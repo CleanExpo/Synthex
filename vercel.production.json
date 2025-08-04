@@ -3,7 +3,7 @@
   "version": 2,
   "builds": [
     {
-      "src": "src/index.ts",
+      "src": "api/vercel.js",
       "use": "@vercel/node",
       "config": {
         "maxLambdaSize": "50mb"
@@ -21,23 +21,23 @@
     },
     {
       "src": "/api-docs/(.*)",
-      "dest": "/src/index.ts"
+      "dest": "/api/vercel.js"
     },
     {
       "src": "/api/(.*)",
-      "dest": "/src/index.ts"
+      "dest": "/api/vercel.js"
     },
     {
       "src": "/auth/(.*)",
-      "dest": "/src/index.ts"
+      "dest": "/api/vercel.js"
     },
     {
       "src": "/health",
-      "dest": "/src/index.ts"
+      "dest": "/api/vercel.js"
     },
     {
       "src": "/(.*)",
-      "dest": "/src/index.ts"
+      "dest": "/api/vercel.js"
     }
   ],
   "env": {
@@ -51,13 +51,13 @@
     "OPENROUTER_API_KEY": "@openrouter_api_key",
     "ANTHROPIC_API_KEY": "@anthropic_api_key"
   },
-  "buildCommand": "npm run build",
+  "buildCommand": "npm install && npx prisma generate && npm run build:prod",
   "outputDirectory": "dist",
-  "installCommand": "npm install && npx prisma generate",
+  "installCommand": "npm ci --production=false",
   "framework": null,
   "regions": ["iad1"],
   "functions": {
-    "src/index.ts": {
+    "api/vercel.js": {
       "memory": 1024,
       "maxDuration": 30
     }
