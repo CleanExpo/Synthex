@@ -3,6 +3,7 @@
   "version": 2,
   "functions": {
     "api/vercel.js": {
+      "runtime": "nodejs20.x",
       "memory": 1024,
       "maxDuration": 30
     }
