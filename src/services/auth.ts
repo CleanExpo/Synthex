@@ -335,6 +335,90 @@ export class AuthService {
       }
     });
   }
+
+  async generateResetCode(email: string): Promise<{ code: string; expiresAt: Date }> {
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
+    const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
+    
+    await prisma.user.update({
+      where: { email },
+      data: {
+        resetCode: code,
+        resetCodeExpires: expiresAt
+      }
+    });
+    
+    return { code, expiresAt };
+  }
+
+  async verifyResetCode(email: string, code: string): Promise<string | null> {
+    const user = await prisma.user.findUnique({
+      where: { email },
+      select: {
+        id: true,
+        resetCode: true,
+        resetCodeExpires: true
+      }
+    });
+    
+    if (!user || user.resetCode !== code) {
+      return null;
+    }
+    
+    if (user.resetCodeExpires && user.resetCodeExpires < new Date()) {
+      return null;
+    }
+    
+    // Generate a temporary token for password reset
+    const resetToken = crypto.randomBytes(32).toString('hex');
+    
+    await prisma.user.update({
+      where: { email },
+      data: {
+        resetToken,
+        resetTokenExpires: new Date(Date.now() + 30 * 60 * 1000) // 30 minutes
+      }
+    });
+    
+    return resetToken;
+  }
+
+  async resetPasswordWithToken(token: string, newPassword: string): Promise<boolean> {
+    const user = await prisma.user.findFirst({
+      where: {
+        resetToken: token,
+        resetTokenExpires: {
+          gt: new Date()
+        }
+      }
+    });
+    
+    if (!user) {
+      return false;
+    }
+    
+    const hashedPassword = await this.hashPassword(newPassword);
+    
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        password: hashedPassword,
+        resetCode: null,
+        resetCodeExpires: null,
+        resetToken: null,
+        resetTokenExpires: null
+      }
+    });
+    
+    return true;
+  }
+
+  async sendPasswordResetEmail(email: string, code: string): Promise<void> {
+    // In production, integrate with email service (SendGrid, AWS SES, etc.)
+    // For now, log to console
+    console.log(`Password reset code for ${email}: ${code}`);
+    console.log('In production, this would be sent via email');
+  }
 }
 
 export const authService = new AuthService();

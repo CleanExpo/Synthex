@@ -33,6 +33,16 @@ model User {
   // User settings
   preferences      Json?
   
+  // Password reset fields
+  resetCode        String?
+  resetCodeExpires DateTime?
+  resetToken       String?
+  resetTokenExpires DateTime?
+  
+  // Email verification
+  verificationCode String?
+  verificationExpires DateTime?
+  
   // Relations
   campaigns        Campaign[]
   projects         Project[]
