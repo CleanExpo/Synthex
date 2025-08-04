@@ -3,7 +3,7 @@
   "version": 2,
   "functions": {
     "api/vercel.js": {
-      "runtime": "@vercel/node@3",
+      "runtime": "nodejs18.x",
       "memory": 1024,
       "maxDuration": 30
     }
