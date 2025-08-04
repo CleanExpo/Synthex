@@ -526,7 +526,7 @@ class UIHelpers {
 // Initialize global UI helper instance
 window.uiHelpers = new UIHelpers();
 
-// Export for module usage
+// Export for module usage (only in Node.js environment)
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = UIHelpers;
 }

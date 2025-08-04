@@ -21,11 +21,27 @@
       "destination": "/api/vercel.js"
     },
     {
-      "source": "/",
-      "destination": "/public/index.html"
+      "source": "/api-info",
+      "destination": "/api/vercel.js"
     },
     {
-      "source": "/(.*)",
+      "source": "/api-docs",
+      "destination": "/api/vercel.js"
+    },
+    {
+      "source": "/app",
+      "destination": "/api/vercel.js"
+    },
+    {
+      "source": "/classic",
+      "destination": "/api/vercel.js"
+    },
+    {
+      "source": "/dashboard",
+      "destination": "/api/vercel.js"
+    },
+    {
+      "source": "/",
       "destination": "/api/vercel.js"
     }
   ],
