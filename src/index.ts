@@ -1,12 +1,15 @@
 import dotenv from 'dotenv';
 import express, { Request, Response, NextFunction } from 'express';
+import session from 'express-session';
 import path from 'path';
 import rateLimit from 'express-rate-limit';
+import passport from './config/passport';
 import openRouterRoutes from './routes/openrouter';
 import mcpTtdRoutes from './routes/mcp-ttd';
 import enhancementRoutes from './routes/enhancement-research';
 import mleStarRoutes from './routes/mle-star';
 import authRoutes from './routes/auth';
+import googleAuthRoutes from './routes/google-auth';
 import { openRouterService } from './services/openrouter';
 import { mcpIntegration } from './services/mcp-integration';
 import { ttdRd } from './services/ttd-rd-framework';
@@ -53,6 +56,21 @@ app.use(express.static(path.join(__dirname, '..', 'public')));
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Session configuration for OAuth
+app.use(session({
+  secret: process.env.JWT_SECRET || 'fallback-session-secret',
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    secure: NODE_ENV === 'production', // HTTPS only in production
+    maxAge: 24 * 60 * 60 * 1000 // 24 hours
+  }
+}));
+
+// Initialize Passport
+app.use(passport.initialize());
+app.use(passport.session());
 
 // Apply general rate limiting to all requests
 app.use(generalLimiter);
@@ -128,6 +146,9 @@ app.get('/api', (req: Request, res: Response) => {
       'POST /api/auth/api-keys - Update API keys',
       'GET /api/auth/api-keys - Get API key status',
       'GET /api/auth/usage - Get API usage statistics',
+      'GET /auth/google - Google OAuth login',
+      'GET /auth/google/callback - Google OAuth callback',
+      'GET /auth/google/status - Google OAuth configuration status',
       'GET /api/openrouter/status - OpenRouter status',
       'GET /api/openrouter/models - Available AI models',
       'GET /api/openrouter/test - Test OpenRouter connection',
@@ -162,6 +183,9 @@ app.use('/api/openrouter/chat', contentGenerationLimiter);
 
 // Authentication routes (with their own rate limiting)
 app.use('/api/auth', authRoutes);
+
+// Google OAuth routes
+app.use('/auth', googleAuthRoutes);
 
 // Apply general API rate limiting to other OpenRouter endpoints
 app.use('/api/openrouter', apiLimiter, openRouterRoutes);

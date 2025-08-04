@@ -1,12 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
-import { authService } from '../services/auth';
+import { authService, User } from '../services/auth';
 
 export interface AuthenticatedRequest extends Request {
-  user?: {
-    id: string;
-    email: string;
-    name?: string;
-  };
+  user?: User;
 }
 
 export const authenticateToken = async (

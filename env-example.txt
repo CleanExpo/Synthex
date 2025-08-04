@@ -4,6 +4,11 @@ DATABASE_URL="postgresql://username:password@localhost:5432/auto_marketing"
 # Authentication
 JWT_SECRET="your-super-secret-jwt-key-minimum-64-characters-long-for-security"
 
+# Google OAuth Configuration
+GOOGLE_CLIENT_ID="your-client-id.apps.googleusercontent.com"
+GOOGLE_CLIENT_SECRET="your-client-secret"
+GOOGLE_CALLBACK_URL="https://your-app.vercel.app/auth/google/callback"
+
 # OpenRouter API Configuration (System-wide fallback - users can add their own)
 OPENROUTER_API_KEY=your_openrouter_api_key_here
 OPENROUTER_BASE_URL="https://openrouter.ai/api/v1"
