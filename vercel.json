@@ -52,7 +52,7 @@
     "ANTHROPIC_API_KEY": "@anthropic_api_key"
   },
   "buildCommand": "npm install && npx prisma generate && npm run build:prod",
-  "outputDirectory": "dist",
+  "outputDirectory": ".",
   "installCommand": "npm ci --production=false",
   "framework": null,
   "regions": ["iad1"],
