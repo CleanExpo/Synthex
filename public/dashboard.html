@@ -230,6 +230,14 @@
                     <button class="tab-btn" onclick="showAuthTab('register')">Register</button>
                 </div>
                 
+                <!-- Google Sign-In Button -->
+                <div style="text-align: center; margin: 20px 0;">
+                    <button class="btn" onclick="loginWithGoogle()" id="google-signin-btn" style="background: linear-gradient(45deg, #4285f4, #34a853); display: none;">
+                        🔐 Sign in with Google
+                    </button>
+                    <div style="margin: 10px 0; color: rgba(255,255,255,0.7);">── or ──</div>
+                </div>
+                
                 <!-- Login Form -->
                 <div id="login-form" class="auth-form">
                     <h3>Welcome Back</h3>
@@ -357,11 +365,43 @@
 
         // Check if user is already logged in
         document.addEventListener('DOMContentLoaded', () => {
+            // Check for token in localStorage
             const token = localStorage.getItem('authToken');
             if (token) {
                 authToken = token;
                 loadUserProfile();
+                return;
             }
+            
+            // Check for token in URL (from Google OAuth redirect)
+            const urlParams = new URLSearchParams(window.location.search);
+            const urlToken = urlParams.get('token');
+            const success = urlParams.get('success');
+            const error = urlParams.get('error');
+            
+            if (urlToken) {
+                authToken = urlToken;
+                localStorage.setItem('authToken', authToken);
+                // Clean URL
+                window.history.replaceState({}, document.title, window.location.pathname);
+                loadUserProfile();
+                if (success === 'google_login') {
+                    showAlert('login-alert', 'Successfully signed in with Google!', 'success');
+                }
+                return;
+            }
+            
+            if (error) {
+                let errorMessage = 'Authentication failed';
+                if (error === 'auth_failed') errorMessage = 'Google authentication failed';
+                if (error === 'auth_callback_failed') errorMessage = 'Google authentication callback failed';
+                showAlert('login-alert', errorMessage, 'error');
+                // Clean URL
+                window.history.replaceState({}, document.title, window.location.pathname);
+            }
+            
+            // Check Google OAuth configuration
+            checkGoogleAuth();
         });
 
         function showAuthTab(tab) {
@@ -596,6 +636,24 @@
             setTimeout(() => {
                 alert.style.display = 'none';
             }, 5000);
+        }
+
+        async function checkGoogleAuth() {
+            try {
+                const response = await fetch('/auth/google/status');
+                const result = await response.json();
+                
+                if (result.configured) {
+                    document.getElementById('google-signin-btn').style.display = 'block';
+                }
+            } catch (error) {
+                console.error('Failed to check Google auth status:', error);
+            }
+        }
+
+        function loginWithGoogle() {
+            // Redirect to Google OAuth
+            window.location.href = '/auth/google';
         }
     </script>
 </body>

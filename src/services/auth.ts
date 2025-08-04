@@ -19,6 +19,13 @@ export interface CreateUserData {
   name?: string;
 }
 
+export interface CreateGoogleUserData {
+  email: string;
+  name: string;
+  googleId: string;
+  avatar?: string;
+}
+
 export interface LoginCredentials {
   email: string;
   password: string;
@@ -89,6 +96,78 @@ export class AuthService {
         name: true,
         createdAt: true,
         preferences: true,
+      }
+    });
+
+    return user;
+  }
+
+  async createGoogleUser(userData: CreateGoogleUserData): Promise<User> {
+    const { email, name, googleId, avatar } = userData;
+
+    // Create user with Google data
+    const user = await prisma.user.create({
+      data: {
+        email,
+        name,
+        googleId,
+        avatar,
+        password: '', // Empty password for Google users
+        authProvider: 'google',
+        emailVerified: true, // Google emails are pre-verified
+      },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        createdAt: true,
+        preferences: true,
+        avatar: true,
+        authProvider: true,
+      }
+    });
+
+    return user;
+  }
+
+  async findUserByEmail(email: string): Promise<User | null> {
+    const user = await prisma.user.findUnique({
+      where: { email },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        createdAt: true,
+        preferences: true,
+        avatar: true,
+        authProvider: true,
+        googleId: true,
+      }
+    });
+
+    return user;
+  }
+
+  async updateUserGoogleInfo(userId: string, data: {
+    googleId: string;
+    avatar?: string;
+    lastLogin: Date;
+  }): Promise<User> {
+    const user = await prisma.user.update({
+      where: { id: userId },
+      data: {
+        googleId: data.googleId,
+        avatar: data.avatar,
+        lastLogin: data.lastLogin,
+      },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        createdAt: true,
+        preferences: true,
+        avatar: true,
+        authProvider: true,
       }
     });
 
