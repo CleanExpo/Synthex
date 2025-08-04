@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SYNTHEX - AI Marketing Platform</title>
+    <link rel="icon" type="image/png" href="/logo.png">
+    <link rel="stylesheet" href="/css/synthex-design-system.css">
+    <style>
+        /* Enhanced page-specific styles */
+        .hero-section {
+            background: linear-gradient(135deg, 
+                rgba(0, 122, 255, 0.05) 0%, 
+                rgba(88, 86, 214, 0.05) 100%);
+            border-radius: var(--radius-xl);
+            padding: var(--space-8);
+            margin-bottom: var(--space-8);
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .hero-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(circle at 20% 80%, rgba(0, 122, 255, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(88, 86, 214, 0.1) 0%, transparent 50%);
+            pointer-events: none;
+        }
+        
+        .hero-content {
+            position: relative;
+            z-index: 1;
+        }
+        
+        .logo-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: var(--space-3);
+            margin-bottom: var(--space-4);
+        }
+        
+        .logo-container img {
+            height: 64px;
+            width: auto;
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-sm);
+        }
+        
+        .status-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: var(--space-4);
+            background-color: var(--color-surface);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-sm);
+            margin-bottom: var(--space-6);
+            border: 1px solid var(--color-border-secondary);
+        }
+        
+        .model-info {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+            font-size: var(--font-size-callout);
+            color: var(--color-text-secondary);
+        }
+        
+        .content-panel {
+            display: none;
+            animation: fadeIn var(--duration-moderate) var(--ease-standard);
+        }
+        
+        .content-panel.active {
+            display: block;
+        }
+        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .form-section {
+            padding: var(--space-6);
+        }
+        
+        .examples-section {
+            background-color: var(--color-surface-secondary);
+            border-radius: var(--radius-md);
+            padding: var(--space-4);
+            margin-top: var(--space-4);
+        }
+        
+        .example-item {
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+            padding: var(--space-3);
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: all var(--duration-quick) var(--ease-standard);
+            border: 1px solid transparent;
+        }
+        
+        .example-item:hover {
+            background-color: var(--color-surface);
+            border-color: var(--color-border-secondary);
+            transform: translateX(4px);
+        }
+        
+        .example-emoji {
+            font-size: 1.2em;
+            flex-shrink: 0;
+        }
+        
+        .checkbox-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: var(--space-3);
+            margin-top: var(--space-3);
+        }
+        
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+            padding: var(--space-2);
+            border-radius: var(--radius-sm);
+            transition: background-color var(--duration-quick) var(--ease-standard);
+        }
+        
+        .checkbox-item:hover {
+            background-color: var(--color-surface-secondary);
+        }
+        
+        .checkbox-item input[type="checkbox"] {
+            width: auto;
+            min-height: auto;
+            margin: 0;
+        }
+        
+        .checkbox-item label {
+            margin: 0;
+            cursor: pointer;
+            font-size: var(--font-size-callout);
+        }
+        
+        .output-section {
+            margin-top: var(--space-8);
+        }
+        
+        .output-content {
+            background-color: var(--color-surface-tertiary);
+            border: 1px solid var(--color-border-secondary);
+            border-radius: var(--radius-md);
+            padding: var(--space-4);
+            max-height: 500px;
+            overflow-y: auto;
+            font-family: var(--font-family-mono);
+            font-size: var(--font-size-callout);
+            line-height: var(--line-height-relaxed);
+            white-space: pre-wrap;
+        }
+        
+        .loading-overlay {
+            display: none;
+            text-align: center;
+            padding: var(--space-8);
+        }
+        
+        .loading-overlay.active {
+            display: block;
+        }
+        
+        .loading-text {
+            margin-top: var(--space-4);
+            color: var(--color-text-secondary);
+        }
+        
+        .floating-action {
+            position: fixed;
+            bottom: var(--space-6);
+            right: var(--space-6);
+            z-index: var(--z-fixed);
+        }
+        
+        .btn-floating {
+            width: 56px;
+            height: 56px;
+            border-radius: var(--radius-full);
+            box-shadow: var(--shadow-lg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+        
+        /* Accessibility improvements */
+        .skip-link {
+            position: absolute;
+            top: -40px;
+            left: 6px;
+            background: var(--color-primary);
+            color: var(--color-text-inverse);
+            padding: var(--space-2) var(--space-3);
+            border-radius: var(--radius-sm);
+            text-decoration: none;
+            z-index: var(--z-tooltip);
+            transition: top var(--duration-quick) var(--ease-standard);
+        }
+        
+        .skip-link:focus {
+            top: 6px;
+        }
+    </style>
+</head>
+<body>
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+    
+    <div class="container">
+        <!-- Hero Section -->
+        <header class="hero-section" role="banner">
+            <div class="hero-content">
+                <div class="logo-container">
+                    <img src="/logo.png" alt="SYNTHEX Logo">
+                    <h1 class="text-title-1">SYNTHEX Platform</h1>
+                </div>
+                <p class="text-headline text-secondary">AI-Powered Marketing Content Generation & Optimization</p>
+            </div>
+        </header>
+        
+        <!-- Status Bar -->
+        <div class="status-bar" role="status" aria-live="polite">
+            <div class="status-indicator" id="statusIndicator">
+                <span class="status-dot" id="statusDot" aria-hidden="true"></span>
+                <span>Server Status: <strong id="statusText">Checking...</strong></span>
+            </div>
+            <div class="model-info">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                    <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                </svg>
+                <span id="modelInfo">Model: OpenRouter Horizon Beta</span>
+            </div>
+        </div>
+        
+        <!-- Navigation Tabs -->
+        <nav class="nav-tabs" role="tablist" aria-label="Main navigation">
+            <button class="nav-tab active" role="tab" aria-selected="true" aria-controls="generate-panel" id="generate-tab" onclick="switchTab('generate', this)">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                </svg>
+                Generate Content
+            </button>
+            <button class="nav-tab" role="tab" aria-selected="false" aria-controls="optimize-panel" id="optimize-tab" onclick="switchTab('optimize', this)">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                    <path d="M3 17v2h6v-2H3zM3 5v2h10V5H3zm10 16v-2h8v-2h-8v-2h-2v6h2zM7 9v2H3v2h4v2h2V9H7zm14 4v-2H11v2h10zm-6-4h2V7h4V5h-4V3h-2v6z"/>
+                </svg>
+                Optimize Content
+            </button>
+            <button class="nav-tab" role="tab" aria-selected="false" aria-controls="variations-panel" id="variations-tab" onclick="switchTab('variations', this)">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                    <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/>
+                </svg>
+                Create Variations
+            </button>
+            <button class="nav-tab" role="tab" aria-selected="false" aria-controls="test-panel" id="test-tab" onclick="switchTab('test', this)">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                </svg>
+                Test Connection
+            </button>
+        </nav>
+        
+        <main id="main-content">
+            <!-- Generate Content Panel -->
+            <div id="generate-panel" class="content-panel active surface" role="tabpanel" aria-labelledby="generate-tab">
+                <div class="form-section">
+                    <h2 class="text-title-3 mb-4">Generate Marketing Content</h2>
+                    <form id="generateForm" novalidate>
+                        <div class="form-group">
+                            <label for="prompt" class="form-label">Describe your product/service and target audience:</label>
+                            <textarea 
+                                id="prompt" 
+                                class="form-textarea" 
+                                placeholder="E.g., Create a compelling social media post for our new eco-friendly coffee shop targeting millennials who care about sustainability"
+                                aria-describedby="prompt-help"
+                                required>
+                            </textarea>
+                            <div id="prompt-help" class="text-footnote text-tertiary" style="margin-top: var(--space-2);">
+                                Be specific about your target audience and desired outcome for best results.
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="contentType" class="form-label">Content Type:</label>
+                            <select id="contentType" class="form-select" aria-describedby="content-type-help">
+                                <option value="social_post">Social Media Post</option>
+                                <option value="email">Email Campaign</option>
+                                <option value="blog">Blog Post</option>
+                                <option value="ad_copy">Ad Copy</option>
+                                <option value="landing_page">Landing Page Copy</option>
+                                <option value="press_release">Press Release</option>
+                                <option value="general">General Marketing</option>
+                            </select>
+                            <div id="content-type-help" class="text-footnote text-tertiary" style="margin-top: var(--space-2);">
+                                Choose the type of content that best matches your needs.
+                            </div>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                            </svg>
+                            Generate Content
+                        </button>
+                    </form>
+                    
+                    <div class="examples-section">
+                        <h4 class="text-headline mb-3">Example Prompts:</h4>
+                        <div class="example-item" onclick="setExample('generate', 'Launch announcement for our AI-powered project management tool that helps remote teams collaborate better')" tabindex="0" role="button">
+                            <span class="example-emoji">📱</span>
+                            <span>Launch announcement for AI project management tool</span>
+                        </div>
+                        <div class="example-item" onclick="setExample('generate', 'Black Friday sale for online fashion store - 50% off everything, targeting young professionals')" tabindex="0" role="button">
+                            <span class="example-emoji">🛍️</span>
+                            <span>Black Friday fashion sale campaign</span>
+                        </div>
+                        <div class="example-item" onclick="setExample('generate', 'Welcome email for new subscribers to our fitness app with personalized workout plans')" tabindex="0" role="button">
+                            <span class="example-emoji">💪</span>
+                            <span>Welcome email for fitness app subscribers</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Optimize Content Panel -->
+            <div id="optimize-panel" class="content-panel surface" role="tabpanel" aria-labelledby="optimize-tab">
+                <div class="form-section">
+                    <h2 class="text-title-3 mb-4">Optimize Existing Content</h2>
+                    <form id="optimizeForm" novalidate>
+                        <div class="form-group">
+                            <label for="content" class="form-label">Your Current Content:</label>
+                            <textarea 
+                                id="content" 
+                                class="form-textarea" 
+                                placeholder="Paste your existing marketing content here to get optimization suggestions and an improved version"
+                                aria-describedby="content-help"
+                                required>
+                            </textarea>
+                            <div id="content-help" class="text-footnote text-tertiary" style="margin-top: var(--space-2);">
+                                Paste any marketing content you'd like to improve.
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="platform" class="form-label">Target Platform:</label>
+                            <select id="platform" class="form-select">
+                                <option value="general">General</option>
+                                <option value="twitter">Twitter/X</option>
+                                <option value="instagram">Instagram</option>
+                                <option value="linkedin">LinkedIn</option>
+                                <option value="facebook">Facebook</option>
+                                <option value="tiktok">TikTok</option>
+                                <option value="youtube">YouTube</option>
+                                <option value="email">Email</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Optimization Goals:</label>
+                            <div class="checkbox-group">
+                                <div class="checkbox-item">
+                                    <input type="checkbox" id="goal-engagement" value="engagement" checked>
+                                    <label for="goal-engagement">Engagement</label>
+                                </div>
+                                <div class="checkbox-item">
+                                    <input type="checkbox" id="goal-conversions" value="conversions" checked>
+                                    <label for="goal-conversions">Conversions</label>
+                                </div>
+                                <div class="checkbox-item">
+                                    <input type="checkbox" id="goal-viral" value="viral">
+                                    <label for="goal-viral">Viral Potential</label>
+                                </div>
+                                <div class="checkbox-item">
+                                    <input type="checkbox" id="goal-brand" value="brand_awareness">
+                                    <label for="goal-brand">Brand Awareness</label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                                <path d="M3 17v2h6v-2H3zM3 5v2h10V5H3zm10 16v-2h8v-2h-8v-2h-2v6h2zM7 9v2H3v2h4v2h2V9H7zm14 4v-2H11v2h10zm-6-4h2V7h4V5h-4V3h-2v6z"/>
+                            </svg>
+                            Optimize Content
+                        </button>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Variations Panel -->
+            <div id="variations-panel" class="content-panel surface" role="tabpanel" aria-labelledby="variations-tab">
+                <div class="form-section">
+                    <h2 class="text-title-3 mb-4">Generate Content Variations</h2>
+                    <form id="variationsForm" novalidate>
+                        <div class="form-group">
+                            <label for="varPrompt" class="form-label">Base Content or Idea:</label>
+                            <textarea 
+                                id="varPrompt" 
+                                class="form-textarea" 
+                                placeholder="Enter your base content or idea to generate multiple variations for A/B testing"
+                                required>
+                            </textarea>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="varContentType" class="form-label">Content Type:</label>
+                            <select id="varContentType" class="form-select">
+                                <option value="social_post">Social Media Post</option>
+                                <option value="email">Email Subject Lines</option>
+                                <option value="ad_copy">Ad Headlines</option>
+                                <option value="cta">Call-to-Action Buttons</option>
+                                <option value="tagline">Taglines</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="count" class="form-label">Number of Variations:</label>
+                            <select id="count" class="form-select">
+                                <option value="3">3 Variations</option>
+                                <option value="5" selected>5 Variations</option>
+                                <option value="7">7 Variations</option>
+                                <option value="10">10 Variations</option>
+                            </select>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                                <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/>
+                            </svg>
+                            Generate Variations
+                        </button>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Test Connection Panel -->
+            <div id="test-panel" class="content-panel surface" role="tabpanel" aria-labelledby="test-tab">
+                <div class="form-section">
+                    <h2 class="text-title-3 mb-4">Test API Connection</h2>
+                    <p class="text-body text-secondary mb-6">Test the connection to OpenRouter and verify everything is working correctly.</p>
+                    <div class="flex gap-4 flex-wrap">
+                        <button onclick="testConnection()" class="btn btn-primary">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                            </svg>
+                            Test Connection
+                        </button>
+                        <button onclick="checkModels()" class="btn btn-secondary">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                            </svg>
+                            List Available Models
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </main>
+        
+        <!-- Output Section -->
+        <section class="output-section">
+            <div class="surface p-6">
+                <h3 class="text-title-3 mb-4">Output</h3>
+                <div class="loading-overlay" id="loading" aria-live="polite">
+                    <div class="loading-spinner" aria-hidden="true"></div>
+                    <p class="loading-text">Generating content...</p>
+                </div>
+                <div class="output-content" id="output" aria-live="polite">
+                    Results will appear here...
+                </div>
+            </div>
+        </section>
+        
+        <!-- Floating Action Button -->
+        <div class="floating-action">
+            <button class="btn btn-primary btn-floating" onclick="scrollToTop()" aria-label="Scroll to top">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                    <path d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6z"/>
+                </svg>
+            </button>
+        </div>
+    </div>
+    
+    <script>
+        const API = 'http://localhost:3000';
+        
+        // Enhanced status checking with better UX
+        async function checkStatus() {
+            try {
+                const res = await fetch(`${API}/health`);
+                const data = await res.json();
+                const isOnline = data.status === 'healthy';
+                
+                const statusDot = document.getElementById('statusDot');
+                const statusText = document.getElementById('statusText');
+                const statusIndicator = document.getElementById('statusIndicator');
+                
+                if (isOnline) {
+                    statusIndicator.className = 'status-indicator status-online';
+                    statusText.textContent = 'Online';
+                } else {
+                    statusIndicator.className = 'status-indicator status-offline';
+                    statusText.textContent = 'Offline';
+                }
+                
+                // Check OpenRouter status
+                const orRes = await fetch(`${API}/api/openrouter/status`);
+                const orData = await orRes.json();
+                if (orData.configured) {
+                    document.getElementById('modelInfo').textContent = `Model: ${orData.defaultModel || 'OpenRouter Horizon Beta'}`;
+                }
+            } catch (e) {
+                const statusIndicator = document.getElementById('statusIndicator');
+                const statusText = document.getElementById('statusText');
+                statusIndicator.className = 'status-indicator status-offline';
+                statusText.textContent = 'Offline';
+            }
+        }
+        
+        // Enhanced tab switching with better accessibility
+        function switchTab(tabName, tabElement) {
+            // Hide all panels
+            document.querySelectorAll('.content-panel').forEach(panel => {
+                panel.classList.remove('active');
+                panel.setAttribute('aria-hidden', 'true');
+            });
+            
+            // Remove active from all tabs
+            document.querySelectorAll('.nav-tab').forEach(tab => {
+                tab.classList.remove('active');
+                tab.setAttribute('aria-selected', 'false');
+            });
+            
+            // Show selected panel
+            const selectedPanel = document.getElementById(`${tabName}-panel`);
+            selectedPanel.classList.add('active');
+            selectedPanel.setAttribute('aria-hidden', 'false');
+            
+            // Highlight selected tab
+            tabElement.classList.add('active');
+            tabElement.setAttribute('aria-selected', 'true');
+            
+            // Focus management
+            const firstInput = selectedPanel.querySelector('input, textarea, select, button');
+            if (firstInput) {
+                firstInput.focus();
+            }
+        }
+        
+        // Enhanced example setting with keyboard support
+        function setExample(type, text) {
+            if (type === 'generate') {
+                document.getElementById('prompt').value = text;
+                document.getElementById('prompt').focus();
+            } else if (type === 'variations') {
+                document.getElementById('varPrompt').value = text;
+                document.getElementById('varPrompt').focus();
+            }
+        }
+        
+        // Enhanced loading states
+        function showLoading() {
+            document.getElementById('loading').classList.add('active');
+            document.getElementById('output').style.display = 'none';
+        }
+        
+        function hideLoading() {
+            document.getElementById('loading').classList.remove('active');
+            document.getElementById('output').style.display = 'block';
+        }
+        
+        // Enhanced output formatting
+        function formatOutput(data) {
+            if (data.content) {
+                return data.content;
+            } else if (data.optimization) {
+                let output = '📊 ANALYSIS:\n' + data.optimization.analysis + '\n\n';
+                output += '✨ OPTIMIZED CONTENT:\n' + data.optimization.optimizedContent + '\n\n';
+                if (data.optimization.suggestions && data.optimization.suggestions.length > 0) {
+                    output += '💡 SUGGESTIONS:\n';
+                    data.optimization.suggestions.forEach((s, i) => {
+                        output += `${i + 1}. ${s}\n`;
+                    });
+                }
+                return output;
+            } else if (data.variations) {
+                let output = '🔄 CONTENT VARIATIONS:\n\n';
+                data.variations.forEach((v, i) => {
+                    output += `--- Variation ${i + 1} ---\n${v}\n\n`;
+                });
+                return output;
+            } else {
+                return JSON.stringify(data, null, 2);
+            }
+        }
+        
+        // Enhanced form handling with validation
+        function handleFormSubmit(formId, endpoint, getFormData) {
+            const form = document.getElementById(formId);
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                const formData = getFormData();
+                if (!formData) return;
+                
+                showLoading();
+                
+                try {
+                    const res = await fetch(endpoint, {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify(formData)
+                    });
+                    
+                    if (!res.ok) {
+                        throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+                    }
+                    
+                    const data = await res.json();
+                    document.getElementById('output').textContent = formatOutput(data);
+                } catch (e) {
+                    document.getElementById('output').textContent = 'Error: ' + e.message;
+                } finally {
+                    hideLoading();
+                }
+            });
+        }
+        
+        // Form handlers
+        handleFormSubmit('generateForm', `${API}/api/openrouter/marketing/generate`, () => {
+            const prompt = document.getElementById('prompt').value.trim();
+            const contentType = document.getElementById('contentType').value;
+            
+            if (!prompt) {
+                alert('Please enter a prompt');
+                document.getElementById('prompt').focus();
+                return null;
+            }
+            
+            return { prompt, contentType };
+        });
+        
+        handleFormSubmit('optimizeForm', `${API}/api/openrouter/marketing/optimize`, () => {
+            const content = document.getElementById('content').value.trim();
+            const platform = document.getElementById('platform').value;
+            
+            if (!content) {
+                alert('Please enter content to optimize');
+                document.getElementById('content').focus();
+                return null;
+            }
+            
+            const goals = Array.from(document.querySelectorAll('.checkbox-group input:checked'))
+                .map(cb => cb.value);
+            
+            return { content, platform, goals };
+        });
+        
+        handleFormSubmit('variationsForm', `${API}/api/openrouter/marketing/variations`, () => {
+            const prompt = document.getElementById('varPrompt').value.trim();
+            const count = parseInt(document.getElementById('count').value);
+            const contentType = document.getElementById('varContentType').value;
+            
+            if (!prompt) {
+                alert('Please enter a prompt');
+                document.getElementById('varPrompt').focus();
+                return null;
+            }
+            
+            return { prompt, count, contentType };
+        });
+        
+        // Test functions
+        async function testConnection() {
+            showLoading();
+            
+            try {
+                const res = await fetch(`${API}/api/openrouter/test`);
+                const data = await res.json();
+                document.getElementById('output').textContent = 
+                    `✅ Connection Test ${data.success ? 'Successful' : 'Failed'}\n\n` +
+                    `Response: ${data.response}\n\n` +
+                    `Model: ${data.model}\n` +
+                    `Tokens Used: ${data.usage ? data.usage.total_tokens : 'N/A'}`;
+            } catch (e) {
+                document.getElementById('output').textContent = 'Error: ' + e.message;
+            }
+            
+            hideLoading();
+        }
+        
+        async function checkModels() {
+            showLoading();
+            
+            try {
+                const res = await fetch(`${API}/api/openrouter/models`);
+                const data = await res.json();
+                let output = '🤖 Available AI Models:\n\n';
+                output += `Recommended: ${data.recommended}\n\n`;
+                output += 'All Models:\n';
+                data.models.forEach((model, i) => {
+                    output += `${i + 1}. ${model}\n`;
+                });
+                document.getElementById('output').textContent = output;
+            } catch (e) {
+                document.getElementById('output').textContent = 'Error: ' + e.message;
+            }
+            
+            hideLoading();
+        }
+        
+        // Utility functions
+        function scrollToTop() {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+        
+        // Keyboard event handlers for accessibility
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && e.target.classList.contains('example-item')) {
+                e.target.click();
+            }
+        });
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            checkStatus();
+            
+            // Check status every 30 seconds
+            setInterval(checkStatus, 30000);
+            
+            // Focus management for better UX
+            const firstTab = document.querySelector('.nav-tab.active');
+            if (firstTab) {
+                firstTab.focus();
+            }
+        });
+    </script>
+</body>
+</html>
