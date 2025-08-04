@@ -1,6 +1,6 @@
 {
+  "name": "synthex-production",
   "version": 2,
-  "name": "synthex",
   "builds": [
     {
       "src": "api/vercel.js",
@@ -16,31 +16,11 @@
   ],
   "routes": [
     {
-      "src": "/logo\\.png",
-      "dest": "/public/logo.png"
-    },
-    {
-      "src": "/js/(.*)",
-      "dest": "/public/js/$1"
-    },
-    {
-      "src": "/css/(.*)",
-      "dest": "/public/css/$1"
-    },
-    {
       "src": "/(.*\\.(html|css|js|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot))",
       "dest": "/public/$1"
     },
     {
-      "src": "/api-docs",
-      "dest": "/api/vercel.js"
-    },
-    {
       "src": "/api-docs/(.*)",
-      "dest": "/api/vercel.js"
-    },
-    {
-      "src": "/api/v1/(.*)",
       "dest": "/api/vercel.js"
     },
     {
@@ -56,36 +36,24 @@
       "dest": "/api/vercel.js"
     },
     {
-      "src": "/app",
-      "dest": "/api/vercel.js"
-    },
-    {
-      "src": "/classic",
-      "dest": "/api/vercel.js"
-    },
-    {
-      "src": "/dashboard",
-      "dest": "/api/vercel.js"
-    },
-    {
-      "src": "/reset-password.html",
-      "dest": "/public/reset-password.html"
-    },
-    {
-      "src": "/",
-      "dest": "/api/vercel.js"
-    },
-    {
       "src": "/(.*)",
       "dest": "/api/vercel.js"
     }
   ],
   "env": {
-    "NODE_ENV": "production"
+    "NODE_ENV": "production",
+    "DATABASE_URL": "@database_url",
+    "POSTGRES_URL_NON_POOLING": "@postgres_url_non_pooling",
+    "JWT_SECRET": "@jwt_secret",
+    "GOOGLE_CLIENT_ID": "@google_client_id",
+    "GOOGLE_CLIENT_SECRET": "@google_client_secret",
+    "GOOGLE_CALLBACK_URL": "@google_callback_url",
+    "OPENROUTER_API_KEY": "@openrouter_api_key",
+    "ANTHROPIC_API_KEY": "@anthropic_api_key"
   },
   "buildCommand": "npm install && npx prisma generate && npm run build:prod",
   "outputDirectory": "dist",
-  "installCommand": "npm install",
+  "installCommand": "npm ci --production=false",
   "framework": null,
   "regions": ["iad1"],
   "functions": {
@@ -109,18 +77,6 @@
         {
           "key": "Access-Control-Allow-Headers",
           "value": "X-Requested-With, Content-Type, Authorization"
-        },
-        {
-          "key": "X-Content-Type-Options",
-          "value": "nosniff"
-        },
-        {
-          "key": "X-Frame-Options",
-          "value": "DENY"
-        },
-        {
-          "key": "X-XSS-Protection",
-          "value": "1; mode=block"
         }
       ]
     },
