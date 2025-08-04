@@ -1,32 +1,115 @@
 {
   "version": 2,
   "name": "synthex",
-  "buildCommand": "npm run build",
-  "outputDirectory": ".",
-  "installCommand": "npm install",
-  "framework": null,
-  "rewrites": [
+  "builds": [
     {
-      "source": "/api/(.*)",
-      "destination": "/api"
+      "src": "src/index.ts",
+      "use": "@vercel/node",
+      "config": {
+        "maxLambdaSize": "50mb"
+      }
     },
     {
-      "source": "/health",
-      "destination": "/api"
-    },
-    {
-      "source": "/",
-      "destination": "/public/app.html"
-    },
-    {
-      "source": "/classic",
-      "destination": "/public/index.html"
+      "src": "public/**",
+      "use": "@vercel/static"
     }
   ],
+  "routes": [
+    {
+      "src": "/logo\\.png",
+      "dest": "/public/logo.png"
+    },
+    {
+      "src": "/js/(.*)",
+      "dest": "/public/js/$1"
+    },
+    {
+      "src": "/css/(.*)",
+      "dest": "/public/css/$1"
+    },
+    {
+      "src": "/(.*\\.(html|css|js|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot))",
+      "dest": "/public/$1"
+    },
+    {
+      "src": "/api-docs",
+      "dest": "/src/index.ts"
+    },
+    {
+      "src": "/api-docs/(.*)",
+      "dest": "/src/index.ts"
+    },
+    {
+      "src": "/api/v1/(.*)",
+      "dest": "/src/index.ts"
+    },
+    {
+      "src": "/api/(.*)",
+      "dest": "/src/index.ts"
+    },
+    {
+      "src": "/auth/(.*)",
+      "dest": "/src/index.ts"
+    },
+    {
+      "src": "/health",
+      "dest": "/src/index.ts"
+    },
+    {
+      "src": "/app",
+      "dest": "/src/index.ts"
+    },
+    {
+      "src": "/classic",
+      "dest": "/src/index.ts"
+    },
+    {
+      "src": "/dashboard",
+      "dest": "/src/index.ts"
+    },
+    {
+      "src": "/reset-password.html",
+      "dest": "/public/reset-password.html"
+    },
+    {
+      "src": "/",
+      "dest": "/src/index.ts"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/src/index.ts"
+    }
+  ],
+  "env": {
+    "NODE_ENV": "production"
+  },
+  "buildCommand": "npm install && npx prisma generate && npm run build",
+  "outputDirectory": "dist",
+  "installCommand": "npm install",
+  "framework": null,
+  "regions": ["iad1"],
+  "functions": {
+    "src/index.ts": {
+      "memory": 1024,
+      "maxDuration": 30
+    }
+  },
   "headers": [
     {
       "source": "/api/(.*)",
       "headers": [
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "*"
+        },
+        {
+          "key": "Access-Control-Allow-Methods",
+          "value": "GET,POST,PUT,DELETE,OPTIONS"
+        },
+        {
+          "key": "Access-Control-Allow-Headers",
+          "value": "X-Requested-With, Content-Type, Authorization"
+        },
         {
           "key": "X-Content-Type-Options",
           "value": "nosniff"
@@ -38,19 +121,27 @@
         {
           "key": "X-XSS-Protection",
           "value": "1; mode=block"
-        },
-        {
-          "key": "Cache-Control",
-          "value": "no-store"
         }
       ]
     },
     {
-      "source": "/public/(.*)",
+      "source": "/(.*)",
       "headers": [
         {
-          "key": "Cache-Control",
-          "value": "public, max-age=31536000, immutable"
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "X-XSS-Protection",
+          "value": "1; mode=block"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
         }
       ]
     }
