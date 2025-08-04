@@ -3,7 +3,10 @@ import express, { Request, Response, NextFunction } from 'express';
 import session from 'express-session';
 import path from 'path';
 import rateLimit from 'express-rate-limit';
+import swaggerUi from 'swagger-ui-express';
 import passport from './config/passport';
+import { swaggerSpec } from './config/swagger';
+import v1Routes from './routes/v1';
 import openRouterRoutes from './routes/openrouter';
 import mcpTtdRoutes from './routes/mcp-ttd';
 import enhancementRoutes from './routes/enhancement-research';
@@ -14,6 +17,7 @@ import { openRouterService } from './services/openrouter';
 import { mcpIntegration } from './services/mcp-integration';
 import { ttdRd } from './services/ttd-rd-framework';
 import { mcpContext7 } from './services/mcp-context7-integration';
+import { ApiRes } from './utils/apiResponse';
 
 // Load environment variables
 dotenv.config();
@@ -93,13 +97,22 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 
 // Health check endpoint
 app.get('/health', (req: Request, res: Response) => {
-  res.status(200).json({
+  ApiRes.success(res, {
     status: 'healthy',
-    timestamp: new Date().toISOString(),
     environment: NODE_ENV,
     version: '1.0.0'
-  });
+  }, 'Service is healthy');
 });
+
+// Swagger UI Documentation
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
+  customCss: '.swagger-ui .topbar { display: none }',
+  customSiteTitle: 'Synthex API Documentation',
+  customfavIcon: '/logo.png'
+}));
+
+// API v1 routes with versioning
+app.use('/api/v1', v1Routes);
 
 // Main endpoint - new landing page
 app.get('/', (req: Request, res: Response) => {
@@ -138,11 +151,19 @@ app.get('/api-info', (req: Request, res: Response) => {
   });
 });
 
-// API routes placeholder
+// API routes placeholder - redirect to v1
 app.get('/api', (req: Request, res: Response) => {
-  res.json({
-    message: 'Auto Marketing Agent API',
-    version: '1.0.0',
+  ApiRes.success(res, {
+    message: 'Synthex Marketing Platform API',
+    currentVersion: 'v1',
+    versions: {
+      v1: {
+        status: 'active',
+        base: '/api/v1',
+        documentation: '/api-docs'
+      }
+    },
+    documentation: '/api-docs',
     availableEndpoints: [
       'GET /health - Health check',
       'GET /api - API information',

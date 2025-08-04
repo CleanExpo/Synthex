@@ -1,0 +1,240 @@
+# Authentication Endpoints
+
+paths:
+  /auth/register:
+    post:
+      tags:
+        - Authentication
+      summary: Register a new user
+      description: Create a new user account with email and password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: user@example.com
+                password:
+                  type: string
+                  format: password
+                  minLength: 8
+                  example: SecurePass123!
+                name:
+                  type: string
+                  example: John Doe
+      responses:
+        201:
+          description: User successfully registered
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Success'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          user:
+                            $ref: '#/components/schemas/User'
+                          token:
+                            type: string
+                            example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        400:
+          $ref: '#/components/responses/ValidationError'
+        409:
+          description: User already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /auth/login:
+    post:
+      tags:
+        - Authentication
+      summary: Login user
+      description: Authenticate user with email and password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: user@example.com
+                password:
+                  type: string
+                  format: password
+                  example: SecurePass123!
+      responses:
+        200:
+          description: Successfully authenticated
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Success'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          user:
+                            $ref: '#/components/schemas/User'
+                          token:
+                            type: string
+                            example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        401:
+          $ref: '#/components/responses/UnauthorizedError'
+        422:
+          $ref: '#/components/responses/ValidationError'
+
+  /auth/profile:
+    get:
+      tags:
+        - User Management
+      summary: Get user profile
+      description: Retrieve the authenticated user's profile information
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: User profile retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Success'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/User'
+        401:
+          $ref: '#/components/responses/UnauthorizedError'
+
+  /auth/reset-password/request:
+    post:
+      tags:
+        - Authentication
+      summary: Request password reset
+      description: Send a password reset code to the user's email
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: user@example.com
+      responses:
+        200:
+          description: Reset code sent if email exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Success'
+        400:
+          $ref: '#/components/responses/ValidationError'
+
+  /auth/reset-password/verify:
+    post:
+      tags:
+        - Authentication
+      summary: Verify reset code
+      description: Verify the password reset code sent to email
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - code
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: user@example.com
+                code:
+                  type: string
+                  example: "123456"
+      responses:
+        200:
+          description: Code verified successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Success'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          token:
+                            type: string
+                            example: reset_token_here
+        400:
+          description: Invalid or expired code
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /auth/reset-password/reset:
+    post:
+      tags:
+        - Authentication
+      summary: Reset password
+      description: Reset password using the verification token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - token
+                - password
+              properties:
+                token:
+                  type: string
+                  example: reset_token_here
+                password:
+                  type: string
+                  format: password
+                  minLength: 8
+                  example: NewSecurePass123!
+      responses:
+        200:
+          description: Password reset successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Success'
+        400:
+          description: Invalid or expired token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
