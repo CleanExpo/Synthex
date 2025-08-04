@@ -25,7 +25,7 @@
       "destination": "/api/vercel.js"
     },
     {
-      "source": "/api-docs",
+      "source": "/api-docs(.*)",
       "destination": "/api/vercel.js"
     },
     {
@@ -47,7 +47,7 @@
   ],
   "buildCommand": "npm install && npx prisma generate && npm run build:prod",
   "installCommand": "npm ci",
-  "outputDirectory": ".",
+  "outputDirectory": "public",
   "framework": null,
   "regions": ["iad1"],
   "headers": [
