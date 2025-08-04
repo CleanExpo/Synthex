@@ -1,0 +1,41 @@
+# Ignore Python files (not needed for Node.js deployment)
+*.py
+__pycache__/
+*.pyc
+
+# Ignore test files
+test-results/
+tests/
+*.test.ts
+*.spec.ts
+
+# Ignore development files
+.env
+.env.local
+.env.txt
+*.env
+
+# Ignore Git files
+.git/
+.gitignore
+
+# Ignore documentation files that aren't needed for deployment
+*.md
+!README.md
+
+# Ignore IDE files
+.vscode/
+.idea/
+
+# Ignore logs
+*.log
+logs/
+
+# Ignore temporary files
+tmp/
+temp/
+*.tmp
+
+# Ignore external directories
+synth-magic-studio/
+external/
