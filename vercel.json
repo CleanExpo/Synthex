@@ -8,26 +8,22 @@
       "maxDuration": 30
     }
   },
-  "routes": [
+  "rewrites": [
     {
-      "src": "/(.*\\.(html|css|js|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot))",
-      "dest": "/public/$1"
+      "source": "/api/(.*)",
+      "destination": "/api/vercel.js"
     },
     {
-      "src": "/api/(.*)",
-      "dest": "/api/vercel.js"
+      "source": "/auth/(.*)",
+      "destination": "/api/vercel.js"
     },
     {
-      "src": "/auth/(.*)",
-      "dest": "/api/vercel.js"
+      "source": "/health",
+      "destination": "/api/vercel.js"
     },
     {
-      "src": "/health",
-      "dest": "/api/vercel.js"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/api/vercel.js"
+      "source": "/(.*)",
+      "destination": "/api/vercel.js"
     }
   ],
   "buildCommand": "npm run vercel-build",
