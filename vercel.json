@@ -3,7 +3,7 @@
   "name": "synthex",
   "builds": [
     {
-      "src": "src/index.ts",
+      "src": "api/vercel.js",
       "use": "@vercel/node",
       "config": {
         "maxLambdaSize": "50mb"
@@ -33,39 +33,39 @@
     },
     {
       "src": "/api-docs",
-      "dest": "/src/index.ts"
+      "dest": "/api/vercel.js"
     },
     {
       "src": "/api-docs/(.*)",
-      "dest": "/src/index.ts"
+      "dest": "/api/vercel.js"
     },
     {
       "src": "/api/v1/(.*)",
-      "dest": "/src/index.ts"
+      "dest": "/api/vercel.js"
     },
     {
       "src": "/api/(.*)",
-      "dest": "/src/index.ts"
+      "dest": "/api/vercel.js"
     },
     {
       "src": "/auth/(.*)",
-      "dest": "/src/index.ts"
+      "dest": "/api/vercel.js"
     },
     {
       "src": "/health",
-      "dest": "/src/index.ts"
+      "dest": "/api/vercel.js"
     },
     {
       "src": "/app",
-      "dest": "/src/index.ts"
+      "dest": "/api/vercel.js"
     },
     {
       "src": "/classic",
-      "dest": "/src/index.ts"
+      "dest": "/api/vercel.js"
     },
     {
       "src": "/dashboard",
-      "dest": "/src/index.ts"
+      "dest": "/api/vercel.js"
     },
     {
       "src": "/reset-password.html",
@@ -73,23 +73,23 @@
     },
     {
       "src": "/",
-      "dest": "/src/index.ts"
+      "dest": "/api/vercel.js"
     },
     {
       "src": "/(.*)",
-      "dest": "/src/index.ts"
+      "dest": "/api/vercel.js"
     }
   ],
   "env": {
     "NODE_ENV": "production"
   },
-  "buildCommand": "npm install && npx prisma generate && npm run build",
+  "buildCommand": "npm install && npx prisma generate && npm run build:prod",
   "outputDirectory": "dist",
   "installCommand": "npm install",
   "framework": null,
   "regions": ["iad1"],
   "functions": {
-    "src/index.ts": {
+    "api/vercel.js": {
       "memory": 1024,
       "maxDuration": 30
     }
