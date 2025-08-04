@@ -3,295 +3,419 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SYNTHEX - Classic Dashboard</title>
+    <title>SYNTHEX - AI Marketing Platform</title>
     <link rel="icon" type="image/png" href="/logo.png">
+    
+    <!-- Inter Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <!-- Design System & Micro-interactions -->
+    <link rel="stylesheet" href="/css/synthex-design-system.css">
+    <link rel="stylesheet" href="/css/micro-interactions.css">
+    
+    <!-- Additional Styles for Enhanced UI -->
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        :root {
+            --gradient-primary: linear-gradient(135deg, #007AFF 0%, #5856D6 100%);
+            --gradient-secondary: linear-gradient(135deg, #34C759 0%, #007AFF 100%);
+            --gradient-accent: linear-gradient(135deg, #FF9500 0%, #FF3B30 100%);
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --backdrop-blur: 20px;
         }
         
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
+        /* Enhanced glassmorphism background */
+        .gradient-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--gradient-primary);
+            opacity: 0.1;
+            z-index: -2;
+            animation: gradientFlow 20s ease infinite;
         }
         
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
+        .gradient-bg::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle at 30% 20%, rgba(255, 149, 0, 0.2) 0%, transparent 50%),
+                        radial-gradient(circle at 70% 80%, rgba(52, 199, 89, 0.2) 0%, transparent 50%);
+            animation: pulseGlow 15s ease-in-out infinite alternate;
         }
         
-        header {
-            text-align: center;
-            color: white;
-            margin-bottom: 40px;
+        @keyframes gradientFlow {
+            0%, 100% { transform: rotate(0deg) scale(1); }
+            25% { transform: rotate(1deg) scale(1.05); }
+            50% { transform: rotate(0deg) scale(1.1); }
+            75% { transform: rotate(-1deg) scale(1.05); }
         }
         
-        h1 {
-            font-size: 2.5rem;
-            margin-bottom: 10px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        @keyframes pulseGlow {
+            0% { opacity: 0.3; }
+            100% { opacity: 0.6; }
         }
         
-        .tagline {
-            font-size: 1.2rem;
-            opacity: 0.95;
+        /* Enhanced glass surfaces */
+        .glass-surface {
+            background: var(--glass-bg);
+            backdrop-filter: blur(var(--backdrop-blur));
+            -webkit-backdrop-filter: blur(var(--backdrop-blur));
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-xl);
+            position: relative;
+            overflow: hidden;
         }
         
-        .status-bar {
-            background: white;
-            padding: 15px 20px;
-            border-radius: 10px;
-            margin-bottom: 30px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        .glass-surface::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
         }
         
-        .status-indicator {
-            display: flex;
-            align-items: center;
-            gap: 10px;
+        /* Status indicator with enhanced animation */
+        .status-enhanced {
+            position: relative;
+            overflow: hidden;
         }
         
-        .status-dot {
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            animation: pulse 2s infinite;
-        }
-        
-        .status-dot.online {
-            background: #10b981;
-        }
-        
-        .status-dot.offline {
-            background: #ef4444;
-        }
-        
-        @keyframes pulse {
-            0% { opacity: 1; }
-            50% { opacity: 0.5; }
-            100% { opacity: 1; }
-        }
-        
-        .tabs {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 30px;
-            flex-wrap: wrap;
-        }
-        
-        .tab {
-            background: white;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 1rem;
-            font-weight: 500;
-            transition: all 0.3s;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        
-        .tab:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
-        }
-        
-        .tab.active {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-        }
-        
-        .content-panel {
-            display: none;
-        }
-        
-        .content-panel.active {
-            display: block;
-        }
-        
-        .card {
-            background: white;
-            border-radius: 12px;
-            padding: 30px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
-        }
-        
-        .form-group {
-            margin-bottom: 20px;
-        }
-        
-        label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 500;
-            color: #374151;
-        }
-        
-        textarea, select, input {
+        .status-enhanced::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
             width: 100%;
-            padding: 12px;
-            border: 2px solid #e5e7eb;
-            border-radius: 8px;
-            font-size: 1rem;
-            transition: border-color 0.3s;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            animation: shimmer 3s infinite;
         }
         
-        textarea:focus, select:focus, input:focus {
-            outline: none;
-            border-color: #667eea;
+        @keyframes shimmer {
+            0% { left: -100%; }
+            100% { left: 100%; }
         }
         
-        textarea {
-            resize: vertical;
-            min-height: 100px;
+        /* Enhanced navigation tabs */
+        .nav-tabs-enhanced {
+            background: var(--glass-bg);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-lg);
+            padding: var(--space-2);
+            margin-bottom: var(--space-8);
+            box-shadow: var(--shadow-lg);
         }
         
-        .button-group {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-        
-        button {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
+        .nav-tab-enhanced {
+            position: relative;
+            background: transparent;
+            color: var(--color-text-inverse);
             border: none;
-            padding: 12px 24px;
-            border-radius: 8px;
-            font-size: 1rem;
-            font-weight: 500;
+            padding: var(--space-3) var(--space-5);
+            border-radius: var(--radius-md);
+            font-weight: var(--font-weight-medium);
+            transition: all var(--duration-moderate) var(--ease-standard);
             cursor: pointer;
-            transition: all 0.3s;
+            overflow: hidden;
         }
         
-        button:hover {
+        .nav-tab-enhanced::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.1);
+            opacity: 0;
+            transition: opacity var(--duration-quick) var(--ease-standard);
+        }
+        
+        .nav-tab-enhanced:hover::before {
+            opacity: 1;
+        }
+        
+        .nav-tab-enhanced.active {
+            background: rgba(255, 255, 255, 0.15);
+            color: var(--color-text-inverse);
+            box-shadow: var(--shadow-sm);
+            transform: translateY(-1px);
+        }
+        
+        .nav-tab-enhanced.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            width: 30px;
+            height: 2px;
+            background: var(--color-text-inverse);
+            border-radius: var(--radius-full);
+            transform: translateX(-50%);
+        }
+        
+        /* Enhanced form controls */
+        .form-control-enhanced {
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: var(--radius-md);
+            padding: var(--space-4);
+            font-family: var(--font-family-system);
+            font-size: var(--font-size-body);
+            color: var(--color-text-primary);
+            transition: all var(--duration-quick) var(--ease-standard);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+        
+        .form-control-enhanced:focus {
+            outline: none;
+            border-color: var(--color-primary);
+            box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.2);
+            background: rgba(255, 255, 255, 0.95);
+        }
+        
+        /* Enhanced buttons */
+        .btn-enhanced {
+            position: relative;
+            background: var(--gradient-primary);
+            color: var(--color-text-inverse);
+            border: none;
+            border-radius: var(--radius-md);
+            padding: var(--space-4) var(--space-6);
+            font-family: var(--font-family-system);
+            font-size: var(--font-size-body);
+            font-weight: var(--font-weight-medium);
+            cursor: pointer;
+            transition: all var(--duration-moderate) var(--ease-standard);
+            overflow: hidden;
+            box-shadow: var(--shadow-md);
+        }
+        
+        .btn-enhanced::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.2);
+            opacity: 0;
+            transition: opacity var(--duration-quick) var(--ease-standard);
+        }
+        
+        .btn-enhanced:hover {
             transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+            box-shadow: var(--shadow-xl);
         }
         
-        button:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
+        .btn-enhanced:hover::before {
+            opacity: 1;
         }
         
-        .output-section {
-            margin-top: 30px;
+        .btn-enhanced:active {
+            transform: translateY(0);
         }
         
-        .output-card {
-            background: #f9fafb;
-            border: 2px solid #e5e7eb;
-            border-radius: 8px;
-            padding: 20px;
-            max-height: 500px;
-            overflow-y: auto;
+        /* Enhanced output area */
+        .output-enhanced {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: var(--radius-lg);
+            padding: var(--space-6);
+            box-shadow: var(--shadow-lg);
+            position: relative;
         }
         
-        .output-content {
-            white-space: pre-wrap;
-            font-family: 'Courier New', monospace;
-            font-size: 0.95rem;
-            line-height: 1.6;
+        .output-enhanced::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(0, 122, 255, 0.3), transparent);
         }
         
-        .loading {
-            display: none;
+        /* Loading state enhancements */
+        .loading-enhanced {
+            background: var(--glass-bg);
+            backdrop-filter: blur(var(--backdrop-blur));
+            -webkit-backdrop-filter: blur(var(--backdrop-blur));
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-xl);
+            padding: var(--space-12);
             text-align: center;
-            padding: 20px;
+            color: var(--color-text-inverse);
         }
         
-        .loading.active {
-            display: block;
-        }
-        
-        .spinner {
-            border: 3px solid #e5e7eb;
-            border-top: 3px solid #667eea;
-            border-radius: 50%;
+        .spinner-enhanced {
             width: 40px;
             height: 40px;
+            border: 3px solid rgba(255, 255, 255, 0.2);
+            border-top: 3px solid var(--color-text-inverse);
+            border-radius: var(--radius-full);
             animation: spin 1s linear infinite;
-            margin: 0 auto;
+            margin: 0 auto var(--space-4);
         }
         
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        
-        .examples {
-            background: #f3f4f6;
-            border-left: 4px solid #667eea;
-            padding: 15px;
-            margin-top: 15px;
-            border-radius: 4px;
-        }
-        
-        .examples h4 {
-            color: #667eea;
-            margin-bottom: 10px;
-        }
-        
-        .example-item {
-            padding: 8px 0;
+        /* Quick templates enhancement */
+        .template-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-lg);
+            padding: var(--space-5);
             cursor: pointer;
-            transition: color 0.3s;
+            transition: all var(--duration-moderate) var(--ease-standard);
+            position: relative;
+            overflow: hidden;
         }
         
-        .example-item:hover {
-            color: #667eea;
+        .template-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.05);
+            opacity: 0;
+            transition: opacity var(--duration-quick) var(--ease-standard);
         }
         
-        .goal-checkboxes {
-            display: flex;
-            gap: 15px;
-            flex-wrap: wrap;
+        .template-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-xl);
         }
         
-        .checkbox-item {
+        .template-card:hover::before {
+            opacity: 1;
+        }
+        
+        .template-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: var(--radius-md);
+            background: var(--gradient-secondary);
             display: flex;
             align-items: center;
-            gap: 5px;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin-bottom: var(--space-3);
         }
         
-        .checkbox-item input[type="checkbox"] {
-            width: auto;
+        /* Mobile optimizations */
+        @media (max-width: 768px) {
+            .nav-tabs-enhanced {
+                padding: var(--space-1);
+                overflow-x: auto;
+                scrollbar-width: none;
+                -ms-overflow-style: none;
+            }
+            
+            .nav-tabs-enhanced::-webkit-scrollbar {
+                display: none;
+            }
+            
+            .nav-tab-enhanced {
+                padding: var(--space-3) var(--space-4);
+                white-space: nowrap;
+            }
+        }
+        
+        /* Accessibility enhancements */
+        @media (prefers-reduced-motion: reduce) {
+            .gradient-bg,
+            .gradient-bg::before,
+            .status-enhanced::after {
+                animation: none;
+            }
+        }
+        
+        /* High contrast mode */
+        @media (prefers-contrast: high) {
+            .glass-surface,
+            .nav-tabs-enhanced,
+            .template-card {
+                border-color: currentColor;
+                background: rgba(0, 0, 0, 0.8);
+            }
         }
     </style>
 </head>
 <body>
+    <!-- Animated gradient background -->
+    <div class="gradient-bg"></div>
+    
     <div class="container">
-        <header>
-            <div style="display: flex; align-items: center; justify-content: center; gap: 1rem; margin-bottom: 0.5rem;">
-                <img src="/logo.png" alt="SYNTHEX Logo" style="height: 50px; width: auto;">
-                <h1 style="margin: 0;">SYNTHEX Platform</h1>
+        <!-- Modern Header -->
+        <header class="text-center mb-8">
+            <div class="flex items-center justify-center gap-4 mb-3">
+                <div class="template-icon">
+                    <img src="/logo.png" alt="SYNTHEX Logo" style="height: 32px; width: auto;">
+                </div>
+                <h1 class="text-title-1 text-inverse" style="margin: 0;">SYNTHEX Platform</h1>
             </div>
-            <p class="tagline">AI-Powered Marketing Content Generation & Optimization</p>
+            <p class="text-headline text-inverse" style="opacity: 0.9;">AI-Powered Marketing Content Generation & Optimization</p>
         </header>
         
-        <div class="status-bar">
-            <div class="status-indicator">
-                <span class="status-dot" id="statusDot"></span>
-                <span>Server Status: <strong id="statusText">Checking...</strong></span>
-            </div>
-            <div>
-                <span id="modelInfo">Model: OpenRouter Horizon Beta</span>
+        <!-- Enhanced Status Bar -->
+        <div class="glass-surface status-enhanced p-6 mb-8">
+            <div class="flex justify-between items-center text-inverse">
+                <div class="flex items-center gap-3">
+                    <div class="status-indicator status-online">
+                        <div class="status-dot"></div>
+                        <span class="text-callout font-medium">Server Status: <strong id="statusText">Checking...</strong></span>
+                    </div>
+                </div>
+                <div class="text-callout" style="opacity: 0.8;">
+                    <span id="modelInfo">Model: OpenRouter Horizon Beta</span>
+                </div>
             </div>
         </div>
         
-        <div class="tabs">
-            <button class="tab active" onclick="switchTab('generate')">Generate Content</button>
-            <button class="tab" onclick="switchTab('optimize')">Optimize Content</button>
-            <button class="tab" onclick="switchTab('variations')">Create Variations</button>
-            <button class="tab" onclick="switchTab('test')">Test Connection</button>
+        <!-- Enhanced Navigation Tabs -->
+        <div class="nav-tabs-enhanced flex gap-2">
+            <button class="nav-tab-enhanced active flex-1" onclick="switchTab('generate')">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                </svg>
+                Generate Content
+            </button>
+            <button class="nav-tab-enhanced flex-1" onclick="switchTab('optimize')">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                </svg>
+                Optimize
+            </button>
+            <button class="nav-tab-enhanced flex-1" onclick="switchTab('variations')">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path>
+                </svg>
+                Variations
+            </button>
+            <button class="nav-tab-enhanced flex-1" onclick="switchTab('test')">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                Test
+            </button>
         </div>
         
         <!-- Generate Content Panel -->
@@ -674,6 +798,7 @@
         checkStatus();
         setInterval(checkStatus, 30000); // Check status every 30 seconds
     </script>
+    <script src="/js/interactions.js"></script>
     <script src="/js/breadcrumb.js"></script>
     <script src="/js/ui-helpers.js"></script>
     <script src="/js/footer.js"></script>

@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SYNTHEX - User Dashboard</title>
     <link rel="icon" type="image/png" href="/logo.png">
+    <link rel="stylesheet" href="/css/micro-interactions.css">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
@@ -300,7 +301,7 @@
             
             <div class="dashboard-grid">
                 <!-- API Configuration -->
-                <div class="card">
+                <div class="card card-interactive">
                     <h3>🔑 API Keys Setup</h3>
                     <p style="color: rgba(255,255,255,0.7); margin-bottom: 20px;">
                         To use SYNTHEX, you need your own API keys. This keeps costs low and gives you full control.
@@ -347,7 +348,7 @@
                                 Direct access to Claude models (better rates)
                             </small>
                         </div>
-                        <button type="submit" class="btn">🔐 Save API Keys Securely</button>
+                        <button type="submit" class="btn btn-magnetic btn-ripple hover-lift">🔐 Save API Keys Securely</button>
                     </form>
                     
                     <!-- Cost Information -->
@@ -363,7 +364,7 @@
                 </div>
                 
                 <!-- Usage Statistics -->
-                <div class="card">
+                <div class="card card-interactive">
                     <h3>📊 Usage Statistics</h3>
                     <div class="usage-stats" id="usage-stats">
                         <div class="stat-item">
@@ -386,14 +387,14 @@
                 </div>
                 
                 <!-- Quick Actions -->
-                <div class="card">
+                <div class="card card-interactive">
                     <h3>⚡ Quick Actions</h3>
                     <div style="display: flex; flex-direction: column; gap: 10px;">
-                        <button class="btn" onclick="window.open('/app', '_blank')">🎨 Launch Content Studio</button>
-                        <button class="btn" onclick="window.open('/classic', '_blank')">📊 Analytics Dashboard</button>
-                        <button class="btn" onclick="testConnection()">🔧 Test API Connection</button>
-                        <button class="btn" onclick="refreshData()">🔄 Refresh Data</button>
-                        <button class="btn" onclick="window.open('/', '_blank')" style="background: linear-gradient(45deg, #11998e, #38ef7d);">
+                        <button class="btn btn-magnetic btn-ripple hover-lift" onclick="window.open('/app', '_blank')">🎨 Launch Content Studio</button>
+                        <button class="btn btn-magnetic btn-ripple hover-lift" onclick="window.open('/classic', '_blank')">📊 Analytics Dashboard</button>
+                        <button class="btn btn-magnetic btn-ripple hover-lift" onclick="testConnection()">🔧 Test API Connection</button>
+                        <button class="btn btn-magnetic btn-ripple hover-lift" onclick="refreshData()">🔄 Refresh Data</button>
+                        <button class="btn btn-magnetic btn-ripple hover-lift" onclick="window.open('/', '_blank')" style="background: linear-gradient(45deg, #11998e, #38ef7d);">
                             🚀 Back to Landing Page
                         </button>
                     </div>
@@ -699,6 +700,7 @@
             window.location.href = '/auth/google';
         }
     </script>
+    <script src="/js/interactions.js"></script>
     <script src="/js/breadcrumb.js"></script>
     <script src="/js/ui-helpers.js"></script>
     <script src="/js/footer.js"></script>
