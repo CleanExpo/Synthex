@@ -1,0 +1,37 @@
+name: Deploy to Vercel
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:  # Allows manual trigger from GitHub Actions tab
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    name: Deploy to Vercel Production
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Trigger Vercel Deployment
+        run: |
+          echo "Triggering Vercel deployment..."
+          response=$(curl -X POST "${{ secrets.VERCEL_DEPLOY_HOOK }}" -w "\n%{http_code}")
+          http_code=$(echo "$response" | tail -n 1)
+          
+          if [ "$http_code" = "200" ] || [ "$http_code" = "201" ]; then
+            echo "✅ Deployment triggered successfully!"
+            echo "Check deployment status at: https://vercel.com/dashboard/synthex"
+          else
+            echo "❌ Deployment failed with HTTP status: $http_code"
+            echo "Response: $response"
+            exit 1
+          fi
+
+      - name: Wait for deployment
+        run: |
+          echo "Waiting 30 seconds for deployment to start..."
+          sleep 30
+          echo "Deployment should now be in progress."
+          echo "Monitor at: https://vercel.com/dashboard/synthex"
