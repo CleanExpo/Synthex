@@ -225,4 +225,79 @@ router.post('/logout', authenticateToken, async (req: AuthenticatedRequest, res:
   }
 });
 
+// Password Reset Routes
+router.post('/reset-password/request', async (req: Request, res: Response) => {
+  try {
+    const { email } = req.body;
+    
+    if (!email) {
+      return res.status(400).json({ error: 'Email is required' });
+    }
+    
+    // Check if user exists
+    const user = await authService.findUserByEmail(email);
+    if (!user) {
+      // Don't reveal if email exists for security
+      return res.json({ message: 'If the email exists, a reset code will be sent' });
+    }
+    
+    // Generate and save reset code
+    const { code } = await authService.generateResetCode(email);
+    
+    // Send email (in production)
+    await authService.sendPasswordResetEmail(email, code);
+    
+    res.json({ message: 'Reset code sent to email' });
+  } catch (error) {
+    console.error('Password reset request error:', error);
+    res.status(500).json({ error: 'Failed to process reset request' });
+  }
+});
+
+router.post('/reset-password/verify', async (req: Request, res: Response) => {
+  try {
+    const { email, code } = req.body;
+    
+    if (!email || !code) {
+      return res.status(400).json({ error: 'Email and code are required' });
+    }
+    
+    const token = await authService.verifyResetCode(email, code);
+    
+    if (!token) {
+      return res.status(400).json({ error: 'Invalid or expired code' });
+    }
+    
+    res.json({ token });
+  } catch (error) {
+    console.error('Code verification error:', error);
+    res.status(500).json({ error: 'Failed to verify code' });
+  }
+});
+
+router.post('/reset-password/reset', async (req: Request, res: Response) => {
+  try {
+    const { token, password } = req.body;
+    
+    if (!token || !password) {
+      return res.status(400).json({ error: 'Token and password are required' });
+    }
+    
+    if (password.length < 8) {
+      return res.status(400).json({ error: 'Password must be at least 8 characters' });
+    }
+    
+    const success = await authService.resetPasswordWithToken(token, password);
+    
+    if (!success) {
+      return res.status(400).json({ error: 'Invalid or expired token' });
+    }
+    
+    res.json({ message: 'Password reset successfully' });
+  } catch (error) {
+    console.error('Password reset error:', error);
+    res.status(500).json({ error: 'Failed to reset password' });
+  }
+});
+
 export default router;
