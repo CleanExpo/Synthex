@@ -55,20 +55,30 @@ export interface OpenRouterOptions {
 }
 
 export class OpenRouterService {
-  private client: OpenAI;
+  private defaultClient: OpenAI;
   private defaultModel: string;
   private siteUrl: string;
   private siteName: string;
 
   constructor() {
-    this.client = openrouter;
+    this.defaultClient = openrouter;
     this.defaultModel = OPENROUTER_MODELS.HORIZON_BETA;
     this.siteUrl = process.env.OPENROUTER_SITE_URL || 'http://localhost:3000';
     this.siteName = process.env.OPENROUTER_SITE_NAME || 'Auto Marketing Agent';
   }
 
   /**
-   * Check if OpenRouter is properly configured
+   * Create a client instance with user-specific API key
+   */
+  private createUserClient(apiKey: string): OpenAI {
+    return new OpenAI({
+      baseURL: process.env.OPENROUTER_BASE_URL || 'https://openrouter.ai/api/v1',
+      apiKey: apiKey,
+    });
+  }
+
+  /**
+   * Check if OpenRouter is properly configured (system-wide)
    */
   isConfigured(): boolean {
     return !!process.env.OPENROUTER_API_KEY && 
@@ -76,18 +86,32 @@ export class OpenRouterService {
   }
 
   /**
-   * Send a chat completion request to OpenRouter
+   * Check if user has configured their own API key
+   */
+  isUserConfigured(apiKey?: string): boolean {
+    return !!apiKey && apiKey.length > 0;
+  }
+
+  /**
+   * Send a chat completion request to OpenRouter with user or system API key
    */
   async chat(
     messages: OpenRouterMessage[],
-    options: OpenRouterOptions = {}
+    options: OpenRouterOptions = {},
+    userApiKey?: string
   ): Promise<OpenRouterResponse> {
-    if (!this.isConfigured()) {
-      throw new Error('OpenRouter API key not configured. Please set OPENROUTER_API_KEY in your .env file.');
+    let client: OpenAI;
+    
+    if (userApiKey && this.isUserConfigured(userApiKey)) {
+      client = this.createUserClient(userApiKey);
+    } else if (this.isConfigured()) {
+      client = this.defaultClient;
+    } else {
+      throw new Error('OpenRouter API key not configured. Please add your API key in your account settings.');
     }
 
     try {
-      const response = await this.client.chat.completions.create({
+      const response = await client.chat.completions.create({
         model: options.model || this.defaultModel,
         messages,
         temperature: options.temperature || 0.7,
@@ -115,7 +139,8 @@ export class OpenRouterService {
   async generateMarketingContent(
     prompt: string,
     contentType: 'social_post' | 'email' | 'blog' | 'ad_copy' | 'general' = 'general',
-    options: OpenRouterOptions = {}
+    options: OpenRouterOptions = {},
+    userApiKey?: string
   ): Promise<string> {
     const systemPrompts = {
       social_post: 'You are a social media marketing expert. Create engaging, concise social media posts that drive engagement and conversions.',
@@ -139,7 +164,7 @@ export class OpenRouterService {
     const response = await this.chat(messages, {
       ...options,
       model: options.model || OPENROUTER_MODELS.HORIZON_BETA,
-    });
+    }, userApiKey);
 
     return response.choices[0]?.message?.content || 'No response generated';
   }
@@ -150,7 +175,8 @@ export class OpenRouterService {
   async optimizeContent(
     content: string,
     platform: string = 'general',
-    goals: string[] = ['engagement', 'conversions']
+    goals: string[] = ['engagement', 'conversions'],
+    userApiKey?: string
   ): Promise<{
     analysis: string;
     optimizedContent: string;
@@ -191,7 +217,7 @@ Format your response as a valid JSON object with exactly these keys:
     const response = await this.chat(messages, {
       model: OPENROUTER_MODELS.HORIZON_BETA,
       temperature: 0.3, // Lower temperature for analysis
-    });
+    }, userApiKey);
 
     const rawContent = response.choices[0]?.message?.content || '';
     
@@ -314,7 +340,8 @@ Format your response as a valid JSON object with exactly these keys:
   async generateVariations(
     prompt: string,
     count: number = 3,
-    contentType: 'social_post' | 'email' | 'blog' | 'ad_copy' = 'social_post'
+    contentType: 'social_post' | 'email' | 'blog' | 'ad_copy' = 'social_post',
+    userApiKey?: string
   ): Promise<string[]> {
     const variations: string[] = [];
 
@@ -323,7 +350,8 @@ Format your response as a valid JSON object with exactly these keys:
         const content = await this.generateMarketingContent(
           `${prompt} (Variation ${i + 1} - make it unique and creative)`,
           contentType,
-          { temperature: 0.8 + (i * 0.1) } // Increase randomness for each variation
+          { temperature: 0.8 + (i * 0.1) }, // Increase randomness for each variation
+          userApiKey
         );
         variations.push(content);
       } catch (error) {

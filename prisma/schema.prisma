@@ -1,0 +1,125 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  directUrl = env("POSTGRES_URL_NON_POOLING") // for migrations on Vercel
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // API Keys (encrypted)
+  openrouterApiKey String?
+  anthropicApiKey  String?
+  
+  // User settings
+  preferences      Json?
+  
+  // Relations
+  campaigns        Campaign[]
+  projects         Project[]
+  apiUsage         ApiUsage[]
+  
+  @@map("users")
+}
+
+model Campaign {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  platform    String   // 'instagram', 'twitter', 'linkedin', etc.
+  status      String   @default("draft") // 'draft', 'active', 'paused', 'completed'
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Campaign data
+  content     Json?    // Generated content, variations, etc.
+  analytics   Json?    // Performance metrics
+  settings    Json?    // Platform-specific settings
+  
+  // Relations
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  posts       Post[]
+  
+  @@map("campaigns")
+}
+
+model Post {
+  id         String   @id @default(cuid())
+  content    String
+  platform   String
+  status     String   @default("draft") // 'draft', 'scheduled', 'published', 'failed'
+  scheduledAt DateTime?
+  publishedAt DateTime?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  
+  // Post data
+  metadata   Json?    // Images, hashtags, mentions, etc.
+  analytics  Json?    // Engagement metrics
+  
+  // Relations
+  campaignId String
+  campaign   Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  
+  @@map("posts")
+}
+
+model Project {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  type        String   // 'marketing', 'content', 'analytics'
+  data        Json?    // Project configuration and data
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("projects")
+}
+
+model ApiUsage {
+  id        String   @id @default(cuid())
+  endpoint  String
+  model     String?  // AI model used
+  tokens    Int?     // Tokens consumed
+  cost      Float?   // Cost in USD
+  status    String   // 'success', 'error', 'rate_limited'
+  createdAt DateTime @default(now())
+  
+  // Request/Response data
+  requestData  Json?
+  responseData Json?
+  errorMessage String?
+  
+  // Relations
+  userId    String
+  user      User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("api_usage")
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  
+  @@map("sessions")
+}
