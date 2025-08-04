@@ -101,8 +101,13 @@ app.get('/health', (req: Request, res: Response) => {
   });
 });
 
-// Main endpoint - redirect to modern UI
+// Main endpoint - new landing page
 app.get('/', (req: Request, res: Response) => {
+  res.sendFile('index-new.html', { root: path.join(__dirname, '..', 'public') });
+});
+
+// Modern UI endpoint (old main page)
+app.get('/app', (req: Request, res: Response) => {
   res.sendFile('app.html', { root: path.join(__dirname, '..', 'public') });
 });
 
@@ -125,7 +130,8 @@ app.get('/api-info', (req: Request, res: Response) => {
     endpoints: {
       health: '/health',
       api: '/api',
-      modernUI: '/',
+      landingPage: '/',
+      modernUI: '/app',
       classicUI: '/classic',
       dashboard: '/dashboard'
     }
