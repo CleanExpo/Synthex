@@ -5,6 +5,8 @@
 ![SYNTHEX Banner](https://img.shields.io/badge/SYNTHEX-Marketing_Automation-blue?style=for-the-badge&logo=robot&logoColor=white)
 
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/CleanExpo/Synthex)
+[![Deploy Status](https://github.com/CleanExpo/Synthex/actions/workflows/deploy.yml/badge.svg)](https://github.com/CleanExpo/Synthex/actions/workflows/deploy.yml)
+[![CI/CD](https://github.com/CleanExpo/Synthex/actions/workflows/ci.yml/badge.svg)](https://github.com/CleanExpo/Synthex/actions/workflows/ci.yml)
 [![GitHub Stars](https://img.shields.io/github/stars/CleanExpo/Synthex?style=social)](https://github.com/CleanExpo/Synthex)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Node Version](https://img.shields.io/badge/node-%3E%3D16.0.0-green)](https://nodejs.org)
@@ -12,7 +14,7 @@
 
 **Transform Your Marketing with AI-Driven Automation**
 
-[Live Demo](https://synthex.vercel.app) | [Documentation](./docs) | [API Reference](#-api-reference) | [Quick Start](#-quick-start)
+[Live Demo](https://synthex-h4j7.vercel.app) | [Documentation](./docs) | [API Reference](#-api-reference) | [Quick Start](#-quick-start)
 
 </div>
 
@@ -127,14 +129,20 @@ cd Synthex
 npm install
 
 # Set up environment variables
-cp .env.example .env
+cp env-example.txt .env
 # Edit .env and add your API keys
+
+# Generate Prisma client
+npx prisma generate
 
 # Build the project
 npm run build
 
 # Start development server
 npm run dev
+
+# Or start production server
+npm run start:prod
 ```
 
 ### 🔑 Environment Setup
@@ -145,6 +153,18 @@ Create a `.env` file with your API keys:
 # Required API Keys
 ANTHROPIC_API_KEY=your_anthropic_api_key_here
 OPENROUTER_API_KEY=your_openrouter_api_key_here
+
+# Database Configuration
+DATABASE_URL=postgresql://user:password@localhost:5432/synthex
+POSTGRES_URL_NON_POOLING=postgresql://user:password@localhost:5432/synthex
+
+# Authentication
+JWT_SECRET=your_jwt_secret_here
+
+# Google OAuth (Optional)
+GOOGLE_CLIENT_ID=your_google_client_id
+GOOGLE_CLIENT_SECRET=your_google_client_secret
+GOOGLE_CALLBACK_URL=http://localhost:3000/auth/google/callback
 
 # Server Configuration
 NODE_ENV=development
@@ -325,6 +345,12 @@ Run comprehensive test suites:
 # Run all tests
 npm test
 
+# Type checking
+npm run typecheck
+
+# Linting
+npm run lint
+
 # Test specific features
 node test-openrouter.js     # AI integration tests
 node test-mcp-ttd.js        # MCP & TTD tests
@@ -333,9 +359,25 @@ node test-research.js       # Analytics tests
 
 # Run with coverage
 npm run test:coverage
+
+# Playwright E2E tests
+npx playwright test
 ```
 
 ## 🚀 Deployment
+
+### Automatic CI/CD Pipeline
+
+This project features a fully automated CI/CD pipeline with GitHub Actions:
+
+- **Automatic Deployment**: Every push to `main` branch triggers automatic deployment
+- **CI/CD Pipeline**: Tests, linting, and type checking before deployment
+- **Manual Trigger**: Deploy manually from GitHub Actions tab
+- **Zero Downtime**: Seamless deployments with Vercel's infrastructure
+
+#### Current Deployment Status
+[![Deploy Status](https://github.com/CleanExpo/Synthex/actions/workflows/deploy.yml/badge.svg)](https://github.com/CleanExpo/Synthex/actions/workflows/deploy.yml)
+[![CI/CD](https://github.com/CleanExpo/Synthex/actions/workflows/ci.yml/badge.svg)](https://github.com/CleanExpo/Synthex/actions/workflows/ci.yml)
 
 ### One-Click Deploy to Vercel
 
@@ -345,16 +387,23 @@ npm run test:coverage
 
 ```bash
 # Build for production
-npm run build
+npm run build:prod
 
 # Deploy with Vercel CLI
 npm i -g vercel
 vercel --prod
 
-# Or deploy with Docker
-docker build -t synthex .
-docker run -p 3000:3000 synthex
+# Or trigger deployment via webhook
+./trigger-deploy.ps1  # Windows
+./trigger-deploy.sh   # Mac/Linux
 ```
+
+### GitHub Actions Workflows
+
+The project includes two automated workflows:
+
+1. **Deploy Workflow** (`deploy.yml`): Triggers Vercel deployment on push to main
+2. **CI/CD Workflow** (`ci.yml`): Runs tests, linting, and builds before deployment
 
 ### Required Environment Variables
 
@@ -364,8 +413,21 @@ Configure these in your deployment platform:
 |----------|-------------|----------|
 | `ANTHROPIC_API_KEY` | Anthropic API key | ✅ |
 | `OPENROUTER_API_KEY` | OpenRouter API key | ✅ |
+| `DATABASE_URL` | PostgreSQL connection string | ✅ |
+| `JWT_SECRET` | JWT secret for authentication | ✅ |
+| `GOOGLE_CLIENT_ID` | Google OAuth client ID | ❌ |
+| `GOOGLE_CLIENT_SECRET` | Google OAuth secret | ❌ |
 | `NODE_ENV` | Set to `production` | ✅ |
 | `PORT` | Server port (default: 3000) | ❌ |
+
+### Deployment Scripts
+
+| Script | Description |
+|--------|-------------|
+| `npm run build:prod` | Build for production |
+| `npm run deploy:prod` | Run tests and deploy to production |
+| `./trigger-deploy.ps1` | Trigger Vercel deployment (Windows) |
+| `./check-deployment-status.ps1` | Check deployment status (Windows) |
 
 ## 📊 Performance Metrics
 
@@ -454,6 +516,10 @@ MCP_MEMORY_RETENTION=0.95
 - ✅ MLE Star framework
 - ✅ TTD RD methodology
 - ✅ Real-time analytics
+- ✅ Automatic CI/CD with GitHub Actions
+- ✅ Vercel deployment integration
+- ✅ OpenRouter multi-model support
+- ✅ Prisma ORM integration
 
 ### Coming Soon (v1.1.0)
 - 🔄 Advanced A/B testing
@@ -464,7 +530,7 @@ MCP_MEMORY_RETENTION=0.95
 
 ### Future (v2.0.0)
 - 📅 Voice content optimization
-- 📅 Video generation
+- 📅 Video generation with Veo3
 - 📅 Blockchain verification
 - 📅 Custom ML models
 - 📅 White-label solution
