@@ -1,55 +1,28 @@
 {
   "version": 2,
   "name": "synthex",
-  "builds": [
-    {
-      "src": "dist/index.js",
-      "use": "@vercel/node",
-      "config": {
-        "includeFiles": [
-          "dist/**",
-          "public/**"
-        ]
-      }
-    }
-  ],
-  "routes": [
-    {
-      "src": "/api/(.*)",
-      "dest": "/dist/index.js",
-      "headers": {
-        "Cache-Control": "s-maxage=0"
-      }
-    },
-    {
-      "src": "/health",
-      "dest": "/dist/index.js",
-      "headers": {
-        "Cache-Control": "no-cache"
-      }
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/public/$1",
-      "headers": {
-        "Cache-Control": "s-maxage=31536000, immutable"
-      }
-    }
-  ],
-  "buildCommand": "npm run build:prod",
+  "buildCommand": "npm run build",
   "outputDirectory": ".",
-  "installCommand": "npm ci --production=false",
+  "installCommand": "npm install",
   "framework": null,
-  "functions": {
-    "dist/index.js": {
-      "maxDuration": 30,
-      "memory": 1024,
-      "runtime": "nodejs18.x"
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "/api"
+    },
+    {
+      "source": "/health",
+      "destination": "/api"
+    },
+    {
+      "source": "/",
+      "destination": "/public/app.html"
+    },
+    {
+      "source": "/classic",
+      "destination": "/public/index.html"
     }
-  },
-  "regions": ["iad1"],
-  "trailingSlash": false,
-  "cleanUrls": true,
+  ],
   "headers": [
     {
       "source": "/api/(.*)",
@@ -65,18 +38,21 @@
         {
           "key": "X-XSS-Protection",
           "value": "1; mode=block"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "no-store"
         }
       ]
-    }
-  ],
-  "rewrites": [
-    {
-      "source": "/",
-      "destination": "/public/app.html"
     },
     {
-      "source": "/classic",
-      "destination": "/public/index.html"
+      "source": "/public/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
     }
   ]
 }
