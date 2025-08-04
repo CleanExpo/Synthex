@@ -28,6 +28,8 @@ ENV/
 # Environment Variables
 .env
 .env.local
+.env.txt
+*.env
 
 # IDE
 .vscode/
@@ -56,5 +58,9 @@ external/
 # Cache
 .cache/
 .pytest_cache/
+
+# Test Results
+test-results/
+playwright-report/
 EOF < /dev/null
 node_modules/
