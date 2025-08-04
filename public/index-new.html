@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SYNTHEX - AI-Powered Marketing Mastery Platform</title>
     <meta name="description" content="Transform your marketing with AI-powered content generation, platform optimization, and real-time analytics. Get started free.">
+    <link rel="icon" type="image/png" href="/logo.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -100,8 +101,21 @@
         }
 
         .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
             font-size: 1.8rem;
             font-weight: 800;
+            color: white;
+        }
+
+        .logo img {
+            height: 40px;
+            width: auto;
+            filter: brightness(1.1);
+        }
+
+        .logo-text {
             background: var(--primary-gradient);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
@@ -645,7 +659,10 @@
     <!-- Header -->
     <header class="header" id="header">
         <nav class="nav">
-            <div class="logo">SYNTHEX</div>
+            <div class="logo">
+                <img src="/logo.png" alt="SYNTHEX Logo">
+                <span class="logo-text">SYNTHEX</span>
+            </div>
             <ul class="nav-links">
                 <li><a href="#features">Features</a></li>
                 <li><a href="#pricing">Pricing</a></li>
