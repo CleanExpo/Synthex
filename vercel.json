@@ -3,10 +3,11 @@
   "version": 2,
   "builds": [
     {
-      "src": "api/vercel.js",
+      "src": "api/synthex.js",
       "use": "@vercel/node",
       "config": {
-        "maxLambdaSize": "50mb"
+        "maxLambdaSize": "50mb",
+        "includeFiles": ["dist/**", ".env"]
       }
     },
     {
@@ -21,23 +22,23 @@
     },
     {
       "src": "/api-docs/(.*)",
-      "dest": "/api/vercel.js"
+      "dest": "/api/synthex.js"
     },
     {
       "src": "/api/(.*)",
-      "dest": "/api/vercel.js"
+      "dest": "/api/synthex.js"
     },
     {
       "src": "/auth/(.*)",
-      "dest": "/api/vercel.js"
+      "dest": "/api/synthex.js"
     },
     {
       "src": "/health",
-      "dest": "/api/vercel.js"
+      "dest": "/api/synthex.js"
     },
     {
       "src": "/(.*)",
-      "dest": "/api/vercel.js"
+      "dest": "/api/synthex.js"
     }
   ],
   "env": {
@@ -57,7 +58,7 @@
   "framework": null,
   "regions": ["iad1"],
   "functions": {
-    "api/vercel.js": {
+    "api/synthex.js": {
       "memory": 1024,
       "maxDuration": 30
     }
