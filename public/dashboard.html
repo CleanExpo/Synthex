@@ -294,32 +294,65 @@
             <div class="dashboard-grid">
                 <!-- API Configuration -->
                 <div class="card">
-                    <h3>🔑 API Configuration</h3>
+                    <h3>🔑 API Keys Setup</h3>
+                    <p style="color: rgba(255,255,255,0.7); margin-bottom: 20px;">
+                        To use SYNTHEX, you need your own API keys. This keeps costs low and gives you full control.
+                    </p>
+                    
                     <div class="alert" id="api-alert"></div>
                     
+                    <!-- API Key Status -->
                     <div class="form-group">
                         <label>OpenRouter API Key Status:</label>
                         <span id="openrouter-status" class="status-indicator status-not-configured">Not Configured</span>
                         <div id="openrouter-masked" class="masked-key" style="display: none; margin-top: 10px;"></div>
+                        <div style="margin-top: 10px;">
+                            <a href="https://openrouter.ai/" target="_blank" style="color: #667eea; text-decoration: none;">
+                                📝 Get OpenRouter API Key (Free $5 credit) →
+                            </a>
+                        </div>
                     </div>
                     
                     <div class="form-group">
                         <label>Anthropic API Key Status:</label>
                         <span id="anthropic-status" class="status-indicator status-not-configured">Not Configured</span>
                         <div id="anthropic-masked" class="masked-key" style="display: none; margin-top: 10px;"></div>
+                        <div style="margin-top: 10px;">
+                            <a href="https://console.anthropic.com/" target="_blank" style="color: #667eea; text-decoration: none;">
+                                📝 Get Anthropic API Key ($5 free credit) →
+                            </a>
+                        </div>
                     </div>
                     
+                    <!-- API Key Input Form -->
                     <form onsubmit="updateApiKeys(event)">
                         <div class="form-group">
                             <label for="openrouter-key">OpenRouter API Key:</label>
-                            <input type="password" id="openrouter-key" placeholder="sk-or-v1-...">
+                            <input type="password" id="openrouter-key" placeholder="sk-or-v1-..." style="font-family: monospace;">
+                            <small style="color: rgba(255,255,255,0.6); margin-top: 5px; display: block;">
+                                Access 50+ AI models including GPT-4, Claude, Gemini
+                            </small>
                         </div>
                         <div class="form-group">
-                            <label for="anthropic-key">Anthropic API Key:</label>
-                            <input type="password" id="anthropic-key" placeholder="sk-ant-api...">
+                            <label for="anthropic-key">Anthropic API Key (Optional):</label>
+                            <input type="password" id="anthropic-key" placeholder="sk-ant-api..." style="font-family: monospace;">
+                            <small style="color: rgba(255,255,255,0.6); margin-top: 5px; display: block;">
+                                Direct access to Claude models (better rates)
+                            </small>
                         </div>
-                        <button type="submit" class="btn">Update API Keys</button>
+                        <button type="submit" class="btn">🔐 Save API Keys Securely</button>
                     </form>
+                    
+                    <!-- Cost Information -->
+                    <div style="margin-top: 20px; padding: 15px; background: rgba(255,255,255,0.05); border-radius: 8px;">
+                        <h4 style="margin-bottom: 10px;">💰 Typical Costs:</h4>
+                        <ul style="color: rgba(255,255,255,0.7); font-size: 0.9rem; margin-left: 20px;">
+                            <li>Social posts: $0.001 - $0.005 each</li>
+                            <li>Blog articles: $0.01 - $0.05 each</li>
+                            <li>Content optimization: $0.002 - $0.01 each</li>
+                            <li>Monthly usage: Typically $1-10 for most users</li>
+                        </ul>
+                    </div>
                 </div>
                 
                 <!-- Usage Statistics -->
@@ -349,10 +382,13 @@
                 <div class="card">
                     <h3>⚡ Quick Actions</h3>
                     <div style="display: flex; flex-direction: column; gap: 10px;">
-                        <button class="btn" onclick="window.open('/', '_blank')">🎨 Open Modern UI</button>
-                        <button class="btn" onclick="window.open('/classic', '_blank')">📊 Open Classic UI</button>
+                        <button class="btn" onclick="window.open('/app', '_blank')">🎨 Launch Content Studio</button>
+                        <button class="btn" onclick="window.open('/classic', '_blank')">📊 Analytics Dashboard</button>
                         <button class="btn" onclick="testConnection()">🔧 Test API Connection</button>
                         <button class="btn" onclick="refreshData()">🔄 Refresh Data</button>
+                        <button class="btn" onclick="window.open('/', '_blank')" style="background: linear-gradient(45deg, #11998e, #38ef7d);">
+                            🚀 Back to Landing Page
+                        </button>
                     </div>
                 </div>
             </div>
