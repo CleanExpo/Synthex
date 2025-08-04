@@ -6,6 +6,7 @@
     <title>SYNTHEX - AI Marketing Platform</title>
     <link rel="icon" type="image/png" href="/logo.png">
     <link rel="stylesheet" href="/css/synthex-design-system.css">
+    <link rel="stylesheet" href="/css/micro-interactions.css">
     <style>
         /* Enhanced page-specific styles */
         .hero-section {
@@ -232,18 +233,18 @@
     
     <div class="container">
         <!-- Hero Section -->
-        <header class="hero-section" role="banner">
+        <header class="hero-section animate-on-scroll fade-in" role="banner">
             <div class="hero-content">
                 <div class="logo-container">
-                    <img src="/logo.png" alt="SYNTHEX Logo">
-                    <h1 class="text-title-1">SYNTHEX Platform</h1>
+                    <img src="/logo.png" alt="SYNTHEX Logo" class="hover-scale">
+                    <h1 class="text-title-1 typing-animation" data-speed="100">SYNTHEX Platform</h1>
                 </div>
-                <p class="text-headline text-secondary">AI-Powered Marketing Content Generation & Optimization</p>
+                <p class="text-headline text-secondary animate-on-scroll slide-in-up">AI-Powered Marketing Content Generation & Optimization</p>
             </div>
         </header>
         
         <!-- Status Bar -->
-        <div class="status-bar" role="status" aria-live="polite">
+        <div class="status-bar animate-on-scroll slide-in-right" role="status" aria-live="polite">
             <div class="status-indicator" id="statusIndicator">
                 <span class="status-dot" id="statusDot" aria-hidden="true"></span>
                 <span>Server Status: <strong id="statusText">Checking...</strong></span>
@@ -257,26 +258,26 @@
         </div>
         
         <!-- Navigation Tabs -->
-        <nav class="nav-tabs" role="tablist" aria-label="Main navigation">
-            <button class="nav-tab active" role="tab" aria-selected="true" aria-controls="generate-panel" id="generate-tab" onclick="switchTab('generate', this)">
+        <nav class="nav-tabs animate-on-scroll slide-in-up" role="tablist" aria-label="Main navigation">
+            <button class="nav-tab nav-tab-enhanced active hover-lift" role="tab" aria-selected="true" aria-controls="generate-panel" id="generate-tab" onclick="switchTab('generate', this)">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                     <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
                 </svg>
                 Generate Content
             </button>
-            <button class="nav-tab" role="tab" aria-selected="false" aria-controls="optimize-panel" id="optimize-tab" onclick="switchTab('optimize', this)">
+            <button class="nav-tab nav-tab-enhanced hover-lift" role="tab" aria-selected="false" aria-controls="optimize-panel" id="optimize-tab" onclick="switchTab('optimize', this)">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                     <path d="M3 17v2h6v-2H3zM3 5v2h10V5H3zm10 16v-2h8v-2h-8v-2h-2v6h2zM7 9v2H3v2h4v2h2V9H7zm14 4v-2H11v2h10zm-6-4h2V7h4V5h-4V3h-2v6z"/>
                 </svg>
                 Optimize Content
             </button>
-            <button class="nav-tab" role="tab" aria-selected="false" aria-controls="variations-panel" id="variations-tab" onclick="switchTab('variations', this)">
+            <button class="nav-tab nav-tab-enhanced hover-lift" role="tab" aria-selected="false" aria-controls="variations-panel" id="variations-tab" onclick="switchTab('variations', this)">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                     <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/>
                 </svg>
                 Create Variations
             </button>
-            <button class="nav-tab" role="tab" aria-selected="false" aria-controls="test-panel" id="test-tab" onclick="switchTab('test', this)">
+            <button class="nav-tab nav-tab-enhanced hover-lift" role="tab" aria-selected="false" aria-controls="test-panel" id="test-tab" onclick="switchTab('test', this)">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                     <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
                 </svg>
@@ -286,9 +287,9 @@
         
         <main id="main-content">
             <!-- Generate Content Panel -->
-            <div id="generate-panel" class="content-panel active surface" role="tabpanel" aria-labelledby="generate-tab">
+            <div id="generate-panel" class="content-panel active surface card-interactive animate-on-scroll fade-in" role="tabpanel" aria-labelledby="generate-tab">
                 <div class="form-section">
-                    <h2 class="text-title-3 mb-4">Generate Marketing Content</h2>
+                    <h2 class="text-title-3 mb-4 animate-on-scroll slide-in-up">Generate Marketing Content</h2>
                     <form id="generateForm" novalidate>
                         <div class="form-group">
                             <label for="prompt" class="form-label">Describe your product/service and target audience:</label>
@@ -320,11 +321,11 @@
                             </div>
                         </div>
                         
-                        <button type="submit" class="btn btn-primary btn-lg">
+                        <button type="submit" class="btn btn-primary btn-lg btn-magnetic btn-ripple btn-focus-enhanced hover-lift">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                                 <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
                             </svg>
-                            Generate Content
+                            <span class="btn-text">Generate Content</span>
                         </button>
                     </form>
                     
@@ -347,7 +348,7 @@
             </div>
             
             <!-- Optimize Content Panel -->
-            <div id="optimize-panel" class="content-panel surface" role="tabpanel" aria-labelledby="optimize-tab">
+            <div id="optimize-panel" class="content-panel surface card-interactive animate-on-scroll fade-in" role="tabpanel" aria-labelledby="optimize-tab">
                 <div class="form-section">
                     <h2 class="text-title-3 mb-4">Optimize Existing Content</h2>
                     <form id="optimizeForm" novalidate>
@@ -401,18 +402,18 @@
                             </div>
                         </div>
                         
-                        <button type="submit" class="btn btn-primary btn-lg">
+                        <button type="submit" class="btn btn-primary btn-lg btn-magnetic btn-ripple btn-focus-enhanced hover-lift">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                                 <path d="M3 17v2h6v-2H3zM3 5v2h10V5H3zm10 16v-2h8v-2h-8v-2h-2v6h2zM7 9v2H3v2h4v2h2V9H7zm14 4v-2H11v2h10zm-6-4h2V7h4V5h-4V3h-2v6z"/>
                             </svg>
-                            Optimize Content
+                            <span class="btn-text">Optimize Content</span>
                         </button>
                     </form>
                 </div>
             </div>
             
             <!-- Variations Panel -->
-            <div id="variations-panel" class="content-panel surface" role="tabpanel" aria-labelledby="variations-tab">
+            <div id="variations-panel" class="content-panel surface card-interactive animate-on-scroll fade-in" role="tabpanel" aria-labelledby="variations-tab">
                 <div class="form-section">
                     <h2 class="text-title-3 mb-4">Generate Content Variations</h2>
                     <form id="variationsForm" novalidate>
@@ -447,33 +448,33 @@
                             </select>
                         </div>
                         
-                        <button type="submit" class="btn btn-primary btn-lg">
+                        <button type="submit" class="btn btn-primary btn-lg btn-magnetic btn-ripple btn-focus-enhanced hover-lift">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                                 <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/>
                             </svg>
-                            Generate Variations
+                            <span class="btn-text">Generate Variations</span>
                         </button>
                     </form>
                 </div>
             </div>
             
             <!-- Test Connection Panel -->
-            <div id="test-panel" class="content-panel surface" role="tabpanel" aria-labelledby="test-tab">
+            <div id="test-panel" class="content-panel surface card-interactive animate-on-scroll fade-in" role="tabpanel" aria-labelledby="test-tab">
                 <div class="form-section">
                     <h2 class="text-title-3 mb-4">Test API Connection</h2>
                     <p class="text-body text-secondary mb-6">Test the connection to OpenRouter and verify everything is working correctly.</p>
                     <div class="flex gap-4 flex-wrap">
-                        <button onclick="testConnection()" class="btn btn-primary">
+                        <button onclick="testConnection()" class="btn btn-primary btn-magnetic btn-ripple btn-focus-enhanced hover-lift">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                                 <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
                             </svg>
-                            Test Connection
+                            <span class="btn-text">Test Connection</span>
                         </button>
-                        <button onclick="checkModels()" class="btn btn-secondary">
+                        <button onclick="checkModels()" class="btn btn-secondary btn-magnetic btn-ripple btn-focus-enhanced hover-lift">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                                 <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
                             </svg>
-                            List Available Models
+                            <span class="btn-text">List Available Models</span>
                         </button>
                     </div>
                 </div>
@@ -481,8 +482,8 @@
         </main>
         
         <!-- Output Section -->
-        <section class="output-section">
-            <div class="surface p-6">
+        <section class="output-section animate-on-scroll fade-in">
+            <div class="surface p-6 card-interactive">
                 <h3 class="text-title-3 mb-4">Output</h3>
                 <div class="loading-overlay" id="loading" aria-live="polite">
                     <div class="loading-spinner" aria-hidden="true"></div>
@@ -496,7 +497,7 @@
         
         <!-- Floating Action Button -->
         <div class="floating-action">
-            <button class="btn btn-primary btn-floating" onclick="scrollToTop()" aria-label="Scroll to top">
+            <button class="btn btn-primary btn-floating btn-magnetic hover-glow" onclick="scrollToTop()" aria-label="Scroll to top" data-tooltip="Scroll to top" data-tooltip-position="left">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                     <path d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6z"/>
                 </svg>
@@ -758,5 +759,6 @@
             }
         });
     </script>
+    <script src="/js/interactions.js"></script>
 </body>
 </html>
