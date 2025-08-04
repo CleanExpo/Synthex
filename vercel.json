@@ -1,38 +1,82 @@
 {
   "version": 2,
-  "name": "auto-marketing-platform",
+  "name": "synthex",
   "builds": [
     {
-      "src": "package.json",
-      "use": "@vercel/node"
-    },
-    {
-      "src": "public/**",
-      "use": "@vercel/static"
+      "src": "dist/index.js",
+      "use": "@vercel/node",
+      "config": {
+        "includeFiles": [
+          "dist/**",
+          "public/**"
+        ]
+      }
     }
   ],
   "routes": [
     {
       "src": "/api/(.*)",
-      "dest": "/src/index.ts"
+      "dest": "/dist/index.js",
+      "headers": {
+        "Cache-Control": "s-maxage=0"
+      }
+    },
+    {
+      "src": "/health",
+      "dest": "/dist/index.js",
+      "headers": {
+        "Cache-Control": "no-cache"
+      }
     },
     {
       "src": "/(.*)",
-      "dest": "/public/$1"
+      "dest": "/public/$1",
+      "headers": {
+        "Cache-Control": "s-maxage=31536000, immutable"
+      }
     }
   ],
-  "env": {
-    "NODE_ENV": "production",
-    "PORT": "@port"
-  },
-  "buildCommand": "npm run build",
-  "outputDirectory": "dist",
-  "installCommand": "npm install",
+  "buildCommand": "npm run build:prod",
+  "outputDirectory": ".",
+  "installCommand": "npm ci --production=false",
   "framework": null,
   "functions": {
-    "src/index.ts": {
+    "dist/index.js": {
       "maxDuration": 30,
-      "memory": 1024
+      "memory": 1024,
+      "runtime": "nodejs18.x"
     }
-  }
+  },
+  "regions": ["iad1"],
+  "trailingSlash": false,
+  "cleanUrls": true,
+  "headers": [
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "X-XSS-Protection",
+          "value": "1; mode=block"
+        }
+      ]
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/",
+      "destination": "/public/app.html"
+    },
+    {
+      "source": "/classic",
+      "destination": "/public/index.html"
+    }
+  ]
 }
