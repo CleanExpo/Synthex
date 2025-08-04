@@ -1,6 +1,8 @@
 import express, { Request, Response } from 'express';
 import { openRouterService, OPENROUTER_MODELS } from '../services/openrouter';
 import { contentLogger } from '../services/contentLogger';
+import { authenticateToken, optionalAuth, AuthenticatedRequest } from '../middleware/auth';
+import { authService } from '../services/auth';
 
 const router = express.Router();
 
@@ -35,18 +37,31 @@ interface VariationsRequest {
  * GET /api/openrouter/status
  * Check OpenRouter configuration status
  */
-router.get('/status', (req: Request, res: Response) => {
+router.get('/status', optionalAuth, async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const isConfigured = openRouterService.isConfigured();
+    const isSystemConfigured = openRouterService.isConfigured();
     const modelInfo = openRouterService.getModelInfo();
     
+    let userApiKey: string | undefined;
+    let hasUserApiKey = false;
+    
+    if (req.user) {
+      const apiKeys = await authService.getUserApiKeys(req.user.id);
+      userApiKey = apiKeys.openrouterApiKey;
+      hasUserApiKey = !!userApiKey;
+    }
+    
     res.json({
-      configured: isConfigured,
+      systemConfigured: isSystemConfigured,
+      userConfigured: hasUserApiKey,
+      configured: isSystemConfigured || hasUserApiKey,
       defaultModel: OPENROUTER_MODELS.HORIZON_BETA,
       modelInfo,
-      message: isConfigured 
+      message: (isSystemConfigured || hasUserApiKey)
         ? 'OpenRouter is properly configured and ready to use'
-        : 'OpenRouter API key not configured. Please set OPENROUTER_API_KEY in your .env file.'
+        : req.user 
+          ? 'Please add your OpenRouter API key in your account settings'
+          : 'OpenRouter API key not configured. Please login and add your API key.'
     });
   } catch (error) {
     res.status(500).json({

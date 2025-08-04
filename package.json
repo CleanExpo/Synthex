@@ -25,7 +25,14 @@
     "rollback": "echo 'Rolling back deployment...'",
     "mcp:init": "npx @modelcontextprotocol/inspector",
     "ttd:test": "npm run test -- --testNamePattern",
-    "install-deps": "npm install"
+    "install-deps": "npm install",
+    "db:generate": "prisma generate",
+    "db:push": "prisma db push",
+    "db:migrate": "prisma migrate dev",
+    "db:migrate:prod": "prisma migrate deploy",
+    "db:seed": "ts-node prisma/seed.ts",
+    "db:studio": "prisma studio",
+    "db:reset": "prisma migrate reset"
   },
   "keywords": [
     "marketing",
@@ -41,15 +48,22 @@
     "@magneticwatermelon/mcp-toolkit": "^1.1.4",
     "@modelcontextprotocol/sdk": "^1.17.1",
     "@modelcontextprotocol/server-sequential-thinking": "^2025.7.1",
+    "@prisma/client": "^6.13.0",
+    "@types/bcryptjs": "^2.4.6",
+    "@types/jsonwebtoken": "^9.0.10",
     "axios": "^1.6.2",
+    "bcryptjs": "^3.0.2",
     "body-parser": "^1.20.2",
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",
     "express": "^4.18.2",
     "express-rate-limit": "^8.0.1",
+    "express-validator": "^7.2.1",
+    "jsonwebtoken": "^9.0.2",
     "multer": "^1.4.5-lts.1",
     "node-fetch": "^3.3.2",
     "openai": "^4.104.0",
+    "prisma": "^6.13.0",
     "ws": "^8.14.2"
   },
   "devDependencies": {

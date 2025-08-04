@@ -1,7 +1,16 @@
-# OpenRouter API Configuration
-OPENROUTER_API_KEY=your_openrouter_api_key_here
+# Database Configuration
+DATABASE_URL="postgresql://username:password@localhost:5432/auto_marketing"
 
-# Optional: Specific Model API Keys (if using direct providers)
+# Authentication
+JWT_SECRET="your-super-secret-jwt-key-minimum-64-characters-long-for-security"
+
+# OpenRouter API Configuration (System-wide fallback - users can add their own)
+OPENROUTER_API_KEY=your_openrouter_api_key_here
+OPENROUTER_BASE_URL="https://openrouter.ai/api/v1"
+OPENROUTER_SITE_URL="https://your-app.vercel.app"
+OPENROUTER_SITE_NAME="Auto Marketing Platform"
+
+# Optional: Specific Model API Keys (System-wide fallback - users can add their own)
 OPENAI_API_KEY=your_openai_api_key_here
 ANTHROPIC_API_KEY=your_anthropic_api_key_here
 GOOGLE_API_KEY=your_google_api_key_here
@@ -31,3 +40,17 @@ PII_DETECTION=true
 # Debug Mode
 DEBUG=false
 LOG_LEVEL=INFO
+
+# Environment
+NODE_ENV="development"
+PORT=3000
+
+# Vercel Production Database (uncomment for production)
+# POSTGRES_URL="your-vercel-postgres-url"
+# POSTGRES_PRISMA_URL="your-vercel-postgres-prisma-url"
+# POSTGRES_URL_NO_SSL="your-vercel-postgres-no-ssl-url"
+# POSTGRES_URL_NON_POOLING="your-vercel-postgres-non-pooling-url"
+# POSTGRES_USER="your-db-user"
+# POSTGRES_HOST="your-db-host"
+# POSTGRES_PASSWORD="your-db-password"
+# POSTGRES_DATABASE="your-db-name"

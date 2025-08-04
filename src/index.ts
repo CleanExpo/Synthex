@@ -6,6 +6,7 @@ import openRouterRoutes from './routes/openrouter';
 import mcpTtdRoutes from './routes/mcp-ttd';
 import enhancementRoutes from './routes/enhancement-research';
 import mleStarRoutes from './routes/mle-star';
+import authRoutes from './routes/auth';
 import { openRouterService } from './services/openrouter';
 import { mcpIntegration } from './services/mcp-integration';
 import { ttdRd } from './services/ttd-rd-framework';
@@ -92,6 +93,11 @@ app.get('/classic', (req: Request, res: Response) => {
   res.sendFile('index.html', { root: path.join(__dirname, '..', 'public') });
 });
 
+// User Dashboard endpoint
+app.get('/dashboard', (req: Request, res: Response) => {
+  res.sendFile('dashboard.html', { root: path.join(__dirname, '..', 'public') });
+});
+
 // API info endpoint
 app.get('/api-info', (req: Request, res: Response) => {
   res.json({
@@ -102,7 +108,8 @@ app.get('/api-info', (req: Request, res: Response) => {
       health: '/health',
       api: '/api',
       modernUI: '/',
-      classicUI: '/classic'
+      classicUI: '/classic',
+      dashboard: '/dashboard'
     }
   });
 });
@@ -115,6 +122,12 @@ app.get('/api', (req: Request, res: Response) => {
     availableEndpoints: [
       'GET /health - Health check',
       'GET /api - API information',
+      'POST /api/auth/register - Register new user account',
+      'POST /api/auth/login - Login to account',
+      'GET /api/auth/profile - Get user profile',
+      'POST /api/auth/api-keys - Update API keys',
+      'GET /api/auth/api-keys - Get API key status',
+      'GET /api/auth/usage - Get API usage statistics',
       'GET /api/openrouter/status - OpenRouter status',
       'GET /api/openrouter/models - Available AI models',
       'GET /api/openrouter/test - Test OpenRouter connection',
@@ -146,6 +159,9 @@ app.use('/api/openrouter/marketing/generate', contentGenerationLimiter);
 app.use('/api/openrouter/marketing/optimize', contentGenerationLimiter);
 app.use('/api/openrouter/marketing/variations', contentGenerationLimiter);
 app.use('/api/openrouter/chat', contentGenerationLimiter);
+
+// Authentication routes (with their own rate limiting)
+app.use('/api/auth', authRoutes);
 
 // Apply general API rate limiting to other OpenRouter endpoints
 app.use('/api/openrouter', apiLimiter, openRouterRoutes);
