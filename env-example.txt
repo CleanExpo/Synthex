@@ -1,5 +1,10 @@
-# Database Configuration
-DATABASE_URL="postgresql://username:password@localhost:5432/auto_marketing"
+# Supabase Configuration
+NEXT_PUBLIC_SUPABASE_URL=https://your-project-id.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key-here
+
+# Database Configuration (Supabase PostgreSQL)
+DATABASE_URL="postgresql://postgres:[YOUR-PASSWORD]@db.your-project-id.supabase.co:5432/postgres"
+POSTGRES_URL_NON_POOLING="postgresql://postgres:[YOUR-PASSWORD]@db.your-project-id.supabase.co:5432/postgres?pgbouncer=true&connection_limit=1"
 
 # Authentication
 JWT_SECRET="your-super-secret-jwt-key-minimum-64-characters-long-for-security"
