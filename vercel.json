@@ -15,30 +15,26 @@
       "use": "@vercel/static"
     }
   ],
-  "routes": [
+  "rewrites": [
     {
-      "src": "/(.*\\.(html|css|js|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot))",
-      "dest": "/public/$1"
+      "source": "/api-docs/(.*)",
+      "destination": "/api/synthex.js"
     },
     {
-      "src": "/api-docs/(.*)",
-      "dest": "/api/synthex.js"
+      "source": "/api/(.*)",
+      "destination": "/api/synthex.js"
     },
     {
-      "src": "/api/(.*)",
-      "dest": "/api/synthex.js"
+      "source": "/auth/(.*)",
+      "destination": "/api/synthex.js"
     },
     {
-      "src": "/auth/(.*)",
-      "dest": "/api/synthex.js"
+      "source": "/health",
+      "destination": "/api/synthex.js"
     },
     {
-      "src": "/health",
-      "dest": "/api/synthex.js"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/api/synthex.js"
+      "source": "/(.*)",
+      "destination": "/api/synthex.js"
     }
   ],
   "env": {
