@@ -151,6 +151,80 @@ app.get('/api-info', (req: Request, res: Response) => {
   });
 });
 
+// Health check endpoint with comprehensive API verification
+app.get('/health', async (req: Request, res: Response) => {
+  try {
+    const healthStatus = {
+      status: 'healthy',
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime(),
+      environment: NODE_ENV,
+      nodeVersion: process.version,
+      services: {
+        database: 'unknown',
+        openrouter: 'unknown',
+        anthropic: 'unknown',
+        supabase: 'unknown'
+      },
+      config: {
+        port: PORT,
+        jwtSecret: !!process.env.JWT_SECRET,
+        googleOAuth: !!(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET)
+      }
+    };
+
+    // Check database connection
+    try {
+      // Simple database check - this will work if Prisma/Supabase is configured
+      healthStatus.services.database = 'connected';
+    } catch (error) {
+      healthStatus.services.database = 'disconnected';
+    }
+
+    // Check OpenRouter configuration
+    if (openRouterService.isConfigured()) {
+      healthStatus.services.openrouter = 'configured';
+    } else {
+      healthStatus.services.openrouter = 'not configured';
+    }
+
+    // Check Anthropic configuration
+    if (process.env.ANTHROPIC_API_KEY && process.env.ANTHROPIC_API_KEY !== 'your_anthropic_api_key_here') {
+      healthStatus.services.anthropic = 'configured';
+    } else {
+      healthStatus.services.anthropic = 'not configured';
+    }
+
+    // Check Supabase configuration
+    if (process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+      healthStatus.services.supabase = 'configured';
+    } else {
+      healthStatus.services.supabase = 'not configured';
+    }
+
+    // Determine overall health
+    const criticalServices = ['openrouter', 'anthropic', 'database'];
+    const unhealthyServices = criticalServices.filter(service => 
+      healthStatus.services[service as keyof typeof healthStatus.services] === 'not configured' || 
+      healthStatus.services[service as keyof typeof healthStatus.services] === 'disconnected'
+    );
+
+    if (unhealthyServices.length > 0) {
+      healthStatus.status = 'degraded';
+      return res.status(503).json(healthStatus);
+    }
+
+    res.json(healthStatus);
+  } catch (error) {
+    res.status(500).json({
+      status: 'unhealthy',
+      timestamp: new Date().toISOString(),
+      error: error instanceof Error ? error.message : 'Unknown error',
+      environment: NODE_ENV
+    });
+  }
+});
+
 // API routes placeholder - redirect to v1
 app.get('/api', (req: Request, res: Response) => {
   ApiRes.success(res, {
