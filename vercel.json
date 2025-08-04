@@ -22,11 +22,15 @@
       "destination": "/api/vercel.js"
     },
     {
+      "source": "/",
+      "destination": "/public/index.html"
+    },
+    {
       "source": "/(.*)",
       "destination": "/api/vercel.js"
     }
   ],
-  "buildCommand": "npm run vercel-build",
+  "buildCommand": "npm install && npx prisma generate && npm run build:prod",
   "installCommand": "npm ci",
   "outputDirectory": ".",
   "framework": null,
