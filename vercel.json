@@ -1,62 +1,48 @@
 {
   "name": "synthex-production",
   "version": 2,
-  "builds": [
-    {
-      "src": "api/synthex.js",
-      "use": "@vercel/node",
-      "config": {
-        "maxLambdaSize": "50mb",
-        "includeFiles": ["dist/**", ".env"]
-      }
-    },
-    {
-      "src": "public/**",
-      "use": "@vercel/static"
+  "functions": {
+    "api/vercel.js": {
+      "runtime": "@vercel/node@3",
+      "memory": 1024,
+      "maxDuration": 30
     }
-  ],
-  "rewrites": [
-    {
-      "source": "/api-docs/(.*)",
-      "destination": "/api/synthex.js"
-    },
-    {
-      "source": "/api/(.*)",
-      "destination": "/api/synthex.js"
-    },
-    {
-      "source": "/auth/(.*)",
-      "destination": "/api/synthex.js"
-    },
-    {
-      "source": "/health",
-      "destination": "/api/synthex.js"
-    },
-    {
-      "source": "/(.*)",
-      "destination": "/api/synthex.js"
-    }
-  ],
-  "env": {
-    "NODE_ENV": "production",
-    "DATABASE_URL": "@database_url",
-    "POSTGRES_URL_NON_POOLING": "@postgres_url_non_pooling",
-    "JWT_SECRET": "@jwt_secret",
-    "GOOGLE_CLIENT_ID": "@google_client_id",
-    "GOOGLE_CLIENT_SECRET": "@google_client_secret",
-    "GOOGLE_CALLBACK_URL": "@google_callback_url",
-    "OPENROUTER_API_KEY": "@openrouter_api_key",
-    "ANTHROPIC_API_KEY": "@anthropic_api_key"
   },
-  "buildCommand": "npm install && npx prisma generate && npm run build:prod",
+  "routes": [
+    {
+      "src": "/(.*\\.(html|css|js|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot))",
+      "dest": "/public/$1"
+    },
+    {
+      "src": "/api/(.*)",
+      "dest": "/api/vercel.js"
+    },
+    {
+      "src": "/auth/(.*)",
+      "dest": "/api/vercel.js"
+    },
+    {
+      "src": "/health",
+      "dest": "/api/vercel.js"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/api/vercel.js"
+    }
+  ],
+  "buildCommand": "npm run vercel-build",
+  "installCommand": "npm ci",
   "outputDirectory": ".",
-  "installCommand": "npm ci --production=false",
   "framework": null,
   "regions": ["iad1"],
   "headers": [
     {
       "source": "/api/(.*)",
       "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, no-store, must-revalidate"
+        },
         {
           "key": "Access-Control-Allow-Origin",
           "value": "*"
