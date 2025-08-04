@@ -224,3 +224,9 @@ app.listen(PORT, async () => {
 
 // Export rate limiters for use in other modules if needed
 export { apiLimiter, contentGenerationLimiter, generalLimiter };
+
+// Export app for Vercel serverless function
+export default app;
+
+// Also export as module.exports for CommonJS compatibility
+module.exports = app;
