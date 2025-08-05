@@ -13,6 +13,7 @@ import enhancementRoutes from './routes/enhancement-research';
 import mleStarRoutes from './routes/mle-star';
 import authRoutes from './routes/auth';
 import googleAuthRoutes from './routes/google-auth';
+import dashboardRoutes from './routes/dashboard';
 import { openRouterService } from './services/openrouter';
 import { mcpIntegration } from './services/mcp-integration';
 import { ttdRd } from './services/ttd-rd-framework';
@@ -299,6 +300,9 @@ app.use('/api/enhancement', apiLimiter, enhancementRoutes);
 
 // MLE Star and Context7 routes
 app.use('/api/mle-star', apiLimiter, mleStarRoutes);
+
+// Dashboard routes
+app.use('/api/v1/dashboard', apiLimiter, dashboardRoutes);
 
 // Error handling middleware
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {

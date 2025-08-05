@@ -11,21 +11,31 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-            --accent-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-            --success-gradient: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
-            --warning-gradient: linear-gradient(135deg, #fc466b 0%, #3f5efb 100%);
+            /* Clean, professional color palette */
+            --primary-color: #2563eb;
+            --primary-hover: #1d4ed8;
+            --secondary-color: #6366f1;
+            --accent-color: #059669;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --error-color: #ef4444;
             
-            --bg-dark: #0a0e27;
-            --bg-card: rgba(255, 255, 255, 0.05);
-            --bg-card-hover: rgba(255, 255, 255, 0.08);
-            --text-primary: #ffffff;
-            --text-secondary: rgba(255, 255, 255, 0.8);
-            --text-muted: rgba(255, 255, 255, 0.6);
-            --border-color: rgba(255, 255, 255, 0.1);
-            --shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
-            --shadow-hover: 0 30px 60px rgba(0, 0, 0, 0.4);
+            /* Modern neutral backgrounds */
+            --bg-primary: #0f172a;
+            --bg-secondary: #1e293b;
+            --bg-tertiary: #334155;
+            --bg-card: rgba(30, 41, 59, 0.6);
+            --bg-card-hover: rgba(30, 41, 59, 0.8);
+            
+            /* Text colors */
+            --text-primary: #f8fafc;
+            --text-secondary: #cbd5e1;
+            --text-muted: #94a3b8;
+            --border-color: rgba(148, 163, 184, 0.2);
+            
+            /* Subtle shadows */
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            --shadow-hover: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
         }
 
         * {
@@ -36,13 +46,13 @@
 
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: var(--bg-dark);
+            background: var(--bg-primary);
             color: var(--text-primary);
             line-height: 1.6;
             overflow-x: hidden;
         }
 
-        /* Background Animation */
+        /* Clean, static background */
         .bg-animation {
             position: fixed;
             top: 0;
@@ -50,27 +60,7 @@
             width: 100%;
             height: 100%;
             z-index: -1;
-            background: var(--bg-dark);
-        }
-
-        .bg-animation::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: 
-                radial-gradient(circle at 20% 20%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
-                radial-gradient(circle at 80% 80%, rgba(255, 119, 198, 0.3) 0%, transparent 50%),
-                radial-gradient(circle at 40% 40%, rgba(120, 219, 255, 0.2) 0%, transparent 50%);
-            animation: backgroundMove 20s ease-in-out infinite;
-        }
-
-        @keyframes backgroundMove {
-            0%, 100% { transform: translate(0, 0) rotate(0deg); }
-            33% { transform: translate(30px, -30px) rotate(1deg); }
-            66% { transform: translate(-20px, 20px) rotate(-1deg); }
+            background: linear-gradient(180deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
         }
 
         /* Header */
@@ -82,14 +72,14 @@
             z-index: 1000;
             padding: 1rem 2rem;
             backdrop-filter: blur(20px);
-            background: rgba(10, 14, 39, 0.8);
+            background: rgba(15, 23, 42, 0.8);
             border-bottom: 1px solid var(--border-color);
             transition: all 0.3s ease;
         }
 
         .header.scrolled {
             padding: 0.5rem 2rem;
-            background: rgba(10, 14, 39, 0.95);
+            background: rgba(15, 23, 42, 0.95);
         }
 
         .nav {
@@ -693,8 +683,8 @@
                 Get Started Free
                 <span>→</span>
             </button>
-            <button class="btn btn-secondary" onclick="window.open('/dashboard', '_blank')">
-                View Demo
+            <button class="btn btn-secondary" onclick="showLiveDemo()">
+                View Live Demo
                 <span>🎯</span>
             </button>
         </div>
@@ -1032,6 +1022,57 @@
                 closeAuthModal();
             }
         });
+
+        // Live demo function
+        async function showLiveDemo() {
+            try {
+                // Show a modal with live API status
+                const modal = document.createElement('div');
+                modal.className = 'modal active';
+                modal.innerHTML = `
+                    <div class="modal-content" style="max-width: 600px;">
+                        <button class="modal-close" onclick="this.closest('.modal').remove()">&times;</button>
+                        <h2 style="margin-bottom: 1rem;">🎯 Live System Status</h2>
+                        <div id="demoContent">
+                            <p>Loading live system data...</p>
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(modal);
+
+                // Fetch real API status
+                const response = await fetch('/health');
+                const healthData = await response.json();
+                
+                const demoContent = document.getElementById('demoContent');
+                demoContent.innerHTML = `
+                    <div style="text-align: left;">
+                        <h3>✅ System Health: ${healthData.status.toUpperCase()}</h3>
+                        <p><strong>Environment:</strong> ${healthData.environment}</p>
+                        <p><strong>Uptime:</strong> ${Math.round(healthData.uptime)}s</p>
+                        
+                        <h4>🔧 Service Status:</h4>
+                        <ul style="list-style: none; padding: 0;">
+                            <li>🤖 OpenRouter AI: ${healthData.services?.openrouter === 'configured' ? '✅ Ready' : '⚠️ Not configured'}</li>
+                            <li>🧠 Anthropic API: ${healthData.services?.anthropic === 'configured' ? '✅ Ready' : '⚠️ Not configured'}</li>
+                            <li>🔐 Google OAuth: ${healthData.config?.googleOAuth ? '✅ Ready' : '⚠️ Not configured'}</li>
+                            <li>💾 Database: ${healthData.services?.database === 'connected' ? '✅ Connected' : '⚠️ Disconnected'}</li>
+                        </ul>
+                        
+                        <div style="margin-top: 1.5rem; padding: 1rem; background: rgba(16, 185, 129, 0.1); border-radius: 8px; border-left: 4px solid #10b981;">
+                            <p><strong>Ready to use!</strong> The platform is live and functional. Create an account to start generating content.</p>
+                        </div>
+                        
+                        <button class="btn btn-primary" onclick="openAuthModal('register')" style="width: 100%; margin-top: 1rem;">
+                            Create Free Account
+                        </button>
+                    </div>
+                `;
+            } catch (error) {
+                console.error('Demo error:', error);
+                alert('System is currently starting up. Please try again in a moment.');
+            }
+        }
 
         // Handle Google OAuth redirect
         document.addEventListener('DOMContentLoaded', () => {
