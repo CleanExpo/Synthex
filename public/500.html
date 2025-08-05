@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Server Error | SYNTHEX</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        /* Reuse glassmorphism design system */
+        :root {
+            --synthex-black: #000000;
+            --synthex-white: #ffffff;
+            --synthex-primary: #0070f3;
+            --synthex-accent: #5e6ad2;
+            --synthex-success: #34C759;
+            --synthex-warning: #FF9500;
+            --synthex-danger: #FF3B30;
+            
+            --background-primary: var(--synthex-black);
+            --background-secondary: #111111;
+            --background-tertiary: #1a1a1a;
+            --foreground-primary: var(--synthex-white);
+            --foreground-secondary: #a3a3a3;
+            --foreground-tertiary: #737373;
+            
+            --gradient-accent: linear-gradient(135deg, #0070f3 0%, #5e6ad2 100%);
+            --gradient-danger: linear-gradient(135deg, #FF3B30 0%, #FF6B6B 100%);
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            
+            --space-1: 8px;
+            --space-2: 16px;
+            --space-3: 24px;
+            --space-4: 32px;
+            --space-6: 48px;
+            --space-8: 64px;
+            
+            --radius: 8px;
+            --radius-lg: 16px;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Inter', sans-serif;
+            background: var(--background-primary);
+            color: var(--foreground-primary);
+            line-height: 1.6;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: var(--space-4);
+        }
+        
+        /* Error Container */
+        .error-container {
+            max-width: 700px;
+            width: 100%;
+            text-align: center;
+        }
+        
+        /* Logo */
+        .logo-section {
+            margin-bottom: var(--space-8);
+        }
+        
+        .logo {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--foreground-primary);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-2);
+        }
+        
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: var(--radius);
+            background: var(--gradient-accent);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--synthex-white);
+            font-size: 1.2rem;
+        }
+        
+        /* Error Card */
+        .error-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-lg);
+            padding: var(--space-8);
+            position: relative;
+            overflow: hidden;
+            margin-bottom: var(--space-6);
+        }
+        
+        .error-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: var(--gradient-danger);
+        }
+        
+        /* Error Content */
+        .error-icon {
+            font-size: 6rem;
+            margin-bottom: var(--space-4);
+            opacity: 0.8;
+            animation: pulse 2s ease-in-out infinite;
+        }
+        
+        .error-code {
+            font-size: 4rem;
+            font-weight: 800;
+            color: var(--synthex-danger);
+            margin-bottom: var(--space-2);
+            text-shadow: 0 0 20px rgba(255, 59, 48, 0.3);
+        }
+        
+        .error-title {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: var(--space-3);
+            color: var(--foreground-primary);
+        }
+        
+        .error-description {
+            font-size: 1.125rem;
+            color: var(--foreground-secondary);
+            margin-bottom: var(--space-6);
+            line-height: 1.6;
+        }
+        
+        /* Status Banner */
+        .status-banner {
+            background: rgba(255, 149, 0, 0.1);
+            border: 1px solid rgba(255, 149, 0, 0.3);
+            border-radius: var(--radius);
+            padding: var(--space-3);
+            margin-bottom: var(--space-6);
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+            color: var(--synthex-warning);
+        }
+        
+        .status-icon {
+            font-size: 1.2rem;
+            animation: spin 2s linear infinite;
+        }
+        
+        .status-text {
+            font-weight: 500;
+        }
+        
+        /* Actions */
+        .error-actions {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-4);
+            align-items: center;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: var(--space-3);
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        .btn {
+            padding: var(--space-3) var(--space-6);
+            border: none;
+            border-radius: var(--radius);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-2);
+            font-size: 1rem;
+            min-width: 140px;
+            justify-content: center;
+        }
+        
+        .btn-primary {
+            background: var(--gradient-accent);
+            color: var(--synthex-white);
+            box-shadow: 0 4px 16px rgba(0, 112, 243, 0.2);
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0, 112, 243, 0.3);
+        }
+        
+        .btn-secondary {
+            background: transparent;
+            color: var(--foreground-primary);
+            border: 1px solid var(--glass-border);
+        }
+        
+        .btn-secondary:hover {
+            background: var(--glass-bg);
+            transform: translateY(-1px);
+        }
+        
+        .btn-danger {
+            background: var(--gradient-danger);
+            color: var(--synthex-white);
+            box-shadow: 0 4px 16px rgba(255, 59, 48, 0.2);
+        }
+        
+        .btn-danger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(255, 59, 48, 0.3);
+        }
+        
+        /* Auto-refresh */
+        .auto-refresh {
+            background: var(--background-secondary);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius);
+            padding: var(--space-3);
+            margin-bottom: var(--space-4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: var(--space-2);
+            color: var(--foreground-secondary);
+            font-size: 0.875rem;
+        }
+        
+        .refresh-timer {
+            color: var(--synthex-primary);
+            font-weight: 600;
+        }
+        
+        /* Support Section */
+        .support-section {
+            background: var(--background-secondary);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-lg);
+            padding: var(--space-6);
+        }
+        
+        .support-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: var(--space-4);
+            color: var(--foreground-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: var(--space-2);
+        }
+        
+        .support-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: var(--space-4);
+            margin-bottom: var(--space-4);
+        }
+        
+        .support-item {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius);
+            padding: var(--space-4);
+            transition: all 0.2s ease;
+        }
+        
+        .support-item:hover {
+            background: var(--background-tertiary);
+            transform: translateY(-1px);
+        }
+        
+        .support-item-header {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+            margin-bottom: var(--space-2);
+        }
+        
+        .support-item-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: var(--radius);
+            background: var(--gradient-accent);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--synthex-white);
+            font-size: 1rem;
+        }
+        
+        .support-item-title {
+            font-weight: 600;
+            color: var(--foreground-primary);
+        }
+        
+        .support-item-description {
+            color: var(--foreground-secondary);
+            font-size: 0.875rem;
+            margin-bottom: var(--space-3);
+        }
+        
+        .support-link {
+            color: var(--synthex-primary);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.2s ease;
+        }
+        
+        .support-link:hover {
+            color: var(--synthex-accent);
+            text-decoration: underline;
+        }
+        
+        /* Technical Details */
+        .tech-details {
+            background: var(--background-tertiary);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius);
+            padding: var(--space-3);
+            margin-top: var(--space-4);
+            font-family: monospace;
+            font-size: 0.75rem;
+            color: var(--foreground-tertiary);
+            text-align: left;
+        }
+        
+        .tech-details summary {
+            cursor: pointer;
+            padding: var(--space-2);
+            border-radius: var(--radius);
+            transition: background 0.2s ease;
+        }
+        
+        .tech-details summary:hover {
+            background: var(--glass-bg);
+        }
+        
+        .tech-details-content {
+            padding: var(--space-2);
+            margin-top: var(--space-2);
+            border-top: 1px solid var(--glass-border);
+        }
+        
+        /* Animations */
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 0.8;
+                transform: scale(1);
+            }
+            50% {
+                opacity: 1;
+                transform: scale(1.05);
+            }
+        }
+        
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .error-container > * {
+            animation: fadeIn 0.6s ease-out forwards;
+        }
+        
+        .error-container > *:nth-child(2) {
+            animation-delay: 0.1s;
+        }
+        
+        .error-container > *:nth-child(3) {
+            animation-delay: 0.2s;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .error-card {
+                padding: var(--space-6);
+            }
+            
+            .error-code {
+                font-size: 3rem;
+            }
+            
+            .error-title {
+                font-size: 1.5rem;
+            }
+            
+            .error-description {
+                font-size: 1rem;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+                width: 100%;
+            }
+            
+            .btn {
+                width: 100%;
+            }
+            
+            .support-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .error-icon {
+                font-size: 4rem;
+            }
+            
+            .error-code {
+                font-size: 2.5rem;
+            }
+            
+            .logo {
+                font-size: 1.5rem;
+            }
+            
+            .logo-icon {
+                width: 32px;
+                height: 32px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="error-container">
+        <!-- Logo -->
+        <div class="logo-section">
+            <a href="/" class="logo">
+                <div class="logo-icon">🚀</div>
+                SYNTHEX
+            </a>
+        </div>
+        
+        <!-- Error Card -->
+        <div class="error-card">
+            <div class="error-icon">⚠️</div>
+            <div class="error-code">500</div>
+            <h1 class="error-title">Internal Server Error</h1>
+            <p class="error-description">
+                We're experiencing some technical difficulties right now. 
+                Our team has been notified and is working to resolve the issue as quickly as possible.
+            </p>
+            
+            <div class="status-banner">
+                <div class="status-icon">🔧</div>
+                <div class="status-text">Our engineering team is actively investigating this issue</div>
+            </div>
+            
+            <div class="error-actions">
+                <div class="auto-refresh">
+                    <span>⏱️</span>
+                    <span>Auto-refreshing in <span class="refresh-timer" id="countdown">30</span> seconds</span>
+                    <button class="btn btn-secondary" onclick="cancelAutoRefresh()" style="margin-left: var(--space-2); padding: var(--space-1) var(--space-2); min-width: auto; font-size: 0.75rem;">
+                        Cancel
+                    </button>
+                </div>
+                
+                <div class="action-buttons">
+                    <button class="btn btn-primary" onclick="window.location.reload()">
+                        <span>🔄</span>
+                        <span>Try Again</span>
+                    </button>
+                    <a href="/" class="btn btn-secondary">
+                        <span>🏠</span>
+                        <span>Go Home</span>
+                    </a>
+                    <a href="mailto:support@synthex.com?subject=Server Error - 500&body=I encountered a 500 error on: " class="btn btn-danger">
+                        <span>📧</span>
+                        <span>Report Issue</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Support Section -->
+        <div class="support-section">
+            <h2 class="support-title">
+                <span>🆘</span>
+                Need Immediate Help?
+            </h2>
+            
+            <div class="support-grid">
+                <div class="support-item">
+                    <div class="support-item-header">
+                        <div class="support-item-icon">📧</div>
+                        <div class="support-item-title">Email Support</div>
+                    </div>
+                    <div class="support-item-description">
+                        Get help from our technical support team
+                    </div>
+                    <a href="mailto:support@synthex.com?subject=Server Error - 500" class="support-link">
+                        support@synthex.com
+                    </a>
+                </div>
+                
+                <div class="support-item">
+                    <div class="support-item-header">
+                        <div class="support-item-icon">💬</div>
+                        <div class="support-item-title">Live Chat</div>
+                    </div>
+                    <div class="support-item-description">
+                        Chat with our support team in real-time
+                    </div>
+                    <a href="#" onclick="openLiveChat()" class="support-link">
+                        Start Chat
+                    </a>
+                </div>
+                
+                <div class="support-item">
+                    <div class="support-item-header">
+                        <div class="support-item-icon">📊</div>
+                        <div class="support-item-title">Status Page</div>
+                    </div>
+                    <div class="support-item-description">
+                        Check our system status and uptime
+                    </div>
+                    <a href="https://status.synthex.com" target="_blank" class="support-link">
+                        status.synthex.com
+                    </a>
+                </div>
+                
+                <div class="support-item">
+                    <div class="support-item-header">
+                        <div class="support-item-icon">📚</div>
+                        <div class="support-item-title">Help Center</div>
+                    </div>
+                    <div class="support-item-description">
+                        Browse our documentation and guides
+                    </div>
+                    <a href="/help" class="support-link">
+                        View Help Center
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Technical Details -->
+            <details class="tech-details">
+                <summary>Technical Details (for developers)</summary>
+                <div class="tech-details-content">
+                    <div>Error ID: <span id="error-id">ERR-500-<?= uniqid() ?></span></div>
+                    <div>Timestamp: <span id="error-timestamp"></span></div>
+                    <div>User Agent: <span id="user-agent"></span></div>
+                    <div>URL: <span id="error-url"></span></div>
+                    <div>Referrer: <span id="error-referrer"></span></div>
+                </div>
+            </details>
+        </div>
+    </div>
+    
+    <script>
+        let countdownTimer;
+        let autoRefreshEnabled = true;
+        let countdown = 30;
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            // Initialize technical details
+            initTechnicalDetails();
+            
+            // Start countdown
+            startAutoRefresh();
+            
+            // Track error for analytics (if needed)
+            if (typeof gtag !== 'undefined') {
+                gtag('event', 'server_error', {
+                    'error_code': '500',
+                    'page_location': window.location.href,
+                    'page_title': document.title
+                });
+            }
+        });
+        
+        function initTechnicalDetails() {
+            document.getElementById('error-timestamp').textContent = new Date().toISOString();
+            document.getElementById('user-agent').textContent = navigator.userAgent;
+            document.getElementById('error-url').textContent = window.location.href;
+            document.getElementById('error-referrer').textContent = document.referrer || 'Direct';
+            
+            // Generate unique error ID
+            const errorId = 'ERR-500-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+            document.getElementById('error-id').textContent = errorId;
+        }
+        
+        function startAutoRefresh() {
+            if (!autoRefreshEnabled) return;
+            
+            countdownTimer = setInterval(() => {
+                countdown--;
+                document.getElementById('countdown').textContent = countdown;
+                
+                if (countdown <= 0) {
+                    window.location.reload();
+                }
+            }, 1000);
+        }
+        
+        function cancelAutoRefresh() {
+            autoRefreshEnabled = false;
+            clearInterval(countdownTimer);
+            
+            const autoRefreshElement = document.querySelector('.auto-refresh');
+            autoRefreshElement.innerHTML = `
+                <span>⏸️</span>
+                <span>Auto-refresh cancelled</span>
+            `;
+            autoRefreshElement.style.color = 'var(--foreground-tertiary)';
+        }
+        
+        function openLiveChat() {
+            // Integrate with your live chat solution (e.g., Intercom, Crisp, etc.)
+            if (typeof Intercom !== 'undefined') {
+                Intercom('show');
+            } else if (typeof $crisp !== 'undefined') {
+                $crisp.push(['do', 'chat:open']);
+            } else {
+                // Fallback to email
+                window.location.href = 'mailto:support@synthex.com?subject=Server Error - 500 - Live Chat Request';
+            }
+        }
+        
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'r' && (e.ctrlKey || e.metaKey)) {
+                e.preventDefault();
+                window.location.reload();
+            }
+            if (e.key === 'Escape') {
+                window.location.href = '/';
+            }
+        });
+        
+        // Report additional error context
+        window.addEventListener('error', (e) => {
+            console.error('Additional error detected:', e);
+            
+            // Send error details to logging service
+            if (typeof fetch !== 'undefined') {
+                fetch('/api/errors/log', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        type: 'client_error',
+                        message: e.message,
+                        filename: e.filename,
+                        lineno: e.lineno,
+                        colno: e.colno,
+                        stack: e.error ? e.error.stack : null,
+                        url: window.location.href,
+                        userAgent: navigator.userAgent,
+                        timestamp: new Date().toISOString()
+                    })
+                }).catch(() => {
+                    // Ignore errors in error reporting
+                });
+            }
+        });
+    </script>
+</body>
+</html>

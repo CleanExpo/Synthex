@@ -65,3 +65,6 @@ export const optionalAuth = async (
     next();
   }
 };
+
+// Alias for consistency with existing routes
+export const authenticateUser = authenticateToken;
