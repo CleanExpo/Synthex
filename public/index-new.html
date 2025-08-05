@@ -10,8 +10,8 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     
-    <!-- Lucide Icons -->
-    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <!-- Microsoft Fluent System Icons -->
+    <!-- Using inline SVG for premium enterprise-grade icons -->
     <style>
         :root {
             /* Clean, professional color palette */
@@ -689,7 +689,7 @@
             </button>
             <button class="btn btn-secondary" onclick="showLiveDemo()">
                 View Live Demo
-                <i data-lucide="play-circle" class="w-5 h-5 ml-2"></i>
+                <svg class="w-5 h-5 ml-2" viewBox="0 0 20 20" fill="currentColor"><path d="M10 2a8 8 0 100 16 8 8 0 000-16zM8 7.5v5l4-2.5-4-2.5z"/></svg>
             </button>
         </div>
     </section>
@@ -703,42 +703,42 @@
         <div class="features-grid">
             <div class="feature-card">
                 <div class="feature-icon">
-                    <i data-lucide="brain-circuit" class="w-8 h-8"></i>
+                    <svg class="w-8 h-8" viewBox="0 0 32 32" fill="currentColor"><path d="M16 4a10 10 0 0110 10c0 1.25-.23 2.44-.67 3.54A6.67 6.67 0 0130 23.33v3.34A3.33 3.33 0 0126.67 30H5.33A3.33 3.33 0 012 26.67v-3.34a6.67 6.67 0 014.67-6.46A9.97 9.97 0 016 14a10 10 0 0110-10zm0 3.33A6.67 6.67 0 009.33 14c0 .58.07 1.15.22 1.7A10 10 0 0116 13.33a10 10 0 016.45 2.37c.15-.55.22-1.12.22-1.7a6.67 6.67 0 00-6.67-6.66z"/></svg>
                 </div>
                 <h3>50+ AI Models</h3>
                 <p>Access the best AI models from OpenRouter, Claude, GPT-4, and more. Generate content that converts with cutting-edge AI technology.</p>
             </div>
             <div class="feature-card">
                 <div class="feature-icon">
-                    <i data-lucide="target" class="w-8 h-8"></i>
+                    <svg class="w-8 h-8" viewBox="0 0 32 32" fill="currentColor"><path d="M16 2C8.268 2 2 8.268 2 16s6.268 14 14 14 14-6.268 14-14S23.732 2 16 2zm0 4a10 10 0 110 20 10 10 0 010-20zm0 3a7 7 0 100 14 7 7 0 000-14zm0 3a4 4 0 110 8 4 4 0 010-8z"/></svg>
                 </div>
                 <h3>Platform Optimization</h3>
                 <p>Automatically optimize content for Instagram, Twitter, LinkedIn, TikTok, and more. Each platform gets perfectly tailored content.</p>
             </div>
             <div class="feature-card">
                 <div class="feature-icon">
-                    <i data-lucide="bar-chart-3" class="w-8 h-8"></i>
+                    <svg class="w-8 h-8" viewBox="0 0 32 32" fill="currentColor"><path d="M5 28v-12h3v12H5zm6 0V14h3v14h-3zm6 0V2h3v26h-3zm6 0v-16h3v16h-3z"/></svg>
                 </div>
                 <h3>Real-Time Analytics</h3>
                 <p>Track performance, costs, and ROI in real-time. Make data-driven decisions with comprehensive usage analytics.</p>
             </div>
             <div class="feature-card">
                 <div class="feature-icon">
-                    <i data-lucide="shield-check" class="w-8 h-8"></i>
+                    <svg class="w-8 h-8" viewBox="0 0 32 32" fill="currentColor"><path d="M16 2l10 4v10c0 8-6 12-10 16-4-4-10-8-10-16V6l10-4zm6 10l-8 8-4-4 1.5-1.5L14 17l6.5-6.5L22 12z"/></svg>
                 </div>
                 <h3>Secure & Private</h3>
                 <p>Your API keys are encrypted and stored securely. Full control over your data and usage with enterprise-grade security.</p>
             </div>
             <div class="feature-card">
                 <div class="feature-icon">
-                    <i data-lucide="zap" class="w-8 h-8"></i>
+                    <svg class="w-8 h-8" viewBox="0 0 32 32" fill="currentColor"><path d="M18 2l-8 14h6l-2 14 8-14h-6l2-14z"/></svg>
                 </div>
                 <h3>Lightning Fast</h3>
                 <p>Generate variations, optimize content, and analyze performance in seconds. Built for speed and scalability.</p>
             </div>
             <div class="feature-card">
                 <div class="feature-icon">
-                    <i data-lucide="palette" class="w-8 h-8"></i>
+                    <svg class="w-8 h-8" viewBox="0 0 32 32" fill="currentColor"><path d="M16 2C8.268 2 2 8.268 2 16s6.268 14 14 14a2 2 0 002-2v-1a2 2 0 00-2-2h-1.5a1.5 1.5 0 01-1.5-1.5c0-.828.672-1.5 1.5-1.5H16a14 14 0 000-28zM8.5 12a1.5 1.5 0 110 3 1.5 1.5 0 010-3zm3-5a1.5 1.5 0 110 3 1.5 1.5 0 010-3zm9 0a1.5 1.5 0 110 3 1.5 1.5 0 010-3zm3 5a1.5 1.5 0 110 3 1.5 1.5 0 010-3z"/></svg>
                 </div>
                 <h3>Professional Templates</h3>
                 <p>Start with proven templates for ads, social posts, emails, and blogs. Customize everything to match your brand.</p>
@@ -1048,7 +1048,7 @@
                 modal.innerHTML = `
                     <div class="modal-content" style="max-width: 600px;">
                         <button class="modal-close" onclick="this.closest('.modal').remove()">&times;</button>
-                        <h2 style="margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;"><i data-lucide="activity" class="w-6 h-6"></i> Live System Status</h2>
+                        <h2 style="margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;"><svg class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" d="M12 3a9 9 0 100 18 9 9 0 000-18zM12 1a11 11 0 100 22 11 11 0 000-22zm2.5 8a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0zm-2.5 2a1 1 0 011 1v5a1 1 0 11-2 0v-5a1 1 0 011-1z" clip-rule="evenodd"/></svg> Live System Status</h2>
                         <div id="demoContent">
                             <p>Loading live system data...</p>
                         </div>
@@ -1069,10 +1069,10 @@
                         
                         <h4>🔧 Service Status:</h4>
                         <ul style="list-style: none; padding: 0;">
-                            <li><i data-lucide="brain" class="w-4 h-4 inline mr-2"></i>OpenRouter AI: ${healthData.services?.openrouter === 'configured' ? '✅ Ready' : '⚠️ Not configured'}</li>
-                            <li><i data-lucide="cpu" class="w-4 h-4 inline mr-2"></i>Anthropic API: ${healthData.services?.anthropic === 'configured' ? '✅ Ready' : '⚠️ Not configured'}</li>
-                            <li><i data-lucide="key" class="w-4 h-4 inline mr-2"></i>Google OAuth: ${healthData.config?.googleOAuth ? '✅ Ready' : '⚠️ Not configured'}</li>
-                            <li><i data-lucide="database" class="w-4 h-4 inline mr-2"></i>Database: ${healthData.services?.database === 'connected' ? '✅ Connected' : '⚠️ Disconnected'}</li>
+                            <li><svg class="w-4 h-4 inline mr-2" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a5 5 0 015 5c0 .63-.12 1.22-.33 1.77A3.33 3.33 0 0115 10.67v2.66A1.67 1.67 0 0113.33 15H2.67A1.67 1.67 0 011 13.33v-2.66a3.33 3.33 0 012.33-3.2A4.98 4.98 0 013 6a5 5 0 015-5zm0 1.67A3.33 3.33 0 004.67 6c0 .29.03.57.11.85A5 5 0 018 6.67a5 5 0 013.22 1.18c.08-.28.11-.56.11-.85A3.33 3.33 0 008 2.67z"/></svg>OpenRouter AI: ${healthData.services?.openrouter === 'configured' ? '✅ Ready' : '⚠️ Not configured'}</li>
+                            <li><svg class="w-4 h-4 inline mr-2" viewBox="0 0 16 16" fill="currentColor"><path d="M6.5 1A1.5 1.5 0 005 2.5V3H3.5A1.5 1.5 0 002 4.5v7A1.5 1.5 0 003.5 13H5v.5A1.5 1.5 0 006.5 15h3a1.5 1.5 0 001.5-1.5V13h1.5a1.5 1.5 0 001.5-1.5v-7A1.5 1.5 0 0012.5 3H11v-.5A1.5 1.5 0 009.5 1h-3zM6.5 2.5v11h3v-11h-3zM5 4.5V11H3.5v-6.5H5zm6 0H12.5v6.5H11V4.5z"/></svg>Anthropic API: ${healthData.services?.anthropic === 'configured' ? '✅ Ready' : '⚠️ Not configured'}</li>
+                            <li><svg class="w-4 h-4 inline mr-2" viewBox="0 0 16 16" fill="currentColor"><path d="M6.5 7a2.5 2.5 0 015 0v1.5h1A1.5 1.5 0 0114 10v4a1.5 1.5 0 01-1.5 1.5h-9A1.5 1.5 0 012 14v-4a1.5 1.5 0 011.5-1.5h1V7a2.5 2.5 0 012.5-2.5zm0 1a1.5 1.5 0 00-1.5 1.5v1.5h3V9.5A1.5 1.5 0 006.5 8z"/></svg>Google OAuth: ${healthData.config?.googleOAuth ? '✅ Ready' : '⚠️ Not configured'}</li>
+                            <li><svg class="w-4 h-4 inline mr-2" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1c3.314 0 6 1.343 6 3v8c0 1.657-2.686 3-6 3s-6-1.343-6-3V4c0-1.657 2.686-3 6-3zm0 1C5.239 2 3 2.895 3 4s2.239 2 5 2 5-.895 5-2-2.239-2-5-2zM3 5.618C4.204 6.487 5.973 7 8 7s3.796-.513 5-1.382V8c0 1.105-2.239 2-5 2s-5-.895-5-2V5.618zm0 3.764C4.204 10.251 5.973 10.764 8 10.764s3.796-.513 5-1.382V12c0 1.105-2.239 2-5 2s-5-.895-5-2V9.382z"/></svg>Database: ${healthData.services?.database === 'connected' ? '✅ Connected' : '⚠️ Disconnected'}</li>
                         </ul>
                         
                         <div style="margin-top: 1.5rem; padding: 1rem; background: rgba(16, 185, 129, 0.1); border-radius: 8px; border-left: 4px solid #10b981;">
@@ -1090,11 +1090,9 @@
             }
         }
 
-        // Initialize Lucide icons
+        // Initialize Fluent System Icons (using inline SVG - no initialization needed)
         document.addEventListener('DOMContentLoaded', () => {
-            if (typeof lucide !== 'undefined') {
-                lucide.createIcons();
-            }
+            // Icons are now inline SVG - no external library needed
         });
 
         // Handle Google OAuth redirect
