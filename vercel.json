@@ -39,10 +39,6 @@
     {
       "source": "/dashboard",
       "destination": "/api/vercel.js"
-    },
-    {
-      "source": "/",
-      "destination": "/api/vercel.js"
     }
   ],
   "buildCommand": "npm install && npx prisma generate && npm run build:prod",
