@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SYNTHEX - AI Marketing Platform</title>
+    <link rel="icon" type="image/png" href="/logo.png">
+    
+    <!-- Inter Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <!-- Design System & Micro-interactions -->
+    <link rel="stylesheet" href="/css/synthex-design-system.css">
+    <link rel="stylesheet" href="/css/micro-interactions.css">
+    
+    <!-- Additional Styles for Enhanced UI -->
+    <style>
+        :root {
+            --gradient-primary: linear-gradient(135deg, #007AFF 0%, #5856D6 100%);
+            --gradient-secondary: linear-gradient(135deg, #34C759 0%, #007AFF 100%);
+            --gradient-accent: linear-gradient(135deg, #FF9500 0%, #FF3B30 100%);
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --backdrop-blur: 20px;
+        }
+        
+        /* Enhanced glassmorphism background */
+        .gradient-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--gradient-primary);
+            opacity: 0.1;
+            z-index: -2;
+            animation: gradientFlow 20s ease infinite;
+        }
+        
+        .gradient-bg::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle at 30% 20%, rgba(255, 149, 0, 0.2) 0%, transparent 50%),
+                        radial-gradient(circle at 70% 80%, rgba(52, 199, 89, 0.2) 0%, transparent 50%);
+            animation: pulseGlow 15s ease-in-out infinite alternate;
+        }
+        
+        @keyframes gradientFlow {
+            0%, 100% { transform: rotate(0deg) scale(1); }
+            25% { transform: rotate(1deg) scale(1.05); }
+            50% { transform: rotate(0deg) scale(1.1); }
+            75% { transform: rotate(-1deg) scale(1.05); }
+        }
+        
+        @keyframes pulseGlow {
+            0% { opacity: 0.3; }
+            100% { opacity: 0.6; }
+        }
+        
+        /* Enhanced glass surfaces */
+        .glass-surface {
+            background: var(--glass-bg);
+            backdrop-filter: blur(var(--backdrop-blur));
+            -webkit-backdrop-filter: blur(var(--backdrop-blur));
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-xl);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .glass-surface::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+        }
+        
+        /* Status indicator with enhanced animation */
+        .status-enhanced {
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .status-enhanced::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            animation: shimmer 3s infinite;
+        }
+        
+        @keyframes shimmer {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+        
+        /* Enhanced navigation tabs */
+        .nav-tabs-enhanced {
+            background: var(--glass-bg);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-lg);
+            padding: var(--space-2);
+            margin-bottom: var(--space-8);
+            box-shadow: var(--shadow-lg);
+        }
+        
+        .nav-tab-enhanced {
+            position: relative;
+            background: transparent;
+            color: var(--color-text-inverse);
+            border: none;
+            padding: var(--space-3) var(--space-5);
+            border-radius: var(--radius-md);
+            font-weight: var(--font-weight-medium);
+            transition: all var(--duration-moderate) var(--ease-standard);
+            cursor: pointer;
+            overflow: hidden;
+        }
+        
+        .nav-tab-enhanced::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.1);
+            opacity: 0;
+            transition: opacity var(--duration-quick) var(--ease-standard);
+        }
+        
+        .nav-tab-enhanced:hover::before {
+            opacity: 1;
+        }
+        
+        .nav-tab-enhanced.active {
+            background: rgba(255, 255, 255, 0.15);
+            color: var(--color-text-inverse);
+            box-shadow: var(--shadow-sm);
+            transform: translateY(-1px);
+        }
+        
+        .nav-tab-enhanced.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            width: 30px;
+            height: 2px;
+            background: var(--color-text-inverse);
+            border-radius: var(--radius-full);
+            transform: translateX(-50%);
+        }
+        
+        /* Enhanced form controls */
+        .form-control-enhanced {
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: var(--radius-md);
+            padding: var(--space-4);
+            font-family: var(--font-family-system);
+            font-size: var(--font-size-body);
+            color: var(--color-text-primary);
+            transition: all var(--duration-quick) var(--ease-standard);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+        
+        .form-control-enhanced:focus {
+            outline: none;
+            border-color: var(--color-primary);
+            box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.2);
+            background: rgba(255, 255, 255, 0.95);
+        }
+        
+        /* Enhanced buttons */
+        .btn-enhanced {
+            position: relative;
+            background: var(--gradient-primary);
+            color: var(--color-text-inverse);
+            border: none;
+            border-radius: var(--radius-md);
+            padding: var(--space-4) var(--space-6);
+            font-family: var(--font-family-system);
+            font-size: var(--font-size-body);
+            font-weight: var(--font-weight-medium);
+            cursor: pointer;
+            transition: all var(--duration-moderate) var(--ease-standard);
+            overflow: hidden;
+            box-shadow: var(--shadow-md);
+        }
+        
+        .btn-enhanced::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.2);
+            opacity: 0;
+            transition: opacity var(--duration-quick) var(--ease-standard);
+        }
+        
+        .btn-enhanced:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-xl);
+        }
+        
+        .btn-enhanced:hover::before {
+            opacity: 1;
+        }
+        
+        .btn-enhanced:active {
+            transform: translateY(0);
+        }
+        
+        /* Enhanced output area */
+        .output-enhanced {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: var(--radius-lg);
+            padding: var(--space-6);
+            box-shadow: var(--shadow-lg);
+            position: relative;
+        }
+        
+        .output-enhanced::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(0, 122, 255, 0.3), transparent);
+        }
+        
+        /* Loading state enhancements */
+        .loading-enhanced {
+            background: var(--glass-bg);
+            backdrop-filter: blur(var(--backdrop-blur));
+            -webkit-backdrop-filter: blur(var(--backdrop-blur));
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-xl);
+            padding: var(--space-12);
+            text-align: center;
+            color: var(--color-text-inverse);
+        }
+        
+        .spinner-enhanced {
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(255, 255, 255, 0.2);
+            border-top: 3px solid var(--color-text-inverse);
+            border-radius: var(--radius-full);
+            animation: spin 1s linear infinite;
+            margin: 0 auto var(--space-4);
+        }
+        
+        /* Quick templates enhancement */
+        .template-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-lg);
+            padding: var(--space-5);
+            cursor: pointer;
+            transition: all var(--duration-moderate) var(--ease-standard);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .template-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.05);
+            opacity: 0;
+            transition: opacity var(--duration-quick) var(--ease-standard);
+        }
+        
+        .template-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-xl);
+        }
+        
+        .template-card:hover::before {
+            opacity: 1;
+        }
+        
+        .template-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: var(--radius-md);
+            background: var(--gradient-secondary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin-bottom: var(--space-3);
+        }
+        
+        /* Mobile optimizations */
+        @media (max-width: 768px) {
+            .nav-tabs-enhanced {
+                padding: var(--space-1);
+                overflow-x: auto;
+                scrollbar-width: none;
+                -ms-overflow-style: none;
+            }
+            
+            .nav-tabs-enhanced::-webkit-scrollbar {
+                display: none;
+            }
+            
+            .nav-tab-enhanced {
+                padding: var(--space-3) var(--space-4);
+                white-space: nowrap;
+            }
+        }
+        
+        /* Accessibility enhancements */
+        @media (prefers-reduced-motion: reduce) {
+            .gradient-bg,
+            .gradient-bg::before,
+            .status-enhanced::after {
+                animation: none;
+            }
+        }
+        
+        /* High contrast mode */
+        @media (prefers-contrast: high) {
+            .glass-surface,
+            .nav-tabs-enhanced,
+            .template-card {
+                border-color: currentColor;
+                background: rgba(0, 0, 0, 0.8);
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Animated gradient background -->
+    <div class="gradient-bg"></div>
+    
+    <div class="container">
+        <!-- Modern Header -->
+        <header class="text-center mb-8">
+            <div class="flex items-center justify-center gap-4 mb-3">
+                <div class="template-icon">
+                    <img src="/logo.png" alt="SYNTHEX Logo" style="height: 32px; width: auto;">
+                </div>
+                <h1 class="text-title-1 text-inverse" style="margin: 0;">SYNTHEX Platform</h1>
+            </div>
+            <p class="text-headline text-inverse" style="opacity: 0.9;">AI-Powered Marketing Content Generation & Optimization</p>
+        </header>
+        
+        <!-- Enhanced Status Bar -->
+        <div class="glass-surface status-enhanced p-6 mb-8">
+            <div class="flex justify-between items-center text-inverse">
+                <div class="flex items-center gap-3">
+                    <div class="status-indicator status-online">
+                        <div class="status-dot"></div>
+                        <span class="text-callout font-medium">Server Status: <strong id="statusText">Checking...</strong></span>
+                    </div>
+                </div>
+                <div class="text-callout" style="opacity: 0.8;">
+                    <span id="modelInfo">Model: OpenRouter Horizon Beta</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Enhanced Navigation Tabs -->
+        <div class="nav-tabs-enhanced flex gap-2">
+            <button class="nav-tab-enhanced active flex-1" onclick="switchTab('generate')">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                </svg>
+                Generate Content
+            </button>
+            <button class="nav-tab-enhanced flex-1" onclick="switchTab('optimize')">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                </svg>
+                Optimize
+            </button>
+            <button class="nav-tab-enhanced flex-1" onclick="switchTab('variations')">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path>
+                </svg>
+                Variations
+            </button>
+            <button class="nav-tab-enhanced flex-1" onclick="switchTab('test')">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                Test
+            </button>
+        </div>
+        
+        <!-- Generate Content Panel -->
+        <div id="generate-panel" class="content-panel active">
+            <div class="card">
+                <h2>Generate Marketing Content</h2>
+                <form id="generateForm">
+                    <div class="form-group">
+                        <label for="prompt">Describe your product/service and target audience:</label>
+                        <textarea id="prompt" placeholder="E.g., Create a compelling social media post for our new eco-friendly coffee shop targeting millennials who care about sustainability"></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="contentType">Content Type:</label>
+                        <select id="contentType">
+                            <option value="social_post">Social Media Post</option>
+                            <option value="email">Email Campaign</option>
+                            <option value="blog">Blog Post</option>
+                            <option value="ad_copy">Ad Copy</option>
+                            <option value="landing_page">Landing Page Copy</option>
+                            <option value="press_release">Press Release</option>
+                            <option value="general">General Marketing</option>
+                        </select>
+                    </div>
+                    
+                    <button type="submit">Generate Content</button>
+                </form>
+                
+                <div class="examples">
+                    <h4>Example Prompts:</h4>
+                    <div class="example-item" onclick="setExample('generate', 'Launch announcement for our AI-powered project management tool that helps remote teams collaborate better')">
+                        📱 "Launch announcement for AI project management tool"
+                    </div>
+                    <div class="example-item" onclick="setExample('generate', 'Black Friday sale for online fashion store - 50% off everything, targeting young professionals')">
+                        🛍️ "Black Friday fashion sale campaign"
+                    </div>
+                    <div class="example-item" onclick="setExample('generate', 'Welcome email for new subscribers to our fitness app with personalized workout plans')">
+                        💪 "Welcome email for fitness app subscribers"
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Optimize Content Panel -->
+        <div id="optimize-panel" class="content-panel">
+            <div class="card">
+                <h2>Optimize Existing Content</h2>
+                <form id="optimizeForm">
+                    <div class="form-group">
+                        <label for="content">Your Current Content:</label>
+                        <textarea id="content" placeholder="Paste your existing marketing content here to get optimization suggestions and an improved version"></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="platform">Target Platform:</label>
+                        <select id="platform">
+                            <option value="general">General</option>
+                            <option value="twitter">Twitter/X</option>
+                            <option value="instagram">Instagram</option>
+                            <option value="linkedin">LinkedIn</option>
+                            <option value="facebook">Facebook</option>
+                            <option value="tiktok">TikTok</option>
+                            <option value="youtube">YouTube</option>
+                            <option value="email">Email</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Optimization Goals:</label>
+                        <div class="goal-checkboxes">
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="goal-engagement" value="engagement" checked>
+                                <label for="goal-engagement">Engagement</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="goal-conversions" value="conversions" checked>
+                                <label for="goal-conversions">Conversions</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="goal-viral" value="viral">
+                                <label for="goal-viral">Viral Potential</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="goal-brand" value="brand_awareness">
+                                <label for="goal-brand">Brand Awareness</label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <button type="submit">Optimize Content</button>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Variations Panel -->
+        <div id="variations-panel" class="content-panel">
+            <div class="card">
+                <h2>Generate Content Variations</h2>
+                <form id="variationsForm">
+                    <div class="form-group">
+                        <label for="varPrompt">Base Content or Idea:</label>
+                        <textarea id="varPrompt" placeholder="Enter your base content or idea to generate multiple variations for A/B testing"></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="varContentType">Content Type:</label>
+                        <select id="varContentType">
+                            <option value="social_post">Social Media Post</option>
+                            <option value="email">Email Subject Lines</option>
+                            <option value="ad_copy">Ad Headlines</option>
+                            <option value="cta">Call-to-Action Buttons</option>
+                            <option value="tagline">Taglines</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="count">Number of Variations:</label>
+                        <select id="count">
+                            <option value="3">3 Variations</option>
+                            <option value="5">5 Variations</option>
+                            <option value="7">7 Variations</option>
+                            <option value="10">10 Variations</option>
+                        </select>
+                    </div>
+                    
+                    <button type="submit">Generate Variations</button>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Test Connection Panel -->
+        <div id="test-panel" class="content-panel">
+            <div class="card">
+                <h2>Test API Connection</h2>
+                <p style="margin-bottom: 20px;">Test the connection to OpenRouter and verify everything is working correctly.</p>
+                <div class="button-group">
+                    <button onclick="testConnection()">Test Connection</button>
+                    <button onclick="checkModels()">List Available Models</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Output Section -->
+        <div class="output-section">
+            <div class="card">
+                <h3>Output</h3>
+                <div class="loading" id="loading">
+                    <div class="spinner"></div>
+                    <p>Generating content...</p>
+                </div>
+                <div class="output-card">
+                    <pre class="output-content" id="output">Results will appear here...</pre>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        const API = 'http://localhost:3000';
+        
+        // Check server status
+        async function checkStatus() {
+            try {
+                const res = await fetch(`${API}/health`);
+                const data = await res.json();
+                const isOnline = data.status === 'healthy';
+                
+                document.getElementById('statusDot').className = `status-dot ${isOnline ? 'online' : 'offline'}`;
+                document.getElementById('statusText').textContent = isOnline ? 'Online' : 'Offline';
+                
+                // Check OpenRouter status
+                const orRes = await fetch(`${API}/api/openrouter/status`);
+                const orData = await orRes.json();
+                if (orData.configured) {
+                    document.getElementById('modelInfo').textContent = `Model: ${orData.defaultModel || 'OpenRouter Horizon Beta'}`;
+                }
+            } catch (e) {
+                document.getElementById('statusDot').className = 'status-dot offline';
+                document.getElementById('statusText').textContent = 'Offline';
+            }
+        }
+        
+        // Switch tabs
+        function switchTab(tabName) {
+            // Hide all panels
+            document.querySelectorAll('.content-panel').forEach(panel => {
+                panel.classList.remove('active');
+            });
+            
+            // Remove active from all tabs
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Show selected panel
+            document.getElementById(`${tabName}-panel`).classList.add('active');
+            
+            // Highlight selected tab
+            event.target.classList.add('active');
+        }
+        
+        // Set example prompts
+        function setExample(type, text) {
+            if (type === 'generate') {
+                document.getElementById('prompt').value = text;
+            } else if (type === 'variations') {
+                document.getElementById('varPrompt').value = text;
+            }
+        }
+        
+        // Show loading
+        function showLoading() {
+            document.getElementById('loading').classList.add('active');
+            document.getElementById('output').style.display = 'none';
+        }
+        
+        // Hide loading
+        function hideLoading() {
+            document.getElementById('loading').classList.remove('active');
+            document.getElementById('output').style.display = 'block';
+        }
+        
+        // Format output
+        function formatOutput(data) {
+            if (data.content) {
+                return data.content;
+            } else if (data.optimization) {
+                let output = '📊 ANALYSIS:\n' + data.optimization.analysis + '\n\n';
+                output += '✨ OPTIMIZED CONTENT:\n' + data.optimization.optimizedContent + '\n\n';
+                if (data.optimization.suggestions && data.optimization.suggestions.length > 0) {
+                    output += '💡 SUGGESTIONS:\n';
+                    data.optimization.suggestions.forEach((s, i) => {
+                        output += `${i + 1}. ${s}\n`;
+                    });
+                }
+                return output;
+            } else if (data.variations) {
+                let output = '🔄 CONTENT VARIATIONS:\n\n';
+                data.variations.forEach((v, i) => {
+                    output += `--- Variation ${i + 1} ---\n${v}\n\n`;
+                });
+                return output;
+            } else {
+                return JSON.stringify(data, null, 2);
+            }
+        }
+        
+        // Generate content
+        document.getElementById('generateForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const prompt = document.getElementById('prompt').value;
+            const contentType = document.getElementById('contentType').value;
+            
+            if (!prompt) {
+                alert('Please enter a prompt');
+                return;
+            }
+            
+            showLoading();
+            
+            try {
+                const res = await fetch(`${API}/api/openrouter/marketing/generate`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({prompt, contentType})
+                });
+                const data = await res.json();
+                document.getElementById('output').textContent = formatOutput(data);
+            } catch (e) {
+                document.getElementById('output').textContent = 'Error: ' + e.message;
+            }
+            
+            hideLoading();
+        });
+        
+        // Optimize content
+        document.getElementById('optimizeForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const content = document.getElementById('content').value;
+            const platform = document.getElementById('platform').value;
+            
+            if (!content) {
+                alert('Please enter content to optimize');
+                return;
+            }
+            
+            // Get selected goals
+            const goals = [];
+            document.querySelectorAll('.goal-checkboxes input:checked').forEach(checkbox => {
+                goals.push(checkbox.value);
+            });
+            
+            showLoading();
+            
+            try {
+                const res = await fetch(`${API}/api/openrouter/marketing/optimize`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({content, platform, goals})
+                });
+                const data = await res.json();
+                document.getElementById('output').textContent = formatOutput(data);
+            } catch (e) {
+                document.getElementById('output').textContent = 'Error: ' + e.message;
+            }
+            
+            hideLoading();
+        });
+        
+        // Generate variations
+        document.getElementById('variationsForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const prompt = document.getElementById('varPrompt').value;
+            const count = document.getElementById('count').value;
+            const contentType = document.getElementById('varContentType').value;
+            
+            if (!prompt) {
+                alert('Please enter a prompt');
+                return;
+            }
+            
+            showLoading();
+            
+            try {
+                const res = await fetch(`${API}/api/openrouter/marketing/variations`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({prompt, count: parseInt(count), contentType})
+                });
+                const data = await res.json();
+                document.getElementById('output').textContent = formatOutput(data);
+            } catch (e) {
+                document.getElementById('output').textContent = 'Error: ' + e.message;
+            }
+            
+            hideLoading();
+        });
+        
+        // Test connection
+        async function testConnection() {
+            showLoading();
+            
+            try {
+                const res = await fetch(`${API}/api/openrouter/test`);
+                const data = await res.json();
+                document.getElementById('output').textContent = 
+                    `✅ Connection Test ${data.success ? 'Successful' : 'Failed'}\n\n` +
+                    `Response: ${data.response}\n\n` +
+                    `Model: ${data.model}\n` +
+                    `Tokens Used: ${data.usage ? data.usage.total_tokens : 'N/A'}`;
+            } catch (e) {
+                document.getElementById('output').textContent = 'Error: ' + e.message;
+            }
+            
+            hideLoading();
+        }
+        
+        // Check available models
+        async function checkModels() {
+            showLoading();
+            
+            try {
+                const res = await fetch(`${API}/api/openrouter/models`);
+                const data = await res.json();
+                let output = '🤖 Available AI Models:\n\n';
+                output += `Recommended: ${data.recommended}\n\n`;
+                output += 'All Models:\n';
+                data.models.forEach((model, i) => {
+                    output += `${i + 1}. ${model}\n`;
+                });
+                document.getElementById('output').textContent = output;
+            } catch (e) {
+                document.getElementById('output').textContent = 'Error: ' + e.message;
+            }
+            
+            hideLoading();
+        }
+        
+        // Initialize
+        checkStatus();
+        setInterval(checkStatus, 30000); // Check status every 30 seconds
+    </script>
+    <script src="/js/interactions.js"></script>
+    <script src="/js/breadcrumb.js"></script>
+    <script src="/js/ui-helpers.js"></script>
+    <script src="/js/footer.js"></script>
+</body>
+</html>
