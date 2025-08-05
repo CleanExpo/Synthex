@@ -1,4 +1,4 @@
-import { PrismaClient, Campaign } from '@prisma/client';
+import { PrismaClient, type Campaign } from '@prisma/client';
 import { z } from 'zod';
 
 const prisma = new PrismaClient();
@@ -76,7 +76,7 @@ export class CampaignService {
     
     // Add post statistics
     const campaignsWithStats = await Promise.all(
-      campaigns.map(async (campaign) => {
+      campaigns.map(async (campaign: Campaign & { _count: { posts: number } }) => {
         const [scheduledCount, publishedCount] = await prisma.$transaction([
           prisma.post.count({
             where: { campaignId: campaign.id, status: 'scheduled' }
@@ -266,8 +266,8 @@ export class CampaignService {
         description: original.description,
         platform: original.platform,
         status: 'draft',
-        content: original.content,
-        settings: original.settings,
+        content: original.content as any,
+        settings: original.settings as any,
         userId,
         analytics: {
           impressions: 0,

@@ -1,4 +1,4 @@
-import { PrismaClient, Project } from '@prisma/client';
+import { PrismaClient, type Project } from '@prisma/client';
 import { z } from 'zod';
 
 const prisma = new PrismaClient();
@@ -80,7 +80,7 @@ export class ProjectService {
     ]);
     
     // Add computed metrics
-    const projectsWithMetrics = projects.map(project => {
+    const projectsWithMetrics = projects.map((project: Project) => {
       const data = project.data as any || {};
       const items = data.items || [];
       const completedItems = items.filter((item: any) => item.completed).length;
@@ -297,7 +297,7 @@ export class ProjectService {
     let totalItems = 0;
     let completedItems = 0;
     
-    projects.forEach(project => {
+    projects.forEach((project: Project) => {
       // Count by type
       byType[project.type] = (byType[project.type] || 0) + 1;
       
@@ -311,7 +311,7 @@ export class ProjectService {
     // Count recently updated (within last 7 days)
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-    const recentlyUpdated = projects.filter(p => p.updatedAt > sevenDaysAgo).length;
+    const recentlyUpdated = projects.filter((p: Project) => p.updatedAt > sevenDaysAgo).length;
     
     return {
       total: projects.length,
@@ -338,7 +338,7 @@ export class ProjectService {
         name: `${original.name} (Copy)`,
         description: original.description,
         type: original.type,
-        data: original.data,
+        data: original.data as any,
         userId
       }
     });
