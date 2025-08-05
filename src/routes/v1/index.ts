@@ -4,6 +4,9 @@ import openrouterRouter from '../openrouter';
 import mcpTtdRouter from '../mcp-ttd';
 import mleStarRouter from '../mle-star';
 import enhancementRouter from '../enhancement-research';
+import campaignsRouter from '../campaigns';
+import projectsRouter from '../projects';
+import postsRouter from '../posts';
 
 const router = Router();
 
@@ -13,6 +16,9 @@ router.use('/openrouter', openrouterRouter);
 router.use('/mcp-ttd', mcpTtdRouter);
 router.use('/mle-star', mleStarRouter);
 router.use('/enhancement', enhancementRouter);
+router.use('/campaigns', campaignsRouter);
+router.use('/projects', projectsRouter);
+router.use('/posts', postsRouter);
 
 // API v1 info endpoint
 router.get('/', (req, res) => {
@@ -24,7 +30,10 @@ router.get('/', (req, res) => {
       openrouter: '/api/v1/openrouter',
       'mcp-ttd': '/api/v1/mcp-ttd',
       'mle-star': '/api/v1/mle-star',
-      enhancement: '/api/v1/enhancement'
+      enhancement: '/api/v1/enhancement',
+      campaigns: '/api/v1/campaigns',
+      projects: '/api/v1/projects',
+      posts: '/api/v1/posts'
     },
     documentation: '/api-docs'
   });

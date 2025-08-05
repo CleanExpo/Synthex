@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Page Not Found | SYNTHEX</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        /* Reuse glassmorphism design system */
+        :root {
+            --synthex-black: #000000;
+            --synthex-white: #ffffff;
+            --synthex-primary: #0070f3;
+            --synthex-accent: #5e6ad2;
+            --synthex-success: #34C759;
+            --synthex-warning: #FF9500;
+            --synthex-danger: #FF3B30;
+            
+            --background-primary: var(--synthex-black);
+            --background-secondary: #111111;
+            --background-tertiary: #1a1a1a;
+            --foreground-primary: var(--synthex-white);
+            --foreground-secondary: #a3a3a3;
+            --foreground-tertiary: #737373;
+            
+            --gradient-accent: linear-gradient(135deg, #0070f3 0%, #5e6ad2 100%);
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            
+            --space-1: 8px;
+            --space-2: 16px;
+            --space-3: 24px;
+            --space-4: 32px;
+            --space-6: 48px;
+            --space-8: 64px;
+            
+            --radius: 8px;
+            --radius-lg: 16px;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Inter', sans-serif;
+            background: var(--background-primary);
+            color: var(--foreground-primary);
+            line-height: 1.6;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: var(--space-4);
+        }
+        
+        /* Error Container */
+        .error-container {
+            max-width: 600px;
+            width: 100%;
+            text-align: center;
+        }
+        
+        /* Logo */
+        .logo-section {
+            margin-bottom: var(--space-8);
+        }
+        
+        .logo {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--foreground-primary);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-2);
+        }
+        
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: var(--radius);
+            background: var(--gradient-accent);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--synthex-white);
+            font-size: 1.2rem;
+        }
+        
+        /* Error Card */
+        .error-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-lg);
+            padding: var(--space-8);
+            position: relative;
+            overflow: hidden;
+            margin-bottom: var(--space-6);
+        }
+        
+        .error-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: var(--gradient-accent);
+        }
+        
+        /* Error Content */
+        .error-icon {
+            font-size: 6rem;
+            margin-bottom: var(--space-4);
+            opacity: 0.8;
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        .error-code {
+            font-size: 4rem;
+            font-weight: 800;
+            color: var(--synthex-primary);
+            margin-bottom: var(--space-2);
+            text-shadow: 0 0 20px rgba(0, 112, 243, 0.3);
+        }
+        
+        .error-title {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: var(--space-3);
+            color: var(--foreground-primary);
+        }
+        
+        .error-description {
+            font-size: 1.125rem;
+            color: var(--foreground-secondary);
+            margin-bottom: var(--space-6);
+            line-height: 1.6;
+        }
+        
+        /* Actions */
+        .error-actions {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-3);
+            align-items: center;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: var(--space-3);
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        .btn {
+            padding: var(--space-3) var(--space-6);
+            border: none;
+            border-radius: var(--radius);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-2);
+            font-size: 1rem;
+            min-width: 140px;
+            justify-content: center;
+        }
+        
+        .btn-primary {
+            background: var(--gradient-accent);
+            color: var(--synthex-white);
+            box-shadow: 0 4px 16px rgba(0, 112, 243, 0.2);
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0, 112, 243, 0.3);
+        }
+        
+        .btn-secondary {
+            background: transparent;
+            color: var(--foreground-primary);
+            border: 1px solid var(--glass-border);
+        }
+        
+        .btn-secondary:hover {
+            background: var(--glass-bg);
+            transform: translateY(-1px);
+        }
+        
+        /* Help Section */
+        .help-section {
+            background: var(--background-secondary);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-lg);
+            padding: var(--space-6);
+        }
+        
+        .help-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: var(--space-3);
+            color: var(--foreground-primary);
+        }
+        
+        .help-list {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .help-item {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+            padding: var(--space-2) 0;
+            color: var(--foreground-secondary);
+            border-bottom: 1px solid var(--glass-border);
+        }
+        
+        .help-item:last-child {
+            border-bottom: none;
+        }
+        
+        .help-item-icon {
+            color: var(--synthex-primary);
+            font-size: 1.1rem;
+        }
+        
+        .help-link {
+            color: var(--synthex-primary);
+            text-decoration: none;
+            transition: color 0.2s ease;
+        }
+        
+        .help-link:hover {
+            color: var(--synthex-accent);
+            text-decoration: underline;
+        }
+        
+        /* Animations */
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0px);
+            }
+            50% {
+                transform: translateY(-10px);
+            }
+        }
+        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .error-container > * {
+            animation: fadeIn 0.6s ease-out forwards;
+        }
+        
+        .error-container > *:nth-child(2) {
+            animation-delay: 0.1s;
+        }
+        
+        .error-container > *:nth-child(3) {
+            animation-delay: 0.2s;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .error-card {
+                padding: var(--space-6);
+            }
+            
+            .error-code {
+                font-size: 3rem;
+            }
+            
+            .error-title {
+                font-size: 1.5rem;
+            }
+            
+            .error-description {
+                font-size: 1rem;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+                width: 100%;
+            }
+            
+            .btn {
+                width: 100%;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .error-icon {
+                font-size: 4rem;
+            }
+            
+            .error-code {
+                font-size: 2.5rem;
+            }
+            
+            .logo {
+                font-size: 1.5rem;
+            }
+            
+            .logo-icon {
+                width: 32px;
+                height: 32px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="error-container">
+        <!-- Logo -->
+        <div class="logo-section">
+            <a href="/" class="logo">
+                <div class="logo-icon">🚀</div>
+                SYNTHEX
+            </a>
+        </div>
+        
+        <!-- Error Card -->
+        <div class="error-card">
+            <div class="error-icon">🔍</div>
+            <div class="error-code">404</div>
+            <h1 class="error-title">Page Not Found</h1>
+            <p class="error-description">
+                Sorry, we couldn't find the page you're looking for. 
+                The page might have been moved, deleted, or you entered the wrong URL.
+            </p>
+            
+            <div class="error-actions">
+                <div class="action-buttons">
+                    <a href="/" class="btn btn-primary">
+                        <span>🏠</span>
+                        <span>Go Home</span>
+                    </a>
+                    <button class="btn btn-secondary" onclick="history.back()">
+                        <span>←</span>
+                        <span>Go Back</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Help Section -->
+        <div class="help-section">
+            <h2 class="help-title">Need Help?</h2>
+            <ul class="help-list">
+                <li class="help-item">
+                    <span class="help-item-icon">🏠</span>
+                    <span>Visit our <a href="/" class="help-link">homepage</a> to get started</span>
+                </li>
+                <li class="help-item">
+                    <span class="help-item-icon">🚀</span>
+                    <span>Check out your <a href="/dashboard.html" class="help-link">dashboard</a> to manage campaigns</span>
+                </li>
+                <li class="help-item">
+                    <span class="help-item-icon">📝</span>
+                    <span>Create new <a href="/campaigns.html" class="help-link">marketing campaigns</a></span>
+                </li>
+                <li class="help-item">
+                    <span class="help-item-icon">📊</span>
+                    <span>View your <a href="/analytics" class="help-link">analytics and insights</a></span>
+                </li>
+                <li class="help-item">
+                    <span class="help-item-icon">💬</span>
+                    <span>Contact support at <a href="mailto:support@synthex.com" class="help-link">support@synthex.com</a></span>
+                </li>
+            </ul>
+        </div>
+    </div>
+    
+    <script>
+        // Add some interactive behavior
+        document.addEventListener('DOMContentLoaded', () => {
+            // Auto-focus on the primary action button
+            const primaryBtn = document.querySelector('.btn-primary');
+            if (primaryBtn) {
+                primaryBtn.focus();
+            }
+            
+            // Add keyboard navigation
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    window.location.href = '/';
+                }
+                if (e.key === 'Backspace' && e.ctrlKey) {
+                    history.back();
+                }
+            });
+            
+            // Track 404 errors for analytics (if needed)
+            if (typeof gtag !== 'undefined') {
+                gtag('event', 'page_not_found', {
+                    'page_location': window.location.href,
+                    'page_title': document.title
+                });
+            }
+        });
+    </script>
+</body>
+</html>
