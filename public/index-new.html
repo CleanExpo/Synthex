@@ -9,6 +9,9 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
     <style>
         :root {
             /* Clean, professional color palette */
@@ -478,11 +481,12 @@
         .feature-icon {
             width: 60px;
             height: 60px;
-            background: var(--primary-gradient);
-            border-radius: 16px;
+            background: var(--bg-card);
+            color: var(--primary-color);
             display: flex;
             align-items: center;
             justify-content: center;
+            border-radius: 16px;
             font-size: 1.5rem;
             margin-bottom: 1.5rem;
         }
@@ -685,7 +689,7 @@
             </button>
             <button class="btn btn-secondary" onclick="showLiveDemo()">
                 View Live Demo
-                <span>🎯</span>
+                <i data-lucide="play-circle" class="w-5 h-5 ml-2"></i>
             </button>
         </div>
     </section>
@@ -698,32 +702,44 @@
         </div>
         <div class="features-grid">
             <div class="feature-card">
-                <div class="feature-icon">🤖</div>
+                <div class="feature-icon">
+                    <i data-lucide="brain-circuit" class="w-8 h-8"></i>
+                </div>
                 <h3>50+ AI Models</h3>
                 <p>Access the best AI models from OpenRouter, Claude, GPT-4, and more. Generate content that converts with cutting-edge AI technology.</p>
             </div>
             <div class="feature-card">
-                <div class="feature-icon">🎯</div>
+                <div class="feature-icon">
+                    <i data-lucide="target" class="w-8 h-8"></i>
+                </div>
                 <h3>Platform Optimization</h3>
                 <p>Automatically optimize content for Instagram, Twitter, LinkedIn, TikTok, and more. Each platform gets perfectly tailored content.</p>
             </div>
             <div class="feature-card">
-                <div class="feature-icon">📊</div>
+                <div class="feature-icon">
+                    <i data-lucide="bar-chart-3" class="w-8 h-8"></i>
+                </div>
                 <h3>Real-Time Analytics</h3>
                 <p>Track performance, costs, and ROI in real-time. Make data-driven decisions with comprehensive usage analytics.</p>
             </div>
             <div class="feature-card">
-                <div class="feature-icon">🔐</div>
+                <div class="feature-icon">
+                    <i data-lucide="shield-check" class="w-8 h-8"></i>
+                </div>
                 <h3>Secure & Private</h3>
                 <p>Your API keys are encrypted and stored securely. Full control over your data and usage with enterprise-grade security.</p>
             </div>
             <div class="feature-card">
-                <div class="feature-icon">⚡</div>
+                <div class="feature-icon">
+                    <i data-lucide="zap" class="w-8 h-8"></i>
+                </div>
                 <h3>Lightning Fast</h3>
                 <p>Generate variations, optimize content, and analyze performance in seconds. Built for speed and scalability.</p>
             </div>
             <div class="feature-card">
-                <div class="feature-icon">🎨</div>
+                <div class="feature-icon">
+                    <i data-lucide="palette" class="w-8 h-8"></i>
+                </div>
                 <h3>Professional Templates</h3>
                 <p>Start with proven templates for ads, social posts, emails, and blogs. Customize everything to match your brand.</p>
             </div>
@@ -1032,7 +1048,7 @@
                 modal.innerHTML = `
                     <div class="modal-content" style="max-width: 600px;">
                         <button class="modal-close" onclick="this.closest('.modal').remove()">&times;</button>
-                        <h2 style="margin-bottom: 1rem;">🎯 Live System Status</h2>
+                        <h2 style="margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;"><i data-lucide="activity" class="w-6 h-6"></i> Live System Status</h2>
                         <div id="demoContent">
                             <p>Loading live system data...</p>
                         </div>
@@ -1053,10 +1069,10 @@
                         
                         <h4>🔧 Service Status:</h4>
                         <ul style="list-style: none; padding: 0;">
-                            <li>🤖 OpenRouter AI: ${healthData.services?.openrouter === 'configured' ? '✅ Ready' : '⚠️ Not configured'}</li>
-                            <li>🧠 Anthropic API: ${healthData.services?.anthropic === 'configured' ? '✅ Ready' : '⚠️ Not configured'}</li>
-                            <li>🔐 Google OAuth: ${healthData.config?.googleOAuth ? '✅ Ready' : '⚠️ Not configured'}</li>
-                            <li>💾 Database: ${healthData.services?.database === 'connected' ? '✅ Connected' : '⚠️ Disconnected'}</li>
+                            <li><i data-lucide="brain" class="w-4 h-4 inline mr-2"></i>OpenRouter AI: ${healthData.services?.openrouter === 'configured' ? '✅ Ready' : '⚠️ Not configured'}</li>
+                            <li><i data-lucide="cpu" class="w-4 h-4 inline mr-2"></i>Anthropic API: ${healthData.services?.anthropic === 'configured' ? '✅ Ready' : '⚠️ Not configured'}</li>
+                            <li><i data-lucide="key" class="w-4 h-4 inline mr-2"></i>Google OAuth: ${healthData.config?.googleOAuth ? '✅ Ready' : '⚠️ Not configured'}</li>
+                            <li><i data-lucide="database" class="w-4 h-4 inline mr-2"></i>Database: ${healthData.services?.database === 'connected' ? '✅ Connected' : '⚠️ Disconnected'}</li>
                         </ul>
                         
                         <div style="margin-top: 1.5rem; padding: 1rem; background: rgba(16, 185, 129, 0.1); border-radius: 8px; border-left: 4px solid #10b981;">
@@ -1073,6 +1089,13 @@
                 alert('System is currently starting up. Please try again in a moment.');
             }
         }
+
+        // Initialize Lucide icons
+        document.addEventListener('DOMContentLoaded', () => {
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+            }
+        });
 
         // Handle Google OAuth redirect
         document.addEventListener('DOMContentLoaded', () => {

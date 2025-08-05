@@ -10,6 +10,9 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    
     <style>
         /* Reuse glassmorphism design system from campaigns.html */
         :root {
@@ -561,31 +564,31 @@
             </div>
             <nav class="sidebar-nav">
                 <a href="/dashboard.html" class="nav-item active">
-                    <span>🏠</span>
+                    <i data-lucide="home" class="w-5 h-5"></i>
                     <span>Dashboard</span>
                 </a>
                 <a href="/campaigns.html" class="nav-item">
-                    <span>🚀</span>
+                    <i data-lucide="rocket" class="w-5 h-5"></i>
                     <span>Campaigns</span>
                 </a>
                 <a href="/content" class="nav-item">
-                    <span>📝</span>
+                    <i data-lucide="file-text" class="w-5 h-5"></i>
                     <span>Content</span>
                 </a>
                 <a href="/analytics" class="nav-item">
-                    <span>📊</span>
+                    <i data-lucide="bar-chart-3" class="w-5 h-5"></i>
                     <span>Analytics</span>
                 </a>
                 <a href="/calendar" class="nav-item">
-                    <span>📅</span>
+                    <i data-lucide="calendar" class="w-5 h-5"></i>
                     <span>Calendar</span>
                 </a>
                 <a href="/ai-agents" class="nav-item">
-                    <span>🤖</span>
+                    <i data-lucide="brain-circuit" class="w-5 h-5"></i>
                     <span>AI Agents</span>
                 </a>
                 <a href="/settings" class="nav-item">
-                    <span>⚙️</span>
+                    <i data-lucide="settings" class="w-5 h-5"></i>
                     <span>Settings</span>
                 </a>
             </nav>
@@ -634,7 +637,7 @@
                 <!-- Statistics -->
                 <div class="stats-grid">
                     <div class="stat-card">
-                        <div class="stat-icon">🚀</div>
+                        <div class="stat-icon"><i data-lucide="rocket" class="w-6 h-6"></i></div>
                         <div class="stat-label">Total Campaigns</div>
                         <div class="stat-value" id="totalCampaigns">0</div>
                         <div class="stat-change positive" id="campaignsChange">+0 this month</div>
@@ -646,13 +649,13 @@
                         <div class="stat-change positive" id="activeChange">+0 this week</div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-icon">📝</div>
+                        <div class="stat-icon"><i data-lucide="file-text" class="w-6 h-6"></i></div>
                         <div class="stat-label">Total Posts</div>
                         <div class="stat-value" id="totalPosts">0</div>
                         <div class="stat-change positive" id="postsChange">+0 this week</div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-icon">📊</div>
+                        <div class="stat-icon"><i data-lucide="trending-up" class="w-6 h-6"></i></div>
                         <div class="stat-label">Engagement Rate</div>
                         <div class="stat-value" id="engagementRate">0%</div>
                         <div class="stat-change positive" id="engagementChange">+0% this week</div>
@@ -683,28 +686,28 @@
                         </div>
                         <div class="quick-actions-grid">
                             <a href="/campaigns.html" class="quick-action-btn">
-                                <div class="quick-action-icon">🚀</div>
+                                <div class="quick-action-icon"><i data-lucide="rocket" class="w-6 h-6"></i></div>
                                 <div class="quick-action-content">
                                     <div class="quick-action-title">Create Campaign</div>
                                     <div class="quick-action-description">Start a new marketing campaign</div>
                                 </div>
                             </a>
                             <a href="/content" class="quick-action-btn">
-                                <div class="quick-action-icon">📝</div>
+                                <div class="quick-action-icon"><i data-lucide="file-plus" class="w-6 h-6"></i></div>
                                 <div class="quick-action-content">
                                     <div class="quick-action-title">Create Content</div>
                                     <div class="quick-action-description">Generate new posts</div>
                                 </div>
                             </a>
                             <a href="/analytics" class="quick-action-btn">
-                                <div class="quick-action-icon">📊</div>
+                                <div class="quick-action-icon"><i data-lucide="bar-chart-3" class="w-6 h-6"></i></div>
                                 <div class="quick-action-content">
                                     <div class="quick-action-title">View Analytics</div>
                                     <div class="quick-action-description">Check performance metrics</div>
                                 </div>
                             </a>
                             <a href="/calendar" class="quick-action-btn">
-                                <div class="quick-action-icon">📅</div>
+                                <div class="quick-action-icon"><i data-lucide="calendar-plus" class="w-6 h-6"></i></div>
                                 <div class="quick-action-content">
                                     <div class="quick-action-title">Schedule Posts</div>
                                     <div class="quick-action-description">Plan your content calendar</div>
@@ -726,7 +729,7 @@
                     </div>
                     <div class="chart-container" id="metricsChart">
                         <div class="empty-state">
-                            <div class="empty-icon">📈</div>
+                            <div class="empty-icon"><i data-lucide="trending-up" class="w-8 h-8"></i></div>
                             <div class="empty-title">Performance Metrics</div>
                             <div class="empty-description">Charts will appear here once you have campaign data</div>
                         </div>
@@ -742,6 +745,10 @@
         
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
+            // Initialize Lucide icons
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+            }
             checkAuth();
             loadDashboardData();
         });
@@ -874,7 +881,7 @@
             if (activities.length === 0) {
                 container.innerHTML = `
                     <div class="empty-state">
-                        <div class="empty-icon">📝</div>
+                        <div class="empty-icon"><i data-lucide="activity" class="w-8 h-8"></i></div>
                         <div class="empty-title">No recent activity</div>
                         <div class="empty-description">Start by creating your first campaign!</div>
                     </div>
@@ -897,12 +904,12 @@
         // Get activity icon
         function getActivityIcon(type) {
             const icons = {
-                campaign_created: '🚀',
-                campaign_updated: '✏️',
-                post_scheduled: '📅',
-                post_published: '✅',
-                analytics_updated: '📊',
-                default: '📝'
+                campaign_created: '<i data-lucide="rocket" class="w-4 h-4 inline mr-2"></i>',
+                campaign_updated: '<i data-lucide="edit" class="w-4 h-4 inline mr-2"></i>',
+                post_scheduled: '<i data-lucide="calendar-clock" class="w-4 h-4 inline mr-2"></i>',
+                post_published: '<i data-lucide="check-circle" class="w-4 h-4 inline mr-2"></i>',
+                analytics_updated: '<i data-lucide="bar-chart-3" class="w-4 h-4 inline mr-2"></i>',
+                default: '<i data-lucide="activity" class="w-4 h-4 inline mr-2"></i>'
             };
             return icons[type] || icons.default;
         }
