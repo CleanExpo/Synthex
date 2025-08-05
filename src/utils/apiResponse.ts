@@ -93,6 +93,10 @@ export class ApiResponseHandler {
     return this.error(res, 'Validation failed', 422, errors);
   }
 
+  static badRequest(res: Response, message: string = 'Bad request', details?: any): Response {
+    return this.error(res, message, 400, details);
+  }
+
   static serverError(res: Response, error: any): Response {
     console.error('Server error:', error);
     
@@ -126,3 +130,4 @@ export class ApiResponseHandler {
 
 // Export for convenience
 export const ApiRes = ApiResponseHandler;
+export const apiResponse = ApiResponseHandler;

@@ -1,4 +1,4 @@
-import { PrismaClient, Post } from '@prisma/client';
+import { PrismaClient, type Post } from '@prisma/client';
 import { z } from 'zod';
 
 const prisma = new PrismaClient();
@@ -64,10 +64,12 @@ export class PostService {
     
     return await prisma.post.create({
       data: {
-        ...validated,
-        campaign: validated.campaignId ? {
-          connect: { id: validated.campaignId }
-        } : undefined,
+        content: validated.content,
+        platform: validated.platform,
+        status: validated.status || 'draft',
+        campaignId: validated.campaignId!,
+        scheduledAt: validated.scheduledAt,
+        metadata: validated.metadata || null,
         analytics: {
           impressions: 0,
           engagement: 0,
@@ -231,7 +233,11 @@ export class PostService {
     userId: string, 
     publishData?: z.infer<typeof PublishPostSchema>
   ): Promise<Post> {
-    const validated = publishData ? PublishPostSchema.parse(publishData) : {};
+    const validated = publishData ? PublishPostSchema.parse(publishData) : {
+      publishNow: false,
+      scheduledAt: undefined,
+      platform: undefined
+    };
     
     // Verify ownership
     const existing = await prisma.post.findFirst({
@@ -307,10 +313,12 @@ export class PostService {
       validated.posts.map(postData => 
         prisma.post.create({
           data: {
-            ...postData,
-            campaign: postData.campaignId ? {
-              connect: { id: postData.campaignId }
-            } : undefined,
+            content: postData.content,
+            platform: postData.platform,
+            status: postData.status || 'draft',
+            campaignId: postData.campaignId!,
+            scheduledAt: postData.scheduledAt,
+            metadata: postData.metadata || null,
             analytics: {
               impressions: 0,
               engagement: 0,
@@ -452,7 +460,7 @@ export class PostService {
     let totalEngagement = 0;
     let totalImpressions = 0;
     
-    posts.forEach(post => {
+    posts.forEach((post: { platform: string; analytics: any; createdAt: Date }) => {
       byPlatform[post.platform] = (byPlatform[post.platform] || 0) + 1;
       
       const analytics = post.analytics as any || {};
@@ -464,7 +472,7 @@ export class PostService {
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
     
-    const recentPosts = posts.filter(post => post.createdAt > sevenDaysAgo);
+    const recentPosts = posts.filter((post: { platform: string; analytics: any; createdAt: Date }) => post.createdAt > sevenDaysAgo);
     const recentActivity: Array<{ date: string; count: number }> = [];
     
     for (let i = 6; i >= 0; i--) {
@@ -472,7 +480,7 @@ export class PostService {
       date.setDate(date.getDate() - i);
       const dateStr = date.toISOString().split('T')[0];
       
-      const count = recentPosts.filter(post => 
+      const count = recentPosts.filter((post: { platform: string; analytics: any; createdAt: Date }) => 
         post.createdAt.toISOString().split('T')[0] === dateStr
       ).length;
       
@@ -580,7 +588,7 @@ export class PostService {
         platform: original.platform,
         status: 'draft',
         campaignId: original.campaignId,
-        metadata: original.metadata,
+        metadata: original.metadata as any,
         analytics: {
           impressions: 0,
           engagement: 0,
