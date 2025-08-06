@@ -150,6 +150,11 @@ app.get('/demo', (req: Request, res: Response) => {
   res.sendFile('demo.html', { root: path.join(__dirname, '..', 'public') });
 });
 
+// Login endpoint - Authentication page
+app.get('/login', (req: Request, res: Response) => {
+  res.sendFile('login.html', { root: path.join(__dirname, '..', 'public') });
+});
+
 // API info endpoint
 app.get('/api-info', (req: Request, res: Response) => {
   res.json({
