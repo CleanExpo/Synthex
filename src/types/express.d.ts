@@ -1,4 +1,8 @@
-import { User } from '../services/auth';
+import express from 'express';
+
+// Re-export everything from express including the default export
+export default express;
+export * from 'express';
 
 declare global {
   namespace Express {
@@ -14,6 +18,7 @@ declare global {
     }
     
     interface Request {
+      user?: User;
       rateLimit?: {
         resetTime?: number;
         limit?: number;
@@ -22,4 +27,10 @@ declare global {
       };
     }
   }
+}
+
+// Additional type for authenticated requests
+export interface AuthenticatedRequest extends Express.Request {
+  user: Express.User;
+  headers: any;
 }

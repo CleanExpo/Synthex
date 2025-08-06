@@ -148,7 +148,7 @@ export async function createNotification(params: {
 export async function checkCampaignPerformance() {
   try {
     // Get all active campaigns
-    const campaigns = await prisma.campaign.findMany({
+    const campaigns = await (prisma as any).campaign.findMany({
       where: { status: 'active' },
       include: { user: true }
     });
@@ -207,7 +207,7 @@ export async function checkScheduledPosts() {
     dayAfter.setDate(dayAfter.getDate() + 1);
     
     // Get posts scheduled for tomorrow
-    const posts = await prisma.post.findMany({
+    const posts = await (prisma as any).post.findMany({
       where: {
         status: 'scheduled',
         scheduledAt: {
@@ -223,22 +223,24 @@ export async function checkScheduledPosts() {
     });
     
     // Group by user
-    const postsByUser = posts.reduce((acc, post) => {
+    const postsByUser = posts.reduce((acc: Record<string, any[]>, post: any) => {
       const userId = post.campaign.userId;
       if (!acc[userId]) acc[userId] = [];
       acc[userId].push(post);
       return acc;
-    }, {} as Record<string, typeof posts>);
+    }, {} as Record<string, any[]>);
     
     // Send notifications
     for (const [userId, userPosts] of Object.entries(postsByUser)) {
-      await createNotification({
-        userId,
-        type: 'info',
-        title: 'Content Scheduling Reminder',
-        message: `You have ${userPosts.length} posts scheduled for tomorrow. Review them before they go live.`,
-        data: { posts: userPosts.map(p => p.id) }
-      });
+      if (Array.isArray(userPosts)) {
+        await createNotification({
+          userId,
+          type: 'info',
+          title: 'Content Scheduling Reminder',
+          message: `You have ${userPosts.length} posts scheduled for tomorrow. Review them before they go live.`,
+          data: { posts: userPosts.map((p: any) => p.id) }
+        });
+      }
     }
   } catch (error) {
     console.error('Scheduled posts check error:', error);

@@ -27,7 +27,7 @@ export class CampaignService {
   static async create(userId: string, data: z.infer<typeof CreateCampaignSchema>): Promise<Campaign> {
     const validated = CreateCampaignSchema.parse(data);
     
-    return await prisma.campaign.create({
+    return await (prisma as any).campaign.create({
       data: {
         ...validated,
         userId,
@@ -58,8 +58,8 @@ export class CampaignService {
     if (options?.status) where.status = options.status;
     if (options?.platform) where.platform = options.platform;
     
-    const [campaigns, total] = await prisma.$transaction([
-      prisma.campaign.findMany({
+    const [campaigns, total] = await (prisma as any).$transaction([
+      (prisma as any).campaign.findMany({
         where,
         skip,
         take: limit,
@@ -70,17 +70,17 @@ export class CampaignService {
           }
         }
       }),
-      prisma.campaign.count({ where })
+      (prisma as any).campaign.count({ where })
     ]);
     
     // Add post statistics
     const campaignsWithStats = await Promise.all(
       campaigns.map(async (campaign: Campaign & { _count: { posts: number } }) => {
-        const [scheduledCount, publishedCount] = await prisma.$transaction([
-          prisma.post.count({
+        const [scheduledCount, publishedCount] = await (prisma as any).$transaction([
+          (prisma as any).post.count({
             where: { campaignId: campaign.id, status: 'scheduled' }
           }),
-          prisma.post.count({
+          (prisma as any).post.count({
             where: { campaignId: campaign.id, status: 'published' }
           })
         ]);
@@ -101,7 +101,7 @@ export class CampaignService {
    * Get a single campaign by ID
    */
   static async getById(id: string, userId: string): Promise<CampaignWithStats | null> {
-    const campaign = await prisma.campaign.findFirst({
+    const campaign = await (prisma as any).campaign.findFirst({
       where: { id, userId },
       include: {
         posts: {
@@ -113,10 +113,10 @@ export class CampaignService {
     
     if (!campaign) return null;
     
-    const [postCount, scheduledCount, publishedCount] = await prisma.$transaction([
-      prisma.post.count({ where: { campaignId: id } }),
-      prisma.post.count({ where: { campaignId: id, status: 'scheduled' } }),
-      prisma.post.count({ where: { campaignId: id, status: 'published' } })
+    const [postCount, scheduledCount, publishedCount] = await (prisma as any).$transaction([
+      (prisma as any).post.count({ where: { campaignId: id } }),
+      (prisma as any).post.count({ where: { campaignId: id, status: 'scheduled' } }),
+      (prisma as any).post.count({ where: { campaignId: id, status: 'published' } })
     ]);
     
     return {
@@ -138,7 +138,7 @@ export class CampaignService {
     const validated = UpdateCampaignSchema.parse(data);
     
     // Verify ownership
-    const existing = await prisma.campaign.findFirst({
+    const existing = await (prisma as any).campaign.findFirst({
       where: { id, userId }
     });
     
@@ -146,7 +146,7 @@ export class CampaignService {
       throw new Error('Campaign not found');
     }
     
-    return await prisma.campaign.update({
+    return await (prisma as any).campaign.update({
       where: { id },
       data: {
         ...validated,
@@ -160,7 +160,7 @@ export class CampaignService {
    */
   static async delete(id: string, userId: string): Promise<void> {
     // Verify ownership
-    const existing = await prisma.campaign.findFirst({
+    const existing = await (prisma as any).campaign.findFirst({
       where: { id, userId }
     });
     
@@ -169,7 +169,7 @@ export class CampaignService {
     }
     
     // Delete campaign (posts will cascade)
-    await prisma.campaign.delete({
+    await (prisma as any).campaign.delete({
       where: { id }
     });
   }
@@ -186,7 +186,7 @@ export class CampaignService {
       conversions?: number;
     }
   ): Promise<Campaign> {
-    const campaign = await prisma.campaign.findUnique({
+    const campaign = await (prisma as any).campaign.findUnique({
       where: { id }
     });
     
@@ -196,7 +196,7 @@ export class CampaignService {
     
     const currentAnalytics = (campaign.analytics as any) || {};
     
-    return await prisma.campaign.update({
+    return await (prisma as any).campaign.update({
       where: { id },
       data: {
         analytics: {
@@ -220,18 +220,18 @@ export class CampaignService {
     scheduledPosts: number;
     publishedPosts: number;
   }> {
-    const [total, active, draft, completed, totalPosts, scheduledPosts, publishedPosts] = await prisma.$transaction([
-      prisma.campaign.count({ where: { userId } }),
-      prisma.campaign.count({ where: { userId, status: 'active' } }),
-      prisma.campaign.count({ where: { userId, status: 'draft' } }),
-      prisma.campaign.count({ where: { userId, status: 'completed' } }),
-      prisma.post.count({ 
+    const [total, active, draft, completed, totalPosts, scheduledPosts, publishedPosts] = await (prisma as any).$transaction([
+      (prisma as any).campaign.count({ where: { userId } }),
+      (prisma as any).campaign.count({ where: { userId, status: 'active' } }),
+      (prisma as any).campaign.count({ where: { userId, status: 'draft' } }),
+      (prisma as any).campaign.count({ where: { userId, status: 'completed' } }),
+      (prisma as any).post.count({ 
         where: { campaign: { userId } } 
       }),
-      prisma.post.count({ 
+      (prisma as any).post.count({ 
         where: { campaign: { userId }, status: 'scheduled' } 
       }),
-      prisma.post.count({ 
+      (prisma as any).post.count({ 
         where: { campaign: { userId }, status: 'published' } 
       })
     ]);
@@ -251,7 +251,7 @@ export class CampaignService {
    * Clone a campaign
    */
   static async clone(id: string, userId: string): Promise<Campaign> {
-    const original = await prisma.campaign.findFirst({
+    const original = await (prisma as any).campaign.findFirst({
       where: { id, userId }
     });
     
@@ -259,7 +259,7 @@ export class CampaignService {
       throw new Error('Campaign not found');
     }
     
-    return await prisma.campaign.create({
+    return await (prisma as any).campaign.create({
       data: {
         name: `${original.name} (Copy)`,
         description: original.description,

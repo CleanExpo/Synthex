@@ -84,7 +84,7 @@ export class AuthService {
     const { email, password, name } = userData;
 
     // Check if user already exists
-    const existingUser = await prisma.user.findUnique({
+    const existingUser = await (prisma as any).user.findUnique({
       where: { email }
     });
 
@@ -96,7 +96,7 @@ export class AuthService {
     const hashedPassword = await this.hashPassword(password);
 
     // Create user
-    const user = await prisma.user.create({
+    const user = await (prisma as any).user.create({
       data: {
         email,
         password: hashedPassword,
@@ -118,7 +118,7 @@ export class AuthService {
     const { email, name, googleId, avatar } = userData;
 
     // Create user with Google data
-    const user = await prisma.user.create({
+    const user = await (prisma as any).user.create({
       data: {
         email,
         name,
@@ -143,7 +143,7 @@ export class AuthService {
   }
 
   async findUserByEmail(email: string): Promise<User | null> {
-    const user = await prisma.user.findUnique({
+    const user = await (prisma as any).user.findUnique({
       where: { email },
       select: {
         id: true,
@@ -165,7 +165,7 @@ export class AuthService {
     avatar?: string;
     lastLogin: Date;
   }): Promise<User> {
-    const user = await prisma.user.update({
+    const user = await (prisma as any).user.update({
       where: { id: userId },
       data: {
         googleId: data.googleId,
@@ -190,7 +190,7 @@ export class AuthService {
     const { email, password } = credentials;
 
     // Find user
-    const user = await prisma.user.findUnique({
+    const user = await (prisma as any).user.findUnique({
       where: { email },
       select: {
         id: true,
@@ -224,7 +224,7 @@ export class AuthService {
   }
 
   async getUserById(userId: string): Promise<User | null> {
-    const user = await prisma.user.findUnique({
+    const user = await (prisma as any).user.findUnique({
       where: { id: userId },
       select: {
         id: true,
@@ -249,14 +249,14 @@ export class AuthService {
       encryptedKeys.anthropicApiKey = this.encryptApiKey(apiKeys.anthropicApiKey);
     }
 
-    await prisma.user.update({
+    await (prisma as any).user.update({
       where: { id: userId },
       data: encryptedKeys
     });
   }
 
   async getUserApiKeys(userId: string): Promise<{ openrouterApiKey?: string; anthropicApiKey?: string }> {
-    const user = await prisma.user.findUnique({
+    const user = await (prisma as any).user.findUnique({
       where: { id: userId },
       select: {
         openrouterApiKey: true,
@@ -321,7 +321,7 @@ export class AuthService {
     responseData?: any;
     errorMessage?: string;
   }): Promise<void> {
-    await prisma.apiUsage.create({
+    await (prisma as any).apiUsage.create({
       data: {
         userId,
         endpoint,
@@ -331,7 +331,7 @@ export class AuthService {
   }
 
   async getUserApiUsage(userId: string, limit: number = 100): Promise<any[]> {
-    return prisma.apiUsage.findMany({
+    return (prisma as any).apiUsage.findMany({
       where: { userId },
       orderBy: { createdAt: 'desc' },
       take: limit,
@@ -352,7 +352,7 @@ export class AuthService {
     const code = Math.floor(100000 + Math.random() * 900000).toString();
     const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
     
-    await prisma.user.update({
+    await (prisma as any).user.update({
       where: { email },
       data: {
         resetCode: code,
@@ -364,7 +364,7 @@ export class AuthService {
   }
 
   async verifyResetCode(email: string, code: string): Promise<string | null> {
-    const user = await prisma.user.findUnique({
+    const user = await (prisma as any).user.findUnique({
       where: { email },
       select: {
         id: true,
@@ -384,7 +384,7 @@ export class AuthService {
     // Generate a temporary token for password reset
     const resetToken = crypto.randomBytes(32).toString('hex');
     
-    await prisma.user.update({
+    await (prisma as any).user.update({
       where: { email },
       data: {
         resetToken,
@@ -396,7 +396,7 @@ export class AuthService {
   }
 
   async resetPasswordWithToken(token: string, newPassword: string): Promise<boolean> {
-    const user = await prisma.user.findFirst({
+    const user = await (prisma as any).user.findFirst({
       where: {
         resetToken: token,
         resetTokenExpires: {
@@ -411,7 +411,7 @@ export class AuthService {
     
     const hashedPassword = await this.hashPassword(newPassword);
     
-    await prisma.user.update({
+    await (prisma as any).user.update({
       where: { id: user.id },
       data: {
         password: hashedPassword,
@@ -433,7 +433,7 @@ export class AuthService {
   }
 
   async updateUserProfile(userId: string, data: { name?: string; preferences?: any }): Promise<User> {
-    const user = await prisma.user.update({
+    const user = await (prisma as any).user.update({
       where: { id: userId },
       data: {
         name: data.name,

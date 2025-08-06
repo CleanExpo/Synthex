@@ -3,6 +3,7 @@ import { authService, User } from '../services/auth';
 
 export interface AuthenticatedRequest extends Request {
   user?: User;
+  headers: any;
 }
 
 export const authenticateToken: RequestHandler = async (

@@ -6,7 +6,7 @@ const isServerless = process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME;
 
 // Create Prisma Client with Accelerate for production/serverless
 // or regular client for local development
-const globalForPrisma = global as unknown as { prisma: PrismaClient };
+const globalForPrisma = global as unknown as { prisma: any };
 
 export const prisma = globalForPrisma.prisma ||
   (isServerless 
