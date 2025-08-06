@@ -10,6 +10,20 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     
+    <script>
+        // Check authentication status on page load
+        (function() {
+            const token = localStorage.getItem('synthex_token');
+            const currentPath = window.location.pathname;
+            const publicPaths = ['/auth.html', '/auth-improved.html', '/demo.html', '/google-oauth-test.html'];
+            
+            if (!token && !publicPaths.includes(currentPath) && currentPath !== '/') {
+                // Redirect to auth if no token and not on public page
+                window.location.href = '/auth.html';
+            }
+        })();
+    </script>
+    
     <!-- Microsoft Fluent System Icons -->
     <!-- Using inline SVG for premium enterprise-grade icons -->
     <style>
@@ -664,8 +678,8 @@
                 <li><a href="/dashboard">Dashboard</a></li>
             </ul>
             <div class="nav-actions">
-                <button class="btn btn-secondary" onclick="openAuthModal('login')">Sign In</button>
-                <button class="btn btn-primary" onclick="openAuthModal('register')">Get Started Free</button>
+                <a href="/auth.html" class="btn btn-secondary">Sign In</a>
+                <a href="/auth.html?tab=register" class="btn btn-primary">Get Started Free</a>
             </div>
         </nav>
     </header>
