@@ -879,6 +879,7 @@
             e.preventDefault();
             const prompt = document.getElementById('prompt').value;
             const contentType = document.getElementById('contentType').value;
+            const tone = document.getElementById('tone').value;
             
             if (!prompt) {
                 showToast('Please enter a prompt', 'error');
@@ -888,16 +889,49 @@
             showLoading();
             
             try {
-                const res = await fetch(`${API}/api/openrouter/marketing/generate`, {
+                const token = localStorage.getItem('authToken');
+                const res = await fetch('/api/v1/content/generate', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ prompt, contentType })
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': token ? `Bearer ${token}` : ''
+                    },
+                    body: JSON.stringify({ 
+                        prompt, 
+                        platform: contentType === 'social_post' ? 'twitter' : 'all',
+                        tone: tone || 'professional'
+                    })
                 });
                 
-                const data = await res.json();
-                if (data.content) {
-                    showOutput(data.content);
+                const result = await res.json();
+                if (result.data?.content) {
+                    const output = `
+                        <div class="generated-content">
+                            <h4>Generated Content:</h4>
+                            <div class="content-preview">${result.data.content.replace(/\n/g, '<br>')}</div>
+                            
+                            ${result.data.suggestions ? `
+                                <h4 style="margin-top: 2rem;">Suggestions:</h4>
+                                <ul class="suggestions-list">
+                                    ${result.data.suggestions.map(s => `<li><strong>${s.title}:</strong> ${s.description}</li>`).join('')}
+                                </ul>
+                            ` : ''}
+                            
+                            ${result.data.metadata ? `
+                                <div class="metadata" style="margin-top: 1.5rem; padding: 1rem; background: var(--bg-card); border-radius: 8px; font-size: 0.9rem;">
+                                    <strong>Metadata:</strong> 
+                                    ${result.data.metadata.wordCount} words, 
+                                    ${result.data.metadata.characterCount} characters, 
+                                    ~${result.data.metadata.estimatedReadTime} min read
+                                </div>
+                            ` : ''}
+                        </div>
+                    `;
+                    showOutput(output);
                     showToast('Content generated successfully!');
+                } else if (result.error) {
+                    hideLoading();
+                    showToast(result.error, 'error');
                 } else {
                     hideLoading();
                     showToast('Failed to generate content', 'error');
