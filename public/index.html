@@ -804,6 +804,147 @@
         </div>
     </div>
 
+    <!-- API Keys Management Modal -->
+    <div id="apiKeysModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="glass rounded-2xl p-8 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div class="flex items-center justify-between mb-6">
+                <div>
+                    <h2 class="text-2xl font-bold">API Key Management</h2>
+                    <p class="text-[var(--text-secondary)]">Configure your AI service API keys</p>
+                </div>
+                <button onclick="closeApiKeysModal()" class="p-2 rounded-lg hover:bg-[var(--border)] transition-smooth">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            
+            <!-- Current API Keys Status -->
+            <div class="mb-8">
+                <h3 class="text-lg font-semibold mb-4">Current Configuration</h3>
+                <div class="grid md:grid-cols-2 gap-4">
+                    <div class="glass rounded-xl p-4">
+                        <div class="flex items-center justify-between mb-2">
+                            <div class="flex items-center gap-3">
+                                <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white text-xs font-bold">
+                                    OR
+                                </div>
+                                <span class="font-medium">OpenRouter</span>
+                            </div>
+                            <span id="openrouterStatus" class="text-sm text-gray-500">Not set</span>
+                        </div>
+                        <p class="text-xs text-[var(--text-secondary)] mb-2">Multiple AI models access</p>
+                        <div class="text-sm font-mono bg-[var(--bg-primary)] p-2 rounded border">
+                            <span id="openrouterKeyDisplay">Not configured</span>
+                        </div>
+                        <button onclick="testApiKey('openrouter')" class="mt-2 px-3 py-1 text-xs rounded-lg border border-[var(--border)] hover:bg-[var(--border)] transition-smooth">
+                            Test Connection
+                        </button>
+                    </div>
+                    
+                    <div class="glass rounded-xl p-4">
+                        <div class="flex items-center justify-between mb-2">
+                            <div class="flex items-center gap-3">
+                                <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center text-white text-xs font-bold">
+                                    AI
+                                </div>
+                                <span class="font-medium">Anthropic</span>
+                            </div>
+                            <span id="anthropicStatus" class="text-sm text-gray-500">Not set</span>
+                        </div>
+                        <p class="text-xs text-[var(--text-secondary)] mb-2">Claude AI models</p>
+                        <div class="text-sm font-mono bg-[var(--bg-primary)] p-2 rounded border">
+                            <span id="anthropicKeyDisplay">Not configured</span>
+                        </div>
+                        <button onclick="testApiKey('anthropic')" class="mt-2 px-3 py-1 text-xs rounded-lg border border-[var(--border)] hover:bg-[var(--border)] transition-smooth">
+                            Test Connection
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- API Usage Statistics -->
+            <div class="mb-8">
+                <h3 class="text-lg font-semibold mb-4">Usage Statistics</h3>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div class="text-center">
+                        <div class="text-xl font-bold text-[var(--accent)]" id="totalRequests">0</div>
+                        <div class="text-sm text-[var(--text-secondary)]">Total Requests</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-xl font-bold text-[var(--accent)]" id="successRate">0%</div>
+                        <div class="text-sm text-[var(--text-secondary)]">Success Rate</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-xl font-bold text-[var(--accent)]" id="totalTokens">0</div>
+                        <div class="text-sm text-[var(--text-secondary)]">Total Tokens</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-xl font-bold text-[var(--accent)]" id="totalCost">$0</div>
+                        <div class="text-sm text-[var(--text-secondary)]">Total Cost</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Add/Update API Keys Form -->
+            <div class="mb-6">
+                <h3 class="text-lg font-semibold mb-4">Update API Keys</h3>
+                <form id="apiKeysForm" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-2">OpenRouter API Key</label>
+                        <input 
+                            type="password" 
+                            id="openrouterApiKey"
+                            class="w-full px-4 py-3 rounded-xl bg-[var(--bg-primary)] border border-[var(--border)] focus:border-[var(--accent)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:ring-opacity-20 transition-smooth font-mono text-sm"
+                            placeholder="sk-or-v1-..."
+                        >
+                        <p class="text-xs text-[var(--text-secondary)] mt-1">
+                            Get your API key from <a href="https://openrouter.ai/keys" target="_blank" class="text-[var(--accent)] hover:underline">openrouter.ai/keys</a>
+                        </p>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Anthropic API Key</label>
+                        <input 
+                            type="password" 
+                            id="anthropicApiKey"
+                            class="w-full px-4 py-3 rounded-xl bg-[var(--bg-primary)] border border-[var(--border)] focus:border-[var(--accent)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:ring-opacity-20 transition-smooth font-mono text-sm"
+                            placeholder="sk-ant-api03-..."
+                        >
+                        <p class="text-xs text-[var(--text-secondary)] mt-1">
+                            Get your API key from <a href="https://console.anthropic.com/" target="_blank" class="text-[var(--accent)] hover:underline">console.anthropic.com</a>
+                        </p>
+                    </div>
+                    
+                    <div class="flex gap-3">
+                        <button type="button" onclick="updateApiKeys()" class="btn-primary">
+                            Update API Keys
+                        </button>
+                        <button type="button" onclick="document.getElementById('apiKeysForm').reset()" class="px-4 py-2 border border-[var(--border)] rounded-lg hover:bg-[var(--border)] transition-smooth">
+                            Clear Form
+                        </button>
+                    </div>
+                </form>
+            </div>
+            
+            <!-- Security Notice -->
+            <div class="glass rounded-xl p-4 border-l-4 border-yellow-500">
+                <div class="flex items-start gap-3">
+                    <svg class="w-5 h-5 text-yellow-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                    </svg>
+                    <div class="text-sm">
+                        <p class="font-medium text-yellow-600 mb-1">Security Notice</p>
+                        <p class="text-[var(--text-secondary)]">
+                            Your API keys are encrypted and stored securely. They are only used for making requests to AI services on your behalf.
+                            Never share your API keys with others.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Toast Notification -->
     <div id="toast" class="fixed bottom-4 right-4 transform translate-y-full transition-transform duration-300 z-50">
         <div class="glass rounded-lg px-6 py-4 flex items-center gap-3 min-w-[300px]">
@@ -1196,7 +1337,129 @@
         }
         
         function showApiKeysModal() {
-            showToast('API Keys management coming soon!');
+            document.getElementById('apiKeysModal').classList.remove('hidden');
+            loadApiKeys();
+        }
+        
+        function closeApiKeysModal() {
+            document.getElementById('apiKeysModal').classList.add('hidden');
+        }
+        
+        async function loadApiKeys() {
+            try {
+                const token = localStorage.getItem('authToken');
+                const response = await fetch('/api/v1/auth/api-keys', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                const result = await response.json();
+                if (result.apiKeys) {
+                    const keys = result.apiKeys;
+                    
+                    // Update OpenRouter key display
+                    document.getElementById('openrouterKeyDisplay').textContent = 
+                        keys.openrouterApiKey || 'Not configured';
+                    document.getElementById('openrouterStatus').className = 
+                        keys.hasOpenRouterKey ? 'text-green-500' : 'text-gray-500';
+                    document.getElementById('openrouterStatus').textContent = 
+                        keys.hasOpenRouterKey ? '✓ Configured' : 'Not set';
+                    
+                    // Update Anthropic key display
+                    document.getElementById('anthropicKeyDisplay').textContent = 
+                        keys.anthropicApiKey || 'Not configured';
+                    document.getElementById('anthropicStatus').className = 
+                        keys.hasAnthropicKey ? 'text-green-500' : 'text-gray-500';
+                    document.getElementById('anthropicStatus').textContent = 
+                        keys.hasAnthropicKey ? '✓ Configured' : 'Not set';
+                }
+                
+                // Load usage statistics
+                loadApiUsage();
+            } catch (error) {
+                console.error('Failed to load API keys:', error);
+                showToast('Failed to load API keys', 'error');
+            }
+        }
+        
+        async function loadApiUsage() {
+            try {
+                const token = localStorage.getItem('authToken');
+                const response = await fetch('/api/v1/auth/usage?limit=50', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                const result = await response.json();
+                if (result.summary) {
+                    const summary = result.summary;
+                    document.getElementById('totalRequests').textContent = summary.totalRequests;
+                    document.getElementById('successRate').textContent = 
+                        `${(100 - parseFloat(summary.errorRate)).toFixed(1)}%`;
+                    document.getElementById('totalTokens').textContent = summary.totalTokens.toLocaleString();
+                    document.getElementById('totalCost').textContent = `$${summary.totalCost}`;
+                }
+            } catch (error) {
+                console.error('Failed to load usage:', error);
+            }
+        }
+        
+        async function updateApiKeys() {
+            const openrouterKey = document.getElementById('openrouterApiKey').value;
+            const anthropicKey = document.getElementById('anthropicApiKey').value;
+            
+            if (!openrouterKey && !anthropicKey) {
+                showToast('Please provide at least one API key', 'error');
+                return;
+            }
+            
+            try {
+                const token = localStorage.getItem('authToken');
+                const response = await fetch('/api/v1/auth/api-keys', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}` 
+                    },
+                    body: JSON.stringify({
+                        openrouterApiKey: openrouterKey || undefined,
+                        anthropicApiKey: anthropicKey || undefined
+                    })
+                });
+                
+                const result = await response.json();
+                if (response.ok) {
+                    showToast('API keys updated successfully!');
+                    // Clear form
+                    document.getElementById('apiKeysForm').reset();
+                    // Reload key display
+                    loadApiKeys();
+                } else {
+                    if (result.details && Array.isArray(result.details)) {
+                        const errors = result.details.map(detail => detail.msg).join(', ');
+                        showToast(`Validation failed: ${errors}`, 'error');
+                    } else {
+                        showToast(result.error || 'Failed to update API keys', 'error');
+                    }
+                }
+            } catch (error) {
+                console.error('Failed to update API keys:', error);
+                showToast('Error updating API keys: ' + error.message, 'error');
+            }
+        }
+        
+        async function testApiKey(provider) {
+            try {
+                const endpoint = provider === 'openrouter' ? '/api/openrouter/test' : '/api/anthropic/test';
+                const response = await fetch(endpoint);
+                const result = await response.json();
+                
+                if (result.success) {
+                    showToast(`${provider.charAt(0).toUpperCase() + provider.slice(1)} API key is working!`);
+                } else {
+                    showToast(`${provider.charAt(0).toUpperCase() + provider.slice(1)} API test failed: ${result.message}`, 'error');
+                }
+            } catch (error) {
+                showToast(`Error testing ${provider} API: ${error.message}`, 'error');
+            }
         }
         
         async function loadAnalytics() {
