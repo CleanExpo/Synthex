@@ -815,35 +815,100 @@
         
         async function loadHistory() {
             try {
-                const res = await fetch(`${API}/api/openrouter/logs/recent?limit=10`);
-                const data = await res.json();
+                const token = localStorage.getItem('authToken');
+                const res = await fetch('/api/v1/content/drafts', {
+                    method: 'GET',
+                    headers: { 
+                        'Authorization': token ? `Bearer ${token}` : ''
+                    }
+                });
                 
+                const result = await res.json();
                 const historyContent = document.getElementById('historyContent');
-                if (data.logs && data.logs.length > 0) {
-                    historyContent.innerHTML = data.logs.map(log => `
+                
+                if (result.data && result.data.length > 0) {
+                    historyContent.innerHTML = result.data.map(draft => `
                         <div class="glass rounded-xl p-6 card-hover">
                             <div class="flex justify-between items-start mb-3">
                                 <span class="text-sm font-medium px-3 py-1 rounded-full bg-[var(--accent)] bg-opacity-20 text-[var(--accent)]">
-                                    ${log.type}
+                                    ${draft.platform || 'Content'}
                                 </span>
                                 <span class="text-xs text-[var(--text-secondary)]">
-                                    ${new Date(log.timestamp).toLocaleString()}
+                                    ${new Date(draft.createdAt).toLocaleString()}
                                 </span>
                             </div>
-                            <p class="text-sm text-[var(--text-secondary)] mb-2">
-                                ${log.input.prompt || log.input.content || 'No input'}
-                            </p>
-                            <div class="text-xs text-[var(--text-secondary)]">
-                                Processing time: ${log.metadata.processingTime || 'N/A'}ms
+                            <div class="mb-3">
+                                <h4 class="font-medium text-sm mb-2">Generated Content:</h4>
+                                <p class="text-sm text-[var(--text-secondary)] mb-2 max-h-20 overflow-hidden">
+                                    ${draft.content ? draft.content.substring(0, 200) + (draft.content.length > 200 ? '...' : '') : 'No content'}
+                                </p>
+                            </div>
+                            ${draft.metadata ? `
+                                <div class="flex gap-4 text-xs text-[var(--text-secondary)]">
+                                    ${draft.metadata.wordCount ? `<span>${draft.metadata.wordCount} words</span>` : ''}
+                                    ${draft.metadata.characterCount ? `<span>${draft.metadata.characterCount} chars</span>` : ''}
+                                    ${draft.metadata.status ? `<span class="px-2 py-1 rounded bg-[var(--bg-primary)]">${draft.metadata.status}</span>` : ''}
+                                </div>
+                            ` : ''}
+                            <div class="flex gap-2 mt-3">
+                                <button onclick="viewDraft('${draft.id}')" class="px-3 py-1 text-xs rounded-lg bg-[var(--accent)] bg-opacity-20 text-[var(--accent)] hover:bg-opacity-30 transition-smooth">
+                                    View Full
+                                </button>
+                                <button onclick="editDraft('${draft.id}')" class="px-3 py-1 text-xs rounded-lg border border-[var(--border)] hover:bg-[var(--border)] transition-smooth">
+                                    Edit
+                                </button>
                             </div>
                         </div>
                     `).join('');
+                } else if (result.error) {
+                    historyContent.innerHTML = `
+                        <div class="text-center py-8">
+                            <p class="text-[var(--text-secondary)] mb-4">Authentication required to view history</p>
+                            <button onclick="showLogin()" class="btn-primary">
+                                Sign In to View History
+                            </button>
+                        </div>
+                    `;
                 } else {
-                    historyContent.innerHTML = '<p class="text-center text-[var(--text-secondary)]">No history available yet.</p>';
+                    historyContent.innerHTML = `
+                        <div class="text-center py-8">
+                            <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-[var(--accent)] bg-opacity-20 flex items-center justify-center">
+                                <svg class="w-8 h-8 text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                            </div>
+                            <p class="text-[var(--text-secondary)]">No content history yet. Generate some content to see it here!</p>
+                        </div>
+                    `;
                 }
             } catch (error) {
                 console.error('Failed to load history:', error);
+                const historyContent = document.getElementById('historyContent');
+                historyContent.innerHTML = `
+                    <div class="text-center py-8">
+                        <p class="text-red-500 mb-4">Failed to load history</p>
+                        <button onclick="loadHistory()" class="btn-primary">
+                            Try Again
+                        </button>
+                    </div>
+                `;
             }
+        }
+        
+        // Helper functions for history interactions
+        function viewDraft(draftId) {
+            // TODO: Implement draft viewing modal
+            showToast('Draft viewing feature coming soon!');
+        }
+        
+        function editDraft(draftId) {
+            // TODO: Implement draft editing
+            showToast('Draft editing feature coming soon!');
+        }
+        
+        function showLogin() {
+            // TODO: Implement login modal
+            showToast('Login feature coming soon!');
         }
         
         async function loadAnalytics() {
