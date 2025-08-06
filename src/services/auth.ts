@@ -2,16 +2,15 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 
-// Import Prisma client
-import { PrismaClient } from '@prisma/client';
+// Import centralized Prisma client with Accelerate
+import { prisma } from '../lib/prisma';
 
-const prisma = new PrismaClient();
 let useMockAuth = false;
 
 // Connect to database
 prisma.$connect()
   .then(() => {
-    console.log('✅ Connected to database');
+    console.log('✅ Connected to database with Prisma Accelerate');
   })
   .catch((error) => {
     console.log('⚠️ Database connection failed, using in-memory mock:', error.message);

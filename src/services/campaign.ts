@@ -1,7 +1,6 @@
-import { PrismaClient, type Campaign } from '@prisma/client';
+import { type Campaign } from '@prisma/client';
 import { z } from 'zod';
-
-const prisma = new PrismaClient();
+import { prisma } from '../lib/prisma';
 
 // Validation schemas
 export const CreateCampaignSchema = z.object({
