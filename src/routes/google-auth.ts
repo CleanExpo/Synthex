@@ -9,6 +9,15 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
   passport = require('../config/passport').default;
 }
 
+// Google OAuth status route
+router.get('/google/status', (req: Request, res: Response) => {
+  const isConfigured = !!(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET);
+  res.json({
+    configured: isConfigured,
+    message: isConfigured ? 'Google OAuth is configured' : 'Google OAuth is not configured'
+  });
+});
+
 // Google OAuth login route
 router.get('/google', (req: Request, res: Response, next: any) => {
   if (!passport) {
