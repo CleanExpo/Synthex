@@ -50,6 +50,8 @@ export interface ApiUsage {
   status: string;
   createdAt: Date;
   errorMessage?: string;
+  requestData?: any;
+  responseData?: any;
 }
 
 // In-memory storage
