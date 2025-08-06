@@ -2,22 +2,21 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 
-// Try to import Prisma, but use mock if not available
-let prisma: any;
+// Import Prisma client
+import { PrismaClient } from '@prisma/client';
+
+const prisma = new PrismaClient();
 let useMockAuth = false;
 
-try {
-  const { PrismaClient } = require('@prisma/client');
-  prisma = new PrismaClient();
-  // Test connection
-  prisma.$connect().catch(() => {
-    console.log('Database connection failed, using in-memory mock');
+// Connect to database
+prisma.$connect()
+  .then(() => {
+    console.log('✅ Connected to database');
+  })
+  .catch((error) => {
+    console.log('⚠️ Database connection failed, using in-memory mock:', error.message);
     useMockAuth = true;
   });
-} catch (error) {
-  console.log('Prisma not available, using in-memory mock');
-  useMockAuth = true;
-}
 
 export interface User {
   id: string;
@@ -454,14 +453,7 @@ export class AuthService {
   }
 }
 
-// Export mock auth service if database is not available
-let authService: AuthService;
-
-if (useMockAuth || !prisma) {
-  const { authService: mockAuth } = require('./mock-auth');
-  authService = mockAuth;
-} else {
-  authService = new AuthService();
-}
+// Always use real auth service with Prisma
+const authService = new AuthService();
 
 export { authService };
