@@ -135,6 +135,50 @@ router.get('/profile', authenticateToken, async (req: Request, res: Response) =>
   }
 });
 
+// Update user profile
+router.put('/profile', authenticateToken, async (req: Request, res: Response) => {
+  try {
+    const userId = (req as AuthenticatedRequest).user!.id;
+    const { name, preferences } = req.body;
+    
+    // Validate preferences structure if provided
+    if (preferences) {
+      const allowedPreferenceKeys = [
+        'userType', 
+        'platforms', 
+        'onboardingCompleted', 
+        'onboardingCompletedAt',
+        'theme',
+        'notifications'
+      ];
+      
+      const invalidKeys = Object.keys(preferences).filter(key => 
+        !allowedPreferenceKeys.includes(key)
+      );
+      
+      if (invalidKeys.length > 0) {
+        return res.status(400).json({
+          error: 'Invalid preference keys',
+          invalidKeys
+        });
+      }
+    }
+
+    const updatedUser = await authService.updateUserProfile(userId, {
+      name,
+      preferences
+    });
+
+    res.json({
+      message: 'Profile updated successfully',
+      user: updatedUser
+    });
+  } catch (error) {
+    console.error('Profile update error:', error);
+    res.status(500).json({ error: 'Failed to update profile' });
+  }
+});
+
 // Verify token
 router.get('/verify', authenticateToken, async (req: Request, res: Response) => {
   try {

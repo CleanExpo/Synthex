@@ -13,14 +13,14 @@ This document captures the approved visual design system for Synthex - Auto Mark
 
 ### Primary Colors
 ```css
---primary: #6366f1;        /* Indigo */
---primary-hover: #5558e3;  /* Darker indigo for hover states */
+--primary: #2563eb;        /* Blue */
+--primary-hover: #1e40af;  /* Darker blue for hover states */
 ```
 
 ### Background Colors
 ```css
---bg-primary: #0a0a0b;     /* Main background */
---bg-secondary: #111113;   /* Secondary surfaces */
+--bg-primary: #0f172a;     /* Main background (slate-900) */
+--bg-secondary: #1e293b;   /* Secondary surfaces (slate-800) */
 --bg-card: rgba(255, 255, 255, 0.03); /* Card backgrounds */
 ```
 

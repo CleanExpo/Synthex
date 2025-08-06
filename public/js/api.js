@@ -229,6 +229,122 @@ class SynthexAPI {
         });
     }
 
+    // Team endpoints
+    async getTeamMembers() {
+        return this.request('/team/members');
+    }
+
+    async inviteTeamMember(data) {
+        return this.request('/team/invite', {
+            method: 'POST',
+            body: JSON.stringify(data)
+        });
+    }
+
+    async updateTeamMemberRole(memberId, role) {
+        return this.request(`/team/members/${memberId}/role`, {
+            method: 'PUT',
+            body: JSON.stringify({ role })
+        });
+    }
+
+    async removeTeamMember(memberId) {
+        return this.request(`/team/members/${memberId}`, {
+            method: 'DELETE'
+        });
+    }
+
+    async getTeamActivity(params = {}) {
+        const queryString = new URLSearchParams(params).toString();
+        return this.request(`/team/activity${queryString ? '?' + queryString : ''}`);
+    }
+
+    async getTeamStats() {
+        return this.request('/team/stats');
+    }
+
+    // Export endpoints
+    async exportAnalyticsCSV(range = 'week', type = 'overview') {
+        const url = `${this.baseURL}/analytics/export/csv`;
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': this.token ? `Bearer ${this.token}` : ''
+            },
+            body: JSON.stringify({ range, type })
+        });
+        
+        if (!response.ok) {
+            throw new Error('Export failed');
+        }
+        
+        // Create blob and download
+        const blob = await response.blob();
+        const downloadUrl = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = downloadUrl;
+        link.download = `analytics-${type}-${range}-${Date.now()}.csv`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(downloadUrl);
+    }
+
+    async exportAnalyticsExcel(range = 'week') {
+        const url = `${this.baseURL}/analytics/export/excel`;
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': this.token ? `Bearer ${this.token}` : ''
+            },
+            body: JSON.stringify({ range })
+        });
+        
+        if (!response.ok) {
+            throw new Error('Export failed');
+        }
+        
+        // Create blob and download
+        const blob = await response.blob();
+        const downloadUrl = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = downloadUrl;
+        link.download = `analytics-report-${range}-${Date.now()}.xlsx`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(downloadUrl);
+    }
+
+    async exportAnalyticsPDF(range = 'week') {
+        const url = `${this.baseURL}/analytics/export/pdf`;
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': this.token ? `Bearer ${this.token}` : ''
+            },
+            body: JSON.stringify({ range })
+        });
+        
+        if (!response.ok) {
+            throw new Error('Export failed');
+        }
+        
+        // Create blob and download
+        const blob = await response.blob();
+        const downloadUrl = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = downloadUrl;
+        link.download = `analytics-report-${range}-${Date.now()}.pdf`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(downloadUrl);
+    }
+
     // Dashboard specific
     async getDashboardStats() {
         try {

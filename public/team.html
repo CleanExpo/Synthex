@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Team - SYNTHEX</title>
+    <link rel="icon" type="image/png" href="/logo.png">
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <script src="/js/auth-check.js"></script>
+    
+    <!-- App CSS -->
+    <link rel="stylesheet" href="/css/synthex-app.css">
+    
+    <style>
+        /* Team Page Styles */
+        .team-container {
+            display: grid;
+            grid-template-columns: 1fr 320px;
+            gap: 24px;
+        }
+        
+        .team-main {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+        
+        .team-header {
+            background: var(--bg-card);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-xl);
+            padding: var(--space-xl);
+        }
+        
+        .team-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: var(--space-sm);
+        }
+        
+        .team-subtitle {
+            color: var(--text-secondary);
+            margin-bottom: var(--space-lg);
+        }
+        
+        .team-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: var(--space-md);
+        }
+        
+        .team-stat {
+            text-align: center;
+            padding: var(--space-md);
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: var(--radius-md);
+        }
+        
+        .team-stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: var(--space-xs);
+        }
+        
+        .team-stat-label {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+        
+        /* Members Grid */
+        .members-section {
+            background: var(--bg-card);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-xl);
+            padding: var(--space-lg);
+        }
+        
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--space-lg);
+        }
+        
+        .section-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+        }
+        
+        .members-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: var(--space-md);
+        }
+        
+        .member-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: var(--space-lg);
+            transition: all var(--transition-base);
+            cursor: pointer;
+        }
+        
+        .member-card:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: var(--border-color-hover);
+            transform: translateY(-2px);
+        }
+        
+        .member-header {
+            display: flex;
+            align-items: center;
+            gap: var(--space-md);
+            margin-bottom: var(--space-md);
+        }
+        
+        .member-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), var(--accent-purple));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            color: white;
+            font-size: 1.125rem;
+        }
+        
+        .member-info {
+            flex: 1;
+        }
+        
+        .member-name {
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+        
+        .member-role {
+            font-size: 0.813rem;
+            color: var(--text-secondary);
+        }
+        
+        .role-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            background: rgba(99, 102, 241, 0.1);
+            color: var(--primary);
+            border-radius: var(--radius-sm);
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+        
+        .role-badge.admin {
+            background: rgba(236, 72, 153, 0.1);
+            color: var(--accent-pink);
+        }
+        
+        .role-badge.editor {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--accent-green);
+        }
+        
+        .member-stats {
+            display: flex;
+            gap: var(--space-lg);
+            margin-top: var(--space-md);
+            padding-top: var(--space-md);
+            border-top: 1px solid var(--border-color);
+        }
+        
+        .member-stat {
+            text-align: center;
+            flex: 1;
+        }
+        
+        .member-stat-value {
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+        
+        .member-stat-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+        
+        .member-actions {
+            display: flex;
+            gap: var(--space-sm);
+            margin-top: var(--space-md);
+        }
+        
+        .member-action {
+            flex: 1;
+            padding: var(--space-sm);
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            color: var(--text-secondary);
+            font-size: 0.813rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all var(--transition-base);
+            text-align: center;
+        }
+        
+        .member-action:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-primary);
+            border-color: var(--border-color-hover);
+        }
+        
+        /* Activity Feed */
+        .activity-section {
+            background: var(--bg-card);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-xl);
+            padding: var(--space-lg);
+        }
+        
+        .activity-list {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-md);
+        }
+        
+        .activity-item {
+            display: flex;
+            gap: var(--space-md);
+            padding: var(--space-md);
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: var(--radius-md);
+        }
+        
+        .activity-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), var(--accent-purple));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: white;
+            flex-shrink: 0;
+        }
+        
+        .activity-content {
+            flex: 1;
+        }
+        
+        .activity-text {
+            font-size: 0.875rem;
+            line-height: 1.5;
+            margin-bottom: var(--space-xs);
+        }
+        
+        .activity-time {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+        
+        /* Sidebar */
+        .team-sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+        
+        .invite-section {
+            background: var(--bg-card);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-xl);
+            padding: var(--space-lg);
+        }
+        
+        .invite-form {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-md);
+        }
+        
+        /* Permissions */
+        .permissions-section {
+            background: var(--bg-card);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-xl);
+            padding: var(--space-lg);
+        }
+        
+        .permission-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: var(--space-sm) 0;
+        }
+        
+        .permission-label {
+            font-size: 0.875rem;
+        }
+        
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal-content {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-xl);
+            padding: var(--space-xl);
+            max-width: 500px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--space-lg);
+        }
+        
+        .modal-close {
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            transition: all var(--transition-base);
+        }
+        
+        .modal-close:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: var(--border-color-hover);
+        }
+        
+        @media (max-width: 1024px) {
+            .team-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .team-sidebar {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <a href="/" class="logo">SYNTHEX</a>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <div class="nav-section">
+                    <div class="nav-section-title">Main</div>
+                    <a href="/app-new.html" class="nav-item">
+                        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="3" width="7" height="7" rx="1"/>
+                            <rect x="14" y="3" width="7" height="7" rx="1"/>
+                            <rect x="3" y="14" width="7" height="7" rx="1"/>
+                            <rect x="14" y="14" width="7" height="7" rx="1"/>
+                        </svg>
+                        <span>Dashboard</span>
+                    </a>
+                    <a href="/campaigns-new.html" class="nav-item">
+                        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V6a2 2 0 012-2z"/>
+                        </svg>
+                        <span>Campaigns</span>
+                    </a>
+                    <a href="/content-studio.html" class="nav-item">
+                        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                        </svg>
+                        <span>Content Studio</span>
+                    </a>
+                    <a href="/schedule.html" class="nav-item">
+                        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <polyline points="12 6 12 12 16 14"/>
+                        </svg>
+                        <span>Schedule</span>
+                    </a>
+                    <a href="/analytics.html" class="nav-item">
+                        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M18 20V10M12 20V4M6 20v-6"/>
+                        </svg>
+                        <span>Analytics</span>
+                    </a>
+                    <a href="/team.html" class="nav-item active">
+                        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 7a4 4 0 100-8 4 4 0 000 8zM23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/>
+                        </svg>
+                        <span>Team</span>
+                    </a>
+                </div>
+                
+                <div class="nav-section">
+                    <div class="nav-section-title">Account</div>
+                    <a href="/notifications.html" class="nav-item">
+                        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"/>
+                        </svg>
+                        <span>Notifications</span>
+                    </a>
+                    <a href="/settings.html" class="nav-item">
+                        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="3"/>
+                            <path d="M12 1v6m0 6v6m12-7h-6m-6 0H1"/>
+                        </svg>
+                        <span>Settings</span>
+                    </a>
+                </div>
+            </nav>
+        </aside>
+        
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="header">
+                <div class="header-left">
+                    <h1 class="header-title">Team</h1>
+                </div>
+                
+                <div class="header-right">
+                    <button class="header-btn notification-bell">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"/>
+                        </svg>
+                    </button>
+                    <button class="btn btn-primary" onclick="openInviteModal()">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M8 7a4 4 0 100-8 4 4 0 000 8zM20 8v6m3-3h-6"/>
+                        </svg>
+                        <span>Invite Member</span>
+                    </button>
+                </div>
+            </header>
+            
+            <!-- Content -->
+            <div class="content">
+                <div class="team-container">
+                    <!-- Main Content -->
+                    <div class="team-main">
+                        <!-- Team Overview -->
+                        <div class="team-header">
+                            <h2 class="team-title">Team Overview</h2>
+                            <p class="team-subtitle">Collaborate with your team to create amazing marketing campaigns</p>
+                            
+                            <div class="team-stats">
+                                <div class="team-stat">
+                                    <div class="team-stat-value" id="totalMembers">4</div>
+                                    <div class="team-stat-label">Team Members</div>
+                                </div>
+                                <div class="team-stat">
+                                    <div class="team-stat-value" id="activeCampaigns">12</div>
+                                    <div class="team-stat-label">Active Campaigns</div>
+                                </div>
+                                <div class="team-stat">
+                                    <div class="team-stat-value" id="contentCreated">248</div>
+                                    <div class="team-stat-label">Content Created</div>
+                                </div>
+                                <div class="team-stat">
+                                    <div class="team-stat-value" id="totalReach">125K</div>
+                                    <div class="team-stat-label">Total Reach</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Team Members -->
+                        <div class="members-section">
+                            <div class="section-header">
+                                <h3 class="section-title">Team Members</h3>
+                                <select class="form-select" style="width: auto;" onchange="filterMembers(this.value)">
+                                    <option value="all">All Members</option>
+                                    <option value="admin">Admins</option>
+                                    <option value="editor">Editors</option>
+                                    <option value="viewer">Viewers</option>
+                                </select>
+                            </div>
+                            
+                            <div class="members-grid" id="membersGrid">
+                                <!-- Members will be loaded here -->
+                            </div>
+                        </div>
+                        
+                        <!-- Recent Activity -->
+                        <div class="activity-section">
+                            <div class="section-header">
+                                <h3 class="section-title">Recent Activity</h3>
+                                <button class="header-btn" onclick="loadMoreActivity()">View All</button>
+                            </div>
+                            
+                            <div class="activity-list" id="activityList">
+                                <!-- Activity items will be loaded here -->
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Sidebar -->
+                    <div class="team-sidebar">
+                        <!-- Quick Invite -->
+                        <div class="invite-section">
+                            <h3 style="margin-bottom: var(--space-md);">Quick Invite</h3>
+                            <form class="invite-form" onsubmit="quickInvite(event)">
+                                <input type="email" class="form-input" placeholder="Email address" required>
+                                <select class="form-select">
+                                    <option value="editor">Editor</option>
+                                    <option value="viewer">Viewer</option>
+                                    <option value="admin">Admin</option>
+                                </select>
+                                <button type="submit" class="btn btn-primary" style="width: 100%;">
+                                    Send Invite
+                                </button>
+                            </form>
+                        </div>
+                        
+                        <!-- Permissions Overview -->
+                        <div class="permissions-section">
+                            <h3 style="margin-bottom: var(--space-md);">Permissions</h3>
+                            
+                            <div class="permission-item">
+                                <span class="permission-label">Create Campaigns</span>
+                                <span class="role-badge admin">Admin</span>
+                            </div>
+                            <div class="permission-item">
+                                <span class="permission-label">Edit Content</span>
+                                <span class="role-badge editor">Editor+</span>
+                            </div>
+                            <div class="permission-item">
+                                <span class="permission-label">View Analytics</span>
+                                <span class="role-badge">All</span>
+                            </div>
+                            <div class="permission-item">
+                                <span class="permission-label">Manage Team</span>
+                                <span class="role-badge admin">Admin</span>
+                            </div>
+                            <div class="permission-item">
+                                <span class="permission-label">Export Data</span>
+                                <span class="role-badge admin">Admin</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <!-- Invite Modal -->
+    <div class="modal" id="inviteModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Invite Team Member</h2>
+                <button class="modal-close" onclick="closeInviteModal()">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"/>
+                        <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                </button>
+            </div>
+            
+            <form id="inviteForm" onsubmit="sendInvite(event)">
+                <div class="form-group">
+                    <label class="form-label">Email Address</label>
+                    <input type="email" class="form-input" id="inviteEmail" required>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Role</label>
+                    <select class="form-select" id="inviteRole">
+                        <option value="viewer">Viewer - Can view campaigns and analytics</option>
+                        <option value="editor" selected>Editor - Can create and edit content</option>
+                        <option value="admin">Admin - Full access to all features</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Message (Optional)</label>
+                    <textarea class="form-input" id="inviteMessage" rows="3" 
+                        placeholder="Add a personal message to the invitation..."></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Campaign Access</label>
+                    <div class="checkbox-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" class="checkbox-input" value="all" checked>
+                            <span>All Campaigns</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" class="checkbox-input" value="new">
+                            <span>New Campaigns Only</span>
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeInviteModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Send Invitation</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Member Details Modal -->
+    <div class="modal" id="memberModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="memberModalTitle">Member Details</h2>
+                <button class="modal-close" onclick="closeMemberModal()">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"/>
+                        <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                </button>
+            </div>
+            
+            <div id="memberModalContent">
+                <!-- Member details will be loaded here -->
+            </div>
+        </div>
+    </div>
+    
+    <script src="/js/api.js"></script>
+    <script src="/js/notifications.js"></script>
+    <script src="/js/team.js"></script>
+</body>
+</html>

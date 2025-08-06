@@ -7,14 +7,14 @@
    =========================== */
 :root {
     /* Primary Colors */
-    --primary: #6366f1;
-    --primary-hover: #5558e3;
-    --primary-light: rgba(99, 102, 241, 0.1);
+    --primary: #2563eb;
+    --primary-hover: #1e40af;
+    --primary-light: rgba(37, 99, 235, 0.1);
     
     /* Background Colors */
-    --bg-primary: #0a0a0b;
-    --bg-secondary: #111113;
-    --bg-tertiary: #1a1a1d;
+    --bg-primary: #0f172a;
+    --bg-secondary: #1e293b;
+    --bg-tertiary: #334155;
     --bg-card: rgba(255, 255, 255, 0.03);
     --bg-card-hover: rgba(255, 255, 255, 0.05);
     
@@ -128,7 +128,7 @@ body {
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    background: linear-gradient(180deg, transparent, rgba(99, 102, 241, 0.02));
+    background: linear-gradient(180deg, transparent, rgba(37, 99, 235, 0.02));
 }
 
 /* Header */
@@ -266,7 +266,7 @@ h6 { font-size: 1rem; }
 
 .btn-primary:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(99, 102, 241, 0.3);
+    box-shadow: 0 8px 20px rgba(37, 99, 235, 0.3);
 }
 
 .btn-secondary {
@@ -331,7 +331,7 @@ h6 { font-size: 1rem; }
     left: -50%;
     width: 200%;
     height: 200%;
-    background: radial-gradient(circle, rgba(99, 102, 241, 0.1) 0%, transparent 70%);
+    background: radial-gradient(circle, rgba(37, 99, 235, 0.1) 0%, transparent 70%);
     opacity: 0;
     transition: opacity var(--transition-base);
     pointer-events: none;
