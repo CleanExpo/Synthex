@@ -145,6 +145,11 @@ app.get('/dashboard', (req: Request, res: Response) => {
   res.sendFile('dashboard.html', { root: path.join(__dirname, '..', 'public') });
 });
 
+// Demo endpoint - Working authentication
+app.get('/demo', (req: Request, res: Response) => {
+  res.sendFile('demo.html', { root: path.join(__dirname, '..', 'public') });
+});
+
 // API info endpoint
 app.get('/api-info', (req: Request, res: Response) => {
   res.json({
