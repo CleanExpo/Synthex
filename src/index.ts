@@ -1,16 +1,10 @@
 /**
  * Main Application Entry Point
- * Bootstrap the complete 3-tier SYNTHEX application
+ * Using legacy implementation for Vercel compatibility
  */
 
-import app from './presentation/app';
-
-// Start the application
-if (require.main === module) {
-  app.start().catch((error) => {
-    console.error('Failed to start application:', error);
-    process.exit(1);
-  });
-}
+// Use legacy implementation for now to maintain Vercel compatibility
+// The new 3-tier architecture is available in ./presentation/app
+import app from './index-legacy';
 
 export default app;
