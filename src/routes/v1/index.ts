@@ -7,6 +7,7 @@ import enhancementRouter from '../enhancement-research';
 import campaignsRouter from '../campaigns';
 import projectsRouter from '../projects';
 import postsRouter from '../posts';
+import contentRouter from '../content';
 
 const router = Router();
 
@@ -19,6 +20,7 @@ router.use('/enhancement', enhancementRouter);
 router.use('/campaigns', campaignsRouter);
 router.use('/projects', projectsRouter);
 router.use('/posts', postsRouter);
+router.use('/content', contentRouter);
 
 // API v1 info endpoint
 router.get('/', (req, res) => {
@@ -33,7 +35,8 @@ router.get('/', (req, res) => {
       enhancement: '/api/v1/enhancement',
       campaigns: '/api/v1/campaigns',
       projects: '/api/v1/projects',
-      posts: '/api/v1/posts'
+      posts: '/api/v1/posts',
+      content: '/api/v1/content'
     },
     documentation: '/api-docs'
   });

@@ -2,12 +2,13 @@ import passport from 'passport';
 import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
 import { authService } from '../services/auth';
 
-// Configure Google OAuth Strategy
-passport.use(new GoogleStrategy({
-  clientID: process.env.GOOGLE_CLIENT_ID!,
-  clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-  callbackURL: process.env.GOOGLE_CALLBACK_URL || '/auth/google/callback'
-}, async (accessToken, refreshToken, profile, done) => {
+// Configure Google OAuth Strategy only if credentials are provided
+if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
+  passport.use(new GoogleStrategy({
+    clientID: process.env.GOOGLE_CLIENT_ID,
+    clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+    callbackURL: process.env.GOOGLE_CALLBACK_URL || '/auth/google/callback'
+  }, async (accessToken, refreshToken, profile, done) => {
   try {
     // Extract user information from Google profile
     const googleId = profile.id;
@@ -44,7 +45,10 @@ passport.use(new GoogleStrategy({
     console.error('Google OAuth error:', error);
     return done(error, undefined);
   }
-}));
+  }));
+} else {
+  console.warn('Google OAuth not configured. Missing GOOGLE_CLIENT_ID or GOOGLE_CLIENT_SECRET');
+}
 
 // Serialize user for session
 passport.serializeUser((user: any, done) => {

@@ -3,11 +3,19 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-// OpenRouter client configuration
-const openrouter = new OpenAI({
-  baseURL: process.env.OPENROUTER_BASE_URL || 'https://openrouter.ai/api/v1',
-  apiKey: process.env.OPENROUTER_API_KEY,
-});
+// OpenRouter client configuration - initialize lazily
+let openrouter: OpenAI | null = null;
+
+const getOpenRouterClient = (apiKey?: string): OpenAI => {
+  const key = apiKey || process.env.OPENROUTER_API_KEY || 'dummy-key';
+  if (!openrouter || apiKey) {
+    openrouter = new OpenAI({
+      baseURL: process.env.OPENROUTER_BASE_URL || 'https://openrouter.ai/api/v1',
+      apiKey: key,
+    });
+  }
+  return openrouter;
+};
 
 // Available OpenRouter models
 export const OPENROUTER_MODELS = {
@@ -61,7 +69,7 @@ export class OpenRouterService {
   private siteName: string;
 
   constructor() {
-    this.defaultClient = openrouter;
+    this.defaultClient = getOpenRouterClient();
     this.defaultModel = OPENROUTER_MODELS.HORIZON_BETA;
     this.siteUrl = process.env.OPENROUTER_SITE_URL || 'http://localhost:3000';
     this.siteName = process.env.OPENROUTER_SITE_NAME || 'Auto Marketing Agent';

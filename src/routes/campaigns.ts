@@ -1,3 +1,4 @@
+/// <reference path="../types/express.d.ts" />
 import { Router, Request, Response } from 'express';
 import { authenticateUser } from '../middleware/auth';
 import CampaignService, { CreateCampaignSchema, UpdateCampaignSchema } from '../services/campaign';

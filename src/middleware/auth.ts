@@ -1,12 +1,12 @@
-import { Request, Response, NextFunction } from 'express';
+import { Request, Response, NextFunction, RequestHandler } from 'express';
 import { authService, User } from '../services/auth';
 
 export interface AuthenticatedRequest extends Request {
   user?: User;
 }
 
-export const authenticateToken = async (
-  req: AuthenticatedRequest,
+export const authenticateToken: RequestHandler = async (
+  req: Request,
   res: Response,
   next: NextFunction
 ): Promise<void> => {
@@ -32,7 +32,7 @@ export const authenticateToken = async (
       return;
     }
 
-    req.user = user;
+    (req as AuthenticatedRequest).user = user;
     next();
   } catch (error) {
     console.error('Authentication error:', error);
@@ -40,8 +40,8 @@ export const authenticateToken = async (
   }
 };
 
-export const optionalAuth = async (
-  req: AuthenticatedRequest,
+export const optionalAuth: RequestHandler = async (
+  req: Request,
   res: Response,
   next: NextFunction
 ): Promise<void> => {
@@ -54,7 +54,7 @@ export const optionalAuth = async (
       if (decoded) {
         const user = await authService.getUserById(decoded.userId);
         if (user) {
-          req.user = user;
+          (req as AuthenticatedRequest).user = user;
         }
       }
     }

@@ -37,7 +37,7 @@ interface VariationsRequest {
  * GET /api/openrouter/status
  * Check OpenRouter configuration status
  */
-router.get('/status', optionalAuth, async (req: AuthenticatedRequest, res: Response) => {
+router.get('/status', optionalAuth, async (req: Request, res: Response) => {
   try {
     const isSystemConfigured = openRouterService.isConfigured();
     const modelInfo = openRouterService.getModelInfo();
@@ -45,8 +45,8 @@ router.get('/status', optionalAuth, async (req: AuthenticatedRequest, res: Respo
     let userApiKey: string | undefined;
     let hasUserApiKey = false;
     
-    if (req.user) {
-      const apiKeys = await authService.getUserApiKeys(req.user.id);
+    if ((req as AuthenticatedRequest).user) {
+      const apiKeys = await authService.getUserApiKeys((req as AuthenticatedRequest).user!.id);
       userApiKey = apiKeys.openrouterApiKey;
       hasUserApiKey = !!userApiKey;
     }

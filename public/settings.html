@@ -1,0 +1,925 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings - SYNTHEX</title>
+    <link rel="icon" type="image/png" href="/logo.png">
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <script src="/js/auth-check.js"></script>
+    
+    <!-- App CSS -->
+    <link rel="stylesheet" href="/css/synthex-app.css">
+    
+    <style>
+        /* Settings Specific Styles */
+        .settings-container {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: var(--space-lg);
+            max-width: 1200px;
+        }
+        
+        .settings-nav {
+            background: var(--bg-card);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-xl);
+            padding: var(--space-lg);
+            height: fit-content;
+            position: sticky;
+            top: var(--space-lg);
+        }
+        
+        .settings-nav-item {
+            display: flex;
+            align-items: center;
+            gap: var(--space-md);
+            padding: var(--space-md);
+            margin-bottom: var(--space-xs);
+            border-radius: var(--radius-md);
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all var(--transition-base);
+        }
+        
+        .settings-nav-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-primary);
+        }
+        
+        .settings-nav-item.active {
+            background: var(--primary-light);
+            color: var(--primary);
+        }
+        
+        .settings-content {
+            background: var(--bg-card);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-xl);
+            padding: var(--space-xl);
+        }
+        
+        .settings-section {
+            display: none;
+        }
+        
+        .settings-section.active {
+            display: block;
+        }
+        
+        .section-header {
+            margin-bottom: var(--space-xl);
+            padding-bottom: var(--space-lg);
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: var(--space-sm);
+        }
+        
+        .section-subtitle {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+        
+        /* Profile Section */
+        .profile-header {
+            display: flex;
+            align-items: center;
+            gap: var(--space-lg);
+            margin-bottom: var(--space-xl);
+        }
+        
+        .profile-avatar {
+            position: relative;
+        }
+        
+        .avatar-image {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), var(--accent-purple));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            font-weight: 700;
+            color: white;
+        }
+        
+        .avatar-upload {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 32px;
+            height: 32px;
+            background: var(--bg-secondary);
+            border: 2px solid var(--bg-primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all var(--transition-base);
+        }
+        
+        .avatar-upload:hover {
+            background: var(--primary);
+            transform: scale(1.1);
+        }
+        
+        .profile-info h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: var(--space-xs);
+        }
+        
+        .profile-info p {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+        
+        /* Form Styles */
+        .settings-form {
+            display: grid;
+            gap: var(--space-lg);
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: var(--space-lg);
+        }
+        
+        /* API Keys Section */
+        .api-key-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: var(--space-lg);
+            margin-bottom: var(--space-md);
+        }
+        
+        .api-key-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: var(--space-md);
+        }
+        
+        .api-key-title {
+            font-weight: 600;
+        }
+        
+        .api-key-status {
+            display: flex;
+            align-items: center;
+            gap: var(--space-xs);
+            font-size: 0.875rem;
+        }
+        
+        .status-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--accent-green);
+        }
+        
+        .status-indicator.inactive {
+            background: var(--text-muted);
+        }
+        
+        .api-key-input-group {
+            display: flex;
+            gap: var(--space-sm);
+        }
+        
+        .api-key-input {
+            flex: 1;
+            font-family: monospace;
+        }
+        
+        /* Plan Section */
+        .plan-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: var(--space-lg);
+            margin-bottom: var(--space-lg);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .plan-card.current {
+            border-color: var(--primary);
+        }
+        
+        .plan-card.current::before {
+            content: 'CURRENT PLAN';
+            position: absolute;
+            top: var(--space-md);
+            right: var(--space-md);
+            background: var(--primary);
+            color: white;
+            padding: var(--space-xs) var(--space-md);
+            border-radius: var(--radius-md);
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        
+        .plan-name {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: var(--space-xs);
+        }
+        
+        .plan-price {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: var(--space-md);
+        }
+        
+        .plan-price span {
+            font-size: 1rem;
+            font-weight: 400;
+            color: var(--text-secondary);
+        }
+        
+        .plan-features {
+            list-style: none;
+            margin-bottom: var(--space-lg);
+        }
+        
+        .plan-features li {
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+            margin-bottom: var(--space-sm);
+            font-size: 0.875rem;
+        }
+        
+        .plan-features svg {
+            color: var(--accent-green);
+        }
+        
+        /* Usage Stats */
+        .usage-stat {
+            margin-bottom: var(--space-lg);
+        }
+        
+        .usage-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--space-sm);
+        }
+        
+        .usage-label {
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+        
+        .usage-value {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+        
+        .usage-bar {
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: var(--radius-sm);
+            overflow: hidden;
+        }
+        
+        .usage-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--accent-purple));
+            border-radius: var(--radius-sm);
+            transition: width var(--transition-base);
+        }
+        
+        /* Notifications */
+        .notification-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: var(--space-md) 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .notification-item:last-child {
+            border-bottom: none;
+        }
+        
+        .notification-info {
+            flex: 1;
+        }
+        
+        .notification-title {
+            font-weight: 500;
+            margin-bottom: var(--space-xs);
+        }
+        
+        .notification-desc {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+        
+        .toggle-switch {
+            position: relative;
+            width: 48px;
+            height: 24px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: var(--radius-full);
+            cursor: pointer;
+            transition: all var(--transition-base);
+        }
+        
+        .toggle-switch.active {
+            background: var(--primary);
+        }
+        
+        .toggle-switch::after {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 50%;
+            transition: all var(--transition-base);
+        }
+        
+        .toggle-switch.active::after {
+            transform: translateX(24px);
+        }
+        
+        /* Danger Zone */
+        .danger-zone {
+            margin-top: var(--space-xl);
+            padding-top: var(--space-xl);
+            border-top: 1px solid var(--border-color);
+        }
+        
+        .danger-title {
+            color: var(--accent-red);
+            font-weight: 600;
+            margin-bottom: var(--space-md);
+        }
+        
+        .danger-actions {
+            display: flex;
+            gap: var(--space-md);
+        }
+        
+        .btn-danger {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--accent-red);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+        
+        .btn-danger:hover {
+            background: var(--accent-red);
+            color: white;
+            border-color: var(--accent-red);
+        }
+        
+        @media (max-width: 768px) {
+            .settings-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .settings-nav {
+                position: static;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <a href="/" class="logo">SYNTHEX</a>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <div class="nav-section">
+                    <div class="nav-section-title">Main</div>
+                    <a href="/app-new.html" class="nav-item">
+                        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="3" width="7" height="7" rx="1"/>
+                            <rect x="14" y="3" width="7" height="7" rx="1"/>
+                            <rect x="3" y="14" width="7" height="7" rx="1"/>
+                            <rect x="14" y="14" width="7" height="7" rx="1"/>
+                        </svg>
+                        <span>Dashboard</span>
+                    </a>
+                    <a href="/campaigns-new.html" class="nav-item">
+                        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V6a2 2 0 012-2z"/>
+                        </svg>
+                        <span>Campaigns</span>
+                    </a>
+                    <a href="/content-studio.html" class="nav-item">
+                        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                        </svg>
+                        <span>Content Studio</span>
+                    </a>
+                    <a href="/analytics.html" class="nav-item">
+                        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M18 20V10M12 20V4M6 20v-6"/>
+                        </svg>
+                        <span>Analytics</span>
+                    </a>
+                </div>
+                
+                <div class="nav-section">
+                    <div class="nav-section-title">Account</div>
+                    <a href="/settings.html" class="nav-item active">
+                        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="3"/>
+                            <path d="M12 1v6m0 6v6m11-7h-6m-6 0H1m20.485-5.485l-4.242 4.242M7.757 7.757L3.515 3.515m13.97 13.97l-4.242-4.242M7.757 16.243l-4.242 4.242"/>
+                        </svg>
+                        <span>Settings</span>
+                    </a>
+                </div>
+            </nav>
+        </aside>
+        
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="header">
+                <div class="header-left">
+                    <h1 class="header-title">Settings</h1>
+                </div>
+                
+                <div class="header-right">
+                    <button class="btn btn-primary" onclick="saveSettings()">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/>
+                            <polyline points="17 21 17 13 7 13 7 21"/>
+                            <polyline points="7 3 7 8 15 8"/>
+                        </svg>
+                        <span>Save Changes</span>
+                    </button>
+                </div>
+            </header>
+            
+            <!-- Content -->
+            <div class="content">
+                <div class="settings-container">
+                    <!-- Settings Navigation -->
+                    <div class="settings-nav">
+                        <div class="settings-nav-item active" data-section="profile">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2M12 11a4 4 0 100-8 4 4 0 000 8z"/>
+                            </svg>
+                            <span>Profile</span>
+                        </div>
+                        <div class="settings-nav-item" data-section="api-keys">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="11" width="18" height="10" rx="2"/>
+                                <path d="M7 11V7a5 5 0 0110 0v4"/>
+                            </svg>
+                            <span>API Keys</span>
+                        </div>
+                        <div class="settings-nav-item" data-section="plan">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="2" y="5" width="20" height="14" rx="2"/>
+                                <line x1="2" y1="10" x2="22" y2="10"/>
+                            </svg>
+                            <span>Plan & Billing</span>
+                        </div>
+                        <div class="settings-nav-item" data-section="notifications">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"/>
+                            </svg>
+                            <span>Notifications</span>
+                        </div>
+                        <div class="settings-nav-item" data-section="security">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                            </svg>
+                            <span>Security</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Settings Content -->
+                    <div class="settings-content">
+                        <!-- Profile Section -->
+                        <div class="settings-section active" id="profile">
+                            <div class="section-header">
+                                <h2 class="section-title">Profile Settings</h2>
+                                <p class="section-subtitle">Manage your personal information and preferences</p>
+                            </div>
+                            
+                            <div class="profile-header">
+                                <div class="profile-avatar">
+                                    <div class="avatar-image" id="avatarDisplay">JD</div>
+                                    <div class="avatar-upload">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/>
+                                            <circle cx="12" cy="13" r="4"/>
+                                        </svg>
+                                    </div>
+                                </div>
+                                <div class="profile-info">
+                                    <h3 id="profileName">John Doe</h3>
+                                    <p id="profileEmail">john.doe@example.com</p>
+                                </div>
+                            </div>
+                            
+                            <form class="settings-form">
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label class="form-label">Full Name</label>
+                                        <input type="text" class="form-input" id="fullName" value="John Doe">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Email</label>
+                                        <input type="email" class="form-input" id="email" value="john.doe@example.com">
+                                    </div>
+                                </div>
+                                
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label class="form-label">Company</label>
+                                        <input type="text" class="form-input" id="company" placeholder="Your company name">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Role</label>
+                                        <input type="text" class="form-input" id="role" placeholder="Your role">
+                                    </div>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label class="form-label">Bio</label>
+                                    <textarea class="form-textarea" id="bio" rows="3" placeholder="Tell us about yourself..."></textarea>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label class="form-label">Timezone</label>
+                                    <select class="form-select" id="timezone">
+                                        <option value="UTC">UTC</option>
+                                        <option value="America/New_York">Eastern Time</option>
+                                        <option value="America/Chicago">Central Time</option>
+                                        <option value="America/Denver">Mountain Time</option>
+                                        <option value="America/Los_Angeles">Pacific Time</option>
+                                        <option value="Europe/London">London</option>
+                                        <option value="Europe/Paris">Paris</option>
+                                        <option value="Asia/Tokyo">Tokyo</option>
+                                    </select>
+                                </div>
+                            </form>
+                        </div>
+                        
+                        <!-- API Keys Section -->
+                        <div class="settings-section" id="api-keys">
+                            <div class="section-header">
+                                <h2 class="section-title">API Keys</h2>
+                                <p class="section-subtitle">Manage your AI service API keys for content generation</p>
+                            </div>
+                            
+                            <div class="api-key-card">
+                                <div class="api-key-header">
+                                    <h3 class="api-key-title">OpenRouter API Key</h3>
+                                    <div class="api-key-status">
+                                        <span class="status-indicator"></span>
+                                        <span>Active</span>
+                                    </div>
+                                </div>
+                                <div class="api-key-input-group">
+                                    <input type="password" class="form-input api-key-input" id="openrouterKey" placeholder="sk-or-...">
+                                    <button class="btn btn-secondary" onclick="toggleKeyVisibility('openrouterKey')">
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                                            <circle cx="12" cy="12" r="3"/>
+                                        </svg>
+                                    </button>
+                                </div>
+                                <p style="font-size: 0.875rem; color: var(--text-muted); margin-top: var(--space-sm);">
+                                    Used for AI content generation. Get your key at <a href="https://openrouter.ai" target="_blank" class="auth-link">openrouter.ai</a>
+                                </p>
+                            </div>
+                            
+                            <div class="api-key-card">
+                                <div class="api-key-header">
+                                    <h3 class="api-key-title">Anthropic API Key</h3>
+                                    <div class="api-key-status">
+                                        <span class="status-indicator inactive"></span>
+                                        <span>Not configured</span>
+                                    </div>
+                                </div>
+                                <div class="api-key-input-group">
+                                    <input type="password" class="form-input api-key-input" id="anthropicKey" placeholder="sk-ant-...">
+                                    <button class="btn btn-secondary" onclick="toggleKeyVisibility('anthropicKey')">
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                                            <circle cx="12" cy="12" r="3"/>
+                                        </svg>
+                                    </button>
+                                </div>
+                                <p style="font-size: 0.875rem; color: var(--text-muted); margin-top: var(--space-sm);">
+                                    Alternative AI provider. Get your key at <a href="https://console.anthropic.com" target="_blank" class="auth-link">console.anthropic.com</a>
+                                </p>
+                            </div>
+                        </div>
+                        
+                        <!-- Plan & Billing Section -->
+                        <div class="settings-section" id="plan">
+                            <div class="section-header">
+                                <h2 class="section-title">Plan & Billing</h2>
+                                <p class="section-subtitle">Manage your subscription and usage</p>
+                            </div>
+                            
+                            <div class="plan-card current">
+                                <h3 class="plan-name">Pro Plan</h3>
+                                <div class="plan-price">$49<span>/month</span></div>
+                                <ul class="plan-features">
+                                    <li>
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <polyline points="20 6 9 17 4 12"/>
+                                        </svg>
+                                        Unlimited campaigns
+                                    </li>
+                                    <li>
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <polyline points="20 6 9 17 4 12"/>
+                                        </svg>
+                                        5,000 AI content generations/month
+                                    </li>
+                                    <li>
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <polyline points="20 6 9 17 4 12"/>
+                                        </svg>
+                                        Advanced analytics
+                                    </li>
+                                    <li>
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <polyline points="20 6 9 17 4 12"/>
+                                        </svg>
+                                        Priority support
+                                    </li>
+                                </ul>
+                                <button class="btn btn-secondary" style="width: 100%;">Manage Subscription</button>
+                            </div>
+                            
+                            <div class="usage-stat">
+                                <div class="usage-header">
+                                    <span class="usage-label">AI Generations Used</span>
+                                    <span class="usage-value">2,847 / 5,000</span>
+                                </div>
+                                <div class="usage-bar">
+                                    <div class="usage-fill" style="width: 57%"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="usage-stat">
+                                <div class="usage-header">
+                                    <span class="usage-label">Active Campaigns</span>
+                                    <span class="usage-value">12 / Unlimited</span>
+                                </div>
+                                <div class="usage-bar">
+                                    <div class="usage-fill" style="width: 12%"></div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Notifications Section -->
+                        <div class="settings-section" id="notifications">
+                            <div class="section-header">
+                                <h2 class="section-title">Notification Preferences</h2>
+                                <p class="section-subtitle">Choose how you want to be notified</p>
+                            </div>
+                            
+                            <div class="notification-item">
+                                <div class="notification-info">
+                                    <div class="notification-title">Email Notifications</div>
+                                    <div class="notification-desc">Receive updates about your campaigns via email</div>
+                                </div>
+                                <div class="toggle-switch active" onclick="toggleSwitch(this)"></div>
+                            </div>
+                            
+                            <div class="notification-item">
+                                <div class="notification-info">
+                                    <div class="notification-title">Campaign Performance Alerts</div>
+                                    <div class="notification-desc">Get notified when campaigns reach milestones</div>
+                                </div>
+                                <div class="toggle-switch active" onclick="toggleSwitch(this)"></div>
+                            </div>
+                            
+                            <div class="notification-item">
+                                <div class="notification-info">
+                                    <div class="notification-title">Content Suggestions</div>
+                                    <div class="notification-desc">Receive AI-powered content recommendations</div>
+                                </div>
+                                <div class="toggle-switch" onclick="toggleSwitch(this)"></div>
+                            </div>
+                            
+                            <div class="notification-item">
+                                <div class="notification-info">
+                                    <div class="notification-title">Weekly Reports</div>
+                                    <div class="notification-desc">Get weekly summary of your marketing performance</div>
+                                </div>
+                                <div class="toggle-switch active" onclick="toggleSwitch(this)"></div>
+                            </div>
+                            
+                            <div class="notification-item">
+                                <div class="notification-info">
+                                    <div class="notification-title">Product Updates</div>
+                                    <div class="notification-desc">Stay informed about new features and improvements</div>
+                                </div>
+                                <div class="toggle-switch" onclick="toggleSwitch(this)"></div>
+                            </div>
+                        </div>
+                        
+                        <!-- Security Section -->
+                        <div class="settings-section" id="security">
+                            <div class="section-header">
+                                <h2 class="section-title">Security Settings</h2>
+                                <p class="section-subtitle">Keep your account secure</p>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label">Change Password</label>
+                                <div class="form-row">
+                                    <input type="password" class="form-input" placeholder="Current password">
+                                    <input type="password" class="form-input" placeholder="New password">
+                                    <input type="password" class="form-input" placeholder="Confirm new password">
+                                </div>
+                                <button class="btn btn-primary" style="margin-top: var(--space-md);">Update Password</button>
+                            </div>
+                            
+                            <div class="form-group" style="margin-top: var(--space-xl);">
+                                <label class="form-label">Two-Factor Authentication</label>
+                                <p style="font-size: 0.875rem; color: var(--text-secondary); margin-bottom: var(--space-md);">
+                                    Add an extra layer of security to your account
+                                </p>
+                                <button class="btn btn-secondary">Enable 2FA</button>
+                            </div>
+                            
+                            <div class="danger-zone">
+                                <h3 class="danger-title">Danger Zone</h3>
+                                <p style="font-size: 0.875rem; color: var(--text-secondary); margin-bottom: var(--space-md);">
+                                    Irreversible and destructive actions
+                                </p>
+                                <div class="danger-actions">
+                                    <button class="btn btn-danger">Export All Data</button>
+                                    <button class="btn btn-danger">Delete Account</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <script>
+        // Auth check
+        const token = localStorage.getItem('token');
+        if (!token) {
+            window.location.href = '/auth.html';
+        }
+        
+        // Load user data
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        if (user.name) {
+            document.getElementById('profileName').textContent = user.name;
+            document.getElementById('fullName').value = user.name;
+            document.getElementById('avatarDisplay').textContent = user.name.split(' ').map(n => n[0]).join('').toUpperCase();
+        }
+        if (user.email) {
+            document.getElementById('profileEmail').textContent = user.email;
+            document.getElementById('email').value = user.email;
+        }
+        
+        // Settings navigation
+        document.querySelectorAll('.settings-nav-item').forEach(item => {
+            item.addEventListener('click', () => {
+                const section = item.dataset.section;
+                
+                // Update nav
+                document.querySelectorAll('.settings-nav-item').forEach(i => i.classList.remove('active'));
+                item.classList.add('active');
+                
+                // Update content
+                document.querySelectorAll('.settings-section').forEach(s => s.classList.remove('active'));
+                document.getElementById(section).classList.add('active');
+            });
+        });
+        
+        // Toggle switches
+        function toggleSwitch(element) {
+            element.classList.toggle('active');
+        }
+        
+        // Toggle API key visibility
+        function toggleKeyVisibility(inputId) {
+            const input = document.getElementById(inputId);
+            input.type = input.type === 'password' ? 'text' : 'password';
+        }
+        
+        // Save settings
+        async function saveSettings() {
+            const settings = {
+                profile: {
+                    name: document.getElementById('fullName').value,
+                    email: document.getElementById('email').value,
+                    company: document.getElementById('company').value,
+                    role: document.getElementById('role').value,
+                    bio: document.getElementById('bio').value,
+                    timezone: document.getElementById('timezone').value
+                },
+                apiKeys: {
+                    openrouterApiKey: document.getElementById('openrouterKey').value,
+                    anthropicApiKey: document.getElementById('anthropicKey').value
+                }
+            };
+            
+            try {
+                // Update profile
+                const profileResponse = await fetch('/api/auth/profile', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(settings.profile)
+                });
+                
+                // Update API keys if provided
+                if (settings.apiKeys.openrouterApiKey || settings.apiKeys.anthropicApiKey) {
+                    const apiKeysResponse = await fetch('/api/auth/api-keys', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify(settings.apiKeys)
+                    });
+                }
+                
+                // Show success
+                const btn = document.querySelector('button[onclick="saveSettings()"]');
+                const originalContent = btn.innerHTML;
+                btn.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg><span>Saved!</span>';
+                btn.style.background = 'var(--accent-green)';
+                
+                setTimeout(() => {
+                    btn.innerHTML = originalContent;
+                    btn.style.background = '';
+                }, 2000);
+                
+            } catch (error) {
+                console.error('Save settings error:', error);
+                alert('Failed to save settings');
+            }
+        }
+        
+        // Load API keys
+        async function loadApiKeys() {
+            try {
+                const response = await fetch('/api/auth/api-keys', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    const keys = data.data.apiKeys;
+                    
+                    if (keys.hasOpenRouterKey) {
+                        document.getElementById('openrouterKey').placeholder = 'sk-or-...****';
+                        document.querySelector('.api-key-card .status-indicator').classList.remove('inactive');
+                    }
+                    
+                    if (keys.hasAnthropicKey) {
+                        document.getElementById('anthropicKey').placeholder = 'sk-ant-...****';
+                        document.querySelectorAll('.api-key-card')[1].querySelector('.status-indicator').classList.remove('inactive');
+                    }
+                }
+            } catch (error) {
+                console.error('Load API keys error:', error);
+            }
+        }
+        
+        // Initialize
+        loadApiKeys();
+    </script>
+</body>
+</html>

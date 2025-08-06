@@ -124,10 +124,10 @@ router.post('/login', authLimiter, loginValidation, async (req: Request, res: Re
 });
 
 // Get current user profile
-router.get('/profile', authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
+router.get('/profile', authenticateToken, async (req: Request, res: Response) => {
   try {
     res.json({
-      user: req.user
+      user: (req as AuthenticatedRequest).user
     });
   } catch (error) {
     console.error('Profile error:', error);
@@ -135,8 +135,21 @@ router.get('/profile', authenticateToken, async (req: AuthenticatedRequest, res:
   }
 });
 
+// Verify token
+router.get('/verify', authenticateToken, async (req: Request, res: Response) => {
+  try {
+    res.json({
+      valid: true,
+      user: (req as AuthenticatedRequest).user
+    });
+  } catch (error) {
+    console.error('Verify error:', error);
+    res.status(500).json({ error: 'Failed to verify token' });
+  }
+});
+
 // Update API keys
-router.post('/api-keys', authenticateToken, apiKeyValidation, async (req: AuthenticatedRequest, res: Response) => {
+router.post('/api-keys', authenticateToken, apiKeyValidation, async (req: Request, res: Response) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -147,7 +160,7 @@ router.post('/api-keys', authenticateToken, apiKeyValidation, async (req: Authen
     }
 
     const { openrouterApiKey, anthropicApiKey } = req.body;
-    const userId = req.user!.id;
+    const userId = (req as AuthenticatedRequest).user!.id;
 
     await authService.updateUserApiKeys(userId, { openrouterApiKey, anthropicApiKey });
 
@@ -161,9 +174,9 @@ router.post('/api-keys', authenticateToken, apiKeyValidation, async (req: Authen
 });
 
 // Get API keys (masked)
-router.get('/api-keys', authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
+router.get('/api-keys', authenticateToken, async (req: Request, res: Response) => {
   try {
-    const userId = req.user!.id;
+    const userId = (req as AuthenticatedRequest).user!.id;
     const apiKeys = await authService.getUserApiKeys(userId);
 
     // Mask the keys for security
@@ -182,9 +195,9 @@ router.get('/api-keys', authenticateToken, async (req: AuthenticatedRequest, res
 });
 
 // Get API usage statistics
-router.get('/usage', authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
+router.get('/usage', authenticateToken, async (req: Request, res: Response) => {
   try {
-    const userId = req.user!.id;
+    const userId = (req as AuthenticatedRequest).user!.id;
     const limit = parseInt(req.query.limit as string) || 100;
     
     const usage = await authService.getUserApiUsage(userId, limit);
@@ -212,7 +225,7 @@ router.get('/usage', authenticateToken, async (req: AuthenticatedRequest, res: R
 });
 
 // Logout (invalidate token - for future session management)
-router.post('/logout', authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
+router.post('/logout', authenticateToken, async (req: Request, res: Response) => {
   try {
     // For JWT tokens, we can't really "logout" without a blacklist
     // In a production app, you'd want to implement session management or token blacklisting
