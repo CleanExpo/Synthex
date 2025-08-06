@@ -1077,7 +1077,7 @@
                 const demoContent = document.getElementById('demoContent');
                 demoContent.innerHTML = `
                     <div style="text-align: left;">
-                        <h3>✅ System Health: ${healthData.status.toUpperCase()}</h3>
+                        <h3>✅ System Health: ${healthData.status ? healthData.status.toUpperCase() : 'UNKNOWN'}</h3>
                         <p><strong>Environment:</strong> ${healthData.environment}</p>
                         <p><strong>Uptime:</strong> ${Math.round(healthData.uptime)}s</p>
                         
