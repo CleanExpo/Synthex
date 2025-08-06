@@ -4,6 +4,10 @@
  * Runs all agents to check for issues before pushing to Vercel
  */
 
+// Load environment variables first
+import * as dotenv from 'dotenv';
+dotenv.config();
+
 import { PredictiveAgentSystem } from '../src/agents/predictive-agent-system';
 import { CodeQualityAnalyzer } from '../src/agents/code-quality-analyzer';
 import { ComplexityAnalyzer } from '../src/agents/sub-agents/complexity-analyzer';
@@ -87,13 +91,36 @@ class PreDeploymentValidator {
       'ANTHROPIC_API_KEY'
     ];
 
-    const missing = requiredVars.filter(v => !process.env[v]);
+    const varStatus: {[key: string]: string} = {};
+    const missing: string[] = [];
+    const placeholder: string[] = [];
+
+    for (const varName of requiredVars) {
+      const value = process.env[varName];
+      if (!value) {
+        missing.push(varName);
+        varStatus[varName] = '❌ Missing';
+      } else if (value.includes('your_') || value.includes('your-')) {
+        placeholder.push(varName);
+        varStatus[varName] = '⚠️  Placeholder';
+      } else {
+        varStatus[varName] = '✅ Set';
+      }
+    }
+    
+    // Display status for each variable
+    for (const [key, status] of Object.entries(varStatus)) {
+      console.log(`  ${status} ${key}`);
+    }
     
     if (missing.length > 0) {
       this.results.warnings.push(`Missing environment variables: ${missing.join(', ')}`);
-      console.log(`⚠️  Missing environment variables: ${missing.join(', ')}\n`);
+      console.log(`\n⚠️  Missing environment variables detected\n`);
+    } else if (placeholder.length > 0) {
+      this.results.warnings.push(`Environment variables with placeholder values: ${placeholder.join(', ')}`);
+      console.log(`\n⚠️  Some environment variables have placeholder values\n`);
     } else {
-      console.log('✅ All required environment variables present\n');
+      console.log('\n✅ All required environment variables properly configured\n');
     }
   }
 
