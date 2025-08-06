@@ -6,8 +6,8 @@
   "scripts": {
     "start": "node dist/index.js",
     "start:prod": "NODE_ENV=production node dist/index.js",
-    "dev": "ts-node src/index.ts",
-    "dev:watch": "nodemon --exec ts-node src/index.ts",
+    "dev": "DATABASE_URL=\"file:./dev.db\" ts-node src/index.ts",
+    "dev:watch": "DATABASE_URL=\"file:./dev.db\" nodemon --exec ts-node src/index.ts",
     "build": "tsc",
     "build:prod": "tsc --sourceMap false",
     "build:watch": "tsc --watch",
