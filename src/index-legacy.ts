@@ -301,8 +301,8 @@ app.use('/api/openrouter/chat', contentGenerationLimiter);
 // Authentication routes (with their own rate limiting)
 app.use('/api/auth', authRoutes);
 
-// Google OAuth routes
-app.use('/auth', googleAuthRoutes);
+// Google OAuth routes - mounted at /api to match Google Console configuration
+app.use('/api', googleAuthRoutes);
 
 // Apply general API rate limiting to other OpenRouter endpoints
 app.use('/api/openrouter', apiLimiter, openRouterRoutes);
