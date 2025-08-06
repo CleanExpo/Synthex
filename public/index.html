@@ -688,6 +688,122 @@
         </main>
     </div>
     
+    <!-- Authentication Modals -->
+    <div id="authModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="glass rounded-2xl p-8 max-w-md w-full mx-4">
+            <!-- Login Form -->
+            <div id="loginForm" class="auth-form">
+                <div class="text-center mb-6">
+                    <div class="flex items-center justify-center gap-2 mb-2">
+                        <img src="/logo.png" alt="SYNTHEX Logo" class="h-8 w-auto">
+                        <h2 class="text-2xl font-bold">Sign In</h2>
+                    </div>
+                    <p class="text-[var(--text-secondary)]">Welcome back to SYNTHEX</p>
+                </div>
+                
+                <form id="loginFormElement" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Email</label>
+                        <input 
+                            type="email" 
+                            id="loginEmail"
+                            required
+                            class="w-full px-4 py-3 rounded-xl bg-[var(--bg-primary)] border border-[var(--border)] focus:border-[var(--accent)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:ring-opacity-20 transition-smooth"
+                            placeholder="your@email.com"
+                        >
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Password</label>
+                        <input 
+                            type="password" 
+                            id="loginPassword"
+                            required
+                            class="w-full px-4 py-3 rounded-xl bg-[var(--bg-primary)] border border-[var(--border)] focus:border-[var(--accent)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:ring-opacity-20 transition-smooth"
+                            placeholder="Your password"
+                        >
+                    </div>
+                    
+                    <button type="submit" class="btn-primary w-full">
+                        Sign In
+                    </button>
+                </form>
+                
+                <div class="text-center mt-4">
+                    <p class="text-sm text-[var(--text-secondary)]">
+                        Don't have an account? 
+                        <button onclick="showRegister()" class="text-[var(--accent)] hover:underline">Sign up</button>
+                    </p>
+                </div>
+            </div>
+            
+            <!-- Registration Form -->
+            <div id="registerForm" class="auth-form hidden">
+                <div class="text-center mb-6">
+                    <div class="flex items-center justify-center gap-2 mb-2">
+                        <img src="/logo.png" alt="SYNTHEX Logo" class="h-8 w-auto">
+                        <h2 class="text-2xl font-bold">Sign Up</h2>
+                    </div>
+                    <p class="text-[var(--text-secondary)]">Join SYNTHEX today</p>
+                </div>
+                
+                <form id="registerFormElement" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Name</label>
+                        <input 
+                            type="text" 
+                            id="registerName"
+                            class="w-full px-4 py-3 rounded-xl bg-[var(--bg-primary)] border border-[var(--border)] focus:border-[var(--accent)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:ring-opacity-20 transition-smooth"
+                            placeholder="Your full name"
+                        >
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Email</label>
+                        <input 
+                            type="email" 
+                            id="registerEmail"
+                            required
+                            class="w-full px-4 py-3 rounded-xl bg-[var(--bg-primary)] border border-[var(--border)] focus:border-[var(--accent)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:ring-opacity-20 transition-smooth"
+                            placeholder="your@email.com"
+                        >
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Password</label>
+                        <input 
+                            type="password" 
+                            id="registerPassword"
+                            required
+                            class="w-full px-4 py-3 rounded-xl bg-[var(--bg-primary)] border border-[var(--border)] focus:border-[var(--accent)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:ring-opacity-20 transition-smooth"
+                            placeholder="Create a strong password"
+                        >
+                        <p class="text-xs text-[var(--text-secondary)] mt-1">
+                            Password must contain uppercase, lowercase, number, and special character
+                        </p>
+                    </div>
+                    
+                    <button type="submit" class="btn-primary w-full">
+                        Create Account
+                    </button>
+                </form>
+                
+                <div class="text-center mt-4">
+                    <p class="text-sm text-[var(--text-secondary)]">
+                        Already have an account? 
+                        <button onclick="showLogin()" class="text-[var(--accent)] hover:underline">Sign in</button>
+                    </p>
+                </div>
+            </div>
+            
+            <button onclick="closeAuthModal()" class="absolute top-4 right-4 p-2 rounded-lg hover:bg-[var(--border)] transition-smooth">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+    </div>
+
     <!-- Toast Notification -->
     <div id="toast" class="fixed bottom-4 right-4 transform translate-y-full transition-transform duration-300 z-50">
         <div class="glass rounded-lg px-6 py-4 flex items-center gap-3 min-w-[300px]">
@@ -907,8 +1023,180 @@
         }
         
         function showLogin() {
-            // TODO: Implement login modal
-            showToast('Login feature coming soon!');
+            document.getElementById('authModal').classList.remove('hidden');
+            document.getElementById('loginForm').classList.remove('hidden');
+            document.getElementById('registerForm').classList.add('hidden');
+        }
+        
+        function showRegister() {
+            document.getElementById('loginForm').classList.add('hidden');
+            document.getElementById('registerForm').classList.remove('hidden');
+        }
+        
+        function closeAuthModal() {
+            document.getElementById('authModal').classList.add('hidden');
+        }
+        
+        // Authentication functions
+        async function login(email, password) {
+            try {
+                const response = await fetch('/api/v1/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok && result.token) {
+                    localStorage.setItem('authToken', result.token);
+                    localStorage.setItem('user', JSON.stringify(result.user));
+                    updateAuthUI(result.user);
+                    closeAuthModal();
+                    showToast('Welcome back to SYNTHEX!');
+                    return true;
+                } else {
+                    showToast(result.error || 'Login failed', 'error');
+                    return false;
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                showToast('Login error: ' + error.message, 'error');
+                return false;
+            }
+        }
+        
+        async function register(name, email, password) {
+            try {
+                const response = await fetch('/api/v1/auth/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, email, password })
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok && result.token) {
+                    localStorage.setItem('authToken', result.token);
+                    localStorage.setItem('user', JSON.stringify(result.user));
+                    updateAuthUI(result.user);
+                    closeAuthModal();
+                    showToast('Welcome to SYNTHEX! Your account has been created.');
+                    return true;
+                } else {
+                    if (result.details && Array.isArray(result.details)) {
+                        const errors = result.details.map(detail => detail.msg).join(', ');
+                        showToast(`Registration failed: ${errors}`, 'error');
+                    } else {
+                        showToast(result.error || 'Registration failed', 'error');
+                    }
+                    return false;
+                }
+            } catch (error) {
+                console.error('Registration error:', error);
+                showToast('Registration error: ' + error.message, 'error');
+                return false;
+            }
+        }
+        
+        function updateAuthUI(user) {
+            // Add user info to sidebar
+            const sidebar = document.getElementById('sidebar');
+            const userSection = sidebar.querySelector('.user-section');
+            
+            if (userSection) {
+                userSection.remove();
+            }
+            
+            // Create user section
+            const userDiv = document.createElement('div');
+            userDiv.className = 'user-section p-4 border-t border-[var(--border)] mt-auto';
+            userDiv.innerHTML = `
+                <div class="flex items-center gap-3 mb-3">
+                    <div class="w-8 h-8 rounded-full bg-[var(--accent)] flex items-center justify-center text-white text-sm font-semibold">
+                        ${user.name ? user.name.charAt(0).toUpperCase() : user.email.charAt(0).toUpperCase()}
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <div class="text-sm font-medium truncate">${user.name || 'User'}</div>
+                        <div class="text-xs text-[var(--text-secondary)] truncate">${user.email}</div>
+                    </div>
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="showApiKeysModal()" class="px-3 py-1 text-xs rounded-lg bg-[var(--accent)] bg-opacity-20 text-[var(--accent)] hover:bg-opacity-30 transition-smooth">
+                        API Keys
+                    </button>
+                    <button onclick="logout()" class="px-3 py-1 text-xs rounded-lg border border-[var(--border)] hover:bg-[var(--border)] transition-smooth">
+                        Logout
+                    </button>
+                </div>
+            `;
+            
+            // Insert before the theme section
+            const themeSection = sidebar.querySelector('.absolute.bottom-0');
+            sidebar.insertBefore(userDiv, themeSection);
+            
+            // Update API connection status
+            const statusIndicator = sidebar.querySelector('.w-2.h-2');
+            if (statusIndicator) {
+                statusIndicator.className = 'w-2 h-2 rounded-full bg-green-500 animate-pulse';
+                statusIndicator.nextElementSibling.textContent = 'Authenticated';
+            }
+        }
+        
+        function logout() {
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('user');
+            
+            // Remove user section
+            const userSection = document.querySelector('.user-section');
+            if (userSection) {
+                userSection.remove();
+            }
+            
+            // Reset API connection status
+            const sidebar = document.getElementById('sidebar');
+            const statusIndicator = sidebar.querySelector('.w-2.h-2');
+            if (statusIndicator) {
+                statusIndicator.className = 'w-2 h-2 rounded-full bg-yellow-500';
+                statusIndicator.nextElementSibling.textContent = 'Guest Mode';
+            }
+            
+            showToast('Logged out successfully');
+            
+            // Clear any cached data
+            if (window.location.hash) {
+                showTab('generate'); // Return to default tab
+            }
+        }
+        
+        async function checkAuthStatus() {
+            const token = localStorage.getItem('authToken');
+            if (!token) return false;
+            
+            try {
+                const response = await fetch('/api/v1/auth/verify', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    if (result.valid && result.user) {
+                        updateAuthUI(result.user);
+                        return true;
+                    }
+                }
+            } catch (error) {
+                console.error('Auth check error:', error);
+            }
+            
+            // Token is invalid, clear it
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('user');
+            return false;
+        }
+        
+        function showApiKeysModal() {
+            showToast('API Keys management coming soon!');
         }
         
         async function loadAnalytics() {
@@ -1313,8 +1601,64 @@
             form.dispatchEvent(new Event('submit'));
         }
         
+        // Form submission handlers
+        document.getElementById('loginFormElement').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            
+            if (!email || !password) {
+                showToast('Please fill in all fields', 'error');
+                return;
+            }
+            
+            const success = await login(email, password);
+            if (success) {
+                // Clear form
+                document.getElementById('loginFormElement').reset();
+                // Refresh current tab data if needed
+                const currentTab = document.querySelector('.sidebar-item.active').textContent.trim();
+                if (currentTab.includes('History')) loadHistory();
+                if (currentTab.includes('Analytics')) loadAnalytics();
+            }
+        });
+        
+        document.getElementById('registerFormElement').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const name = document.getElementById('registerName').value;
+            const email = document.getElementById('registerEmail').value;
+            const password = document.getElementById('registerPassword').value;
+            
+            if (!email || !password) {
+                showToast('Email and password are required', 'error');
+                return;
+            }
+            
+            const success = await register(name, email, password);
+            if (success) {
+                // Clear form
+                document.getElementById('registerFormElement').reset();
+                // Refresh current tab data if needed
+                const currentTab = document.querySelector('.sidebar-item.active').textContent.trim();
+                if (currentTab.includes('History')) loadHistory();
+                if (currentTab.includes('Analytics')) loadAnalytics();
+            }
+        });
+        
         // Initialize
         initTheme();
+        
+        // Check authentication status on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            checkAuthStatus();
+        });
+        
+        // Check auth status immediately if DOM is already loaded
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', checkAuthStatus);
+        } else {
+            checkAuthStatus();
+        }
     </script>
     <script src="/js/breadcrumb.js"></script>
     <script src="/js/ui-helpers.js"></script>
