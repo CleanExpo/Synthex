@@ -126,14 +126,14 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
 // API v1 routes with versioning
 app.use('/api/v1', v1Routes);
 
-// Main endpoint - new landing page
+// Main endpoint - full Synthex application
 app.get('/', (req: Request, res: Response) => {
-  res.sendFile('index-new.html', { root: path.join(__dirname, '..', 'public') });
+  res.sendFile('app.html', { root: path.join(__dirname, '..', 'public') });
 });
 
-// Modern UI endpoint (old main page)
-app.get('/app', (req: Request, res: Response) => {
-  res.sendFile('app.html', { root: path.join(__dirname, '..', 'public') });
+// Landing page endpoint for marketing
+app.get('/landing', (req: Request, res: Response) => {
+  res.sendFile('index-new.html', { root: path.join(__dirname, '..', 'public') });
 });
 
 // Classic UI endpoint
