@@ -89,7 +89,6 @@
     "@playwright/test": "^1.54.2",
     "@types/express": "^5.0.3",
     "@types/express-session": "^1.18.2",
-    "@types/ioredis": "^5.0.0",
     "@types/jest": "^29.5.12",
     "@types/node": "^20.19.9",
     "@types/passport": "^1.0.17",
