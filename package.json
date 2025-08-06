@@ -66,6 +66,7 @@
     "@modelcontextprotocol/sdk": "^1.17.1",
     "@modelcontextprotocol/server-sequential-thinking": "^2025.7.1",
     "@prisma/client": "^6.13.0",
+    "@prisma/extension-accelerate": "^2.0.2",
     "@types/bcryptjs": "^2.4.6",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/natural": "^5.1.5",

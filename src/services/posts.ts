@@ -1,7 +1,6 @@
-import { PrismaClient, type Post } from '@prisma/client';
+import { type Post } from '@prisma/client';
 import { z } from 'zod';
-
-const prisma = new PrismaClient();
+import { prisma } from '../lib/prisma';
 
 // Validation schemas
 export const CreatePostSchema = z.object({
