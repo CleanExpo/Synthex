@@ -12,5 +12,14 @@ declare global {
       authProvider?: string;
       googleId?: string;
     }
+    
+    interface Request {
+      rateLimit?: {
+        resetTime?: number;
+        limit?: number;
+        remaining?: number;
+        used?: number;
+      };
+    }
   }
 }
