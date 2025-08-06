@@ -25,7 +25,7 @@ export class ProjectService {
   static async create(userId: string, data: z.infer<typeof CreateProjectSchema>): Promise<Project> {
     const validated = CreateProjectSchema.parse(data);
     
-    return await prisma.project.create({
+    return await (prisma as any).project.create({
       data: {
         ...validated,
         userId,
@@ -68,14 +68,14 @@ export class ProjectService {
       ];
     }
     
-    const [projects, total] = await prisma.$transaction([
-      prisma.project.findMany({
+    const [projects, total] = await (prisma as any).$transaction([
+      (prisma as any).project.findMany({
         where,
         skip,
         take: limit,
         orderBy: { [sortBy]: sortOrder }
       }),
-      prisma.project.count({ where })
+      (prisma as any).project.count({ where })
     ]);
     
     // Add computed metrics
@@ -99,7 +99,7 @@ export class ProjectService {
    * Get a single project by ID
    */
   static async getById(id: string, userId: string): Promise<ProjectWithMetrics | null> {
-    const project = await prisma.project.findFirst({
+    const project = await (prisma as any).project.findFirst({
       where: { id, userId }
     });
     
@@ -128,7 +128,7 @@ export class ProjectService {
     const validated = UpdateProjectSchema.parse(data);
     
     // Verify ownership
-    const existing = await prisma.project.findFirst({
+    const existing = await (prisma as any).project.findFirst({
       where: { id, userId }
     });
     
@@ -145,7 +145,7 @@ export class ProjectService {
       };
     }
     
-    return await prisma.project.update({
+    return await (prisma as any).project.update({
       where: { id },
       data: {
         ...validated,
@@ -159,7 +159,7 @@ export class ProjectService {
    */
   static async delete(id: string, userId: string): Promise<void> {
     // Verify ownership
-    const existing = await prisma.project.findFirst({
+    const existing = await (prisma as any).project.findFirst({
       where: { id, userId }
     });
     
@@ -167,7 +167,7 @@ export class ProjectService {
       throw new Error('Project not found');
     }
     
-    await prisma.project.delete({
+    await (prisma as any).project.delete({
       where: { id }
     });
   }
@@ -288,7 +288,7 @@ export class ProjectService {
     recentlyUpdated: number;
     completionRate: number;
   }> {
-    const projects = await prisma.project.findMany({
+    const projects = await (prisma as any).project.findMany({
       where: { userId }
     });
     
@@ -324,7 +324,7 @@ export class ProjectService {
    * Clone a project
    */
   static async clone(id: string, userId: string): Promise<Project> {
-    const original = await prisma.project.findFirst({
+    const original = await (prisma as any).project.findFirst({
       where: { id, userId }
     });
     
@@ -332,7 +332,7 @@ export class ProjectService {
       throw new Error('Project not found');
     }
     
-    return await prisma.project.create({
+    return await (prisma as any).project.create({
       data: {
         name: `${original.name} (Copy)`,
         description: original.description,
@@ -347,7 +347,7 @@ export class ProjectService {
    * Search projects
    */
   static async search(userId: string, query: string): Promise<Project[]> {
-    return await prisma.project.findMany({
+    return await (prisma as any).project.findMany({
       where: {
         userId,
         OR: [

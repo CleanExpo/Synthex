@@ -172,7 +172,7 @@ export class PostService {
     const validated = UpdatePostSchema.parse(data);
     
     // Verify ownership
-    const existing = await prisma.post.findFirst({
+    const existing = await (prisma as any).post.findFirst({
       where: { 
         id,
         campaign: { userId }
@@ -208,7 +208,7 @@ export class PostService {
    */
   static async delete(id: string, userId: string): Promise<void> {
     // Verify ownership
-    const existing = await prisma.post.findFirst({
+    const existing = await (prisma as any).post.findFirst({
       where: { 
         id,
         campaign: { userId }
@@ -239,7 +239,7 @@ export class PostService {
     };
     
     // Verify ownership
-    const existing = await prisma.post.findFirst({
+    const existing = await (prisma as any).post.findFirst({
       where: { 
         id,
         campaign: { userId }
@@ -274,7 +274,7 @@ export class PostService {
     if (validated.scheduledAt) updateData.scheduledAt = validated.scheduledAt;
     if (validated.platform) updateData.platform = validated.platform;
     
-    return await prisma.post.update({
+    return await (prisma as any).post.update({
       where: { id },
       data: updateData
     });
@@ -295,7 +295,7 @@ export class PostService {
       .filter((id): id is string => !!id);
     
     if (campaignIds.length > 0) {
-      const campaigns = await prisma.campaign.findMany({
+      const campaigns = await (prisma as any).campaign.findMany({
         where: { 
           id: { in: campaignIds },
           userId 
@@ -308,9 +308,9 @@ export class PostService {
     }
     
     // Create posts in transaction
-    return await prisma.$transaction(
-      validated.posts.map(postData => 
-        prisma.post.create({
+    return await (prisma as any).$transaction(
+      validated.posts.map((postData: any) => 
+        (prisma as any).post.create({
           data: {
             content: postData.content,
             platform: postData.platform,
@@ -363,7 +363,7 @@ export class PostService {
     
     if (platform) where.platform = platform;
     
-    return await prisma.post.findMany({
+    return await (prisma as any).post.findMany({
       where,
       include: {
         campaign: {
@@ -389,7 +389,7 @@ export class PostService {
     id: string, 
     analytics: Partial<PostAnalytics>
   ): Promise<Post> {
-    const post = await prisma.post.findUnique({
+    const post = await (prisma as any).post.findUnique({
       where: { id }
     });
     
@@ -399,7 +399,7 @@ export class PostService {
     
     const currentAnalytics = (post.analytics as any) || {};
     
-    return await prisma.post.update({
+    return await (prisma as any).post.update({
       where: { id },
       data: {
         analytics: {
@@ -428,23 +428,23 @@ export class PostService {
       count: number;
     }>;
   }> {
-    const [total, draft, scheduled, published, failed, posts] = await prisma.$transaction([
-      prisma.post.count({ 
+    const [total, draft, scheduled, published, failed, posts] = await (prisma as any).$transaction([
+      (prisma as any).post.count({ 
         where: { campaign: { userId } } 
       }),
-      prisma.post.count({ 
+      (prisma as any).post.count({ 
         where: { campaign: { userId }, status: 'draft' } 
       }),
-      prisma.post.count({ 
+      (prisma as any).post.count({ 
         where: { campaign: { userId }, status: 'scheduled' } 
       }),
-      prisma.post.count({ 
+      (prisma as any).post.count({ 
         where: { campaign: { userId }, status: 'published' } 
       }),
-      prisma.post.count({ 
+      (prisma as any).post.count({ 
         where: { campaign: { userId }, status: 'failed' } 
       }),
-      prisma.post.findMany({
+      (prisma as any).post.findMany({
         where: { campaign: { userId } },
         select: {
           platform: true,
@@ -516,7 +516,7 @@ export class PostService {
       where.campaign = { userId };
     }
     
-    return await prisma.post.findMany({
+    return await (prisma as any).post.findMany({
       where,
       include: {
         campaign: true
@@ -528,7 +528,7 @@ export class PostService {
    * Mark scheduled post as published
    */
   static async markAsPublished(id: string): Promise<Post> {
-    return await prisma.post.update({
+    return await (prisma as any).post.update({
       where: { id },
       data: {
         status: 'published',
@@ -548,7 +548,7 @@ export class PostService {
     };
     
     if (errorMessage) {
-      const currentMetadata = await prisma.post.findUnique({
+      const currentMetadata = await (prisma as any).post.findUnique({
         where: { id },
         select: { metadata: true }
       });
@@ -560,7 +560,7 @@ export class PostService {
       };
     }
     
-    return await prisma.post.update({
+    return await (prisma as any).post.update({
       where: { id },
       data: updateData
     });
@@ -570,7 +570,7 @@ export class PostService {
    * Duplicate a post
    */
   static async duplicate(id: string, userId: string): Promise<Post> {
-    const original = await prisma.post.findFirst({
+    const original = await (prisma as any).post.findFirst({
       where: { 
         id,
         campaign: { userId }
@@ -581,7 +581,7 @@ export class PostService {
       throw new Error('Post not found');
     }
     
-    return await prisma.post.create({
+    return await (prisma as any).post.create({
       data: {
         content: `${original.content} (Copy)`,
         platform: original.platform,

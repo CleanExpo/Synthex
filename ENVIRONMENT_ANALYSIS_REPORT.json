@@ -1,0 +1,639 @@
+{
+  "timestamp": "2025-08-06T19:46:35.754Z",
+  "summary": {
+    "totalEnvFiles": 4,
+    "totalVariables": 118,
+    "usedVariables": 319,
+    "securityIssues": 5,
+    "missingVariables": 0
+  },
+  "variables": {
+    "NEXT_PUBLIC_SUPABASE_URL": {
+      "file": ".env.txt",
+      "value": "https://synthex-cerq.vercel.app/",
+      "used": true
+    },
+    "NEXT_PUBLIC_SUPABASE_ANON_KEY": {
+      "file": ".env.txt",
+      "value": "ey********************9Y",
+      "used": true
+    },
+    "SUPABASE_SERVICE_ROLE_KEY": {
+      "file": ".env.txt",
+      "value": "ey********************mk",
+      "used": false
+    },
+    "DATABASE_PROVIDER": {
+      "file": ".env.txt",
+      "value": "postgresql",
+      "used": false
+    },
+    "DIRECT_DATABASE_URL": {
+      "file": ".env",
+      "value": "postgresql://postgres:lX2WLK2mB8Ucrjdv@db.znyjoyjsvjotlzjppzal.supabase.co:5432/postgres",
+      "used": false
+    },
+    "DATABASE_URL": {
+      "file": ".env.txt",
+      "value": "postgresql://postgres:lX2WLK2mB8Ucrjdv@db.znyjoyjsvjotlzjppzal.supabase.co:5432/postgres",
+      "used": true
+    },
+    "POSTGRES_URL_POOLING": {
+      "file": ".env",
+      "value": "postgresql://postgres.znyjoyjsvjotlzjppzal:lX2WLK2mB8Ucrjdv@aws-0-ap-southeast-1.pooler.supabase.com:5432/postgres",
+      "used": false
+    },
+    "JWT_SECRET": {
+      "file": ".env.txt",
+      "value": "NE********************==",
+      "used": true
+    },
+    "GOOGLE_CALLBACK_URL": {
+      "file": ".env.txt",
+      "value": "https://synthex-cerq.vercel.app/auth/google/callback",
+      "used": true
+    },
+    "OPENROUTER_API_KEY": {
+      "file": ".env.txt",
+      "value": "sk********************2f",
+      "used": true
+    },
+    "OPENROUTER_BASE_URL": {
+      "file": ".env.txt",
+      "value": "https://openrouter.ai/api/v1",
+      "used": true
+    },
+    "OPENROUTER_SITE_URL": {
+      "file": ".env.txt",
+      "value": "https://synthex-cerq.vercel.app",
+      "used": true
+    },
+    "OPENROUTER_SITE_NAME": {
+      "file": ".env.txt",
+      "value": "SYNTHEX",
+      "used": true
+    },
+    "OPENAI_API_KEY": {
+      "file": ".env.txt",
+      "value": "sk********************wA",
+      "used": true
+    },
+    "ANTHROPIC_API_KEY": {
+      "file": ".env.txt",
+      "value": "sk********************AA",
+      "used": true
+    },
+    "GOOGLE_API_KEY": {
+      "file": ".env.txt",
+      "value": "AI********************6w",
+      "used": false
+    },
+    "GOOGLE_CLIENT_ID": {
+      "file": ".env.txt",
+      "value": "858852811970-52un4b3i4gujj56oapief6uhht2033ks.apps.googleusercontent.com",
+      "used": true
+    },
+    "GOOGLE_CLIENT_SECRET": {
+      "file": ".env.txt",
+      "value": "GO********************fg",
+      "used": true
+    },
+    "GITHUB_CLIENT_ID": {
+      "file": ".env.txt",
+      "value": "Ov23lirLjZFRjpiEnRta",
+      "used": false
+    },
+    "GITHUB_CLIENT_SECRET": {
+      "file": ".env.txt",
+      "value": "b0********************2e",
+      "used": false
+    },
+    "GOOGLE_PROJECT_NUMBER": {
+      "file": ".env.txt",
+      "value": "858852811970",
+      "used": false
+    },
+    "GOOGLE_PROJECT_ID": {
+      "file": ".env.txt",
+      "value": "synthex-468000",
+      "used": false
+    },
+    "DAILY_BUDGET_LIMIT": {
+      "file": ".env.txt",
+      "value": "50.00",
+      "used": false
+    },
+    "MONTHLY_BUDGET_LIMIT": {
+      "file": ".env.txt",
+      "value": "1000.00",
+      "used": false
+    },
+    "MAX_CONCURRENT_REQUESTS": {
+      "file": ".env.txt",
+      "value": "5",
+      "used": false
+    },
+    "CACHE_ENABLED": {
+      "file": ".env.txt",
+      "value": "true",
+      "used": false
+    },
+    "CACHE_TTL_SECONDS": {
+      "file": ".env.txt",
+      "value": "3600",
+      "used": false
+    },
+    "MAX_CPU_PERCENT": {
+      "file": ".env.txt",
+      "value": "70",
+      "used": false
+    },
+    "THROTTLE_DELAY": {
+      "file": ".env.txt",
+      "value": "0.5",
+      "used": false
+    },
+    "TRACK_USAGE": {
+      "file": ".env.txt",
+      "value": "true",
+      "used": false
+    },
+    "TRACK_COSTS": {
+      "file": ".env.txt",
+      "value": "true",
+      "used": false
+    },
+    "EXPORT_METRICS": {
+      "file": ".env.txt",
+      "value": "true",
+      "used": false
+    },
+    "SANITIZE_LOGS": {
+      "file": ".env.txt",
+      "value": "true",
+      "used": false
+    },
+    "PII_DETECTION": {
+      "file": ".env.txt",
+      "value": "true",
+      "used": false
+    },
+    "DEBUG": {
+      "file": ".env.txt",
+      "value": "false",
+      "used": true
+    },
+    "LOG_LEVEL": {
+      "file": ".env.txt",
+      "value": "INFO",
+      "used": true
+    },
+    "NODE_ENV": {
+      "file": ".env.txt",
+      "value": "development",
+      "used": true
+    },
+    "PORT": {
+      "file": ".env.txt",
+      "value": "3000",
+      "used": true
+    },
+    "postgresql://postgres:lX2WLK2mB8Ucrjdv@db.znyjoyjsvjotlzjppzal.supabase.co:5432/postgres": {
+      "file": ".env.txt",
+      "value": "",
+      "used": false
+    },
+    "postgresql://postgres:lX2WLK2mB8Ucrjdv@db.znyjoyjsvjotlzjppzal.supabase.co:5432/postgres?pgbouncer": {
+      "file": ".env.txt",
+      "value": "true",
+      "used": false
+    },
+    "postgresql://postgres.znyjoyjsvjotlzjppzal:lX2WLK2mB8Ucrjdv@aws-0-ap-southeast-1.pooler.supabase.com:5432/postgres": {
+      "file": ".env.txt",
+      "value": "",
+      "used": false
+    },
+    "lX2WLK2mB8Ucrjdv": {
+      "file": ".env.txt",
+      "value": "",
+      "used": false
+    },
+    "RATE_LIMIT_WINDOW_GENERAL": {
+      "file": ".env.production",
+      "value": "900000  # 15 minutes",
+      "used": false
+    },
+    "RATE_LIMIT_MAX_GENERAL": {
+      "file": ".env.production",
+      "value": "100        # Requests per window",
+      "used": false
+    },
+    "RATE_LIMIT_WINDOW_API": {
+      "file": ".env.production",
+      "value": "60000       # 1 minute",
+      "used": false
+    },
+    "RATE_LIMIT_MAX_API": {
+      "file": ".env.production",
+      "value": "50             # API requests per minute",
+      "used": false
+    },
+    "RATE_LIMIT_WINDOW_CONTENT": {
+      "file": ".env.production",
+      "value": "60000   # 1 minute",
+      "used": false
+    },
+    "RATE_LIMIT_MAX_CONTENT": {
+      "file": ".env.production",
+      "value": "20         # Content generation per minute",
+      "used": false
+    },
+    "MCP_SEQUENTIAL_THINKING_ENABLED": {
+      "file": ".env.production",
+      "value": "true",
+      "used": false
+    },
+    "MCP_CONTEXT7_ENABLED": {
+      "file": ".env.production",
+      "value": "true",
+      "used": false
+    },
+    "MCP_MAX_CONTEXT_WINDOWS": {
+      "file": ".env.production",
+      "value": "7",
+      "used": false
+    },
+    "MCP_MAX_TOKENS_PER_WINDOW": {
+      "file": ".env.production",
+      "value": "4000",
+      "used": false
+    },
+    "MCP_MEMORY_RETENTION": {
+      "file": ".env.production",
+      "value": "0.95",
+      "used": false
+    },
+    "MLE_STAR_MIN_PRODUCTION_SCORE": {
+      "file": ".env.production",
+      "value": "70",
+      "used": false
+    },
+    "MLE_STAR_AUTO_EVALUATE": {
+      "file": ".env.production",
+      "value": "true",
+      "used": false
+    },
+    "MLE_STAR_MONITORING_ENABLED": {
+      "file": ".env.production",
+      "value": "true",
+      "used": false
+    },
+    "ANALYTICS_ENABLED": {
+      "file": ".env.production",
+      "value": "true",
+      "used": false
+    },
+    "ANALYTICS_RETENTION_DAYS": {
+      "file": ".env.production",
+      "value": "90",
+      "used": false
+    },
+    "ANALYTICS_BATCH_SIZE": {
+      "file": ".env.production",
+      "value": "100",
+      "used": false
+    },
+    "CORS_ALLOWED_ORIGINS": {
+      "file": ".env.production",
+      "value": "https://synthex.vercel.app,https://synthex.dev",
+      "used": false
+    },
+    "HELMET_ENABLED": {
+      "file": ".env.production",
+      "value": "true",
+      "used": false
+    },
+    "CSRF_PROTECTION": {
+      "file": ".env.production",
+      "value": "true",
+      "used": false
+    },
+    "API_KEY_ROTATION_DAYS": {
+      "file": ".env.production",
+      "value": "30",
+      "used": false
+    },
+    "CACHE_TTL": {
+      "file": ".env.test",
+      "value": "300",
+      "used": true
+    },
+    "COMPRESSION_ENABLED": {
+      "file": ".env.production",
+      "value": "true",
+      "used": false
+    },
+    "REQUEST_TIMEOUT": {
+      "file": ".env.production",
+      "value": "30000",
+      "used": false
+    },
+    "SENTRY_DSN": {
+      "file": ".env.production",
+      "value": "",
+      "used": false
+    },
+    "NEW_RELIC_LICENSE_KEY": {
+      "file": ".env.production",
+      "value": "",
+      "used": false
+    },
+    "DATADOG_API_KEY": {
+      "file": ".env.production",
+      "value": "",
+      "used": false
+    },
+    "DATABASE_POOL_SIZE": {
+      "file": ".env.production",
+      "value": "10",
+      "used": false
+    },
+    "DATABASE_SSL": {
+      "file": ".env.production",
+      "value": "true",
+      "used": false
+    },
+    "REDIS_URL": {
+      "file": ".env.production",
+      "value": "",
+      "used": true
+    },
+    "REDIS_PASSWORD": {
+      "file": ".env.test",
+      "value": "",
+      "used": true
+    },
+    "REDIS_TTL": {
+      "file": ".env.production",
+      "value": "3600",
+      "used": false
+    },
+    "AUTO_ROLLBACK_ENABLED": {
+      "file": ".env.production",
+      "value": "true",
+      "used": false
+    },
+    "HEALTH_CHECK_INTERVAL": {
+      "file": ".env.production",
+      "value": "60000",
+      "used": false
+    },
+    "HEALTH_CHECK_TIMEOUT": {
+      "file": ".env.production",
+      "value": "5000",
+      "used": false
+    },
+    "MAX_DEPLOY_TIME": {
+      "file": ".env.production",
+      "value": "300000",
+      "used": false
+    },
+    "GRACEFUL_SHUTDOWN_TIMEOUT": {
+      "file": ".env.production",
+      "value": "30000",
+      "used": false
+    },
+    "FEATURE_AB_TESTING": {
+      "file": ".env.production",
+      "value": "false",
+      "used": false
+    },
+    "FEATURE_SMART_SCHEDULING": {
+      "file": ".env.production",
+      "value": "false",
+      "used": false
+    },
+    "FEATURE_COMPETITOR_ANALYSIS": {
+      "file": ".env.production",
+      "value": "false",
+      "used": false
+    },
+    "FEATURE_MULTI_LANGUAGE": {
+      "file": ".env.production",
+      "value": "false",
+      "used": false
+    },
+    "FEATURE_VOICE_CONTENT": {
+      "file": ".env.production",
+      "value": "false",
+      "used": false
+    },
+    "SLACK_WEBHOOK_URL": {
+      "file": ".env.production",
+      "value": "",
+      "used": false
+    },
+    "DISCORD_WEBHOOK_URL": {
+      "file": ".env.production",
+      "value": "",
+      "used": false
+    },
+    "ZAPIER_WEBHOOK_URL": {
+      "file": ".env.production",
+      "value": "",
+      "used": false
+    },
+    "WEBHOOK_SECRET": {
+      "file": ".env.production",
+      "value": "",
+      "used": false
+    },
+    "SMTP_HOST": {
+      "file": ".env.production",
+      "value": "",
+      "used": false
+    },
+    "SMTP_PORT": {
+      "file": ".env.production",
+      "value": "587",
+      "used": false
+    },
+    "SMTP_USER": {
+      "file": ".env.production",
+      "value": "",
+      "used": false
+    },
+    "SMTP_PASSWORD": {
+      "file": ".env.production",
+      "value": "",
+      "used": false
+    },
+    "NOTIFICATION_EMAIL": {
+      "file": ".env.production",
+      "value": "",
+      "used": false
+    },
+    "CDN_URL": {
+      "file": ".env.production",
+      "value": "",
+      "used": false
+    },
+    "CDN_ENABLED": {
+      "file": ".env.production",
+      "value": "false",
+      "used": false
+    },
+    "BACKUP_ENABLED": {
+      "file": ".env.production",
+      "value": "false",
+      "used": false
+    },
+    "BACKUP_SCHEDULE": {
+      "file": ".env.production",
+      "value": "0 2 * * *",
+      "used": false
+    },
+    "BACKUP_RETENTION_DAYS": {
+      "file": ".env.production",
+      "value": "30",
+      "used": false
+    },
+    "JWT_ISSUER": {
+      "file": ".env.test",
+      "value": "synthex-test",
+      "used": true
+    },
+    "ENCRYPTION_KEY": {
+      "file": ".env.test",
+      "value": "te********************ng",
+      "used": true
+    },
+    "REDIS_HOST": {
+      "file": ".env.test",
+      "value": "localhost",
+      "used": true
+    },
+    "REDIS_PORT": {
+      "file": ".env.test",
+      "value": "6379",
+      "used": true
+    },
+    "REDIS_DB": {
+      "file": ".env.test",
+      "value": "1",
+      "used": true
+    },
+    "LOG_FILE_PATH": {
+      "file": ".env.test",
+      "value": "./logs/test.log",
+      "used": true
+    },
+    "CACHE_KEY_PREFIX": {
+      "file": ".env.test",
+      "value": "sy*********t:",
+      "used": true
+    },
+    "CACHE_MAX_MEMORY_ITEMS": {
+      "file": ".env.test",
+      "value": "100",
+      "used": true
+    },
+    "RATE_LIMIT_WINDOW_MS": {
+      "file": ".env.test",
+      "value": "60000",
+      "used": true
+    },
+    "RATE_LIMIT_MAX_REQUESTS": {
+      "file": ".env.test",
+      "value": "1000",
+      "used": true
+    },
+    "CORS_ORIGINS": {
+      "file": ".env.test",
+      "value": "http://localhost:3001,http://localhost:3000",
+      "used": true
+    },
+    "ENABLE_SWAGGER": {
+      "file": ".env.test",
+      "value": "true",
+      "used": true
+    },
+    "ENABLE_METRICS": {
+      "file": ".env.test",
+      "value": "true",
+      "used": true
+    },
+    "ENABLE_HEALTH_CHECK": {
+      "file": ".env.test",
+      "value": "true",
+      "used": true
+    },
+    "TEST_TIMEOUT": {
+      "file": ".env.test",
+      "value": "30000",
+      "used": false
+    },
+    "TEST_DB_CLEANUP": {
+      "file": ".env.test",
+      "value": "true",
+      "used": false
+    },
+    "TEST_PARALLEL_WORKERS": {
+      "file": ".env.test",
+      "value": "1",
+      "used": false
+    },
+    "Synthex Environment Variables": {
+      "file": ".env.txt",
+      "value": "",
+      "used": false
+    },
+    "Supabase_Password": {
+      "file": ".env.txt",
+      "value": "lX************dv",
+      "used": false
+    },
+    "POSTGRES_URL_NON_POOLING": {
+      "file": ".env.txt",
+      "value": "postgresql://postgres.znyjoyjsvjotlzjppzal:lX2WLK2mB8Ucrjdv@aws-0-ap-southeast-1.pooler.supabase.com:5432/postgreslX2WLK2mB8Ucrjdv",
+      "used": false
+    }
+  },
+  "securityIssues": [
+    {
+      "variable": "NEXT_PUBLIC_SUPABASE_ANON_KEY",
+      "issue": "Detected JWT Token pattern in value",
+      "severity": "high",
+      "file": ".env.txt"
+    },
+    {
+      "variable": "SUPABASE_SERVICE_ROLE_KEY",
+      "issue": "Detected JWT Token pattern in value",
+      "severity": "high",
+      "file": ".env.txt"
+    },
+    {
+      "variable": "GOOGLE_API_KEY",
+      "issue": "Detected Google API Key pattern in value",
+      "severity": "critical",
+      "file": ".env.txt"
+    },
+    {
+      "variable": "MCP_MAX_TOKENS_PER_WINDOW",
+      "issue": "Weak secret value (too short)",
+      "severity": "high",
+      "file": ".env.production"
+    },
+    {
+      "variable": "API_KEY_ROTATION_DAYS",
+      "issue": "Weak secret value (too short)",
+      "severity": "high",
+      "file": ".env.production"
+    }
+  ],
+  "missingVariables": [],
+  "recommendations": [
+    "Address 1 critical security issues immediately",
+    "Consider removing 84 unused variables"
+  ]
+}

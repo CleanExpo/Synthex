@@ -5,7 +5,8 @@
 
 // Load environment variables first
 import './env';
-import express, { Request, Response, NextFunction } from 'express';
+import express from 'express';
+import { Request, Response, NextFunction } from 'express';
 import session from 'express-session';
 import path from 'path';
 import rateLimit from 'express-rate-limit';

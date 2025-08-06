@@ -70,7 +70,7 @@ export async function generateContent(params: GenerateContentParams): Promise<Co
 
   try {
     // Get user's API key
-    const user = await prisma.user.findUnique({
+    const user = await (prisma as any).user.findUnique({
       where: { id: userId },
       select: { openrouterApiKey: true }
     });
@@ -117,7 +117,7 @@ export async function generateContent(params: GenerateContentParams): Promise<Co
     };
 
     // Log usage
-    await prisma.apiUsage.create({
+    await (prisma as any).apiUsage.create({
       data: {
         userId,
         endpoint: '/content/generate',
@@ -184,7 +184,7 @@ export async function saveDraft(params: {
   const { content, platform, metadata, userId, campaignId } = params;
 
   // Save as a project with type 'draft'
-  const draft = await prisma.project.create({
+  const draft = await (prisma as any).project.create({
     data: {
       userId,
       name: `Draft - ${new Date().toLocaleString()}`,
@@ -203,7 +203,7 @@ export async function saveDraft(params: {
 
 // Get drafts
 export async function getDrafts(userId: string) {
-  const drafts = await prisma.project.findMany({
+  const drafts = await (prisma as any).project.findMany({
     where: {
       userId,
       type: 'draft'
@@ -236,7 +236,7 @@ export async function publishContent(params: {
   let finalCampaignId = campaignId;
   
   if (!finalCampaignId) {
-    const defaultCampaign = await prisma.campaign.create({
+    const defaultCampaign = await (prisma as any).campaign.create({
       data: {
         userId,
         name: 'Quick Posts',
@@ -249,7 +249,7 @@ export async function publishContent(params: {
   }
 
   // Create a post
-  const post = await prisma.post.create({
+  const post = await (prisma as any).post.create({
     data: {
       content,
       platform,
