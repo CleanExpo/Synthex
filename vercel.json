@@ -9,6 +9,10 @@
   },
   "routes": [
     {
+      "src": "/",
+      "dest": "/public/index-new.html"
+    },
+    {
       "src": "/favicon.ico",
       "dest": "/public/favicon.ico"
     },
@@ -27,9 +31,17 @@
     {
       "src": "/(.*).html",
       "dest": "/public/$1.html"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/public/$1"
     }
   ],
   "rewrites": [
+    {
+      "source": "/",
+      "destination": "/api/vercel.js"
+    },
     {
       "source": "/api/(.*)",
       "destination": "/api/vercel.js"
