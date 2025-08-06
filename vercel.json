@@ -7,41 +7,7 @@
       "maxDuration": 30
     }
   },
-  "routes": [
-    {
-      "src": "/",
-      "dest": "/public/index-new.html"
-    },
-    {
-      "src": "/favicon.ico",
-      "dest": "/public/favicon.ico"
-    },
-    {
-      "src": "/css/(.*)",
-      "dest": "/public/css/$1"
-    },
-    {
-      "src": "/js/(.*)",
-      "dest": "/public/js/$1"
-    },
-    {
-      "src": "/logo.png",
-      "dest": "/public/logo.png"
-    },
-    {
-      "src": "/(.*).html",
-      "dest": "/public/$1.html"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/public/$1"
-    }
-  ],
   "rewrites": [
-    {
-      "source": "/",
-      "destination": "/api/vercel.js"
-    },
     {
       "source": "/api/(.*)",
       "destination": "/api/vercel.js"
@@ -63,15 +29,11 @@
       "destination": "/api/vercel.js"
     },
     {
-      "source": "/app",
+      "source": "/(app|classic|dashboard|demo|login)",
       "destination": "/api/vercel.js"
     },
     {
-      "source": "/classic",
-      "destination": "/api/vercel.js"
-    },
-    {
-      "source": "/dashboard",
+      "source": "/",
       "destination": "/api/vercel.js"
     }
   ],
