@@ -9,15 +9,18 @@ const router = express.Router();
 // Rate limiting for auth endpoints
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 20, // Limit each IP to 20 auth requests per windowMs (increased for development)
-  message: { error: 'Too many authentication attempts, please try again later.' },
+  max: 50, // Increased for development - reduce in production
   standardHeaders: true,
   legacyHeaders: false,
+  skipSuccessfulRequests: false,
+  skipFailedRequests: false,
   handler: (req: any, res: any) => {
+    const resetTime = req.rateLimit?.resetTime || Date.now() + 900000;
+    const retryAfter = Math.ceil((resetTime - Date.now()) / 1000);
     res.status(429).json({ 
       error: 'Too many authentication attempts', 
-      message: 'Please wait before trying again',
-      retryAfter: Math.ceil(req.rateLimit?.resetTime ? (req.rateLimit.resetTime - Date.now()) / 1000 : 900)
+      message: `Please wait ${retryAfter} seconds before trying again`,
+      retryAfter: retryAfter
     });
   }
 });
