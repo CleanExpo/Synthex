@@ -1,10 +1,15 @@
-import dotenv from 'dotenv';
+// Load environment variables first
+import './env';
 import express, { Request, Response, NextFunction } from 'express';
 import session from 'express-session';
 import path from 'path';
 import rateLimit from 'express-rate-limit';
 import swaggerUi from 'swagger-ui-express';
-import passport from './config/passport';
+// Conditionally import passport only if Google OAuth is configured
+let passport: any = null;
+if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
+  passport = require('./config/passport').default;
+}
 import { swaggerSpec } from './config/swagger';
 import v1Routes from './routes/v1';
 import openRouterRoutes from './routes/openrouter';
@@ -19,9 +24,6 @@ import { mcpIntegration } from './services/mcp-integration';
 import { ttdRd } from './services/ttd-rd-framework';
 import { mcpContext7 } from './services/mcp-context7-integration';
 import { ApiRes } from './utils/apiResponse';
-
-// Load environment variables
-dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -74,8 +76,11 @@ app.use(session({
 }));
 
 // Initialize Passport
-app.use(passport.initialize());
-app.use(passport.session());
+// Initialize passport only if configured
+if (passport) {
+  app.use(passport.initialize());
+  app.use(passport.session());
+}
 
 // Apply general rate limiting to all requests
 app.use(generalLimiter);

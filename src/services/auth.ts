@@ -419,6 +419,25 @@ export class AuthService {
     console.log(`Password reset code for ${email}: ${code}`);
     console.log('In production, this would be sent via email');
   }
+
+  async updateUserProfile(userId: string, data: { name?: string; preferences?: any }): Promise<User> {
+    const user = await prisma.user.update({
+      where: { id: userId },
+      data: {
+        name: data.name,
+        preferences: data.preferences
+      },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        createdAt: true,
+        preferences: true
+      }
+    });
+
+    return user;
+  }
 }
 
 export const authService = new AuthService();

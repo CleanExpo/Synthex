@@ -15,10 +15,10 @@
     <style>
         /* Import from STYLE_GUIDE.md */
         :root {
-            --primary: #6366f1;
-            --primary-hover: #5558e3;
-            --bg-primary: #0a0a0b;
-            --bg-secondary: #111113;
+            --primary: #2563eb;
+            --primary-hover: #1e40af;
+            --bg-primary: #0f172a;
+            --bg-secondary: #1e293b;
             --bg-card: rgba(255, 255, 255, 0.03);
             --text-primary: #ffffff;
             --text-secondary: #a0a0a0;
@@ -622,6 +622,14 @@
                             <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"/>
                         </svg>
                     </button>
+                    <button class="header-btn" onclick="startFeatureTour()" title="Take a feature tour">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/>
+                            <point cx="12" cy="17" r="1"/>
+                        </svg>
+                        <span>Help</span>
+                    </button>
                     <button class="header-btn">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M12 2v20m10-10H2"/>
@@ -995,5 +1003,6 @@
     </script>
     
     <script src="/js/notifications.js"></script>
+    <script src="/js/tour.js"></script>
 </body>
 </html>
