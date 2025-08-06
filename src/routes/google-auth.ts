@@ -1,23 +1,38 @@
 import express, { Request, Response } from 'express';
-import passport from '../config/passport';
 import { authService } from '../services/auth';
 
 const router = express.Router();
 
+// Import passport only if Google OAuth is configured
+let passport: any = null;
+if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
+  passport = require('../config/passport').default;
+}
+
 // Google OAuth login route
-router.get('/google', 
+router.get('/google', (req: Request, res: Response, next: any) => {
+  if (!passport) {
+    return res.status(400).json({
+      error: 'Google OAuth not configured',
+      message: 'Please configure GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET in your environment variables'
+    });
+  }
+  
   passport.authenticate('google', { 
     scope: ['profile', 'email'] 
-  })
-);
+  })(req, res, next);
+});
 
 // Google OAuth callback route
-router.get('/google/callback',
+router.get('/google/callback', (req: Request, res: Response, next: any) => {
+  if (!passport) {
+    return res.redirect('/dashboard?error=google_not_configured');
+  }
+  
   passport.authenticate('google', { 
     failureRedirect: '/dashboard?error=auth_failed',
     session: false  // We'll use JWT instead of sessions
-  }),
-  async (req: Request, res: Response) => {
+  })(req, res, async () => {
     try {
       const user = req.user as any;
       

@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SYNTHEX Demo - Working Authentication</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&display=swap" rel="stylesheet">
+    <style>
+        * { font-family: 'Space Grotesk', sans-serif; }
+        .gradient-bg {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+        }
+        .glass {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+    </style>
+</head>
+<body class="h-full gradient-bg text-white">
+    <div class="min-h-screen flex items-center justify-center p-4">
+        <div class="max-w-md w-full space-y-8">
+            <!-- Logo and Title -->
+            <div class="text-center">
+                <h1 class="text-4xl font-bold mb-2">SYNTHEX Demo</h1>
+                <p class="text-gray-400">Working Authentication System</p>
+            </div>
+
+            <!-- Demo Credentials -->
+            <div class="glass rounded-xl p-6 mb-6">
+                <h3 class="text-lg font-semibold mb-4 text-blue-400">Demo Credentials</h3>
+                <div class="space-y-2 text-sm">
+                    <p><span class="text-gray-400">Email:</span> <code class="bg-gray-800 px-2 py-1 rounded">demo@synthex.com</code></p>
+                    <p><span class="text-gray-400">Password:</span> <code class="bg-gray-800 px-2 py-1 rounded">demo123!</code></p>
+                </div>
+            </div>
+
+            <!-- Login Form -->
+            <div class="glass rounded-xl p-8">
+                <h2 class="text-2xl font-bold mb-6">Sign In</h2>
+                
+                <form id="loginForm" class="space-y-6">
+                    <div>
+                        <label for="email" class="block text-sm font-medium mb-2">Email</label>
+                        <input type="email" id="email" name="email" required
+                               class="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                               placeholder="demo@synthex.com">
+                    </div>
+                    
+                    <div>
+                        <label for="password" class="block text-sm font-medium mb-2">Password</label>
+                        <input type="password" id="password" name="password" required
+                               class="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                               placeholder="••••••••">
+                    </div>
+                    
+                    <button type="submit" 
+                            class="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 rounded-lg font-medium transition-colors">
+                        Sign In
+                    </button>
+                </form>
+
+                <div class="mt-6 pt-6 border-t border-gray-700">
+                    <p class="text-center text-sm text-gray-400 mb-4">Or continue with</p>
+                    
+                    <button onclick="checkGoogleAuth()" 
+                            class="w-full py-3 px-4 bg-gray-800 hover:bg-gray-700 rounded-lg font-medium transition-colors flex items-center justify-center gap-2">
+                        <svg class="w-5 h-5" viewBox="0 0 24 24">
+                            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                        </svg>
+                        Google
+                    </button>
+                </div>
+
+                <div class="mt-6 text-center">
+                    <p class="text-sm text-gray-400">
+                        Don't have an account? 
+                        <a href="#" onclick="showRegisterForm()" class="text-blue-400 hover:text-blue-300">Sign up</a>
+                    </p>
+                </div>
+            </div>
+
+            <!-- Error/Success Messages -->
+            <div id="message" class="hidden glass rounded-lg p-4"></div>
+        </div>
+    </div>
+
+    <!-- User Dashboard (Hidden by default) -->
+    <div id="dashboard" class="hidden min-h-screen p-8">
+        <div class="max-w-4xl mx-auto">
+            <div class="glass rounded-xl p-8">
+                <h2 class="text-3xl font-bold mb-6">Welcome to SYNTHEX!</h2>
+                <div id="userInfo" class="space-y-4 mb-8"></div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="glass rounded-lg p-6">
+                        <h3 class="text-xl font-semibold mb-4 text-blue-400">3-Tier Architecture</h3>
+                        <ul class="space-y-2 text-sm text-gray-300">
+                            <li>✅ Data Access Layer</li>
+                            <li>✅ Business Logic Layer</li>
+                            <li>✅ Presentation Layer</li>
+                            <li>✅ Security & Authentication</li>
+                            <li>✅ Caching & Monitoring</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="glass rounded-lg p-6">
+                        <h3 class="text-xl font-semibold mb-4 text-green-400">Features Ready</h3>
+                        <ul class="space-y-2 text-sm text-gray-300">
+                            <li>✅ JWT Authentication</li>
+                            <li>✅ In-Memory User Storage</li>
+                            <li>✅ API Documentation</li>
+                            <li>✅ Rate Limiting</li>
+                            <li>✅ Testing Framework</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <button onclick="logout()" class="mt-8 px-6 py-2 bg-red-600 hover:bg-red-700 rounded-lg transition-colors">
+                    Sign Out
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let authToken = null;
+
+        // Check if user is already logged in
+        window.onload = () => {
+            const token = localStorage.getItem('synthex_token');
+            if (token) {
+                authToken = token;
+                verifyToken();
+            }
+        };
+
+        // Login form handler
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            try {
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email, password })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    authToken = data.token;
+                    localStorage.setItem('synthex_token', authToken);
+                    showMessage('Login successful!', 'success');
+                    showDashboard(data.user);
+                } else {
+                    showMessage(data.error || 'Login failed', 'error');
+                }
+            } catch (error) {
+                showMessage('Network error. Please try again.', 'error');
+            }
+        });
+
+        // Verify token
+        async function verifyToken() {
+            try {
+                const response = await fetch('/api/auth/verify', {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.valid) {
+                    showDashboard(data.user);
+                } else {
+                    localStorage.removeItem('synthex_token');
+                    authToken = null;
+                }
+            } catch (error) {
+                console.error('Token verification failed:', error);
+            }
+        }
+
+        // Check Google Auth status
+        async function checkGoogleAuth() {
+            try {
+                const response = await fetch('/auth/google/status');
+                const data = await response.json();
+                
+                if (data.configured) {
+                    window.location.href = data.authUrl;
+                } else {
+                    showMessage('Google OAuth is not configured. Please use email/password login.', 'error');
+                }
+            } catch (error) {
+                showMessage('Failed to check Google auth status', 'error');
+            }
+        }
+
+        // Show dashboard
+        function showDashboard(user) {
+            document.querySelector('.min-h-screen.flex').classList.add('hidden');
+            document.getElementById('dashboard').classList.remove('hidden');
+            
+            document.getElementById('userInfo').innerHTML = `
+                <p class="text-lg"><span class="text-gray-400">Email:</span> ${user.email}</p>
+                <p class="text-lg"><span class="text-gray-400">Name:</span> ${user.name || 'Not set'}</p>
+                <p class="text-lg"><span class="text-gray-400">Account Created:</span> ${new Date(user.createdAt).toLocaleDateString()}</p>
+            `;
+        }
+
+        // Show message
+        function showMessage(text, type) {
+            const messageEl = document.getElementById('message');
+            messageEl.textContent = text;
+            messageEl.className = `glass rounded-lg p-4 ${type === 'error' ? 'text-red-400' : 'text-green-400'}`;
+            messageEl.classList.remove('hidden');
+            
+            setTimeout(() => {
+                messageEl.classList.add('hidden');
+            }, 5000);
+        }
+
+        // Logout
+        function logout() {
+            localStorage.removeItem('synthex_token');
+            authToken = null;
+            window.location.reload();
+        }
+
+        // Show register form (placeholder)
+        function showRegisterForm() {
+            showMessage('Registration form coming soon! Use the demo account for now.', 'error');
+        }
+    </script>
+</body>
+</html>

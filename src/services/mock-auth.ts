@@ -2,29 +2,24 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 
-// Try to import Prisma, but use mock if not available
-let prisma: any;
-let useMockAuth = false;
-
-try {
-  const { PrismaClient } = require('@prisma/client');
-  prisma = new PrismaClient();
-  // Test connection
-  prisma.$connect().catch(() => {
-    console.log('Database connection failed, using in-memory mock');
-    useMockAuth = true;
-  });
-} catch (error) {
-  console.log('Prisma not available, using in-memory mock');
-  useMockAuth = true;
-}
-
 export interface User {
   id: string;
   email: string;
   name: string | null;
   createdAt: Date;
   preferences?: any;
+  password?: string;
+  googleId?: string | null;
+  avatar?: string | null;
+  authProvider?: string;
+  emailVerified?: boolean;
+  openrouterApiKey?: string | null;
+  anthropicApiKey?: string | null;
+  resetCode?: string | null;
+  resetCodeExpires?: Date | null;
+  resetToken?: string | null;
+  resetTokenExpires?: Date | null;
+  lastLogin?: Date | null;
 }
 
 export interface CreateUserData {
@@ -45,7 +40,40 @@ export interface LoginCredentials {
   password: string;
 }
 
-export class AuthService {
+export interface ApiUsage {
+  id: string;
+  userId: string;
+  endpoint: string;
+  model?: string;
+  tokens?: number;
+  cost?: number;
+  status: string;
+  createdAt: Date;
+  errorMessage?: string;
+}
+
+// In-memory storage
+const users = new Map<string, User>();
+const apiUsage = new Map<string, ApiUsage[]>();
+
+// Initialize with a demo user
+const demoUserId = crypto.randomUUID();
+users.set(demoUserId, {
+  id: demoUserId,
+  email: 'demo@synthex.com',
+  name: 'Demo User',
+  password: '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewYpfQr6U1B1xP.O', // password: demo123!
+  createdAt: new Date(),
+  preferences: {
+    onboardingCompleted: false,
+    userType: null,
+    platforms: []
+  },
+  authProvider: 'local',
+  emailVerified: true
+});
+
+export class MockAuthService {
   private readonly JWT_SECRET: string;
   private readonly JWT_EXPIRES_IN = '7d';
   private readonly SALT_ROUNDS = 12;
@@ -86,10 +114,7 @@ export class AuthService {
     const { email, password, name } = userData;
 
     // Check if user already exists
-    const existingUser = await prisma.user.findUnique({
-      where: { email }
-    });
-
+    const existingUser = Array.from(users.values()).find(u => u.email === email);
     if (existingUser) {
       throw new Error('User with this email already exists');
     }
@@ -98,68 +123,73 @@ export class AuthService {
     const hashedPassword = await this.hashPassword(password);
 
     // Create user
-    const user = await prisma.user.create({
-      data: {
-        email,
-        password: hashedPassword,
-        name,
+    const user: User = {
+      id: crypto.randomUUID(),
+      email,
+      password: hashedPassword,
+      name: name || null,
+      createdAt: new Date(),
+      preferences: {
+        onboardingCompleted: false,
+        userType: null,
+        platforms: []
       },
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        createdAt: true,
-        preferences: true,
-      }
-    });
+      authProvider: 'local',
+      emailVerified: false
+    };
 
-    return user;
+    users.set(user.id, user);
+
+    // Return user without password
+    const { password: _, ...userWithoutPassword } = user;
+    return userWithoutPassword;
   }
 
   async createGoogleUser(userData: CreateGoogleUserData): Promise<User> {
     const { email, name, googleId, avatar } = userData;
 
-    // Create user with Google data
-    const user = await prisma.user.create({
-      data: {
-        email,
-        name,
-        googleId,
-        avatar,
-        password: '', // Empty password for Google users
-        authProvider: 'google',
-        emailVerified: true, // Google emails are pre-verified
-      },
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        createdAt: true,
-        preferences: true,
-        avatar: true,
-        authProvider: true,
-      }
-    });
+    // Check if user already exists
+    const existingUser = Array.from(users.values()).find(u => u.email === email);
+    if (existingUser) {
+      // Update existing user with Google info
+      existingUser.googleId = googleId;
+      existingUser.avatar = avatar;
+      existingUser.authProvider = 'google';
+      existingUser.emailVerified = true;
+      existingUser.lastLogin = new Date();
+      users.set(existingUser.id, existingUser);
+      
+      const { password: _, ...userWithoutPassword } = existingUser;
+      return userWithoutPassword;
+    }
 
-    return user;
+    // Create new user with Google data
+    const user: User = {
+      id: crypto.randomUUID(),
+      email,
+      name,
+      googleId,
+      avatar,
+      password: '', // Empty password for Google users
+      authProvider: 'google',
+      emailVerified: true, // Google emails are pre-verified
+      createdAt: new Date(),
+      preferences: {
+        onboardingCompleted: false,
+        userType: null,
+        platforms: []
+      }
+    };
+
+    users.set(user.id, user);
+
+    const { password: _, ...userWithoutPassword } = user;
+    return userWithoutPassword;
   }
 
   async findUserByEmail(email: string): Promise<User | null> {
-    const user = await prisma.user.findUnique({
-      where: { email },
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        createdAt: true,
-        preferences: true,
-        avatar: true,
-        authProvider: true,
-        googleId: true,
-      }
-    });
-
-    return user;
+    const user = Array.from(users.values()).find(u => u.email === email);
+    return user || null;
   }
 
   async updateUserGoogleInfo(userId: string, data: {
@@ -167,44 +197,27 @@ export class AuthService {
     avatar?: string;
     lastLogin: Date;
   }): Promise<User> {
-    const user = await prisma.user.update({
-      where: { id: userId },
-      data: {
-        googleId: data.googleId,
-        avatar: data.avatar,
-        lastLogin: data.lastLogin,
-      },
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        createdAt: true,
-        preferences: true,
-        avatar: true,
-        authProvider: true,
-      }
-    });
+    const user = users.get(userId);
+    if (!user) {
+      throw new Error('User not found');
+    }
 
-    return user;
+    user.googleId = data.googleId;
+    if (data.avatar) user.avatar = data.avatar;
+    user.lastLogin = data.lastLogin;
+
+    users.set(userId, user);
+
+    const { password: _, ...userWithoutPassword } = user;
+    return userWithoutPassword;
   }
 
   async authenticateUser(credentials: LoginCredentials): Promise<{ user: User; token: string } | null> {
     const { email, password } = credentials;
 
     // Find user
-    const user = await prisma.user.findUnique({
-      where: { email },
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        password: true,
-        createdAt: true,
-        preferences: true,
-      }
-    });
-
-    if (!user) {
+    const user = Array.from(users.values()).find(u => u.email === email);
+    if (!user || !user.password) {
       return null;
     }
 
@@ -213,6 +226,10 @@ export class AuthService {
     if (!isPasswordValid) {
       return null;
     }
+
+    // Update last login
+    user.lastLogin = new Date();
+    users.set(user.id, user);
 
     // Generate token
     const token = this.generateToken(user.id);
@@ -226,46 +243,32 @@ export class AuthService {
   }
 
   async getUserById(userId: string): Promise<User | null> {
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        createdAt: true,
-        preferences: true,
-      }
-    });
+    const user = users.get(userId);
+    if (!user) return null;
 
-    return user;
+    const { password: _, ...userWithoutPassword } = user;
+    return userWithoutPassword;
   }
 
   async updateUserApiKeys(userId: string, apiKeys: { openrouterApiKey?: string; anthropicApiKey?: string }): Promise<void> {
-    const encryptedKeys: any = {};
-    
+    const user = users.get(userId);
+    if (!user) {
+      throw new Error('User not found');
+    }
+
     if (apiKeys.openrouterApiKey) {
-      encryptedKeys.openrouterApiKey = this.encryptApiKey(apiKeys.openrouterApiKey);
+      user.openrouterApiKey = this.encryptApiKey(apiKeys.openrouterApiKey);
     }
     
     if (apiKeys.anthropicApiKey) {
-      encryptedKeys.anthropicApiKey = this.encryptApiKey(apiKeys.anthropicApiKey);
+      user.anthropicApiKey = this.encryptApiKey(apiKeys.anthropicApiKey);
     }
 
-    await prisma.user.update({
-      where: { id: userId },
-      data: encryptedKeys
-    });
+    users.set(userId, user);
   }
 
   async getUserApiKeys(userId: string): Promise<{ openrouterApiKey?: string; anthropicApiKey?: string }> {
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: {
-        openrouterApiKey: true,
-        anthropicApiKey: true,
-      }
-    });
-
+    const user = users.get(userId);
     if (!user) {
       return {};
     }
@@ -287,7 +290,7 @@ export class AuthService {
     const algorithm = 'aes-256-cbc';
     const key = crypto.scryptSync(this.JWT_SECRET, 'salt', 32);
     const iv = crypto.randomBytes(16);
-    const cipher = crypto.createCipher(algorithm, key);
+    const cipher = crypto.createCipheriv(algorithm, key, iv);
     
     let encrypted = cipher.update(apiKey, 'utf8', 'hex');
     encrypted += cipher.final('hex');
@@ -303,7 +306,7 @@ export class AuthService {
       const iv = Buffer.from(parts[0], 'hex');
       const encrypted = parts[1];
       
-      const decipher = crypto.createDecipher(algorithm, key);
+      const decipher = crypto.createDecipheriv(algorithm, key, iv);
       let decrypted = decipher.update(encrypted, 'hex', 'utf8');
       decrypted += decipher.final('utf8');
       
@@ -323,57 +326,53 @@ export class AuthService {
     responseData?: any;
     errorMessage?: string;
   }): Promise<void> {
-    await prisma.apiUsage.create({
-      data: {
-        userId,
-        endpoint,
-        ...data
-      }
-    });
+    const usage: ApiUsage = {
+      id: crypto.randomUUID(),
+      userId,
+      endpoint,
+      ...data,
+      createdAt: new Date()
+    };
+
+    if (!apiUsage.has(userId)) {
+      apiUsage.set(userId, []);
+    }
+    
+    const userUsage = apiUsage.get(userId)!;
+    userUsage.push(usage);
+    
+    // Keep only last 1000 entries per user
+    if (userUsage.length > 1000) {
+      userUsage.splice(0, userUsage.length - 1000);
+    }
   }
 
   async getUserApiUsage(userId: string, limit: number = 100): Promise<any[]> {
-    return prisma.apiUsage.findMany({
-      where: { userId },
-      orderBy: { createdAt: 'desc' },
-      take: limit,
-      select: {
-        id: true,
-        endpoint: true,
-        model: true,
-        tokens: true,
-        cost: true,
-        status: true,
-        createdAt: true,
-        errorMessage: true,
-      }
-    });
+    const userUsage = apiUsage.get(userId) || [];
+    return userUsage
+      .slice(-limit)
+      .reverse()
+      .map(({ requestData, responseData, ...usage }) => usage);
   }
 
   async generateResetCode(email: string): Promise<{ code: string; expiresAt: Date }> {
+    const user = Array.from(users.values()).find(u => u.email === email);
+    if (!user) {
+      throw new Error('User not found');
+    }
+
     const code = Math.floor(100000 + Math.random() * 900000).toString();
     const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
     
-    await prisma.user.update({
-      where: { email },
-      data: {
-        resetCode: code,
-        resetCodeExpires: expiresAt
-      }
-    });
+    user.resetCode = code;
+    user.resetCodeExpires = expiresAt;
+    users.set(user.id, user);
     
     return { code, expiresAt };
   }
 
   async verifyResetCode(email: string, code: string): Promise<string | null> {
-    const user = await prisma.user.findUnique({
-      where: { email },
-      select: {
-        id: true,
-        resetCode: true,
-        resetCodeExpires: true
-      }
-    });
+    const user = Array.from(users.values()).find(u => u.email === email);
     
     if (!user || user.resetCode !== code) {
       return null;
@@ -386,26 +385,19 @@ export class AuthService {
     // Generate a temporary token for password reset
     const resetToken = crypto.randomBytes(32).toString('hex');
     
-    await prisma.user.update({
-      where: { email },
-      data: {
-        resetToken,
-        resetTokenExpires: new Date(Date.now() + 30 * 60 * 1000) // 30 minutes
-      }
-    });
+    user.resetToken = resetToken;
+    user.resetTokenExpires = new Date(Date.now() + 30 * 60 * 1000); // 30 minutes
+    users.set(user.id, user);
     
     return resetToken;
   }
 
   async resetPasswordWithToken(token: string, newPassword: string): Promise<boolean> {
-    const user = await prisma.user.findFirst({
-      where: {
-        resetToken: token,
-        resetTokenExpires: {
-          gt: new Date()
-        }
-      }
-    });
+    const user = Array.from(users.values()).find(u => 
+      u.resetToken === token && 
+      u.resetTokenExpires && 
+      u.resetTokenExpires > new Date()
+    );
     
     if (!user) {
       return false;
@@ -413,16 +405,13 @@ export class AuthService {
     
     const hashedPassword = await this.hashPassword(newPassword);
     
-    await prisma.user.update({
-      where: { id: user.id },
-      data: {
-        password: hashedPassword,
-        resetCode: null,
-        resetCodeExpires: null,
-        resetToken: null,
-        resetTokenExpires: null
-      }
-    });
+    user.password = hashedPassword;
+    user.resetCode = null;
+    user.resetCodeExpires = null;
+    user.resetToken = null;
+    user.resetTokenExpires = null;
+    
+    users.set(user.id, user);
     
     return true;
   }
@@ -435,33 +424,21 @@ export class AuthService {
   }
 
   async updateUserProfile(userId: string, data: { name?: string; preferences?: any }): Promise<User> {
-    const user = await prisma.user.update({
-      where: { id: userId },
-      data: {
-        name: data.name,
-        preferences: data.preferences
-      },
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        createdAt: true,
-        preferences: true
-      }
-    });
+    const user = users.get(userId);
+    if (!user) {
+      throw new Error('User not found');
+    }
 
-    return user;
+    if (data.name !== undefined) user.name = data.name;
+    if (data.preferences !== undefined) {
+      user.preferences = { ...user.preferences, ...data.preferences };
+    }
+
+    users.set(userId, user);
+
+    const { password: _, ...userWithoutPassword } = user;
+    return userWithoutPassword;
   }
 }
 
-// Export mock auth service if database is not available
-let authService: AuthService;
-
-if (useMockAuth || !prisma) {
-  const { authService: mockAuth } = require('./mock-auth');
-  authService = mockAuth;
-} else {
-  authService = new AuthService();
-}
-
-export { authService };
+export const authService = new MockAuthService();
