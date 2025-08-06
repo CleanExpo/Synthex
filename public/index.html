@@ -3,1145 +3,996 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SYNTHEX - AI-Powered Marketing Mastery Platform</title>
-    <meta name="description" content="Transform your marketing with AI-powered content generation, platform optimization, and real-time analytics. Get started free.">
+    <title>SYNTHEX - AI Marketing Platform</title>
     <link rel="icon" type="image/png" href="/logo.png">
+    
+    <!-- Inter Font -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     
+    <!-- Tailwind CSS - Fallback to CDN if local file not available -->
+    <link rel="stylesheet" href="/css/synthex-app.css" onerror="this.onerror=null;this.href='https://cdn.tailwindcss.com'">
     <script>
-        // Check authentication status on page load
-        (function() {
-            const token = localStorage.getItem('synthex_token');
-            const currentPath = window.location.pathname;
-            const publicPaths = ['/auth.html', '/auth-improved.html', '/demo.html', '/google-oauth-test.html'];
-            
-            if (!token && !publicPaths.includes(currentPath) && currentPath !== '/') {
-                // Redirect to auth if no token and not on public page
-                window.location.href = '/auth.html';
-            }
-        })();
+        // Fallback to Tailwind CDN if CSS file not found
+        if (!document.querySelector('link[href="/css/synthex-app.css"]')) {
+            document.write('<script src="https://cdn.tailwindcss.com"><\/script>');
+        }
     </script>
     
-    <!-- Microsoft Fluent System Icons -->
-    <!-- Using inline SVG for premium enterprise-grade icons -->
+    <!-- Custom Styles -->
     <style>
         :root {
-            /* Clean, professional color palette */
-            --primary-color: #2563eb;
-            --primary-hover: #1d4ed8;
-            --secondary-color: #6366f1;
-            --accent-color: #059669;
-            --success-color: #10b981;
-            --warning-color: #f59e0b;
-            --error-color: #ef4444;
-            
-            /* Modern neutral backgrounds */
-            --bg-primary: #0f172a;
-            --bg-secondary: #1e293b;
-            --bg-tertiary: #334155;
-            --bg-card: rgba(30, 41, 59, 0.6);
-            --bg-card-hover: rgba(30, 41, 59, 0.8);
-            
-            /* Text colors */
-            --text-primary: #f8fafc;
-            --text-secondary: #cbd5e1;
-            --text-muted: #94a3b8;
-            --border-color: rgba(148, 163, 184, 0.2);
-            
-            /* Subtle shadows */
-            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-            --shadow-hover: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            --bg-primary: #fcfbf8;
+            --bg-secondary: #ffffff;
+            --text-primary: #1a1a1a;
+            --text-secondary: #666666;
+            --accent: #7c3aed;
+            --accent-hover: #6d28d9;
+            --border: #e5e7eb;
+            --shadow: rgba(0, 0, 0, 0.1);
+            --gradient-start: #7c3aed;
+            --gradient-end: #ec4899;
         }
-
+        
+        [data-theme="dark"] {
+            --bg-primary: #0a0a0a;
+            --bg-secondary: #1a1a1a;
+            --text-primary: #ffffff;
+            --text-secondary: #a0a0a0;
+            --accent: #a78bfa;
+            --accent-hover: #c4b5fd;
+            --border: #2a2a2a;
+            --shadow: rgba(0, 0, 0, 0.5);
+            --gradient-start: #a78bfa;
+            --gradient-end: #f9a8d4;
+        }
+        
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
-
+        
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
             background: var(--bg-primary);
             color: var(--text-primary);
-            line-height: 1.6;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             overflow-x: hidden;
         }
-
-        /* Clean, static background */
-        .bg-animation {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: -1;
-            background: linear-gradient(180deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
-        }
-
-        /* Header */
-        .header {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            z-index: 1000;
-            padding: 1rem 2rem;
-            backdrop-filter: blur(20px);
-            background: rgba(15, 23, 42, 0.8);
-            border-bottom: 1px solid var(--border-color);
-            transition: all 0.3s ease;
-        }
-
-        .header.scrolled {
-            padding: 0.5rem 2rem;
-            background: rgba(15, 23, 42, 0.95);
-        }
-
-        .nav {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            max-width: 1400px;
-            margin: 0 auto;
-        }
-
-        .logo {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            font-size: 1.8rem;
-            font-weight: 800;
-            color: white;
-        }
-
-        .logo img {
-            height: 40px;
-            width: auto;
-            filter: brightness(1.1);
-        }
-
-        .logo-text {
-            background: var(--primary-gradient);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        .nav-links {
-            display: flex;
-            list-style: none;
-            gap: 2rem;
-        }
-
-        .nav-links a {
-            color: var(--text-secondary);
-            text-decoration: none;
-            font-weight: 500;
-            transition: color 0.3s ease;
-        }
-
-        .nav-links a:hover {
-            color: var(--text-primary);
-        }
-
-        .nav-actions {
-            display: flex;
-            gap: 1rem;
-            align-items: center;
-        }
-
-        /* Buttons */
-        .btn {
-            padding: 0.75rem 1.5rem;
-            border: none;
-            border-radius: 12px;
-            font-weight: 600;
-            font-size: 0.9rem;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .btn-primary {
-            background: var(--primary-gradient);
-            color: white;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.6);
-        }
-
-        .btn-secondary {
-            background: var(--bg-card);
-            color: var(--text-primary);
-            border: 1px solid var(--border-color);
-            backdrop-filter: blur(10px);
-        }
-
-        .btn-secondary:hover {
-            background: var(--bg-card-hover);
-            transform: translateY(-1px);
-        }
-
-        .btn-google {
-            background: white;
-            color: #1a1a1a;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-        }
-
-        .btn-google:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-        }
-
-        /* Hero Section */
-        .hero {
-            padding: 8rem 2rem 4rem;
-            text-align: center;
-            max-width: 1400px;
-            margin: 0 auto;
-        }
-
-        .hero-badge {
-            display: inline-block;
-            padding: 0.5rem 1rem;
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: 50px;
-            font-size: 0.85rem;
-            margin-bottom: 2rem;
-            backdrop-filter: blur(10px);
-        }
-
-        .hero h1 {
-            font-size: clamp(2.5rem, 5vw, 4rem);
-            font-weight: 800;
-            margin-bottom: 1.5rem;
-            line-height: 1.2;
-        }
-
-        .hero h1 .gradient-text {
-            background: var(--primary-gradient);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        .hero p {
-            font-size: 1.25rem;
-            color: var(--text-secondary);
-            margin-bottom: 3rem;
-            max-width: 600px;
-            margin-left: auto;
-            margin-right: auto;
-        }
-
-        .hero-actions {
-            display: flex;
-            gap: 1rem;
-            justify-content: center;
-            flex-wrap: wrap;
-            margin-bottom: 4rem;
-        }
-
-        .hero .btn {
-            padding: 1rem 2rem;
-            font-size: 1rem;
-        }
-
-        /* Auth Modal */
-        .modal {
+        
+        /* Animated gradient background */
+        .gradient-bg {
             position: fixed;
             top: 0;
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(0, 0, 0, 0.8);
+            background: linear-gradient(135deg, var(--gradient-start) 0%, var(--gradient-end) 100%);
+            opacity: 0.05;
+            z-index: -1;
+            animation: gradientShift 15s ease infinite;
+        }
+        
+        @keyframes gradientShift {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            25% { transform: translate(-5%, -5%) scale(1.1); }
+            50% { transform: translate(-10%, 5%) scale(1); }
+            75% { transform: translate(5%, -10%) scale(1.1); }
+        }
+        
+        /* Glassmorphism effect */
+        .glass {
+            background: rgba(255, 255, 255, 0.05);
             backdrop-filter: blur(10px);
-            z-index: 2000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            opacity: 0;
-            visibility: hidden;
-            transition: all 0.3s ease;
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
-
-        .modal.active {
-            opacity: 1;
-            visibility: visible;
+        
+        [data-theme="dark"] .glass {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
         }
-
-        .modal-content {
-            background: var(--bg-card);
-            backdrop-filter: blur(20px);
-            border: 1px solid var(--border-color);
-            border-radius: 20px;
-            padding: 2rem;
-            max-width: 400px;
-            width: 90%;
-            max-height: 90vh;
-            overflow-y: auto;
-            transform: translateY(20px);
-            transition: transform 0.3s ease;
+        
+        /* Smooth transitions */
+        .transition-smooth {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
-
-        .modal.active .modal-content {
-            transform: translateY(0);
+        
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
         }
-
-        .modal-close {
-            position: absolute;
-            top: 1rem;
-            right: 1rem;
-            background: none;
-            border: none;
-            color: var(--text-secondary);
-            font-size: 1.5rem;
-            cursor: pointer;
-            transition: color 0.3s ease;
+        
+        ::-webkit-scrollbar-track {
+            background: var(--bg-primary);
         }
-
-        .modal-close:hover {
-            color: var(--text-primary);
+        
+        ::-webkit-scrollbar-thumb {
+            background: var(--accent);
+            border-radius: 4px;
         }
-
-        .auth-tabs {
-            display: flex;
-            margin-bottom: 2rem;
-            background: var(--bg-card);
-            border-radius: 12px;
-            padding: 0.25rem;
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--accent-hover);
         }
-
-        .auth-tab {
-            flex: 1;
-            padding: 0.75rem;
-            background: none;
-            border: none;
-            color: var(--text-secondary);
-            font-weight: 600;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.3s ease;
+        
+        /* Card hover effects */
+        .card-hover {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
-
-        .auth-tab.active {
-            background: var(--primary-gradient);
+        
+        .card-hover:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        }
+        
+        /* Button animations */
+        .btn-primary {
+            background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
             color: white;
-        }
-
-        .form-group {
-            margin-bottom: 1.5rem;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 0.5rem;
-            font-weight: 600;
-            color: var(--text-primary);
-        }
-
-        .input-wrapper {
+            font-weight: 500;
+            padding: 12px 24px;
+            border-radius: 12px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             position: relative;
+            overflow: hidden;
         }
-
-        .form-group input {
+        
+        .btn-primary::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
             width: 100%;
-            padding: 1rem;
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            color: var(--text-primary);
-            font-size: 1rem;
-            transition: all 0.3s ease;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateX(-100%);
+            transition: transform 0.3s;
         }
-
-        .form-group input:focus {
-            outline: none;
-            border-color: rgba(102, 126, 234, 0.6);
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        
+        .btn-primary:hover::before {
+            transform: translateX(0);
         }
-
-        .password-toggle {
-            position: absolute;
-            right: 1rem;
-            top: 50%;
-            transform: translateY(-50%);
-            background: none;
-            border: none;
-            color: var(--text-secondary);
-            cursor: pointer;
-            font-size: 1.1rem;
-            transition: color 0.3s ease;
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(124, 58, 237, 0.3);
         }
-
-        .password-toggle:hover {
-            color: var(--text-primary);
-        }
-
-        .form-divider {
-            display: flex;
-            align-items: center;
-            margin: 1.5rem 0;
-            color: var(--text-muted);
-        }
-
-        .form-divider::before,
-        .form-divider::after {
-            content: '';
-            flex: 1;
-            height: 1px;
-            background: var(--border-color);
-        }
-
-        .form-divider span {
-            padding: 0 1rem;
-            font-size: 0.9rem;
-        }
-
-        .alert {
-            padding: 1rem;
-            border-radius: 12px;
-            margin-bottom: 1rem;
-            display: none;
-        }
-
-        .alert.success {
-            background: rgba(17, 153, 142, 0.2);
-            border: 1px solid rgba(17, 153, 142, 0.3);
-            color: #38ef7d;
-        }
-
-        .alert.error {
-            background: rgba(252, 70, 107, 0.2);
-            border: 1px solid rgba(252, 70, 107, 0.3);
-            color: #fc466b;
-        }
-
-        /* Features Section */
-        .features {
-            padding: 6rem 2rem;
-            max-width: 1400px;
-            margin: 0 auto;
-        }
-
-        .features-header {
-            text-align: center;
-            margin-bottom: 4rem;
-        }
-
-        .features-header h2 {
-            font-size: 2.5rem;
-            font-weight: 700;
-            margin-bottom: 1rem;
-        }
-
-        .features-header p {
-            font-size: 1.1rem;
-            color: var(--text-secondary);
-            max-width: 600px;
-            margin: 0 auto;
-        }
-
-        .features-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-            gap: 2rem;
-        }
-
-        .feature-card {
-            background: var(--bg-card);
-            backdrop-filter: blur(20px);
-            border: 1px solid var(--border-color);
-            border-radius: 20px;
-            padding: 2rem;
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .feature-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 4px;
-            background: var(--primary-gradient);
-            transform: scaleX(0);
-            transition: transform 0.3s ease;
-        }
-
-        .feature-card:hover::before {
-            transform: scaleX(1);
-        }
-
-        .feature-card:hover {
-            transform: translateY(-5px);
-            background: var(--bg-card-hover);
-            box-shadow: var(--shadow-hover);
-        }
-
-        .feature-icon {
-            width: 60px;
-            height: 60px;
-            background: var(--bg-card);
-            color: var(--primary-color);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 16px;
-            font-size: 1.5rem;
-            margin-bottom: 1.5rem;
-        }
-
-        .feature-card h3 {
-            font-size: 1.3rem;
-            font-weight: 600;
-            margin-bottom: 1rem;
-        }
-
-        .feature-card p {
-            color: var(--text-secondary);
-            line-height: 1.6;
-        }
-
-        /* Pricing Section */
-        .pricing {
-            padding: 6rem 2rem;
-            max-width: 1200px;
-            margin: 0 auto;
-            text-align: center;
-        }
-
-        .pricing h2 {
-            font-size: 2.5rem;
-            font-weight: 700;
-            margin-bottom: 1rem;
-        }
-
-        .pricing-subtitle {
-            font-size: 1.1rem;
-            color: var(--text-secondary);
-            margin-bottom: 3rem;
-        }
-
-        .pricing-card {
-            background: var(--bg-card);
-            backdrop-filter: blur(20px);
-            border: 1px solid var(--border-color);
-            border-radius: 20px;
-            padding: 2.5rem;
-            max-width: 400px;
-            margin: 0 auto;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .pricing-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 4px;
-            background: var(--success-gradient);
-        }
-
-        .pricing-badge {
-            display: inline-block;
-            background: var(--success-gradient);
-            color: white;
-            padding: 0.5rem 1rem;
-            border-radius: 50px;
-            font-size: 0.85rem;
-            font-weight: 600;
-            margin-bottom: 1rem;
-        }
-
-        .pricing-card h3 {
-            font-size: 1.5rem;
-            font-weight: 700;
-            margin-bottom: 2rem;
-        }
-
-        .pricing-features {
-            list-style: none;
-            margin-bottom: 2rem;
-        }
-
-        .pricing-features li {
-            padding: 0.5rem 0;
-            color: var(--text-secondary);
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .pricing-features li::before {
-            content: '✓';
-            color: #38ef7d;
-            font-weight: bold;
-        }
-
-        /* Responsive Design */
-        @media (max-width: 768px) {
-            .header {
-                padding: 1rem;
-            }
-
-            .nav-links {
-                display: none;
-            }
-
-            .hero {
-                padding: 6rem 1rem 3rem;
-            }
-
-            .hero-actions {
-                flex-direction: column;
-                align-items: center;
-            }
-
-            .modal-content {
-                margin: 1rem;
-                padding: 1.5rem;
-            }
-
-            .features {
-                padding: 4rem 1rem;
-            }
-
-            .features-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .pricing {
-                padding: 4rem 1rem;
-            }
-        }
-
-        /* Loading Animation */
-        .loading {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 2px solid rgba(255, 255, 255, 0.3);
+        
+        /* Loading spinner */
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--border);
+            border-top-color: var(--accent);
             border-radius: 50%;
-            border-top-color: white;
-            animation: spin 1s ease-in-out infinite;
+            animation: spin 1s linear infinite;
         }
-
+        
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
-
-        /* Hide scrollbar but keep functionality */
-        .modal-content::-webkit-scrollbar {
-            width: 4px;
+        
+        /* Sidebar styles */
+        .sidebar {
+            width: 280px;
+            height: 100vh;
+            background: var(--bg-secondary);
+            border-right: 1px solid var(--border);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
-
-        .modal-content::-webkit-scrollbar-track {
-            background: transparent;
+        
+        .sidebar-item {
+            padding: 12px 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border-left: 3px solid transparent;
+            color: var(--text-secondary);
         }
-
-        .modal-content::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 2px;
+        
+        .sidebar-item:hover {
+            background: rgba(124, 58, 237, 0.1);
+            border-left-color: var(--accent);
+            color: var(--text-primary);
+        }
+        
+        .sidebar-item.active {
+            background: rgba(124, 58, 237, 0.15);
+            border-left-color: var(--accent);
+            color: var(--accent);
+            font-weight: 500;
+        }
+        
+        /* Content area */
+        .content-area {
+            flex: 1;
+            padding: 32px;
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                position: fixed;
+                z-index: 50;
+                transform: translateX(-100%);
+            }
+            
+            .sidebar.open {
+                transform: translateX(0);
+            }
+            
+            .content-area {
+                padding: 20px;
+            }
+        }
+        
+        /* Typing animation */
+        .typing-dots::after {
+            content: '...';
+            animation: typing 1.5s infinite;
+        }
+        
+        @keyframes typing {
+            0%, 60% { opacity: 1; }
+            61%, 100% { opacity: 0; }
+        }
+        
+        /* Glow effect */
+        .glow {
+            box-shadow: 0 0 20px rgba(124, 58, 237, 0.3);
+        }
+        
+        /* Smooth fade in */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.5s ease-out;
         }
     </style>
 </head>
 <body>
-    <div class="bg-animation"></div>
-
-    <!-- Header -->
-    <header class="header" id="header">
-        <nav class="nav">
-            <div class="logo">
-                <img src="/logo.png" alt="SYNTHEX Logo">
-                <span class="logo-text">SYNTHEX</span>
-            </div>
-            <ul class="nav-links">
-                <li><a href="#features">Features</a></li>
-                <li><a href="#pricing">Pricing</a></li>
-                <li><a href="#about">About</a></li>
-                <li><a href="/dashboard">Dashboard</a></li>
-            </ul>
-            <div class="nav-actions">
-                <a href="/auth.html" class="btn btn-secondary">Sign In</a>
-                <a href="/auth.html?tab=register" class="btn btn-primary">Get Started Free</a>
-            </div>
-        </nav>
-    </header>
-
-    <!-- Hero Section -->
-    <section class="hero">
-        <div class="hero-badge">
-            🚀 AI-Powered Marketing Revolution
-        </div>
-        <h1>
-            Transform Your Marketing with <span class="gradient-text">AI Intelligence</span>
-        </h1>
-        <p>
-            Generate high-converting content, optimize for every platform, and scale your marketing with the power of 50+ AI models. 
-            Completely free platform - just bring your own API keys.
-        </p>
-        <div class="hero-actions">
-            <button class="btn btn-primary" onclick="openAuthModal('register')">
-                Get Started Free
-                <span>→</span>
-            </button>
-            <button class="btn btn-secondary" onclick="showLiveDemo()">
-                View Live Demo
-                <svg class="w-5 h-5 ml-2" viewBox="0 0 20 20" fill="currentColor"><path d="M10 2a8 8 0 100 16 8 8 0 000-16zM8 7.5v5l4-2.5-4-2.5z"/></svg>
-            </button>
-        </div>
-    </section>
-
-    <!-- Features Section -->
-    <section class="features" id="features">
-        <div class="features-header">
-            <h2>Everything You Need to Dominate Marketing</h2>
-            <p>Powerful AI tools, seamless integrations, and real-time analytics to supercharge your marketing campaigns.</p>
-        </div>
-        <div class="features-grid">
-            <div class="feature-card">
-                <div class="feature-icon">
-                    <svg class="w-8 h-8" viewBox="0 0 32 32" fill="currentColor"><path d="M16 4a10 10 0 0110 10c0 1.25-.23 2.44-.67 3.54A6.67 6.67 0 0130 23.33v3.34A3.33 3.33 0 0126.67 30H5.33A3.33 3.33 0 012 26.67v-3.34a6.67 6.67 0 014.67-6.46A9.97 9.97 0 016 14a10 10 0 0110-10zm0 3.33A6.67 6.67 0 009.33 14c0 .58.07 1.15.22 1.7A10 10 0 0116 13.33a10 10 0 016.45 2.37c.15-.55.22-1.12.22-1.7a6.67 6.67 0 00-6.67-6.66z"/></svg>
-                </div>
-                <h3>50+ AI Models</h3>
-                <p>Access the best AI models from OpenRouter, Claude, GPT-4, and more. Generate content that converts with cutting-edge AI technology.</p>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon">
-                    <svg class="w-8 h-8" viewBox="0 0 32 32" fill="currentColor"><path d="M16 2C8.268 2 2 8.268 2 16s6.268 14 14 14 14-6.268 14-14S23.732 2 16 2zm0 4a10 10 0 110 20 10 10 0 010-20zm0 3a7 7 0 100 14 7 7 0 000-14zm0 3a4 4 0 110 8 4 4 0 010-8z"/></svg>
-                </div>
-                <h3>Platform Optimization</h3>
-                <p>Automatically optimize content for Instagram, Twitter, LinkedIn, TikTok, and more. Each platform gets perfectly tailored content.</p>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon">
-                    <svg class="w-8 h-8" viewBox="0 0 32 32" fill="currentColor"><path d="M5 28v-12h3v12H5zm6 0V14h3v14h-3zm6 0V2h3v26h-3zm6 0v-16h3v16h-3z"/></svg>
-                </div>
-                <h3>Real-Time Analytics</h3>
-                <p>Track performance, costs, and ROI in real-time. Make data-driven decisions with comprehensive usage analytics.</p>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon">
-                    <svg class="w-8 h-8" viewBox="0 0 32 32" fill="currentColor"><path d="M16 2l10 4v10c0 8-6 12-10 16-4-4-10-8-10-16V6l10-4zm6 10l-8 8-4-4 1.5-1.5L14 17l6.5-6.5L22 12z"/></svg>
-                </div>
-                <h3>Secure & Private</h3>
-                <p>Your API keys are encrypted and stored securely. Full control over your data and usage with enterprise-grade security.</p>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon">
-                    <svg class="w-8 h-8" viewBox="0 0 32 32" fill="currentColor"><path d="M18 2l-8 14h6l-2 14 8-14h-6l2-14z"/></svg>
-                </div>
-                <h3>Lightning Fast</h3>
-                <p>Generate variations, optimize content, and analyze performance in seconds. Built for speed and scalability.</p>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon">
-                    <svg class="w-8 h-8" viewBox="0 0 32 32" fill="currentColor"><path d="M16 2C8.268 2 2 8.268 2 16s6.268 14 14 14a2 2 0 002-2v-1a2 2 0 00-2-2h-1.5a1.5 1.5 0 01-1.5-1.5c0-.828.672-1.5 1.5-1.5H16a14 14 0 000-28zM8.5 12a1.5 1.5 0 110 3 1.5 1.5 0 010-3zm3-5a1.5 1.5 0 110 3 1.5 1.5 0 010-3zm9 0a1.5 1.5 0 110 3 1.5 1.5 0 010-3zm3 5a1.5 1.5 0 110 3 1.5 1.5 0 010-3z"/></svg>
-                </div>
-                <h3>Professional Templates</h3>
-                <p>Start with proven templates for ads, social posts, emails, and blogs. Customize everything to match your brand.</p>
-            </div>
-        </div>
-    </section>
-
-    <!-- Pricing Section -->
-    <section class="pricing" id="pricing">
-        <h2>100% Free Platform</h2>
-        <p class="pricing-subtitle">No subscriptions, no hidden fees. Just bring your own API keys and start creating.</p>
-        
-        <div class="pricing-card">
-            <div class="pricing-badge">Always Free</div>
-            <h3>Completely Free Forever</h3>
-            <ul class="pricing-features">
-                <li>✅ Free platform access forever</li>
-                <li>✅ No monthly subscriptions</li>
-                <li>✅ No usage limits or restrictions</li>
-                <li>✅ Use your own OpenRouter API keys (~$1-5/month)</li>
-                <li>✅ Use your own Anthropic API keys (optional)</li>
-                <li>✅ Unlimited campaigns and projects</li>
-                <li>✅ Real-time analytics and reporting</li>
-                <li>✅ All platform optimizations included</li>
-                <li>✅ Full support and documentation</li>
-            </ul>
-            <button class="btn btn-primary" onclick="openAuthModal('register')" style="width: 100%;">
-                Create Free Account
-            </button>
-            <p style="margin-top: 15px; font-size: 0.9rem; color: var(--text-muted);">
-                Only cost: Your own AI API usage (typically $1-10/month)
-            </p>
-        </div>
-    </section>
-
-    <!-- Authentication Modal -->
-    <div class="modal" id="authModal">
-        <div class="modal-content">
-            <button class="modal-close" onclick="closeAuthModal()">&times;</button>
-            
-            <div class="auth-tabs">
-                <button class="auth-tab active" onclick="switchAuthTab('login')">Sign In</button>
-                <button class="auth-tab" onclick="switchAuthTab('register')">Sign Up</button>
-            </div>
-
-            <!-- Google Sign-In -->
-            <button class="btn btn-google" onclick="loginWithGoogle()" id="googleSignInBtn" style="width: 100%; margin-bottom: 1rem; display: none;">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-                    <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-                    <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
-                    <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-                </svg>
-                Continue with Google
-            </button>
-
-            <div class="form-divider">
-                <span>or</span>
-            </div>
-
-            <!-- Login Form -->
-            <div id="loginForm" class="auth-form">
-                <div class="alert" id="loginAlert"></div>
-                <form onsubmit="handleLogin(event)">
-                    <div class="form-group">
-                        <label for="loginEmail">Email</label>
-                        <input type="email" id="loginEmail" placeholder="Enter your email" required>
+    <div class="gradient-bg"></div>
+    
+    <div class="flex min-h-screen">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="p-6 border-b border-[var(--border)]">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-[var(--gradient-start)] to-[var(--gradient-end)] flex items-center justify-center text-white font-bold">
+                        AI
                     </div>
-                    <div class="form-group">
-                        <label for="loginPassword">Password</label>
-                        <div class="input-wrapper">
-                            <input type="password" id="loginPassword" placeholder="Enter your password" required>
-                            <button type="button" class="password-toggle" onclick="togglePassword('loginPassword')">
-                                👁️
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <img src="/logo.png" alt="SYNTHEX Logo" class="h-8 w-auto">
+                            <h1 class="font-bold text-lg">SYNTHEX</h1>
+                        </div>
+                        <p class="text-xs text-[var(--text-secondary)]">AI-Powered Platform</p>
+                    </div>
+                </div>
+            </div>
+            
+            <nav class="py-4">
+                <div class="sidebar-item active" onclick="showTab('generate')">
+                    <div class="flex items-center gap-3">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                        </svg>
+                        <span>Generate Content</span>
+                    </div>
+                </div>
+                
+                <div class="sidebar-item" onclick="showTab('optimize')">
+                    <div class="flex items-center gap-3">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                        </svg>
+                        <span>Optimize</span>
+                    </div>
+                </div>
+                
+                <div class="sidebar-item" onclick="showTab('variations')">
+                    <div class="flex items-center gap-3">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path>
+                        </svg>
+                        <span>Variations</span>
+                    </div>
+                </div>
+                
+                <div class="sidebar-item" onclick="showTab('history')">
+                    <div class="flex items-center gap-3">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        <span>History</span>
+                    </div>
+                </div>
+                
+                <div class="sidebar-item" onclick="showTab('analytics')">
+                    <div class="flex items-center gap-3">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                        </svg>
+                        <span>Analytics</span>
+                    </div>
+                </div>
+            </nav>
+            
+            <div class="absolute bottom-0 left-0 right-0 p-6 border-t border-[var(--border)]">
+                <div class="flex items-center justify-between mb-4">
+                    <span class="text-sm text-[var(--text-secondary)]">Theme</span>
+                    <button onclick="toggleTheme()" class="p-2 rounded-lg hover:bg-[var(--border)] transition-smooth">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" id="theme-icon">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                        </svg>
+                    </button>
+                </div>
+                
+                <div class="flex items-center gap-2">
+                    <div class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+                    <span class="text-xs text-[var(--text-secondary)]">API Connected</span>
+                </div>
+            </div>
+        </aside>
+        
+        <!-- Mobile menu button -->
+        <button onclick="toggleSidebar()" class="lg:hidden fixed top-4 left-4 z-50 p-2 rounded-lg bg-[var(--bg-secondary)] border border-[var(--border)]">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+            </svg>
+        </button>
+        
+        <!-- Main Content -->
+        <main class="flex-1 overflow-y-auto">
+            <div class="content-area">
+                <!-- Generate Content Tab -->
+                <div id="generate-tab" class="tab-content fade-in">
+                    <div class="mb-8">
+                        <h2 class="text-3xl font-bold mb-2 bg-gradient-to-r from-[var(--gradient-start)] to-[var(--gradient-end)] bg-clip-text text-transparent">
+                            Generate Marketing Content
+                        </h2>
+                        <p class="text-[var(--text-secondary)]">Create compelling content powered by advanced AI</p>
+                    </div>
+                    
+                    <div class="glass rounded-2xl p-8 card-hover">
+                        <form id="generateForm" class="space-y-6">
+                            <div>
+                                <label class="block text-sm font-medium mb-2">Describe your product or campaign</label>
+                                <textarea 
+                                    id="prompt"
+                                    class="w-full px-4 py-3 rounded-xl bg-[var(--bg-primary)] border border-[var(--border)] focus:border-[var(--accent)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:ring-opacity-20 transition-smooth resize-none"
+                                    rows="4"
+                                    placeholder="E.g., Launch announcement for our AI-powered project management tool that helps remote teams collaborate better..."
+                                ></textarea>
+                            </div>
+                            
+                            <div class="grid md:grid-cols-2 gap-6">
+                                <div>
+                                    <label class="block text-sm font-medium mb-2">Content Type</label>
+                                    <select id="contentType" class="w-full px-4 py-3 rounded-xl bg-[var(--bg-primary)] border border-[var(--border)] focus:border-[var(--accent)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:ring-opacity-20 transition-smooth">
+                                        <option value="social_post">Social Media Post</option>
+                                        <option value="email">Email Campaign</option>
+                                        <option value="blog">Blog Post</option>
+                                        <option value="ad_copy">Ad Copy</option>
+                                        <option value="landing_page">Landing Page</option>
+                                        <option value="press_release">Press Release</option>
+                                    </select>
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-medium mb-2">Tone</label>
+                                    <select id="tone" class="w-full px-4 py-3 rounded-xl bg-[var(--bg-primary)] border border-[var(--border)] focus:border-[var(--accent)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:ring-opacity-20 transition-smooth">
+                                        <option value="professional">Professional</option>
+                                        <option value="casual">Casual</option>
+                                        <option value="friendly">Friendly</option>
+                                        <option value="urgent">Urgent</option>
+                                        <option value="inspirational">Inspirational</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <button type="submit" class="btn-primary w-full md:w-auto">
+                                Generate Content
                             </button>
+                        </form>
+                    </div>
+                    
+                    <!-- Quick Templates -->
+                    <div class="mt-8">
+                        <h3 class="text-lg font-semibold mb-4">Quick Templates</h3>
+                        <div class="grid md:grid-cols-3 gap-4">
+                            <div class="glass rounded-xl p-4 cursor-pointer card-hover" onclick="useTemplate('product-launch')">
+                                <div class="flex items-center gap-3 mb-2">
+                                    <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white text-sm">
+                                        🚀
+                                    </div>
+                                    <span class="font-medium">Product Launch</span>
+                                </div>
+                                <p class="text-sm text-[var(--text-secondary)]">Announce your new product with impact</p>
+                            </div>
+                            
+                            <div class="glass rounded-xl p-4 cursor-pointer card-hover" onclick="useTemplate('sale-promo')">
+                                <div class="flex items-center gap-3 mb-2">
+                                    <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-green-500 to-teal-500 flex items-center justify-center text-white text-sm">
+                                        💰
+                                    </div>
+                                    <span class="font-medium">Sale Promotion</span>
+                                </div>
+                                <p class="text-sm text-[var(--text-secondary)]">Drive urgency for limited-time offers</p>
+                            </div>
+                            
+                            <div class="glass rounded-xl p-4 cursor-pointer card-hover" onclick="useTemplate('newsletter')">
+                                <div class="flex items-center gap-3 mb-2">
+                                    <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center text-white text-sm">
+                                        📧
+                                    </div>
+                                    <span class="font-medium">Newsletter</span>
+                                </div>
+                                <p class="text-sm text-[var(--text-secondary)]">Engage subscribers with valuable content</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Optimize Tab -->
+                <div id="optimize-tab" class="tab-content hidden fade-in">
+                    <div class="mb-8">
+                        <h2 class="text-3xl font-bold mb-2 bg-gradient-to-r from-[var(--gradient-start)] to-[var(--gradient-end)] bg-clip-text text-transparent">
+                            Optimize Content
+                        </h2>
+                        <p class="text-[var(--text-secondary)]">Enhance your existing content for better performance</p>
+                    </div>
+                    
+                    <div class="glass rounded-2xl p-8 card-hover">
+                        <form id="optimizeForm" class="space-y-6">
+                            <div>
+                                <label class="block text-sm font-medium mb-2">Paste your content</label>
+                                <textarea 
+                                    id="content"
+                                    class="w-full px-4 py-3 rounded-xl bg-[var(--bg-primary)] border border-[var(--border)] focus:border-[var(--accent)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:ring-opacity-20 transition-smooth resize-none"
+                                    rows="6"
+                                    placeholder="Enter your existing marketing content here..."
+                                ></textarea>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium mb-2">Target Platform</label>
+                                <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                                    <label class="glass rounded-lg p-3 cursor-pointer hover:border-[var(--accent)] border border-transparent transition-smooth">
+                                        <input type="radio" name="platform" value="twitter" class="sr-only">
+                                        <div class="text-center">
+                                            <span class="text-lg mb-1">𝕏</span>
+                                            <p class="text-xs">Twitter</p>
+                                        </div>
+                                    </label>
+                                    <label class="glass rounded-lg p-3 cursor-pointer hover:border-[var(--accent)] border border-transparent transition-smooth">
+                                        <input type="radio" name="platform" value="instagram" class="sr-only">
+                                        <div class="text-center">
+                                            <span class="text-lg mb-1">📷</span>
+                                            <p class="text-xs">Instagram</p>
+                                        </div>
+                                    </label>
+                                    <label class="glass rounded-lg p-3 cursor-pointer hover:border-[var(--accent)] border border-transparent transition-smooth">
+                                        <input type="radio" name="platform" value="linkedin" class="sr-only">
+                                        <div class="text-center">
+                                            <span class="text-lg mb-1">💼</span>
+                                            <p class="text-xs">LinkedIn</p>
+                                        </div>
+                                    </label>
+                                    <label class="glass rounded-lg p-3 cursor-pointer hover:border-[var(--accent)] border border-transparent transition-smooth">
+                                        <input type="radio" name="platform" value="email" class="sr-only">
+                                        <div class="text-center">
+                                            <span class="text-lg mb-1">📧</span>
+                                            <p class="text-xs">Email</p>
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium mb-2">Optimization Goals</label>
+                                <div class="flex flex-wrap gap-3">
+                                    <label class="flex items-center gap-2 px-4 py-2 rounded-full bg-[var(--bg-primary)] border border-[var(--border)] cursor-pointer hover:border-[var(--accent)] transition-smooth">
+                                        <input type="checkbox" value="engagement" checked class="text-[var(--accent)]">
+                                        <span class="text-sm">Engagement</span>
+                                    </label>
+                                    <label class="flex items-center gap-2 px-4 py-2 rounded-full bg-[var(--bg-primary)] border border-[var(--border)] cursor-pointer hover:border-[var(--accent)] transition-smooth">
+                                        <input type="checkbox" value="conversions" checked class="text-[var(--accent)]">
+                                        <span class="text-sm">Conversions</span>
+                                    </label>
+                                    <label class="flex items-center gap-2 px-4 py-2 rounded-full bg-[var(--bg-primary)] border border-[var(--border)] cursor-pointer hover:border-[var(--accent)] transition-smooth">
+                                        <input type="checkbox" value="viral" class="text-[var(--accent)]">
+                                        <span class="text-sm">Viral Potential</span>
+                                    </label>
+                                    <label class="flex items-center gap-2 px-4 py-2 rounded-full bg-[var(--bg-primary)] border border-[var(--border)] cursor-pointer hover:border-[var(--accent)] transition-smooth">
+                                        <input type="checkbox" value="brand" class="text-[var(--accent)]">
+                                        <span class="text-sm">Brand Awareness</span>
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <button type="submit" class="btn-primary w-full md:w-auto">
+                                Optimize Content
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                
+                <!-- Variations Tab -->
+                <div id="variations-tab" class="tab-content hidden fade-in">
+                    <div class="mb-8">
+                        <h2 class="text-3xl font-bold mb-2 bg-gradient-to-r from-[var(--gradient-start)] to-[var(--gradient-end)] bg-clip-text text-transparent">
+                            Generate Variations
+                        </h2>
+                        <p class="text-[var(--text-secondary)]">Create multiple versions for A/B testing</p>
+                    </div>
+                    
+                    <div class="glass rounded-2xl p-8 card-hover">
+                        <form id="variationsForm" class="space-y-6">
+                            <div>
+                                <label class="block text-sm font-medium mb-2">Base content or idea</label>
+                                <textarea 
+                                    id="varPrompt"
+                                    class="w-full px-4 py-3 rounded-xl bg-[var(--bg-primary)] border border-[var(--border)] focus:border-[var(--accent)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:ring-opacity-20 transition-smooth resize-none"
+                                    rows="4"
+                                    placeholder="Enter your base content to generate variations..."
+                                ></textarea>
+                            </div>
+                            
+                            <div class="grid md:grid-cols-2 gap-6">
+                                <div>
+                                    <label class="block text-sm font-medium mb-2">Number of Variations</label>
+                                    <input 
+                                        type="range" 
+                                        id="varCount" 
+                                        min="2" 
+                                        max="10" 
+                                        value="5"
+                                        class="w-full"
+                                        oninput="updateVariationCount(this.value)"
+                                    >
+                                    <div class="flex justify-between text-sm text-[var(--text-secondary)] mt-1">
+                                        <span>2</span>
+                                        <span id="varCountDisplay" class="font-medium text-[var(--accent)]">5 variations</span>
+                                        <span>10</span>
+                                    </div>
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-medium mb-2">Variation Type</label>
+                                    <select id="varType" class="w-full px-4 py-3 rounded-xl bg-[var(--bg-primary)] border border-[var(--border)] focus:border-[var(--accent)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:ring-opacity-20 transition-smooth">
+                                        <option value="social_post">Social Posts</option>
+                                        <option value="email">Email Subject Lines</option>
+                                        <option value="ad_copy">Ad Headlines</option>
+                                        <option value="cta">Call-to-Action</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <button type="submit" class="btn-primary w-full md:w-auto">
+                                Generate Variations
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                
+                <!-- History Tab -->
+                <div id="history-tab" class="tab-content hidden fade-in">
+                    <div class="mb-8">
+                        <h2 class="text-3xl font-bold mb-2 bg-gradient-to-r from-[var(--gradient-start)] to-[var(--gradient-end)] bg-clip-text text-transparent">
+                            Generation History
+                        </h2>
+                        <p class="text-[var(--text-secondary)]">View your recent content generations</p>
+                    </div>
+                    
+                    <div id="historyContent" class="space-y-4">
+                        <!-- History items will be loaded here -->
+                    </div>
+                </div>
+                
+                <!-- Analytics Tab -->
+                <div id="analytics-tab" class="tab-content hidden fade-in">
+                    <div class="mb-8">
+                        <h2 class="text-3xl font-bold mb-2 bg-gradient-to-r from-[var(--gradient-start)] to-[var(--gradient-end)] bg-clip-text text-transparent">
+                            Analytics Dashboard
+                        </h2>
+                        <p class="text-[var(--text-secondary)]">Track your content generation statistics</p>
+                    </div>
+                    
+                    <div class="grid md:grid-cols-3 gap-6 mb-8">
+                        <div class="glass rounded-xl p-6 card-hover">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-sm text-[var(--text-secondary)]">Total Generations</span>
+                                <svg class="w-5 h-5 text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+                                </svg>
+                            </div>
+                            <div class="text-2xl font-bold" id="totalGenerations">0</div>
+                            <div class="text-xs text-green-500 mt-1">+12% from last week</div>
+                        </div>
+                        
+                        <div class="glass rounded-xl p-6 card-hover">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-sm text-[var(--text-secondary)]">Avg Processing Time</span>
+                                <svg class="w-5 h-5 text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                            </div>
+                            <div class="text-2xl font-bold" id="avgProcessing">2.3s</div>
+                            <div class="text-xs text-green-500 mt-1">-0.5s improvement</div>
+                        </div>
+                        
+                        <div class="glass rounded-xl p-6 card-hover">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-sm text-[var(--text-secondary)]">Most Used Type</span>
+                                <svg class="w-5 h-5 text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                            </div>
+                            <div class="text-2xl font-bold" id="mostUsedType">Social Post</div>
+                            <div class="text-xs text-[var(--text-secondary)] mt-1">45% of all generations</div>
                         </div>
                     </div>
                     
-                    <div style="text-align: right; margin-bottom: 1rem;">
-                        <a href="/reset-password.html" style="color: var(--primary-color); text-decoration: none; font-size: 0.875rem;">Forgot Password?</a>
-                    </div>
-                    <button type="submit" class="btn btn-primary" style="width: 100%;">
-                        <span class="btn-text">Sign In</span>
-                        <span class="loading" style="display: none;"></span>
-                    </button>
-                </form>
-            </div>
-
-            <!-- Register Form -->
-            <div id="registerForm" class="auth-form" style="display: none;">
-                <div class="alert" id="registerAlert"></div>
-                <form onsubmit="handleRegister(event)">
-                    <div class="form-group">
-                        <label for="registerName">Full Name (Optional)</label>
-                        <input type="text" id="registerName" placeholder="Your full name">
-                    </div>
-                    <div class="form-group">
-                        <label for="registerEmail">Email</label>
-                        <input type="email" id="registerEmail" placeholder="Enter your email" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="registerPassword">Password</label>
-                        <div class="input-wrapper">
-                            <input type="password" id="registerPassword" placeholder="Create a strong password" required minlength="8">
-                            <button type="button" class="password-toggle" onclick="togglePassword('registerPassword')">
-                                👁️
-                            </button>
+                    <div class="glass rounded-xl p-6">
+                        <h3 class="text-lg font-semibold mb-4">Content Type Distribution</h3>
+                        <div id="statsChart" class="space-y-3">
+                            <!-- Chart will be rendered here -->
                         </div>
-                        <small style="color: var(--text-muted); margin-top: 0.5rem; display: block;">
-                            Must be 8+ characters with uppercase, lowercase, number, and special character
-                        </small>
                     </div>
-                    <button type="submit" class="btn btn-primary" style="width: 100%;">
-                        <span class="btn-text">Create Account</span>
-                        <span class="loading" style="display: none;"></span>
-                    </button>
-                </form>
+                </div>
+                
+                <!-- Output Panel -->
+                <div id="outputPanel" class="hidden mt-8 fade-in">
+                    <div class="glass rounded-2xl p-8">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-xl font-semibold">Generated Content</h3>
+                            <div class="flex gap-2">
+                                <button onclick="copyOutput()" class="p-2 rounded-lg hover:bg-[var(--border)] transition-smooth" title="Copy">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                                    </svg>
+                                </button>
+                                <button onclick="downloadOutput()" class="p-2 rounded-lg hover:bg-[var(--border)] transition-smooth" title="Download">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                        <div id="outputContent" class="prose prose-lg max-w-none text-[var(--text-primary)]">
+                            <!-- Content will be displayed here -->
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Loading State -->
+                <div id="loadingState" class="hidden mt-8">
+                    <div class="glass rounded-2xl p-12 text-center">
+                        <div class="spinner mx-auto mb-4"></div>
+                        <p class="text-[var(--text-secondary)]">Generating your content<span class="typing-dots"></span></p>
+                    </div>
+                </div>
             </div>
+        </main>
+    </div>
+    
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-4 right-4 transform translate-y-full transition-transform duration-300 z-50">
+        <div class="glass rounded-lg px-6 py-4 flex items-center gap-3 min-w-[300px]">
+            <div class="w-2 h-2 rounded-full bg-green-500"></div>
+            <span id="toastMessage">Success!</span>
         </div>
     </div>
-
+    
     <script>
-        let currentAuthTab = 'login';
-
-        // Header scroll effect
-        window.addEventListener('scroll', () => {
-            const header = document.getElementById('header');
-            if (window.scrollY > 100) {
-                header.classList.add('scrolled');
+        const API = 'http://localhost:3000';
+        let currentTheme = localStorage.getItem('theme') || 'light';
+        
+        // Initialize theme
+        function initTheme() {
+            document.documentElement.setAttribute('data-theme', currentTheme);
+            updateThemeIcon();
+        }
+        
+        function toggleTheme() {
+            currentTheme = currentTheme === 'light' ? 'dark' : 'light';
+            document.documentElement.setAttribute('data-theme', currentTheme);
+            localStorage.setItem('theme', currentTheme);
+            updateThemeIcon();
+        }
+        
+        function updateThemeIcon() {
+            const icon = document.getElementById('theme-icon');
+            if (currentTheme === 'dark') {
+                icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>';
             } else {
-                header.classList.remove('scrolled');
-            }
-        });
-
-        // Authentication Modal Functions
-        function openAuthModal(tab = 'login') {
-            const modal = document.getElementById('authModal');
-            modal.classList.add('active');
-            switchAuthTab(tab);
-            checkGoogleAuth();
-        }
-
-        function closeAuthModal() {
-            const modal = document.getElementById('authModal');
-            modal.classList.remove('active');
-            // Clear forms
-            document.querySelectorAll('.auth-form input').forEach(input => input.value = '');
-            document.querySelectorAll('.alert').forEach(alert => alert.style.display = 'none');
-        }
-
-        function switchAuthTab(tab) {
-            currentAuthTab = tab;
-            
-            // Update tab buttons
-            document.querySelectorAll('.auth-tab').forEach(btn => btn.classList.remove('active'));
-            document.querySelector(`.auth-tab:${tab === 'login' ? 'first' : 'last'}-child`).classList.add('active');
-            
-            // Show/hide forms
-            document.getElementById('loginForm').style.display = tab === 'login' ? 'block' : 'none';
-            document.getElementById('registerForm').style.display = tab === 'register' ? 'block' : 'none';
-            
-            // Clear alerts
-            document.querySelectorAll('.alert').forEach(alert => alert.style.display = 'none');
-        }
-
-        function togglePassword(inputId) {
-            const input = document.getElementById(inputId);
-            const button = input.nextElementSibling;
-            
-            if (input.type === 'password') {
-                input.type = 'text';
-                button.textContent = '🙈';
-            } else {
-                input.type = 'password';
-                button.textContent = '👁️';
+                icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path>';
             }
         }
-
-        async function checkGoogleAuth() {
-            try {
-                const response = await fetch('/auth/google/status');
-                const result = await response.json();
-                
-                if (result.configured) {
-                    document.getElementById('googleSignInBtn').style.display = 'flex';
-                }
-            } catch (error) {
-                console.error('Failed to check Google auth status:', error);
-            }
+        
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('open');
         }
-
-        function loginWithGoogle() {
-            window.location.href = '/auth/google';
-        }
-
-        async function handleLogin(event) {
-            event.preventDefault();
-            const submitBtn = event.target.querySelector('button[type="submit"]');
-            const btnText = submitBtn.querySelector('.btn-text');
-            const loading = submitBtn.querySelector('.loading');
-            
-            // Show loading
-            btnText.style.display = 'none';
-            loading.style.display = 'inline-block';
-            submitBtn.disabled = true;
-            
-            const email = document.getElementById('loginEmail').value;
-            const password = document.getElementById('loginPassword').value;
-            
-            try {
-                const response = await fetch('/api/auth/login', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email, password })
-                });
-                
-                const result = await response.json();
-                
-                if (response.ok) {
-                    localStorage.setItem('authToken', result.token);
-                    showAlert('loginAlert', 'Login successful! Redirecting...', 'success');
-                    setTimeout(() => {
-                        window.location.href = '/app-new.html';
-                    }, 1500);
-                } else {
-                    showAlert('loginAlert', result.error || 'Login failed', 'error');
-                }
-            } catch (error) {
-                showAlert('loginAlert', 'Network error: ' + error.message, 'error');
-            } finally {
-                // Hide loading
-                btnText.style.display = 'inline';
-                loading.style.display = 'none';
-                submitBtn.disabled = false;
-            }
-        }
-
-        async function handleRegister(event) {
-            event.preventDefault();
-            const submitBtn = event.target.querySelector('button[type="submit"]');
-            const btnText = submitBtn.querySelector('.btn-text');
-            const loading = submitBtn.querySelector('.loading');
-            
-            // Show loading
-            btnText.style.display = 'none';
-            loading.style.display = 'inline-block';
-            submitBtn.disabled = true;
-            
-            const name = document.getElementById('registerName').value;
-            const email = document.getElementById('registerEmail').value;
-            const password = document.getElementById('registerPassword').value;
-            
-            try {
-                const response = await fetch('/api/auth/register', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ name, email, password })
-                });
-                
-                const result = await response.json();
-                
-                if (response.ok) {
-                    localStorage.setItem('authToken', result.token);
-                    showAlert('registerAlert', 'Account created successfully! Redirecting...', 'success');
-                    setTimeout(() => {
-                        window.location.href = '/app-new.html';
-                    }, 1500);
-                } else {
-                    showAlert('registerAlert', result.error || 'Registration failed', 'error');
-                }
-            } catch (error) {
-                showAlert('registerAlert', 'Network error: ' + error.message, 'error');
-            } finally {
-                // Hide loading
-                btnText.style.display = 'inline';
-                loading.style.display = 'none';
-                submitBtn.disabled = false;
-            }
-        }
-
-        function showAlert(alertId, message, type) {
-            const alert = document.getElementById(alertId);
-            alert.textContent = message;
-            alert.className = `alert ${type}`;
-            alert.style.display = 'block';
-            
-            if (type === 'success') {
-                setTimeout(() => {
-                    alert.style.display = 'none';
-                }, 3000);
-            }
-        }
-
-        // Close modal when clicking outside
-        document.getElementById('authModal').addEventListener('click', (e) => {
-            if (e.target.id === 'authModal') {
-                closeAuthModal();
-            }
-        });
-
-        // Live demo function
-        async function showLiveDemo() {
-            try {
-                // Show a modal with live API status
-                const modal = document.createElement('div');
-                modal.className = 'modal active';
-                modal.innerHTML = `
-                    <div class="modal-content" style="max-width: 600px;">
-                        <button class="modal-close" onclick="this.closest('.modal').remove()">&times;</button>
-                        <h2 style="margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;"><svg class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" d="M12 3a9 9 0 100 18 9 9 0 000-18zM12 1a11 11 0 100 22 11 11 0 000-22zm2.5 8a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0zm-2.5 2a1 1 0 011 1v5a1 1 0 11-2 0v-5a1 1 0 011-1z" clip-rule="evenodd"/></svg> Live System Status</h2>
-                        <div id="demoContent">
-                            <p>Loading live system data...</p>
-                        </div>
-                    </div>
-                `;
-                document.body.appendChild(modal);
-
-                // Fetch real API status
-                const response = await fetch('/health');
-                const healthData = await response.json();
-                
-                const demoContent = document.getElementById('demoContent');
-                demoContent.innerHTML = `
-                    <div style="text-align: left;">
-                        <h3>✅ System Health: ${healthData.status ? healthData.status.toUpperCase() : 'UNKNOWN'}</h3>
-                        <p><strong>Environment:</strong> ${healthData.environment}</p>
-                        <p><strong>Uptime:</strong> ${Math.round(healthData.uptime)}s</p>
-                        
-                        <h4>🔧 Service Status:</h4>
-                        <ul style="list-style: none; padding: 0;">
-                            <li><svg class="w-4 h-4 inline mr-2" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a5 5 0 015 5c0 .63-.12 1.22-.33 1.77A3.33 3.33 0 0115 10.67v2.66A1.67 1.67 0 0113.33 15H2.67A1.67 1.67 0 011 13.33v-2.66a3.33 3.33 0 012.33-3.2A4.98 4.98 0 013 6a5 5 0 015-5zm0 1.67A3.33 3.33 0 004.67 6c0 .29.03.57.11.85A5 5 0 018 6.67a5 5 0 013.22 1.18c.08-.28.11-.56.11-.85A3.33 3.33 0 008 2.67z"/></svg>OpenRouter AI: ${healthData.services?.openrouter === 'configured' ? '✅ Ready' : '⚠️ Not configured'}</li>
-                            <li><svg class="w-4 h-4 inline mr-2" viewBox="0 0 16 16" fill="currentColor"><path d="M6.5 1A1.5 1.5 0 005 2.5V3H3.5A1.5 1.5 0 002 4.5v7A1.5 1.5 0 003.5 13H5v.5A1.5 1.5 0 006.5 15h3a1.5 1.5 0 001.5-1.5V13h1.5a1.5 1.5 0 001.5-1.5v-7A1.5 1.5 0 0012.5 3H11v-.5A1.5 1.5 0 009.5 1h-3zM6.5 2.5v11h3v-11h-3zM5 4.5V11H3.5v-6.5H5zm6 0H12.5v6.5H11V4.5z"/></svg>Anthropic API: ${healthData.services?.anthropic === 'configured' ? '✅ Ready' : '⚠️ Not configured'}</li>
-                            <li><svg class="w-4 h-4 inline mr-2" viewBox="0 0 16 16" fill="currentColor"><path d="M6.5 7a2.5 2.5 0 015 0v1.5h1A1.5 1.5 0 0114 10v4a1.5 1.5 0 01-1.5 1.5h-9A1.5 1.5 0 012 14v-4a1.5 1.5 0 011.5-1.5h1V7a2.5 2.5 0 012.5-2.5zm0 1a1.5 1.5 0 00-1.5 1.5v1.5h3V9.5A1.5 1.5 0 006.5 8z"/></svg>Google OAuth: ${healthData.config?.googleOAuth ? '✅ Ready' : '⚠️ Not configured'}</li>
-                            <li><svg class="w-4 h-4 inline mr-2" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1c3.314 0 6 1.343 6 3v8c0 1.657-2.686 3-6 3s-6-1.343-6-3V4c0-1.657 2.686-3 6-3zm0 1C5.239 2 3 2.895 3 4s2.239 2 5 2 5-.895 5-2-2.239-2-5-2zM3 5.618C4.204 6.487 5.973 7 8 7s3.796-.513 5-1.382V8c0 1.105-2.239 2-5 2s-5-.895-5-2V5.618zm0 3.764C4.204 10.251 5.973 10.764 8 10.764s3.796-.513 5-1.382V12c0 1.105-2.239 2-5 2s-5-.895-5-2V9.382z"/></svg>Database: ${healthData.services?.database === 'connected' ? '✅ Connected' : '⚠️ Disconnected'}</li>
-                        </ul>
-                        
-                        <div style="margin-top: 1.5rem; padding: 1rem; background: rgba(16, 185, 129, 0.1); border-radius: 8px; border-left: 4px solid #10b981;">
-                            <p><strong>Ready to use!</strong> The platform is live and functional. Create an account to start generating content.</p>
-                        </div>
-                        
-                        <button class="btn btn-primary" onclick="openAuthModal('register')" style="width: 100%; margin-top: 1rem;">
-                            Create Free Account
-                        </button>
-                    </div>
-                `;
-            } catch (error) {
-                console.error('Demo error:', error);
-                alert('System is currently starting up. Please try again in a moment.');
-            }
-        }
-
-        // Initialize Fluent System Icons (using inline SVG - no initialization needed)
-        document.addEventListener('DOMContentLoaded', () => {
-            // Icons are now inline SVG - no external library needed
-        });
-
-        // Handle Google OAuth redirect
-        document.addEventListener('DOMContentLoaded', () => {
-            const urlParams = new URLSearchParams(window.location.search);
-            const token = urlParams.get('token');
-            const success = urlParams.get('success');
-            const error = urlParams.get('error');
-            
-            if (token) {
-                localStorage.setItem('authToken', token);
-                window.history.replaceState({}, document.title, window.location.pathname);
-                window.location.href = '/app-new.html';
-            } else if (error) {
-                openAuthModal('login');
-                let errorMessage = 'Authentication failed';
-                if (error === 'auth_failed') errorMessage = 'Google authentication failed';
-                showAlert('loginAlert', errorMessage, 'error');
-                window.history.replaceState({}, document.title, window.location.pathname);
-            }
-        });
-
-        // Smooth scrolling for nav links
-        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-            anchor.addEventListener('click', function (e) {
-                e.preventDefault();
-                const target = document.querySelector(this.getAttribute('href'));
-                if (target) {
-                    target.scrollIntoView({
-                        behavior: 'smooth',
-                        block: 'start'
-                    });
-                }
+        
+        function showTab(tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.add('hidden');
             });
+            
+            // Show selected tab
+            document.getElementById(`${tabName}-tab`).classList.remove('hidden');
+            
+            // Update sidebar active state
+            document.querySelectorAll('.sidebar-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            event.currentTarget.classList.add('active');
+            
+            // Close mobile sidebar
+            if (window.innerWidth < 768) {
+                document.getElementById('sidebar').classList.remove('open');
+            }
+            
+            // Load tab-specific data
+            if (tabName === 'history') {
+                loadHistory();
+            } else if (tabName === 'analytics') {
+                loadAnalytics();
+            }
+        }
+        
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toastMessage');
+            toastMessage.textContent = message;
+            
+            toast.style.transform = 'translateY(0)';
+            setTimeout(() => {
+                toast.style.transform = 'translateY(200%)';
+            }, 3000);
+        }
+        
+        function updateVariationCount(value) {
+            document.getElementById('varCountDisplay').textContent = `${value} variations`;
+        }
+        
+        function useTemplate(template) {
+            const templates = {
+                'product-launch': 'We are excited to announce the launch of our revolutionary new product that will transform how businesses handle their daily operations. This innovative solution combines cutting-edge AI technology with user-friendly design.',
+                'sale-promo': 'Limited time offer! Get 50% off on all our premium features this Black Friday. Transform your marketing strategy with our AI-powered tools.',
+                'newsletter': 'Welcome to our monthly newsletter! Discover the latest trends in AI marketing, success stories from our clients, and exclusive tips to boost your campaigns.'
+            };
+            
+            document.getElementById('prompt').value = templates[template];
+            showToast('Template loaded!');
+        }
+        
+        async function showOutput(content) {
+            document.getElementById('outputContent').innerHTML = content.replace(/\n/g, '<br>');
+            document.getElementById('outputPanel').classList.remove('hidden');
+            document.getElementById('loadingState').classList.add('hidden');
+        }
+        
+        function showLoading() {
+            document.getElementById('loadingState').classList.remove('hidden');
+            document.getElementById('outputPanel').classList.add('hidden');
+        }
+        
+        function hideLoading() {
+            document.getElementById('loadingState').classList.add('hidden');
+        }
+        
+        function copyOutput() {
+            const content = document.getElementById('outputContent').innerText;
+            navigator.clipboard.writeText(content);
+            showToast('Copied to clipboard!');
+        }
+        
+        function downloadOutput() {
+            const content = document.getElementById('outputContent').innerText;
+            const blob = new Blob([content], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `marketing-content-${Date.now()}.txt`;
+            a.click();
+            showToast('Downloaded successfully!');
+        }
+        
+        async function loadHistory() {
+            try {
+                const res = await fetch(`${API}/api/openrouter/logs/recent?limit=10`);
+                const data = await res.json();
+                
+                const historyContent = document.getElementById('historyContent');
+                if (data.logs && data.logs.length > 0) {
+                    historyContent.innerHTML = data.logs.map(log => `
+                        <div class="glass rounded-xl p-6 card-hover">
+                            <div class="flex justify-between items-start mb-3">
+                                <span class="text-sm font-medium px-3 py-1 rounded-full bg-[var(--accent)] bg-opacity-20 text-[var(--accent)]">
+                                    ${log.type}
+                                </span>
+                                <span class="text-xs text-[var(--text-secondary)]">
+                                    ${new Date(log.timestamp).toLocaleString()}
+                                </span>
+                            </div>
+                            <p class="text-sm text-[var(--text-secondary)] mb-2">
+                                ${log.input.prompt || log.input.content || 'No input'}
+                            </p>
+                            <div class="text-xs text-[var(--text-secondary)]">
+                                Processing time: ${log.metadata.processingTime || 'N/A'}ms
+                            </div>
+                        </div>
+                    `).join('');
+                } else {
+                    historyContent.innerHTML = '<p class="text-center text-[var(--text-secondary)]">No history available yet.</p>';
+                }
+            } catch (error) {
+                console.error('Failed to load history:', error);
+            }
+        }
+        
+        async function loadAnalytics() {
+            try {
+                const res = await fetch(`${API}/api/openrouter/logs/stats?days=7`);
+                const data = await res.json();
+                
+                if (data.stats) {
+                    document.getElementById('totalGenerations').textContent = data.stats.totalRequests || 0;
+                    
+                    // Create simple bar chart
+                    const chartData = Object.entries(data.stats.byContentType || {});
+                    const maxValue = Math.max(...chartData.map(([_, v]) => v), 1);
+                    
+                    document.getElementById('statsChart').innerHTML = chartData.map(([type, count]) => `
+                        <div class="flex items-center gap-3">
+                            <span class="text-sm text-[var(--text-secondary)] w-24">${type}</span>
+                            <div class="flex-1 bg-[var(--border)] rounded-full h-6 relative overflow-hidden">
+                                <div class="absolute inset-y-0 left-0 bg-gradient-to-r from-[var(--gradient-start)] to-[var(--gradient-end)] rounded-full transition-all duration-500"
+                                     style="width: ${(count / maxValue) * 100}%"></div>
+                            </div>
+                            <span class="text-sm font-medium w-12 text-right">${count}</span>
+                        </div>
+                    `).join('');
+                }
+            } catch (error) {
+                console.error('Failed to load analytics:', error);
+            }
+        }
+        
+        // Form submissions
+        document.getElementById('generateForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const prompt = document.getElementById('prompt').value;
+            const contentType = document.getElementById('contentType').value;
+            
+            if (!prompt) {
+                showToast('Please enter a prompt', 'error');
+                return;
+            }
+            
+            showLoading();
+            
+            try {
+                const res = await fetch(`${API}/api/openrouter/marketing/generate`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ prompt, contentType })
+                });
+                
+                const data = await res.json();
+                if (data.content) {
+                    showOutput(data.content);
+                    showToast('Content generated successfully!');
+                } else {
+                    hideLoading();
+                    showToast('Failed to generate content', 'error');
+                }
+            } catch (error) {
+                hideLoading();
+                showToast('Error: ' + error.message, 'error');
+            }
         });
+        
+        document.getElementById('optimizeForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const content = document.getElementById('content').value;
+            const platform = document.querySelector('input[name="platform"]:checked')?.value || 'general';
+            const goals = Array.from(document.querySelectorAll('#optimize-tab input[type="checkbox"]:checked'))
+                .map(cb => cb.value);
+            
+            if (!content) {
+                showToast('Please enter content to optimize', 'error');
+                return;
+            }
+            
+            showLoading();
+            
+            try {
+                const res = await fetch(`${API}/api/openrouter/marketing/optimize`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ content, platform, goals })
+                });
+                
+                const data = await res.json();
+                if (data.optimization) {
+                    const output = `
+                        <h4>Analysis:</h4>
+                        <p>${data.optimization.analysis}</p>
+                        <h4>Optimized Content:</h4>
+                        <p>${data.optimization.optimizedContent}</p>
+                        <h4>Suggestions:</h4>
+                        <ul>${data.optimization.suggestions.map(s => `<li>${s}</li>`).join('')}</ul>
+                    `;
+                    showOutput(output);
+                    showToast('Content optimized successfully!');
+                } else {
+                    hideLoading();
+                    showToast('Failed to optimize content', 'error');
+                }
+            } catch (error) {
+                hideLoading();
+                showToast('Error: ' + error.message, 'error');
+            }
+        });
+        
+        document.getElementById('variationsForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const prompt = document.getElementById('varPrompt').value;
+            const count = document.getElementById('varCount').value;
+            const contentType = document.getElementById('varType').value;
+            
+            if (!prompt) {
+                showToast('Please enter content for variations', 'error');
+                return;
+            }
+            
+            showLoading();
+            
+            try {
+                const res = await fetch(`${API}/api/openrouter/marketing/variations`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ prompt, count: parseInt(count), contentType })
+                });
+                
+                const data = await res.json();
+                if (data.variations) {
+                    const output = data.variations.map((v, i) => 
+                        `<div class="mb-4 p-4 rounded-lg bg-[var(--bg-primary)]">
+                            <h4>Variation ${i + 1}:</h4>
+                            <p>${v}</p>
+                        </div>`
+                    ).join('');
+                    showOutput(output);
+                    showToast('Variations generated successfully!');
+                } else {
+                    hideLoading();
+                    showToast('Failed to generate variations', 'error');
+                }
+            } catch (error) {
+                hideLoading();
+                showToast('Error: ' + error.message, 'error');
+            }
+        });
+        
+        // Initialize
+        initTheme();
     </script>
     <script src="/js/breadcrumb.js"></script>
     <script src="/js/ui-helpers.js"></script>
