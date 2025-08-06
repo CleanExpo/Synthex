@@ -173,6 +173,31 @@ class SynthexAPI {
         });
     }
 
+    async schedulePost(data) {
+        return this.request('/content/schedule', {
+            method: 'POST',
+            body: JSON.stringify(data)
+        });
+    }
+
+    async getScheduledPosts(params = {}) {
+        const queryString = new URLSearchParams(params).toString();
+        return this.request(`/content/scheduled${queryString ? '?' + queryString : ''}`);
+    }
+
+    async updateScheduledPost(id, data) {
+        return this.request(`/content/scheduled/${id}`, {
+            method: 'PUT',
+            body: JSON.stringify(data)
+        });
+    }
+
+    async deleteScheduledPost(id) {
+        return this.request(`/content/scheduled/${id}`, {
+            method: 'DELETE'
+        });
+    }
+
     // Analytics endpoints
     async getAnalyticsOverview(range = 'week') {
         return this.request(`/analytics/overview?range=${range}`);
@@ -184,6 +209,24 @@ class SynthexAPI {
 
     async getContentPerformance() {
         return this.request('/analytics/content-performance');
+    }
+
+    // Notification endpoints
+    async getNotifications(params = {}) {
+        const queryString = new URLSearchParams(params).toString();
+        return this.request(`/notifications${queryString ? '?' + queryString : ''}`);
+    }
+
+    async markNotificationAsRead(id) {
+        return this.request(`/notifications/${id}/read`, {
+            method: 'PUT'
+        });
+    }
+
+    async markAllNotificationsAsRead() {
+        return this.request('/notifications/read-all', {
+            method: 'PUT'
+        });
     }
 
     // Dashboard specific

@@ -1,4 +1,4 @@
-import { generateWithOpenRouter } from './openrouter';
+import { openRouterService } from './openrouter';
 import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
@@ -77,27 +77,32 @@ export async function generateContent(params: GenerateContentParams): Promise<Co
       select: { openrouterApiKey: true }
     });
 
-    const apiKey = user?.openrouterApiKey;
+    const apiKey = user?.openrouterApiKey || undefined;
     
     // Generate content using OpenRouter
-    const response = await generateWithOpenRouter(
-      systemPrompt,
-      userPrompt,
+    const response = await openRouterService.chat(
+      [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userPrompt }
+      ],
       {
         model: 'anthropic/claude-3-haiku-20240307', // Fast and cost-effective
         temperature: 0.7,
-        maxTokens: 1000,
+        max_tokens: 1000,
       },
       apiKey
     );
 
+    // Get the content from the response
+    const responseContent = response.choices[0]?.message?.content || '';
+    
     // Parse the JSON response
     let parsedResponse;
     try {
-      parsedResponse = JSON.parse(response);
+      parsedResponse = JSON.parse(responseContent);
     } catch (e) {
       // If not JSON, use the raw response
-      parsedResponse = { content: response, hashtags: [], suggestions: [] };
+      parsedResponse = { content: responseContent, hashtags: [], suggestions: [] };
     }
 
     // Format content with hashtags
@@ -176,8 +181,9 @@ export async function saveDraft(params: {
   platform?: string;
   metadata?: any;
   userId: string;
+  campaignId?: string;
 }) {
-  const { content, platform, metadata, userId } = params;
+  const { content, platform, metadata, userId, campaignId } = params;
 
   // Save as a project with type 'draft'
   const draft = await prisma.project.create({
@@ -188,7 +194,8 @@ export async function saveDraft(params: {
       data: {
         content,
         platform,
-        metadata
+        metadata,
+        campaignId
       }
     }
   });

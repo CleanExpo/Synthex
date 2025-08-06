@@ -635,13 +635,20 @@
                         </svg>
                         <span>Campaigns</span>
                     </a>
-                    <a href="#content" class="nav-item">
+                    <a href="/content-studio.html" class="nav-item">
                         <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
                         </svg>
                         <span>Content Studio</span>
                     </a>
-                    <a href="#analytics" class="nav-item">
+                    <a href="/schedule.html" class="nav-item">
+                        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <polyline points="12 6 12 12 16 14"/>
+                        </svg>
+                        <span>Schedule</span>
+                    </a>
+                    <a href="/analytics.html" class="nav-item">
                         <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M18 20V10M12 20V4M6 20v-6"/>
                         </svg>
@@ -660,6 +667,11 @@
                 </div>
                 
                 <div class="header-right">
+                    <button class="header-btn notification-bell">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"/>
+                        </svg>
+                    </button>
                     <button class="header-btn" onclick="window.location.href='/create-campaign.html'">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M12 5v14m7-7H5"/>
@@ -1074,5 +1086,7 @@
         // Initialize
         loadCampaigns();
     </script>
+    
+    <script src="/js/notifications.js"></script>
 </body>
 </html>
