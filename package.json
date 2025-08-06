@@ -41,7 +41,14 @@
     "pre-deploy": "ts-node scripts/pre-deploy-check.ts",
     "deploy:smart": "powershell -ExecutionPolicy Bypass -File scripts/smart-deploy.ps1",
     "deploy:check": "npm run pre-deploy",
-    "deploy:safe": "npm run pre-deploy && npm run build:prod && git push origin main"
+    "deploy:safe": "npm run pre-deploy && npm run build:prod && git push origin main",
+    "deploy:real": "ts-node scripts/real-deploy-check.ts",
+    "deploy:no-bs": "ts-node scripts/no-bullshit-deploy.ts",
+    "test:local": "ts-node scripts/no-bullshit-deploy.ts --local-only",
+    "test:production": "ts-node scripts/real-deploy-check.ts --production-only",
+    "deploy:ultimate": "ts-node scripts/ultimate-deploy.ts",
+    "deploy:quick": "ts-node scripts/ultimate-deploy.ts --skip-local",
+    "deploy:force": "ts-node scripts/ultimate-deploy.ts --force"
   },
   "keywords": [
     "marketing",
