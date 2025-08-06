@@ -64,7 +64,7 @@ users.set(demoUserId, {
   id: demoUserId,
   email: 'demo@synthex.com',
   name: 'Demo User',
-  password: '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewYpfQr6U1B1xP.O', // password: demo123!
+  password: '$2b$12$n8LKCMwt7UkaW43BTtJxXennp32syNC05hx0keuPp09dZ96BL7Ak2', // password: demo123!
   createdAt: new Date(),
   preferences: {
     onboardingCompleted: false,
