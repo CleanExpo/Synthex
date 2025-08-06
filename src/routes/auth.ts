@@ -9,18 +9,32 @@ const router = express.Router();
 // Rate limiting for auth endpoints
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5, // Limit each IP to 5 auth requests per windowMs
-  message: 'Too many authentication attempts, please try again later.',
+  max: 20, // Limit each IP to 20 auth requests per windowMs (increased for development)
+  message: { error: 'Too many authentication attempts, please try again later.' },
   standardHeaders: true,
   legacyHeaders: false,
+  handler: (req: any, res: any) => {
+    res.status(429).json({ 
+      error: 'Too many authentication attempts', 
+      message: 'Please wait before trying again',
+      retryAfter: Math.ceil(req.rateLimit?.resetTime ? (req.rateLimit.resetTime - Date.now()) / 1000 : 900)
+    });
+  }
 });
 
 const registerLimiter = rateLimit({
   windowMs: 60 * 60 * 1000, // 1 hour
-  max: 3, // Limit each IP to 3 registration attempts per hour
-  message: 'Too many registration attempts, please try again later.',
+  max: 10, // Limit each IP to 10 registration attempts per hour (increased for development)
+  message: { error: 'Too many registration attempts, please try again later.' },
   standardHeaders: true,
   legacyHeaders: false,
+  handler: (req: any, res: any) => {
+    res.status(429).json({ 
+      error: 'Too many registration attempts', 
+      message: 'Please wait before trying again',
+      retryAfter: Math.ceil(req.rateLimit?.resetTime ? (req.rateLimit.resetTime - Date.now()) / 1000 : 3600)
+    });
+  }
 });
 
 // Validation rules

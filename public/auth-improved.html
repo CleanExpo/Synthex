@@ -296,7 +296,18 @@
                     body: JSON.stringify({ email, password })
                 });
                 
-                const data = await response.json();
+                let data;
+                const contentType = response.headers.get('content-type');
+                
+                // Check if response is JSON
+                if (contentType && contentType.includes('application/json')) {
+                    data = await response.json();
+                } else {
+                    // If not JSON, try to read as text
+                    const text = await response.text();
+                    console.error('Non-JSON response:', text);
+                    data = { error: 'Server error: ' + text.substring(0, 100) };
+                }
                 
                 if (response.ok) {
                     authToken = data.token;
@@ -315,8 +326,12 @@
                     
                     showMessage('Login successful! Redirecting...', 'success');
                     setTimeout(() => showDashboard(data.user), 1000);
+                } else if (response.status === 429) {
+                    // Rate limit error
+                    const retryAfter = data.retryAfter || 60;
+                    showMessage(`Too many attempts. Please wait ${retryAfter} seconds before trying again.`, 'error');
                 } else {
-                    showMessage(data.error || 'Login failed', 'error');
+                    showMessage(data.error || data.message || 'Login failed', 'error');
                 }
             } catch (error) {
                 showMessage('Network error. Please check your connection.', 'error');
@@ -347,19 +362,34 @@
                     body: JSON.stringify({ name, email, password })
                 });
                 
-                const data = await response.json();
+                let data;
+                const contentType = response.headers.get('content-type');
+                
+                // Check if response is JSON
+                if (contentType && contentType.includes('application/json')) {
+                    data = await response.json();
+                } else {
+                    // If not JSON, try to read as text
+                    const text = await response.text();
+                    console.error('Non-JSON response:', text);
+                    data = { error: 'Server error: ' + text.substring(0, 100) };
+                }
                 
                 if (response.ok) {
                     authToken = data.token;
                     localStorage.setItem('synthex_token', authToken);
                     showMessage('Registration successful! Welcome to SYNTHEX!', 'success');
                     setTimeout(() => showDashboard(data.user), 1000);
+                } else if (response.status === 429) {
+                    // Rate limit error
+                    const retryAfter = data.retryAfter || 60;
+                    showMessage(`Too many attempts. Please wait ${retryAfter} seconds before trying again.`, 'error');
                 } else {
                     if (data.details && Array.isArray(data.details)) {
                         const errorMessages = data.details.map(d => d.msg).join(', ');
                         showMessage(errorMessages, 'error');
                     } else {
-                        showMessage(data.error || 'Registration failed', 'error');
+                        showMessage(data.error || data.message || 'Registration failed', 'error');
                     }
                 }
             } catch (error) {
