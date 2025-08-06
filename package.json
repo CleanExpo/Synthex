@@ -37,7 +37,11 @@
     "db:seed": "ts-node prisma/seed.ts",
     "db:studio": "prisma studio",
     "db:reset": "prisma migrate reset",
-    "verify-env": "node verify-env.js"
+    "verify-env": "node verify-env.js",
+    "pre-deploy": "ts-node scripts/pre-deploy-check.ts",
+    "deploy:smart": "powershell -ExecutionPolicy Bypass -File scripts/smart-deploy.ps1",
+    "deploy:check": "npm run pre-deploy",
+    "deploy:safe": "npm run pre-deploy && npm run build:prod && git push origin main"
   },
   "keywords": [
     "marketing",
