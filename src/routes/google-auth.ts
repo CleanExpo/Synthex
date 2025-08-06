@@ -23,8 +23,8 @@ router.get('/google', (req: Request, res: Response, next: any) => {
   })(req, res, next);
 });
 
-// Google OAuth callback route
-router.get('/google/callback', (req: Request, res: Response, next: any) => {
+// Google OAuth callback route - matches Google Console configuration
+router.get('/auth/callback/google', (req: Request, res: Response, next: any) => {
   if (!passport) {
     return res.redirect('/dashboard?error=google_not_configured');
   }
@@ -57,8 +57,8 @@ router.get('/google/callback', (req: Request, res: Response, next: any) => {
       console.error('Google OAuth callback error:', error);
       res.redirect('/dashboard?error=auth_callback_failed');
     }
-  }
-);
+  });
+});
 
 // Check Google authentication status
 router.get('/google/status', async (req: Request, res: Response) => {
@@ -67,7 +67,7 @@ router.get('/google/status', async (req: Request, res: Response) => {
     
     res.json({
       configured: isConfigured,
-      authUrl: isConfigured ? '/auth/google' : null,
+      authUrl: isConfigured ? '/api/google' : null,
       message: isConfigured 
         ? 'Google OAuth is configured and ready'
         : 'Google OAuth not configured. Please set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET.'
