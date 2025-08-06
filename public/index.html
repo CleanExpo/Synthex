@@ -1149,7 +1149,7 @@
             showLoading();
             
             try {
-                const res = await fetch(`${API}/api/openrouter/marketing/optimize`, {
+                const res = await fetch('/api/openrouter/marketing/optimize', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ content, platform, goals })
@@ -1158,15 +1158,45 @@
                 const data = await res.json();
                 if (data.optimization) {
                     const output = `
-                        <h4>Analysis:</h4>
-                        <p>${data.optimization.analysis}</p>
-                        <h4>Optimized Content:</h4>
-                        <p>${data.optimization.optimizedContent}</p>
-                        <h4>Suggestions:</h4>
-                        <ul>${data.optimization.suggestions.map(s => `<li>${s}</li>`).join('')}</ul>
+                        <div class="optimization-result">
+                            <h4 class="text-lg font-semibold mb-3">Content Analysis:</h4>
+                            <div class="p-4 rounded-lg bg-[var(--bg-primary)] mb-4">
+                                <p>${data.optimization.analysis}</p>
+                            </div>
+                            
+                            <h4 class="text-lg font-semibold mb-3">Optimized Content:</h4>
+                            <div class="p-4 rounded-lg bg-[var(--bg-primary)] mb-4 border-l-4 border-[var(--accent)]">
+                                <p style="white-space: pre-wrap;">${data.optimization.optimizedContent}</p>
+                            </div>
+                            
+                            <h4 class="text-lg font-semibold mb-3">Optimization Suggestions:</h4>
+                            <ul class="space-y-2">
+                                ${data.optimization.suggestions.map(s => `
+                                    <li class="flex items-start gap-3 p-3 rounded-lg bg-[var(--bg-primary)]">
+                                        <div class="w-2 h-2 rounded-full bg-[var(--accent)] mt-2 flex-shrink-0"></div>
+                                        <span>${s}</span>
+                                    </li>
+                                `).join('')}
+                            </ul>
+                            
+                            <div class="flex gap-3 mt-6">
+                                <button onclick="copyOptimizedContent()" class="btn-primary">
+                                    Copy Optimized Content
+                                </button>
+                                <button onclick="saveOptimization()" class="px-4 py-2 border border-[var(--border)] rounded-lg hover:bg-[var(--border)] transition-smooth">
+                                    Save as Draft
+                                </button>
+                            </div>
+                        </div>
                     `;
                     showOutput(output);
                     showToast('Content optimized successfully!');
+                    
+                    // Store optimized content for copying
+                    window.optimizedContent = data.optimization.optimizedContent;
+                } else if (data.error) {
+                    hideLoading();
+                    showToast(data.error || 'Failed to optimize content', 'error');
                 } else {
                     hideLoading();
                     showToast('Failed to optimize content', 'error');
@@ -1191,22 +1221,54 @@
             showLoading();
             
             try {
-                const res = await fetch(`${API}/api/openrouter/marketing/variations`, {
+                const res = await fetch('/api/openrouter/marketing/variations', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ prompt, count: parseInt(count), contentType })
                 });
                 
                 const data = await res.json();
-                if (data.variations) {
-                    const output = data.variations.map((v, i) => 
-                        `<div class="mb-4 p-4 rounded-lg bg-[var(--bg-primary)]">
-                            <h4>Variation ${i + 1}:</h4>
-                            <p>${v}</p>
-                        </div>`
-                    ).join('');
+                if (data.variations && data.variations.length > 0) {
+                    const output = `
+                        <div class="variations-result">
+                            <h4 class="text-lg font-semibold mb-4">Generated Variations (${data.variations.length})</h4>
+                            <div class="space-y-4">
+                                ${data.variations.map((variation, i) => `
+                                    <div class="variation-card p-4 rounded-lg bg-[var(--bg-primary)] border-l-4 border-[var(--accent)]">
+                                        <div class="flex justify-between items-start mb-2">
+                                            <h5 class="font-medium text-[var(--accent)]">Variation ${i + 1}</h5>
+                                            <button onclick="copyVariation('${variation.replace(/'/g, '\\\'')}')" class="p-1 rounded hover:bg-[var(--border)] transition-smooth" title="Copy variation">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                                                </svg>
+                                            </button>
+                                        </div>
+                                        <p class="text-[var(--text-primary)]" style="white-space: pre-wrap;">${variation}</p>
+                                    </div>
+                                `).join('')}
+                            </div>
+                            
+                            <div class="flex gap-3 mt-6">
+                                <button onclick="copyAllVariations()" class="btn-primary">
+                                    Copy All Variations
+                                </button>
+                                <button onclick="saveVariations()" class="px-4 py-2 border border-[var(--border)] rounded-lg hover:bg-[var(--border)] transition-smooth">
+                                    Save as Drafts
+                                </button>
+                                <button onclick="generateMoreVariations()" class="px-4 py-2 border border-[var(--border)] rounded-lg hover:bg-[var(--border)] transition-smooth">
+                                    Generate More
+                                </button>
+                            </div>
+                        </div>
+                    `;
                     showOutput(output);
-                    showToast('Variations generated successfully!');
+                    showToast(`${data.variations.length} variations generated successfully!`);
+                    
+                    // Store variations for copying and further actions
+                    window.currentVariations = data.variations;
+                } else if (data.error) {
+                    hideLoading();
+                    showToast(data.error || 'Failed to generate variations', 'error');
                 } else {
                     hideLoading();
                     showToast('Failed to generate variations', 'error');
@@ -1216,6 +1278,40 @@
                 showToast('Error: ' + error.message, 'error');
             }
         });
+        
+        // Helper functions for optimized content and variations
+        function copyOptimizedContent() {
+            if (window.optimizedContent) {
+                navigator.clipboard.writeText(window.optimizedContent);
+                showToast('Optimized content copied to clipboard!');
+            }
+        }
+        
+        function saveOptimization() {
+            showToast('Save optimization feature coming soon!');
+        }
+        
+        function copyVariation(variation) {
+            navigator.clipboard.writeText(variation);
+            showToast('Variation copied to clipboard!');
+        }
+        
+        function copyAllVariations() {
+            if (window.currentVariations) {
+                const allVariations = window.currentVariations.map((v, i) => `Variation ${i + 1}:\n${v}`).join('\n\n');
+                navigator.clipboard.writeText(allVariations);
+                showToast('All variations copied to clipboard!');
+            }
+        }
+        
+        function saveVariations() {
+            showToast('Save variations feature coming soon!');
+        }
+        
+        function generateMoreVariations() {
+            const form = document.getElementById('variationsForm');
+            form.dispatchEvent(new Event('submit'));
+        }
         
         // Initialize
         initTheme();
