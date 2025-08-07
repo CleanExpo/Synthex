@@ -216,7 +216,7 @@ export class DashboardService {
       const activities: RecentActivity[] = [
         {
           id: '1',
-          type: 'post_published',
+          type: 'post_published' as const,
           title: 'Post Published',
           description: 'Your LinkedIn post about AI marketing trends went live',
           timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000),
@@ -225,7 +225,7 @@ export class DashboardService {
         },
         {
           id: '2',
-          type: 'ai_generated',
+          type: 'ai_generated' as const,
           title: 'AI Content Generated',
           description: 'Generated 5 marketing variations for your campaign',
           timestamp: new Date(Date.now() - 4 * 60 * 60 * 1000),
@@ -234,7 +234,7 @@ export class DashboardService {
         },
         {
           id: '3',
-          type: 'campaign_created',
+          type: 'campaign_created' as const,
           title: 'Campaign Created',
           description: 'New "Winter Product Launch" campaign created successfully',
           timestamp: new Date(Date.now() - 8 * 60 * 60 * 1000),
@@ -243,7 +243,7 @@ export class DashboardService {
         },
         {
           id: '4',
-          type: 'platform_connected',
+          type: 'platform_connected' as const,
           title: 'Platform Connected',
           description: 'Successfully connected Instagram Business account',
           timestamp: new Date(Date.now() - 12 * 60 * 60 * 1000),
@@ -252,7 +252,7 @@ export class DashboardService {
         },
         {
           id: '5',
-          type: 'analytics_synced',
+          type: 'analytics_synced' as const,
           title: 'Analytics Updated',
           description: 'Performance metrics synced from all connected platforms',
           timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000),
@@ -260,7 +260,7 @@ export class DashboardService {
         },
         {
           id: '6',
-          type: 'post_created',
+          type: 'post_created' as const,
           title: 'Post Drafted',
           description: 'Created draft post for Twitter about industry insights',
           timestamp: new Date(Date.now() - 36 * 60 * 60 * 1000),
@@ -269,7 +269,7 @@ export class DashboardService {
         },
         {
           id: '7',
-          type: 'post_published',
+          type: 'post_published' as const,
           title: 'Post Failed to Publish',
           description: 'Facebook post failed due to API rate limit',
           timestamp: new Date(Date.now() - 48 * 60 * 60 * 1000),

@@ -375,7 +375,10 @@ export class AgentIntegrationService {
     const { type, data } = update;
     
     // Emit events for UI updates
-    process.emit('agent:data:update' as any, { type, data });
+    // Using global event emitter pattern for cross-module communication
+    if (global.eventEmitter) {
+      global.eventEmitter.emit('agent:data:update', { type, data });
+    }
     
     // Log the update
     console.log(`🔄 ${type} data updated in application`);

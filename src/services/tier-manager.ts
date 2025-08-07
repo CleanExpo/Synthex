@@ -197,7 +197,7 @@ export class TierManager {
       aiGenerations?: number;
       teamMembers?: number;
     }
-  ): { shouldUpgrade: boolean; suggestedTier?: string; reasons: string[] } {
+  ): { shouldUpgrade: boolean; suggestedTier?: string; reasons: string[]; benefits: string[] } {
     const limits = this.getTierLimits(currentTier);
     const reasons: string[] = [];
     let shouldUpgrade = false;
@@ -235,7 +235,7 @@ export class TierManager {
       }
     }
 
-    return { shouldUpgrade, suggestedTier, reasons };
+    return { shouldUpgrade, suggestedTier, reasons, benefits: [] };
   }
 
   /**
