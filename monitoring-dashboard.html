@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SYNTHEX - Testing Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        header {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 30px;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        h1 {
+            font-size: 2rem;
+            font-weight: 700;
+        }
+        
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 25px;
+        }
+        
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+        
+        .status-dot.running {
+            background: #10b981;
+        }
+        
+        .status-dot.stopped {
+            background: #ef4444;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.2); opacity: 0.7; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .metric-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+        
+        .metric-label {
+            color: #6b7280;
+            font-size: 0.875rem;
+            margin-bottom: 5px;
+        }
+        
+        .metric-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #1f2937;
+        }
+        
+        .metric-change {
+            font-size: 0.875rem;
+            margin-top: 5px;
+        }
+        
+        .metric-change.positive {
+            color: #10b981;
+        }
+        
+        .metric-change.negative {
+            color: #ef4444;
+        }
+        
+        .issues-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+        
+        .issues-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e5e7eb;
+        }
+        
+        .issues-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #1f2937;
+        }
+        
+        .filter-buttons {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .filter-btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 8px;
+            background: #f3f4f6;
+            color: #6b7280;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .filter-btn:hover {
+            background: #e5e7eb;
+        }
+        
+        .filter-btn.active {
+            background: #667eea;
+            color: white;
+        }
+        
+        .issues-list {
+            max-height: 600px;
+            overflow-y: auto;
+        }
+        
+        .issue-item {
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            background: #f9fafb;
+            border-left: 4px solid;
+            transition: all 0.2s;
+        }
+        
+        .issue-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+        
+        .issue-item.error {
+            border-left-color: #ef4444;
+        }
+        
+        .issue-item.warning {
+            border-left-color: #f59e0b;
+        }
+        
+        .issue-item.info {
+            border-left-color: #3b82f6;
+        }
+        
+        .issue-type {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-right: 10px;
+        }
+        
+        .issue-type.console-error,
+        .issue-type.page-error,
+        .issue-type.network-error {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+        
+        .issue-type.missing-page,
+        .issue-type.missing-api {
+            background: #fef3c7;
+            color: #d97706;
+        }
+        
+        .issue-type.performance,
+        .issue-type.accessibility {
+            background: #dbeafe;
+            color: #2563eb;
+        }
+        
+        .issue-description {
+            font-size: 0.95rem;
+            color: #374151;
+            margin: 5px 0;
+        }
+        
+        .issue-meta {
+            display: flex;
+            gap: 15px;
+            margin-top: 8px;
+            font-size: 0.85rem;
+            color: #9ca3af;
+        }
+        
+        .last-update {
+            text-align: center;
+            margin-top: 30px;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.875rem;
+        }
+        
+        .no-issues {
+            text-align: center;
+            padding: 40px;
+            color: #9ca3af;
+        }
+        
+        .refresh-btn {
+            padding: 10px 20px;
+            background: white;
+            color: #667eea;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .refresh-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🚀 SYNTHEX Testing Dashboard</h1>
+            <div class="status-indicator">
+                <div class="status-dot running" id="statusDot"></div>
+                <span id="statusText">Monitoring Active</span>
+                <button class="refresh-btn" onclick="loadIssues()">Refresh</button>
+            </div>
+        </header>
+        
+        <div class="metrics-grid">
+            <div class="metric-card">
+                <div class="metric-label">Total Issues</div>
+                <div class="metric-value" id="totalIssues">0</div>
+                <div class="metric-change negative" id="issueChange">Loading...</div>
+            </div>
+            
+            <div class="metric-card">
+                <div class="metric-label">Critical Errors</div>
+                <div class="metric-value" id="criticalErrors">0</div>
+                <div class="metric-change" id="errorChange"></div>
+            </div>
+            
+            <div class="metric-card">
+                <div class="metric-label">Missing Pages</div>
+                <div class="metric-value" id="missingPages">0</div>
+                <div class="metric-change" id="pageChange"></div>
+            </div>
+            
+            <div class="metric-card">
+                <div class="metric-label">API Issues</div>
+                <div class="metric-value" id="apiIssues">0</div>
+                <div class="metric-change" id="apiChange"></div>
+            </div>
+            
+            <div class="metric-card">
+                <div class="metric-label">Last Test Run</div>
+                <div class="metric-value" id="lastTest" style="font-size: 1rem;">Never</div>
+                <div class="metric-change" id="testStatus"></div>
+            </div>
+        </div>
+        
+        <div class="issues-container">
+            <div class="issues-header">
+                <h2 class="issues-title">Detected Issues</h2>
+                <div class="filter-buttons">
+                    <button class="filter-btn active" onclick="filterIssues('all')">All</button>
+                    <button class="filter-btn" onclick="filterIssues('error')">Errors</button>
+                    <button class="filter-btn" onclick="filterIssues('warning')">Warnings</button>
+                    <button class="filter-btn" onclick="filterIssues('info')">Info</button>
+                </div>
+            </div>
+            
+            <div class="issues-list" id="issuesList">
+                <div class="no-issues">Loading issues...</div>
+            </div>
+        </div>
+        
+        <div class="last-update" id="lastUpdate">
+            Last updated: Never
+        </div>
+    </div>
+    
+    <script>
+        let allIssues = [];
+        let currentFilter = 'all';
+        
+        function loadIssues() {
+            fetch('/testing-issues.json')
+                .then(response => response.json())
+                .then(data => {
+                    allIssues = data;
+                    updateMetrics(data);
+                    displayIssues(data);
+                    updateLastUpdate();
+                })
+                .catch(error => {
+                    console.error('Error loading issues:', error);
+                    // Try loading from file system
+                    if (window.location.protocol === 'file:') {
+                        // For local file access, use hardcoded data
+                        fetch('./testing-issues.json')
+                            .then(response => response.json())
+                            .then(data => {
+                                allIssues = data;
+                                updateMetrics(data);
+                                displayIssues(data);
+                                updateLastUpdate();
+                            })
+                            .catch(() => {
+                                document.getElementById('issuesList').innerHTML = 
+                                    '<div class="no-issues">Unable to load issues. Please ensure testing-issues.json exists.</div>';
+                            });
+                    }
+                });
+        }
+        
+        function updateMetrics(issues) {
+            const total = issues.length;
+            const errors = issues.filter(i => 
+                i.type === 'console-error' || 
+                i.type === 'page-error' || 
+                i.type === 'network-error'
+            ).length;
+            const missingPages = issues.filter(i => i.type === 'missing-page').length;
+            const apiIssues = issues.filter(i => i.type === 'missing-api').length;
+            
+            document.getElementById('totalIssues').textContent = total;
+            document.getElementById('criticalErrors').textContent = errors;
+            document.getElementById('missingPages').textContent = missingPages;
+            document.getElementById('apiIssues').textContent = apiIssues;
+            
+            // Update change indicators
+            document.getElementById('issueChange').textContent = 
+                total > 0 ? `${total} issues need attention` : 'All clear!';
+            
+            // Update last test time
+            if (issues.length > 0) {
+                const lastIssue = issues[issues.length - 1];
+                const lastTime = new Date(lastIssue.lastSeen);
+                document.getElementById('lastTest').textContent = 
+                    lastTime.toLocaleTimeString();
+            }
+        }
+        
+        function displayIssues(issues) {
+            const container = document.getElementById('issuesList');
+            
+            if (issues.length === 0) {
+                container.innerHTML = '<div class="no-issues">✨ No issues detected!</div>';
+                return;
+            }
+            
+            const filteredIssues = filterIssuesByType(issues, currentFilter);
+            
+            if (filteredIssues.length === 0) {
+                container.innerHTML = `<div class="no-issues">No ${currentFilter} issues found</div>`;
+                return;
+            }
+            
+            container.innerHTML = filteredIssues.map(issue => {
+                const severity = getSeverity(issue.type);
+                return `
+                    <div class="issue-item ${severity}">
+                        <span class="issue-type ${issue.type}">${issue.type.replace('-', ' ').toUpperCase()}</span>
+                        <div class="issue-description">${issue.description}</div>
+                        <div class="issue-meta">
+                            <span>📍 ${issue.url || 'N/A'}</span>
+                            <span>🔄 ${issue.occurrences} occurrence(s)</span>
+                            <span>⏰ ${new Date(issue.lastSeen).toLocaleTimeString()}</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        function filterIssuesByType(issues, type) {
+            if (type === 'all') return issues;
+            
+            const typeMap = {
+                'error': ['console-error', 'page-error', 'network-error'],
+                'warning': ['missing-page', 'missing-api'],
+                'info': ['performance', 'accessibility', 'form-element']
+            };
+            
+            return issues.filter(i => typeMap[type].includes(i.type));
+        }
+        
+        function getSeverity(type) {
+            if (['console-error', 'page-error', 'network-error'].includes(type)) {
+                return 'error';
+            }
+            if (['missing-page', 'missing-api'].includes(type)) {
+                return 'warning';
+            }
+            return 'info';
+        }
+        
+        function filterIssues(type) {
+            currentFilter = type;
+            
+            // Update button states
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            displayIssues(allIssues);
+        }
+        
+        function updateLastUpdate() {
+            const now = new Date();
+            document.getElementById('lastUpdate').textContent = 
+                `Last updated: ${now.toLocaleTimeString()}`;
+        }
+        
+        // Load issues on page load
+        loadIssues();
+        
+        // Auto-refresh every 30 seconds
+        setInterval(loadIssues, 30000);
+    </script>
+</body>
+</html>
