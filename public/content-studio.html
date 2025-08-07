@@ -471,11 +471,12 @@
         </main>
     </div>
     
+    <script src="/js/api-client.js"></script>
     <script>
         // Auth check
-        const token = localStorage.getItem('token');
-        if (!token) {
-            window.location.href = '/auth.html';
+        const api = window.synthexAPI;
+        if (!api.isAuthenticated()) {
+            window.location.href = '/login';
         }
         
         // Content editor functionality

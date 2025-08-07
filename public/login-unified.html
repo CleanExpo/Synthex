@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="light">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -14,17 +14,57 @@
     <!-- Font Awesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- SYNTHEX Unified Design System -->
-    <link rel="stylesheet" href="/css/synthex-unified.css">
+    <!-- SYNTHEX Glassmorphic Design System -->
     
-    <!-- Page Specific Styles -->
+    <!-- Login Glassmorphic Styles -->
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-blue: #007AFF;
+            --secondary-blue: #0051D5;
+            --accent-purple: #5856D6;
+            --accent-teal: #5AC8FA;
+            --success-green: #34C759;
+            --warning-orange: #FF9500;
+            --danger-red: #FF3B30;
+            
+            --bg-primary: #000000;
+            --bg-secondary: rgba(255, 255, 255, 0.02);
+            --bg-elevated: rgba(255, 255, 255, 0.05);
+            
+            --text-primary: #FFFFFF;
+            --text-secondary: rgba(255, 255, 255, 0.85);
+            --text-tertiary: rgba(255, 255, 255, 0.6);
+            --text-quaternary: rgba(255, 255, 255, 0.4);
+            
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.37);
+            
+            --blur-amount: 20px;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'SF Pro Display', 'Segoe UI', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
         .auth-container {
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: var(--space-4);
+            padding: 1rem;
             position: relative;
             overflow: hidden;
         }
@@ -38,25 +78,62 @@
             z-index: -1;
         }
         
+        /* Animated Background */
         .gradient-mesh {
             position: absolute;
-            width: 200%;
-            height: 200%;
-            top: -50%;
-            left: -50%;
-            background: 
-                radial-gradient(circle at 20% 50%, var(--synthex-primary-light) 0%, transparent 50%),
-                radial-gradient(circle at 80% 80%, var(--synthex-secondary-light) 0%, transparent 50%),
-                radial-gradient(circle at 40% 20%, var(--synthex-accent) 0%, transparent 50%);
-            opacity: 0.1;
-            animation: meshAnimation 30s ease infinite;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            overflow: hidden;
         }
         
-        @keyframes meshAnimation {
-            0%, 100% { transform: rotate(0deg) scale(1); }
-            25% { transform: rotate(90deg) scale(1.1); }
-            50% { transform: rotate(180deg) scale(1); }
-            75% { transform: rotate(270deg) scale(1.1); }
+        .gradient-orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(100px);
+            opacity: 0.4;
+            animation: float 20s infinite ease-in-out;
+        }
+        
+        .orb-1 {
+            width: 800px;
+            height: 800px;
+            background: radial-gradient(circle, var(--primary-blue), transparent);
+            top: -400px;
+            left: -400px;
+            animation-delay: 0s;
+        }
+        
+        .orb-2 {
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, var(--accent-purple), transparent);
+            bottom: -300px;
+            right: -300px;
+            animation-delay: 7s;
+        }
+        
+        .orb-3 {
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, var(--accent-teal), transparent);
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            animation-delay: 14s;
+        }
+        
+        @keyframes float {
+            0%, 100% {
+                transform: translate(0, 0) rotate(0deg);
+            }
+            33% {
+                transform: translate(30px, -30px) rotate(120deg);
+            }
+            66% {
+                transform: translate(-20px, 20px) rotate(240deg);
+            }
         }
         
         .auth-card {
@@ -66,38 +143,40 @@
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
             border: 1px solid var(--glass-border);
-            border-radius: var(--radius-xl);
-            padding: var(--space-10);
+            border-radius: 24px;
+            padding: 2.5rem;
             box-shadow: var(--glass-shadow);
         }
         
         .social-login-btn {
             width: 100%;
-            padding: var(--space-3);
-            border: 1px solid var(--color-border);
-            border-radius: var(--radius-md);
-            background: var(--color-bg-elevated);
+            padding: 0.75rem;
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: var(--space-2);
-            font-weight: var(--font-medium);
-            color: var(--color-text-primary);
+            gap: 0.5rem;
+            font-weight: 500;
+            color: var(--text-primary);
             cursor: pointer;
-            transition: all var(--duration-200) var(--ease-in-out);
+            transition: var(--transition);
         }
         
         .social-login-btn:hover {
-            background: var(--color-bg-tertiary);
-            transform: translateY(-1px);
-            box-shadow: var(--shadow-sm);
+            background: rgba(255, 255, 255, 0.08);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
         }
         
         .divider {
             display: flex;
             align-items: center;
-            gap: var(--space-3);
-            margin: var(--space-6) 0;
+            gap: 0.75rem;
+            margin: 1.5rem 0;
         }
         
         .divider::before,
@@ -105,12 +184,12 @@
             content: '';
             flex: 1;
             height: 1px;
-            background: var(--color-border);
+            background: var(--glass-border);
         }
         
         .divider span {
-            color: var(--color-text-tertiary);
-            font-size: var(--text-sm);
+            color: var(--text-tertiary);
+            font-size: 0.875rem;
         }
         
         .password-toggle {
@@ -170,30 +249,34 @@
         
         .strength-bar.active.weak { background: var(--synthex-error); }
         .strength-bar.active.medium { background: var(--synthex-warning); }
-        .strength-bar.active.strong { background: var(--synthex-success); }
+        .strength-bar.active.strong { background: var(--success-green); }
     </style>
 </head>
 <body>
     <div class="auth-container">
         <div class="auth-background">
-            <div class="gradient-mesh"></div>
+            <div class="gradient-mesh">
+                <div class="gradient-orb orb-1"></div>
+                <div class="gradient-orb orb-2"></div>
+                <div class="gradient-orb orb-3"></div>
+            </div>
         </div>
         
         <div class="auth-card">
             <!-- Logo -->
-            <div class="text-center mb-8">
-                <a href="/" class="inline-flex items-center gap-2 mb-4">
-                    <img src="/logo.png" alt="SYNTHEX" class="h-10 w-auto">
-                    <span class="text-2xl font-bold">SYNTHEX</span>
+            <div style="text-align: center; margin-bottom: 2rem;">
+                <a href="/" style="display: inline-flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem; text-decoration: none; color: var(--text-primary);">
+                    <img src="/logo.png" alt="SYNTHEX" style="height: 2.5rem; width: auto;">
+                    <span style="font-size: 1.5rem; font-weight: 700; background: linear-gradient(135deg, var(--primary-blue), var(--accent-purple)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">SYNTHEX</span>
                 </a>
-                <h1 class="text-3xl font-bold mb-2">Welcome Back</h1>
-                <p class="text-secondary">Sign in to continue to your dashboard</p>
+                <h1 style="font-size: 1.875rem; font-weight: 700; margin-bottom: 0.5rem; color: var(--text-primary);">Welcome Back</h1>
+                <p style="color: var(--text-secondary);">Sign in to continue to your dashboard</p>
             </div>
             
             <!-- Social Login -->
-            <div class="space-y-3">
+            <div style="display: flex; flex-direction: column; gap: 0.75rem;">
                 <button class="social-login-btn">
-                    <svg class="w-5 h-5" viewBox="0 0 24 24">
+                    <svg style="width: 1.25rem; height: 1.25rem;" viewBox="0 0 24 24">
                         <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
                         <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
                         <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
@@ -270,6 +353,7 @@
     
     <!-- SYNTHEX Components JS -->
     <script src="/js/synthex-components.js"></script>
+    <script src="/js/api-client.js"></script>
     
     <script>
         function togglePassword() {
@@ -286,6 +370,73 @@
                 toggleBtn.classList.add('fa-eye');
             }
         }
+
+        // Handle form submission
+        document.querySelector('form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            
+            // Show loading state
+            const originalText = submitBtn.textContent;
+            submitBtn.textContent = 'Signing in...';
+            submitBtn.disabled = true;
+            
+            try {
+                const response = await window.synthexAPI.login(email, password);
+                
+                if (response.success) {
+                    // Show success message
+                    submitBtn.textContent = 'Success! Redirecting...';
+                    submitBtn.style.background = 'var(--success-green)';
+                    
+                    // Redirect to dashboard
+                    setTimeout(() => {
+                        window.location.href = '/dashboard';
+                    }, 1000);
+                } else {
+                    throw new Error(response.message || 'Login failed');
+                }
+            } catch (error) {
+                // Show error message
+                submitBtn.textContent = 'Login Failed';
+                submitBtn.style.background = 'var(--danger-red)';
+                
+                // Create or update error message
+                let errorDiv = document.getElementById('login-error');
+                if (!errorDiv) {
+                    errorDiv = document.createElement('div');
+                    errorDiv.id = 'login-error';
+                    errorDiv.style.cssText = 'background: rgba(255, 59, 48, 0.1); border: 1px solid var(--danger-red); color: var(--danger-red); padding: 1rem; border-radius: 8px; margin-bottom: 1rem; text-align: center;';
+                    e.target.insertBefore(errorDiv, e.target.firstChild);
+                }
+                errorDiv.textContent = error.message || 'Invalid email or password';
+                
+                // Reset button after 2 seconds
+                setTimeout(() => {
+                    submitBtn.textContent = originalText;
+                    submitBtn.style.background = '';
+                    submitBtn.disabled = false;
+                }, 2000);
+            }
+        });
+
+        // Handle social login buttons
+        document.querySelectorAll('.social-login-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                // Show coming soon message
+                const originalText = btn.innerHTML;
+                btn.innerHTML = 'Coming Soon...';
+                btn.disabled = true;
+                
+                setTimeout(() => {
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                }, 2000);
+            });
+        });
     </script>
 </body>
 </html>
