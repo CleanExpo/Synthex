@@ -132,15 +132,15 @@
             verifyToken();
         }
         
-        // Load saved credentials if Remember Me was checked
+        // Load saved email only (not password for security)
         window.addEventListener('DOMContentLoaded', () => {
             const savedEmail = localStorage.getItem('savedEmail');
-            const savedPassword = localStorage.getItem('savedPassword');
             
-            if (savedEmail && savedPassword) {
+            if (savedEmail) {
                 document.getElementById('loginEmail').value = savedEmail;
-                document.getElementById('loginPassword').value = atob(savedPassword);
                 document.getElementById('rememberMe').checked = true;
+                // Focus on password field for convenience
+                document.getElementById('loginPassword').focus();
             }
         });
 
@@ -167,15 +167,27 @@
             const rememberMe = document.getElementById('rememberMe').checked;
             
             try {
-                const response = await fetch('/api/auth/login', {
+                // Add better error handling for production
+                const apiUrl = '/api/auth/login';
+                console.log('Attempting login to:', apiUrl);
+                
+                const response = await fetch(apiUrl, {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
                     },
-                    body: JSON.stringify({ email, password })
+                    body: JSON.stringify({ email, password }),
+                    credentials: 'same-origin' // Important for cookies in production
                 });
                 
-                const data = await response.json();
+                let data;
+                try {
+                    data = await response.json();
+                } catch (jsonError) {
+                    console.error('Failed to parse response as JSON:', jsonError);
+                    data = { error: 'Invalid server response' };
+                }
                 
                 if (response.ok) {
                     authToken = data.token;
@@ -193,13 +205,14 @@
                         localStorage.setItem('user', JSON.stringify(data.user));
                     }
                     
-                    // Save credentials if Remember Me is checked
+                    // Save email only if Remember Me is checked (not password for security)
                     if (rememberMe) {
                         localStorage.setItem('savedEmail', email);
-                        localStorage.setItem('savedPassword', btoa(password));
+                        // Set a longer session/token expiry for remember me
+                        localStorage.setItem('rememberMeEnabled', 'true');
                     } else {
                         localStorage.removeItem('savedEmail');
-                        localStorage.removeItem('savedPassword');
+                        localStorage.removeItem('rememberMeEnabled');
                     }
                     
                     showMessage('Login successful! Redirecting...', 'success');
@@ -241,12 +254,20 @@
                 const response = await fetch('/api/auth/register', {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
                     },
-                    body: JSON.stringify({ name, email, password })
+                    body: JSON.stringify({ name, email, password }),
+                    credentials: 'same-origin' // Important for cookies in production
                 });
                 
-                const data = await response.json();
+                let data;
+                try {
+                    data = await response.json();
+                } catch (jsonError) {
+                    console.error('Failed to parse response as JSON:', jsonError);
+                    data = { error: 'Invalid server response' };
+                }
                 
                 if (response.ok) {
                     authToken = data.token;
