@@ -220,7 +220,7 @@ export class DashboardService {
           title: 'Post Published',
           description: 'Your LinkedIn post about AI marketing trends went live',
           timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000),
-          status: 'success',
+          status: 'success' as const,
           metadata: { platform: 'linkedin', postId: 'post_123' }
         },
         {
@@ -229,7 +229,7 @@ export class DashboardService {
           title: 'AI Content Generated',
           description: 'Generated 5 marketing variations for your campaign',
           timestamp: new Date(Date.now() - 4 * 60 * 60 * 1000),
-          status: 'success',
+          status: 'success' as const,
           metadata: { count: 5 }
         },
         {
@@ -238,7 +238,7 @@ export class DashboardService {
           title: 'Campaign Created',
           description: 'New "Winter Product Launch" campaign created successfully',
           timestamp: new Date(Date.now() - 8 * 60 * 60 * 1000),
-          status: 'success',
+          status: 'success' as const,
           metadata: { campaignId: 'camp_456' }
         },
         {
@@ -247,7 +247,7 @@ export class DashboardService {
           title: 'Platform Connected',
           description: 'Successfully connected Instagram Business account',
           timestamp: new Date(Date.now() - 12 * 60 * 60 * 1000),
-          status: 'success',
+          status: 'success' as const,
           metadata: { platform: 'instagram' }
         },
         {
@@ -256,7 +256,7 @@ export class DashboardService {
           title: 'Analytics Updated',
           description: 'Performance metrics synced from all connected platforms',
           timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000),
-          status: 'info'
+          status: 'info' as const
         },
         {
           id: '6',
@@ -264,7 +264,7 @@ export class DashboardService {
           title: 'Post Drafted',
           description: 'Created draft post for Twitter about industry insights',
           timestamp: new Date(Date.now() - 36 * 60 * 60 * 1000),
-          status: 'info',
+          status: 'info' as const,
           metadata: { platform: 'twitter', postId: 'post_789' }
         },
         {
@@ -273,7 +273,7 @@ export class DashboardService {
           title: 'Post Failed to Publish',
           description: 'Facebook post failed due to API rate limit',
           timestamp: new Date(Date.now() - 48 * 60 * 60 * 1000),
-          status: 'error',
+          status: 'error' as const,
           metadata: { platform: 'facebook' }
         }
       ].slice(0, limit);
