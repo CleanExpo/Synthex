@@ -1,6 +1,6 @@
 // Authentication Check for Protected Pages
 (function() {
-    const publicPages = ['/', '/index.html', '/auth.html', '/404.html', '/500.html'];
+    const publicPages = ['/', '/index.html', '/auth.html', '/login.html', '/404.html', '/500.html'];
     const onboardingPages = ['/onboarding.html'];
     const currentPath = window.location.pathname;
     
@@ -21,7 +21,7 @@
             // Store intended destination
             sessionStorage.setItem('redirectAfterLogin', window.location.href);
             // Redirect to login
-            window.location.href = '/auth.html';
+            window.location.href = '/login.html';
         } else {
             // Check if user needs onboarding
             checkOnboardingStatus(user);
@@ -32,7 +32,7 @@
         // For onboarding pages, still check if user is authenticated
         const token = localStorage.getItem('token');
         if (!token) {
-            window.location.href = '/auth.html';
+            window.location.href = '/login.html';
         }
     }
     
@@ -66,7 +66,7 @@
                 localStorage.removeItem('token');
                 localStorage.removeItem('user');
                 sessionStorage.setItem('redirectAfterLogin', window.location.href);
-                window.location.href = '/auth.html';
+                window.location.href = '/login.html';
             }
         } catch (error) {
             console.error('Token verification failed:', error);
@@ -77,7 +77,7 @@
     window.logout = function() {
         localStorage.removeItem('token');
         localStorage.removeItem('user');
-        window.location.href = '/auth.html';
+        window.location.href = '/login.html';
     };
     
     // Add user info to window for easy access
