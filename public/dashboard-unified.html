@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - SYNTHEX</title>
+    <link rel="icon" type="image/png" href="/logo.png">
+    
+    <!-- Inter Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- SYNTHEX Unified Design System -->
+    <link rel="stylesheet" href="/css/synthex-unified.css">
+    
+    <!-- Dashboard Specific Styles -->
+    <style>
+        .dashboard-layout {
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+        
+        /* Sidebar */
+        .sidebar {
+            width: 280px;
+            background: var(--color-bg-elevated);
+            border-right: 1px solid var(--color-border);
+            display: flex;
+            flex-direction: column;
+            transition: transform var(--duration-300) var(--ease-in-out);
+        }
+        
+        .sidebar-header {
+            padding: var(--space-6);
+            border-bottom: 1px solid var(--color-border);
+        }
+        
+        .sidebar-nav {
+            flex: 1;
+            overflow-y: auto;
+            padding: var(--space-4);
+        }
+        
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+            padding: var(--space-3) var(--space-4);
+            margin-bottom: var(--space-1);
+            border-radius: var(--radius-md);
+            color: var(--color-text-secondary);
+            text-decoration: none;
+            font-weight: var(--font-medium);
+            transition: all var(--duration-200) var(--ease-in-out);
+            position: relative;
+        }
+        
+        .nav-item:hover {
+            background: var(--color-bg-secondary);
+            color: var(--color-text-primary);
+        }
+        
+        .nav-item.active {
+            background: var(--synthex-primary-light);
+            color: var(--synthex-primary);
+        }
+        
+        .nav-item.active::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 3px;
+            height: 20px;
+            background: var(--synthex-primary);
+            border-radius: 0 3px 3px 0;
+        }
+        
+        .nav-section-title {
+            font-size: var(--text-xs);
+            font-weight: var(--font-semibold);
+            color: var(--color-text-tertiary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            padding: var(--space-2) var(--space-4);
+            margin-top: var(--space-4);
+            margin-bottom: var(--space-2);
+        }
+        
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        .top-bar {
+            background: var(--color-bg-elevated);
+            border-bottom: 1px solid var(--color-border);
+            padding: var(--space-4) var(--space-8);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .search-bar {
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+            background: var(--color-bg-secondary);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-md);
+            padding: var(--space-2) var(--space-4);
+            width: 400px;
+        }
+        
+        .search-bar input {
+            flex: 1;
+            background: none;
+            border: none;
+            outline: none;
+            color: var(--color-text-primary);
+        }
+        
+        .content-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: var(--space-8);
+            background: var(--color-bg-primary);
+        }
+        
+        /* Dashboard Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: var(--space-6);
+            margin-bottom: var(--space-8);
+        }
+        
+        .stat-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-lg);
+            padding: var(--space-6);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--synthex-primary), var(--synthex-secondary));
+        }
+        
+        .stat-value {
+            font-size: var(--text-3xl);
+            font-weight: var(--font-bold);
+            margin-bottom: var(--space-2);
+        }
+        
+        .stat-label {
+            font-size: var(--text-sm);
+            color: var(--color-text-tertiary);
+            margin-bottom: var(--space-3);
+        }
+        
+        .stat-change {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-1);
+            padding: var(--space-1) var(--space-2);
+            border-radius: var(--radius-full);
+            font-size: var(--text-xs);
+            font-weight: var(--font-semibold);
+        }
+        
+        .stat-change.positive {
+            background: var(--synthex-success-light);
+            color: var(--synthex-success);
+        }
+        
+        .stat-change.negative {
+            background: var(--synthex-error-light);
+            color: var(--synthex-error);
+        }
+        
+        /* Charts Section */
+        .chart-container {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-lg);
+            padding: var(--space-6);
+            margin-bottom: var(--space-6);
+        }
+        
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--space-4);
+        }
+        
+        .chart-placeholder {
+            height: 300px;
+            background: var(--color-bg-tertiary);
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--color-text-tertiary);
+        }
+        
+        /* Activity Feed */
+        .activity-feed {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-lg);
+            padding: var(--space-6);
+        }
+        
+        .activity-item {
+            display: flex;
+            gap: var(--space-3);
+            padding: var(--space-4) 0;
+            border-bottom: 1px solid var(--color-border);
+        }
+        
+        .activity-item:last-child {
+            border-bottom: none;
+        }
+        
+        .activity-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: var(--radius-full);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        
+        .activity-content {
+            flex: 1;
+        }
+        
+        .activity-title {
+            font-weight: var(--font-medium);
+            margin-bottom: var(--space-1);
+        }
+        
+        .activity-time {
+            font-size: var(--text-sm);
+            color: var(--color-text-tertiary);
+        }
+        
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .sidebar {
+                position: fixed;
+                z-index: var(--z-fixed);
+                transform: translateX(-100%);
+            }
+            
+            .sidebar.open {
+                transform: translateX(0);
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .search-bar {
+                width: 100%;
+            }
+            
+            .content-area {
+                padding: var(--space-4);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-layout">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <a href="/" class="flex items-center gap-2">
+                    <img src="/logo.png" alt="SYNTHEX" class="h-8 w-auto">
+                    <span class="text-xl font-bold">SYNTHEX</span>
+                </a>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <a href="#" class="nav-item active">
+                    <i class="fas fa-home"></i>
+                    <span>Dashboard</span>
+                </a>
+                
+                <a href="/campaigns.html" class="nav-item">
+                    <i class="fas fa-bullhorn"></i>
+                    <span>Campaigns</span>
+                </a>
+                
+                <a href="/content-studio.html" class="nav-item">
+                    <i class="fas fa-paint-brush"></i>
+                    <span>Content Studio</span>
+                </a>
+                
+                <a href="/analytics.html" class="nav-item">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Analytics</span>
+                </a>
+                
+                <a href="/schedule.html" class="nav-item">
+                    <i class="fas fa-calendar-alt"></i>
+                    <span>Schedule</span>
+                </a>
+                
+                <div class="nav-section-title">Settings</div>
+                
+                <a href="/team.html" class="nav-item">
+                    <i class="fas fa-users"></i>
+                    <span>Team</span>
+                </a>
+                
+                <a href="/settings.html" class="nav-item">
+                    <i class="fas fa-cog"></i>
+                    <span>Settings</span>
+                </a>
+                
+                <a href="/notifications.html" class="nav-item">
+                    <i class="fas fa-bell"></i>
+                    <span>Notifications</span>
+                    <span class="badge badge-error" style="margin-left: auto;">3</span>
+                </a>
+            </nav>
+            
+            <!-- User Profile -->
+            <div class="sidebar-footer p-4 border-t">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white font-semibold">
+                        JD
+                    </div>
+                    <div class="flex-1">
+                        <div class="font-medium">John Doe</div>
+                        <div class="text-sm text-muted">john@example.com</div>
+                    </div>
+                    <button class="btn btn-ghost btn-sm">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </button>
+                </div>
+            </div>
+        </aside>
+        
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Top Bar -->
+            <header class="top-bar">
+                <div class="flex items-center gap-4">
+                    <button id="menu-toggle" class="btn btn-ghost btn-sm lg:hidden">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    
+                    <div class="search-bar">
+                        <i class="fas fa-search text-muted"></i>
+                        <input type="text" placeholder="Search campaigns, content, analytics...">
+                    </div>
+                </div>
+                
+                <div class="flex items-center gap-4">
+                    <button class="btn btn-ghost btn-sm" data-tooltip="Notifications">
+                        <i class="fas fa-bell"></i>
+                        <span class="badge badge-error" style="position: absolute; top: -4px; right: -4px;">3</span>
+                    </button>
+                    
+                    <button id="theme-toggle" class="btn btn-ghost btn-sm" data-tooltip="Toggle theme">
+                        <i class="fas fa-moon"></i>
+                    </button>
+                    
+                    <button class="btn btn-primary btn-sm">
+                        <i class="fas fa-plus"></i>
+                        New Campaign
+                    </button>
+                </div>
+            </header>
+            
+            <!-- Content Area -->
+            <div class="content-area">
+                <!-- Page Header -->
+                <div class="mb-8">
+                    <h1 class="text-3xl font-bold mb-2">Welcome back, John!</h1>
+                    <p class="text-secondary">Here's what's happening with your campaigns today.</p>
+                </div>
+                
+                <!-- Stats Grid -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value">12,485</div>
+                        <div class="stat-label">Total Reach</div>
+                        <span class="stat-change positive">
+                            <i class="fas fa-arrow-up"></i>
+                            12.5%
+                        </span>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-value">3,842</div>
+                        <div class="stat-label">Engagements</div>
+                        <span class="stat-change positive">
+                            <i class="fas fa-arrow-up"></i>
+                            8.2%
+                        </span>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-value">24</div>
+                        <div class="stat-label">Active Campaigns</div>
+                        <span class="stat-change negative">
+                            <i class="fas fa-arrow-down"></i>
+                            2.1%
+                        </span>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-value">89.2%</div>
+                        <div class="stat-label">Success Rate</div>
+                        <span class="stat-change positive">
+                            <i class="fas fa-arrow-up"></i>
+                            5.3%
+                        </span>
+                    </div>
+                </div>
+                
+                <!-- Charts Row -->
+                <div class="grid grid-cols-2 gap-6">
+                    <div class="chart-container">
+                        <div class="chart-header">
+                            <h3 class="text-xl font-semibold">Performance Overview</h3>
+                            <select class="form-select" style="width: auto;">
+                                <option>Last 7 days</option>
+                                <option>Last 30 days</option>
+                                <option>Last 90 days</option>
+                            </select>
+                        </div>
+                        <div class="chart-placeholder">
+                            <i class="fas fa-chart-line text-4xl"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="chart-container">
+                        <div class="chart-header">
+                            <h3 class="text-xl font-semibold">Platform Distribution</h3>
+                            <button class="btn btn-ghost btn-sm">
+                                <i class="fas fa-ellipsis-h"></i>
+                            </button>
+                        </div>
+                        <div class="chart-placeholder">
+                            <i class="fas fa-chart-pie text-4xl"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Activity Feed -->
+                <div class="activity-feed">
+                    <h3 class="text-xl font-semibold mb-4">Recent Activity</h3>
+                    
+                    <div class="activity-item">
+                        <div class="activity-icon bg-success-light text-success">
+                            <i class="fas fa-check"></i>
+                        </div>
+                        <div class="activity-content">
+                            <div class="activity-title">Campaign "Summer Sale" completed</div>
+                            <div class="activity-time">2 hours ago</div>
+                        </div>
+                    </div>
+                    
+                    <div class="activity-item">
+                        <div class="activity-icon bg-info-light text-info">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="activity-content">
+                            <div class="activity-title">3 posts scheduled for tomorrow</div>
+                            <div class="activity-time">5 hours ago</div>
+                        </div>
+                    </div>
+                    
+                    <div class="activity-item">
+                        <div class="activity-icon bg-warning-light text-warning">
+                            <i class="fas fa-exclamation"></i>
+                        </div>
+                        <div class="activity-content">
+                            <div class="activity-title">Review needed for "Product Launch" content</div>
+                            <div class="activity-time">Yesterday</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <!-- SYNTHEX Components JS -->
+    <script src="/js/synthex-components.js"></script>
+    
+    <script>
+        // Mobile menu toggle
+        document.getElementById('menu-toggle')?.addEventListener('click', () => {
+            document.getElementById('sidebar').classList.toggle('open');
+        });
+    </script>
+</body>
+</html>

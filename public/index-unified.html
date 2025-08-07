@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SYNTHEX - AI-Powered Marketing Platform</title>
+    <link rel="icon" type="image/png" href="/logo.png">
+    
+    <!-- Inter Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- SYNTHEX Unified Design System -->
+    <link rel="stylesheet" href="/css/synthex-unified.css">
+    
+    <!-- Custom Page Styles -->
+    <style>
+        /* Hero Background Animation */
+        .hero-background {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            overflow: hidden;
+            z-index: -1;
+        }
+        
+        .gradient-orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(40px);
+            opacity: 0.3;
+            animation: float 20s infinite ease-in-out;
+        }
+        
+        .orb-1 {
+            width: 600px;
+            height: 600px;
+            background: linear-gradient(135deg, var(--synthex-primary), var(--synthex-secondary));
+            top: -200px;
+            left: -200px;
+            animation-delay: 0s;
+        }
+        
+        .orb-2 {
+            width: 400px;
+            height: 400px;
+            background: linear-gradient(135deg, var(--synthex-secondary), var(--synthex-accent));
+            bottom: -100px;
+            right: -100px;
+            animation-delay: 5s;
+        }
+        
+        .orb-3 {
+            width: 300px;
+            height: 300px;
+            background: linear-gradient(135deg, var(--synthex-accent), var(--synthex-primary));
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            animation-delay: 10s;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            25% { transform: translate(30px, -30px) scale(1.1); }
+            50% { transform: translate(-20px, 20px) scale(0.9); }
+            75% { transform: translate(-30px, -10px) scale(1.05); }
+        }
+        
+        /* Feature Cards Animation */
+        .feature-card {
+            animation: fadeInUp 0.6s ease-out forwards;
+            opacity: 0;
+        }
+        
+        .feature-card:nth-child(1) { animation-delay: 0.1s; }
+        .feature-card:nth-child(2) { animation-delay: 0.2s; }
+        .feature-card:nth-child(3) { animation-delay: 0.3s; }
+        
+        @keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+        }
+        
+        /* Scroll Top Button */
+        #scroll-top {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--synthex-primary), var(--synthex-secondary));
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            opacity: 0;
+            visibility: hidden;
+            transition: all var(--duration-300) var(--ease-in-out);
+            z-index: var(--z-fixed);
+        }
+        
+        #scroll-top.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        #scroll-top:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-lg);
+        }
+        
+        /* Progress Bar */
+        #progress-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--synthex-primary), var(--synthex-secondary));
+            z-index: var(--z-fixed);
+            transition: width var(--duration-200) var(--ease-out);
+        }
+    </style>
+</head>
+<body>
+    <!-- Progress Bar -->
+    <div id="progress-bar" style="width: 0;"></div>
+    
+    <!-- Navigation -->
+    <nav class="nav">
+        <div class="container flex items-center justify-between">
+            <a href="/" class="nav-brand flex items-center gap-2">
+                <img src="/logo.png" alt="SYNTHEX" class="h-8 w-auto">
+                <span>SYNTHEX</span>
+            </a>
+            
+            <ul class="nav-menu">
+                <li><a href="#features" class="nav-link">Features</a></li>
+                <li><a href="#platforms" class="nav-link">Platforms</a></li>
+                <li><a href="#pricing" class="nav-link">Pricing</a></li>
+                <li><a href="#about" class="nav-link">About</a></li>
+            </ul>
+            
+            <div class="flex items-center gap-4">
+                <button id="theme-toggle" class="btn btn-ghost btn-sm">
+                    <i class="fas fa-moon"></i>
+                </button>
+                <a href="/login.html" class="btn btn-ghost btn-sm">Login</a>
+                <a href="/dashboard.html" class="btn btn-primary btn-sm">Get Started</a>
+            </div>
+            
+            <!-- Mobile Menu Toggle -->
+            <button id="menu-toggle" class="hidden btn btn-ghost">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
+        
+        <!-- Mobile Menu -->
+        <div id="mobile-menu" class="hidden">
+            <ul class="container flex flex-col gap-2 p-4">
+                <li><a href="#features" class="nav-link">Features</a></li>
+                <li><a href="#platforms" class="nav-link">Platforms</a></li>
+                <li><a href="#pricing" class="nav-link">Pricing</a></li>
+                <li><a href="#about" class="nav-link">About</a></li>
+                <li><a href="/login.html" class="btn btn-ghost w-full">Login</a></li>
+                <li><a href="/dashboard.html" class="btn btn-primary w-full">Get Started</a></li>
+            </ul>
+        </div>
+    </nav>
+    
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-background">
+            <div class="gradient-orb orb-1"></div>
+            <div class="gradient-orb orb-2"></div>
+            <div class="gradient-orb orb-3"></div>
+        </div>
+        
+        <div class="container">
+            <h1 class="hero-title" data-animate>
+                Transform Your Marketing with AI-Powered Intelligence
+            </h1>
+            <p class="hero-subtitle" data-animate>
+                Create, optimize, and distribute content across all major social platforms with advanced AI technology. Boost engagement, save time, and scale your marketing efforts effortlessly.
+            </p>
+            <div class="flex gap-4 justify-center" data-animate>
+                <a href="/dashboard.html" class="btn btn-primary btn-lg">
+                    <i class="fas fa-rocket"></i>
+                    Start Free Trial
+                </a>
+                <button class="btn btn-secondary btn-lg" data-modal-trigger="demo-modal">
+                    <i class="fas fa-play-circle"></i>
+                    Watch Demo
+                </button>
+            </div>
+            
+            <!-- Stats -->
+            <div class="grid grid-cols-3 gap-8 mt-16" data-animate>
+                <div class="text-center">
+                    <div class="text-4xl font-bold text-primary">50K+</div>
+                    <div class="text-sm text-muted mt-2">Active Users</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-4xl font-bold text-primary">10M+</div>
+                    <div class="text-sm text-muted mt-2">Content Generated</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-4xl font-bold text-primary">95%</div>
+                    <div class="text-sm text-muted mt-2">Time Saved</div>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Features Section -->
+    <section id="features" class="p-20 bg-secondary">
+        <div class="container">
+            <h2 class="text-center mb-4" data-animate>Powerful Features</h2>
+            <p class="text-center text-secondary mb-12" data-animate>
+                Everything you need to dominate social media marketing
+            </p>
+            
+            <div class="grid grid-cols-3 gap-8">
+                <div class="card feature-card">
+                    <div class="flex items-center justify-center w-16 h-16 rounded-lg bg-primary mb-4" style="background: var(--synthex-primary-light);">
+                        <i class="fas fa-brain text-2xl text-primary"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-3">AI Content Generation</h3>
+                    <p class="text-secondary">
+                        Generate high-quality, engaging content tailored to each platform's best practices and audience preferences.
+                    </p>
+                </div>
+                
+                <div class="card feature-card">
+                    <div class="flex items-center justify-center w-16 h-16 rounded-lg bg-primary mb-4" style="background: var(--synthex-success-light);">
+                        <i class="fas fa-chart-line text-2xl" style="color: var(--synthex-success);"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-3">Performance Analytics</h3>
+                    <p class="text-secondary">
+                        Track engagement, reach, and conversion metrics across all platforms with comprehensive dashboards.
+                    </p>
+                </div>
+                
+                <div class="card feature-card">
+                    <div class="flex items-center justify-center w-16 h-16 rounded-lg bg-primary mb-4" style="background: var(--synthex-info-light);">
+                        <i class="fas fa-calendar-alt text-2xl" style="color: var(--synthex-info);"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-3">Smart Scheduling</h3>
+                    <p class="text-secondary">
+                        Automatically schedule posts at optimal times for maximum engagement based on AI-driven insights.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Platforms Section -->
+    <section id="platforms" class="p-20">
+        <div class="container">
+            <h2 class="text-center mb-4" data-animate>All Platforms, One Solution</h2>
+            <p class="text-center text-secondary mb-12" data-animate>
+                Seamlessly manage your presence across every major social network
+            </p>
+            
+            <div class="grid grid-cols-4 gap-6" data-animate>
+                <div class="card text-center p-8">
+                    <i class="fab fa-facebook text-4xl mb-4" style="color: #1877f2;"></i>
+                    <h4 class="font-semibold">Facebook</h4>
+                </div>
+                <div class="card text-center p-8">
+                    <i class="fab fa-instagram text-4xl mb-4" style="color: #e4405f;"></i>
+                    <h4 class="font-semibold">Instagram</h4>
+                </div>
+                <div class="card text-center p-8">
+                    <i class="fab fa-twitter text-4xl mb-4" style="color: #1da1f2;"></i>
+                    <h4 class="font-semibold">Twitter</h4>
+                </div>
+                <div class="card text-center p-8">
+                    <i class="fab fa-linkedin text-4xl mb-4" style="color: #0077b5;"></i>
+                    <h4 class="font-semibold">LinkedIn</h4>
+                </div>
+                <div class="card text-center p-8">
+                    <i class="fab fa-youtube text-4xl mb-4" style="color: #ff0000;"></i>
+                    <h4 class="font-semibold">YouTube</h4>
+                </div>
+                <div class="card text-center p-8">
+                    <i class="fab fa-tiktok text-4xl mb-4" style="color: #000000;"></i>
+                    <h4 class="font-semibold">TikTok</h4>
+                </div>
+                <div class="card text-center p-8">
+                    <i class="fab fa-pinterest text-4xl mb-4" style="color: #bd081c;"></i>
+                    <h4 class="font-semibold">Pinterest</h4>
+                </div>
+                <div class="card text-center p-8">
+                    <i class="fab fa-reddit text-4xl mb-4" style="color: #ff4500;"></i>
+                    <h4 class="font-semibold">Reddit</h4>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- CTA Section -->
+    <section class="p-20 bg-secondary">
+        <div class="container text-center">
+            <h2 class="mb-4" data-animate>Ready to Transform Your Marketing?</h2>
+            <p class="text-secondary mb-8" data-animate>
+                Join thousands of marketers who are already using SYNTHEX to scale their social media presence.
+            </p>
+            <div class="flex gap-4 justify-center" data-animate>
+                <a href="/dashboard.html" class="btn btn-primary btn-lg">
+                    Get Started Free
+                </a>
+                <a href="/pricing.html" class="btn btn-secondary btn-lg">
+                    View Pricing
+                </a>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Footer -->
+    <footer class="p-16 bg-tertiary">
+        <div class="container">
+            <div class="grid grid-cols-4 gap-8 mb-8">
+                <div>
+                    <div class="flex items-center gap-2 mb-4">
+                        <img src="/logo.png" alt="SYNTHEX" class="h-8 w-auto">
+                        <span class="font-bold text-xl">SYNTHEX</span>
+                    </div>
+                    <p class="text-secondary text-sm">
+                        AI-powered marketing platform for the modern digital world.
+                    </p>
+                </div>
+                
+                <div>
+                    <h5 class="font-semibold mb-4">Product</h5>
+                    <ul class="space-y-2">
+                        <li><a href="#features" class="text-secondary hover:text-primary">Features</a></li>
+                        <li><a href="/pricing.html" class="text-secondary hover:text-primary">Pricing</a></li>
+                        <li><a href="#" class="text-secondary hover:text-primary">API</a></li>
+                        <li><a href="#" class="text-secondary hover:text-primary">Integrations</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h5 class="font-semibold mb-4">Company</h5>
+                    <ul class="space-y-2">
+                        <li><a href="#about" class="text-secondary hover:text-primary">About</a></li>
+                        <li><a href="#" class="text-secondary hover:text-primary">Blog</a></li>
+                        <li><a href="#" class="text-secondary hover:text-primary">Careers</a></li>
+                        <li><a href="#" class="text-secondary hover:text-primary">Contact</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h5 class="font-semibold mb-4">Legal</h5>
+                    <ul class="space-y-2">
+                        <li><a href="#" class="text-secondary hover:text-primary">Privacy Policy</a></li>
+                        <li><a href="#" class="text-secondary hover:text-primary">Terms of Service</a></li>
+                        <li><a href="#" class="text-secondary hover:text-primary">Cookie Policy</a></li>
+                        <li><a href="#" class="text-secondary hover:text-primary">GDPR</a></li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="border-t pt-8 flex items-center justify-between">
+                <p class="text-secondary text-sm">
+                    © 2024 SYNTHEX. All rights reserved.
+                </p>
+                <div class="flex gap-4">
+                    <a href="#" class="text-secondary hover:text-primary">
+                        <i class="fab fa-twitter"></i>
+                    </a>
+                    <a href="#" class="text-secondary hover:text-primary">
+                        <i class="fab fa-linkedin"></i>
+                    </a>
+                    <a href="#" class="text-secondary hover:text-primary">
+                        <i class="fab fa-github"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </footer>
+    
+    <!-- Demo Modal -->
+    <div id="demo-modal" class="modal-backdrop">
+        <div class="modal">
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="text-2xl font-bold">Watch Demo</h3>
+                <button data-modal-close class="btn btn-ghost btn-sm">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="aspect-video bg-tertiary rounded-lg flex items-center justify-center mb-6">
+                <i class="fas fa-play-circle text-6xl text-muted"></i>
+            </div>
+            <p class="text-secondary mb-6">
+                See how SYNTHEX can transform your marketing workflow in just 5 minutes.
+            </p>
+            <div class="flex gap-4">
+                <a href="/dashboard.html" class="btn btn-primary w-full">Start Free Trial</a>
+                <button data-modal-close class="btn btn-secondary w-full">Close</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Scroll to Top Button -->
+    <button id="scroll-top">
+        <i class="fas fa-arrow-up"></i>
+    </button>
+    
+    <!-- SYNTHEX Components JS -->
+    <script src="/js/synthex-components.js"></script>
+</body>
+</html>
