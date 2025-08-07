@@ -4,6 +4,7 @@ import crypto from 'crypto';
 
 // Import centralized Prisma client with Accelerate
 import { prisma } from '../lib/prisma';
+import { appConfig } from '../config/app-config';
 
 let useMockAuth = false;
 
@@ -49,7 +50,7 @@ export class AuthService {
   private readonly SALT_ROUNDS = 12;
 
   constructor() {
-    this.JWT_SECRET = process.env.JWT_SECRET || this.generateFallbackSecret();
+    this.JWT_SECRET = appConfig.security.jwtSecret;
     if (!process.env.JWT_SECRET) {
       console.warn('⚠️  JWT_SECRET not set in environment variables. Using generated secret.');
     }
