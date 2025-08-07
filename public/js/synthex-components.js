@@ -18,10 +18,10 @@ class SynthexComponents {
     this.initScrollEffects();
   }
 
-  // Theme Management
+  // Theme Management - Default to dark for glassmorphic design
   initThemeToggle() {
-    const savedTheme = localStorage.getItem('synthex-theme') || 'light';
-    document.documentElement.setAttribute('data-theme', savedTheme);
+    const savedTheme = localStorage.getItem('synthex-theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', 'dark');
 
     const themeToggle = document.getElementById('theme-toggle');
     if (themeToggle) {
