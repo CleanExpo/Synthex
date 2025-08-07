@@ -806,11 +806,81 @@
         
         // Load dashboard data
         async function loadDashboardData() {
+            try {
+                const token = localStorage.getItem('token');
+                const response = await fetch('/api/v1/dashboard/summary', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    if (result.success && result.data) {
+                        updateDashboardWithData(result.data);
+                    }
+                }
+            } catch (error) {
+                console.error('Failed to load dashboard data:', error);
+            }
+            
+            // Also load individual components
             await Promise.all([
                 loadStatistics(),
                 loadActivity(),
                 loadMetrics()
             ]);
+        }
+        
+        // Update dashboard with fetched data
+        function updateDashboardWithData(data) {
+            // Update statistics
+            if (data.stats) {
+                document.getElementById('totalCampaigns').textContent = data.stats.totalPosts || 0;
+                document.getElementById('activeCampaigns').textContent = data.stats.aiGenerationsUsed || 0;
+                document.getElementById('totalPosts').textContent = data.stats.totalPosts || 0;
+                document.getElementById('engagementRate').textContent = `${data.stats.engagementRate || 0}%`;
+            }
+            
+            // Update activity feed
+            if (data.activity && data.activity.length > 0) {
+                const activityList = document.querySelector('.activity-list');
+                activityList.innerHTML = data.activity.map(item => `
+                    <div class="activity-item">
+                        <div class="activity-icon">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                            </svg>
+                        </div>
+                        <div class="activity-content">
+                            <div class="activity-title">${item.title}</div>
+                            <div class="activity-description">${item.description}</div>
+                            <div class="activity-time">${new Date(item.timestamp).toLocaleString()}</div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+            
+            // Update insights
+            if (data.insights && data.insights.length > 0) {
+                const insightsContainer = document.querySelector('.insights-list');
+                if (insightsContainer) {
+                    insightsContainer.innerHTML = data.insights.map(insight => `
+                        <div class="insight-item ${insight.priority}">
+                            <div class="insight-icon">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M9 11l3 3L22 4"/>
+                                    <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/>
+                                </svg>
+                            </div>
+                            <div class="insight-content">
+                                <div class="insight-title">${insight.insight}</div>
+                                <div class="insight-action">${insight.action}</div>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+            }
         }
         
         // Load statistics

@@ -11,6 +11,7 @@ import auditRoutes from './audit';
 import performanceRoutes from './performance';
 import mcpRoutes from './mcp';
 import emailRoutes from './email';
+import dashboardRoutes from './dashboard-api';
 
 const router = Router();
 
@@ -21,6 +22,7 @@ router.use('/content', contentRoutes);
 router.use('/analytics', analyticsRoutes);
 router.use('/notifications', notificationRoutes);
 router.use('/team', teamRoutes);
+router.use('/dashboard', dashboardRoutes);
 
 // Enterprise features
 router.use('/users', userManagementRoutes);
