@@ -120,6 +120,7 @@ function updateNavigationButtons() {
             </svg>
             Go to Dashboard
         `;
+        nextBtn.onclick = () => { window.location.href = '/dashboard.html'; };
         skipBtn.style.display = 'none';
     } else if (currentStep === totalSteps - 1) {
         // Last step before completion
