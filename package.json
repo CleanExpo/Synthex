@@ -37,9 +37,9 @@
     "install-deps": "npm install",
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
-    "db:migrate": "prisma migrate dev",
+    "db:migrate": "ts-node src/migrations/run-migration.ts",
     "db:migrate:prod": "prisma migrate deploy",
-    "db:seed": "ts-node prisma/seed.ts",
+    "db:seed": "ts-node src/migrations/seed-database.ts",
     "db:studio": "prisma studio",
     "db:reset": "prisma migrate reset",
     "verify-env": "node verify-env.js",
@@ -55,9 +55,7 @@
     "deploy:quick": "ts-node scripts/ultimate-deploy.ts --skip-local",
     "deploy:force": "ts-node scripts/ultimate-deploy.ts --force",
     "build:autonomous": "ts-node start-autonomous-build.ts",
-    "agent:start": "ts-node src/agents/marketing-orchestrator.ts",
-    "db:migrate": "ts-node src/migrations/run-migration.ts",
-    "db:seed": "ts-node src/migrations/seed-database.ts"
+    "agent:start": "ts-node src/agents/marketing-orchestrator.ts"
   },
   "keywords": [
     "marketing",
@@ -70,6 +68,7 @@
   "author": "Auto Marketing Team",
   "license": "MIT",
   "dependencies": {
+    "2": "^3.0.0",
     "@magneticwatermelon/mcp-toolkit": "^1.1.4",
     "@modelcontextprotocol/sdk": "^1.17.1",
     "@modelcontextprotocol/server-sequential-thinking": "^2025.7.1",
@@ -86,9 +85,9 @@
     "chalk": "^4.1.2",
     "cors": "^2.8.5",
     "csv-writer": "^1.6.0",
-    "dotenv": "^16.3.1",
+    "dotenv": "^16.6.1",
     "exceljs": "^4.4.0",
-    "express": "^4.18.2",
+    "express": "^4.21.2",
     "express-rate-limit": "^8.0.1",
     "express-session": "^1.18.2",
     "express-validator": "^7.2.1",
