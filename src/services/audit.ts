@@ -32,7 +32,8 @@ export const AuditLogFiltersSchema = z.object({
 });
 
 // Use the Prisma-generated type
-export type { AuditLog } from '@prisma/client';
+import type { AuditLog } from '@prisma/client';
+export type { AuditLog };
 
 export interface AuditLogStats {
   total: number;
