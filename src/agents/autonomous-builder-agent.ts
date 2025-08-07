@@ -50,7 +50,7 @@ export class AutonomousBuilderAgent extends EventEmitter {
   }
 
   private initializeSubAgents(): void {
-    this.subAgents = new Map([
+    this.subAgents = new Map<string, any>([
       ['database', new DatabaseBuilderAgent()],
       ['api', new APIIntegrationAgent()],
       ['platform', new PlatformImplementationAgent()],

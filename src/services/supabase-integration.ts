@@ -554,7 +554,14 @@ export class SupabaseService {
           console.error('Failed to publish post:', error);
           await this.updatePost(post.id, {
             status: 'failed',
-            metrics: { ...post.metrics, error: String(error) }
+            metrics: { 
+              ...post.metrics, 
+              impressions: 0,
+              reach: 0,
+              engagement: 0,
+              clicks: 0,
+              conversions: 0
+            }
           });
         }
       }, delay);

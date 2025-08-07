@@ -85,7 +85,7 @@ export interface PerformanceMetrics {
 }
 
 export class MarketingOrchestrator extends EventEmitter {
-  private platformAgents: Map<string, any>;
+  public platformAgents: Map<string, any>;
   private coreAgents: Map<string, any>;
   private innovationAgents: Map<string, any>;
   private taskQueue: AgentTask[] = [];
@@ -101,7 +101,7 @@ export class MarketingOrchestrator extends EventEmitter {
 
   private initializeAgents(): void {
     // Initialize Platform Agents
-    this.platformAgents = new Map([
+    this.platformAgents = new Map<string, any>([
       ['linkedin', new LinkedInAgent()],
       ['twitter', new TwitterAgent()],
       ['instagram', new InstagramAgent()],
@@ -113,7 +113,7 @@ export class MarketingOrchestrator extends EventEmitter {
     ]);
 
     // Initialize Core Agents
-    this.coreAgents = new Map([
+    this.coreAgents = new Map<string, any>([
       ['content', new ContentGenerationAgent()],
       ['analytics', new AnalyticsAgent()],
       ['audience', new AudienceIntelligenceAgent()],
@@ -122,7 +122,7 @@ export class MarketingOrchestrator extends EventEmitter {
     ]);
 
     // Initialize Innovation Agents
-    this.innovationAgents = new Map([
+    this.innovationAgents = new Map<string, any>([
       ['trends', new TrendPredictionAgent()],
       ['ai', new AIEnhancementAgent()]
     ]);
