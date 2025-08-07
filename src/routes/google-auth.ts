@@ -33,7 +33,7 @@ router.get('/google', (req: Request, res: Response, next: any) => {
 });
 
 // Google OAuth callback route - matches Google Console configuration
-router.get('/auth/callback/google', (req: Request, res: Response, next: any) => {
+router.get('/google/callback', (req: Request, res: Response, next: any) => {
   if (!passport) {
     return res.redirect('/dashboard?error=google_not_configured');
   }

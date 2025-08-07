@@ -30,23 +30,8 @@ export const NotificationFiltersSchema = z.object({
   sortOrder: z.enum(['asc', 'desc']).optional().default('desc')
 });
 
-export interface Notification {
-  id: string;
-  userId: string;
-  title: string;
-  message: string;
-  type: 'info' | 'success' | 'warning' | 'error' | 'platform' | 'system';
-  priority: 'low' | 'medium' | 'high' | 'critical';
-  read: boolean;
-  archived: boolean;
-  actionUrl?: string;
-  actionText?: string;
-  metadata?: any;
-  scheduledFor?: Date;
-  expiresAt?: Date;
-  createdAt: Date;
-  updatedAt: Date;
-}
+// We'll use the Prisma-generated type instead
+export type { Notification } from '@prisma/client';
 
 export interface NotificationStats {
   total: number;
@@ -72,16 +57,16 @@ export class NotificationService {
         title: validated.title,
         message: validated.message,
         type: validated.type,
-        priority: validated.priority || 'medium',
-        read: false,
-        archived: false,
-        actionUrl: validated.actionUrl,
-        actionText: validated.actionText,
-        metadata: validated.metadata || null,
-        scheduledFor: validated.scheduledFor,
-        expiresAt: validated.expiresAt
+        data: {
+          priority: validated.priority || 'medium',
+          actionUrl: validated.actionUrl,
+          actionText: validated.actionText,
+          metadata: validated.metadata || null,
+          scheduledFor: validated.scheduledFor,
+          expiresAt: validated.expiresAt
+        }
       }
-    });
+    }) as any;
   }
 
   /**
@@ -118,13 +103,13 @@ export class NotificationService {
     if (validated.priority) where.priority = validated.priority;
     
     const [notifications, total, stats] = await Promise.all([
-      (prisma as any).notification.findMany({
+      prisma.notification.findMany({
         where,
         skip,
         take: validated.limit,
         orderBy: { [validated.sortBy]: validated.sortOrder }
       }),
-      (prisma as any).notification.count({ where }),
+      prisma.notification.count({ where }),
       this.getStats(userId)
     ]);
     
@@ -135,7 +120,7 @@ export class NotificationService {
    * Get notification statistics for a user
    */
   static async getStats(userId: string): Promise<NotificationStats> {
-    const notifications = await (prisma as any).notification.findMany({
+    const notifications = await prisma.notification.findMany({
       where: {
         userId,
         OR: [
@@ -188,7 +173,7 @@ export class NotificationService {
    * Get a single notification
    */
   static async getById(id: string, userId: string): Promise<Notification | null> {
-    return await (prisma as any).notification.findFirst({
+    return await prisma.notification.findFirst({
       where: { id, userId }
     });
   }
@@ -204,7 +189,7 @@ export class NotificationService {
     const validated = UpdateNotificationSchema.parse(data);
     
     // Verify ownership
-    const existing = await (prisma as any).notification.findFirst({
+    const existing = await prisma.notification.findFirst({
       where: { id, userId }
     });
     
@@ -212,7 +197,7 @@ export class NotificationService {
       throw new Error('Notification not found');
     }
     
-    return await (prisma as any).notification.update({
+    return await prisma.notification.update({
       where: { id },
       data: {
         ...validated,
@@ -232,7 +217,7 @@ export class NotificationService {
    * Mark all notifications as read
    */
   static async markAllAsRead(userId: string): Promise<number> {
-    const result = await (prisma as any).notification.updateMany({
+    const result = await prisma.notification.updateMany({
       where: { userId, read: false },
       data: { read: true, updatedAt: new Date() }
     });
@@ -252,7 +237,7 @@ export class NotificationService {
    */
   static async delete(id: string, userId: string): Promise<void> {
     // Verify ownership
-    const existing = await (prisma as any).notification.findFirst({
+    const existing = await prisma.notification.findFirst({
       where: { id, userId }
     });
     
@@ -260,7 +245,7 @@ export class NotificationService {
       throw new Error('Notification not found');
     }
     
-    await (prisma as any).notification.delete({
+    await prisma.notification.delete({
       where: { id }
     });
   }
@@ -269,7 +254,7 @@ export class NotificationService {
    * Delete all archived notifications
    */
   static async deleteArchived(userId: string): Promise<number> {
-    const result = await (prisma as any).notification.deleteMany({
+    const result = await prisma.notification.deleteMany({
       where: { userId, archived: true }
     });
     
@@ -373,7 +358,7 @@ export class NotificationService {
    * Get pending scheduled notifications
    */
   static async getPendingScheduled(): Promise<Notification[]> {
-    return await (prisma as any).notification.findMany({
+    return await prisma.notification.findMany({
       where: {
         scheduledFor: {
           lte: new Date()
@@ -393,7 +378,7 @@ export class NotificationService {
    * Clean up expired notifications
    */
   static async cleanupExpired(): Promise<number> {
-    const result = await (prisma as any).notification.deleteMany({
+    const result = await prisma.notification.deleteMany({
       where: {
         expiresAt: {
           lt: new Date()
