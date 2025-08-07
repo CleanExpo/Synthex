@@ -328,6 +328,15 @@
                     </div>
                 </div>
                 
+                <div class="sidebar-item" onclick="showTab('schedule')">
+                    <div class="flex items-center gap-3">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                        </svg>
+                        <span>Schedule</span>
+                    </div>
+                </div>
+                
                 <div class="sidebar-item" onclick="showTab('analytics')">
                     <div class="flex items-center gap-3">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -709,6 +718,134 @@
                     <!-- Campaigns List -->
                     <div id="campaignsContent" class="space-y-4">
                         <!-- Campaigns will be loaded here -->
+                    </div>
+                </div>
+                
+                <!-- Schedule Tab -->
+                <div id="schedule-tab" class="tab-content hidden fade-in">
+                    <div class="mb-8">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <h2 class="text-3xl font-bold mb-2 bg-gradient-to-r from-[var(--gradient-start)] to-[var(--gradient-end)] bg-clip-text text-transparent">
+                                    Content Scheduling
+                                </h2>
+                                <p class="text-[var(--text-secondary)]">Schedule and manage your content publishing</p>
+                            </div>
+                            <button onclick="showSchedulePostModal()" class="btn-primary">
+                                Schedule Post
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Schedule Statistics -->
+                    <div class="grid md:grid-cols-4 gap-6 mb-8">
+                        <div class="glass rounded-xl p-6 card-hover">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-sm text-[var(--text-secondary)]">Scheduled Posts</span>
+                                <svg class="w-5 h-5 text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                </svg>
+                            </div>
+                            <div class="text-2xl font-bold" id="scheduledPosts">0</div>
+                            <div class="text-xs text-blue-500 mt-1">Ready to publish</div>
+                        </div>
+                        
+                        <div class="glass rounded-xl p-6 card-hover">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-sm text-[var(--text-secondary)]">Published Today</span>
+                                <svg class="w-5 h-5 text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                            </div>
+                            <div class="text-2xl font-bold" id="publishedToday">0</div>
+                            <div class="text-xs text-green-500 mt-1">Successfully posted</div>
+                        </div>
+                        
+                        <div class="glass rounded-xl p-6 card-hover">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-sm text-[var(--text-secondary)]">Success Rate</span>
+                                <svg class="w-5 h-5 text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+                                </svg>
+                            </div>
+                            <div class="text-2xl font-bold" id="successRate">95%</div>
+                            <div class="text-xs text-green-500 mt-1">Last 30 days</div>
+                        </div>
+                        
+                        <div class="glass rounded-xl p-6 card-hover">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-sm text-[var(--text-secondary)]">Next Post In</span>
+                                <svg class="w-5 h-5 text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                            </div>
+                            <div class="text-2xl font-bold" id="nextPostIn">--</div>
+                            <div class="text-xs text-[var(--text-secondary)] mt-1" id="nextPostPlatform">No posts scheduled</div>
+                        </div>
+                    </div>
+                    
+                    <!-- View Toggle -->
+                    <div class="flex items-center justify-between mb-6">
+                        <div class="flex items-center gap-4">
+                            <div class="flex bg-[var(--bg-primary)] rounded-lg p-1">
+                                <button onclick="showScheduleView('calendar')" id="calendarViewBtn" class="px-4 py-2 rounded-lg text-sm transition-smooth bg-[var(--accent)] text-white">
+                                    Calendar
+                                </button>
+                                <button onclick="showScheduleView('list')" id="listViewBtn" class="px-4 py-2 rounded-lg text-sm transition-smooth">
+                                    List
+                                </button>
+                            </div>
+                            
+                            <div class="flex items-center gap-2">
+                                <label class="text-sm font-medium">Platform:</label>
+                                <select id="schedulesPlatformFilter" onchange="filterScheduledPosts()" class="px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg-primary)] text-sm">
+                                    <option value="">All Platforms</option>
+                                    <option value="twitter">Twitter</option>
+                                    <option value="instagram">Instagram</option>
+                                    <option value="linkedin">LinkedIn</option>
+                                    <option value="facebook">Facebook</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <button onclick="loadScheduledPosts()" class="px-4 py-2 border border-[var(--border)] rounded-lg hover:bg-[var(--border)] transition-smooth text-sm">
+                            Refresh
+                        </button>
+                    </div>
+                    
+                    <!-- Calendar View -->
+                    <div id="calendarView" class="schedule-view">
+                        <div class="glass rounded-xl p-6">
+                            <div class="flex items-center justify-between mb-6">
+                                <div class="flex items-center gap-4">
+                                    <button onclick="navigateCalendar(-1)" class="p-2 rounded-lg hover:bg-[var(--border)] transition-smooth">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                                        </svg>
+                                    </button>
+                                    <h3 class="text-xl font-semibold" id="calendarMonth">Loading...</h3>
+                                    <button onclick="navigateCalendar(1)" class="p-2 rounded-lg hover:bg-[var(--border)] transition-smooth">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                                        </svg>
+                                    </button>
+                                </div>
+                                <button onclick="goToToday()" class="px-4 py-2 text-sm border border-[var(--border)] rounded-lg hover:bg-[var(--border)] transition-smooth">
+                                    Today
+                                </button>
+                            </div>
+                            
+                            <div id="calendarGrid" class="grid grid-cols-7 gap-1">
+                                <!-- Calendar will be rendered here -->
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- List View -->
+                    <div id="listView" class="schedule-view hidden">
+                        <div id="scheduledPostsList" class="space-y-4">
+                            <!-- Scheduled posts will be loaded here -->
+                        </div>
                     </div>
                 </div>
                 
