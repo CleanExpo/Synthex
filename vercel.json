@@ -1,12 +1,5 @@
 {
-  "name": "synthex-production",
   "version": 2,
-  "functions": {
-    "api/vercel.js": {
-      "memory": 1024,
-      "maxDuration": 30
-    }
-  },
   "rewrites": [
     {
       "source": "/api/(.*)",
@@ -37,10 +30,7 @@
       "destination": "/api/vercel.js"
     }
   ],
-  "buildCommand": "npm install && npx prisma generate && npm run build:prod",
-  "installCommand": "npm ci",
   "outputDirectory": "public",
-  "framework": null,
   "regions": ["iad1"],
   "headers": [
     {
