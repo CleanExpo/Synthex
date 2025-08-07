@@ -1,0 +1,32 @@
+{
+  "app": {
+    "name": "Synthex",
+    "domain": "synthex.social",
+    "url": "https://synthex.social",
+    "api_url": "https://synthex.social/api",
+    "environment": "production"
+  },
+  "cors": {
+    "origin": [
+      "https://synthex.social",
+      "https://www.synthex.social"
+    ],
+    "credentials": true
+  },
+  "cookies": {
+    "domain": ".synthex.social",
+    "secure": true,
+    "sameSite": "lax",
+    "httpOnly": true
+  },
+  "oauth": {
+    "google": {
+      "callback_url": "https://synthex.social/auth/google/callback"
+    }
+  },
+  "security": {
+    "enable_https": true,
+    "force_ssl": true,
+    "hsts_max_age": 31536000
+  }
+}
