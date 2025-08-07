@@ -109,7 +109,8 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 
 // Health check endpoints
 app.get('/health', async (req: Request, res: Response) => {
-  const { checkDatabaseHealth } = await import('./lib/db-health');
+  const dbHealthModule = await import('./lib/db-health');
+  const checkDatabaseHealth = dbHealthModule.checkDatabaseHealth;
   
   const dbHealth = await checkDatabaseHealth();
   
@@ -127,7 +128,9 @@ app.get('/health', async (req: Request, res: Response) => {
 
 // Detailed health check endpoint
 app.get('/health/db', async (req: Request, res: Response) => {
-  const { checkDatabaseHealth, validateDatabaseSchema } = await import('./lib/db-health');
+  const dbHealthModule = await import('./lib/db-health');
+  const checkDatabaseHealth = dbHealthModule.checkDatabaseHealth;
+  const validateDatabaseSchema = dbHealthModule.validateDatabaseSchema;
   
   const [health, validation] = await Promise.all([
     checkDatabaseHealth(),
