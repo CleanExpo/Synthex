@@ -14,6 +14,9 @@
     <!-- Using React Icons CDN for web usage -->
     <script src="https://unpkg.com/@fluentui/react-icons@2.0.258/lib/bundle.js"></script>
     
+    <!-- Auth Check Script -->
+    <script src="/js/auth-check.js"></script>
+    
     <style>
         /* Reuse glassmorphism design system from campaigns.html */
         :root {
@@ -747,36 +750,37 @@
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
             // Initialize Fluent System Icons (using inline SVG - no initialization needed)
-            checkAuth();
+            loadUserData();
             loadDashboardData();
         });
         
-        // Check authentication
-        async function checkAuth() {
+        // Load user data from localStorage
+        async function loadUserData() {
             try {
-                const token = localStorage.getItem('auth_token');
-                if (!token) {
-                    window.location.href = '/';
-                    return;
+                const userStr = localStorage.getItem('user');
+                if (userStr) {
+                    currentUser = JSON.parse(userStr);
+                    updateUserInfo();
                 }
                 
-                const response = await fetch(`${API_URL}/auth/profile`, {
-                    headers: {
-                        'Authorization': `Bearer ${token}`
+                // Fetch fresh user data
+                const token = localStorage.getItem('token');
+                if (token) {
+                    const response = await fetch(`${API_URL}/auth/profile`, {
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        }
+                    });
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        currentUser = data.user;
+                        localStorage.setItem('user', JSON.stringify(currentUser));
+                        updateUserInfo();
                     }
-                });
-                
-                if (!response.ok) {
-                    window.location.href = '/';
-                    return;
                 }
-                
-                const data = await response.json();
-                currentUser = data.user;
-                updateUserInfo();
             } catch (error) {
-                console.error('Auth check failed:', error);
-                window.location.href = '/';
+                console.error('Failed to load user data:', error);
             }
         }
         
@@ -806,7 +810,7 @@
             try {
                 const response = await fetch(`${API_URL}/campaigns/statistics`, {
                     headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
                     }
                 });
                 
@@ -855,7 +859,7 @@
             try {
                 const response = await fetch(`${API_URL}/dashboard/activity`, {
                     headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
                     }
                 });
                 
@@ -934,7 +938,7 @@
                 const timeframe = document.getElementById('metricsTimeframe').value;
                 const response = await fetch(`${API_URL}/dashboard/metrics?timeframe=${timeframe}`, {
                     headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
                     }
                 });
                 

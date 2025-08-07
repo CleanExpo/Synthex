@@ -50,8 +50,20 @@ class RealDeploymentValidator {
     console.log('🚀 Starting local server...');
     const server = this.startLocalServer();
     
-    // Wait for server to start
-    await this.sleep(3000);
+    // Wait for server to start and check if it's running
+    console.log('⏳ Waiting for server to start (5s)...');
+    await this.sleep(5000);
+    
+    // Check if server is actually running
+    try {
+      const testResponse = await axios.get(this.LOCAL_URL, {
+        timeout: 2000,
+        validateStatus: () => true
+      });
+      console.log('✅ Local server is running');
+    } catch (error) {
+      console.log('⚠️  Local server may not be running, continuing with tests...');
+    }
     
     try {
       // Test all endpoints locally
@@ -245,11 +257,14 @@ class RealDeploymentValidator {
    */
   private startLocalServer(): any {
     try {
-      const server = execSync('npm start', {
+      const { spawn } = require('child_process');
+      const server = spawn('npm', ['start'], {
         detached: true,
         stdio: 'ignore',
+        shell: true,
         windowsHide: true
       });
+      server.unref();
       return server;
     } catch (error) {
       console.log('Local server start attempted');

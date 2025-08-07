@@ -19,6 +19,11 @@ import { CampaignOptimizationAgent } from './core/campaign-optimization-agent';
 import { ComplianceAgent } from './core/compliance-agent';
 import { TrendPredictionAgent } from './innovation/trend-prediction-agent';
 import { AIEnhancementAgent } from './innovation/ai-enhancement-agent';
+import { 
+  platformSpecialistCoordinator,
+  socialSchedulerCoordinator,
+  trendPredictorCoordinator
+} from './specialists';
 
 export interface Campaign {
   id: string;
@@ -88,6 +93,7 @@ export class MarketingOrchestrator extends EventEmitter {
   public platformAgents: Map<string, any>;
   private coreAgents: Map<string, any>;
   private innovationAgents: Map<string, any>;
+  private specialistCoordinators: Map<string, any>;
   private taskQueue: AgentTask[] = [];
   private activeTask: Map<string, AgentTask> = new Map();
   private performanceData: Map<string, PerformanceMetrics> = new Map();
@@ -127,6 +133,13 @@ export class MarketingOrchestrator extends EventEmitter {
       ['ai', new AIEnhancementAgent()]
     ]);
 
+    // Initialize Specialist Coordinators (Sub-agents)
+    this.specialistCoordinators = new Map<string, any>([
+      ['platform-specialist', platformSpecialistCoordinator],
+      ['social-scheduler', socialSchedulerCoordinator],
+      ['trend-predictor', trendPredictorCoordinator]
+    ]);
+
     // Set up agent event listeners
     this.setupAgentListeners();
   }
@@ -139,6 +152,14 @@ export class MarketingOrchestrator extends EventEmitter {
         agent.on('task-complete', (task: AgentTask) => this.handleTaskComplete(task));
         agent.on('error', (error: any) => this.handleAgentError(error));
       });
+
+    // Listen to specialist coordinators
+    this.specialistCoordinators.forEach(coordinator => {
+      coordinator.on('optimization-complete', (data: any) => this.handleOptimizationComplete(data));
+      coordinator.on('post-scheduled', (data: any) => this.handlePostScheduled(data));
+      coordinator.on('trends-detected', (data: any) => this.handleTrendsDetected(data));
+      coordinator.on('prediction-generated', (data: any) => this.handlePredictionGenerated(data));
+    });
   }
 
   private startOrchestration(): void {
@@ -301,6 +322,36 @@ export class MarketingOrchestrator extends EventEmitter {
       recommendations,
       predictions,
       competitorComparison: await this.compareWithCompetitors(metrics)
+    };
+  }
+
+  /**
+   * Get system status
+   */
+  public getSystemStatus(): any {
+    const agentStatuses = [
+      ...Array.from(this.platformAgents.values()),
+      ...Array.from(this.coreAgents.values()),
+      ...Array.from(this.innovationAgents.values())
+    ];
+
+    return {
+      agents: {
+        total: agentStatuses.length,
+        platforms: this.platformAgents.size,
+        core: this.coreAgents.size,
+        innovation: this.innovationAgents.size,
+        specialists: this.specialistCoordinators.size
+      },
+      tasks: {
+        queued: this.taskQueue.length,
+        active: this.activeTask.size,
+        total: this.taskQueue.length + this.activeTask.size
+      },
+      performance: {
+        data: this.performanceData.size,
+        competitors: this.competitorData.size
+      }
     };
   }
 
@@ -646,6 +697,218 @@ export class MarketingOrchestrator extends EventEmitter {
   private identifyWeaknesses(our: any, their: any): string[] {
     // Identify areas where competitors outperform
     return [];
+  }
+
+  /**
+   * Enhanced methods using sub-agent coordinators
+   */
+  public async optimizeContentForAllPlatforms(
+    content: any,
+    platforms: string[]
+  ): Promise<any> {
+    const platformSpecialist = this.specialistCoordinators.get('platform-specialist');
+    const results = await platformSpecialist.coordinateCrossPlatform(content, platforms);
+    
+    // Schedule optimized content
+    const scheduler = this.specialistCoordinators.get('social-scheduler');
+    const scheduled = await scheduler.bulkSchedule(
+      platforms.map(platform => ({
+        platform,
+        content: results.platformVersions[platform],
+        options: {
+          preferredTime: results.postingSchedule[platform],
+          strategy: 'maximize-reach'
+        }
+      }))
+    );
+
+    return {
+      optimized: results,
+      scheduled
+    };
+  }
+
+  /**
+   * Leverage trend predictions for content strategy
+   */
+  public async createTrendBasedCampaign(): Promise<any> {
+    const trendPredictor = this.specialistCoordinators.get('trend-predictor');
+    
+    // Detect emerging trends
+    const trends = await trendPredictor.detectEmergingTrends();
+    
+    // Find best opportunities
+    const opportunities = await trendPredictor.findContentOpportunities(
+      trends.slice(0, 3).map((t: any) => t.id)
+    );
+    
+    // Create campaign based on top opportunity
+    if (opportunities.length > 0) {
+      const topOpp = opportunities[0];
+      const campaign: Campaign = {
+        id: `campaign_${Date.now()}`,
+        name: `Trend Campaign: ${topOpp.description}`,
+        platforms: ['instagram', 'tiktok', 'twitter'],
+        objectives: ['brand_awareness', 'engagement'],
+        budget: 5000,
+        startDate: topOpp.timeWindow.start,
+        endDate: topOpp.timeWindow.end,
+        targetAudience: {
+          demographics: {
+            ageRange: [18, 35],
+            gender: ['all'],
+            locations: ['US', 'UK'],
+            languages: ['en']
+          },
+          psychographics: {
+            interests: ['trends', 'innovation'],
+            values: ['creativity', 'authenticity'],
+            lifestyle: ['digital-native']
+          },
+          behaviors: {
+            purchaseHistory: [],
+            engagementLevel: 'high',
+            platformPreferences: ['instagram', 'tiktok']
+          }
+        },
+        content: {
+          tone: 'casual',
+          formats: ['video', 'image', 'story'],
+          themes: [topOpp.description],
+          hooks: ['Trending now', 'You need to see this'],
+          ctas: ['Learn more', 'Join the trend']
+        },
+        status: 'draft'
+      };
+      
+      await this.launchCampaign(campaign);
+      return { campaign, opportunity: topOpp, trends };
+    }
+    
+    return { message: 'No suitable trends found' };
+  }
+
+  /**
+   * Smart scheduling with optimization
+   */
+  public async smartScheduleContent(
+    contents: Array<{ platform: string; content: any; priority?: any }>
+  ): Promise<any> {
+    const scheduler = this.specialistCoordinators.get('social-scheduler');
+    const platformSpecialist = this.specialistCoordinators.get('platform-specialist');
+    
+    // Optimize each content piece
+    const optimizedContents = await Promise.all(
+      contents.map(async item => {
+        const optimized = await platformSpecialist.optimizeForPlatform({
+          platform: item.platform,
+          content: item.content,
+          targetAudience: {},
+          objectives: []
+        });
+        return {
+          ...item,
+          content: optimized.optimizedContent,
+          optimalTime: optimized.optimizedContent.postingTime
+        };
+      })
+    );
+    
+    // Schedule all content
+    const scheduled = await scheduler.bulkSchedule(
+      optimizedContents.map(item => ({
+        platform: item.platform,
+        content: item.content,
+        options: {
+          preferredTime: item.optimalTime,
+          priority: item.priority
+        }
+      }))
+    );
+    
+    return {
+      scheduled,
+      queueStatus: scheduler.getQueueStatus()
+    };
+  }
+
+  /**
+   * Handle specialist coordinator events
+   */
+  private handleOptimizationComplete(data: any): void {
+    console.log('📊 Platform optimization complete:', data);
+    this.emit('content-optimized', data);
+  }
+
+  private handlePostScheduled(data: any): void {
+    console.log('📅 Post scheduled:', data);
+    this.emit('post-scheduled', data);
+  }
+
+  private handleTrendsDetected(data: any): void {
+    console.log('📈 New trends detected:', data);
+    
+    // Automatically create tasks for high-potential trends
+    data.forEach((trend: any) => {
+      if (trend.viralPotential > 70) {
+        this.queueTask({
+          id: `trend-${trend.id}`,
+          type: 'evaluate-trend',
+          priority: 'high',
+          assignedAgent: 'content',
+          payload: { trend },
+          status: 'pending',
+          createdAt: new Date()
+        });
+      }
+    });
+    
+    this.emit('trends-available', data);
+  }
+
+  private handlePredictionGenerated(data: any): void {
+    console.log('🔮 Trend prediction generated:', data);
+    
+    // Act on high-confidence predictions
+    if (data.confidence > 80 && data.opportunities.length > 0) {
+      this.queueTask({
+        id: `opportunity-${Date.now()}`,
+        type: 'execute-opportunity',
+        priority: 'medium',
+        assignedAgent: 'optimization',
+        payload: { prediction: data },
+        status: 'pending',
+        createdAt: new Date()
+      });
+    }
+    
+    this.emit('prediction-ready', data);
+  }
+
+  /**
+   * Get comprehensive orchestrator status including sub-agents
+   */
+  public getComprehensiveStatus(): any {
+    const baseStatus = this.getSystemStatus();
+    
+    // Add specialist coordinator status
+    const specialistStatus = {
+      platformSpecialist: {
+        active: true,
+        optimizationsCompleted: this.specialistCoordinators.get('platform-specialist')?.optimizationHistory?.size || 0
+      },
+      socialScheduler: {
+        queueStatus: this.specialistCoordinators.get('social-scheduler')?.getQueueStatus()
+      },
+      trendPredictor: {
+        insights: this.specialistCoordinators.get('trend-predictor')?.getTrendInsights()
+      }
+    };
+    
+    return {
+      ...baseStatus,
+      specialists: specialistStatus
+    };
   }
 }
 

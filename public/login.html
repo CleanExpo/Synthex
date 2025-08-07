@@ -120,7 +120,7 @@
     </div>
 
     <script>
-        let authToken = localStorage.getItem('synthex_token');
+        let authToken = localStorage.getItem('token');
 
         // Check if user is already logged in
         if (authToken) {
@@ -161,10 +161,14 @@
                 
                 if (response.ok) {
                     authToken = data.token;
-                    localStorage.setItem('synthex_token', authToken);
+                    localStorage.setItem('token', authToken);
+                    // Store user data
+                    if (data.user) {
+                        localStorage.setItem('user', JSON.stringify(data.user));
+                    }
                     showMessage('Login successful! Redirecting...', 'success');
                     setTimeout(() => {
-                        window.location.href = '/dashboard';
+                        window.location.href = '/dashboard.html';
                     }, 1500);
                 } else {
                     showMessage(data.error || 'Login failed', 'error');
@@ -202,10 +206,14 @@
                 
                 if (response.ok) {
                     authToken = data.token;
-                    localStorage.setItem('synthex_token', authToken);
+                    localStorage.setItem('token', authToken);
+                    // Store user data
+                    if (data.user) {
+                        localStorage.setItem('user', JSON.stringify(data.user));
+                    }
                     showMessage('Account created successfully! Redirecting...', 'success');
                     setTimeout(() => {
-                        window.location.href = '/dashboard';
+                        window.location.href = '/dashboard.html';
                     }, 1500);
                 } else {
                     if (data.details && Array.isArray(data.details)) {
@@ -233,14 +241,16 @@
                 const data = await response.json();
                 
                 if (response.ok && data.valid) {
-                    window.location.href = '/dashboard';
+                    window.location.href = '/dashboard.html';
                 } else {
-                    localStorage.removeItem('synthex_token');
+                    localStorage.removeItem('token');
+                    localStorage.removeItem('user');
                     authToken = null;
                 }
             } catch (error) {
                 console.error('Token verification failed:', error);
-                localStorage.removeItem('synthex_token');
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
                 authToken = null;
             }
         }
