@@ -8,7 +8,6 @@ generator client {
 datasource db {
   provider  = "postgresql"
   url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_DATABASE_URL")
 }
 
 model User {
@@ -47,6 +46,10 @@ model User {
   campaigns        Campaign[]
   projects         Project[]
   apiUsage         ApiUsage[]
+  notifications    Notification[]
+  auditLogs        AuditLog[]
+  organizationId   String?
+  organization     Organization? @relation(fields: [organizationId], references: [id])
   
   @@map("users")
 }
@@ -139,4 +142,63 @@ model Session {
   createdAt DateTime @default(now())
   
   @@map("sessions")
+}
+
+model Notification {
+  id          String   @id @default(cuid())
+  type        String   // 'info', 'warning', 'error', 'success'
+  title       String
+  message     String
+  read        Boolean  @default(false)
+  data        Json?    // Additional notification data
+  createdAt   DateTime @default(now())
+  
+  // Relations
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("notifications")
+}
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  action      String   // 'user_login', 'post_publish', 'password_change', etc.
+  resource    String   // 'authentication', 'user', 'post', 'api_key', etc.
+  resourceId  String?  // ID of the affected resource
+  entity      String?  // Backward compatibility - deprecated
+  entityId    String?  // Backward compatibility - deprecated
+  details     Json?    // Additional details about the action
+  ipAddress   String?
+  userAgent   String?
+  severity    String   @default("medium") // 'low', 'medium', 'high', 'critical'
+  category    String   @default("system") // 'auth', 'data', 'system', 'security', 'compliance', 'api'
+  outcome     String   @default("success") // 'success', 'failure', 'warning'
+  createdAt   DateTime @default(now())
+  
+  // Relations
+  userId      String?
+  user        User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("audit_logs")
+}
+
+model Organization {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  description String?
+  plan        String   @default("free") // 'free', 'starter', 'pro', 'enterprise'
+  settings    Json?    // Organization-wide settings
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Billing
+  stripeCustomerId String?
+  billingEmail     String?
+  billingStatus    String @default("active") // 'active', 'past_due', 'canceled'
+  
+  // Relations
+  users       User[]
+  
+  @@map("organizations")
 }

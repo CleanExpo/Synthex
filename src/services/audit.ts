@@ -31,20 +31,8 @@ export const AuditLogFiltersSchema = z.object({
   sortOrder: z.enum(['asc', 'desc']).optional().default('desc')
 });
 
-export interface AuditLog {
-  id: string;
-  userId?: string;
-  action: string;
-  resource: string;
-  resourceId?: string;
-  details?: any;
-  ipAddress?: string;
-  userAgent?: string;
-  severity: 'low' | 'medium' | 'high' | 'critical';
-  category: 'auth' | 'data' | 'system' | 'security' | 'compliance' | 'api';
-  outcome: 'success' | 'failure' | 'warning';
-  createdAt: Date;
-}
+// Use the Prisma-generated type
+export type { AuditLog } from '@prisma/client';
 
 export interface AuditLogStats {
   total: number;
@@ -118,7 +106,7 @@ export class AuditService {
     }
     
     const [logs, total, stats] = await Promise.all([
-      (prisma as any).auditLog.findMany({
+      prisma.auditLog.findMany({
         where,
         skip,
         take: validated.limit,
@@ -133,7 +121,7 @@ export class AuditService {
           }
         }
       }),
-      (prisma as any).auditLog.count({ where }),
+      prisma.auditLog.count({ where }),
       this.getStats(validated.startDate, validated.endDate)
     ]);
     
@@ -152,7 +140,7 @@ export class AuditService {
       if (endDate) where.createdAt.lte = endDate;
     }
     
-    const logs = await (prisma as any).auditLog.findMany({
+    const logs = await prisma.auditLog.findMany({
       where,
       select: {
         category: true,
@@ -216,7 +204,7 @@ export class AuditService {
    * Get audit log by ID
    */
   static async getById(id: string): Promise<AuditLog | null> {
-    return await (prisma as any).auditLog.findUnique({
+    return await prisma.auditLog.findUnique({
       where: { id },
       include: {
         user: {
@@ -237,7 +225,7 @@ export class AuditService {
     const cutoffDate = new Date();
     cutoffDate.setDate(cutoffDate.getDate() - olderThanDays);
     
-    const result = await (prisma as any).auditLog.deleteMany({
+    const result = await prisma.auditLog.deleteMany({
       where: {
         createdAt: {
           lt: cutoffDate

@@ -107,13 +107,46 @@ app.use((req: Request, res: Response, next: NextFunction) => {
   next();
 });
 
-// Health check endpoint
-app.get('/health', (req: Request, res: Response) => {
+// Health check endpoints
+app.get('/health', async (req: Request, res: Response) => {
+  const { checkDatabaseHealth } = await import('./lib/db-health');
+  
+  const dbHealth = await checkDatabaseHealth();
+  
   ApiRes.success(res, {
-    status: 'healthy',
+    status: dbHealth.connected ? 'healthy' : 'degraded',
     environment: NODE_ENV,
-    version: '1.0.0'
-  }, 'Service is healthy');
+    version: '1.0.0',
+    database: {
+      connected: dbHealth.connected,
+      latency: dbHealth.latency,
+      error: dbHealth.error
+    }
+  }, dbHealth.connected ? 'Service is healthy' : 'Service is running with degraded database connectivity');
+});
+
+// Detailed health check endpoint
+app.get('/health/db', async (req: Request, res: Response) => {
+  const { checkDatabaseHealth, validateDatabaseSchema } = await import('./lib/db-health');
+  
+  const [health, validation] = await Promise.all([
+    checkDatabaseHealth(),
+    validateDatabaseSchema()
+  ]);
+  
+  if (health.connected && validation.valid) {
+    ApiRes.success(res, {
+      database: health,
+      schema: validation
+    }, 'Database is healthy');
+  } else {
+    res.status(503).json({
+      success: false,
+      database: health,
+      schema: validation,
+      message: 'Database health check failed'
+    });
+  }
 });
 
 // Swagger UI Documentation

@@ -6,24 +6,51 @@ if (!process.env.VERCEL && process.env.NODE_ENV !== 'production') {
     console.log('📦 Loaded environment variables from .env file');
 }
 
-// Validate critical environment variables
-const requiredEnvVars = ['JWT_SECRET'];
-const missingVars: string[] = [];
+// Define environment variable requirements
+const requiredEnvVars = ['JWT_SECRET', 'DATABASE_URL'];
+const recommendedEnvVars = [
+    'NEXT_PUBLIC_SUPABASE_URL',
+    'NEXT_PUBLIC_SUPABASE_ANON_KEY',
+    'OPENROUTER_API_KEY',
+    'GOOGLE_CLIENT_ID',
+    'GOOGLE_CLIENT_SECRET'
+];
+
+// Validate required variables
+const missingRequired: string[] = [];
+const missingRecommended: string[] = [];
 
 for (const varName of requiredEnvVars) {
     if (!process.env[varName]) {
-        missingVars.push(varName);
+        missingRequired.push(varName);
     }
 }
 
-if (missingVars.length > 0) {
-    console.warn(`⚠️  Missing required environment variables: ${missingVars.join(', ')}`);
-    console.warn('Please check your .env file or environment configuration.');
-    
-    // In production, this is more critical
-    if (process.env.NODE_ENV === 'production' || process.env.VERCEL) {
-        console.error('🚨 Critical: Missing environment variables in production!');
+for (const varName of recommendedEnvVars) {
+    if (!process.env[varName]) {
+        missingRecommended.push(varName);
     }
+}
+
+// Report missing variables
+if (missingRequired.length > 0) {
+    console.error(`❌ Missing REQUIRED environment variables: ${missingRequired.join(', ')}`);
+    console.error('The application cannot start without these variables.');
+    console.error('Please check your .env file or environment configuration.');
+    
+    // In production, this is critical
+    if (process.env.NODE_ENV === 'production' || process.env.VERCEL) {
+        console.error('🚨 CRITICAL: Missing required environment variables in production!');
+        // Don't exit in Vercel as it might be using different env vars
+        if (!process.env.VERCEL) {
+            process.exit(1);
+        }
+    }
+}
+
+if (missingRecommended.length > 0) {
+    console.warn(`⚠️  Missing recommended environment variables: ${missingRecommended.join(', ')}`);
+    console.warn('Some features may not be available.');
 }
 
 // Log environment info for debugging
