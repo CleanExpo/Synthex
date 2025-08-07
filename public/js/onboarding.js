@@ -1,10 +1,11 @@
 // Onboarding Flow Management
 
 let currentStep = 0;
-let totalSteps = 4; // 0-3 steps + completion
+let totalSteps = 5; // 0-4 steps + completion
 let onboardingData = {
     userType: null,
     selectedPlatforms: ['instagram'], // Default selection
+    selectedTier: 'professional', // Default to professional tier
     apiKeys: {
         openrouter: '',
         anthropic: ''
@@ -73,8 +74,8 @@ function showStep(stepIndex) {
     });
     
     // Show current step
-    // Note: Step 4 is the completion step (index 4, but totalSteps is 4)
-    const stepId = stepIndex === 4 ? 'step-4' : `step-${stepIndex}`;
+    // Note: Step 5 is the completion step (index 5, but totalSteps is 5)
+    const stepId = `step-${stepIndex}`;
     const currentStepElement = document.getElementById(stepId);
     if (currentStepElement) {
         currentStepElement.classList.add('active');
@@ -126,7 +127,7 @@ function updateNavigationButtons() {
         nextBtn.innerHTML = `
             Complete Setup
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M5 12l5 5L20 7"/>
+                <path d="M5 12h14M12 5l7 7-7 7"/>
             </svg>
         `;
         skipBtn.style.display = 'inline-flex';
@@ -162,7 +163,14 @@ function validateCurrentStep() {
             }
             return true;
             
-        case 3: // API configuration - optional
+        case 3: // Tier selection
+            if (!onboardingData.selectedTier) {
+                alert('Please select a plan to continue.');
+                return false;
+            }
+            return true;
+            
+        case 4: // API configuration - optional
             // Capture API keys if provided
             const openrouterKey = document.getElementById('openrouterApiKey').value;
             const anthropicKey = document.getElementById('anthropicApiKey').value;
@@ -185,6 +193,19 @@ function selectUserType(type) {
         option.classList.remove('selected');
         if (option.dataset.type === type) {
             option.classList.add('selected');
+        }
+    });
+}
+
+// Tier selection
+function selectTier(tier) {
+    onboardingData.selectedTier = tier;
+    
+    // Update visual selection
+    document.querySelectorAll('.tier-card').forEach(card => {
+        card.classList.remove('selected');
+        if (card.dataset.tier === tier) {
+            card.classList.add('selected');
         }
     });
 }
@@ -255,6 +276,7 @@ async function completeOnboarding() {
                 preferences: {
                     userType: onboardingData.userType,
                     platforms: onboardingData.selectedPlatforms,
+                    tier: onboardingData.selectedTier,
                     onboardingCompleted: true,
                     onboardingCompletedAt: onboardingData.completedAt
                 }
@@ -273,6 +295,7 @@ async function completeOnboarding() {
             user.preferences = {
                 userType: onboardingData.userType,
                 platforms: onboardingData.selectedPlatforms,
+                tier: onboardingData.selectedTier,
                 onboardingCompleted: true,
                 onboardingCompletedAt: onboardingData.completedAt
             };

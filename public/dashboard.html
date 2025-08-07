@@ -792,7 +792,15 @@
                 document.getElementById('user-joined').textContent = currentUser.createdAt ? 
                     new Date(currentUser.createdAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : 
                     'Recently';
-                document.getElementById('user-plan').textContent = currentUser.plan || 'Free';
+                
+                // Display user tier with proper formatting
+                const userTier = currentUser.preferences?.tier || 'starter';
+                const tierDisplay = {
+                    'starter': 'Starter (Free)',
+                    'professional': 'Professional (Free)',
+                    'business': 'Business (Free)'
+                };
+                document.getElementById('user-plan').textContent = tierDisplay[userTier] || 'Starter (Free)';
             }
         }
         

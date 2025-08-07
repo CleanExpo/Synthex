@@ -309,6 +309,91 @@
                 grid-template-columns: repeat(2, 1fr);
             }
         }
+        
+        /* Tier Selection Styles */
+        .tier-selection {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: var(--space-lg);
+            margin-top: var(--space-xl);
+        }
+        
+        .tier-card {
+            background: var(--bg-card);
+            border: 2px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: var(--space-lg);
+            cursor: pointer;
+            transition: all var(--transition-base);
+            position: relative;
+        }
+        
+        .tier-card:hover {
+            border-color: var(--primary);
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+        }
+        
+        .tier-card.selected {
+            border-color: var(--primary);
+            background: rgba(99, 102, 241, 0.05);
+        }
+        
+        .tier-card.recommended {
+            border-color: var(--primary);
+        }
+        
+        .tier-badge {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-primary);
+            padding: 4px 12px;
+            border-radius: 999px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            display: inline-block;
+            margin-bottom: 1rem;
+        }
+        
+        .tier-recommended-badge {
+            position: absolute;
+            top: -12px;
+            right: 20px;
+            background: var(--accent-green);
+            color: var(--bg-primary);
+            padding: 4px 12px;
+            border-radius: 999px;
+            font-size: 0.65rem;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+        }
+        
+        .tier-price {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+        }
+        
+        .tier-features {
+            margin-bottom: 1.5rem;
+        }
+        
+        .tier-feature {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+        
+        .tier-ideal {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-align: center;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border-color);
+        }
     </style>
 </head>
 <body>
@@ -321,6 +406,7 @@
                 <div class="step-dot" data-step="2"></div>
                 <div class="step-dot" data-step="3"></div>
                 <div class="step-dot" data-step="4"></div>
+                <div class="step-dot" data-step="5"></div>
             </div>
             
             <!-- Step 1: Welcome -->
@@ -496,8 +582,155 @@
                 </p>
             </div>
             
-            <!-- Step 4: API Configuration -->
+            <!-- Step 3: Choose Your Plan -->
             <div class="step-content" id="step-3">
+                <h2 class="step-title">Choose Your Plan</h2>
+                <p class="step-description">
+                    All plans are currently FREE during our beta period! Choose the one that best fits your needs.
+                </p>
+                
+                <div class="tier-selection">
+                    <div class="tier-card" onclick="selectTier('starter')" data-tier="starter">
+                        <div class="tier-badge">STARTER</div>
+                        <div class="tier-price">
+                            <span style="text-decoration: line-through; opacity: 0.5;">$29/mo</span>
+                            <span style="color: var(--accent-green); font-weight: 700; margin-left: 8px;">FREE</span>
+                        </div>
+                        <div class="tier-features">
+                            <div class="tier-feature">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent-green)" stroke-width="2">
+                                    <polyline points="20 6 9 17 4 12"/>
+                                </svg>
+                                <span>3 Social Platforms</span>
+                            </div>
+                            <div class="tier-feature">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent-green)" stroke-width="2">
+                                    <polyline points="20 6 9 17 4 12"/>
+                                </svg>
+                                <span>100 Posts/Month</span>
+                            </div>
+                            <div class="tier-feature">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent-green)" stroke-width="2">
+                                    <polyline points="20 6 9 17 4 12"/>
+                                </svg>
+                                <span>50 AI Generations</span>
+                            </div>
+                            <div class="tier-feature">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent-green)" stroke-width="2">
+                                    <polyline points="20 6 9 17 4 12"/>
+                                </svg>
+                                <span>Basic Analytics</span>
+                            </div>
+                        </div>
+                        <div class="tier-ideal">Perfect for individuals and small businesses</div>
+                    </div>
+                    
+                    <div class="tier-card recommended" onclick="selectTier('professional')" data-tier="professional">
+                        <div class="tier-badge" style="background: var(--primary);">PROFESSIONAL</div>
+                        <div class="tier-recommended-badge">MOST POPULAR</div>
+                        <div class="tier-price">
+                            <span style="text-decoration: line-through; opacity: 0.5;">$79/mo</span>
+                            <span style="color: var(--accent-green); font-weight: 700; margin-left: 8px;">FREE</span>
+                        </div>
+                        <div class="tier-features">
+                            <div class="tier-feature">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent-green)" stroke-width="2">
+                                    <polyline points="20 6 9 17 4 12"/>
+                                </svg>
+                                <span>8 Social Platforms</span>
+                            </div>
+                            <div class="tier-feature">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent-green)" stroke-width="2">
+                                    <polyline points="20 6 9 17 4 12"/>
+                                </svg>
+                                <span>500 Posts/Month</span>
+                            </div>
+                            <div class="tier-feature">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent-green)" stroke-width="2">
+                                    <polyline points="20 6 9 17 4 12"/>
+                                </svg>
+                                <span>250 AI Generations</span>
+                            </div>
+                            <div class="tier-feature">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent-green)" stroke-width="2">
+                                    <polyline points="20 6 9 17 4 12"/>
+                                </svg>
+                                <span>Advanced Analytics</span>
+                            </div>
+                            <div class="tier-feature">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent-green)" stroke-width="2">
+                                    <polyline points="20 6 9 17 4 12"/>
+                                </svg>
+                                <span>3 Team Members</span>
+                            </div>
+                            <div class="tier-feature">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent-green)" stroke-width="2">
+                                    <polyline points="20 6 9 17 4 12"/>
+                                </svg>
+                                <span>Video Generation</span>
+                            </div>
+                        </div>
+                        <div class="tier-ideal">Ideal for growing businesses and agencies</div>
+                    </div>
+                    
+                    <div class="tier-card" onclick="selectTier('business')" data-tier="business">
+                        <div class="tier-badge" style="background: var(--accent-purple);">BUSINESS</div>
+                        <div class="tier-price">
+                            <span style="text-decoration: line-through; opacity: 0.5;">$149/mo</span>
+                            <span style="color: var(--accent-green); font-weight: 700; margin-left: 8px;">FREE</span>
+                        </div>
+                        <div class="tier-features">
+                            <div class="tier-feature">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent-green)" stroke-width="2">
+                                    <polyline points="20 6 9 17 4 12"/>
+                                </svg>
+                                <span>Unlimited Platforms</span>
+                            </div>
+                            <div class="tier-feature">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent-green)" stroke-width="2">
+                                    <polyline points="20 6 9 17 4 12"/>
+                                </svg>
+                                <span>2000 Posts/Month</span>
+                            </div>
+                            <div class="tier-feature">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent-green)" stroke-width="2">
+                                    <polyline points="20 6 9 17 4 12"/>
+                                </svg>
+                                <span>1000 AI Generations</span>
+                            </div>
+                            <div class="tier-feature">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent-green)" stroke-width="2">
+                                    <polyline points="20 6 9 17 4 12"/>
+                                </svg>
+                                <span>Premium Analytics</span>
+                            </div>
+                            <div class="tier-feature">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent-green)" stroke-width="2">
+                                    <polyline points="20 6 9 17 4 12"/>
+                                </svg>
+                                <span>10 Team Members</span>
+                            </div>
+                            <div class="tier-feature">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent-green)" stroke-width="2">
+                                    <polyline points="20 6 9 17 4 12"/>
+                                </svg>
+                                <span>Priority Support</span>
+                            </div>
+                        </div>
+                        <div class="tier-ideal">Best for established businesses with high volume</div>
+                    </div>
+                </div>
+                
+                <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: var(--radius-lg); padding: var(--space-md); margin-top: var(--space-lg); text-align: center;">
+                    <p style="color: var(--accent-green); font-weight: 600; margin: 0;">🎉 Beta Access Special</p>
+                    <p style="font-size: 0.875rem; color: var(--text-secondary); margin: 8px 0 0 0;">
+                        All features are unlocked and free during our beta period. No credit card required!
+                    </p>
+                </div>
+            </div>
+            
+            <!-- Step 4: API Configuration -->
+            <div class="step-content" id="step-4">
                 <h2 class="step-title">Supercharge with AI</h2>
                 <p class="step-description">
                     Connect your AI service to unlock advanced content generation features
@@ -539,7 +772,7 @@
             </div>
             
             <!-- Step 5: Completion -->
-            <div class="step-content" id="step-4">
+            <div class="step-content" id="step-5">
                 <div class="completion-animation">
                     <div class="checkmark">
                         <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3">
