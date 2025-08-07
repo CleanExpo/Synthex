@@ -1,0 +1,961 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SYNTHEX - Unified Marketing Platform</title>
+    <link rel="icon" type="image/png" href="/logo.png">
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary-blue: #007AFF;
+            --secondary-blue: #0051D5;
+            --accent-purple: #5856D6;
+            --accent-teal: #5AC8FA;
+            --success-green: #34C759;
+            --warning-orange: #FF9500;
+            --danger-red: #FF3B30;
+            
+            --bg-primary: #000000;
+            --bg-secondary: rgba(255, 255, 255, 0.02);
+            --bg-tertiary: rgba(255, 255, 255, 0.05);
+            --bg-elevated: rgba(255, 255, 255, 0.08);
+            
+            --text-primary: #FFFFFF;
+            --text-secondary: rgba(255, 255, 255, 0.85);
+            --text-tertiary: rgba(255, 255, 255, 0.6);
+            --text-quaternary: rgba(255, 255, 255, 0.4);
+            
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.37);
+            
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --transition-fast: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Inter', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            overflow: hidden;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* Loading Screen */
+        .loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--bg-primary);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            transition: opacity 0.5s ease;
+        }
+
+        .loading-screen.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .loading-logo {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, var(--primary-blue), var(--accent-teal));
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            font-weight: 800;
+            margin-bottom: 2rem;
+            animation: pulse 2s infinite;
+        }
+
+        .loading-text {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        .loading-subtitle {
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+        }
+
+        .loading-progress {
+            width: 200px;
+            height: 4px;
+            background: var(--bg-secondary);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .loading-progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary-blue), var(--accent-teal));
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        /* Main App Layout */
+        .app-container {
+            display: flex;
+            height: 100vh;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        .app-container.loaded {
+            opacity: 1;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 320px;
+            background: var(--bg-secondary);
+            backdrop-filter: blur(20px) saturate(180%);
+            border-right: 1px solid var(--glass-border);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .sidebar-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--glass-border);
+            background: var(--glass-bg);
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--primary-blue), var(--accent-teal));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 1.2rem;
+        }
+
+        .logo-text {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .user-tier-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.25rem 0.75rem;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 50px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .tier-basic { color: var(--text-secondary); }
+        .tier-pro { color: var(--warning-orange); }
+        .tier-enterprise { color: var(--accent-purple); }
+
+        /* Building Blocks Section */
+        .building-blocks {
+            flex: 1;
+            padding: 1rem;
+            overflow-y: auto;
+        }
+
+        .blocks-section {
+            margin-bottom: 2rem;
+        }
+
+        .section-title {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 1rem;
+        }
+
+        .blocks-grid {
+            display: grid;
+            gap: 0.5rem;
+        }
+
+        .building-block {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            cursor: grab;
+            transition: var(--transition-fast);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .building-block:hover {
+            background: var(--bg-tertiary);
+            transform: translateY(-2px);
+            box-shadow: var(--glass-shadow);
+        }
+
+        .building-block:active {
+            cursor: grabbing;
+            transform: scale(0.95);
+        }
+
+        .building-block.dragging {
+            opacity: 0.5;
+            transform: rotate(5deg);
+        }
+
+        .block-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            background: var(--gradient-accent, linear-gradient(135deg, var(--primary-blue), var(--accent-teal)));
+            color: white;
+        }
+
+        .block-content {
+            flex: 1;
+        }
+
+        .block-title {
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .block-description {
+            font-size: 0.75rem;
+            color: var(--text-tertiary);
+            line-height: 1.4;
+        }
+
+        .block-tier-lock {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            width: 16px;
+            height: 16px;
+            background: var(--warning-orange);
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.6rem;
+        }
+
+        /* Main Content Area */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* Top Bar */
+        .top-bar {
+            height: 60px;
+            background: var(--bg-secondary);
+            backdrop-filter: blur(20px) saturate(180%);
+            border-bottom: 1px solid var(--glass-border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 1.5rem;
+        }
+
+        .breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        .breadcrumb-separator {
+            opacity: 0.5;
+        }
+
+        .top-bar-actions {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .action-button {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 8px;
+            color: var(--text-primary);
+            text-decoration: none;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: var(--transition-fast);
+            cursor: pointer;
+        }
+
+        .action-button:hover {
+            background: var(--bg-tertiary);
+            transform: translateY(-1px);
+        }
+
+        .action-button.primary {
+            background: linear-gradient(135deg, var(--primary-blue), var(--secondary-blue));
+            border-color: var(--primary-blue);
+        }
+
+        .action-button.primary:hover {
+            box-shadow: 0 4px 20px rgba(0, 122, 255, 0.4);
+        }
+
+        /* Sandbox Area */
+        .sandbox {
+            flex: 1;
+            background: var(--bg-primary);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .sandbox-canvas {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            background: 
+                radial-gradient(circle at 25% 25%, rgba(0, 122, 255, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 75% 75%, rgba(88, 86, 214, 0.1) 0%, transparent 50%);
+        }
+
+        .drop-zone {
+            position: absolute;
+            inset: 2rem;
+            border: 2px dashed var(--glass-border);
+            border-radius: 16px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: var(--transition);
+            opacity: 0;
+        }
+
+        .drop-zone.active {
+            opacity: 1;
+            border-color: var(--primary-blue);
+            background: rgba(0, 122, 255, 0.05);
+        }
+
+        .drop-zone-content {
+            text-align: center;
+        }
+
+        .drop-zone-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        .drop-zone-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .drop-zone-subtitle {
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+        }
+
+        /* Canvas Elements */
+        .canvas-element {
+            position: absolute;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px) saturate(180%);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 1rem;
+            min-width: 200px;
+            cursor: move;
+            transition: var(--transition-fast);
+        }
+
+        .canvas-element:hover {
+            box-shadow: var(--glass-shadow);
+        }
+
+        .canvas-element.selected {
+            border-color: var(--primary-blue);
+            box-shadow: 0 0 0 2px rgba(0, 122, 255, 0.2);
+        }
+
+        .element-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+        }
+
+        .element-title {
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+
+        .element-controls {
+            display: flex;
+            gap: 0.25rem;
+        }
+
+        .control-button {
+            width: 24px;
+            height: 24px;
+            border-radius: 4px;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: var(--transition-fast);
+        }
+
+        .control-button:hover {
+            background: var(--bg-tertiary);
+        }
+
+        /* Content Input Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: var(--transition);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .modal {
+            width: 90%;
+            max-width: 800px;
+            max-height: 80vh;
+            background: var(--bg-secondary);
+            backdrop-filter: blur(30px) saturate(180%);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            overflow: hidden;
+            transform: scale(0.9) translateY(20px);
+            transition: var(--transition);
+        }
+
+        .modal-overlay.active .modal {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--glass-border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .modal-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+        }
+
+        .modal-close {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: var(--transition-fast);
+        }
+
+        .modal-close:hover {
+            background: var(--bg-tertiary);
+        }
+
+        .modal-content {
+            padding: 1.5rem;
+        }
+
+        /* Input Tabs */
+        .input-tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .input-tab {
+            padding: 0.5rem 1rem;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: var(--transition-fast);
+            font-size: 0.875rem;
+        }
+
+        .input-tab.active {
+            background: var(--primary-blue);
+            border-color: var(--primary-blue);
+            color: white;
+        }
+
+        .input-tab:hover:not(.active) {
+            background: var(--bg-tertiary);
+        }
+
+        .input-panel {
+            display: none;
+        }
+
+        .input-panel.active {
+            display: block;
+        }
+
+        .input-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .input-label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+            color: var(--text-secondary);
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 0.75rem;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 0.875rem;
+            transition: var(--transition-fast);
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: var(--primary-blue);
+            box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.1);
+        }
+
+        .input-field.textarea {
+            resize: vertical;
+            min-height: 120px;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .sidebar {
+                width: 280px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .app-container {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                height: 200px;
+                border-right: none;
+                border-bottom: 1px solid var(--glass-border);
+            }
+            
+            .building-blocks {
+                overflow-x: auto;
+            }
+            
+            .blocks-grid {
+                display: flex;
+                gap: 0.5rem;
+                min-width: max-content;
+            }
+        }
+
+        /* Animations */
+        .fade-in {
+            animation: fadeIn 0.5s ease forwards;
+        }
+
+        .slide-in-left {
+            animation: slideInLeft 0.5s ease forwards;
+        }
+
+        .slide-in-right {
+            animation: slideInRight 0.5s ease forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideInLeft {
+            from { opacity: 0; transform: translateX(-20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        @keyframes slideInRight {
+            from { opacity: 0; transform: translateX(20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div class="loading-screen" id="loadingScreen">
+        <div class="loading-logo">S</div>
+        <div class="loading-text">SYNTHEX</div>
+        <div class="loading-subtitle">Initializing your marketing workspace...</div>
+        <div class="loading-progress">
+            <div class="loading-progress-bar" id="loadingBar"></div>
+        </div>
+    </div>
+
+    <!-- Main App -->
+    <div class="app-container" id="appContainer">
+        <!-- Sidebar with Building Blocks -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo-container">
+                    <div class="logo-icon">S</div>
+                    <div class="logo-text">SYNTHEX</div>
+                </div>
+                <div class="user-tier-badge tier-pro" id="userTierBadge">
+                    <span>⭐</span>
+                    <span id="userTier">Pro</span>
+                </div>
+            </div>
+
+            <div class="building-blocks">
+                <!-- Content Generation Blocks -->
+                <div class="blocks-section">
+                    <div class="section-title">Content Generation</div>
+                    <div class="blocks-grid">
+                        <div class="building-block" data-type="text-generator" draggable="true">
+                            <div class="block-icon">📝</div>
+                            <div class="block-content">
+                                <div class="block-title">Text Generator</div>
+                                <div class="block-description">Create compelling copy for any platform</div>
+                            </div>
+                        </div>
+                        <div class="building-block" data-type="image-creator" draggable="true">
+                            <div class="block-icon">🎨</div>
+                            <div class="block-content">
+                                <div class="block-title">Image Creator</div>
+                                <div class="block-description">Generate stunning visuals with AI</div>
+                            </div>
+                        </div>
+                        <div class="building-block" data-type="video-script" draggable="true">
+                            <div class="block-icon">🎬</div>
+                            <div class="block-content">
+                                <div class="block-title">Video Script</div>
+                                <div class="block-description">Write engaging video scripts</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Platform Optimization -->
+                <div class="blocks-section">
+                    <div class="section-title">Platform Optimization</div>
+                    <div class="blocks-grid">
+                        <div class="building-block" data-type="instagram-optimizer" draggable="true">
+                            <div class="block-icon">📸</div>
+                            <div class="block-content">
+                                <div class="block-title">Instagram Optimizer</div>
+                                <div class="block-description">Optimize for Instagram's algorithm</div>
+                            </div>
+                        </div>
+                        <div class="building-block" data-type="tiktok-optimizer" draggable="true">
+                            <div class="block-icon">🎵</div>
+                            <div class="block-content">
+                                <div class="block-title">TikTok Optimizer</div>
+                                <div class="block-description">Create viral TikTok content</div>
+                            </div>
+                        </div>
+                        <div class="building-block" data-type="linkedin-optimizer" draggable="true">
+                            <div class="block-icon">💼</div>
+                            <div class="block-content">
+                                <div class="block-title">LinkedIn Optimizer</div>
+                                <div class="block-description">Professional content for LinkedIn</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Analytics & Insights -->
+                <div class="blocks-section">
+                    <div class="section-title">Analytics & Insights</div>
+                    <div class="blocks-grid">
+                        <div class="building-block" data-type="performance-tracker" draggable="true">
+                            <div class="block-icon">📊</div>
+                            <div class="block-content">
+                                <div class="block-title">Performance Tracker</div>
+                                <div class="block-description">Monitor campaign performance</div>
+                            </div>
+                        </div>
+                        <div class="building-block" data-type="audience-analyzer" draggable="true">
+                            <div class="block-icon">👥</div>
+                            <div class="block-content">
+                                <div class="block-title">Audience Analyzer</div>
+                                <div class="block-description">Understand your audience better</div>
+                            </div>
+                        </div>
+                        <div class="building-block" data-type="trend-predictor" draggable="true">
+                            <div class="block-icon">🔮</div>
+                            <div class="block-content">
+                                <div class="block-title">Trend Predictor</div>
+                                <div class="block-description">Predict upcoming trends</div>
+                            </div>
+                            <div class="block-tier-lock">🔒</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Automation -->
+                <div class="blocks-section">
+                    <div class="section-title">Automation</div>
+                    <div class="blocks-grid">
+                        <div class="building-block" data-type="scheduler" draggable="true">
+                            <div class="block-icon">⏰</div>
+                            <div class="block-content">
+                                <div class="block-title">Post Scheduler</div>
+                                <div class="block-description">Schedule posts across platforms</div>
+                            </div>
+                        </div>
+                        <div class="building-block" data-type="workflow-automation" draggable="true">
+                            <div class="block-icon">⚡</div>
+                            <div class="block-content">
+                                <div class="block-title">Workflow Automation</div>
+                                <div class="block-description">Automate repetitive tasks</div>
+                            </div>
+                            <div class="block-tier-lock">🔒</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content Area -->
+        <div class="main-content">
+            <!-- Top Bar -->
+            <div class="top-bar">
+                <div class="breadcrumb">
+                    <span>Workspace</span>
+                    <span class="breadcrumb-separator">/</span>
+                    <span>New Project</span>
+                </div>
+                <div class="top-bar-actions">
+                    <button class="action-button" onclick="openContentInput()">
+                        <span>📥</span>
+                        <span>Input Content</span>
+                    </button>
+                    <button class="action-button" onclick="saveProject()">
+                        <span>💾</span>
+                        <span>Save</span>
+                    </button>
+                    <button class="action-button primary" onclick="generateCampaign()">
+                        <span>🚀</span>
+                        <span>Generate Campaign</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Sandbox -->
+            <div class="sandbox">
+                <div class="sandbox-canvas" id="sandboxCanvas">
+                    <div class="drop-zone" id="dropZone">
+                        <div class="drop-zone-content">
+                            <div class="drop-zone-icon">🎯</div>
+                            <div class="drop-zone-title">Build Your Marketing Campaign</div>
+                            <div class="drop-zone-subtitle">Drag and drop building blocks to create your perfect marketing workflow</div>
+                            <button class="action-button primary" onclick="openContentInput()">
+                                <span>🎬</span>
+                                <span>Start with Content Input</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Content Input Modal -->
+    <div class="modal-overlay" id="contentInputModal">
+        <div class="modal">
+            <div class="modal-header">
+                <div class="modal-title">Content Input - Establish Your Brand Voice</div>
+                <button class="modal-close" onclick="closeContentInput()">
+                    <span>✕</span>
+                </button>
+            </div>
+            <div class="modal-content">
+                <div class="input-tabs">
+                    <div class="input-tab active" onclick="switchInputTab('text')">Text/Ideas</div>
+                    <div class="input-tab" onclick="switchInputTab('video')">Video</div>
+                    <div class="input-tab" onclick="switchInputTab('youtube')">YouTube</div>
+                    <div class="input-tab" onclick="switchInputTab('podcast')">Podcast</div>
+                    <div class="input-tab" onclick="switchInputTab('url')">Website/URL</div>
+                </div>
+
+                <!-- Text Input Panel -->
+                <div class="input-panel active" id="textPanel">
+                    <div class="input-group">
+                        <label class="input-label">Your Ideas or Brand Voice</label>
+                        <textarea class="input-field textarea" placeholder="Describe your brand, products, or ideas. The AI will analyze your writing style and create content that matches your voice..."></textarea>
+                    </div>
+                    <div class="input-group">
+                        <label class="input-label">Target Audience</label>
+                        <input type="text" class="input-field" placeholder="e.g., Tech entrepreneurs, Fashion enthusiasts, Small business owners">
+                    </div>
+                    <div class="input-group">
+                        <label class="input-label">Key Goals</label>
+                        <input type="text" class="input-field" placeholder="e.g., Increase brand awareness, Drive sales, Build community">
+                    </div>
+                </div>
+
+                <!-- Video Input Panel -->
+                <div class="input-panel" id="videoPanel">
+                    <div class="input-group">
+                        <label class="input-label">Upload Video</label>
+                        <div class="file-upload-zone" onclick="document.getElementById('videoUpload').click()">
+                            <input type="file" id="videoUpload" style="display: none;" accept="video/*">
+                            <div>📹 Click to upload video or drag and drop</div>
+                            <small>AI will analyze your speaking style, tone, and content</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- YouTube Input Panel -->
+                <div class="input-panel" id="youtubePanel">
+                    <div class="input-group">
+                        <label class="input-label">YouTube Channel or Video URL</label>
+                        <input type="url" class="input-field" placeholder="https://youtube.com/@yourchannel or https://youtu.be/videoid">
+                    </div>
+                    <div class="input-group">
+                        <label class="input-label">Analysis Type</label>
+                        <select class="input-field">
+                            <option>Analyze entire channel</option>
+                            <option>Analyze specific video</option>
+                            <option>Analyze recent uploads only</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Podcast Input Panel -->
+                <div class="input-panel" id="podcastPanel">
+                    <div class="input-group">
+                        <label class="input-label">Podcast URL or Upload Audio</label>
+                        <input type="url" class="input-field" placeholder="Podcast RSS feed, Spotify link, or audio file URL">
+                    </div>
+                    <div class="input-group">
+                        <label class="input-label">Upload Audio File</label>
+                        <div class="file-upload-zone" onclick="document.getElementById('audioUpload').click()">
+                            <input type="file" id="audioUpload" style="display: none;" accept="audio/*">
+                            <div>🎙️ Click to upload audio or drag and drop</div>
+                            <small>AI will analyze your speaking patterns and content style</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- URL Input Panel -->
+                <div class="input-panel" id="urlPanel">
+                    <div class="input-group">
+                        <label class="input-label">Website or Article URL</label>
+                        <input type="url" class="input-field" placeholder="https://yourwebsite.com or article URL">
+                    </div>
+                    <div class="input-group">
+                        <label class="input-label">Content Type</label>
+                        <select class="input-field">
+                            <option>Company website</option>
+                            <option>Blog post</option>
+                            <option>Product page</option>
+                            <option>About page</option>
+                            <option>Social media profile</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div style="margin-top: 2rem; display: flex; gap: 1rem; justify-content: flex-end;">
+                    <button class="action-button" onclick="closeContentInput()">Cancel</button>
+                    <button class="action-button primary" onclick="analyzeContent()">
+                        <span>🧠</span>
+                        <span>Analyze & Build Persona</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/unified-app.js"></script>
+</body>
+</html>
