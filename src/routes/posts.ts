@@ -317,4 +317,136 @@ router.put('/:id/publish-status', async (req: Request, res: Response) => {
   }
 });
 
+/**
+ * @route   POST /api/posts/platforms/configure
+ * @desc    Configure platform credentials for user
+ * @access  Private
+ */
+router.post('/platforms/configure', async (req: Request, res: Response) => {
+  try {
+    const { platform, config } = req.body;
+    
+    if (!platform || !config) {
+      return apiResponse.error(res, 'Platform and config are required', 400);
+    }
+    
+    const success = await PostService.configurePlatform(req.user!.id, platform, config);
+    
+    if (success) {
+      return apiResponse.success(res, { configured: true }, 'Platform configured successfully');
+    } else {
+      return apiResponse.error(res, 'Failed to configure platform');
+    }
+  } catch (error) {
+    console.error('Error configuring platform:', error);
+    return apiResponse.error(res, 'Failed to configure platform');
+  }
+});
+
+/**
+ * @route   GET /api/posts/platforms/test/:platform
+ * @desc    Test platform connection
+ * @access  Private
+ */
+router.get('/platforms/test/:platform', async (req: Request, res: Response) => {
+  try {
+    const { platform } = req.params;
+    
+    const result = await PostService.testPlatformConnection(req.user!.id, platform);
+    
+    if (result.success) {
+      return apiResponse.success(res, { connected: true }, 'Platform connection successful');
+    } else {
+      return apiResponse.error(res, result.error || 'Connection test failed', 400);
+    }
+  } catch (error) {
+    console.error('Error testing platform connection:', error);
+    return apiResponse.error(res, 'Failed to test platform connection');
+  }
+});
+
+/**
+ * @route   POST /api/posts/:id/publish-to-platform
+ * @desc    Publish post directly to platform
+ * @access  Private
+ */
+router.post('/:id/publish-to-platform', async (req: Request, res: Response) => {
+  try {
+    const result = await PostService.publishToPlatform(req.params.id, req.user!.id);
+    
+    if (result.success) {
+      return apiResponse.success(res, { 
+        published: true, 
+        url: result.url 
+      }, 'Post published to platform successfully');
+    } else {
+      return apiResponse.error(res, result.error || 'Failed to publish to platform');
+    }
+  } catch (error) {
+    console.error('Error publishing to platform:', error);
+    return apiResponse.error(res, 'Failed to publish to platform');
+  }
+});
+
+/**
+ * @route   POST /api/posts/:id/sync-analytics
+ * @desc    Sync analytics from platform
+ * @access  Private
+ */
+router.post('/:id/sync-analytics', async (req: Request, res: Response) => {
+  try {
+    const result = await PostService.syncPlatformAnalytics(req.params.id, req.user!.id);
+    
+    if (result.success) {
+      return apiResponse.success(res, result.analytics, 'Analytics synced successfully');
+    } else {
+      return apiResponse.error(res, result.error || 'Failed to sync analytics');
+    }
+  } catch (error) {
+    console.error('Error syncing analytics:', error);
+    return apiResponse.error(res, 'Failed to sync analytics');
+  }
+});
+
+/**
+ * @route   POST /api/posts/analytics/bulk-sync
+ * @desc    Bulk sync analytics for all user's published posts
+ * @access  Private
+ */
+router.post('/analytics/bulk-sync', async (req: Request, res: Response) => {
+  try {
+    const result = await PostService.bulkSyncAnalytics(req.user!.id);
+    
+    return apiResponse.success(res, result, `Synced ${result.synced} posts, ${result.failed} failed`);
+  } catch (error) {
+    console.error('Error bulk syncing analytics:', error);
+    return apiResponse.error(res, 'Failed to bulk sync analytics');
+  }
+});
+
+/**
+ * @route   GET /api/posts/platforms/supported
+ * @desc    Get list of supported platforms
+ * @access  Private
+ */
+router.get('/platforms/supported', async (req: Request, res: Response) => {
+  try {
+    const supported = PostService.getSupportedPlatforms();
+    const implemented = PostService.getImplementedPlatforms();
+    
+    return apiResponse.success(res, {
+      supported,
+      implemented,
+      status: supported.map(platform => ({
+        platform,
+        implemented: implemented.includes(platform),
+        ready: implemented.includes(platform)
+      }))
+    }, 'Platform information retrieved successfully');
+  } catch (error) {
+    console.error('Error getting platform information:', error);
+    return apiResponse.error(res, 'Failed to get platform information');
+  }
+});
+
 export default router;

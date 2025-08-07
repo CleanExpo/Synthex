@@ -1,6 +1,9 @@
 import { type Post } from '@prisma/client';
 import { z } from 'zod';
 import { prisma } from '../lib/prisma';
+import { platformFactory } from './platforms/platform-factory';
+import { BasePlatformPost, PlatformConfig } from './platforms/base-platform';
+import NotificationService from './notification';
 
 // Validation schemas
 export const CreatePostSchema = z.object({
@@ -600,6 +603,315 @@ export class PostService {
         }
       }
     });
+  }
+
+  /**
+   * Configure platform credentials for a user
+   */
+  static async configurePlatform(
+    userId: string, 
+    platform: string, 
+    config: PlatformConfig
+  ): Promise<boolean> {
+    try {
+      // Test the platform connection
+      const platformService = platformFactory.createPlatform(platform, config);
+      
+      if (!platformService) {
+        throw new Error(`Platform ${platform} not supported`);
+      }
+
+      const isValid = await platformService.validateConfig();
+      
+      if (!isValid) {
+        throw new Error('Invalid platform configuration');
+      }
+
+      // Store configuration securely (in production, encrypt these values)
+      // For now, we'll store in metadata - in production use a dedicated table
+      await (prisma as any).user.update({
+        where: { id: userId },
+        data: {
+          metadata: {
+            platformConfigs: {
+              [platform]: config
+            }
+          }
+        }
+      });
+
+      // Create success notification
+      await NotificationService.createPlatformNotification(
+        userId,
+        platform,
+        'configure',
+        true
+      );
+
+      return true;
+    } catch (error) {
+      console.error('Failed to configure platform:', error);
+      
+      // Create error notification
+      await NotificationService.createPlatformNotification(
+        userId,
+        platform,
+        'configure',
+        false,
+        { error: error instanceof Error ? error.message : 'Unknown error' }
+      );
+      
+      return false;
+    }
+  }
+
+  /**
+   * Test platform connection
+   */
+  static async testPlatformConnection(
+    userId: string, 
+    platform: string
+  ): Promise<{ success: boolean; error?: string }> {
+    try {
+      const config = await this.getPlatformConfig(userId, platform);
+      
+      if (!config) {
+        return { success: false, error: 'Platform not configured' };
+      }
+
+      const platformService = platformFactory.createPlatform(platform, config);
+      
+      if (!platformService) {
+        return { success: false, error: 'Platform not supported' };
+      }
+
+      const isConnected = await platformService.testConnection();
+      
+      return { 
+        success: isConnected, 
+        error: isConnected ? undefined : 'Connection test failed' 
+      };
+    } catch (error) {
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Unknown error' 
+      };
+    }
+  }
+
+  /**
+   * Publish post directly to platform
+   */
+  static async publishToPlatform(
+    id: string, 
+    userId: string
+  ): Promise<{ success: boolean; url?: string; error?: string }> {
+    try {
+      // Get the post
+      const post = await this.getById(id, userId);
+      
+      if (!post) {
+        return { success: false, error: 'Post not found' };
+      }
+
+      // Get platform configuration
+      const config = await this.getPlatformConfig(userId, post.platform);
+      
+      if (!config) {
+        return { success: false, error: `Platform ${post.platform} not configured` };
+      }
+
+      // Create platform service
+      const platformService = platformFactory.createPlatform(post.platform, config);
+      
+      if (!platformService) {
+        return { success: false, error: `Platform ${post.platform} not supported` };
+      }
+
+      // Prepare post data
+      const platformPost: BasePlatformPost = {
+        content: post.content,
+        mediaUrls: (post.metadata as any)?.mediaUrls || [],
+        scheduledAt: post.scheduledAt || undefined
+      };
+
+      // Publish to platform
+      const result = await platformService.publishPost(platformPost);
+      
+      if (result.success) {
+        // Update post with platform data
+        await this.update(id, userId, {
+          status: 'published',
+          metadata: {
+            ...(post.metadata as any || {}),
+            platformPostId: result.platformPostId,
+            platformUrl: result.url,
+            publishedAt: new Date()
+          }
+        });
+
+        await this.markAsPublished(id);
+      } else {
+        // Mark as failed
+        await this.markAsFailed(id, result.error);
+      }
+
+      return {
+        success: result.success,
+        url: result.url,
+        error: result.error
+      };
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      await this.markAsFailed(id, errorMessage);
+      
+      return { 
+        success: false, 
+        error: errorMessage 
+      };
+    }
+  }
+
+  /**
+   * Sync analytics from platform
+   */
+  static async syncPlatformAnalytics(
+    id: string, 
+    userId: string
+  ): Promise<{ success: boolean; analytics?: any; error?: string }> {
+    try {
+      const post = await this.getById(id, userId);
+      
+      if (!post) {
+        return { success: false, error: 'Post not found' };
+      }
+
+      const platformPostId = (post.metadata as any)?.platformPostId;
+      
+      if (!platformPostId) {
+        return { success: false, error: 'Post not published to platform' };
+      }
+
+      const config = await this.getPlatformConfig(userId, post.platform);
+      
+      if (!config) {
+        return { success: false, error: `Platform ${post.platform} not configured` };
+      }
+
+      const platformService = platformFactory.createPlatform(post.platform, config);
+      
+      if (!platformService) {
+        return { success: false, error: `Platform ${post.platform} not supported` };
+      }
+
+      const analyticsResult = await platformService.getAnalytics(platformPostId);
+      
+      if (analyticsResult.success && analyticsResult.analytics) {
+        // Update post analytics
+        const updatedPost = await this.updateAnalytics(id, {
+          impressions: analyticsResult.analytics.impressions,
+          engagement: analyticsResult.analytics.likes + analyticsResult.analytics.shares + analyticsResult.analytics.comments,
+          clicks: analyticsResult.analytics.clicks,
+          likes: analyticsResult.analytics.likes,
+          shares: analyticsResult.analytics.shares,
+          comments: analyticsResult.analytics.comments,
+          reach: analyticsResult.analytics.reach,
+          lastUpdated: new Date()
+        });
+
+        return {
+          success: true,
+          analytics: updatedPost.analytics
+        };
+      } else {
+        return {
+          success: false,
+          error: analyticsResult.error || 'Failed to get analytics'
+        };
+      }
+    } catch (error) {
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Unknown error' 
+      };
+    }
+  }
+
+  /**
+   * Get platform configuration for user
+   */
+  private static async getPlatformConfig(
+    userId: string, 
+    platform: string
+  ): Promise<PlatformConfig | null> {
+    try {
+      const user = await (prisma as any).user.findUnique({
+        where: { id: userId },
+        select: { metadata: true }
+      });
+
+      const platformConfigs = (user?.metadata as any)?.platformConfigs;
+      return platformConfigs?.[platform] || null;
+    } catch (error) {
+      console.error('Failed to get platform config:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Get supported platforms
+   */
+  static getSupportedPlatforms(): string[] {
+    return platformFactory.getSupportedPlatforms();
+  }
+
+  /**
+   * Get implemented platforms (ready for use)
+   */
+  static getImplementedPlatforms(): string[] {
+    return platformFactory.getImplementedPlatforms();
+  }
+
+  /**
+   * Bulk sync analytics for user's published posts
+   */
+  static async bulkSyncAnalytics(userId: string): Promise<{
+    synced: number;
+    failed: number;
+    errors: string[];
+  }> {
+    const publishedPosts = await (prisma as any).post.findMany({
+      where: {
+        campaign: { userId },
+        status: 'published',
+        metadata: {
+          path: ['platformPostId'],
+          not: null
+        }
+      }
+    });
+
+    let synced = 0;
+    let failed = 0;
+    const errors: string[] = [];
+
+    for (const post of publishedPosts) {
+      try {
+        const result = await this.syncPlatformAnalytics(post.id, userId);
+        
+        if (result.success) {
+          synced++;
+        } else {
+          failed++;
+          errors.push(`${post.platform}: ${result.error}`);
+        }
+      } catch (error) {
+        failed++;
+        errors.push(`${post.platform}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      }
+    }
+
+    return { synced, failed, errors };
   }
 }
 

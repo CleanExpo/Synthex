@@ -1,250 +1,281 @@
 import { Router, Request, Response } from 'express';
-import { authenticateToken, AuthenticatedRequest } from '../middleware/auth';
-import { prisma } from '../lib/prisma';
+import { authenticateUser } from '../middleware/auth';
+import NotificationService, { 
+  CreateNotificationSchema,
+  UpdateNotificationSchema, 
+  NotificationFiltersSchema
+} from '../services/notification';
+import { apiResponse } from '../utils/apiResponse';
+import { z } from 'zod';
 
 const router = Router();
 
-// Get notifications
-router.get('/', authenticateToken, async (req: Request, res: Response) => {
+// All routes require authentication
+router.use(authenticateUser);
+
+/**
+ * @route   GET /api/v1/notifications
+ * @desc    Get all notifications for the authenticated user
+ * @access  Private
+ */
+router.get('/', async (req: Request, res: Response) => {
   try {
-    const user = (req as AuthenticatedRequest).user;
-    if (!user) {
-      return res.status(401).json({ error: 'Unauthorized' });
+    const filters: any = {};
+    
+    if (req.query.type && ['info', 'success', 'warning', 'error', 'platform', 'system'].includes(req.query.type as string)) {
+      filters.type = req.query.type;
     }
-
-    const { since, limit = 50, unreadOnly } = req.query;
-
-    // For now, return sample notifications
-    const notifications = [
-      {
-        id: '1',
-        type: 'success',
-        title: 'Campaign Published Successfully!',
-        message: 'Your "Summer Sale 2024" campaign is now live across all platforms.',
-        read: false,
-        createdAt: new Date(Date.now() - 5 * 60000).toISOString(),
-        data: { campaignId: '1' }
-      },
-      {
-        id: '2',
-        type: 'analytics',
-        title: 'Weekly Performance Report Ready',
-        message: 'Your weekly analytics report is ready. Total reach increased by 23%!',
-        read: false,
-        createdAt: new Date(Date.now() - 2 * 3600000).toISOString()
-      },
-      {
-        id: '3',
-        type: 'warning',
-        title: 'Content Scheduling Reminder',
-        message: 'You have 3 posts scheduled for tomorrow. Review them before they go live.',
-        read: true,
-        createdAt: new Date(Date.now() - 24 * 3600000).toISOString()
-      },
-      {
-        id: '4',
-        type: 'success',
-        title: 'Milestone Reached! 🎉',
-        message: 'Your Instagram account just hit 10K followers!',
-        read: true,
-        createdAt: new Date(Date.now() - 2 * 24 * 3600000).toISOString()
-      },
-      {
-        id: '5',
-        type: 'content',
-        title: 'AI Content Generated',
-        message: '5 new content variations are ready for your review.',
-        read: true,
-        createdAt: new Date(Date.now() - 3 * 24 * 3600000).toISOString()
-      }
-    ];
-
-    let filteredNotifications = notifications;
-
-    // Filter by unread only
-    if (unreadOnly === 'true') {
-      filteredNotifications = filteredNotifications.filter(n => !n.read);
+    
+    if (req.query.read === 'true') filters.read = true;
+    if (req.query.read === 'false') filters.read = false;
+    
+    if (req.query.priority && ['low', 'medium', 'high', 'critical'].includes(req.query.priority as string)) {
+      filters.priority = req.query.priority;
     }
-
-    // Filter by since timestamp
-    if (since) {
-      const sinceDate = new Date(since as string);
-      filteredNotifications = filteredNotifications.filter(n => 
-        new Date(n.createdAt) > sinceDate
-      );
+    
+    if (req.query.page) filters.page = parseInt(req.query.page as string);
+    if (req.query.limit) filters.limit = parseInt(req.query.limit as string);
+    
+    if (req.query.sortBy && ['createdAt', 'priority', 'type'].includes(req.query.sortBy as string)) {
+      filters.sortBy = req.query.sortBy;
     }
-
-    // Limit results
-    filteredNotifications = filteredNotifications.slice(0, parseInt(limit as string));
-
-    res.json({
-      data: filteredNotifications,
-      unreadCount: notifications.filter(n => !n.read).length
-    });
+    
+    if (req.query.sortOrder && ['asc', 'desc'].includes(req.query.sortOrder as string)) {
+      filters.sortOrder = req.query.sortOrder;
+    }
+    
+    const result = await NotificationService.getUserNotifications(req.user!.id, filters);
+    
+    return apiResponse.success(res, result, 'Notifications retrieved successfully');
   } catch (error) {
-    console.error('Get notifications error:', error);
-    res.status(500).json({ error: 'Failed to get notifications' });
+    if (error instanceof z.ZodError) {
+      return apiResponse.validationError(res, error.errors);
+    }
+    console.error('Error fetching notifications:', error);
+    return apiResponse.error(res, 'Failed to fetch notifications');
   }
 });
 
-// Mark notification as read
-router.put('/:id/read', authenticateToken, async (req: Request, res: Response) => {
+/**
+ * @route   POST /api/v1/notifications
+ * @desc    Create a new notification (admin only)
+ * @access  Private
+ */
+router.post('/', async (req: Request, res: Response) => {
   try {
-    const user = (req as AuthenticatedRequest).user;
-    if (!user) {
-      return res.status(401).json({ error: 'Unauthorized' });
-    }
-
-    const { id } = req.params;
-
-    // TODO: Update in database
-    res.json({
-      message: 'Notification marked as read',
-      data: { id, read: true }
-    });
+    // For now, allow users to create notifications for themselves
+    // In production, this might be restricted to admin users
+    const notification = await NotificationService.create(req.user!.id, req.body);
+    
+    return apiResponse.created(res, notification, 'Notification created successfully');
   } catch (error) {
-    console.error('Mark notification as read error:', error);
-    res.status(500).json({ error: 'Failed to mark notification as read' });
+    if (error instanceof z.ZodError) {
+      return apiResponse.validationError(res, error.errors);
+    }
+    console.error('Error creating notification:', error);
+    return apiResponse.error(res, 'Failed to create notification');
   }
 });
 
-// Mark all notifications as read
-router.put('/read-all', authenticateToken, async (req: Request, res: Response) => {
+/**
+ * @route   GET /api/v1/notifications/stats
+ * @desc    Get notification statistics for the user
+ * @access  Private
+ */
+router.get('/stats', async (req: Request, res: Response) => {
   try {
-    const user = (req as AuthenticatedRequest).user;
-    if (!user) {
-      return res.status(401).json({ error: 'Unauthorized' });
-    }
-
-    // TODO: Update all notifications in database
-    res.json({
-      message: 'All notifications marked as read'
-    });
+    const stats = await NotificationService.getStats(req.user!.id);
+    return apiResponse.success(res, stats, 'Notification statistics retrieved successfully');
   } catch (error) {
-    console.error('Mark all as read error:', error);
-    res.status(500).json({ error: 'Failed to mark all notifications as read' });
+    console.error('Error fetching notification stats:', error);
+    return apiResponse.error(res, 'Failed to fetch notification statistics');
   }
 });
 
-// Create notification (internal use)
-export async function createNotification(params: {
-  userId: string;
-  type: 'info' | 'success' | 'warning' | 'error' | 'campaign' | 'content' | 'analytics';
-  title: string;
-  message: string;
-  data?: any;
-}) {
-  // TODO: Implement actual notification creation in database
-  console.log('Creating notification:', params);
-  
-  // In a real implementation, this would:
-  // 1. Create notification in database
-  // 2. Send real-time update via WebSocket/SSE
-  // 3. Send push notification if enabled
-  // 4. Send email notification if enabled
-}
-
-// Performance monitoring functions
-export async function checkCampaignPerformance() {
+/**
+ * @route   GET /api/v1/notifications/:id
+ * @desc    Get a single notification by ID
+ * @access  Private
+ */
+router.get('/:id', async (req: Request, res: Response) => {
   try {
-    // Get all active campaigns
-    const campaigns = await (prisma as any).campaign.findMany({
-      where: { status: 'active' },
-      include: { user: true }
-    });
-
-    for (const campaign of campaigns) {
-      if (campaign.analytics) {
-        const analytics = campaign.analytics as any;
-        
-        // Check for high engagement
-        if (analytics.engagement > 10) {
-          await createNotification({
-            userId: campaign.userId,
-            type: 'success',
-            title: 'High Engagement Alert! 🎉',
-            message: `Your campaign "${campaign.name}" is performing exceptionally well with ${analytics.engagement}% engagement rate!`,
-            data: { campaignId: campaign.id }
-          });
-        }
-        
-        // Check for milestones
-        if (analytics.totalReach >= 10000 && analytics.totalReach < 10100) {
-          await createNotification({
-            userId: campaign.userId,
-            type: 'success',
-            title: 'Milestone Reached!',
-            message: `"${campaign.name}" just reached 10K people!`,
-            data: { campaignId: campaign.id }
-          });
-        }
-        
-        // Check for low performance
-        if (analytics.engagement < 2 && analytics.totalReach > 1000) {
-          await createNotification({
-            userId: campaign.userId,
-            type: 'warning',
-            title: 'Low Engagement Warning',
-            message: `Campaign "${campaign.name}" has low engagement (${analytics.engagement}%). Consider optimizing your content.`,
-            data: { campaignId: campaign.id }
-          });
-        }
-      }
+    const notification = await NotificationService.getById(req.params.id, req.user!.id);
+    
+    if (!notification) {
+      return apiResponse.notFound(res, 'Notification not found');
     }
+    
+    return apiResponse.success(res, notification, 'Notification retrieved successfully');
   } catch (error) {
-    console.error('Campaign performance check error:', error);
+    console.error('Error fetching notification:', error);
+    return apiResponse.error(res, 'Failed to fetch notification');
   }
-}
+});
 
-// Schedule reminder notifications
-export async function checkScheduledPosts() {
+/**
+ * @route   PUT /api/v1/notifications/:id
+ * @desc    Update a notification (mark as read, archive, etc.)
+ * @access  Private
+ */
+router.put('/:id', async (req: Request, res: Response) => {
   try {
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    tomorrow.setHours(0, 0, 0, 0);
+    const notification = await NotificationService.update(
+      req.params.id,
+      req.user!.id,
+      req.body
+    );
     
-    const dayAfter = new Date(tomorrow);
-    dayAfter.setDate(dayAfter.getDate() + 1);
-    
-    // Get posts scheduled for tomorrow
-    const posts = await (prisma as any).post.findMany({
-      where: {
-        status: 'scheduled',
-        scheduledAt: {
-          gte: tomorrow,
-          lt: dayAfter
-        }
-      },
-      include: {
-        campaign: {
-          include: { user: true }
-        }
-      }
-    });
-    
-    // Group by user
-    const postsByUser = posts.reduce((acc: Record<string, any[]>, post: any) => {
-      const userId = post.campaign.userId;
-      if (!acc[userId]) acc[userId] = [];
-      acc[userId].push(post);
-      return acc;
-    }, {} as Record<string, any[]>);
-    
-    // Send notifications
-    for (const [userId, userPosts] of Object.entries(postsByUser)) {
-      if (Array.isArray(userPosts)) {
-        await createNotification({
-          userId,
-          type: 'info',
-          title: 'Content Scheduling Reminder',
-          message: `You have ${userPosts.length} posts scheduled for tomorrow. Review them before they go live.`,
-          data: { posts: userPosts.map((p: any) => p.id) }
-        });
-      }
-    }
+    return apiResponse.success(res, notification, 'Notification updated successfully');
   } catch (error) {
-    console.error('Scheduled posts check error:', error);
+    if (error instanceof z.ZodError) {
+      return apiResponse.validationError(res, error.errors);
+    }
+    if ((error as Error).message === 'Notification not found') {
+      return apiResponse.notFound(res, 'Notification not found');
+    }
+    console.error('Error updating notification:', error);
+    return apiResponse.error(res, 'Failed to update notification');
   }
-}
+});
+
+/**
+ * @route   PUT /api/v1/notifications/:id/read
+ * @desc    Mark a notification as read
+ * @access  Private
+ */
+router.put('/:id/read', async (req: Request, res: Response) => {
+  try {
+    const notification = await NotificationService.markAsRead(req.params.id, req.user!.id);
+    return apiResponse.success(res, notification, 'Notification marked as read');
+  } catch (error) {
+    if ((error as Error).message === 'Notification not found') {
+      return apiResponse.notFound(res, 'Notification not found');
+    }
+    console.error('Error marking notification as read:', error);
+    return apiResponse.error(res, 'Failed to mark notification as read');
+  }
+});
+
+/**
+ * @route   PUT /api/v1/notifications/read-all
+ * @desc    Mark all notifications as read
+ * @access  Private
+ */
+router.put('/read-all', async (req: Request, res: Response) => {
+  try {
+    const count = await NotificationService.markAllAsRead(req.user!.id);
+    return apiResponse.success(res, { count }, `${count} notifications marked as read`);
+  } catch (error) {
+    console.error('Error marking all notifications as read:', error);
+    return apiResponse.error(res, 'Failed to mark notifications as read');
+  }
+});
+
+/**
+ * @route   PUT /api/v1/notifications/:id/archive
+ * @desc    Archive a notification
+ * @access  Private
+ */
+router.put('/:id/archive', async (req: Request, res: Response) => {
+  try {
+    const notification = await NotificationService.archive(req.params.id, req.user!.id);
+    return apiResponse.success(res, notification, 'Notification archived');
+  } catch (error) {
+    if ((error as Error).message === 'Notification not found') {
+      return apiResponse.notFound(res, 'Notification not found');
+    }
+    console.error('Error archiving notification:', error);
+    return apiResponse.error(res, 'Failed to archive notification');
+  }
+});
+
+/**
+ * @route   DELETE /api/v1/notifications/:id
+ * @desc    Delete a notification
+ * @access  Private
+ */
+router.delete('/:id', async (req: Request, res: Response) => {
+  try {
+    await NotificationService.delete(req.params.id, req.user!.id);
+    return apiResponse.success(res, null, 'Notification deleted successfully');
+  } catch (error) {
+    if ((error as Error).message === 'Notification not found') {
+      return apiResponse.notFound(res, 'Notification not found');
+    }
+    console.error('Error deleting notification:', error);
+    return apiResponse.error(res, 'Failed to delete notification');
+  }
+});
+
+/**
+ * @route   DELETE /api/v1/notifications/archived
+ * @desc    Delete all archived notifications
+ * @access  Private
+ */
+router.delete('/archived', async (req: Request, res: Response) => {
+  try {
+    const count = await NotificationService.deleteArchived(req.user!.id);
+    return apiResponse.success(res, { count }, `${count} archived notifications deleted`);
+  } catch (error) {
+    console.error('Error deleting archived notifications:', error);
+    return apiResponse.error(res, 'Failed to delete archived notifications');
+  }
+});
+
+/**
+ * @route   POST /api/v1/notifications/system
+ * @desc    Create a system notification
+ * @access  Private
+ */
+router.post('/system', async (req: Request, res: Response) => {
+  try {
+    const { title, message, priority = 'medium' } = req.body;
+    
+    if (!title || !message) {
+      return apiResponse.error(res, 'Title and message are required', 400);
+    }
+    
+    const notification = await NotificationService.createSystemNotification(
+      req.user!.id,
+      title,
+      message,
+      priority
+    );
+    
+    return apiResponse.created(res, notification, 'System notification created successfully');
+  } catch (error) {
+    console.error('Error creating system notification:', error);
+    return apiResponse.error(res, 'Failed to create system notification');
+  }
+});
+
+/**
+ * @route   POST /api/v1/notifications/schedule
+ * @desc    Schedule a notification
+ * @access  Private
+ */
+router.post('/schedule', async (req: Request, res: Response) => {
+  try {
+    const { scheduledFor, ...notificationData } = req.body;
+    
+    if (!scheduledFor) {
+      return apiResponse.error(res, 'scheduledFor is required', 400);
+    }
+    
+    const notification = await NotificationService.scheduleNotification(
+      req.user!.id,
+      notificationData,
+      new Date(scheduledFor)
+    );
+    
+    return apiResponse.created(res, notification, 'Notification scheduled successfully');
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return apiResponse.validationError(res, error.errors);
+    }
+    console.error('Error scheduling notification:', error);
+    return apiResponse.error(res, 'Failed to schedule notification');
+  }
+});
 
 export default router;
