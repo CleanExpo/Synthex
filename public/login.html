@@ -48,6 +48,14 @@
                                    placeholder="••••••••">
                         </div>
                         
+                        <div class="flex items-center justify-between">
+                            <label class="flex items-center">
+                                <input type="checkbox" id="rememberMe" class="w-4 h-4 bg-gray-800 border-gray-700 rounded focus:ring-2 focus:ring-blue-500">
+                                <span class="ml-2 text-sm text-gray-400">Remember me</span>
+                            </label>
+                            <a href="/reset-password.html" class="text-sm text-blue-400 hover:text-blue-300">Forgot password?</a>
+                        </div>
+                        
                         <button type="submit" 
                                 class="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 rounded-lg font-medium transition-colors">
                             Sign In
@@ -58,9 +66,6 @@
                         <p class="text-sm text-gray-400">
                             Don't have an account? 
                             <a href="#" onclick="toggleForm('register')" class="text-blue-400 hover:text-blue-300">Sign up</a>
-                        </p>
-                        <p class="text-sm text-gray-400 mt-2">
-                            <a href="/reset-password.html" class="text-blue-400 hover:text-blue-300">Forgot password?</a>
                         </p>
                     </div>
                 </div>
@@ -126,6 +131,18 @@
         if (authToken) {
             verifyToken();
         }
+        
+        // Load saved credentials if Remember Me was checked
+        window.addEventListener('DOMContentLoaded', () => {
+            const savedEmail = localStorage.getItem('savedEmail');
+            const savedPassword = localStorage.getItem('savedPassword');
+            
+            if (savedEmail && savedPassword) {
+                document.getElementById('loginEmail').value = savedEmail;
+                document.getElementById('loginPassword').value = atob(savedPassword);
+                document.getElementById('rememberMe').checked = true;
+            }
+        });
 
         // Toggle between login and register forms
         function toggleForm(form) {
@@ -147,6 +164,7 @@
             
             const email = document.getElementById('loginEmail').value;
             const password = document.getElementById('loginPassword').value;
+            const rememberMe = document.getElementById('rememberMe').checked;
             
             try {
                 const response = await fetch('/api/auth/login', {
@@ -162,14 +180,40 @@
                 if (response.ok) {
                     authToken = data.token;
                     localStorage.setItem('token', authToken);
+                    
                     // Store user data
                     if (data.user) {
+                        // Ensure onboardingCompleted is set for existing users
+                        if (!data.user.preferences) {
+                            data.user.preferences = {};
+                        }
+                        if (data.user.preferences.onboardingCompleted === undefined) {
+                            data.user.preferences.onboardingCompleted = true;
+                        }
                         localStorage.setItem('user', JSON.stringify(data.user));
                     }
+                    
+                    // Save credentials if Remember Me is checked
+                    if (rememberMe) {
+                        localStorage.setItem('savedEmail', email);
+                        localStorage.setItem('savedPassword', btoa(password));
+                    } else {
+                        localStorage.removeItem('savedEmail');
+                        localStorage.removeItem('savedPassword');
+                    }
+                    
                     showMessage('Login successful! Redirecting...', 'success');
+                    
+                    // Check for redirect URL or go to dashboard
+                    const redirectUrl = sessionStorage.getItem('redirectAfterLogin');
                     setTimeout(() => {
-                        window.location.href = '/dashboard.html';
-                    }, 1500);
+                        if (redirectUrl && !redirectUrl.includes('login') && !redirectUrl.includes('auth')) {
+                            sessionStorage.removeItem('redirectAfterLogin');
+                            window.location.href = redirectUrl;
+                        } else {
+                            window.location.href = '/dashboard.html';
+                        }
+                    }, 1000);
                 } else {
                     showMessage(data.error || 'Login failed', 'error');
                 }
@@ -209,12 +253,17 @@
                     localStorage.setItem('token', authToken);
                     // Store user data
                     if (data.user) {
+                        // New users need onboarding
+                        if (!data.user.preferences) {
+                            data.user.preferences = {};
+                        }
+                        data.user.preferences.onboardingCompleted = false;
                         localStorage.setItem('user', JSON.stringify(data.user));
                     }
-                    showMessage('Account created successfully! Redirecting...', 'success');
+                    showMessage('Account created successfully! Redirecting to setup...', 'success');
                     setTimeout(() => {
-                        window.location.href = '/dashboard.html';
-                    }, 1500);
+                        window.location.href = '/onboarding.html';
+                    }, 1000);
                 } else {
                     if (data.details && Array.isArray(data.details)) {
                         const errors = data.details.map(d => d.msg).join(', ');
