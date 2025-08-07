@@ -337,6 +337,15 @@
                     </div>
                 </div>
                 
+                <div class="sidebar-item" onclick="showTab('team')">
+                    <div class="flex items-center gap-3">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
+                        </svg>
+                        <span>Team</span>
+                    </div>
+                </div>
+                
                 <div class="sidebar-item" onclick="showTab('analytics')">
                     <div class="flex items-center gap-3">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -845,6 +854,99 @@
                     <div id="listView" class="schedule-view hidden">
                         <div id="scheduledPostsList" class="space-y-4">
                             <!-- Scheduled posts will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Team Tab -->
+                <div id="team-tab" class="tab-content hidden fade-in">
+                    <div class="mb-8">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <h2 class="text-3xl font-bold mb-2 bg-gradient-to-r from-[var(--gradient-start)] to-[var(--gradient-end)] bg-clip-text text-transparent">
+                                    Team Collaboration
+                                </h2>
+                                <p class="text-[var(--text-secondary)]">Manage your team members and collaboration</p>
+                            </div>
+                            <button onclick="showInviteTeamModal()" class="btn-primary">
+                                Invite Member
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Team Statistics -->
+                    <div class="grid md:grid-cols-4 gap-6 mb-8">
+                        <div class="glass rounded-xl p-6 card-hover">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-sm text-[var(--text-secondary)]">Team Members</span>
+                                <svg class="w-5 h-5 text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
+                                </svg>
+                            </div>
+                            <div class="text-2xl font-bold" id="totalMembers">0</div>
+                            <div class="text-xs text-green-500 mt-1">+1 this month</div>
+                        </div>
+                        
+                        <div class="glass rounded-xl p-6 card-hover">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-sm text-[var(--text-secondary)]">Active Campaigns</span>
+                                <svg class="w-5 h-5 text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 9a2 2 0 00-2 2v2a2 2 0 002 2m0 0h14m-14 0a2 2 0 01-2-2V9a2 2 0 012-2h14a2 2 0 012 2v2a2 2 0 01-2 2m-14 0v2a2 2 0 002 2h12a2 2 0 002-2v-2"></path>
+                                </svg>
+                            </div>
+                            <div class="text-2xl font-bold" id="teamActiveCampaigns">0</div>
+                            <div class="text-xs text-blue-500 mt-1">Team projects</div>
+                        </div>
+                        
+                        <div class="glass rounded-xl p-6 card-hover">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-sm text-[var(--text-secondary)]">Content Created</span>
+                                <svg class="w-5 h-5 text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                </svg>
+                            </div>
+                            <div class="text-2xl font-bold" id="teamContentCreated">0</div>
+                            <div class="text-xs text-green-500 mt-1">This month</div>
+                        </div>
+                        
+                        <div class="glass rounded-xl p-6 card-hover">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-sm text-[var(--text-secondary)]">Total Reach</span>
+                                <svg class="w-5 h-5 text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                </svg>
+                            </div>
+                            <div class="text-2xl font-bold" id="teamTotalReach">0</div>
+                            <div class="text-xs text-[var(--text-secondary)] mt-1">Combined reach</div>
+                        </div>
+                    </div>
+                    
+                    <div class="grid lg:grid-cols-2 gap-8">
+                        <!-- Team Members -->
+                        <div class="glass rounded-xl p-6">
+                            <div class="flex items-center justify-between mb-6">
+                                <h3 class="text-lg font-semibold">Team Members</h3>
+                                <button onclick="loadTeamMembers()" class="px-3 py-1 text-xs rounded-lg border border-[var(--border)] hover:bg-[var(--border)] transition-smooth">
+                                    Refresh
+                                </button>
+                            </div>
+                            <div id="teamMembersContent" class="space-y-4">
+                                <!-- Team members will be loaded here -->
+                            </div>
+                        </div>
+                        
+                        <!-- Team Activity -->
+                        <div class="glass rounded-xl p-6">
+                            <div class="flex items-center justify-between mb-6">
+                                <h3 class="text-lg font-semibold">Recent Activity</h3>
+                                <button onclick="loadTeamActivity()" class="px-3 py-1 text-xs rounded-lg border border-[var(--border)] hover:bg-[var(--border)] transition-smooth">
+                                    Refresh
+                                </button>
+                            </div>
+                            <div id="teamActivityContent" class="space-y-3">
+                                <!-- Team activity will be loaded here -->
+                            </div>
                         </div>
                     </div>
                 </div>
