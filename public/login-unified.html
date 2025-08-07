@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - SYNTHEX</title>
+    <link rel="icon" type="image/png" href="/logo.png">
+    
+    <!-- Inter Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- SYNTHEX Unified Design System -->
+    <link rel="stylesheet" href="/css/synthex-unified.css">
+    
+    <!-- Page Specific Styles -->
+    <style>
+        .auth-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: var(--space-4);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .auth-background {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: -1;
+        }
+        
+        .gradient-mesh {
+            position: absolute;
+            width: 200%;
+            height: 200%;
+            top: -50%;
+            left: -50%;
+            background: 
+                radial-gradient(circle at 20% 50%, var(--synthex-primary-light) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, var(--synthex-secondary-light) 0%, transparent 50%),
+                radial-gradient(circle at 40% 20%, var(--synthex-accent) 0%, transparent 50%);
+            opacity: 0.1;
+            animation: meshAnimation 30s ease infinite;
+        }
+        
+        @keyframes meshAnimation {
+            0%, 100% { transform: rotate(0deg) scale(1); }
+            25% { transform: rotate(90deg) scale(1.1); }
+            50% { transform: rotate(180deg) scale(1); }
+            75% { transform: rotate(270deg) scale(1.1); }
+        }
+        
+        .auth-card {
+            width: 100%;
+            max-width: 420px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-xl);
+            padding: var(--space-10);
+            box-shadow: var(--glass-shadow);
+        }
+        
+        .social-login-btn {
+            width: 100%;
+            padding: var(--space-3);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-md);
+            background: var(--color-bg-elevated);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: var(--space-2);
+            font-weight: var(--font-medium);
+            color: var(--color-text-primary);
+            cursor: pointer;
+            transition: all var(--duration-200) var(--ease-in-out);
+        }
+        
+        .social-login-btn:hover {
+            background: var(--color-bg-tertiary);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-sm);
+        }
+        
+        .divider {
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+            margin: var(--space-6) 0;
+        }
+        
+        .divider::before,
+        .divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--color-border);
+        }
+        
+        .divider span {
+            color: var(--color-text-tertiary);
+            font-size: var(--text-sm);
+        }
+        
+        .password-toggle {
+            position: absolute;
+            right: var(--space-3);
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: var(--color-text-tertiary);
+            cursor: pointer;
+            padding: var(--space-2);
+        }
+        
+        .password-toggle:hover {
+            color: var(--color-text-secondary);
+        }
+        
+        .remember-forgot {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--space-6);
+        }
+        
+        .checkbox-wrapper {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+        }
+        
+        .checkbox-wrapper input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+        
+        .checkbox-wrapper label {
+            cursor: pointer;
+            font-size: var(--text-sm);
+            color: var(--color-text-secondary);
+        }
+        
+        .strength-indicator {
+            display: flex;
+            gap: var(--space-1);
+            margin-top: var(--space-2);
+        }
+        
+        .strength-bar {
+            flex: 1;
+            height: 4px;
+            background: var(--color-bg-tertiary);
+            border-radius: var(--radius-full);
+            transition: background var(--duration-300) var(--ease-in-out);
+        }
+        
+        .strength-bar.active.weak { background: var(--synthex-error); }
+        .strength-bar.active.medium { background: var(--synthex-warning); }
+        .strength-bar.active.strong { background: var(--synthex-success); }
+    </style>
+</head>
+<body>
+    <div class="auth-container">
+        <div class="auth-background">
+            <div class="gradient-mesh"></div>
+        </div>
+        
+        <div class="auth-card">
+            <!-- Logo -->
+            <div class="text-center mb-8">
+                <a href="/" class="inline-flex items-center gap-2 mb-4">
+                    <img src="/logo.png" alt="SYNTHEX" class="h-10 w-auto">
+                    <span class="text-2xl font-bold">SYNTHEX</span>
+                </a>
+                <h1 class="text-3xl font-bold mb-2">Welcome Back</h1>
+                <p class="text-secondary">Sign in to continue to your dashboard</p>
+            </div>
+            
+            <!-- Social Login -->
+            <div class="space-y-3">
+                <button class="social-login-btn">
+                    <svg class="w-5 h-5" viewBox="0 0 24 24">
+                        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                        <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                    </svg>
+                    Continue with Google
+                </button>
+                
+                <button class="social-login-btn">
+                    <i class="fab fa-github text-xl"></i>
+                    Continue with GitHub
+                </button>
+            </div>
+            
+            <!-- Divider -->
+            <div class="divider">
+                <span>or</span>
+            </div>
+            
+            <!-- Login Form -->
+            <form data-validate>
+                <div class="form-group">
+                    <label class="form-label" for="email">Email Address</label>
+                    <input 
+                        type="email" 
+                        id="email" 
+                        class="form-input" 
+                        placeholder="you@example.com"
+                        required
+                    >
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="password">Password</label>
+                    <div style="position: relative;">
+                        <input 
+                            type="password" 
+                            id="password" 
+                            class="form-input" 
+                            placeholder="Enter your password"
+                            required
+                            style="padding-right: 45px;"
+                        >
+                        <button type="button" class="password-toggle" onclick="togglePassword()">
+                            <i class="far fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="remember-forgot">
+                    <div class="checkbox-wrapper">
+                        <input type="checkbox" id="remember" name="remember">
+                        <label for="remember">Remember me</label>
+                    </div>
+                    <a href="/reset-password.html" class="text-sm text-primary">Forgot password?</a>
+                </div>
+                
+                <button type="submit" class="btn btn-primary btn-lg w-full mb-4">
+                    Sign In
+                </button>
+                
+                <p class="text-center text-sm text-secondary">
+                    Don't have an account? 
+                    <a href="/signup.html" class="text-primary font-medium">Sign up</a>
+                </p>
+            </form>
+        </div>
+        
+        <!-- Theme Toggle -->
+        <button id="theme-toggle" style="position: fixed; top: 20px; right: 20px;" class="btn btn-ghost">
+            <i class="fas fa-moon"></i>
+        </button>
+    </div>
+    
+    <!-- SYNTHEX Components JS -->
+    <script src="/js/synthex-components.js"></script>
+    
+    <script>
+        function togglePassword() {
+            const passwordInput = document.getElementById('password');
+            const toggleBtn = document.querySelector('.password-toggle i');
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                toggleBtn.classList.remove('fa-eye');
+                toggleBtn.classList.add('fa-eye-slash');
+            } else {
+                passwordInput.type = 'password';
+                toggleBtn.classList.remove('fa-eye-slash');
+                toggleBtn.classList.add('fa-eye');
+            }
+        }
+    </script>
+</body>
+</html>
