@@ -3,23 +3,23 @@
 # SYNTHEX - Deploy Environment Variables to Vercel
 # PowerShell script for Windows users
 
-Write-Host "🚀 SYNTHEX - Vercel Environment Setup" -ForegroundColor Cyan
+Write-Host "SYNTHEX - Vercel Environment Setup" -ForegroundColor Cyan
 Write-Host "=" * 50 -ForegroundColor Gray
 Write-Host ""
 
 # Check if Vercel CLI is installed
 if (-not (Get-Command vercel -ErrorAction SilentlyContinue)) {
-    Write-Host "❌ Vercel CLI not found. Installing..." -ForegroundColor Red
+    Write-Host "Vercel CLI not found. Installing..." -ForegroundColor Red
     npm install -g vercel
 }
 
-Write-Host "📋 Setting up production environment variables..." -ForegroundColor Yellow
+Write-Host "Setting up production environment variables..." -ForegroundColor Yellow
 Write-Host ""
 
 # Read .env file if it exists
 $envFile = ".env"
 if (Test-Path $envFile) {
-    Write-Host "✅ Found .env file" -ForegroundColor Green
+    Write-Host "Found .env file" -ForegroundColor Green
     
     # Parse .env file
     $envVars = @{}
@@ -58,7 +58,7 @@ if (Test-Path $envFile) {
     
     if ($response -eq 'y') {
         Write-Host ""
-        Write-Host "🔐 Adding variables to Vercel..." -ForegroundColor Yellow
+        Write-Host "Adding variables to Vercel..." -ForegroundColor Yellow
         
         # Link to Vercel project
         vercel link
@@ -74,28 +74,29 @@ if (Test-Path $envFile) {
         
         # Add production-specific overrides
         Write-Host ""
-        Write-Host "📝 Setting production overrides..." -ForegroundColor Yellow
+        Write-Host "Setting production overrides..." -ForegroundColor Yellow
         echo "production" | vercel env add NODE_ENV production
         
         Write-Host ""
-        Write-Host "✅ Environment variables configured!" -ForegroundColor Green
+        Write-Host "Environment variables configured!" -ForegroundColor Green
         Write-Host ""
-        Write-Host "📌 Next steps:" -ForegroundColor Cyan
+        Write-Host "Next steps:" -ForegroundColor Cyan
         Write-Host "  1. Verify variables: vercel env ls production" -ForegroundColor Gray
         Write-Host "  2. Deploy to production: vercel --prod" -ForegroundColor Gray
         Write-Host "  3. Check deployment: vercel ls" -ForegroundColor Gray
+        Write-Host ""
         
     } else {
-        Write-Host "❌ Setup cancelled" -ForegroundColor Red
+        Write-Host "Setup cancelled" -ForegroundColor Red
     }
     
 } else {
-    Write-Host "❌ No .env file found" -ForegroundColor Red
+    Write-Host "No .env file found" -ForegroundColor Red
     Write-Host "Please create a .env file with your environment variables" -ForegroundColor Yellow
 }
 
 Write-Host ""
-Write-Host "🔒 Security Reminders:" -ForegroundColor Yellow
+Write-Host "Security Reminders:" -ForegroundColor Yellow
 Write-Host "  - Never commit .env files to git" -ForegroundColor Gray
 Write-Host "  - Rotate API keys regularly" -ForegroundColor Gray
 Write-Host "  - Use different keys for dev and production" -ForegroundColor Gray
