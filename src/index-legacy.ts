@@ -22,7 +22,7 @@ import openRouterRoutes from './routes/openrouter';
 import mcpTtdRoutes from './routes/mcp-ttd';
 import enhancementRoutes from './routes/enhancement-research';
 import mleStarRoutes from './routes/mle-star';
-import authRoutes from './routes/auth';
+// import authRoutes from './routes/auth'; // Temporarily disabled - using simplified auth
 import googleAuthRoutes from './routes/google-auth';
 import dashboardRoutes from './routes/dashboard';
 import { openRouterService } from './services/openrouter';
@@ -305,7 +305,9 @@ app.use('/api/openrouter/marketing/variations', contentGenerationLimiter);
 app.use('/api/openrouter/chat', contentGenerationLimiter);
 
 // Authentication routes (with their own rate limiting)
-app.use('/api/auth', authRoutes);
+// Using simplified auth routes for now to avoid database issues
+import apiAuthRoutes from './routes/api-auth';
+app.use('/api/auth', apiAuthRoutes);
 
 // Google OAuth routes - mounted at /api to match Google Console configuration
 app.use('/auth', googleAuthRoutes);
