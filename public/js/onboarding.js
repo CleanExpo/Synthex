@@ -1,7 +1,7 @@
 // Onboarding Flow Management
 
 let currentStep = 0;
-let totalSteps = 5;
+let totalSteps = 4; // 0-3 steps + completion
 let onboardingData = {
     userType: null,
     selectedPlatforms: ['instagram'], // Default selection
@@ -14,14 +14,19 @@ let onboardingData = {
 
 // Initialize onboarding
 function initializeOnboarding() {
+    // Make sure we have the API instance
+    if (typeof synthexAPI === 'undefined') {
+        window.synthexAPI = new SynthexAPI();
+    }
+    
     updateStepIndicators();
     updateNavigationButtons();
     
     // Check if user has already completed onboarding
     const user = JSON.parse(localStorage.getItem('user') || '{}');
-    if (user.onboardingCompleted) {
+    if (user.preferences && user.preferences.onboardingCompleted) {
         // Skip onboarding and go to dashboard
-        window.location.href = '/app-new.html';
+        window.location.href = '/dashboard.html';
         return;
     }
     
@@ -31,7 +36,7 @@ function initializeOnboarding() {
 
 // Step navigation
 function nextStep() {
-    if (currentStep < totalSteps - 1) {
+    if (currentStep < totalSteps) {
         // Validate current step before proceeding
         if (validateCurrentStep()) {
             currentStep++;
@@ -68,13 +73,15 @@ function showStep(stepIndex) {
     });
     
     // Show current step
-    const currentStepElement = document.getElementById(`step-${stepIndex}`);
+    // Note: Step 4 is the completion step (index 4, but totalSteps is 4)
+    const stepId = stepIndex === 4 ? 'step-4' : `step-${stepIndex}`;
+    const currentStepElement = document.getElementById(stepId);
     if (currentStepElement) {
         currentStepElement.classList.add('active');
     }
     
     // Special handling for completion step
-    if (stepIndex === totalSteps - 1) {
+    if (stepIndex === totalSteps) {
         updateCompletionStats();
     }
 }
@@ -104,7 +111,7 @@ function updateNavigationButtons() {
     }
     
     // Update next button text and functionality
-    if (currentStep === totalSteps - 1) {
+    if (currentStep === totalSteps) {
         nextBtn.textContent = 'Go to Dashboard';
         nextBtn.innerHTML = `
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -113,6 +120,16 @@ function updateNavigationButtons() {
             Go to Dashboard
         `;
         skipBtn.style.display = 'none';
+    } else if (currentStep === totalSteps - 1) {
+        // Last step before completion
+        nextBtn.textContent = 'Complete Setup';
+        nextBtn.innerHTML = `
+            Complete Setup
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M5 12l5 5L20 7"/>
+            </svg>
+        `;
+        skipBtn.style.display = 'inline-flex';
     } else {
         nextBtn.textContent = 'Continue';
         nextBtn.innerHTML = `
@@ -267,10 +284,11 @@ async function completeOnboarding() {
         }
         
         // Show completion animation
-        if (currentStep !== totalSteps - 1) {
-            currentStep = totalSteps - 1;
+        if (currentStep !== totalSteps) {
+            currentStep = totalSteps;
             showStep(currentStep);
             updateStepIndicators();
+            updateNavigationButtons();
         }
         
         // Reset button
@@ -280,7 +298,7 @@ async function completeOnboarding() {
         // Add a small delay for the animation
         setTimeout(() => {
             // Redirect to dashboard
-            window.location.href = '/app-new.html';
+            window.location.href = '/dashboard.html';
         }, 1500);
         
     } catch (error) {
@@ -298,14 +316,14 @@ async function completeOnboarding() {
         
         // Still redirect to dashboard even if saving failed
         setTimeout(() => {
-            window.location.href = '/app-new.html';
+            window.location.href = '/dashboard.html';
         }, 500);
     }
 }
 
 // Quick navigation functions for completion step
 function goToDashboard() {
-    window.location.href = '/app-new.html';
+    window.location.href = '/dashboard.html';
 }
 
 function goToContentStudio() {
