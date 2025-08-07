@@ -1,0 +1,17 @@
+{
+  "version": 2,
+  "name": "synthex",
+  "builds": [
+    {
+      "src": "public/**",
+      "use": "@vercel/static"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "/public/$1"
+    }
+  ],
+  "outputDirectory": "public"
+}
