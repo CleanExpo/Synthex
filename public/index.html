@@ -319,6 +319,15 @@
                     </div>
                 </div>
                 
+                <div class="sidebar-item" onclick="showTab('campaigns')">
+                    <div class="flex items-center gap-3">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 9a2 2 0 00-2 2v2a2 2 0 002 2m0 0h14m-14 0a2 2 0 01-2-2V9a2 2 0 012-2h14a2 2 0 012 2v2a2 2 0 01-2 2m-14 0v2a2 2 0 002 2h12a2 2 0 002-2v-2"></path>
+                        </svg>
+                        <span>Campaigns</span>
+                    </div>
+                </div>
+                
                 <div class="sidebar-item" onclick="showTab('analytics')">
                     <div class="flex items-center gap-3">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -598,6 +607,108 @@
                     
                     <div id="historyContent" class="space-y-4">
                         <!-- History items will be loaded here -->
+                    </div>
+                </div>
+                
+                <!-- Campaigns Tab -->
+                <div id="campaigns-tab" class="tab-content hidden fade-in">
+                    <div class="mb-8">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <h2 class="text-3xl font-bold mb-2 bg-gradient-to-r from-[var(--gradient-start)] to-[var(--gradient-end)] bg-clip-text text-transparent">
+                                    Campaign Management
+                                </h2>
+                                <p class="text-[var(--text-secondary)]">Create and manage your marketing campaigns</p>
+                            </div>
+                            <button onclick="showCreateCampaignModal()" class="btn-primary">
+                                Create Campaign
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Campaign Statistics -->
+                    <div class="grid md:grid-cols-4 gap-6 mb-8">
+                        <div class="glass rounded-xl p-6 card-hover">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-sm text-[var(--text-secondary)]">Total Campaigns</span>
+                                <svg class="w-5 h-5 text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 9a2 2 0 00-2 2v2a2 2 0 002 2m0 0h14m-14 0a2 2 0 01-2-2V9a2 2 0 012-2h14a2 2 0 012 2v2a2 2 0 01-2 2m-14 0v2a2 2 0 002 2h12a2 2 0 002-2v-2"></path>
+                                </svg>
+                            </div>
+                            <div class="text-2xl font-bold" id="totalCampaigns">0</div>
+                            <div class="text-xs text-green-500 mt-1">+2 this week</div>
+                        </div>
+                        
+                        <div class="glass rounded-xl p-6 card-hover">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-sm text-[var(--text-secondary)]">Active Campaigns</span>
+                                <svg class="w-5 h-5 text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.636 18.364a9 9 0 010-12.728m12.728 0a9 9 0 010 12.728m-9.9-2.829a5 5 0 010-7.07m7.072 0a5 5 0 010 7.07M13 12a1 1 0 11-2 0 1 1 0 012 0z"></path>
+                                </svg>
+                            </div>
+                            <div class="text-2xl font-bold" id="activeCampaigns">0</div>
+                            <div class="text-xs text-blue-500 mt-1">Currently running</div>
+                        </div>
+                        
+                        <div class="glass rounded-xl p-6 card-hover">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-sm text-[var(--text-secondary)]">Avg Performance</span>
+                                <svg class="w-5 h-5 text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+                                </svg>
+                            </div>
+                            <div class="text-2xl font-bold" id="avgPerformance">0%</div>
+                            <div class="text-xs text-green-500 mt-1">+5% improvement</div>
+                        </div>
+                        
+                        <div class="glass rounded-xl p-6 card-hover">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-sm text-[var(--text-secondary)]">Total Reach</span>
+                                <svg class="w-5 h-5 text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                </svg>
+                            </div>
+                            <div class="text-2xl font-bold" id="totalReach">0</div>
+                            <div class="text-xs text-[var(--text-secondary)] mt-1">Across all campaigns</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Campaign Filters -->
+                    <div class="flex flex-wrap items-center gap-4 mb-6">
+                        <div class="flex items-center gap-2">
+                            <label class="text-sm font-medium">Status:</label>
+                            <select id="campaignStatusFilter" onchange="filterCampaigns()" class="px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg-primary)] text-sm">
+                                <option value="">All Status</option>
+                                <option value="draft">Draft</option>
+                                <option value="active">Active</option>
+                                <option value="paused">Paused</option>
+                                <option value="completed">Completed</option>
+                            </select>
+                        </div>
+                        
+                        <div class="flex items-center gap-2">
+                            <label class="text-sm font-medium">Platform:</label>
+                            <select id="campaignPlatformFilter" onchange="filterCampaigns()" class="px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg-primary)] text-sm">
+                                <option value="">All Platforms</option>
+                                <option value="twitter">Twitter</option>
+                                <option value="instagram">Instagram</option>
+                                <option value="linkedin">LinkedIn</option>
+                                <option value="facebook">Facebook</option>
+                                <option value="email">Email</option>
+                            </select>
+                        </div>
+                        
+                        <div class="ml-auto">
+                            <button onclick="loadCampaigns()" class="px-4 py-2 border border-[var(--border)] rounded-lg hover:bg-[var(--border)] transition-smooth text-sm">
+                                Refresh
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Campaigns List -->
+                    <div id="campaignsContent" class="space-y-4">
+                        <!-- Campaigns will be loaded here -->
                     </div>
                 </div>
                 
@@ -942,6 +1053,111 @@
                     </div>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <!-- Create Campaign Modal -->
+    <div id="createCampaignModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="glass rounded-2xl p-8 max-w-lg w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div class="flex items-center justify-between mb-6">
+                <div>
+                    <h2 class="text-2xl font-bold">Create New Campaign</h2>
+                    <p class="text-[var(--text-secondary)]">Plan your marketing campaign</p>
+                </div>
+                <button onclick="closeCreateCampaignModal()" class="p-2 rounded-lg hover:bg-[var(--border)] transition-smooth">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            
+            <form id="createCampaignForm" class="space-y-6">
+                <div>
+                    <label class="block text-sm font-medium mb-2">Campaign Name</label>
+                    <input 
+                        type="text" 
+                        id="campaignName"
+                        required
+                        class="w-full px-4 py-3 rounded-xl bg-[var(--bg-primary)] border border-[var(--border)] focus:border-[var(--accent)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:ring-opacity-20 transition-smooth"
+                        placeholder="Summer Product Launch"
+                    >
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium mb-2">Description</label>
+                    <textarea 
+                        id="campaignDescription"
+                        rows="3"
+                        class="w-full px-4 py-3 rounded-xl bg-[var(--bg-primary)] border border-[var(--border)] focus:border-[var(--accent)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:ring-opacity-20 transition-smooth resize-none"
+                        placeholder="Describe your campaign goals and strategy..."
+                    ></textarea>
+                </div>
+                
+                <div class="grid md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Primary Platform</label>
+                        <select id="campaignPlatform" class="w-full px-4 py-3 rounded-xl bg-[var(--bg-primary)] border border-[var(--border)] focus:border-[var(--accent)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:ring-opacity-20 transition-smooth">
+                            <option value="twitter">Twitter</option>
+                            <option value="instagram">Instagram</option>
+                            <option value="linkedin">LinkedIn</option>
+                            <option value="facebook">Facebook</option>
+                            <option value="email">Email</option>
+                            <option value="multi">Multi-Platform</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Budget</label>
+                        <input 
+                            type="number" 
+                            id="campaignBudget"
+                            min="0"
+                            step="0.01"
+                            class="w-full px-4 py-3 rounded-xl bg-[var(--bg-primary)] border border-[var(--border)] focus:border-[var(--accent)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:ring-opacity-20 transition-smooth"
+                            placeholder="1000.00"
+                        >
+                    </div>
+                </div>
+                
+                <div class="grid md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Start Date</label>
+                        <input 
+                            type="date" 
+                            id="campaignStartDate"
+                            class="w-full px-4 py-3 rounded-xl bg-[var(--bg-primary)] border border-[var(--border)] focus:border-[var(--accent)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:ring-opacity-20 transition-smooth"
+                        >
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium mb-2">End Date</label>
+                        <input 
+                            type="date" 
+                            id="campaignEndDate"
+                            class="w-full px-4 py-3 rounded-xl bg-[var(--bg-primary)] border border-[var(--border)] focus:border-[var(--accent)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:ring-opacity-20 transition-smooth"
+                        >
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium mb-2">Campaign Tags</label>
+                    <input 
+                        type="text" 
+                        id="campaignTags"
+                        class="w-full px-4 py-3 rounded-xl bg-[var(--bg-primary)] border border-[var(--border)] focus:border-[var(--accent)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:ring-opacity-20 transition-smooth"
+                        placeholder="summer, product-launch, social-media (comma separated)"
+                    >
+                </div>
+                
+                <div class="flex gap-3">
+                    <button type="submit" class="btn-primary">
+                        Create Campaign
+                    </button>
+                    <button type="button" onclick="closeCreateCampaignModal()" class="px-4 py-2 border border-[var(--border)] rounded-lg hover:bg-[var(--border)] transition-smooth">
+                        Cancel
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 
@@ -1908,6 +2124,270 @@
             }
         });
         
+        // Campaign Management Functions
+        function showCreateCampaignModal() {
+            document.getElementById('createCampaignModal').classList.remove('hidden');
+            // Set default dates
+            const today = new Date().toISOString().split('T')[0];
+            const nextWeek = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+            document.getElementById('campaignStartDate').value = today;
+            document.getElementById('campaignEndDate').value = nextWeek;
+        }
+        
+        function closeCreateCampaignModal() {
+            document.getElementById('createCampaignModal').classList.add('hidden');
+            document.getElementById('createCampaignForm').reset();
+        }
+        
+        async function loadCampaigns() {
+            try {
+                const token = localStorage.getItem('authToken');
+                const statusFilter = document.getElementById('campaignStatusFilter').value;
+                const platformFilter = document.getElementById('campaignPlatformFilter').value;
+                
+                let url = '/api/campaigns?page=1&limit=10';
+                if (statusFilter) url += `&status=${statusFilter}`;
+                if (platformFilter) url += `&platform=${platformFilter}`;
+                
+                const response = await fetch(url, {
+                    headers: { 'Authorization': token ? `Bearer ${token}` : '' }
+                });
+                
+                const result = await response.json();
+                
+                if (result.success && result.data) {
+                    const campaigns = result.data.campaigns || [];
+                    const stats = result.data.stats || {};
+                    
+                    // Update statistics
+                    document.getElementById('totalCampaigns').textContent = stats.total || campaigns.length;
+                    document.getElementById('activeCampaigns').textContent = stats.active || 0;
+                    document.getElementById('avgPerformance').textContent = `${stats.avgPerformance || 0}%`;
+                    document.getElementById('totalReach').textContent = stats.totalReach?.toLocaleString() || '0';
+                    
+                    // Display campaigns
+                    const campaignsContent = document.getElementById('campaignsContent');
+                    if (campaigns.length > 0) {
+                        campaignsContent.innerHTML = campaigns.map(campaign => createCampaignCard(campaign)).join('');
+                    } else {
+                        campaignsContent.innerHTML = createEmptyCampaignsState();
+                    }
+                } else if (result.error) {
+                    document.getElementById('campaignsContent').innerHTML = createAuthRequiredState();
+                } else {
+                    showToast('Failed to load campaigns', 'error');
+                }
+            } catch (error) {
+                console.error('Failed to load campaigns:', error);
+                showToast('Error loading campaigns: ' + error.message, 'error');
+            }
+        }
+        
+        function createCampaignCard(campaign) {
+            const statusColor = {
+                draft: 'bg-gray-500 bg-opacity-20 text-gray-600',
+                active: 'bg-green-500 bg-opacity-20 text-green-600',
+                paused: 'bg-yellow-500 bg-opacity-20 text-yellow-600',
+                completed: 'bg-blue-500 bg-opacity-20 text-blue-600'
+            };
+            
+            return `
+                <div class="glass rounded-xl p-6 card-hover">
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="flex-1">
+                            <h3 class="text-lg font-semibold mb-2">${campaign.name}</h3>
+                            <p class="text-sm text-[var(--text-secondary)] mb-3">${campaign.description || 'No description'}</p>
+                            <div class="flex items-center gap-4 text-sm">
+                                <span class="px-3 py-1 rounded-full ${statusColor[campaign.status] || statusColor.draft}">
+                                    ${campaign.status?.charAt(0).toUpperCase() + campaign.status?.slice(1) || 'Draft'}
+                                </span>
+                                <span class="text-[var(--text-secondary)]">
+                                    <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                                    </svg>
+                                    ${campaign.platform?.charAt(0).toUpperCase() + campaign.platform?.slice(1) || 'Multi-Platform'}
+                                </span>
+                                ${campaign.budget ? `
+                                    <span class="text-[var(--text-secondary)]">
+                                        <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
+                                        </svg>
+                                        $${campaign.budget}
+                                    </span>
+                                ` : ''}
+                            </div>
+                        </div>
+                        <div class="flex gap-2 ml-4">
+                            <button onclick="editCampaign('${campaign.id}')" class="p-2 rounded-lg hover:bg-[var(--border)] transition-smooth" title="Edit">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                </svg>
+                            </button>
+                            <button onclick="cloneCampaign('${campaign.id}')" class="p-2 rounded-lg hover:bg-[var(--border)] transition-smooth" title="Clone">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    ${campaign.analytics ? `
+                        <div class="grid grid-cols-3 gap-4 pt-4 border-t border-[var(--border)]">
+                            <div class="text-center">
+                                <div class="text-lg font-bold text-[var(--accent)]">${campaign.analytics.reach || 0}</div>
+                                <div class="text-xs text-[var(--text-secondary)]">Reach</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-lg font-bold text-[var(--accent)]">${campaign.analytics.engagement || 0}</div>
+                                <div class="text-xs text-[var(--text-secondary)]">Engagement</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-lg font-bold text-[var(--accent)]">${campaign.analytics.conversions || 0}</div>
+                                <div class="text-xs text-[var(--text-secondary)]">Conversions</div>
+                            </div>
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+        }
+        
+        function createEmptyCampaignsState() {
+            return `
+                <div class="text-center py-12">
+                    <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-[var(--accent)] bg-opacity-20 flex items-center justify-center">
+                        <svg class="w-8 h-8 text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 9a2 2 0 00-2 2v2a2 2 0 002 2m0 0h14m-14 0a2 2 0 01-2-2V9a2 2 0 012-2h14a2 2 0 012 2v2a2 2 0 01-2 2m-14 0v2a2 2 0 002 2h12a2 2 0 002-2v-2"></path>
+                        </svg>
+                    </div>
+                    <h3 class="text-lg font-medium mb-2">No campaigns yet</h3>
+                    <p class="text-[var(--text-secondary)] mb-4">Create your first marketing campaign to get started</p>
+                    <button onclick="showCreateCampaignModal()" class="btn-primary">
+                        Create Your First Campaign
+                    </button>
+                </div>
+            `;
+        }
+        
+        function createAuthRequiredState() {
+            return `
+                <div class="text-center py-12">
+                    <p class="text-[var(--text-secondary)] mb-4">Authentication required to view campaigns</p>
+                    <button onclick="showLogin()" class="btn-primary">
+                        Sign In to View Campaigns
+                    </button>
+                </div>
+            `;
+        }
+        
+        async function createCampaign(campaignData) {
+            try {
+                const token = localStorage.getItem('authToken');
+                const response = await fetch('/api/campaigns', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(campaignData)
+                });
+                
+                const result = await response.json();
+                if (result.success) {
+                    showToast('Campaign created successfully!');
+                    closeCreateCampaignModal();
+                    loadCampaigns();
+                    return true;
+                } else {
+                    showToast(result.error || 'Failed to create campaign', 'error');
+                    return false;
+                }
+            } catch (error) {
+                console.error('Error creating campaign:', error);
+                showToast('Error creating campaign: ' + error.message, 'error');
+                return false;
+            }
+        }
+        
+        function filterCampaigns() {
+            loadCampaigns();
+        }
+        
+        function editCampaign(campaignId) {
+            showToast('Campaign editing feature coming soon!');
+        }
+        
+        async function cloneCampaign(campaignId) {
+            try {
+                const token = localStorage.getItem('authToken');
+                const response = await fetch(`/api/campaigns/${campaignId}/clone`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                const result = await response.json();
+                if (result.success) {
+                    showToast('Campaign cloned successfully!');
+                    loadCampaigns();
+                } else {
+                    showToast(result.error || 'Failed to clone campaign', 'error');
+                }
+            } catch (error) {
+                showToast('Error cloning campaign: ' + error.message, 'error');
+            }
+        }
+        
+        // Create campaign form submission
+        document.getElementById('createCampaignForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const campaignData = {
+                name: document.getElementById('campaignName').value,
+                description: document.getElementById('campaignDescription').value,
+                platform: document.getElementById('campaignPlatform').value,
+                budget: parseFloat(document.getElementById('campaignBudget').value) || undefined,
+                startDate: document.getElementById('campaignStartDate').value,
+                endDate: document.getElementById('campaignEndDate').value,
+                tags: document.getElementById('campaignTags').value.split(',').map(tag => tag.trim()).filter(tag => tag)
+            };
+            
+            if (!campaignData.name) {
+                showToast('Campaign name is required', 'error');
+                return;
+            }
+            
+            await createCampaign(campaignData);
+        });
+        
+        // Load campaigns when campaigns tab is opened
+        function showTab(tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.add('hidden');
+            });
+            
+            // Show selected tab
+            document.getElementById(`${tabName}-tab`).classList.remove('hidden');
+            
+            // Update sidebar active state
+            document.querySelectorAll('.sidebar-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            event.currentTarget.classList.add('active');
+            
+            // Close mobile sidebar
+            if (window.innerWidth < 768) {
+                document.getElementById('sidebar').classList.remove('open');
+            }
+            
+            // Load tab-specific data
+            if (tabName === 'history') {
+                loadHistory();
+            } else if (tabName === 'analytics') {
+                loadAnalytics();
+            } else if (tabName === 'campaigns') {
+                loadCampaigns();
+            }
+        }
+
         // Initialize
         initTheme();
         
