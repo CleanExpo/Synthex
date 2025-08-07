@@ -291,14 +291,12 @@ async function completeOnboarding() {
             }
             
             // Update local user data
-            user.onboardingCompleted = true;
-            user.preferences = {
-                userType: onboardingData.userType,
-                platforms: onboardingData.selectedPlatforms,
-                tier: onboardingData.selectedTier,
-                onboardingCompleted: true,
-                onboardingCompletedAt: onboardingData.completedAt
-            };
+            user.preferences = user.preferences || {};
+            user.preferences.userType = onboardingData.userType;
+            user.preferences.platforms = onboardingData.selectedPlatforms;
+            user.preferences.tier = onboardingData.selectedTier;
+            user.preferences.onboardingCompleted = true;
+            user.preferences.onboardingCompletedAt = onboardingData.completedAt;
             localStorage.setItem('user', JSON.stringify(user));
             
         } catch (error) {

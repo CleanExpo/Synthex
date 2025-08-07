@@ -43,9 +43,12 @@
             const preferences = user.preferences || {};
             
             // If user hasn't completed onboarding, redirect to onboarding
-            if (!preferences.onboardingCompleted) {
-                window.location.href = '/onboarding.html';
-                return;
+            // Skip for dashboard and other core pages
+            if (!preferences.onboardingCompleted && !window.location.pathname.includes('dashboard')) {
+                if (!window.location.pathname.includes('onboarding')) {
+                    window.location.href = '/onboarding.html';
+                    return;
+                }
             }
         } catch (error) {
             console.error('Error checking onboarding status:', error);
