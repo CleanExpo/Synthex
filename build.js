@@ -8,7 +8,16 @@ console.log('Building SYNTHEX...');
 try {
     // Clean dist directory
     console.log('Cleaning dist directory...');
-    execSync('npx rimraf dist', { stdio: 'inherit' });
+    try {
+        // Try rimraf first, fallback to rm -rf
+        execSync('npx rimraf dist 2>/dev/null || rm -rf dist', { stdio: 'inherit', shell: true });
+    } catch (e) {
+        // If both fail, try to use Node.js fs
+        const fs = require('fs');
+        if (fs.existsSync('dist')) {
+            fs.rmSync('dist', { recursive: true, force: true });
+        }
+    }
     
     // Run TypeScript compiler
     console.log('Compiling TypeScript...');
