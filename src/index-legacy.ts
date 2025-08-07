@@ -109,45 +109,59 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 
 // Health check endpoints
 app.get('/health', async (req: Request, res: Response) => {
-  const dbHealthModule = await import('./lib/db-health');
-  const checkDatabaseHealth = dbHealthModule.checkDatabaseHealth;
-  
-  const dbHealth = await checkDatabaseHealth();
-  
+  // Basic health check without database
   ApiRes.success(res, {
-    status: dbHealth.connected ? 'healthy' : 'degraded',
+    status: 'healthy',
     environment: NODE_ENV,
     version: '1.0.0',
-    database: {
-      connected: dbHealth.connected,
-      latency: dbHealth.latency,
-      error: dbHealth.error
-    }
-  }, dbHealth.connected ? 'Service is healthy' : 'Service is running with degraded database connectivity');
+    timestamp: new Date().toISOString()
+  }, 'Service is healthy');
 });
 
-// Detailed health check endpoint
+// Detailed health check endpoint with database
 app.get('/health/db', async (req: Request, res: Response) => {
-  const dbHealthModule = await import('./lib/db-health');
-  const checkDatabaseHealth = dbHealthModule.checkDatabaseHealth;
-  const validateDatabaseSchema = dbHealthModule.validateDatabaseSchema;
-  
-  const [health, validation] = await Promise.all([
-    checkDatabaseHealth(),
-    validateDatabaseSchema()
-  ]);
-  
-  if (health.connected && validation.valid) {
-    ApiRes.success(res, {
-      database: health,
-      schema: validation
-    }, 'Database is healthy');
-  } else {
+  try {
+    // Simple database connectivity check using prisma
+    const { prisma } = await import('./lib/prisma');
+    
+    const startTime = Date.now();
+    let connected = false;
+    let error: string | undefined;
+    
+    try {
+      // Try a simple query
+      await prisma.$queryRaw`SELECT 1`;
+      connected = true;
+    } catch (dbError) {
+      error = dbError instanceof Error ? dbError.message : 'Database connection failed';
+    }
+    
+    const latency = Date.now() - startTime;
+    
+    if (connected) {
+      ApiRes.success(res, {
+        database: {
+          connected: true,
+          latency
+        },
+        message: 'Database is healthy'
+      }, 'Database health check passed');
+    } else {
+      res.status(503).json({
+        success: false,
+        database: {
+          connected: false,
+          error,
+          latency
+        },
+        message: 'Database health check failed'
+      });
+    }
+  } catch (error) {
     res.status(503).json({
       success: false,
-      database: health,
-      schema: validation,
-      message: 'Database health check failed'
+      error: error instanceof Error ? error.message : 'Health check failed',
+      message: 'Unable to perform database health check'
     });
   }
 });
