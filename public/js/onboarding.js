@@ -20,18 +20,30 @@ function initializeOnboarding() {
         window.synthexAPI = new SynthexAPI();
     }
     
-    updateStepIndicators();
-    updateNavigationButtons();
-    
-    // Check if user has already completed onboarding
+    // CRITICAL FIX: Check onboarding status BEFORE initializing UI
     const user = JSON.parse(localStorage.getItem('user') || '{}');
-    if (user.preferences && user.preferences.onboardingCompleted) {
-        // Skip onboarding and go to dashboard
-        window.location.href = '/dashboard.html';
+    
+    // More robust check for onboarding completion
+    if (user && user.preferences && 
+        (user.preferences.onboardingCompleted === true || 
+         user.preferences.onboardingCompletedAt)) {
+        // Skip onboarding and go to dashboard immediately
+        console.log('Onboarding already completed, redirecting to dashboard...');
+        window.location.replace('/dashboard.html');  // Use replace to prevent back button issues
         return;
     }
     
-    // Update platform count display
+    // Also check if we have a valid token (logged in user)
+    const token = localStorage.getItem('token');
+    if (!token) {
+        // Not logged in, redirect to login
+        window.location.href = '/login.html';
+        return;
+    }
+    
+    // Only initialize UI if we actually need onboarding
+    updateStepIndicators();
+    updateNavigationButtons();
     updateCompletionStats();
 }
 
