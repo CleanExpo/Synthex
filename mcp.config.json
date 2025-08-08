@@ -12,7 +12,7 @@
     },
     "filesystem": {
       "command": "npx",
-      "args": ["@modelcontextprotocol/server-filesystem", "--allowed-directories", "."],
+      "args": ["@modelcontextprotocol/server-filesystem", "--allowed-directories", "D:\\Synthex"],
       "env": {},
       "capabilities": {
         "tools": true,

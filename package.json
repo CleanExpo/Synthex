@@ -6,8 +6,8 @@
   "scripts": {
     "start": "node dist/index.js",
     "start:prod": "NODE_ENV=production node dist/index.js",
-    "dev": "set DATABASE_URL=file:./dev.db&& ts-node src/index.ts",
-    "dev:watch": "set DATABASE_URL=file:./dev.db&& nodemon --exec ts-node src/index.ts",
+    "dev": "set DATABASE_URL=file:./prisma/dev.db&& ts-node src/index.ts",
+    "dev:watch": "set DATABASE_URL=file:./prisma/dev.db&& nodemon --exec ts-node src/index.ts",
     "build": "node build.js",
     "build:prod": "node build.js",
     "build:watch": "tsc --watch",
