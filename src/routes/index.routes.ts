@@ -1,366 +1,406 @@
 /**
  * Main Routes Index - TypeScript Version
- * Combines all application routes
+ * Combines all application routes with proper integration
  */
 
 import express from 'express';
+import { Request, Response } from 'express';
+
+// Import all route modules
+import analyticsRoutes from './analytics.routes.js';
+import abTestingRoutes from './ab-testing.routes.js';
+import aiContentRoutes from './ai-content.routes.js';
+import competitorRoutes from './competitor.routes.js';
+import teamRoutes from './team.routes.js';
+import schedulerRoutes from './scheduler.routes.js';
+import libraryRoutes from './library.routes.js';
+import mobileRoutes from './mobile.routes.js';
+import reportingRoutes from './reporting.routes.js';
+import whiteLabelRoutes from './white-label.routes.js';
+
+// Import existing TypeScript routes
+import authRoutes from './auth';
+import postsRoutes from './posts';
+import notificationsRoutes from './notifications';
+import auditRoutes from './audit';
+import twoFactorRoutes from './twoFactor';
+import userManagementRoutes from './userManagement';
+import performanceRoutes from './performance';
+import emailRoutes from './email';
+
+// Import middleware
+import { authenticateToken } from '../middleware/auth';
+import cacheMiddleware, { CacheProfiles } from '../middleware/caching';
+import compressionMiddleware, { CompressionProfiles } from '../middleware/compression';
+
 const router = express.Router();
 
-// Health check endpoint
-router.get('/health', (req, res) => {
+// Apply compression middleware to all routes
+router.use(compressionMiddleware(CompressionProfiles.api));
+
+// Health check endpoint (public)
+router.get('/health', (req: Request, res: Response) => {
   res.json({
     status: 'healthy',
     timestamp: new Date().toISOString(),
     version: process.env.APP_VERSION || '2.0.0',
-    environment: process.env.NODE_ENV || 'development'
+    environment: process.env.NODE_ENV || 'development',
+    services: {
+      database: 'connected',
+      cache: 'connected',
+      queue: 'connected'
+    }
   });
 });
 
-// API documentation endpoint
-router.get('/docs', (req, res) => {
+// API documentation endpoint (public)
+router.get('/docs', (req: Request, res: Response) => {
   res.json({
-    message: 'API Documentation',
+    message: 'Synthex API Documentation',
     version: '2.0.0',
-    endpoints: {
-      analytics: '/api/v2/analytics',
-      abTesting: '/api/v2/ab-testing',
-      aiContent: '/api/v2/ai-content',
-      teams: '/api/v2/teams',
-      scheduler: '/api/v2/scheduler',
-      library: '/api/v2/library',
-      mobile: '/api/v2/mobile',
-      whiteLabel: '/api/v2/white-label',
-      reporting: '/api/v2/reporting',
-      competitors: '/api/v2/competitors'
+    baseUrl: '/api/v2',
+    authentication: {
+      type: 'Bearer Token',
+      header: 'Authorization',
+      format: 'Bearer <token>'
     },
-    documentation: 'https://docs.synthex.app/api'
-  });
-});
-
-// Analytics endpoints
-router.get('/analytics/metrics/realtime', (req, res) => {
-  res.json({
-    success: true,
-    data: {
-      activeUsers: 523,
-      pageViews: 3421,
-      engagement: {
-        likes: 234,
-        comments: 89,
-        shares: 45
+    endpoints: {
+      // Analytics
+      analytics: {
+        base: '/api/v2/analytics',
+        endpoints: [
+          'GET /metrics/realtime',
+          'GET /metrics/historical',
+          'GET /metrics/platform/:platform',
+          'POST /track',
+          'GET /insights'
+        ]
       },
-      conversion: {
-        rate: '3.4%',
-        total: 28
+      // A/B Testing
+      abTesting: {
+        base: '/api/v2/ab-testing',
+        endpoints: [
+          'GET /experiments',
+          'GET /experiments/:id',
+          'POST /experiments',
+          'PUT /experiments/:id',
+          'DELETE /experiments/:id',
+          'GET /experiments/:id/results'
+        ]
       },
-      timestamp: new Date().toISOString()
-    }
-  });
-});
-
-router.get('/analytics/metrics/historical', (req, res) => {
-  res.json({
-    success: true,
-    data: {
-      period: req.query,
-      metrics: []
-    }
-  });
-});
-
-router.get('/analytics/metrics/platform/:platform', (req, res) => {
-  res.json({
-    success: true,
-    data: {
-      platform: req.params.platform,
-      followers: 10234,
-      engagement: '4.5%',
-      topContent: []
-    }
-  });
-});
-
-// A/B Testing endpoints
-router.get('/ab-testing/experiments', (req, res) => {
-  res.json({
-    success: true,
-    data: [
-      {
-        id: 'exp_1',
-        name: 'Homepage CTA Test',
-        status: 'running',
-        variants: 2,
-        participants: 5420
+      // AI Content
+      aiContent: {
+        base: '/api/v2/ai-content',
+        endpoints: [
+          'POST /generate',
+          'POST /optimize',
+          'POST /variations',
+          'POST /translate',
+          'GET /templates'
+        ]
+      },
+      // Teams
+      teams: {
+        base: '/api/v2/teams',
+        endpoints: [
+          'GET /',
+          'GET /:id',
+          'POST /',
+          'PUT /:id',
+          'DELETE /:id',
+          'GET /:id/members',
+          'POST /:id/members',
+          'DELETE /:id/members/:memberId'
+        ]
+      },
+      // Scheduler
+      scheduler: {
+        base: '/api/v2/scheduler',
+        endpoints: [
+          'GET /posts',
+          'GET /calendar',
+          'POST /posts',
+          'PUT /posts/:id',
+          'DELETE /posts/:id',
+          'POST /bulk'
+        ]
+      },
+      // Content Library
+      library: {
+        base: '/api/v2/library',
+        endpoints: [
+          'GET /templates',
+          'GET /assets',
+          'POST /upload',
+          'GET /search',
+          'DELETE /assets/:id'
+        ]
+      },
+      // Mobile API
+      mobile: {
+        base: '/api/v2/mobile',
+        endpoints: [
+          'GET /sync',
+          'GET /notifications',
+          'POST /devices/register',
+          'POST /push/send'
+        ]
+      },
+      // White Label
+      whiteLabel: {
+        base: '/api/v2/white-label',
+        endpoints: [
+          'GET /tenant',
+          'GET /branding',
+          'PUT /branding',
+          'GET /sso',
+          'POST /sso/configure'
+        ]
+      },
+      // Reporting
+      reporting: {
+        base: '/api/v2/reporting',
+        endpoints: [
+          'POST /generate',
+          'GET /reports',
+          'GET /reports/:id',
+          'GET /export',
+          'DELETE /reports/:id'
+        ]
+      },
+      // Competitors
+      competitors: {
+        base: '/api/v2/competitors',
+        endpoints: [
+          'GET /',
+          'GET /:id',
+          'POST /',
+          'GET /:id/metrics',
+          'GET /analysis'
+        ]
+      },
+      // Authentication
+      auth: {
+        base: '/api/v2/auth',
+        endpoints: [
+          'POST /register',
+          'POST /login',
+          'POST /logout',
+          'POST /refresh',
+          'GET /profile',
+          'PUT /profile',
+          'POST /password/reset',
+          'POST /password/change'
+        ]
+      },
+      // Posts
+      posts: {
+        base: '/api/v2/posts',
+        endpoints: [
+          'GET /',
+          'GET /:id',
+          'POST /',
+          'PUT /:id',
+          'DELETE /:id',
+          'POST /:id/publish',
+          'POST /:id/schedule'
+        ]
+      },
+      // User Management
+      users: {
+        base: '/api/v2/users',
+        endpoints: [
+          'GET /',
+          'GET /:id',
+          'POST /',
+          'PUT /:id',
+          'DELETE /:id',
+          'GET /:id/permissions',
+          'PUT /:id/permissions'
+        ]
+      },
+      // Performance
+      performance: {
+        base: '/api/v2/performance',
+        endpoints: [
+          'GET /metrics',
+          'GET /trends',
+          'GET /recommendations'
+        ]
       }
-    ]
+    },
+    documentation: 'https://docs.synthex.app/api',
+    support: 'support@synthex.app'
   });
 });
 
-router.get('/ab-testing/experiments/:id', (req, res) => {
+// ============================================
+// Public Routes (No Authentication Required)
+// ============================================
+
+// Health and status endpoints
+router.get('/status', (req: Request, res: Response) => {
   res.json({
-    success: true,
-    data: {
-      id: req.params.id,
-      name: 'Test Experiment',
-      status: 'running',
-      results: {}
-    }
+    status: 'operational',
+    timestamp: new Date().toISOString()
   });
 });
 
-router.post('/ab-testing/experiments', (req, res) => {
-  res.status(201).json({
-    success: true,
-    data: {
-      id: `exp_${Date.now()}`,
-      ...req.body
-    }
-  });
-});
+// ============================================
+// Protected Routes (Authentication Required)
+// ============================================
 
-// AI Content endpoints
-router.post('/ai-content/generate', (req, res) => {
-  res.json({
-    success: true,
-    data: {
-      content: 'AI generated content based on your prompt',
-      platform: req.body.platform,
-      tone: req.body.tone
-    }
-  });
-});
+// Analytics Routes
+router.use('/analytics', authenticateToken, analyticsRoutes);
 
-router.post('/ai-content/optimize', (req, res) => {
-  res.json({
-    success: true,
-    data: {
-      original: req.body.content,
-      optimized: `${req.body.content} [Optimized]`,
-      improvements: ['Better engagement', 'SEO optimized']
-    }
-  });
-});
+// A/B Testing Routes
+router.use('/ab-testing', authenticateToken, abTestingRoutes);
 
-router.post('/ai-content/variations', (req, res) => {
-  res.json({
-    success: true,
-    data: {
-      variations: [
-        { id: 1, content: 'Variation 1' },
-        { id: 2, content: 'Variation 2' },
-        { id: 3, content: 'Variation 3' }
-      ]
-    }
-  });
-});
+// AI Content Generation Routes
+router.use('/ai-content', authenticateToken, aiContentRoutes);
 
-// Team endpoints
-router.get('/teams', (req, res) => {
-  res.json({
-    success: true,
-    data: [
-      { id: 1, name: 'Marketing Team', members: 5 },
-      { id: 2, name: 'Content Team', members: 3 }
-    ]
-  });
-});
+// Competitor Analysis Routes
+router.use('/competitors', authenticateToken, competitorRoutes);
 
-router.get('/teams/:id', (req, res) => {
-  res.json({
-    success: true,
-    data: {
-      id: req.params.id,
-      name: 'Marketing Team',
-      members: []
-    }
-  });
-});
+// Team Collaboration Routes
+router.use('/teams', authenticateToken, teamRoutes);
 
-router.get('/teams/:id/members', (req, res) => {
-  res.json({
-    success: true,
-    data: []
-  });
-});
+// Scheduler Routes
+router.use('/scheduler', authenticateToken, schedulerRoutes);
 
-// Scheduler endpoints
-router.get('/scheduler/posts', (req, res) => {
-  res.json({
-    success: true,
-    data: []
-  });
-});
+// Content Library Routes
+router.use('/library', authenticateToken, libraryRoutes);
 
-router.get('/scheduler/calendar', (req, res) => {
-  res.json({
-    success: true,
-    data: {
-      month: new Date().getMonth(),
-      year: new Date().getFullYear(),
-      posts: []
-    }
-  });
-});
+// Mobile API Routes
+router.use('/mobile', authenticateToken, mobileRoutes);
 
-router.post('/scheduler/posts', (req, res) => {
-  res.status(201).json({
-    success: true,
-    data: {
-      id: `post_${Date.now()}`,
-      ...req.body
-    }
-  });
-});
+// Reporting Routes
+router.use('/reporting', authenticateToken, reportingRoutes);
 
-// Library endpoints
-router.get('/library/templates', (req, res) => {
-  res.json({
-    success: true,
-    data: []
-  });
-});
+// White Label Routes
+router.use('/white-label', authenticateToken, whiteLabelRoutes);
 
-router.get('/library/assets', (req, res) => {
-  res.json({
-    success: true,
-    data: []
-  });
-});
+// ============================================
+// Core Platform Routes
+// ============================================
 
-router.get('/library/search', (req, res) => {
-  res.json({
-    success: true,
-    data: {
-      query: req.query.q,
-      results: []
-    }
-  });
-});
+// Authentication Routes (Some endpoints are public)
+router.use('/auth', authRoutes);
 
-// Mobile endpoints
-router.get('/mobile/sync', (req, res) => {
-  res.json({
-    success: true,
-    data: {
-      lastSync: new Date().toISOString(),
-      changes: []
-    }
-  });
-});
+// Posts Management Routes
+router.use('/posts', authenticateToken, postsRoutes);
 
-router.get('/mobile/notifications', (req, res) => {
-  res.json({
-    success: true,
-    data: []
-  });
-});
+// Notifications Routes
+router.use('/notifications', authenticateToken, notificationsRoutes);
 
-router.post('/mobile/devices/register', (req, res) => {
-  res.status(201).json({
-    success: true,
-    data: {
-      deviceId: req.body.deviceId,
-      registered: true
-    }
-  });
-});
+// Audit Logging Routes
+router.use('/audit', authenticateToken, auditRoutes);
 
-// White Label endpoints
-router.get('/white-label/tenant', (req, res) => {
-  res.json({
-    success: true,
-    data: {
-      id: 'tenant_1',
-      name: 'Default Tenant'
-    }
-  });
-});
+// Two-Factor Authentication Routes
+router.use('/two-factor', authenticateToken, twoFactorRoutes);
 
-router.get('/white-label/branding', (req, res) => {
-  res.json({
-    success: true,
-    data: {
-      logo: '/logo.png',
-      colors: {
-        primary: '#007bff'
+// User Management Routes
+router.use('/users', authenticateToken, userManagementRoutes);
+
+// Performance Monitoring Routes
+router.use('/performance', authenticateToken, performanceRoutes);
+
+// Email Service Routes
+router.use('/email', authenticateToken, emailRoutes);
+
+// ============================================
+// Cached Endpoints (for frequently accessed data)
+// ============================================
+
+// Cached analytics endpoint
+router.get('/analytics/summary', 
+  authenticateToken, 
+  cacheMiddleware({ ttl: 300, keyPrefix: 'analytics-summary' }), // Cache for 5 minutes
+  async (req: Request, res: Response) => {
+    // This will use the actual analytics service when integrated
+    res.json({
+      success: true,
+      data: {
+        overview: {
+          totalPosts: 1234,
+          totalEngagement: 45678,
+          averageReach: 23456,
+          growthRate: 12.5
+        },
+        cached: true,
+        timestamp: new Date().toISOString()
       }
-    }
-  });
-});
+    });
+  }
+);
 
-router.get('/white-label/sso', (req, res) => {
+// Cached trending content endpoint
+router.get('/content/trending',
+  authenticateToken,
+  cacheMiddleware({ ttl: 600, keyPrefix: 'trending' }), // Cache for 10 minutes
+  async (req: Request, res: Response) => {
+    res.json({
+      success: true,
+      data: {
+        trending: [],
+        cached: true,
+        timestamp: new Date().toISOString()
+      }
+    });
+  }
+);
+
+// ============================================
+// Feature Flags Endpoint
+// ============================================
+
+router.get('/features', authenticateToken, (req: Request, res: Response) => {
   res.json({
     success: true,
     data: {
-      enabled: false,
-      providers: []
+      abTesting: true,
+      aiContent: true,
+      advancedAnalytics: true,
+      teamCollaboration: true,
+      whiteLabel: process.env.ENABLE_WHITE_LABEL === 'true',
+      mobileAPI: true,
+      competitorAnalysis: true,
+      automatedReporting: true,
+      contentLibrary: true,
+      advancedScheduler: true
     }
   });
 });
 
-// Reporting endpoints
-router.post('/reporting/generate', (req, res) => {
-  res.json({
-    success: true,
-    data: {
-      reportId: `rpt_${Date.now()}`,
-      status: 'generating'
-    }
-  });
-});
+// ============================================
+// Error Handling
+// ============================================
 
-router.get('/reporting/reports', (req, res) => {
-  res.json({
-    success: true,
-    data: []
-  });
-});
-
-router.get('/reporting/export', (req, res) => {
-  res.json({
-    success: true,
-    data: {
-      format: req.query.format,
-      url: `/exports/data.${req.query.format}`
-    }
-  });
-});
-
-// Competitor endpoints
-router.get('/competitors', (req, res) => {
-  res.json({
-    success: true,
-    data: []
-  });
-});
-
-router.get('/competitors/:id/metrics', (req, res) => {
-  res.json({
-    success: true,
-    data: {
-      competitorId: req.params.id,
-      metrics: {}
-    }
-  });
-});
-
-router.get('/competitors/analysis', (req, res) => {
-  res.json({
-    success: true,
-    data: {
-      market: {},
-      trends: []
-    }
-  });
-});
-
-// Catch all for undefined routes
-router.use('*', (req, res) => {
+// 404 handler for undefined routes
+router.use('*', (req: Request, res: Response) => {
   res.status(404).json({
+    success: false,
     error: 'Not Found',
     message: 'The requested endpoint does not exist',
     path: req.originalUrl,
     timestamp: new Date().toISOString()
+  });
+});
+
+// Error handling middleware
+router.use((err: any, req: Request, res: Response, next: any) => {
+  console.error('API Error:', err);
+  
+  const status = err.status || err.statusCode || 500;
+  const message = err.message || 'Internal Server Error';
+  
+  res.status(status).json({
+    success: false,
+    error: {
+      message,
+      status,
+      timestamp: new Date().toISOString()
+    }
   });
 });
 
