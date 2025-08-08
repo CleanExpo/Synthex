@@ -76,3 +76,13 @@ node_modules/
 .vercel
 
 .vercel
+
+
+# Cleanup and backup
+backup-before-cleanup/
+test-*.js
+*-sandbox.html
+*-demo.html
+*-test.html
+
+# Development files

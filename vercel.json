@@ -4,19 +4,14 @@
   "outputDirectory": "public",
   "framework": null,
   "functions": {
-    "api/vercel.js": {
-      "maxDuration": 10,
-      "includeFiles": "dist/**"
+    "api/main.js": {
+      "maxDuration": 10
     }
   },
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "/api/vercel.js"
-    },
-    {
-      "source": "/auth/:path*",
-      "destination": "/api/vercel.js"
+      "destination": "/api/main.js"
     }
   ]
 }
