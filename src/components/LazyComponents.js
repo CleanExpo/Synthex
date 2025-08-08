@@ -24,35 +24,35 @@ function lazyLoadComponent(componentPath, featureName) {
 
 // Platform Optimizer Components
 export const InstagramOptimizer = isFeatureEnabled('instagramOptimizer')
-  ? () => lazyLoadComponent('./optimizers/InstagramOptimizer.js', 'instagramOptimizer')
+  ? () => lazyLoadComponent('./InstagramOptimizer.jsx', 'instagramOptimizer')
   : () => null;
 
 export const FacebookOptimizer = isFeatureEnabled('facebookOptimizer')
-  ? () => lazyLoadComponent('./optimizers/FacebookOptimizer.js', 'facebookOptimizer')
+  ? () => lazyLoadComponent('./FacebookOptimizer.jsx', 'facebookOptimizer')
   : () => null;
 
 export const TwitterOptimizer = isFeatureEnabled('twitterOptimizer')
-  ? () => lazyLoadComponent('./optimizers/TwitterOptimizer.js', 'twitterOptimizer')
+  ? () => lazyLoadComponent('./TwitterOptimizer.jsx', 'twitterOptimizer')
   : () => null;
 
 export const LinkedInOptimizer = isFeatureEnabled('linkedinOptimizer')
-  ? () => lazyLoadComponent('./optimizers/LinkedInOptimizer.js', 'linkedinOptimizer')
+  ? () => lazyLoadComponent('./LinkedInOptimizer.jsx', 'linkedinOptimizer')
   : () => null;
 
 export const TikTokOptimizer = isFeatureEnabled('tiktokOptimizer')
-  ? () => lazyLoadComponent('./optimizers/TikTokOptimizer.js', 'tiktokOptimizer')
+  ? () => lazyLoadComponent('./TikTokOptimizer.jsx', 'tiktokOptimizer')
   : () => null;
 
 export const PinterestOptimizer = isFeatureEnabled('pinterestOptimizer')
-  ? () => lazyLoadComponent('./optimizers/PinterestOptimizer.js', 'pinterestOptimizer')
+  ? () => lazyLoadComponent('./PinterestOptimizer.jsx', 'pinterestOptimizer')
   : () => null;
 
 export const YouTubeOptimizer = isFeatureEnabled('youtubeOptimizer')
-  ? () => lazyLoadComponent('./optimizers/YouTubeOptimizer.js', 'youtubeOptimizer')
+  ? () => lazyLoadComponent('./YouTubeOptimizer.jsx', 'youtubeOptimizer')
   : () => null;
 
 export const RedditOptimizer = isFeatureEnabled('redditOptimizer')
-  ? () => lazyLoadComponent('./optimizers/RedditOptimizer.js', 'redditOptimizer')
+  ? () => lazyLoadComponent('./RedditOptimizer.jsx', 'redditOptimizer')
   : () => null;
 
 // UI Components
