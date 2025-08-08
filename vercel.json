@@ -1,6 +1,18 @@
 {
   "version": 2,
+  "buildCommand": "npm run build:prod",
+  "outputDirectory": "public",
+  "regions": ["iad1"],
+  "framework": null,
   "rewrites": [
+    {
+      "source": "/api/v1/(.*)",
+      "destination": "/api/vercel.js"
+    },
+    {
+      "source": "/api/auth/(.*)",
+      "destination": "/api/vercel.js"
+    },
     {
       "source": "/api/(.*)",
       "destination": "/api/vercel.js"
@@ -8,30 +20,8 @@
     {
       "source": "/auth/(.*)",
       "destination": "/api/vercel.js"
-    },
-    {
-      "source": "/health",
-      "destination": "/api/vercel.js"
-    },
-    {
-      "source": "/api-info",
-      "destination": "/api/vercel.js"
-    },
-    {
-      "source": "/api-docs(.*)",
-      "destination": "/api/vercel.js"
-    },
-    {
-      "source": "/(app|classic|dashboard|demo|login)",
-      "destination": "/api/vercel.js"
-    },
-    {
-      "source": "/",
-      "destination": "/api/vercel.js"
     }
   ],
-  "outputDirectory": "public",
-  "regions": ["iad1"],
   "headers": [
     {
       "source": "/api/(.*)",
