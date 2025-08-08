@@ -1,340 +1,825 @@
 <!DOCTYPE html>
-<html lang="en" class="h-full">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - SYNTHEX Marketing Platform</title>
-    <link rel="stylesheet" href="/css/production.css">
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&display=swap" rel="stylesheet">
+    <title>Sign In - SYNTHEX</title>
+    <link rel="icon" type="image/png" href="/logo.png">
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
     <style>
-        * { font-family: 'Space Grotesk', sans-serif; }
-        .gradient-bg {
-            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
-        .glass {
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --primary-light: #818cf8;
+            --secondary: #0ea5e9;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --dark: #0f172a;
+            --dark-secondary: #1e293b;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --border: rgba(148, 163, 184, 0.1);
+            --glass: rgba(15, 23, 42, 0.6);
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Animated background */
+        .bg-animation {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            z-index: 0;
+            overflow: hidden;
+        }
+
+        .gradient-orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.5;
+            animation: float 20s infinite ease-in-out;
+        }
+
+        .orb-1 {
+            width: 400px;
+            height: 400px;
+            background: var(--primary);
+            top: -200px;
+            left: -200px;
+        }
+
+        .orb-2 {
+            width: 300px;
+            height: 300px;
+            background: var(--secondary);
+            bottom: -150px;
+            right: -150px;
+            animation-delay: 7s;
+        }
+
+        .orb-3 {
+            width: 350px;
+            height: 350px;
+            background: var(--primary-light);
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            animation-delay: 14s;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(30px, -30px) scale(1.1); }
+            66% { transform: translate(-20px, 20px) scale(0.9); }
+        }
+
+        /* Main container */
+        .auth-container {
+            position: relative;
+            z-index: 10;
+            width: 100%;
+            max-width: 480px;
+            padding: 20px;
+        }
+
+        /* Logo */
+        .logo-section {
+            text-align: center;
+            margin-bottom: 40px;
+            animation: fadeInDown 0.8s ease;
+        }
+
+        .logo {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .logo-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 24px;
+            color: white;
+            box-shadow: 0 8px 24px rgba(99, 102, 241, 0.3);
+        }
+
+        .logo-text {
+            font-size: 28px;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+        }
+
+        .tagline {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        /* Auth card */
+        .auth-card {
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: fadeInUp 0.8s ease;
+        }
+
+        .auth-header {
+            margin-bottom: 32px;
+        }
+
+        .auth-title {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .auth-subtitle {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        /* Form styles */
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px 16px;
+            background: rgba(30, 41, 59, 0.5);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            color: var(--text-primary);
+            font-size: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            background: rgba(30, 41, 59, 0.8);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        .form-input::placeholder {
+            color: var(--text-secondary);
+            opacity: 0.5;
+        }
+
+        /* Password input with toggle */
+        .password-input-wrapper {
+            position: relative;
+        }
+
+        .password-toggle {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            padding: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: color 0.3s;
+        }
+
+        .password-toggle:hover {
+            color: var(--text-primary);
+        }
+
+        /* Checkbox and remember me */
+        .form-checkbox-group {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 24px;
+        }
+
+        .checkbox-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .checkbox {
+            width: 18px;
+            height: 18px;
+            accent-color: var(--primary);
+        }
+
+        .checkbox-label {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        .forgot-link {
+            font-size: 14px;
+            color: var(--primary);
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .forgot-link:hover {
+            color: var(--primary-light);
+        }
+
+        /* Buttons */
+        .btn {
+            width: 100%;
+            padding: 14px 24px;
+            border: none;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            box-shadow: 0 4px 14px rgba(99, 102, 241, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-secondary {
+            background: rgba(148, 163, 184, 0.1);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(148, 163, 184, 0.2);
+        }
+
+        /* Loading spinner */
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            display: none;
+        }
+
+        .btn-loading .spinner {
+            display: block;
+        }
+
+        .btn-loading .btn-text {
+            display: none;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Divider */
+        .divider {
+            position: relative;
+            text-align: center;
+            margin: 32px 0;
+        }
+
+        .divider::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: var(--border);
+        }
+
+        .divider-text {
+            position: relative;
+            display: inline-block;
+            padding: 0 16px;
+            background: var(--glass);
+            color: var(--text-secondary);
+            font-size: 13px;
+        }
+
+        /* Social login */
+        .social-login {
+            display: flex;
+            gap: 12px;
+        }
+
+        .social-btn {
+            flex: 1;
+            padding: 12px;
+            background: rgba(148, 163, 184, 0.1);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            color: var(--text-primary);
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .social-btn:hover {
+            background: rgba(148, 163, 184, 0.2);
+            transform: translateY(-2px);
+        }
+
+        /* Switch form link */
+        .switch-form {
+            text-align: center;
+            margin-top: 32px;
+            padding-top: 32px;
+            border-top: 1px solid var(--border);
+        }
+
+        .switch-form-text {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        .switch-form-link {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.3s;
+        }
+
+        .switch-form-link:hover {
+            color: var(--primary-light);
+        }
+
+        /* Alert messages */
+        .alert {
+            padding: 12px 16px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            display: none;
+            animation: slideDown 0.3s ease;
+        }
+
+        .alert.show {
+            display: block;
+        }
+
+        .alert-success {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            color: var(--success);
+        }
+
+        .alert-error {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            color: var(--danger);
+        }
+
+        /* Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Back to home link */
+        .back-home {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: color 0.3s;
+            z-index: 20;
+        }
+
+        .back-home:hover {
+            color: var(--text-primary);
+        }
+
+        /* Responsive */
+        @media (max-width: 640px) {
+            .auth-card {
+                padding: 28px 20px;
+            }
+
+            .auth-title {
+                font-size: 20px;
+            }
+
+            .social-login {
+                flex-direction: column;
+            }
         }
     </style>
 </head>
-<body class="h-full gradient-bg text-white">
-    <div class="min-h-screen flex items-center justify-center p-4">
-        <div class="max-w-md w-full space-y-8">
-            <!-- Logo and Title -->
-            <div class="text-center">
-                <h1 class="text-4xl font-bold mb-2">SYNTHEX</h1>
-                <p class="text-gray-400">Marketing Automation Platform</p>
+<body>
+    <!-- Animated Background -->
+    <div class="bg-animation">
+        <div class="gradient-orb orb-1"></div>
+        <div class="gradient-orb orb-2"></div>
+        <div class="gradient-orb orb-3"></div>
+    </div>
+
+    <!-- Back to Home -->
+    <a href="/" class="back-home">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M19 12H5M12 19l-7-7 7-7"/>
+        </svg>
+        Back to Home
+    </a>
+
+    <!-- Auth Container -->
+    <div class="auth-container">
+        <!-- Logo Section -->
+        <div class="logo-section">
+            <a href="/" class="logo">
+                <div class="logo-icon">S</div>
+                <span class="logo-text">SYNTHEX</span>
+            </a>
+            <p class="tagline">AI-Powered Marketing Platform</p>
+        </div>
+
+        <!-- Login Card -->
+        <div class="auth-card" id="loginCard">
+            <div class="auth-header">
+                <h1 class="auth-title">Welcome back</h1>
+                <p class="auth-subtitle">Enter your credentials to access your account</p>
             </div>
 
-            <!-- Login/Register Forms Container -->
-            <div id="authContainer" class="glass rounded-xl p-8">
-                <!-- Login Form -->
-                <div id="loginFormContainer">
-                    <h2 class="text-2xl font-bold mb-6">Sign In</h2>
-                    
-                    <form id="loginForm" class="space-y-6">
-                        <div>
-                            <label for="loginEmail" class="block text-sm font-medium mb-2">Email</label>
-                            <input type="email" id="loginEmail" name="email" required
-                                   class="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                   placeholder="your@email.com">
-                        </div>
-                        
-                        <div>
-                            <label for="loginPassword" class="block text-sm font-medium mb-2">Password</label>
-                            <input type="password" id="loginPassword" name="password" required
-                                   class="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                   placeholder="••••••••">
-                        </div>
-                        
-                        <div class="flex items-center justify-between">
-                            <label class="flex items-center">
-                                <input type="checkbox" id="rememberMe" class="w-4 h-4 bg-gray-800 border-gray-700 rounded focus:ring-2 focus:ring-blue-500">
-                                <span class="ml-2 text-sm text-gray-400">Remember me</span>
-                            </label>
-                            <a href="/reset-password.html" class="text-sm text-blue-400 hover:text-blue-300">Forgot password?</a>
-                        </div>
-                        
-                        <button type="submit" 
-                                class="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 rounded-lg font-medium transition-colors">
-                            Sign In
-                        </button>
-                    </form>
+            <!-- Alert Message -->
+            <div class="alert alert-error" id="loginAlert"></div>
 
-                    <div class="mt-6 text-center">
-                        <p class="text-sm text-gray-400">
-                            Don't have an account? 
-                            <a href="#" onclick="toggleForm('register')" class="text-blue-400 hover:text-blue-300">Sign up</a>
-                        </p>
+            <!-- Login Form -->
+            <form id="loginForm">
+                <div class="form-group">
+                    <label class="form-label" for="email">Email address</label>
+                    <input 
+                        type="email" 
+                        id="email" 
+                        name="email" 
+                        class="form-input" 
+                        placeholder="name@company.com"
+                        required
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="password">Password</label>
+                    <div class="password-input-wrapper">
+                        <input 
+                            type="password" 
+                            id="password" 
+                            name="password" 
+                            class="form-input" 
+                            placeholder="Enter your password"
+                            required
+                        >
+                        <button type="button" class="password-toggle" onclick="togglePassword()">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                                <circle cx="12" cy="12" r="3"/>
+                            </svg>
+                        </button>
                     </div>
                 </div>
 
-                <!-- Register Form (Hidden by default) -->
-                <div id="registerFormContainer" class="hidden">
-                    <h2 class="text-2xl font-bold mb-6">Create Account</h2>
-                    
-                    <form id="registerForm" class="space-y-6">
-                        <div>
-                            <label for="registerName" class="block text-sm font-medium mb-2">Name</label>
-                            <input type="text" id="registerName" name="name"
-                                   class="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                   placeholder="Your Name">
-                        </div>
-
-                        <div>
-                            <label for="registerEmail" class="block text-sm font-medium mb-2">Email</label>
-                            <input type="email" id="registerEmail" name="email" required
-                                   class="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                   placeholder="your@email.com">
-                        </div>
-                        
-                        <div>
-                            <label for="registerPassword" class="block text-sm font-medium mb-2">Password</label>
-                            <input type="password" id="registerPassword" name="password" required
-                                   class="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                   placeholder="••••••••">
-                            <p class="text-xs text-gray-400 mt-1">At least 8 characters, including uppercase, lowercase, number, and special character</p>
-                        </div>
-
-                        <div>
-                            <label for="confirmPassword" class="block text-sm font-medium mb-2">Confirm Password</label>
-                            <input type="password" id="confirmPassword" name="confirmPassword" required
-                                   class="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                   placeholder="••••••••">
-                        </div>
-                        
-                        <button type="submit" 
-                                class="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 rounded-lg font-medium transition-colors">
-                            Create Account
-                        </button>
-                    </form>
-
-                    <div class="mt-6 text-center">
-                        <p class="text-sm text-gray-400">
-                            Already have an account? 
-                            <a href="#" onclick="toggleForm('login')" class="text-blue-400 hover:text-blue-300">Sign in</a>
-                        </p>
+                <div class="form-checkbox-group">
+                    <div class="checkbox-wrapper">
+                        <input type="checkbox" id="remember" class="checkbox">
+                        <label for="remember" class="checkbox-label">Remember me</label>
                     </div>
+                    <a href="/reset-password" class="forgot-link">Forgot password?</a>
                 </div>
+
+                <button type="submit" class="btn btn-primary" id="loginBtn">
+                    <span class="btn-text">Sign in</span>
+                    <div class="spinner"></div>
+                </button>
+            </form>
+
+            <div class="divider">
+                <span class="divider-text">Or continue with</span>
             </div>
 
-            <!-- Error/Success Messages -->
-            <div id="message" class="hidden glass rounded-lg p-4"></div>
+            <div class="social-login">
+                <button class="social-btn" onclick="loginWithGoogle()">
+                    <svg width="18" height="18" viewBox="0 0 24 24">
+                        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                        <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                    </svg>
+                    Google
+                </button>
+                <button class="social-btn" onclick="loginWithGitHub()">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                    </svg>
+                    GitHub
+                </button>
+            </div>
+
+            <div class="switch-form">
+                <p class="switch-form-text">
+                    Don't have an account? 
+                    <a href="#" class="switch-form-link" onclick="showRegisterForm(event)">Sign up</a>
+                </p>
+            </div>
+        </div>
+
+        <!-- Register Card (Hidden by default) -->
+        <div class="auth-card" id="registerCard" style="display: none;">
+            <div class="auth-header">
+                <h1 class="auth-title">Create an account</h1>
+                <p class="auth-subtitle">Start your free trial today</p>
+            </div>
+
+            <!-- Alert Message -->
+            <div class="alert alert-error" id="registerAlert"></div>
+
+            <!-- Register Form -->
+            <form id="registerForm">
+                <div class="form-group">
+                    <label class="form-label" for="regName">Full name</label>
+                    <input 
+                        type="text" 
+                        id="regName" 
+                        name="name" 
+                        class="form-input" 
+                        placeholder="John Doe"
+                        required
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="regEmail">Email address</label>
+                    <input 
+                        type="email" 
+                        id="regEmail" 
+                        name="email" 
+                        class="form-input" 
+                        placeholder="name@company.com"
+                        required
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="regPassword">Password</label>
+                    <div class="password-input-wrapper">
+                        <input 
+                            type="password" 
+                            id="regPassword" 
+                            name="password" 
+                            class="form-input" 
+                            placeholder="Create a strong password"
+                            required
+                            minlength="8"
+                        >
+                        <button type="button" class="password-toggle" onclick="toggleRegPassword()">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                                <circle cx="12" cy="12" r="3"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="form-checkbox-group">
+                    <div class="checkbox-wrapper">
+                        <input type="checkbox" id="terms" required class="checkbox">
+                        <label for="terms" class="checkbox-label">
+                            I agree to the <a href="/terms" class="forgot-link">Terms</a> and <a href="/privacy" class="forgot-link">Privacy Policy</a>
+                        </label>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary" id="registerBtn">
+                    <span class="btn-text">Create account</span>
+                    <div class="spinner"></div>
+                </button>
+            </form>
+
+            <div class="switch-form">
+                <p class="switch-form-text">
+                    Already have an account? 
+                    <a href="#" class="switch-form-link" onclick="showLoginForm(event)">Sign in</a>
+                </p>
+            </div>
         </div>
     </div>
 
+    <!-- API Client -->
+    <script src="/js/api-client.js"></script>
+    
     <script>
-        let authToken = localStorage.getItem('token');
-
-        // Check if user is already logged in
-        if (authToken) {
-            verifyToken();
-        }
-        
-        // Load saved email only (not password for security)
-        window.addEventListener('DOMContentLoaded', () => {
-            const savedEmail = localStorage.getItem('savedEmail');
-            
-            if (savedEmail) {
-                document.getElementById('loginEmail').value = savedEmail;
-                document.getElementById('rememberMe').checked = true;
-                // Focus on password field for convenience
-                document.getElementById('loginPassword').focus();
-            }
-        });
-
-        // Toggle between login and register forms
-        function toggleForm(form) {
-            const loginContainer = document.getElementById('loginFormContainer');
-            const registerContainer = document.getElementById('registerFormContainer');
-            
-            if (form === 'register') {
-                loginContainer.classList.add('hidden');
-                registerContainer.classList.remove('hidden');
-            } else {
-                loginContainer.classList.remove('hidden');
-                registerContainer.classList.add('hidden');
-            }
+        // Toggle password visibility
+        function togglePassword() {
+            const input = document.getElementById('password');
+            const type = input.type === 'password' ? 'text' : 'password';
+            input.type = type;
         }
 
-        // Login form handler
+        function toggleRegPassword() {
+            const input = document.getElementById('regPassword');
+            const type = input.type === 'password' ? 'text' : 'password';
+            input.type = type;
+        }
+
+        // Switch between login and register forms
+        function showRegisterForm(e) {
+            e.preventDefault();
+            document.getElementById('loginCard').style.display = 'none';
+            document.getElementById('registerCard').style.display = 'block';
+        }
+
+        function showLoginForm(e) {
+            e.preventDefault();
+            document.getElementById('registerCard').style.display = 'none';
+            document.getElementById('loginCard').style.display = 'block';
+        }
+
+        // Show alert message
+        function showAlert(elementId, message, type = 'error') {
+            const alert = document.getElementById(elementId);
+            alert.className = `alert alert-${type} show`;
+            alert.textContent = message;
+            
+            setTimeout(() => {
+                alert.classList.remove('show');
+            }, 5000);
+        }
+
+        // Login form submission
         document.getElementById('loginForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             
-            const email = document.getElementById('loginEmail').value;
-            const password = document.getElementById('loginPassword').value;
-            const rememberMe = document.getElementById('rememberMe').checked;
+            const btn = document.getElementById('loginBtn');
+            btn.classList.add('btn-loading');
+            btn.disabled = true;
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
             
             try {
-                // Add better error handling for production
-                const apiUrl = '/api/auth/login';
-                console.log('Attempting login to:', apiUrl);
+                const response = await window.synthexAPI.login(email, password);
                 
-                const response = await fetch(apiUrl, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json'
-                    },
-                    body: JSON.stringify({ email, password }),
-                    credentials: 'same-origin' // Important for cookies in production
-                });
-                
-                let data;
-                try {
-                    data = await response.json();
-                } catch (jsonError) {
-                    console.error('Failed to parse response as JSON:', jsonError);
-                    data = { error: 'Invalid server response' };
-                }
-                
-                if (response.ok) {
-                    authToken = data.token;
-                    localStorage.setItem('token', authToken);
-                    
-                    // Store user data
-                    if (data.user) {
-                        // Ensure onboardingCompleted is set for existing users
-                        if (!data.user.preferences) {
-                            data.user.preferences = {};
-                        }
-                        if (data.user.preferences.onboardingCompleted === undefined) {
-                            data.user.preferences.onboardingCompleted = true;
-                        }
-                        localStorage.setItem('user', JSON.stringify(data.user));
-                    }
-                    
-                    // Save email only if Remember Me is checked (not password for security)
-                    if (rememberMe) {
-                        localStorage.setItem('savedEmail', email);
-                        // Set a longer session/token expiry for remember me
-                        localStorage.setItem('rememberMeEnabled', 'true');
-                    } else {
-                        localStorage.removeItem('savedEmail');
-                        localStorage.removeItem('rememberMeEnabled');
-                    }
-                    
-                    showMessage('Login successful! Redirecting...', 'success');
-                    
-                    // Check for redirect URL or go to dashboard
-                    const redirectUrl = sessionStorage.getItem('redirectAfterLogin');
+                if (response.success) {
+                    showAlert('loginAlert', 'Login successful! Redirecting...', 'success');
                     setTimeout(() => {
-                        if (redirectUrl && !redirectUrl.includes('login') && !redirectUrl.includes('auth')) {
-                            sessionStorage.removeItem('redirectAfterLogin');
-                            window.location.href = redirectUrl;
-                        } else {
-                            window.location.href = '/dashboard.html';
-                        }
+                        window.location.href = '/dashboard';
                     }, 1000);
                 } else {
-                    showMessage(data.error || 'Login failed', 'error');
+                    showAlert('loginAlert', response.message || 'Invalid credentials');
                 }
             } catch (error) {
-                showMessage('Network error. Please try again.', 'error');
-                console.error('Login error:', error);
+                showAlert('loginAlert', error.message || 'Login failed. Please try again.');
+            } finally {
+                btn.classList.remove('btn-loading');
+                btn.disabled = false;
             }
         });
 
-        // Register form handler
+        // Register form submission
         document.getElementById('registerForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             
-            const name = document.getElementById('registerName').value;
-            const email = document.getElementById('registerEmail').value;
-            const password = document.getElementById('registerPassword').value;
-            const confirmPassword = document.getElementById('confirmPassword').value;
+            const btn = document.getElementById('registerBtn');
+            btn.classList.add('btn-loading');
+            btn.disabled = true;
             
-            if (password !== confirmPassword) {
-                showMessage('Passwords do not match', 'error');
-                return;
-            }
+            const name = document.getElementById('regName').value;
+            const email = document.getElementById('regEmail').value;
+            const password = document.getElementById('regPassword').value;
             
             try {
-                const response = await fetch('/api/auth/register', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json'
-                    },
-                    body: JSON.stringify({ name, email, password }),
-                    credentials: 'same-origin' // Important for cookies in production
-                });
+                const response = await window.synthexAPI.register(email, password, name);
                 
-                let data;
-                try {
-                    data = await response.json();
-                } catch (jsonError) {
-                    console.error('Failed to parse response as JSON:', jsonError);
-                    data = { error: 'Invalid server response' };
-                }
-                
-                if (response.ok) {
-                    authToken = data.token;
-                    localStorage.setItem('token', authToken);
-                    // Store user data
-                    if (data.user) {
-                        // New users need onboarding
-                        if (!data.user.preferences) {
-                            data.user.preferences = {};
-                        }
-                        data.user.preferences.onboardingCompleted = false;
-                        localStorage.setItem('user', JSON.stringify(data.user));
-                    }
-                    showMessage('Account created successfully! Redirecting to setup...', 'success');
+                if (response.success) {
+                    showAlert('registerAlert', 'Account created! Please sign in.', 'success');
                     setTimeout(() => {
-                        window.location.href = '/onboarding.html';
-                    }, 1000);
+                        showLoginForm(e);
+                    }, 2000);
                 } else {
-                    if (data.details && Array.isArray(data.details)) {
-                        const errors = data.details.map(d => d.msg).join(', ');
-                        showMessage(errors, 'error');
-                    } else {
-                        showMessage(data.error || 'Registration failed', 'error');
-                    }
+                    showAlert('registerAlert', response.message || 'Registration failed');
                 }
             } catch (error) {
-                showMessage('Network error. Please try again.', 'error');
-                console.error('Registration error:', error);
+                showAlert('registerAlert', error.message || 'Registration failed. Please try again.');
+            } finally {
+                btn.classList.remove('btn-loading');
+                btn.disabled = false;
             }
         });
 
-        // Verify token
-        async function verifyToken() {
-            try {
-                const response = await fetch('/api/auth/verify', {
-                    headers: {
-                        'Authorization': `Bearer ${authToken}`
-                    }
-                });
-                
-                const data = await response.json();
-                
-                if (response.ok && data.valid) {
-                    window.location.href = '/dashboard.html';
-                } else {
-                    localStorage.removeItem('token');
-                    localStorage.removeItem('user');
-                    authToken = null;
-                }
-            } catch (error) {
-                console.error('Token verification failed:', error);
-                localStorage.removeItem('token');
-                localStorage.removeItem('user');
-                authToken = null;
-            }
+        // Social login functions (placeholders)
+        function loginWithGoogle() {
+            window.location.href = '/auth/google';
         }
 
-        // Show message
-        function showMessage(text, type) {
-            const messageEl = document.getElementById('message');
-            messageEl.textContent = text;
-            messageEl.className = `glass rounded-lg p-4 ${type === 'error' ? 'text-red-400' : 'text-green-400'}`;
-            messageEl.classList.remove('hidden');
-            
-            setTimeout(() => {
-                messageEl.classList.add('hidden');
-            }, 5000);
+        function loginWithGitHub() {
+            alert('GitHub login coming soon!');
+        }
+
+        // Check if user is already logged in
+        if (window.synthexAPI && window.synthexAPI.isAuthenticated()) {
+            window.location.href = '/dashboard';
         }
     </script>
 </body>
