@@ -1,283 +1,513 @@
 /**
- * SYNTHEX API Client
- * Unified API communication layer
+ * Unified API Client for Synthex v2
+ * Integrates all frontend pages with the new API structure
  */
 
-class SynthexAPI {
+class SynthexAPIClient {
   constructor() {
-    this.baseURL = window.location.origin + '/api';
-    this.token = localStorage.getItem('synthex-token');
+    this.baseURL = window.location.origin + '/api/v2';
+    this.token = localStorage.getItem('synthex_token');
+    this.locale = localStorage.getItem('synthex_locale') || 'en';
+    this.sessionId = this.generateSessionId();
+    this.deviceId = this.getOrCreateDeviceId();
   }
 
-  // Helper method for API calls
+  /**
+   * Generate unique session ID
+   */
+  generateSessionId() {
+    return `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  }
+
+  /**
+   * Get or create device ID
+   */
+  getOrCreateDeviceId() {
+    let deviceId = localStorage.getItem('synthex_device_id');
+    if (!deviceId) {
+      deviceId = `device_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      localStorage.setItem('synthex_device_id', deviceId);
+    }
+    return deviceId;
+  }
+
+  /**
+   * Set authentication token
+   */
+  setToken(token) {
+    this.token = token;
+    localStorage.setItem('synthex_token', token);
+  }
+
+  /**
+   * Clear authentication
+   */
+  clearAuth() {
+    this.token = null;
+    localStorage.removeItem('synthex_token');
+  }
+
+  /**
+   * Set locale
+   */
+  setLocale(locale) {
+    this.locale = locale;
+    localStorage.setItem('synthex_locale', locale);
+  }
+
+  /**
+   * Make API request
+   */
   async request(endpoint, options = {}) {
     const url = `${this.baseURL}${endpoint}`;
-    const config = {
-      ...options,
-      headers: {
-        'Content-Type': 'application/json',
-        ...options.headers,
-      }
+    
+    const headers = {
+      'Content-Type': 'application/json',
+      'X-Session-ID': this.sessionId,
+      'X-Device-ID': this.deviceId,
+      'X-Locale': this.locale,
+      'X-Platform': 'web',
+      ...options.headers
     };
 
-    // Add auth token if available
     if (this.token) {
-      config.headers['Authorization'] = `Bearer ${this.token}`;
+      headers['Authorization'] = `Bearer ${this.token}`;
     }
 
     try {
-      const response = await fetch(url, config);
+      const response = await fetch(url, {
+        ...options,
+        headers,
+        body: options.body ? JSON.stringify(options.body) : undefined
+      });
+
+      // Handle rate limiting
+      if (response.status === 429) {
+        const retryAfter = response.headers.get('Retry-After');
+        throw new Error(`Rate limited. Please retry after ${retryAfter} seconds`);
+      }
+
+      // Handle authentication errors
+      if (response.status === 401) {
+        this.clearAuth();
+        window.location.href = '/login.html';
+        throw new Error('Authentication required');
+      }
+
+      // Parse response
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || 'API request failed');
+        throw new Error(data.error || `Request failed: ${response.status}`);
       }
 
       return data;
     } catch (error) {
-      console.error('API Error:', error);
+      console.error('API Request failed:', error);
       throw error;
     }
   }
 
-  // Authentication
+  /**
+   * GET request
+   */
+  async get(endpoint, params = {}) {
+    const queryString = new URLSearchParams(params).toString();
+    const fullEndpoint = queryString ? `${endpoint}?${queryString}` : endpoint;
+    return this.request(fullEndpoint, { method: 'GET' });
+  }
+
+  /**
+   * POST request
+   */
+  async post(endpoint, body = {}) {
+    return this.request(endpoint, { method: 'POST', body });
+  }
+
+  /**
+   * PUT request
+   */
+  async put(endpoint, body = {}) {
+    return this.request(endpoint, { method: 'PUT', body });
+  }
+
+  /**
+   * DELETE request
+   */
+  async delete(endpoint) {
+    return this.request(endpoint, { method: 'DELETE' });
+  }
+
+  /**
+   * PATCH request
+   */
+  async patch(endpoint, body = {}) {
+    return this.request(endpoint, { method: 'PATCH', body });
+  }
+
+  // ============================================
+  // Authentication API
+  // ============================================
+
   async login(email, password) {
-    const response = await this.request('/auth/login', {
-      method: 'POST',
-      body: JSON.stringify({ email, password })
-    });
-
-    if (response.success && response.token) {
-      this.token = response.token;
-      localStorage.setItem('synthex-token', response.token);
-      localStorage.setItem('synthex-user', JSON.stringify(response.user));
+    const response = await this.post('/auth/login', { email, password });
+    if (response.token) {
+      this.setToken(response.token);
     }
-
     return response;
   }
 
-  async register(email, password, name) {
-    return await this.request('/auth/register', {
-      method: 'POST',
-      body: JSON.stringify({ email, password, name })
-    });
+  async register(userData) {
+    const response = await this.post('/auth/register', userData);
+    if (response.token) {
+      this.setToken(response.token);
+    }
+    return response;
   }
 
   async logout() {
-    localStorage.removeItem('synthex-token');
-    localStorage.removeItem('synthex-user');
-    this.token = null;
-    window.location.href = '/login';
+    await this.post('/auth/logout');
+    this.clearAuth();
   }
 
-  getUser() {
-    const userStr = localStorage.getItem('synthex-user');
-    return userStr ? JSON.parse(userStr) : null;
+  async resetPassword(email) {
+    return this.post('/auth/reset-password', { email });
   }
 
-  isAuthenticated() {
-    return !!this.token;
+  async verifyToken(token) {
+    return this.post('/auth/verify-token', { token });
   }
 
-  // Dashboard
-  async getDashboardStats() {
-    return await this.request('/dashboard/stats');
+  // ============================================
+  // Analytics API
+  // ============================================
+
+  async getAnalytics(platform, dateRange) {
+    return this.get('/analytics', { platform, ...dateRange });
   }
 
-  // Campaigns
-  async getCampaigns() {
-    return await this.request('/campaigns');
+  async getRealtimeAnalytics(platform) {
+    return this.get('/analytics/realtime', { platform });
   }
 
-  async createCampaign(campaignData) {
-    return await this.request('/campaigns', {
-      method: 'POST',
-      body: JSON.stringify(campaignData)
-    });
+  async getInsights() {
+    return this.get('/analytics/insights');
   }
 
-  async getCampaign(id) {
-    return await this.request(`/campaigns/${id}`);
+  async getPlatformPerformance(platform) {
+    return this.get('/analytics/performance', { platform });
   }
 
-  async updateCampaign(id, updates) {
-    return await this.request(`/campaigns/${id}`, {
-      method: 'PUT',
-      body: JSON.stringify(updates)
-    });
+  // ============================================
+  // Content Generation API
+  // ============================================
+
+  async generateContent(params) {
+    return this.post('/ai-content/generate', params);
   }
 
-  async deleteCampaign(id) {
-    return await this.request(`/campaigns/${id}`, {
-      method: 'DELETE'
-    });
+  async optimizeContent(content, platform) {
+    return this.post('/ai-content/optimize', { content, platform });
   }
 
-  // Content Generation
-  async generateContent(prompt, platform, options = {}) {
-    return await this.request('/content/generate', {
-      method: 'POST',
-      body: JSON.stringify({ prompt, platform, ...options })
-    });
+  async generateHashtags(content) {
+    return this.post('/ai-content/hashtags', { content });
   }
 
-  async analyzeContent(content) {
-    return await this.request('/content/analyze', {
-      method: 'POST',
-      body: JSON.stringify({ content })
-    });
+  async translateContent(content, targetLocale) {
+    return this.post('/ai-content/translate', { content, targetLocale });
   }
 
-  // Posts
-  async getPosts(filters = {}) {
-    const params = new URLSearchParams(filters).toString();
-    return await this.request(`/posts${params ? '?' + params : ''}`);
+  // ============================================
+  // A/B Testing API
+  // ============================================
+
+  async createABTest(testData) {
+    return this.post('/ab-testing/tests', testData);
   }
 
-  async createPost(postData) {
-    return await this.request('/posts', {
-      method: 'POST',
-      body: JSON.stringify(postData)
-    });
+  async getABTests() {
+    return this.get('/ab-testing/tests');
   }
 
-  async schedulePost(postData) {
-    return await this.request('/posts/schedule', {
-      method: 'POST',
-      body: JSON.stringify(postData)
-    });
+  async getABTestResults(testId) {
+    return this.get(`/ab-testing/tests/${testId}/results`);
   }
 
-  async updatePost(id, updates) {
-    return await this.request(`/posts/${id}`, {
-      method: 'PUT',
-      body: JSON.stringify(updates)
-    });
-  }
+  // ============================================
+  // Team Collaboration API
+  // ============================================
 
-  async deletePost(id) {
-    return await this.request(`/posts/${id}`, {
-      method: 'DELETE'
-    });
-  }
-
-  // Analytics
-  async getAnalytics(params = {}) {
-    const queryString = new URLSearchParams(params).toString();
-    return await this.request(`/analytics${queryString ? '?' + queryString : ''}`);
-  }
-
-  async getPlatformAnalytics(platform) {
-    return await this.request(`/analytics/platforms/${platform}`);
-  }
-
-  // Settings
-  async getSettings() {
-    return await this.request('/settings');
-  }
-
-  async updateSettings(settings) {
-    return await this.request('/settings', {
-      method: 'PUT',
-      body: JSON.stringify(settings)
-    });
-  }
-
-  // Team Management
   async getTeamMembers() {
-    return await this.request('/team');
+    return this.get('/teams/members');
   }
 
   async inviteTeamMember(email, role) {
-    return await this.request('/team/invite', {
-      method: 'POST',
-      body: JSON.stringify({ email, role })
-    });
+    return this.post('/teams/invite', { email, role });
   }
 
-  async updateTeamMember(id, updates) {
-    return await this.request(`/team/${id}`, {
-      method: 'PUT',
-      body: JSON.stringify(updates)
-    });
+  async updateTeamMember(memberId, updates) {
+    return this.patch(`/teams/members/${memberId}`, updates);
   }
 
-  async removeTeamMember(id) {
-    return await this.request(`/team/${id}`, {
-      method: 'DELETE'
-    });
+  // ============================================
+  // Scheduler API
+  // ============================================
+
+  async schedulePost(postData) {
+    return this.post('/scheduler/posts', postData);
   }
 
-  // Notifications
+  async getScheduledPosts() {
+    return this.get('/scheduler/posts');
+  }
+
+  async updateScheduledPost(postId, updates) {
+    return this.patch(`/scheduler/posts/${postId}`, updates);
+  }
+
+  async deleteScheduledPost(postId) {
+    return this.delete(`/scheduler/posts/${postId}`);
+  }
+
+  // ============================================
+  // Content Library API
+  // ============================================
+
+  async getContentLibrary(filters = {}) {
+    return this.get('/library/content', filters);
+  }
+
+  async saveToLibrary(content) {
+    return this.post('/library/content', content);
+  }
+
+  async getContentItem(contentId) {
+    return this.get(`/library/content/${contentId}`);
+  }
+
+  // ============================================
+  // Competitor Analysis API
+  // ============================================
+
+  async getCompetitors() {
+    return this.get('/competitors');
+  }
+
+  async addCompetitor(competitorData) {
+    return this.post('/competitors', competitorData);
+  }
+
+  async analyzeCompetitor(competitorId) {
+    return this.post(`/competitors/${competitorId}/analyze`);
+  }
+
+  // ============================================
+  // Reporting API
+  // ============================================
+
+  async generateReport(reportConfig) {
+    return this.post('/reporting/generate', reportConfig);
+  }
+
+  async getReports() {
+    return this.get('/reporting/reports');
+  }
+
+  async downloadReport(reportId, format = 'pdf') {
+    return this.get(`/reporting/reports/${reportId}/download`, { format });
+  }
+
+  // ============================================
+  // White Label API
+  // ============================================
+
+  async getWhiteLabelConfig() {
+    return this.get('/white-label/config');
+  }
+
+  async updateWhiteLabelConfig(config) {
+    return this.put('/white-label/config', config);
+  }
+
+  // ============================================
+  // Mobile API
+  // ============================================
+
+  async getMobileConfig() {
+    return this.get('/mobile/config');
+  }
+
+  async syncMobileData(data) {
+    return this.post('/mobile/sync', data);
+  }
+
+  // ============================================
+  // User Management API
+  // ============================================
+
+  async getProfile() {
+    return this.get('/users/profile');
+  }
+
+  async updateProfile(updates) {
+    return this.patch('/users/profile', updates);
+  }
+
+  async changePassword(currentPassword, newPassword) {
+    return this.post('/users/change-password', { currentPassword, newPassword });
+  }
+
+  async deleteAccount() {
+    return this.delete('/users/account');
+  }
+
+  // ============================================
+  // Notifications API
+  // ============================================
+
   async getNotifications() {
-    return await this.request('/notifications');
+    return this.get('/notifications');
   }
 
-  async markNotificationRead(id) {
-    return await this.request(`/notifications/${id}/read`, {
-      method: 'POST'
-    });
+  async markNotificationRead(notificationId) {
+    return this.patch(`/notifications/${notificationId}/read`);
   }
 
-  async clearNotifications() {
-    return await this.request('/notifications/clear', {
-      method: 'POST'
+  async updateNotificationSettings(settings) {
+    return this.put('/notifications/settings', settings);
+  }
+
+  // ============================================
+  // Performance API
+  // ============================================
+
+  async getPerformanceMetrics() {
+    return this.get('/performance/metrics');
+  }
+
+  async getSystemHealth() {
+    return this.get('/health');
+  }
+
+  // ============================================
+  // Feature Flags API
+  // ============================================
+
+  async getFeatureFlags() {
+    return this.get('/features');
+  }
+
+  // ============================================
+  // Helper Methods
+  // ============================================
+
+  /**
+   * Upload file
+   */
+  async uploadFile(file, endpoint = '/upload') {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const response = await fetch(`${this.baseURL}${endpoint}`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${this.token}`,
+        'X-Session-ID': this.sessionId,
+        'X-Device-ID': this.deviceId
+      },
+      body: formData
     });
+
+    if (!response.ok) {
+      throw new Error('File upload failed');
+    }
+
+    return response.json();
+  }
+
+  /**
+   * Download file
+   */
+  async downloadFile(endpoint) {
+    const response = await fetch(`${this.baseURL}${endpoint}`, {
+      headers: {
+        'Authorization': `Bearer ${this.token}`,
+        'X-Session-ID': this.sessionId,
+        'X-Device-ID': this.deviceId
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error('File download failed');
+    }
+
+    const blob = await response.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = endpoint.split('/').pop();
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+  }
+
+  /**
+   * WebSocket connection for real-time updates
+   */
+  connectWebSocket() {
+    const wsUrl = this.baseURL.replace('http', 'ws').replace('/api/v2', '/ws');
+    this.ws = new WebSocket(wsUrl);
+
+    this.ws.onopen = () => {
+      console.log('WebSocket connected');
+      this.ws.send(JSON.stringify({
+        type: 'auth',
+        token: this.token,
+        sessionId: this.sessionId
+      }));
+    };
+
+    this.ws.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      this.handleWebSocketMessage(data);
+    };
+
+    this.ws.onerror = (error) => {
+      console.error('WebSocket error:', error);
+    };
+
+    this.ws.onclose = () => {
+      console.log('WebSocket disconnected');
+      // Attempt to reconnect after 5 seconds
+      setTimeout(() => this.connectWebSocket(), 5000);
+    };
+  }
+
+  /**
+   * Handle WebSocket messages
+   */
+  handleWebSocketMessage(data) {
+    // Dispatch custom events based on message type
+    const event = new CustomEvent(`synthex:${data.type}`, { detail: data });
+    window.dispatchEvent(event);
+  }
+
+  /**
+   * Disconnect WebSocket
+   */
+  disconnectWebSocket() {
+    if (this.ws) {
+      this.ws.close();
+    }
   }
 }
 
 // Create global instance
-window.synthexAPI = new SynthexAPI();
+window.synthexAPI = new SynthexAPIClient();
 
-// Auth state management
-document.addEventListener('DOMContentLoaded', () => {
-  const api = window.synthexAPI;
-  
-  // Check auth state
-  if (api.isAuthenticated()) {
-    // Update UI for authenticated state
-    const user = api.getUser();
-    const userElements = document.querySelectorAll('[data-user-name]');
-    const userEmailElements = document.querySelectorAll('[data-user-email]');
-    
-    userElements.forEach(el => {
-      el.textContent = user?.name || 'User';
-    });
-    
-    userEmailElements.forEach(el => {
-      el.textContent = user?.email || '';
-    });
-    
-    // Show/hide auth-specific elements
-    document.querySelectorAll('[data-auth="true"]').forEach(el => {
-      el.style.display = '';
-    });
-    
-    document.querySelectorAll('[data-auth="false"]').forEach(el => {
-      el.style.display = 'none';
-    });
-  } else {
-    // Show/hide elements for non-authenticated users
-    document.querySelectorAll('[data-auth="true"]').forEach(el => {
-      el.style.display = 'none';
-    });
-    
-    document.querySelectorAll('[data-auth="false"]').forEach(el => {
-      el.style.display = '';
-    });
-    
-    // Redirect to login if on protected page
-    const protectedPaths = ['/dashboard', '/campaigns', '/analytics', '/settings', '/team'];
-    if (protectedPaths.some(path => window.location.pathname.startsWith(path))) {
-      window.location.href = '/login';
-    }
-  }
-  
-  // Setup logout handlers
-  document.querySelectorAll('[data-action="logout"]').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      e.preventDefault();
-      api.logout();
-    });
-  });
-});
+// Export for module usage
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = SynthexAPIClient;
+}
