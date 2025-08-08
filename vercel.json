@@ -3,6 +3,7 @@
   "buildCommand": "npm run build:prod",
   "outputDirectory": "public",
   "regions": ["iad1"],
+  "public": true,
   "framework": null,
   "rewrites": [
     {
