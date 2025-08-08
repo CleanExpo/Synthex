@@ -1,0 +1,97 @@
+{
+  "templates": {
+    "promotional": {
+      "title": "Promotional Content Templates",
+      "announcement": "🎉 Exciting news! {{announcement}} Check it out now! #{{hashtag}}",
+      "discount": "💸 Limited time offer! Get {{discount}}% off {{product}}. Use code {{code}}. #Sale #{{brand}}",
+      "launch": "🚀 Introducing {{product}}! {{description}} #NewLaunch #{{category}}",
+      "event": "📅 Join us for {{event}} on {{date}}! Don't miss out on {{highlight}}. #Event #{{location}}"
+    },
+    "educational": {
+      "title": "Educational Content Templates",
+      "tip": "💡 Pro tip: {{tip}} What's your experience with this? #Tips #{{topic}}",
+      "howTo": "🔧 How to {{action}}: {{steps}} Try it and let us know how it goes! #HowTo #{{skill}}",
+      "fact": "🧠 Did you know? {{fact}} Share your thoughts in the comments! #DidYouKnow #{{subject}}",
+      "tutorial": "📚 Step-by-step guide: {{title}}. {{preview}} Full tutorial in our bio! #Tutorial #{{topic}}"
+    },
+    "engagement": {
+      "title": "Engagement Content Templates",
+      "question": "🤔 Quick question: {{question}} Drop your answer below! #{{topic}} #Community",
+      "poll": "📊 We want to hear from you! {{pollQuestion}} Vote and tell us why! #Poll #{{subject}}",
+      "challenge": "💪 Challenge time! {{challenge}} Tag a friend who should try this! #Challenge #{{theme}}",
+      "share": "✨ Share your {{topic}} story! We love hearing from our community. Tag us! #ShareYourStory #{{community}}"
+    },
+    "seasonal": {
+      "title": "Seasonal Content Templates",
+      "holiday": "🎊 Happy {{holiday}}! {{message}} How are you celebrating? #{{holiday}} #Celebration",
+      "newYear": "🥳 New year, new goals! What's on your {{year}} wishlist? Share below! #NewYear #Goals{{year}}",
+      "summer": "☀️ Summer vibes! {{activity}} Perfect weather for {{suggestion}}! #Summer #{{mood}}",
+      "winter": "❄️ Cozy winter days call for {{activity}}. What's your favorite winter {{item}}? #Winter #Cozy"
+    }
+  },
+  "optimization": {
+    "suggestions": {
+      "addHashtags": "Consider adding relevant hashtags to increase discoverability",
+      "shortenText": "Try shortening your text for better engagement",
+      "addEmoji": "Adding emojis can make your content more engaging",
+      "includeQuestion": "Asking a question can boost engagement",
+      "addCallToAction": "Include a clear call-to-action",
+      "optimizeHashtags": "Use a mix of popular and niche hashtags",
+      "improveReadability": "Break up long paragraphs for better readability",
+      "addPersonality": "Add more personality to connect with your audience"
+    },
+    "scores": {
+      "excellent": "Excellent content! This should perform very well.",
+      "good": "Good content with room for improvement.",
+      "average": "Average content. Consider applying our suggestions.",
+      "needsWork": "This content needs significant improvements."
+    }
+  },
+  "platforms": {
+    "instagram": {
+      "tips": [
+        "Use up to 30 hashtags for maximum reach",
+        "Stories expire in 24 hours, use highlights to save important ones",
+        "Post when your audience is most active",
+        "Use high-quality, visually appealing images"
+      ],
+      "bestPractices": "For Instagram, focus on visual storytelling and use relevant hashtags."
+    },
+    "facebook": {
+      "tips": [
+        "Posts with images get 2.3x more engagement",
+        "Ask questions to encourage comments",
+        "Share behind-the-scenes content",
+        "Use Facebook Groups to build community"
+      ],
+      "bestPractices": "Facebook rewards content that generates meaningful conversations."
+    },
+    "twitter": {
+      "tips": [
+        "Keep tweets concise and punchy",
+        "Use 1-2 hashtags for optimal engagement",
+        "Tweet during peak hours (12-1pm, 5-6pm)",
+        "Engage with trending topics when relevant"
+      ],
+      "bestPractices": "Twitter is about real-time engagement and conversations."
+    },
+    "linkedin": {
+      "tips": [
+        "Share professional insights and industry news",
+        "Use a professional tone",
+        "Include relevant keywords in your posts",
+        "Post during business hours for better reach"
+      ],
+      "bestPractices": "LinkedIn content should be professional and provide value to your network."
+    },
+    "tiktok": {
+      "tips": [
+        "Create authentic, entertaining content",
+        "Use trending sounds and effects",
+        "Post consistently for better algorithm performance",
+        "Engage with comments quickly"
+      ],
+      "bestPractices": "TikTok rewards creativity and authentic content that entertains."
+    }
+  }
+}

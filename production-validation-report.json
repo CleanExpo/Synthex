@@ -1,0 +1,4814 @@
+{
+  "timestamp": "2025-08-08T10:04:35.029Z",
+  "environment": "production",
+  "summary": {
+    "totalVariables": 326,
+    "validationErrors": 9,
+    "securityIssues": 98,
+    "migrationChanges": 0
+  },
+  "details": {
+    "discovery": {
+      "totalVariables": 326,
+      "defined": 326,
+      "undefined": 0,
+      "unused": 326,
+      "template": "# Auto-generated environment template\n# Generated on 2025-08-08T10:04:35.028Z\n\n# Core Configuration\n#==================================================\n# Environment variable (boolean)\n# Type: boolean\nEXPORT_METRICS=true\n\n# Node.js environment (development, production, test)\nNODE_ENV=production\n\n# Server port number\n# Type: number\nPORT=3001\n\n# Server hostname (string)\nREDIS_HOST=localhost\n\n# Network port (number)\n# Type: number\nREDIS_PORT=6379\n\n# SMTP server hostname\n# Type: number\nSMTP_HOST=0\n\n# SMTP server port\n# Type: number\nSMTP_PORT=587\n\n# Server hostname (string)\nDB_HOST=localhost\n\n# Network port (number)\n# Type: number\nDB_PORT=5432\n\n# Server hostname (string)\nMAIL_HOST=smtp.sendgrid.net\n\n# Network port (number)\n# Type: number\nMAIL_PORT=587\n\n# Network port (number)\n# Type: number\nWS_PORT=3001\n\n# Environment variable (boolean)\n# Type: boolean\nFEATURE_AUTOMATED_REPORTING=true\n\n# Environment variable (string)\nSUPPORTED_LOCALES=en,es,fr,de,it,pt,ja,zh,ko,ar\n\n# Database\n#==================================================\n# Environment variable (string)\nDATABASE_PROVIDER=postgresql\n\n# Database connection string\n# Type: url\nDATABASE_URL=file:./test.db\n\n# Environment variable (number)\n# Type: number\nDATABASE_POOL_SIZE=10\n\n# Environment variable (boolean)\n# Type: boolean\nDATABASE_SSL=true\n\n# Environment variable (boolean)\n# Type: boolean\nTEST_DB_CLEANUP=true\n\n# Environment variable (string)\nDB_CONNECTION=postgresql\n\n# Environment variable (string)\nDB_DATABASE=synthex_production\n\n# Environment variable (string)\nDB_USERNAME=synthex_user\n\n# Environment variable (string)\nDB_PASSWORD=\n\n# Environment variable (boolean)\n# Type: boolean\nDB_SSL=true\n\n# Environment variable (number)\n# Type: number\nDB_POOL_MIN=2\n\n# Environment variable (number)\n# Type: number\nDB_POOL_MAX=20\n\n# API & Authentication\n#==================================================\n# Secret key for JWT token generation\nJWT_SECRET=your-secret-key-here\n\n# Authentication credential (string)\nOPENROUTER_API_KEY=\n\n# Authentication credential (string)\nOPENAI_API_KEY=\n\n# Authentication credential (string)\nANTHROPIC_API_KEY=\n\n# Authentication credential (base64)\n# Type: base64\nGOOGLE_API_KEY=\n\n# Google OAuth client secret\nGOOGLE_CLIENT_SECRET=\n\n# Authentication credential (base64)\n# Type: base64\nGITHUB_CLIENT_SECRET=\n\n# Environment variable (string)\nRATE_LIMIT_WINDOW_API=\n\n# Environment variable (string)\nRATE_LIMIT_MAX_API=\n\n# Environment variable (number)\n# Type: number\nMCP_MAX_TOKENS_PER_WINDOW=0\n\n# Authentication credential (number)\n# Type: number\nAPI_KEY_ROTATION_DAYS=0\n\n# Authentication credential (string)\nDATADOG_API_KEY=\n\n# URL endpoint (number)\n# Type: number\nZAPIER_WEBHOOK_URL=0\n\n# Authentication credential (number)\n# Type: number\nWEBHOOK_SECRET=0\n\n# Environment variable (string)\nJWT_ISSUER=synthex-test\n\n# API endpoint URL\n# Type: url\nAPI_URL=https://example.com\n\n# Authentication credential (string)\nSESSION_SECRET=\n\n# Environment variable (string)\nJWT_EXPIRES_IN=7d\n\n# Authentication credential (string)\nJWT_REFRESH_SECRET=\n\n# Environment variable (string)\nJWT_REFRESH_EXPIRES_IN=30d\n\n# Authentication credential (string)\nSENDGRID_API_KEY=\n\n# Authentication credential (string)\nMAILGUN_API_KEY=\n\n# Authentication credential (string)\nAWS_SES_SECRET=\n\n# Environment variable (number)\n# Type: number\nOPENAI_MAX_TOKENS=0\n\n# Environment variable (number)\n# Type: number\nANTHROPIC_MAX_TOKENS=0\n\n# Authentication credential (string)\nTIKTOK_CLIENT_SECRET=\n\n# Authentication credential (string)\nINSTAGRAM_CLIENT_SECRET=\n\n# Authentication credential (string)\nFACEBOOK_APP_SECRET=\n\n# Authentication credential (string)\nTWITTER_API_KEY=\n\n# Authentication credential (string)\nTWITTER_API_SECRET=\n\n# Environment variable (string)\nTWITTER_BEARER_TOKEN=\n\n# Environment variable (string)\nTWITTER_ACCESS_TOKEN=\n\n# Authentication credential (string)\nTWITTER_ACCESS_SECRET=\n\n# Authentication credential (string)\nLINKEDIN_CLIENT_SECRET=\n\n# Authentication credential (string)\nYOUTUBE_API_KEY=\n\n# Authentication credential (string)\nYOUTUBE_CLIENT_SECRET=\n\n# Authentication credential (string)\nPINTEREST_APP_SECRET=\n\n# Authentication credential (string)\nSNAPCHAT_CLIENT_SECRET=\n\n# Environment variable (string)\nMIXPANEL_TOKEN=\n\n# Authentication credential (string)\nAMPLITUDE_API_KEY=\n\n# Authentication credential (string)\nONESIGNAL_API_KEY=\n\n# AWS secret access key\nAWS_SECRET_ACCESS_KEY=\n\n# Authentication credential (string)\nCLOUDINARY_API_KEY=\n\n# Authentication credential (string)\nCLOUDINARY_API_SECRET=\n\n# Environment variable (string)\nCLOUDFLARE_API_TOKEN=\n\n# Authentication credential (string)\nCSRF_SECRET=\n\n# Authentication credential (string)\nSPLIT_IO_API_KEY=\n\n# Authentication credential (string)\nSTRIPE_SECRET_KEY=\n\n# Authentication credential (string)\nSTRIPE_WEBHOOK_SECRET=\n\n# Authentication credential (string)\nPAYPAL_CLIENT_SECRET=\n\n# Environment variable (string)\nOAUTH_CLIENT_ID=\n\n# Authentication credential (string)\nOAUTH_CLIENT_SECRET=\n\n# URL endpoint (url)\n# Type: url\nOAUTH_AUTHORIZATION_URL=https://example.com\n\n# URL endpoint (url)\n# Type: url\nOAUTH_TOKEN_URL=https://example.com\n\n# Environment variable (boolean)\n# Type: boolean\nFEATURE_MOBILE_API=false\n\n# Authentication credential (string)\nTRANSLATION_API_KEY=\n\n# Authentication credential (string)\nPERSPECTIVE_API_KEY=\n\n# AWS Services\n#==================================================\n# Authentication credential (string)\nAWS_SES_KEY=\n\n# Environment variable (string)\nAWS_SES_REGION=us-east-1\n\n# AWS access key identifier\nAWS_ACCESS_KEY_ID=\n\n# Environment variable (string)\nAWS_DEFAULT_REGION=us-east-1\n\n# Environment variable (string)\nAWS_BUCKET=synthex-production\n\n# URL endpoint (url)\n# Type: url\nAWS_CLOUDFRONT_URL=https://d1234567890.cloudfront.net\n\n# Environment variable (string)\nBACKUP_S3_BUCKET=synthex-backups\n\n# Third-party Services\n#==================================================\n# URL endpoint (url)\n# Type: url\nGOOGLE_CALLBACK_URL=https://synthex-cerq.vercel.app/auth/google/callback\n\n# Google OAuth client ID\nGOOGLE_CLIENT_ID=858852811970-52un4b3i4gujj56oapief6uhht2033ks.apps.googleusercontent.com\n\n# Environment variable (string)\nGITHUB_CLIENT_ID=Ov23lirLjZFRjpiEnRta\n\n# Environment variable (number)\n# Type: number\nGOOGLE_PROJECT_NUMBER=858852811970\n\n# Environment variable (string)\nGOOGLE_PROJECT_ID=synthex-468000\n\n# Environment variable (boolean)\n# Type: boolean\nREACT_APP_FACEBOOK=true\n\n# Authentication credential (string)\nGOOGLE_AI_KEY=\n\n# Environment variable (string)\nGOOGLE_AI_MODEL=gemini-pro\n\n# Environment variable (string)\nFACEBOOK_APP_ID=CHANGE_THIS_FACEBOOK_ID\n\n# URL endpoint (url)\n# Type: url\nFACEBOOK_REDIRECT_URI=https://synthex.app/auth/facebook/callback\n\n# Environment variable (string)\nGOOGLE_ANALYTICS_ID=G-CHANGE_THIS_ID\n\n# Environment variable (string)\nGOOGLE_OPTIMIZE_ID=CHANGE_THIS_OPTIMIZE_ID\n\n# Authentication credential (string)\nSTRIPE_PUBLISHABLE_KEY=\n\n# Environment variable (string)\nSTRIPE_PRICE_ID_BASIC=price_CHANGE_THIS\n\n# Environment variable (string)\nSTRIPE_PRICE_ID_PRO=price_CHANGE_THIS\n\n# Environment variable (string)\nSTRIPE_PRICE_ID_ENTERPRISE=price_CHANGE_THIS\n\n# Email Configuration\n#==================================================\n# SMTP authentication username\n# Type: number\nSMTP_USER=0\n\n# Environment variable (number)\n# Type: number\nSMTP_PASSWORD=0\n\n# Environment variable (number)\n# Type: number\nNOTIFICATION_EMAIL=0\n\n# Environment variable (string)\nMAIL_DRIVER=smtp\n\n# Environment variable (string)\nMAIL_USERNAME=apikey\n\n# Environment variable (string)\nMAIL_PASSWORD=\n\n# Environment variable (string)\nMAIL_ENCRYPTION=tls\n\n# Environment variable (email)\n# Type: email\nMAIL_FROM_ADDRESS=noreply@synthex.app\n\n# Environment variable (string)\nMAIL_FROM_NAME=SYNTHEX\n\n# Environment variable (string)\nMAILGUN_DOMAIN=mg.synthex.app\n\n# Feature Flags\n#==================================================\n# Environment variable (boolean)\n# Type: boolean\nCACHE_ENABLED=true\n\n# Environment variable (boolean)\n# Type: boolean\nMCP_SEQUENTIAL_THINKING_ENABLED=true\n\n# Environment variable (boolean)\n# Type: boolean\nMCP_CONTEXT7_ENABLED=true\n\n# Environment variable (boolean)\n# Type: boolean\nMLE_STAR_MONITORING_ENABLED=true\n\n# Environment variable (boolean)\n# Type: boolean\nANALYTICS_ENABLED=true\n\n# Environment variable (boolean)\n# Type: boolean\nHELMET_ENABLED=true\n\n# Environment variable (boolean)\n# Type: boolean\nCOMPRESSION_ENABLED=true\n\n# Environment variable (boolean)\n# Type: boolean\nAUTO_ROLLBACK_ENABLED=true\n\n# Environment variable (boolean)\n# Type: boolean\nFEATURE_AB_TESTING=true\n\n# Environment variable (boolean)\n# Type: boolean\nFEATURE_SMART_SCHEDULING=false\n\n# Environment variable (boolean)\n# Type: boolean\nFEATURE_COMPETITOR_ANALYSIS=true\n\n# Environment variable (boolean)\n# Type: boolean\nFEATURE_MULTI_LANGUAGE=false\n\n# Environment variable (boolean)\n# Type: boolean\nFEATURE_VOICE_CONTENT=false\n\n# Environment variable (boolean)\n# Type: boolean\nCDN_ENABLED=true\n\n# Environment variable (boolean)\n# Type: boolean\nBACKUP_ENABLED=true\n\n# Feature toggle (boolean)\n# Type: boolean\nENABLE_SWAGGER=true\n\n# Feature toggle (boolean)\n# Type: boolean\nENABLE_METRICS=true\n\n# Feature toggle (boolean)\n# Type: boolean\nENABLE_HEALTH_CHECK=true\n\n# Environment variable (boolean)\n# Type: boolean\nWS_ENABLED=true\n\n# Environment variable (boolean)\n# Type: boolean\nRATE_LIMIT_ENABLED=true\n\n# Environment variable (boolean)\n# Type: boolean\nCORS_ENABLED=true\n\n# Environment variable (boolean)\n# Type: boolean\nCSRF_ENABLED=true\n\n# Environment variable (boolean)\n# Type: boolean\nAB_TESTING_ENABLED=true\n\n# Environment variable (boolean)\n# Type: boolean\nWHITE_LABEL_ENABLED=true\n\n# Environment variable (boolean)\n# Type: boolean\nMULTI_TENANT_ENABLED=true\n\n# Environment variable (boolean)\n# Type: boolean\nCUSTOM_DOMAIN_ENABLED=true\n\n# Environment variable (boolean)\n# Type: boolean\nSSO_ENABLED=true\n\n# Environment variable (boolean)\n# Type: boolean\nFEATURE_ANALYTICS_DASHBOARD=true\n\n# Environment variable (boolean)\n# Type: boolean\nFEATURE_AI_CONTENT_GENERATION=true\n\n# Environment variable (boolean)\n# Type: boolean\nFEATURE_TEAM_COLLABORATION=true\n\n# Environment variable (boolean)\n# Type: boolean\nFEATURE_WHITE_LABEL=true\n\n# Environment variable (boolean)\n# Type: boolean\nFEATURE_ADVANCED_SCHEDULER=true\n\n# Environment variable (boolean)\n# Type: boolean\nFEATURE_CONTENT_LIBRARY=true\n\n# Environment variable (boolean)\n# Type: boolean\nFEATURE_REAL_TIME_SYNC=true\n\n# Environment variable (boolean)\n# Type: boolean\nFEATURE_PREDICTIVE_ANALYTICS=true\n\n# Environment variable (boolean)\n# Type: boolean\nFEATURE_CONTENT_MODERATION=true\n\n# Environment variable (boolean)\n# Type: boolean\nFEATURE_INTERNATIONALIZATION=true\n\n# Environment variable (boolean)\n# Type: boolean\nFEATURE_BACKUP_SYSTEM=true\n\n# Environment variable (boolean)\n# Type: boolean\nSCHEDULER_ENABLED=true\n\n# Environment variable (boolean)\n# Type: boolean\nMODERATION_ENABLED=true\n\n# Feature toggle (boolean)\n# Type: boolean\nENABLE_COMPRESSION=true\n\n# Feature toggle (boolean)\n# Type: boolean\nENABLE_CACHING=true\n\n# Feature toggle (boolean)\n# Type: boolean\nENABLE_MINIFICATION=true\n\n# Feature toggle (boolean)\n# Type: boolean\nENABLE_LAZY_LOADING=true\n\n# Feature toggle (boolean)\n# Type: boolean\nENABLE_IMAGE_OPTIMIZATION=true\n\n# Environment variable (boolean)\n# Type: boolean\nAUTO_SCALING_ENABLED=true\n\n# Other\n#==================================================\n# URL endpoint (url)\n# Type: url\nNEXT_PUBLIC_SUPABASE_URL=https://znyjoyjsvjotlzjppzal.supabase.co\n\n# Authentication credential (string)\nNEXT_PUBLIC_SUPABASE_ANON_KEY=\n\n# Authentication credential (string)\nSUPABASE_SERVICE_ROLE_KEY=\n\n# URL endpoint (url)\n# Type: url\nOPENROUTER_BASE_URL=https://openrouter.ai/api/v1\n\n# URL endpoint (url)\n# Type: url\nOPENROUTER_SITE_URL=https://synthex-cerq.vercel.app\n\n# Environment variable (string)\nOPENROUTER_SITE_NAME=SYNTHEX\n\n# Environment variable (number)\n# Type: number\nDAILY_BUDGET_LIMIT=50.00\n\n# Environment variable (number)\n# Type: number\nMONTHLY_BUDGET_LIMIT=1000.00\n\n# Environment variable (number)\n# Type: number\nMAX_CONCURRENT_REQUESTS=5\n\n# Environment variable (number)\n# Type: number\nCACHE_TTL_SECONDS=3600\n\n# Environment variable (number)\n# Type: number\nMAX_CPU_PERCENT=70\n\n# Environment variable (number)\n# Type: number\nTHROTTLE_DELAY=0.5\n\n# Environment variable (boolean)\n# Type: boolean\nTRACK_USAGE=true\n\n# Environment variable (boolean)\n# Type: boolean\nTRACK_COSTS=true\n\n# Environment variable (boolean)\n# Type: boolean\nSANITIZE_LOGS=true\n\n# Environment variable (boolean)\n# Type: boolean\nPII_DETECTION=true\n\n# Enable debug mode\n# Type: boolean\nDEBUG=false\n\n# Logging verbosity level\nLOG_LEVEL=info\n\n# Environment variable (string)\nRATE_LIMIT_WINDOW_GENERAL=900000  # 15 minutes\n\n# Environment variable (string)\nRATE_LIMIT_MAX_GENERAL=100        # Requests per window\n\n# Environment variable (string)\nRATE_LIMIT_WINDOW_CONTENT=60000   # 1 minute\n\n# Environment variable (string)\nRATE_LIMIT_MAX_CONTENT=20         # Content generation per minute\n\n# Environment variable (number)\n# Type: number\nMCP_MAX_CONTEXT_WINDOWS=7\n\n# Environment variable (number)\n# Type: number\nMCP_MEMORY_RETENTION=0.95\n\n# Environment variable (number)\n# Type: number\nMLE_STAR_MIN_PRODUCTION_SCORE=70\n\n# Environment variable (boolean)\n# Type: boolean\nMLE_STAR_AUTO_EVALUATE=true\n\n# Environment variable (number)\n# Type: number\nANALYTICS_RETENTION_DAYS=90\n\n# Environment variable (number)\n# Type: number\nANALYTICS_BATCH_SIZE=100\n\n# Environment variable (url)\n# Type: url\nCORS_ALLOWED_ORIGINS=https://synthex.vercel.app,https://synthex.dev\n\n# Environment variable (boolean)\n# Type: boolean\nCSRF_PROTECTION=true\n\n# Environment variable (number)\n# Type: number\nCACHE_TTL=3600\n\n# Environment variable (number)\n# Type: number\nREQUEST_TIMEOUT=30000\n\n# Environment variable (string)\nSENTRY_DSN=CHANGE_THIS_SENTRY_DSN\n\n# Authentication credential (string)\nNEW_RELIC_LICENSE_KEY=\n\n# Redis connection string\n# Type: url\nREDIS_URL=redis://localhost:6379\n\n# Environment variable (string)\nREDIS_PASSWORD=\n\n# Environment variable (number)\n# Type: number\nREDIS_TTL=3600\n\n# Environment variable (number)\n# Type: number\nHEALTH_CHECK_INTERVAL=30\n\n# Environment variable (number)\n# Type: number\nHEALTH_CHECK_TIMEOUT=5000\n\n# Environment variable (number)\n# Type: number\nMAX_DEPLOY_TIME=300000\n\n# Environment variable (number)\n# Type: number\nGRACEFUL_SHUTDOWN_TIMEOUT=30000\n\n# Environment variable (boolean)\n# Type: boolean\nREACT_APP_GLASSMORPHIC=true\n\n# Environment variable (boolean)\n# Type: boolean\nREACT_APP_OPTIMIZERS=true\n\n# Environment variable (boolean)\n# Type: boolean\nREACT_APP_ANALYTICS=true\n\n# Environment variable (boolean)\n# Type: boolean\nREACT_APP_CALENDAR=true\n\n# Environment variable (boolean)\n# Type: boolean\nREACT_APP_CHARTS=true\n\n# Environment variable (boolean)\n# Type: boolean\nREACT_APP_FILE_UPLOAD=true\n\n# Environment variable (boolean)\n# Type: boolean\nREACT_APP_NOTIFICATIONS=true\n\n# Environment variable (boolean)\n# Type: boolean\nREACT_APP_INSTAGRAM=true\n\n# Environment variable (boolean)\n# Type: boolean\nREACT_APP_TWITTER=true\n\n# Environment variable (boolean)\n# Type: boolean\nREACT_APP_LINKEDIN=true\n\n# Environment variable (boolean)\n# Type: boolean\nREACT_APP_TIKTOK=true\n\n# Environment variable (boolean)\n# Type: boolean\nREACT_APP_PINTEREST=true\n\n# Environment variable (boolean)\n# Type: boolean\nREACT_APP_YOUTUBE=true\n\n# Environment variable (boolean)\n# Type: boolean\nREACT_APP_REDDIT=true\n\n# URL endpoint (number)\n# Type: number\nSLACK_WEBHOOK_URL=0\n\n# URL endpoint (number)\n# Type: number\nDISCORD_WEBHOOK_URL=0\n\n# Environment variable (string)\nCDN_PROVIDER=cloudflare\n\n# URL endpoint (url)\n# Type: url\nCDN_URL=https://cdn.synthex.app\n\n# Environment variable (boolean)\n# Type: boolean\nCDN_IMAGE_OPTIMIZATION=true\n\n# Environment variable (number)\n# Type: number\nCDN_IMAGE_QUALITY=85\n\n# Environment variable (boolean)\n# Type: boolean\nCDN_CSS_OPTIMIZATION=true\n\n# Environment variable (boolean)\n# Type: boolean\nCDN_JS_OPTIMIZATION=true\n\n# Environment variable (string)\nBACKUP_SCHEDULE=\n\n# Environment variable (number)\n# Type: number\nBACKUP_RETENTION_DAYS=30\n\n# Authentication credential (string)\nENCRYPTION_KEY=\n\n# Environment variable (number)\n# Type: number\nREDIS_DB=0\n\n# File system path (string)\nLOG_FILE_PATH=/var/log/synthex/app.log\n\n# Authentication credential (url)\n# Type: url\nCACHE_KEY_PREFIX=https://example.com\n\n# Environment variable (number)\n# Type: number\nCACHE_MAX_MEMORY_ITEMS=100\n\n# Environment variable (number)\n# Type: number\nRATE_LIMIT_WINDOW_MS=900000\n\n# Environment variable (number)\n# Type: number\nRATE_LIMIT_MAX_REQUESTS=100\n\n# Environment variable (string)\nCORS_ORIGINS=http://localhost:3001,http://localhost:3000\n\n# Environment variable (number)\n# Type: number\nTEST_TIMEOUT=30000\n\n# Environment variable (number)\n# Type: number\nTEST_PARALLEL_WORKERS=1\n\n# Environment variable (string)\nAPP_NAME=SYNTHEX\n\n# Environment variable (string)\nAPP_VERSION=2.0.0\n\n# URL endpoint (url)\n# Type: url\nAPP_URL=https://synthex.app\n\n# Authentication credential (url)\n# Type: url\nREDIS_KEY_PREFIX=https://example.com\n\n# Environment variable (number)\n# Type: number\nREDIS_CACHE_TTL=3600\n\n# Environment variable (boolean)\n# Type: boolean\nSESSION_SECURE=true\n\n# Environment variable (boolean)\n# Type: boolean\nSESSION_HTTP_ONLY=true\n\n# Environment variable (string)\nSESSION_SAME_SITE=strict\n\n# Environment variable (number)\n# Type: number\nSESSION_MAX_AGE=86400000\n\n# Environment variable (number)\n# Type: number\nBCRYPT_ROUNDS=12\n\n# Environment variable (string)\nOPENAI_ORGANIZATION=CHANGE_THIS_ORG_ID\n\n# Environment variable (string)\nOPENAI_MODEL=gpt-4-turbo-preview\n\n# Environment variable (number)\n# Type: number\nOPENAI_TEMPERATURE=0.7\n\n# Environment variable (string)\nANTHROPIC_MODEL=claude-3-opus-20240229\n\n# Environment variable (url)\n# Type: url\nCUSTOM_AI_ENDPOINT=https://your-ai-endpoint.com\n\n# Authentication credential (string)\nCUSTOM_AI_KEY=\n\n# Authentication credential (string)\nTIKTOK_CLIENT_KEY=\n\n# URL endpoint (url)\n# Type: url\nTIKTOK_REDIRECT_URI=https://synthex.app/auth/tiktok/callback\n\n# Environment variable (string)\nINSTAGRAM_CLIENT_ID=CHANGE_THIS_INSTAGRAM_ID\n\n# URL endpoint (url)\n# Type: url\nINSTAGRAM_REDIRECT_URI=https://synthex.app/auth/instagram/callback\n\n# Environment variable (string)\nLINKEDIN_CLIENT_ID=CHANGE_THIS_LINKEDIN_ID\n\n# URL endpoint (url)\n# Type: url\nLINKEDIN_REDIRECT_URI=https://synthex.app/auth/linkedin/callback\n\n# Environment variable (string)\nYOUTUBE_CLIENT_ID=CHANGE_THIS_YOUTUBE_ID\n\n# Environment variable (string)\nPINTEREST_APP_ID=CHANGE_THIS_PINTEREST_ID\n\n# Environment variable (string)\nSNAPCHAT_CLIENT_ID=CHANGE_THIS_SNAPCHAT_ID\n\n# Authentication credential (string)\nSEGMENT_WRITE_KEY=\n\n# Environment variable (string)\nHOTJAR_SITE_ID=CHANGE_THIS_HOTJAR_ID\n\n# Authentication credential (string)\nFCM_SERVER_KEY=\n\n# Environment variable (string)\nFCM_SENDER_ID=CHANGE_THIS_SENDER_ID\n\n# Authentication credential (string)\nAPNS_KEY_ID=\n\n# Environment variable (string)\nAPNS_TEAM_ID=CHANGE_THIS_TEAM_ID\n\n# Environment variable (string)\nAPNS_BUNDLE_ID=com.synthex.app\n\n# Environment variable (boolean)\n# Type: boolean\nAPNS_PRODUCTION=true\n\n# Environment variable (string)\nONESIGNAL_APP_ID=CHANGE_THIS_ONESIGNAL_ID\n\n# Environment variable (string)\nGCS_PROJECT_ID=synthex-production\n\n# Authentication credential (string)\nGCS_KEY_FILE=\n\n# Environment variable (string)\nGCS_BUCKET=synthex-media\n\n# Environment variable (string)\nCLOUDINARY_CLOUD_NAME=CHANGE_THIS_CLOUD_NAME\n\n# Environment variable (string)\nCLOUDFLARE_ZONE_ID=CHANGE_THIS_ZONE_ID\n\n# Environment variable (number)\n# Type: number\nCDN_CACHE_MAX_AGE=31536000\n\n# Environment variable (boolean)\n# Type: boolean\nCDN_CACHE_PUBLIC=true\n\n# Environment variable (url)\n# Type: url\nWS_CORS_ORIGIN=https://synthex.app\n\n# Environment variable (number)\n# Type: number\nWS_PING_INTERVAL=30000\n\n# Environment variable (number)\n# Type: number\nWS_PING_TIMEOUT=60000\n\n# Environment variable (boolean)\n# Type: boolean\nRATE_LIMIT_SKIP_SUCCESSFUL_REQUESTS=false\n\n# Environment variable (boolean)\n# Type: boolean\nRATE_LIMIT_SKIP_FAILED_REQUESTS=false\n\n# Environment variable (url)\n# Type: url\nCORS_ORIGIN=https://synthex.app,https://app.synthex.app\n\n# Environment variable (boolean)\n# Type: boolean\nCORS_CREDENTIALS=false\n\n# Environment variable (string)\nLOG_FORMAT=json\n\n# Environment variable (boolean)\n# Type: boolean\nLOG_TO_FILE=true\n\n# Environment variable (string)\nLOG_ROTATION=daily\n\n# Environment variable (string)\nLOG_MAX_SIZE=20m\n\n# Environment variable (string)\nLOG_MAX_FILES=14d\n\n# Environment variable (string)\nSENTRY_ENVIRONMENT=production\n\n# Environment variable (number)\n# Type: number\nSENTRY_TRACES_SAMPLE_RATE=0.1\n\n# Environment variable (string)\nNEW_RELIC_APP_NAME=SYNTHEX Production\n\n# Authentication credential (string)\nDATADOG_APP_KEY=\n\n# Authentication credential (string)\nOPTIMIZELY_SDK_KEY=\n\n# Environment variable (string)\nPAYPAL_CLIENT_ID=CHANGE_THIS_PAYPAL_ID\n\n# Environment variable (string)\nPAYPAL_MODE=production\n\n# Environment variable (url)\n# Type: url\nSAML_ENTRY_POINT=https://sso.synthex.app/saml/login\n\n# Environment variable (string)\nSAML_ISSUER=synthex-saml-issuer\n\n# File system path (string)\nSAML_CERT_PATH=./certs/saml.pem\n\n# URL endpoint (url)\n# Type: url\nLDAP_URL=ldap://ldap.synthex.app:389\n\n# Environment variable (string)\nLDAP_BIND_DN=cn=admin,dc=synthex,dc=app\n\n# Environment variable (string)\nLDAP_BIND_CREDENTIALS=\n\n# Environment variable (string)\nLDAP_SEARCH_BASE=dc=synthex,dc=app\n\n# Environment variable (string)\nSCHEDULER_TIMEZONE=UTC\n\n# Environment variable (number)\n# Type: number\nSCHEDULER_MAX_CONCURRENT_JOBS=10\n\n# Environment variable (number)\n# Type: number\nSCHEDULER_RETRY_ATTEMPTS=3\n\n# Environment variable (number)\n# Type: number\nSCHEDULER_RETRY_DELAY=60000\n\n# Authentication credential (string)\nBACKUP_ENCRYPTION_KEY=\n\n# Environment variable (string)\nDEFAULT_LOCALE=en\n\n# Environment variable (boolean)\n# Type: boolean\nLOCALE_DETECTION=true\n\n# Authentication credential (string)\nAZURE_CONTENT_MODERATOR_KEY=\n\n# Environment variable (url)\n# Type: url\nAZURE_CONTENT_MODERATOR_ENDPOINT=https://synthex.cognitiveservices.azure.com\n\n# Environment variable (number)\n# Type: number\nMAX_UPLOAD_SIZE=104857600\n\n# Environment variable (string)\nDEPLOYMENT_ENV=production\n\n# Environment variable (string)\nDEPLOYMENT_REGION=us-east-1\n\n# Environment variable (number)\n# Type: number\nMIN_INSTANCES=2\n\n# Environment variable (number)\n# Type: number\nMAX_INSTANCES=20\n\n# File system path (string)\nHEALTH_CHECK_PATH=/health\n\n# Environment variable (string)\nTIMEZONE=UTC\n\n# Environment variable (string)\nDATE_FORMAT=YYYY-MM-DD\n\n# Environment variable (url)\n# Type: url\nTIME_FORMAT=HH:mm:ss\n\n# Environment variable (string)\nCURRENCY=USD\n\n# Environment variable (string)\nLANGUAGE=en-US\n\n# Environment variable (boolean)\n# Type: boolean\nMAINTENANCE_MODE=false\n\n# Environment variable (string)\nMAINTENANCE_MESSAGE=We are currently performing scheduled maintenance. We'll be back shortly!\n",
+      "variables": [
+        {
+          "name": "NEXT_PUBLIC_SUPABASE_URL",
+          "files": [
+            ".env"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "https://znyjoyjsvjotlzjppzal.supabase.co",
+          "type": "url",
+          "required": false,
+          "description": "URL endpoint (url)"
+        },
+        {
+          "name": "NEXT_PUBLIC_SUPABASE_ANON_KEY",
+          "files": [
+            ".env"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "ey********************9Y",
+          "type": "string",
+          "required": false,
+          "description": "Authentication credential (string)"
+        },
+        {
+          "name": "SUPABASE_SERVICE_ROLE_KEY",
+          "files": [
+            ".env"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "ey********************mk",
+          "type": "string",
+          "required": false,
+          "description": "Authentication credential (string)"
+        },
+        {
+          "name": "DATABASE_PROVIDER",
+          "files": [
+            ".env",
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "postgresql",
+          "type": "string",
+          "required": false,
+          "description": "Environment variable (string)"
+        },
+        {
+          "name": "DATABASE_URL",
+          "files": [
+            ".env",
+            ".env.production",
+            ".env.test"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "file:./test.db",
+          "type": "url",
+          "required": false,
+          "description": "Database connection string"
+        },
+        {
+          "name": "JWT_SECRET",
+          "files": [
+            ".env",
+            ".env.local",
+            ".env.test",
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "CH********************EY",
+          "type": "string",
+          "required": false,
+          "description": "Secret key for JWT token generation"
+        },
+        {
+          "name": "GOOGLE_CALLBACK_URL",
+          "files": [
+            ".env"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "https://synthex-cerq.vercel.app/auth/google/callback",
+          "type": "url",
+          "required": false,
+          "description": "URL endpoint (url)"
+        },
+        {
+          "name": "OPENROUTER_API_KEY",
+          "files": [
+            ".env",
+            ".env.local",
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "yo********************re",
+          "type": "string",
+          "required": false,
+          "description": "Authentication credential (string)"
+        },
+        {
+          "name": "OPENROUTER_BASE_URL",
+          "files": [
+            ".env"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "https://openrouter.ai/api/v1",
+          "type": "url",
+          "required": false,
+          "description": "URL endpoint (url)"
+        },
+        {
+          "name": "OPENROUTER_SITE_URL",
+          "files": [
+            ".env"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "https://synthex-cerq.vercel.app",
+          "type": "url",
+          "required": false,
+          "description": "URL endpoint (url)"
+        },
+        {
+          "name": "OPENROUTER_SITE_NAME",
+          "files": [
+            ".env"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "SYNTHEX",
+          "type": "string",
+          "required": false,
+          "description": "Environment variable (string)"
+        },
+        {
+          "name": "OPENAI_API_KEY",
+          "files": [
+            ".env",
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "CH******************EY",
+          "type": "string",
+          "required": false,
+          "description": "Authentication credential (string)"
+        },
+        {
+          "name": "ANTHROPIC_API_KEY",
+          "files": [
+            ".env",
+            ".env.local",
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "CH********************EY",
+          "type": "string",
+          "required": false,
+          "description": "Authentication credential (string)"
+        },
+        {
+          "name": "GOOGLE_API_KEY",
+          "files": [
+            ".env"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "AI********************6w",
+          "type": "base64",
+          "required": false,
+          "description": "Authentication credential (base64)"
+        },
+        {
+          "name": "GOOGLE_CLIENT_ID",
+          "files": [
+            ".env"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "858852811970-52un4b3i4gujj56oapief6uhht2033ks.apps.googleusercontent.com",
+          "type": "string",
+          "required": false,
+          "description": "Google OAuth client ID"
+        },
+        {
+          "name": "GOOGLE_CLIENT_SECRET",
+          "files": [
+            ".env"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "GO********************4Y",
+          "type": "string",
+          "required": false,
+          "description": "Google OAuth client secret"
+        },
+        {
+          "name": "GITHUB_CLIENT_ID",
+          "files": [
+            ".env"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "Ov23lirLjZFRjpiEnRta",
+          "type": "string",
+          "required": false,
+          "description": "Environment variable (string)"
+        },
+        {
+          "name": "GITHUB_CLIENT_SECRET",
+          "files": [
+            ".env"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "b0********************2e",
+          "type": "base64",
+          "required": false,
+          "description": "Authentication credential (base64)"
+        },
+        {
+          "name": "GOOGLE_PROJECT_NUMBER",
+          "files": [
+            ".env"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "858852811970",
+          "type": "number",
+          "required": false,
+          "description": "Environment variable (number)"
+        },
+        {
+          "name": "GOOGLE_PROJECT_ID",
+          "files": [
+            ".env"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "synthex-468000",
+          "type": "string",
+          "required": false,
+          "description": "Environment variable (string)"
+        },
+        {
+          "name": "DAILY_BUDGET_LIMIT",
+          "files": [
+            ".env"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "50.00",
+          "type": "number",
+          "required": false,
+          "description": "Environment variable (number)"
+        },
+        {
+          "name": "MONTHLY_BUDGET_LIMIT",
+          "files": [
+            ".env"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "1000.00",
+          "type": "number",
+          "required": false,
+          "description": "Environment variable (number)"
+        },
+        {
+          "name": "MAX_CONCURRENT_REQUESTS",
+          "files": [
+            ".env"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "5",
+          "type": "number",
+          "required": false,
+          "description": "Environment variable (number)"
+        },
+        {
+          "name": "CACHE_ENABLED",
+          "files": [
+            ".env",
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "true",
+          "type": "boolean",
+          "required": false,
+          "description": "Environment variable (boolean)"
+        },
+        {
+          "name": "CACHE_TTL_SECONDS",
+          "files": [
+            ".env"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "3600",
+          "type": "number",
+          "required": false,
+          "description": "Environment variable (number)"
+        },
+        {
+          "name": "MAX_CPU_PERCENT",
+          "files": [
+            ".env"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "70",
+          "type": "number",
+          "required": false,
+          "description": "Environment variable (number)"
+        },
+        {
+          "name": "THROTTLE_DELAY",
+          "files": [
+            ".env"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "0.5",
+          "type": "number",
+          "required": false,
+          "description": "Environment variable (number)"
+        },
+        {
+          "name": "TRACK_USAGE",
+          "files": [
+            ".env"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "true",
+          "type": "boolean",
+          "required": false,
+          "description": "Environment variable (boolean)"
+        },
+        {
+          "name": "TRACK_COSTS",
+          "files": [
+            ".env"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "true",
+          "type": "boolean",
+          "required": false,
+          "description": "Environment variable (boolean)"
+        },
+        {
+          "name": "EXPORT_METRICS",
+          "files": [
+            ".env"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "true",
+          "type": "boolean",
+          "required": false,
+          "description": "Environment variable (boolean)"
+        },
+        {
+          "name": "SANITIZE_LOGS",
+          "files": [
+            ".env"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "true",
+          "type": "boolean",
+          "required": false,
+          "description": "Environment variable (boolean)"
+        },
+        {
+          "name": "PII_DETECTION",
+          "files": [
+            ".env"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "true",
+          "type": "boolean",
+          "required": false,
+          "description": "Environment variable (boolean)"
+        },
+        {
+          "name": "DEBUG",
+          "files": [
+            ".env",
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "false",
+          "type": "boolean",
+          "required": false,
+          "description": "Enable debug mode"
+        },
+        {
+          "name": "LOG_LEVEL",
+          "files": [
+            ".env",
+            ".env.production",
+            ".env.test"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "info",
+          "type": "string",
+          "required": false,
+          "description": "Logging verbosity level"
+        },
+        {
+          "name": "NODE_ENV",
+          "files": [
+            ".env",
+            ".env.production",
+            ".env.test"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "production",
+          "type": "string",
+          "required": false,
+          "description": "Node.js environment (development, production, test)"
+        },
+        {
+          "name": "PORT",
+          "files": [
+            ".env",
+            ".env.production",
+            ".env.test"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "3001",
+          "type": "number",
+          "required": false,
+          "description": "Server port number"
+        },
+        {
+          "name": "RATE_LIMIT_WINDOW_GENERAL",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "900000  # 15 minutes",
+          "type": "string",
+          "required": false,
+          "description": "Environment variable (string)"
+        },
+        {
+          "name": "RATE_LIMIT_MAX_GENERAL",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "100        # Requests per window",
+          "type": "string",
+          "required": false,
+          "description": "Environment variable (string)"
+        },
+        {
+          "name": "RATE_LIMIT_WINDOW_API",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "60******************te",
+          "type": "string",
+          "required": false,
+          "description": "Environment variable (string)"
+        },
+        {
+          "name": "RATE_LIMIT_MAX_API",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "50********************te",
+          "type": "string",
+          "required": false,
+          "description": "Environment variable (string)"
+        },
+        {
+          "name": "RATE_LIMIT_WINDOW_CONTENT",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "60000   # 1 minute",
+          "type": "string",
+          "required": false,
+          "description": "Environment variable (string)"
+        },
+        {
+          "name": "RATE_LIMIT_MAX_CONTENT",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "20         # Content generation per minute",
+          "type": "string",
+          "required": false,
+          "description": "Environment variable (string)"
+        },
+        {
+          "name": "MCP_SEQUENTIAL_THINKING_ENABLED",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "true",
+          "type": "boolean",
+          "required": false,
+          "description": "Environment variable (boolean)"
+        },
+        {
+          "name": "MCP_CONTEXT7_ENABLED",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "true",
+          "type": "boolean",
+          "required": false,
+          "description": "Environment variable (boolean)"
+        },
+        {
+          "name": "MCP_MAX_CONTEXT_WINDOWS",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "7",
+          "type": "number",
+          "required": false,
+          "description": "Environment variable (number)"
+        },
+        {
+          "name": "MCP_MAX_TOKENS_PER_WINDOW",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "****",
+          "type": "number",
+          "required": false,
+          "description": "Environment variable (number)"
+        },
+        {
+          "name": "MCP_MEMORY_RETENTION",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "0.95",
+          "type": "number",
+          "required": false,
+          "description": "Environment variable (number)"
+        },
+        {
+          "name": "MLE_STAR_MIN_PRODUCTION_SCORE",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "70",
+          "type": "number",
+          "required": false,
+          "description": "Environment variable (number)"
+        },
+        {
+          "name": "MLE_STAR_AUTO_EVALUATE",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "true",
+          "type": "boolean",
+          "required": false,
+          "description": "Environment variable (boolean)"
+        },
+        {
+          "name": "MLE_STAR_MONITORING_ENABLED",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "true",
+          "type": "boolean",
+          "required": false,
+          "description": "Environment variable (boolean)"
+        },
+        {
+          "name": "ANALYTICS_ENABLED",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "true",
+          "type": "boolean",
+          "required": false,
+          "description": "Environment variable (boolean)"
+        },
+        {
+          "name": "ANALYTICS_RETENTION_DAYS",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "90",
+          "type": "number",
+          "required": false,
+          "description": "Environment variable (number)"
+        },
+        {
+          "name": "ANALYTICS_BATCH_SIZE",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "100",
+          "type": "number",
+          "required": false,
+          "description": "Environment variable (number)"
+        },
+        {
+          "name": "CORS_ALLOWED_ORIGINS",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "https://synthex.vercel.app,https://synthex.dev",
+          "type": "url",
+          "required": false,
+          "description": "Environment variable (url)"
+        },
+        {
+          "name": "HELMET_ENABLED",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "true",
+          "type": "boolean",
+          "required": false,
+          "description": "Environment variable (boolean)"
+        },
+        {
+          "name": "CSRF_PROTECTION",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "true",
+          "type": "boolean",
+          "required": false,
+          "description": "Environment variable (boolean)"
+        },
+        {
+          "name": "API_KEY_ROTATION_DAYS",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "**",
+          "type": "number",
+          "required": false,
+          "description": "Authentication credential (number)"
+        },
+        {
+          "name": "CACHE_TTL",
+          "files": [
+            ".env.production",
+            ".env.test"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "3600",
+          "type": "number",
+          "required": false,
+          "description": "Environment variable (number)"
+        },
+        {
+          "name": "COMPRESSION_ENABLED",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "true",
+          "type": "boolean",
+          "required": false,
+          "description": "Environment variable (boolean)"
+        },
+        {
+          "name": "REQUEST_TIMEOUT",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "30000",
+          "type": "number",
+          "required": false,
+          "description": "Environment variable (number)"
+        },
+        {
+          "name": "SENTRY_DSN",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "CHANGE_THIS_SENTRY_DSN",
+          "type": "string",
+          "required": false,
+          "description": "Environment variable (string)"
+        },
+        {
+          "name": "NEW_RELIC_LICENSE_KEY",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "CH********************EY",
+          "type": "string",
+          "required": false,
+          "description": "Authentication credential (string)"
+        },
+        {
+          "name": "DATADOG_API_KEY",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "CH*******************EY",
+          "type": "string",
+          "required": false,
+          "description": "Authentication credential (string)"
+        },
+        {
+          "name": "DATABASE_POOL_SIZE",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "10",
+          "type": "number",
+          "required": false,
+          "description": "Environment variable (number)"
+        },
+        {
+          "name": "DATABASE_SSL",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "true",
+          "type": "boolean",
+          "required": false,
+          "description": "Environment variable (boolean)"
+        },
+        {
+          "name": "REDIS_URL",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "redis://localhost:6379",
+          "type": "url",
+          "required": false,
+          "description": "Redis connection string"
+        },
+        {
+          "name": "REDIS_PASSWORD",
+          "files": [
+            ".env.production",
+            ".env.test"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "CH********************RD",
+          "type": "string",
+          "required": false,
+          "description": "Environment variable (string)"
+        },
+        {
+          "name": "REDIS_HOST",
+          "files": [
+            ".env.production",
+            ".env.test"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "localhost",
+          "type": "string",
+          "required": false,
+          "description": "Server hostname (string)"
+        },
+        {
+          "name": "REDIS_PORT",
+          "files": [
+            ".env.production",
+            ".env.test"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "6379",
+          "type": "number",
+          "required": false,
+          "description": "Network port (number)"
+        },
+        {
+          "name": "REDIS_TTL",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "3600",
+          "type": "number",
+          "required": false,
+          "description": "Environment variable (number)"
+        },
+        {
+          "name": "AUTO_ROLLBACK_ENABLED",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "true",
+          "type": "boolean",
+          "required": false,
+          "description": "Environment variable (boolean)"
+        },
+        {
+          "name": "HEALTH_CHECK_INTERVAL",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "30",
+          "type": "number",
+          "required": false,
+          "description": "Environment variable (number)"
+        },
+        {
+          "name": "HEALTH_CHECK_TIMEOUT",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "5000",
+          "type": "number",
+          "required": false,
+          "description": "Environment variable (number)"
+        },
+        {
+          "name": "MAX_DEPLOY_TIME",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "300000",
+          "type": "number",
+          "required": false,
+          "description": "Environment variable (number)"
+        },
+        {
+          "name": "GRACEFUL_SHUTDOWN_TIMEOUT",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "30000",
+          "type": "number",
+          "required": false,
+          "description": "Environment variable (number)"
+        },
+        {
+          "name": "REACT_APP_GLASSMORPHIC",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "true",
+          "type": "boolean",
+          "required": false,
+          "description": "Environment variable (boolean)"
+        },
+        {
+          "name": "REACT_APP_OPTIMIZERS",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "true",
+          "type": "boolean",
+          "required": false,
+          "description": "Environment variable (boolean)"
+        },
+        {
+          "name": "REACT_APP_ANALYTICS",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "true",
+          "type": "boolean",
+          "required": false,
+          "description": "Environment variable (boolean)"
+        },
+        {
+          "name": "REACT_APP_CALENDAR",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "true",
+          "type": "boolean",
+          "required": false,
+          "description": "Environment variable (boolean)"
+        },
+        {
+          "name": "REACT_APP_CHARTS",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "true",
+          "type": "boolean",
+          "required": false,
+          "description": "Environment variable (boolean)"
+        },
+        {
+          "name": "REACT_APP_FILE_UPLOAD",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "true",
+          "type": "boolean",
+          "required": false,
+          "description": "Environment variable (boolean)"
+        },
+        {
+          "name": "REACT_APP_NOTIFICATIONS",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "true",
+          "type": "boolean",
+          "required": false,
+          "description": "Environment variable (boolean)"
+        },
+        {
+          "name": "REACT_APP_INSTAGRAM",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "true",
+          "type": "boolean",
+          "required": false,
+          "description": "Environment variable (boolean)"
+        },
+        {
+          "name": "REACT_APP_FACEBOOK",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "true",
+          "type": "boolean",
+          "required": false,
+          "description": "Environment variable (boolean)"
+        },
+        {
+          "name": "REACT_APP_TWITTER",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "true",
+          "type": "boolean",
+          "required": false,
+          "description": "Environment variable (boolean)"
+        },
+        {
+          "name": "REACT_APP_LINKEDIN",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "true",
+          "type": "boolean",
+          "required": false,
+          "description": "Environment variable (boolean)"
+        },
+        {
+          "name": "REACT_APP_TIKTOK",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "true",
+          "type": "boolean",
+          "required": false,
+          "description": "Environment variable (boolean)"
+        },
+        {
+          "name": "REACT_APP_PINTEREST",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "true",
+          "type": "boolean",
+          "required": false,
+          "description": "Environment variable (boolean)"
+        },
+        {
+          "name": "REACT_APP_YOUTUBE",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "true",
+          "type": "boolean",
+          "required": false,
+          "description": "Environment variable (boolean)"
+        },
+        {
+          "name": "REACT_APP_REDDIT",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "true",
+          "type": "boolean",
+          "required": false,
+          "description": "Environment variable (boolean)"
+        },
+        {
+          "name": "FEATURE_AB_TESTING",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "true",
+          "type": "boolean",
+          "required": false,
+          "description": "Environment variable (boolean)"
+        },
+        {
+          "name": "FEATURE_SMART_SCHEDULING",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "false",
+          "type": "boolean",
+          "required": false,
+          "description": "Environment variable (boolean)"
+        },
+        {
+          "name": "FEATURE_COMPETITOR_ANALYSIS",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "true",
+          "type": "boolean",
+          "required": false,
+          "description": "Environment variable (boolean)"
+        },
+        {
+          "name": "FEATURE_MULTI_LANGUAGE",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "false",
+          "type": "boolean",
+          "required": false,
+          "description": "Environment variable (boolean)"
+        },
+        {
+          "name": "FEATURE_VOICE_CONTENT",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "false",
+          "type": "boolean",
+          "required": false,
+          "description": "Environment variable (boolean)"
+        },
+        {
+          "name": "SLACK_WEBHOOK_URL",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "",
+          "type": "number",
+          "required": false,
+          "description": "URL endpoint (number)"
+        },
+        {
+          "name": "DISCORD_WEBHOOK_URL",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "",
+          "type": "number",
+          "required": false,
+          "description": "URL endpoint (number)"
+        },
+        {
+          "name": "ZAPIER_WEBHOOK_URL",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "",
+          "type": "number",
+          "required": false,
+          "description": "URL endpoint (number)"
+        },
+        {
+          "name": "WEBHOOK_SECRET",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "",
+          "type": "number",
+          "required": false,
+          "description": "Authentication credential (number)"
+        },
+        {
+          "name": "SMTP_HOST",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "",
+          "type": "number",
+          "required": false,
+          "description": "SMTP server hostname"
+        },
+        {
+          "name": "SMTP_PORT",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "587",
+          "type": "number",
+          "required": false,
+          "description": "SMTP server port"
+        },
+        {
+          "name": "SMTP_USER",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "",
+          "type": "number",
+          "required": false,
+          "description": "SMTP authentication username"
+        },
+        {
+          "name": "SMTP_PASSWORD",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "",
+          "type": "number",
+          "required": false,
+          "description": "Environment variable (number)"
+        },
+        {
+          "name": "NOTIFICATION_EMAIL",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "",
+          "type": "number",
+          "required": false,
+          "description": "Environment variable (number)"
+        },
+        {
+          "name": "CDN_ENABLED",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "true",
+          "type": "boolean",
+          "required": false,
+          "description": "Environment variable (boolean)"
+        },
+        {
+          "name": "CDN_PROVIDER",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "cloudflare",
+          "type": "string",
+          "required": false,
+          "description": "Environment variable (string)"
+        },
+        {
+          "name": "CDN_URL",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "https://cdn.synthex.app",
+          "type": "url",
+          "required": false,
+          "description": "URL endpoint (url)"
+        },
+        {
+          "name": "CDN_IMAGE_OPTIMIZATION",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "true",
+          "type": "boolean",
+          "required": false,
+          "description": "Environment variable (boolean)"
+        },
+        {
+          "name": "CDN_IMAGE_QUALITY",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "85",
+          "type": "number",
+          "required": false,
+          "description": "Environment variable (number)"
+        },
+        {
+          "name": "CDN_CSS_OPTIMIZATION",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "true",
+          "type": "boolean",
+          "required": false,
+          "description": "Environment variable (boolean)"
+        },
+        {
+          "name": "CDN_JS_OPTIMIZATION",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "true",
+          "type": "boolean",
+          "required": false,
+          "description": "Environment variable (boolean)"
+        },
+        {
+          "name": "BACKUP_ENABLED",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "true",
+          "type": "boolean",
+          "required": false,
+          "description": "Environment variable (boolean)"
+        },
+        {
+          "name": "BACKUP_SCHEDULE",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "0 2 * * *",
+          "type": "string",
+          "required": false,
+          "description": "Environment variable (string)"
+        },
+        {
+          "name": "BACKUP_RETENTION_DAYS",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "30",
+          "type": "number",
+          "required": false,
+          "description": "Environment variable (number)"
+        },
+        {
+          "name": "JWT_ISSUER",
+          "files": [
+            ".env.test"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "synthex-test",
+          "type": "string",
+          "required": false,
+          "description": "Environment variable (string)"
+        },
+        {
+          "name": "ENCRYPTION_KEY",
+          "files": [
+            ".env.test"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "te********************ng",
+          "type": "string",
+          "required": false,
+          "description": "Authentication credential (string)"
+        },
+        {
+          "name": "REDIS_DB",
+          "files": [
+            ".env.test",
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "0",
+          "type": "number",
+          "required": false,
+          "description": "Environment variable (number)"
+        },
+        {
+          "name": "LOG_FILE_PATH",
+          "files": [
+            ".env.test",
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "/var/log/synthex/app.log",
+          "type": "string",
+          "required": false,
+          "description": "File system path (string)"
+        },
+        {
+          "name": "CACHE_KEY_PREFIX",
+          "files": [
+            ".env.test"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "sy*********t:",
+          "type": "url",
+          "required": false,
+          "description": "Authentication credential (url)"
+        },
+        {
+          "name": "CACHE_MAX_MEMORY_ITEMS",
+          "files": [
+            ".env.test"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "100",
+          "type": "number",
+          "required": false,
+          "description": "Environment variable (number)"
+        },
+        {
+          "name": "RATE_LIMIT_WINDOW_MS",
+          "files": [
+            ".env.test",
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "900000",
+          "type": "number",
+          "required": false,
+          "description": "Environment variable (number)"
+        },
+        {
+          "name": "RATE_LIMIT_MAX_REQUESTS",
+          "files": [
+            ".env.test",
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "100",
+          "type": "number",
+          "required": false,
+          "description": "Environment variable (number)"
+        },
+        {
+          "name": "CORS_ORIGINS",
+          "files": [
+            ".env.test"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "http://localhost:3001,http://localhost:3000",
+          "type": "string",
+          "required": false,
+          "description": "Environment variable (string)"
+        },
+        {
+          "name": "ENABLE_SWAGGER",
+          "files": [
+            ".env.test"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "true",
+          "type": "boolean",
+          "required": false,
+          "description": "Feature toggle (boolean)"
+        },
+        {
+          "name": "ENABLE_METRICS",
+          "files": [
+            ".env.test"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "true",
+          "type": "boolean",
+          "required": false,
+          "description": "Feature toggle (boolean)"
+        },
+        {
+          "name": "ENABLE_HEALTH_CHECK",
+          "files": [
+            ".env.test"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "true",
+          "type": "boolean",
+          "required": false,
+          "description": "Feature toggle (boolean)"
+        },
+        {
+          "name": "TEST_TIMEOUT",
+          "files": [
+            ".env.test"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "30000",
+          "type": "number",
+          "required": false,
+          "description": "Environment variable (number)"
+        },
+        {
+          "name": "TEST_DB_CLEANUP",
+          "files": [
+            ".env.test"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "true",
+          "type": "boolean",
+          "required": false,
+          "description": "Environment variable (boolean)"
+        },
+        {
+          "name": "TEST_PARALLEL_WORKERS",
+          "files": [
+            ".env.test"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "1",
+          "type": "number",
+          "required": false,
+          "description": "Environment variable (number)"
+        },
+        {
+          "name": "APP_NAME",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "SYNTHEX",
+          "type": "string",
+          "required": false,
+          "description": "Environment variable (string)"
+        },
+        {
+          "name": "APP_VERSION",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "2.0.0",
+          "type": "string",
+          "required": false,
+          "description": "Environment variable (string)"
+        },
+        {
+          "name": "APP_URL",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "https://synthex.app",
+          "type": "url",
+          "required": false,
+          "description": "URL endpoint (url)"
+        },
+        {
+          "name": "API_URL",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "ht*******************pp",
+          "type": "url",
+          "required": false,
+          "description": "API endpoint URL"
+        },
+        {
+          "name": "DB_CONNECTION",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "postgresql",
+          "type": "string",
+          "required": false,
+          "description": "Environment variable (string)"
+        },
+        {
+          "name": "DB_HOST",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "localhost",
+          "type": "string",
+          "required": false,
+          "description": "Server hostname (string)"
+        },
+        {
+          "name": "DB_PORT",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "5432",
+          "type": "number",
+          "required": false,
+          "description": "Network port (number)"
+        },
+        {
+          "name": "DB_DATABASE",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "synthex_production",
+          "type": "string",
+          "required": false,
+          "description": "Environment variable (string)"
+        },
+        {
+          "name": "DB_USERNAME",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "synthex_user",
+          "type": "string",
+          "required": false,
+          "description": "Environment variable (string)"
+        },
+        {
+          "name": "DB_PASSWORD",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "CH********************RD",
+          "type": "string",
+          "required": false,
+          "description": "Environment variable (string)"
+        },
+        {
+          "name": "DB_SSL",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "true",
+          "type": "boolean",
+          "required": false,
+          "description": "Environment variable (boolean)"
+        },
+        {
+          "name": "DB_POOL_MIN",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "2",
+          "type": "number",
+          "required": false,
+          "description": "Environment variable (number)"
+        },
+        {
+          "name": "DB_POOL_MAX",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "20",
+          "type": "number",
+          "required": false,
+          "description": "Environment variable (number)"
+        },
+        {
+          "name": "REDIS_KEY_PREFIX",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "sy****x:",
+          "type": "url",
+          "required": false,
+          "description": "Authentication credential (url)"
+        },
+        {
+          "name": "REDIS_CACHE_TTL",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "3600",
+          "type": "number",
+          "required": false,
+          "description": "Environment variable (number)"
+        },
+        {
+          "name": "SESSION_SECRET",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "CH********************EY",
+          "type": "string",
+          "required": false,
+          "description": "Authentication credential (string)"
+        },
+        {
+          "name": "SESSION_SECURE",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "true",
+          "type": "boolean",
+          "required": false,
+          "description": "Environment variable (boolean)"
+        },
+        {
+          "name": "SESSION_HTTP_ONLY",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "true",
+          "type": "boolean",
+          "required": false,
+          "description": "Environment variable (boolean)"
+        },
+        {
+          "name": "SESSION_SAME_SITE",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "strict",
+          "type": "string",
+          "required": false,
+          "description": "Environment variable (string)"
+        },
+        {
+          "name": "SESSION_MAX_AGE",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "86400000",
+          "type": "number",
+          "required": false,
+          "description": "Environment variable (number)"
+        },
+        {
+          "name": "JWT_EXPIRES_IN",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "7d",
+          "type": "string",
+          "required": false,
+          "description": "Environment variable (string)"
+        },
+        {
+          "name": "JWT_REFRESH_SECRET",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "CH********************ET",
+          "type": "string",
+          "required": false,
+          "description": "Authentication credential (string)"
+        },
+        {
+          "name": "JWT_REFRESH_EXPIRES_IN",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "30d",
+          "type": "string",
+          "required": false,
+          "description": "Environment variable (string)"
+        },
+        {
+          "name": "BCRYPT_ROUNDS",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "12",
+          "type": "number",
+          "required": false,
+          "description": "Environment variable (number)"
+        },
+        {
+          "name": "MAIL_DRIVER",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "smtp",
+          "type": "string",
+          "required": false,
+          "description": "Environment variable (string)"
+        },
+        {
+          "name": "MAIL_HOST",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "smtp.sendgrid.net",
+          "type": "string",
+          "required": false,
+          "description": "Server hostname (string)"
+        },
+        {
+          "name": "MAIL_PORT",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "587",
+          "type": "number",
+          "required": false,
+          "description": "Network port (number)"
+        },
+        {
+          "name": "MAIL_USERNAME",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "apikey",
+          "type": "string",
+          "required": false,
+          "description": "Environment variable (string)"
+        },
+        {
+          "name": "MAIL_PASSWORD",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "CH********************EY",
+          "type": "string",
+          "required": false,
+          "description": "Environment variable (string)"
+        },
+        {
+          "name": "MAIL_ENCRYPTION",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "tls",
+          "type": "string",
+          "required": false,
+          "description": "Environment variable (string)"
+        },
+        {
+          "name": "MAIL_FROM_ADDRESS",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "noreply@synthex.app",
+          "type": "email",
+          "required": false,
+          "description": "Environment variable (email)"
+        },
+        {
+          "name": "MAIL_FROM_NAME",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "SYNTHEX",
+          "type": "string",
+          "required": false,
+          "description": "Environment variable (string)"
+        },
+        {
+          "name": "SENDGRID_API_KEY",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "CH********************EY",
+          "type": "string",
+          "required": false,
+          "description": "Authentication credential (string)"
+        },
+        {
+          "name": "MAILGUN_API_KEY",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "CH*******************EY",
+          "type": "string",
+          "required": false,
+          "description": "Authentication credential (string)"
+        },
+        {
+          "name": "MAILGUN_DOMAIN",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "mg.synthex.app",
+          "type": "string",
+          "required": false,
+          "description": "Environment variable (string)"
+        },
+        {
+          "name": "AWS_SES_KEY",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "CH***************EY",
+          "type": "string",
+          "required": false,
+          "description": "Authentication credential (string)"
+        },
+        {
+          "name": "AWS_SES_SECRET",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "CH******************ET",
+          "type": "string",
+          "required": false,
+          "description": "Authentication credential (string)"
+        },
+        {
+          "name": "AWS_SES_REGION",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "us-east-1",
+          "type": "string",
+          "required": false,
+          "description": "Environment variable (string)"
+        },
+        {
+          "name": "OPENAI_ORGANIZATION",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "CHANGE_THIS_ORG_ID",
+          "type": "string",
+          "required": false,
+          "description": "Environment variable (string)"
+        },
+        {
+          "name": "OPENAI_MODEL",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "gpt-4-turbo-preview",
+          "type": "string",
+          "required": false,
+          "description": "Environment variable (string)"
+        },
+        {
+          "name": "OPENAI_MAX_TOKENS",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "****",
+          "type": "number",
+          "required": false,
+          "description": "Environment variable (number)"
+        },
+        {
+          "name": "OPENAI_TEMPERATURE",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "0.7",
+          "type": "number",
+          "required": false,
+          "description": "Environment variable (number)"
+        },
+        {
+          "name": "ANTHROPIC_MODEL",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "claude-3-opus-20240229",
+          "type": "string",
+          "required": false,
+          "description": "Environment variable (string)"
+        },
+        {
+          "name": "ANTHROPIC_MAX_TOKENS",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "****",
+          "type": "number",
+          "required": false,
+          "description": "Environment variable (number)"
+        },
+        {
+          "name": "GOOGLE_AI_KEY",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "CH******************EY",
+          "type": "string",
+          "required": false,
+          "description": "Authentication credential (string)"
+        },
+        {
+          "name": "GOOGLE_AI_MODEL",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "gemini-pro",
+          "type": "string",
+          "required": false,
+          "description": "Environment variable (string)"
+        },
+        {
+          "name": "CUSTOM_AI_ENDPOINT",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "https://your-ai-endpoint.com",
+          "type": "url",
+          "required": false,
+          "description": "Environment variable (url)"
+        },
+        {
+          "name": "CUSTOM_AI_KEY",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "CH******************EY",
+          "type": "string",
+          "required": false,
+          "description": "Authentication credential (string)"
+        },
+        {
+          "name": "TIKTOK_CLIENT_KEY",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "CH******************EY",
+          "type": "string",
+          "required": false,
+          "description": "Authentication credential (string)"
+        },
+        {
+          "name": "TIKTOK_CLIENT_SECRET",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "CH********************ET",
+          "type": "string",
+          "required": false,
+          "description": "Authentication credential (string)"
+        },
+        {
+          "name": "TIKTOK_REDIRECT_URI",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "https://synthex.app/auth/tiktok/callback",
+          "type": "url",
+          "required": false,
+          "description": "URL endpoint (url)"
+        },
+        {
+          "name": "INSTAGRAM_CLIENT_ID",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "CHANGE_THIS_INSTAGRAM_ID",
+          "type": "string",
+          "required": false,
+          "description": "Environment variable (string)"
+        },
+        {
+          "name": "INSTAGRAM_CLIENT_SECRET",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "CH********************ET",
+          "type": "string",
+          "required": false,
+          "description": "Authentication credential (string)"
+        },
+        {
+          "name": "INSTAGRAM_REDIRECT_URI",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "https://synthex.app/auth/instagram/callback",
+          "type": "url",
+          "required": false,
+          "description": "URL endpoint (url)"
+        },
+        {
+          "name": "FACEBOOK_APP_ID",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "CHANGE_THIS_FACEBOOK_ID",
+          "type": "string",
+          "required": false,
+          "description": "Environment variable (string)"
+        },
+        {
+          "name": "FACEBOOK_APP_SECRET",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "CH********************ET",
+          "type": "string",
+          "required": false,
+          "description": "Authentication credential (string)"
+        },
+        {
+          "name": "FACEBOOK_REDIRECT_URI",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "https://synthex.app/auth/facebook/callback",
+          "type": "url",
+          "required": false,
+          "description": "URL endpoint (url)"
+        },
+        {
+          "name": "TWITTER_API_KEY",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "CH*******************EY",
+          "type": "string",
+          "required": false,
+          "description": "Authentication credential (string)"
+        },
+        {
+          "name": "TWITTER_API_SECRET",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "CH********************ET",
+          "type": "string",
+          "required": false,
+          "description": "Authentication credential (string)"
+        },
+        {
+          "name": "TWITTER_BEARER_TOKEN",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "CH********************EN",
+          "type": "string",
+          "required": false,
+          "description": "Environment variable (string)"
+        },
+        {
+          "name": "TWITTER_ACCESS_TOKEN",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "CH********************EN",
+          "type": "string",
+          "required": false,
+          "description": "Environment variable (string)"
+        },
+        {
+          "name": "TWITTER_ACCESS_SECRET",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "CH********************ET",
+          "type": "string",
+          "required": false,
+          "description": "Authentication credential (string)"
+        },
+        {
+          "name": "LINKEDIN_CLIENT_ID",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "CHANGE_THIS_LINKEDIN_ID",
+          "type": "string",
+          "required": false,
+          "description": "Environment variable (string)"
+        },
+        {
+          "name": "LINKEDIN_CLIENT_SECRET",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "CH********************ET",
+          "type": "string",
+          "required": false,
+          "description": "Authentication credential (string)"
+        },
+        {
+          "name": "LINKEDIN_REDIRECT_URI",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "https://synthex.app/auth/linkedin/callback",
+          "type": "url",
+          "required": false,
+          "description": "URL endpoint (url)"
+        },
+        {
+          "name": "YOUTUBE_API_KEY",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "CH*******************EY",
+          "type": "string",
+          "required": false,
+          "description": "Authentication credential (string)"
+        },
+        {
+          "name": "YOUTUBE_CLIENT_ID",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "CHANGE_THIS_YOUTUBE_ID",
+          "type": "string",
+          "required": false,
+          "description": "Environment variable (string)"
+        },
+        {
+          "name": "YOUTUBE_CLIENT_SECRET",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "CH********************ET",
+          "type": "string",
+          "required": false,
+          "description": "Authentication credential (string)"
+        },
+        {
+          "name": "PINTEREST_APP_ID",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "CHANGE_THIS_PINTEREST_ID",
+          "type": "string",
+          "required": false,
+          "description": "Environment variable (string)"
+        },
+        {
+          "name": "PINTEREST_APP_SECRET",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "CH********************ET",
+          "type": "string",
+          "required": false,
+          "description": "Authentication credential (string)"
+        },
+        {
+          "name": "SNAPCHAT_CLIENT_ID",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "CHANGE_THIS_SNAPCHAT_ID",
+          "type": "string",
+          "required": false,
+          "description": "Environment variable (string)"
+        },
+        {
+          "name": "SNAPCHAT_CLIENT_SECRET",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "CH********************ET",
+          "type": "string",
+          "required": false,
+          "description": "Authentication credential (string)"
+        },
+        {
+          "name": "GOOGLE_ANALYTICS_ID",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "G-CHANGE_THIS_ID",
+          "type": "string",
+          "required": false,
+          "description": "Environment variable (string)"
+        },
+        {
+          "name": "MIXPANEL_TOKEN",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "CH********************EN",
+          "type": "string",
+          "required": false,
+          "description": "Environment variable (string)"
+        },
+        {
+          "name": "SEGMENT_WRITE_KEY",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "CH*******************EY",
+          "type": "string",
+          "required": false,
+          "description": "Authentication credential (string)"
+        },
+        {
+          "name": "AMPLITUDE_API_KEY",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "CH********************EY",
+          "type": "string",
+          "required": false,
+          "description": "Authentication credential (string)"
+        },
+        {
+          "name": "HOTJAR_SITE_ID",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "CHANGE_THIS_HOTJAR_ID",
+          "type": "string",
+          "required": false,
+          "description": "Environment variable (string)"
+        },
+        {
+          "name": "FCM_SERVER_KEY",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "CH***************EY",
+          "type": "string",
+          "required": false,
+          "description": "Authentication credential (string)"
+        },
+        {
+          "name": "FCM_SENDER_ID",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "CHANGE_THIS_SENDER_ID",
+          "type": "string",
+          "required": false,
+          "description": "Environment variable (string)"
+        },
+        {
+          "name": "APNS_KEY_ID",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "CH****************EY",
+          "type": "string",
+          "required": false,
+          "description": "Authentication credential (string)"
+        },
+        {
+          "name": "APNS_TEAM_ID",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "CHANGE_THIS_TEAM_ID",
+          "type": "string",
+          "required": false,
+          "description": "Environment variable (string)"
+        },
+        {
+          "name": "APNS_BUNDLE_ID",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "com.synthex.app",
+          "type": "string",
+          "required": false,
+          "description": "Environment variable (string)"
+        },
+        {
+          "name": "APNS_PRODUCTION",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "true",
+          "type": "boolean",
+          "required": false,
+          "description": "Environment variable (boolean)"
+        },
+        {
+          "name": "ONESIGNAL_APP_ID",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "CHANGE_THIS_ONESIGNAL_ID",
+          "type": "string",
+          "required": false,
+          "description": "Environment variable (string)"
+        },
+        {
+          "name": "ONESIGNAL_API_KEY",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "CH********************EY",
+          "type": "string",
+          "required": false,
+          "description": "Authentication credential (string)"
+        },
+        {
+          "name": "AWS_ACCESS_KEY_ID",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "CH***************EY",
+          "type": "string",
+          "required": false,
+          "description": "AWS access key identifier"
+        },
+        {
+          "name": "AWS_SECRET_ACCESS_KEY",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "CH******************ET",
+          "type": "string",
+          "required": false,
+          "description": "AWS secret access key"
+        },
+        {
+          "name": "AWS_DEFAULT_REGION",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "us-east-1",
+          "type": "string",
+          "required": false,
+          "description": "Environment variable (string)"
+        },
+        {
+          "name": "AWS_BUCKET",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "synthex-production",
+          "type": "string",
+          "required": false,
+          "description": "Environment variable (string)"
+        },
+        {
+          "name": "AWS_CLOUDFRONT_URL",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "https://d1234567890.cloudfront.net",
+          "type": "url",
+          "required": false,
+          "description": "URL endpoint (url)"
+        },
+        {
+          "name": "GCS_PROJECT_ID",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "synthex-production",
+          "type": "string",
+          "required": false,
+          "description": "Environment variable (string)"
+        },
+        {
+          "name": "GCS_KEY_FILE",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "./********************on",
+          "type": "string",
+          "required": false,
+          "description": "Authentication credential (string)"
+        },
+        {
+          "name": "GCS_BUCKET",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "synthex-media",
+          "type": "string",
+          "required": false,
+          "description": "Environment variable (string)"
+        },
+        {
+          "name": "CLOUDINARY_CLOUD_NAME",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "CHANGE_THIS_CLOUD_NAME",
+          "type": "string",
+          "required": false,
+          "description": "Environment variable (string)"
+        },
+        {
+          "name": "CLOUDINARY_API_KEY",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "CH********************EY",
+          "type": "string",
+          "required": false,
+          "description": "Authentication credential (string)"
+        },
+        {
+          "name": "CLOUDINARY_API_SECRET",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "CH********************ET",
+          "type": "string",
+          "required": false,
+          "description": "Authentication credential (string)"
+        },
+        {
+          "name": "CLOUDFLARE_ZONE_ID",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "CHANGE_THIS_ZONE_ID",
+          "type": "string",
+          "required": false,
+          "description": "Environment variable (string)"
+        },
+        {
+          "name": "CLOUDFLARE_API_TOKEN",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "CH****************EN",
+          "type": "string",
+          "required": false,
+          "description": "Environment variable (string)"
+        },
+        {
+          "name": "CDN_CACHE_MAX_AGE",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "31536000",
+          "type": "number",
+          "required": false,
+          "description": "Environment variable (number)"
+        },
+        {
+          "name": "CDN_CACHE_PUBLIC",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "true",
+          "type": "boolean",
+          "required": false,
+          "description": "Environment variable (boolean)"
+        },
+        {
+          "name": "WS_ENABLED",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "true",
+          "type": "boolean",
+          "required": false,
+          "description": "Environment variable (boolean)"
+        },
+        {
+          "name": "WS_PORT",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "3001",
+          "type": "number",
+          "required": false,
+          "description": "Network port (number)"
+        },
+        {
+          "name": "WS_CORS_ORIGIN",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "https://synthex.app",
+          "type": "url",
+          "required": false,
+          "description": "Environment variable (url)"
+        },
+        {
+          "name": "WS_PING_INTERVAL",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "30000",
+          "type": "number",
+          "required": false,
+          "description": "Environment variable (number)"
+        },
+        {
+          "name": "WS_PING_TIMEOUT",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "60000",
+          "type": "number",
+          "required": false,
+          "description": "Environment variable (number)"
+        },
+        {
+          "name": "RATE_LIMIT_ENABLED",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "true",
+          "type": "boolean",
+          "required": false,
+          "description": "Environment variable (boolean)"
+        },
+        {
+          "name": "RATE_LIMIT_SKIP_SUCCESSFUL_REQUESTS",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "false",
+          "type": "boolean",
+          "required": false,
+          "description": "Environment variable (boolean)"
+        },
+        {
+          "name": "RATE_LIMIT_SKIP_FAILED_REQUESTS",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "false",
+          "type": "boolean",
+          "required": false,
+          "description": "Environment variable (boolean)"
+        },
+        {
+          "name": "CORS_ENABLED",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "true",
+          "type": "boolean",
+          "required": false,
+          "description": "Environment variable (boolean)"
+        },
+        {
+          "name": "CORS_ORIGIN",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "https://synthex.app,https://app.synthex.app",
+          "type": "url",
+          "required": false,
+          "description": "Environment variable (url)"
+        },
+        {
+          "name": "CORS_CREDENTIALS",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "****",
+          "type": "boolean",
+          "required": false,
+          "description": "Environment variable (boolean)"
+        },
+        {
+          "name": "CSRF_ENABLED",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "true",
+          "type": "boolean",
+          "required": false,
+          "description": "Environment variable (boolean)"
+        },
+        {
+          "name": "CSRF_SECRET",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "CH*******************ET",
+          "type": "string",
+          "required": false,
+          "description": "Authentication credential (string)"
+        },
+        {
+          "name": "LOG_FORMAT",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "json",
+          "type": "string",
+          "required": false,
+          "description": "Environment variable (string)"
+        },
+        {
+          "name": "LOG_TO_FILE",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "true",
+          "type": "boolean",
+          "required": false,
+          "description": "Environment variable (boolean)"
+        },
+        {
+          "name": "LOG_ROTATION",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "daily",
+          "type": "string",
+          "required": false,
+          "description": "Environment variable (string)"
+        },
+        {
+          "name": "LOG_MAX_SIZE",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "20m",
+          "type": "string",
+          "required": false,
+          "description": "Environment variable (string)"
+        },
+        {
+          "name": "LOG_MAX_FILES",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "14d",
+          "type": "string",
+          "required": false,
+          "description": "Environment variable (string)"
+        },
+        {
+          "name": "SENTRY_ENVIRONMENT",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "production",
+          "type": "string",
+          "required": false,
+          "description": "Environment variable (string)"
+        },
+        {
+          "name": "SENTRY_TRACES_SAMPLE_RATE",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "0.1",
+          "type": "number",
+          "required": false,
+          "description": "Environment variable (number)"
+        },
+        {
+          "name": "NEW_RELIC_APP_NAME",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "SYNTHEX Production",
+          "type": "string",
+          "required": false,
+          "description": "Environment variable (string)"
+        },
+        {
+          "name": "DATADOG_APP_KEY",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "CH********************EY",
+          "type": "string",
+          "required": false,
+          "description": "Authentication credential (string)"
+        },
+        {
+          "name": "AB_TESTING_ENABLED",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "true",
+          "type": "boolean",
+          "required": false,
+          "description": "Environment variable (boolean)"
+        },
+        {
+          "name": "OPTIMIZELY_SDK_KEY",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "CH********************EY",
+          "type": "string",
+          "required": false,
+          "description": "Authentication credential (string)"
+        },
+        {
+          "name": "GOOGLE_OPTIMIZE_ID",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "CHANGE_THIS_OPTIMIZE_ID",
+          "type": "string",
+          "required": false,
+          "description": "Environment variable (string)"
+        },
+        {
+          "name": "SPLIT_IO_API_KEY",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "CH*****************EY",
+          "type": "string",
+          "required": false,
+          "description": "Authentication credential (string)"
+        },
+        {
+          "name": "STRIPE_PUBLISHABLE_KEY",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "pk***************IS",
+          "type": "string",
+          "required": false,
+          "description": "Authentication credential (string)"
+        },
+        {
+          "name": "STRIPE_SECRET_KEY",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "sk***************IS",
+          "type": "string",
+          "required": false,
+          "description": "Authentication credential (string)"
+        },
+        {
+          "name": "STRIPE_WEBHOOK_SECRET",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "wh*************IS",
+          "type": "string",
+          "required": false,
+          "description": "Authentication credential (string)"
+        },
+        {
+          "name": "STRIPE_PRICE_ID_BASIC",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "price_CHANGE_THIS",
+          "type": "string",
+          "required": false,
+          "description": "Environment variable (string)"
+        },
+        {
+          "name": "STRIPE_PRICE_ID_PRO",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "price_CHANGE_THIS",
+          "type": "string",
+          "required": false,
+          "description": "Environment variable (string)"
+        },
+        {
+          "name": "STRIPE_PRICE_ID_ENTERPRISE",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "price_CHANGE_THIS",
+          "type": "string",
+          "required": false,
+          "description": "Environment variable (string)"
+        },
+        {
+          "name": "PAYPAL_CLIENT_ID",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "CHANGE_THIS_PAYPAL_ID",
+          "type": "string",
+          "required": false,
+          "description": "Environment variable (string)"
+        },
+        {
+          "name": "PAYPAL_CLIENT_SECRET",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "CH********************ET",
+          "type": "string",
+          "required": false,
+          "description": "Authentication credential (string)"
+        },
+        {
+          "name": "PAYPAL_MODE",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "production",
+          "type": "string",
+          "required": false,
+          "description": "Environment variable (string)"
+        },
+        {
+          "name": "WHITE_LABEL_ENABLED",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "true",
+          "type": "boolean",
+          "required": false,
+          "description": "Environment variable (boolean)"
+        },
+        {
+          "name": "MULTI_TENANT_ENABLED",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "true",
+          "type": "boolean",
+          "required": false,
+          "description": "Environment variable (boolean)"
+        },
+        {
+          "name": "CUSTOM_DOMAIN_ENABLED",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "true",
+          "type": "boolean",
+          "required": false,
+          "description": "Environment variable (boolean)"
+        },
+        {
+          "name": "SSO_ENABLED",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "true",
+          "type": "boolean",
+          "required": false,
+          "description": "Environment variable (boolean)"
+        },
+        {
+          "name": "SAML_ENTRY_POINT",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "https://sso.synthex.app/saml/login",
+          "type": "url",
+          "required": false,
+          "description": "Environment variable (url)"
+        },
+        {
+          "name": "SAML_ISSUER",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "synthex-saml-issuer",
+          "type": "string",
+          "required": false,
+          "description": "Environment variable (string)"
+        },
+        {
+          "name": "SAML_CERT_PATH",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "./certs/saml.pem",
+          "type": "string",
+          "required": false,
+          "description": "File system path (string)"
+        },
+        {
+          "name": "OAUTH_CLIENT_ID",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "CH****************ID",
+          "type": "string",
+          "required": false,
+          "description": "Environment variable (string)"
+        },
+        {
+          "name": "OAUTH_CLIENT_SECRET",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "CH********************ET",
+          "type": "string",
+          "required": false,
+          "description": "Authentication credential (string)"
+        },
+        {
+          "name": "OAUTH_AUTHORIZATION_URL",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "ht********************ze",
+          "type": "url",
+          "required": false,
+          "description": "URL endpoint (url)"
+        },
+        {
+          "name": "OAUTH_TOKEN_URL",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "ht********************en",
+          "type": "url",
+          "required": false,
+          "description": "URL endpoint (url)"
+        },
+        {
+          "name": "LDAP_URL",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "ldap://ldap.synthex.app:389",
+          "type": "url",
+          "required": false,
+          "description": "URL endpoint (url)"
+        },
+        {
+          "name": "LDAP_BIND_DN",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "cn=admin,dc=synthex,dc=app",
+          "type": "string",
+          "required": false,
+          "description": "Environment variable (string)"
+        },
+        {
+          "name": "LDAP_BIND_CREDENTIALS",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "CH********************RD",
+          "type": "string",
+          "required": false,
+          "description": "Environment variable (string)"
+        },
+        {
+          "name": "LDAP_SEARCH_BASE",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "dc=synthex,dc=app",
+          "type": "string",
+          "required": false,
+          "description": "Environment variable (string)"
+        },
+        {
+          "name": "FEATURE_ANALYTICS_DASHBOARD",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "true",
+          "type": "boolean",
+          "required": false,
+          "description": "Environment variable (boolean)"
+        },
+        {
+          "name": "FEATURE_AI_CONTENT_GENERATION",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "true",
+          "type": "boolean",
+          "required": false,
+          "description": "Environment variable (boolean)"
+        },
+        {
+          "name": "FEATURE_TEAM_COLLABORATION",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "true",
+          "type": "boolean",
+          "required": false,
+          "description": "Environment variable (boolean)"
+        },
+        {
+          "name": "FEATURE_WHITE_LABEL",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "true",
+          "type": "boolean",
+          "required": false,
+          "description": "Environment variable (boolean)"
+        },
+        {
+          "name": "FEATURE_ADVANCED_SCHEDULER",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "true",
+          "type": "boolean",
+          "required": false,
+          "description": "Environment variable (boolean)"
+        },
+        {
+          "name": "FEATURE_CONTENT_LIBRARY",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "true",
+          "type": "boolean",
+          "required": false,
+          "description": "Environment variable (boolean)"
+        },
+        {
+          "name": "FEATURE_MOBILE_API",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "****",
+          "type": "boolean",
+          "required": false,
+          "description": "Environment variable (boolean)"
+        },
+        {
+          "name": "FEATURE_AUTOMATED_REPORTING",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "true",
+          "type": "boolean",
+          "required": false,
+          "description": "Environment variable (boolean)"
+        },
+        {
+          "name": "FEATURE_REAL_TIME_SYNC",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "true",
+          "type": "boolean",
+          "required": false,
+          "description": "Environment variable (boolean)"
+        },
+        {
+          "name": "FEATURE_PREDICTIVE_ANALYTICS",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "true",
+          "type": "boolean",
+          "required": false,
+          "description": "Environment variable (boolean)"
+        },
+        {
+          "name": "FEATURE_CONTENT_MODERATION",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "true",
+          "type": "boolean",
+          "required": false,
+          "description": "Environment variable (boolean)"
+        },
+        {
+          "name": "FEATURE_INTERNATIONALIZATION",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "true",
+          "type": "boolean",
+          "required": false,
+          "description": "Environment variable (boolean)"
+        },
+        {
+          "name": "FEATURE_BACKUP_SYSTEM",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "true",
+          "type": "boolean",
+          "required": false,
+          "description": "Environment variable (boolean)"
+        },
+        {
+          "name": "SCHEDULER_ENABLED",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "true",
+          "type": "boolean",
+          "required": false,
+          "description": "Environment variable (boolean)"
+        },
+        {
+          "name": "SCHEDULER_TIMEZONE",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "UTC",
+          "type": "string",
+          "required": false,
+          "description": "Environment variable (string)"
+        },
+        {
+          "name": "SCHEDULER_MAX_CONCURRENT_JOBS",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "10",
+          "type": "number",
+          "required": false,
+          "description": "Environment variable (number)"
+        },
+        {
+          "name": "SCHEDULER_RETRY_ATTEMPTS",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "3",
+          "type": "number",
+          "required": false,
+          "description": "Environment variable (number)"
+        },
+        {
+          "name": "SCHEDULER_RETRY_DELAY",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "60000",
+          "type": "number",
+          "required": false,
+          "description": "Environment variable (number)"
+        },
+        {
+          "name": "BACKUP_S3_BUCKET",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "synthex-backups",
+          "type": "string",
+          "required": false,
+          "description": "Environment variable (string)"
+        },
+        {
+          "name": "BACKUP_ENCRYPTION_KEY",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "CH******************EY",
+          "type": "string",
+          "required": false,
+          "description": "Authentication credential (string)"
+        },
+        {
+          "name": "DEFAULT_LOCALE",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "en",
+          "type": "string",
+          "required": false,
+          "description": "Environment variable (string)"
+        },
+        {
+          "name": "SUPPORTED_LOCALES",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "en,es,fr,de,it,pt,ja,zh,ko,ar",
+          "type": "string",
+          "required": false,
+          "description": "Environment variable (string)"
+        },
+        {
+          "name": "LOCALE_DETECTION",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "true",
+          "type": "boolean",
+          "required": false,
+          "description": "Environment variable (boolean)"
+        },
+        {
+          "name": "TRANSLATION_API_KEY",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "CH********************EY",
+          "type": "string",
+          "required": false,
+          "description": "Authentication credential (string)"
+        },
+        {
+          "name": "MODERATION_ENABLED",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "true",
+          "type": "boolean",
+          "required": false,
+          "description": "Environment variable (boolean)"
+        },
+        {
+          "name": "PERSPECTIVE_API_KEY",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "CH********************EY",
+          "type": "string",
+          "required": false,
+          "description": "Authentication credential (string)"
+        },
+        {
+          "name": "AZURE_CONTENT_MODERATOR_KEY",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "CH*****************EY",
+          "type": "string",
+          "required": false,
+          "description": "Authentication credential (string)"
+        },
+        {
+          "name": "AZURE_CONTENT_MODERATOR_ENDPOINT",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "https://synthex.cognitiveservices.azure.com",
+          "type": "url",
+          "required": false,
+          "description": "Environment variable (url)"
+        },
+        {
+          "name": "ENABLE_COMPRESSION",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "true",
+          "type": "boolean",
+          "required": false,
+          "description": "Feature toggle (boolean)"
+        },
+        {
+          "name": "ENABLE_CACHING",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "true",
+          "type": "boolean",
+          "required": false,
+          "description": "Feature toggle (boolean)"
+        },
+        {
+          "name": "ENABLE_MINIFICATION",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "true",
+          "type": "boolean",
+          "required": false,
+          "description": "Feature toggle (boolean)"
+        },
+        {
+          "name": "ENABLE_LAZY_LOADING",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "true",
+          "type": "boolean",
+          "required": false,
+          "description": "Feature toggle (boolean)"
+        },
+        {
+          "name": "ENABLE_IMAGE_OPTIMIZATION",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "true",
+          "type": "boolean",
+          "required": false,
+          "description": "Feature toggle (boolean)"
+        },
+        {
+          "name": "MAX_UPLOAD_SIZE",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "104857600",
+          "type": "number",
+          "required": false,
+          "description": "Environment variable (number)"
+        },
+        {
+          "name": "DEPLOYMENT_ENV",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "production",
+          "type": "string",
+          "required": false,
+          "description": "Environment variable (string)"
+        },
+        {
+          "name": "DEPLOYMENT_REGION",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "us-east-1",
+          "type": "string",
+          "required": false,
+          "description": "Environment variable (string)"
+        },
+        {
+          "name": "AUTO_SCALING_ENABLED",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "true",
+          "type": "boolean",
+          "required": false,
+          "description": "Environment variable (boolean)"
+        },
+        {
+          "name": "MIN_INSTANCES",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "2",
+          "type": "number",
+          "required": false,
+          "description": "Environment variable (number)"
+        },
+        {
+          "name": "MAX_INSTANCES",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "20",
+          "type": "number",
+          "required": false,
+          "description": "Environment variable (number)"
+        },
+        {
+          "name": "HEALTH_CHECK_PATH",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "/health",
+          "type": "string",
+          "required": false,
+          "description": "File system path (string)"
+        },
+        {
+          "name": "TIMEZONE",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "UTC",
+          "type": "string",
+          "required": false,
+          "description": "Environment variable (string)"
+        },
+        {
+          "name": "DATE_FORMAT",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "YYYY-MM-DD",
+          "type": "string",
+          "required": false,
+          "description": "Environment variable (string)"
+        },
+        {
+          "name": "TIME_FORMAT",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "HH:mm:ss",
+          "type": "url",
+          "required": false,
+          "description": "Environment variable (url)"
+        },
+        {
+          "name": "CURRENCY",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "USD",
+          "type": "string",
+          "required": false,
+          "description": "Environment variable (string)"
+        },
+        {
+          "name": "LANGUAGE",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "en-US",
+          "type": "string",
+          "required": false,
+          "description": "Environment variable (string)"
+        },
+        {
+          "name": "MAINTENANCE_MODE",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "false",
+          "type": "boolean",
+          "required": false,
+          "description": "Environment variable (boolean)"
+        },
+        {
+          "name": "MAINTENANCE_MESSAGE",
+          "files": [
+            ".env.production"
+          ],
+          "usages": [],
+          "defined": true,
+          "value": "We are currently performing scheduled maintenance. We'll be back shortly!",
+          "type": "string",
+          "required": false,
+          "description": "Environment variable (string)"
+        }
+      ]
+    },
+    "validation": {
+      "errors": [
+        {
+          "variable": "DATABASE_URL",
+          "value": "file:./test.db",
+          "error": "Value does not match pattern: /^(postgresql|prisma\\+postgres):\\/\\/.+/",
+          "suggestion": "PostgreSQL or Prisma Accelerate connection string"
+        },
+        {
+          "variable": "JWT_SECRET",
+          "value": "CHANGE_THIS_JWT_SECRET_KEY",
+          "error": "Value too short. Minimum length: 64",
+          "suggestion": "Provide at least 64 characters"
+        },
+        {
+          "variable": "OPENROUTER_API_KEY",
+          "value": "your_production_openrouter_api_key_here",
+          "error": "Value does not match pattern: /^sk-or-/",
+          "suggestion": "OpenRouter API key"
+        },
+        {
+          "variable": "ANTHROPIC_API_KEY",
+          "value": "CHANGE_THIS_ANTHROPIC_KEY",
+          "error": "Value does not match pattern: /^sk-ant-/",
+          "suggestion": "Anthropic API key (optional)"
+        },
+        {
+          "variable": "ANTHROPIC_API_KEY",
+          "value": "CHANGE_THIS_ANTHROPIC_KEY",
+          "error": "Value too short. Minimum length: 50",
+          "suggestion": "Provide at least 50 characters"
+        },
+        {
+          "variable": "OPENAI_API_KEY",
+          "value": "CHANGE_THIS_OPENAI_KEY",
+          "error": "Value does not match pattern: /^sk-/",
+          "suggestion": "OpenAI API key (optional)"
+        },
+        {
+          "variable": "OPENAI_API_KEY",
+          "value": "CHANGE_THIS_OPENAI_KEY",
+          "error": "Value too short. Minimum length: 40",
+          "suggestion": "Provide at least 40 characters"
+        },
+        {
+          "variable": "RATE_LIMIT_WINDOW_GENERAL",
+          "value": "900000  # 15 minutes",
+          "error": "Invalid type. Expected number",
+          "suggestion": "Use a numeric value (e.g., 123)"
+        },
+        {
+          "variable": "RATE_LIMIT_MAX_GENERAL",
+          "value": "100        # Requests per window",
+          "error": "Invalid type. Expected number",
+          "suggestion": "Use a numeric value (e.g., 123)"
+        }
+      ],
+      "warnings": [],
+      "totalVarsChecked": 17
+    },
+    "security": {
+      "issues": [
+        {
+          "severity": "critical",
+          "variable": "NEXT_PUBLIC_SUPABASE_ANON_KEY",
+          "issue": "Detected AWS Secret Key pattern in value",
+          "recommendation": "This appears to be a real secret. Rotate immediately and use secure storage",
+          "line": 3,
+          "file": ".env"
+        },
+        {
+          "severity": "critical",
+          "variable": "NEXT_PUBLIC_SUPABASE_ANON_KEY",
+          "issue": "Detected JWT Token pattern in value",
+          "recommendation": "This appears to be a real secret. Rotate immediately and use secure storage",
+          "line": 3,
+          "file": ".env"
+        },
+        {
+          "severity": "critical",
+          "variable": "SUPABASE_SERVICE_ROLE_KEY",
+          "issue": "Detected AWS Secret Key pattern in value",
+          "recommendation": "This appears to be a real secret. Rotate immediately and use secure storage",
+          "line": 4,
+          "file": ".env"
+        },
+        {
+          "severity": "critical",
+          "variable": "SUPABASE_SERVICE_ROLE_KEY",
+          "issue": "Detected JWT Token pattern in value",
+          "recommendation": "This appears to be a real secret. Rotate immediately and use secure storage",
+          "line": 4,
+          "file": ".env"
+        },
+        {
+          "severity": "high",
+          "variable": "DATABASE_URL",
+          "issue": "Secret stored in plain text",
+          "recommendation": "Consider using encryption or a secret management service",
+          "line": 9,
+          "file": ".env"
+        },
+        {
+          "severity": "critical",
+          "variable": "DATABASE_URL",
+          "issue": "Detected AWS Secret Key pattern in value",
+          "recommendation": "This appears to be a real secret. Rotate immediately and use secure storage",
+          "line": 9,
+          "file": ".env"
+        },
+        {
+          "severity": "critical",
+          "variable": "DATABASE_URL",
+          "issue": "Detected JWT Token pattern in value",
+          "recommendation": "This appears to be a real secret. Rotate immediately and use secure storage",
+          "line": 9,
+          "file": ".env"
+        },
+        {
+          "severity": "high",
+          "variable": "JWT_SECRET",
+          "issue": "Secret stored in plain text",
+          "recommendation": "Consider using encryption or a secret management service",
+          "line": 12,
+          "file": ".env"
+        },
+        {
+          "severity": "critical",
+          "variable": "JWT_SECRET",
+          "issue": "Detected AWS Secret Key pattern in value",
+          "recommendation": "This appears to be a real secret. Rotate immediately and use secure storage",
+          "line": 12,
+          "file": ".env"
+        },
+        {
+          "severity": "high",
+          "variable": "OPENROUTER_API_KEY",
+          "issue": "Secret stored in plain text",
+          "recommendation": "Consider using encryption or a secret management service",
+          "line": 20,
+          "file": ".env"
+        },
+        {
+          "severity": "critical",
+          "variable": "OPENROUTER_API_KEY",
+          "issue": "Detected AWS Secret Key pattern in value",
+          "recommendation": "This appears to be a real secret. Rotate immediately and use secure storage",
+          "line": 20,
+          "file": ".env"
+        },
+        {
+          "severity": "high",
+          "variable": "OPENAI_API_KEY",
+          "issue": "Secret stored in plain text",
+          "recommendation": "Consider using encryption or a secret management service",
+          "line": 26,
+          "file": ".env"
+        },
+        {
+          "severity": "critical",
+          "variable": "OPENAI_API_KEY",
+          "issue": "Detected AWS Secret Key pattern in value",
+          "recommendation": "This appears to be a real secret. Rotate immediately and use secure storage",
+          "line": 26,
+          "file": ".env"
+        },
+        {
+          "severity": "high",
+          "variable": "ANTHROPIC_API_KEY",
+          "issue": "Secret stored in plain text",
+          "recommendation": "Consider using encryption or a secret management service",
+          "line": 27,
+          "file": ".env"
+        },
+        {
+          "severity": "critical",
+          "variable": "ANTHROPIC_API_KEY",
+          "issue": "Detected AWS Secret Key pattern in value",
+          "recommendation": "This appears to be a real secret. Rotate immediately and use secure storage",
+          "line": 27,
+          "file": ".env"
+        },
+        {
+          "severity": "high",
+          "variable": "GOOGLE_API_KEY",
+          "issue": "Secret stored in plain text",
+          "recommendation": "Consider using encryption or a secret management service",
+          "line": 28,
+          "file": ".env"
+        },
+        {
+          "severity": "critical",
+          "variable": "GOOGLE_API_KEY",
+          "issue": "Detected Google API Key pattern in value",
+          "recommendation": "This appears to be a real secret. Rotate immediately and use secure storage",
+          "line": 28,
+          "file": ".env"
+        },
+        {
+          "severity": "high",
+          "variable": "GOOGLE_CLIENT_SECRET",
+          "issue": "Secret stored in plain text",
+          "recommendation": "Consider using encryption or a secret management service",
+          "line": 31,
+          "file": ".env"
+        },
+        {
+          "severity": "high",
+          "variable": "GITHUB_CLIENT_SECRET",
+          "issue": "Secret stored in plain text",
+          "recommendation": "Consider using encryption or a secret management service",
+          "line": 33,
+          "file": ".env"
+        },
+        {
+          "severity": "critical",
+          "variable": "GITHUB_CLIENT_SECRET",
+          "issue": "Detected AWS Secret Key pattern in value",
+          "recommendation": "This appears to be a real secret. Rotate immediately and use secure storage",
+          "line": 33,
+          "file": ".env"
+        },
+        {
+          "severity": "high",
+          "variable": "JWT_SECRET",
+          "issue": "Secret stored in plain text",
+          "recommendation": "Consider using encryption or a secret management service",
+          "line": 1,
+          "file": ".env.local"
+        },
+        {
+          "severity": "critical",
+          "variable": "JWT_SECRET",
+          "issue": "Detected AWS Secret Key pattern in value",
+          "recommendation": "This appears to be a real secret. Rotate immediately and use secure storage",
+          "line": 1,
+          "file": ".env.local"
+        },
+        {
+          "severity": "critical",
+          "variable": "OPENROUTER_API_KEY",
+          "issue": "Uses common or default value",
+          "recommendation": "Replace with a unique, secure value",
+          "line": 3,
+          "file": ".env.local"
+        },
+        {
+          "severity": "high",
+          "variable": "OPENROUTER_API_KEY",
+          "issue": "Secret stored in plain text",
+          "recommendation": "Consider using encryption or a secret management service",
+          "line": 3,
+          "file": ".env.local"
+        },
+        {
+          "severity": "critical",
+          "variable": "ANTHROPIC_API_KEY",
+          "issue": "Uses common or default value",
+          "recommendation": "Replace with a unique, secure value",
+          "line": 4,
+          "file": ".env.local"
+        },
+        {
+          "severity": "high",
+          "variable": "ANTHROPIC_API_KEY",
+          "issue": "Secret stored in plain text",
+          "recommendation": "Consider using encryption or a secret management service",
+          "line": 4,
+          "file": ".env.local"
+        },
+        {
+          "severity": "high",
+          "variable": "ANTHROPIC_API_KEY",
+          "issue": "Secret stored in plain text",
+          "recommendation": "Consider using encryption or a secret management service",
+          "line": 9,
+          "file": ".env.production"
+        },
+        {
+          "severity": "high",
+          "variable": "OPENROUTER_API_KEY",
+          "issue": "Secret stored in plain text",
+          "recommendation": "Consider using encryption or a secret management service",
+          "line": 10,
+          "file": ".env.production"
+        },
+        {
+          "severity": "low",
+          "variable": "RATE_LIMIT_WINDOW_GENERAL",
+          "issue": "Value contains spaces but is not quoted",
+          "recommendation": "Wrap values with spaces in quotes",
+          "line": 21,
+          "file": ".env.production"
+        },
+        {
+          "severity": "low",
+          "variable": "RATE_LIMIT_MAX_GENERAL",
+          "issue": "Value contains spaces but is not quoted",
+          "recommendation": "Wrap values with spaces in quotes",
+          "line": 22,
+          "file": ".env.production"
+        },
+        {
+          "severity": "low",
+          "variable": "RATE_LIMIT_WINDOW_API",
+          "issue": "Value contains spaces but is not quoted",
+          "recommendation": "Wrap values with spaces in quotes",
+          "line": 23,
+          "file": ".env.production"
+        },
+        {
+          "severity": "low",
+          "variable": "RATE_LIMIT_MAX_API",
+          "issue": "Value contains spaces but is not quoted",
+          "recommendation": "Wrap values with spaces in quotes",
+          "line": 24,
+          "file": ".env.production"
+        },
+        {
+          "severity": "low",
+          "variable": "RATE_LIMIT_WINDOW_CONTENT",
+          "issue": "Value contains spaces but is not quoted",
+          "recommendation": "Wrap values with spaces in quotes",
+          "line": 25,
+          "file": ".env.production"
+        },
+        {
+          "severity": "low",
+          "variable": "RATE_LIMIT_MAX_CONTENT",
+          "issue": "Value contains spaces but is not quoted",
+          "recommendation": "Wrap values with spaces in quotes",
+          "line": 26,
+          "file": ".env.production"
+        },
+        {
+          "severity": "high",
+          "variable": "API_KEY_ROTATION_DAYS",
+          "issue": "Weak secret value (too short)",
+          "recommendation": "Use a strong, randomly generated value with at least 32 characters",
+          "line": 53,
+          "file": ".env.production"
+        },
+        {
+          "severity": "high",
+          "variable": "API_KEY_ROTATION_DAYS",
+          "issue": "Secret stored in plain text",
+          "recommendation": "Consider using encryption or a secret management service",
+          "line": 53,
+          "file": ".env.production"
+        },
+        {
+          "severity": "critical",
+          "variable": "DATABASE_URL",
+          "issue": "Uses common or default value",
+          "recommendation": "Replace with a unique, secure value",
+          "line": 69,
+          "file": ".env.production"
+        },
+        {
+          "severity": "high",
+          "variable": "DATABASE_URL",
+          "issue": "Secret stored in plain text",
+          "recommendation": "Consider using encryption or a secret management service",
+          "line": 69,
+          "file": ".env.production"
+        },
+        {
+          "severity": "low",
+          "variable": "BACKUP_SCHEDULE",
+          "issue": "Value contains spaces but is not quoted",
+          "recommendation": "Wrap values with spaces in quotes",
+          "line": 141,
+          "file": ".env.production"
+        },
+        {
+          "severity": "critical",
+          "variable": "JWT_SECRET",
+          "issue": "Uses common or default value",
+          "recommendation": "Replace with a unique, secure value",
+          "line": 6,
+          "file": ".env.test"
+        },
+        {
+          "severity": "high",
+          "variable": "JWT_SECRET",
+          "issue": "Secret stored in plain text",
+          "recommendation": "Consider using encryption or a secret management service",
+          "line": 6,
+          "file": ".env.test"
+        },
+        {
+          "severity": "critical",
+          "variable": "ENCRYPTION_KEY",
+          "issue": "Uses common or default value",
+          "recommendation": "Replace with a unique, secure value",
+          "line": 10,
+          "file": ".env.test"
+        },
+        {
+          "severity": "high",
+          "variable": "ENCRYPTION_KEY",
+          "issue": "Secret stored in plain text",
+          "recommendation": "Consider using encryption or a secret management service",
+          "line": 10,
+          "file": ".env.test"
+        },
+        {
+          "severity": "critical",
+          "variable": "DATABASE_URL",
+          "issue": "Uses common or default value",
+          "recommendation": "Replace with a unique, secure value",
+          "line": 13,
+          "file": ".env.test"
+        },
+        {
+          "severity": "high",
+          "variable": "DATABASE_URL",
+          "issue": "Secret stored in plain text",
+          "recommendation": "Consider using encryption or a secret management service",
+          "line": 13,
+          "file": ".env.test"
+        },
+        {
+          "severity": "critical",
+          "variable": "DB_PASSWORD",
+          "issue": "Uses common or default value",
+          "recommendation": "Replace with a unique, secure value",
+          "line": 23,
+          "file": ".env.production"
+        },
+        {
+          "severity": "high",
+          "variable": "DB_PASSWORD",
+          "issue": "Secret stored in plain text",
+          "recommendation": "Consider using encryption or a secret management service",
+          "line": 23,
+          "file": ".env.production"
+        },
+        {
+          "severity": "critical",
+          "variable": "REDIS_PASSWORD",
+          "issue": "Uses common or default value",
+          "recommendation": "Replace with a unique, secure value",
+          "line": 33,
+          "file": ".env.production"
+        },
+        {
+          "severity": "high",
+          "variable": "REDIS_PASSWORD",
+          "issue": "Secret stored in plain text",
+          "recommendation": "Consider using encryption or a secret management service",
+          "line": 33,
+          "file": ".env.production"
+        },
+        {
+          "severity": "critical",
+          "variable": "JWT_SECRET",
+          "issue": "Uses common or default value",
+          "recommendation": "Replace with a unique, secure value",
+          "line": 50,
+          "file": ".env.production"
+        },
+        {
+          "severity": "high",
+          "variable": "JWT_SECRET",
+          "issue": "Secret stored in plain text",
+          "recommendation": "Consider using encryption or a secret management service",
+          "line": 50,
+          "file": ".env.production"
+        },
+        {
+          "severity": "high",
+          "variable": "MAIL_PASSWORD",
+          "issue": "Secret stored in plain text",
+          "recommendation": "Consider using encryption or a secret management service",
+          "line": 63,
+          "file": ".env.production"
+        },
+        {
+          "severity": "high",
+          "variable": "SENDGRID_API_KEY",
+          "issue": "Secret stored in plain text",
+          "recommendation": "Consider using encryption or a secret management service",
+          "line": 69,
+          "file": ".env.production"
+        },
+        {
+          "severity": "high",
+          "variable": "MAILGUN_API_KEY",
+          "issue": "Secret stored in plain text",
+          "recommendation": "Consider using encryption or a secret management service",
+          "line": 70,
+          "file": ".env.production"
+        },
+        {
+          "severity": "high",
+          "variable": "OPENAI_API_KEY",
+          "issue": "Secret stored in plain text",
+          "recommendation": "Consider using encryption or a secret management service",
+          "line": 80,
+          "file": ".env.production"
+        },
+        {
+          "severity": "high",
+          "variable": "ANTHROPIC_API_KEY",
+          "issue": "Secret stored in plain text",
+          "recommendation": "Consider using encryption or a secret management service",
+          "line": 87,
+          "file": ".env.production"
+        },
+        {
+          "severity": "critical",
+          "variable": "TIKTOK_CLIENT_SECRET",
+          "issue": "Uses common or default value",
+          "recommendation": "Replace with a unique, secure value",
+          "line": 104,
+          "file": ".env.production"
+        },
+        {
+          "severity": "high",
+          "variable": "TIKTOK_CLIENT_SECRET",
+          "issue": "Secret stored in plain text",
+          "recommendation": "Consider using encryption or a secret management service",
+          "line": 104,
+          "file": ".env.production"
+        },
+        {
+          "severity": "critical",
+          "variable": "INSTAGRAM_CLIENT_SECRET",
+          "issue": "Uses common or default value",
+          "recommendation": "Replace with a unique, secure value",
+          "line": 109,
+          "file": ".env.production"
+        },
+        {
+          "severity": "high",
+          "variable": "INSTAGRAM_CLIENT_SECRET",
+          "issue": "Secret stored in plain text",
+          "recommendation": "Consider using encryption or a secret management service",
+          "line": 109,
+          "file": ".env.production"
+        },
+        {
+          "severity": "high",
+          "variable": "TWITTER_API_KEY",
+          "issue": "Secret stored in plain text",
+          "recommendation": "Consider using encryption or a secret management service",
+          "line": 118,
+          "file": ".env.production"
+        },
+        {
+          "severity": "critical",
+          "variable": "TWITTER_API_SECRET",
+          "issue": "Uses common or default value",
+          "recommendation": "Replace with a unique, secure value",
+          "line": 119,
+          "file": ".env.production"
+        },
+        {
+          "severity": "high",
+          "variable": "TWITTER_API_SECRET",
+          "issue": "Secret stored in plain text",
+          "recommendation": "Consider using encryption or a secret management service",
+          "line": 119,
+          "file": ".env.production"
+        },
+        {
+          "severity": "high",
+          "variable": "TWITTER_ACCESS_TOKEN",
+          "issue": "Secret stored in plain text",
+          "recommendation": "Consider using encryption or a secret management service",
+          "line": 121,
+          "file": ".env.production"
+        },
+        {
+          "severity": "critical",
+          "variable": "LINKEDIN_CLIENT_SECRET",
+          "issue": "Uses common or default value",
+          "recommendation": "Replace with a unique, secure value",
+          "line": 126,
+          "file": ".env.production"
+        },
+        {
+          "severity": "high",
+          "variable": "LINKEDIN_CLIENT_SECRET",
+          "issue": "Secret stored in plain text",
+          "recommendation": "Consider using encryption or a secret management service",
+          "line": 126,
+          "file": ".env.production"
+        },
+        {
+          "severity": "high",
+          "variable": "YOUTUBE_API_KEY",
+          "issue": "Secret stored in plain text",
+          "recommendation": "Consider using encryption or a secret management service",
+          "line": 130,
+          "file": ".env.production"
+        },
+        {
+          "severity": "critical",
+          "variable": "YOUTUBE_CLIENT_SECRET",
+          "issue": "Uses common or default value",
+          "recommendation": "Replace with a unique, secure value",
+          "line": 132,
+          "file": ".env.production"
+        },
+        {
+          "severity": "high",
+          "variable": "YOUTUBE_CLIENT_SECRET",
+          "issue": "Secret stored in plain text",
+          "recommendation": "Consider using encryption or a secret management service",
+          "line": 132,
+          "file": ".env.production"
+        },
+        {
+          "severity": "critical",
+          "variable": "SNAPCHAT_CLIENT_SECRET",
+          "issue": "Uses common or default value",
+          "recommendation": "Replace with a unique, secure value",
+          "line": 140,
+          "file": ".env.production"
+        },
+        {
+          "severity": "high",
+          "variable": "SNAPCHAT_CLIENT_SECRET",
+          "issue": "Secret stored in plain text",
+          "recommendation": "Consider using encryption or a secret management service",
+          "line": 140,
+          "file": ".env.production"
+        },
+        {
+          "severity": "high",
+          "variable": "AMPLITUDE_API_KEY",
+          "issue": "Secret stored in plain text",
+          "recommendation": "Consider using encryption or a secret management service",
+          "line": 148,
+          "file": ".env.production"
+        },
+        {
+          "severity": "high",
+          "variable": "ONESIGNAL_API_KEY",
+          "issue": "Secret stored in plain text",
+          "recommendation": "Consider using encryption or a secret management service",
+          "line": 166,
+          "file": ".env.production"
+        },
+        {
+          "severity": "high",
+          "variable": "AWS_ACCESS_KEY_ID",
+          "issue": "Secret stored in plain text",
+          "recommendation": "Consider using encryption or a secret management service",
+          "line": 172,
+          "file": ".env.production"
+        },
+        {
+          "severity": "critical",
+          "variable": "AWS_SECRET_ACCESS_KEY",
+          "issue": "Uses common or default value",
+          "recommendation": "Replace with a unique, secure value",
+          "line": 173,
+          "file": ".env.production"
+        },
+        {
+          "severity": "high",
+          "variable": "AWS_SECRET_ACCESS_KEY",
+          "issue": "Secret stored in plain text",
+          "recommendation": "Consider using encryption or a secret management service",
+          "line": 173,
+          "file": ".env.production"
+        },
+        {
+          "severity": "high",
+          "variable": "CLOUDINARY_API_KEY",
+          "issue": "Secret stored in plain text",
+          "recommendation": "Consider using encryption or a secret management service",
+          "line": 185,
+          "file": ".env.production"
+        },
+        {
+          "severity": "critical",
+          "variable": "CLOUDINARY_API_SECRET",
+          "issue": "Uses common or default value",
+          "recommendation": "Replace with a unique, secure value",
+          "line": 186,
+          "file": ".env.production"
+        },
+        {
+          "severity": "high",
+          "variable": "CLOUDINARY_API_SECRET",
+          "issue": "Secret stored in plain text",
+          "recommendation": "Consider using encryption or a secret management service",
+          "line": 186,
+          "file": ".env.production"
+        },
+        {
+          "severity": "low",
+          "variable": "NEW_RELIC_APP_NAME",
+          "issue": "Value contains spaces but is not quoted",
+          "recommendation": "Wrap values with spaces in quotes",
+          "line": 243,
+          "file": ".env.production"
+        },
+        {
+          "severity": "high",
+          "variable": "DATADOG_API_KEY",
+          "issue": "Secret stored in plain text",
+          "recommendation": "Consider using encryption or a secret management service",
+          "line": 247,
+          "file": ".env.production"
+        },
+        {
+          "severity": "high",
+          "variable": "SPLIT_IO_API_KEY",
+          "issue": "Secret stored in plain text",
+          "recommendation": "Consider using encryption or a secret management service",
+          "line": 256,
+          "file": ".env.production"
+        },
+        {
+          "severity": "high",
+          "variable": "STRIPE_SECRET_KEY",
+          "issue": "Secret stored in plain text",
+          "recommendation": "Consider using encryption or a secret management service",
+          "line": 262,
+          "file": ".env.production"
+        },
+        {
+          "severity": "critical",
+          "variable": "PAYPAL_CLIENT_SECRET",
+          "issue": "Uses common or default value",
+          "recommendation": "Replace with a unique, secure value",
+          "line": 270,
+          "file": ".env.production"
+        },
+        {
+          "severity": "high",
+          "variable": "PAYPAL_CLIENT_SECRET",
+          "issue": "Secret stored in plain text",
+          "recommendation": "Consider using encryption or a secret management service",
+          "line": 270,
+          "file": ".env.production"
+        },
+        {
+          "severity": "critical",
+          "variable": "OAUTH_CLIENT_SECRET",
+          "issue": "Uses common or default value",
+          "recommendation": "Replace with a unique, secure value",
+          "line": 288,
+          "file": ".env.production"
+        },
+        {
+          "severity": "high",
+          "variable": "OAUTH_CLIENT_SECRET",
+          "issue": "Secret stored in plain text",
+          "recommendation": "Consider using encryption or a secret management service",
+          "line": 288,
+          "file": ".env.production"
+        },
+        {
+          "severity": "high",
+          "variable": "OAUTH_TOKEN_URL",
+          "issue": "Secret stored in plain text",
+          "recommendation": "Consider using encryption or a secret management service",
+          "line": 290,
+          "file": ".env.production"
+        },
+        {
+          "severity": "low",
+          "variable": "BACKUP_SCHEDULE",
+          "issue": "Value contains spaces but is not quoted",
+          "recommendation": "Wrap values with spaces in quotes",
+          "line": 330,
+          "file": ".env.production"
+        },
+        {
+          "severity": "high",
+          "variable": "BACKUP_ENCRYPTION_KEY",
+          "issue": "Secret stored in plain text",
+          "recommendation": "Consider using encryption or a secret management service",
+          "line": 333,
+          "file": ".env.production"
+        },
+        {
+          "severity": "high",
+          "variable": "TRANSLATION_API_KEY",
+          "issue": "Secret stored in plain text",
+          "recommendation": "Consider using encryption or a secret management service",
+          "line": 341,
+          "file": ".env.production"
+        },
+        {
+          "severity": "high",
+          "variable": "PERSPECTIVE_API_KEY",
+          "issue": "Secret stored in plain text",
+          "recommendation": "Consider using encryption or a secret management service",
+          "line": 347,
+          "file": ".env.production"
+        },
+        {
+          "severity": "low",
+          "variable": "MAINTENANCE_MESSAGE",
+          "issue": "Value contains spaces but is not quoted",
+          "recommendation": "Wrap values with spaces in quotes",
+          "line": 384,
+          "file": ".env.production"
+        },
+        {
+          "severity": "medium",
+          "variable": ".env",
+          "issue": "File has overly permissive permissions (666)",
+          "recommendation": "Set file permissions to 600 (rw-------) or 400 (r--------)",
+          "file": ".env"
+        },
+        {
+          "severity": "medium",
+          "variable": ".env.local",
+          "issue": "File has overly permissive permissions (666)",
+          "recommendation": "Set file permissions to 600 (rw-------) or 400 (r--------)",
+          "file": ".env.local"
+        },
+        {
+          "severity": "medium",
+          "variable": ".env.production",
+          "issue": "File has overly permissive permissions (666)",
+          "recommendation": "Set file permissions to 600 (rw-------) or 400 (r--------)",
+          "file": ".env.production"
+        },
+        {
+          "severity": "medium",
+          "variable": ".env.test",
+          "issue": "File has overly permissive permissions (666)",
+          "recommendation": "Set file permissions to 600 (rw-------) or 400 (r--------)",
+          "file": ".env.test"
+        },
+        {
+          "severity": "medium",
+          "variable": ".env.production",
+          "issue": "File has overly permissive permissions (666)",
+          "recommendation": "Set file permissions to 600 (rw-------) or 400 (r--------)",
+          "file": ".env.production"
+        }
+      ],
+      "summary": {
+        "critical": 32,
+        "high": 51,
+        "medium": 5,
+        "low": 10
+      }
+    }
+  },
+  "recommendations": [
+    "Fix validation errors before deployment",
+    "Address critical security issues immediately",
+    "Consider removing 326 unused variables"
+  ]
+}

@@ -25,6 +25,9 @@ import mleStarRoutes from './routes/mle-star';
 // import authRoutes from './routes/auth'; // Temporarily disabled - using simplified auth
 import googleAuthRoutes from './routes/google-auth';
 import dashboardRoutes from './routes/dashboard';
+
+// Import new API routes
+import newApiRoutes from './routes/index.routes';
 import { openRouterService } from './services/openrouter';
 import { mcpIntegration } from './services/mcp-integration';
 import { ttdRd } from './services/ttd-rd-framework';
@@ -206,6 +209,15 @@ app.get('/login', (req: Request, res: Response) => {
   res.sendFile('login.html', { root: path.join(__dirname, '..', 'public') });
 });
 
+// New Feature Dashboards
+app.get('/features-dashboard', (req: Request, res: Response) => {
+  res.sendFile('features-dashboard.html', { root: path.join(__dirname, '..', 'public') });
+});
+
+app.get('/admin-panel', (req: Request, res: Response) => {
+  res.sendFile('admin-panel.html', { root: path.join(__dirname, '..', 'public') });
+});
+
 // API info endpoint
 app.get('/api-info', (req: Request, res: Response) => {
   res.json({
@@ -376,6 +388,9 @@ app.use('/api/mle-star', apiLimiter, mleStarRoutes);
 
 // Dashboard routes
 app.use('/api/v1/dashboard', apiLimiter, dashboardRoutes);
+
+// Mount new API v2 routes with all new features
+app.use('/api/v2', apiLimiter, newApiRoutes);
 
 // Error handling middleware
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
