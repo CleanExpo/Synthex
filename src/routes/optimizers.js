@@ -215,9 +215,9 @@ export function setupOptimizerRouting() {
     
     try {
       // Dynamically import component
-      const { componentLoader } = await import('./LazyComponents.js');
+      const { componentLoader } = await import('../components/LazyComponents.js');
       const component = await componentLoader.load(route.component, () => 
-        import(`./optimizers/${route.component}.js`)
+        import(`../components/${route.component}.jsx`)
       );
       
       if (component) {
