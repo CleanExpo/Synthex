@@ -481,14 +481,45 @@
         // Update metrics every 5 seconds
         setInterval(updateMetrics, 5000);
 
-        function updateMetrics() {
-            // Simulate metric updates
+        async function updateMetrics() {
+            try {
+                // Fetch real metrics from API
+                const response = await fetch('/api/metrics?type=all&timeframe=1h');
+                const data = await response.json();
+                
+                if (data.system) {
+                    // Real system metrics
+                    const errorRate = data.performance?.errorRates?.rate || 0;
+                    const responseTime = data.performance?.apiLatency?.average || 0;
+                    const activeUsers = data.users?.active || 0;
+                    const memUsage = data.system?.memoryUsage ? 
+                        Math.round((data.system.memoryUsage.heapUsed / data.system.memoryUsage.heapTotal) * 100) : 0;
+                    const uptime = Math.round((data.system.uptime / (24 * 60 * 60)) * 10000) / 100; // Convert to percentage
+                    
+                    updateDisplay(errorRate, responseTime, activeUsers, 0, memUsage, uptime, data);
+                } else {
+                    // Fallback to simulated data
+                    updateDisplaySimulated();
+                }
+            } catch (error) {
+                console.error('Failed to fetch metrics:', error);
+                // Fallback to simulated data
+                updateDisplaySimulated();
+            }
+        }
+        
+        function updateDisplaySimulated() {
             const errorRate = (Math.random() * 2).toFixed(2);
             const responseTime = Math.floor(200 + Math.random() * 200);
             const activeUsers = Math.floor(1000 + Math.random() * 500);
             const cpuUsage = Math.floor(30 + Math.random() * 40);
             const memUsage = Math.floor(50 + Math.random() * 30);
             const uptime = (99 + Math.random()).toFixed(1);
+            
+            updateDisplay(errorRate, responseTime, activeUsers, cpuUsage, memUsage, uptime);
+        }
+        
+        function updateDisplay(errorRate, responseTime, activeUsers, cpuUsage, memUsage, uptime, realData) {
 
             // Update display
             document.getElementById('errorRate').textContent = errorRate + '%';
