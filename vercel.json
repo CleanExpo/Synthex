@@ -1,6 +1,22 @@
 {
   "version": 2,
-  "buildCommand": "echo 'No build required'",
+  "buildCommand": "npm install && npm run build:prod",
   "outputDirectory": "public",
-  "framework": null
+  "framework": null,
+  "functions": {
+    "api/vercel.js": {
+      "maxDuration": 10,
+      "includeFiles": "dist/**"
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "/api/vercel.js"
+    },
+    {
+      "source": "/auth/:path*",
+      "destination": "/api/vercel.js"
+    }
+  ]
 }
