@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Synthex Deployment Monitoring Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #1e3a8a 100%);
+            color: #fff;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .dashboard {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5rem;
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .status-bar {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .status-light {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        .status-light.green {
+            background: #10b981;
+            box-shadow: 0 0 20px rgba(16, 185, 129, 0.5);
+        }
+
+        .status-light.yellow {
+            background: #f59e0b;
+            box-shadow: 0 0 20px rgba(245, 158, 11, 0.5);
+        }
+
+        .status-light.red {
+            background: #ef4444;
+            box-shadow: 0 0 20px rgba(239, 68, 68, 0.5);
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .metric-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            transition: transform 0.3s ease;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .metric-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .metric-title {
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.7);
+            text-transform: uppercase;
+        }
+
+        .metric-value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .metric-chart {
+            height: 100px;
+            margin-top: 15px;
+            position: relative;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #6366f1 0%, #8b5cf6 100%);
+            transition: width 0.5s ease;
+        }
+
+        .rollout-stages {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stage-list {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+
+        .stage {
+            text-align: center;
+            flex: 1;
+            position: relative;
+        }
+
+        .stage::after {
+            content: '';
+            position: absolute;
+            top: 20px;
+            right: -50%;
+            width: 100%;
+            height: 2px;
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .stage:last-child::after {
+            display: none;
+        }
+
+        .stage-circle {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            margin: 0 auto 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            z-index: 1;
+        }
+
+        .stage.active .stage-circle {
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            border-color: #6366f1;
+            animation: rotate 2s linear infinite;
+        }
+
+        .stage.completed .stage-circle {
+            background: #10b981;
+            border-color: #10b981;
+        }
+
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .logs-section {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 30px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .log-entry {
+            padding: 10px;
+            margin-bottom: 5px;
+            background: rgba(255, 255, 255, 0.02);
+            border-left: 3px solid transparent;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+        }
+
+        .log-entry.info {
+            border-left-color: #06b6d4;
+        }
+
+        .log-entry.success {
+            border-left-color: #10b981;
+        }
+
+        .log-entry.warning {
+            border-left-color: #f59e0b;
+        }
+
+        .log-entry.error {
+            border-left-color: #ef4444;
+        }
+
+        .control-panel {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+
+        .control-btn {
+            padding: 12px 24px;
+            border-radius: 10px;
+            border: none;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .control-btn.primary {
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            color: white;
+        }
+
+        .control-btn.danger {
+            background: #ef4444;
+            color: white;
+        }
+
+        .control-btn.secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .control-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .control-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .alert {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid #ef4444;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .alert.show {
+            display: block;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard">
+        <h1>🚀 Synthex Deployment Monitor</h1>
+        
+        <!-- Status Bar -->
+        <div class="status-bar">
+            <div class="status-indicator">
+                <div class="status-light green" id="statusLight"></div>
+                <span id="statusText">System Healthy</span>
+            </div>
+            <div>
+                <span>Rollout: </span>
+                <strong id="rolloutPercentage">0%</strong>
+            </div>
+            <div>
+                <span>Environment: </span>
+                <strong id="environment">Production</strong>
+            </div>
+        </div>
+
+        <!-- Alert Section -->
+        <div class="alert" id="alertBox">
+            <strong>⚠️ Warning:</strong> <span id="alertMessage"></span>
+        </div>
+
+        <!-- Metrics Grid -->
+        <div class="metrics-grid">
+            <div class="metric-card">
+                <div class="metric-header">
+                    <span class="metric-title">Error Rate</span>
+                    <span id="errorTrend">↓</span>
+                </div>
+                <div class="metric-value" id="errorRate">0.12%</div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="errorBar" style="width: 2%"></div>
+                </div>
+            </div>
+
+            <div class="metric-card">
+                <div class="metric-header">
+                    <span class="metric-title">Response Time</span>
+                    <span id="perfTrend">↓</span>
+                </div>
+                <div class="metric-value" id="responseTime">245ms</div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="perfBar" style="width: 25%"></div>
+                </div>
+            </div>
+
+            <div class="metric-card">
+                <div class="metric-header">
+                    <span class="metric-title">Active Users</span>
+                    <span id="userTrend">↑</span>
+                </div>
+                <div class="metric-value" id="activeUsers">1,234</div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="userBar" style="width: 60%"></div>
+                </div>
+            </div>
+
+            <div class="metric-card">
+                <div class="metric-header">
+                    <span class="metric-title">CPU Usage</span>
+                    <span id="cpuTrend">→</span>
+                </div>
+                <div class="metric-value" id="cpuUsage">42%</div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="cpuBar" style="width: 42%"></div>
+                </div>
+            </div>
+
+            <div class="metric-card">
+                <div class="metric-header">
+                    <span class="metric-title">Memory Usage</span>
+                    <span id="memTrend">→</span>
+                </div>
+                <div class="metric-value" id="memUsage">68%</div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="memBar" style="width: 68%"></div>
+                </div>
+            </div>
+
+            <div class="metric-card">
+                <div class="metric-header">
+                    <span class="metric-title">Uptime</span>
+                    <span id="uptimeTrend">→</span>
+                </div>
+                <div class="metric-value" id="uptime">99.9%</div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="uptimeBar" style="width: 99.9%"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Rollout Stages -->
+        <div class="rollout-stages">
+            <h2>Deployment Progress</h2>
+            <div class="stage-list">
+                <div class="stage completed" id="stage1">
+                    <div class="stage-circle">✓</div>
+                    <div>10%</div>
+                </div>
+                <div class="stage active" id="stage2">
+                    <div class="stage-circle">...</div>
+                    <div>25%</div>
+                </div>
+                <div class="stage" id="stage3">
+                    <div class="stage-circle">3</div>
+                    <div>50%</div>
+                </div>
+                <div class="stage" id="stage4">
+                    <div class="stage-circle">4</div>
+                    <div>75%</div>
+                </div>
+                <div class="stage" id="stage5">
+                    <div class="stage-circle">5</div>
+                    <div>100%</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Live Logs -->
+        <div class="logs-section">
+            <h2>Live Deployment Logs</h2>
+            <div id="logsContainer">
+                <div class="log-entry info">
+                    <span class="timestamp">[14:32:01]</span> Starting deployment monitoring...
+                </div>
+                <div class="log-entry success">
+                    <span class="timestamp">[14:32:05]</span> Pre-deployment checks passed
+                </div>
+                <div class="log-entry info">
+                    <span class="timestamp">[14:32:10]</span> Rolling out to 10% of users
+                </div>
+                <div class="log-entry success">
+                    <span class="timestamp">[14:35:00]</span> 10% rollout stable
+                </div>
+                <div class="log-entry info">
+                    <span class="timestamp">[14:35:01]</span> Increasing rollout to 25%
+                </div>
+            </div>
+        </div>
+
+        <!-- Control Panel -->
+        <div class="control-panel">
+            <button class="control-btn primary" id="continueBtn" onclick="continueRollout()">
+                Continue Rollout
+            </button>
+            <button class="control-btn secondary" id="pauseBtn" onclick="pauseRollout()">
+                Pause Deployment
+            </button>
+            <button class="control-btn danger" id="rollbackBtn" onclick="initiateRollback()">
+                Emergency Rollback
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Monitoring Dashboard JavaScript
+        let currentStage = 2;
+        let isPaused = false;
+        let rolloutPercentage = 25;
+
+        // Update metrics every 5 seconds
+        setInterval(updateMetrics, 5000);
+
+        function updateMetrics() {
+            // Simulate metric updates
+            const errorRate = (Math.random() * 2).toFixed(2);
+            const responseTime = Math.floor(200 + Math.random() * 200);
+            const activeUsers = Math.floor(1000 + Math.random() * 500);
+            const cpuUsage = Math.floor(30 + Math.random() * 40);
+            const memUsage = Math.floor(50 + Math.random() * 30);
+            const uptime = (99 + Math.random()).toFixed(1);
+
+            // Update display
+            document.getElementById('errorRate').textContent = errorRate + '%';
+            document.getElementById('responseTime').textContent = responseTime + 'ms';
+            document.getElementById('activeUsers').textContent = activeUsers.toLocaleString();
+            document.getElementById('cpuUsage').textContent = cpuUsage + '%';
+            document.getElementById('memUsage').textContent = memUsage + '%';
+            document.getElementById('uptime').textContent = uptime + '%';
+
+            // Update progress bars
+            document.getElementById('errorBar').style.width = (errorRate * 10) + '%';
+            document.getElementById('perfBar').style.width = (responseTime / 10) + '%';
+            document.getElementById('userBar').style.width = (activeUsers / 20) + '%';
+            document.getElementById('cpuBar').style.width = cpuUsage + '%';
+            document.getElementById('memBar').style.width = memUsage + '%';
+            document.getElementById('uptimeBar').style.width = uptime + '%';
+
+            // Check for alerts
+            if (errorRate > 1.5) {
+                showAlert('Error rate exceeding threshold: ' + errorRate + '%');
+                updateStatus('warning');
+            } else if (responseTime > 350) {
+                showAlert('Response time degraded: ' + responseTime + 'ms');
+                updateStatus('warning');
+            } else {
+                hideAlert();
+                updateStatus('healthy');
+            }
+
+            // Add log entry
+            if (Math.random() > 0.7) {
+                addLogEntry('info', 'Health check passed - all systems operational');
+            }
+        }
+
+        function continueRollout() {
+            if (isPaused) {
+                isPaused = false;
+                document.getElementById('pauseBtn').textContent = 'Pause Deployment';
+            }
+            
+            if (currentStage < 5) {
+                currentStage++;
+                updateStageDisplay();
+                rolloutPercentage = [10, 25, 50, 75, 100][currentStage - 1];
+                document.getElementById('rolloutPercentage').textContent = rolloutPercentage + '%';
+                addLogEntry('info', `Increasing rollout to ${rolloutPercentage}%`);
+            }
+        }
+
+        function pauseRollout() {
+            isPaused = !isPaused;
+            if (isPaused) {
+                document.getElementById('pauseBtn').textContent = 'Resume Deployment';
+                addLogEntry('warning', 'Deployment paused by operator');
+                updateStatus('warning');
+            } else {
+                document.getElementById('pauseBtn').textContent = 'Pause Deployment';
+                addLogEntry('info', 'Deployment resumed');
+                updateStatus('healthy');
+            }
+        }
+
+        function initiateRollback() {
+            if (confirm('Are you sure you want to rollback? This will revert all changes.')) {
+                updateStatus('error');
+                addLogEntry('error', 'EMERGENCY ROLLBACK INITIATED');
+                
+                // Reset stages
+                currentStage = 0;
+                rolloutPercentage = 0;
+                document.getElementById('rolloutPercentage').textContent = '0%';
+                
+                // Update stage display
+                document.querySelectorAll('.stage').forEach(stage => {
+                    stage.classList.remove('active', 'completed');
+                });
+                
+                // Disable buttons
+                document.getElementById('continueBtn').disabled = true;
+                document.getElementById('pauseBtn').disabled = true;
+                
+                setTimeout(() => {
+                    addLogEntry('success', 'Rollback completed successfully');
+                    updateStatus('healthy');
+                }, 3000);
+            }
+        }
+
+        function updateStageDisplay() {
+            document.querySelectorAll('.stage').forEach((stage, index) => {
+                stage.classList.remove('active');
+                if (index < currentStage - 1) {
+                    stage.classList.add('completed');
+                    stage.querySelector('.stage-circle').textContent = '✓';
+                } else if (index === currentStage - 1) {
+                    stage.classList.add('active');
+                    stage.querySelector('.stage-circle').textContent = '...';
+                }
+            });
+        }
+
+        function updateStatus(status) {
+            const statusLight = document.getElementById('statusLight');
+            const statusText = document.getElementById('statusText');
+            
+            statusLight.className = 'status-light';
+            
+            switch(status) {
+                case 'healthy':
+                    statusLight.classList.add('green');
+                    statusText.textContent = 'System Healthy';
+                    break;
+                case 'warning':
+                    statusLight.classList.add('yellow');
+                    statusText.textContent = 'Warning - Monitor Closely';
+                    break;
+                case 'error':
+                    statusLight.classList.add('red');
+                    statusText.textContent = 'Critical - Action Required';
+                    break;
+            }
+        }
+
+        function showAlert(message) {
+            const alertBox = document.getElementById('alertBox');
+            document.getElementById('alertMessage').textContent = message;
+            alertBox.classList.add('show');
+        }
+
+        function hideAlert() {
+            document.getElementById('alertBox').classList.remove('show');
+        }
+
+        function addLogEntry(type, message) {
+            const logsContainer = document.getElementById('logsContainer');
+            const timestamp = new Date().toLocaleTimeString();
+            
+            const logEntry = document.createElement('div');
+            logEntry.className = `log-entry ${type}`;
+            logEntry.innerHTML = `<span class="timestamp">[${timestamp}]</span> ${message}`;
+            
+            logsContainer.appendChild(logEntry);
+            logsContainer.scrollTop = logsContainer.scrollHeight;
+            
+            // Keep only last 50 logs
+            while (logsContainer.children.length > 50) {
+                logsContainer.removeChild(logsContainer.firstChild);
+            }
+        }
+
+        // Initial load
+        updateMetrics();
+    </script>
+</body>
+</html>
