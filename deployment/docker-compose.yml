@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+  synthex-web:
+    image: nginx:alpine
+    container_name: synthex-production
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ../public:/usr/share/nginx/html:ro
+      - ./ssl:/etc/nginx/ssl:ro
+    restart: unless-stopped
+    networks:
+      - synthex-network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  synthex-api:
+    build:
+      context: ..
+      dockerfile: deployment/Dockerfile
+    container_name: synthex-api
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+    volumes:
+      - ../dist:/app/dist
+      - ../.env:/app/.env:ro
+    restart: unless-stopped
+    networks:
+      - synthex-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+networks:
+  synthex-network:
+    driver: bridge
