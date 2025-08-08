@@ -179,9 +179,9 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
 // API v1 routes with versioning
 app.use('/api/v1', v1Routes);
 
-// Main endpoint - full Synthex application
+// Main endpoint - full Synthex application with glassmorphic design
 app.get('/', (req: Request, res: Response) => {
-  res.sendFile('app.html', { root: path.join(__dirname, '..', 'public') });
+  res.sendFile('index.html', { root: path.join(__dirname, '..', 'public') });
 });
 
 // Landing page endpoint for marketing
