@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "buildCommand": "npm install && npm run build:prod",
+  "buildCommand": "echo 'Skipping build - using static files'",
   "outputDirectory": "public",
   "framework": null,
   "functions": {
