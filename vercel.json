@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "buildCommand": "echo 'Skipping build - using static files'",
+  "buildCommand": "npm run vercel-build",
   "outputDirectory": "public",
   "framework": null,
   "functions": {
@@ -14,7 +14,35 @@
       "destination": "/api/main.js"
     },
     {
-      "source": "/(.*)",
+      "source": "/app",
+      "destination": "/app.html"
+    },
+    {
+      "source": "/dashboard",
+      "destination": "/dashboard.html"
+    },
+    {
+      "source": "/login",
+      "destination": "/login.html"
+    },
+    {
+      "source": "/signup",
+      "destination": "/signup.html"
+    },
+    {
+      "source": "/forgot-password",
+      "destination": "/forgot-password.html"
+    },
+    {
+      "source": "/pricing",
+      "destination": "/pricing.html"
+    },
+    {
+      "source": "/analytics",
+      "destination": "/analytics.html"
+    },
+    {
+      "source": "/",
       "destination": "/index.html"
     }
   ],
