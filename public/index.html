@@ -40,14 +40,30 @@
     <link rel="icon" type="image/png" href="/logo.png">
     <link rel="apple-touch-icon" href="/logo.png">
     
-    <!-- SF Pro Font (Apple Font Alternative) -->
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/manifest.json">
+    
+    <!-- Critical CSS (inline for performance) -->
+    <style>
+        /* Critical CSS - Above the fold styles */
+        *{margin:0;padding:0;box-sizing:border-box}html{font-size:16px;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}body{font-family:-apple-system,BlinkMacSystemFont,'Inter','Segoe UI',Roboto,Oxygen,Ubuntu,sans-serif;line-height:1.6;color:#1a1a1a;background:#fff;min-height:100vh}.container{width:100%;max-width:1200px;margin:0 auto;padding:0 1rem}header,.header{position:fixed;top:0;left:0;right:0;background:rgba(255,255,255,.95);backdrop-filter:blur(10px);z-index:1000;height:64px;display:flex;align-items:center;border-bottom:1px solid rgba(0,0,0,.1)}nav{display:flex;align-items:center;gap:2rem}main{padding-top:80px;min-height:calc(100vh - 64px)}.hero{padding:4rem 0;text-align:center}h1{font-size:clamp(2rem,5vw,3.5rem);font-weight:700;line-height:1.2;margin-bottom:1rem}.loading{opacity:.6;pointer-events:none}.skeleton{background:linear-gradient(90deg,#f0f0f0 25%,#e0e0e0 50%,#f0f0f0 75%);background-size:200% 100%;animation:loading 1.5s infinite}@keyframes loading{0%{background-position:200% 0}100%{background-position:-200% 0}}button,.btn{padding:.75rem 1.5rem;border:none;border-radius:8px;font-weight:500;cursor:pointer;transition:all .2s;font-size:1rem}.btn-primary{background:#6366f1;color:#fff}.btn-primary:hover{background:#5558e3}[data-theme="dark"] body{background:#0a0a0a;color:#e0e0e0}[data-theme="dark"] header,[data-theme="dark"] .header{background:rgba(10,10,10,.95);border-bottom:1px solid rgba(255,255,255,.1)}@media (max-width:768px){.container{padding:0 .75rem}h1{font-size:clamp(1.75rem,4vw,2.5rem)}.hero{padding:2rem 0}}.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}:focus-visible{outline:2px solid #6366f1;outline-offset:2px}img{max-width:100%;height:auto;display:block}
+    </style>
+    
+    <!-- Preconnect to external domains -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
+    
+    <!-- Font loading with display swap for performance -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     
-    <!-- SYNTHEX Design System CSS -->
-    <link rel="stylesheet" href="/css/synthex-design-system.css">
-    <link rel="stylesheet" href="/css/loading-states.css">
+    <!-- Deferred CSS loading for non-critical styles -->
+    <link rel="preload" href="/css/synthex-design-system.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <link rel="preload" href="/css/loading-states.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript>
+        <link rel="stylesheet" href="/css/synthex-design-system.css">
+        <link rel="stylesheet" href="/css/loading-states.css">
+    </noscript>
     <link rel="stylesheet" href="/css/micro-interactions.css">
     <link rel="stylesheet" href="/css/production.css">
     <link rel="stylesheet" href="/css/synthex-unified.css">
@@ -590,6 +606,19 @@
                 }, 100);
             }
         });
+    </script>
+    
+    <!-- Performance Optimization Scripts -->
+    <script src="/js/app-init.js" defer></script>
+    <script src="/js/performance-optimizer.js" defer></script>
+    
+    <!-- Register Service Worker -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/service-worker.js');
+            });
+        }
     </script>
 </body>
 </html>
