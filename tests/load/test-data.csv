@@ -1,0 +1,21 @@
+email,password,name
+loadtest1@example.com,LoadTest123!@#,Load Test User 1
+loadtest2@example.com,LoadTest123!@#,Load Test User 2
+loadtest3@example.com,LoadTest123!@#,Load Test User 3
+loadtest4@example.com,LoadTest123!@#,Load Test User 4
+loadtest5@example.com,LoadTest123!@#,Load Test User 5
+loadtest6@example.com,LoadTest123!@#,Load Test User 6
+loadtest7@example.com,LoadTest123!@#,Load Test User 7
+loadtest8@example.com,LoadTest123!@#,Load Test User 8
+loadtest9@example.com,LoadTest123!@#,Load Test User 9
+loadtest10@example.com,LoadTest123!@#,Load Test User 10
+performance1@test.com,PerfTest123!@#,Performance User 1
+performance2@test.com,PerfTest123!@#,Performance User 2
+performance3@test.com,PerfTest123!@#,Performance User 3
+performance4@test.com,PerfTest123!@#,Performance User 4
+performance5@test.com,PerfTest123!@#,Performance User 5
+stress1@test.com,StressTest123!@#,Stress Test User 1
+stress2@test.com,StressTest123!@#,Stress Test User 2
+stress3@test.com,StressTest123!@#,Stress Test User 3
+stress4@test.com,StressTest123!@#,Stress Test User 4
+stress5@test.com,StressTest123!@#,Stress Test User 5
