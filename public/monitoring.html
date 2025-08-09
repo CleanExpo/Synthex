@@ -1,0 +1,913 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SYNTHEX System Monitoring Dashboard</title>
+    <link rel="icon" type="image/png" href="/logo.png">
+    
+    <!-- Chart.js for visualizations -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/date-fns@2/index.min.js"></script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        :root {
+            --bg-primary: #0a0a0a;
+            --bg-secondary: #1a1a1a;
+            --bg-tertiary: #2a2a2a;
+            --text-primary: #e0e0e0;
+            --text-secondary: #a0a0a0;
+            --accent: #6366f1;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --error: #ef4444;
+            --info: #3b82f6;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+        
+        .dashboard {
+            display: grid;
+            grid-template-columns: 250px 1fr;
+            min-height: 100vh;
+        }
+        
+        /* Sidebar */
+        .sidebar {
+            background: var(--bg-secondary);
+            padding: 2rem 1rem;
+            border-right: 1px solid var(--bg-tertiary);
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 3rem;
+            padding: 0 1rem;
+        }
+        
+        .logo img {
+            width: 40px;
+            height: 40px;
+        }
+        
+        .logo h1 {
+            font-size: 1.25rem;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .nav-menu {
+            list-style: none;
+        }
+        
+        .nav-item {
+            margin-bottom: 0.5rem;
+        }
+        
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1rem;
+            color: var(--text-secondary);
+            text-decoration: none;
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+        
+        .nav-link:hover {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+        }
+        
+        .nav-link.active {
+            background: var(--accent);
+            color: white;
+        }
+        
+        .nav-icon {
+            width: 20px;
+            height: 20px;
+        }
+        
+        /* Main Content */
+        .main-content {
+            padding: 2rem;
+            overflow-y: auto;
+        }
+        
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+        
+        .header h2 {
+            font-size: 2rem;
+            font-weight: 700;
+        }
+        
+        .header-actions {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+        
+        .time-range-selector {
+            display: flex;
+            gap: 0.5rem;
+            background: var(--bg-secondary);
+            padding: 0.25rem;
+            border-radius: 8px;
+        }
+        
+        .time-range-btn {
+            padding: 0.5rem 1rem;
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+        
+        .time-range-btn:hover {
+            color: var(--text-primary);
+        }
+        
+        .time-range-btn.active {
+            background: var(--accent);
+            color: white;
+        }
+        
+        .refresh-btn {
+            padding: 0.5rem 1rem;
+            background: var(--bg-secondary);
+            border: 1px solid var(--bg-tertiary);
+            color: var(--text-primary);
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.2s;
+        }
+        
+        .refresh-btn:hover {
+            background: var(--bg-tertiary);
+        }
+        
+        /* Status Cards */
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .status-card {
+            background: var(--bg-secondary);
+            padding: 1.5rem;
+            border-radius: 12px;
+            border: 1px solid var(--bg-tertiary);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .status-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: var(--accent);
+        }
+        
+        .status-card.success::before {
+            background: var(--success);
+        }
+        
+        .status-card.warning::before {
+            background: var(--warning);
+        }
+        
+        .status-card.error::before {
+            background: var(--error);
+        }
+        
+        .status-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        
+        .status-title {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        
+        .status-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 50px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        
+        .badge-success {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--success);
+        }
+        
+        .badge-warning {
+            background: rgba(245, 158, 11, 0.2);
+            color: var(--warning);
+        }
+        
+        .badge-error {
+            background: rgba(239, 68, 68, 0.2);
+            color: var(--error);
+        }
+        
+        .status-value {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+        
+        .status-change {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+        
+        .status-change.positive {
+            color: var(--success);
+        }
+        
+        .status-change.negative {
+            color: var(--error);
+        }
+        
+        /* Charts Section */
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .chart-container {
+            background: var(--bg-secondary);
+            padding: 1.5rem;
+            border-radius: 12px;
+            border: 1px solid var(--bg-tertiary);
+        }
+        
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+        
+        .chart-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+        }
+        
+        .chart-options {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .chart-option-btn {
+            padding: 0.25rem 0.5rem;
+            background: var(--bg-tertiary);
+            border: none;
+            color: var(--text-secondary);
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.875rem;
+        }
+        
+        .chart-option-btn:hover {
+            color: var(--text-primary);
+        }
+        
+        /* Logs Section */
+        .logs-container {
+            background: var(--bg-secondary);
+            padding: 1.5rem;
+            border-radius: 12px;
+            border: 1px solid var(--bg-tertiary);
+        }
+        
+        .logs-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        
+        .log-filters {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .log-filter {
+            padding: 0.25rem 0.75rem;
+            background: var(--bg-tertiary);
+            border: none;
+            color: var(--text-secondary);
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.875rem;
+        }
+        
+        .log-filter.active {
+            background: var(--accent);
+            color: white;
+        }
+        
+        .logs-list {
+            max-height: 400px;
+            overflow-y: auto;
+            font-family: 'Monaco', 'Courier New', monospace;
+            font-size: 0.875rem;
+        }
+        
+        .log-entry {
+            padding: 0.75rem;
+            border-bottom: 1px solid var(--bg-tertiary);
+            display: flex;
+            gap: 1rem;
+            align-items: flex-start;
+        }
+        
+        .log-entry:hover {
+            background: var(--bg-tertiary);
+        }
+        
+        .log-timestamp {
+            color: var(--text-secondary);
+            white-space: nowrap;
+        }
+        
+        .log-level {
+            padding: 0.125rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+        
+        .log-level.info {
+            background: rgba(59, 130, 246, 0.2);
+            color: var(--info);
+        }
+        
+        .log-level.warning {
+            background: rgba(245, 158, 11, 0.2);
+            color: var(--warning);
+        }
+        
+        .log-level.error {
+            background: rgba(239, 68, 68, 0.2);
+            color: var(--error);
+        }
+        
+        .log-level.success {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--success);
+        }
+        
+        .log-message {
+            flex: 1;
+            color: var(--text-primary);
+        }
+        
+        /* Real-time indicator */
+        .live-indicator {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: var(--bg-tertiary);
+            border-radius: 50px;
+        }
+        
+        .live-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--success);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% {
+                opacity: 1;
+                transform: scale(1);
+            }
+            50% {
+                opacity: 0.5;
+                transform: scale(1.2);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+        
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+            
+            .sidebar {
+                display: none;
+            }
+            
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard">
+        <aside class="sidebar">
+            <div class="logo">
+                <img src="/logo.png" alt="SYNTHEX">
+                <h1>Monitoring</h1>
+            </div>
+            
+            <nav>
+                <ul class="nav-menu">
+                    <li class="nav-item">
+                        <a href="#" class="nav-link active" data-section="overview">
+                            <span class="nav-icon">📊</span>
+                            <span>Overview</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" data-section="performance">
+                            <span class="nav-icon">⚡</span>
+                            <span>Performance</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" data-section="api">
+                            <span class="nav-icon">🔌</span>
+                            <span>API Health</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" data-section="errors">
+                            <span class="nav-icon">⚠️</span>
+                            <span>Errors</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" data-section="security">
+                            <span class="nav-icon">🔒</span>
+                            <span>Security</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" data-section="database">
+                            <span class="nav-icon">💾</span>
+                            <span>Database</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" data-section="cache">
+                            <span class="nav-icon">🚀</span>
+                            <span>Cache</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" data-section="logs">
+                            <span class="nav-icon">📝</span>
+                            <span>Logs</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </aside>
+        
+        <main class="main-content">
+            <div class="header">
+                <h2>System Overview</h2>
+                <div class="header-actions">
+                    <div class="live-indicator">
+                        <span class="live-dot"></span>
+                        <span>Live</span>
+                    </div>
+                    <div class="time-range-selector">
+                        <button class="time-range-btn" data-range="1h">1H</button>
+                        <button class="time-range-btn active" data-range="24h">24H</button>
+                        <button class="time-range-btn" data-range="7d">7D</button>
+                        <button class="time-range-btn" data-range="30d">30D</button>
+                    </div>
+                    <button class="refresh-btn">
+                        <span>🔄</span>
+                        <span>Refresh</span>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Status Cards -->
+            <div class="status-grid">
+                <div class="status-card success">
+                    <div class="status-header">
+                        <span class="status-title">System Status</span>
+                        <span class="status-badge badge-success">Operational</span>
+                    </div>
+                    <div class="status-value">99.99%</div>
+                    <div class="status-change positive">↑ 0.02% from last hour</div>
+                </div>
+                
+                <div class="status-card">
+                    <div class="status-header">
+                        <span class="status-title">API Requests</span>
+                        <span class="status-badge badge-success">Normal</span>
+                    </div>
+                    <div class="status-value">1.2M</div>
+                    <div class="status-change positive">↑ 12% from yesterday</div>
+                </div>
+                
+                <div class="status-card">
+                    <div class="status-header">
+                        <span class="status-title">Response Time</span>
+                        <span class="status-badge badge-success">Fast</span>
+                    </div>
+                    <div class="status-value">42ms</div>
+                    <div class="status-change positive">↓ 8ms from average</div>
+                </div>
+                
+                <div class="status-card warning">
+                    <div class="status-header">
+                        <span class="status-title">Error Rate</span>
+                        <span class="status-badge badge-warning">Elevated</span>
+                    </div>
+                    <div class="status-value">0.8%</div>
+                    <div class="status-change negative">↑ 0.3% from baseline</div>
+                </div>
+                
+                <div class="status-card">
+                    <div class="status-header">
+                        <span class="status-title">Active Users</span>
+                        <span class="status-badge badge-success">Growing</span>
+                    </div>
+                    <div class="status-value">8,432</div>
+                    <div class="status-change positive">↑ 523 from last hour</div>
+                </div>
+                
+                <div class="status-card">
+                    <div class="status-header">
+                        <span class="status-title">Database Load</span>
+                        <span class="status-badge badge-success">Low</span>
+                    </div>
+                    <div class="status-value">23%</div>
+                    <div class="status-change positive">↓ 5% from peak</div>
+                </div>
+            </div>
+            
+            <!-- Charts -->
+            <div class="charts-grid">
+                <div class="chart-container">
+                    <div class="chart-header">
+                        <h3 class="chart-title">Request Volume</h3>
+                        <div class="chart-options">
+                            <button class="chart-option-btn">Export</button>
+                        </div>
+                    </div>
+                    <canvas id="requestChart" width="400" height="200"></canvas>
+                </div>
+                
+                <div class="chart-container">
+                    <div class="chart-header">
+                        <h3 class="chart-title">Response Times</h3>
+                        <div class="chart-options">
+                            <button class="chart-option-btn">Export</button>
+                        </div>
+                    </div>
+                    <canvas id="responseChart" width="400" height="200"></canvas>
+                </div>
+                
+                <div class="chart-container">
+                    <div class="chart-header">
+                        <h3 class="chart-title">Error Distribution</h3>
+                        <div class="chart-options">
+                            <button class="chart-option-btn">Export</button>
+                        </div>
+                    </div>
+                    <canvas id="errorChart" width="400" height="200"></canvas>
+                </div>
+                
+                <div class="chart-container">
+                    <div class="chart-header">
+                        <h3 class="chart-title">System Resources</h3>
+                        <div class="chart-options">
+                            <button class="chart-option-btn">Export</button>
+                        </div>
+                    </div>
+                    <canvas id="resourceChart" width="400" height="200"></canvas>
+                </div>
+            </div>
+            
+            <!-- Logs -->
+            <div class="logs-container">
+                <div class="logs-header">
+                    <h3>Recent Logs</h3>
+                    <div class="log-filters">
+                        <button class="log-filter active" data-level="all">All</button>
+                        <button class="log-filter" data-level="error">Errors</button>
+                        <button class="log-filter" data-level="warning">Warnings</button>
+                        <button class="log-filter" data-level="info">Info</button>
+                    </div>
+                </div>
+                <div class="logs-list" id="logsList">
+                    <!-- Logs will be dynamically added here -->
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <script>
+        // Initialize charts
+        const chartOptions = {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                x: {
+                    grid: {
+                        color: 'rgba(255, 255, 255, 0.1)'
+                    },
+                    ticks: {
+                        color: '#a0a0a0'
+                    }
+                },
+                y: {
+                    grid: {
+                        color: 'rgba(255, 255, 255, 0.1)'
+                    },
+                    ticks: {
+                        color: '#a0a0a0'
+                    }
+                }
+            }
+        };
+        
+        // Request Volume Chart
+        const requestCtx = document.getElementById('requestChart').getContext('2d');
+        const requestChart = new Chart(requestCtx, {
+            type: 'line',
+            data: {
+                labels: Array.from({length: 24}, (_, i) => `${i}:00`),
+                datasets: [{
+                    data: Array.from({length: 24}, () => Math.floor(Math.random() * 10000) + 40000),
+                    borderColor: '#6366f1',
+                    backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                }]
+            },
+            options: chartOptions
+        });
+        
+        // Response Time Chart
+        const responseCtx = document.getElementById('responseChart').getContext('2d');
+        const responseChart = new Chart(responseCtx, {
+            type: 'line',
+            data: {
+                labels: Array.from({length: 24}, (_, i) => `${i}:00`),
+                datasets: [{
+                    label: 'P50',
+                    data: Array.from({length: 24}, () => Math.floor(Math.random() * 20) + 30),
+                    borderColor: '#10b981',
+                    tension: 0.4
+                }, {
+                    label: 'P95',
+                    data: Array.from({length: 24}, () => Math.floor(Math.random() * 50) + 80),
+                    borderColor: '#f59e0b',
+                    tension: 0.4
+                }, {
+                    label: 'P99',
+                    data: Array.from({length: 24}, () => Math.floor(Math.random() * 100) + 150),
+                    borderColor: '#ef4444',
+                    tension: 0.4
+                }]
+            },
+            options: {
+                ...chartOptions,
+                plugins: {
+                    legend: {
+                        display: true,
+                        labels: {
+                            color: '#a0a0a0'
+                        }
+                    }
+                }
+            }
+        });
+        
+        // Error Distribution Chart
+        const errorCtx = document.getElementById('errorChart').getContext('2d');
+        const errorChart = new Chart(errorCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['400', '401', '403', '404', '500', '503'],
+                datasets: [{
+                    data: [120, 85, 45, 234, 67, 23],
+                    backgroundColor: [
+                        '#3b82f6',
+                        '#6366f1',
+                        '#8b5cf6',
+                        '#f59e0b',
+                        '#ef4444',
+                        '#ec4899'
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'right',
+                        labels: {
+                            color: '#a0a0a0'
+                        }
+                    }
+                }
+            }
+        });
+        
+        // System Resources Chart
+        const resourceCtx = document.getElementById('resourceChart').getContext('2d');
+        const resourceChart = new Chart(resourceCtx, {
+            type: 'bar',
+            data: {
+                labels: ['CPU', 'Memory', 'Disk', 'Network'],
+                datasets: [{
+                    data: [23, 45, 67, 34],
+                    backgroundColor: [
+                        'rgba(16, 185, 129, 0.8)',
+                        'rgba(16, 185, 129, 0.8)',
+                        'rgba(245, 158, 11, 0.8)',
+                        'rgba(16, 185, 129, 0.8)'
+                    ]
+                }]
+            },
+            options: {
+                ...chartOptions,
+                scales: {
+                    ...chartOptions.scales,
+                    y: {
+                        ...chartOptions.scales.y,
+                        max: 100
+                    }
+                }
+            }
+        });
+        
+        // Generate sample logs
+        function generateLogs() {
+            const levels = ['info', 'warning', 'error', 'success'];
+            const messages = [
+                'API request processed successfully',
+                'Database query executed in 23ms',
+                'Cache hit ratio: 92%',
+                'New user registration completed',
+                'Failed authentication attempt from IP 192.168.1.1',
+                'Rate limit exceeded for user ID 12345',
+                'Scheduled post published to Twitter',
+                'Webhook delivered successfully',
+                'Memory usage threshold reached',
+                'Background job completed',
+                'SSL certificate renewed',
+                'Backup completed successfully'
+            ];
+            
+            const logsList = document.getElementById('logsList');
+            logsList.innerHTML = '';
+            
+            for (let i = 0; i < 20; i++) {
+                const level = levels[Math.floor(Math.random() * levels.length)];
+                const message = messages[Math.floor(Math.random() * messages.length)];
+                const timestamp = new Date(Date.now() - Math.random() * 3600000).toLocaleTimeString();
+                
+                const logEntry = document.createElement('div');
+                logEntry.className = 'log-entry';
+                logEntry.innerHTML = `
+                    <span class="log-timestamp">${timestamp}</span>
+                    <span class="log-level ${level}">${level.toUpperCase()}</span>
+                    <span class="log-message">${message}</span>
+                `;
+                
+                logsList.appendChild(logEntry);
+            }
+        }
+        
+        // Initialize logs
+        generateLogs();
+        
+        // Update data periodically
+        setInterval(() => {
+            // Update charts with new data
+            requestChart.data.datasets[0].data = Array.from({length: 24}, () => Math.floor(Math.random() * 10000) + 40000);
+            requestChart.update();
+            
+            // Add new log entry
+            const levels = ['info', 'warning', 'error', 'success'];
+            const messages = [
+                'API request processed',
+                'Cache updated',
+                'User action logged'
+            ];
+            
+            const logsList = document.getElementById('logsList');
+            const level = levels[Math.floor(Math.random() * levels.length)];
+            const message = messages[Math.floor(Math.random() * messages.length)];
+            const timestamp = new Date().toLocaleTimeString();
+            
+            const logEntry = document.createElement('div');
+            logEntry.className = 'log-entry';
+            logEntry.innerHTML = `
+                <span class="log-timestamp">${timestamp}</span>
+                <span class="log-level ${level}">${level.toUpperCase()}</span>
+                <span class="log-message">${message}</span>
+            `;
+            
+            logsList.insertBefore(logEntry, logsList.firstChild);
+            
+            // Keep only last 20 logs
+            while (logsList.children.length > 20) {
+                logsList.removeChild(logsList.lastChild);
+            }
+        }, 5000);
+        
+        // Handle navigation
+        document.querySelectorAll('.nav-link').forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+                link.classList.add('active');
+            });
+        });
+        
+        // Handle time range selection
+        document.querySelectorAll('.time-range-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.time-range-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+            });
+        });
+        
+        // Handle log filters
+        document.querySelectorAll('.log-filter').forEach(filter => {
+            filter.addEventListener('click', () => {
+                document.querySelectorAll('.log-filter').forEach(f => f.classList.remove('active'));
+                filter.classList.add('active');
+            });
+        });
+        
+        // Handle refresh
+        document.querySelector('.refresh-btn').addEventListener('click', () => {
+            generateLogs();
+            // Refresh charts
+            requestChart.update();
+            responseChart.update();
+            errorChart.update();
+            resourceChart.update();
+        });
+    </script>
+</body>
+</html>
