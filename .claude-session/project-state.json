@@ -4,9 +4,10 @@
   "initialized": "2025-01-09T20:52:00Z",
   "state": "EXISTING_PROJECT",
   "lastDeployment": {
-    "url": "https://synthex-2dnvxbd1l-unite-group.vercel.app",
+    "url": "https://synthex-6ku8a7rhg-unite-group.vercel.app",
     "status": "Ready",
-    "timestamp": "9 minutes ago"
+    "timestamp": "2025-01-09T21:03:00Z",
+    "aliases": ["https://synthex.social", "https://synthex-sandy.vercel.app"]
   },
   "uncommittedChanges": [
     "public/index.html",
