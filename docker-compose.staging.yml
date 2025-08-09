@@ -1,0 +1,111 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database for Staging
+  postgres-staging:
+    image: postgres:15-alpine
+    container_name: synthex-postgres-staging
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: synthex_staging
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_staging_data:/var/lib/postgresql/data
+      - ./scripts/init-staging.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - synthex-staging
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis Cache for Staging
+  redis-staging:
+    image: redis:7-alpine
+    container_name: synthex-redis-staging
+    ports:
+      - "6380:6379"
+    volumes:
+      - redis_staging_data:/data
+    networks:
+      - synthex-staging
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Application for Staging
+  app-staging:
+    build:
+      context: .
+      dockerfile: Dockerfile.staging
+      args:
+        - NODE_ENV=staging
+    container_name: synthex-app-staging
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=staging
+      - DATABASE_URL=postgresql://postgres:postgres@postgres-staging:5432/synthex_staging
+      - REDIS_URL=redis://redis-staging:6379
+    env_file:
+      - .env.staging
+    depends_on:
+      postgres-staging:
+        condition: service_healthy
+      redis-staging:
+        condition: service_healthy
+    volumes:
+      - ./public:/app/public
+      - ./src:/app/src
+      - ./prisma:/app/prisma
+      - node_modules_staging:/app/node_modules
+    networks:
+      - synthex-staging
+    command: npm run dev
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Nginx Reverse Proxy for Staging
+  nginx-staging:
+    image: nginx:alpine
+    container_name: synthex-nginx-staging
+    ports:
+      - "8081:80"
+    volumes:
+      - ./nginx/staging.conf:/etc/nginx/nginx.conf:ro
+      - ./public:/usr/share/nginx/html:ro
+      - nginx_staging_cache:/var/cache/nginx
+    depends_on:
+      - app-staging
+    networks:
+      - synthex-staging
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+networks:
+  synthex-staging:
+    driver: bridge
+    name: synthex-staging-network
+
+volumes:
+  postgres_staging_data:
+    name: synthex-postgres-staging-data
+  redis_staging_data:
+    name: synthex-redis-staging-data
+  node_modules_staging:
+    name: synthex-node-modules-staging
+  nginx_staging_cache:
+    name: synthex-nginx-staging-cache
