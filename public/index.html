@@ -17,6 +17,12 @@
     <link rel="stylesheet" href="/css/micro-interactions.css">
     <link rel="stylesheet" href="/css/production.css">
     <link rel="stylesheet" href="/css/synthex-unified.css">
+    <link rel="stylesheet" href="/css/synthex-app.css">
+    
+    <!-- Component CSS -->
+    <link rel="stylesheet" href="/css/components/analytics-dashboard.css">
+    <link rel="stylesheet" href="/css/components/notifications.css">
+    <link rel="stylesheet" href="/css/components/charts.css">
     
     <!-- Additional Glassmorphic Styles -->
     <style>
@@ -247,8 +253,8 @@
                 <button id="theme-toggle" class="btn btn-glass" aria-label="Toggle theme" style="background: rgba(255,255,255,0.05); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.08); color: white; padding: 0.625rem 1rem; border-radius: 12px; cursor: pointer; transition: all 0.3s;">
                     🌙
                 </button>
-                <button id="sign-in-btn" class="btn btn-glass">Sign In</button>
-                <button id="get-started-btn" class="btn btn-primary">Get Started</button>
+                <button id="sign-in-btn" class="btn btn-glass btn-magnetic btn-ripple">Sign In</button>
+                <button id="get-started-btn" class="btn btn-primary btn-magnetic btn-ripple">Get Started</button>
             </div>
 
             <!-- Mobile Menu Button -->
@@ -309,13 +315,13 @@
             </p>
             
             <div class="hero-actions" style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
-                <button id="hero-start-trial-btn" class="btn btn-primary btn-lg">
+                <button id="hero-start-trial-btn" class="btn btn-primary btn-lg btn-magnetic btn-ripple hover-lift">
                     <span>Start Free Trial</span>
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M5 12h14M12 5l7 7-7 7"/>
                     </svg>
                 </button>
-                <button id="watch-demo-btn" class="btn btn-glass btn-lg" data-modal-trigger="demo-modal">
+                <button id="watch-demo-btn" class="btn btn-glass btn-lg btn-magnetic hover-glow" data-modal-trigger="demo-modal">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                         <path d="M8 5v14l11-7z"/>
                     </svg>
@@ -329,7 +335,7 @@
     <section class="features" id="features" style="padding: 6rem 2rem; max-width: 1400px; margin: 0 auto;">
         <div class="stagger-container">
             <div class="features-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; margin-top: 4rem;">
-                <div class="feature-card stagger-item" data-animate="fade-up">
+                <div class="feature-card stagger-item card-interactive card-magnetic animate-on-scroll" data-animate="fade-up">
                     <div class="feature-icon" style="width: 60px; height: 60px; background: linear-gradient(135deg, #007AFF, #5AC8FA); border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; margin-bottom: 1.5rem; box-shadow: 0 8px 20px rgba(0, 122, 255, 0.3);">🚀</div>
                     <h3 class="feature-title text-title-3">AI Content Generation</h3>
                     <p class="feature-description text-body">
@@ -398,7 +404,7 @@
         <div class="cta-content surface" style="max-width: 900px; margin: 0 auto; background: rgba(255,255,255,0.05); backdrop-filter: blur(30px) saturate(180%); border: 1px solid rgba(255,255,255,0.08); border-radius: 30px; padding: 4rem; position: relative; overflow: hidden;">
             <h2 class="cta-title gradient-text text-title-1" style="font-size: 3rem; font-weight: 800; margin-bottom: 1.5rem; letter-spacing: -0.02em;">Ready to Scale Your Marketing?</h2>
             <p class="cta-subtitle text-body" style="font-size: 1.25rem; color: rgba(255,255,255,0.85); margin-bottom: 2.5rem;">Join thousands of brands using SYNTHEX to dominate social media</p>
-            <button id="cta-start-trial-btn" class="btn btn-primary btn-lg">
+            <button id="cta-start-trial-btn" class="btn btn-primary btn-lg btn-magnetic btn-ripple hover-lift">
                 Start Your Free Trial
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M5 12h14M12 5l7 7-7 7"/>
