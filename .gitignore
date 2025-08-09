@@ -87,3 +87,5 @@ test-*.js
 *-test.html
 
 # Development files
+
+.vercel
