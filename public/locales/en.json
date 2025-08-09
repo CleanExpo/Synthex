@@ -1,0 +1,468 @@
+{
+  "common": {
+    "appName": "SYNTHEX",
+    "welcome": "Welcome",
+    "loading": "Loading...",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "create": "Create",
+    "update": "Update",
+    "search": "Search",
+    "filter": "Filter",
+    "export": "Export",
+    "import": "Import",
+    "download": "Download",
+    "upload": "Upload",
+    "submit": "Submit",
+    "confirm": "Confirm",
+    "yes": "Yes",
+    "no": "No",
+    "ok": "OK",
+    "close": "Close",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
+    "finish": "Finish",
+    "required": "Required",
+    "optional": "Optional",
+    "success": "Success",
+    "error": "Error",
+    "warning": "Warning",
+    "info": "Information",
+    "noData": "No data available",
+    "actions": "Actions",
+    "status": "Status",
+    "date": "Date",
+    "time": "Time",
+    "language": "Language",
+    "theme": "Theme",
+    "settings": "Settings",
+    "help": "Help",
+    "about": "About",
+    "logout": "Logout",
+    "login": "Login",
+    "register": "Register",
+    "forgotPassword": "Forgot Password?",
+    "resetPassword": "Reset Password",
+    "changePassword": "Change Password",
+    "profile": "Profile",
+    "account": "Account",
+    "dashboard": "Dashboard",
+    "notifications": "Notifications"
+  },
+  "auth": {
+    "signIn": "Sign In",
+    "signUp": "Sign Up",
+    "signOut": "Sign Out",
+    "email": "Email Address",
+    "password": "Password",
+    "confirmPassword": "Confirm Password",
+    "fullName": "Full Name",
+    "company": "Company",
+    "rememberMe": "Remember Me",
+    "termsAgreement": "I agree to the Terms of Service and Privacy Policy",
+    "alreadyHaveAccount": "Already have an account?",
+    "dontHaveAccount": "Don't have an account?",
+    "orContinueWith": "Or continue with",
+    "continueWithGoogle": "Continue with Google",
+    "continueWithFacebook": "Continue with Facebook",
+    "continueWithTwitter": "Continue with Twitter",
+    "verifyEmail": "Verify Your Email",
+    "emailVerified": "Email Verified Successfully",
+    "verificationSent": "Verification email sent",
+    "invalidCredentials": "Invalid email or password",
+    "accountCreated": "Account created successfully",
+    "passwordResetSent": "Password reset link sent to your email",
+    "passwordChanged": "Password changed successfully",
+    "sessionExpired": "Your session has expired. Please sign in again.",
+    "unauthorized": "You are not authorized to access this resource",
+    "twoFactorAuth": "Two-Factor Authentication",
+    "enterCode": "Enter verification code",
+    "enableTwoFactor": "Enable Two-Factor Authentication",
+    "disableTwoFactor": "Disable Two-Factor Authentication"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "overview": "Overview",
+    "analytics": "Analytics",
+    "performance": "Performance",
+    "recentActivity": "Recent Activity",
+    "quickActions": "Quick Actions",
+    "statistics": "Statistics",
+    "totalUsers": "Total Users",
+    "activeUsers": "Active Users",
+    "totalPosts": "Total Posts",
+    "publishedPosts": "Published Posts",
+    "scheduledPosts": "Scheduled Posts",
+    "draftPosts": "Draft Posts",
+    "engagement": "Engagement",
+    "reach": "Reach",
+    "impressions": "Impressions",
+    "clicks": "Clicks",
+    "shares": "Shares",
+    "likes": "Likes",
+    "comments": "Comments",
+    "followers": "Followers",
+    "following": "Following",
+    "growthRate": "Growth Rate",
+    "conversionRate": "Conversion Rate",
+    "bounceRate": "Bounce Rate",
+    "avgSessionDuration": "Avg. Session Duration",
+    "pageViews": "Page Views",
+    "uniqueVisitors": "Unique Visitors",
+    "newVsReturning": "New vs Returning",
+    "trafficSources": "Traffic Sources",
+    "topContent": "Top Content",
+    "recentPosts": "Recent Posts",
+    "upcomingPosts": "Upcoming Posts",
+    "notifications": {
+      "one": "{{count}} new notification",
+      "other": "{{count}} new notifications"
+    }
+  },
+  "posts": {
+    "title": "Posts",
+    "createPost": "Create Post",
+    "editPost": "Edit Post",
+    "deletePost": "Delete Post",
+    "publishPost": "Publish Post",
+    "schedulePost": "Schedule Post",
+    "duplicatePost": "Duplicate Post",
+    "postTitle": "Post Title",
+    "postContent": "Post Content",
+    "selectPlatforms": "Select Platforms",
+    "selectDate": "Select Date",
+    "selectTime": "Select Time",
+    "addMedia": "Add Media",
+    "addHashtags": "Add Hashtags",
+    "characterCount": {
+      "one": "{{count}} character",
+      "other": "{{count}} characters"
+    },
+    "mediaCount": {
+      "zero": "No media files",
+      "one": "{{count}} media file",
+      "other": "{{count}} media files"
+    },
+    "platforms": {
+      "all": "All Platforms",
+      "twitter": "Twitter",
+      "facebook": "Facebook",
+      "instagram": "Instagram",
+      "linkedin": "LinkedIn",
+      "youtube": "YouTube",
+      "tiktok": "TikTok",
+      "pinterest": "Pinterest",
+      "reddit": "Reddit"
+    },
+    "status": {
+      "draft": "Draft",
+      "scheduled": "Scheduled",
+      "published": "Published",
+      "failed": "Failed",
+      "pending": "Pending"
+    },
+    "visibility": {
+      "public": "Public",
+      "private": "Private",
+      "unlisted": "Unlisted"
+    },
+    "messages": {
+      "postCreated": "Post created successfully",
+      "postUpdated": "Post updated successfully",
+      "postDeleted": "Post deleted successfully",
+      "postPublished": "Post published successfully",
+      "postScheduled": "Post scheduled for {{date}}",
+      "postDuplicated": "Post duplicated successfully",
+      "confirmDelete": "Are you sure you want to delete this post?",
+      "confirmPublish": "Are you sure you want to publish this post now?",
+      "noPostsFound": "No posts found",
+      "loadingPosts": "Loading posts..."
+    }
+  },
+  "analytics": {
+    "title": "Analytics",
+    "overview": "Overview",
+    "detailed": "Detailed Analytics",
+    "realtime": "Real-time",
+    "historical": "Historical",
+    "compare": "Compare",
+    "export": "Export Report",
+    "dateRange": "Date Range",
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "last7Days": "Last 7 Days",
+    "last30Days": "Last 30 Days",
+    "thisMonth": "This Month",
+    "lastMonth": "Last Month",
+    "thisYear": "This Year",
+    "custom": "Custom Range",
+    "metrics": {
+      "reach": "Reach",
+      "engagement": "Engagement",
+      "impressions": "Impressions",
+      "clicks": "Clicks",
+      "conversions": "Conversions",
+      "revenue": "Revenue",
+      "roi": "ROI",
+      "cpc": "CPC",
+      "cpm": "CPM",
+      "ctr": "CTR",
+      "engagementRate": "Engagement Rate",
+      "conversionRate": "Conversion Rate",
+      "averageOrderValue": "Average Order Value",
+      "lifetimeValue": "Lifetime Value"
+    },
+    "charts": {
+      "line": "Line Chart",
+      "bar": "Bar Chart",
+      "pie": "Pie Chart",
+      "donut": "Donut Chart",
+      "area": "Area Chart",
+      "scatter": "Scatter Plot",
+      "heatmap": "Heatmap",
+      "funnel": "Funnel"
+    },
+    "insights": {
+      "title": "Insights",
+      "bestTime": "Best time to post: {{time}}",
+      "topPerforming": "Top performing content",
+      "audienceGrowth": "Audience growth: {{percent}}%",
+      "engagementTrend": "Engagement trend",
+      "recommendations": "Recommendations"
+    }
+  },
+  "team": {
+    "title": "Team",
+    "members": "Team Members",
+    "inviteMembers": "Invite Members",
+    "roles": "Roles & Permissions",
+    "activity": "Team Activity",
+    "member": {
+      "one": "{{count}} member",
+      "other": "{{count}} members"
+    },
+    "role": {
+      "owner": "Owner",
+      "admin": "Administrator",
+      "editor": "Editor",
+      "viewer": "Viewer",
+      "contributor": "Contributor"
+    },
+    "permissions": {
+      "manageTeam": "Manage Team",
+      "manageContent": "Manage Content",
+      "publishContent": "Publish Content",
+      "viewAnalytics": "View Analytics",
+      "manageBilling": "Manage Billing",
+      "manageSettings": "Manage Settings"
+    },
+    "inviteStatus": {
+      "pending": "Pending",
+      "accepted": "Accepted",
+      "expired": "Expired",
+      "revoked": "Revoked"
+    },
+    "messages": {
+      "memberAdded": "Team member added successfully",
+      "memberRemoved": "Team member removed successfully",
+      "inviteSent": "Invitation sent to {{email}}",
+      "inviteAccepted": "Invitation accepted",
+      "roleUpdated": "Role updated successfully",
+      "confirmRemove": "Are you sure you want to remove {{name}} from the team?"
+    }
+  },
+  "settings": {
+    "title": "Settings",
+    "general": "General",
+    "profile": "Profile",
+    "account": "Account",
+    "security": "Security",
+    "privacy": "Privacy",
+    "notifications": "Notifications",
+    "integrations": "Integrations",
+    "billing": "Billing",
+    "api": "API",
+    "advanced": "Advanced",
+    "appearance": {
+      "title": "Appearance",
+      "theme": "Theme",
+      "lightMode": "Light Mode",
+      "darkMode": "Dark Mode",
+      "autoMode": "Auto (System)",
+      "primaryColor": "Primary Color",
+      "fontSize": "Font Size",
+      "language": "Language"
+    },
+    "notifications": {
+      "email": "Email Notifications",
+      "push": "Push Notifications",
+      "sms": "SMS Notifications",
+      "marketing": "Marketing Communications",
+      "updates": "Product Updates",
+      "tips": "Tips & Tutorials",
+      "security": "Security Alerts",
+      "billing": "Billing Notifications"
+    },
+    "privacy": {
+      "dataCollection": "Data Collection",
+      "dataSharing": "Data Sharing",
+      "cookies": "Cookie Preferences",
+      "tracking": "Analytics Tracking",
+      "publicProfile": "Public Profile",
+      "searchVisibility": "Search Engine Visibility"
+    },
+    "security": {
+      "password": "Password",
+      "twoFactor": "Two-Factor Authentication",
+      "sessions": "Active Sessions",
+      "apiKeys": "API Keys",
+      "loginHistory": "Login History",
+      "securityLog": "Security Log"
+    },
+    "messages": {
+      "settingsSaved": "Settings saved successfully",
+      "passwordUpdated": "Password updated successfully",
+      "profileUpdated": "Profile updated successfully",
+      "preferencesUpdated": "Preferences updated successfully",
+      "integrationConnected": "Integration connected successfully",
+      "integrationDisconnected": "Integration disconnected successfully"
+    }
+  },
+  "billing": {
+    "title": "Billing",
+    "currentPlan": "Current Plan",
+    "usage": "Usage",
+    "invoices": "Invoices",
+    "paymentMethods": "Payment Methods",
+    "upgradePlan": "Upgrade Plan",
+    "cancelSubscription": "Cancel Subscription",
+    "plans": {
+      "free": "Free",
+      "basic": "Basic",
+      "pro": "Professional",
+      "enterprise": "Enterprise",
+      "custom": "Custom"
+    },
+    "features": {
+      "users": {
+        "one": "{{count}} user",
+        "other": "{{count}} users"
+      },
+      "posts": {
+        "one": "{{count}} post per month",
+        "other": "{{count}} posts per month"
+      },
+      "storage": "{{amount}} GB storage",
+      "analytics": "Advanced analytics",
+      "support": "Priority support",
+      "api": "API access",
+      "customBranding": "Custom branding",
+      "teamCollaboration": "Team collaboration"
+    },
+    "invoice": {
+      "number": "Invoice #{{number}}",
+      "date": "Date",
+      "amount": "Amount",
+      "status": "Status",
+      "download": "Download PDF",
+      "paid": "Paid",
+      "pending": "Pending",
+      "overdue": "Overdue",
+      "canceled": "Canceled"
+    },
+    "messages": {
+      "planUpgraded": "Plan upgraded successfully",
+      "planDowngraded": "Plan downgraded successfully",
+      "subscriptionCanceled": "Subscription canceled",
+      "paymentMethodAdded": "Payment method added successfully",
+      "paymentMethodRemoved": "Payment method removed successfully",
+      "paymentFailed": "Payment failed. Please update your payment method.",
+      "trialEnding": "Your trial ends in {{days}} days"
+    }
+  },
+  "errors": {
+    "general": "An error occurred. Please try again.",
+    "network": "Network error. Please check your connection.",
+    "server": "Server error. Please try again later.",
+    "notFound": "Page not found",
+    "forbidden": "You don't have permission to access this resource",
+    "unauthorized": "Please sign in to continue",
+    "validation": "Please check your input and try again",
+    "rateLimit": "Too many requests. Please wait a moment.",
+    "maintenance": "We're currently undergoing maintenance. Please check back soon.",
+    "fieldRequired": "{{field}} is required",
+    "fieldInvalid": "{{field}} is invalid",
+    "fieldMinLength": "{{field}} must be at least {{min}} characters",
+    "fieldMaxLength": "{{field}} must be no more than {{max}} characters",
+    "fieldEmail": "Please enter a valid email address",
+    "fieldUrl": "Please enter a valid URL",
+    "fieldNumber": "Please enter a valid number",
+    "fieldPhone": "Please enter a valid phone number",
+    "fieldPassword": "Password must be at least 8 characters with uppercase, lowercase, and numbers",
+    "fieldMatch": "{{field}} does not match",
+    "fileSize": "File size must be less than {{size}}",
+    "fileType": "File type not supported"
+  },
+  "time": {
+    "just_now": "Just now",
+    "seconds_ago": {
+      "one": "{{count}} second ago",
+      "other": "{{count}} seconds ago"
+    },
+    "minutes_ago": {
+      "one": "{{count}} minute ago",
+      "other": "{{count}} minutes ago"
+    },
+    "hours_ago": {
+      "one": "{{count}} hour ago",
+      "other": "{{count}} hours ago"
+    },
+    "days_ago": {
+      "one": "{{count}} day ago",
+      "other": "{{count}} days ago"
+    },
+    "weeks_ago": {
+      "one": "{{count}} week ago",
+      "other": "{{count}} weeks ago"
+    },
+    "months_ago": {
+      "one": "{{count}} month ago",
+      "other": "{{count}} months ago"
+    },
+    "years_ago": {
+      "one": "{{count}} year ago",
+      "other": "{{count}} years ago"
+    },
+    "in_seconds": {
+      "one": "in {{count}} second",
+      "other": "in {{count}} seconds"
+    },
+    "in_minutes": {
+      "one": "in {{count}} minute",
+      "other": "in {{count}} minutes"
+    },
+    "in_hours": {
+      "one": "in {{count}} hour",
+      "other": "in {{count}} hours"
+    },
+    "in_days": {
+      "one": "in {{count}} day",
+      "other": "in {{count}} days"
+    },
+    "in_weeks": {
+      "one": "in {{count}} week",
+      "other": "in {{count}} weeks"
+    },
+    "in_months": {
+      "one": "in {{count}} month",
+      "other": "in {{count}} months"
+    },
+    "in_years": {
+      "one": "in {{count}} year",
+      "other": "in {{count}} years"
+    }
+  }
+}
