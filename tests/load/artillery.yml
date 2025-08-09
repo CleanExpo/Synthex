@@ -1,0 +1,216 @@
+config:
+  target: "http://localhost:3000"
+  phases:
+    - duration: 60
+      arrivalRate: 5
+      name: "Warm up"
+    - duration: 120
+      arrivalRate: 10
+      name: "Ramp up"
+    - duration: 300
+      arrivalRate: 25
+      name: "Sustained load"
+    - duration: 120
+      arrivalRate: 50
+      name: "Peak load"
+    - duration: 60
+      arrivalRate: 10
+      name: "Cool down"
+  
+  payload:
+    - path: "./test-data.csv"
+      fields:
+        - "email"
+        - "password"
+        - "name"
+  
+  variables:
+    target: "{{ $environment }}"
+    apiVersion: "v1"
+  
+  processor: "./load-test-helpers.js"
+  
+  plugins:
+    expect:
+      outputFormat: "json"
+    metrics-by-endpoint:
+      stripQueryString: true
+      includeQueryString: false
+      metricsNamespace: "endpoint_metrics"
+
+scenarios:
+  - name: "User Registration and Login Flow"
+    weight: 20
+    flow:
+      - post:
+          url: "/api/{{ apiVersion }}/auth/register"
+          json:
+            email: "{{ $randomString() }}@loadtest.com"
+            password: "LoadTest123!@#"
+            name: "Load Test User {{ $randomNumber() }}"
+          capture:
+            - json: "$.data.token"
+              as: "authToken"
+            - json: "$.data.user.id"
+              as: "userId"
+          expect:
+            - statusCode: 201
+            - contentType: json
+            - hasProperty: "success"
+      
+      - think: 2
+      
+      - post:
+          url: "/api/{{ apiVersion }}/auth/login"
+          json:
+            email: "{{ email }}"
+            password: "{{ password }}"
+          capture:
+            - json: "$.data.token"
+              as: "authToken"
+          expect:
+            - statusCode: 200
+            - hasProperty: "data.token"
+
+  - name: "Authenticated User Actions"
+    weight: 40
+    flow:
+      - post:
+          url: "/api/{{ apiVersion }}/auth/login"
+          json:
+            email: "{{ email }}"
+            password: "{{ password }}"
+          capture:
+            - json: "$.data.token"
+              as: "authToken"
+      
+      - get:
+          url: "/api/{{ apiVersion }}/user/profile"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+          expect:
+            - statusCode: 200
+      
+      - think: 1
+      
+      - post:
+          url: "/api/{{ apiVersion }}/posts"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+          json:
+            title: "Load Test Post {{ $randomNumber() }}"
+            content: "This is a load test post content"
+            platforms: ["twitter", "facebook"]
+          expect:
+            - statusCode: 201
+          capture:
+            - json: "$.data.id"
+              as: "postId"
+      
+      - think: 2
+      
+      - get:
+          url: "/api/{{ apiVersion }}/posts"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+          expect:
+            - statusCode: 200
+      
+      - get:
+          url: "/api/{{ apiVersion }}/analytics/overview"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+          qs:
+            range: "week"
+          expect:
+            - statusCode: 200
+
+  - name: "Content Creation Flow"
+    weight: 25
+    flow:
+      - post:
+          url: "/api/{{ apiVersion }}/auth/login"
+          json:
+            email: "{{ email }}"
+            password: "{{ password }}"
+          capture:
+            - json: "$.data.token"
+              as: "authToken"
+      
+      - loop:
+          - post:
+              url: "/api/{{ apiVersion }}/posts"
+              headers:
+                Authorization: "Bearer {{ authToken }}"
+              json:
+                title: "Post {{ $loopCount }} - {{ $randomString() }}"
+                content: "Content for post number {{ $loopCount }}"
+                platforms: ["{{ $randomItem(['twitter', 'facebook', 'instagram', 'linkedin']) }}"]
+              expect:
+                - statusCode: 201
+          count: 5
+      
+      - think: 3
+      
+      - get:
+          url: "/api/{{ apiVersion }}/posts"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+          qs:
+            page: 1
+            limit: 10
+          expect:
+            - statusCode: 200
+
+  - name: "Analytics Heavy User"
+    weight: 15
+    flow:
+      - post:
+          url: "/api/{{ apiVersion }}/auth/login"
+          json:
+            email: "{{ email }}"
+            password: "{{ password }}"
+          capture:
+            - json: "$.data.token"
+              as: "authToken"
+      
+      - loop:
+          - get:
+              url: "/api/{{ apiVersion }}/analytics/overview"
+              headers:
+                Authorization: "Bearer {{ authToken }}"
+              qs:
+                range: "{{ $randomItem(['day', 'week', 'month']) }}"
+              expect:
+                - statusCode: 200
+          
+          - think: 1
+          
+          - get:
+              url: "/api/{{ apiVersion }}/analytics/platforms/{{ $randomItem(['twitter', 'facebook', 'instagram']) }}"
+              headers:
+                Authorization: "Bearer {{ authToken }}"
+              expect:
+                - statusCode: 200
+          
+          - think: 2
+          
+          count: 3
+
+reporting:
+  - module: artillery-plugin-statsd
+    enabled: true
+    host: localhost
+    port: 8125
+    prefix: "synthex.load_test"
+  
+  - module: artillery-plugin-cloudwatch
+    enabled: false
+    namespace: "SYNTHEX/LoadTest"
+    region: "us-east-1"
+  
+  - module: artillery-plugin-datadog
+    enabled: false
+    apiKey: "{{ $processEnvironment.DATADOG_API_KEY }}"
+    appKey: "{{ $processEnvironment.DATADOG_APP_KEY }}"
+    prefix: "synthex.load_test"
