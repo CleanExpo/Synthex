@@ -30,6 +30,6 @@
       "@/public/*": ["./public/*"]
     }
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
-  "exclude": ["node_modules"]
+  "include": ["next-env.d.ts", "app/**/*.ts", "app/**/*.tsx", "components/**/*.ts", "components/**/*.tsx", "lib/**/*.ts", "lib/**/*.tsx", "hooks/**/*.ts", "hooks/**/*.tsx", ".next/types/**/*.ts"],
+  "exclude": ["node_modules", "controlled-autonomous-build.ts", "start-autonomous-build.ts", "test*.ts", "*.py", "tests/**/*", "playwright.config.ts", "playwright.config.js", "prisma/seed.ts", "scripts/**/*", "src/agents/**/*", "agents/**/*"]
 }

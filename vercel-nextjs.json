@@ -1,0 +1,18 @@
+{
+  "framework": "nextjs",
+  "buildCommand": "npm run build",
+  "devCommand": "npm run dev",
+  "installCommand": "npm install",
+  "regions": ["iad1"],
+  "functions": {
+    "app/api/cron/analyze-patterns/route.ts": {
+      "maxDuration": 60
+    },
+    "app/api/content/generate/route.ts": {
+      "maxDuration": 30
+    },
+    "app/api/patterns/analyze/route.ts": {
+      "maxDuration": 30
+    }
+  }
+}

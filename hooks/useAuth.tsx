@@ -28,7 +28,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     checkUser();
 
     // Listen for auth changes
-    const { data: listener } = auth.onAuthStateChange(async (event, session) => {
+    const { data: listener } = auth.onAuthStateChange(async (event: any, session: any) => {
       if (event === 'SIGNED_IN') {
         setUser(session?.user ?? null);
         router.push('/dashboard');

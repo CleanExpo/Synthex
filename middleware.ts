@@ -3,16 +3,24 @@ import type { NextRequest } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
 // Create a Supabase client configured for server-side
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+const supabase = supabaseUrl && supabaseKey 
+  ? createClient(supabaseUrl, supabaseKey)
+  : null;
 
 export async function middleware(request: NextRequest) {
   const res = NextResponse.next();
   
   // Get the pathname of the request (e.g. /, /dashboard)
   const pathname = request.nextUrl.pathname;
+  
+  // If Supabase is not configured, allow all routes
+  if (!supabase) {
+    console.warn('Supabase not configured - allowing all routes');
+    return res;
+  }
   
   // Protected routes that require authentication
   const protectedRoutes = ['/dashboard'];

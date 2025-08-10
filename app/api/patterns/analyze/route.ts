@@ -162,7 +162,7 @@ export async function POST(request: Request) {
 
 // Analyze content characteristics
 function analyzeContent(content: string, platform: string, metrics: any) {
-  const analysis = {
+  const analysis: any = {
     length: content.length,
     wordCount: content.split(/\s+/).length,
     hasEmojis: /[\u{1F300}-\u{1F9FF}]/u.test(content),

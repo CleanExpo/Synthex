@@ -35,7 +35,7 @@ export async function GET(request: Request) {
       stats: {
         patternsAnalyzed: patterns.length,
         avgViralityScore: insights.avgViralityScore,
-        topPlatform: insights.platformPerformance?.[0]?.platform || 'N/A',
+        topPlatform: (insights as any).platformPerformance?.[0]?.platform || 'N/A',
       },
       timestamp: new Date().toISOString(),
     });
