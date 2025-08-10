@@ -115,15 +115,15 @@ export function monitorMemoryUsage() {
 }
 
 // Lazy loading helper
-export function lazyLoad(
-  componentPath: string,
-  chunkName?: string
+// Note: Dynamic imports with variable paths require specific handling
+// Use React.lazy() or next/dynamic for component lazy loading instead
+export async function lazyLoad(
+  componentPath: string
 ): Promise<any> {
-  return import(
-    /* webpackChunkName: "[request]" */
-    /* webpackPrefetch: true */
-    componentPath
-  );
+  // This is a placeholder - in practice, use next/dynamic or React.lazy
+  // Dynamic imports with variables are not supported in webpack
+  console.warn('Use next/dynamic or React.lazy for component lazy loading');
+  return Promise.resolve(null);
 }
 
 // Image optimization helper
@@ -161,7 +161,7 @@ export function throttle<T extends (...args: any[]) => any>(
   limit: number
 ): (...args: Parameters<T>) => void {
   let inThrottle: boolean;
-  return function executedFunction(...args: Parameters<T>) {
+  return function executedFunction(this: any, ...args: Parameters<T>) {
     if (!inThrottle) {
       func.apply(this, args);
       inThrottle = true;
