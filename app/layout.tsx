@@ -3,7 +3,7 @@ import { Inter } from 'next/font/google';
 import { Providers } from './providers';
 import { Toaster } from 'react-hot-toast';
 import { PerformanceMonitor } from '@/components/PerformanceMonitor';
-import { ErrorBoundary } from '@/lib/monitoring';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 import './globals.css';
 
 const inter = Inter({ 
