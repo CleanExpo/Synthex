@@ -54,18 +54,20 @@ export async function POST(request: Request) {
       targetLength,
     });
 
-    // Save to database
-    try {
-      await db.content.create({
-        platform,
-        content: result.primary,
-        persona_id: personaId || null,
-        metadata: result.metadata,
-        status: 'draft',
-      });
-    } catch (dbError) {
-      console.error('Failed to save content:', dbError);
-    }
+    // Save to database (commented out - requires authenticated user)
+    // In production, get userId from session
+    // try {
+    //   const userId = 'user-id-from-session';
+    //   await db.content.create(userId, {
+    //     platform,
+    //     content: result.primary,
+    //     persona_id: personaId || null,
+    //     metadata: result.metadata,
+    //     status: 'draft',
+    //   });
+    // } catch (dbError) {
+    //   console.error('Failed to save content:', dbError);
+    // }
 
     return NextResponse.json({
       success: true,
