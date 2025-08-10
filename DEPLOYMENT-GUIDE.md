@@ -1,211 +1,391 @@
-# Deployment Guide - Auto Marketing Platform
+# 🚀 Synthex Deployment Guide
 
-## 🚀 GitHub Push Instructions
-
-Since there's an authentication issue, you'll need to push manually:
-
-### Option 1: Using GitHub Desktop
-1. Open GitHub Desktop
-2. It should detect all the changes
-3. Review the changes
-4. Click "Push origin"
-
-### Option 2: Using Personal Access Token
-```bash
-# Set up authentication
-git remote set-url origin https://YOUR_GITHUB_TOKEN@github.com/PhillMcGurk/SYNTHEX.git
-
-# Push changes
-git push origin main
-```
-
-### Option 3: Using SSH
-```bash
-# Change remote to SSH
-git remote set-url origin git@github.com:PhillMcGurk/SYNTHEX.git
-
-# Push changes
-git push origin main
-```
-
-## 🔷 Vercel Deployment
+## Complete Deployment Instructions for Vercel
 
 ### Prerequisites
-1. Vercel account (free at vercel.com)
-2. Vercel CLI: `npm i -g vercel`
+- GitHub account with repository access
+- Vercel account (free tier works)
+- Supabase account with project created
+- (Optional) OpenAI/Anthropic API keys for AI features
 
-### Method 1: Vercel CLI Deployment
+---
 
+## 📋 Step 1: Prepare Your Environment Variables
+
+1. **Copy the example environment file:**
+   ```bash
+   cp .env.example .env.local
+   ```
+
+2. **Required Environment Variables:**
+   ```env
+   # Get from Supabase Dashboard > Settings > API
+   NEXT_PUBLIC_SUPABASE_URL=https://[YOUR-PROJECT-REF].supabase.co
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=[YOUR-ANON-KEY]
+   SUPABASE_SERVICE_ROLE_KEY=[YOUR-SERVICE-ROLE-KEY]
+
+   # Security (generate random strings)
+   CRON_SECRET=[RANDOM-STRING-32-CHARS]
+   ADMIN_API_KEY=[RANDOM-STRING-32-CHARS]
+
+   # AI (optional but recommended)
+   OPENAI_API_KEY=sk-proj-[YOUR-KEY]
+   # OR
+   ANTHROPIC_API_KEY=sk-ant-[YOUR-KEY]
+   ```
+
+---
+
+## 🔗 Step 2: Connect to Vercel
+
+### Method A: Using Vercel CLI (Recommended)
 ```bash
+# Install Vercel CLI
+npm i -g vercel
+
 # Login to Vercel
 vercel login
 
-# Deploy to production
-vercel --prod
+# Deploy
+vercel
 
-# Follow the prompts:
-# - Link to existing project or create new
-# - Select the directory (current)
-# - Override settings if needed
+# Follow prompts:
+# - Set up and deploy: Y
+# - Which scope: [Your Account]
+# - Link to existing project: N
+# - Project name: synthex (or your choice)
+# - Directory: ./
+# - Override settings: N
 ```
 
-### Method 2: GitHub Integration (Recommended)
+### Method B: Using Vercel Dashboard
 
-1. Go to [vercel.com](https://vercel.com)
-2. Click "Import Project"
-3. Select "Import Git Repository"
-4. Authorize GitHub and select `PhillMcGurk/SYNTHEX`
-5. Configure:
-   - Framework Preset: `Other`
-   - Build Command: `npm run build`
-   - Output Directory: `dist`
-   - Install Command: `npm install`
+1. **Go to [vercel.com/new](https://vercel.com/new)**
 
-### Method 3: Manual Deployment
+2. **Import Git Repository:**
+   - Click "Import" next to your GitHub repo
+   - Select "CleanExpo/Synthex"
 
-1. Build locally:
-```bash
-npm run build
+3. **Configure Project:**
+   - Framework Preset: `Next.js`
+   - Root Directory: `./`
+   - Build Command: `npm run build` (auto-detected)
+   - Output Directory: `.next` (auto-detected)
+
+---
+
+## 🔐 Step 3: Add Environment Variables in Vercel
+
+1. **Navigate to:** Project Settings > Environment Variables
+
+2. **Add each variable:**
+   ```
+   NEXT_PUBLIC_SUPABASE_URL         = [Your Supabase URL]
+   NEXT_PUBLIC_SUPABASE_ANON_KEY    = [Your Anon Key]
+   SUPABASE_SERVICE_ROLE_KEY        = [Your Service Role Key]
+   CRON_SECRET                       = [Generate random string]
+   ADMIN_API_KEY                     = [Generate random string]
+   OPENAI_API_KEY                    = [Your OpenAI Key]
+   ```
+
+3. **Environment Selection:**
+   - ✅ Production
+   - ✅ Preview
+   - ✅ Development
+
+4. **Click "Save"**
+
+---
+
+## 🗄️ Step 4: Set Up Supabase Database
+
+### Create Tables via Supabase Dashboard:
+
+1. **Go to:** Supabase Dashboard > SQL Editor
+
+2. **Run this SQL:**
+```sql
+-- Users table (extends auth.users)
+CREATE TABLE public.users (
+  id UUID REFERENCES auth.users(id) PRIMARY KEY,
+  email TEXT UNIQUE NOT NULL,
+  name TEXT,
+  avatar_url TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW())
+);
+
+-- Personas table
+CREATE TABLE public.personas (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID REFERENCES public.users(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  description TEXT,
+  attributes JSONB,
+  training_data JSONB,
+  accuracy FLOAT DEFAULT 0,
+  status TEXT DEFAULT 'draft',
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW())
+);
+
+-- Content table
+CREATE TABLE public.content (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID REFERENCES public.users(id) ON DELETE CASCADE,
+  persona_id UUID REFERENCES public.personas(id) ON DELETE SET NULL,
+  platform TEXT NOT NULL,
+  content TEXT NOT NULL,
+  metadata JSONB,
+  status TEXT DEFAULT 'draft',
+  scheduled_for TIMESTAMP WITH TIME ZONE,
+  published_at TIMESTAMP WITH TIME ZONE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW())
+);
+
+-- Patterns table
+CREATE TABLE public.patterns (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  platform TEXT NOT NULL,
+  pattern_type TEXT,
+  pattern_data JSONB,
+  engagement_score FLOAT DEFAULT 0,
+  discovered_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW())
+);
+
+-- Campaigns table
+CREATE TABLE public.campaigns (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID REFERENCES public.users(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  description TEXT,
+  goals JSONB,
+  status TEXT DEFAULT 'draft',
+  start_date TIMESTAMP WITH TIME ZONE,
+  end_date TIMESTAMP WITH TIME ZONE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW())
+);
+
+-- Enable RLS
+ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.personas ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.content ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.patterns ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.campaigns ENABLE ROW LEVEL SECURITY;
+
+-- RLS Policies
+CREATE POLICY "Users can view own profile" ON public.users
+  FOR SELECT USING (auth.uid() = id);
+
+CREATE POLICY "Users can update own profile" ON public.users
+  FOR UPDATE USING (auth.uid() = id);
+
+CREATE POLICY "Users can manage own personas" ON public.personas
+  FOR ALL USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can manage own content" ON public.content
+  FOR ALL USING (auth.uid() = user_id);
+
+CREATE POLICY "Patterns are viewable by all authenticated users" ON public.patterns
+  FOR SELECT USING (auth.uid() IS NOT NULL);
+
+CREATE POLICY "Users can manage own campaigns" ON public.campaigns
+  FOR ALL USING (auth.uid() = user_id);
 ```
 
-2. Deploy using Vercel CLI:
-```bash
-vercel deploy --prod
-```
+3. **Enable Authentication:**
+   - Go to Authentication > Providers
+   - Enable Email/Password
+   - (Optional) Enable Google OAuth
+   - (Optional) Enable GitHub OAuth
 
-## 🔐 Environment Variables
+---
 
-Add these in Vercel Dashboard > Settings > Environment Variables:
+## 🚀 Step 5: Deploy
 
-```env
-# Required
-NODE_ENV=production
-PORT=3000
-
-# API Keys (Add your actual keys)
-ANTHROPIC_API_KEY=your_anthropic_api_key
-OPENROUTER_API_KEY=your_openrouter_api_key
-
-# Optional
-RATE_LIMIT_WINDOW=15
-RATE_LIMIT_MAX=100
-```
-
-## 📦 Project Structure for Vercel
-
-```
-/
-├── dist/               # Built TypeScript files
-├── public/             # Static files (HTML, CSS, JS)
-├── src/                # Source TypeScript files
-├── package.json        # Dependencies and scripts
-├── vercel.json         # Vercel configuration
-├── tsconfig.json       # TypeScript configuration
-└── .env.example        # Environment variables template
-```
-
-## 🎯 Quick Deploy Steps
+### Initial Deployment:
 
 1. **Push to GitHub:**
-```bash
-# If you have authentication set up:
-git push origin main
-```
+   ```bash
+   git add .
+   git commit -m "Ready for deployment"
+   git push origin main
+   ```
 
-2. **Deploy to Vercel:**
-```bash
-# Install Vercel CLI if not installed
-npm i -g vercel
+2. **Vercel Auto-Deploy:**
+   - Vercel automatically builds and deploys
+   - Watch progress in Vercel Dashboard
+   - Takes ~2-3 minutes
 
-# Deploy
-vercel --prod
-```
+3. **Check Deployment:**
+   - Visit: `https://[your-project].vercel.app`
+   - Test login/signup functionality
+   - Verify all pages load correctly
 
-3. **Configure Environment:**
-- Go to your Vercel dashboard
-- Add environment variables
-- Redeploy if needed
+---
 
-## 🔍 Verifying Deployment
+## ⚙️ Step 6: Configure Custom Domain (Optional)
 
-After deployment, test these endpoints:
+1. **In Vercel Dashboard:**
+   - Go to Settings > Domains
+   - Add your domain: `synthex.ai`
+   - Follow DNS configuration instructions
 
-```bash
-# Health check
-curl https://your-app.vercel.app/health
+2. **DNS Settings:**
+   ```
+   Type: CNAME
+   Name: www
+   Value: cname.vercel-dns.com
 
-# API info
-curl https://your-app.vercel.app/api
+   Type: A
+   Name: @
+   Value: 76.76.21.21
+   ```
 
-# OpenRouter status
-curl https://your-app.vercel.app/api/openrouter/status
+---
 
-# MCP status
-curl https://your-app.vercel.app/api/mcp-ttd/mcp/status
+## 🔄 Step 7: Set Up Cron Jobs
 
-# MLE Star score
-curl https://your-app.vercel.app/api/mle-star/score
-```
+The platform includes automatic pattern analysis every 6 hours.
 
-## 🚨 Troubleshooting
+1. **Vercel automatically detects** cron configuration from `vercel.json`
 
-### Build Fails
-- Check TypeScript errors: `npm run build`
-- Verify all dependencies: `npm install`
-- Check Node version: Should be >=16.0.0
+2. **To test manually:**
+   ```bash
+   curl -X POST https://[your-domain]/api/cron/analyze-patterns \
+     -H "Authorization: Bearer [YOUR-CRON-SECRET]"
+   ```
 
-### API Routes Not Working
-- Verify environment variables are set
-- Check Vercel function logs
-- Ensure proper CORS configuration
+---
 
-### Rate Limiting Issues
-- Adjust rate limit settings in environment variables
-- Check Vercel function execution limits
+## 📊 Step 8: Monitor Your Deployment
 
-## 📊 Monitoring
+### Vercel Dashboard Features:
+- **Analytics:** View real-time traffic
+- **Functions:** Monitor API performance
+- **Logs:** Check error logs
+- **Deployments:** View deployment history
 
-1. **Vercel Dashboard:**
-   - Real-time logs
-   - Function metrics
-   - Error tracking
+### Recommended Monitoring:
+1. Set up Vercel Analytics (free tier available)
+2. Enable Vercel Speed Insights
+3. Configure error notifications
 
-2. **Application Metrics:**
-   - `/health` - System health
-   - `/api/mle-star/report` - ML metrics
-   - `/api/enhancement/analytics/insights` - Analytics
+---
 
-## 🔄 Continuous Deployment
+## 🐛 Troubleshooting
 
-Once GitHub integration is set up:
-1. Every push to `main` triggers deployment
-2. Preview deployments for pull requests
-3. Automatic rollback on failures
+### Common Issues:
+
+1. **Build Fails:**
+   ```bash
+   # Check locally first
+   npm run build
+   
+   # Fix any TypeScript errors
+   npm run type-check
+   ```
+
+2. **Database Connection Issues:**
+   - Verify Supabase URL and keys
+   - Check RLS policies
+   - Ensure tables are created
+
+3. **Authentication Not Working:**
+   - Verify environment variables
+   - Check Supabase Auth settings
+   - Ensure redirect URLs are configured
+
+4. **API Routes Timeout:**
+   - Check function duration in vercel.json
+   - Optimize long-running operations
+   - Consider using background jobs
+
+---
 
 ## 📝 Post-Deployment Checklist
 
-- [ ] All API endpoints responding
-- [ ] Environment variables configured
-- [ ] Rate limiting active
-- [ ] Analytics dashboard accessible
-- [ ] MCP providers initialized
-- [ ] OpenRouter connection verified
-- [ ] UI accessible (both Modern and Classic)
-- [ ] Test scripts passing
+- [ ] All pages load without errors
+- [ ] Authentication works (signup/login)
+- [ ] Database operations work
+- [ ] Content generation works (if AI keys added)
+- [ ] Scheduling system displays correctly
+- [ ] Pattern analyzer shows mock data
+- [ ] Personas can be created
+- [ ] Sandbox editor functions properly
 
-## 🎉 Success Indicators
+---
 
-Your deployment is successful when:
-- Health endpoint returns `{"status": "healthy"}`
-- API endpoints are accessible
-- UI loads at root URL
-- No errors in Vercel function logs
-- MLE Star score can be calculated
+## 🔧 Maintenance
 
-## 📚 Additional Resources
+### Regular Updates:
+```bash
+# Update dependencies
+npm update
 
+# Check for vulnerabilities
+npm audit
+
+# Fix vulnerabilities
+npm audit fix
+
+# Deploy updates
+git push origin main
+```
+
+### Database Backups:
+- Supabase automatically backs up daily
+- Download backups from Dashboard > Settings > Backups
+
+---
+
+## 🆘 Support
+
+### Resources:
 - [Vercel Documentation](https://vercel.com/docs)
-- [Project Documentation](./docs/)
-- [API Documentation](./README.md)
-- [MLE Star Guide](./docs/MLE-STAR-INTEGRATION.md)
-- [MCP TTD RD Guide](./docs/MCP-TTD-RD-INTEGRATION.md)
+- [Next.js Documentation](https://nextjs.org/docs)
+- [Supabase Documentation](https://supabase.com/docs)
+- [GitHub Issues](https://github.com/CleanExpo/Synthex/issues)
+
+### Environment Variables Reference:
+```env
+# Required
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+SUPABASE_SERVICE_ROLE_KEY=
+
+# Security
+CRON_SECRET=
+ADMIN_API_KEY=
+
+# AI (Choose one)
+OPENAI_API_KEY=
+ANTHROPIC_API_KEY=
+
+# Optional Social Media APIs
+TWITTER_API_KEY=
+LINKEDIN_CLIENT_ID=
+INSTAGRAM_ACCESS_TOKEN=
+FACEBOOK_APP_ID=
+TIKTOK_CLIENT_KEY=
+```
+
+---
+
+## ✅ Success!
+
+Your Synthex platform should now be live at:
+- **Production:** `https://[your-project].vercel.app`
+- **Custom Domain:** `https://yourdomain.com` (if configured)
+
+**Next Steps:**
+1. Create your first persona
+2. Analyze viral patterns
+3. Generate AI content
+4. Schedule posts
+5. Monitor engagement
+
+🎉 **Congratulations on deploying Synthex!**
