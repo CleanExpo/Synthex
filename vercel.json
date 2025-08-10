@@ -1,16 +1,6 @@
 {
-  "framework": "nextjs",
   "buildCommand": "npm run build",
   "outputDirectory": ".next",
-  "devCommand": "npm run dev",
-  "installCommand": "npm install",
-  "regions": ["iad1"],
-  "functions": {
-    "app/**/*.ts": {
-      "runtime": "nodejs18.x"
-    },
-    "pages/api/**/*.ts": {
-      "runtime": "nodejs18.x"
-    }
-  }
+  "framework": "nextjs",
+  "regions": ["iad1"]
 }
