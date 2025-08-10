@@ -1,20 +1,19 @@
-# SYNTHEX - AI-Powered Marketing Automation Platform
+# SYNTHEX - AI-Powered Social Media Automation Platform
 
 <div align="center">
 
-![SYNTHEX Banner](https://img.shields.io/badge/SYNTHEX-Marketing_Automation-blue?style=for-the-badge&logo=robot&logoColor=white)
+![SYNTHEX Banner](https://img.shields.io/badge/SYNTHEX-Social_Media_Automation-blue?style=for-the-badge&logo=robot&logoColor=white)
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/CleanExpo/Synthex)
-[![Deploy Status](https://github.com/CleanExpo/Synthex/actions/workflows/deploy.yml/badge.svg)](https://github.com/CleanExpo/Synthex/actions/workflows/deploy.yml)
-[![CI/CD](https://github.com/CleanExpo/Synthex/actions/workflows/ci.yml/badge.svg)](https://github.com/CleanExpo/Synthex/actions/workflows/ci.yml)
-[![GitHub Stars](https://img.shields.io/github/stars/CleanExpo/Synthex?style=social)](https://github.com/CleanExpo/Synthex)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/unite-group/synthex)
+[![Version](https://img.shields.io/badge/version-2.0.1-blue)](https://github.com/unite-group/synthex)
+[![Next.js](https://img.shields.io/badge/Next.js-14.0.4-black)](https://nextjs.org)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.3-blue)](https://www.typescriptlang.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Node Version](https://img.shields.io/badge/node-%3E%3D16.0.0-green)](https://nodejs.org)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue)](https://www.typescriptlang.org/)
+[![Node Version](https://img.shields.io/badge/node-%3E%3D18.17.0-green)](https://nodejs.org)
 
-**Transform Your Marketing with AI-Driven Automation**
+**Transform Your Social Media Presence with AI-Driven Automation**
 
-[Live Demo](https://synthex-h4j7.vercel.app) | [Documentation](./docs) | [API Reference](#-api-reference) | [Quick Start](#-quick-start)
+[Live Demo](https://synthex-l8vugw0we-unite-group.vercel.app) | [Documentation](./docs) | [API Reference](#-api-documentation) | [Quick Start](#-quick-start)
 
 </div>
 
