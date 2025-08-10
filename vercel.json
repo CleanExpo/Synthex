@@ -1,73 +1,24 @@
 {
-  "version": 2,
-  "buildCommand": "npm run vercel-build",
-  "outputDirectory": "public",
-  "framework": null,
+  "buildCommand": "npm run build",
+  "devCommand": "npm run dev",
+  "installCommand": "npm install",
+  "framework": "nextjs",
+  "regions": ["iad1"],
   "functions": {
-    "api/main.js": {
-      "maxDuration": 10
+    "app/api/cron/analyze-patterns/route.ts": {
+      "maxDuration": 60
+    },
+    "app/api/content/generate/route.ts": {
+      "maxDuration": 30
+    },
+    "app/api/patterns/analyze/route.ts": {
+      "maxDuration": 30
     }
   },
-  "rewrites": [
+  "crons": [
     {
-      "source": "/api/:path*",
-      "destination": "/api/main.js"
-    },
-    {
-      "source": "/app",
-      "destination": "/app.html"
-    },
-    {
-      "source": "/dashboard",
-      "destination": "/dashboard.html"
-    },
-    {
-      "source": "/login",
-      "destination": "/login.html"
-    },
-    {
-      "source": "/signup",
-      "destination": "/signup.html"
-    },
-    {
-      "source": "/forgot-password",
-      "destination": "/forgot-password.html"
-    },
-    {
-      "source": "/pricing",
-      "destination": "/pricing.html"
-    },
-    {
-      "source": "/analytics",
-      "destination": "/analytics.html"
-    },
-    {
-      "source": "/",
-      "destination": "/index.html"
-    },
-    {
-      "source": "/(.*)",
-      "destination": "/index.html"
-    }
-  ],
-  "headers": [
-    {
-      "source": "/css/(.*)",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "public, max-age=31536000, immutable"
-        }
-      ]
-    },
-    {
-      "source": "/js/(.*)",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "public, max-age=31536000, immutable"
-        }
-      ]
+      "path": "/api/cron/analyze-patterns",
+      "schedule": "0 */6 * * *"
     }
   ]
 }
