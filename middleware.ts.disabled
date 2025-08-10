@@ -1,3 +1,4 @@
+// Temporarily disabled middleware - rename back to middleware.ts to enable
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
