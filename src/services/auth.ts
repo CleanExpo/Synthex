@@ -6,16 +6,14 @@ import crypto from 'crypto';
 import { prisma } from '../lib/prisma';
 import { appConfig } from '../config/app-config';
 
-let useMockAuth = false;
-
-// Connect to database
+// Connect to database (required - no fallback)
 prisma.$connect()
   .then(() => {
     console.log('✅ Connected to database with Prisma Accelerate');
   })
   .catch((error) => {
-    console.log('⚠️ Database connection failed, using in-memory mock:', error.message);
-    useMockAuth = true;
+    console.error('❌ Database connection failed:', error.message);
+    throw new Error('Database connection required for authentication');
   });
 
 export interface User {

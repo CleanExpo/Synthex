@@ -40,6 +40,17 @@ export default function LoginPage() {
         throw new Error(data.error || 'Invalid credentials');
       }
       
+      // Store user data in localStorage for the sidebar and other components
+      if (data.user) {
+        localStorage.setItem('authToken', data.session?.access_token || 'authenticated');
+        localStorage.setItem('user', JSON.stringify({
+          id: data.user.id,
+          email: data.user.email,
+          name: data.user.user_metadata?.name || data.user.email.split('@')[0],
+          avatar: data.user.user_metadata?.avatar_url
+        }));
+      }
+      
       toast.success('Welcome back!');
       router.push('/dashboard');
     } catch (error: any) {
