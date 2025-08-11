@@ -1,9 +1,9 @@
+/* Import enhanced design system */
+@import './design-system.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-/* Import enhanced design system */
-@import './design-system.css';
 
 @layer base {
   :root {
