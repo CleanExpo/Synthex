@@ -48,6 +48,7 @@ model User {
   apiUsage         ApiUsage[]
   notifications    Notification[]
   auditLogs        AuditLog[]
+  platformConnections PlatformConnection[]
   organizationId   String?
   organization     Organization? @relation(fields: [organizationId], references: [id])
   
@@ -201,4 +202,74 @@ model Organization {
   users       User[]
   
   @@map("organizations")
+}
+
+// Platform Integration Models
+model PlatformConnection {
+  id           String   @id @default(cuid())
+  userId       String
+  platform     String   // 'facebook', 'instagram', 'twitter', 'linkedin', 'tiktok', 'youtube', 'pinterest', 'reddit'
+  accessToken  String
+  refreshToken String?
+  expiresAt    DateTime?
+  scope        String?  // Platform-specific permissions
+  profileId    String?  // Platform user/page ID
+  profileName  String?  // Platform username/page name
+  isActive     Boolean  @default(true)
+  lastSync     DateTime?
+  metadata     Json?    // Platform-specific data
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  
+  // Relations
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  platformPosts PlatformPost[]
+  
+  @@unique([userId, platform, profileId])
+  @@map("platform_connections")
+}
+
+model PlatformPost {
+  id           String   @id @default(cuid())
+  connectionId String
+  platformId   String   // ID on the platform
+  content      String   @db.Text
+  mediaUrls    String[]
+  hashtags     String[]
+  mentions     String[]
+  status       String   // 'draft', 'scheduled', 'published', 'failed'
+  scheduledAt  DateTime?
+  publishedAt  DateTime?
+  errorMessage String?
+  metadata     Json?    // Platform-specific post data
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  
+  // Relations
+  connection   PlatformConnection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+  metrics      PlatformMetrics[]
+  
+  @@unique([connectionId, platformId])
+  @@map("platform_posts")
+}
+
+model PlatformMetrics {
+  id          String   @id @default(cuid())
+  postId      String
+  likes       Int      @default(0)
+  shares      Int      @default(0)
+  comments    Int      @default(0)
+  views       Int      @default(0)
+  reach       Int      @default(0)
+  impressions Int      @default(0)
+  clicks      Int      @default(0)
+  saves       Int      @default(0)
+  engagementRate Float?
+  metadata    Json?    // Platform-specific metrics
+  recordedAt  DateTime @default(now())
+  
+  // Relations
+  post        PlatformPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  
+  @@map("platform_metrics")
 }
