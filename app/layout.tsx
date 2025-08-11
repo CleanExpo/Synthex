@@ -4,6 +4,10 @@ import { Providers } from './providers';
 import { Toaster } from 'react-hot-toast';
 import { PerformanceMonitor } from '@/components/PerformanceMonitor';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
+import { CommandPalette } from '@/components/CommandPalette';
+import { ProductTour } from '@/components/ProductTour';
+import { FloatingActionButton } from '@/components/FloatingActionButton';
+import { FloatingStreak } from '@/components/StreakCounter';
 import './globals.css';
 
 const inter = Inter({ 
@@ -61,6 +65,10 @@ export default function RootLayout({
         <ErrorBoundary>
           <Providers>
             <PerformanceMonitor />
+            <CommandPalette />
+            <ProductTour />
+            <FloatingActionButton />
+            <FloatingStreak />
             {children}
             <Toaster
               position="bottom-right"

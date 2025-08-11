@@ -1,9 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import toast from 'react-hot-toast';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -24,17 +25,75 @@ export default function OnboardingPage() {
     contentTypes: []
   });
 
+  // Restore progress on mount
+  useEffect(() => {
+    const savedProgress = localStorage.getItem('onboardingProgress');
+    if (savedProgress) {
+      try {
+        const { step: savedStep, userData: savedData } = JSON.parse(savedProgress);
+        setStep(savedStep);
+        setUserData(savedData);
+        toast.success('Welcome back! We restored your progress.');
+      } catch (error) {
+        console.error('Failed to restore progress:', error);
+      }
+    }
+  }, []);
+
   const totalSteps = 4;
   const progress = (step / totalSteps) * 100;
 
+  const validateStep = () => {
+    switch(step) {
+      case 1:
+        if (!userData.userType) {
+          toast.error('Please select your account type');
+          return false;
+        }
+        break;
+      case 2:
+        if (!userData.companyName || userData.companyName.trim().length < 2) {
+          toast.error('Please enter your name or company name');
+          return false;
+        }
+        break;
+      case 3:
+        if (userData.goals.length === 0) {
+          toast.error('Please select at least one goal');
+          return false;
+        }
+        break;
+      case 4:
+        if (userData.platforms.length === 0) {
+          toast.error('Please select at least one platform');
+          return false;
+        }
+        break;
+    }
+    return true;
+  };
+
   const handleNext = () => {
+    if (!validateStep()) return;
+    
     if (step < totalSteps) {
       setStep(step + 1);
+      // Save progress to localStorage
+      localStorage.setItem('onboardingProgress', JSON.stringify({ step: step + 1, userData }));
     } else {
       // Save onboarding data and redirect to dashboard
       localStorage.setItem('onboardingComplete', 'true');
       localStorage.setItem('userData', JSON.stringify(userData));
+      localStorage.removeItem('onboardingProgress');
+      toast.success('Welcome to SYNTHEX! Let\'s create amazing content together! 🚀');
       router.push('/dashboard');
+    }
+  };
+
+  const handleBack = () => {
+    if (step > 1) {
+      setStep(step - 1);
+      localStorage.setItem('onboardingProgress', JSON.stringify({ step: step - 1, userData }));
     }
   };
 

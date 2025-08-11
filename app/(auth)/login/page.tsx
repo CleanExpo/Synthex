@@ -114,6 +114,9 @@ export default function LoginPage() {
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   className="pl-10 bg-white/5 border-white/10 text-white placeholder:text-gray-500"
+                  aria-label="Email address"
+                  aria-required="true"
+                  aria-describedby="email-error"
                   required
                   disabled={isLoading}
                 />
