@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { SkeletonCard, SkeletonChart } from '@/components/ui/skeleton';
+import { EmptyState } from '@/components/EmptyState';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { 
@@ -18,6 +20,11 @@ import {
   BarChart3,
   Activity
 } from 'lucide-react';
+import { QuickStats } from '@/components/QuickStats';
+import { StreakCounter } from '@/components/StreakCounter';
+import { SmartSuggestions } from '@/components/SmartSuggestions';
+import { TemplateSelector } from '@/components/TemplateSelector';
+import { useMultiSelect, BulkActionsMenu } from '@/hooks/useMultiSelect';
 import {
   LineChart,
   Line,
@@ -32,24 +39,7 @@ import {
   ResponsiveContainer,
 } from 'recharts';
 
-// Mock data for charts
-const engagementData = [
-  { name: 'Mon', value: 2400 },
-  { name: 'Tue', value: 3600 },
-  { name: 'Wed', value: 3200 },
-  { name: 'Thu', value: 4100 },
-  { name: 'Fri', value: 4900 },
-  { name: 'Sat', value: 5200 },
-  { name: 'Sun', value: 4800 },
-];
-
-const platformData = [
-  { platform: 'Twitter', posts: 45, engagement: 12000 },
-  { platform: 'LinkedIn', posts: 32, engagement: 8500 },
-  { platform: 'Instagram', posts: 58, engagement: 15000 },
-  { platform: 'TikTok', posts: 28, engagement: 22000 },
-  { platform: 'Facebook', posts: 35, engagement: 6000 },
-];
+// Data will be fetched from API
 
 const StatCard = ({ 
   title, 
@@ -96,18 +86,38 @@ const StatCard = ({
 
 export default function DashboardPage() {
   const [aiProgress, setAiProgress] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
+  const [dashboardData, setDashboardData] = useState<any>({
+    stats: {},
+    engagementData: [],
+    platformData: [],
+    recentActivity: []
+  });
 
   useEffect(() => {
+    fetchDashboardData();
     const timer = setTimeout(() => setAiProgress(75), 500);
     return () => clearTimeout(timer);
   }, []);
+
+  const fetchDashboardData = async () => {
+    try {
+      const response = await fetch('/api/dashboard/stats');
+      const data = await response.json();
+      setDashboardData(data);
+    } catch (error) {
+      console.error('Failed to fetch dashboard data:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold gradient-text">Welcome back, John!</h1>
+          <h1 className="text-3xl font-bold gradient-text">Welcome back!</h1>
           <p className="text-gray-400 mt-1">Here's what's happening with your social media today</p>
         </div>
         <div className="flex space-x-3 mt-4 sm:mt-0">
@@ -122,35 +132,29 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <StatCard
-          title="Total Engagement"
-          value="128.5K"
-          change="+12.5% from last week"
-          changeType="positive"
-          icon={TrendingUp}
-        />
-        <StatCard
-          title="Active Campaigns"
-          value="12"
-          description="3 launching this week"
-          icon={Target}
-        />
-        <StatCard
-          title="Content Generated"
-          value="847"
-          change="+23% from last month"
-          changeType="positive"
-          icon={FileText}
-        />
-        <StatCard
-          title="Audience Growth"
-          value="+4,235"
-          change="+8.2% growth rate"
-          changeType="positive"
-          icon={Users}
-        />
+      {/* Quick Stats Widget */}
+      <QuickStats />
+      
+      {/* Streak & Gamification */}
+      <div className="grid gap-4 md:grid-cols-3">
+        <div className="md:col-span-2">
+          <StreakCounter />
+        </div>
+        <Card className="glass-card">
+          <CardHeader>
+            <CardTitle>Today's Goal</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-400">Posts Created</span>
+                <span className="text-white">3/5</span>
+              </div>
+              <Progress value={60} className="h-2" />
+              <p className="text-xs text-gray-400">2 more posts to complete your daily goal!</p>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Main Content Grid */}
@@ -341,6 +345,11 @@ export default function DashboardPage() {
             </div>
           </CardContent>
         </Card>
+      </div>
+      
+      {/* Smart Suggestions Section */}
+      <div className="mt-6">
+        <SmartSuggestions context={{ dashboard: true }} compact={false} />
       </div>
     </div>
   );

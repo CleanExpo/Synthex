@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import MobileMenu from '@/components/MobileMenu';
 import { 
   Sparkles, 
   Home, 
@@ -61,12 +62,14 @@ export default function DashboardLayout({
 
   return (
     <div className="min-h-screen bg-gray-950">
-      {/* Sidebar */}
+      {/* Mobile Menu Component */}
+      <MobileMenu />
+      
+      {/* Desktop Sidebar - Hidden on mobile */}
       <aside
         className={cn(
-          'fixed left-0 top-0 z-40 h-screen transition-all duration-300 glass-card border-r',
-          sidebarCollapsed ? 'w-16' : 'w-64',
-          mobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+          'hidden md:block fixed left-0 top-0 z-40 h-screen transition-all duration-300 glass-card border-r',
+          sidebarCollapsed ? 'w-16' : 'w-64'
         )}
       >
         <div className="flex h-full flex-col">
