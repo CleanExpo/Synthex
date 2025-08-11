@@ -28,7 +28,6 @@
     "deploy:prod": "vercel --prod --yes"
   },
   "dependencies": {
-    "2": "^3.0.0",
     "@anthropic-ai/sdk": "^0.20.0",
     "@prisma/client": "^5.8.0",
     "@radix-ui/react-avatar": "^1.0.4",
