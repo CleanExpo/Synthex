@@ -407,7 +407,7 @@ export default function AnalyticsPage() {
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={250}>
-              <LineChart data={growthData}>
+              <RechartsLineChart data={growthData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#333" />
                 <XAxis dataKey="month" stroke="#666" />
                 <YAxis yAxisId="left" stroke="#666" />
@@ -436,7 +436,7 @@ export default function AnalyticsPage() {
                   strokeWidth={2}
                   name="Engagement %"
                 />
-              </LineChart>
+              </RechartsLineChart>
             </ResponsiveContainer>
           </CardContent>
         </Card>

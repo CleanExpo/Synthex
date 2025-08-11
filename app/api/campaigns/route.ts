@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
 import prisma from '@/lib/prisma';
 import jwt from 'jsonwebtoken';
 
@@ -6,8 +7,9 @@ const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 
 // Helper to get user from token
 async function getUserFromRequest(request: Request) {
+  const cookieStore = cookies();
   const token = request.headers.get('authorization')?.replace('Bearer ', '') ||
-                request.cookies.get('session')?.value;
+                cookieStore.get('session')?.value;
 
   if (!token) return null;
 

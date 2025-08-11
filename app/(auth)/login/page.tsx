@@ -23,7 +23,12 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      const response = await fetch('/api/auth/login', {
+      // Use dev login endpoint in development
+      const endpoint = process.env.NODE_ENV === 'development' 
+        ? '/api/auth/dev-login' 
+        : '/api/auth/login';
+      
+      const response = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
