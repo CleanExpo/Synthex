@@ -1,0 +1,356 @@
+/**
+ * Print-friendly styles for SYNTHEX
+ * Optimizes layout and appearance for printing
+ */
+
+@media print {
+  /* Reset and base styles */
+  * {
+    background: transparent !important;
+    color: #000 !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+  
+  /* Page setup */
+  @page {
+    margin: 1.5cm;
+    size: A4;
+  }
+  
+  @page :first {
+    margin-top: 2cm;
+  }
+  
+  /* Body styles */
+  body {
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: 12pt;
+    line-height: 1.5;
+    color: #000;
+    background: white;
+  }
+  
+  /* Typography */
+  h1, h2, h3, h4, h5, h6 {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    page-break-after: avoid;
+    page-break-inside: avoid;
+    margin-top: 1em;
+    margin-bottom: 0.5em;
+  }
+  
+  h1 { font-size: 24pt; }
+  h2 { font-size: 20pt; }
+  h3 { font-size: 16pt; }
+  h4 { font-size: 14pt; }
+  h5, h6 { font-size: 12pt; }
+  
+  p, li, td {
+    font-size: 12pt;
+    line-height: 1.5;
+    orphans: 3;
+    widows: 3;
+  }
+  
+  /* Links */
+  a {
+    color: #000;
+    text-decoration: underline;
+  }
+  
+  a[href^="http"]:after {
+    content: " (" attr(href) ")";
+    font-size: 0.8em;
+    color: #666;
+  }
+  
+  a[href^="javascript:"]:after,
+  a[href^="#"]:after {
+    content: "";
+  }
+  
+  /* Images */
+  img {
+    max-width: 100% !important;
+    page-break-inside: avoid;
+  }
+  
+  /* Tables */
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    page-break-inside: auto;
+  }
+  
+  thead {
+    display: table-header-group;
+  }
+  
+  tr {
+    page-break-inside: avoid;
+  }
+  
+  th, td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+  }
+  
+  th {
+    background-color: #f5f5f5 !important;
+    font-weight: bold;
+  }
+  
+  /* Hide non-printable elements */
+  .no-print,
+  .print\\:hidden,
+  nav,
+  header nav,
+  footer,
+  .sidebar,
+  .floating-action-button,
+  .toast,
+  .modal,
+  .dropdown,
+  .tooltip,
+  button:not(.print-button),
+  .breadcrumb,
+  .pagination,
+  .tabs,
+  .command-palette,
+  .notification,
+  .banner,
+  .cookie-consent,
+  video,
+  audio,
+  iframe,
+  .advertisement,
+  .social-share,
+  .comments-section {
+    display: none !important;
+  }
+  
+  /* Show print-only elements */
+  .print\\:block {
+    display: block !important;
+  }
+  
+  .print\\:inline {
+    display: inline !important;
+  }
+  
+  .print\\:inline-block {
+    display: inline-block !important;
+  }
+  
+  /* Layout adjustments */
+  .container,
+  .content-wrapper,
+  main {
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  
+  /* Cards and boxes */
+  .card,
+  .glass-card,
+  .box {
+    border: 1px solid #ddd !important;
+    padding: 10px !important;
+    margin-bottom: 15px !important;
+    page-break-inside: avoid;
+  }
+  
+  /* Code blocks */
+  pre, code {
+    font-family: 'Courier New', monospace;
+    font-size: 10pt;
+    border: 1px solid #ddd;
+    padding: 5px;
+    background-color: #f9f9f9 !important;
+    page-break-inside: avoid;
+  }
+  
+  /* Blockquotes */
+  blockquote {
+    border-left: 3px solid #ddd;
+    margin-left: 0;
+    padding-left: 15px;
+    font-style: italic;
+  }
+  
+  /* Lists */
+  ul, ol {
+    margin-left: 20px;
+  }
+  
+  /* Page breaks */
+  .page-break {
+    page-break-after: always;
+  }
+  
+  .avoid-break {
+    page-break-inside: avoid;
+  }
+  
+  /* Header for printed pages */
+  .print-header {
+    display: block !important;
+    text-align: center;
+    margin-bottom: 20px;
+    border-bottom: 2px solid #000;
+    padding-bottom: 10px;
+  }
+  
+  .print-header h1 {
+    margin: 0;
+    font-size: 20pt;
+  }
+  
+  .print-header .date {
+    font-size: 10pt;
+    color: #666;
+    margin-top: 5px;
+  }
+  
+  /* Footer for printed pages */
+  .print-footer {
+    display: block !important;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    text-align: center;
+    font-size: 10pt;
+    color: #666;
+    border-top: 1px solid #ddd;
+    padding-top: 10px;
+  }
+  
+  /* Analytics and charts */
+  .chart-container {
+    page-break-inside: avoid;
+    max-height: 400px;
+  }
+  
+  canvas {
+    max-width: 100% !important;
+    height: auto !important;
+  }
+  
+  /* Form elements (show as text) */
+  input[type="text"],
+  input[type="email"],
+  input[type="number"],
+  textarea,
+  select {
+    border: none !important;
+    background: none !important;
+    padding: 0 !important;
+    display: inline !important;
+  }
+  
+  input[type="checkbox"],
+  input[type="radio"] {
+    display: inline-block !important;
+    margin-right: 5px;
+  }
+  
+  /* Dashboard specific */
+  .dashboard-grid {
+    display: block !important;
+  }
+  
+  .dashboard-widget {
+    page-break-inside: avoid;
+    margin-bottom: 20px !important;
+    border: 1px solid #ddd !important;
+    padding: 15px !important;
+  }
+  
+  /* Badges and tags */
+  .badge,
+  .tag {
+    display: inline-block;
+    padding: 2px 6px;
+    border: 1px solid #666;
+    border-radius: 3px;
+    font-size: 10pt;
+    margin-right: 5px;
+  }
+  
+  /* Progress bars */
+  .progress-bar {
+    border: 1px solid #000;
+    height: 20px;
+    position: relative;
+    background: white !important;
+  }
+  
+  .progress-bar-fill {
+    background: #666 !important;
+    height: 100%;
+  }
+  
+  /* Icons - replace with text */
+  .icon-print-text:before {
+    content: "[" attr(data-icon) "] ";
+    font-weight: bold;
+  }
+  
+  /* QR codes for URLs */
+  .print-qr-code {
+    display: block !important;
+    margin: 10px 0;
+  }
+  
+  /* Watermark */
+  .print-watermark {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(-45deg);
+    font-size: 72pt;
+    color: rgba(0, 0, 0, 0.05) !important;
+    z-index: -1;
+    font-weight: bold;
+  }
+}
+
+/* Utility classes for print control */
+@media screen {
+  .print\\:only {
+    display: none !important;
+  }
+}
+
+/* Add print button styles */
+.print-button {
+  @media print {
+    display: none !important;
+  }
+  
+  @media screen {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 1000;
+    background: #8b5cf6;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 500;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transition: all 0.2s;
+  }
+  
+  .print-button:hover {
+    background: #7c3aed;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+  }
+}

@@ -1,5 +1,7 @@
 /* Import enhanced design system */
 @import './design-system.css';
+/* Import print styles */
+@import './print.css';
 
 @tailwind base;
 @tailwind components;
