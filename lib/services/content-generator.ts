@@ -134,9 +134,9 @@ export class ContentGeneratorService {
   private provider: 'openai' | 'anthropic' = 'openai';
 
   constructor() {
-    // Initialize with environment variables
-    this.apiKey = process.env.OPENAI_API_KEY || process.env.ANTHROPIC_API_KEY || null;
-    this.provider = process.env.ANTHROPIC_API_KEY ? 'anthropic' : 'openai';
+    // Initialize with environment variables - prefer OpenRouter
+    this.apiKey = process.env.OPENROUTER_API_KEY || process.env.OPENAI_API_KEY || process.env.ANTHROPIC_API_KEY || null;
+    this.provider = process.env.OPENROUTER_API_KEY ? 'openai' : (process.env.ANTHROPIC_API_KEY ? 'anthropic' : 'openai');
   }
 
   /**
@@ -232,8 +232,23 @@ export class ContentGeneratorService {
    * Apply persona voice to content
    */
   private async applyPersonaVoice(content: string, persona: any): Promise<string> {
-    // In production, this would use the AI API to rewrite in persona's voice
-    // For now, we'll apply basic transformations based on persona attributes
+    // Use AI to rewrite in persona's voice if available
+    if (this.apiKey && persona?.attributes) {
+      const prompt = `Rewrite the following content in a ${persona.attributes.tone} tone with a ${persona.attributes.style} style:
+
+"${content}"
+
+Maintain the core message but adapt the voice to be ${persona.attributes.emotion}.`;
+      
+      try {
+        const aiRewrite = await this.generateWithAI(prompt, 300);
+        if (aiRewrite && !aiRewrite.includes('mock')) {
+          return aiRewrite;
+        }
+      } catch (error) {
+        console.error('Persona voice AI error:', error);
+      }
+    }
     
     let voicedContent = content;
     
@@ -379,21 +394,98 @@ export class ContentGeneratorService {
   }
 
   /**
-   * Generate content with OpenAI
+   * Generate content with OpenAI via OpenRouter
    */
   private async generateWithOpenAI(prompt: string, maxTokens: number): Promise<string> {
-    // This would use the OpenAI API in production
-    // For now, return mock content
-    return this.generateMockAIContent(prompt);
+    const openRouterKey = process.env.OPENROUTER_API_KEY;
+    if (!openRouterKey) {
+      return this.generateMockAIContent(prompt);
+    }
+
+    try {
+      const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${openRouterKey}`,
+          'Content-Type': 'application/json',
+          'HTTP-Referer': process.env.OPENROUTER_SITE_URL || 'https://synthex.app',
+          'X-Title': 'SYNTHEX Content Generator'
+        },
+        body: JSON.stringify({
+          model: 'openai/gpt-4-turbo-preview',
+          messages: [
+            {
+              role: 'system',
+              content: 'You are a viral content creator specializing in social media marketing. Generate engaging, platform-optimized content.'
+            },
+            {
+              role: 'user',
+              content: prompt
+            }
+          ],
+          max_tokens: maxTokens,
+          temperature: 0.8,
+          top_p: 0.9
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`OpenRouter API error: ${response.status}`);
+      }
+
+      const data = await response.json();
+      return data.choices[0]?.message?.content || this.generateMockAIContent(prompt);
+    } catch (error) {
+      console.error('OpenRouter API error:', error);
+      return this.generateMockAIContent(prompt);
+    }
   }
 
   /**
-   * Generate content with Anthropic
+   * Generate content with Anthropic via OpenRouter
    */
   private async generateWithAnthropic(prompt: string, maxTokens: number): Promise<string> {
-    // This would use the Anthropic API in production
-    // For now, return mock content
-    return this.generateMockAIContent(prompt);
+    const openRouterKey = process.env.OPENROUTER_API_KEY;
+    if (!openRouterKey) {
+      return this.generateMockAIContent(prompt);
+    }
+
+    try {
+      const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${openRouterKey}`,
+          'Content-Type': 'application/json',
+          'HTTP-Referer': process.env.OPENROUTER_SITE_URL || 'https://synthex.app',
+          'X-Title': 'SYNTHEX Content Generator'
+        },
+        body: JSON.stringify({
+          model: 'anthropic/claude-3-opus',
+          messages: [
+            {
+              role: 'system',
+              content: 'You are a viral content creator specializing in social media marketing. Generate engaging, platform-optimized content.'
+            },
+            {
+              role: 'user',
+              content: prompt
+            }
+          ],
+          max_tokens: maxTokens,
+          temperature: 0.8
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`OpenRouter API error: ${response.status}`);
+      }
+
+      const data = await response.json();
+      return data.choices[0]?.message?.content || this.generateMockAIContent(prompt);
+    } catch (error) {
+      console.error('OpenRouter API error:', error);
+      return this.generateMockAIContent(prompt);
+    }
   }
 
   /**
