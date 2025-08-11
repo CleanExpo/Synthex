@@ -84,7 +84,7 @@ export default function ContentPage() {
   const [topic, setTopic] = useState('');
   const [hookType, setHookType] = useState('question');
   const [tone, setTone] = useState('casual');
-  const [personaId, setPersonaId] = useState('');
+  const [personaId, setPersonaId] = useState('none');
   const [includeHashtags, setIncludeHashtags] = useState(true);
   const [includeEmojis, setIncludeEmojis] = useState(true);
   const [targetLength, setTargetLength] = useState('medium');
@@ -114,7 +114,7 @@ export default function ContentPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           platform,
-          personaId,
+          personaId: personaId === 'none' ? null : personaId,
           topic,
           hookType,
           tone,
@@ -319,7 +319,7 @@ export default function ContentPage() {
                   <SelectValue placeholder="Select a persona" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">None</SelectItem>
+                  <SelectItem value="none">None</SelectItem>
                   {personas.map((persona) => (
                     <SelectItem key={persona.id} value={persona.id}>
                       {persona.name}
