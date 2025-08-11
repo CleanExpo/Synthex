@@ -1,17 +1,85 @@
 import { NextResponse } from 'next/server';
+import prisma from '@/lib/prisma';
 
 export async function GET() {
-  return NextResponse.json({
-    status: 'ok',
-    timestamp: new Date().toISOString(),
-    environment: process.env.NODE_ENV,
-    version: '2.0.1',
-    message: 'SYNTHEX API is running'
-  }, {
-    status: 200,
-    headers: {
-      'Cache-Control': 'no-cache, no-store, must-revalidate',
-      'Access-Control-Allow-Origin': '*'
+  try {
+    // Check database connectivity
+    let dbStatus = 'healthy';
+    let dbLatency = 0;
+    
+    try {
+      const startTime = Date.now();
+      await prisma.$queryRaw`SELECT 1`;
+      dbLatency = Date.now() - startTime;
+    } catch (dbError) {
+      dbStatus = 'unhealthy';
+      console.error('Database health check failed:', dbError);
     }
-  });
+    
+    // Check environment variables
+    const requiredEnvVars = [
+      'DATABASE_URL',
+      'JWT_SECRET',
+      'OPENROUTER_API_KEY'
+    ];
+    
+    const missingEnvVars = requiredEnvVars.filter(
+      varName => !process.env[varName]
+    );
+    
+    const envStatus = missingEnvVars.length === 0 ? 'healthy' : 'degraded';
+    
+    // Determine overall health status
+    const overallStatus = dbStatus === 'unhealthy' ? 'unhealthy' : 
+                         envStatus === 'degraded' ? 'degraded' : 'healthy';
+    
+    // Prepare response
+    const healthResponse = {
+      status: overallStatus === 'healthy' ? 'ok' : overallStatus,
+      timestamp: new Date().toISOString(),
+      environment: process.env.NODE_ENV || 'development',
+      version: '2.0.1',
+      message: `SYNTHEX API is ${overallStatus}`,
+      checks: {
+        database: {
+          status: dbStatus,
+          latency: `${dbLatency}ms`
+        },
+        environment: {
+          status: envStatus,
+          missingVars: missingEnvVars.length > 0 ? missingEnvVars : undefined
+        }
+      }
+    };
+    
+    // Return appropriate status code based on health
+    const statusCode = overallStatus === 'healthy' ? 200 : 
+                       overallStatus === 'degraded' ? 200 : 503;
+    
+    return NextResponse.json(healthResponse, { 
+      status: statusCode,
+      headers: {
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Access-Control-Allow-Origin': '*'
+      }
+    });
+    
+  } catch (error: any) {
+    console.error('Health check error:', error);
+    
+    return NextResponse.json({
+      status: 'error',
+      timestamp: new Date().toISOString(),
+      environment: process.env.NODE_ENV || 'development',
+      version: '2.0.1',
+      message: 'SYNTHEX API health check failed',
+      error: error.message || 'Unknown error occurred'
+    }, { 
+      status: 503,
+      headers: {
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Access-Control-Allow-Origin': '*'
+      }
+    });
+  }
 }
