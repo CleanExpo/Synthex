@@ -20,7 +20,12 @@
     "db:studio": "prisma studio",
     "analyze": "ANALYZE=true next build",
     "clean": "rm -rf .next out dist node_modules",
-    "reinstall": "npm run clean && npm install"
+    "reinstall": "npm run clean && npm install",
+    "setup:db": "echo \"Run the SQL from supabase/complete-schema.sql in Supabase dashboard\"",
+    "test:integration": "node test-integration.mjs",
+    "dev:api": "next dev",
+    "check:env": "node -e \"console.log(Object.keys(process.env).filter(k => k.includes('SUPABASE') || k.includes('OPENROUTER')))\"",
+    "deploy:prod": "vercel --prod --yes"
   },
   "dependencies": {
     "2": "^3.0.0",
