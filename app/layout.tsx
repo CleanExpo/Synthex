@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import { Providers } from './providers';
-import { Toaster } from 'react-hot-toast';
+import { Toaster } from '@/components/ui/toast';
 import { PerformanceMonitor } from '@/components/PerformanceMonitor';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { CommandPalette } from '@/components/CommandPalette';
@@ -70,18 +70,11 @@ export default function RootLayout({
             <FloatingActionButton />
             <FloatingStreak />
             {children}
-            <Toaster
+            <Toaster 
               position="bottom-right"
-              toastOptions={{
-                duration: 4000,
-                style: {
-                  background: 'rgba(0, 0, 0, 0.8)',
-                  color: '#fff',
-                  backdropFilter: 'blur(10px)',
-                  border: '1px solid rgba(255, 255, 255, 0.1)',
-                  borderRadius: '12px',
-                },
-              }}
+              duration={4000}
+              richColors
+              closeButton
             />
           </Providers>
         </ErrorBoundary>
