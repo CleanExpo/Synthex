@@ -30,6 +30,7 @@ class ClientSidebar {
     init() {
         this.createSidebar();
         this.loadState();
+        this.loadUserData();
         this.setupEventListeners();
         this.applyAnimations();
     }
@@ -105,8 +106,8 @@ class ClientSidebar {
                 <div class="user-profile glass-card">
                     <img src="https://via.placeholder.com/40" alt="User" class="user-avatar">
                     <div class="user-info">
-                        <div class="user-name">John Doe</div>
-                        <div class="user-role">Pro Member</div>
+                        <div class="user-name" id="sidebar-user-name">Loading...</div>
+                        <div class="user-role" id="sidebar-user-role">Member</div>
                     </div>
                     <button class="profile-menu-btn">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
@@ -639,6 +640,47 @@ class ClientSidebar {
                 isOpen: this.isOpen,
                 isCollapsed: this.isCollapsed
             }));
+        }
+    }
+    
+    loadUserData() {
+        // Load user data from localStorage or session
+        try {
+            const nameElement = document.getElementById('sidebar-user-name');
+            const roleElement = document.getElementById('sidebar-user-role');
+            
+            // First check for logged-in user data
+            const loginUser = localStorage.getItem('user');
+            if (loginUser) {
+                const user = JSON.parse(loginUser);
+                if (nameElement) {
+                    nameElement.textContent = user.name || user.email || 'User';
+                }
+                if (roleElement) {
+                    roleElement.textContent = 'Pro Member';
+                }
+                return;
+            }
+            
+            // Then check onboarding data
+            const userData = localStorage.getItem('userData');
+            if (userData) {
+                const user = JSON.parse(userData);
+                if (nameElement) {
+                    nameElement.textContent = user.companyName || user.name || 'User';
+                }
+                if (roleElement) {
+                    roleElement.textContent = user.userType || 'Pro Member';
+                }
+                return;
+            }
+            
+            // Default fallback
+            if (nameElement) {
+                nameElement.textContent = 'Guest';
+            }
+        } catch (error) {
+            console.log('Could not load user data:', error);
         }
     }
     
