@@ -1,0 +1,62 @@
+{
+  "mcpServers": {
+    "playwright": {
+      "command": "npx",
+      "args": ["@modelcontextprotocol/server-playwright", "--headless"],
+      "env": {},
+      "capabilities": {
+        "tools": true,
+        "prompts": false,
+        "resources": false
+      },
+      "description": "Automated E2E testing before deployment"
+    },
+    "sequential-thinking": {
+      "command": "npx",
+      "args": ["@modelcontextprotocol/server-sequential-thinking"],
+      "env": {},
+      "capabilities": {
+        "tools": true,
+        "prompts": true,
+        "resources": false
+      },
+      "description": "Deployment strategy planning and rollback analysis"
+    }
+  },
+  "deployment": {
+    "vercel": {
+      "projectName": "synthex",
+      "team": "unite-group",
+      "regions": ["iad1"],
+      "environment": {
+        "production": {
+          "domains": ["synthex.vercel.app"],
+          "envVars": ["SUPABASE_URL", "SUPABASE_ANON_KEY", "OPENROUTER_API_KEY"],
+          "buildCommand": "npm run build",
+          "outputDirectory": ".next",
+          "installCommand": "npm install",
+          "framework": "nextjs"
+        },
+        "preview": {
+          "autoAlias": true,
+          "protectionBypass": true
+        }
+      }
+    },
+    "healthChecks": {
+      "endpoints": [
+        "/api/health",
+        "/api/auth/session",
+        "/api/ai/status"
+      ],
+      "timeout": 30000,
+      "retries": 3
+    },
+    "rollback": {
+      "automatic": true,
+      "healthCheckFailure": true,
+      "errorThreshold": 10,
+      "timeWindow": 300
+    }
+  }
+}
