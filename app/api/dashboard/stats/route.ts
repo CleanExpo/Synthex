@@ -3,11 +3,10 @@ import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
-export async function GET(request: Request) {
+export async function GET() {
   try {
-    // Get date range from query params (default to last 7 days)
-    const { searchParams } = new URL(request.url);
-    const days = parseInt(searchParams.get('days') || '7');
+    // Use default 7 days for static generation
+    const days = 7;
     
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - days);
