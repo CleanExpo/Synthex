@@ -28,33 +28,32 @@ export const LazyBarChart = dynamic(
   }
 );
 
-// Lazy load dashboard components
-export const LazyDashboardCharts = dynamic(
-  () => import('@/components/DashboardCharts'),
-  {
-    loading: () => (
-      <div className="grid gap-4 md:grid-cols-2">
-        <SkeletonChart />
-        <SkeletonChart />
-      </div>
-    ),
-    ssr: false
-  }
-);
+// Note: DashboardCharts and ContentGenerator components need to be created
+// export const LazyDashboardCharts = dynamic(
+//   () => import('@/components/DashboardCharts'),
+//   {
+//     loading: () => (
+//       <div className="grid gap-4 md:grid-cols-2">
+//         <SkeletonChart />
+//         <SkeletonChart />
+//       </div>
+//     ),
+//     ssr: false
+//   }
+// );
 
-// Lazy load content generator
-export const LazyContentGenerator = dynamic(
-  () => import('@/components/ContentGenerator'),
-  {
-    loading: () => (
-      <div className="space-y-4">
-        <SkeletonCard />
-        <SkeletonCard />
-      </div>
-    ),
-    ssr: false
-  }
-);
+// export const LazyContentGenerator = dynamic(
+//   () => import('@/components/ContentGenerator'),
+//   {
+//     loading: () => (
+//       <div className="space-y-4">
+//         <SkeletonCard />
+//         <SkeletonCard />
+//       </div>
+//     ),
+//     ssr: false
+//   }
+// );
 
 // Generic lazy component wrapper
 export function LazyComponent<T extends React.ComponentType<any>>({
