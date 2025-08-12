@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { profileAPI, settingsAPI, integrationsAPI, billingAPI } from '@/lib/api/settings';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -58,6 +59,15 @@ import toast from 'react-hot-toast';
 
 export default function SettingsPage() {
   const [isLoading, setIsLoading] = useState(false);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [profile, setProfile] = useState({
+    name: '',
+    email: '',
+    company: '',
+    role: '',
+    bio: '',
+    avatar_url: '',
+  });
   const [theme, setTheme] = useState('dark');
   const [notifications, setNotifications] = useState({
     email: true,
@@ -73,34 +83,106 @@ export default function SettingsPage() {
     allowDataCollection: true,
   });
   const [integrations, setIntegrations] = useState({
-    twitter: true,
-    linkedin: true,
+    twitter: false,
+    linkedin: false,
     instagram: false,
     facebook: false,
     tiktok: false,
   });
 
+  // Load initial data
+  useEffect(() => {
+    loadUserData();
+  }, []);
+
+  const loadUserData = async () => {
+    try {
+      // Load profile
+      const profileData = await profileAPI.getProfile();
+      if (profileData.profile) {
+        setProfile(profileData.profile);
+      }
+
+      // Load settings
+      const settingsData = await settingsAPI.getSettings();
+      if (settingsData.settings) {
+        setNotifications(settingsData.settings.notifications || notifications);
+        setPrivacy(settingsData.settings.privacy || privacy);
+        setTheme(settingsData.settings.theme || 'dark');
+      }
+
+      // Load integrations
+      const integrationsData = await integrationsAPI.getIntegrations();
+      if (integrationsData.integrations) {
+        setIntegrations(integrationsData.integrations);
+      }
+    } catch (error) {
+      console.error('Error loading user data:', error);
+      toast.error('Failed to load settings');
+    }
+  };
+
   const handleSave = async (section: string) => {
     setIsLoading(true);
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      switch (section) {
+        case 'Profile':
+          await profileAPI.updateProfile(profile);
+          break;
+        case 'Notifications':
+          await settingsAPI.updateSettings('notifications', notifications);
+          break;
+        case 'Privacy':
+          await settingsAPI.updateSettings('privacy', privacy);
+          break;
+        case 'Advanced':
+          await settingsAPI.updateSettings('theme', theme);
+          break;
+      }
       toast.success(`${section} settings saved successfully!`);
     } catch (error) {
-      toast.error('Failed to save settings');
+      console.error(`Error saving ${section}:`, error);
+      toast.error(`Failed to save ${section.toLowerCase()} settings`);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleConnect = (platform: string) => {
-    toast.success(`Connecting to ${platform}...`);
-    // In production, this would initiate OAuth flow
+  const handleAvatarChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setUploadingAvatar(true);
+    try {
+      const result = await profileAPI.uploadAvatar(file);
+      setProfile(prev => ({ ...prev, avatar_url: result.avatar_url }));
+      toast.success('Avatar uploaded successfully!');
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to upload avatar');
+    } finally {
+      setUploadingAvatar(false);
+    }
   };
 
-  const handleDisconnect = (platform: string) => {
-    setIntegrations(prev => ({ ...prev, [platform]: false }));
-    toast.success(`Disconnected from ${platform}`);
+  const handleConnect = async (platform: string) => {
+    try {
+      toast.loading(`Connecting to ${platform}...`);
+      await integrationsAPI.connectPlatform(platform.toLowerCase());
+      await loadUserData(); // Reload integrations
+      toast.success(`Connected to ${platform} successfully!`);
+    } catch (error: any) {
+      toast.error(error.message || `Failed to connect to ${platform}`);
+    }
+  };
+
+  const handleDisconnect = async (platform: string) => {
+    try {
+      await integrationsAPI.disconnectPlatform(platform.toLowerCase());
+      setIntegrations(prev => ({ ...prev, [platform.toLowerCase()]: false }));
+      toast.success(`Disconnected from ${platform}`);
+    } catch (error) {
+      toast.error(`Failed to disconnect from ${platform}`);
+    }
   };
 
   return (
@@ -166,14 +248,42 @@ export default function SettingsPage() {
             <CardContent className="space-y-6">
               {/* Avatar */}
               <div className="flex items-center space-x-4">
-                <div className="h-20 w-20 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center text-2xl font-bold text-white">
-                  JD
-                </div>
+                {profile.avatar_url ? (
+                  <img
+                    src={profile.avatar_url}
+                    alt="Avatar"
+                    className="h-20 w-20 rounded-full object-cover"
+                  />
+                ) : (
+                  <div className="h-20 w-20 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center text-2xl font-bold text-white">
+                    {profile.name ? profile.name.charAt(0).toUpperCase() : 'U'}
+                  </div>
+                )}
                 <div>
-                  <Button variant="outline" className="bg-white/5 border-white/10 text-white hover:bg-white/10">
-                    <Camera className="mr-2 h-4 w-4" />
-                    Change Avatar
-                  </Button>
+                  <input
+                    type="file"
+                    id="avatar-upload"
+                    accept="image/*"
+                    onChange={handleAvatarChange}
+                    className="hidden"
+                    disabled={uploadingAvatar}
+                  />
+                  <label htmlFor="avatar-upload">
+                    <Button
+                      variant="outline"
+                      className="bg-white/5 border-white/10 text-white hover:bg-white/10"
+                      disabled={uploadingAvatar}
+                      asChild
+                    >
+                      <span>
+                        {uploadingAvatar ? (
+                          <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Uploading...</>
+                        ) : (
+                          <><Camera className="mr-2 h-4 w-4" />Change Avatar</>
+                        )}
+                      </span>
+                    </Button>
+                  </label>
                   <p className="text-xs text-gray-400 mt-1">JPG, PNG or GIF. Max 2MB.</p>
                 </div>
               </div>
@@ -184,7 +294,8 @@ export default function SettingsPage() {
                   <Label htmlFor="name" className="text-gray-400">Full Name</Label>
                   <Input
                     id="name"
-                    defaultValue="John Doe"
+                    value={profile.name}
+                    onChange={(e) => setProfile(prev => ({ ...prev, name: e.target.value }))}
                     className="bg-white/5 border-white/10 text-white mt-1"
                   />
                 </div>
@@ -193,15 +304,18 @@ export default function SettingsPage() {
                   <Input
                     id="email"
                     type="email"
-                    defaultValue="user@synthex.social"
+                    value={profile.email}
+                    onChange={(e) => setProfile(prev => ({ ...prev, email: e.target.value }))}
                     className="bg-white/5 border-white/10 text-white mt-1"
+                    disabled
                   />
                 </div>
                 <div>
                   <Label htmlFor="company" className="text-gray-400">Company</Label>
                   <Input
                     id="company"
-                    defaultValue="Acme Inc"
+                    value={profile.company}
+                    onChange={(e) => setProfile(prev => ({ ...prev, company: e.target.value }))}
                     className="bg-white/5 border-white/10 text-white mt-1"
                   />
                 </div>
@@ -209,7 +323,8 @@ export default function SettingsPage() {
                   <Label htmlFor="role" className="text-gray-400">Role</Label>
                   <Input
                     id="role"
-                    defaultValue="Marketing Manager"
+                    value={profile.role}
+                    onChange={(e) => setProfile(prev => ({ ...prev, role: e.target.value }))}
                     className="bg-white/5 border-white/10 text-white mt-1"
                   />
                 </div>
@@ -219,7 +334,8 @@ export default function SettingsPage() {
                     id="bio"
                     rows={3}
                     className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-md text-white mt-1"
-                    defaultValue="Passionate about AI and social media marketing."
+                    value={profile.bio}
+                    onChange={(e) => setProfile(prev => ({ ...prev, bio: e.target.value }))}
                   />
                 </div>
               </div>

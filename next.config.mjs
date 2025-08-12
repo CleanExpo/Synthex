@@ -16,6 +16,29 @@ const nextConfig = {
   },
   experimental: {
     serverComponentsExternalPackages: ['@prisma/client', 'bcryptjs'],
+    // Optimize build performance
+    optimizeCss: true,
+    scrollRestoration: true,
+  },
+  // Optimize production builds
+  productionBrowserSourceMaps: false,
+  compress: true,
+  poweredByHeader: false,
+  generateEtags: true,
+  
+  // Build optimization
+  compiler: {
+    removeConsole: process.env.NODE_ENV === 'production' ? { exclude: ['error', 'warn'] } : false,
+  },
+  
+  // Module optimization
+  modularizeImports: {
+    '@heroicons/react': {
+      transform: '@heroicons/react/24/outline/{{member}}',
+    },
+    'lucide-react': {
+      transform: 'lucide-react/dist/esm/icons/{{kebabCase member}}',
+    },
   },
   images: {
     domains: [

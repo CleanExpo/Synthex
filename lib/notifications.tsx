@@ -73,7 +73,7 @@ export const notify = {
   warning: (message: string) => toast(message, { icon: '⚠️' }),
   
   // Custom toast
-  custom: (message: React.ReactNode) => toast.custom(() => message),
+  custom: (message: React.ReactNode) => toast.custom((t) => <>{message}</>),
   
   // Dismiss all toasts
   dismiss: () => toast.dismiss(),
@@ -112,7 +112,7 @@ export const loadingMessages: {
     "📝 Updating records..."
   ],
   
-  getRandomMessage: (type: keyof typeof loadingMessages): string => {
+  getRandomMessage: (type: 'content' | 'analytics' | 'save'): string => {
     const messages = loadingMessages[type];
     return messages[Math.floor(Math.random() * messages.length)];
   }

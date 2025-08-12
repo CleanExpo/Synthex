@@ -50,7 +50,7 @@ export function useToast() {
       return sonnerToast.promise(promise, messages);
     },
     
-    custom: (content: React.ReactNode, options?: any) => {
+    custom: (content: (id: string | number) => React.ReactElement, options?: any) => {
       sonnerToast.custom(content, options);
     },
     

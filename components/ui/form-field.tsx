@@ -94,7 +94,7 @@ export function FormField({
             showSuccess && "border-green-500 focus:ring-green-500",
             className
           )}
-          aria-invalid={hasError}
+          aria-invalid={hasError ? "true" : "false"}
           aria-describedby={
             hasError ? errorId : helperText ? helperId : undefined
           }

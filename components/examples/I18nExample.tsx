@@ -16,10 +16,7 @@ export function I18nExample() {
   const { t, formatDate, formatNumber, formatCurrency, locale } = useTranslation();
 
   const handleSave = () => {
-    toast({
-      title: t('notifications.success.saved'),
-      description: t('common.success'),
-    });
+    toast.success(t('notifications.success.saved'), t('common.success'));
   };
 
   const today = new Date();
@@ -42,7 +39,7 @@ export function I18nExample() {
       {/* Basic Translation Examples */}
       <Card>
         <CardHeader>
-          <CardTitle>{t('common.actions')}</CardTitle>
+          <CardTitle>Actions</CardTitle>
           <CardDescription>
             Basic translation examples
           </CardDescription>
@@ -62,7 +59,7 @@ export function I18nExample() {
           
           <div className="grid grid-cols-2 gap-4 mt-4">
             <div>
-              <Badge variant="secondary">{t('common.status')}</Badge>
+              <Badge variant="secondary">Status</Badge>
               <p className="text-sm mt-1">{t('common.success')}</p>
             </div>
             <div>

@@ -83,7 +83,7 @@ class EmailService {
 
     try {
       const mailOptions = {
-        from: options.from || process.env.EMAIL_FROM || 'noreply@synthex.ai',
+        from: options.from || process.env.EMAIL_FROM || 'support@synthex.social',
         to: Array.isArray(options.to) ? options.to.join(', ') : options.to,
         subject: options.subject,
         html: options.html,
@@ -274,7 +274,7 @@ class EmailService {
               <a href="${baseUrl}/dashboard" class="button">Get Started Now</a>
             </div>
             
-            <p>If you have any questions, our support team is here to help at <a href="mailto:support@synthex.ai">support@synthex.ai</a></p>
+            <p>If you have any questions, our support team is here to help at <a href="mailto:support@synthex.social">support@synthex.social</a></p>
             
             <p>Happy marketing!<br>The SYNTHEX Team</p>
           </div>

@@ -95,9 +95,9 @@ export async function loadFeature(featureName, loader) {
   }
   
   try {
-    const module = await loader();
+    const loadedModule = await loader();
     console.log(`Feature '${featureName}' loaded successfully`);
-    return module;
+    return loadedModule;
   } catch (error) {
     console.error(`Failed to load feature '${featureName}':`, error);
     return null;

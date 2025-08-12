@@ -211,13 +211,13 @@ export default function SupportPage() {
               <Zap className="w-10 h-10 text-cyan-400 mb-4" />
               <h3 className="text-xl font-semibold text-white mb-3">Getting Started</h3>
               <ul className="space-y-2">
-                <li><Link href="#" className="text-gray-400 hover:text-cyan-400 flex items-center gap-2">
+                <li><Link href="/onboarding" className="text-gray-400 hover:text-cyan-400 flex items-center gap-2">
                   <ChevronRight className="w-4 h-4" /> Account setup guide
                 </Link></li>
-                <li><Link href="#" className="text-gray-400 hover:text-cyan-400 flex items-center gap-2">
+                <li><Link href="/dashboard/integrations" className="text-gray-400 hover:text-cyan-400 flex items-center gap-2">
                   <ChevronRight className="w-4 h-4" /> Connect social accounts
                 </Link></li>
-                <li><Link href="#" className="text-gray-400 hover:text-cyan-400 flex items-center gap-2">
+                <li><Link href="/dashboard/content" className="text-gray-400 hover:text-cyan-400 flex items-center gap-2">
                   <ChevronRight className="w-4 h-4" /> Create your first campaign
                 </Link></li>
               </ul>
@@ -227,13 +227,13 @@ export default function SupportPage() {
               <Settings className="w-10 h-10 text-amber-400 mb-4" />
               <h3 className="text-xl font-semibold text-white mb-3">Features & Tools</h3>
               <ul className="space-y-2">
-                <li><Link href="#" className="text-gray-400 hover:text-amber-400 flex items-center gap-2">
+                <li><Link href="/dashboard/content" className="text-gray-400 hover:text-amber-400 flex items-center gap-2">
                   <ChevronRight className="w-4 h-4" /> AI content generation
                 </Link></li>
-                <li><Link href="#" className="text-gray-400 hover:text-amber-400 flex items-center gap-2">
+                <li><Link href="/dashboard/analytics" className="text-gray-400 hover:text-amber-400 flex items-center gap-2">
                   <ChevronRight className="w-4 h-4" /> Analytics dashboard
                 </Link></li>
-                <li><Link href="#" className="text-gray-400 hover:text-amber-400 flex items-center gap-2">
+                <li><Link href="/dashboard/schedule" className="text-gray-400 hover:text-amber-400 flex items-center gap-2">
                   <ChevronRight className="w-4 h-4" /> Scheduling tools
                 </Link></li>
               </ul>
@@ -243,13 +243,13 @@ export default function SupportPage() {
               <CreditCard className="w-10 h-10 text-purple-400 mb-4" />
               <h3 className="text-xl font-semibold text-white mb-3">Billing & Plans</h3>
               <ul className="space-y-2">
-                <li><Link href="#" className="text-gray-400 hover:text-purple-400 flex items-center gap-2">
+                <li><Link href="/pricing" className="text-gray-400 hover:text-purple-400 flex items-center gap-2">
                   <ChevronRight className="w-4 h-4" /> Pricing comparison
                 </Link></li>
-                <li><Link href="#" className="text-gray-400 hover:text-purple-400 flex items-center gap-2">
+                <li><Link href="/dashboard/settings" className="text-gray-400 hover:text-purple-400 flex items-center gap-2">
                   <ChevronRight className="w-4 h-4" /> Upgrade or downgrade
                 </Link></li>
-                <li><Link href="#" className="text-gray-400 hover:text-purple-400 flex items-center gap-2">
+                <li><Link href="/dashboard/settings" className="text-gray-400 hover:text-purple-400 flex items-center gap-2">
                   <ChevronRight className="w-4 h-4" /> Payment methods
                 </Link></li>
               </ul>
