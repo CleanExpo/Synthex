@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Content Schedule - SYNTHEX</title>
+    <link rel="icon" type="image/png" href="/logo.png">
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <script src="/js/auth-check.js"></script>
+    
+    <!-- App CSS -->
+    <link rel="stylesheet" href="/css/synthex-app.css">
+    
+    <style>
+        /* Calendar Styles */
+        .schedule-container {
+            display: grid;
+            grid-template-columns: 1fr 320px;
+            gap: 24px;
+            height: calc(100vh - 180px);
+        }
+        
+        .calendar-section {
+            background: var(--bg-card);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-xl);
+            padding: var(--space-lg);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--space-lg);
+        }
+        
+        .calendar-nav {
+            display: flex;
+            align-items: center;
+            gap: var(--space-md);
+        }
+        
+        .calendar-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+        
+        .calendar-btn {
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all var(--transition-base);
+        }
+        
+        .calendar-btn:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-primary);
+            border-color: var(--border-color-hover);
+        }
+        
+        .view-selector {
+            display: flex;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 2px;
+        }
+        
+        .view-option {
+            padding: var(--space-xs) var(--space-md);
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            border-radius: var(--radius-sm);
+            transition: all var(--transition-base);
+            font-size: 0.875rem;
+        }
+        
+        .view-option:hover {
+            color: var(--text-primary);
+        }
+        
+        .view-option.active {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .calendar-grid {
+            flex: 1;
+            overflow-y: auto;
+        }
+        
+        .weekdays {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 1px;
+            margin-bottom: var(--space-sm);
+            padding-bottom: var(--space-sm);
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .weekday {
+            text-align: center;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        
+        .days-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 1px;
+            background: var(--border-color);
+        }
+        
+        .calendar-day {
+            background: var(--bg-card);
+            min-height: 100px;
+            padding: var(--space-sm);
+            cursor: pointer;
+            transition: all var(--transition-base);
+            position: relative;
+        }
+        
+        .calendar-day:hover {
+            background: rgba(255, 255, 255, 0.02);
+        }
+        
+        .calendar-day.other-month {
+            opacity: 0.3;
+        }
+        
+        .calendar-day.today {
+            background: rgba(99, 102, 241, 0.1);
+        }
+        
+        .calendar-day.selected {
+            background: rgba(99, 102, 241, 0.2);
+            border: 1px solid var(--primary);
+        }
+        
+        .day-number {
+            font-size: 0.875rem;
+            font-weight: 500;
+            margin-bottom: var(--space-xs);
+        }
+        
+        .day-posts {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+        
+        .post-indicator {
+            font-size: 0.625rem;
+            padding: 2px 6px;
+            border-radius: var(--radius-sm);
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-color);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .post-indicator.instagram {
+            border-color: #E4405F;
+            color: #E4405F;
+        }
+        
+        .post-indicator.facebook {
+            border-color: #1877F2;
+            color: #1877F2;
+        }
+        
+        .post-indicator.twitter {
+            border-color: #1DA1F2;
+            color: #1DA1F2;
+        }
+        
+        .post-indicator.linkedin {
+            border-color: #0077B5;
+            color: #0077B5;
+        }
+        
+        .sidebar-section {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+        
+        .quick-schedule {
+            background: var(--bg-card);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-xl);
+            padding: var(--space-lg);
+        }
+        
+        .scheduled-posts {
+            flex: 1;
+            background: var(--bg-card);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-xl);
+            padding: var(--space-lg);
+            overflow-y: auto;
+        }
+        
+        .scheduled-post {
+            padding: var(--space-md);
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            margin-bottom: var(--space-md);
+            cursor: pointer;
+            transition: all var(--transition-base);
+        }
+        
+        .scheduled-post:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: var(--border-color-hover);
+        }
+        
+        .post-time {
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-bottom: var(--space-xs);
+        }
+        
+        .post-content-preview {
+            font-size: 0.875rem;
+            line-height: 1.4;
+            color: var(--text-primary);
+            margin-bottom: var(--space-sm);
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        
+        .post-platforms {
+            display: flex;
+            gap: var(--space-xs);
+        }
+        
+        .platform-badge {
+            font-size: 0.625rem;
+            padding: 2px 8px;
+            border-radius: var(--radius-sm);
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-color);
+        }
+        
+        .time-slots {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: var(--space-sm);
+            margin-top: var(--space-md);
+        }
+        
+        .time-slot {
+            padding: var(--space-sm);
+            text-align: center;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            transition: all var(--transition-base);
+            font-size: 0.875rem;
+        }
+        
+        .time-slot:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: var(--border-color-hover);
+        }
+        
+        .time-slot.active {
+            background: var(--primary-light);
+            color: var(--primary);
+            border-color: var(--primary);
+        }
+        
+        .schedule-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal-content {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-xl);
+            padding: var(--space-xl);
+            max-width: 600px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--space-lg);
+        }
+        
+        .modal-close {
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            transition: all var(--transition-base);
+        }
+        
+        .modal-close:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: var(--border-color-hover);
+        }
+        
+        @media (max-width: 1024px) {
+            .schedule-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .sidebar-section {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar (same as other pages) -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <a href="/" class="logo">SYNTHEX</a>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <div class="nav-section">
+                    <div class="nav-section-title">Main</div>
+                    <a href="/app-new.html" class="nav-item">
+                        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="3" width="7" height="7" rx="1"/>
+                            <rect x="14" y="3" width="7" height="7" rx="1"/>
+                            <rect x="3" y="14" width="7" height="7" rx="1"/>
+                            <rect x="14" y="14" width="7" height="7" rx="1"/>
+                        </svg>
+                        <span>Dashboard</span>
+                    </a>
+                    <a href="/campaigns-new.html" class="nav-item">
+                        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V6a2 2 0 012-2z"/>
+                        </svg>
+                        <span>Campaigns</span>
+                    </a>
+                    <a href="/content-studio.html" class="nav-item">
+                        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                        </svg>
+                        <span>Content Studio</span>
+                    </a>
+                    <a href="/schedule.html" class="nav-item active">
+                        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <polyline points="12 6 12 12 16 14"/>
+                        </svg>
+                        <span>Schedule</span>
+                    </a>
+                    <a href="/analytics.html" class="nav-item">
+                        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M18 20V10M12 20V4M6 20v-6"/>
+                        </svg>
+                        <span>Analytics</span>
+                    </a>
+                </div>
+            </nav>
+        </aside>
+        
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="header">
+                <div class="header-left">
+                    <h1 class="header-title">Content Schedule</h1>
+                </div>
+                
+                <div class="header-right">
+                    <button class="header-btn notification-bell">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"/>
+                        </svg>
+                    </button>
+                    <button class="header-btn" onclick="openScheduleModal()">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="12" y1="5" x2="12" y2="19"/>
+                            <line x1="5" y1="12" x2="19" y2="12"/>
+                        </svg>
+                        <span>Schedule Post</span>
+                    </button>
+                    <button class="btn btn-primary" onclick="bulkSchedule()">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
+                            <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                        </svg>
+                        <span>Bulk Schedule</span>
+                    </button>
+                </div>
+            </header>
+            
+            <!-- Content -->
+            <div class="content">
+                <div class="schedule-container">
+                    <!-- Calendar Section -->
+                    <div class="calendar-section">
+                        <div class="calendar-header">
+                            <div class="calendar-nav">
+                                <button class="calendar-btn" onclick="previousMonth()">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <polyline points="15 18 9 12 15 6"/>
+                                    </svg>
+                                </button>
+                                <h2 class="calendar-title" id="currentMonth">December 2024</h2>
+                                <button class="calendar-btn" onclick="nextMonth()">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <polyline points="9 18 15 12 9 6"/>
+                                    </svg>
+                                </button>
+                                <button class="calendar-btn" onclick="goToToday()">Today</button>
+                            </div>
+                            
+                            <div class="view-selector">
+                                <button class="view-option active" data-view="month">Month</button>
+                                <button class="view-option" data-view="week">Week</button>
+                                <button class="view-option" data-view="day">Day</button>
+                            </div>
+                        </div>
+                        
+                        <div class="calendar-grid">
+                            <div class="weekdays">
+                                <div class="weekday">Sun</div>
+                                <div class="weekday">Mon</div>
+                                <div class="weekday">Tue</div>
+                                <div class="weekday">Wed</div>
+                                <div class="weekday">Thu</div>
+                                <div class="weekday">Fri</div>
+                                <div class="weekday">Sat</div>
+                            </div>
+                            <div class="days-grid" id="calendarDays">
+                                <!-- Calendar days will be generated dynamically -->
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Sidebar -->
+                    <div class="sidebar-section">
+                        <!-- Quick Schedule -->
+                        <div class="quick-schedule">
+                            <h3 style="margin-bottom: var(--space-md);">Quick Schedule</h3>
+                            <div class="form-group">
+                                <label class="form-label">Select Date</label>
+                                <input type="date" class="form-input" id="quickDate">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label">Popular Times</label>
+                                <div class="time-slots">
+                                    <div class="time-slot" data-time="09:00">9:00 AM</div>
+                                    <div class="time-slot active" data-time="12:00">12:00 PM</div>
+                                    <div class="time-slot" data-time="17:00">5:00 PM</div>
+                                    <div class="time-slot" data-time="19:00">7:00 PM</div>
+                                </div>
+                            </div>
+                            
+                            <button class="btn btn-primary" style="width: 100%; margin-top: var(--space-md);" onclick="quickSchedulePost()">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="10"/>
+                                    <polyline points="12 6 12 12 16 14"/>
+                                </svg>
+                                <span>Schedule Now</span>
+                            </button>
+                        </div>
+                        
+                        <!-- Scheduled Posts -->
+                        <div class="scheduled-posts">
+                            <h3 style="margin-bottom: var(--space-md);">Upcoming Posts</h3>
+                            <div id="upcomingPosts">
+                                <div class="scheduled-post">
+                                    <div class="post-time">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <circle cx="12" cy="12" r="10"/>
+                                            <polyline points="12 6 12 12 16 14"/>
+                                        </svg>
+                                        <span>Today, 2:00 PM</span>
+                                    </div>
+                                    <div class="post-content-preview">
+                                        Excited to announce our new eco-friendly product line! 🌱 Made from 100% sustainable materials...
+                                    </div>
+                                    <div class="post-platforms">
+                                        <span class="platform-badge instagram">Instagram</span>
+                                        <span class="platform-badge facebook">Facebook</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="scheduled-post">
+                                    <div class="post-time">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <circle cx="12" cy="12" r="10"/>
+                                            <polyline points="12 6 12 12 16 14"/>
+                                        </svg>
+                                        <span>Tomorrow, 10:00 AM</span>
+                                    </div>
+                                    <div class="post-content-preview">
+                                        Join our webinar on digital marketing trends for 2025. Register now to secure your spot!
+                                    </div>
+                                    <div class="post-platforms">
+                                        <span class="platform-badge linkedin">LinkedIn</span>
+                                        <span class="platform-badge twitter">Twitter</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <!-- Schedule Modal -->
+    <div class="schedule-modal" id="scheduleModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Schedule Content</h2>
+                <button class="modal-close" onclick="closeScheduleModal()">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"/>
+                        <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                </button>
+            </div>
+            
+            <form id="scheduleForm">
+                <div class="form-group">
+                    <label class="form-label">Content</label>
+                    <textarea class="form-input" rows="4" id="scheduleContent" placeholder="Enter your content..."></textarea>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Date</label>
+                        <input type="date" class="form-input" id="scheduleDate">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Time</label>
+                        <input type="time" class="form-input" id="scheduleTime">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Platforms</label>
+                    <div class="checkbox-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" class="checkbox-input" value="instagram">
+                            <span>Instagram</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" class="checkbox-input" value="facebook">
+                            <span>Facebook</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" class="checkbox-input" value="twitter">
+                            <span>Twitter/X</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" class="checkbox-input" value="linkedin">
+                            <span>LinkedIn</span>
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Repeat</label>
+                    <select class="form-select" id="scheduleRepeat">
+                        <option value="none">No repeat</option>
+                        <option value="daily">Daily</option>
+                        <option value="weekly">Weekly</option>
+                        <option value="monthly">Monthly</option>
+                    </select>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeScheduleModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Schedule Post</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <script src="/js/api.js"></script>
+    <script src="/js/schedule.js"></script>
+    <script src="/js/notifications.js"></script>
+</body>
+</html>

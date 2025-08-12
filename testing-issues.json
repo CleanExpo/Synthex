@@ -330,8 +330,8 @@
       }
     },
     "firstDetected": "2025-08-07T08:15:19.818Z",
-    "lastSeen": "2025-08-12T15:24:17.267Z",
-    "occurrences": 459,
+    "lastSeen": "2025-08-12T22:32:53.035Z",
+    "occurrences": 1316,
     "status": "open"
   },
   {
@@ -341,8 +341,8 @@
     "url": "/api/auth/login",
     "details": {},
     "firstDetected": "2025-08-07T08:15:19.825Z",
-    "lastSeen": "2025-08-12T15:24:17.283Z",
-    "occurrences": 459,
+    "lastSeen": "2025-08-12T22:32:53.049Z",
+    "occurrences": 1316,
     "status": "open"
   },
   {
@@ -358,8 +358,8 @@
       }
     },
     "firstDetected": "2025-08-07T08:15:19.834Z",
-    "lastSeen": "2025-08-12T15:24:17.303Z",
-    "occurrences": 459,
+    "lastSeen": "2025-08-12T22:32:53.068Z",
+    "occurrences": 1316,
     "status": "open"
   },
   {
@@ -369,8 +369,8 @@
     "url": "/api/auth/register",
     "details": {},
     "firstDetected": "2025-08-07T08:15:19.841Z",
-    "lastSeen": "2025-08-12T15:24:17.321Z",
-    "occurrences": 459,
+    "lastSeen": "2025-08-12T22:32:53.082Z",
+    "occurrences": 1316,
     "status": "open"
   },
   {
@@ -442,8 +442,8 @@
       }
     },
     "firstDetected": "2025-08-07T08:15:19.914Z",
-    "lastSeen": "2025-08-12T15:24:17.352Z",
-    "occurrences": 459,
+    "lastSeen": "2025-08-12T22:32:53.109Z",
+    "occurrences": 1316,
     "status": "open"
   },
   {
@@ -453,8 +453,8 @@
     "url": "/api/content/generate",
     "details": {},
     "firstDetected": "2025-08-07T08:15:19.925Z",
-    "lastSeen": "2025-08-12T15:24:17.367Z",
-    "occurrences": 459,
+    "lastSeen": "2025-08-12T22:32:53.125Z",
+    "occurrences": 1316,
     "status": "open"
   },
   {
@@ -554,8 +554,8 @@
     "url": "/login",
     "details": {},
     "firstDetected": "2025-08-12T11:35:41.010Z",
-    "lastSeen": "2025-08-12T15:24:17.977Z",
-    "occurrences": 458,
+    "lastSeen": "2025-08-12T22:32:53.682Z",
+    "occurrences": 1315,
     "status": "open"
   },
   {
@@ -565,8 +565,8 @@
     "url": "/login",
     "details": {},
     "firstDetected": "2025-08-12T11:35:41.022Z",
-    "lastSeen": "2025-08-12T15:24:17.991Z",
-    "occurrences": 458,
+    "lastSeen": "2025-08-12T22:32:53.695Z",
+    "occurrences": 1315,
     "status": "open"
   },
   {
@@ -576,8 +576,8 @@
     "url": "/login",
     "details": {},
     "firstDetected": "2025-08-12T11:35:41.035Z",
-    "lastSeen": "2025-08-12T15:24:18.004Z",
-    "occurrences": 458,
+    "lastSeen": "2025-08-12T22:32:53.708Z",
+    "occurrences": 1315,
     "status": "open"
   },
   {
@@ -589,8 +589,8 @@
       "stack": "TypeError: window.synthexAPI.isAuthenticated is not a function\n    at http://localhost:3002/login.html:821:52"
     },
     "firstDetected": "2025-08-12T12:11:46.063Z",
-    "lastSeen": "2025-08-12T15:24:16.875Z",
-    "occurrences": 386,
+    "lastSeen": "2025-08-12T22:32:52.846Z",
+    "occurrences": 1243,
     "status": "open"
   },
   {
@@ -605,8 +605,8 @@
       }
     },
     "firstDetected": "2025-08-12T12:11:46.084Z",
-    "lastSeen": "2025-08-12T15:24:16.903Z",
-    "occurrences": 380,
+    "lastSeen": "2025-08-12T22:32:52.868Z",
+    "occurrences": 1221,
     "status": "open"
   },
   {
@@ -621,8 +621,8 @@
       }
     },
     "firstDetected": "2025-08-12T12:11:46.222Z",
-    "lastSeen": "2025-08-12T15:24:17.088Z",
-    "occurrences": 380,
+    "lastSeen": "2025-08-12T22:32:52.965Z",
+    "occurrences": 1220,
     "status": "open"
   },
   {
@@ -637,8 +637,8 @@
       }
     },
     "firstDetected": "2025-08-12T12:11:46.255Z",
-    "lastSeen": "2025-08-12T15:24:17.245Z",
-    "occurrences": 380,
+    "lastSeen": "2025-08-12T22:32:53.016Z",
+    "occurrences": 1219,
     "status": "open"
   },
   {
@@ -653,8 +653,8 @@
       }
     },
     "firstDetected": "2025-08-12T12:33:13.614Z",
-    "lastSeen": "2025-08-12T13:52:15.777Z",
-    "occurrences": 2,
+    "lastSeen": "2025-08-12T19:41:50.017Z",
+    "occurrences": 3,
     "status": "open"
   }
 ]

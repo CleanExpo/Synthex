@@ -1,0 +1,414 @@
+{
+  "platform": "Instagram",
+  "last_updated": "2024-12-20",
+  "algorithm_ranking_factors": {
+    "primary_signals": {
+      "relationship": {
+        "weight": "30%",
+        "factors": [
+          "DM exchanges",
+          "Profile visits",
+          "Story interactions",
+          "Comment frequency",
+          "Tagged together"
+        ]
+      },
+      "interest": {
+        "weight": "25%",
+        "factors": [
+          "Past engagement with similar content",
+          "Time spent on posts",
+          "Save rate",
+          "Share rate",
+          "Explore page interactions"
+        ]
+      },
+      "timeliness": {
+        "weight": "20%",
+        "factors": [
+          "Post recency",
+          "User's typical usage time",
+          "Trending topics",
+          "Seasonal relevance"
+        ]
+      },
+      "engagement_velocity": {
+        "weight": "15%",
+        "factors": [
+          "Likes in first 30 minutes",
+          "Comments in first hour",
+          "Shares in first 2 hours",
+          "Saves throughout first day"
+        ]
+      },
+      "content_quality": {
+        "weight": "10%",
+        "factors": [
+          "Resolution and technical quality",
+          "Completion rate (video/reels)",
+          "Information richness",
+          "Original content vs repost"
+        ]
+      }
+    }
+  },
+  "content_formats": {
+    "reels": {
+      "priority": "HIGHEST",
+      "reach_multiplier": "3.5x",
+      "specifications": {
+        "aspect_ratio": "9:16",
+        "resolution": "1080x1920",
+        "duration": "15-90 seconds",
+        "optimal_length": "15-30 seconds",
+        "file_size": "max 4GB",
+        "format": "MP4",
+        "fps": "30"
+      },
+      "algorithm_boost": {
+        "new_feature_bonus": "50% extra reach",
+        "trending_audio_bonus": "30% extra reach",
+        "original_audio_potential": "Viral possibility"
+      },
+      "best_practices": [
+        "Hook in first 3 seconds",
+        "Use trending audio within 24 hours",
+        "Text overlay for silent viewing",
+        "Native editing in-app when possible",
+        "Seamless loops increase watch time"
+      ],
+      "templates": {
+        "educational": {
+          "structure": "Problem → Solution → Result",
+          "duration": "30-45 seconds",
+          "text_overlay": "Step-by-step points"
+        },
+        "entertainment": {
+          "structure": "Setup → Twist → Payoff",
+          "duration": "15-30 seconds",
+          "text_overlay": "Minimal, punchy"
+        },
+        "transformation": {
+          "structure": "Before → Process → After",
+          "duration": "30-60 seconds",
+          "text_overlay": "Timeline markers"
+        }
+      }
+    },
+    "carousel_posts": {
+      "priority": "HIGH",
+      "engagement_rate": "1.7x single posts",
+      "specifications": {
+        "max_items": 10,
+        "aspect_ratios": ["1:1", "4:5"],
+        "resolution": "1080x1080 or 1080x1350",
+        "format": "JPG or PNG"
+      },
+      "strategies": {
+        "educational_carousel": {
+          "slide_1": "Hook/Promise",
+          "slide_2-8": "Value delivery",
+          "slide_9": "Summary",
+          "slide_10": "CTA"
+        },
+        "storytelling_carousel": {
+          "progression": "Linear narrative",
+          "cliffhangers": "Between slides 3-4, 6-7",
+          "resolution": "Final 2 slides"
+        },
+        "before_after": {
+          "odd_slides": "Before states",
+          "even_slides": "After states",
+          "final_slide": "How to achieve"
+        }
+      }
+    },
+    "stories": {
+      "priority": "MEDIUM",
+      "visibility": "24 hours",
+      "specifications": {
+        "aspect_ratio": "9:16",
+        "resolution": "1080x1920",
+        "duration": "15 seconds max per story",
+        "formats": "Photo, video, boomerang"
+      },
+      "interactive_elements": {
+        "polls": "80% engagement rate",
+        "questions": "Direct audience insight",
+        "quizzes": "Gamification element",
+        "sliders": "Emotional engagement",
+        "countdown": "FOMO creation",
+        "music": "Mood setting"
+      },
+      "story_highlights": {
+        "purpose": "Permanent profile features",
+        "categories": [
+          "About/Intro",
+          "Products/Services",
+          "Testimonials",
+          "Behind-scenes",
+          "FAQ",
+          "Tutorials"
+        ]
+      }
+    },
+    "igtv_video": {
+      "priority": "LOW (being phased out)",
+      "migrating_to": "Reels for short, Feed videos for long"
+    },
+    "live_video": {
+      "priority": "MEDIUM",
+      "algorithm_boost": "Top of feed placement",
+      "specifications": {
+        "max_duration": "4 hours",
+        "save_option": "Stories (24h) or IGTV",
+        "features": [
+          "Shopping tags",
+          "Donations",
+          "Badges",
+          "Q&A",
+          "Guest capability (4 people)"
+        ]
+      }
+    }
+  },
+  "hashtag_strategy": {
+    "optimal_number": "8-15 hashtags",
+    "distribution": {
+      "high_volume": "2-3 hashtags (1M+ posts)",
+      "medium_volume": "5-7 hashtags (100K-1M posts)",
+      "low_volume": "3-5 hashtags (10K-100K posts)",
+      "niche": "2-3 hashtags (<10K posts)",
+      "branded": "1-2 hashtags"
+    },
+    "placement": {
+      "feed_posts": "First comment or caption end",
+      "stories": "Hidden behind stickers/GIFs",
+      "reels": "In caption"
+    },
+    "research_tools": [
+      "Instagram Insights",
+      "Hashtag autocomplete",
+      "Competitor analysis",
+      "Trending page"
+    ]
+  },
+  "posting_schedule": {
+    "optimal_times": {
+      "monday": ["6:00", "12:00", "19:00"],
+      "tuesday": ["6:00", "12:00", "19:00"],
+      "wednesday": ["6:00", "12:00", "17:00", "19:00"],
+      "thursday": ["6:00", "12:00", "17:00", "19:00"],
+      "friday": ["6:00", "12:00", "17:00"],
+      "saturday": ["11:00", "19:00"],
+      "sunday": ["11:00", "14:00", "19:00"]
+    },
+    "frequency": {
+      "feed_posts": "1-2 per day",
+      "stories": "2-5 per day",
+      "reels": "4-7 per week",
+      "live": "1-2 per week"
+    }
+  },
+  "engagement_tactics": {
+    "caption_strategies": {
+      "optimal_length": "125-150 characters visible",
+      "full_length": "up to 2,200 characters",
+      "structure": {
+        "hook": "First 125 characters",
+        "value": "Main content",
+        "cta": "Question or action prompt",
+        "hashtags": "End or first comment"
+      },
+      "cta_examples": [
+        "Double tap if you agree!",
+        "Save this for later →",
+        "Share with someone who needs this",
+        "Comment your thoughts below",
+        "Which one is your favorite? 1, 2, or 3?"
+      ]
+    },
+    "comment_management": {
+      "response_time": "Within 1 hour for best engagement",
+      "strategies": [
+        "Ask follow-up questions",
+        "Use commenter's name",
+        "Heart valuable comments",
+        "Pin important comments",
+        "Create comment threads"
+      ]
+    },
+    "dm_strategies": {
+      "response_rate": "Affects algorithm ranking",
+      "automation": "Quick replies for FAQs",
+      "voice_messages": "Higher engagement",
+      "broadcast_channels": "One-to-many messaging"
+    }
+  },
+  "instagram_shopping": {
+    "setup_requirements": [
+      "Business/Creator account",
+      "Connected Facebook catalog",
+      "Approved products",
+      "Shopping agreements accepted"
+    ],
+    "features": {
+      "product_tags": "Feed posts and stories",
+      "shopping_stickers": "Stories",
+      "shop_tab": "Profile destination",
+      "live_shopping": "Real-time sales",
+      "product_launches": "Countdown features"
+    }
+  },
+  "analytics_benchmarks": {
+    "engagement_rates": {
+      "poor": "<1%",
+      "average": "1-3%",
+      "good": "3-6%",
+      "excellent": ">6%"
+    },
+    "reach_rate": {
+      "poor": "<10%",
+      "average": "10-30%",
+      "good": "30-50%",
+      "excellent": ">50%"
+    },
+    "story_metrics": {
+      "completion_rate": {
+        "target": ">70%"
+      },
+      "tap_forwards": {
+        "good": "<10%"
+      },
+      "tap_backs": {
+        "good": ">5%"
+      },
+      "exits": {
+        "good": "<5%"
+      }
+    },
+    "reels_metrics": {
+      "completion_rate": {
+        "target": ">50%"
+      },
+      "replay_rate": {
+        "target": ">1.5"
+      },
+      "share_rate": {
+        "target": ">2%"
+      }
+    }
+  },
+  "growth_strategies": {
+    "organic_growth": {
+      "collaborations": {
+        "methods": ["Guest posts", "Takeovers", "Shoutouts", "Challenges"],
+        "roi": "3-5x follower growth"
+      },
+      "ugc_campaigns": {
+        "tactics": ["Branded hashtags", "Contests", "Features", "Reposts"],
+        "engagement_lift": "50-70%"
+      },
+      "explore_page": {
+        "requirements": ["High engagement rate", "Niche relevance", "Quality content"],
+        "impact": "10-20x reach"
+      }
+    },
+    "paid_promotion": {
+      "boost_criteria": {
+        "organic_engagement": ">5%",
+        "reach": ">30% followers",
+        "saves": ">2% of reach"
+      },
+      "ad_formats": [
+        "Collection ads",
+        "Carousel ads",
+        "Reels ads",
+        "Story ads",
+        "Explore ads"
+      ]
+    }
+  },
+  "content_pillars": {
+    "distribution": {
+      "educational": "30%",
+      "entertaining": "25%",
+      "inspirational": "20%",
+      "promotional": "10%",
+      "behind_scenes": "10%",
+      "user_generated": "5%"
+    },
+    "examples": {
+      "educational": ["Tutorials", "Tips", "How-tos", "Facts"],
+      "entertaining": ["Memes", "Trends", "Challenges", "Humor"],
+      "inspirational": ["Quotes", "Success stories", "Transformations"],
+      "promotional": ["Products", "Services", "Offers", "Launches"],
+      "behind_scenes": ["Process", "Team", "Creation", "Daily life"],
+      "user_generated": ["Reviews", "Testimonials", "Features", "Reposts"]
+    }
+  },
+  "instagram_seo": {
+    "optimization_areas": {
+      "username": "Include main keyword",
+      "name_field": "Searchable keywords (30 chars)",
+      "bio": "Primary keywords and clear value prop",
+      "alt_text": "Descriptive for accessibility and SEO",
+      "captions": "Natural keyword integration",
+      "hashtags": "Mix of keywords and topics"
+    },
+    "discoverability": {
+      "search": "Username, name, hashtags, location",
+      "explore": "Interest-based algorithm",
+      "suggested": "Similar accounts, mutual connections"
+    }
+  },
+  "tools_and_apps": {
+    "content_creation": [
+      "Canva - Graphics and templates",
+      "VSCO - Photo editing",
+      "InShot - Video editing",
+      "Unfold - Story templates",
+      "Mojo - Animated stories"
+    ],
+    "analytics": [
+      "Instagram Insights - Native analytics",
+      "Later - Scheduling and analytics",
+      "Hootsuite - Management and reporting",
+      "Sprout Social - Deep analytics"
+    ],
+    "hashtag_research": [
+      "Hashtagify",
+      "All Hashtag",
+      "Display Purposes",
+      "TagsFinder"
+    ]
+  },
+  "common_mistakes": [
+    "Buying followers (kills engagement rate)",
+    "Using banned/broken hashtags",
+    "Posting without strategy",
+    "Ignoring Stories and Reels",
+    "Over-promotional content",
+    "Inconsistent posting",
+    "Poor image quality",
+    "Ignoring comments/DMs",
+    "Not utilizing all features"
+  ],
+  "2024_updates": {
+    "new_features": [
+      "AI-powered editing tools",
+      "Enhanced Reels templates",
+      "Broadcast channels expansion",
+      "NFT integration testing",
+      "Advanced creator insights",
+      "Threads integration"
+    ],
+    "algorithm_changes": [
+      "Increased Reels prioritization",
+      "Original content boost",
+      "Small creator support",
+      "Reduced repost reach",
+      "Enhanced interest targeting"
+    ]
+  }
+}

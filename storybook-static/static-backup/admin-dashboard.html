@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Synthex Admin Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .card-shadow {
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+        .stat-card {
+            transition: transform 0.3s ease;
+        }
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+        .sidebar-item {
+            transition: all 0.3s ease;
+        }
+        .sidebar-item:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+            padding-left: 2rem;
+        }
+        .chart-container {
+            position: relative;
+            height: 300px;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Sidebar -->
+    <div id="sidebar" class="fixed left-0 top-0 h-full w-64 gradient-bg text-white z-40 transform -translate-x-full lg:translate-x-0 transition-transform duration-300">
+        <div class="p-6">
+            <h1 class="text-2xl font-bold mb-8">
+                <i class="fas fa-rocket mr-2"></i>Synthex Admin
+            </h1>
+            
+            <nav class="space-y-2">
+                <a href="#dashboard" class="sidebar-item block py-3 px-4 rounded-lg">
+                    <i class="fas fa-dashboard mr-3"></i>Dashboard
+                </a>
+                <a href="#analytics" class="sidebar-item block py-3 px-4 rounded-lg">
+                    <i class="fas fa-chart-line mr-3"></i>Analytics
+                </a>
+                <a href="#content" class="sidebar-item block py-3 px-4 rounded-lg">
+                    <i class="fas fa-pen-to-square mr-3"></i>Content Generation
+                </a>
+                <a href="#ab-testing" class="sidebar-item block py-3 px-4 rounded-lg">
+                    <i class="fas fa-flask mr-3"></i>A/B Testing
+                </a>
+                <a href="#competitors" class="sidebar-item block py-3 px-4 rounded-lg">
+                    <i class="fas fa-users-viewfinder mr-3"></i>Competitors
+                </a>
+                <a href="#teams" class="sidebar-item block py-3 px-4 rounded-lg">
+                    <i class="fas fa-people-group mr-3"></i>Teams
+                </a>
+                <a href="#scheduler" class="sidebar-item block py-3 px-4 rounded-lg">
+                    <i class="fas fa-calendar-days mr-3"></i>Scheduler
+                </a>
+                <a href="#library" class="sidebar-item block py-3 px-4 rounded-lg">
+                    <i class="fas fa-book mr-3"></i>Content Library
+                </a>
+                <a href="#reports" class="sidebar-item block py-3 px-4 rounded-lg">
+                    <i class="fas fa-file-pdf mr-3"></i>Reports
+                </a>
+                <a href="#white-label" class="sidebar-item block py-3 px-4 rounded-lg">
+                    <i class="fas fa-palette mr-3"></i>White Label
+                </a>
+                <a href="#settings" class="sidebar-item block py-3 px-4 rounded-lg">
+                    <i class="fas fa-cog mr-3"></i>Settings
+                </a>
+            </nav>
+        </div>
+        
+        <div class="absolute bottom-0 left-0 right-0 p-6">
+            <div class="bg-white bg-opacity-20 rounded-lg p-4">
+                <div class="flex items-center mb-2">
+                    <img src="https://ui-avatars.com/api/?name=Admin&background=fff&color=667eea" 
+                         class="w-10 h-10 rounded-full mr-3">
+                    <div>
+                        <div class="font-semibold">Admin User</div>
+                        <div class="text-xs opacity-75">Enterprise Plan</div>
+                    </div>
+                </div>
+                <button onclick="logout()" class="text-sm opacity-75 hover:opacity-100">
+                    <i class="fas fa-sign-out-alt mr-1"></i>Logout
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="lg:ml-64 min-h-screen">
+        <!-- Top Bar -->
+        <div class="bg-white shadow-sm px-6 py-4 flex items-center justify-between">
+            <button onclick="toggleSidebar()" class="lg:hidden text-gray-600">
+                <i class="fas fa-bars text-xl"></i>
+            </button>
+            
+            <div class="flex items-center space-x-4">
+                <div class="relative">
+                    <input type="search" placeholder="Search..." 
+                           class="pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:border-purple-500">
+                    <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+                </div>
+            </div>
+            
+            <div class="flex items-center space-x-4">
+                <!-- Notifications -->
+                <button class="relative text-gray-600 hover:text-purple-600">
+                    <i class="fas fa-bell text-xl"></i>
+                    <span class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">3</span>
+                </button>
+                
+                <!-- Language Selector -->
+                <select onchange="changeLocale(this.value)" class="border rounded px-2 py-1 text-sm">
+                    <option value="en">English</option>
+                    <option value="es">Español</option>
+                    <option value="fr">Français</option>
+                    <option value="de">Deutsch</option>
+                    <option value="zh">中文</option>
+                </select>
+                
+                <!-- Theme Toggle -->
+                <button onclick="toggleTheme()" class="text-gray-600 hover:text-purple-600">
+                    <i class="fas fa-moon text-xl"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Dashboard Content -->
+        <div class="p-6">
+            <!-- Page Title -->
+            <div class="mb-8">
+                <h2 class="text-3xl font-bold text-gray-800">Admin Dashboard</h2>
+                <p class="text-gray-600 mt-2">Welcome back! Here's what's happening with your platform.</p>
+            </div>
+
+            <!-- Stats Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <!-- Total Users -->
+                <div class="stat-card bg-white rounded-xl p-6 card-shadow">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="bg-blue-100 p-3 rounded-lg">
+                            <i class="fas fa-users text-blue-600 text-xl"></i>
+                        </div>
+                        <span class="text-green-500 text-sm">
+                            <i class="fas fa-arrow-up mr-1"></i>12.5%
+                        </span>
+                    </div>
+                    <div class="text-2xl font-bold text-gray-800">24,536</div>
+                    <div class="text-gray-600 text-sm">Total Users</div>
+                </div>
+
+                <!-- Active Campaigns -->
+                <div class="stat-card bg-white rounded-xl p-6 card-shadow">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="bg-green-100 p-3 rounded-lg">
+                            <i class="fas fa-bullhorn text-green-600 text-xl"></i>
+                        </div>
+                        <span class="text-green-500 text-sm">
+                            <i class="fas fa-arrow-up mr-1"></i>8.3%
+                        </span>
+                    </div>
+                    <div class="text-2xl font-bold text-gray-800">1,847</div>
+                    <div class="text-gray-600 text-sm">Active Campaigns</div>
+                </div>
+
+                <!-- Content Generated -->
+                <div class="stat-card bg-white rounded-xl p-6 card-shadow">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="bg-purple-100 p-3 rounded-lg">
+                            <i class="fas fa-file-lines text-purple-600 text-xl"></i>
+                        </div>
+                        <span class="text-green-500 text-sm">
+                            <i class="fas fa-arrow-up mr-1"></i>23.7%
+                        </span>
+                    </div>
+                    <div class="text-2xl font-bold text-gray-800">156,234</div>
+                    <div class="text-gray-600 text-sm">Content Generated</div>
+                </div>
+
+                <!-- Revenue -->
+                <div class="stat-card bg-white rounded-xl p-6 card-shadow">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="bg-yellow-100 p-3 rounded-lg">
+                            <i class="fas fa-dollar-sign text-yellow-600 text-xl"></i>
+                        </div>
+                        <span class="text-green-500 text-sm">
+                            <i class="fas fa-arrow-up mr-1"></i>18.9%
+                        </span>
+                    </div>
+                    <div class="text-2xl font-bold text-gray-800">$847,290</div>
+                    <div class="text-gray-600 text-sm">Monthly Revenue</div>
+                </div>
+            </div>
+
+            <!-- Charts Row -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                <!-- Platform Performance -->
+                <div class="bg-white rounded-xl p-6 card-shadow">
+                    <h3 class="text-lg font-semibold mb-4">Platform Performance</h3>
+                    <div class="chart-container">
+                        <canvas id="platformChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- User Activity -->
+                <div class="bg-white rounded-xl p-6 card-shadow">
+                    <h3 class="text-lg font-semibold mb-4">User Activity</h3>
+                    <div class="chart-container">
+                        <canvas id="activityChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Feature Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                <!-- AI Content Generation -->
+                <div class="bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl p-6 text-white">
+                    <div class="flex items-center justify-between mb-4">
+                        <i class="fas fa-brain text-3xl"></i>
+                        <span class="bg-white bg-opacity-20 px-2 py-1 rounded text-xs">AI Powered</span>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-2">AI Content Generation</h3>
+                    <p class="text-sm opacity-90 mb-4">Generate high-quality content in seconds</p>
+                    <button onclick="openAIContent()" class="bg-white text-purple-600 px-4 py-2 rounded-lg font-semibold hover:bg-opacity-90">
+                        Generate Now
+                    </button>
+                </div>
+
+                <!-- A/B Testing -->
+                <div class="bg-gradient-to-br from-blue-500 to-cyan-500 rounded-xl p-6 text-white">
+                    <div class="flex items-center justify-between mb-4">
+                        <i class="fas fa-flask text-3xl"></i>
+                        <span class="bg-white bg-opacity-20 px-2 py-1 rounded text-xs">Active: 12</span>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-2">A/B Testing</h3>
+                    <p class="text-sm opacity-90 mb-4">Optimize your content with data-driven tests</p>
+                    <button onclick="openABTesting()" class="bg-white text-blue-600 px-4 py-2 rounded-lg font-semibold hover:bg-opacity-90">
+                        View Tests
+                    </button>
+                </div>
+
+                <!-- Competitor Analysis -->
+                <div class="bg-gradient-to-br from-green-500 to-teal-500 rounded-xl p-6 text-white">
+                    <div class="flex items-center justify-between mb-4">
+                        <i class="fas fa-chart-line text-3xl"></i>
+                        <span class="bg-white bg-opacity-20 px-2 py-1 rounded text-xs">Updated</span>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-2">Competitor Analysis</h3>
+                    <p class="text-sm opacity-90 mb-4">Track and analyze competitor strategies</p>
+                    <button onclick="openCompetitors()" class="bg-white text-green-600 px-4 py-2 rounded-lg font-semibold hover:bg-opacity-90">
+                        Analyze Now
+                    </button>
+                </div>
+            </div>
+
+            <!-- Recent Activity Table -->
+            <div class="bg-white rounded-xl p-6 card-shadow">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-semibold">Recent Activity</h3>
+                    <button class="text-purple-600 hover:text-purple-700 text-sm font-semibold">
+                        View All <i class="fas fa-arrow-right ml-1"></i>
+                    </button>
+                </div>
+                
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead>
+                            <tr class="text-left text-gray-600 text-sm border-b">
+                                <th class="pb-3">User</th>
+                                <th class="pb-3">Action</th>
+                                <th class="pb-3">Platform</th>
+                                <th class="pb-3">Time</th>
+                                <th class="pb-3">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="activityTable" class="text-sm">
+                            <!-- Activity rows will be inserted here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Load API Client -->
+    <script src="/js/api-client.js"></script>
+    
+    <!-- Load Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Admin Dashboard Script -->
+    <script>
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', async () => {
+            await loadDashboardData();
+            initializeCharts();
+            startRealTimeUpdates();
+        });
+
+        // Load dashboard data
+        async function loadDashboardData() {
+            try {
+                // Check feature flags
+                const features = await synthexAPI.getFeatureFlags();
+                updateFeatureVisibility(features);
+
+                // Load analytics
+                const analytics = await synthexAPI.getAnalytics('all', {
+                    startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
+                    endDate: new Date()
+                });
+                updateAnalytics(analytics);
+
+                // Load recent activity
+                await loadRecentActivity();
+
+                // Load notifications
+                await loadNotifications();
+            } catch (error) {
+                console.error('Failed to load dashboard data:', error);
+                showError('Failed to load dashboard data');
+            }
+        }
+
+        // Initialize charts
+        function initializeCharts() {
+            // Platform Performance Chart
+            const platformCtx = document.getElementById('platformChart').getContext('2d');
+            new Chart(platformCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Twitter', 'Instagram', 'LinkedIn', 'TikTok', 'Facebook'],
+                    datasets: [{
+                        label: 'Engagement Rate',
+                        data: [4.2, 6.8, 3.5, 8.9, 5.1],
+                        backgroundColor: [
+                            'rgba(29, 161, 242, 0.8)',
+                            'rgba(233, 68, 117, 0.8)',
+                            'rgba(0, 119, 181, 0.8)',
+                            'rgba(0, 0, 0, 0.8)',
+                            'rgba(59, 89, 152, 0.8)'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return value + '%';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            // User Activity Chart
+            const activityCtx = document.getElementById('activityChart').getContext('2d');
+            new Chart(activityCtx, {
+                type: 'line',
+                data: {
+                    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                    datasets: [{
+                        label: 'Active Users',
+                        data: [3200, 3500, 3300, 3800, 4200, 3900, 3600],
+                        borderColor: 'rgba(102, 126, 234, 1)',
+                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                        tension: 0.3
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+
+        // Load recent activity
+        async function loadRecentActivity() {
+            const activities = [
+                { user: 'John Doe', action: 'Published post', platform: 'Twitter', time: '2 min ago', status: 'success' },
+                { user: 'Jane Smith', action: 'Generated content', platform: 'Instagram', time: '5 min ago', status: 'success' },
+                { user: 'Mike Johnson', action: 'Started A/B test', platform: 'LinkedIn', time: '12 min ago', status: 'pending' },
+                { user: 'Sarah Williams', action: 'Scheduled post', platform: 'TikTok', time: '18 min ago', status: 'success' },
+                { user: 'Tom Brown', action: 'Updated campaign', platform: 'Facebook', time: '25 min ago', status: 'success' }
+            ];
+
+            const tbody = document.getElementById('activityTable');
+            tbody.innerHTML = activities.map(activity => `
+                <tr class="border-b hover:bg-gray-50">
+                    <td class="py-3">
+                        <div class="flex items-center">
+                            <img src="https://ui-avatars.com/api/?name=${activity.user}&size=32" 
+                                 class="w-8 h-8 rounded-full mr-3">
+                            <span class="font-medium">${activity.user}</span>
+                        </div>
+                    </td>
+                    <td class="py-3">${activity.action}</td>
+                    <td class="py-3">
+                        <span class="px-2 py-1 bg-gray-100 rounded text-xs">
+                            ${activity.platform}
+                        </span>
+                    </td>
+                    <td class="py-3 text-gray-600">${activity.time}</td>
+                    <td class="py-3">
+                        <span class="px-2 py-1 rounded text-xs ${
+                            activity.status === 'success' ? 'bg-green-100 text-green-600' :
+                            activity.status === 'pending' ? 'bg-yellow-100 text-yellow-600' :
+                            'bg-red-100 text-red-600'
+                        }">
+                            ${activity.status}
+                        </span>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // Start real-time updates
+        function startRealTimeUpdates() {
+            // Connect WebSocket for real-time data
+            synthexAPI.connectWebSocket();
+
+            // Listen for real-time events
+            window.addEventListener('synthex:analytics', (event) => {
+                updateAnalytics(event.detail);
+            });
+
+            window.addEventListener('synthex:notification', (event) => {
+                showNotification(event.detail);
+            });
+
+            // Refresh data every 30 seconds
+            setInterval(loadDashboardData, 30000);
+        }
+
+        // Toggle sidebar
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('-translate-x-full');
+        }
+
+        // Change locale
+        function changeLocale(locale) {
+            synthexAPI.setLocale(locale);
+            location.reload();
+        }
+
+        // Toggle theme
+        function toggleTheme() {
+            document.body.classList.toggle('dark');
+        }
+
+        // Logout
+        async function logout() {
+            await synthexAPI.logout();
+            window.location.href = '/login.html';
+        }
+
+        // Open AI Content
+        function openAIContent() {
+            window.location.href = '/content-generator.html';
+        }
+
+        // Open A/B Testing
+        function openABTesting() {
+            window.location.href = '/ab-testing.html';
+        }
+
+        // Open Competitors
+        function openCompetitors() {
+            window.location.href = '/competitors.html';
+        }
+
+        // Update feature visibility
+        function updateFeatureVisibility(features) {
+            // Show/hide features based on flags
+            if (!features.ENABLE_AI_CONTENT) {
+                document.querySelectorAll('[data-feature="ai-content"]').forEach(el => {
+                    el.style.display = 'none';
+                });
+            }
+        }
+
+        // Update analytics
+        function updateAnalytics(data) {
+            // Update stats cards with real data
+            console.log('Analytics data:', data);
+        }
+
+        // Load notifications
+        async function loadNotifications() {
+            try {
+                const notifications = await synthexAPI.getNotifications();
+                // Update notification badge
+                const badge = document.querySelector('.fa-bell').nextElementSibling;
+                if (badge) {
+                    badge.textContent = notifications.filter(n => !n.read).length;
+                }
+            } catch (error) {
+                console.error('Failed to load notifications:', error);
+            }
+        }
+
+        // Show notification
+        function showNotification(notification) {
+            // Create toast notification
+            const toast = document.createElement('div');
+            toast.className = 'fixed bottom-4 right-4 bg-white rounded-lg shadow-lg p-4 max-w-sm z-50';
+            toast.innerHTML = `
+                <div class="flex items-start">
+                    <i class="fas fa-info-circle text-blue-500 mr-3 mt-1"></i>
+                    <div>
+                        <div class="font-semibold">${notification.title}</div>
+                        <div class="text-sm text-gray-600">${notification.message}</div>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.remove();
+            }, 5000);
+        }
+
+        // Show error
+        function showError(message) {
+            const toast = document.createElement('div');
+            toast.className = 'fixed bottom-4 right-4 bg-red-500 text-white rounded-lg shadow-lg p-4 max-w-sm z-50';
+            toast.innerHTML = `
+                <div class="flex items-start">
+                    <i class="fas fa-exclamation-circle mr-3 mt-1"></i>
+                    <div>${message}</div>
+                </div>
+            `;
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.remove();
+            }, 5000);
+        }
+    </script>
+</body>
+</html>

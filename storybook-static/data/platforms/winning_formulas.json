@@ -1,0 +1,415 @@
+{
+  "platform_winning_formulas": {
+    "youtube": {
+      "shorts_viral_formula": {
+        "hook": "0-3 seconds maximum impact",
+        "structure": "Problem → Solution → Result",
+        "elements": {
+          "visual": "Fast cuts every 2-3 seconds",
+          "audio": "Trending sound or punchy original",
+          "text": "Bold captions, easy to read",
+          "loop": "Seamless for replay value"
+        },
+        "proven_formats": [
+          "Before/After transformation",
+          "Quick tutorial/hack",
+          "Satisfying process",
+          "Unexpected reveal",
+          "Relatable moment"
+        ],
+        "success_metrics": {
+          "view_duration": ">90%",
+          "replay_rate": ">1.5x",
+          "engagement": ">10%",
+          "share_rate": ">2%"
+        }
+      },
+      "long_form_authority": {
+        "structure": {
+          "0-15_sec": "Hook + Preview",
+          "15-30_sec": "Establish credibility",
+          "30_sec-2_min": "Deliver core value",
+          "2-8_min": "Deep dive with examples",
+          "8-10_min": "Summary + CTA"
+        },
+        "retention_tactics": [
+          "Chapter markers",
+          "Visual variety every 30 seconds",
+          "Pattern interrupts",
+          "Open loops",
+          "Value bullets"
+        ],
+        "thumbnail_formula": "Emotion + Curiosity + Clarity",
+        "title_structure": "[Result] + [Timeframe/Method] + [Intrigue]"
+      }
+    },
+    "facebook": {
+      "engagement_maximizer": {
+        "post_formula": "Story + Question + Visual",
+        "optimal_elements": {
+          "text_length": "40-80 characters",
+          "image": "Bright, faces visible, high contrast",
+          "video": "Square format, captions, 60 seconds",
+          "timing": "When audience online"
+        },
+        "conversation_starters": [
+          "Fill in the blank: ___",
+          "This or that?",
+          "Caption this!",
+          "Wrong answers only",
+          "Share your story"
+        ],
+        "algorithm_hacks": [
+          "No external links initially",
+          "Edit after 10 minutes to add links",
+          "Respond to every comment in first hour",
+          "Use native video",
+          "Post when fans online"
+        ]
+      },
+      "group_domination": {
+        "value_ladder": {
+          "week_1": "Observe and learn",
+          "week_2": "Answer questions",
+          "week_3": "Share resources",
+          "week_4": "Post valuable content",
+          "ongoing": "Become go-to expert"
+        },
+        "post_types": {
+          "monday": "Motivational with personal story",
+          "tuesday": "Tutorial or how-to",
+          "wednesday": "Win or success share",
+          "thursday": "Thought-provoking question",
+          "friday": "Free resource or tool"
+        }
+      }
+    },
+    "instagram": {
+      "reels_viral_framework": {
+        "hook_types": [
+          "POV: [Relatable scenario]",
+          "Things that [unexpected twist]",
+          "Nobody talks about this but...",
+          "Wait for it...",
+          "You've been doing [X] wrong"
+        ],
+        "content_pillars": {
+          "educational": "Quick tips, hacks, tutorials",
+          "entertaining": "Humor, trends, challenges",
+          "inspirational": "Transformations, quotes, wins",
+          "relatable": "Daily struggles, real moments"
+        },
+        "technical_optimization": {
+          "aspect_ratio": "9:16 full screen",
+          "duration": "7-15 seconds optimal",
+          "text_overlay": "Easy to read without sound",
+          "hashtags": "3-5 in caption",
+          "audio": "Trending within 24 hours"
+        }
+      },
+      "carousel_converter": {
+        "slide_formula": {
+          "slide_1": "Hook/Promise (stop scroll)",
+          "slide_2-3": "Problem agitation",
+          "slide_4-7": "Solution/Value",
+          "slide_8-9": "Proof/Examples",
+          "slide_10": "CTA/Summary"
+        },
+        "design_rules": [
+          "Consistent branding",
+          "Readable fonts",
+          "High contrast",
+          "Swipe indicator",
+          "Value on every slide"
+        ]
+      },
+      "story_engager": {
+        "interactive_elements": [
+          "Polls for quick engagement",
+          "Questions for DM responses",
+          "Quizzes for gamification",
+          "Countdown for FOMO",
+          "Slider for emotional response"
+        ],
+        "story_series": {
+          "behind_scenes": "Process and authenticity",
+          "day_in_life": "Relatable content",
+          "quick_tips": "Valuable and saveable",
+          "user_generated": "Community features"
+        }
+      }
+    },
+    "twitter": {
+      "thread_authority": {
+        "structure": {
+          "tweet_1": "Bold claim or question hook",
+          "tweet_2": "Expand the problem",
+          "tweet_3-7": "Deliver value points",
+          "tweet_8": "Surprising insight",
+          "tweet_9": "Actionable takeaway",
+          "tweet_10": "Summary + CTA"
+        },
+        "engagement_boosters": [
+          "Number tweets (1/10 format)",
+          "Use line breaks for readability",
+          "Add image every 3-4 tweets",
+          "Include mini-CTAs throughout",
+          "End with question"
+        ]
+      },
+      "viral_tweet": {
+        "templates": [
+          "Unpopular opinion: [contrarian take]",
+          "[Industry] is broken. Here's why:",
+          "I spent [time] researching [topic]. Here's what I found:",
+          "Stop doing [common practice]. Do this instead:",
+          "[Number] [things] that [specific outcome]:"
+        ],
+        "optimization": {
+          "length": "100-150 characters",
+          "format": "Line breaks for emphasis",
+          "media": "Image or GIF for 2x engagement",
+          "timing": "Peak hours for audience",
+          "hashtags": "0-2 maximum"
+        }
+      }
+    },
+    "linkedin": {
+      "thought_leadership": {
+        "post_structure": {
+          "hook": "First 3 lines visible in feed",
+          "story": "Personal narrative with stakes",
+          "insight": "Unique perspective or data",
+          "value": "Clear takeaways",
+          "engagement": "Question to spark discussion"
+        },
+        "content_angles": [
+          "Lessons from failure",
+          "Industry predictions",
+          "Contrarian viewpoints",
+          "Behind-the-scenes insights",
+          "Data-driven discoveries"
+        ],
+        "formatting": {
+          "line_breaks": "Every 1-2 sentences",
+          "bullets": "For key points",
+          "emojis": "Sparingly, 1-3 per post",
+          "hashtags": "3-5 at end",
+          "mentions": "Tag relevant people"
+        }
+      },
+      "document_authority": {
+        "carousel_structure": {
+          "slide_1": "Title + Value proposition",
+          "slide_2": "Problem overview",
+          "slide_3-8": "Solution steps",
+          "slide_9": "Results/Case study",
+          "slide_10": "Resources + CTA"
+        },
+        "design_principles": [
+          "Professional but accessible",
+          "Consistent branding",
+          "Data visualizations",
+          "Scannable content",
+          "Actionable insights"
+        ]
+      }
+    },
+    "tiktok": {
+      "viral_blueprint": {
+        "hook_mastery": {
+          "first_3_seconds": [
+            "Visual pattern interrupt",
+            "Provocative statement",
+            "Start with the payoff",
+            "Ask intriguing question",
+            "Show transformation teaser"
+          ]
+        },
+        "content_rhythm": {
+          "pacing": "New element every 2-3 seconds",
+          "transitions": "Match beat drops",
+          "text_overlay": "Reinforce audio",
+          "visual_variety": "Multiple angles/scenes"
+        },
+        "trend_hijacking": {
+          "timing": "Jump on within 24-48 hours",
+          "adaptation": "Add unique twist",
+          "audio": "Use exact trending sound",
+          "hashtags": "Mix trending + niche"
+        }
+      },
+      "series_success": {
+        "format": "Part 1, Part 2, etc.",
+        "consistency": "Same time daily",
+        "cliffhangers": "Leave them wanting more",
+        "community": "Respond to every comment",
+        "evolution": "Adapt based on feedback"
+      }
+    },
+    "pinterest": {
+      "pin_perfection": {
+        "visual_formula": {
+          "aspect_ratio": "2:3 (1000x1500px)",
+          "text_overlay": "Large, readable fonts",
+          "colors": "Bright, high contrast",
+          "branding": "Subtle but consistent",
+          "style": "Aspirational and achievable"
+        },
+        "seo_optimization": {
+          "title": "Keyword-rich, specific",
+          "description": "200-300 characters, natural keywords",
+          "board_placement": "Most relevant first",
+          "hashtags": "2-5 relevant tags"
+        },
+        "seasonal_strategy": {
+          "timing": "45 days before event",
+          "frequency": "Daily during peak season",
+          "boards": "Season-specific collections",
+          "trends": "Monitor Pinterest Trends"
+        }
+      },
+      "idea_pin_engagement": {
+        "structure": {
+          "page_1": "Hook with promise",
+          "page_2-4": "Build interest",
+          "page_5-7": "Deliver value",
+          "page_8-9": "Show results",
+          "page_10": "Call to action"
+        },
+        "interactive_features": [
+          "Shopping tags",
+          "Try-on feature",
+          "Recipe ingredients",
+          "Project supplies",
+          "Q&A stickers"
+        ]
+      }
+    },
+    "reddit": {
+      "value_first": {
+        "post_formula": {
+          "title": "Clear value proposition",
+          "body": {
+            "context": "Background and credibility",
+            "value": "Detailed insights or resources",
+            "proof": "Data, examples, verification",
+            "engagement": "Questions for discussion"
+          }
+        },
+        "comment_strategy": {
+          "early_bird": "Comment on rising posts",
+          "value_add": "Expand on OP's point",
+          "formatting": "Use markdown for readability",
+          "personality": "Authentic voice"
+        }
+      },
+      "community_integration": {
+        "phases": {
+          "lurk": "Week 1-2: Learn culture",
+          "contribute": "Week 3-4: Add value",
+          "establish": "Month 2: Build reputation",
+          "leverage": "Month 3+: Strategic sharing"
+        },
+        "subreddit_approach": {
+          "small": "Test content and build karma",
+          "medium": "Establish expertise",
+          "large": "Share best content only"
+        }
+      }
+    }
+  },
+  "cross_platform_synergies": {
+    "content_waterfall": {
+      "tier_1_original": "YouTube long-form or Blog",
+      "tier_2_adapt": {
+        "linkedin": "Professional angle article",
+        "facebook": "Community discussion post",
+        "twitter": "Thread with key points"
+      },
+      "tier_3_atomize": {
+        "instagram": "Carousel of main points",
+        "tiktok": "Quick tip from content",
+        "pinterest": "Infographic summary",
+        "youtube_shorts": "Key moment clip"
+      },
+      "tier_4_engage": {
+        "reddit": "AMA or case study",
+        "facebook_groups": "Answer related questions",
+        "twitter_spaces": "Live discussion"
+      }
+    },
+    "platform_strengths": {
+      "discovery": ["TikTok", "YouTube Shorts", "Instagram Reels"],
+      "authority": ["LinkedIn", "YouTube", "Twitter"],
+      "community": ["Facebook Groups", "Reddit", "Discord"],
+      "visual": ["Instagram", "Pinterest", "TikTok"],
+      "conversation": ["Twitter", "Reddit", "LinkedIn"],
+      "evergreen": ["YouTube", "Pinterest", "Blog"]
+    }
+  },
+  "monthly_content_calendar": {
+    "week_1": {
+      "theme": "Educational/How-to",
+      "platforms": {
+        "monday": ["LinkedIn article", "YouTube tutorial"],
+        "tuesday": ["Instagram carousel", "Pinterest guide"],
+        "wednesday": ["Twitter thread", "Facebook Live Q&A"],
+        "thursday": ["TikTok series start", "Reddit case study"],
+        "friday": ["YouTube Shorts compilation", "Instagram Reels"]
+      }
+    },
+    "week_2": {
+      "theme": "Behind-the-scenes/Process",
+      "platforms": {
+        "monday": ["Instagram Stories", "TikTok BTS"],
+        "tuesday": ["LinkedIn insights", "Facebook photos"],
+        "wednesday": ["Twitter updates", "YouTube vlog"],
+        "thursday": ["Pinterest process pins", "Reddit AMA"],
+        "friday": ["Instagram Reels", "TikTok trend"]
+      }
+    },
+    "week_3": {
+      "theme": "Community/UGC",
+      "platforms": {
+        "monday": ["Facebook group spotlight", "Instagram features"],
+        "tuesday": ["Twitter engagement", "LinkedIn mentions"],
+        "wednesday": ["TikTok duets", "YouTube community tab"],
+        "thursday": ["Reddit discussions", "Pinterest boards"],
+        "friday": ["Instagram takeover", "Facebook testimonials"]
+      }
+    },
+    "week_4": {
+      "theme": "Results/Analytics",
+      "platforms": {
+        "monday": ["LinkedIn case study", "YouTube analysis"],
+        "tuesday": ["Twitter data thread", "Instagram insights"],
+        "wednesday": ["Facebook results", "Pinterest trends"],
+        "thursday": ["TikTok metrics", "Reddit report"],
+        "friday": ["Cross-platform summary", "Newsletter"]
+      }
+    }
+  },
+  "performance_optimization": {
+    "testing_framework": {
+      "variables": [
+        "Posting time",
+        "Content format",
+        "Caption length",
+        "Hashtag mix",
+        "Visual style",
+        "CTA type"
+      ],
+      "metrics": {
+        "vanity": ["Likes", "Followers", "Views"],
+        "valuable": ["Engagement rate", "Click-through", "Conversions", "Shares", "Saves"]
+      },
+      "iteration_cycle": {
+        "test": "1 week minimum",
+        "analyze": "Compare to baseline",
+        "optimize": "Implement winners",
+        "scale": "Apply across platforms"
+      }
+    }
+  }
+}
