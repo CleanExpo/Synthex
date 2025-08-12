@@ -21,6 +21,12 @@ export {
 // Re-export individual translations for direct use if needed
 export { en, es } from './translations';
 
+// Default export
+import { i18nConfig } from './config';
+import { translations } from './translations';
+import { useTranslation } from './hooks/useTranslation';
+import { LanguageSwitch } from './components/LanguageSwitch';
+
 export default {
   config: i18nConfig,
   translations,

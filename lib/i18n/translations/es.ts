@@ -222,7 +222,7 @@ export const es = {
     roles: 'Roles',
     permissions: 'Permisos',
     
-    roles: {
+    roleTypes: {
       owner: 'Propietario',
       admin: 'Administrador',
       editor: 'Editor',
@@ -258,7 +258,7 @@ export const es = {
     integrations: 'Integraciones',
     api: 'API',
     
-    profile: {
+    profileFields: {
       name: 'Nombre',
       email: 'Correo',
       phone: 'Teléfono',
@@ -269,7 +269,7 @@ export const es = {
       dateFormat: 'Formato de Fecha',
     },
     
-    notifications: {
+    notificationTypes: {
       email: 'Notificaciones por Correo',
       push: 'Notificaciones Push',
       desktop: 'Notificaciones de Escritorio',
@@ -278,7 +278,7 @@ export const es = {
       tips: 'Consejos y Tutoriales',
     },
     
-    security: {
+    securityOptions: {
       changePassword: 'Cambiar Contraseña',
       twoFactor: 'Autenticación de Dos Factores',
       sessions: 'Sesiones Activas',

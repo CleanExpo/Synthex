@@ -290,7 +290,7 @@ export const cardHover = {
   boxShadow: '0 10px 30px rgba(139, 92, 246, 0.2)',
   transition: {
     duration: 0.3,
-    ease: 'easeOut'
+    ease: "easeOut" as const
   }
 };
 
@@ -359,7 +359,7 @@ export const float = {
   transition: {
     duration: 3,
     repeat: Infinity,
-    ease: 'easeInOut'
+    ease: "easeInOut" as const
   }
 };
 

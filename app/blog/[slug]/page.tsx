@@ -179,7 +179,7 @@ export default function BlogPostPage() {
   const [copied, setCopied] = useState(false);
   
   // Get the blog post based on the slug
-  const post = blogPosts[params.slug as string];
+  const post = blogPosts[params.slug as keyof typeof blogPosts];
   
   // If post not found, redirect to blog page
   useEffect(() => {
@@ -329,7 +329,7 @@ export default function BlogPostPage() {
           <div className="mt-12 pt-8 border-t border-gray-800">
             <div className="flex items-center gap-2 flex-wrap">
               <span className="text-gray-400">Tags:</span>
-              {post.tags.map((tag) => (
+              {post.tags.map((tag: string) => (
                 <Badge 
                   key={tag}
                   variant="outline" 

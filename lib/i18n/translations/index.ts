@@ -20,7 +20,7 @@ export type TranslationKey = keyof typeof en;
 export type TranslationLocale = keyof typeof translations;
 
 // Type for nested keys (e.g., 'auth.signIn', 'dashboard.metrics.totalCampaigns')
-export type NestedTranslationKeys<T = typeof en, K = keyof T> = K extends string
+export type NestedTranslationKeys<T = typeof en, K extends keyof T = keyof T> = K extends string
   ? T[K] extends Record<string, any>
     ? T[K] extends string
       ? K

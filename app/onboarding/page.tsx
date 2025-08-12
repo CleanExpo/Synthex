@@ -20,9 +20,9 @@ export default function OnboardingPage() {
     companyName: '',
     industry: '',
     teamSize: '',
-    goals: [],
-    platforms: [],
-    contentTypes: []
+    goals: [] as string[],
+    platforms: [] as string[],
+    contentTypes: [] as string[]
   });
 
   // Restore progress on mount
