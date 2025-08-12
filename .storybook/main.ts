@@ -2,15 +2,14 @@ import type { StorybookConfig } from '@storybook/nextjs';
 
 const config: StorybookConfig = {
   stories: [
-    '../stories/**/*.stories.@(js|jsx|ts|tsx|mdx)',
-    '../components/**/*.stories.@(js|jsx|ts|tsx|mdx)',
-    '../app/**/*.stories.@(js|jsx|ts|tsx|mdx)',
+    '../stories/**/*.stories.@(ts|tsx)',
+    '../components/**/*.stories.@(ts|tsx)',
+    '../app/**/*.stories.@(ts|tsx)',
   ],
   
   addons: [
     '@storybook/addon-links',
     '@storybook/addon-essentials',
-    '@storybook/addon-onboarding',
     '@storybook/addon-interactions',
     '@storybook/addon-a11y',
     '@storybook/addon-viewport',
