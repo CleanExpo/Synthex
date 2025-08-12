@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
@@ -16,10 +16,11 @@ export default function TestEmailPage() {
     message: 'This is a test email to verify that the email configuration is working correctly.',
   });
   const [result, setResult] = useState<any>(null);
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || (typeof window !== 'undefined' ? window.location.origin : '');
 
   const checkConfig = async () => {
     try {
-      const response = await fetch('/api/test-email');
+      const response = await fetch(`${baseUrl}/api/test-email`);
       const data = await response.json();
       setConfig(data);
     } catch (error) {
@@ -33,7 +34,7 @@ export default function TestEmailPage() {
     setResult(null);
 
     try {
-      const response = await fetch('/api/test-email', {
+      const response = await fetch(`${baseUrl}/api/test-email`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -59,9 +60,9 @@ export default function TestEmailPage() {
   };
 
   // Check config on mount
-  useState(() => {
+  useEffect(() => {
     checkConfig();
-  });
+  }, []);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-cyan-900/20 to-gray-900 p-6">
