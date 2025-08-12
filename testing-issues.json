@@ -190,8 +190,8 @@
       }
     },
     "firstDetected": "2025-08-07T08:15:19.716Z",
-    "lastSeen": "2025-08-07T08:15:19.716Z",
-    "occurrences": 1,
+    "lastSeen": "2025-08-12T12:11:13.475Z",
+    "occurrences": 73,
     "status": "open"
   },
   {
@@ -201,8 +201,8 @@
     "url": "/docs",
     "details": {},
     "firstDetected": "2025-08-07T08:15:19.725Z",
-    "lastSeen": "2025-08-07T08:15:19.725Z",
-    "occurrences": 1,
+    "lastSeen": "2025-08-12T12:11:13.490Z",
+    "occurrences": 73,
     "status": "open"
   },
   {
@@ -302,8 +302,8 @@
       }
     },
     "firstDetected": "2025-08-07T08:15:19.795Z",
-    "lastSeen": "2025-08-07T08:15:19.795Z",
-    "occurrences": 1,
+    "lastSeen": "2025-08-12T12:11:13.524Z",
+    "occurrences": 73,
     "status": "open"
   },
   {
@@ -313,8 +313,8 @@
     "url": "/signup.html",
     "details": {},
     "firstDetected": "2025-08-07T08:15:19.803Z",
-    "lastSeen": "2025-08-07T08:15:19.803Z",
-    "occurrences": 1,
+    "lastSeen": "2025-08-12T12:11:13.537Z",
+    "occurrences": 73,
     "status": "open"
   },
   {
@@ -330,8 +330,8 @@
       }
     },
     "firstDetected": "2025-08-07T08:15:19.818Z",
-    "lastSeen": "2025-08-07T08:15:19.818Z",
-    "occurrences": 1,
+    "lastSeen": "2025-08-12T15:24:17.267Z",
+    "occurrences": 459,
     "status": "open"
   },
   {
@@ -341,8 +341,8 @@
     "url": "/api/auth/login",
     "details": {},
     "firstDetected": "2025-08-07T08:15:19.825Z",
-    "lastSeen": "2025-08-07T08:15:19.825Z",
-    "occurrences": 1,
+    "lastSeen": "2025-08-12T15:24:17.283Z",
+    "occurrences": 459,
     "status": "open"
   },
   {
@@ -358,8 +358,8 @@
       }
     },
     "firstDetected": "2025-08-07T08:15:19.834Z",
-    "lastSeen": "2025-08-07T08:15:19.834Z",
-    "occurrences": 1,
+    "lastSeen": "2025-08-12T15:24:17.303Z",
+    "occurrences": 459,
     "status": "open"
   },
   {
@@ -369,8 +369,8 @@
     "url": "/api/auth/register",
     "details": {},
     "firstDetected": "2025-08-07T08:15:19.841Z",
-    "lastSeen": "2025-08-07T08:15:19.841Z",
-    "occurrences": 1,
+    "lastSeen": "2025-08-12T15:24:17.321Z",
+    "occurrences": 459,
     "status": "open"
   },
   {
@@ -442,8 +442,8 @@
       }
     },
     "firstDetected": "2025-08-07T08:15:19.914Z",
-    "lastSeen": "2025-08-07T08:15:19.914Z",
-    "occurrences": 1,
+    "lastSeen": "2025-08-12T15:24:17.352Z",
+    "occurrences": 459,
     "status": "open"
   },
   {
@@ -453,8 +453,8 @@
     "url": "/api/content/generate",
     "details": {},
     "firstDetected": "2025-08-07T08:15:19.925Z",
-    "lastSeen": "2025-08-07T08:15:19.925Z",
-    "occurrences": 1,
+    "lastSeen": "2025-08-12T15:24:17.367Z",
+    "occurrences": 459,
     "status": "open"
   },
   {
@@ -489,6 +489,172 @@
     "firstDetected": "2025-08-07T08:15:20.616Z",
     "lastSeen": "2025-08-07T08:15:20.616Z",
     "occurrences": 1,
+    "status": "open"
+  },
+  {
+    "id": 34,
+    "type": "console-error",
+    "description": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "url": "http://localhost:3002/login.html",
+    "details": {
+      "stack": {
+        "url": "http://localhost:3002/login.html",
+        "lineNumber": 0,
+        "columnNumber": 0
+      }
+    },
+    "firstDetected": "2025-08-12T11:35:40.232Z",
+    "lastSeen": "2025-08-12T12:11:13.389Z",
+    "occurrences": 72,
+    "status": "open"
+  },
+  {
+    "id": 35,
+    "type": "missing-page",
+    "description": "Page not found: /login.html",
+    "url": "/login.html",
+    "details": {},
+    "firstDetected": "2025-08-12T11:35:40.245Z",
+    "lastSeen": "2025-08-12T12:11:13.412Z",
+    "occurrences": 72,
+    "status": "open"
+  },
+  {
+    "id": 36,
+    "type": "console-error",
+    "description": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "url": "http://localhost:3002/pricing.html",
+    "details": {
+      "stack": {
+        "url": "http://localhost:3002/pricing.html",
+        "lineNumber": 0,
+        "columnNumber": 0
+      }
+    },
+    "firstDetected": "2025-08-12T11:35:40.269Z",
+    "lastSeen": "2025-08-12T12:11:13.442Z",
+    "occurrences": 72,
+    "status": "open"
+  },
+  {
+    "id": 37,
+    "type": "missing-page",
+    "description": "Page not found: /pricing.html",
+    "url": "/pricing.html",
+    "details": {},
+    "firstDetected": "2025-08-12T11:35:40.282Z",
+    "lastSeen": "2025-08-12T12:11:13.456Z",
+    "occurrences": 72,
+    "status": "open"
+  },
+  {
+    "id": 38,
+    "type": "form-element",
+    "description": "Email input not found on login page",
+    "url": "/login",
+    "details": {},
+    "firstDetected": "2025-08-12T11:35:41.010Z",
+    "lastSeen": "2025-08-12T15:24:17.977Z",
+    "occurrences": 458,
+    "status": "open"
+  },
+  {
+    "id": 39,
+    "type": "form-element",
+    "description": "Password input not found on login page",
+    "url": "/login",
+    "details": {},
+    "firstDetected": "2025-08-12T11:35:41.022Z",
+    "lastSeen": "2025-08-12T15:24:17.991Z",
+    "occurrences": 458,
+    "status": "open"
+  },
+  {
+    "id": 40,
+    "type": "form-element",
+    "description": "Submit button not found on login page",
+    "url": "/login",
+    "details": {},
+    "firstDetected": "2025-08-12T11:35:41.035Z",
+    "lastSeen": "2025-08-12T15:24:18.004Z",
+    "occurrences": 458,
+    "status": "open"
+  },
+  {
+    "id": 41,
+    "type": "page-error",
+    "description": "window.synthexAPI.isAuthenticated is not a function",
+    "url": "http://localhost:3002/login.html",
+    "details": {
+      "stack": "TypeError: window.synthexAPI.isAuthenticated is not a function\n    at http://localhost:3002/login.html:821:52"
+    },
+    "firstDetected": "2025-08-12T12:11:46.063Z",
+    "lastSeen": "2025-08-12T15:24:16.875Z",
+    "occurrences": 386,
+    "status": "open"
+  },
+  {
+    "id": 42,
+    "type": "network-error",
+    "description": "Failed request: https://fonts.gstatic.com/s/inter/v19/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa1ZL7.woff2",
+    "url": "http://localhost:3002/login.html",
+    "details": {
+      "method": "GET",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    "firstDetected": "2025-08-12T12:11:46.084Z",
+    "lastSeen": "2025-08-12T15:24:16.903Z",
+    "occurrences": 380,
+    "status": "open"
+  },
+  {
+    "id": 43,
+    "type": "network-error",
+    "description": "Failed request: https://fonts.gstatic.com/s/inter/v19/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa1ZL7.woff2",
+    "url": "http://localhost:3002/docs",
+    "details": {
+      "method": "GET",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    "firstDetected": "2025-08-12T12:11:46.222Z",
+    "lastSeen": "2025-08-12T15:24:17.088Z",
+    "occurrences": 380,
+    "status": "open"
+  },
+  {
+    "id": 44,
+    "type": "network-error",
+    "description": "Failed request: https://fonts.gstatic.com/s/inter/v19/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa1ZL7.woff2",
+    "url": "http://localhost:3002/signup.html",
+    "details": {
+      "method": "GET",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    "firstDetected": "2025-08-12T12:11:46.255Z",
+    "lastSeen": "2025-08-12T15:24:17.245Z",
+    "occurrences": 380,
+    "status": "open"
+  },
+  {
+    "id": 45,
+    "type": "network-error",
+    "description": "Failed request: http://localhost:3002/logo.png",
+    "url": "http://localhost:3002/pricing.html",
+    "details": {
+      "method": "GET",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    "firstDetected": "2025-08-12T12:33:13.614Z",
+    "lastSeen": "2025-08-12T13:52:15.777Z",
+    "occurrences": 2,
     "status": "open"
   }
 ]
