@@ -1,0 +1,414 @@
+{
+  "platform": "Pinterest",
+  "last_updated": "2024-12-20",
+  "positioning": "Visual Discovery & Inspiration Engine",
+  "algorithm_factors": {
+    "smart_feed_algorithm": {
+      "user_engagement_history": {
+        "weight": "35%",
+        "factors": [
+          "Pins saved from similar content",
+          "Board creation patterns",
+          "Click-through behavior",
+          "Time spent on pins",
+          "Search history"
+        ]
+      },
+      "pin_quality": {
+        "weight": "30%",
+        "factors": [
+          "Image resolution and aspect ratio",
+          "Fresh content vs repins",
+          "Domain quality score",
+          "Pin description completeness",
+          "Rich Pin implementation"
+        ]
+      },
+      "pinner_quality": {
+        "weight": "20%",
+        "factors": [
+          "Account verification",
+          "Consistent pinning activity",
+          "Original content ratio",
+          "Follower engagement rate",
+          "Board organization"
+        ]
+      },
+      "relevance_and_timeliness": {
+        "weight": "15%",
+        "factors": [
+          "Seasonal trending",
+          "Keyword relevance",
+          "Category alignment",
+          "Freshness of content",
+          "Emerging interests"
+        ]
+      }
+    }
+  },
+  "content_specifications": {
+    "standard_pins": {
+      "optimal_aspect_ratio": "2:3",
+      "recommended_size": "1000x1500px",
+      "max_aspect_ratio": "1:2.1",
+      "file_formats": "JPG, PNG",
+      "max_file_size": "32MB",
+      "title_length": "40-100 characters",
+      "description_length": "200-500 characters"
+    },
+    "idea_pins": {
+      "pages": "1-20",
+      "aspect_ratio": "9:16",
+      "resolution": "1080x1920",
+      "video_length": "1-60 seconds per page",
+      "total_length": "up to 10 minutes",
+      "features": [
+        "Text overlay",
+        "Music",
+        "Voiceover",
+        "Interactive stickers",
+        "Product tags"
+      ]
+    },
+    "video_pins": {
+      "aspect_ratio": "2:3, 1:1, or 9:16",
+      "max_length": "15 minutes",
+      "optimal_length": "15-60 seconds",
+      "file_formats": "MP4, MOV, M4V",
+      "max_file_size": "2GB",
+      "encoding": "H.264 or H.265"
+    },
+    "rich_pins": {
+      "types": {
+        "article": {
+          "metadata": ["Headline", "Author", "Description"],
+          "benefits": "Automatic updates from website"
+        },
+        "product": {
+          "metadata": ["Price", "Availability", "Where to buy"],
+          "benefits": "Real-time pricing, increased CTR"
+        },
+        "recipe": {
+          "metadata": ["Ingredients", "Cook time", "Servings"],
+          "benefits": "Save rates 2x higher"
+        }
+      }
+    }
+  },
+  "seasonal_strategy": {
+    "planning_timeline": {
+      "45_days_before": "Start pinning seasonal content",
+      "30_days_before": "Increase frequency",
+      "14_days_before": "Peak pinning period",
+      "day_of": "Last-minute inspiration",
+      "7_days_after": "Next year planning content"
+    },
+    "major_seasons": {
+      "january": ["New Year", "Organization", "Health goals"],
+      "february": ["Valentine's Day", "Winter recipes"],
+      "march": ["Spring cleaning", "St. Patrick's Day"],
+      "april": ["Easter", "Spring fashion", "Garden planning"],
+      "may": ["Mother's Day", "Graduation", "Memorial Day"],
+      "june": ["Father's Day", "Summer vacation", "Weddings"],
+      "july": ["4th of July", "Summer recipes", "Back to school prep"],
+      "august": ["Back to school", "Fall preview"],
+      "september": ["Fall decor", "Halloween prep"],
+      "october": ["Halloween", "Thanksgiving prep"],
+      "november": ["Thanksgiving", "Black Friday", "Christmas prep"],
+      "december": ["Christmas", "Hanukkah", "New Year's Eve"]
+    }
+  },
+  "board_optimization": {
+    "structure": {
+      "optimal_board_count": "15-30 focused boards",
+      "pins_per_board": "50-250 for authority",
+      "naming_convention": "SEO-friendly, descriptive titles",
+      "board_covers": "Cohesive, branded aesthetics",
+      "board_descriptions": "Keyword-rich, 200+ characters"
+    },
+    "board_types": {
+      "hero_boards": {
+        "purpose": "Main topic expertise",
+        "pin_frequency": "Daily",
+        "optimization": "Most relevant keywords"
+      },
+      "seasonal_boards": {
+        "purpose": "Timely content",
+        "pin_frequency": "45 days before season",
+        "optimization": "Trending searches"
+      },
+      "evergreen_boards": {
+        "purpose": "Consistent traffic",
+        "pin_frequency": "2-3 times weekly",
+        "optimization": "High-volume keywords"
+      },
+      "collaborative_boards": {
+        "purpose": "Community engagement",
+        "management": "Moderated contributions",
+        "benefits": "Increased reach and engagement"
+      }
+    }
+  },
+  "seo_optimization": {
+    "keyword_placement": {
+      "profile_name": "Primary keyword",
+      "profile_description": "3-5 keywords naturally",
+      "board_titles": "Long-tail keywords",
+      "board_descriptions": "Related keywords",
+      "pin_titles": "Searchable phrases",
+      "pin_descriptions": "Natural keyword integration",
+      "alt_text": "Descriptive for accessibility"
+    },
+    "trending_keywords": {
+      "discovery_tools": [
+        "Pinterest Trends tool",
+        "Pinterest search bar suggestions",
+        "Guided search bubbles",
+        "Pinterest Analytics",
+        "Google Trends correlation"
+      ],
+      "implementation": "Mix trending with evergreen"
+    }
+  },
+  "pinning_strategy": {
+    "frequency": {
+      "minimum": "1 pin daily",
+      "optimal": "15-25 pins daily",
+      "maximum": "50 pins (avoid spam detection)",
+      "fresh_content_ratio": "80% new pins, 20% repins"
+    },
+    "timing": {
+      "best_times_est": {
+        "morning": "5:00-7:00 AM",
+        "afternoon": "2:00-4:00 PM",
+        "evening": "8:00-11:00 PM",
+        "peak_day": "Saturday"
+      },
+      "audience_specific": "Check Pinterest Analytics for your peak times"
+    },
+    "distribution": {
+      "own_content": "20-30%",
+      "curated_content": "60-70%",
+      "collaborative_pins": "10-20%"
+    }
+  },
+  "idea_pins_strategy": {
+    "content_types": {
+      "tutorials": {
+        "structure": "Step-by-step process",
+        "pages": "5-10",
+        "engagement": "3x standard pins"
+      },
+      "before_after": {
+        "structure": "Transformation story",
+        "pages": "3-5",
+        "save_rate": "2x higher"
+      },
+      "listicles": {
+        "structure": "Numbered tips or ideas",
+        "pages": "5-15",
+        "completion_rate": "High"
+      },
+      "behind_scenes": {
+        "structure": "Process reveal",
+        "pages": "4-8",
+        "authenticity": "Builds trust"
+      }
+    },
+    "optimization": {
+      "cover_image": "Eye-catching, clear text",
+      "text_overlay": "Large, readable fonts",
+      "music": "Trending or mood-appropriate",
+      "hashtags": "3-5 relevant tags",
+      "interactive_elements": "Polls, questions, stickers"
+    }
+  },
+  "analytics_benchmarks": {
+    "engagement_metrics": {
+      "save_rate": {
+        "poor": "<0.1%",
+        "average": "0.1-0.3%",
+        "good": "0.3-0.5%",
+        "excellent": ">0.5%"
+      },
+      "click_rate": {
+        "poor": "<0.2%",
+        "average": "0.2-0.4%",
+        "good": "0.4-0.6%",
+        "excellent": ">0.6%"
+      },
+      "closeup_rate": {
+        "target": ">1%",
+        "indicates": "High interest"
+      }
+    },
+    "growth_metrics": {
+      "monthly_viewers": {
+        "growth_target": "10-20% month-over-month"
+      },
+      "follower_growth": {
+        "healthy_rate": "5-10% monthly"
+      },
+      "engagement_growth": {
+        "target": "Consistent upward trend"
+      }
+    }
+  },
+  "content_categories": {
+    "top_performing_niches": {
+      "home_decor": {
+        "trending_topics": ["DIY", "Minimalist", "Sustainable"],
+        "peak_seasons": ["Spring", "Fall"],
+        "content_ideas": ["Room tours", "Before/after", "Budget makeovers"]
+      },
+      "recipes_food": {
+        "trending_topics": ["Quick meals", "Healthy", "Comfort food"],
+        "peak_seasons": ["Holidays", "Summer BBQ"],
+        "content_ideas": ["Step-by-step", "Meal prep", "Dietary specific"]
+      },
+      "fashion_beauty": {
+        "trending_topics": ["Sustainable", "Capsule wardrobe", "Skincare"],
+        "peak_seasons": ["Spring/Fall transitions"],
+        "content_ideas": ["Outfit formulas", "Tutorials", "Product reviews"]
+      },
+      "diy_crafts": {
+        "trending_topics": ["Upcycling", "Kids crafts", "Holiday crafts"],
+        "peak_seasons": ["Back to school", "Holidays"],
+        "content_ideas": ["Tutorials", "Supply lists", "Templates"]
+      },
+      "health_fitness": {
+        "trending_topics": ["Home workouts", "Meal planning", "Mental health"],
+        "peak_seasons": ["New Year", "Summer prep"],
+        "content_ideas": ["Workout routines", "Progress tracking", "Tips"]
+      },
+      "travel": {
+        "trending_topics": ["Budget travel", "Solo travel", "Hidden gems"],
+        "peak_seasons": ["Summer", "Holiday planning"],
+        "content_ideas": ["Guides", "Packing lists", "Itineraries"]
+      }
+    }
+  },
+  "shopping_features": {
+    "product_pins": {
+      "requirements": [
+        "Business account",
+        "Claimed website",
+        "Product catalog upload"
+      ],
+      "benefits": [
+        "Automatic pricing updates",
+        "In-stock indicators",
+        "Direct checkout option"
+      ]
+    },
+    "shopping_ads": {
+      "formats": [
+        "Shopping ads",
+        "Collection ads",
+        "Dynamic retargeting"
+      ],
+      "best_practices": [
+        "High-quality product images",
+        "Competitive pricing",
+        "Seasonal promotions",
+        "Mobile optimization"
+      ]
+    },
+    "verified_merchant_program": {
+      "benefits": [
+        "Verified badge",
+        "Priority distribution",
+        "Enhanced analytics",
+        "Early feature access"
+      ]
+    }
+  },
+  "growth_tactics": {
+    "organic_growth": {
+      "consistency": "Pin daily without gaps",
+      "quality": "High-res, vertical images",
+      "seo": "Optimize everything",
+      "engagement": "Respond to comments",
+      "community": "Join group boards",
+      "fresh_content": "Create new pins regularly"
+    },
+    "pinterest_ads": {
+      "campaign_types": [
+        "Awareness",
+        "Consideration",
+        "Conversions",
+        "Catalog sales"
+      ],
+      "targeting_options": [
+        "Keywords",
+        "Interests",
+        "Demographics",
+        "Customer lists",
+        "Actalike audiences"
+      ]
+    },
+    "influencer_collaboration": {
+      "strategies": [
+        "Guest pinning",
+        "Board takeovers",
+        "Co-created content",
+        "Affiliate programs"
+      ]
+    }
+  },
+  "common_mistakes": [
+    "Pinning only own content",
+    "Ignoring SEO optimization",
+    "Inconsistent pinning schedule",
+    "Poor image quality",
+    "Not using Rich Pins",
+    "Neglecting seasonal content",
+    "Spam-like behavior",
+    "Not engaging with community",
+    "Ignoring analytics",
+    "Horizontal images only"
+  ],
+  "tools_resources": {
+    "scheduling": [
+      "Tailwind",
+      "Later",
+      "Buffer",
+      "Hootsuite"
+    ],
+    "design": [
+      "Canva (Pinterest templates)",
+      "Adobe Spark",
+      "PicMonkey",
+      "Crello"
+    ],
+    "analytics": [
+      "Pinterest Analytics",
+      "Tailwind Analytics",
+      "Google Analytics"
+    ],
+    "keyword_research": [
+      "Pinterest Trends",
+      "Pinterest Ads Manager",
+      "Keysearch",
+      "Pin Inspector"
+    ]
+  },
+  "2024_trends": {
+    "platform_updates": [
+      "AI-powered visual search expansion",
+      "Creator rewards program",
+      "Enhanced shopping features",
+      "Idea Pins monetization",
+      "Pinterest TV growth",
+      "Augmented reality try-on"
+    ],
+    "content_trends": [
+      "Sustainability focus",
+      "Inclusive representation",
+      "Video-first content",
+      "Interactive experiences",
+      "Nostalgia marketing",
+      "Wellness and self-care"
+    ]
+  }
+}

@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Documentation - SYNTHEX</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+        }
+        
+        nav {
+            background: white;
+            padding: 20px 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        nav .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            font-size: 24px;
+            font-weight: 800;
+            color: #667eea;
+            text-decoration: none;
+        }
+        
+        .nav-links {
+            display: flex;
+            gap: 30px;
+            align-items: center;
+        }
+        
+        .nav-links a {
+            color: #4b5563;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+        
+        .nav-links a:hover {
+            color: #667eea;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+        
+        .docs-grid {
+            display: grid;
+            grid-template-columns: 250px 1fr;
+            gap: 40px;
+            margin-top: 20px;
+        }
+        
+        .sidebar {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            height: fit-content;
+            position: sticky;
+            top: 100px;
+        }
+        
+        .sidebar h3 {
+            color: #1f2937;
+            margin-bottom: 15px;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .sidebar ul {
+            list-style: none;
+        }
+        
+        .sidebar li {
+            margin-bottom: 10px;
+        }
+        
+        .sidebar a {
+            color: #6b7280;
+            text-decoration: none;
+            display: block;
+            padding: 8px 12px;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+        
+        .sidebar a:hover, .sidebar a.active {
+            background: #f3f4f6;
+            color: #667eea;
+        }
+        
+        .content {
+            background: white;
+            border-radius: 12px;
+            padding: 40px;
+        }
+        
+        .content h1 {
+            color: #1f2937;
+            margin-bottom: 20px;
+            font-size: 36px;
+        }
+        
+        .content h2 {
+            color: #374151;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            font-size: 24px;
+        }
+        
+        .content h3 {
+            color: #4b5563;
+            margin-top: 20px;
+            margin-bottom: 10px;
+            font-size: 18px;
+        }
+        
+        .content p {
+            color: #6b7280;
+            line-height: 1.7;
+            margin-bottom: 15px;
+        }
+        
+        .content code {
+            background: #f3f4f6;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+        }
+        
+        .content pre {
+            background: #1f2937;
+            color: #e5e7eb;
+            padding: 20px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 20px 0;
+        }
+        
+        .content ul, .content ol {
+            margin: 15px 0;
+            padding-left: 30px;
+            color: #6b7280;
+        }
+        
+        .content li {
+            margin-bottom: 8px;
+            line-height: 1.6;
+        }
+        
+        .alert {
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        
+        .alert.info {
+            background: #dbeafe;
+            color: #1e40af;
+            border-left: 4px solid #3b82f6;
+        }
+        
+        .alert.warning {
+            background: #fef3c7;
+            color: #92400e;
+            border-left: 4px solid #f59e0b;
+        }
+        
+        .alert.success {
+            background: #d1fae5;
+            color: #065f46;
+            border-left: 4px solid #10b981;
+        }
+        
+        @media (max-width: 768px) {
+            .docs-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .sidebar {
+                position: static;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="container">
+            <a href="/" class="logo">SYNTHEX</a>
+            <div class="nav-links">
+                <a href="/">Home</a>
+                <a href="/docs">Docs</a>
+                <a href="/pricing.html">Pricing</a>
+                <a href="/dashboard">Dashboard</a>
+                <a href="/login">Sign In</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="docs-grid">
+            <aside class="sidebar">
+                <h3>Getting Started</h3>
+                <ul>
+                    <li><a href="#introduction" class="active">Introduction</a></li>
+                    <li><a href="#quickstart">Quick Start</a></li>
+                    <li><a href="#installation">Installation</a></li>
+                    <li><a href="#configuration">Configuration</a></li>
+                </ul>
+                
+                <h3 style="margin-top: 25px;">Core Features</h3>
+                <ul>
+                    <li><a href="#ai-content">AI Content Generation</a></li>
+                    <li><a href="#campaigns">Campaign Management</a></li>
+                    <li><a href="#analytics">Analytics</a></li>
+                    <li><a href="#scheduling">Smart Scheduling</a></li>
+                </ul>
+                
+                <h3 style="margin-top: 25px;">API Reference</h3>
+                <ul>
+                    <li><a href="#api-auth">Authentication</a></li>
+                    <li><a href="#api-campaigns">Campaigns API</a></li>
+                    <li><a href="#api-content">Content API</a></li>
+                    <li><a href="#api-analytics">Analytics API</a></li>
+                </ul>
+                
+                <h3 style="margin-top: 25px;">Advanced</h3>
+                <ul>
+                    <li><a href="#agents">AI Agents</a></li>
+                    <li><a href="#webhooks">Webhooks</a></li>
+                    <li><a href="#integrations">Integrations</a></li>
+                </ul>
+            </aside>
+
+            <main class="content">
+                <h1>SYNTHEX Documentation</h1>
+                <p>Welcome to the SYNTHEX documentation. Here you'll find everything you need to get started with our AI-powered marketing automation platform.</p>
+
+                <div class="alert info">
+                    <strong>Note:</strong> SYNTHEX is currently in beta. Some features may change as we continue to improve the platform.
+                </div>
+
+                <h2 id="introduction">Introduction</h2>
+                <p>SYNTHEX is a revolutionary marketing automation platform that leverages artificial intelligence to create, optimize, and manage your social media presence across multiple platforms. Our intelligent agents work 24/7 to ensure your content reaches the right audience at the perfect time.</p>
+
+                <h3>Key Features</h3>
+                <ul>
+                    <li><strong>AI-Powered Content Generation:</strong> Create engaging content tailored to each platform</li>
+                    <li><strong>Multi-Platform Management:</strong> Manage 8+ social platforms from one dashboard</li>
+                    <li><strong>Intelligent Scheduling:</strong> Post at optimal times based on audience activity</li>
+                    <li><strong>Real-Time Analytics:</strong> Track performance with advanced metrics</li>
+                    <li><strong>Autonomous Agents:</strong> AI agents that learn and improve continuously</li>
+                </ul>
+
+                <h2 id="quickstart">Quick Start</h2>
+                <p>Get up and running with SYNTHEX in just a few minutes:</p>
+
+                <h3>1. Create Your Account</h3>
+                <p>Sign up for a free account at <a href="/signup.html">synthex.com/signup</a>. You'll get instant access to all core features.</p>
+
+                <h3>2. Connect Your Platforms</h3>
+                <p>Navigate to Settings → Integrations and connect your social media accounts:</p>
+                <pre><code>// Example: Connecting Twitter
+const twitter = await synthex.connect('twitter', {
+  apiKey: process.env.TWITTER_API_KEY,
+  apiSecret: process.env.TWITTER_API_SECRET
+});</code></pre>
+
+                <h3>3. Create Your First Campaign</h3>
+                <p>Use the Campaign Builder to create your first automated campaign:</p>
+                <pre><code>// Create a campaign via API
+const campaign = await synthex.campaigns.create({
+  name: "Product Launch 2024",
+  platforms: ["twitter", "linkedin", "facebook"],
+  schedule: "optimal", // AI determines best times
+  content: {
+    generate: true, // Use AI generation
+    tone: "professional",
+    keywords: ["innovation", "technology"]
+  }
+});</code></pre>
+
+                <h2 id="installation">Installation</h2>
+                <p>SYNTHEX can be used through our web interface or integrated into your applications via our SDK.</p>
+
+                <h3>Web Application</h3>
+                <p>No installation required! Access SYNTHEX directly at <a href="/dashboard">synthex.com/dashboard</a></p>
+
+                <h3>Node.js SDK</h3>
+                <pre><code>npm install @synthex/sdk</code></pre>
+
+                <h3>Python SDK</h3>
+                <pre><code>pip install synthex</code></pre>
+
+                <h2 id="configuration">Configuration</h2>
+                <p>Configure SYNTHEX to match your brand and workflow:</p>
+
+                <h3>Environment Variables</h3>
+                <pre><code># .env file
+SYNTHEX_API_KEY=your_api_key_here
+OPENROUTER_API_KEY=your_openrouter_key
+SUPABASE_URL=your_supabase_url
+SUPABASE_ANON_KEY=your_supabase_key</code></pre>
+
+                <h3>Brand Settings</h3>
+                <p>Define your brand voice and style guidelines in the dashboard under Settings → Brand:</p>
+                <ul>
+                    <li>Brand voice and tone</li>
+                    <li>Color schemes and visual guidelines</li>
+                    <li>Hashtag preferences</li>
+                    <li>Content restrictions</li>
+                </ul>
+
+                <h2 id="ai-content">AI Content Generation</h2>
+                <p>SYNTHEX uses advanced AI models to generate platform-optimized content that resonates with your audience.</p>
+
+                <h3>Content Types</h3>
+                <ul>
+                    <li><strong>Posts:</strong> Text content for social media</li>
+                    <li><strong>Images:</strong> AI-generated visuals and graphics</li>
+                    <li><strong>Videos:</strong> Short-form video content</li>
+                    <li><strong>Stories:</strong> Platform-specific story content</li>
+                </ul>
+
+                <h3>Generation API</h3>
+                <pre><code>// Generate content with AI
+const content = await synthex.content.generate({
+  type: "post",
+  platform: "linkedin",
+  topic: "AI in marketing",
+  style: "thought-leadership",
+  length: "medium",
+  includeHashtags: true,
+  includeEmojis: false
+});
+
+console.log(content.text);
+// Output: "The future of marketing lies in AI-driven personalization..."</code></pre>
+
+                <div class="alert success">
+                    <strong>Pro Tip:</strong> Use the Content Studio's A/B testing feature to automatically test different variations and optimize for engagement.
+                </div>
+
+                <h2 id="api-auth">Authentication API</h2>
+                <p>Secure authentication for accessing SYNTHEX APIs:</p>
+
+                <h3>Login Endpoint</h3>
+                <pre><code>POST /api/auth/login
+Content-Type: application/json
+
+{
+  "email": "user@example.com",
+  "password": "your_password"
+}
+
+// Response
+{
+  "success": true,
+  "token": "jwt_token_here",
+  "user": {
+    "id": 1,
+    "email": "user@example.com",
+    "name": "John Doe"
+  }
+}</code></pre>
+
+                <h3>Using the Token</h3>
+                <p>Include the JWT token in all authenticated requests:</p>
+                <pre><code>Authorization: Bearer your_jwt_token_here</code></pre>
+
+                <h2 id="agents">AI Agents</h2>
+                <p>SYNTHEX employs multiple specialized AI agents that work together to optimize your marketing:</p>
+
+                <h3>Available Agents</h3>
+                <ul>
+                    <li><strong>Content Agent:</strong> Generates and optimizes content</li>
+                    <li><strong>Analytics Agent:</strong> Analyzes performance metrics</li>
+                    <li><strong>Scheduling Agent:</strong> Determines optimal posting times</li>
+                    <li><strong>Engagement Agent:</strong> Manages audience interactions</li>
+                    <li><strong>Trend Agent:</strong> Identifies and leverages trending topics</li>
+                    <li><strong>Competitor Agent:</strong> Monitors competitor strategies</li>
+                    <li><strong>Platform Agents:</strong> Specialized agents for each social platform</li>
+                </ul>
+
+                <div class="alert warning">
+                    <strong>Beta Feature:</strong> Advanced agent customization is currently in beta. Contact support for early access.
+                </div>
+
+                <h2>Need Help?</h2>
+                <p>If you have questions or need assistance:</p>
+                <ul>
+                    <li>Email: <a href="mailto:support@synthex.ai">support@synthex.ai</a></li>
+                    <li>Discord: <a href="#">Join our community</a></li>
+                    <li>GitHub: <a href="#">Report issues</a></li>
+                </ul>
+            </main>
+        </div>
+    </div>
+
+    <script>
+        // Smooth scrolling for sidebar links
+        document.querySelectorAll('.sidebar a').forEach(link => {
+            link.addEventListener('click', function(e) {
+                if (this.getAttribute('href').startsWith('#')) {
+                    e.preventDefault();
+                    const target = document.querySelector(this.getAttribute('href'));
+                    if (target) {
+                        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        
+                        // Update active state
+                        document.querySelectorAll('.sidebar a').forEach(a => a.classList.remove('active'));
+                        this.classList.add('active');
+                    }
+                }
+            });
+        });
+
+        // Highlight current section on scroll
+        window.addEventListener('scroll', () => {
+            const sections = document.querySelectorAll('h2[id], h3[id]');
+            let current = '';
+            
+            sections.forEach(section => {
+                const rect = section.getBoundingClientRect();
+                if (rect.top <= 100) {
+                    current = section.getAttribute('id');
+                }
+            });
+            
+            document.querySelectorAll('.sidebar a').forEach(a => {
+                a.classList.remove('active');
+                if (a.getAttribute('href') === `#${current}`) {
+                    a.classList.add('active');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

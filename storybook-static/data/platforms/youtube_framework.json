@@ -1,0 +1,289 @@
+{
+  "platform": "YouTube",
+  "last_updated": "2024-12-20",
+  "algorithm_priorities": {
+    "primary_factors": [
+      {
+        "factor": "Watch Time",
+        "weight": "35%",
+        "description": "Total minutes watched across all sessions",
+        "optimization": "Create longer, engaging content that keeps viewers watching"
+      },
+      {
+        "factor": "Click-Through Rate (CTR)",
+        "weight": "25%",
+        "description": "Percentage of impressions that result in clicks",
+        "optimization": "Compelling thumbnails and titles with 4-6% CTR target"
+      },
+      {
+        "factor": "Average View Duration",
+        "weight": "20%",
+        "description": "Average percentage of video watched",
+        "optimization": "Strong hooks, chapter markers, engaging throughout"
+      },
+      {
+        "factor": "Session Duration",
+        "weight": "15%",
+        "description": "Time spent on YouTube after watching your video",
+        "optimization": "Create series, playlists, and end screen recommendations"
+      },
+      {
+        "factor": "Engagement Signals",
+        "weight": "5%",
+        "description": "Likes, comments, shares, and saves",
+        "optimization": "Ask questions, create controversial topics, call-to-actions"
+      }
+    ]
+  },
+  "content_formats": {
+    "long_form": {
+      "optimal_length": "8-15 minutes",
+      "structure": {
+        "0-15_seconds": "Hook - Promise value, create curiosity",
+        "15-30_seconds": "Preview - Show what's coming",
+        "30-60_seconds": "Intro/Branding - Quick, consistent",
+        "1-2_minutes": "Context/Problem - Establish need",
+        "2-10_minutes": "Main Content - Deliver value",
+        "10-14_minutes": "Examples/Case Studies - Proof",
+        "14-15_minutes": "Summary & CTA - Next steps"
+      },
+      "retention_targets": {
+        "30_seconds": "80%",
+        "1_minute": "70%",
+        "halfway_point": "50%",
+        "end": "40%"
+      }
+    },
+    "shorts": {
+      "optimal_length": "30-59 seconds",
+      "structure": {
+        "0-3_seconds": "Instant hook - Visual or verbal",
+        "3-10_seconds": "Setup - Context quickly",
+        "10-40_seconds": "Payoff - Main content",
+        "40-59_seconds": "Loop or CTA - Drive action"
+      },
+      "key_elements": [
+        "Vertical format (9:16)",
+        "Fast-paced editing",
+        "Text overlays for silent viewing",
+        "Trending audio when relevant",
+        "Strong visual hook"
+      ]
+    }
+  },
+  "thumbnail_optimization": {
+    "technical_specs": {
+      "resolution": "1280x720",
+      "file_format": "JPG, GIF, PNG",
+      "max_file_size": "2MB"
+    },
+    "design_principles": {
+      "contrast": "High contrast between elements",
+      "faces": "Human faces increase CTR by 38%",
+      "text": "Large, readable text (30% of thumbnail max)",
+      "colors": "Bright, contrasting colors (avoid YouTube red)",
+      "consistency": "Brand consistency across thumbnails"
+    },
+    "a_b_testing": {
+      "elements_to_test": [
+        "Text vs no text",
+        "Face expressions",
+        "Color schemes",
+        "Text placement",
+        "Background complexity"
+      ],
+      "testing_duration": "48-72 hours minimum"
+    }
+  },
+  "title_optimization": {
+    "character_limit": "100 (display: 60-70)",
+    "structure_templates": [
+      "How to [Achieve Desired Outcome] in [Time Frame]",
+      "[Number] [Adjective] Ways to [Solve Problem]",
+      "Why [Common Belief] is Wrong (And What to Do Instead)",
+      "[Celebrity/Brand] [Did Something Surprising]: Here's What Happened",
+      "The [Adjective] Guide to [Topic] ([Year] Edition)"
+    ],
+    "keyword_placement": "Front-load important keywords in first 60 characters",
+    "emotional_triggers": [
+      "Curiosity gaps",
+      "Fear of missing out",
+      "Controversy",
+      "Transformation promise",
+      "Exclusive information"
+    ]
+  },
+  "description_strategy": {
+    "structure": {
+      "first_125_chars": "Hook and key information (visible in search)",
+      "links_section": "Relevant links, tools, resources mentioned",
+      "timestamps": "Chapter markers for navigation",
+      "about_section": "Brief channel/video context",
+      "tags_keywords": "Natural keyword integration",
+      "social_links": "All platform links",
+      "call_to_action": "Subscribe, like, comment prompts"
+    },
+    "seo_optimization": {
+      "keyword_density": "2-3%",
+      "related_keywords": "Include 5-10 variations",
+      "natural_language": "Write for humans, not algorithms"
+    }
+  },
+  "publishing_schedule": {
+    "optimal_times": {
+      "weekdays": {
+        "best": "14:00-16:00 EST",
+        "good": "12:00-13:00 EST",
+        "avoid": "22:00-06:00 EST"
+      },
+      "weekends": {
+        "saturday": "10:00-11:00 EST",
+        "sunday": "14:00-17:00 EST"
+      }
+    },
+    "frequency": {
+      "minimum": "1 video per week",
+      "optimal": "2-3 videos per week",
+      "maximum": "Daily (only if quality maintained)"
+    }
+  },
+  "engagement_tactics": {
+    "comments": {
+      "first_hour": "Respond to all comments",
+      "pin_comment": "Ask engaging question",
+      "heart_comments": "Show appreciation",
+      "community_tab": "Post polls, updates between videos"
+    },
+    "end_screens": {
+      "duration": "20 seconds",
+      "elements": "2 videos + subscribe button",
+      "placement": "Last 20 seconds of video"
+    },
+    "cards": {
+      "maximum": "5 per video",
+      "timing": "When referenced in content",
+      "types": "Video, playlist, channel, link"
+    }
+  },
+  "monetization_optimization": {
+    "ad_placement": {
+      "video_length_8min": "2-3 mid-rolls",
+      "video_length_15min": "4-5 mid-rolls",
+      "placement_timing": "Natural breaks in content"
+    },
+    "revenue_streams": [
+      "AdSense",
+      "Channel Memberships",
+      "Super Chat/Thanks",
+      "Merchandise Shelf",
+      "Brand Sponsorships",
+      "Affiliate Marketing"
+    ]
+  },
+  "analytics_kpis": {
+    "primary_metrics": {
+      "ctr": {
+        "poor": "<2%",
+        "average": "2-4%",
+        "good": "4-6%",
+        "excellent": ">6%"
+      },
+      "average_view_duration": {
+        "poor": "<30%",
+        "average": "30-50%",
+        "good": "50-60%",
+        "excellent": ">60%"
+      },
+      "engagement_rate": {
+        "calculation": "(likes + comments + shares) / views",
+        "target": ">5%"
+      }
+    },
+    "growth_indicators": [
+      "Subscriber growth rate",
+      "Returning viewer percentage",
+      "Browse/Suggested traffic increase",
+      "Playlist saves",
+      "Share rate"
+    ]
+  },
+  "content_strategy": {
+    "content_pillars": [
+      {
+        "type": "Educational",
+        "percentage": "40%",
+        "format": "Tutorials, How-tos, Guides"
+      },
+      {
+        "type": "Entertainment",
+        "percentage": "30%",
+        "format": "Stories, Reactions, Challenges"
+      },
+      {
+        "type": "Inspirational",
+        "percentage": "20%",
+        "format": "Success stories, Transformations"
+      },
+      {
+        "type": "Community",
+        "percentage": "10%",
+        "format": "Q&A, Behind-scenes, Updates"
+      }
+    ],
+    "series_strategy": {
+      "benefits": "Increased watch time, returning viewers",
+      "format": "Consistent branding, numbering, playlists"
+    }
+  },
+  "algorithm_hacks": {
+    "browse_features": {
+      "requirement": "Consistent uploads, high CTR, good retention",
+      "optimization": "Maintain quality over quantity"
+    },
+    "suggested_videos": {
+      "requirement": "High session duration, related content",
+      "optimization": "Create content clusters, use end screens"
+    },
+    "search": {
+      "requirement": "Keyword optimization, high CTR",
+      "optimization": "Research keywords, optimize titles/descriptions"
+    },
+    "notifications": {
+      "requirement": "High engagement rate from notifications",
+      "optimization": "Consistent schedule, bell reminders"
+    }
+  },
+  "competitor_analysis": {
+    "track_metrics": [
+      "Upload frequency",
+      "Video length",
+      "Thumbnail styles",
+      "Title formulas",
+      "Engagement rates",
+      "View velocity"
+    ],
+    "tools": [
+      "YouTube Analytics",
+      "TubeBuddy",
+      "VidIQ",
+      "Social Blade"
+    ]
+  },
+  "common_mistakes": [
+    "Inconsistent upload schedule",
+    "Poor audio quality",
+    "Weak hooks",
+    "Clickbait without delivery",
+    "Ignoring analytics",
+    "Not optimizing for mobile viewing",
+    "Overlooking YouTube Shorts opportunity"
+  ],
+  "platform_updates_2024": [
+    "Shorts monetization improvements",
+    "AI-powered dubbing tools",
+    "Enhanced analytics for Shorts",
+    "Podcast integration",
+    "Shopping features expansion",
+    "Improved live streaming tools"
+  ]
+}

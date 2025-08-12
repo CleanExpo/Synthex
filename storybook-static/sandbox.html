@@ -1,0 +1,970 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SYNTHEX Sandbox | AI Marketing Platform</title>
+    <link rel="icon" type="image/png" href="/logo.png">
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet">
+    
+    <!-- Design System -->
+    <link rel="stylesheet" href="css/design-system.css">
+    
+    <!-- Monaco Editor for code editing -->
+    <link rel="stylesheet" data-name="vs/editor/editor.main" href="https://cdn.jsdelivr.net/npm/monaco-editor@0.44.0/min/vs/editor/editor.main.css">
+    
+    <style>
+        /* Sandbox Layout */
+        .sandbox-layout {
+            display: grid;
+            grid-template-areas: 
+                "sidebar header header"
+                "sidebar main preview"
+                "sidebar terminal preview";
+            grid-template-columns: 280px 1fr 400px;
+            grid-template-rows: 60px 1fr 200px;
+            height: 100vh;
+            background: var(--synthex-gradient-dark);
+            position: relative;
+        }
+        
+        .sandbox-layout::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--synthex-gradient-mesh);
+            opacity: 0.3;
+            pointer-events: none;
+        }
+        
+        /* Sidebar */
+        .sandbox-sidebar {
+            grid-area: sidebar;
+            background: var(--synthex-glass-bg);
+            backdrop-filter: blur(var(--synthex-glass-blur-heavy));
+            border-right: 1px solid var(--synthex-glass-border);
+            display: flex;
+            flex-direction: column;
+            z-index: 10;
+        }
+        
+        .sidebar-header {
+            padding: var(--synthex-space-4);
+            border-bottom: 1px solid var(--synthex-glass-border);
+            display: flex;
+            align-items: center;
+            gap: var(--synthex-space-3);
+        }
+        
+        .sidebar-logo {
+            width: 40px;
+            height: 40px;
+            filter: drop-shadow(0 0 20px rgba(99, 102, 241, 0.5));
+        }
+        
+        .sidebar-title {
+            font-size: var(--synthex-text-xl);
+            font-weight: var(--synthex-font-bold);
+            background: var(--synthex-gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .sidebar-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: var(--synthex-space-4);
+        }
+        
+        .sidebar-section {
+            margin-bottom: var(--synthex-space-6);
+        }
+        
+        .section-title {
+            font-size: var(--synthex-text-xs);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: rgba(255, 255, 255, 0.4);
+            margin-bottom: var(--synthex-space-3);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .section-action {
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--synthex-glass-bg);
+            border: 1px solid var(--synthex-glass-border);
+            border-radius: var(--synthex-radius-sm);
+            cursor: pointer;
+            transition: all var(--synthex-transition-fast);
+        }
+        
+        .section-action:hover {
+            background: var(--synthex-glass-bg-hover);
+            transform: scale(1.1);
+        }
+        
+        .file-tree {
+            list-style: none;
+        }
+        
+        .file-item {
+            display: flex;
+            align-items: center;
+            gap: var(--synthex-space-2);
+            padding: var(--synthex-space-2) var(--synthex-space-3);
+            margin-bottom: var(--synthex-space-1);
+            border-radius: var(--synthex-radius-md);
+            cursor: pointer;
+            transition: all var(--synthex-transition-fast);
+            color: rgba(255, 255, 255, 0.7);
+        }
+        
+        .file-item:hover {
+            background: var(--synthex-glass-bg-hover);
+            color: var(--synthex-white);
+        }
+        
+        .file-item.active {
+            background: var(--synthex-gradient-primary);
+            color: var(--synthex-white);
+            font-weight: var(--synthex-font-medium);
+        }
+        
+        .file-icon {
+            width: 16px;
+            height: 16px;
+            opacity: 0.8;
+        }
+        
+        .file-name {
+            flex: 1;
+            font-size: var(--synthex-text-sm);
+        }
+        
+        .file-badge {
+            padding: 2px 6px;
+            background: var(--synthex-glass-bg);
+            border-radius: var(--synthex-radius-sm);
+            font-size: var(--synthex-text-xs);
+            opacity: 0.6;
+        }
+        
+        /* Header */
+        .sandbox-header {
+            grid-area: header;
+            background: var(--synthex-glass-bg);
+            backdrop-filter: blur(var(--synthex-glass-blur-heavy));
+            border-bottom: 1px solid var(--synthex-glass-border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 var(--synthex-space-6);
+            z-index: 10;
+        }
+        
+        .header-tabs {
+            display: flex;
+            gap: var(--synthex-space-1);
+            flex: 1;
+        }
+        
+        .tab {
+            display: flex;
+            align-items: center;
+            gap: var(--synthex-space-2);
+            padding: var(--synthex-space-2) var(--synthex-space-4);
+            background: var(--synthex-glass-bg);
+            border: 1px solid var(--synthex-glass-border);
+            border-radius: var(--synthex-radius-md) var(--synthex-radius-md) 0 0;
+            cursor: pointer;
+            transition: all var(--synthex-transition-fast);
+            color: rgba(255, 255, 255, 0.6);
+            font-size: var(--synthex-text-sm);
+        }
+        
+        .tab:hover {
+            background: var(--synthex-glass-bg-hover);
+            color: var(--synthex-white);
+        }
+        
+        .tab.active {
+            background: var(--synthex-gradient-primary);
+            color: var(--synthex-white);
+            border-color: transparent;
+        }
+        
+        .tab-close {
+            width: 16px;
+            height: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: var(--synthex-radius-sm);
+            transition: all var(--synthex-transition-fast);
+        }
+        
+        .tab-close:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .header-actions {
+            display: flex;
+            gap: var(--synthex-space-3);
+        }
+        
+        .action-button {
+            padding: var(--synthex-space-2) var(--synthex-space-4);
+            background: var(--synthex-glass-bg);
+            border: 1px solid var(--synthex-glass-border);
+            border-radius: var(--synthex-radius-md);
+            color: var(--synthex-white);
+            font-size: var(--synthex-text-sm);
+            cursor: pointer;
+            transition: all var(--synthex-transition-fast);
+            display: flex;
+            align-items: center;
+            gap: var(--synthex-space-2);
+        }
+        
+        .action-button:hover {
+            background: var(--synthex-glass-bg-hover);
+            transform: translateY(-2px);
+        }
+        
+        .action-button.primary {
+            background: var(--synthex-gradient-primary);
+            border: none;
+        }
+        
+        .action-button.primary:hover {
+            box-shadow: 0 4px 20px rgba(99, 102, 241, 0.4);
+        }
+        
+        /* Main Editor Area */
+        .sandbox-main {
+            grid-area: main;
+            background: var(--synthex-glass-bg);
+            backdrop-filter: blur(var(--synthex-glass-blur));
+            border-right: 1px solid var(--synthex-glass-border);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .editor-container {
+            height: 100%;
+            position: relative;
+        }
+        
+        .editor-toolbar {
+            position: absolute;
+            top: var(--synthex-space-3);
+            right: var(--synthex-space-3);
+            display: flex;
+            gap: var(--synthex-space-2);
+            z-index: 10;
+        }
+        
+        .editor-tool {
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--synthex-glass-bg);
+            border: 1px solid var(--synthex-glass-border);
+            border-radius: var(--synthex-radius-md);
+            cursor: pointer;
+            transition: all var(--synthex-transition-fast);
+        }
+        
+        .editor-tool:hover {
+            background: var(--synthex-glass-bg-hover);
+            transform: scale(1.1);
+        }
+        
+        #editor {
+            height: 100%;
+            font-family: var(--synthex-font-mono);
+        }
+        
+        /* Terminal */
+        .sandbox-terminal {
+            grid-area: terminal;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(var(--synthex-glass-blur));
+            border-top: 1px solid var(--synthex-glass-border);
+            border-right: 1px solid var(--synthex-glass-border);
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .terminal-header {
+            padding: var(--synthex-space-2) var(--synthex-space-4);
+            background: var(--synthex-glass-bg);
+            border-bottom: 1px solid var(--synthex-glass-border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .terminal-tabs {
+            display: flex;
+            gap: var(--synthex-space-3);
+        }
+        
+        .terminal-tab {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: var(--synthex-text-sm);
+            cursor: pointer;
+            transition: color var(--synthex-transition-fast);
+        }
+        
+        .terminal-tab:hover {
+            color: var(--synthex-white);
+        }
+        
+        .terminal-tab.active {
+            color: var(--synthex-primary);
+            font-weight: var(--synthex-font-medium);
+        }
+        
+        .terminal-content {
+            flex: 1;
+            padding: var(--synthex-space-3);
+            font-family: var(--synthex-font-mono);
+            font-size: var(--synthex-text-sm);
+            overflow-y: auto;
+            color: var(--synthex-white);
+        }
+        
+        .terminal-line {
+            margin-bottom: var(--synthex-space-1);
+            display: flex;
+            gap: var(--synthex-space-2);
+        }
+        
+        .terminal-prompt {
+            color: var(--synthex-success);
+        }
+        
+        .terminal-input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: var(--synthex-white);
+            outline: none;
+            font-family: inherit;
+        }
+        
+        /* Preview Panel */
+        .sandbox-preview {
+            grid-area: preview;
+            background: var(--synthex-glass-bg);
+            backdrop-filter: blur(var(--synthex-glass-blur));
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .preview-header {
+            padding: var(--synthex-space-3) var(--synthex-space-4);
+            background: var(--synthex-glass-bg);
+            border-bottom: 1px solid var(--synthex-glass-border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .preview-url {
+            flex: 1;
+            padding: var(--synthex-space-2) var(--synthex-space-3);
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--synthex-glass-border);
+            border-radius: var(--synthex-radius-md);
+            color: var(--synthex-white);
+            font-size: var(--synthex-text-sm);
+            font-family: var(--synthex-font-mono);
+        }
+        
+        .preview-actions {
+            display: flex;
+            gap: var(--synthex-space-2);
+            margin-left: var(--synthex-space-3);
+        }
+        
+        .preview-action {
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--synthex-glass-bg);
+            border: 1px solid var(--synthex-glass-border);
+            border-radius: var(--synthex-radius-md);
+            cursor: pointer;
+            transition: all var(--synthex-transition-fast);
+        }
+        
+        .preview-action:hover {
+            background: var(--synthex-glass-bg-hover);
+        }
+        
+        .preview-content {
+            flex: 1;
+            background: white;
+            position: relative;
+        }
+        
+        .preview-iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        
+        .preview-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: rgba(255, 255, 255, 0.6);
+        }
+        
+        .preview-icon {
+            font-size: 48px;
+            margin-bottom: var(--synthex-space-4);
+            opacity: 0.4;
+        }
+        
+        /* Floating Action Menu */
+        .floating-menu {
+            position: fixed;
+            bottom: var(--synthex-space-6);
+            right: var(--synthex-space-6);
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: var(--synthex-space-3);
+            z-index: 100;
+        }
+        
+        .floating-button {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: var(--synthex-gradient-primary);
+            border: none;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 4px 20px rgba(99, 102, 241, 0.4);
+            transition: all var(--synthex-transition-base);
+            position: relative;
+        }
+        
+        .floating-button:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 30px rgba(99, 102, 241, 0.6);
+        }
+        
+        .floating-button.main {
+            width: 64px;
+            height: 64px;
+            font-size: 24px;
+        }
+        
+        .floating-menu-items {
+            display: flex;
+            flex-direction: column;
+            gap: var(--synthex-space-2);
+            transform: scale(0);
+            transform-origin: bottom right;
+            transition: transform var(--synthex-transition-base);
+        }
+        
+        .floating-menu.active .floating-menu-items {
+            transform: scale(1);
+        }
+        
+        .floating-label {
+            position: absolute;
+            right: 72px;
+            background: var(--synthex-glass-bg);
+            backdrop-filter: blur(var(--synthex-glass-blur));
+            border: 1px solid var(--synthex-glass-border);
+            padding: var(--synthex-space-2) var(--synthex-space-3);
+            border-radius: var(--synthex-radius-md);
+            white-space: nowrap;
+            font-size: var(--synthex-text-sm);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity var(--synthex-transition-fast);
+        }
+        
+        .floating-button:hover .floating-label {
+            opacity: 1;
+        }
+        
+        /* Responsive */
+        @media (max-width: 1400px) {
+            .sandbox-layout {
+                grid-template-columns: 240px 1fr 350px;
+            }
+        }
+        
+        @media (max-width: 1024px) {
+            .sandbox-layout {
+                grid-template-areas: 
+                    "header header"
+                    "main main"
+                    "terminal terminal";
+                grid-template-columns: 1fr;
+                grid-template-rows: 60px 1fr 200px;
+            }
+            
+            .sandbox-sidebar,
+            .sandbox-preview {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="sandbox-layout">
+        <!-- Sidebar -->
+        <aside class="sandbox-sidebar">
+            <div class="sidebar-header">
+                <img src="/logo.png" alt="SYNTHEX" class="sidebar-logo float">
+                <span class="sidebar-title">SYNTHEX</span>
+            </div>
+            
+            <div class="sidebar-content">
+                <!-- Project Files -->
+                <div class="sidebar-section">
+                    <div class="section-title">
+                        PROJECT FILES
+                        <div class="section-action">+</div>
+                    </div>
+                    <ul class="file-tree">
+                        <li class="file-item active">
+                            <span class="file-icon">📄</span>
+                            <span class="file-name">campaign.js</span>
+                            <span class="file-badge">JS</span>
+                        </li>
+                        <li class="file-item">
+                            <span class="file-icon">🎨</span>
+                            <span class="file-name">styles.css</span>
+                            <span class="file-badge">CSS</span>
+                        </li>
+                        <li class="file-item">
+                            <span class="file-icon">📋</span>
+                            <span class="file-name">template.html</span>
+                            <span class="file-badge">HTML</span>
+                        </li>
+                        <li class="file-item">
+                            <span class="file-icon">⚙️</span>
+                            <span class="file-name">config.json</span>
+                            <span class="file-badge">JSON</span>
+                        </li>
+                    </ul>
+                </div>
+                
+                <!-- AI Tools -->
+                <div class="sidebar-section">
+                    <div class="section-title">
+                        AI TOOLS
+                        <div class="section-action">⚡</div>
+                    </div>
+                    <div class="glass-card p-3 mb-3">
+                        <div class="flex items-center gap-3 mb-2">
+                            <span class="text-2xl">🤖</span>
+                            <span class="font-semibold">Content Generator</span>
+                        </div>
+                        <p class="text-xs opacity-60 mb-3">Generate marketing content with AI</p>
+                        <button class="glass-button w-full text-sm">Generate</button>
+                    </div>
+                    <div class="glass-card p-3">
+                        <div class="flex items-center gap-3 mb-2">
+                            <span class="text-2xl">📊</span>
+                            <span class="font-semibold">Analytics Insights</span>
+                        </div>
+                        <p class="text-xs opacity-60 mb-3">AI-powered performance analysis</p>
+                        <button class="glass-button w-full text-sm">Analyze</button>
+                    </div>
+                </div>
+                
+                <!-- Components -->
+                <div class="sidebar-section">
+                    <div class="section-title">
+                        COMPONENTS
+                        <div class="section-action">📦</div>
+                    </div>
+                    <ul class="file-tree">
+                        <li class="file-item">
+                            <span class="file-icon">🎯</span>
+                            <span class="file-name">CTA Button</span>
+                        </li>
+                        <li class="file-item">
+                            <span class="file-icon">📧</span>
+                            <span class="file-name">Email Template</span>
+                        </li>
+                        <li class="file-item">
+                            <span class="file-icon">📱</span>
+                            <span class="file-name">Social Card</span>
+                        </li>
+                        <li class="file-item">
+                            <span class="file-icon">🎨</span>
+                            <span class="file-name">Hero Section</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </aside>
+        
+        <!-- Header -->
+        <header class="sandbox-header">
+            <div class="header-tabs">
+                <div class="tab active">
+                    <span>campaign.js</span>
+                    <span class="tab-close">×</span>
+                </div>
+                <div class="tab">
+                    <span>styles.css</span>
+                    <span class="tab-close">×</span>
+                </div>
+                <div class="tab">
+                    <span>template.html</span>
+                    <span class="tab-close">×</span>
+                </div>
+            </div>
+            
+            <div class="header-actions">
+                <button class="action-button">
+                    <span>💾</span>
+                    <span>Save</span>
+                </button>
+                <button class="action-button">
+                    <span>↩️</span>
+                    <span>Undo</span>
+                </button>
+                <button class="action-button">
+                    <span>↪️</span>
+                    <span>Redo</span>
+                </button>
+                <button class="action-button primary">
+                    <span>▶️</span>
+                    <span>Run</span>
+                </button>
+            </div>
+        </header>
+        
+        <!-- Main Editor -->
+        <main class="sandbox-main">
+            <div class="editor-container">
+                <div class="editor-toolbar">
+                    <div class="editor-tool" title="Format Code">
+                        <span>✨</span>
+                    </div>
+                    <div class="editor-tool" title="Find & Replace">
+                        <span>🔍</span>
+                    </div>
+                    <div class="editor-tool" title="Settings">
+                        <span>⚙️</span>
+                    </div>
+                </div>
+                <div id="editor"></div>
+            </div>
+        </main>
+        
+        <!-- Terminal -->
+        <div class="sandbox-terminal">
+            <div class="terminal-header">
+                <div class="terminal-tabs">
+                    <span class="terminal-tab active">Terminal</span>
+                    <span class="terminal-tab">Problems</span>
+                    <span class="terminal-tab">Output</span>
+                    <span class="terminal-tab">Debug Console</span>
+                </div>
+                <div class="section-action">×</div>
+            </div>
+            <div class="terminal-content">
+                <div class="terminal-line">
+                    <span class="terminal-prompt">synthex ></span>
+                    <span>Initializing AI marketing sandbox...</span>
+                </div>
+                <div class="terminal-line">
+                    <span class="terminal-prompt">synthex ></span>
+                    <span style="color: var(--synthex-success)">✓ Environment ready</span>
+                </div>
+                <div class="terminal-line">
+                    <span class="terminal-prompt">synthex ></span>
+                    <span style="color: var(--synthex-info)">Loading campaign assets...</span>
+                </div>
+                <div class="terminal-line">
+                    <span class="terminal-prompt">synthex ></span>
+                    <span style="color: var(--synthex-success)">✓ All systems operational</span>
+                </div>
+                <div class="terminal-line">
+                    <span class="terminal-prompt">synthex ></span>
+                    <input type="text" class="terminal-input" placeholder="Enter command..." autofocus>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Preview Panel -->
+        <aside class="sandbox-preview">
+            <div class="preview-header">
+                <input type="text" class="preview-url" value="http://localhost:3000/preview" readonly>
+                <div class="preview-actions">
+                    <div class="preview-action" title="Refresh">
+                        <span>🔄</span>
+                    </div>
+                    <div class="preview-action" title="Open in New Tab">
+                        <span>🔗</span>
+                    </div>
+                    <div class="preview-action" title="Device Preview">
+                        <span>📱</span>
+                    </div>
+                </div>
+            </div>
+            <div class="preview-content">
+                <div class="preview-overlay">
+                    <div class="preview-icon">👁️</div>
+                    <h3 class="mb-2">Preview Pane</h3>
+                    <p class="text-sm opacity-60">Click "Run" to see your campaign preview</p>
+                </div>
+                <!-- <iframe class="preview-iframe" src="about:blank"></iframe> -->
+            </div>
+        </aside>
+        
+        <!-- Floating Action Menu -->
+        <div class="floating-menu" id="floatingMenu">
+            <div class="floating-menu-items">
+                <button class="floating-button" data-action="ai-assist">
+                    <span>🤖</span>
+                    <span class="floating-label">AI Assistant</span>
+                </button>
+                <button class="floating-button" data-action="templates">
+                    <span>📋</span>
+                    <span class="floating-label">Templates</span>
+                </button>
+                <button class="floating-button" data-action="share">
+                    <span>🔗</span>
+                    <span class="floating-label">Share</span>
+                </button>
+                <button class="floating-button" data-action="export">
+                    <span>📤</span>
+                    <span class="floating-label">Export</span>
+                </button>
+            </div>
+            <button class="floating-button main" id="floatingToggle">
+                <span>+</span>
+            </button>
+        </div>
+    </div>
+    
+    <!-- Monaco Editor -->
+    <script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.44.0/min/vs/loader.js"></script>
+    <script>
+        require.config({ paths: { 'vs': 'https://cdn.jsdelivr.net/npm/monaco-editor@0.44.0/min/vs' }});
+        
+        require(['vs/editor/editor.main'], function() {
+            // Initialize Monaco Editor
+            const editor = monaco.editor.create(document.getElementById('editor'), {
+                value: `// SYNTHEX Campaign Configuration
+class MarketingCampaign {
+    constructor(config) {
+        this.name = config.name;
+        this.platforms = config.platforms || ['twitter', 'facebook', 'instagram'];
+        this.schedule = config.schedule;
+        this.content = config.content;
+        this.analytics = new AnalyticsTracker();
+    }
+    
+    async launch() {
+        console.log(\`🚀 Launching campaign: \${this.name}\`);
+        
+        // AI-powered content optimization
+        const optimizedContent = await this.optimizeWithAI(this.content);
+        
+        // Deploy to platforms
+        for (const platform of this.platforms) {
+            await this.deployToPlatform(platform, optimizedContent);
+        }
+        
+        // Start tracking
+        this.analytics.startTracking(this.name);
+        
+        return {
+            success: true,
+            message: 'Campaign launched successfully!',
+            trackingId: this.analytics.getTrackingId()
+        };
+    }
+    
+    async optimizeWithAI(content) {
+        // Simulated AI optimization
+        return {
+            ...content,
+            hashtags: this.generateHashtags(content.text),
+            sentiment: await this.analyzeSentiment(content.text),
+            engagement_score: Math.random() * 100
+        };
+    }
+    
+    generateHashtags(text) {
+        // AI-powered hashtag generation
+        const words = text.toLowerCase().split(' ');
+        return words
+            .filter(w => w.length > 5)
+            .slice(0, 5)
+            .map(w => \`#\${w}\`);
+    }
+    
+    async analyzeSentiment(text) {
+        // Simulated sentiment analysis
+        return {
+            positive: 0.75,
+            neutral: 0.20,
+            negative: 0.05
+        };
+    }
+    
+    async deployToPlatform(platform, content) {
+        console.log(\`📱 Deploying to \${platform}...\`);
+        // Platform-specific deployment logic
+        return new Promise(resolve => {
+            setTimeout(() => {
+                console.log(\`✅ Successfully deployed to \${platform}\`);
+                resolve();
+            }, 1000);
+        });
+    }
+}
+
+// Initialize campaign
+const campaign = new MarketingCampaign({
+    name: 'Summer Sale 2024',
+    platforms: ['twitter', 'instagram', 'tiktok'],
+    schedule: {
+        start: new Date('2024-06-01'),
+        end: new Date('2024-08-31'),
+        frequency: 'daily'
+    },
+    content: {
+        text: 'Discover amazing deals this summer! Up to 50% off on all products.',
+        media: ['summer-banner.jpg', 'product-showcase.mp4'],
+        cta: 'Shop Now'
+    }
+});
+
+// Launch when ready
+campaign.launch().then(result => {
+    console.log('Campaign Result:', result);
+});`,
+                language: 'javascript',
+                theme: 'vs-dark',
+                fontSize: 14,
+                fontFamily: 'Fira Code, monospace',
+                minimap: { enabled: true },
+                automaticLayout: true,
+                wordWrap: 'on',
+                lineNumbers: 'on',
+                renderLineHighlight: 'all',
+                scrollBeyondLastLine: false,
+                smoothScrolling: true,
+                cursorBlinking: 'smooth',
+                cursorSmoothCaretAnimation: true,
+                formatOnPaste: true,
+                formatOnType: true,
+                suggestOnTriggerCharacters: true,
+                acceptSuggestionOnEnter: 'on',
+                tabCompletion: 'on',
+                wordBasedSuggestions: false,
+                suggest: {
+                    showKeywords: true,
+                    showSnippets: true,
+                    showClasses: true,
+                    showFunctions: true,
+                    showVariables: true
+                }
+            });
+            
+            // Add custom theme
+            monaco.editor.defineTheme('synthex-dark', {
+                base: 'vs-dark',
+                inherit: true,
+                rules: [
+                    { token: 'comment', foreground: '608B4E' },
+                    { token: 'keyword', foreground: '569CD6' },
+                    { token: 'string', foreground: 'CE9178' },
+                    { token: 'number', foreground: 'B5CEA8' }
+                ],
+                colors: {
+                    'editor.background': '#0a0a0a',
+                    'editor.foreground': '#D4D4D4',
+                    'editor.lineHighlightBackground': '#1a1a1a',
+                    'editorCursor.foreground': '#6366f1',
+                    'editor.selectionBackground': '#264F78',
+                    'editor.inactiveSelectionBackground': '#3A3D41'
+                }
+            });
+            
+            editor.updateOptions({ theme: 'synthex-dark' });
+        });
+        
+        // Floating menu toggle
+        const floatingMenu = document.getElementById('floatingMenu');
+        const floatingToggle = document.getElementById('floatingToggle');
+        
+        floatingToggle.addEventListener('click', () => {
+            floatingMenu.classList.toggle('active');
+            floatingToggle.innerHTML = floatingMenu.classList.contains('active') ? '×' : '+';
+        });
+        
+        // Terminal input handling
+        const terminalInput = document.querySelector('.terminal-input');
+        terminalInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                const command = e.target.value;
+                if (command) {
+                    // Process command
+                    const terminalContent = document.querySelector('.terminal-content');
+                    const outputLine = document.createElement('div');
+                    outputLine.className = 'terminal-line';
+                    outputLine.innerHTML = `<span class="terminal-prompt">synthex ></span><span>${command}</span>`;
+                    terminalContent.insertBefore(outputLine, terminalContent.lastElementChild);
+                    
+                    // Clear input
+                    e.target.value = '';
+                    
+                    // Simulate response
+                    setTimeout(() => {
+                        const responseLine = document.createElement('div');
+                        responseLine.className = 'terminal-line';
+                        responseLine.innerHTML = `<span style="color: var(--synthex-success)">✓ Command executed successfully</span>`;
+                        terminalContent.insertBefore(responseLine, terminalContent.lastElementChild);
+                    }, 500);
+                }
+            }
+        });
+    </script>
+    
+    <!-- UI Components -->
+    <script src="js/synthex-ui.js"></script>
+</body>
+</html>
