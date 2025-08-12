@@ -1,0 +1,1074 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard | SYNTHEX</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Microsoft Fluent System Icons -->
+    <!-- Using React Icons CDN for web usage -->
+    <script src="https://unpkg.com/@fluentui/react-icons@2.0.258/lib/bundle.js"></script>
+    
+    <!-- Auth Bypass for Development -->
+    <script src="/js/auth-bypass.js"></script>
+    
+    <!-- Auth Check Script -->
+    <script src="/js/auth-check-fixed.js"></script>
+    
+    <!-- App CSS - CRITICAL FIX: This was missing! -->
+    <link rel="stylesheet" href="/css/synthex-app.css">
+    
+    <style>
+        /* Reuse glassmorphism design system from campaigns.html */
+        :root {
+            --synthex-black: #000000;
+            --synthex-white: #ffffff;
+            --synthex-primary: #0070f3;
+            --synthex-accent: #5e6ad2;
+            --synthex-success: #34C759;
+            --synthex-warning: #FF9500;
+            --synthex-danger: #FF3B30;
+            
+            --gray-50: #fafaf9;
+            --gray-100: #f5f5f4;
+            --gray-200: #e7e5e4;
+            --gray-300: #d6d3d1;
+            --gray-400: #a8a29e;
+            --gray-500: #78716c;
+            --gray-600: #57534e;
+            --gray-700: #44403c;
+            --gray-800: #292524;
+            --gray-900: #1c1917;
+            
+            --background-primary: var(--synthex-black);
+            --background-secondary: #111111;
+            --background-tertiary: #1a1a1a;
+            --foreground-primary: var(--synthex-white);
+            --foreground-secondary: #a3a3a3;
+            --foreground-tertiary: #737373;
+            
+            --gradient-accent: linear-gradient(135deg, #0070f3 0%, #5e6ad2 100%);
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            
+            --space-1: 8px;
+            --space-2: 16px;
+            --space-3: 24px;
+            --space-4: 32px;
+            --space-6: 48px;
+            --space-8: 64px;
+            
+            --radius: 8px;
+            --radius-lg: 16px;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Inter', sans-serif;
+            background: var(--background-primary);
+            color: var(--foreground-primary);
+            line-height: 1.6;
+        }
+        
+        /* Layout */
+        .app-layout {
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+        
+        /* Sidebar */
+        .sidebar {
+            width: 280px;
+            background: var(--background-secondary);
+            border-right: 1px solid var(--glass-border);
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .sidebar-header {
+            padding: var(--space-4);
+            border-bottom: 1px solid var(--glass-border);
+        }
+        
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--foreground-primary);
+            text-decoration: none;
+        }
+        
+        .sidebar-nav {
+            flex: 1;
+            padding: var(--space-3);
+        }
+        
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+            padding: var(--space-2) var(--space-3);
+            margin-bottom: var(--space-1);
+            border-radius: var(--radius);
+            color: var(--foreground-secondary);
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+        
+        .nav-item:hover {
+            background: var(--glass-bg);
+            color: var(--foreground-primary);
+        }
+        
+        .nav-item.active {
+            background: var(--glass-bg);
+            color: var(--synthex-primary);
+            border: 1px solid var(--glass-border);
+        }
+        
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        /* Header */
+        .header {
+            background: var(--background-secondary);
+            border-bottom: 1px solid var(--glass-border);
+            padding: var(--space-3) var(--space-6);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .page-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+        
+        .header-actions {
+            display: flex;
+            gap: var(--space-2);
+        }
+        
+        /* Content Area */
+        .content {
+            flex: 1;
+            padding: var(--space-6);
+            overflow-y: auto;
+        }
+        
+        /* Welcome Section */
+        .welcome-section {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-lg);
+            padding: var(--space-6);
+            margin-bottom: var(--space-6);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .welcome-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: var(--gradient-accent);
+        }
+        
+        .welcome-title {
+            font-size: 1.75rem;
+            font-weight: 700;
+            margin-bottom: var(--space-2);
+        }
+        
+        .welcome-subtitle {
+            color: var(--foreground-secondary);
+            margin-bottom: var(--space-4);
+        }
+        
+        .user-info {
+            display: flex;
+            gap: var(--space-4);
+            margin-bottom: var(--space-4);
+        }
+        
+        .user-info-item {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .user-info-label {
+            font-size: 0.875rem;
+            color: var(--foreground-secondary);
+            margin-bottom: var(--space-1);
+        }
+        
+        .user-info-value {
+            font-weight: 600;
+            color: var(--foreground-primary);
+        }
+        
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: var(--space-4);
+            margin-bottom: var(--space-6);
+        }
+        
+        .stat-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-lg);
+            padding: var(--space-4);
+            position: relative;
+            overflow: hidden;
+            transition: all 0.2s ease;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+        
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: var(--gradient-accent);
+        }
+        
+        .stat-icon {
+            font-size: 2rem;
+            margin-bottom: var(--space-2);
+        }
+        
+        .stat-label {
+            color: var(--foreground-secondary);
+            font-size: 0.875rem;
+            margin-bottom: var(--space-1);
+        }
+        
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--foreground-primary);
+        }
+        
+        .stat-change {
+            font-size: 0.75rem;
+            margin-top: var(--space-1);
+        }
+        
+        .stat-change.positive {
+            color: var(--synthex-success);
+        }
+        
+        .stat-change.negative {
+            color: var(--synthex-danger);
+        }
+        
+        /* Dashboard Grid */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: var(--space-6);
+            margin-bottom: var(--space-6);
+        }
+        
+        /* Activity Feed */
+        .activity-section {
+            background: var(--background-secondary);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+        }
+        
+        .section-header {
+            padding: var(--space-4);
+            border-bottom: 1px solid var(--glass-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .section-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+        }
+        
+        .activity-list {
+            padding: var(--space-4);
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .activity-item {
+            display: flex;
+            gap: var(--space-3);
+            padding: var(--space-3);
+            border-bottom: 1px solid var(--glass-border);
+            transition: all 0.2s ease;
+        }
+        
+        .activity-item:last-child {
+            border-bottom: none;
+        }
+        
+        .activity-item:hover {
+            background: var(--glass-bg);
+            border-radius: var(--radius);
+        }
+        
+        .activity-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: var(--radius);
+            background: var(--glass-bg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+        
+        .activity-content {
+            flex: 1;
+        }
+        
+        .activity-title {
+            font-weight: 600;
+            margin-bottom: var(--space-1);
+        }
+        
+        .activity-description {
+            color: var(--foreground-secondary);
+            font-size: 0.875rem;
+            margin-bottom: var(--space-1);
+        }
+        
+        .activity-time {
+            color: var(--foreground-tertiary);
+            font-size: 0.75rem;
+        }
+        
+        /* Quick Actions */
+        .quick-actions {
+            background: var(--background-secondary);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+        }
+        
+        .quick-actions-grid {
+            padding: var(--space-4);
+            display: grid;
+            gap: var(--space-3);
+        }
+        
+        .quick-action-btn {
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+            padding: var(--space-3);
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius);
+            color: var(--foreground-primary);
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+        
+        .quick-action-btn:hover {
+            background: var(--background-tertiary);
+            transform: translateY(-1px);
+        }
+        
+        .quick-action-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: var(--radius);
+            background: var(--gradient-accent);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--synthex-white);
+        }
+        
+        .quick-action-content {
+            flex: 1;
+        }
+        
+        .quick-action-title {
+            font-weight: 600;
+            margin-bottom: var(--space-1);
+        }
+        
+        .quick-action-description {
+            color: var(--foreground-secondary);
+            font-size: 0.875rem;
+        }
+        
+        /* Performance Metrics Chart */
+        .metrics-section {
+            background: var(--background-secondary);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+        }
+        
+        .chart-container {
+            padding: var(--space-4);
+            height: 300px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--glass-bg);
+            color: var(--foreground-secondary);
+        }
+        
+        /* Buttons */
+        .btn {
+            padding: var(--space-2) var(--space-4);
+            border: none;
+            border-radius: var(--radius);
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-1);
+        }
+        
+        .btn-primary {
+            background: var(--gradient-accent);
+            color: var(--synthex-white);
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 16px rgba(94, 106, 210, 0.4);
+        }
+        
+        .btn-secondary {
+            background: transparent;
+            color: var(--foreground-primary);
+            border: 1px solid var(--glass-border);
+        }
+        
+        .btn-secondary:hover {
+            background: var(--glass-bg);
+        }
+        
+        /* Loading State */
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: var(--space-8);
+            color: var(--foreground-secondary);
+        }
+        
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--glass-border);
+            border-top-color: var(--synthex-primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: var(--space-8);
+            color: var(--foreground-secondary);
+        }
+        
+        .empty-icon {
+            font-size: 3rem;
+            margin-bottom: var(--space-2);
+            opacity: 0.5;
+        }
+        
+        .empty-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--foreground-primary);
+            margin-bottom: var(--space-1);
+        }
+        
+        .empty-description {
+            margin-bottom: var(--space-4);
+        }
+        
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .sidebar {
+                display: none;
+            }
+            
+            .content {
+                padding: var(--space-4);
+            }
+            
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .welcome-section {
+                padding: var(--space-4);
+            }
+            
+            .user-info {
+                flex-direction: column;
+                gap: var(--space-2);
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-layout">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <a href="/" class="logo">SYNTHEX</a>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="/dashboard.html" class="nav-item active">
+                    <svg class="w-5 h-5" viewBox="0 0 20 20" fill="currentColor"><path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"/></svg>
+                    <span>Dashboard</span>
+                </a>
+                <a href="/campaigns.html" class="nav-item">
+                    <svg class="w-5 h-5" viewBox="0 0 20 20" fill="currentColor"><path d="m12.85 4.85l-.35-.35l-.85.85l.35.35zm-5.7 5.7l-.35-.35l-.85.85l.35.35zm3.5-7.78l4.95 4.95c.39.39.39 1.02 0 1.41l-1.06 1.06l-3.89-3.89l1.06-1.06c.39-.39 1.02-.39 1.41 0l-.47-.47zm-7.07 7.07l4.95 4.95c.39.39 1.02.39 1.41 0l1.06-1.06l-3.89-3.89l-1.06 1.06c-.39.39-.39 1.02 0 1.41l-.47-.47z"/></svg>
+                    <span>Campaigns</span>
+                </a>
+                <a href="/content" class="nav-item">
+                    <svg class="w-5 h-5" viewBox="0 0 20 20" fill="currentColor"><path d="M4 2a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2V6.414A2 2 0 0017.414 5L14 1.586A2 2 0 0012.586 1H4zm2 3h8v2H6V5zm0 4h8v2H6V9zm0 4h5v2H6v-2z"/></svg>
+                    <span>Content</span>
+                </a>
+                <a href="/analytics" class="nav-item">
+                    <svg class="w-5 h-5" viewBox="0 0 20 20" fill="currentColor"><path d="M3 17v-6h2v6H3zm4 0V7h2v10H7zm4 0V1h2v16h-2zm4 0v-8h2v8h-2z"/></svg>
+                    <span>Analytics</span>
+                </a>
+                <a href="/calendar" class="nav-item">
+                    <svg class="w-5 h-5" viewBox="0 0 20 20" fill="currentColor"><path d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zM4 8h12v8H4V8z"/></svg>
+                    <span>Calendar</span>
+                </a>
+                <a href="/ai-agents" class="nav-item">
+                    <svg class="w-5 h-5" viewBox="0 0 20 20" fill="currentColor"><path d="M10 2a6 6 0 016 6c0 .75-.14 1.46-.4 2.12A4 4 0 0118 14v2a2 2 0 01-2 2H4a2 2 0 01-2-2v-2a4 4 0 012.4-3.88A5.98 5.98 0 014 8a6 6 0 016-6zm0 2a4 4 0 00-4 4c0 .35.04.69.13 1.02A6 6 0 0110 8a6 6 0 013.87 1.02c.09-.33.13-.67.13-1.02a4 4 0 00-4-4z"/></svg>
+                    <span>AI Agents</span>
+                </a>
+                <a href="/settings" class="nav-item">
+                    <svg class="w-5 h-5" viewBox="0 0 20 20" fill="currentColor"><path d="M10 12a2 2 0 100-4 2 2 0 000 4z"/><path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd"/></svg>
+                    <span>Settings</span>
+                </a>
+            </nav>
+        </aside>
+        
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="header">
+                <h1 class="page-title">Dashboard</h1>
+                <div class="header-actions">
+                    <button class="btn btn-secondary" onclick="refreshDashboard()">
+                        <span>🔄</span>
+                        <span>Refresh</span>
+                    </button>
+                    <a href="/campaigns.html" class="btn btn-primary">
+                        <span>+</span>
+                        <span>New Campaign</span>
+                    </a>
+                </div>
+            </header>
+            
+            <!-- Content -->
+            <div class="content">
+                <!-- Welcome Section -->
+                <div class="welcome-section">
+                    <h2 class="welcome-title">Welcome back, <span id="user-name">User</span>!</h2>
+                    <p class="welcome-subtitle">Here's what's happening with your campaigns today.</p>
+                    
+                    <div class="user-info">
+                        <div class="user-info-item">
+                            <span class="user-info-label">Email</span>
+                            <span class="user-info-value" id="user-email">user@example.com</span>
+                        </div>
+                        <div class="user-info-item">
+                            <span class="user-info-label">Member Since</span>
+                            <span class="user-info-value" id="user-joined">January 2024</span>
+                        </div>
+                        <div class="user-info-item">
+                            <span class="user-info-label">Plan</span>
+                            <span class="user-info-value" id="user-plan">Free</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Statistics -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon"><svg class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor"><path d="m12.85 4.85l-.35-.35l-.85.85l.35.35zm-5.7 5.7l-.35-.35l-.85.85l.35.35zm3.5-7.78l4.95 4.95c.39.39.39 1.02 0 1.41l-1.06 1.06l-3.89-3.89l1.06-1.06c.39-.39 1.02-.39 1.41 0l-.47-.47zm-7.07 7.07l4.95 4.95c.39.39 1.02.39 1.41 0l1.06-1.06l-3.89-3.89l-1.06 1.06c-.39.39-.39 1.02 0 1.41l-.47-.47z"/></svg></div>
+                        <div class="stat-label">Total Campaigns</div>
+                        <div class="stat-value" id="totalCampaigns">0</div>
+                        <div class="stat-change positive" id="campaignsChange">+0 this month</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">✅</div>
+                        <div class="stat-label">Active Campaigns</div>
+                        <div class="stat-value" id="activeCampaigns">0</div>
+                        <div class="stat-change positive" id="activeChange">+0 this week</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon"><svg class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor"><path d="M6 2a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V6.414A2 2 0 0019.414 5L16 1.586A2 2 0 0014.586 1H6zm2 3h8v2H8V5zm0 4h8v2H8V9zm0 4h6v2H8v-2z"/></svg></div>
+                        <div class="stat-label">Total Posts</div>
+                        <div class="stat-value" id="totalPosts">0</div>
+                        <div class="stat-change positive" id="postsChange">+0 this week</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon"><svg class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor"><path d="m13 7l5 5l-1.41 1.41L13 9.83l-4 4L7.59 12.41L13 7zm0 0V3h4v4h-4z"/></svg></div>
+                        <div class="stat-label">Engagement Rate</div>
+                        <div class="stat-value" id="engagementRate">0%</div>
+                        <div class="stat-change positive" id="engagementChange">+0% this week</div>
+                    </div>
+                </div>
+                
+                <!-- Dashboard Grid -->
+                <div class="dashboard-grid">
+                    <!-- Recent Activity -->
+                    <div class="activity-section">
+                        <div class="section-header">
+                            <h3 class="section-title">Recent Activity</h3>
+                            <button class="btn btn-secondary" onclick="loadActivity()">
+                                <span>🔄</span>
+                            </button>
+                        </div>
+                        <div class="activity-list" id="activityList">
+                            <div class="loading">
+                                <div class="spinner"></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Quick Actions -->
+                    <div class="quick-actions">
+                        <div class="section-header">
+                            <h3 class="section-title">Quick Actions</h3>
+                        </div>
+                        <div class="quick-actions-grid">
+                            <a href="/campaigns.html" class="quick-action-btn">
+                                <div class="quick-action-icon"><svg class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor"><path d="m12.85 4.85l-.35-.35l-.85.85l.35.35zm-5.7 5.7l-.35-.35l-.85.85l.35.35zm3.5-7.78l4.95 4.95c.39.39.39 1.02 0 1.41l-1.06 1.06l-3.89-3.89l1.06-1.06c.39-.39 1.02-.39 1.41 0l-.47-.47zm-7.07 7.07l4.95 4.95c.39.39 1.02.39 1.41 0l1.06-1.06l-3.89-3.89l-1.06 1.06c-.39.39-.39 1.02 0 1.41l-.47-.47z"/></svg></div>
+                                <div class="quick-action-content">
+                                    <div class="quick-action-title">Create Campaign</div>
+                                    <div class="quick-action-description">Start a new marketing campaign</div>
+                                </div>
+                            </a>
+                            <a href="/content" class="quick-action-btn">
+                                <div class="quick-action-icon"><svg class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor"><path d="M13 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V9l-7-7zm-1 7V3.5L18.5 9H12zm0 2v3h3v2h-3v3h-2v-3H8v-2h3v-3h2z"/></svg></div>
+                                <div class="quick-action-content">
+                                    <div class="quick-action-title">Create Content</div>
+                                    <div class="quick-action-description">Generate new posts</div>
+                                </div>
+                            </a>
+                            <a href="/analytics" class="quick-action-btn">
+                                <div class="quick-action-icon"><svg class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor"><path d="M3 17v-6h2v6H3zm4 0V7h2v10H7zm4 0V1h2v16h-2zm4 0v-8h2v8h-2z"/></svg></div>
+                                <div class="quick-action-content">
+                                    <div class="quick-action-title">View Analytics</div>
+                                    <div class="quick-action-description">Check performance metrics</div>
+                                </div>
+                            </a>
+                            <a href="/calendar" class="quick-action-btn">
+                                <div class="quick-action-icon"><svg class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19a2 2 0 002 2h14a2 2 0 002-2V5c0-1.1-.89-2-2-2zm-5 12h-2v-2h2v2zm4-9H6v10h12V6zm-5-1h2v2h-2V5zm-4 4h2v2H9V9z"/></svg></div>
+                                <div class="quick-action-content">
+                                    <div class="quick-action-title">Schedule Posts</div>
+                                    <div class="quick-action-description">Plan your content calendar</div>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Performance Metrics -->
+                <div class="metrics-section">
+                    <div class="section-header">
+                        <h3 class="section-title">Performance Overview</h3>
+                        <select class="btn btn-secondary" id="metricsTimeframe" onchange="updateMetrics()">
+                            <option value="7d">Last 7 days</option>
+                            <option value="30d">Last 30 days</option>
+                            <option value="90d">Last 90 days</option>
+                        </select>
+                    </div>
+                    <div class="chart-container" id="metricsChart">
+                        <div class="empty-state">
+                            <div class="empty-icon"><svg class="w-8 h-8" viewBox="0 0 32 32" fill="currentColor"><path d="m17 9l6 6l-1.88 1.88L17 12.76l-5 5L10.12 16L17 9zm0 0V4h5v5h-5z"/></svg></div>
+                            <div class="empty-title">Performance Metrics</div>
+                            <div class="empty-description">Charts will appear here once you have campaign data</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <script>
+        const API_URL = window.location.origin + '/api/v1';
+        let currentUser = null;
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            // Initialize Fluent System Icons (using inline SVG - no initialization needed)
+            loadUserData();
+            loadDashboardData();
+        });
+        
+        // Load user data from localStorage
+        async function loadUserData() {
+            try {
+                const userStr = localStorage.getItem('user');
+                if (userStr) {
+                    currentUser = JSON.parse(userStr);
+                    updateUserInfo();
+                }
+                
+                // Fetch fresh user data
+                const token = localStorage.getItem('token');
+                if (token) {
+                    const response = await fetch(`${API_URL}/auth/profile`, {
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        }
+                    });
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        currentUser = data.user;
+                        localStorage.setItem('user', JSON.stringify(currentUser));
+                        updateUserInfo();
+                    }
+                }
+            } catch (error) {
+                console.error('Failed to load user data:', error);
+            }
+        }
+        
+        // Update user information
+        function updateUserInfo() {
+            if (currentUser) {
+                document.getElementById('user-name').textContent = currentUser.name || 'User';
+                document.getElementById('user-email').textContent = currentUser.email || 'user@example.com';
+                document.getElementById('user-joined').textContent = currentUser.createdAt ? 
+                    new Date(currentUser.createdAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : 
+                    'Recently';
+                
+                // Display user tier with proper formatting
+                const userTier = currentUser.preferences?.tier || 'starter';
+                const tierDisplay = {
+                    'starter': 'Starter (Free)',
+                    'professional': 'Professional (Free)',
+                    'business': 'Business (Free)'
+                };
+                document.getElementById('user-plan').textContent = tierDisplay[userTier] || 'Starter (Free)';
+            }
+        }
+        
+        // Load dashboard data
+        async function loadDashboardData() {
+            try {
+                const token = localStorage.getItem('token');
+                const response = await fetch('/api/v1/dashboard/summary', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    if (result.success && result.data) {
+                        updateDashboardWithData(result.data);
+                    }
+                }
+            } catch (error) {
+                console.error('Failed to load dashboard data:', error);
+            }
+            
+            // Also load individual components
+            await Promise.all([
+                loadStatistics(),
+                loadActivity(),
+                loadMetrics()
+            ]);
+        }
+        
+        // Update dashboard with fetched data
+        function updateDashboardWithData(data) {
+            // Update statistics
+            if (data.stats) {
+                document.getElementById('totalCampaigns').textContent = data.stats.totalPosts || 0;
+                document.getElementById('activeCampaigns').textContent = data.stats.aiGenerationsUsed || 0;
+                document.getElementById('totalPosts').textContent = data.stats.totalPosts || 0;
+                document.getElementById('engagementRate').textContent = `${data.stats.engagementRate || 0}%`;
+            }
+            
+            // Update activity feed
+            if (data.activity && data.activity.length > 0) {
+                const activityList = document.querySelector('.activity-list');
+                activityList.innerHTML = data.activity.map(item => `
+                    <div class="activity-item">
+                        <div class="activity-icon">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                            </svg>
+                        </div>
+                        <div class="activity-content">
+                            <div class="activity-title">${item.title}</div>
+                            <div class="activity-description">${item.description}</div>
+                            <div class="activity-time">${new Date(item.timestamp).toLocaleString()}</div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+            
+            // Update insights
+            if (data.insights && data.insights.length > 0) {
+                const insightsContainer = document.querySelector('.insights-list');
+                if (insightsContainer) {
+                    insightsContainer.innerHTML = data.insights.map(insight => `
+                        <div class="insight-item ${insight.priority}">
+                            <div class="insight-icon">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M9 11l3 3L22 4"/>
+                                    <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/>
+                                </svg>
+                            </div>
+                            <div class="insight-content">
+                                <div class="insight-title">${insight.insight}</div>
+                                <div class="insight-action">${insight.action}</div>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+            }
+        }
+        
+        // Load statistics
+        async function loadStatistics() {
+            try {
+                const response = await fetch(`${API_URL}/campaigns/statistics`, {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    const stats = data.data;
+                    
+                    document.getElementById('totalCampaigns').textContent = stats.total || 0;
+                    document.getElementById('activeCampaigns').textContent = stats.active || 0;
+                    document.getElementById('totalPosts').textContent = (stats.scheduledPosts || 0) + (stats.publishedPosts || 0);
+                    document.getElementById('engagementRate').textContent = stats.engagementRate ? `${stats.engagementRate}%` : '0%';
+                    
+                    // Update change indicators
+                    updateChangeIndicators(stats);
+                }
+            } catch (error) {
+                console.error('Failed to load statistics:', error);
+            }
+        }
+        
+        // Update change indicators
+        function updateChangeIndicators(stats) {
+            const campaignsChange = stats.campaignsChange || 0;
+            const activeChange = stats.activeChange || 0;
+            const postsChange = stats.postsChange || 0;
+            const engagementChange = stats.engagementChange || 0;
+            
+            updateChangeElement('campaignsChange', campaignsChange, 'this month');
+            updateChangeElement('activeChange', activeChange, 'this week');
+            updateChangeElement('postsChange', postsChange, 'this week');
+            updateChangeElement('engagementChange', engagementChange, 'this week', '%');
+        }
+        
+        function updateChangeElement(elementId, value, period, suffix = '') {
+            const element = document.getElementById(elementId);
+            const sign = value >= 0 ? '+' : '';
+            element.textContent = `${sign}${value}${suffix} ${period}`;
+            element.className = `stat-change ${value >= 0 ? 'positive' : 'negative'}`;
+        }
+        
+        // Load recent activity
+        async function loadActivity() {
+            const container = document.getElementById('activityList');
+            container.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+            
+            try {
+                const response = await fetch(`${API_URL}/dashboard/activity`, {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    const activities = data.data.activities || [];
+                    renderActivity(activities);
+                } else {
+                    throw new Error('Failed to load activity');
+                }
+            } catch (error) {
+                console.error('Failed to load activity:', error);
+                renderActivity([]);
+            }
+        }
+        
+        // Render activity list
+        function renderActivity(activities) {
+            const container = document.getElementById('activityList');
+            
+            if (activities.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon"><svg class="w-8 h-8" viewBox="0 0 32 32" fill="currentColor"><path fill-rule="evenodd" d="M16 5a11 11 0 1 0 0 22 11 11 0 0 0 0-22ZM16 3a13 13 0 1 0 0 26 13 13 0 0 0 0-26Zm3 9a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm-3 2a1 1 0 0 1 1 1v6a1 1 0 1 1-2 0v-6a1 1 0 0 1 1-1Z" clip-rule="evenodd"/></svg></div>
+                        <div class="empty-title">No recent activity</div>
+                        <div class="empty-description">Start by creating your first campaign!</div>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = activities.map(activity => `
+                <div class="activity-item">
+                    <div class="activity-icon">${getActivityIcon(activity.type)}</div>
+                    <div class="activity-content">
+                        <div class="activity-title">${activity.title}</div>
+                        <div class="activity-description">${activity.description}</div>
+                        <div class="activity-time">${formatTime(activity.createdAt)}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        // Get activity icon
+        function getActivityIcon(type) {
+            const icons = {
+                campaign_created: '<svg class="w-4 h-4 inline mr-2" viewBox="0 0 16 16" fill="currentColor"><path d="m8.57 3.24l-.28-.28l-.57.57l.28.28zm-3.8 3.8l-.28-.28l-.57.57l.28.28zm2.33-5.18l3.3 3.3c.26.26.26.68 0 .94l-.71.71l-2.59-2.59l.71-.71c.26-.26.68-.26.94 0l-.35-.35zm-4.71 4.71l3.3 3.3c.26.26.68.26.94 0l.71-.71l-2.59-2.59l-.71.71c-.26.26-.26.68 0 .94l-.35-.35z"/></svg>',
+                campaign_updated: '<svg class="w-4 h-4 inline mr-2" viewBox="0 0 16 16" fill="currentColor"><path d="M11.013 1.427a1.75 1.75 0 0 1 2.474 0l1.086 1.086a1.75 1.75 0 0 1 0 2.474l-8.61 8.61c-.21.21-.47.364-.756.445l-3.251.93a.75.75 0 0 1-.927-.928l.929-3.25c.081-.286.235-.547.445-.758l8.61-8.61Z"/></svg>',
+                post_scheduled: '<svg class="w-4 h-4 inline mr-2" viewBox="0 0 16 16" fill="currentColor"><path d="M4 1.75C4 .784 4.784 0 5.75 0h4.5C11.216 0 12 .784 12 1.75V3h1.25C14.216 3 15 3.784 15 4.75v8.5A1.75 1.75 0 0 1 13.25 15H2.75A1.75 1.75 0 0 1 1 13.25v-8.5C1 3.784 1.784 3 2.75 3H4ZM5.75 1.5a.25.25 0 0 0-.25.25V3h5V1.75a.25.25 0 0 0-.25-.25Z"/></svg>',
+                post_published: '<svg class="w-4 h-4 inline mr-2" viewBox="0 0 16 16" fill="currentColor"><path d="M13.78 4.22a.75.75 0 0 1 0 1.06l-7.25 7.25a.75.75 0 0 1-1.06 0L2.22 9.28a.75.75 0 0 1 1.06-1.06L6 10.94l6.72-6.72a.75.75 0 0 1 1.06 0Z"/></svg>',
+                analytics_updated: '<svg class="w-4 h-4 inline mr-2" viewBox="0 0 16 16" fill="currentColor"><path d="M2 11.5v-4h1v4H2zm2.5 0V5.5h1v6h-1zm2.5 0V1.5h1v10H7zm2.5 0v-6h1v6H9.5z"/></svg>',
+                default: '<svg class="w-4 h-4 inline mr-2" viewBox="0 0 16 16" fill="currentColor"><path fill-rule="evenodd" d="M8 2.5a5.5 5.5 0 0 1 5.5 5.5 5.5 5.5 0 0 1-5.5 5.5A5.5 5.5 0 0 1 2.5 8A5.5 5.5 0 0 1 8 2.5ZM8 1a7 7 0 1 0 0 14A7 7 0 0 0 8 1Zm1.5 4.5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0ZM8 7a.5.5 0 0 1 .5.5v3a.5.5 0 0 1-1 0v-3A.5.5 0 0 1 8 7Z" clip-rule="evenodd"/></svg>'
+            };
+            return icons[type] || icons.default;
+        }
+        
+        // Format time
+        function formatTime(timestamp) {
+            const date = new Date(timestamp);
+            const now = new Date();
+            const diff = now - date;
+            const minutes = Math.floor(diff / 60000);
+            const hours = Math.floor(diff / 3600000);
+            const days = Math.floor(diff / 86400000);
+            
+            if (minutes < 1) return 'Just now';
+            if (minutes < 60) return `${minutes}m ago`;
+            if (hours < 24) return `${hours}h ago`;
+            if (days < 7) return `${days}d ago`;
+            return date.toLocaleDateString();
+        }
+        
+        // Load metrics
+        async function loadMetrics() {
+            try {
+                const timeframe = document.getElementById('metricsTimeframe').value;
+                const response = await fetch(`${API_URL}/dashboard/metrics?timeframe=${timeframe}`, {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    renderMetrics(data.data);
+                }
+            } catch (error) {
+                console.error('Failed to load metrics:', error);
+            }
+        }
+        
+        // Render metrics chart
+        function renderMetrics(metricsData) {
+            const container = document.getElementById('metricsChart');
+            
+            if (!metricsData || metricsData.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">📈</div>
+                        <div class="empty-title">Performance Metrics</div>
+                        <div class="empty-description">Charts will appear here once you have campaign data</div>
+                    </div>
+                `;
+                return;
+            }
+            
+            // For now, show a placeholder. In a real implementation, you'd integrate with a charting library
+            container.innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-icon">📈</div>
+                    <div class="empty-title">Chart Integration Needed</div>
+                    <div class="empty-description">Integrate with Chart.js or D3.js for data visualization</div>
+                </div>
+            `;
+        }
+        
+        // Update metrics
+        function updateMetrics() {
+            loadMetrics();
+        }
+        
+        // Refresh dashboard
+        function refreshDashboard() {
+            loadDashboardData();
+        }
+    </script>
+</body>
+</html>

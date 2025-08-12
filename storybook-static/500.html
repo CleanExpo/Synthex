@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Server Error - SYNTHEX</title>
+    <link rel="icon" type="image/png" href="/logo.png">
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        /* Import design system */
+        :root {
+            --primary: #2563eb;
+            --primary-hover: #1e40af;
+            --bg-primary: #0f172a;
+            --bg-secondary: #1e293b;
+            --bg-card: rgba(255, 255, 255, 0.03);
+            --text-primary: #ffffff;
+            --text-secondary: #a0a0a0;
+            --text-muted: #6b7280;
+            --accent-blue: #3b82f6;
+            --accent-green: #10b981;
+            --accent-purple: #8b5cf6;
+            --accent-pink: #ec4899;
+            --border-color: rgba(255, 255, 255, 0.1);
+            
+            --space-1: 8px;
+            --space-2: 16px;
+            --space-3: 24px;
+            --space-4: 32px;
+            --space-6: 48px;
+            --space-8: 64px;
+            
+            --radius: 8px;
+            --radius-lg: 16px;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: var(--space-4);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        /* Animated Background */
+        body::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle at 20% 50%, rgba(239, 68, 68, 0.1) 0%, transparent 50%),
+                        radial-gradient(circle at 80% 80%, rgba(245, 158, 11, 0.05) 0%, transparent 50%),
+                        radial-gradient(circle at 40% 20%, rgba(236, 72, 153, 0.05) 0%, transparent 50%);
+            animation: gradientMove 20s ease infinite;
+        }
+        
+        @keyframes gradientMove {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Error Container */
+        .error-container {
+            max-width: 600px;
+            width: 100%;
+            text-align: center;
+            z-index: 1;
+            position: relative;
+        }
+        
+        /* Logo */
+        .logo-section {
+            margin-bottom: var(--space-8);
+        }
+        
+        .logo {
+            font-size: 2rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary), var(--accent-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        /* Error Card */
+        .error-card {
+            background: var(--bg-card);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: var(--space-8);
+            position: relative;
+            overflow: hidden;
+            margin-bottom: var(--space-6);
+        }
+        
+        .error-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #ef4444, #f59e0b);
+        }
+        
+        /* Error Content */
+        .error-icon {
+            margin-bottom: var(--space-4);
+            opacity: 0.8;
+            animation: pulse 2s ease-in-out infinite;
+        }
+        
+        .error-icon svg {
+            color: #ef4444;
+            opacity: 0.8;
+        }
+        
+        .error-code {
+            font-size: 4rem;
+            font-weight: 800;
+            color: #ef4444;
+            margin-bottom: var(--space-2);
+            text-shadow: 0 0 20px rgba(239, 68, 68, 0.3);
+        }
+        
+        .error-title {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: var(--space-3);
+            color: var(--text-primary);
+        }
+        
+        .error-description {
+            font-size: 1.125rem;
+            color: var(--text-secondary);
+            margin-bottom: var(--space-6);
+            line-height: 1.6;
+        }
+        
+        /* Actions */
+        .error-actions {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-3);
+            align-items: center;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: var(--space-3);
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        .btn {
+            padding: var(--space-3) var(--space-6);
+            border: none;
+            border-radius: var(--radius);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-2);
+            font-size: 1rem;
+            min-width: 140px;
+            justify-content: center;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--accent-purple));
+            color: var(--text-primary);
+            box-shadow: 0 4px 16px rgba(99, 102, 241, 0.2);
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(99, 102, 241, 0.3);
+        }
+        
+        .btn-secondary {
+            background: transparent;
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+        }
+        
+        .btn-secondary:hover {
+            background: var(--bg-card);
+            transform: translateY(-1px);
+        }
+        
+        /* Status Info */
+        .status-info {
+            background: var(--bg-card);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: var(--space-6);
+            text-align: left;
+        }
+        
+        .status-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: var(--space-3);
+            color: var(--text-primary);
+        }
+        
+        .status-message {
+            color: var(--text-secondary);
+            margin-bottom: var(--space-3);
+        }
+        
+        .error-details {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            padding: var(--space-3);
+            margin-top: var(--space-3);
+            font-family: 'Courier New', monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            word-break: break-all;
+        }
+        
+        /* Animations */
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+                opacity: 0.8;
+            }
+            50% {
+                transform: scale(1.05);
+                opacity: 1;
+            }
+        }
+        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .error-container > * {
+            animation: fadeIn 0.6s ease-out forwards;
+        }
+        
+        .error-container > *:nth-child(2) {
+            animation-delay: 0.1s;
+        }
+        
+        .error-container > *:nth-child(3) {
+            animation-delay: 0.2s;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .error-card {
+                padding: var(--space-6);
+            }
+            
+            .error-code {
+                font-size: 3rem;
+            }
+            
+            .error-title {
+                font-size: 1.5rem;
+            }
+            
+            .error-description {
+                font-size: 1rem;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+                width: 100%;
+            }
+            
+            .btn {
+                width: 100%;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .error-code {
+                font-size: 2.5rem;
+            }
+            
+            .logo {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+    <link rel="stylesheet" href="/css/synthex-app.css">
+</head>
+<body>
+    <div class="error-container">
+        <!-- Logo -->
+        <div class="logo-section">
+            <a href="/" class="logo">SYNTHEX</a>
+        </div>
+        
+        <!-- Error Card -->
+        <div class="error-card">
+            <div class="error-icon">
+                <svg width="96" height="96" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                    <line x1="12" y1="9" x2="12" y2="13"/>
+                    <line x1="12" y1="17" x2="12.01" y2="17"/>
+                </svg>
+            </div>
+            <div class="error-code">500</div>
+            <h1 class="error-title">Server Error</h1>
+            <p class="error-description">
+                Something went wrong on our end. Our team has been notified and is working to fix the issue. 
+                Please try again in a few moments.
+            </p>
+            
+            <div class="error-actions">
+                <div class="action-buttons">
+                    <a href="/" class="btn btn-primary">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                            <polyline points="9 22 9 12 15 12 15 22"/>
+                        </svg>
+                        <span>Go Home</span>
+                    </a>
+                    <button class="btn btn-secondary" onclick="location.reload()">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="23 4 23 10 17 10"/>
+                            <polyline points="1 20 1 14 7 14"/>
+                            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+                        </svg>
+                        <span>Try Again</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Status Info -->
+        <div class="status-info">
+            <h2 class="status-title">What happened?</h2>
+            <p class="status-message">
+                The server encountered an unexpected error while processing your request.
+                This could be due to:
+            </p>
+            <ul style="list-style: none; padding: 0; color: var(--text-secondary);">
+                <li style="padding: var(--space-1) 0;">• Temporary server overload</li>
+                <li style="padding: var(--space-1) 0;">• Database connection issues</li>
+                <li style="padding: var(--space-1) 0;">• Configuration problems</li>
+                <li style="padding: var(--space-1) 0;">• Unexpected application errors</li>
+            </ul>
+            
+            <div class="error-details" id="errorDetails">
+                Error ID: <span id="errorId"></span><br>
+                Timestamp: <span id="timestamp"></span>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Add error details
+        document.addEventListener('DOMContentLoaded', () => {
+            // Generate error ID
+            const errorId = 'ERR_' + Math.random().toString(36).substr(2, 9).toUpperCase();
+            document.getElementById('errorId').textContent = errorId;
+            
+            // Add timestamp
+            const timestamp = new Date().toLocaleString();
+            document.getElementById('timestamp').textContent = timestamp;
+            
+            // Auto-focus on the primary action button
+            const primaryBtn = document.querySelector('.btn-primary');
+            if (primaryBtn) {
+                primaryBtn.focus();
+            }
+            
+            // Add keyboard navigation
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    window.location.href = '/';
+                }
+                if (e.key === 'F5' || (e.ctrlKey && e.key === 'r')) {
+                    e.preventDefault();
+                    location.reload();
+                }
+            });
+            
+            // Track 500 errors for analytics (if needed)
+            if (typeof gtag !== 'undefined') {
+                gtag('event', 'server_error', {
+                    'error_id': errorId,
+                    'page_location': window.location.href,
+                    'page_title': document.title
+                });
+            }
+            
+            // Store error in session storage for debugging
+            sessionStorage.setItem('lastError', JSON.stringify({
+                id: errorId,
+                timestamp: timestamp,
+                url: window.location.href,
+                userAgent: navigator.userAgent
+            }));
+        });
+    </script>
+</body>
+</html>
