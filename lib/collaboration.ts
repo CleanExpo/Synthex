@@ -257,7 +257,9 @@ export class CollaborationManager {
     // Store comment (in production, save to database)
     const comments = this.getComments();
     comments.push(fullComment);
-    localStorage.setItem('collaboration_comments', JSON.stringify(comments));
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('collaboration_comments', JSON.stringify(comments));
+    }
     
     // Notify mentioned users
     fullComment.mentions.forEach(userId => {
@@ -286,7 +288,9 @@ export class CollaborationManager {
     const comment = comments.find(c => c.id === commentId);
     if (comment) {
       comment.replies.push(fullReply);
-      localStorage.setItem('collaboration_comments', JSON.stringify(comments));
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('collaboration_comments', JSON.stringify(comments));
+      }
       
       // Notify comment author
       this.sendNotification({
@@ -310,7 +314,9 @@ export class CollaborationManager {
       // Remove existing reaction from same user
       comment.reactions = comment.reactions.filter(r => r.userId !== reaction.userId);
       comment.reactions.push(reaction);
-      localStorage.setItem('collaboration_comments', JSON.stringify(comments));
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('collaboration_comments', JSON.stringify(comments));
+      }
       
       this.broadcast('reaction', { commentId, reaction });
     }
@@ -322,7 +328,9 @@ export class CollaborationManager {
     const comment = comments.find(c => c.id === commentId);
     if (comment) {
       comment.resolved = resolved;
-      localStorage.setItem('collaboration_comments', JSON.stringify(comments));
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('collaboration_comments', JSON.stringify(comments));
+      }
       
       this.broadcast('comment-resolved', { commentId, resolved });
     }
@@ -340,19 +348,23 @@ export class CollaborationManager {
     // Store notification
     const notifications = this.getNotifications();
     notifications.push(fullNotification);
-    localStorage.setItem('collaboration_notifications', JSON.stringify(notifications));
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('collaboration_notifications', JSON.stringify(notifications));
+    }
     
     this.broadcast('notification', fullNotification);
   }
   
   // Get comments
   getComments(): Comment[] {
+    if (typeof window === 'undefined') return [];
     const stored = localStorage.getItem('collaboration_comments');
     return stored ? JSON.parse(stored) : [];
   }
   
   // Get notifications
   getNotifications(): Notification[] {
+    if (typeof window === 'undefined') return [];
     const stored = localStorage.getItem('collaboration_notifications');
     return stored ? JSON.parse(stored) : [];
   }
@@ -363,7 +375,9 @@ export class CollaborationManager {
     const notification = notifications.find(n => n.id === notificationId);
     if (notification) {
       notification.read = true;
-      localStorage.setItem('collaboration_notifications', JSON.stringify(notifications));
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('collaboration_notifications', JSON.stringify(notifications));
+      }
     }
   }
   

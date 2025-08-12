@@ -27,15 +27,17 @@ export default function OnboardingPage() {
 
   // Restore progress on mount
   useEffect(() => {
-    const savedProgress = localStorage.getItem('onboardingProgress');
-    if (savedProgress) {
-      try {
-        const { step: savedStep, userData: savedData } = JSON.parse(savedProgress);
-        setStep(savedStep);
-        setUserData(savedData);
-        toast.success('Welcome back! We restored your progress.');
-      } catch (error) {
-        console.error('Failed to restore progress:', error);
+    if (typeof window !== 'undefined') {
+      const savedProgress = localStorage.getItem('onboardingProgress');
+      if (savedProgress) {
+        try {
+          const { step: savedStep, userData: savedData } = JSON.parse(savedProgress);
+          setStep(savedStep);
+          setUserData(savedData);
+          toast.success('Welcome back! We restored your progress.');
+        } catch (error) {
+          console.error('Failed to restore progress:', error);
+        }
       }
     }
   }, []);
@@ -79,12 +81,16 @@ export default function OnboardingPage() {
     if (step < totalSteps) {
       setStep(step + 1);
       // Save progress to localStorage
-      localStorage.setItem('onboardingProgress', JSON.stringify({ step: step + 1, userData }));
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('onboardingProgress', JSON.stringify({ step: step + 1, userData }));
+      }
     } else {
       // Save onboarding data and redirect to dashboard
-      localStorage.setItem('onboardingComplete', 'true');
-      localStorage.setItem('userData', JSON.stringify(userData));
-      localStorage.removeItem('onboardingProgress');
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('onboardingComplete', 'true');
+        localStorage.setItem('userData', JSON.stringify(userData));
+        localStorage.removeItem('onboardingProgress');
+      }
       toast.success('Welcome to SYNTHEX! Let\'s create amazing content together! 🚀');
       router.push('/dashboard');
     }
@@ -93,12 +99,16 @@ export default function OnboardingPage() {
   const handleBack = () => {
     if (step > 1) {
       setStep(step - 1);
-      localStorage.setItem('onboardingProgress', JSON.stringify({ step: step - 1, userData }));
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('onboardingProgress', JSON.stringify({ step: step - 1, userData }));
+      }
     }
   };
 
   const handleSkip = () => {
-    localStorage.setItem('onboardingComplete', 'true');
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('onboardingComplete', 'true');
+    }
     router.push('/dashboard');
   };
 

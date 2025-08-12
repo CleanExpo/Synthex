@@ -41,7 +41,7 @@ export default function LoginPage() {
       }
       
       // Store user data in localStorage for the sidebar and other components
-      if (data.user) {
+      if (data.user && typeof window !== 'undefined') {
         localStorage.setItem('authToken', data.session?.access_token || 'authenticated');
         localStorage.setItem('user', JSON.stringify({
           id: data.user.id,
