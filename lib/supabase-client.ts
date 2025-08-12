@@ -9,12 +9,15 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-key';
 
-// Create Supabase client with SSG safety
+// Create Supabase client with proper session management
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
-    autoRefreshToken: typeof window !== 'undefined',
-    persistSession: typeof window !== 'undefined',
-    detectSessionInUrl: typeof window !== 'undefined',
+    autoRefreshToken: true,
+    persistSession: true,
+    detectSessionInUrl: true,
+    flowType: 'pkce',
+    storage: typeof window !== 'undefined' ? window.localStorage : undefined,
+    storageKey: 'synthex-auth-token',
   },
   realtime: {
     params: {
@@ -109,12 +112,32 @@ export const auth = {
       return null;
     }
     
-    const {
-      data: { user },
-      error,
-    } = await supabase.auth.getUser();
-    if (error) throw error;
-    return user;
+    try {
+      // First try to get the session
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError) {
+        console.warn('Session error:', sessionError);
+      }
+      
+      // If we have a session, return the user
+      if (session?.user) {
+        return session.user;
+      }
+      
+      // Otherwise try to get the user directly
+      const { data: { user }, error } = await supabase.auth.getUser();
+      
+      if (error) {
+        console.warn('User fetch error:', error);
+        return null;
+      }
+      
+      return user;
+    } catch (error) {
+      console.error('Error getting current user:', error);
+      return null;
+    }
   },
 
   async resetPassword(email: string) {

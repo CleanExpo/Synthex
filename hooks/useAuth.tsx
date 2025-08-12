@@ -56,8 +56,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return;
       }
       
+      // Add small delay to ensure localStorage is available
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
       const user = await auth.getCurrentUser();
       setUser(user);
+      
+      // If user exists but was not set, try to refresh the session
+      if (!user) {
+        const storedToken = localStorage.getItem('synthex-auth-token');
+        if (storedToken) {
+          try {
+            // Try to recover session from stored token
+            const { data } = JSON.parse(storedToken);
+            if (data?.session?.user) {
+              setUser(data.session.user);
+            }
+          } catch (e) {
+            // Token might be invalid, clear it
+            localStorage.removeItem('synthex-auth-token');
+          }
+        }
+      }
     } catch (error) {
       console.error('Error checking user:', error);
       // Don't treat auth errors as fatal - user may just not be logged in
