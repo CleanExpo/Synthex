@@ -76,7 +76,7 @@ export function FileUpload({
     });
     
     // Process accepted files
-    const newFiles = acceptedFiles.map(file => 
+    const newFiles: FileWithPreview[] = acceptedFiles.map(file => 
       Object.assign(file, {
         preview: file.type.startsWith('image/') 
           ? URL.createObjectURL(file) 
@@ -123,7 +123,7 @@ export function FileUpload({
         // Mark files as error
         setFiles(prev => prev.map(f => 
           newFiles.includes(f) 
-            ? { ...f, status: 'error' as const, error: 'Upload failed' }
+            ? { ...f, status: 'error' as const, error: 'Upload failed', preview: f.preview || undefined }
             : f
         ));
         

@@ -533,7 +533,7 @@ class WhiteLabelSystem {
       }
       
       // Create module container
-      const module = {
+      const customModule = {
         id: `module_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
         name: moduleData.name,
         version: moduleData.version || '1.0.0',
@@ -566,7 +566,7 @@ class WhiteLabelSystem {
       const deployment = await this.deployModule(tenant, module);
       
       // Register module
-      tenant.features.customModules.push(module);
+      tenant.features.customModules.push(customModule);
       await this.updateTenant(tenantId, tenant);
       
       // Update routing
@@ -672,8 +672,8 @@ class WhiteLabelSystem {
         
         // Import modules
         if (importData.modules) {
-          for (const module of importData.modules) {
-            await this.deployCustomModule(tenantId, module);
+          for (const moduleItem of importData.modules) {
+            await this.deployCustomModule(tenantId, moduleItem);
           }
         }
         
@@ -878,12 +878,12 @@ class WhiteLabelSystem {
 
   async initializeFeatures(tenant) {
     // Enable/disable features based on configuration
-    for (const module of tenant.features.modules) {
-      await this.enableModule(tenant.id, module);
+    for (const moduleItem of tenant.features.modules) {
+      await this.enableModule(tenant.id, moduleItem);
     }
     
-    for (const module of tenant.features.disabled) {
-      await this.disableModule(tenant.id, module);
+    for (const moduleItem of tenant.features.disabled) {
+      await this.disableModule(tenant.id, moduleItem);
     }
   }
 

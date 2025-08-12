@@ -21,7 +21,7 @@ function interpolate(template: string, values: Record<string, string | number> =
 // Get locale from various sources (cookie, localStorage, browser, default)
 function getInitialLocale(): Locale {
   if (typeof window === 'undefined') {
-    return i18nConfig.defaultLocale;
+    return i18nConfig.defaultLocale as Locale;
   }
 
   // Check cookie
@@ -50,7 +50,7 @@ function getInitialLocale(): Locale {
     return browserLocale as Locale;
   }
 
-  return i18nConfig.defaultLocale;
+  return i18nConfig.defaultLocale as Locale;
 }
 
 // Set locale in cookie and localStorage

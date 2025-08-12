@@ -123,7 +123,7 @@ export function ProductTour() {
     if (currentStep < tourSteps.length - 1) {
       setCurrentStep(currentStep + 1);
       if (tourSteps[currentStep + 1].action) {
-        tourSteps[currentStep + 1].action();
+        tourSteps[currentStep + 1].action?.();
       }
     } else {
       completeTour();

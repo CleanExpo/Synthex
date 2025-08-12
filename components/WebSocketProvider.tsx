@@ -106,10 +106,7 @@ export function WebSocketProvider({
     onConnect: () => {
       console.log('WebSocket connected');
       if (connectionLost) {
-        toast({
-          title: 'Connection Restored',
-          description: 'Real-time notifications are now active',
-        });
+        toast.success('Connection Restored', 'Real-time notifications are now active');
         setConnectionLost(false);
       }
     },
@@ -117,20 +114,12 @@ export function WebSocketProvider({
       console.log('WebSocket disconnected:', event);
       if (event.code !== 1000) {
         setConnectionLost(true);
-        toast({
-          title: 'Connection Lost',
-          description: 'Attempting to reconnect...',
-          variant: 'destructive',
-        });
+        toast.warning('Connection Lost', 'Attempting to reconnect...');
       }
     },
     onError: (error) => {
       console.error('WebSocket error:', error);
-      toast({
-        title: 'Connection Error',
-        description: 'Failed to connect to real-time services',
-        variant: 'destructive',
-      });
+      toast.error('Connection Error', 'Failed to connect to real-time services');
     },
     onNotification: (notification) => {
       console.log('Received notification:', notification);

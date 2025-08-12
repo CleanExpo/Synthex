@@ -39,7 +39,7 @@ const router = express.Router();
 router.use(compressionMiddleware(CompressionProfiles.api));
 
 // Health check endpoint (public)
-router.get('/health', (req: Request, res: Response) => {
+router.get('/health', (req, res) => {
   res.json({
     status: 'healthy',
     timestamp: new Date().toISOString(),
@@ -54,7 +54,7 @@ router.get('/health', (req: Request, res: Response) => {
 });
 
 // API documentation endpoint (public)
-router.get('/docs', (req: Request, res: Response) => {
+router.get('/docs', (req, res) => {
   res.json({
     message: 'Synthex API Documentation',
     version: '2.0.0',

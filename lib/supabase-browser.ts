@@ -28,13 +28,6 @@ export function createSupabaseBrowser() {
         flowType: 'pkce',
         storage: typeof window !== 'undefined' ? window.localStorage : undefined,
         storageKey: 'synthex-auth-token',
-        cookieOptions: {
-          name: 'synthex-auth',
-          lifetime: 60 * 60 * 24 * 7, // 1 week
-          domain: '',
-          path: '/',
-          sameSite: 'lax',
-        },
       },
       realtime: {
         params: {

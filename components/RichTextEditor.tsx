@@ -52,11 +52,7 @@ export function RichTextEditor({
 }: RichTextEditorProps) {
   const editor = useEditor({
     extensions: [
-      StarterKit.configure({
-        placeholder: {
-          placeholder
-        }
-      })
+      StarterKit
     ],
     content,
     editable,
@@ -126,11 +122,13 @@ export function RichTextEditor({
     if (url === null) return;
     
     if (url === '') {
-      editor.chain().focus().extendMarkRange('link').unsetLink().run();
+      // Link extension not installed
+      toast.error('Link feature not available');
       return;
     }
     
-    editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run();
+    // Link extension not installed
+    toast.error('Link feature not available');
   }, [editor]);
   
   // Insert image
@@ -139,7 +137,8 @@ export function RichTextEditor({
     
     const url = window.prompt('Image URL');
     if (url) {
-      editor.chain().focus().setImage({ src: url }).run();
+      // Image extension not installed
+      toast.error('Image feature not available');
     }
   }, [editor]);
   

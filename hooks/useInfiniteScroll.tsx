@@ -122,7 +122,7 @@ export function useInfiniteScrollTrigger(
   const triggerRef = useRef<HTMLElement | null>(null);
   
   useEffect(() => {
-    if (!options?.enabled ?? true) return;
+    if (options?.enabled === false) return;
     
     const handleIntersection = (entries: IntersectionObserverEntry[]) => {
       entries.forEach(entry => {
