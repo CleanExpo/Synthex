@@ -53,6 +53,8 @@ export function AIPersonaManager() {
   }, []);
   
   const loadPersonas = () => {
+    if (typeof window === 'undefined') return;
+    
     const stored = localStorage.getItem('ai_personas');
     if (stored) {
       const data = JSON.parse(stored);
@@ -87,7 +89,9 @@ export function AIPersonaManager() {
   const deletePersona = (id: string) => {
     const updated = personas.filter(p => p.id !== id);
     setPersonas(updated);
-    localStorage.setItem('ai_personas', JSON.stringify(updated));
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('ai_personas', JSON.stringify(updated));
+    }
     
     if (selectedPersona?.id === id) {
       setSelectedPersona(updated[0] || null);

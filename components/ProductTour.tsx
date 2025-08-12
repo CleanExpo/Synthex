@@ -84,6 +84,8 @@ export function ProductTour() {
   
   // Check if should show tour
   useEffect(() => {
+    if (typeof window === 'undefined') return;
+    
     const hasSeenTour = localStorage.getItem('hasSeenTour');
     const isNewUser = !localStorage.getItem('onboardingComplete');
     
@@ -136,13 +138,17 @@ export function ProductTour() {
   
   const skipTour = () => {
     setIsActive(false);
-    localStorage.setItem('hasSeenTour', 'true');
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('hasSeenTour', 'true');
+    }
     notify.custom('Tour skipped. Press ? anytime for help!');
   };
   
   const completeTour = () => {
     setIsActive(false);
-    localStorage.setItem('hasSeenTour', 'true');
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('hasSeenTour', 'true');
+    }
     if (step.action) step.action();
   };
   
@@ -317,8 +323,10 @@ export function ProductTour() {
 // Tour trigger button
 export function TourTrigger() {
   const startTour = () => {
-    localStorage.removeItem('hasSeenTour');
-    window.location.reload();
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('hasSeenTour');
+      window.location.reload();
+    }
   };
   
   return (

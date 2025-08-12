@@ -31,6 +31,19 @@ interface StreakData {
 
 // Get or initialize streak data
 function getStreakData(): StreakData {
+  if (typeof window === 'undefined') {
+    return {
+      currentStreak: 0,
+      longestStreak: 0,
+      totalDays: 0,
+      lastActiveDate: '',
+      level: 1,
+      points: 0,
+      nextMilestone: 7,
+      todayCompleted: false
+    };
+  }
+  
   const stored = localStorage.getItem('streakData');
   if (stored) {
     return JSON.parse(stored);
@@ -50,11 +63,15 @@ function getStreakData(): StreakData {
 
 // Save streak data
 function saveStreakData(data: StreakData) {
-  localStorage.setItem('streakData', JSON.stringify(data));
+  if (typeof window !== 'undefined') {
+    localStorage.setItem('streakData', JSON.stringify(data));
+  }
 }
 
 // Check if user was active today
 function checkDailyActivity(): boolean {
+  if (typeof window === 'undefined') return false;
+  
   // In production, this would check actual user activity
   const lastActivity = localStorage.getItem('lastActivity');
   const today = new Date().toDateString();
@@ -63,7 +80,9 @@ function checkDailyActivity(): boolean {
 
 // Mark today as active
 function markTodayActive() {
-  localStorage.setItem('lastActivity', new Date().toDateString());
+  if (typeof window !== 'undefined') {
+    localStorage.setItem('lastActivity', new Date().toDateString());
+  }
 }
 
 // Calculate level from total days

@@ -84,6 +84,8 @@ export function AIABTesting() {
   }, []);
   
   const loadTests = () => {
+    if (typeof window === 'undefined') return;
+    
     const stored = localStorage.getItem('ab_tests');
     if (stored) {
       const data = JSON.parse(stored);
@@ -216,7 +218,9 @@ export function AIABTesting() {
     
     const updated = [...tests, newTest];
     setTests(updated);
-    localStorage.setItem('ab_tests', JSON.stringify(updated));
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('ab_tests', JSON.stringify(updated));
+    }
     setSelectedTest(newTest);
     setShowCreateForm(false);
     resetForm();
@@ -229,7 +233,9 @@ export function AIABTesting() {
     test.startDate = new Date();
     const updated = [...tests];
     setTests(updated);
-    localStorage.setItem('ab_tests', JSON.stringify(updated));
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('ab_tests', JSON.stringify(updated));
+    }
     notify.success('Test started!');
     
     // Simulate test progress
@@ -274,7 +280,9 @@ export function AIABTesting() {
           return test;
         });
         
-        localStorage.setItem('ab_tests', JSON.stringify(updated));
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('ab_tests', JSON.stringify(updated));
+        }
         return updated;
       });
     }, 2000);
@@ -311,7 +319,9 @@ export function AIABTesting() {
     test.status = 'paused';
     const updated = [...tests];
     setTests(updated);
-    localStorage.setItem('ab_tests', JSON.stringify(updated));
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('ab_tests', JSON.stringify(updated));
+    }
     notify.info('Test paused');
   };
   
