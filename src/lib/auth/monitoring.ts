@@ -3,7 +3,21 @@
  * Tracks all auth events and sends alerts on failures
  */
 
-import * as Sentry from '@sentry/nextjs';
+// Optional Sentry import - only import if package is available
+let Sentry: any;
+try {
+  Sentry = require('@sentry/nextjs');
+} catch (e) {
+  // Sentry not installed, use mock
+  Sentry = {
+    init: () => {},
+    captureException: () => {},
+    addBreadcrumb: () => {},
+    setUser: () => {},
+    setTag: () => {},
+    setContext: () => {}
+  };
+}
 
 export interface AuthEvent {
   type: 'attempt' | 'success' | 'failure' | 'error' | 'logout';
