@@ -65,6 +65,13 @@ export default function LoginPage() {
     try {
       const { supabase } = await import('@/lib/supabase-client');
       
+      // Check if Supabase is properly configured
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+      if (!supabaseUrl || supabaseUrl === 'https://placeholder.supabase.co') {
+        toast.error('OAuth login is not configured. Please use demo credentials: demo@synthex.com / demo123');
+        return;
+      }
+      
       if (provider === 'google') {
         const { error } = await supabase.auth.signInWithOAuth({
           provider: 'google',
@@ -83,7 +90,12 @@ export default function LoginPage() {
         if (error) throw error;
       }
     } catch (error: any) {
-      toast.error(`Failed to login with ${provider}: ${error.message}`);
+      // Handle specific OAuth errors
+      if (error.message?.includes('provider is not enabled')) {
+        toast.error(`${provider} login is not enabled. Please use email/password or demo credentials.`);
+      } else {
+        toast.error(`Login error: ${error.message}`);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -100,6 +112,14 @@ export default function LoginPage() {
           <CardDescription className="text-center text-gray-400">
             Enter your credentials to access your dashboard
           </CardDescription>
+          {/* Demo credentials notice */}
+          {(process.env.NODE_ENV === 'development' || !process.env.NEXT_PUBLIC_SUPABASE_URL) && (
+            <div className="mt-4 p-3 bg-purple-500/10 border border-purple-500/30 rounded-lg">
+              <p className="text-xs text-purple-300 text-center">
+                Demo Mode: Use <strong>demo@synthex.com</strong> / <strong>demo123</strong>
+              </p>
+            </div>
+          )}
         </CardHeader>
         <CardContent className="space-y-4">
           <form onSubmit={handleSubmit} className="space-y-4">
