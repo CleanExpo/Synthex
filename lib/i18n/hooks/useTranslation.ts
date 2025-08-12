@@ -34,10 +34,14 @@ function getInitialLocale(): Locale {
     return cookieLocale as Locale;
   }
 
-  // Check localStorage
-  const storedLocale = localStorage.getItem(i18nConfig.cookieName);
-  if (storedLocale && (i18nConfig.locales as readonly string[]).includes(storedLocale)) {
-    return storedLocale as Locale;
+  // Check localStorage (with SSG protection)
+  try {
+    const storedLocale = localStorage.getItem(i18nConfig.cookieName);
+    if (storedLocale && (i18nConfig.locales as readonly string[]).includes(storedLocale)) {
+      return storedLocale as Locale;
+    }
+  } catch (error) {
+    // localStorage not available (SSG), continue to browser check
   }
 
   // Check browser language
@@ -59,7 +63,11 @@ function persistLocale(locale: Locale) {
   document.cookie = `${i18nConfig.cookieName}=${locale}; expires=${expiry.toUTCString()}; path=/`;
 
   // Set localStorage
-  localStorage.setItem(i18nConfig.cookieName, locale);
+  try {
+    localStorage.setItem(i18nConfig.cookieName, locale);
+  } catch (error) {
+    // localStorage not available, skip
+  }
 }
 
 export function useTranslation() {
