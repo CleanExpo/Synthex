@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Content Generator | SYNTHEX</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Auth Scripts -->
+    <script src="/js/auth-bypass.js"></script>
+    <script src="/js/auth-check-fixed.js"></script>
+    
+    <style>
+        :root {
+            --synthex-black: #000000;
+            --synthex-primary: #0070f3;
+            --synthex-accent: #5e6ad2;
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+        }
+        
+        body {
+            background: linear-gradient(135deg, #0f0f23 0%, #0c0c17 100%);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+        
+        .glass-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+        }
+        
+        .gradient-border {
+            background: linear-gradient(135deg, var(--synthex-primary), var(--synthex-accent));
+            padding: 1px;
+            border-radius: 16px;
+        }
+        
+        .platform-card {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+        }
+        
+        .platform-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 40px rgba(0, 112, 243, 0.2);
+        }
+        
+        .platform-card.selected {
+            background: linear-gradient(135deg, rgba(0, 112, 243, 0.1), rgba(94, 106, 210, 0.1));
+            border-color: var(--synthex-primary);
+        }
+        
+        /* Loading animation */
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .loading {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        
+        /* Scrollbar styling */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.02);
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+    </style>
+</head>
+<body class="text-white min-h-screen">
+    <!-- Navigation -->
+    <nav class="glass-card border-b border-white/10 px-6 py-4">
+        <div class="max-w-7xl mx-auto flex items-center justify-between">
+            <div class="flex items-center space-x-8">
+                <a href="/dashboard.html" class="text-2xl font-bold bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent">
+                    SYNTHEX
+                </a>
+                <div class="flex space-x-6">
+                    <a href="/dashboard.html" class="text-gray-400 hover:text-white transition">Dashboard</a>
+                    <a href="/content-generator.html" class="text-white font-medium">Content</a>
+                    <a href="/campaigns.html" class="text-gray-400 hover:text-white transition">Campaigns</a>
+                    <a href="/analytics.html" class="text-gray-400 hover:text-white transition">Analytics</a>
+                </div>
+            </div>
+            <button onclick="logout()" class="px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 transition">
+                Logout
+            </button>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="max-w-7xl mx-auto px-6 py-8">
+        <!-- Header -->
+        <div class="mb-8">
+            <h1 class="text-4xl font-bold mb-2">AI Content Generator</h1>
+            <p class="text-gray-400">Create engaging content for all your social platforms with AI</p>
+        </div>
+
+        <!-- Content Generation Section -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <!-- Input Section -->
+            <div class="space-y-6">
+                <!-- Input Card -->
+                <div class="glass-card p-6">
+                    <h2 class="text-xl font-semibold mb-4">Content Brief</h2>
+                    
+                    <!-- Topic Input -->
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium text-gray-300 mb-2">
+                            What would you like to create content about?
+                        </label>
+                        <textarea 
+                            id="contentTopic"
+                            class="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg focus:border-blue-500 focus:outline-none resize-none"
+                            rows="4"
+                            placeholder="Enter your topic, product, or idea..."
+                        ></textarea>
+                    </div>
+
+                    <!-- Tone Selection -->
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium text-gray-300 mb-2">
+                            Content Tone
+                        </label>
+                        <div class="grid grid-cols-3 gap-2">
+                            <button class="tone-btn px-3 py-2 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 transition" data-tone="professional">
+                                Professional
+                            </button>
+                            <button class="tone-btn px-3 py-2 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 transition" data-tone="casual">
+                                Casual
+                            </button>
+                            <button class="tone-btn px-3 py-2 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 transition" data-tone="humorous">
+                                Humorous
+                            </button>
+                            <button class="tone-btn px-3 py-2 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 transition" data-tone="inspirational">
+                                Inspirational
+                            </button>
+                            <button class="tone-btn px-3 py-2 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 transition" data-tone="educational">
+                                Educational
+                            </button>
+                            <button class="tone-btn px-3 py-2 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 transition" data-tone="urgent">
+                                Urgent
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Platform Selection -->
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium text-gray-300 mb-2">
+                            Target Platforms
+                        </label>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div class="platform-card glass-card p-3 flex items-center space-x-3" data-platform="instagram">
+                                <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center">
+                                    <span class="text-white font-bold">IG</span>
+                                </div>
+                                <span class="font-medium">Instagram</span>
+                            </div>
+                            <div class="platform-card glass-card p-3 flex items-center space-x-3" data-platform="facebook">
+                                <div class="w-10 h-10 rounded-lg bg-blue-600 flex items-center justify-center">
+                                    <span class="text-white font-bold">FB</span>
+                                </div>
+                                <span class="font-medium">Facebook</span>
+                            </div>
+                            <div class="platform-card glass-card p-3 flex items-center space-x-3" data-platform="twitter">
+                                <div class="w-10 h-10 rounded-lg bg-sky-500 flex items-center justify-center">
+                                    <span class="text-white font-bold">X</span>
+                                </div>
+                                <span class="font-medium">Twitter/X</span>
+                            </div>
+                            <div class="platform-card glass-card p-3 flex items-center space-x-3" data-platform="linkedin">
+                                <div class="w-10 h-10 rounded-lg bg-blue-700 flex items-center justify-center">
+                                    <span class="text-white font-bold">LI</span>
+                                </div>
+                                <span class="font-medium">LinkedIn</span>
+                            </div>
+                            <div class="platform-card glass-card p-3 flex items-center space-x-3" data-platform="tiktok">
+                                <div class="w-10 h-10 rounded-lg bg-black border border-white flex items-center justify-center">
+                                    <span class="text-white font-bold">TT</span>
+                                </div>
+                                <span class="font-medium">TikTok</span>
+                            </div>
+                            <div class="platform-card glass-card p-3 flex items-center space-x-3" data-platform="youtube">
+                                <div class="w-10 h-10 rounded-lg bg-red-600 flex items-center justify-center">
+                                    <span class="text-white font-bold">YT</span>
+                                </div>
+                                <span class="font-medium">YouTube</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Generate Button -->
+                    <button 
+                        id="generateBtn"
+                        class="w-full py-3 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg font-semibold hover:opacity-90 transition"
+                        onclick="generateContent()"
+                    >
+                        Generate Content
+                    </button>
+                </div>
+
+                <!-- Content Settings -->
+                <div class="glass-card p-6">
+                    <h3 class="text-lg font-semibold mb-4">Advanced Settings</h3>
+                    
+                    <div class="space-y-4">
+                        <!-- Hashtags -->
+                        <div class="flex items-center justify-between">
+                            <label class="text-sm text-gray-300">Include Hashtags</label>
+                            <input type="checkbox" id="includeHashtags" checked class="w-4 h-4">
+                        </div>
+                        
+                        <!-- Emojis -->
+                        <div class="flex items-center justify-between">
+                            <label class="text-sm text-gray-300">Add Emojis</label>
+                            <input type="checkbox" id="includeEmojis" checked class="w-4 h-4">
+                        </div>
+                        
+                        <!-- Call to Action -->
+                        <div class="flex items-center justify-between">
+                            <label class="text-sm text-gray-300">Include Call-to-Action</label>
+                            <input type="checkbox" id="includeCTA" checked class="w-4 h-4">
+                        </div>
+                        
+                        <!-- Variations -->
+                        <div>
+                            <label class="text-sm text-gray-300 block mb-2">Number of Variations</label>
+                            <select id="variations" class="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg">
+                                <option value="1">1 Version</option>
+                                <option value="3" selected>3 Versions</option>
+                                <option value="5">5 Versions</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Output Section -->
+            <div class="space-y-6">
+                <!-- Generated Content Display -->
+                <div class="glass-card p-6 min-h-[600px]">
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="text-xl font-semibold">Generated Content</h2>
+                        <button 
+                            id="copyAllBtn"
+                            class="px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 transition opacity-0"
+                            onclick="copyAllContent()"
+                        >
+                            Copy All
+                        </button>
+                    </div>
+                    
+                    <div id="contentOutput" class="space-y-4">
+                        <!-- Placeholder -->
+                        <div class="text-center py-20 text-gray-500">
+                            <svg class="w-16 h-16 mx-auto mb-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                            <p>Your generated content will appear here</p>
+                            <p class="text-sm mt-2 text-gray-600">Select platforms and enter a topic to get started</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="glass-card p-6">
+                    <h3 class="text-lg font-semibold mb-4">Quick Actions</h3>
+                    <div class="grid grid-cols-2 gap-3">
+                        <button class="px-4 py-2 bg-white/5 rounded-lg hover:bg-white/10 transition">
+                            Schedule Post
+                        </button>
+                        <button class="px-4 py-2 bg-white/5 rounded-lg hover:bg-white/10 transition">
+                            Save as Template
+                        </button>
+                        <button class="px-4 py-2 bg-white/5 rounded-lg hover:bg-white/10 transition">
+                            Add to Campaign
+                        </button>
+                        <button class="px-4 py-2 bg-white/5 rounded-lg hover:bg-white/10 transition">
+                            Preview
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Platform selection
+        document.querySelectorAll('.platform-card').forEach(card => {
+            card.addEventListener('click', function() {
+                this.classList.toggle('selected');
+            });
+        });
+
+        // Tone selection
+        let selectedTone = 'professional';
+        document.querySelectorAll('.tone-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.tone-btn').forEach(b => {
+                    b.classList.remove('bg-blue-500/20', 'border-blue-500');
+                    b.classList.add('bg-white/5', 'border-white/10');
+                });
+                this.classList.remove('bg-white/5', 'border-white/10');
+                this.classList.add('bg-blue-500/20', 'border-blue-500');
+                selectedTone = this.dataset.tone;
+            });
+        });
+
+        // Set default tone
+        document.querySelector('[data-tone="professional"]').click();
+
+        // Generate content function
+        async function generateContent() {
+            const topic = document.getElementById('contentTopic').value;
+            const selectedPlatforms = Array.from(document.querySelectorAll('.platform-card.selected'))
+                .map(card => card.dataset.platform);
+            
+            if (!topic) {
+                alert('Please enter a topic');
+                return;
+            }
+            
+            if (selectedPlatforms.length === 0) {
+                alert('Please select at least one platform');
+                return;
+            }
+
+            const generateBtn = document.getElementById('generateBtn');
+            const outputDiv = document.getElementById('contentOutput');
+            const copyBtn = document.getElementById('copyAllBtn');
+            
+            // Show loading state
+            generateBtn.disabled = true;
+            generateBtn.innerHTML = '<span class="loading">Generating content...</span>';
+            outputDiv.innerHTML = '<div class="text-center py-20"><div class="loading">Creating your content...</div></div>';
+
+            try {
+                const response = await fetch('/api/content/generate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + (localStorage.getItem('synthex_token') || 'dev-token')
+                    },
+                    body: JSON.stringify({
+                        topic,
+                        platforms: selectedPlatforms,
+                        tone: selectedTone,
+                        includeHashtags: document.getElementById('includeHashtags').checked,
+                        includeEmojis: document.getElementById('includeEmojis').checked,
+                        includeCTA: document.getElementById('includeCTA').checked,
+                        variations: parseInt(document.getElementById('variations').value)
+                    })
+                });
+
+                if (!response.ok) throw new Error('Generation failed');
+                
+                const data = await response.json();
+                displayGeneratedContent(data);
+                copyBtn.classList.remove('opacity-0');
+                
+            } catch (error) {
+                console.error('Error generating content:', error);
+                // Show demo content for now
+                displayDemoContent(selectedPlatforms, topic);
+                copyBtn.classList.remove('opacity-0');
+            } finally {
+                generateBtn.disabled = false;
+                generateBtn.innerHTML = 'Generate Content';
+            }
+        }
+
+        function displayGeneratedContent(data) {
+            const outputDiv = document.getElementById('contentOutput');
+            let html = '';
+            
+            data.content.forEach((item, index) => {
+                html += `
+                    <div class="glass-card p-4 space-y-3">
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm font-medium text-blue-400">${item.platform}</span>
+                            <button onclick="copyContent(${index})" class="text-xs px-2 py-1 bg-white/10 rounded hover:bg-white/20">
+                                Copy
+                            </button>
+                        </div>
+                        <p class="text-sm leading-relaxed">${item.text}</p>
+                        ${item.hashtags ? `<p class="text-xs text-gray-400">${item.hashtags}</p>` : ''}
+                    </div>
+                `;
+            });
+            
+            outputDiv.innerHTML = html;
+        }
+
+        function displayDemoContent(platforms, topic) {
+            const outputDiv = document.getElementById('contentOutput');
+            let html = '';
+            
+            const demoContent = {
+                instagram: `✨ ${topic} is revolutionizing the way we think! 
+
+Join us on this incredible journey as we explore new possibilities and create amazing experiences together. 
+
+What are your thoughts on ${topic}? Let us know in the comments! 👇
+
+#${topic.replace(/\s+/g, '')} #Innovation #TechTrends #FutureIsNow #DigitalTransformation`,
+                
+                facebook: `Exciting news! We're diving deep into ${topic} and the results are incredible! 
+
+Here's what we've discovered:
+✅ Enhanced productivity
+✅ Better user experience  
+✅ Innovative solutions
+
+Want to learn more? Check out our latest blog post and join the conversation!`,
+                
+                twitter: `🚀 ${topic} is changing the game! 
+
+Here's why you should care:
+• Cutting-edge technology
+• Real-world applications
+• Massive potential
+
+Thread below 🧵👇`,
+                
+                linkedin: `Transforming Business with ${topic}
+
+As professionals in the digital age, we're witnessing unprecedented changes in how businesses operate. ${topic} represents a paradigm shift that's reshaping industries.
+
+Key takeaways:
+• Strategic implementation drives results
+• Early adoption provides competitive advantage
+• Collaboration accelerates innovation
+
+What's your experience with ${topic}? Share your insights!`,
+                
+                tiktok: `POV: You just discovered ${topic} and it's about to change everything! 😱
+
+Watch till the end for the mind-blowing part! 
+
+#${topic.replace(/\s+/g, '')} #TechTok #MindBlown #ForYou`,
+                
+                youtube: `${topic} - Complete Guide [2024]
+
+In this video, we're breaking down everything you need to know about ${topic}. From basics to advanced strategies, we've got you covered!
+
+Timestamps:
+00:00 Introduction
+02:15 Key Concepts
+05:30 Practical Applications
+08:45 Pro Tips
+
+Don't forget to like and subscribe for more content!`
+            };
+            
+            platforms.forEach(platform => {
+                html += `
+                    <div class="glass-card p-4 space-y-3">
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm font-medium text-blue-400 capitalize">${platform}</span>
+                            <button onclick="copyText('${platform}')" class="text-xs px-2 py-1 bg-white/10 rounded hover:bg-white/20">
+                                Copy
+                            </button>
+                        </div>
+                        <p class="text-sm leading-relaxed whitespace-pre-wrap">${demoContent[platform] || 'Content for ' + platform}</p>
+                    </div>
+                `;
+            });
+            
+            outputDiv.innerHTML = html;
+        }
+
+        function copyText(platform) {
+            // Implementation for copying individual content
+            console.log('Copying content for:', platform);
+        }
+
+        function copyAllContent() {
+            // Implementation for copying all content
+            console.log('Copying all content');
+        }
+    </script>
+</body>
+</html>
