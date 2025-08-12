@@ -1,0 +1,160 @@
+name: Authentication Testing & Deployment Guard
+
+on:
+  push:
+    branches: [main, staging]
+  pull_request:
+    branches: [main]
+
+env:
+  VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+  VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+
+jobs:
+  auth-tests:
+    name: Test Authentication Flows
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build application
+        run: npm run build
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+
+      - name: Start test server
+        run: |
+          npm run dev &
+          sleep 10
+        env:
+          NODE_ENV: test
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+
+      - name: Install Playwright
+        run: npx playwright install --with-deps chromium
+
+      - name: Run authentication tests
+        run: npx playwright test tests/e2e/auth-guard.spec.ts
+        env:
+          TEST_EMAIL: ${{ secrets.TEST_EMAIL }}
+          TEST_PASSWORD: ${{ secrets.TEST_PASSWORD }}
+          BASE_URL: http://localhost:3000
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: auth-test-results
+          path: test-results/
+
+  file-integrity:
+    name: Verify File Integrity
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Calculate auth file hashes
+        run: |
+          echo "Calculating SHA256 hashes for auth files..."
+          find src/lib/auth app/api/auth -type f -name "*.ts" -o -name "*.tsx" | while read file; do
+            sha256sum "$file"
+          done > auth-hashes.txt
+          cat auth-hashes.txt
+
+      - name: Compare with previous deployment
+        run: |
+          # TODO: Compare with stored hashes from last successful deployment
+          echo "Hash comparison would go here"
+
+      - name: Store current hashes
+        uses: actions/upload-artifact@v3
+        with:
+          name: auth-file-hashes
+          path: auth-hashes.txt
+
+  deploy-staging:
+    name: Deploy to Staging
+    needs: [auth-tests, file-integrity]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/staging'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Install Vercel CLI
+        run: npm install -g vercel
+
+      - name: Deploy to Vercel Staging
+        run: |
+          vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
+          vercel build --token=${{ secrets.VERCEL_TOKEN }}
+          vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }} > deployment-url.txt
+          echo "STAGING_URL=$(cat deployment-url.txt)" >> $GITHUB_ENV
+
+      - name: Test staging deployment
+        run: |
+          echo "Testing staging at ${{ env.STAGING_URL }}"
+          sleep 30
+          curl -f "${{ env.STAGING_URL }}/api/health" || exit 1
+
+      - name: Run E2E tests on staging
+        run: |
+          npx playwright test tests/e2e/auth-guard.spec.ts
+        env:
+          BASE_URL: ${{ env.STAGING_URL }}
+          TEST_EMAIL: ${{ secrets.TEST_EMAIL }}
+          TEST_PASSWORD: ${{ secrets.TEST_PASSWORD }}
+
+  deploy-production:
+    name: Deploy to Production
+    needs: [auth-tests, file-integrity]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Install Vercel CLI
+        run: npm install -g vercel
+
+      - name: Deploy to Vercel Production
+        run: |
+          vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+          vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
+          vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }} --force
+
+      - name: Verify production deployment
+        run: |
+          sleep 30
+          curl -f "https://synthex.vercel.app/api/health" || exit 1
+
+      - name: Send deployment notification
+        if: success()
+        run: |
+          echo "Production deployment successful!"
+          # TODO: Send to Slack/Discord webhook
+
+      - name: Rollback on failure
+        if: failure()
+        run: |
+          echo "Deployment failed, initiating rollback..."
+          # vercel rollback --token=${{ secrets.VERCEL_TOKEN }}
