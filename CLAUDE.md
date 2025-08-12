@@ -71,19 +71,39 @@ Coordinates all sub-agents and maintains project coherence. The Orchestra Agent 
    - Document recovery steps in session log
    - Test incrementally after each recovery step
 
-## 🌐 MCP Integration
+## 🌐 MCP Integration [ENHANCED with Claude Code v1.2]
 **Active MCPs (Maximum Collaboration Protocol):**
 - **Sequential Thinking** - Step-by-step problem solving with hypothesis generation and verification
 - **Context7** - Enhanced context management for library documentation and code examples
 - **Playwright** - Browser automation, E2E testing, and visual regression testing
 - **IDE Integration** - Direct VS Code integration for diagnostics and code execution
 
+**MCP Configuration Files (New Multi-Config Support):**
+- `mcp.config.json` - Base configuration with filesystem and sequential thinking
+- `mcp.development.json` - Development tools (IDE, Context7, diagnostics)
+- `mcp.marketing.json` - Marketing workflow tools (Playwright, Context7)
+- `mcp.deployment.json` - Deployment and testing tools
+
+**Usage Examples:**
+```bash
+# Development workflow
+claude code --mcp-config mcp.development.json mcp.config.json
+
+# Marketing workflow  
+claude code --mcp-config mcp.marketing.json mcp.development.json
+
+# Deployment workflow
+claude code --mcp-config mcp.deployment.json
+```
+
 **MCP Usage Guidelines:**
 - Verify MCP availability at session start
+- Use multiple config files for specialized workflows
 - Reference MCPs in every relevant operation
 - Suggest additional MCPs when tasks would benefit
 - Maintain MCP activation throughout entire session
 - Document MCP usage in session logs
+- Press ESC to cancel OAuth authentication flows
 
 ## 📁 Session Persistence
 - **Session Directory:** `.claude-session/`
@@ -143,12 +163,23 @@ Coordinates all sub-agents and maintains project coherence. The Orchestra Agent 
 - **AI:** OpenRouter API integration
 
 ## 📊 Recent Enhancements
+**Previous Features:**
 - Comprehensive authentication API (auth-api.js)
 - Glassmorphic modal system (modal-system.js)
 - Toast notification system (toast-notifications.js)
 - Form validation framework (form-validation.js)
 - Theme manager with dark/light modes (theme-manager.js)
 - Enhanced loading states CSS
+
+**Claude Code v1.2 Enhancements (NEW):**
+- ✅ Multiple MCP config file support for specialized workflows
+- ✅ Context7 integration for real-time library documentation
+- ✅ Playwright integration for automated E2E testing
+- ✅ IDE diagnostics for real-time error detection
+- ✅ Enhanced bash validation reducing false security warnings
+- ✅ OAuth testing utilities with ESC cancellation support
+- ✅ Enhanced workflow scripts with resource monitoring
+- ✅ Improved spinner animations and UI feedback
 
 ## 🛡️ Anthropic-Level Security & Best Practices
 
@@ -214,6 +245,28 @@ Coordinates all sub-agents and maintains project coherence. The Orchestra Agent 
 npm run dev              # Start development server
 npm run build           # Build for production
 npm test               # Run tests
+
+# Enhanced Workflows (NEW)
+bash scripts/enhanced-workflows.sh  # Interactive menu for all workflows
+./scripts/enhanced-workflows.sh 1   # Start dev with MCPs
+./scripts/enhanced-workflows.sh 3   # Safe deploy with checks
+
+# MCP-Enhanced Commands
+claude code --mcp-config mcp.development.json  # Dev mode
+claude code --mcp-config mcp.marketing.json    # Marketing mode
+claude code --mcp-config mcp.deployment.json   # Deploy mode
+
+# Testing with Playwright MCP
+node tests/playwright/marketing-ui.test.js     # Run UI tests
+
+# OAuth Testing (ESC to cancel)
+node src/lib/auth/oauth-testing.js            # Test OAuth flows
+
+# IDE Diagnostics
+node src/lib/ide/diagnostics-integration.js   # Check code quality
+
+# Documentation with Context7
+node src/lib/ai/context7-integration.js       # Fetch library docs
 
 # Deployment
 vercel --prod --yes    # Deploy to production

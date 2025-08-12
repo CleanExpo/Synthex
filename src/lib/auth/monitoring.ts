@@ -43,6 +43,22 @@ export class AuthMonitor {
   }
 
   /**
+   * Track authentication event (simplified version of logEvent)
+   */
+  trackEvent(event: any): void {
+    this.logEvent({
+      type: event.type || 'attempt',
+      method: event.method || 'email',
+      provider: event.metadata?.provider,
+      email: event.metadata?.email,
+      error: event.metadata?.error,
+      sessionId: event.metadata?.sessionId,
+      ipAddress: event.metadata?.ipAddress,
+      userAgent: event.metadata?.userAgent
+    });
+  }
+
+  /**
    * Log authentication event
    */
   async logEvent(event: Omit<AuthEvent, 'timestamp' | 'environment'>): Promise<void> {
