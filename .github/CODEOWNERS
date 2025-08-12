@@ -1,0 +1,23 @@
+# CODEOWNERS - Enforces review requirements for critical files
+
+# Authentication System - Requires security review
+/src/lib/auth/ @security-team @lead-developer
+/app/api/auth/ @security-team @lead-developer
+
+# CI/CD Workflows - Requires DevOps review
+/.github/workflows/ @devops-team @lead-developer
+
+# Environment Configuration
+/.env.example @devops-team
+/vercel.json @devops-team
+
+# Database Schemas
+/prisma/ @database-team @lead-developer
+
+# Critical Configuration Files
+/next.config.js @lead-developer
+/package.json @lead-developer
+/tsconfig.json @lead-developer
+
+# Default owner for everything else
+* @development-team

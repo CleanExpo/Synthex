@@ -23,31 +23,31 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      // Use dev login endpoint in development
-      const endpoint = process.env.NODE_ENV === 'development' 
-        ? '/api/auth/dev-login' 
-        : '/api/auth/login';
-      
-      const response = await fetch(endpoint, {
+      // Use unified auth endpoint
+      const response = await fetch('/api/auth/unified-login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          method: formData.email === 'demo@synthex.com' ? 'demo' : 'email',
+          email: formData.email,
+          password: formData.password
+        }),
       });
 
       const data = await response.json();
 
-      if (!response.ok) {
+      if (!response.ok || !data.success) {
         throw new Error(data.error || 'Invalid credentials');
       }
       
       // Store user data in localStorage for the sidebar and other components
       if (data.user && typeof window !== 'undefined') {
-        localStorage.setItem('authToken', data.session?.access_token || 'authenticated');
+        localStorage.setItem('authToken', data.session?.accessToken || 'authenticated');
         localStorage.setItem('user', JSON.stringify({
           id: data.user.id,
           email: data.user.email,
-          name: data.user.user_metadata?.name || data.user.email.split('@')[0],
-          avatar: data.user.user_metadata?.avatar_url
+          name: data.user.name || data.user.email.split('@')[0],
+          avatar: data.user.avatar
         }));
       }
       
