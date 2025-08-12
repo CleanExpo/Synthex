@@ -16,6 +16,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'https://synthex.ai'),
   title: 'Synthex - AI-Powered Social Media Automation',
   description: 'Generate viral content with AI, analyze engagement patterns, and automate your social media presence across all platforms.',
   keywords: 'social media automation, AI content generation, viral marketing, content scheduling, persona learning',
