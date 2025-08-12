@@ -5,16 +5,16 @@
 
 import { createClient } from '@supabase/supabase-js';
 
-// Get environment variables
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+// Get environment variables with fallback for SSG
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-key';
 
-// Create Supabase client
+// Create Supabase client with SSG safety
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
-    autoRefreshToken: true,
-    persistSession: true,
-    detectSessionInUrl: true,
+    autoRefreshToken: typeof window !== 'undefined',
+    persistSession: typeof window !== 'undefined',
+    detectSessionInUrl: typeof window !== 'undefined',
   },
   realtime: {
     params: {
@@ -104,6 +104,11 @@ export const auth = {
   },
 
   async getCurrentUser() {
+    // Skip during SSG/SSR
+    if (typeof window === 'undefined') {
+      return null;
+    }
+    
     const {
       data: { user },
       error,

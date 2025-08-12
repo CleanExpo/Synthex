@@ -24,6 +24,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
 
   useEffect(() => {
+    // Only run auth checks on client side
+    if (typeof window === 'undefined') return;
+    
     // Check initial session
     checkUser();
 
@@ -47,10 +50,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   async function checkUser() {
     try {
+      // Skip auth check during SSG/SSR
+      if (typeof window === 'undefined') {
+        setLoading(false);
+        return;
+      }
+      
       const user = await auth.getCurrentUser();
       setUser(user);
     } catch (error) {
       console.error('Error checking user:', error);
+      // Don't treat auth errors as fatal - user may just not be logged in
+      setUser(null);
     } finally {
       setLoading(false);
     }
