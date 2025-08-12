@@ -17,7 +17,7 @@ const nextConfig = {
   experimental: {
     serverComponentsExternalPackages: ['@prisma/client', 'bcryptjs'],
     // Optimize build performance
-    optimizeCss: true,
+    optimizeCss: false,
     scrollRestoration: true,
   },
   // Optimize production builds
