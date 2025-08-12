@@ -193,7 +193,7 @@ export default function SettingsPage() {
                   <Input
                     id="email"
                     type="email"
-                    defaultValue="john@example.com"
+                    defaultValue="user@synthex.social"
                     className="bg-white/5 border-white/10 text-white mt-1"
                   />
                 </div>

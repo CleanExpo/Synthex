@@ -256,8 +256,8 @@ export default function TermsPage() {
               Our legal team is here to clarify any questions about our terms of service.
             </p>
             <div className="space-y-2 text-gray-300">
-              <p>Email: legal@synthex.ai</p>
-              <p>Support: support@synthex.ai</p>
+              <p>Email: legal@synthex.social</p>
+              <p>Support: support@synthex.social</p>
               <p>Address: 100 Market St, San Francisco, CA 94105</p>
             </div>
             <Button className="mt-6 bg-gradient-to-r from-cyan-500 to-cyan-600 text-white">

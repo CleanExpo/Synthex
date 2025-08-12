@@ -141,7 +141,7 @@ export default function SupportPage() {
             <Card className="liquid-glass p-6 hover:scale-105 transition-transform cursor-pointer">
               <Mail className="w-8 h-8 text-green-400 mb-3" />
               <h3 className="text-white font-semibold mb-1">Email Support</h3>
-              <p className="text-gray-400 text-sm">support@synthex.ai</p>
+              <p className="text-gray-400 text-sm">support@synthex.social</p>
             </Card>
           </div>
         </div>
@@ -273,7 +273,7 @@ export default function SupportPage() {
                 <div className="space-y-4">
                   <div className="flex items-center gap-3">
                     <Mail className="w-5 h-5 text-cyan-400" />
-                    <span className="text-gray-300">support@synthex.ai</span>
+                    <span className="text-gray-300">support@synthex.social</span>
                   </div>
                   <div className="flex items-center gap-3">
                     <MessageCircle className="w-5 h-5 text-cyan-400" />
