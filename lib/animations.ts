@@ -191,7 +191,7 @@ export const pulseAnimation = {
   transition: {
     duration: 2,
     repeat: Infinity,
-    ease: 'easeInOut'
+    ease: 'easeInOut' as const
   }
 };
 
@@ -200,7 +200,7 @@ export const shimmer = {
   transition: {
     duration: 2,
     repeat: Infinity,
-    ease: 'linear'
+    ease: 'linear' as const
   }
 };
 
@@ -210,7 +210,7 @@ export const rotate360 = {
   transition: {
     duration: 1,
     repeat: Infinity,
-    ease: 'linear'
+    ease: 'linear' as const
   }
 };
 
@@ -220,7 +220,7 @@ export const bounce = {
   transition: {
     duration: 0.6,
     repeat: Infinity,
-    ease: 'easeInOut'
+    ease: 'easeInOut' as const
   }
 };
 
@@ -349,7 +349,7 @@ export const skeletonPulse = {
   transition: {
     duration: 1.5,
     repeat: Infinity,
-    ease: 'easeInOut'
+    ease: 'easeInOut' as const
   }
 };
 
@@ -434,7 +434,7 @@ export const successCheckmark = {
   opacity: [0, 1],
   transition: {
     duration: 0.4,
-    ease: 'easeInOut'
+    ease: 'easeInOut' as const
   }
 };
 

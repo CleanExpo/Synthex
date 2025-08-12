@@ -3,7 +3,8 @@
  * Integrates with OpenRouter for multi-model content creation
  */
 
-import { viralPatterns } from '@/lib/viral-patterns';
+// TODO: Create viral-patterns module
+// import { viralPatterns } from '@/lib/viral-patterns';
 
 export interface ContentRequest {
   type: 'post' | 'caption' | 'thread' | 'story' | 'reel' | 'article';

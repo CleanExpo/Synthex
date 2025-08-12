@@ -30,8 +30,7 @@ import {
   Sparkles,
   ChevronRight,
   Info,
-  AlertCircle,
-  ChartLine
+  AlertCircle
 } from 'lucide-react';
 import {
   LineChart,
@@ -365,7 +364,7 @@ export function PredictiveAnalytics() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="p-2 rounded-lg bg-gradient-to-br from-purple-500/20 to-pink-500/20">
-            <ChartLine className="h-6 w-6 text-purple-400" />
+            <BarChart3 className="h-6 w-6 text-purple-400" />
           </div>
           <div>
             <h2 className="text-2xl font-bold text-white">Predictive Analytics</h2>
