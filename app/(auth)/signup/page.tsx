@@ -71,14 +71,33 @@ export default function SignupPage() {
     }
   };
 
-  const handleOAuthSignup = async (provider: 'google' | 'github') => {
+  const handleGoogleSignup = async () => {
     setIsLoading(true);
     try {
-      // TODO: Implement OAuth with Supabase
-      toast.success(`Signing up with ${provider}...`);
-      // router.push('/api/auth/' + provider);
-    } catch (error) {
-      toast.error(`Failed to signup with ${provider}`);
+      const { supabase } = await import('@/lib/supabase-client');
+      
+      // Check if Supabase is properly configured
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+      if (!supabaseUrl || supabaseUrl === 'https://placeholder.supabase.co') {
+        toast.error('OAuth signup is not configured. Please use the regular signup form.');
+        return;
+      }
+      
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/dashboard`,
+        },
+      });
+      
+      if (error) throw error;
+    } catch (error: any) {
+      // Handle specific OAuth errors
+      if (error.message?.includes('provider is not enabled')) {
+        toast.error('Google signup is not enabled. Please use the regular signup form.');
+      } else {
+        toast.error(`Signup error: ${error.message}`);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -248,24 +267,15 @@ export default function SignupPage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="w-full">
             <Button
               variant="outline"
-              className="bg-white/5 border-white/10 text-white hover:bg-white/10"
-              onClick={() => handleOAuthSignup('google')}
+              className="w-full bg-white/5 border-white/10 text-white hover:bg-white/10"
+              onClick={handleGoogleSignup}
               disabled={isLoading}
             >
               <Chrome className="mr-2 h-4 w-4" />
-              Google
-            </Button>
-            <Button
-              variant="outline"
-              className="bg-white/5 border-white/10 text-white hover:bg-white/10"
-              onClick={() => handleOAuthSignup('github')}
-              disabled={isLoading}
-            >
-              <Github className="mr-2 h-4 w-4" />
-              GitHub
+              Continue with Google
             </Button>
           </div>
         </CardContent>
