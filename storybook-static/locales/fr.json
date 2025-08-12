@@ -1,0 +1,468 @@
+{
+  "common": {
+    "appName": "SYNTHEX",
+    "welcome": "Bienvenue",
+    "loading": "Chargement...",
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "delete": "Supprimer",
+    "edit": "Modifier",
+    "create": "Créer",
+    "update": "Mettre à jour",
+    "search": "Rechercher",
+    "filter": "Filtrer",
+    "export": "Exporter",
+    "import": "Importer",
+    "download": "Télécharger",
+    "upload": "Téléverser",
+    "submit": "Soumettre",
+    "confirm": "Confirmer",
+    "yes": "Oui",
+    "no": "Non",
+    "ok": "OK",
+    "close": "Fermer",
+    "back": "Retour",
+    "next": "Suivant",
+    "previous": "Précédent",
+    "finish": "Terminer",
+    "required": "Requis",
+    "optional": "Optionnel",
+    "success": "Succès",
+    "error": "Erreur",
+    "warning": "Avertissement",
+    "info": "Information",
+    "noData": "Aucune donnée disponible",
+    "actions": "Actions",
+    "status": "Statut",
+    "date": "Date",
+    "time": "Heure",
+    "language": "Langue",
+    "theme": "Thème",
+    "settings": "Paramètres",
+    "help": "Aide",
+    "about": "À propos",
+    "logout": "Déconnexion",
+    "login": "Connexion",
+    "register": "S'inscrire",
+    "forgotPassword": "Mot de passe oublié ?",
+    "resetPassword": "Réinitialiser le mot de passe",
+    "changePassword": "Changer le mot de passe",
+    "profile": "Profil",
+    "account": "Compte",
+    "dashboard": "Tableau de bord",
+    "notifications": "Notifications"
+  },
+  "auth": {
+    "signIn": "Se connecter",
+    "signUp": "S'inscrire",
+    "signOut": "Se déconnecter",
+    "email": "Adresse e-mail",
+    "password": "Mot de passe",
+    "confirmPassword": "Confirmer le mot de passe",
+    "fullName": "Nom complet",
+    "company": "Entreprise",
+    "rememberMe": "Se souvenir de moi",
+    "termsAgreement": "J'accepte les Conditions d'utilisation et la Politique de confidentialité",
+    "alreadyHaveAccount": "Vous avez déjà un compte ?",
+    "dontHaveAccount": "Vous n'avez pas de compte ?",
+    "orContinueWith": "Ou continuer avec",
+    "continueWithGoogle": "Continuer avec Google",
+    "continueWithFacebook": "Continuer avec Facebook",
+    "continueWithTwitter": "Continuer avec Twitter",
+    "verifyEmail": "Vérifiez votre e-mail",
+    "emailVerified": "E-mail vérifié avec succès",
+    "verificationSent": "E-mail de vérification envoyé",
+    "invalidCredentials": "E-mail ou mot de passe invalide",
+    "accountCreated": "Compte créé avec succès",
+    "passwordResetSent": "Lien de réinitialisation envoyé à votre e-mail",
+    "passwordChanged": "Mot de passe changé avec succès",
+    "sessionExpired": "Votre session a expiré. Veuillez vous reconnecter.",
+    "unauthorized": "Vous n'êtes pas autorisé à accéder à cette ressource",
+    "twoFactorAuth": "Authentification à deux facteurs",
+    "enterCode": "Entrez le code de vérification",
+    "enableTwoFactor": "Activer l'authentification à deux facteurs",
+    "disableTwoFactor": "Désactiver l'authentification à deux facteurs"
+  },
+  "dashboard": {
+    "title": "Tableau de bord",
+    "overview": "Vue d'ensemble",
+    "analytics": "Analytiques",
+    "performance": "Performance",
+    "recentActivity": "Activité récente",
+    "quickActions": "Actions rapides",
+    "statistics": "Statistiques",
+    "totalUsers": "Utilisateurs totaux",
+    "activeUsers": "Utilisateurs actifs",
+    "totalPosts": "Publications totales",
+    "publishedPosts": "Publications publiées",
+    "scheduledPosts": "Publications programmées",
+    "draftPosts": "Brouillons",
+    "engagement": "Engagement",
+    "reach": "Portée",
+    "impressions": "Impressions",
+    "clicks": "Clics",
+    "shares": "Partages",
+    "likes": "J'aime",
+    "comments": "Commentaires",
+    "followers": "Abonnés",
+    "following": "Abonnements",
+    "growthRate": "Taux de croissance",
+    "conversionRate": "Taux de conversion",
+    "bounceRate": "Taux de rebond",
+    "avgSessionDuration": "Durée moyenne de session",
+    "pageViews": "Vues de page",
+    "uniqueVisitors": "Visiteurs uniques",
+    "newVsReturning": "Nouveaux vs Récurrents",
+    "trafficSources": "Sources de trafic",
+    "topContent": "Contenu principal",
+    "recentPosts": "Publications récentes",
+    "upcomingPosts": "Publications à venir",
+    "notifications": {
+      "one": "{{count}} nouvelle notification",
+      "other": "{{count}} nouvelles notifications"
+    }
+  },
+  "posts": {
+    "title": "Publications",
+    "createPost": "Créer une publication",
+    "editPost": "Modifier la publication",
+    "deletePost": "Supprimer la publication",
+    "publishPost": "Publier",
+    "schedulePost": "Programmer la publication",
+    "duplicatePost": "Dupliquer la publication",
+    "postTitle": "Titre de la publication",
+    "postContent": "Contenu de la publication",
+    "selectPlatforms": "Sélectionner les plateformes",
+    "selectDate": "Sélectionner la date",
+    "selectTime": "Sélectionner l'heure",
+    "addMedia": "Ajouter des médias",
+    "addHashtags": "Ajouter des hashtags",
+    "characterCount": {
+      "one": "{{count}} caractère",
+      "other": "{{count}} caractères"
+    },
+    "mediaCount": {
+      "zero": "Aucun fichier média",
+      "one": "{{count}} fichier média",
+      "other": "{{count}} fichiers médias"
+    },
+    "platforms": {
+      "all": "Toutes les plateformes",
+      "twitter": "Twitter",
+      "facebook": "Facebook",
+      "instagram": "Instagram",
+      "linkedin": "LinkedIn",
+      "youtube": "YouTube",
+      "tiktok": "TikTok",
+      "pinterest": "Pinterest",
+      "reddit": "Reddit"
+    },
+    "status": {
+      "draft": "Brouillon",
+      "scheduled": "Programmé",
+      "published": "Publié",
+      "failed": "Échoué",
+      "pending": "En attente"
+    },
+    "visibility": {
+      "public": "Public",
+      "private": "Privé",
+      "unlisted": "Non répertorié"
+    },
+    "messages": {
+      "postCreated": "Publication créée avec succès",
+      "postUpdated": "Publication mise à jour avec succès",
+      "postDeleted": "Publication supprimée avec succès",
+      "postPublished": "Publication publiée avec succès",
+      "postScheduled": "Publication programmée pour {{date}}",
+      "postDuplicated": "Publication dupliquée avec succès",
+      "confirmDelete": "Êtes-vous sûr de vouloir supprimer cette publication ?",
+      "confirmPublish": "Êtes-vous sûr de vouloir publier maintenant ?",
+      "noPostsFound": "Aucune publication trouvée",
+      "loadingPosts": "Chargement des publications..."
+    }
+  },
+  "analytics": {
+    "title": "Analytiques",
+    "overview": "Vue d'ensemble",
+    "detailed": "Analytiques détaillées",
+    "realtime": "Temps réel",
+    "historical": "Historique",
+    "compare": "Comparer",
+    "export": "Exporter le rapport",
+    "dateRange": "Plage de dates",
+    "today": "Aujourd'hui",
+    "yesterday": "Hier",
+    "last7Days": "7 derniers jours",
+    "last30Days": "30 derniers jours",
+    "thisMonth": "Ce mois",
+    "lastMonth": "Mois dernier",
+    "thisYear": "Cette année",
+    "custom": "Plage personnalisée",
+    "metrics": {
+      "reach": "Portée",
+      "engagement": "Engagement",
+      "impressions": "Impressions",
+      "clicks": "Clics",
+      "conversions": "Conversions",
+      "revenue": "Revenus",
+      "roi": "ROI",
+      "cpc": "CPC",
+      "cpm": "CPM",
+      "ctr": "CTR",
+      "engagementRate": "Taux d'engagement",
+      "conversionRate": "Taux de conversion",
+      "averageOrderValue": "Valeur moyenne de commande",
+      "lifetimeValue": "Valeur à vie"
+    },
+    "charts": {
+      "line": "Graphique linéaire",
+      "bar": "Graphique à barres",
+      "pie": "Graphique circulaire",
+      "donut": "Graphique en anneau",
+      "area": "Graphique en aires",
+      "scatter": "Nuage de points",
+      "heatmap": "Carte de chaleur",
+      "funnel": "Entonnoir"
+    },
+    "insights": {
+      "title": "Insights",
+      "bestTime": "Meilleur moment pour publier : {{time}}",
+      "topPerforming": "Contenu le plus performant",
+      "audienceGrowth": "Croissance de l'audience : {{percent}}%",
+      "engagementTrend": "Tendance d'engagement",
+      "recommendations": "Recommandations"
+    }
+  },
+  "team": {
+    "title": "Équipe",
+    "members": "Membres de l'équipe",
+    "inviteMembers": "Inviter des membres",
+    "roles": "Rôles et permissions",
+    "activity": "Activité de l'équipe",
+    "member": {
+      "one": "{{count}} membre",
+      "other": "{{count}} membres"
+    },
+    "role": {
+      "owner": "Propriétaire",
+      "admin": "Administrateur",
+      "editor": "Éditeur",
+      "viewer": "Observateur",
+      "contributor": "Contributeur"
+    },
+    "permissions": {
+      "manageTeam": "Gérer l'équipe",
+      "manageContent": "Gérer le contenu",
+      "publishContent": "Publier le contenu",
+      "viewAnalytics": "Voir les analytiques",
+      "manageBilling": "Gérer la facturation",
+      "manageSettings": "Gérer les paramètres"
+    },
+    "inviteStatus": {
+      "pending": "En attente",
+      "accepted": "Accepté",
+      "expired": "Expiré",
+      "revoked": "Révoqué"
+    },
+    "messages": {
+      "memberAdded": "Membre de l'équipe ajouté avec succès",
+      "memberRemoved": "Membre de l'équipe supprimé avec succès",
+      "inviteSent": "Invitation envoyée à {{email}}",
+      "inviteAccepted": "Invitation acceptée",
+      "roleUpdated": "Rôle mis à jour avec succès",
+      "confirmRemove": "Êtes-vous sûr de vouloir retirer {{name}} de l'équipe ?"
+    }
+  },
+  "settings": {
+    "title": "Paramètres",
+    "general": "Général",
+    "profile": "Profil",
+    "account": "Compte",
+    "security": "Sécurité",
+    "privacy": "Confidentialité",
+    "notifications": "Notifications",
+    "integrations": "Intégrations",
+    "billing": "Facturation",
+    "api": "API",
+    "advanced": "Avancé",
+    "appearance": {
+      "title": "Apparence",
+      "theme": "Thème",
+      "lightMode": "Mode clair",
+      "darkMode": "Mode sombre",
+      "autoMode": "Auto (Système)",
+      "primaryColor": "Couleur principale",
+      "fontSize": "Taille de police",
+      "language": "Langue"
+    },
+    "notifications": {
+      "email": "Notifications par e-mail",
+      "push": "Notifications push",
+      "sms": "Notifications SMS",
+      "marketing": "Communications marketing",
+      "updates": "Mises à jour du produit",
+      "tips": "Conseils et tutoriels",
+      "security": "Alertes de sécurité",
+      "billing": "Notifications de facturation"
+    },
+    "privacy": {
+      "dataCollection": "Collecte de données",
+      "dataSharing": "Partage de données",
+      "cookies": "Préférences de cookies",
+      "tracking": "Suivi analytique",
+      "publicProfile": "Profil public",
+      "searchVisibility": "Visibilité sur les moteurs de recherche"
+    },
+    "security": {
+      "password": "Mot de passe",
+      "twoFactor": "Authentification à deux facteurs",
+      "sessions": "Sessions actives",
+      "apiKeys": "Clés API",
+      "loginHistory": "Historique de connexion",
+      "securityLog": "Journal de sécurité"
+    },
+    "messages": {
+      "settingsSaved": "Paramètres enregistrés avec succès",
+      "passwordUpdated": "Mot de passe mis à jour avec succès",
+      "profileUpdated": "Profil mis à jour avec succès",
+      "preferencesUpdated": "Préférences mises à jour avec succès",
+      "integrationConnected": "Intégration connectée avec succès",
+      "integrationDisconnected": "Intégration déconnectée avec succès"
+    }
+  },
+  "billing": {
+    "title": "Facturation",
+    "currentPlan": "Plan actuel",
+    "usage": "Utilisation",
+    "invoices": "Factures",
+    "paymentMethods": "Moyens de paiement",
+    "upgradePlan": "Améliorer le plan",
+    "cancelSubscription": "Annuler l'abonnement",
+    "plans": {
+      "free": "Gratuit",
+      "basic": "Basique",
+      "pro": "Professionnel",
+      "enterprise": "Entreprise",
+      "custom": "Personnalisé"
+    },
+    "features": {
+      "users": {
+        "one": "{{count}} utilisateur",
+        "other": "{{count}} utilisateurs"
+      },
+      "posts": {
+        "one": "{{count}} publication par mois",
+        "other": "{{count}} publications par mois"
+      },
+      "storage": "{{amount}} Go de stockage",
+      "analytics": "Analytiques avancées",
+      "support": "Support prioritaire",
+      "api": "Accès API",
+      "customBranding": "Marque personnalisée",
+      "teamCollaboration": "Collaboration d'équipe"
+    },
+    "invoice": {
+      "number": "Facture n°{{number}}",
+      "date": "Date",
+      "amount": "Montant",
+      "status": "Statut",
+      "download": "Télécharger PDF",
+      "paid": "Payé",
+      "pending": "En attente",
+      "overdue": "En retard",
+      "canceled": "Annulé"
+    },
+    "messages": {
+      "planUpgraded": "Plan amélioré avec succès",
+      "planDowngraded": "Plan rétrogradé avec succès",
+      "subscriptionCanceled": "Abonnement annulé",
+      "paymentMethodAdded": "Moyen de paiement ajouté avec succès",
+      "paymentMethodRemoved": "Moyen de paiement supprimé avec succès",
+      "paymentFailed": "Paiement échoué. Veuillez mettre à jour votre moyen de paiement.",
+      "trialEnding": "Votre essai se termine dans {{days}} jours"
+    }
+  },
+  "errors": {
+    "general": "Une erreur s'est produite. Veuillez réessayer.",
+    "network": "Erreur réseau. Veuillez vérifier votre connexion.",
+    "server": "Erreur serveur. Veuillez réessayer plus tard.",
+    "notFound": "Page non trouvée",
+    "forbidden": "Vous n'avez pas la permission d'accéder à cette ressource",
+    "unauthorized": "Veuillez vous connecter pour continuer",
+    "validation": "Veuillez vérifier votre saisie et réessayer",
+    "rateLimit": "Trop de requêtes. Veuillez patienter un moment.",
+    "maintenance": "Nous sommes en maintenance. Revenez bientôt.",
+    "fieldRequired": "{{field}} est requis",
+    "fieldInvalid": "{{field}} est invalide",
+    "fieldMinLength": "{{field}} doit contenir au moins {{min}} caractères",
+    "fieldMaxLength": "{{field}} ne doit pas dépasser {{max}} caractères",
+    "fieldEmail": "Veuillez entrer une adresse e-mail valide",
+    "fieldUrl": "Veuillez entrer une URL valide",
+    "fieldNumber": "Veuillez entrer un nombre valide",
+    "fieldPhone": "Veuillez entrer un numéro de téléphone valide",
+    "fieldPassword": "Le mot de passe doit contenir au moins 8 caractères avec majuscules, minuscules et chiffres",
+    "fieldMatch": "{{field}} ne correspond pas",
+    "fileSize": "La taille du fichier doit être inférieure à {{size}}",
+    "fileType": "Type de fichier non supporté"
+  },
+  "time": {
+    "just_now": "À l'instant",
+    "seconds_ago": {
+      "one": "il y a {{count}} seconde",
+      "other": "il y a {{count}} secondes"
+    },
+    "minutes_ago": {
+      "one": "il y a {{count}} minute",
+      "other": "il y a {{count}} minutes"
+    },
+    "hours_ago": {
+      "one": "il y a {{count}} heure",
+      "other": "il y a {{count}} heures"
+    },
+    "days_ago": {
+      "one": "il y a {{count}} jour",
+      "other": "il y a {{count}} jours"
+    },
+    "weeks_ago": {
+      "one": "il y a {{count}} semaine",
+      "other": "il y a {{count}} semaines"
+    },
+    "months_ago": {
+      "one": "il y a {{count}} mois",
+      "other": "il y a {{count}} mois"
+    },
+    "years_ago": {
+      "one": "il y a {{count}} an",
+      "other": "il y a {{count}} ans"
+    },
+    "in_seconds": {
+      "one": "dans {{count}} seconde",
+      "other": "dans {{count}} secondes"
+    },
+    "in_minutes": {
+      "one": "dans {{count}} minute",
+      "other": "dans {{count}} minutes"
+    },
+    "in_hours": {
+      "one": "dans {{count}} heure",
+      "other": "dans {{count}} heures"
+    },
+    "in_days": {
+      "one": "dans {{count}} jour",
+      "other": "dans {{count}} jours"
+    },
+    "in_weeks": {
+      "one": "dans {{count}} semaine",
+      "other": "dans {{count}} semaines"
+    },
+    "in_months": {
+      "one": "dans {{count}} mois",
+      "other": "dans {{count}} mois"
+    },
+    "in_years": {
+      "one": "dans {{count}} an",
+      "other": "dans {{count}} ans"
+    }
+  }
+}

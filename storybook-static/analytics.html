@@ -1,0 +1,1024 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analytics - SYNTHEX</title>
+    <link rel="icon" type="image/png" href="/logo.png">
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <script src="/js/auth-check.js"></script>
+    
+    <!-- App CSS -->
+    <link rel="stylesheet" href="/css/synthex-app.css">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <style>
+        /* Analytics Specific Styles */
+        .analytics-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: var(--space-xl);
+        }
+        
+        .date-range-selector {
+            display: flex;
+            gap: var(--space-sm);
+            align-items: center;
+        }
+        
+        .date-btn {
+            padding: var(--space-sm) var(--space-md);
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all var(--transition-base);
+            font-size: 0.875rem;
+        }
+        
+        .date-btn:hover {
+            background: var(--bg-card-hover);
+            color: var(--text-primary);
+            border-color: var(--border-color-hover);
+        }
+        
+        .date-btn.active {
+            background: var(--primary-light);
+            color: var(--primary);
+            border-color: var(--primary);
+        }
+        
+        .metrics-overview {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: var(--space-lg);
+            margin-bottom: var(--space-xl);
+        }
+        
+        .metric-card {
+            background: var(--bg-card);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-xl);
+            padding: var(--space-lg);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .metric-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary), var(--accent-purple));
+        }
+        
+        .metric-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: var(--space-md);
+        }
+        
+        .metric-title {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+        
+        .metric-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+        }
+        
+        .metric-value {
+            font-size: 2rem;
+            font-weight: 700;
+            line-height: 1;
+            margin-bottom: var(--space-sm);
+        }
+        
+        .metric-change {
+            display: flex;
+            align-items: center;
+            gap: var(--space-xs);
+            font-size: 0.875rem;
+        }
+        
+        .metric-change.positive {
+            color: var(--accent-green);
+        }
+        
+        .metric-change.negative {
+            color: var(--accent-red);
+        }
+        
+        .charts-grid {
+            display: grid;
+            gap: var(--space-lg);
+            margin-bottom: var(--space-xl);
+        }
+        
+        .chart-container {
+            background: var(--bg-card);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-xl);
+            padding: var(--space-lg);
+        }
+        
+        .chart-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: var(--space-lg);
+        }
+        
+        .chart-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+        }
+        
+        .chart-tabs {
+            display: flex;
+            gap: var(--space-xs);
+        }
+        
+        .chart-tab {
+            padding: var(--space-xs) var(--space-md);
+            background: transparent;
+            border: 1px solid transparent;
+            border-radius: var(--radius-md);
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all var(--transition-base);
+            font-size: 0.75rem;
+        }
+        
+        .chart-tab:hover {
+            background: var(--bg-card-hover);
+            border-color: var(--border-color);
+        }
+        
+        .chart-tab.active {
+            background: var(--primary-light);
+            color: var(--primary);
+            border-color: var(--primary);
+        }
+        
+        .chart-wrapper {
+            height: 300px;
+            position: relative;
+        }
+        
+        .platform-breakdown {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: var(--space-md);
+        }
+        
+        .platform-stat {
+            display: flex;
+            align-items: center;
+            gap: var(--space-md);
+            padding: var(--space-md);
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: var(--radius-md);
+            transition: all var(--transition-base);
+        }
+        
+        .platform-stat:hover {
+            background: rgba(255, 255, 255, 0.05);
+            transform: translateX(4px);
+        }
+        
+        .platform-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .platform-info {
+            flex: 1;
+        }
+        
+        .platform-name {
+            font-size: 0.875rem;
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+        
+        .platform-value {
+            font-size: 1.25rem;
+            font-weight: 700;
+        }
+        
+        .top-content {
+            background: var(--bg-card);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-xl);
+            padding: var(--space-lg);
+        }
+        
+        .content-list {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-md);
+            margin-top: var(--space-lg);
+        }
+        
+        .content-item {
+            display: flex;
+            align-items: center;
+            gap: var(--space-md);
+            padding: var(--space-md);
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: var(--radius-md);
+            transition: all var(--transition-base);
+        }
+        
+        .content-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+        
+        .content-rank {
+            width: 32px;
+            height: 32px;
+            border-radius: var(--radius-md);
+            background: var(--primary-light);
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 0.875rem;
+        }
+        
+        .content-details {
+            flex: 1;
+        }
+        
+        .content-title {
+            font-size: 0.875rem;
+            font-weight: 500;
+            margin-bottom: 4px;
+            display: -webkit-box;
+            -webkit-line-clamp: 1;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        
+        .content-stats {
+            display: flex;
+            gap: var(--space-md);
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+        
+        .content-metric {
+            display: flex;
+            align-items: center;
+            gap: var(--space-xs);
+        }
+        
+        @media (max-width: 768px) {
+            .analytics-header {
+                flex-direction: column;
+                gap: var(--space-md);
+                align-items: stretch;
+            }
+            
+            .date-range-selector {
+                overflow-x: auto;
+            }
+            
+            .metrics-overview {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar (same as other pages) -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <a href="/" class="logo">SYNTHEX</a>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <div class="nav-section">
+                    <div class="nav-section-title">Main</div>
+                    <a href="/app-new.html" class="nav-item">
+                        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="3" width="7" height="7" rx="1"/>
+                            <rect x="14" y="3" width="7" height="7" rx="1"/>
+                            <rect x="3" y="14" width="7" height="7" rx="1"/>
+                            <rect x="14" y="14" width="7" height="7" rx="1"/>
+                        </svg>
+                        <span>Dashboard</span>
+                    </a>
+                    <a href="/campaigns-new.html" class="nav-item">
+                        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V6a2 2 0 012-2z"/>
+                        </svg>
+                        <span>Campaigns</span>
+                    </a>
+                    <a href="/content-studio.html" class="nav-item">
+                        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                        </svg>
+                        <span>Content Studio</span>
+                    </a>
+                    <a href="/schedule.html" class="nav-item">
+                        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <polyline points="12 6 12 12 16 14"/>
+                        </svg>
+                        <span>Schedule</span>
+                    </a>
+                    <a href="/analytics.html" class="nav-item active">
+                        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M18 20V10M12 20V4M6 20v-6"/>
+                        </svg>
+                        <span>Analytics</span>
+                    </a>
+                </div>
+            </nav>
+        </aside>
+        
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="header">
+                <div class="header-left">
+                    <h1 class="header-title">Analytics</h1>
+                </div>
+                
+                <div class="header-right">
+                    <button class="header-btn notification-bell">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"/>
+                        </svg>
+                    </button>
+                    <button class="header-btn" onclick="exportData()">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+                        </svg>
+                        <span>Export</span>
+                    </button>
+                </div>
+            </header>
+            
+            <!-- Content -->
+            <div class="content">
+                <!-- Analytics Header -->
+                <div class="analytics-header">
+                    <div>
+                        <h2 style="font-size: 1.5rem; font-weight: 700;">Performance Overview</h2>
+                        <p style="color: var(--text-secondary); margin-top: 4px;">Track your marketing performance across all platforms</p>
+                    </div>
+                    
+                    <div class="date-range-selector">
+                        <button class="date-btn" data-range="today">Today</button>
+                        <button class="date-btn active" data-range="week">7 Days</button>
+                        <button class="date-btn" data-range="month">30 Days</button>
+                        <button class="date-btn" data-range="quarter">90 Days</button>
+                        <button class="date-btn" data-range="custom">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="4" width="18" height="18" rx="2"/>
+                                <line x1="16" y1="2" x2="16" y2="6"/>
+                                <line x1="8" y1="2" x2="8" y2="6"/>
+                                <line x1="3" y1="10" x2="21" y2="10"/>
+                            </svg>
+                            Custom
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Metrics Overview -->
+                <div class="metrics-overview">
+                    <div class="metric-card">
+                        <div class="metric-header">
+                            <div class="metric-title">Total Reach</div>
+                            <div class="metric-icon" style="background: rgba(59, 130, 246, 0.1); color: var(--accent-blue);">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75M9 7a4 4 0 11-8 0 4 4 0 018 0z"/>
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="metric-value" id="totalReach">0</div>
+                        <div class="metric-change positive">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M7 17l5-5 5 5M12 12V3"/>
+                            </svg>
+                            <span>+24.5%</span>
+                        </div>
+                    </div>
+                    
+                    <div class="metric-card">
+                        <div class="metric-header">
+                            <div class="metric-title">Engagement Rate</div>
+                            <div class="metric-icon" style="background: rgba(16, 185, 129, 0.1); color: var(--accent-green);">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="metric-value" id="engagementRate">0%</div>
+                        <div class="metric-change positive">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M7 17l5-5 5 5M12 12V3"/>
+                            </svg>
+                            <span>+2.1%</span>
+                        </div>
+                    </div>
+                    
+                    <div class="metric-card">
+                        <div class="metric-header">
+                            <div class="metric-title">Total Posts</div>
+                            <div class="metric-icon" style="background: rgba(139, 92, 246, 0.1); color: var(--accent-purple);">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/>
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="metric-value" id="totalPosts">0</div>
+                        <div class="metric-change positive">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M7 17l5-5 5 5M12 12V3"/>
+                            </svg>
+                            <span>+18 this week</span>
+                        </div>
+                    </div>
+                    
+                    <div class="metric-card">
+                        <div class="metric-header">
+                            <div class="metric-title">Click Rate</div>
+                            <div class="metric-icon" style="background: rgba(236, 72, 153, 0.1); color: var(--accent-pink);">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="metric-value" id="clickRate">0%</div>
+                        <div class="metric-change negative">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M17 7l-5 5-5-5M12 12v9"/>
+                            </svg>
+                            <span>-0.4%</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Charts Grid -->
+                <div class="charts-grid">
+                    <!-- Engagement Over Time -->
+                    <div class="chart-container">
+                        <div class="chart-header">
+                            <h3 class="chart-title">Engagement Over Time</h3>
+                            <div class="chart-tabs">
+                                <button class="chart-tab active" data-metric="engagement">Engagement</button>
+                                <button class="chart-tab" data-metric="reach">Reach</button>
+                                <button class="chart-tab" data-metric="clicks">Clicks</button>
+                            </div>
+                        </div>
+                        <div class="chart-wrapper">
+                            <canvas id="engagementChart"></canvas>
+                        </div>
+                    </div>
+                    
+                    <!-- Platform Breakdown -->
+                    <div class="chart-container">
+                        <div class="chart-header">
+                            <h3 class="chart-title">Platform Performance</h3>
+                        </div>
+                        <div class="platform-breakdown">
+                            <div class="platform-stat" data-platform="instagram">
+                                <div class="platform-icon" style="background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
+                                        <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zM5.838 12a6.162 6.162 0 1112.324 0 6.162 6.162 0 01-12.324 0zM12 16a4 4 0 110-8 4 4 0 010 8zm4.965-10.405a1.44 1.44 0 112.881.001 1.44 1.44 0 01-2.881-.001z"/>
+                                    </svg>
+                                </div>
+                                <div class="platform-info">
+                                    <div class="platform-name">Instagram</div>
+                                    <div class="platform-value">0</div>
+                                </div>
+                            </div>
+                            
+                            <div class="platform-stat" data-platform="facebook">
+                                <div class="platform-icon" style="background: #1877f2;">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
+                                        <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                                    </svg>
+                                </div>
+                                <div class="platform-info">
+                                    <div class="platform-name">Facebook</div>
+                                    <div class="platform-value">0</div>
+                                </div>
+                            </div>
+                            
+                            <div class="platform-stat" data-platform="twitter">
+                                <div class="platform-icon" style="background: #1da1f2;">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
+                                        <path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/>
+                                    </svg>
+                                </div>
+                                <div class="platform-info">
+                                    <div class="platform-name">Twitter</div>
+                                    <div class="platform-value">0</div>
+                                </div>
+                            </div>
+                            
+                            <div class="platform-stat" data-platform="linkedin">
+                                <div class="platform-icon" style="background: #0077b5;">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
+                                        <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+                                    </svg>
+                                </div>
+                                <div class="platform-info">
+                                    <div class="platform-name">LinkedIn</div>
+                                    <div class="platform-value">0</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Top Performing Content -->
+                <div class="top-content">
+                    <h3 class="chart-title">Top Performing Content</h3>
+                    <div class="content-list" id="topContent">
+                        <!-- Will be populated dynamically -->
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <!-- Export Modal -->
+    <div class="modal" id="exportModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(10px); z-index: 1000; align-items: center; justify-content: center;">
+        <div class="modal-content" style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-xl); padding: var(--space-xl); max-width: 500px; width: 90%; max-height: 90vh; overflow-y: auto;">
+            <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-lg);">
+                <h2>Export Analytics Report</h2>
+                <button class="modal-close" onclick="closeExportModal()" style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-color); border-radius: var(--radius-md); cursor: pointer; transition: all var(--transition-base);">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"/>
+                        <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                </button>
+            </div>
+            
+            <form id="exportForm">
+                <div class="form-group" style="margin-bottom: var(--space-md);">
+                    <label class="form-label">Time Range</label>
+                    <select class="form-select" id="exportRange">
+                        <option value="week" selected>Last 7 Days</option>
+                        <option value="month">Last 30 Days</option>
+                        <option value="quarter">Last 90 Days</option>
+                    </select>
+                </div>
+                
+                <div class="form-group" style="margin-bottom: var(--space-md);">
+                    <label class="form-label">Export Format</label>
+                    <div class="export-format-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-md); margin-top: var(--space-sm);">
+                        <div class="export-format-option" onclick="selectExportFormat('csv')" data-format="csv" style="padding: var(--space-md); border: 2px solid var(--border-color); border-radius: var(--radius-lg); cursor: pointer; text-align: center; transition: all var(--transition-base);">
+                            <div style="background: rgba(34, 197, 94, 0.1); color: var(--accent-green); width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto var(--space-sm);">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+                                    <polyline points="14 2 14 8 20 8"/>
+                                    <line x1="16" y1="13" x2="8" y2="13"/>
+                                    <line x1="16" y1="17" x2="8" y2="17"/>
+                                    <polyline points="10 9 9 9 8 9"/>
+                                </svg>
+                            </div>
+                            <div style="font-weight: 600; margin-bottom: var(--space-xs);">CSV</div>
+                            <div style="font-size: 0.75rem; color: var(--text-muted);">Spreadsheet format</div>
+                        </div>
+                        
+                        <div class="export-format-option" onclick="selectExportFormat('excel')" data-format="excel" style="padding: var(--space-md); border: 2px solid var(--border-color); border-radius: var(--radius-lg); cursor: pointer; text-align: center; transition: all var(--transition-base);">
+                            <div style="background: rgba(34, 139, 34, 0.1); color: #228B22; width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto var(--space-sm);">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+                                    <polyline points="14 2 14 8 20 8"/>
+                                    <path d="M8 13h8M8 17h8M8 9h2"/>
+                                </svg>
+                            </div>
+                            <div style="font-weight: 600; margin-bottom: var(--space-xs);">Excel</div>
+                            <div style="font-size: 0.75rem; color: var(--text-muted);">Full report with sheets</div>
+                        </div>
+                        
+                        <div class="export-format-option" onclick="selectExportFormat('pdf')" data-format="pdf" style="padding: var(--space-md); border: 2px solid var(--border-color); border-radius: var(--radius-lg); cursor: pointer; text-align: center; transition: all var(--transition-base);">
+                            <div style="background: rgba(239, 68, 68, 0.1); color: var(--accent-red); width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto var(--space-sm);">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+                                    <polyline points="14 2 14 8 20 8"/>
+                                    <line x1="9" y1="15" x2="15" y2="15"/>
+                                </svg>
+                            </div>
+                            <div style="font-weight: 600; margin-bottom: var(--space-xs);">PDF</div>
+                            <div style="font-size: 0.75rem; color: var(--text-muted);">Professional report</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group" id="csvTypeGroup" style="margin-bottom: var(--space-lg); display: none;">
+                    <label class="form-label">CSV Data Type</label>
+                    <select class="form-select" id="csvType">
+                        <option value="overview">Performance Overview</option>
+                        <option value="content">Content Performance</option>
+                        <option value="platforms">Platform Analytics</option>
+                    </select>
+                </div>
+                
+                <div class="form-actions" style="display: flex; gap: var(--space-md); justify-content: flex-end;">
+                    <button type="button" class="btn btn-secondary" onclick="closeExportModal()">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="startExport()" id="exportBtn" disabled>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+                        </svg>
+                        Export Report
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <script src="/js/api.js"></script>
+    <script>
+        // Auth check is handled by auth-check.js
+        
+        // Initialize variables
+        let engagementChart, reachChart;
+        let updateInterval;
+        
+        // Initialize charts
+        Chart.defaults.color = '#a0a0a0';
+        Chart.defaults.borderColor = 'rgba(255, 255, 255, 0.1)';
+        
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeCharts();
+            loadAnalyticsData();
+            
+            // Update data every 30 seconds
+            updateInterval = setInterval(loadAnalyticsData, 30000);
+        });
+        
+        // Clean up on page unload
+        window.addEventListener('beforeunload', () => {
+            if (updateInterval) clearInterval(updateInterval);
+        });
+        
+        function initializeCharts() {
+            // Engagement Chart
+            const engagementCtx = document.getElementById('engagementChart').getContext('2d');
+            engagementChart = new Chart(engagementCtx, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [{
+                    label: 'Engagement Rate',
+                    data: [],
+                    borderColor: '#6366f1',
+                    backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                    borderWidth: 2,
+                    tension: 0.4,
+                    pointBackgroundColor: '#6366f1',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2,
+                    pointRadius: 4,
+                    pointHoverRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: {
+                            color: 'rgba(255, 255, 255, 0.05)'
+                        }
+                    },
+                    y: {
+                        grid: {
+                            color: 'rgba(255, 255, 255, 0.05)'
+                        },
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return value + '%';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        
+        // Date range selector
+        document.querySelectorAll('.date-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.date-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                fetchAnalytics(btn.dataset.range);
+            });
+        });
+        
+        // Chart tabs
+        document.querySelectorAll('.chart-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.chart-tab').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                updateChartMetric(tab.dataset.metric);
+            });
+        });
+        
+        // Fetch analytics data
+        async function fetchAnalytics(range = 'week') {
+            try {
+                const response = await fetch(`/api/analytics/overview?range=${range}`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                if (!response.ok) throw new Error('Failed to fetch analytics');
+                
+                const data = await response.json();
+                updateMetrics(data.data);
+                updateCharts(data.data);
+                updateTopContent(data.data.topContent);
+                
+            } catch (error) {
+                console.error('Analytics error:', error);
+                // Use mock data for demo
+                useMockData();
+            }
+        }
+        
+        // Update metrics
+        function updateMetrics(data) {
+            // Animate number counting
+            animateValue('totalReach', 0, data.totalReach || 125000, 2000);
+        }
+        
+        // Animate counting
+        function animateValue(id, start, end, duration) {
+            const element = document.getElementById(id);
+            const range = end - start;
+            const increment = end > start ? 1 : -1;
+            const stepTime = Math.abs(Math.floor(duration / range));
+            let current = start;
+            
+            const timer = setInterval(() => {
+                current += increment * Math.ceil(range / 100);
+                if ((increment > 0 && current >= end) || (increment < 0 && current <= end)) {
+                    current = end;
+                    clearInterval(timer);
+                }
+                element.textContent = formatNumber(current);
+            }, stepTime);
+        }
+        
+        // Format large numbers
+        function formatNumber(num) {
+            if (num >= 1000000) {
+                return (num / 1000000).toFixed(1) + 'M';
+            } else if (num >= 1000) {
+                return (num / 1000).toFixed(1) + 'K';
+            }
+            return num.toString();
+        }
+        
+        // Update charts
+        function updateCharts(data) {
+            const labels = generateDateLabels(7);
+            const engagementData = [6.2, 7.1, 7.8, 7.5, 8.2, 8.0, 8.4];
+            
+            engagementChart.data.labels = labels;
+            engagementChart.data.datasets[0].data = engagementData;
+            engagementChart.update();
+        }
+        
+        // Generate date labels
+        function generateDateLabels(days) {
+            const labels = [];
+            for (let i = days - 1; i >= 0; i--) {
+                const date = new Date();
+                date.setDate(date.getDate() - i);
+                labels.push(date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
+            }
+            return labels;
+        }
+        
+        // Update chart metric
+        function updateChartMetric(metric) {
+            const data = {
+                engagement: [6.2, 7.1, 7.8, 7.5, 8.2, 8.0, 8.4],
+                reach: [95, 102, 118, 125, 132, 128, 125],
+                clicks: [2.8, 3.0, 3.1, 2.9, 3.3, 3.2, 3.2]
+            };
+            
+            const colors = {
+                engagement: '#6366f1',
+                reach: '#10b981',
+                clicks: '#ec4899'
+            };
+            
+            engagementChart.data.datasets[0].data = data[metric];
+            engagementChart.data.datasets[0].borderColor = colors[metric];
+            engagementChart.data.datasets[0].backgroundColor = colors[metric] + '20';
+            engagementChart.data.datasets[0].pointBackgroundColor = colors[metric];
+            engagementChart.update();
+        }
+        
+        // Update top content
+        function updateTopContent(content) {
+            const topContent = content || [
+                { title: "Summer Collection Launch Post", platform: "instagram", likes: 3542, shares: 892, engagement: "12.4%" },
+                { title: "Behind the Scenes: Product Development", platform: "facebook", likes: 2891, shares: 567, engagement: "9.8%" },
+                { title: "Sustainability Initiative Announcement", platform: "linkedin", likes: 1876, shares: 423, engagement: "8.7%" },
+                { title: "Customer Success Story", platform: "twitter", likes: 1543, shares: 321, engagement: "7.2%" },
+                { title: "New Feature Release", platform: "instagram", likes: 1234, shares: 287, engagement: "6.5%" }
+            ];
+            
+            const contentList = document.getElementById('topContent');
+            contentList.innerHTML = topContent.map((item, index) => `
+                <div class="content-item">
+                    <div class="content-rank">${index + 1}</div>
+                    <div class="content-details">
+                        <div class="content-title">${item.title}</div>
+                        <div class="content-stats">
+                            <div class="content-metric">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
+                                </svg>
+                                ${formatNumber(item.likes)}
+                            </div>
+                            <div class="content-metric">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8M16 6l-4-4-4 4M12 2v13"/>
+                                </svg>
+                                ${formatNumber(item.shares)}
+                            </div>
+                            <div class="content-metric">
+                                ${item.engagement} engagement
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        // Export data
+        function exportData() {
+            document.getElementById('exportModal').style.display = 'flex';
+        }
+        
+        // Export modal functions
+        let selectedExportFormat = null;
+        
+        function closeExportModal() {
+            document.getElementById('exportModal').style.display = 'none';
+            selectedExportFormat = null;
+            document.getElementById('exportBtn').disabled = true;
+            
+            // Reset format selection
+            document.querySelectorAll('.export-format-option').forEach(option => {
+                option.style.borderColor = 'var(--border-color)';
+                option.style.background = 'transparent';
+            });
+            
+            // Hide CSV type group
+            document.getElementById('csvTypeGroup').style.display = 'none';
+        }
+        
+        function selectExportFormat(format) {
+            selectedExportFormat = format;
+            
+            // Update visual selection
+            document.querySelectorAll('.export-format-option').forEach(option => {
+                if (option.dataset.format === format) {
+                    option.style.borderColor = 'var(--primary)';
+                    option.style.background = 'rgba(99, 102, 241, 0.05)';
+                } else {
+                    option.style.borderColor = 'var(--border-color)';
+                    option.style.background = 'transparent';
+                }
+            });
+            
+            // Show CSV type selector if CSV is selected
+            if (format === 'csv') {
+                document.getElementById('csvTypeGroup').style.display = 'block';
+            } else {
+                document.getElementById('csvTypeGroup').style.display = 'none';
+            }
+            
+            // Enable export button
+            document.getElementById('exportBtn').disabled = false;
+        }
+        
+        async function startExport() {
+            if (!selectedExportFormat) return;
+            
+            const range = document.getElementById('exportRange').value;
+            const exportBtn = document.getElementById('exportBtn');
+            
+            // Show loading state
+            exportBtn.innerHTML = `
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="animate-spin">
+                    <path d="M21 12a9 9 0 11-6.219-8.56"/>
+                </svg>
+                Exporting...
+            `;
+            exportBtn.disabled = true;
+            
+            try {
+                if (selectedExportFormat === 'csv') {
+                    const csvType = document.getElementById('csvType').value;
+                    await synthexAPI.exportAnalyticsCSV(range, csvType);
+                } else if (selectedExportFormat === 'excel') {
+                    await synthexAPI.exportAnalyticsExcel(range);
+                } else if (selectedExportFormat === 'pdf') {
+                    await synthexAPI.exportAnalyticsPDF(range);
+                }
+                
+                // Show success notification
+                if (window.notificationSystem) {
+                    window.notificationSystem.addNotification({
+                        type: 'success',
+                        title: 'Export Complete',
+                        message: `Analytics report exported successfully as ${selectedExportFormat.toUpperCase()}`
+                    });
+                }
+                
+                closeExportModal();
+            } catch (error) {
+                console.error('Export failed:', error);
+                
+                // Show error notification
+                if (window.notificationSystem) {
+                    window.notificationSystem.addNotification({
+                        type: 'error',
+                        title: 'Export Failed',
+                        message: 'Failed to export analytics report. Please try again.'
+                    });
+                }
+                
+                // Reset button
+                exportBtn.innerHTML = `
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+                    </svg>
+                    Export Report
+                `;
+                exportBtn.disabled = false;
+            }
+        }
+        
+        // Close modal on outside click
+        document.getElementById('exportModal').addEventListener('click', function(event) {
+            if (event.target === this) {
+                closeExportModal();
+            }
+        });
+        
+        // Use mock data for demo
+        function useMockData() {
+            updateMetrics({ totalReach: 125000 });
+            updateCharts({});
+            updateTopContent();
+        }
+        
+        // Initialize
+        fetchAnalytics('week');
+    </script>
+    
+    <script src="/js/notifications.js"></script>
+</body>
+</html>

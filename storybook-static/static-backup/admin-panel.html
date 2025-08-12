@@ -1,0 +1,1111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SYNTHEX Admin Panel - System Configuration</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --dark: #0f172a;
+            --darker: #020617;
+            --light: #f8fafc;
+            --border: #1e293b;
+            --text: #cbd5e1;
+            --text-light: #94a3b8;
+            --primary: #3b82f6;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --info: #06b6d4;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--darker);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        .admin-layout {
+            display: flex;
+            height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 260px;
+            background: var(--dark);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 1.25rem;
+        }
+
+        .logo-text {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: white;
+        }
+
+        .logo-badge {
+            background: var(--danger);
+            color: white;
+            padding: 0.125rem 0.5rem;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+
+        .sidebar-menu {
+            flex: 1;
+            padding: 1rem;
+            overflow-y: auto;
+        }
+
+        .menu-section {
+            margin-bottom: 1.5rem;
+        }
+
+        .menu-label {
+            color: var(--text-light);
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-bottom: 0.5rem;
+            padding: 0 0.5rem;
+        }
+
+        .menu-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-bottom: 0.25rem;
+        }
+
+        .menu-item:hover {
+            background: rgba(59, 130, 246, 0.1);
+            color: var(--primary);
+        }
+
+        .menu-item.active {
+            background: rgba(59, 130, 246, 0.2);
+            color: var(--primary);
+        }
+
+        .menu-icon {
+            width: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .topbar {
+            background: var(--dark);
+            border-bottom: 1px solid var(--border);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .search-bar {
+            display: flex;
+            align-items: center;
+            background: var(--darker);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 0.5rem 1rem;
+            width: 400px;
+        }
+
+        .search-bar input {
+            background: none;
+            border: none;
+            color: var(--text);
+            outline: none;
+            width: 100%;
+            margin-left: 0.5rem;
+        }
+
+        .topbar-actions {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .notification-btn {
+            position: relative;
+            background: var(--darker);
+            border: 1px solid var(--border);
+            padding: 0.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .notification-btn:hover {
+            border-color: var(--primary);
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: -4px;
+            right: -4px;
+            background: var(--danger);
+            color: white;
+            font-size: 0.65rem;
+            padding: 0.125rem 0.25rem;
+            border-radius: 10px;
+            min-width: 16px;
+            text-align: center;
+        }
+
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            background: var(--darker);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+        }
+
+        /* Content Area */
+        .content {
+            flex: 1;
+            padding: 2rem;
+            overflow-y: auto;
+        }
+
+        .page-header {
+            margin-bottom: 2rem;
+        }
+
+        .page-title {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 0.5rem;
+        }
+
+        .page-description {
+            color: var(--text-light);
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--dark);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+        }
+
+        .stat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .stat-label {
+            color: var(--text-light);
+            font-size: 0.875rem;
+        }
+
+        .stat-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-change {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .stat-change.positive {
+            color: var(--success);
+        }
+
+        .stat-change.negative {
+            color: var(--danger);
+        }
+
+        /* Configuration Sections */
+        .config-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .config-card {
+            background: var(--dark);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+        }
+
+        .config-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .config-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: white;
+        }
+
+        .config-status {
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .status-active {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--success);
+        }
+
+        .status-inactive {
+            background: rgba(239, 68, 68, 0.2);
+            color: var(--danger);
+        }
+
+        .status-warning {
+            background: rgba(245, 158, 11, 0.2);
+            color: var(--warning);
+        }
+
+        .config-content {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .config-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .config-item:last-child {
+            border-bottom: none;
+        }
+
+        .config-label {
+            color: var(--text);
+            font-size: 0.875rem;
+        }
+
+        .config-value {
+            color: var(--text-light);
+            font-size: 0.875rem;
+        }
+
+        /* Toggle Switch */
+        .toggle-switch {
+            position: relative;
+            width: 44px;
+            height: 24px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--border);
+            transition: 0.4s;
+            border-radius: 24px;
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background: white;
+            transition: 0.4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .toggle-slider {
+            background: var(--primary);
+        }
+
+        input:checked + .toggle-slider:before {
+            transform: translateX(20px);
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 0.625rem 1.25rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #2563eb;
+        }
+
+        .btn-secondary {
+            background: var(--darker);
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+
+        /* System Logs */
+        .log-viewer {
+            background: var(--darker);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1rem;
+            height: 300px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 0.875rem;
+        }
+
+        .log-entry {
+            padding: 0.5rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .log-entry:last-child {
+            border-bottom: none;
+        }
+
+        .log-time {
+            color: var(--text-light);
+            margin-right: 0.5rem;
+        }
+
+        .log-level {
+            padding: 0.125rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            margin-right: 0.5rem;
+        }
+
+        .log-level.info {
+            background: rgba(6, 182, 212, 0.2);
+            color: var(--info);
+        }
+
+        .log-level.warning {
+            background: rgba(245, 158, 11, 0.2);
+            color: var(--warning);
+        }
+
+        .log-level.error {
+            background: rgba(239, 68, 68, 0.2);
+            color: var(--danger);
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--dark);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 2rem;
+            max-width: 500px;
+            width: 90%;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: white;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            color: var(--text-light);
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        .close-btn:hover {
+            color: white;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                display: none;
+            }
+            
+            .search-bar {
+                width: 100%;
+            }
+            
+            .config-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-layout">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <div class="logo-icon">S</div>
+                    <span class="logo-text">SYNTHEX</span>
+                    <span class="logo-badge">ADMIN</span>
+                </div>
+            </div>
+            
+            <div class="sidebar-menu">
+                <div class="menu-section">
+                    <div class="menu-label">Dashboard</div>
+                    <div class="menu-item active" onclick="showSection('overview')">
+                        <span class="menu-icon"><i class="fas fa-chart-pie"></i></span>
+                        <span>Overview</span>
+                    </div>
+                    <div class="menu-item" onclick="showSection('analytics')">
+                        <span class="menu-icon"><i class="fas fa-chart-line"></i></span>
+                        <span>Analytics</span>
+                    </div>
+                </div>
+                
+                <div class="menu-section">
+                    <div class="menu-label">Configuration</div>
+                    <div class="menu-item" onclick="showSection('features')">
+                        <span class="menu-icon"><i class="fas fa-toggle-on"></i></span>
+                        <span>Feature Flags</span>
+                    </div>
+                    <div class="menu-item" onclick="showSection('api')">
+                        <span class="menu-icon"><i class="fas fa-key"></i></span>
+                        <span>API Management</span>
+                    </div>
+                    <div class="menu-item" onclick="showSection('database')">
+                        <span class="menu-icon"><i class="fas fa-database"></i></span>
+                        <span>Database</span>
+                    </div>
+                    <div class="menu-item" onclick="showSection('cache')">
+                        <span class="menu-icon"><i class="fas fa-bolt"></i></span>
+                        <span>Cache & Redis</span>
+                    </div>
+                </div>
+                
+                <div class="menu-section">
+                    <div class="menu-label">Services</div>
+                    <div class="menu-item" onclick="showSection('integrations')">
+                        <span class="menu-icon"><i class="fas fa-plug"></i></span>
+                        <span>Integrations</span>
+                    </div>
+                    <div class="menu-item" onclick="showSection('webhooks')">
+                        <span class="menu-icon"><i class="fas fa-link"></i></span>
+                        <span>Webhooks</span>
+                    </div>
+                    <div class="menu-item" onclick="showSection('scheduler')">
+                        <span class="menu-icon"><i class="fas fa-clock"></i></span>
+                        <span>Scheduler</span>
+                    </div>
+                    <div class="menu-item" onclick="showSection('queue')">
+                        <span class="menu-icon"><i class="fas fa-list"></i></span>
+                        <span>Job Queue</span>
+                    </div>
+                </div>
+                
+                <div class="menu-section">
+                    <div class="menu-label">Security</div>
+                    <div class="menu-item" onclick="showSection('users')">
+                        <span class="menu-icon"><i class="fas fa-users"></i></span>
+                        <span>Users</span>
+                    </div>
+                    <div class="menu-item" onclick="showSection('permissions')">
+                        <span class="menu-icon"><i class="fas fa-shield-alt"></i></span>
+                        <span>Permissions</span>
+                    </div>
+                    <div class="menu-item" onclick="showSection('audit')">
+                        <span class="menu-icon"><i class="fas fa-file-alt"></i></span>
+                        <span>Audit Logs</span>
+                    </div>
+                </div>
+                
+                <div class="menu-section">
+                    <div class="menu-label">System</div>
+                    <div class="menu-item" onclick="showSection('monitoring')">
+                        <span class="menu-icon"><i class="fas fa-heartbeat"></i></span>
+                        <span>Monitoring</span>
+                    </div>
+                    <div class="menu-item" onclick="showSection('logs')">
+                        <span class="menu-icon"><i class="fas fa-terminal"></i></span>
+                        <span>System Logs</span>
+                    </div>
+                    <div class="menu-item" onclick="showSection('backups')">
+                        <span class="menu-icon"><i class="fas fa-save"></i></span>
+                        <span>Backups</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Topbar -->
+            <div class="topbar">
+                <div class="search-bar">
+                    <i class="fas fa-search" style="color: var(--text-light);"></i>
+                    <input type="text" placeholder="Search settings, features, users...">
+                </div>
+                
+                <div class="topbar-actions">
+                    <div class="notification-btn">
+                        <i class="fas fa-bell"></i>
+                        <span class="notification-badge">3</span>
+                    </div>
+                    
+                    <div class="user-menu">
+                        <div class="user-avatar">A</div>
+                        <div>
+                            <div style="font-size: 0.875rem; font-weight: 500;">Admin User</div>
+                            <div style="font-size: 0.75rem; color: var(--text-light);">Super Admin</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Content Area -->
+            <div class="content">
+                <div class="page-header">
+                    <h1 class="page-title">System Overview</h1>
+                    <p class="page-description">Monitor and configure your SYNTHEX platform</p>
+                </div>
+                
+                <!-- Stats Grid -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <span class="stat-label">Total Users</span>
+                            <div class="stat-icon" style="background: rgba(59, 130, 246, 0.2); color: var(--primary);">
+                                <i class="fas fa-users"></i>
+                            </div>
+                        </div>
+                        <div class="stat-value">24,537</div>
+                        <div class="stat-change positive">
+                            <i class="fas fa-arrow-up"></i>
+                            <span>12.5% from last month</span>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <span class="stat-label">API Calls</span>
+                            <div class="stat-icon" style="background: rgba(16, 185, 129, 0.2); color: var(--success);">
+                                <i class="fas fa-code"></i>
+                            </div>
+                        </div>
+                        <div class="stat-value">1.2M</div>
+                        <div class="stat-change positive">
+                            <i class="fas fa-arrow-up"></i>
+                            <span>8.3% from last week</span>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <span class="stat-label">System Health</span>
+                            <div class="stat-icon" style="background: rgba(16, 185, 129, 0.2); color: var(--success);">
+                                <i class="fas fa-heartbeat"></i>
+                            </div>
+                        </div>
+                        <div class="stat-value">99.9%</div>
+                        <div class="stat-change positive">
+                            <i class="fas fa-check"></i>
+                            <span>All systems operational</span>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <span class="stat-label">Active Features</span>
+                            <div class="stat-icon" style="background: rgba(139, 92, 246, 0.2); color: #8b5cf6;">
+                                <i class="fas fa-rocket"></i>
+                            </div>
+                        </div>
+                        <div class="stat-value">42/50</div>
+                        <div class="stat-change">
+                            <i class="fas fa-info-circle"></i>
+                            <span>8 features in beta</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Configuration Grid -->
+                <div class="config-grid">
+                    <!-- Feature Flags -->
+                    <div class="config-card">
+                        <div class="config-header">
+                            <h3 class="config-title">Feature Flags</h3>
+                            <span class="config-status status-active">Active</span>
+                        </div>
+                        <div class="config-content">
+                            <div class="config-item">
+                                <span class="config-label">Analytics Dashboard</span>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" checked>
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                            <div class="config-item">
+                                <span class="config-label">A/B Testing</span>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" checked>
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                            <div class="config-item">
+                                <span class="config-label">AI Content Generator</span>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" checked>
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                            <div class="config-item">
+                                <span class="config-label">White-label Platform</span>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" checked>
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                            <div class="config-item">
+                                <span class="config-label">Mobile API (Beta)</span>
+                                <label class="toggle-switch">
+                                    <input type="checkbox">
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Database Status -->
+                    <div class="config-card">
+                        <div class="config-header">
+                            <h3 class="config-title">Database Status</h3>
+                            <span class="config-status status-active">Connected</span>
+                        </div>
+                        <div class="config-content">
+                            <div class="config-item">
+                                <span class="config-label">Connection Pool</span>
+                                <span class="config-value">18/20 active</span>
+                            </div>
+                            <div class="config-item">
+                                <span class="config-label">Query Time (avg)</span>
+                                <span class="config-value">23ms</span>
+                            </div>
+                            <div class="config-item">
+                                <span class="config-label">Database Size</span>
+                                <span class="config-value">3.7 GB</span>
+                            </div>
+                            <div class="config-item">
+                                <span class="config-label">Last Backup</span>
+                                <span class="config-value">2 hours ago</span>
+                            </div>
+                            <div class="config-item">
+                                <span class="config-label">Replication Status</span>
+                                <span class="config-value" style="color: var(--success);">In Sync</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Redis Cache -->
+                    <div class="config-card">
+                        <div class="config-header">
+                            <h3 class="config-title">Redis Cache</h3>
+                            <span class="config-status status-active">Running</span>
+                        </div>
+                        <div class="config-content">
+                            <div class="config-item">
+                                <span class="config-label">Memory Usage</span>
+                                <span class="config-value">487 MB / 2 GB</span>
+                            </div>
+                            <div class="config-item">
+                                <span class="config-label">Hit Rate</span>
+                                <span class="config-value">94.3%</span>
+                            </div>
+                            <div class="config-item">
+                                <span class="config-label">Keys</span>
+                                <span class="config-value">12,847</span>
+                            </div>
+                            <div class="config-item">
+                                <span class="config-label">Evicted Keys</span>
+                                <span class="config-value">238</span>
+                            </div>
+                            <div class="config-item">
+                                <span class="config-label">Connected Clients</span>
+                                <span class="config-value">47</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- API Rate Limits -->
+                    <div class="config-card">
+                        <div class="config-header">
+                            <h3 class="config-title">API Rate Limits</h3>
+                            <span class="config-status status-warning">Review</span>
+                        </div>
+                        <div class="config-content">
+                            <div class="config-item">
+                                <span class="config-label">Standard (req/15min)</span>
+                                <input type="number" value="100" style="background: var(--darker); border: 1px solid var(--border); padding: 0.25rem 0.5rem; border-radius: 4px; color: var(--text); width: 80px;">
+                            </div>
+                            <div class="config-item">
+                                <span class="config-label">AI Generation (req/hr)</span>
+                                <input type="number" value="30" style="background: var(--darker); border: 1px solid var(--border); padding: 0.25rem 0.5rem; border-radius: 4px; color: var(--text); width: 80px;">
+                            </div>
+                            <div class="config-item">
+                                <span class="config-label">Upload (req/hr)</span>
+                                <input type="number" value="10" style="background: var(--darker); border: 1px solid var(--border); padding: 0.25rem 0.5rem; border-radius: 4px; color: var(--text); width: 80px;">
+                            </div>
+                            <div class="config-item">
+                                <span class="config-label">Enterprise Multiplier</span>
+                                <input type="number" value="10" style="background: var(--darker); border: 1px solid var(--border); padding: 0.25rem 0.5rem; border-radius: 4px; color: var(--text); width: 80px;">
+                            </div>
+                            <button class="btn btn-primary" style="width: 100%; margin-top: 1rem;">
+                                <i class="fas fa-save"></i> Update Limits
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- System Logs -->
+                <div class="config-card" style="margin-top: 1.5rem;">
+                    <div class="config-header">
+                        <h3 class="config-title">Recent System Logs</h3>
+                        <button class="btn btn-secondary" onclick="refreshLogs()">
+                            <i class="fas fa-sync"></i> Refresh
+                        </button>
+                    </div>
+                    <div class="log-viewer" id="logViewer">
+                        <div class="log-entry">
+                            <span class="log-time">14:32:15</span>
+                            <span class="log-level info">INFO</span>
+                            <span>Database backup completed successfully</span>
+                        </div>
+                        <div class="log-entry">
+                            <span class="log-time">14:28:47</span>
+                            <span class="log-level warning">WARN</span>
+                            <span>High API usage detected from IP: 192.168.1.100</span>
+                        </div>
+                        <div class="log-entry">
+                            <span class="log-time">14:25:03</span>
+                            <span class="log-level info">INFO</span>
+                            <span>New user registration: user_12847</span>
+                        </div>
+                        <div class="log-entry">
+                            <span class="log-time">14:21:19</span>
+                            <span class="log-level info">INFO</span>
+                            <span>Cache cleared for analytics dashboard</span>
+                        </div>
+                        <div class="log-entry">
+                            <span class="log-time">14:18:55</span>
+                            <span class="log-level error">ERROR</span>
+                            <span>Failed to connect to external API: TikTok (timeout)</span>
+                        </div>
+                        <div class="log-entry">
+                            <span class="log-time">14:15:22</span>
+                            <span class="log-level info">INFO</span>
+                            <span>Scheduled job completed: Daily analytics aggregation</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Action Buttons -->
+                <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+                    <button class="btn btn-primary" onclick="saveConfiguration()">
+                        <i class="fas fa-save"></i> Save Configuration
+                    </button>
+                    <button class="btn btn-secondary" onclick="exportConfig()">
+                        <i class="fas fa-download"></i> Export Settings
+                    </button>
+                    <button class="btn btn-danger" onclick="clearCache()">
+                        <i class="fas fa-trash"></i> Clear Cache
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Configuration Modal -->
+    <div id="configModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Configuration Saved</h2>
+                <button class="close-btn" onclick="closeModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <p style="color: var(--text-light); margin-bottom: 1.5rem;">
+                Your configuration changes have been saved successfully. Some changes may require a system restart to take effect.
+            </p>
+            <div style="display: flex; gap: 1rem;">
+                <button class="btn btn-primary" onclick="closeModal()">OK</button>
+                <button class="btn btn-secondary" onclick="restartServices()">Restart Services</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Show different sections
+        function showSection(section) {
+            // Update active menu item
+            document.querySelectorAll('.menu-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            event.target.closest('.menu-item').classList.add('active');
+            
+            // Update page title
+            const titles = {
+                overview: 'System Overview',
+                analytics: 'Analytics Dashboard',
+                features: 'Feature Flags',
+                api: 'API Management',
+                database: 'Database Configuration',
+                cache: 'Cache & Redis',
+                integrations: 'Integrations',
+                webhooks: 'Webhooks',
+                scheduler: 'Scheduler',
+                queue: 'Job Queue',
+                users: 'User Management',
+                permissions: 'Permissions',
+                audit: 'Audit Logs',
+                monitoring: 'System Monitoring',
+                logs: 'System Logs',
+                backups: 'Backup Management'
+            };
+            
+            document.querySelector('.page-title').textContent = titles[section] || 'System Configuration';
+            console.log(`Loading section: ${section}`);
+        }
+        
+        // Save configuration
+        function saveConfiguration() {
+            document.getElementById('configModal').classList.add('active');
+        }
+        
+        // Close modal
+        function closeModal() {
+            document.getElementById('configModal').classList.remove('active');
+        }
+        
+        // Export configuration
+        function exportConfig() {
+            const config = {
+                features: {},
+                database: {},
+                cache: {},
+                rateLimits: {},
+                timestamp: new Date().toISOString()
+            };
+            
+            // Collect all configuration values
+            document.querySelectorAll('input[type="checkbox"]').forEach(input => {
+                const label = input.closest('.config-item')?.querySelector('.config-label')?.textContent;
+                if (label) {
+                    config.features[label] = input.checked;
+                }
+            });
+            
+            // Download as JSON
+            const blob = new Blob([JSON.stringify(config, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `synthex-config-${Date.now()}.json`;
+            a.click();
+        }
+        
+        // Clear cache
+        function clearCache() {
+            if (confirm('Are you sure you want to clear all cache? This action cannot be undone.')) {
+                console.log('Clearing cache...');
+                alert('Cache cleared successfully!');
+            }
+        }
+        
+        // Refresh logs
+        function refreshLogs() {
+            const logViewer = document.getElementById('logViewer');
+            logViewer.innerHTML = '<div style="text-align: center; padding: 2rem; color: var(--text-light);">Loading logs...</div>';
+            
+            // Simulate loading new logs
+            setTimeout(() => {
+                const logs = [
+                    { time: new Date().toLocaleTimeString(), level: 'info', message: 'Logs refreshed successfully' },
+                    { time: new Date().toLocaleTimeString(), level: 'info', message: 'All systems operational' }
+                ];
+                
+                logViewer.innerHTML = logs.map(log => `
+                    <div class="log-entry">
+                        <span class="log-time">${log.time}</span>
+                        <span class="log-level ${log.level}">${log.level.toUpperCase()}</span>
+                        <span>${log.message}</span>
+                    </div>
+                `).join('');
+            }, 1000);
+        }
+        
+        // Restart services
+        function restartServices() {
+            if (confirm('Are you sure you want to restart all services? This will cause a brief downtime.')) {
+                console.log('Restarting services...');
+                alert('Services restart initiated. System will be back online in 30 seconds.');
+                closeModal();
+            }
+        }
+        
+        // Real-time updates simulation
+        setInterval(() => {
+            // Update stats randomly
+            const apiCalls = document.querySelector('.stat-value');
+            if (apiCalls && apiCalls.textContent.includes('M')) {
+                const current = parseFloat(apiCalls.textContent);
+                apiCalls.textContent = (current + 0.001).toFixed(3) + 'M';
+            }
+        }, 5000);
+    </script>
+</body>
+</html>
