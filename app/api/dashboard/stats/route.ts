@@ -13,20 +13,19 @@ export async function GET(request: Request) {
     startDate.setDate(startDate.getDate() - days);
     
     // Fetch real metrics from database
-    const [campaigns, content, users] = await Promise.all([
+    const [campaigns, posts, users] = await Promise.all([
       // Get campaign stats
       prisma.campaign.count({
         where: { createdAt: { gte: startDate } }
       }),
       
-      // Get content stats
-      prisma.content.findMany({
+      // Get post stats
+      prisma.post.findMany({
         where: { createdAt: { gte: startDate } },
         select: {
           platform: true,
-          engagement: true,
-          impressions: true,
-          clicks: true
+          analytics: true,
+          createdAt: true
         }
       }),
       
@@ -43,12 +42,12 @@ export async function GET(request: Request) {
       date.setDate(date.getDate() - i);
       const dayName = date.toLocaleDateString('en', { weekday: 'short' });
       
-      const dayContent = content.filter(c => {
+      const dayPosts = posts.filter((c: any) => {
         const contentDate = new Date(c.createdAt);
         return contentDate.toDateString() === date.toDateString();
       });
       
-      const totalEngagement = dayContent.reduce((sum, c) => sum + (c.engagement || 0), 0);
+      const totalEngagement = dayPosts.reduce((sum: any, c: any) => sum + ((c.analytics?.engagement) || 0), 0);
       
       engagementByDay.push({
         name: dayName,
@@ -58,24 +57,24 @@ export async function GET(request: Request) {
     
     // Calculate platform stats
     const platformStats = ['Twitter', 'LinkedIn', 'Instagram', 'TikTok', 'Facebook'].map(platform => {
-      const platformContent = content.filter(c => c.platform === platform);
+      const platformPosts = posts.filter((c: any) => c.platform === platform);
       return {
         platform,
-        posts: platformContent.length,
-        engagement: platformContent.reduce((sum, c) => sum + (c.engagement || 0), 0)
+        posts: platformPosts.length,
+        engagement: platformPosts.reduce((sum: any, c: any) => sum + ((c.analytics?.engagement) || 0), 0)
       };
     });
     
     // Calculate summary stats
-    const totalEngagement = content.reduce((sum, c) => sum + (c.engagement || 0), 0);
-    const totalImpressions = content.reduce((sum, c) => sum + (c.impressions || 0), 0);
+    const totalEngagement = posts.reduce((sum: any, c: any) => sum + ((c.analytics?.engagement) || 0), 0);
+    const totalImpressions = posts.reduce((sum: any, c: any) => sum + ((c.analytics?.impressions) || 0), 0);
     const avgEngagementRate = totalImpressions > 0 
       ? ((totalEngagement / totalImpressions) * 100).toFixed(2)
       : '0';
     
     return NextResponse.json({
       stats: {
-        totalPosts: content.length,
+        totalPosts: posts.length,
         totalEngagement,
         totalImpressions,
         avgEngagementRate,
@@ -84,11 +83,11 @@ export async function GET(request: Request) {
       },
       engagementData: engagementByDay,
       platformData: platformStats,
-      recentActivity: content.slice(0, 5).map(c => ({
+      recentActivity: posts.slice(0, 5).map((c: any) => ({
         platform: c.platform,
         action: 'Posted content',
         time: new Date(c.createdAt).toISOString(),
-        engagement: c.engagement
+        engagement: c.analytics?.engagement || 0
       }))
     });
     

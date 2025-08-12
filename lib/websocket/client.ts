@@ -2,11 +2,12 @@
  * WebSocket client for real-time notifications
  */
 
-import { toast } from '@/hooks/useToast';
+import { toast } from 'sonner';
 
 export interface WebSocketMessage {
-  type: 'notification' | 'update' | 'error' | 'ping' | 'pong';
+  type: 'notification' | 'update' | 'error' | 'ping' | 'pong' | 'subscribe' | 'unsubscribe';
   data?: any;
+  channel?: string;
   id?: string;
   timestamp?: string;
   userId?: string;
@@ -182,6 +183,14 @@ class WebSocketClient {
           // Heartbeat response received
           break;
           
+        case 'subscribe':
+          this.emit('subscribed', message.channel);
+          break;
+          
+        case 'unsubscribe':
+          this.emit('unsubscribed', message.channel);
+          break;
+          
         default:
           this.emit('message', message);
       }
@@ -206,36 +215,19 @@ class WebSocketClient {
 
     switch (type) {
       case 'success':
-        toast({
-          title,
-          description: message,
-          action: toastAction,
-        });
+        toast.success(`${title}: ${message}`);
         break;
         
       case 'error':
-        toast({
-          title,
-          description: message,
-          variant: 'destructive',
-          action: toastAction,
-        });
+        toast.error(`${title}: ${message}`);
         break;
         
       case 'warning':
-        toast({
-          title,
-          description: message,
-          action: toastAction,
-        });
+        toast.warning(`${title}: ${message}`);
         break;
         
       default:
-        toast({
-          title,
-          description: message,
-          action: toastAction,
-        });
+        toast.info(`${title}: ${message}`);
     }
 
     // Show browser notification if persistent and permission granted

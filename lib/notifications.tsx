@@ -67,15 +67,25 @@ export const notify = {
     }
   ) => toast.promise(promise, messages),
   
+  // Generic methods for compatibility
+  success: (message: string) => toast.success(message),
+  info: (message: string) => toast(message, { icon: 'ℹ️' }),
+  warning: (message: string) => toast(message, { icon: '⚠️' }),
+  
   // Custom toast
-  custom: (message: React.ReactNode) => toast.custom(message),
+  custom: (message: React.ReactNode) => toast.custom(() => message),
   
   // Dismiss all toasts
   dismiss: () => toast.dismiss(),
 };
 
 // Loading messages for variety
-export const loadingMessages = {
+export const loadingMessages: {
+  content: string[];
+  analytics: string[];
+  save: string[];
+  getRandomMessage: (type: keyof Omit<typeof loadingMessages, 'getRandomMessage'>) => string;
+} = {
   content: [
     "🧠 Analyzing viral patterns...",
     "✨ Crafting the perfect hook...",

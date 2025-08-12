@@ -282,14 +282,18 @@ export function checkToneConsistency(
   }
   
   // Check vocabulary alignment
-  const inappropriateWords = {
+  const inappropriateWords: Partial<Record<WritingTone, string[]>> = {
     professional: ['lol', 'omg', 'btw', 'gonna'],
     formal: ['cool', 'awesome', 'stuff', 'things'],
-    casual: ['pursuant', 'heretofore', 'whereas']
+    casual: ['pursuant', 'heretofore', 'whereas'],
+    educational: ['lol', 'omg', 'awesome'],
+    persuasive: ['maybe', 'possibly', 'uncertain'],
+    empathetic: ['whatever', 'don\'t care', 'not my problem'],
+    confident: ['maybe', 'perhaps', 'uncertain']
   };
   
   const wordsToAvoid = inappropriateWords[expectedTone] || [];
-  wordsToAvoid.forEach(word => {
+  wordsToAvoid.forEach((word: string) => {
     if (content.toLowerCase().includes(word)) {
       issues.push(`"${word}" doesn't fit ${expectedTone} tone`);
       score -= 15;
@@ -301,15 +305,20 @@ export function checkToneConsistency(
 
 // Helper functions
 function generateMockContent(request: AIWritingRequest, toneConfig: any): string {
-  const templates = {
+  const templates: Record<WritingTone, string> = {
     professional: `In today's competitive landscape, ${request.prompt}. Our strategic approach ensures comprehensive results that drive innovation and efficiency.`,
     casual: `Hey there! So ${request.prompt} - pretty awesome, right? Let's dive in and check out what makes this so cool!`,
     friendly: `We're so excited to share that ${request.prompt}! It's wonderful to see how this brings value to our amazing community.`,
+    formal: `It is hereby noted that ${request.prompt}. This matter requires careful consideration and appropriate action pursuant to established protocols.`,
     humorous: `Plot twist: ${request.prompt}. I know, I know - mind = blown! But wait, there's more (said in my best infomercial voice).`,
-    inspirational: `Believe in your dreams because ${request.prompt}. You have the power to transform your vision into reality. The time is now!`
+    inspirational: `Believe in your dreams because ${request.prompt}. You have the power to transform your vision into reality. The time is now!`,
+    educational: `Let's explore how ${request.prompt}. Understanding this concept will help you master the fundamentals and apply them effectively.`,
+    persuasive: `Here's why ${request.prompt} is exactly what you need. Don't miss this opportunity to transform your results with proven strategies.`,
+    empathetic: `We understand that ${request.prompt} can feel overwhelming. You're not alone in this journey, and we're here to support you every step of the way.`,
+    confident: `${request.prompt} - and here's exactly how we're going to make it happen. With our proven approach, success is not just possible, it's inevitable.`
   };
   
-  return templates[request.style.tone] || `${request.prompt} - crafted with ${request.style.tone} tone.`;
+  return templates[request.style.tone];
 }
 
 function generateAlternatives(content: string, tone: WritingTone): string[] {

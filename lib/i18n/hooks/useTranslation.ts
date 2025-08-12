@@ -30,19 +30,19 @@ function getInitialLocale(): Locale {
     .find(row => row.startsWith(`${i18nConfig.cookieName}=`))
     ?.split('=')[1];
 
-  if (cookieLocale && i18nConfig.locales.includes(cookieLocale as Locale)) {
+  if (cookieLocale && (i18nConfig.locales as readonly string[]).includes(cookieLocale)) {
     return cookieLocale as Locale;
   }
 
   // Check localStorage
   const storedLocale = localStorage.getItem(i18nConfig.cookieName);
-  if (storedLocale && i18nConfig.locales.includes(storedLocale as Locale)) {
+  if (storedLocale && (i18nConfig.locales as readonly string[]).includes(storedLocale)) {
     return storedLocale as Locale;
   }
 
   // Check browser language
   const browserLocale = navigator.language.split('-')[0];
-  if (i18nConfig.locales.includes(browserLocale as Locale)) {
+  if ((i18nConfig.locales as readonly string[]).includes(browserLocale)) {
     return browserLocale as Locale;
   }
 
