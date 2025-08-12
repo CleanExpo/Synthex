@@ -184,6 +184,13 @@ export default function HomePage() {
               <p className="text-gray-400">
                 AI-powered social media automation for the modern creator.
               </p>
+              <div className="mt-4 space-y-1">
+                <p className="text-gray-400 text-sm">
+                  <a href="mailto:support@synthex.social" className="hover:text-white transition">
+                    ✉ support@synthex.social
+                  </a>
+                </p>
+              </div>
             </div>
             <div>
               <h4 className="text-white font-semibold mb-4">Product</h4>
@@ -215,6 +222,9 @@ export default function HomePage() {
           </div>
           <div className="border-t border-white/10 mt-8 pt-8 text-center text-gray-400">
             <p>&copy; 2025 Synthex. All rights reserved.</p>
+            <p className="mt-2 text-sm">
+              Contact: <a href="mailto:support@synthex.social" className="hover:text-white transition">support@synthex.social</a>
+            </p>
           </div>
         </div>
       </footer>

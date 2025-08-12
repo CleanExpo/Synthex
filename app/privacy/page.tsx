@@ -207,8 +207,9 @@ export default function PrivacyPage() {
               Our Data Protection Officer is here to help with any privacy concerns or requests.
             </p>
             <div className="space-y-2 text-gray-300">
-              <p>Email: privacy@synthex.ai</p>
-              <p>Data Protection Officer: legal@synthex.ai</p>
+              <p>Email: privacy@synthex.social</p>
+              <p>Data Protection Officer: legal@synthex.social</p>
+              <p>Support: support@synthex.social</p>
               <p>Address: 100 Market St, San Francisco, CA 94105</p>
             </div>
             <Button className="mt-6 bg-gradient-to-r from-cyan-500 to-cyan-600 text-white">

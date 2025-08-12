@@ -180,7 +180,7 @@ export default function DashboardLayout({
                   <div className="flex flex-col space-y-1">
                     <p className="text-sm font-medium leading-none">John Doe</p>
                     <p className="text-xs leading-none text-muted-foreground">
-                      john@example.com
+                      user@synthex.social
                     </p>
                   </div>
                 </DropdownMenuLabel>
