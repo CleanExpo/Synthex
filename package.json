@@ -5,7 +5,9 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "validate:env": "node scripts/validate-env.js",
+    "build": "npm run validate:env && next build",
+    "build:force": "next build",
     "vercel-build": "next build",
     "start": "next start",
     "lint": "next lint",
@@ -121,7 +123,6 @@
     "tailwindcss-animate": "^1.0.7",
     "three": "^0.159.0",
     "ws": "^8.14.0",
-    "xlsx": "^0.18.5",
     "zod": "^3.25.76",
     "zustand": "^4.4.0",
     "typescript": "^5.3.3",
