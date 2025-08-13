@@ -1,0 +1,184 @@
+{
+  "testCases": [
+    {
+      "id": "test-001",
+      "name": "Tech Startup SaaS",
+      "input": {
+        "businessType": "B2B SaaS Platform",
+        "targetAudience": {
+          "demographics": ["Tech companies", "25-45 years", "Decision makers"],
+          "psychographics": ["Innovation-focused", "Efficiency-driven", "ROI-conscious"],
+          "painPoints": ["Manual processes", "Data silos", "Scaling challenges"]
+        },
+        "brandGoals": ["Increase Trust", "Drive Sales", "Stand Out"],
+        "tonePreference": "Professional",
+        "psychologyPreference": ["Authority Principle", "Social Proof", "Loss Aversion"],
+        "competitorContext": "Competing with Salesforce, HubSpot in CRM space"
+      },
+      "expectedOutput": {
+        "brandNames": [
+          {
+            "name": "PeakSync Pro",
+            "psychologicalTrigger": "Anchoring Bias",
+            "rationale": "Sets high-value perception with 'Peak' and professional authority with 'Pro'"
+          },
+          {
+            "name": "TrustFlow",
+            "psychologicalTrigger": "Authority Principle",
+            "rationale": "Combines trust (authority) with flow (efficiency) for B2B appeal"
+          }
+        ],
+        "taglines": [
+          {
+            "text": "Where Leaders Scale Success",
+            "psychologicalTarget": "Social Proof",
+            "emotionalResonance": "Aspiration and belonging"
+          },
+          {
+            "text": "Never Miss Growth Again",
+            "psychologicalTarget": "Loss Aversion",
+            "emotionalResonance": "Fear of missing opportunities"
+          }
+        ]
+      }
+    },
+    {
+      "id": "test-002",
+      "name": "Luxury Fashion Brand",
+      "input": {
+        "businessType": "Luxury Fashion E-commerce",
+        "targetAudience": {
+          "demographics": ["High-income individuals", "30-55 years", "Urban professionals"],
+          "psychographics": ["Status-conscious", "Quality-focused", "Exclusivity-seeking"],
+          "painPoints": ["Finding unique pieces", "Authenticity concerns", "Personal styling"]
+        },
+        "brandGoals": ["Build Community", "Stand Out", "Increase Trust"],
+        "tonePreference": "Luxurious",
+        "psychologyPreference": ["Scarcity Principle", "Halo Effect", "Social Proof"],
+        "competitorContext": "Competing with Net-a-Porter, Farfetch"
+      },
+      "expectedOutput": {
+        "brandNames": [
+          {
+            "name": "Atelier Privé",
+            "psychologicalTrigger": "Scarcity Principle",
+            "rationale": "French luxury with 'Privé' suggesting exclusive access"
+          },
+          {
+            "name": "The Curated Few",
+            "psychologicalTrigger": "Scarcity Principle",
+            "rationale": "Emphasizes limited availability and selective curation"
+          }
+        ],
+        "taglines": [
+          {
+            "text": "Exclusively Yours",
+            "psychologicalTarget": "Scarcity Principle",
+            "emotionalResonance": "Exclusivity and personal ownership"
+          },
+          {
+            "text": "Where Elegance Meets Excellence",
+            "psychologicalTarget": "Halo Effect",
+            "emotionalResonance": "Sophistication and quality"
+          }
+        ]
+      }
+    },
+    {
+      "id": "test-003",
+      "name": "Health & Wellness App",
+      "input": {
+        "businessType": "Mental Health & Wellness Mobile App",
+        "targetAudience": {
+          "demographics": ["Millennials & Gen Z", "18-35 years", "Urban & suburban"],
+          "psychographics": ["Health-conscious", "Tech-savvy", "Self-improvement focused"],
+          "painPoints": ["Stress management", "Work-life balance", "Accessibility to therapy"]
+        },
+        "brandGoals": ["Build Community", "Increase Trust", "Drive Sales"],
+        "tonePreference": "Friendly",
+        "psychologyPreference": ["Social Proof", "Mere Exposure Effect", "Reciprocity Principle"],
+        "competitorContext": "Competing with Headspace, Calm, BetterHelp"
+      },
+      "expectedOutput": {
+        "brandNames": [
+          {
+            "name": "MindPal",
+            "psychologicalTrigger": "Mere Exposure Effect",
+            "rationale": "Familiar 'pal' concept creates instant comfort and approachability"
+          },
+          {
+            "name": "ZenCircle",
+            "psychologicalTrigger": "Social Proof",
+            "rationale": "Community-focused name emphasizing collective wellness"
+          }
+        ],
+        "taglines": [
+          {
+            "text": "Your Daily Dose of Calm",
+            "psychologicalTarget": "Reciprocity Principle",
+            "emotionalResonance": "Giving and nurturing"
+          },
+          {
+            "text": "Join Millions Finding Peace",
+            "psychologicalTarget": "Social Proof",
+            "emotionalResonance": "Belonging and validation"
+          }
+        ]
+      }
+    }
+  ],
+  "psychologyMappings": {
+    "businessTypeDefaults": {
+      "B2B": ["Authority Principle", "Social Proof", "Loss Aversion"],
+      "E-commerce": ["Scarcity Principle", "Social Proof", "Anchoring Bias"],
+      "SaaS": ["Loss Aversion", "Authority Principle", "Reciprocity"],
+      "Luxury": ["Scarcity Principle", "Halo Effect", "Contrast Principle"],
+      "Healthcare": ["Authority Principle", "Social Proof", "Trust"],
+      "Education": ["Authority Principle", "Social Proof", "Primacy Effect"],
+      "Entertainment": ["Social Proof", "FOMO", "Mere Exposure Effect"]
+    },
+    "audienceDefaults": {
+      "Youth": ["Social Proof", "FOMO", "Trending", "Mere Exposure"],
+      "Professional": ["Authority", "Efficiency", "ROI", "Loss Aversion"],
+      "Luxury": ["Exclusivity", "Status", "Scarcity", "Halo Effect"],
+      "Budget": ["Value", "Social Proof", "Loss Aversion", "Anchoring"]
+    }
+  },
+  "validationRules": {
+    "brandName": {
+      "minLength": 2,
+      "maxLength": 30,
+      "allowNumbers": false,
+      "allowSpecialChars": false,
+      "requireUniqueness": true
+    },
+    "tagline": {
+      "minWords": 3,
+      "maxWords": 7,
+      "requireActionableLanguage": true,
+      "requireEmotionalTrigger": true
+    },
+    "metadata": {
+      "requireKeywords": true,
+      "minKeywords": 5,
+      "maxKeywords": 15,
+      "requireHashtags": true,
+      "platformSpecific": true
+    }
+  },
+  "performanceMetrics": {
+    "targetScores": {
+      "memorability": 80,
+      "engagement": 75,
+      "conversion": 70,
+      "recall": 85,
+      "emotionalResonance": 80
+    },
+    "acceptableRanges": {
+      "low": 60,
+      "medium": 70,
+      "high": 80,
+      "excellent": 90
+    }
+  }
+}
