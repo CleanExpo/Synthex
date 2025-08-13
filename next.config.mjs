@@ -28,7 +28,10 @@ const nextConfig = {
   
   // Build optimization
   compiler: {
-    removeConsole: process.env.NODE_ENV === 'production' ? { exclude: ['error', 'warn'] } : false,
+    // Remove all console statements except error and warn in production
+    removeConsole: process.env.NODE_ENV === 'production' ? { 
+      exclude: ['error', 'warn', 'info'] 
+    } : false,
   },
   
   // Module optimization
@@ -53,14 +56,22 @@ const nextConfig = {
     ],
   },
   async headers() {
+    const allowedOrigin = process.env.NODE_ENV === 'production' 
+      ? 'https://synthex.social'
+      : 'http://localhost:3000';
+    
     return [
       {
         source: '/api/:path*',
         headers: [
           { key: 'Access-Control-Allow-Credentials', value: 'true' },
-          { key: 'Access-Control-Allow-Origin', value: '*' },
+          { key: 'Access-Control-Allow-Origin', value: allowedOrigin },
           { key: 'Access-Control-Allow-Methods', value: 'GET,OPTIONS,PATCH,DELETE,POST,PUT' },
           { key: 'Access-Control-Allow-Headers', value: 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version' },
+          { key: 'X-Frame-Options', value: 'DENY' },
+          { key: 'X-Content-Type-Options', value: 'nosniff' },
+          { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+          { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
         ],
       },
     ];
