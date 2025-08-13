@@ -242,12 +242,35 @@ class SynthexAPIClient {
     return this.get('/teams/members');
   }
 
-  async inviteTeamMember(email, role) {
-    return this.post('/teams/invite', { email, role });
+  async inviteTeamMember(payloadOrEmail, role) {
+    let body;
+    if (typeof payloadOrEmail === 'object' && payloadOrEmail !== null) {
+      const { email, role: r, message, campaignAccess } = payloadOrEmail;
+      body = { email, role: r, message, campaignAccess };
+    } else {
+      body = { email: payloadOrEmail, role };
+    }
+    return this.post('/teams/invite', body);
   }
 
   async updateTeamMember(memberId, updates) {
     return this.patch(`/teams/members/${memberId}`, updates);
+  }
+
+  async updateTeamMemberRole(memberId, role) {
+    return this.patch(`/teams/members/${memberId}/role`, { role });
+  }
+
+  async removeTeamMember(memberId) {
+    return this.delete(`/teams/members/${memberId}`);
+  }
+
+  async getTeamActivity() {
+    return this.get('/teams/activity');
+  }
+
+  async getTeamStats() {
+    return this.get('/teams/stats');
   }
 
   // ============================================
