@@ -1,12 +1,12 @@
 {
-  "generatedAt": "2025-08-13T04:08:58.196Z",
+  "generatedAt": "2025-08-13T04:35:21.970Z",
   "clientSource": "public\\js\\api-client.js",
   "counts": {
     "clientEndpoints": 47,
-    "serverRoutes": 74,
+    "serverRoutes": 76,
     "missingOnServer": 0,
     "methodMismatch": 0,
-    "serverUnused": 35
+    "serverUnused": 37
   },
   "missingOnServer": [],
   "methodMismatch": [],
@@ -148,6 +148,20 @@
         "POST"
       ],
       "source": "app\\api\\patterns\\analyze\\route.ts"
+    },
+    {
+      "path": "/api/teams/invitations",
+      "methods": [
+        "GET"
+      ],
+      "source": "app\\api\\teams\\invitations\\route.ts"
+    },
+    {
+      "path": "/api/teams/invitations/:id",
+      "methods": [
+        "DELETE"
+      ],
+      "source": "app\\api\\teams\\invitations\\[id]\\route.ts"
     },
     {
       "path": "/api/test-database",
