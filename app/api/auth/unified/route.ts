@@ -1,0 +1,259 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { PrismaClient } from '@prisma/client';
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
+import { z } from 'zod';
+import { rateLimiters } from '@/lib/rate-limit';
+
+const prisma = new PrismaClient();
+
+// Validation schemas
+const loginSchema = z.object({
+  email: z.string().email(),
+  password: z.string().min(6),
+});
+
+const signupSchema = z.object({
+  email: z.string().email(),
+  password: z.string().min(8),
+  name: z.string().min(2),
+  company: z.string().optional(),
+});
+
+// Helper function to generate JWT
+function generateToken(userId: string): string {
+  const secret = process.env.JWT_SECRET;
+  if (!secret) {
+    throw new Error('JWT_SECRET not configured');
+  }
+  
+  return jwt.sign(
+    { userId, iat: Date.now() },
+    secret,
+    { expiresIn: '7d' }
+  );
+}
+
+/**
+ * Unified Authentication Handler
+ * Handles both login and signup in a single endpoint
+ */
+export async function POST(request: NextRequest) {
+  // Apply rate limiting for auth endpoints
+  return rateLimiters.auth(request, async () => {
+    try {
+      const body = await request.json();
+    const { action } = body;
+
+    // Handle different auth actions
+    switch (action) {
+      case 'login':
+        return handleLogin(body);
+      
+      case 'signup':
+        return handleSignup(body);
+      
+      case 'logout':
+        return handleLogout();
+      
+      case 'verify':
+        return handleVerify(request);
+      
+      default:
+        return NextResponse.json(
+          { error: 'Invalid action. Use: login, signup, logout, or verify' },
+          { status: 400 }
+        );
+    }
+    } catch (error) {
+      console.error('Auth error:', error);
+      return NextResponse.json(
+        { error: 'Authentication failed' },
+        { status: 500 }
+      );
+    }
+  });
+}
+
+/**
+ * Handle user login
+ */
+async function handleLogin(body: any) {
+  try {
+    const { email, password } = loginSchema.parse(body);
+
+    // Find user
+    const user = await prisma.user.findUnique({
+      where: { email },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        password: true,
+        role: true,
+      },
+    });
+
+    if (!user) {
+      return NextResponse.json(
+        { error: 'Invalid credentials' },
+        { status: 401 }
+      );
+    }
+
+    // Verify password
+    const isValid = await bcrypt.compare(password, user.password);
+    if (!isValid) {
+      return NextResponse.json(
+        { error: 'Invalid credentials' },
+        { status: 401 }
+      );
+    }
+
+    // Generate token
+    const token = generateToken(user.id);
+
+    // Return user data (without password)
+    const { password: _, ...userData } = user;
+    
+    return NextResponse.json({
+      user: userData,
+      token,
+      message: 'Login successful',
+    });
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        { error: 'Invalid input', details: error.errors },
+        { status: 400 }
+      );
+    }
+    throw error;
+  }
+}
+
+/**
+ * Handle user signup
+ */
+async function handleSignup(body: any) {
+  try {
+    const { email, password, name, company } = signupSchema.parse(body);
+
+    // Check if user exists
+    const existingUser = await prisma.user.findUnique({
+      where: { email },
+    });
+
+    if (existingUser) {
+      return NextResponse.json(
+        { error: 'Email already registered' },
+        { status: 400 }
+      );
+    }
+
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Create user
+    const user = await prisma.user.create({
+      data: {
+        email,
+        password: hashedPassword,
+        name,
+        company,
+        role: 'user',
+      },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        role: true,
+      },
+    });
+
+    // Generate token
+    const token = generateToken(user.id);
+
+    return NextResponse.json({
+      user,
+      token,
+      message: 'Account created successfully',
+    });
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        { error: 'Invalid input', details: error.errors },
+        { status: 400 }
+      );
+    }
+    throw error;
+  }
+}
+
+/**
+ * Handle user logout
+ */
+async function handleLogout() {
+  // For JWT-based auth, logout is handled client-side
+  // Just return success
+  return NextResponse.json({
+    message: 'Logged out successfully',
+  });
+}
+
+/**
+ * Verify JWT token
+ */
+async function handleVerify(request: NextRequest) {
+  try {
+    const authHeader = request.headers.get('authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return NextResponse.json(
+        { error: 'No token provided' },
+        { status: 401 }
+      );
+    }
+
+    const token = authHeader.substring(7);
+    const secret = process.env.JWT_SECRET;
+    
+    if (!secret) {
+      throw new Error('JWT_SECRET not configured');
+    }
+
+    const decoded = jwt.verify(token, secret) as any;
+    
+    // Get user data
+    const user = await prisma.user.findUnique({
+      where: { id: decoded.userId },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        role: true,
+      },
+    });
+
+    if (!user) {
+      return NextResponse.json(
+        { error: 'User not found' },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json({
+      valid: true,
+      user,
+    });
+  } catch (error) {
+    return NextResponse.json(
+      { valid: false, error: 'Invalid token' },
+      { status: 401 }
+    );
+  }
+}
+
+// Handle GET requests (for token verification)
+export async function GET(request: NextRequest) {
+  return handleVerify(request);
+}

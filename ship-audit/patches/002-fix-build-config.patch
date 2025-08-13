@@ -1,0 +1,28 @@
+From: Ship Audit Bot
+Date: 2025-08-13
+Subject: Enable TypeScript and ESLint checks for production safety
+
+--- a/next.config.mjs
++++ b/next.config.mjs
+@@ -5,14 +5,14 @@ const nextConfig = {
+   typescript: {
+     // !! WARN !!
+     // Dangerously allow production builds to successfully complete even if
+     // your project has type errors.
+     // !! WARN !!
+-    ignoreBuildErrors: true,
++    ignoreBuildErrors: false,
+   },
+   eslint: {
+     // Warning: This allows production builds to successfully complete even if
+     // your project has ESLint errors.
+-    ignoreDuringBuilds: true,
++    ignoreDuringBuilds: false,
+   },
+   experimental: {
+     serverComponentsExternalPackages: ['@prisma/client', 'bcryptjs'],
+
+Risk Level: MEDIUM
+Rollback: Set flags back to true
+Impact: Will catch type and lint errors during build
+Note: Fix existing lint/type errors before applying
