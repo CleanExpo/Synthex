@@ -201,7 +201,7 @@ export default function AnimationShowcase() {
         {/* Pulse Animation */}
         <div className="text-center">
           <motion.div
-            {...animations.pulseAnimation}
+            animate={animations.pulseAnimation.animate}
             className="inline-block px-12 py-6 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full"
           >
             <span className="text-2xl font-bold text-white">Pulsing Element</span>

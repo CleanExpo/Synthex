@@ -190,7 +190,7 @@ export default function PsychologyBrandGenerator() {
                       ...formData,
                       targetAudience: {
                         ...formData.targetAudience,
-                        demographics: [e.target.value]
+                        demographics: [e.target.value] as any
                       }
                     })}
                   />
@@ -204,12 +204,12 @@ export default function PsychologyBrandGenerator() {
                         key={goal}
                         onClick={() => setFormData({
                           ...formData,
-                          brandGoals: formData.brandGoals.includes(goal)
-                            ? formData.brandGoals.filter(g => g !== goal)
-                            : [...formData.brandGoals, goal]
+                          brandGoals: (formData.brandGoals as any[]).includes(goal)
+                            ? (formData.brandGoals as any[]).filter((g: any) => g !== goal)
+                            : [...(formData.brandGoals as any[]), goal]
                         })}
                         className={`px-4 py-3 rounded-xl border transition-all ${
-                          formData.brandGoals.includes(goal)
+                          (formData.brandGoals as any[]).includes(goal)
                             ? 'bg-purple-500 border-purple-500 text-white'
                             : 'bg-gray-900/50 border-purple-500/30 text-gray-300 hover:border-purple-500'
                         }`}
