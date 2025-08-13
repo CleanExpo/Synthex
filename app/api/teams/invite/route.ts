@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import prisma from '@/lib/prisma';
 
 type InvitePayload = {
   email?: string;
@@ -12,8 +13,8 @@ type InvitePayload = {
  * Accepts: { email, role, message?, campaignAccess? }
  * Returns: { success, data|error }
  *
- * This is a functional stub: it validates input and echoes a success response.
- * Replace with real invitation logic (DB writes, email, etc.) as needed.
+ * Persists a TeamInvitation when DATABASE_URL is configured.
+ * Falls back to a non-persistent response if DB is unavailable.
  */
 export async function POST(req: Request) {
   try {
@@ -44,8 +45,26 @@ export async function POST(req: Request) {
       campaignAccess = [];
     }
 
-    // Simulate invitation creation
-    const invitation = {
+    // Try to persist via Prisma if DATABASE_URL is set
+    let persisted: any = null;
+    const canUseDb = !!process.env.DATABASE_URL;
+    if (canUseDb) {
+      try {
+        persisted = await prisma.teamInvitation.create({
+          data: {
+            email,
+            role,
+            message,
+            campaignAccess: campaignAccess as any,
+            status: 'sent',
+          },
+        });
+      } catch (e) {
+        console.error('Prisma invitation create failed, falling back to non-persistent response:', e);
+      }
+    }
+
+    const invitation = persisted || {
       id: `invite_${Date.now()}`,
       email,
       role,
@@ -58,7 +77,7 @@ export async function POST(req: Request) {
     return NextResponse.json({
       success: true,
       data: invitation,
-      message: 'Invitation sent',
+      message: persisted ? 'Invitation persisted' : 'Invitation sent',
     });
   } catch (err) {
     console.error('Invite error:', err);

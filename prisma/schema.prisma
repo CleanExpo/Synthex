@@ -51,6 +51,7 @@ model User {
   platformConnections PlatformConnection[]
   organizationId   String?
   organization     Organization? @relation(fields: [organizationId], references: [id])
+  teamInvitations  TeamInvitation[]
   
   @@map("users")
 }
@@ -199,7 +200,8 @@ model Organization {
   billingStatus    String @default("active") // 'active', 'past_due', 'canceled'
   
   // Relations
-  users       User[]
+  users             User[]
+  teamInvitations   TeamInvitation[]
   
   @@map("organizations")
 }
@@ -272,4 +274,26 @@ model PlatformMetrics {
   post        PlatformPost @relation(fields: [postId], references: [id], onDelete: Cascade)
   
   @@map("platform_metrics")
+}
+
+//
+// Team invitations (persistence for /api/teams/invite)
+//
+model TeamInvitation {
+  id             String   @id @default(cuid())
+  email          String
+  role           String
+  message        String?
+  campaignAccess Json?
+  status         String   @default("sent")
+  sentAt         DateTime @default(now())
+
+  // Optional relations (who invited, and org context), kept nullable to avoid blocking usage
+  userId         String?
+  organizationId String?
+  user           User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+
+  @@index([email])
+  @@map("team_invitations")
 }
