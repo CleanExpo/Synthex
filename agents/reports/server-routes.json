@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2025-08-13T02:52:37.193Z",
+  "generatedAt": "2025-08-13T03:07:25.704Z",
   "routes": [
     {
       "source": "api\\admin.js",
@@ -20,6 +20,47 @@
       "note": "legacyApiHeuristic"
     },
     {
+      "source": "app\\api\\ab-testing\\tests\\route.ts",
+      "path": "/api/ab-testing/tests",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "regex": "/^\\/api\\/ab-testing\\/tests$/"
+    },
+    {
+      "source": "app\\api\\ab-testing\\tests\\[testId]\\results\\route.ts",
+      "path": "/api/ab-testing/tests/:testId/results",
+      "methods": [
+        "GET"
+      ],
+      "regex": "/^\\/api\\/ab-testing\\/tests\\/:testId\\/results$/"
+    },
+    {
+      "source": "app\\api\\ai-content\\hashtags\\route.ts",
+      "path": "/api/ai-content/hashtags",
+      "methods": [
+        "POST"
+      ],
+      "regex": "/^\\/api\\/ai-content\\/hashtags$/"
+    },
+    {
+      "source": "app\\api\\ai-content\\optimize\\route.ts",
+      "path": "/api/ai-content/optimize",
+      "methods": [
+        "POST"
+      ],
+      "regex": "/^\\/api\\/ai-content\\/optimize$/"
+    },
+    {
+      "source": "app\\api\\ai-content\\translate\\route.ts",
+      "path": "/api/ai-content/translate",
+      "methods": [
+        "POST"
+      ],
+      "regex": "/^\\/api\\/ai-content\\/translate$/"
+    },
+    {
       "source": "app\\api\\ai\\generate-content\\route.ts",
       "path": "/api/ai/generate-content",
       "methods": [
@@ -29,6 +70,22 @@
       "regex": "/^\\/api\\/ai\\/generate-content$/"
     },
     {
+      "source": "app\\api\\analytics\\route.ts",
+      "path": "/api/analytics",
+      "methods": [
+        "GET"
+      ],
+      "regex": "/^\\/api\\/analytics$/"
+    },
+    {
+      "source": "app\\api\\analytics\\insights\\route.ts",
+      "path": "/api/analytics/insights",
+      "methods": [
+        "GET"
+      ],
+      "regex": "/^\\/api\\/analytics\\/insights$/"
+    },
+    {
       "source": "app\\api\\analytics\\performance\\route.ts",
       "path": "/api/analytics/performance",
       "methods": [
@@ -36,6 +93,14 @@
         "POST"
       ],
       "regex": "/^\\/api\\/analytics\\/performance$/"
+    },
+    {
+      "source": "app\\api\\analytics\\realtime\\route.ts",
+      "path": "/api/analytics/realtime",
+      "methods": [
+        "GET"
+      ],
+      "regex": "/^\\/api\\/analytics\\/realtime$/"
     },
     {
       "source": "app\\api\\auth\\dev-login\\route.ts",
@@ -72,6 +137,14 @@
       "regex": "/^\\/api\\/auth\\/oauth\\/:platform$/"
     },
     {
+      "source": "app\\api\\auth\\reset-password\\route.ts",
+      "path": "/api/auth/reset-password",
+      "methods": [
+        "POST"
+      ],
+      "regex": "/^\\/api\\/auth\\/reset-password$/"
+    },
+    {
       "source": "app\\api\\auth\\signup\\route.ts",
       "path": "/api/auth/signup",
       "methods": [
@@ -97,6 +170,14 @@
       "regex": "/^\\/api\\/auth\\/unified-login$/"
     },
     {
+      "source": "app\\api\\auth\\verify-token\\route.ts",
+      "path": "/api/auth/verify-token",
+      "methods": [
+        "POST"
+      ],
+      "regex": "/^\\/api\\/auth\\/verify-token$/"
+    },
+    {
       "source": "app\\api\\campaigns\\route.ts",
       "path": "/api/campaigns",
       "methods": [
@@ -106,6 +187,23 @@
         "PUT"
       ],
       "regex": "/^\\/api\\/campaigns$/"
+    },
+    {
+      "source": "app\\api\\competitors\\route.ts",
+      "path": "/api/competitors",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "regex": "/^\\/api\\/competitors$/"
+    },
+    {
+      "source": "app\\api\\competitors\\[competitorId]\\analyze\\route.ts",
+      "path": "/api/competitors/:competitorId/analyze",
+      "methods": [
+        "POST"
+      ],
+      "regex": "/^\\/api\\/competitors\\/:competitorId\\/analyze$/"
     },
     {
       "source": "app\\api\\content\\generate\\route.ts",
@@ -134,6 +232,14 @@
       "regex": "/^\\/api\\/dashboard\\/stats$/"
     },
     {
+      "source": "app\\api\\features\\route.ts",
+      "path": "/api/features",
+      "methods": [
+        "GET"
+      ],
+      "regex": "/^\\/api\\/features$/"
+    },
+    {
       "source": "app\\api\\health\\route.ts",
       "path": "/api/health",
       "methods": [
@@ -160,6 +266,39 @@
       "regex": "/^\\/api\\/integrations$/"
     },
     {
+      "source": "app\\api\\library\\content\\route.ts",
+      "path": "/api/library/content",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "regex": "/^\\/api\\/library\\/content$/"
+    },
+    {
+      "source": "app\\api\\library\\content\\[contentId]\\route.ts",
+      "path": "/api/library/content/:contentId",
+      "methods": [
+        "GET"
+      ],
+      "regex": "/^\\/api\\/library\\/content\\/:contentId$/"
+    },
+    {
+      "source": "app\\api\\mobile\\config\\route.ts",
+      "path": "/api/mobile/config",
+      "methods": [
+        "GET"
+      ],
+      "regex": "/^\\/api\\/mobile\\/config$/"
+    },
+    {
+      "source": "app\\api\\mobile\\sync\\route.ts",
+      "path": "/api/mobile/sync",
+      "methods": [
+        "POST"
+      ],
+      "regex": "/^\\/api\\/mobile\\/sync$/"
+    },
+    {
       "source": "app\\api\\monitoring\\events\\route.ts",
       "path": "/api/monitoring/events",
       "methods": [
@@ -167,6 +306,30 @@
         "POST"
       ],
       "regex": "/^\\/api\\/monitoring\\/events$/"
+    },
+    {
+      "source": "app\\api\\notifications\\route.ts",
+      "path": "/api/notifications",
+      "methods": [
+        "GET"
+      ],
+      "regex": "/^\\/api\\/notifications$/"
+    },
+    {
+      "source": "app\\api\\notifications\\[notificationId]\\read\\route.ts",
+      "path": "/api/notifications/:notificationId/read",
+      "methods": [
+        "PATCH"
+      ],
+      "regex": "/^\\/api\\/notifications\\/:notificationId\\/read$/"
+    },
+    {
+      "source": "app\\api\\notifications\\settings\\route.ts",
+      "path": "/api/notifications/settings",
+      "methods": [
+        "PUT"
+      ],
+      "regex": "/^\\/api\\/notifications\\/settings$/"
     },
     {
       "source": "app\\api\\onboarding\\route.ts",
@@ -184,6 +347,105 @@
         "POST"
       ],
       "regex": "/^\\/api\\/patterns\\/analyze$/"
+    },
+    {
+      "source": "app\\api\\performance\\metrics\\route.ts",
+      "path": "/api/performance/metrics",
+      "methods": [
+        "GET"
+      ],
+      "regex": "/^\\/api\\/performance\\/metrics$/"
+    },
+    {
+      "source": "app\\api\\reporting\\generate\\route.ts",
+      "path": "/api/reporting/generate",
+      "methods": [
+        "POST"
+      ],
+      "regex": "/^\\/api\\/reporting\\/generate$/"
+    },
+    {
+      "source": "app\\api\\reporting\\reports\\route.ts",
+      "path": "/api/reporting/reports",
+      "methods": [
+        "GET"
+      ],
+      "regex": "/^\\/api\\/reporting\\/reports$/"
+    },
+    {
+      "source": "app\\api\\reporting\\reports\\[reportId]\\download\\route.ts",
+      "path": "/api/reporting/reports/:reportId/download",
+      "methods": [
+        "GET"
+      ],
+      "regex": "/^\\/api\\/reporting\\/reports\\/:reportId\\/download$/"
+    },
+    {
+      "source": "app\\api\\scheduler\\posts\\route.ts",
+      "path": "/api/scheduler/posts",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "regex": "/^\\/api\\/scheduler\\/posts$/"
+    },
+    {
+      "source": "app\\api\\scheduler\\posts\\[postId]\\route.ts",
+      "path": "/api/scheduler/posts/:postId",
+      "methods": [
+        "DELETE",
+        "PATCH"
+      ],
+      "regex": "/^\\/api\\/scheduler\\/posts\\/:postId$/"
+    },
+    {
+      "source": "app\\api\\teams\\activity\\route.ts",
+      "path": "/api/teams/activity",
+      "methods": [
+        "GET"
+      ],
+      "regex": "/^\\/api\\/teams\\/activity$/"
+    },
+    {
+      "source": "app\\api\\teams\\invite\\route.ts",
+      "path": "/api/teams/invite",
+      "methods": [
+        "POST"
+      ],
+      "regex": "/^\\/api\\/teams\\/invite$/"
+    },
+    {
+      "source": "app\\api\\teams\\members\\route.ts",
+      "path": "/api/teams/members",
+      "methods": [
+        "GET"
+      ],
+      "regex": "/^\\/api\\/teams\\/members$/"
+    },
+    {
+      "source": "app\\api\\teams\\members\\[memberId]\\route.ts",
+      "path": "/api/teams/members/:memberId",
+      "methods": [
+        "DELETE",
+        "PATCH"
+      ],
+      "regex": "/^\\/api\\/teams\\/members\\/:memberId$/"
+    },
+    {
+      "source": "app\\api\\teams\\members\\[memberId]\\role\\route.ts",
+      "path": "/api/teams/members/:memberId/role",
+      "methods": [
+        "PATCH"
+      ],
+      "regex": "/^\\/api\\/teams\\/members\\/:memberId\\/role$/"
+    },
+    {
+      "source": "app\\api\\teams\\stats\\route.ts",
+      "path": "/api/teams/stats",
+      "methods": [
+        "GET"
+      ],
+      "regex": "/^\\/api\\/teams\\/stats$/"
     },
     {
       "source": "app\\api\\test-database\\route.ts",
@@ -211,6 +473,14 @@
       "regex": "/^\\/api\\/test-email$/"
     },
     {
+      "source": "app\\api\\user\\account\\route.ts",
+      "path": "/api/user/account",
+      "methods": [
+        "DELETE"
+      ],
+      "regex": "/^\\/api\\/user\\/account$/"
+    },
+    {
       "source": "app\\api\\user\\avatar\\route.ts",
       "path": "/api/user/avatar",
       "methods": [
@@ -218,6 +488,14 @@
         "POST"
       ],
       "regex": "/^\\/api\\/user\\/avatar$/"
+    },
+    {
+      "source": "app\\api\\user\\change-password\\route.ts",
+      "path": "/api/user/change-password",
+      "methods": [
+        "POST"
+      ],
+      "regex": "/^\\/api\\/user\\/change-password$/"
     },
     {
       "source": "app\\api\\user\\profile\\route.ts",
@@ -237,6 +515,15 @@
         "PUT"
       ],
       "regex": "/^\\/api\\/user\\/settings$/"
+    },
+    {
+      "source": "app\\api\\white-label\\config\\route.ts",
+      "path": "/api/white-label/config",
+      "methods": [
+        "GET",
+        "PUT"
+      ],
+      "regex": "/^\\/api\\/white-label\\/config$/"
     },
     {
       "source": "app\\api\\ws\\route.ts",
@@ -348,5 +635,5 @@
       "note": "legacyApiHeuristic"
     }
   ],
-  "count": 39
+  "count": 74
 }

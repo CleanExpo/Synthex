@@ -1,83 +1,18 @@
 {
-  "generatedAt": "2025-08-13T02:52:37.297Z",
+  "generatedAt": "2025-08-13T03:07:25.824Z",
   "clientSource": "public\\js\\api-client.js",
   "counts": {
     "clientEndpoints": 47,
-    "serverRoutes": 39,
-    "missingOnServer": 45,
+    "serverRoutes": 74,
+    "missingOnServer": 10,
     "methodMismatch": 0,
-    "serverUnused": 37
+    "serverUnused": 43
   },
   "missingOnServer": [
     {
       "method": "GET",
-      "path": "/api/v2/ab-testing/tests",
-      "matchPath": "/api/ab-testing/tests"
-    },
-    {
-      "method": "POST",
-      "path": "/api/v2/ab-testing/tests",
-      "matchPath": "/api/ab-testing/tests"
-    },
-    {
-      "method": "GET",
       "path": "/api/v2/ab-testing/tests/:param/results",
       "matchPath": "/api/ab-testing/tests/:param/results"
-    },
-    {
-      "method": "POST",
-      "path": "/api/v2/ai-content/generate",
-      "matchPath": "/api/ai-content/generate"
-    },
-    {
-      "method": "POST",
-      "path": "/api/v2/ai-content/hashtags",
-      "matchPath": "/api/ai-content/hashtags"
-    },
-    {
-      "method": "POST",
-      "path": "/api/v2/ai-content/optimize",
-      "matchPath": "/api/ai-content/optimize"
-    },
-    {
-      "method": "POST",
-      "path": "/api/v2/ai-content/translate",
-      "matchPath": "/api/ai-content/translate"
-    },
-    {
-      "method": "GET",
-      "path": "/api/v2/analytics",
-      "matchPath": "/api/analytics"
-    },
-    {
-      "method": "GET",
-      "path": "/api/v2/analytics/insights",
-      "matchPath": "/api/analytics/insights"
-    },
-    {
-      "method": "GET",
-      "path": "/api/v2/analytics/realtime",
-      "matchPath": "/api/analytics/realtime"
-    },
-    {
-      "method": "POST",
-      "path": "/api/v2/auth/reset-password",
-      "matchPath": "/api/auth/reset-password"
-    },
-    {
-      "method": "POST",
-      "path": "/api/v2/auth/verify-token",
-      "matchPath": "/api/auth/verify-token"
-    },
-    {
-      "method": "GET",
-      "path": "/api/v2/competitors",
-      "matchPath": "/api/competitors"
-    },
-    {
-      "method": "POST",
-      "path": "/api/v2/competitors",
-      "matchPath": "/api/competitors"
     },
     {
       "method": "POST",
@@ -86,38 +21,8 @@
     },
     {
       "method": "GET",
-      "path": "/api/v2/features",
-      "matchPath": "/api/features"
-    },
-    {
-      "method": "GET",
-      "path": "/api/v2/library/content",
-      "matchPath": "/api/library/content"
-    },
-    {
-      "method": "POST",
-      "path": "/api/v2/library/content",
-      "matchPath": "/api/library/content"
-    },
-    {
-      "method": "GET",
       "path": "/api/v2/library/content/:param",
       "matchPath": "/api/library/content/:param"
-    },
-    {
-      "method": "GET",
-      "path": "/api/v2/mobile/config",
-      "matchPath": "/api/mobile/config"
-    },
-    {
-      "method": "POST",
-      "path": "/api/v2/mobile/sync",
-      "matchPath": "/api/mobile/sync"
-    },
-    {
-      "method": "GET",
-      "path": "/api/v2/notifications",
-      "matchPath": "/api/notifications"
     },
     {
       "method": "PATCH",
@@ -125,39 +30,9 @@
       "matchPath": "/api/notifications/:param/read"
     },
     {
-      "method": "PUT",
-      "path": "/api/v2/notifications/settings",
-      "matchPath": "/api/notifications/settings"
-    },
-    {
-      "method": "GET",
-      "path": "/api/v2/performance/metrics",
-      "matchPath": "/api/performance/metrics"
-    },
-    {
-      "method": "POST",
-      "path": "/api/v2/reporting/generate",
-      "matchPath": "/api/reporting/generate"
-    },
-    {
-      "method": "GET",
-      "path": "/api/v2/reporting/reports",
-      "matchPath": "/api/reporting/reports"
-    },
-    {
       "method": "GET",
       "path": "/api/v2/reporting/reports/:param/download",
       "matchPath": "/api/reporting/reports/:param/download"
-    },
-    {
-      "method": "GET",
-      "path": "/api/v2/scheduler/posts",
-      "matchPath": "/api/scheduler/posts"
-    },
-    {
-      "method": "POST",
-      "path": "/api/v2/scheduler/posts",
-      "matchPath": "/api/scheduler/posts"
     },
     {
       "method": "DELETE",
@@ -168,21 +43,6 @@
       "method": "PATCH",
       "path": "/api/v2/scheduler/posts/:param",
       "matchPath": "/api/scheduler/posts/:param"
-    },
-    {
-      "method": "GET",
-      "path": "/api/v2/teams/activity",
-      "matchPath": "/api/teams/activity"
-    },
-    {
-      "method": "POST",
-      "path": "/api/v2/teams/invite",
-      "matchPath": "/api/teams/invite"
-    },
-    {
-      "method": "GET",
-      "path": "/api/v2/teams/members",
-      "matchPath": "/api/teams/members"
     },
     {
       "method": "DELETE",
@@ -198,41 +58,6 @@
       "method": "PATCH",
       "path": "/api/v2/teams/members/:param/role",
       "matchPath": "/api/teams/members/:param/role"
-    },
-    {
-      "method": "GET",
-      "path": "/api/v2/teams/stats",
-      "matchPath": "/api/teams/stats"
-    },
-    {
-      "method": "DELETE",
-      "path": "/api/v2/users/account",
-      "matchPath": "/api/users/account"
-    },
-    {
-      "method": "POST",
-      "path": "/api/v2/users/change-password",
-      "matchPath": "/api/users/change-password"
-    },
-    {
-      "method": "GET",
-      "path": "/api/v2/users/profile",
-      "matchPath": "/api/users/profile"
-    },
-    {
-      "method": "PATCH",
-      "path": "/api/v2/users/profile",
-      "matchPath": "/api/users/profile"
-    },
-    {
-      "method": "GET",
-      "path": "/api/v2/white-label/config",
-      "matchPath": "/api/white-label/config"
-    },
-    {
-      "method": "PUT",
-      "path": "/api/v2/white-label/config",
-      "matchPath": "/api/white-label/config"
     }
   ],
   "methodMismatch": [],
@@ -252,12 +77,11 @@
       "source": "api\\ai.js"
     },
     {
-      "path": "/api/ai/generate-content",
+      "path": "/api/ab-testing/tests/:testId/results",
       "methods": [
-        "GET",
-        "POST"
+        "GET"
       ],
-      "source": "app\\api\\ai\\generate-content\\route.ts"
+      "source": "app\\api\\ab-testing\\tests\\[testId]\\results\\route.ts"
     },
     {
       "path": "/api/auth/dev-login",
@@ -322,6 +146,13 @@
       "source": "app\\api\\campaigns\\route.ts"
     },
     {
+      "path": "/api/competitors/:competitorId/analyze",
+      "methods": [
+        "POST"
+      ],
+      "source": "app\\api\\competitors\\[competitorId]\\analyze\\route.ts"
+    },
+    {
       "path": "/api/content/generate",
       "methods": [
         "POST",
@@ -361,12 +192,26 @@
       "source": "app\\api\\integrations\\route.ts"
     },
     {
+      "path": "/api/library/content/:contentId",
+      "methods": [
+        "GET"
+      ],
+      "source": "app\\api\\library\\content\\[contentId]\\route.ts"
+    },
+    {
       "path": "/api/monitoring/events",
       "methods": [
         "GET",
         "POST"
       ],
       "source": "app\\api\\monitoring\\events\\route.ts"
+    },
+    {
+      "path": "/api/notifications/:notificationId/read",
+      "methods": [
+        "PATCH"
+      ],
+      "source": "app\\api\\notifications\\[notificationId]\\read\\route.ts"
     },
     {
       "path": "/api/onboarding",
@@ -382,6 +227,36 @@
         "POST"
       ],
       "source": "app\\api\\patterns\\analyze\\route.ts"
+    },
+    {
+      "path": "/api/reporting/reports/:reportId/download",
+      "methods": [
+        "GET"
+      ],
+      "source": "app\\api\\reporting\\reports\\[reportId]\\download\\route.ts"
+    },
+    {
+      "path": "/api/scheduler/posts/:postId",
+      "methods": [
+        "DELETE",
+        "PATCH"
+      ],
+      "source": "app\\api\\scheduler\\posts\\[postId]\\route.ts"
+    },
+    {
+      "path": "/api/teams/members/:memberId",
+      "methods": [
+        "DELETE",
+        "PATCH"
+      ],
+      "source": "app\\api\\teams\\members\\[memberId]\\route.ts"
+    },
+    {
+      "path": "/api/teams/members/:memberId/role",
+      "methods": [
+        "PATCH"
+      ],
+      "source": "app\\api\\teams\\members\\[memberId]\\role\\route.ts"
     },
     {
       "path": "/api/test-database",
@@ -412,15 +287,6 @@
         "POST"
       ],
       "source": "app\\api\\user\\avatar\\route.ts"
-    },
-    {
-      "path": "/api/user/profile",
-      "methods": [
-        "DELETE",
-        "GET",
-        "PUT"
-      ],
-      "source": "app\\api\\user\\profile\\route.ts"
     },
     {
       "path": "/api/user/settings",
