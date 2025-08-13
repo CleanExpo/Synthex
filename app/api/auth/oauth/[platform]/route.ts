@@ -63,21 +63,28 @@ export async function GET(
     }
 
     // Get the current user
+    // Try header-based auth first; fallback to email param for static pages
     const authHeader = request.headers.get('authorization');
-    if (!authHeader) {
-      return NextResponse.json({ error: 'No authorization header' }, { status: 401 });
+    let user: any = null;
+    if (authHeader) {
+      const token = authHeader.replace('Bearer ', '');
+      const { data, error: authError } = await supabase.auth.getUser(token);
+      if (!authError && data?.user) {
+        user = data.user;
+      }
     }
-
-    const token = authHeader.replace('Bearer ', '');
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!user) {
+      const emailParam = new URL(request.url).searchParams.get('email');
+      if (!emailParam) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      }
+      user = { id: null, email: emailParam };
     }
 
     // Generate state parameter for security
     const state = Buffer.from(JSON.stringify({
-      userId: user.id,
+      userId: user?.id || null,
+      email: user?.email || null,
       platform,
       timestamp: Date.now()
     })).toString('base64');
@@ -173,10 +180,22 @@ export async function POST(
     const scope = tokenData.scope || oauthConfig[platform].scope;
     const profileId = tokenData.user_id || tokenData.resource_owner_id || null; // fallback if provided by provider
 
+    // Resolve userId (fallback to email) if missing
+    let userId = stateData.userId;
+    if (!userId && stateData.email && process.env.DATABASE_URL) {
+      const u = await prisma.user.upsert({
+        where: { email: stateData.email },
+        update: {},
+        create: { email: stateData.email, password: '!', name: stateData.email },
+        select: { id: true }
+      });
+      userId = u.id;
+    }
+
     try {
       await prisma.platformConnection.create({
         data: {
-          userId: stateData.userId,
+          userId,
           platform,
           accessToken: tokenData.access_token,
           refreshToken: tokenData.refresh_token || null,

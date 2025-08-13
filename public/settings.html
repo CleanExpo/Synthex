@@ -909,7 +909,7 @@
                             'Content-Type': 'application/json',
                             'Authorization': `Bearer ${token}`
                         },
-                        body: JSON.stringify(settings.apiKeys)
+                        body: JSON.stringify({ ...settings.apiKeys, email: user.email })
                     });
                 }
                 
@@ -933,7 +933,7 @@
         // Load API keys
         async function loadApiKeys() {
             try {
-                const response = await fetch('/api/auth/api-keys', {
+                const response = await fetch(`/api/auth/api-keys?email=${encodeURIComponent(user.email || '')}`, {
                     headers: {
                         'Authorization': `Bearer ${token}`
                     }
@@ -958,8 +958,40 @@
             }
         }
         
+        // Social OAuth wiring
+        function wireSocialOAuth() {
+            try {
+                const socialSection = document.getElementById('social');
+                if (!socialSection) return;
+                const links = socialSection.querySelectorAll('a[href^="/api/auth/oauth/"]');
+                links.forEach((a) => {
+                    a.addEventListener('click', async (e) => {
+                        e.preventDefault();
+                        const href = a.getAttribute('href') || '';
+                        const parts = href.split('/');
+                        const platform = parts[parts.length - 1];
+                        try {
+                            const res = await fetch(`/api/auth/oauth/${platform}?email=${encodeURIComponent(user.email || '')}`);
+                            const data = await res.json();
+                            if (res.ok && data.authorizationUrl) {
+                                window.location.href = data.authorizationUrl;
+                            } else {
+                                alert('Failed to start OAuth: ' + (data.error || res.statusText));
+                            }
+                        } catch (err) {
+                            console.error('OAuth start error:', err);
+                            alert('Network error starting OAuth');
+                        }
+                    }, { passive: false });
+                });
+            } catch (err) {
+                console.error('wireSocialOAuth error:', err);
+            }
+        }
+
         // Initialize
         loadApiKeys();
+        wireSocialOAuth();
     </script>
     
     <script src="/js/notifications.js"></script>
