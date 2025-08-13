@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
+import { sendTeamInviteEmail } from '@/lib/email';
 
 type InvitePayload = {
   email?: string;
@@ -50,7 +51,7 @@ export async function POST(req: Request) {
     const canUseDb = !!process.env.DATABASE_URL;
     if (canUseDb) {
       try {
-        persisted = await prisma.teamInvitation.create({
+        persisted = await (prisma as any).teamInvitation.create({
           data: {
             email,
             role,
@@ -74,9 +75,27 @@ export async function POST(req: Request) {
       sentAt: new Date().toISOString(),
     };
 
+    // Best-effort email dispatch if provider is configured; do not fail request on email error
+    let emailQueued = false;
+    if (process.env.EMAIL_PROVIDER && process.env.EMAIL_FROM) {
+      try {
+        await sendTeamInviteEmail({
+          to: email,
+          role,
+          message,
+          inviterName: undefined,
+          appUrl: process.env.NEXT_PUBLIC_APP_URL,
+        });
+        emailQueued = true;
+      } catch (e) {
+        console.error('Invite email send failed:', e);
+      }
+    }
+
     return NextResponse.json({
       success: true,
       data: invitation,
+      emailQueued,
       message: persisted ? 'Invitation persisted' : 'Invitation sent',
     });
   } catch (err) {
