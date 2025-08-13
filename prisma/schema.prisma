@@ -52,6 +52,8 @@ model User {
   organizationId   String?
   organization     Organization? @relation(fields: [organizationId], references: [id])
   teamInvitations  TeamInvitation[]
+  brandGenerations BrandGeneration[]
+  psychologyPreferences UserPsychologyPreference?
   
   @@map("users")
 }
@@ -296,4 +298,105 @@ model TeamInvitation {
 
   @@index([email])
   @@map("team_invitations")
+}
+
+// ==========================================
+// Strategic Marketing Models
+// ==========================================
+
+model PsychologyPrinciple {
+  id                   String   @id @default(uuid())
+  name                 String   @unique
+  category             String
+  description          String?
+  brandingApplication  Json     @default("{}")
+  triggerWords         String[]
+  audienceRelevance    Json     @default("{}")
+  effectivenessScore   Decimal  @default(0.00) @db.Decimal(3, 2)
+  usageCount           Int      @default(0)
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  @@index([category])
+  @@index([effectivenessScore(sort: Desc)])
+  @@map("psychology_principles")
+}
+
+model BrandGeneration {
+  id                   String   @id @default(uuid())
+  userId               String
+  businessType         String
+  targetAudience       Json
+  brandGoals           String[]
+  tonePreference       String?
+  psychologyStrategy   Json
+  brandNames           Json
+  taglines             Json
+  metadataPackages     Json     @default("{}")
+  implementationGuide  Json     @default("{}")
+  effectivenessScore   Decimal  @default(0.00) @db.Decimal(3, 2)
+  status               String   @default("draft")
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+  
+  user                 User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  psychologyMetrics    PsychologyMetric[]
+  competitiveAnalyses  CompetitiveAnalysis[]
+
+  @@index([userId])
+  @@index([status])
+  @@map("brand_generations")
+}
+
+model PsychologyMetric {
+  id                   String   @id @default(uuid())
+  generationId         String
+  principleUsed        String
+  variantType          String
+  variantContent       String
+  engagementScore      Decimal  @default(0.00) @db.Decimal(3, 2)
+  conversionRate       Decimal  @default(0.00) @db.Decimal(5, 2)
+  recallScore          Decimal  @default(0.00) @db.Decimal(3, 2)
+  clickThroughRate     Decimal  @default(0.00) @db.Decimal(5, 2)
+  clientSatisfaction   Int?
+  testDurationHours    Int      @default(24)
+  sampleSize           Int      @default(0)
+  testedAt             DateTime @default(now())
+  
+  generation           BrandGeneration @relation(fields: [generationId], references: [id], onDelete: Cascade)
+
+  @@index([generationId])
+  @@index([principleUsed])
+  @@map("psychology_metrics")
+}
+
+model UserPsychologyPreference {
+  id                   String   @id @default(uuid())
+  userId               String   @unique
+  preferredPrinciples  String[]
+  avoidedPrinciples    String[]
+  industryFocus        String?
+  targetDemographic    Json     @default("{}")
+  successMetrics       Json     @default("{}")
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+  
+  user                 User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_psychology_preferences")
+}
+
+model CompetitiveAnalysis {
+  id                   String   @id @default(uuid())
+  generationId         String
+  competitorName       String
+  competitorTagline    String?
+  identifiedPrinciples String[]
+  differentiationStrategy String?
+  marketPosition       String?
+  analyzedAt           DateTime @default(now())
+  
+  generation           BrandGeneration @relation(fields: [generationId], references: [id], onDelete: Cascade)
+
+  @@map("competitive_analyses")
 }
