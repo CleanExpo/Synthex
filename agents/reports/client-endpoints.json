@@ -1,0 +1,195 @@
+{
+  "generatedAt": "2025-08-13T02:52:37.054Z",
+  "source": "public\\js\\api-client.js",
+  "count": 47,
+  "endpoints": [
+    {
+      "method": "GET",
+      "path": "/api/v2/ab-testing/tests"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v2/ab-testing/tests"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v2/ab-testing/tests/:param/results"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v2/ai-content/generate"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v2/ai-content/hashtags"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v2/ai-content/optimize"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v2/ai-content/translate"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v2/analytics"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v2/analytics/insights"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v2/analytics/performance"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v2/analytics/realtime"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v2/auth/reset-password"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v2/auth/verify-token"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v2/competitors"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v2/competitors"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v2/competitors/:param/analyze"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v2/features"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v2/health"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v2/library/content"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v2/library/content"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v2/library/content/:param"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v2/mobile/config"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v2/mobile/sync"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v2/notifications"
+    },
+    {
+      "method": "PATCH",
+      "path": "/api/v2/notifications/:param/read"
+    },
+    {
+      "method": "PUT",
+      "path": "/api/v2/notifications/settings"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v2/performance/metrics"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v2/reporting/generate"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v2/reporting/reports"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v2/reporting/reports/:param/download"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v2/scheduler/posts"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v2/scheduler/posts"
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/v2/scheduler/posts/:param"
+    },
+    {
+      "method": "PATCH",
+      "path": "/api/v2/scheduler/posts/:param"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v2/teams/activity"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v2/teams/invite"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v2/teams/members"
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/v2/teams/members/:param"
+    },
+    {
+      "method": "PATCH",
+      "path": "/api/v2/teams/members/:param"
+    },
+    {
+      "method": "PATCH",
+      "path": "/api/v2/teams/members/:param/role"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v2/teams/stats"
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/v2/users/account"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v2/users/change-password"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v2/users/profile"
+    },
+    {
+      "method": "PATCH",
+      "path": "/api/v2/users/profile"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v2/white-label/config"
+    },
+    {
+      "method": "PUT",
+      "path": "/api/v2/white-label/config"
+    }
+  ]
+}

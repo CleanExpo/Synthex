@@ -67,8 +67,23 @@ const nextConfig = {
   },
   async rewrites() {
     return [
+      // Legacy v1 -> unified /api
       {
         source: '/api/v1/:path*',
+        destination: '/api/:path*',
+      },
+      // Specific v2 mappings for renamed resources
+      {
+        source: '/api/v2/users/:path*',
+        destination: '/api/user/:path*',
+      },
+      {
+        source: '/api/v2/ai-content/generate',
+        destination: '/api/ai/generate-content',
+      },
+      // Generic v2 -> unified /api fallback
+      {
+        source: '/api/v2/:path*',
         destination: '/api/:path*',
       },
     ];
