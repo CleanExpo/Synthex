@@ -1,62 +1,55 @@
-name: CI/CD Pipeline
+name: CI
 
 on:
-  push:
-    branches: [ main, develop ]
   pull_request:
-    branches: [ main ]
+  push:
+    branches:
+      - main
+      - release/**
+      - feature/**
+      - hotfix/**
 
 jobs:
-  test:
+  build-and-test:
     runs-on: ubuntu-latest
-    name: Test and Build
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: 20
           cache: 'npm'
 
       - name: Install dependencies
         run: npm ci
 
-      - name: Run type checking
-        run: npm run typecheck
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps
 
-      - name: Run lint
+      - name: Type check
+        run: npm run type-check
+
+      - name: Lint
         run: npm run lint
-        continue-on-error: true  # Don't fail on lint warnings
 
-      - name: Build project
-        run: npm run build:prod
+      - name: Unit tests
+        run: npm test
 
-      - name: Upload build artifacts
-        uses: actions/upload-artifact@v3
+      - name: E2E tests (Playwright)
+        run: npm run e2e
+
+      - name: Build
+        run: npm run build
+
+      - name: Upload Playwright artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
         with:
-          name: dist
-          path: dist/
-
-  deploy:
-    needs: test
-    runs-on: ubuntu-latest
-    name: Deploy to Vercel
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    
-    steps:
-      - name: Trigger Vercel Deployment
-        run: |
-          echo "Triggering Vercel deployment..."
-          response=$(curl -X POST "${{ secrets.VERCEL_DEPLOY_HOOK }}" -w "\n%{http_code}")
-          http_code=$(echo "$response" | tail -n 1)
-          
-          if [ "$http_code" = "200" ] || [ "$http_code" = "201" ]; then
-            echo "✅ Deployment triggered successfully!"
-            echo "Check deployment status at: https://vercel.com/dashboard/synthex"
-          else
-            echo "❌ Deployment failed with HTTP status: $http_code"
-            exit 1
-          fi
+          name: playwright-artifacts
+          path: |
+            playwright-report
+            test-results
+            reports/**/*.json
