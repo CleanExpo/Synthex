@@ -1,5 +1,5 @@
 // API Configuration and Helper Functions
-const API_BASE_URL = window.location.origin + '/api/v1';
+const API_BASE_URL = window.location.origin + '/api';
 
 // API Helper Class
 class SynthexAPI {
@@ -11,13 +11,18 @@ class SynthexAPI {
     // Generic request method
     async request(endpoint, options = {}) {
         const url = `${this.baseURL}${endpoint}`;
+        const headers = {
+            ...(options.headers || {})
+        };
+        if (options.body) {
+            headers['Content-Type'] = 'application/json';
+        }
+        if (this.token) {
+            headers['Authorization'] = `Bearer ${this.token}`;
+        }
         const config = {
             ...options,
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': this.token ? `Bearer ${this.token}` : '',
-                ...options.headers
-            }
+            headers
         };
 
         try {
@@ -219,7 +224,7 @@ class SynthexAPI {
 
     async markNotificationAsRead(id) {
         return this.request(`/notifications/${id}/read`, {
-            method: 'PUT'
+            method: 'PATCH'
         });
     }
 
@@ -231,36 +236,36 @@ class SynthexAPI {
 
     // Team endpoints
     async getTeamMembers() {
-        return this.request('/team/members');
+        return this.request('/teams/members');
     }
 
     async inviteTeamMember(data) {
-        return this.request('/team/invite', {
+        return this.request('/teams/invite', {
             method: 'POST',
             body: JSON.stringify(data)
         });
     }
 
     async updateTeamMemberRole(memberId, role) {
-        return this.request(`/team/members/${memberId}/role`, {
-            method: 'PUT',
+        return this.request(`/teams/members/${memberId}/role`, {
+            method: 'PATCH',
             body: JSON.stringify({ role })
         });
     }
 
     async removeTeamMember(memberId) {
-        return this.request(`/team/members/${memberId}`, {
+        return this.request(`/teams/members/${memberId}`, {
             method: 'DELETE'
         });
     }
 
     async getTeamActivity(params = {}) {
         const queryString = new URLSearchParams(params).toString();
-        return this.request(`/team/activity${queryString ? '?' + queryString : ''}`);
+        return this.request(`/teams/activity${queryString ? '?' + queryString : ''}`);
     }
 
     async getTeamStats() {
-        return this.request('/team/stats');
+        return this.request('/teams/stats');
     }
 
     // Export endpoints

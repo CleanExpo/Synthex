@@ -15,6 +15,15 @@ class NotificationSystem {
         
         // Update notification bell if it exists
         this.updateBellIcon();
+
+        // Delegated click: ensure bell always toggles dropdown
+        document.addEventListener('click', (e) => {
+            const el = e.target;
+            if (el && el.closest && el.closest('.notification-bell')) {
+                e.stopPropagation();
+                this.toggleNotifications();
+            }
+        });
         
         // Load notifications
         this.loadNotifications();
@@ -41,7 +50,7 @@ class NotificationSystem {
             border-radius: var(--radius-xl);
             box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
             display: none;
-            z-index: 1000;
+            z-index: 2000;
             overflow: hidden;
         `;
         
