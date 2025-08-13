@@ -1,0 +1,1393 @@
+{
+  "generatedAt": "2025-08-13T03:07:26.250Z",
+  "scannedJSFiles": [
+    "public\\js\\analytics-dashboard.js",
+    "public\\js\\api-client.js",
+    "public\\js\\api.js",
+    "public\\js\\app-init.js",
+    "public\\js\\auth-api.js",
+    "public\\js\\auth-bypass.js",
+    "public\\js\\auth-check-fixed.js",
+    "public\\js\\auth-check.js",
+    "public\\js\\auth-visibility-fix.js",
+    "public\\js\\breadcrumb.js",
+    "public\\js\\client-sidebar.js",
+    "public\\js\\footer.js",
+    "public\\js\\form-validation.js",
+    "public\\js\\i18n.js",
+    "public\\js\\interactions.js",
+    "public\\js\\loading-manager.js",
+    "public\\js\\modal-system.js",
+    "public\\js\\notifications.js",
+    "public\\js\\onboarding.js",
+    "public\\js\\performance-optimizer.js",
+    "public\\js\\schedule.js",
+    "public\\js\\synthex-components.js",
+    "public\\js\\synthex-ui.js",
+    "public\\js\\team.js",
+    "public\\js\\theme-manager.js",
+    "public\\js\\toast-notifications.js",
+    "public\\js\\tour.js",
+    "public\\js\\ui-helpers.js"
+  ],
+  "referencedIdCount": 59,
+  "referencedIds": [
+    {
+      "id": "activeCampaigns",
+      "referencedBy": [
+        "public\\js\\team.js"
+      ],
+      "referenceCount": 1,
+      "foundIn": [
+        {
+          "file": "public\\campaigns.html",
+          "matches": [
+            "aigns</div> <div class=\"stat-value\" id=\"activeCampaigns\">0</div> </div>"
+          ]
+        },
+        {
+          "file": "public\\dashboard.html",
+          "matches": [
+            "aigns</div> <div class=\"stat-value\" id=\"activeCampaigns\">0</div> <div cl"
+          ]
+        },
+        {
+          "file": "public\\static-backup\\campaigns.html",
+          "matches": [
+            "aigns</div> <div class=\"stat-value\" id=\"activeCampaigns\">0</div> </div>"
+          ]
+        },
+        {
+          "file": "public\\static-backup\\dashboard.html",
+          "matches": [
+            "aigns</div> <div class=\"stat-value\" id=\"activeCampaigns\">0</div> <div cl"
+          ]
+        },
+        {
+          "file": "public\\static-backup\\team.html",
+          "matches": [
+            "<div class=\"team-stat-value\" id=\"activeCampaigns\">12</div>"
+          ]
+        },
+        {
+          "file": "public\\team.html",
+          "matches": [
+            "<div class=\"team-stat-value\" id=\"activeCampaigns\">12</div>"
+          ]
+        }
+      ],
+      "status": "RESOLVED"
+    },
+    {
+      "id": "activityList",
+      "referencedBy": [
+        "public\\js\\team.js"
+      ],
+      "referenceCount": 1,
+      "foundIn": [
+        {
+          "file": "public\\dashboard.html",
+          "matches": [
+            "</div> <div class=\"activity-list\" id=\"activityList\"> <div class=\"l"
+          ]
+        },
+        {
+          "file": "public\\static-backup\\dashboard.html",
+          "matches": [
+            "</div> <div class=\"activity-list\" id=\"activityList\"> <div class=\"l"
+          ]
+        },
+        {
+          "file": "public\\static-backup\\team.html",
+          "matches": [
+            "<div class=\"activity-list\" id=\"activityList\"> <!-- Acti"
+          ]
+        },
+        {
+          "file": "public\\team.html",
+          "matches": [
+            "<div class=\"activity-list\" id=\"activityList\"> <!-- Acti"
+          ]
+        }
+      ],
+      "status": "RESOLVED"
+    },
+    {
+      "id": "anthropicApiKey",
+      "referencedBy": [
+        "public\\js\\onboarding.js"
+      ],
+      "referenceCount": 1,
+      "foundIn": [
+        {
+          "file": "public\\onboarding.html",
+          "matches": [
+            "<input type=\"password\" class=\"form-input\" id=\"anthropicApiKey\" placeholder=\"sk-ant-...\">"
+          ]
+        },
+        {
+          "file": "public\\static-backup\\onboarding.html",
+          "matches": [
+            "<input type=\"password\" class=\"form-input\" id=\"anthropicApiKey\" placeholder=\"sk-ant-...\">"
+          ]
+        }
+      ],
+      "status": "RESOLVED"
+    },
+    {
+      "id": "apiStatus",
+      "referencedBy": [
+        "public\\js\\onboarding.js"
+      ],
+      "referenceCount": 1,
+      "foundIn": [
+        {
+          "file": "public\\onboarding.html",
+          "matches": [
+            "\"> <div class=\"progress-stat-value\" id=\"apiStatus\">Ready</div> <div clas"
+          ]
+        },
+        {
+          "file": "public\\static-backup\\onboarding.html",
+          "matches": [
+            "\"> <div class=\"progress-stat-value\" id=\"apiStatus\">Ready</div> <div clas"
+          ]
+        }
+      ],
+      "status": "RESOLVED"
+    },
+    {
+      "id": "authModal",
+      "referencedBy": [
+        "public\\js\\auth-visibility-fix.js"
+      ],
+      "referenceCount": 2,
+      "foundIn": [
+        {
+          "file": "public\\landing.html",
+          "matches": [
+            "</footer> <!-- Authentication Modal --> <div id=\"authModal\" class=\"fixed inset-0 bg-black bg-opacity-50 f"
+          ]
+        },
+        {
+          "file": "public\\static-backup\\landing.html",
+          "matches": [
+            "</footer> <!-- Authentication Modal --> <div id=\"authModal\" class=\"fixed inset-0 bg-black bg-opacity-50 f"
+          ]
+        }
+      ],
+      "status": "RESOLVED"
+    },
+    {
+      "id": "breadcrumb-styles",
+      "referencedBy": [
+        "public\\js\\breadcrumb.js"
+      ],
+      "referenceCount": 1,
+      "foundIn": [
+        {
+          "file": "public\\js\\breadcrumb.js",
+          "matches": [
+            "eturn; const styles = ` <style id=\"breadcrumb-styles\"> .synthex-breadcrumb"
+          ]
+        }
+      ],
+      "status": "RESOLVED"
+    },
+    {
+      "id": "calendarDays",
+      "referencedBy": [
+        "public\\js\\schedule.js"
+      ],
+      "referenceCount": 1,
+      "foundIn": [
+        {
+          "file": "public\\schedule.html",
+          "matches": [
+            "</div> <div class=\"days-grid\" id=\"calendarDays\"> <!-- Cale"
+          ]
+        },
+        {
+          "file": "public\\static-backup\\schedule.html",
+          "matches": [
+            "</div> <div class=\"days-grid\" id=\"calendarDays\"> <!-- Cale"
+          ]
+        }
+      ],
+      "status": "RESOLVED"
+    },
+    {
+      "id": "changeMemberRole",
+      "referencedBy": [
+        "public\\js\\team.js"
+      ],
+      "referenceCount": 1,
+      "foundIn": [
+        {
+          "file": "public\\js\\team.js",
+          "matches": [
+            "ge Role</label> <select class=\"form-select\" id=\"changeMemberRole\"> <option value=\"vi"
+          ]
+        }
+      ],
+      "status": "RESOLVED"
+    },
+    {
+      "id": "clickRate",
+      "referencedBy": [
+        "public\\js\\analytics-dashboard.js"
+      ],
+      "referenceCount": 1,
+      "foundIn": [
+        {
+          "file": "public\\analytics.html",
+          "matches": [
+            "</div> <div class=\"metric-value\" id=\"clickRate\">0%</div> <div class=\""
+          ]
+        },
+        {
+          "file": "public\\static-backup\\analytics.html",
+          "matches": [
+            "</div> <div class=\"metric-value\" id=\"clickRate\">0%</div> <div class=\""
+          ]
+        }
+      ],
+      "status": "RESOLVED"
+    },
+    {
+      "id": "contentCreated",
+      "referencedBy": [
+        "public\\js\\team.js"
+      ],
+      "referenceCount": 1,
+      "foundIn": [
+        {
+          "file": "public\\static-backup\\team.html",
+          "matches": [
+            "<div class=\"team-stat-value\" id=\"contentCreated\">248</div>"
+          ]
+        },
+        {
+          "file": "public\\team.html",
+          "matches": [
+            "<div class=\"team-stat-value\" id=\"contentCreated\">248</div>"
+          ]
+        }
+      ],
+      "status": "RESOLVED"
+    },
+    {
+      "id": "currentMonth",
+      "referencedBy": [
+        "public\\js\\schedule.js"
+      ],
+      "referenceCount": 1,
+      "foundIn": [
+        {
+          "file": "public\\schedule.html",
+          "matches": [
+            "<h2 class=\"calendar-title\" id=\"currentMonth\">December 2024</h2>"
+          ]
+        },
+        {
+          "file": "public\\static-backup\\schedule.html",
+          "matches": [
+            "<h2 class=\"calendar-title\" id=\"currentMonth\">December 2024</h2>"
+          ]
+        }
+      ],
+      "status": "RESOLVED"
+    },
+    {
+      "id": "engagementChart",
+      "referencedBy": [
+        "public\\js\\analytics-dashboard.js"
+      ],
+      "referenceCount": 1,
+      "foundIn": [
+        {
+          "file": "public\\analytics.html",
+          "matches": [
+            "class=\"chart-wrapper\"> <canvas id=\"engagementChart\"></canvas> </div"
+          ]
+        },
+        {
+          "file": "public\\static-backup\\analytics.html",
+          "matches": [
+            "class=\"chart-wrapper\"> <canvas id=\"engagementChart\"></canvas> </div"
+          ]
+        }
+      ],
+      "status": "RESOLVED"
+    },
+    {
+      "id": "engagementRate",
+      "referencedBy": [
+        "public\\js\\analytics-dashboard.js"
+      ],
+      "referenceCount": 1,
+      "foundIn": [
+        {
+          "file": "public\\analytics.html",
+          "matches": [
+            "</div> <div class=\"metric-value\" id=\"engagementRate\">0%</div> <div cl"
+          ]
+        },
+        {
+          "file": "public\\dashboard.html",
+          "matches": [
+            "Rate</div> <div class=\"stat-value\" id=\"engagementRate\">0%</div> <div cl"
+          ]
+        },
+        {
+          "file": "public\\static-backup\\analytics.html",
+          "matches": [
+            "</div> <div class=\"metric-value\" id=\"engagementRate\">0%</div> <div cl"
+          ]
+        },
+        {
+          "file": "public\\static-backup\\dashboard.html",
+          "matches": [
+            "Rate</div> <div class=\"stat-value\" id=\"engagementRate\">0%</div> <div cl"
+          ]
+        }
+      ],
+      "status": "RESOLVED"
+    },
+    {
+      "id": "footer-styles",
+      "referencedBy": [
+        "public\\js\\footer.js"
+      ],
+      "referenceCount": 1,
+      "foundIn": [
+        {
+          "file": "public\\js\\footer.js",
+          "matches": [
+            "eturn; const styles = ` <style id=\"footer-styles\"> .synthex-footer {"
+          ]
+        }
+      ],
+      "status": "RESOLVED"
+    },
+    {
+      "id": "form-validator-styles",
+      "referencedBy": [
+        "public\\js\\form-validation.js"
+      ],
+      "referenceCount": 1,
+      "foundIn": [
+        {
+          "file": "public\\js\\form-validation.js",
+          "matches": [
+            "tyleSheet = document.createElement('style'); styleSheet.id = 'form-validator-styles'; styleSheet.textContent = s"
+          ]
+        }
+      ],
+      "status": "RESOLVED"
+    },
+    {
+      "id": "inviteEmail",
+      "referencedBy": [
+        "public\\js\\team.js"
+      ],
+      "referenceCount": 1,
+      "foundIn": [
+        {
+          "file": "public\\static-backup\\team.html",
+          "matches": [
+            "<input type=\"email\" class=\"form-input\" id=\"inviteEmail\" required> </div>"
+          ]
+        },
+        {
+          "file": "public\\team.html",
+          "matches": [
+            "<input type=\"email\" class=\"form-input\" id=\"inviteEmail\" required> </div>"
+          ]
+        }
+      ],
+      "status": "RESOLVED"
+    },
+    {
+      "id": "inviteForm",
+      "referencedBy": [
+        "public\\js\\team.js"
+      ],
+      "referenceCount": 1,
+      "foundIn": [
+        {
+          "file": "public\\static-backup\\team.html",
+          "matches": [
+            "</button> </div> <form id=\"inviteForm\" onsubmit=\"sendInvite(event)\">"
+          ]
+        },
+        {
+          "file": "public\\team.html",
+          "matches": [
+            "</button> </div> <form id=\"inviteForm\" onsubmit=\"sendInvite(event)\">"
+          ]
+        }
+      ],
+      "status": "RESOLVED"
+    },
+    {
+      "id": "inviteMessage",
+      "referencedBy": [
+        "public\\js\\team.js"
+      ],
+      "referenceCount": 1,
+      "foundIn": [
+        {
+          "file": "public\\static-backup\\team.html",
+          "matches": [
+            "l)</label> <textarea class=\"form-input\" id=\"inviteMessage\" rows=\"3\" placeho"
+          ]
+        },
+        {
+          "file": "public\\team.html",
+          "matches": [
+            "l)</label> <textarea class=\"form-input\" id=\"inviteMessage\" rows=\"3\" placeho"
+          ]
+        }
+      ],
+      "status": "RESOLVED"
+    },
+    {
+      "id": "inviteModal",
+      "referencedBy": [
+        "public\\js\\team.js"
+      ],
+      "referenceCount": 2,
+      "foundIn": [
+        {
+          "file": "public\\static-backup\\team.html",
+          "matches": [
+            "/div> <!-- Invite Modal --> <div class=\"modal\" id=\"inviteModal\"> <div class=\"modal-content\">"
+          ]
+        },
+        {
+          "file": "public\\team.html",
+          "matches": [
+            "/div> <!-- Invite Modal --> <div class=\"modal\" id=\"inviteModal\"> <div class=\"modal-content\">"
+          ]
+        }
+      ],
+      "status": "RESOLVED"
+    },
+    {
+      "id": "inviteRole",
+      "referencedBy": [
+        "public\\js\\team.js"
+      ],
+      "referenceCount": 1,
+      "foundIn": [
+        {
+          "file": "public\\static-backup\\team.html",
+          "matches": [
+            "ole</label> <select class=\"form-select\" id=\"inviteRole\"> <option value=\"view"
+          ]
+        },
+        {
+          "file": "public\\team.html",
+          "matches": [
+            "ole</label> <select class=\"form-select\" id=\"inviteRole\"> <option value=\"view"
+          ]
+        }
+      ],
+      "status": "RESOLVED"
+    },
+    {
+      "id": "loginForm",
+      "referencedBy": [
+        "public\\js\\auth-visibility-fix.js"
+      ],
+      "referenceCount": 1,
+      "foundIn": [
+        {
+          "file": "public\\auth.html",
+          "matches": [
+            "6\">Welcome Back</h2> <form id=\"loginForm\" class=\"space-y-6\"> <div>"
+          ]
+        },
+        {
+          "file": "public\\demo.html",
+          "matches": [
+            "d mb-6\">Sign In</h2> <form id=\"loginForm\" class=\"space-y-6\"> <div>"
+          ]
+        },
+        {
+          "file": "public\\landing.html",
+          "matches": [
+            "ative;\"> <!-- Login Form --> <div id=\"loginForm\" class=\"auth-form\"> <div styl"
+          ]
+        },
+        {
+          "file": "public\\login-old.html",
+          "matches": [
+            "Sign In</h2> <form id=\"loginForm\" class=\"space-y-6\"> <d"
+          ]
+        },
+        {
+          "file": "public\\login.html",
+          "matches": [
+            "\"></div> <!-- Login Form --> <form id=\"loginForm\"> <div class=\"form-group\">"
+          ]
+        },
+        {
+          "file": "public\\static-backup\\auth.html",
+          "matches": [
+            "6\">Welcome Back</h2> <form id=\"loginForm\" class=\"space-y-6\"> <div>"
+          ]
+        },
+        {
+          "file": "public\\static-backup\\demo.html",
+          "matches": [
+            "d mb-6\">Sign In</h2> <form id=\"loginForm\" class=\"space-y-6\"> <div>"
+          ]
+        },
+        {
+          "file": "public\\static-backup\\landing.html",
+          "matches": [
+            "ative;\"> <!-- Login Form --> <div id=\"loginForm\" class=\"auth-form\"> <div styl"
+          ]
+        },
+        {
+          "file": "public\\static-backup\\login-old.html",
+          "matches": [
+            "Sign In</h2> <form id=\"loginForm\" class=\"space-y-6\"> <d"
+          ]
+        },
+        {
+          "file": "public\\static-backup\\login.html",
+          "matches": [
+            "\"></div> <!-- Login Form --> <form id=\"loginForm\"> <div class=\"form-group\">"
+          ]
+        }
+      ],
+      "status": "RESOLVED"
+    },
+    {
+      "id": "memberModal",
+      "referencedBy": [
+        "public\\js\\team.js"
+      ],
+      "referenceCount": 2,
+      "foundIn": [
+        {
+          "file": "public\\static-backup\\team.html",
+          "matches": [
+            "<!-- Member Details Modal --> <div class=\"modal\" id=\"memberModal\"> <div class=\"modal-content\">"
+          ]
+        },
+        {
+          "file": "public\\team.html",
+          "matches": [
+            "<!-- Member Details Modal --> <div class=\"modal\" id=\"memberModal\"> <div class=\"modal-content\">"
+          ]
+        }
+      ],
+      "status": "RESOLVED"
+    },
+    {
+      "id": "memberModalContent",
+      "referencedBy": [
+        "public\\js\\team.js"
+      ],
+      "referenceCount": 1,
+      "foundIn": [
+        {
+          "file": "public\\static-backup\\team.html",
+          "matches": [
+            "</button> </div> <div id=\"memberModalContent\"> <!-- Member details"
+          ]
+        },
+        {
+          "file": "public\\team.html",
+          "matches": [
+            "</button> </div> <div id=\"memberModalContent\"> <!-- Member details"
+          ]
+        }
+      ],
+      "status": "RESOLVED"
+    },
+    {
+      "id": "memberModalTitle",
+      "referencedBy": [
+        "public\\js\\team.js"
+      ],
+      "referenceCount": 1,
+      "foundIn": [
+        {
+          "file": "public\\static-backup\\team.html",
+          "matches": [
+            "<div class=\"modal-header\"> <h2 id=\"memberModalTitle\">Member Details</h2> <b"
+          ]
+        },
+        {
+          "file": "public\\team.html",
+          "matches": [
+            "<div class=\"modal-header\"> <h2 id=\"memberModalTitle\">Member Details</h2> <b"
+          ]
+        }
+      ],
+      "status": "RESOLVED"
+    },
+    {
+      "id": "membersGrid",
+      "referencedBy": [
+        "public\\js\\team.js"
+      ],
+      "referenceCount": 1,
+      "foundIn": [
+        {
+          "file": "public\\static-backup\\team.html",
+          "matches": [
+            "<div class=\"members-grid\" id=\"membersGrid\"> <!-- Membe"
+          ]
+        },
+        {
+          "file": "public\\team.html",
+          "matches": [
+            "<div class=\"members-grid\" id=\"membersGrid\"> <!-- Membe"
+          ]
+        }
+      ],
+      "status": "RESOLVED"
+    },
+    {
+      "id": "mobile-menu",
+      "referencedBy": [
+        "public\\js\\synthex-components.js"
+      ],
+      "referenceCount": 1,
+      "foundIn": [
+        {
+          "file": "components\\MobileMenu.tsx",
+          "matches": [
+            "} {/* Mobile Menu Panel */} <nav id=\"mobile-menu\" className={`md:hidden fixed top-0 l"
+          ]
+        }
+      ],
+      "status": "RESOLVED"
+    },
+    {
+      "id": "modal-container",
+      "referencedBy": [
+        "public\\js\\modal-system.js"
+      ],
+      "referenceCount": 2,
+      "foundIn": [
+        {
+          "file": "public\\js\\modal-system.js",
+          "matches": [
+            "iner = document.createElement('div'); container.id = 'modal-container'; container.className = 'm"
+          ]
+        }
+      ],
+      "status": "RESOLVED"
+    },
+    {
+      "id": "modal-styles",
+      "referencedBy": [
+        "public\\js\\modal-system.js"
+      ],
+      "referenceCount": 1,
+      "foundIn": [
+        {
+          "file": "public\\js\\modal-system.js",
+          "matches": [
+            "Sheet = document.createElement('style'); styleSheet.id = 'modal-styles'; styleSheet.textContent = styles"
+          ]
+        }
+      ],
+      "status": "RESOLVED"
+    },
+    {
+      "id": "nextBtn",
+      "referencedBy": [
+        "public\\js\\onboarding.js"
+      ],
+      "referenceCount": 3,
+      "foundIn": [
+        {
+          "file": "public\\create-campaign.html",
+          "matches": [
+            "<button type=\"button\" class=\"btn btn-primary\" id=\"nextBtn\"> Next <"
+          ]
+        },
+        {
+          "file": "public\\onboarding.html",
+          "matches": [
+            "<button class=\"btn btn-primary\" onclick=\"nextStep()\" id=\"nextBtn\">Get Started</button> </div>"
+          ]
+        },
+        {
+          "file": "public\\static-backup\\create-campaign.html",
+          "matches": [
+            "<button type=\"button\" class=\"btn btn-primary\" id=\"nextBtn\"> Next <"
+          ]
+        },
+        {
+          "file": "public\\static-backup\\onboarding.html",
+          "matches": [
+            "<button class=\"btn btn-primary\" onclick=\"nextStep()\" id=\"nextBtn\">Get Started</button> </div>"
+          ]
+        }
+      ],
+      "status": "RESOLVED"
+    },
+    {
+      "id": "openrouterApiKey",
+      "referencedBy": [
+        "public\\js\\onboarding.js"
+      ],
+      "referenceCount": 1,
+      "foundIn": [
+        {
+          "file": "public\\onboarding.html",
+          "matches": [
+            "<input type=\"password\" class=\"form-input\" id=\"openrouterApiKey\" placeholder=\"sk-or-...\">"
+          ]
+        },
+        {
+          "file": "public\\static-backup\\onboarding.html",
+          "matches": [
+            "<input type=\"password\" class=\"form-input\" id=\"openrouterApiKey\" placeholder=\"sk-or-...\">"
+          ]
+        }
+      ],
+      "status": "RESOLVED"
+    },
+    {
+      "id": "platformChart",
+      "referencedBy": [
+        "public\\js\\analytics-dashboard.js"
+      ],
+      "referenceCount": 1,
+      "foundIn": [
+        {
+          "file": "public\\admin-dashboard.html",
+          "matches": [
+            "v class=\"chart-container\"> <canvas id=\"platformChart\"></canvas> </div>"
+          ]
+        },
+        {
+          "file": "public\\static-backup\\admin-dashboard.html",
+          "matches": [
+            "v class=\"chart-container\"> <canvas id=\"platformChart\"></canvas> </div>"
+          ]
+        }
+      ],
+      "status": "RESOLVED"
+    },
+    {
+      "id": "platformCount",
+      "referencedBy": [
+        "public\\js\\onboarding.js"
+      ],
+      "referenceCount": 1,
+      "foundIn": [
+        {
+          "file": "public\\onboarding.html",
+          "matches": [
+            "\"> <div class=\"progress-stat-value\" id=\"platformCount\">1</div> <div clas"
+          ]
+        },
+        {
+          "file": "public\\static-backup\\onboarding.html",
+          "matches": [
+            "\"> <div class=\"progress-stat-value\" id=\"platformCount\">1</div> <div clas"
+          ]
+        }
+      ],
+      "status": "RESOLVED"
+    },
+    {
+      "id": "prevBtn",
+      "referencedBy": [
+        "public\\js\\onboarding.js"
+      ],
+      "referenceCount": 1,
+      "foundIn": [
+        {
+          "file": "public\\create-campaign.html",
+          "matches": [
+            "<button type=\"button\" class=\"btn btn-secondary\" id=\"prevBtn\" style=\"display: none;\"> <sv"
+          ]
+        },
+        {
+          "file": "public\\onboarding.html",
+          "matches": [
+            "<button class=\"btn btn-secondary\" onclick=\"previousStep()\" id=\"prevBtn\" style=\"display: none;\">Previous</button>"
+          ]
+        },
+        {
+          "file": "public\\static-backup\\create-campaign.html",
+          "matches": [
+            "<button type=\"button\" class=\"btn btn-secondary\" id=\"prevBtn\" style=\"display: none;\"> <sv"
+          ]
+        },
+        {
+          "file": "public\\static-backup\\onboarding.html",
+          "matches": [
+            "<button class=\"btn btn-secondary\" onclick=\"previousStep()\" id=\"prevBtn\" style=\"display: none;\">Previous</button>"
+          ]
+        }
+      ],
+      "status": "RESOLVED"
+    },
+    {
+      "id": "progress-bar",
+      "referencedBy": [
+        "public\\js\\synthex-components.js"
+      ],
+      "referenceCount": 1,
+      "foundIn": [
+        {
+          "file": "public\\index-static-backup.html",
+          "matches": [
+            "rb-3\"></div> </div> <!-- Progress Bar --> <div id=\"progress-bar\" style=\"position: fixed; top: 0; left: 0; h"
+          ]
+        },
+        {
+          "file": "public\\static-backup\\index-static-backup.html",
+          "matches": [
+            "rb-3\"></div> </div> <!-- Progress Bar --> <div id=\"progress-bar\" style=\"position: fixed; top: 0; left: 0; h"
+          ]
+        }
+      ],
+      "status": "RESOLVED"
+    },
+    {
+      "id": "quickDate",
+      "referencedBy": [
+        "public\\js\\schedule.js"
+      ],
+      "referenceCount": 3,
+      "foundIn": [
+        {
+          "file": "public\\schedule.html",
+          "matches": [
+            "<input type=\"date\" class=\"form-input\" id=\"quickDate\"> </div>"
+          ]
+        },
+        {
+          "file": "public\\static-backup\\schedule.html",
+          "matches": [
+            "<input type=\"date\" class=\"form-input\" id=\"quickDate\"> </div>"
+          ]
+        }
+      ],
+      "status": "RESOLVED"
+    },
+    {
+      "id": "ripple-styles",
+      "referencedBy": [
+        "public\\js\\interactions.js"
+      ],
+      "referenceCount": 1,
+      "foundIn": [
+        {
+          "file": "public\\js\\interactions.js",
+          "matches": [
+            "const style = document.createElement('style'); style.id = 'ripple-styles'; style.textContent = ` @k"
+          ]
+        }
+      ],
+      "status": "RESOLVED"
+    },
+    {
+      "id": "scheduleContent",
+      "referencedBy": [
+        "public\\js\\schedule.js"
+      ],
+      "referenceCount": 1,
+      "foundIn": [
+        {
+          "file": "public\\schedule.html",
+          "matches": [
+            "> <textarea class=\"form-input\" rows=\"4\" id=\"scheduleContent\" placeholder=\"Enter your content...\"></t"
+          ]
+        },
+        {
+          "file": "public\\static-backup\\schedule.html",
+          "matches": [
+            "> <textarea class=\"form-input\" rows=\"4\" id=\"scheduleContent\" placeholder=\"Enter your content...\"></t"
+          ]
+        }
+      ],
+      "status": "RESOLVED"
+    },
+    {
+      "id": "scheduleDate",
+      "referencedBy": [
+        "public\\js\\schedule.js"
+      ],
+      "referenceCount": 3,
+      "foundIn": [
+        {
+          "file": "public\\schedule.html",
+          "matches": [
+            "<input type=\"date\" class=\"form-input\" id=\"scheduleDate\"> </div>"
+          ]
+        },
+        {
+          "file": "public\\static-backup\\schedule.html",
+          "matches": [
+            "<input type=\"date\" class=\"form-input\" id=\"scheduleDate\"> </div>"
+          ]
+        }
+      ],
+      "status": "RESOLVED"
+    },
+    {
+      "id": "scheduleForm",
+      "referencedBy": [
+        "public\\js\\schedule.js"
+      ],
+      "referenceCount": 2,
+      "foundIn": [
+        {
+          "file": "public\\schedule.html",
+          "matches": [
+            "</button> </div> <form id=\"scheduleForm\"> <div class=\"form-group\">"
+          ]
+        },
+        {
+          "file": "public\\static-backup\\schedule.html",
+          "matches": [
+            "</button> </div> <form id=\"scheduleForm\"> <div class=\"form-group\">"
+          ]
+        }
+      ],
+      "status": "RESOLVED"
+    },
+    {
+      "id": "scheduleModal",
+      "referencedBy": [
+        "public\\js\\schedule.js"
+      ],
+      "referenceCount": 2,
+      "foundIn": [
+        {
+          "file": "public\\schedule.html",
+          "matches": [
+            "<!-- Schedule Modal --> <div class=\"schedule-modal\" id=\"scheduleModal\"> <div class=\"modal-content\">"
+          ]
+        },
+        {
+          "file": "public\\static-backup\\schedule.html",
+          "matches": [
+            "<!-- Schedule Modal --> <div class=\"schedule-modal\" id=\"scheduleModal\"> <div class=\"modal-content\">"
+          ]
+        }
+      ],
+      "status": "RESOLVED"
+    },
+    {
+      "id": "scheduleRepeat",
+      "referencedBy": [
+        "public\\js\\schedule.js"
+      ],
+      "referenceCount": 1,
+      "foundIn": [
+        {
+          "file": "public\\schedule.html",
+          "matches": [
+            "eat</label> <select class=\"form-select\" id=\"scheduleRepeat\"> <option value=\""
+          ]
+        },
+        {
+          "file": "public\\static-backup\\schedule.html",
+          "matches": [
+            "eat</label> <select class=\"form-select\" id=\"scheduleRepeat\"> <option value=\""
+          ]
+        }
+      ],
+      "status": "RESOLVED"
+    },
+    {
+      "id": "scheduleTime",
+      "referencedBy": [
+        "public\\js\\schedule.js"
+      ],
+      "referenceCount": 3,
+      "foundIn": [
+        {
+          "file": "public\\schedule.html",
+          "matches": [
+            "<input type=\"time\" class=\"form-input\" id=\"scheduleTime\"> </div>"
+          ]
+        },
+        {
+          "file": "public\\static-backup\\schedule.html",
+          "matches": [
+            "<input type=\"time\" class=\"form-input\" id=\"scheduleTime\"> </div>"
+          ]
+        }
+      ],
+      "status": "RESOLVED"
+    },
+    {
+      "id": "scroll-top",
+      "referencedBy": [
+        "public\\js\\synthex-components.js"
+      ],
+      "referenceCount": 1,
+      "foundIn": [
+        {
+          "file": "public\\index-static-backup.html",
+          "matches": [
+            "</footer> <!-- Scroll to Top Button --> <button id=\"scroll-top\" class=\"btn btn-primary\" style=\"position: fix"
+          ]
+        },
+        {
+          "file": "public\\static-backup\\index-static-backup.html",
+          "matches": [
+            "</footer> <!-- Scroll to Top Button --> <button id=\"scroll-top\" class=\"btn btn-primary\" style=\"position: fix"
+          ]
+        }
+      ],
+      "status": "RESOLVED"
+    },
+    {
+      "id": "sidebar-user-name",
+      "referencedBy": [
+        "public\\js\\client-sidebar.js"
+      ],
+      "referenceCount": 1,
+      "foundIn": [
+        {
+          "file": "public\\js\\client-sidebar.js",
+          "matches": [
+            "\"user-info\"> <div class=\"user-name\" id=\"sidebar-user-name\">Loading...</div>"
+          ]
+        }
+      ],
+      "status": "RESOLVED"
+    },
+    {
+      "id": "sidebar-user-role",
+      "referencedBy": [
+        "public\\js\\client-sidebar.js"
+      ],
+      "referenceCount": 1,
+      "foundIn": [
+        {
+          "file": "public\\js\\client-sidebar.js",
+          "matches": [
+            "ing...</div> <div class=\"user-role\" id=\"sidebar-user-role\">Member</div> </di"
+          ]
+        }
+      ],
+      "status": "RESOLVED"
+    },
+    {
+      "id": "signupForm",
+      "referencedBy": [
+        "public\\js\\auth-visibility-fix.js"
+      ],
+      "referenceCount": 1,
+      "foundIn": [
+        {
+          "file": "public\\signup.html",
+          "matches": [
+            "sMessage\" class=\"success-message\"></div> <form id=\"signupForm\"> <div class=\"form-row\">"
+          ]
+        },
+        {
+          "file": "public\\static-backup\\signup.html",
+          "matches": [
+            "sMessage\" class=\"success-message\"></div> <form id=\"signupForm\"> <div class=\"form-row\">"
+          ]
+        }
+      ],
+      "status": "RESOLVED"
+    },
+    {
+      "id": "skipBtn",
+      "referencedBy": [
+        "public\\js\\onboarding.js"
+      ],
+      "referenceCount": 1,
+      "foundIn": [
+        {
+          "file": "public\\onboarding.html",
+          "matches": [
+            "<button class=\"btn btn-skip\" onclick=\"skipOnboarding()\" id=\"skipBtn\">Skip</button> <div style=\"displ"
+          ]
+        },
+        {
+          "file": "public\\static-backup\\onboarding.html",
+          "matches": [
+            "<button class=\"btn btn-skip\" onclick=\"skipOnboarding()\" id=\"skipBtn\">Skip</button> <div style=\"displ"
+          ]
+        }
+      ],
+      "status": "RESOLVED"
+    },
+    {
+      "id": "theme-toggle",
+      "referencedBy": [
+        "public\\js\\synthex-components.js"
+      ],
+      "referenceCount": 1,
+      "foundIn": [
+        {
+          "file": "public\\index-static-backup.html",
+          "matches": [
+            "<!-- Theme Toggle Button --> <button id=\"theme-toggle\" class=\"btn btn-glass\" aria-label=\"Toggle t"
+          ]
+        },
+        {
+          "file": "public\\static-backup\\index-static-backup.html",
+          "matches": [
+            "<!-- Theme Toggle Button --> <button id=\"theme-toggle\" class=\"btn btn-glass\" aria-label=\"Toggle t"
+          ]
+        }
+      ],
+      "status": "RESOLVED"
+    },
+    {
+      "id": "theme-transition-styles",
+      "referencedBy": [
+        "public\\js\\theme-manager.js"
+      ],
+      "referenceCount": 1,
+      "foundIn": [
+        {
+          "file": "public\\js\\theme-manager.js",
+          "matches": [
+            "tyleSheet = document.createElement('style'); styleSheet.id = 'theme-transition-styles'; styleSheet.textContent ="
+          ]
+        }
+      ],
+      "status": "RESOLVED"
+    },
+    {
+      "id": "toast-container",
+      "referencedBy": [
+        "public\\js\\toast-notifications.js"
+      ],
+      "referenceCount": 2,
+      "foundIn": [
+        {
+          "file": "public\\js\\toast-notifications.js",
+          "matches": [
+            "iner = document.createElement('div'); container.id = 'toast-container'; container.className = 't"
+          ]
+        }
+      ],
+      "status": "RESOLVED"
+    },
+    {
+      "id": "toast-styles",
+      "referencedBy": [
+        "public\\js\\toast-notifications.js"
+      ],
+      "referenceCount": 1,
+      "foundIn": [
+        {
+          "file": "public\\js\\toast-notifications.js",
+          "matches": [
+            "Sheet = document.createElement('style'); styleSheet.id = 'toast-styles'; styleSheet.textContent = styles"
+          ]
+        }
+      ],
+      "status": "RESOLVED"
+    },
+    {
+      "id": "topContent",
+      "referencedBy": [
+        "public\\js\\analytics-dashboard.js"
+      ],
+      "referenceCount": 1,
+      "foundIn": [
+        {
+          "file": "public\\analytics.html",
+          "matches": [
+            "Content</h3> <div class=\"content-list\" id=\"topContent\"> <!-- Will be popula"
+          ]
+        },
+        {
+          "file": "public\\static-backup\\analytics.html",
+          "matches": [
+            "Content</h3> <div class=\"content-list\" id=\"topContent\"> <!-- Will be popula"
+          ]
+        }
+      ],
+      "status": "RESOLVED"
+    },
+    {
+      "id": "totalMembers",
+      "referencedBy": [
+        "public\\js\\team.js"
+      ],
+      "referenceCount": 1,
+      "foundIn": [
+        {
+          "file": "public\\static-backup\\team.html",
+          "matches": [
+            "<div class=\"team-stat-value\" id=\"totalMembers\">4</div>"
+          ]
+        },
+        {
+          "file": "public\\team.html",
+          "matches": [
+            "<div class=\"team-stat-value\" id=\"totalMembers\">4</div>"
+          ]
+        }
+      ],
+      "status": "RESOLVED"
+    },
+    {
+      "id": "totalPosts",
+      "referencedBy": [
+        "public\\js\\analytics-dashboard.js"
+      ],
+      "referenceCount": 1,
+      "foundIn": [
+        {
+          "file": "public\\analytics.html",
+          "matches": [
+            "</div> <div class=\"metric-value\" id=\"totalPosts\">0</div> <div class=\""
+          ]
+        },
+        {
+          "file": "public\\dashboard.html",
+          "matches": [
+            "Posts</div> <div class=\"stat-value\" id=\"totalPosts\">0</div> <div class=\""
+          ]
+        },
+        {
+          "file": "public\\static-backup\\analytics.html",
+          "matches": [
+            "</div> <div class=\"metric-value\" id=\"totalPosts\">0</div> <div class=\""
+          ]
+        },
+        {
+          "file": "public\\static-backup\\dashboard.html",
+          "matches": [
+            "Posts</div> <div class=\"stat-value\" id=\"totalPosts\">0</div> <div class=\""
+          ]
+        }
+      ],
+      "status": "RESOLVED"
+    },
+    {
+      "id": "totalReach",
+      "referencedBy": [
+        "public\\js\\analytics-dashboard.js",
+        "public\\js\\team.js"
+      ],
+      "referenceCount": 2,
+      "foundIn": [
+        {
+          "file": "public\\analytics.html",
+          "matches": [
+            "</div> <div class=\"metric-value\" id=\"totalReach\">0</div> <div class=\""
+          ]
+        },
+        {
+          "file": "public\\static-backup\\analytics.html",
+          "matches": [
+            "</div> <div class=\"metric-value\" id=\"totalReach\">0</div> <div class=\""
+          ]
+        },
+        {
+          "file": "public\\static-backup\\team.html",
+          "matches": [
+            "<div class=\"team-stat-value\" id=\"totalReach\">125K</div>"
+          ]
+        },
+        {
+          "file": "public\\team.html",
+          "matches": [
+            "<div class=\"team-stat-value\" id=\"totalReach\">125K</div>"
+          ]
+        }
+      ],
+      "status": "RESOLVED"
+    },
+    {
+      "id": "typing-styles",
+      "referencedBy": [
+        "public\\js\\interactions.js"
+      ],
+      "referenceCount": 1,
+      "foundIn": [
+        {
+          "file": "public\\js\\interactions.js",
+          "matches": [
+            "const style = document.createElement('style'); style.id = 'typing-styles'; style.textContent = ` @k"
+          ]
+        }
+      ],
+      "status": "RESOLVED"
+    },
+    {
+      "id": "ui-helper-styles",
+      "referencedBy": [
+        "public\\js\\ui-helpers.js"
+      ],
+      "referenceCount": 1,
+      "foundIn": [
+        {
+          "file": "public\\js\\ui-helpers.js",
+          "matches": [
+            "eturn; const styles = ` <style id=\"ui-helper-styles\"> /* Loading States */"
+          ]
+        }
+      ],
+      "status": "RESOLVED"
+    },
+    {
+      "id": "upcomingPosts",
+      "referencedBy": [
+        "public\\js\\schedule.js"
+      ],
+      "referenceCount": 1,
+      "foundIn": [
+        {
+          "file": "public\\schedule.html",
+          "matches": [
+            "-md);\">Upcoming Posts</h3> <div id=\"upcomingPosts\"> <div cla"
+          ]
+        },
+        {
+          "file": "public\\static-backup\\schedule.html",
+          "matches": [
+            "-md);\">Upcoming Posts</h3> <div id=\"upcomingPosts\"> <div cla"
+          ]
+        }
+      ],
+      "status": "RESOLVED"
+    },
+    {
+      "id": "userType",
+      "referencedBy": [
+        "public\\js\\onboarding.js"
+      ],
+      "referenceCount": 1,
+      "foundIn": [
+        {
+          "file": "public\\onboarding.html",
+          "matches": [
+            "\"> <div class=\"progress-stat-value\" id=\"userType\">Setup</div> <div class"
+          ]
+        },
+        {
+          "file": "public\\static-backup\\onboarding.html",
+          "matches": [
+            "\"> <div class=\"progress-stat-value\" id=\"userType\">Setup</div> <div class"
+          ]
+        }
+      ],
+      "status": "RESOLVED"
+    }
+  ],
+  "summary": {
+    "missing": 0,
+    "resolved": 59
+  }
+}

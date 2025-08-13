@@ -374,7 +374,8 @@ class SynthexAPIClient {
   }
 
   async updateProfile(updates) {
-    return this.patch('/users/profile', updates);
+    // Server implements PUT at /api/user/profile; rewrites map /api/v2/users/profile -> /api/user/profile
+    return this.put('/users/profile', updates);
   }
 
   async changePassword(currentPassword, newPassword) {

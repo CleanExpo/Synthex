@@ -45,7 +45,7 @@ class SynthexComponents {
   // Navigation
   initNavigation() {
     // Mobile menu toggle
-    const menuToggle = document.getElementById('menu-toggle');
+    const menuToggle = document.querySelector('[data-menu-toggle], #menu-toggle');
     const mobileMenu = document.getElementById('mobile-menu');
     
     if (menuToggle && mobileMenu) {
