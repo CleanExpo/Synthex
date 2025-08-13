@@ -18,6 +18,7 @@
     "noImplicitReturns": false,
     "noUnusedLocals": false,
     "noUnusedParameters": false,
+    "baseUrl": ".",
     "plugins": [
       {
         "name": "next"
