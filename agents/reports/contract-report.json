@@ -1,65 +1,14 @@
 {
-  "generatedAt": "2025-08-13T03:07:25.824Z",
+  "generatedAt": "2025-08-13T03:13:28.471Z",
   "clientSource": "public\\js\\api-client.js",
   "counts": {
     "clientEndpoints": 47,
     "serverRoutes": 74,
-    "missingOnServer": 10,
+    "missingOnServer": 0,
     "methodMismatch": 0,
-    "serverUnused": 43
+    "serverUnused": 35
   },
-  "missingOnServer": [
-    {
-      "method": "GET",
-      "path": "/api/v2/ab-testing/tests/:param/results",
-      "matchPath": "/api/ab-testing/tests/:param/results"
-    },
-    {
-      "method": "POST",
-      "path": "/api/v2/competitors/:param/analyze",
-      "matchPath": "/api/competitors/:param/analyze"
-    },
-    {
-      "method": "GET",
-      "path": "/api/v2/library/content/:param",
-      "matchPath": "/api/library/content/:param"
-    },
-    {
-      "method": "PATCH",
-      "path": "/api/v2/notifications/:param/read",
-      "matchPath": "/api/notifications/:param/read"
-    },
-    {
-      "method": "GET",
-      "path": "/api/v2/reporting/reports/:param/download",
-      "matchPath": "/api/reporting/reports/:param/download"
-    },
-    {
-      "method": "DELETE",
-      "path": "/api/v2/scheduler/posts/:param",
-      "matchPath": "/api/scheduler/posts/:param"
-    },
-    {
-      "method": "PATCH",
-      "path": "/api/v2/scheduler/posts/:param",
-      "matchPath": "/api/scheduler/posts/:param"
-    },
-    {
-      "method": "DELETE",
-      "path": "/api/v2/teams/members/:param",
-      "matchPath": "/api/teams/members/:param"
-    },
-    {
-      "method": "PATCH",
-      "path": "/api/v2/teams/members/:param",
-      "matchPath": "/api/teams/members/:param"
-    },
-    {
-      "method": "PATCH",
-      "path": "/api/v2/teams/members/:param/role",
-      "matchPath": "/api/teams/members/:param/role"
-    }
-  ],
+  "missingOnServer": [],
   "methodMismatch": [],
   "serverUnused": [
     {
@@ -75,13 +24,6 @@
         "UNKNOWN"
       ],
       "source": "api\\ai.js"
-    },
-    {
-      "path": "/api/ab-testing/tests/:testId/results",
-      "methods": [
-        "GET"
-      ],
-      "source": "app\\api\\ab-testing\\tests\\[testId]\\results\\route.ts"
     },
     {
       "path": "/api/auth/dev-login",
@@ -146,13 +88,6 @@
       "source": "app\\api\\campaigns\\route.ts"
     },
     {
-      "path": "/api/competitors/:competitorId/analyze",
-      "methods": [
-        "POST"
-      ],
-      "source": "app\\api\\competitors\\[competitorId]\\analyze\\route.ts"
-    },
-    {
       "path": "/api/content/generate",
       "methods": [
         "POST",
@@ -192,26 +127,12 @@
       "source": "app\\api\\integrations\\route.ts"
     },
     {
-      "path": "/api/library/content/:contentId",
-      "methods": [
-        "GET"
-      ],
-      "source": "app\\api\\library\\content\\[contentId]\\route.ts"
-    },
-    {
       "path": "/api/monitoring/events",
       "methods": [
         "GET",
         "POST"
       ],
       "source": "app\\api\\monitoring\\events\\route.ts"
-    },
-    {
-      "path": "/api/notifications/:notificationId/read",
-      "methods": [
-        "PATCH"
-      ],
-      "source": "app\\api\\notifications\\[notificationId]\\read\\route.ts"
     },
     {
       "path": "/api/onboarding",
@@ -227,36 +148,6 @@
         "POST"
       ],
       "source": "app\\api\\patterns\\analyze\\route.ts"
-    },
-    {
-      "path": "/api/reporting/reports/:reportId/download",
-      "methods": [
-        "GET"
-      ],
-      "source": "app\\api\\reporting\\reports\\[reportId]\\download\\route.ts"
-    },
-    {
-      "path": "/api/scheduler/posts/:postId",
-      "methods": [
-        "DELETE",
-        "PATCH"
-      ],
-      "source": "app\\api\\scheduler\\posts\\[postId]\\route.ts"
-    },
-    {
-      "path": "/api/teams/members/:memberId",
-      "methods": [
-        "DELETE",
-        "PATCH"
-      ],
-      "source": "app\\api\\teams\\members\\[memberId]\\route.ts"
-    },
-    {
-      "path": "/api/teams/members/:memberId/role",
-      "methods": [
-        "PATCH"
-      ],
-      "source": "app\\api\\teams\\members\\[memberId]\\role\\route.ts"
     },
     {
       "path": "/api/test-database",

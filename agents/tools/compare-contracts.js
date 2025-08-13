@@ -59,9 +59,16 @@ function main() {
     const ce = clientEndpoints[i]; // {method, path}
     // Apply rewrite normalization mirroring next.config.mjs
     const ceMatchPath = applyRewrites(ce.path);
+    // Convert client placeholder tokens like :param, :param+, :param* into a concrete segment
+    // so they will match server route regexes like /([^/]+)/
+    const ceTestPath = ceMatchPath.replace(/:param(\+|\*)?/g, 'placeholder');
     const matches = serverRoutes
-      .map((sr, idx) => ({ idx, sr }))
-      .filter(({ sr }) => sr.regexObj.test(ceMatchPath));
+      .map((sr, idx) => ({
+        idx,
+        sr,
+        norm: (sr.path || '').replace(/:([A-Za-z0-9_]+)(\+|\*)?/g, ':param$2')
+      }))
+      .filter(({ sr, norm }) => sr.regexObj.test(ceTestPath) || norm === ceMatchPath);
 
     if (matches.length === 0) {
       // Keep original client endpoint but include the normalized path used for matching
