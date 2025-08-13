@@ -4,7 +4,7 @@
  */
 
 import { AGENT_CONFIG, PSYCHOLOGY_PRINCIPLES } from './agent-prompts';
-import { callOpenRouter } from '@/lib/ai/openrouter';
+import { callOpenRouter } from '../../openrouter';
 
 export interface BrandGenerationInput {
   businessType: string;
