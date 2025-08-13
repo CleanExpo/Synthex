@@ -1,5 +1,7 @@
 import { defineConfig, devices } from '@playwright/test';
 
+const SKIP_WS = !!process.env.PW_SKIP_WEBSERVER;
+
 export default defineConfig({
   testDir: './tests',
   fullyParallel: true,
@@ -8,7 +10,7 @@ export default defineConfig({
   workers: process.env.CI ? 1 : undefined,
   reporter: 'html',
   use: {
-    baseURL: process.env.BASE_URL || 'http://localhost:3000',
+    baseURL: process.env.BASE_URL || 'http://localhost:3001',
     trace: 'on-first-retry',
   },
 
@@ -24,10 +26,12 @@ export default defineConfig({
     },
   ],
 
-  webServer: {
-    command: 'npm run dev',
-    url: 'http://localhost:3000',
-    reuseExistingServer: !process.env.CI,
-    timeout: 120 * 1000,
-  },
+  webServer: SKIP_WS
+    ? undefined
+    : {
+        command: 'npm run dev -- -p 3001',
+        url: 'http://localhost:3001',
+        reuseExistingServer: true,
+        timeout: 300 * 1000,
+      },
 });
