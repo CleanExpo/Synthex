@@ -14,7 +14,7 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
-    "postinstall": "prisma generate",
+    "postinstall": "npx prisma generate || echo 'Prisma generation skipped'",
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate dev",
     "db:studio": "prisma studio",
