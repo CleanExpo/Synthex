@@ -1,8 +1,8 @@
 {
   "framework": "nextjs",
-  "buildCommand": "npx prisma generate && next build",
+  "buildCommand": "rm -rf .next && npx prisma generate && next build",
   "outputDirectory": ".next",
-  "installCommand": "npm install --legacy-peer-deps",
+  "installCommand": "npm ci --legacy-peer-deps",
   "devCommand": "npm run dev",
   "regions": ["iad1"],
   "functions": {
