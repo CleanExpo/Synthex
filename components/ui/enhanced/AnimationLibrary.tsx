@@ -409,6 +409,9 @@ interface ParticleEffectProps {
 }
 
 export function ParticleEffect({ count = 50, color = "#8b5cf6" }: ParticleEffectProps) {
+  const width = typeof window !== 'undefined' ? window.innerWidth : 1920;
+  const height = typeof window !== 'undefined' ? window.innerHeight : 1080;
+  
   return (
     <div className="absolute inset-0 overflow-hidden pointer-events-none">
       {[...Array(count)].map((_, i) => (
@@ -417,12 +420,12 @@ export function ParticleEffect({ count = 50, color = "#8b5cf6" }: ParticleEffect
           className="absolute w-1 h-1 rounded-full"
           style={{ backgroundColor: color }}
           initial={{
-            x: Math.random() * window.innerWidth,
-            y: window.innerHeight + 10,
+            x: Math.random() * width,
+            y: height + 10,
           }}
           animate={{
             y: -10,
-            x: Math.random() * window.innerWidth,
+            x: Math.random() * width,
           }}
           transition={{
             duration: Math.random() * 10 + 10,

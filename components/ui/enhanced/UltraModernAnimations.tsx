@@ -288,6 +288,7 @@ export function KineticText({ words, className = "" }: KineticTextProps) {
 export function MatrixRain() {
   const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789@#$%^&*()';
   const columns = 50;
+  const height = typeof window !== 'undefined' ? window.innerHeight : 1080;
   
   return (
     <div className="fixed inset-0 overflow-hidden pointer-events-none">
@@ -303,7 +304,7 @@ export function MatrixRain() {
               initial={{ opacity: 0, y: -20 }}
               animate={{ 
                 opacity: [0, 1, 0],
-                y: window.innerHeight + 20,
+                y: height + 20,
               }}
               transition={{
                 duration: Math.random() * 5 + 5,
@@ -401,6 +402,9 @@ export function InfiniteMarquee({ children, speed = 20, direction = 'left' }: Ma
 
 // Glowing Orbs Background
 export function GlowingOrbs() {
+  const width = typeof window !== 'undefined' ? window.innerWidth : 1920;
+  const height = typeof window !== 'undefined' ? window.innerHeight : 1080;
+  
   return (
     <div className="fixed inset-0 overflow-hidden pointer-events-none">
       {[...Array(5)].map((_, i) => (
@@ -415,14 +419,14 @@ export function GlowingOrbs() {
           }}
           animate={{
             x: [
-              Math.random() * window.innerWidth,
-              Math.random() * window.innerWidth,
-              Math.random() * window.innerWidth,
+              Math.random() * width,
+              Math.random() * width,
+              Math.random() * width,
             ],
             y: [
-              Math.random() * window.innerHeight,
-              Math.random() * window.innerHeight,
-              Math.random() * window.innerHeight,
+              Math.random() * height,
+              Math.random() * height,
+              Math.random() * height,
             ],
           }}
           transition={{
