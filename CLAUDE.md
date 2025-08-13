@@ -27,13 +27,26 @@ Coordinates all sub-agents and maintains project coherence. The Orchestra Agent 
 - Continuous performance monitoring and adaptive task reassignment
 - Agent queue management: Additional agents wait until slots available
 
-## 🔧 System Resource Management [CRITICAL - UPDATED AFTER SHUTDOWN]
+## 🔧 System Resource Management [CRITICAL - ENHANCED v2.0]
 - **CPU Monitoring:** STRICT throttling at 50% capacity (REDUCED from 80% after failure)
+  - Monitor CPU usage continuously
+  - Implement automatic throttling when approaching limits
+  - Break complex operations into smaller chunks with pauses
 - **Memory Management:** Chunked processing for memory-intensive operations
+  - Use incremental builds and changes rather than full rebuilds
+  - Implement garbage collection between intensive tasks
 - **Pre-execution Alerts:** Warning system for resource-heavy operations
+  - Alert before executing any operation >5 seconds
+  - Provide estimated resource usage and duration
 - **Build Optimization:** Incremental builds prioritized over full rebuilds
+  - Use cached dependencies when possible
+  - Parallel processing for independent tasks
 - **Resource Allocation:** Dynamic adjustment based on system load
+  - Automatic task queue management
+  - Priority-based resource distribution
 - **Operation Chunking:** Break tasks >10 seconds into manageable segments
+  - Progress reporting for long-running operations
+  - Checkpoint creation for recovery
 
 ## 🚀 Session Initialization Protocol
 **For Existing Projects (SYNTHEX):**
@@ -181,16 +194,30 @@ claude code --mcp-config mcp.deployment.json
 - ✅ Enhanced workflow scripts with resource monitoring
 - ✅ Improved spinner animations and UI feedback
 
-## 🛡️ Anthropic-Level Security & Best Practices
+## 🛡️ Anthropic-Level Security & Best Practices [ENHANCED v2.0]
 
 ### Security-First Implementation:
 - **Never expose secrets:** All API keys and sensitive data in environment variables only
+  - Use secret scanning tools to prevent accidental commits
+  - Implement key rotation strategies
 - **Input validation:** Sanitize and validate all user inputs before processing
+  - Use schema validation libraries (Zod, Joi)
+  - Implement rate limiting per endpoint
 - **SQL injection prevention:** Use parameterized queries with Prisma ORM
+  - Never concatenate user input into queries
+  - Use prepared statements consistently
 - **XSS protection:** Implement Content Security Policy headers
+  - Escape all user-generated content
+  - Use trusted types where available
 - **Rate limiting:** Enforce request limits on all API endpoints
+  - Implement progressive backoff
+  - Monitor for abuse patterns
 - **Authentication:** JWT tokens with secure httpOnly cookies
+  - Implement refresh token rotation
+  - Use secure session management
 - **CORS configuration:** Whitelist only trusted origins
+  - Validate origin headers
+  - Implement preflight checks
 
 ### Code Quality Standards (Anthropic-Level):
 - **Comprehensive Error Handling:**
@@ -198,22 +225,30 @@ claude code --mcp-config mcp.deployment.json
   - Graceful degradation for non-critical failures
   - Detailed error logging without exposing sensitive data
   - User-friendly error messages
+  - Error boundary components for React
+  - Centralized error tracking and monitoring
 - **Edge Case Consideration:**
   - Handle network failures and timeouts
   - Account for race conditions
   - Validate data boundaries and limits
   - Test with malformed inputs
+  - Handle browser compatibility issues
+  - Plan for offline scenarios
 - **Documentation Standards:**
   - Inline comments for complex logic
   - JSDoc/TSDoc for all public functions
   - README updates for new features
   - API documentation maintenance
+  - Architecture decision records (ADRs)
+  - Runbook for common issues
 - **Long-term Maintainability:**
   - Modular, reusable components
   - Clear separation of concerns
   - Consistent naming conventions
   - Regular dependency updates
   - Technical debt tracking
+  - Performance budgets
+  - Code coverage requirements
 
 ### Proactive Issue Prevention:
 - **Before Making Changes:**
@@ -221,11 +256,23 @@ claude code --mcp-config mcp.deployment.json
   - Consider performance implications
   - Review security ramifications
   - Plan for backward compatibility
+  - Create rollback strategies
+  - Document breaking changes
 - **System Architecture Thinking:**
   - Consider scalability from the start
   - Design for fault tolerance
   - Implement proper caching strategies
   - Plan for monitoring and observability
+  - Use feature flags for gradual rollouts
+  - Implement circuit breakers for external services
+  - Design with microservices principles in mind
+- **Testing Strategy:**
+  - Unit tests for business logic
+  - Integration tests for API endpoints
+  - E2E tests for critical user flows
+  - Performance testing for bottlenecks
+  - Security testing for vulnerabilities
+  - Accessibility testing for compliance
 
 ## 📋 Communication Protocol
 - Confirm understanding before execution
