@@ -8,18 +8,20 @@ import {
   DNALoader,
   HolographicCard,
   KineticText,
-  MatrixRain,
   OrganicBlob,
   InfiniteMarquee,
-  GlowingOrbs,
   FractalTree,
   CyberpunkButton,
   WaveText,
-  AuroraBackground,
   RippleButton,
   FlipCard3D,
   SpotlightCard
 } from '@/components/ui/enhanced/UltraModernAnimations';
+
+// Dynamic imports for components that use window
+const MatrixRain = dynamic(() => import('@/components/ui/enhanced/UltraModernAnimations').then(mod => ({ default: mod.MatrixRain })), { ssr: false });
+const GlowingOrbs = dynamic(() => import('@/components/ui/enhanced/UltraModernAnimations').then(mod => ({ default: mod.GlowingOrbs })), { ssr: false });
+const AuroraBackground = dynamic(() => import('@/components/ui/enhanced/UltraModernAnimations').then(mod => ({ default: mod.AuroraBackground })), { ssr: false });
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Sparkles, 

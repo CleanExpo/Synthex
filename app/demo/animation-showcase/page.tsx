@@ -1,6 +1,7 @@
 'use client';
 
-import React from 'react';
+import React, { Suspense } from 'react';
+import dynamic from 'next/dynamic';
 import {
   ParallaxContainer,
   RevealOnScroll,
@@ -12,14 +13,16 @@ import {
   Typewriter,
   GlitchText,
   LoadingSpinner,
-  ParticleEffect,
-  CursorTrail,
   ResponsiveContainer,
   AnimatedCounter,
   BlurIn,
   TiltCard,
   animations
 } from '@/components/ui/enhanced/AnimationLibrary';
+
+// Dynamic imports for components that use window
+const ParticleEffect = dynamic(() => import('@/components/ui/enhanced/AnimationLibrary').then(mod => ({ default: mod.ParticleEffect })), { ssr: false });
+const CursorTrail = dynamic(() => import('@/components/ui/enhanced/AnimationLibrary').then(mod => ({ default: mod.CursorTrail })), { ssr: false });
 import { motion } from 'framer-motion';
 import { Sparkles, Zap, Heart, Star, Globe, Cpu, Layers, Shield } from 'lucide-react';
 
