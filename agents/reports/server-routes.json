@@ -1,0 +1,352 @@
+{
+  "generatedAt": "2025-08-13T02:52:37.193Z",
+  "routes": [
+    {
+      "source": "api\\admin.js",
+      "path": "/admin.js/admin",
+      "methods": [
+        "UNKNOWN"
+      ],
+      "regex": "/^\\/admin\\.js\\/admin$/",
+      "note": "legacyApiHeuristic"
+    },
+    {
+      "source": "api\\ai.js",
+      "path": "/ai.js/ai",
+      "methods": [
+        "UNKNOWN"
+      ],
+      "regex": "/^\\/ai\\.js\\/ai$/",
+      "note": "legacyApiHeuristic"
+    },
+    {
+      "source": "app\\api\\ai\\generate-content\\route.ts",
+      "path": "/api/ai/generate-content",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "regex": "/^\\/api\\/ai\\/generate-content$/"
+    },
+    {
+      "source": "app\\api\\analytics\\performance\\route.ts",
+      "path": "/api/analytics/performance",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "regex": "/^\\/api\\/analytics\\/performance$/"
+    },
+    {
+      "source": "app\\api\\auth\\dev-login\\route.ts",
+      "path": "/api/auth/dev-login",
+      "methods": [
+        "POST"
+      ],
+      "regex": "/^\\/api\\/auth\\/dev-login$/"
+    },
+    {
+      "source": "app\\api\\auth\\login\\route.ts",
+      "path": "/api/auth/login",
+      "methods": [
+        "DELETE",
+        "POST"
+      ],
+      "regex": "/^\\/api\\/auth\\/login$/"
+    },
+    {
+      "source": "app\\api\\auth\\login-prisma\\route.ts",
+      "path": "/api/auth/login-prisma",
+      "methods": [
+        "POST"
+      ],
+      "regex": "/^\\/api\\/auth\\/login-prisma$/"
+    },
+    {
+      "source": "app\\api\\auth\\oauth\\[platform]\\route.ts",
+      "path": "/api/auth/oauth/:platform",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "regex": "/^\\/api\\/auth\\/oauth\\/:platform$/"
+    },
+    {
+      "source": "app\\api\\auth\\signup\\route.ts",
+      "path": "/api/auth/signup",
+      "methods": [
+        "POST"
+      ],
+      "regex": "/^\\/api\\/auth\\/signup$/"
+    },
+    {
+      "source": "app\\api\\auth\\signup-prisma\\route.ts",
+      "path": "/api/auth/signup-prisma",
+      "methods": [
+        "POST"
+      ],
+      "regex": "/^\\/api\\/auth\\/signup-prisma$/"
+    },
+    {
+      "source": "app\\api\\auth\\unified-login\\route.ts",
+      "path": "/api/auth/unified-login",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "regex": "/^\\/api\\/auth\\/unified-login$/"
+    },
+    {
+      "source": "app\\api\\campaigns\\route.ts",
+      "path": "/api/campaigns",
+      "methods": [
+        "DELETE",
+        "GET",
+        "POST",
+        "PUT"
+      ],
+      "regex": "/^\\/api\\/campaigns$/"
+    },
+    {
+      "source": "app\\api\\content\\generate\\route.ts",
+      "path": "/api/content/generate",
+      "methods": [
+        "POST",
+        "PUT"
+      ],
+      "regex": "/^\\/api\\/content\\/generate$/"
+    },
+    {
+      "source": "app\\api\\cron\\analyze-patterns\\route.ts",
+      "path": "/api/cron/analyze-patterns",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "regex": "/^\\/api\\/cron\\/analyze-patterns$/"
+    },
+    {
+      "source": "app\\api\\dashboard\\stats\\route.ts",
+      "path": "/api/dashboard/stats",
+      "methods": [
+        "GET"
+      ],
+      "regex": "/^\\/api\\/dashboard\\/stats$/"
+    },
+    {
+      "source": "app\\api\\health\\route.ts",
+      "path": "/api/health",
+      "methods": [
+        "GET"
+      ],
+      "regex": "/^\\/api\\/health$/"
+    },
+    {
+      "source": "app\\api\\health\\auth\\route.ts",
+      "path": "/api/health/auth",
+      "methods": [
+        "GET"
+      ],
+      "regex": "/^\\/api\\/health\\/auth$/"
+    },
+    {
+      "source": "app\\api\\integrations\\route.ts",
+      "path": "/api/integrations",
+      "methods": [
+        "DELETE",
+        "GET",
+        "POST"
+      ],
+      "regex": "/^\\/api\\/integrations$/"
+    },
+    {
+      "source": "app\\api\\monitoring\\events\\route.ts",
+      "path": "/api/monitoring/events",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "regex": "/^\\/api\\/monitoring\\/events$/"
+    },
+    {
+      "source": "app\\api\\onboarding\\route.ts",
+      "path": "/api/onboarding",
+      "methods": [
+        "POST"
+      ],
+      "regex": "/^\\/api\\/onboarding$/"
+    },
+    {
+      "source": "app\\api\\patterns\\analyze\\route.ts",
+      "path": "/api/patterns/analyze",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "regex": "/^\\/api\\/patterns\\/analyze$/"
+    },
+    {
+      "source": "app\\api\\test-database\\route.ts",
+      "path": "/api/test-database",
+      "methods": [
+        "GET"
+      ],
+      "regex": "/^\\/api\\/test-database$/"
+    },
+    {
+      "source": "app\\api\\test-db\\route.ts",
+      "path": "/api/test-db",
+      "methods": [
+        "GET"
+      ],
+      "regex": "/^\\/api\\/test-db$/"
+    },
+    {
+      "source": "app\\api\\test-email\\route.ts",
+      "path": "/api/test-email",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "regex": "/^\\/api\\/test-email$/"
+    },
+    {
+      "source": "app\\api\\user\\avatar\\route.ts",
+      "path": "/api/user/avatar",
+      "methods": [
+        "DELETE",
+        "POST"
+      ],
+      "regex": "/^\\/api\\/user\\/avatar$/"
+    },
+    {
+      "source": "app\\api\\user\\profile\\route.ts",
+      "path": "/api/user/profile",
+      "methods": [
+        "DELETE",
+        "GET",
+        "PUT"
+      ],
+      "regex": "/^\\/api\\/user\\/profile$/"
+    },
+    {
+      "source": "app\\api\\user\\settings\\route.ts",
+      "path": "/api/user/settings",
+      "methods": [
+        "GET",
+        "PUT"
+      ],
+      "regex": "/^\\/api\\/user\\/settings$/"
+    },
+    {
+      "source": "app\\api\\ws\\route.ts",
+      "path": "/api/ws",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "regex": "/^\\/api\\/ws$/"
+    },
+    {
+      "source": "api\\auth.js",
+      "path": "/auth.js/auth",
+      "methods": [
+        "UNKNOWN"
+      ],
+      "regex": "/^\\/auth\\.js\\/auth$/",
+      "note": "legacyApiHeuristic"
+    },
+    {
+      "source": "api\\docs.js",
+      "path": "/docs.js/docs",
+      "methods": [
+        "UNKNOWN"
+      ],
+      "regex": "/^\\/docs\\.js\\/docs$/",
+      "note": "legacyApiHeuristic"
+    },
+    {
+      "source": "api\\email.js",
+      "path": "/email.js/email",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "regex": "/^\\/email\\.js\\/email$/",
+      "note": "legacyApiHeuristic"
+    },
+    {
+      "source": "api\\health.js",
+      "path": "/health.js/health",
+      "methods": [
+        "UNKNOWN"
+      ],
+      "regex": "/^\\/health\\.js\\/health$/",
+      "note": "legacyApiHeuristic"
+    },
+    {
+      "source": "api\\index.js",
+      "path": "/index.js",
+      "methods": [
+        "UNKNOWN"
+      ],
+      "regex": "/^\\/index\\.js$/",
+      "note": "legacyApiHeuristic"
+    },
+    {
+      "source": "api\\main.js",
+      "path": "/main.js/main",
+      "methods": [
+        "UNKNOWN"
+      ],
+      "regex": "/^\\/main\\.js\\/main$/",
+      "note": "legacyApiHeuristic"
+    },
+    {
+      "source": "api\\metrics.js",
+      "path": "/metrics.js/metrics",
+      "methods": [
+        "UNKNOWN"
+      ],
+      "regex": "/^\\/metrics\\.js\\/metrics$/",
+      "note": "legacyApiHeuristic"
+    },
+    {
+      "source": "api\\optimize.js",
+      "path": "/optimize.js/optimize",
+      "methods": [
+        "UNKNOWN"
+      ],
+      "regex": "/^\\/optimize\\.js\\/optimize$/",
+      "note": "legacyApiHeuristic"
+    },
+    {
+      "source": "api\\real-endpoints.js",
+      "path": "/real-endpoints.js/real-endpoints",
+      "methods": [
+        "UNKNOWN"
+      ],
+      "regex": "/^\\/real-endpoints\\.js\\/real-endpoints$/",
+      "note": "legacyApiHeuristic"
+    },
+    {
+      "source": "api\\synthex.js",
+      "path": "/synthex.js/synthex",
+      "methods": [
+        "UNKNOWN"
+      ],
+      "regex": "/^\\/synthex\\.js\\/synthex$/",
+      "note": "legacyApiHeuristic"
+    },
+    {
+      "source": "api\\vercel.js",
+      "path": "/vercel.js/vercel",
+      "methods": [
+        "UNKNOWN"
+      ],
+      "regex": "/^\\/vercel\\.js\\/vercel$/",
+      "note": "legacyApiHeuristic"
+    }
+  ],
+  "count": 39
+}
