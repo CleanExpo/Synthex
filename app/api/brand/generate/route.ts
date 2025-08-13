@@ -48,11 +48,11 @@ export async function POST(request: NextRequest) {
         targetAudience: targetAudience,
         brandGoals: brandGoals,
         tonePreference: tonePreference,
-        psychologyStrategy: result.psychologicalStrategy,
-        brandNames: result.brandNames,
-        taglines: result.taglines,
-        metadataPackages: result.metadataPackages,
-        implementationGuide: result.implementationGuide,
+        psychologyStrategy: result.psychologicalStrategy as any,
+        brandNames: result.brandNames as any,
+        taglines: result.taglines as any,
+        metadataPackages: result.metadataPackages as any,
+        implementationGuide: result.implementationGuide as any,
         effectivenessScore: result.effectivenessScore,
         status: 'draft'
       }
