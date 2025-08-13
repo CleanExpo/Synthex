@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
+import { IntegrationModal } from '@/components/IntegrationModal';
 import { 
   Twitter, 
   Linkedin, 
@@ -37,6 +38,8 @@ interface Integration {
 export default function IntegrationsPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [connectingId, setConnectingId] = useState<string | null>(null);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [selectedIntegration, setSelectedIntegration] = useState<Integration | null>(null);
 
   const [integrations, setIntegrations] = useState<Integration[]>([
     {
@@ -87,14 +90,30 @@ export default function IntegrationsPage() {
   ]);
 
   const handleConnect = async (id: string) => {
-    setConnectingId(id);
+    const integration = integrations.find(i => i.id === id);
+    if (integration) {
+      setSelectedIntegration(integration);
+      setModalOpen(true);
+    }
+  };
+
+  const handleModalConnect = async (credentials?: any) => {
+    if (!selectedIntegration) return;
+    
+    setConnectingId(selectedIntegration.id);
     
     try {
-      // Simulate OAuth flow
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Call API to save credentials
+      const response = await fetch(`/api/integrations/${selectedIntegration.id}/connect`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(credentials || {})
+      });
+
+      if (!response.ok) throw new Error('Connection failed');
       
       setIntegrations(prev => prev.map(integration => 
-        integration.id === id 
+        integration.id === selectedIntegration.id 
           ? { 
               ...integration, 
               connected: true,
@@ -103,9 +122,11 @@ export default function IntegrationsPage() {
           : integration
       ));
       
-      toast.success(`${integrations.find(i => i.id === id)?.name} connected successfully!`);
+      toast.success(`${selectedIntegration.name} connected successfully!`);
+      setModalOpen(false);
     } catch (error) {
       toast.error('Failed to connect. Please try again.');
+      throw error;
     } finally {
       setConnectingId(null);
     }
@@ -281,6 +302,18 @@ export default function IntegrationsPage() {
           </div>
         </CardContent>
       </Card>
+
+      {selectedIntegration && (
+        <IntegrationModal
+          isOpen={modalOpen}
+          onClose={() => {
+            setModalOpen(false);
+            setSelectedIntegration(null);
+          }}
+          integration={selectedIntegration}
+          onConnect={handleModalConnect}
+        />
+      )}
     </div>
   );
 }
