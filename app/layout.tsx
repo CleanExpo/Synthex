@@ -9,6 +9,7 @@ import { ProductTour } from '@/components/ProductTour';
 import { FloatingActionButton } from '@/components/FloatingActionButton';
 import { FloatingStreak } from '@/components/StreakCounter';
 import './globals.css';
+import { validatedEnv } from '@/config/env.server';
 
 const inter = Inter({ 
   subsets: ['latin'],
