@@ -154,10 +154,15 @@ export function exportToPDF(data: ExportData, filename = 'export.pdf') {
 }
 
 /**
- * Export data to Excel format (XLSX)
+ * Export data to Excel format (CSV as fallback due to xlsx vulnerability)
+ * Note: Temporarily using CSV format until xlsx vulnerability is resolved
  */
-export async function exportToExcel(data: ExportData, filename = 'export.xlsx') {
-  // Dynamic import to reduce bundle size
+export async function exportToExcel(data: ExportData, filename = 'export.csv') {
+  // Using CSV export as safer alternative to vulnerable xlsx package
+  console.warn('Excel export using CSV format for security. Full Excel support coming soon.');
+  return exportToCSV(data, filename);
+  
+  /* Original XLSX code - disabled due to security vulnerability
   const XLSX = await import('xlsx');
   
   const { headers, rows, metadata } = data;
@@ -195,6 +200,7 @@ export async function exportToExcel(data: ExportData, filename = 'export.xlsx') 
   
   // Write file
   XLSX.writeFile(wb, filename);
+  */
 }
 
 /**
