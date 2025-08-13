@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import MobileMenu from '@/components/MobileMenu';
+import { NotificationBell } from '@/components/NotificationBell';
 import { 
   Sparkles, 
   Home, 
@@ -15,7 +16,6 @@ import {
   HelpCircle,
   ChevronLeft,
   ChevronRight,
-  Bell,
   Search,
   User,
   LogOut,
@@ -158,12 +158,7 @@ export default function DashboardLayout({
 
           <div className="flex items-center space-x-4">
             {/* Notifications */}
-            <Button variant="ghost" size="icon" className="relative">
-              <Bell className="h-5 w-5" />
-              <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-purple-500 text-[10px] font-medium text-white flex items-center justify-center">
-                3
-              </span>
-            </Button>
+            <NotificationBell />
 
             {/* User Menu */}
             <DropdownMenu>
