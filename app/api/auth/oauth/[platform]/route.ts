@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase-client';
+import prisma from '@/lib/prisma';
 
 // OAuth configuration for different platforms
 const oauthConfig = {
@@ -164,30 +165,51 @@ export async function POST(
 
     const tokenData = await tokenResponse.json();
 
-    // Store the integration in database
-    const { error: dbError } = await supabase
-      .from('social_integrations')
-      .upsert({
-        user_id: stateData.userId,
-        platform,
-        access_token: tokenData.access_token,
-        refresh_token: tokenData.refresh_token,
-        token_expires_at: tokenData.expires_in 
-          ? new Date(Date.now() + tokenData.expires_in * 1000).toISOString()
-          : null,
-        is_active: true,
-        profile_data: {
-          scope: tokenData.scope,
-          token_type: tokenData.token_type,
-        },
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      }, {
-        onConflict: 'user_id,platform'
-      });
+    // Persist the integration using Prisma PlatformConnection
+    // Try to create; if unique conflict occurs, update existing
+    const expiresAt = tokenData.expires_in
+      ? new Date(Date.now() + tokenData.expires_in * 1000)
+      : null;
+    const scope = tokenData.scope || oauthConfig[platform].scope;
+    const profileId = tokenData.user_id || tokenData.resource_owner_id || null; // fallback if provided by provider
 
-    if (dbError) {
-      throw dbError;
+    try {
+      await prisma.platformConnection.create({
+        data: {
+          userId: stateData.userId,
+          platform,
+          accessToken: tokenData.access_token,
+          refreshToken: tokenData.refresh_token || null,
+          expiresAt,
+          scope,
+          profileId,
+          profileName: null,
+          isActive: true,
+          lastSync: null,
+          metadata: {
+            token_type: tokenData.token_type,
+            raw: tokenData,
+          },
+        },
+      });
+    } catch (e: any) {
+      // On conflict (unique constraint), update existing record
+      console.warn('PlatformConnection create failed, attempting updateMany:', e?.message || e);
+      await prisma.platformConnection.updateMany({
+        where: { userId: stateData.userId, platform },
+        data: {
+          accessToken: tokenData.access_token,
+          refreshToken: tokenData.refresh_token || null,
+          expiresAt,
+          scope,
+          isActive: true,
+          updatedAt: new Date(),
+          metadata: {
+            token_type: tokenData.token_type,
+            raw: tokenData,
+          } as any,
+        },
+      });
     }
 
     return NextResponse.json({
