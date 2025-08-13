@@ -7,7 +7,7 @@ export * from './badge';
 export * from './checkbox';
 export * from './dialog';
 export * from './dropdown-menu';
-export * from './form';
+export * from './form-field';
 export * from './popover';
 export * from './select';
 export * from './separator';
