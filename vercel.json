@@ -1,6 +1,6 @@
 {
   "framework": "nextjs",
-  "buildCommand": "rm -rf .next && npx prisma generate && next build",
+  "buildCommand": "rm -rf .next && next build",
   "outputDirectory": ".next",
   "installCommand": "npm ci --legacy-peer-deps",
   "devCommand": "npm run dev",
