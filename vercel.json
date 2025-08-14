@@ -8,8 +8,20 @@
   "functions": {
     "app/api/**/*.ts": {
       "maxDuration": 10
+    },
+    "app/api/backup/route.ts": {
+      "maxDuration": 60
+    },
+    "app/api/monitoring/metrics/route.ts": {
+      "maxDuration": 30
     }
   },
+  "crons": [
+    {
+      "path": "/api/backup",
+      "schedule": "0 2 * * *"
+    }
+  ],
   "headers": [
     {
       "source": "/(.*)",
