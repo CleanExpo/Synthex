@@ -1,0 +1,26 @@
+diff --git a/.env.example b/.env.example
+index 1234567..abcdefg 100644
+--- a/.env.example
++++ b/.env.example
+@@ -90,6 +90,21 @@ NEXTAUTH_SECRET=
+ # Development Mode Settings
+ NODE_ENV=development
+ 
++# Build Configuration
++ANALYZE=false
++
++# API Configuration
++API_URL=http://localhost:3000
++
++# Vercel Environment Variables (auto-populated)
++NEXT_PUBLIC_VERCEL_GIT_COMMIT_SHA=
++NEXT_PUBLIC_VERCEL_ENV=
++VERCEL_URL=
++NEXT_PUBLIC_VERCEL_URL=
++
++# Anthropic Configuration (for advanced AI features)
++ANTHROPIC_API_KEY=
++
+ # Strategic Marketing Feature Flags
+ ENABLE_STRATEGIC_MARKETING=true
+ ENABLE_AB_TESTING=true

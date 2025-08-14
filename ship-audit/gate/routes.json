@@ -1,0 +1,738 @@
+[
+  {
+    "path": "/app\\page.tsx",
+    "file": "app\\page.tsx",
+    "type": "page"
+  },
+  {
+    "path": "/app\\terms\\page.tsx",
+    "file": "app\\terms\\page.tsx",
+    "type": "page"
+  },
+  {
+    "path": "/app\\support\\page.tsx",
+    "file": "app\\support\\page.tsx",
+    "type": "page"
+  },
+  {
+    "path": "/app\\roadmap\\page.tsx",
+    "file": "app\\roadmap\\page.tsx",
+    "type": "page"
+  },
+  {
+    "path": "/app\\pricing\\page.tsx",
+    "file": "app\\pricing\\page.tsx",
+    "type": "page"
+  },
+  {
+    "path": "/app\\privacy\\page.tsx",
+    "file": "app\\privacy\\page.tsx",
+    "type": "page"
+  },
+  {
+    "path": "/app\\onboarding\\page.tsx",
+    "file": "app\\onboarding\\page.tsx",
+    "type": "page"
+  },
+  {
+    "path": "/app\\forgot-password\\page.tsx",
+    "file": "app\\forgot-password\\page.tsx",
+    "type": "page"
+  },
+  {
+    "path": "/app\\features\\page.tsx",
+    "file": "app\\features\\page.tsx",
+    "type": "page"
+  },
+  {
+    "path": "/app\\docs\\page.tsx",
+    "file": "app\\docs\\page.tsx",
+    "type": "page"
+  },
+  {
+    "path": "/app\\demo\\page.tsx",
+    "file": "app\\demo\\page.tsx",
+    "type": "page"
+  },
+  {
+    "path": "/app\\dashboard\\page.tsx",
+    "file": "app\\dashboard\\page.tsx",
+    "type": "page"
+  },
+  {
+    "path": "/app\\changelog\\page.tsx",
+    "file": "app\\changelog\\page.tsx",
+    "type": "page"
+  },
+  {
+    "path": "/app\\careers\\page.tsx",
+    "file": "app\\careers\\page.tsx",
+    "type": "page"
+  },
+  {
+    "path": "/app\\brand-generator\\page.tsx",
+    "file": "app\\brand-generator\\page.tsx",
+    "type": "page"
+  },
+  {
+    "path": "/app\\api-reference\\page.tsx",
+    "file": "app\\api-reference\\page.tsx",
+    "type": "page"
+  },
+  {
+    "path": "/app\\blog\\page.tsx",
+    "file": "app\\blog\\page.tsx",
+    "type": "page"
+  },
+  {
+    "path": "/app\\about\\page.tsx",
+    "file": "app\\about\\page.tsx",
+    "type": "page"
+  },
+  {
+    "path": "/app\\demo\\ultra-animations\\page.tsx",
+    "file": "app\\demo\\ultra-animations\\page.tsx",
+    "type": "page"
+  },
+  {
+    "path": "/app\\demo\\enhanced-landing\\page.tsx",
+    "file": "app\\demo\\enhanced-landing\\page.tsx",
+    "type": "page"
+  },
+  {
+    "path": "/app\\demo\\enhanced-sandbox\\page.tsx",
+    "file": "app\\demo\\enhanced-sandbox\\page.tsx",
+    "type": "page"
+  },
+  {
+    "path": "/app\\demo\\animation-showcase\\page.tsx",
+    "file": "app\\demo\\animation-showcase\\page.tsx",
+    "type": "page"
+  },
+  {
+    "path": "/app\\dashboard\\settings\\page.tsx",
+    "file": "app\\dashboard\\settings\\page.tsx",
+    "type": "page"
+  },
+  {
+    "path": "/app\\dashboard\\schedule\\page.tsx",
+    "file": "app\\dashboard\\schedule\\page.tsx",
+    "type": "page"
+  },
+  {
+    "path": "/app\\dashboard\\team\\page.tsx",
+    "file": "app\\dashboard\\team\\page.tsx",
+    "type": "page"
+  },
+  {
+    "path": "/app\\dashboard\\personas\\page.tsx",
+    "file": "app\\dashboard\\personas\\page.tsx",
+    "type": "page"
+  },
+  {
+    "path": "/app\\dashboard\\sandbox\\page.tsx",
+    "file": "app\\dashboard\\sandbox\\page.tsx",
+    "type": "page"
+  },
+  {
+    "path": "/app\\dashboard\\patterns\\page.tsx",
+    "file": "app\\dashboard\\patterns\\page.tsx",
+    "type": "page"
+  },
+  {
+    "path": "/app\\dashboard\\help\\page.tsx",
+    "file": "app\\dashboard\\help\\page.tsx",
+    "type": "page"
+  },
+  {
+    "path": "/app\\dashboard\\integrations\\page.tsx",
+    "file": "app\\dashboard\\integrations\\page.tsx",
+    "type": "page"
+  },
+  {
+    "path": "/app\\dashboard\\analytics\\page.tsx",
+    "file": "app\\dashboard\\analytics\\page.tsx",
+    "type": "page"
+  },
+  {
+    "path": "/app\\dashboard\\content\\page.tsx",
+    "file": "app\\dashboard\\content\\page.tsx",
+    "type": "page"
+  },
+  {
+    "path": "/app\\blog\\:slug\\page.tsx",
+    "file": "app\\blog\\[slug]\\page.tsx",
+    "type": "page"
+  },
+  {
+    "path": "/app\\/\\signup\\page.tsx",
+    "file": "app\\(auth)\\signup\\page.tsx",
+    "type": "page"
+  },
+  {
+    "path": "/app\\/\\login\\page.tsx",
+    "file": "app\\(auth)\\login\\page.tsx",
+    "type": "page"
+  },
+  {
+    "path": "/app\\api\\ws\\route.ts",
+    "file": "app\\api\\ws\\route.ts",
+    "type": "api",
+    "methods": [
+      "GET",
+      "POST",
+      "OPTIONS"
+    ]
+  },
+  {
+    "path": "/app\\api\\onboarding\\route.ts",
+    "file": "app\\api\\onboarding\\route.ts",
+    "type": "api",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/app\\api\\notifications\\route.ts",
+    "file": "app\\api\\notifications\\route.ts",
+    "type": "api",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/app\\api\\integrations\\route.ts",
+    "file": "app\\api\\integrations\\route.ts",
+    "type": "api",
+    "methods": [
+      "GET",
+      "POST",
+      "DELETE"
+    ]
+  },
+  {
+    "path": "/app\\api\\health\\route.ts",
+    "file": "app\\api\\health\\route.ts",
+    "type": "api",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/app\\api\\features\\route.ts",
+    "file": "app\\api\\features\\route.ts",
+    "type": "api",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/app\\api\\competitors\\route.ts",
+    "file": "app\\api\\competitors\\route.ts",
+    "type": "api",
+    "methods": [
+      "GET",
+      "POST"
+    ]
+  },
+  {
+    "path": "/app\\api\\campaigns\\route.ts",
+    "file": "app\\api\\campaigns\\route.ts",
+    "type": "api",
+    "methods": [
+      "GET",
+      "POST",
+      "PUT",
+      "DELETE"
+    ]
+  },
+  {
+    "path": "/app\\api\\analytics\\route.ts",
+    "file": "app\\api\\analytics\\route.ts",
+    "type": "api",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/app\\api\\white-label\\config\\route.ts",
+    "file": "app\\api\\white-label\\config\\route.ts",
+    "type": "api",
+    "methods": [
+      "GET",
+      "PUT"
+    ]
+  },
+  {
+    "path": "/app\\api\\teams\\stats\\route.ts",
+    "file": "app\\api\\teams\\stats\\route.ts",
+    "type": "api",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/app\\api\\teams\\members\\route.ts",
+    "file": "app\\api\\teams\\members\\route.ts",
+    "type": "api",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/app\\api\\teams\\invitations\\route.ts",
+    "file": "app\\api\\teams\\invitations\\route.ts",
+    "type": "api",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/app\\api\\teams\\activity\\route.ts",
+    "file": "app\\api\\teams\\activity\\route.ts",
+    "type": "api",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/app\\api\\teams\\invite\\route.ts",
+    "file": "app\\api\\teams\\invite\\route.ts",
+    "type": "api",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/app\\api\\user\\settings\\route.ts",
+    "file": "app\\api\\user\\settings\\route.ts",
+    "type": "api",
+    "methods": [
+      "GET",
+      "PUT"
+    ]
+  },
+  {
+    "path": "/app\\api\\user\\profile\\route.ts",
+    "file": "app\\api\\user\\profile\\route.ts",
+    "type": "api",
+    "methods": [
+      "GET",
+      "PUT",
+      "DELETE"
+    ]
+  },
+  {
+    "path": "/app\\api\\user\\change-password\\route.ts",
+    "file": "app\\api\\user\\change-password\\route.ts",
+    "type": "api",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/app\\api\\user\\avatar\\route.ts",
+    "file": "app\\api\\user\\avatar\\route.ts",
+    "type": "api",
+    "methods": [
+      "POST",
+      "DELETE"
+    ]
+  },
+  {
+    "path": "/app\\api\\user\\account\\route.ts",
+    "file": "app\\api\\user\\account\\route.ts",
+    "type": "api",
+    "methods": [
+      "DELETE"
+    ]
+  },
+  {
+    "path": "/app\\api\\scheduler\\posts\\route.ts",
+    "file": "app\\api\\scheduler\\posts\\route.ts",
+    "type": "api",
+    "methods": [
+      "GET",
+      "POST"
+    ]
+  },
+  {
+    "path": "/app\\api\\reporting\\reports\\route.ts",
+    "file": "app\\api\\reporting\\reports\\route.ts",
+    "type": "api",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/app\\api\\reporting\\generate\\route.ts",
+    "file": "app\\api\\reporting\\generate\\route.ts",
+    "type": "api",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/app\\api\\performance\\metrics\\route.ts",
+    "file": "app\\api\\performance\\metrics\\route.ts",
+    "type": "api",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/app\\api\\patterns\\analyze\\route.ts",
+    "file": "app\\api\\patterns\\analyze\\route.ts",
+    "type": "api",
+    "methods": [
+      "GET",
+      "POST"
+    ]
+  },
+  {
+    "path": "/app\\api\\notifications\\settings\\route.ts",
+    "file": "app\\api\\notifications\\settings\\route.ts",
+    "type": "api",
+    "methods": [
+      "PUT"
+    ]
+  },
+  {
+    "path": "/app\\api\\monitoring\\events\\route.ts",
+    "file": "app\\api\\monitoring\\events\\route.ts",
+    "type": "api",
+    "methods": [
+      "POST",
+      "GET"
+    ]
+  },
+  {
+    "path": "/app\\api\\mobile\\sync\\route.ts",
+    "file": "app\\api\\mobile\\sync\\route.ts",
+    "type": "api",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/app\\api\\mobile\\config\\route.ts",
+    "file": "app\\api\\mobile\\config\\route.ts",
+    "type": "api",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/app\\api\\library\\content\\route.ts",
+    "file": "app\\api\\library\\content\\route.ts",
+    "type": "api",
+    "methods": [
+      "GET",
+      "POST"
+    ]
+  },
+  {
+    "path": "/app\\api\\health\\auth\\route.ts",
+    "file": "app\\api\\health\\auth\\route.ts",
+    "type": "api",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/app\\api\\dashboard\\stats\\route.ts",
+    "file": "app\\api\\dashboard\\stats\\route.ts",
+    "type": "api",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/app\\api\\cron\\analyze-patterns\\route.ts",
+    "file": "app\\api\\cron\\analyze-patterns\\route.ts",
+    "type": "api",
+    "methods": [
+      "GET",
+      "POST"
+    ]
+  },
+  {
+    "path": "/app\\api\\content\\generate\\route.ts",
+    "file": "app\\api\\content\\generate\\route.ts",
+    "type": "api",
+    "methods": [
+      "POST",
+      "PUT"
+    ]
+  },
+  {
+    "path": "/app\\api\\brand\\generate\\route.ts",
+    "file": "app\\api\\brand\\generate\\route.ts",
+    "type": "api",
+    "methods": [
+      "POST",
+      "GET"
+    ]
+  },
+  {
+    "path": "/app\\api\\auth\\verify-token\\route.ts",
+    "file": "app\\api\\auth\\verify-token\\route.ts",
+    "type": "api",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/app\\api\\auth\\verify\\route.ts",
+    "file": "app\\api\\auth\\verify\\route.ts",
+    "type": "api",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/app\\api\\auth\\unified-login\\route.ts",
+    "file": "app\\api\\auth\\unified-login\\route.ts",
+    "type": "api",
+    "methods": [
+      "POST",
+      "GET"
+    ]
+  },
+  {
+    "path": "/app\\api\\auth\\unified\\route.ts",
+    "file": "app\\api\\auth\\unified\\route.ts",
+    "type": "api",
+    "methods": [
+      "POST",
+      "GET"
+    ]
+  },
+  {
+    "path": "/app\\api\\auth\\signup-prisma\\route.ts",
+    "file": "app\\api\\auth\\signup-prisma\\route.ts",
+    "type": "api",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/app\\api\\auth\\signup\\route.ts",
+    "file": "app\\api\\auth\\signup\\route.ts",
+    "type": "api",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/app\\api\\auth\\reset-password\\route.ts",
+    "file": "app\\api\\auth\\reset-password\\route.ts",
+    "type": "api",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/app\\api\\auth\\login-prisma\\route.ts",
+    "file": "app\\api\\auth\\login-prisma\\route.ts",
+    "type": "api",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/app\\api\\auth\\login\\route.ts",
+    "file": "app\\api\\auth\\login\\route.ts",
+    "type": "api",
+    "methods": [
+      "POST",
+      "DELETE"
+    ]
+  },
+  {
+    "path": "/app\\api\\auth\\api-keys\\route.ts",
+    "file": "app\\api\\auth\\api-keys\\route.ts",
+    "type": "api",
+    "methods": [
+      "GET",
+      "POST"
+    ]
+  },
+  {
+    "path": "/app\\api\\analytics\\performance\\route.ts",
+    "file": "app\\api\\analytics\\performance\\route.ts",
+    "type": "api",
+    "methods": [
+      "POST",
+      "GET"
+    ]
+  },
+  {
+    "path": "/app\\api\\auth\\profile\\route.ts",
+    "file": "app\\api\\auth\\profile\\route.ts",
+    "type": "api",
+    "methods": [
+      "GET",
+      "PUT"
+    ]
+  },
+  {
+    "path": "/app\\api\\analytics\\realtime\\route.ts",
+    "file": "app\\api\\analytics\\realtime\\route.ts",
+    "type": "api",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/app\\api\\ai\\generate-content\\route.ts",
+    "file": "app\\api\\ai\\generate-content\\route.ts",
+    "type": "api",
+    "methods": [
+      "POST",
+      "GET"
+    ]
+  },
+  {
+    "path": "/app\\api\\analytics\\insights\\route.ts",
+    "file": "app\\api\\analytics\\insights\\route.ts",
+    "type": "api",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/app\\api\\ai-content\\optimize\\route.ts",
+    "file": "app\\api\\ai-content\\optimize\\route.ts",
+    "type": "api",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/app\\api\\ai-content\\hashtags\\route.ts",
+    "file": "app\\api\\ai-content\\hashtags\\route.ts",
+    "type": "api",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/app\\api\\ai-content\\translate\\route.ts",
+    "file": "app\\api\\ai-content\\translate\\route.ts",
+    "type": "api",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/app\\api\\teams\\members\\:memberId\\route.ts",
+    "file": "app\\api\\teams\\members\\[memberId]\\route.ts",
+    "type": "api",
+    "methods": [
+      "PATCH",
+      "DELETE"
+    ]
+  },
+  {
+    "path": "/app\\api\\ab-testing\\tests\\route.ts",
+    "file": "app\\api\\ab-testing\\tests\\route.ts",
+    "type": "api",
+    "methods": [
+      "GET",
+      "POST"
+    ]
+  },
+  {
+    "path": "/app\\api\\teams\\invitations\\:id\\route.ts",
+    "file": "app\\api\\teams\\invitations\\[id]\\route.ts",
+    "type": "api",
+    "methods": [
+      "DELETE"
+    ]
+  },
+  {
+    "path": "/app\\api\\scheduler\\posts\\:postId\\route.ts",
+    "file": "app\\api\\scheduler\\posts\\[postId]\\route.ts",
+    "type": "api",
+    "methods": [
+      "DELETE",
+      "PATCH"
+    ]
+  },
+  {
+    "path": "/app\\api\\notifications\\:notificationId\\read\\route.ts",
+    "file": "app\\api\\notifications\\[notificationId]\\read\\route.ts",
+    "type": "api",
+    "methods": [
+      "PATCH"
+    ]
+  },
+  {
+    "path": "/app\\api\\library\\content\\:contentId\\route.ts",
+    "file": "app\\api\\library\\content\\[contentId]\\route.ts",
+    "type": "api",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/app\\api\\integrations\\:integrationId\\status\\route.ts",
+    "file": "app\\api\\integrations\\[integrationId]\\status\\route.ts",
+    "type": "api",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/app\\api\\integrations\\:integrationId\\connect\\route.ts",
+    "file": "app\\api\\integrations\\[integrationId]\\connect\\route.ts",
+    "type": "api",
+    "methods": [
+      "POST",
+      "GET",
+      "DELETE"
+    ]
+  },
+  {
+    "path": "/app\\api\\competitors\\:competitorId\\analyze\\route.ts",
+    "file": "app\\api\\competitors\\[competitorId]\\analyze\\route.ts",
+    "type": "api",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/app\\api\\auth\\oauth\\:platform\\route.ts",
+    "file": "app\\api\\auth\\oauth\\[platform]\\route.ts",
+    "type": "api",
+    "methods": [
+      "GET",
+      "POST"
+    ]
+  },
+  {
+    "path": "/app\\api\\teams\\members\\:memberId\\role\\route.ts",
+    "file": "app\\api\\teams\\members\\[memberId]\\role\\route.ts",
+    "type": "api",
+    "methods": [
+      "PATCH"
+    ]
+  },
+  {
+    "path": "/app\\api\\reporting\\reports\\:reportId\\download\\route.ts",
+    "file": "app\\api\\reporting\\reports\\[reportId]\\download\\route.ts",
+    "type": "api",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/app\\api\\ab-testing\\tests\\:testId\\results\\route.ts",
+    "file": "app\\api\\ab-testing\\tests\\[testId]\\results\\route.ts",
+    "type": "api",
+    "methods": [
+      "GET"
+    ]
+  }
+]

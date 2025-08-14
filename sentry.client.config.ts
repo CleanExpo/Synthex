@@ -5,6 +5,9 @@ const SENTRY_DSN = process.env.NEXT_PUBLIC_SENTRY_DSN;
 Sentry.init({
   dsn: SENTRY_DSN || 'YOUR_SENTRY_DSN_HERE',
   
+  // Organization: cleanexpo247
+  // Project: synthex
+  
   // Adjust this value in production, or use tracesSampler for greater control
   tracesSampleRate: process.env.NODE_ENV === 'production' ? 0.1 : 1.0,
   
@@ -24,17 +27,18 @@ Sentry.init({
       // Set `tracePropagationTargets` to control what URLs are traced
       tracePropagationTargets: [
         'localhost',
-        /^https:\/\/synthex\.ai/,
-        /^https:\/\/api\.synthex\.ai/,
+        /^https:\/\/synthex\.social/,
+        /^https:\/\/synthex-.*\.vercel\.app/,
+        /^https:\/\/api\.synthex\.social/,
       ],
     }),
   ],
   
   // Environment configuration
-  environment: process.env.NODE_ENV,
+  environment: process.env.NEXT_PUBLIC_SENTRY_ENVIRONMENT || process.env.NODE_ENV,
   
   // Release tracking
-  release: process.env.NEXT_PUBLIC_VERCEL_GIT_COMMIT_SHA,
+  release: process.env.NEXT_PUBLIC_SENTRY_RELEASE || process.env.NEXT_PUBLIC_VERCEL_GIT_COMMIT_SHA,
   
   // User context
   initialScope: {

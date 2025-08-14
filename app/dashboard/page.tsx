@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { SkeletonCard, SkeletonChart } from '@/components/ui/skeleton';
 import { EmptyState } from '@/components/EmptyState';
@@ -95,6 +97,9 @@ const StatCard = ({
 export default function DashboardPage() {
   const [aiProgress, setAiProgress] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
+  const router = useRouter();
+  const [showAutomationSetup, setShowAutomationSetup] = useState(false);
+  const [features, setFeatures] = useState({ smartScheduling: false, trendDetection: false });
   const [activeTab, setActiveTab] = useState('overview');
   const [dashboardData, setDashboardData] = useState<any>({
     stats: {
@@ -123,6 +128,11 @@ export default function DashboardPage() {
     ],
     recentActivity: []
   });
+
+  const handleFeatureToggle = (feature: string) => {
+        setFeatures(prev => ({ ...prev, [feature]: !prev[feature] }));
+        toast.success(`${feature} ${features[feature] ? 'disabled' : 'enabled'}`);
+      };
 
   useEffect(() => {
     fetchDashboardData();
@@ -448,28 +458,28 @@ export default function DashboardPage() {
                   <p className="text-sm text-gray-400 mb-4">
                     AI automatically optimizes your content for maximum engagement
                   </p>
-                  <Button variant="outline" className="w-full">Configure</Button>
+                  <Button variant="outline" className="w-full" onClick={() => router.push("/dashboard/settings")}>Configure</Button>
                 </div>
                 <div className="p-6 bg-white/5 rounded-lg">
                   <h3 className="font-semibold mb-2">Smart Scheduling</h3>
                   <p className="text-sm text-gray-400 mb-4">
                     Post at optimal times based on audience activity patterns
                   </p>
-                  <Button variant="outline" className="w-full">Enable</Button>
+                  <Button variant="outline" className="w-full" onClick={() => handleFeatureToggle("smartScheduling")}>Enable</Button>
                 </div>
                 <div className="p-6 bg-white/5 rounded-lg">
                   <h3 className="font-semibold mb-2">Response Automation</h3>
                   <p className="text-sm text-gray-400 mb-4">
                     AI-powered responses to comments and messages
                   </p>
-                  <Button variant="outline" className="w-full">Set Up</Button>
+                  <Button variant="outline" className="w-full" onClick={() => setShowAutomationSetup(true)}>Set Up</Button>
                 </div>
                 <div className="p-6 bg-white/5 rounded-lg">
                   <h3 className="font-semibold mb-2">Trend Detection</h3>
                   <p className="text-sm text-gray-400 mb-4">
                     Automatically identify and capitalize on trending topics
                   </p>
-                  <Button variant="outline" className="w-full">Activate</Button>
+                  <Button variant="outline" className="w-full" onClick={() => handleFeatureToggle("trendDetection")}>Activate</Button>
                 </div>
               </div>
             </CardContent>
