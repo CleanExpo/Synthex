@@ -3,16 +3,14 @@ const nextConfig = {
   reactStrictMode: true,
   swcMinify: true,
   typescript: {
-    // !! WARN !!
-    // Dangerously allow production builds to successfully complete even if
-    // your project has type errors.
-    // !! WARN !!
-    ignoreBuildErrors: true,
+    // Type checking enabled for production builds
+    // Set to true temporarily if urgent deployment needed
+    ignoreBuildErrors: false,
   },
   eslint: {
-    // Warning: This allows production builds to successfully complete even if
-    // your project has ESLint errors.
-    ignoreDuringBuilds: true,
+    // ESLint checking enabled for production builds
+    // Set to true temporarily if urgent deployment needed
+    ignoreDuringBuilds: false,
   },
   experimental: {
     serverComponentsExternalPackages: ['@prisma/client', 'bcryptjs'],
