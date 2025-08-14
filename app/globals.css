@@ -9,6 +9,8 @@
 
 @layer base {
   :root {
+    /* TEMPORARY TEST - synthex.social verification - Remove this after testing */
+    --test-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     --background: 0 0% 100%;
     --foreground: 240 10% 3.9%;
     --card: 0 0% 100%;
