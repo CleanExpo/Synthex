@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import {
-  Flask,
+  Beaker,
   Play,
   Pause,
   TrendingUp,
@@ -145,7 +145,7 @@ export default function ExperimentsPage() {
         <Card className="glass-card">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium flex items-center">
-              <Flask className="w-4 h-4 mr-2 text-purple-400" />
+              <Beaker className="w-4 h-4 mr-2 text-purple-400" />
               Total Experiments
             </CardTitle>
           </CardHeader>

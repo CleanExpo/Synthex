@@ -6,8 +6,23 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { realtimeService, RealtimeMessage } from '@/lib/realtime';
-import { useUser } from '@supabase/auth-helpers-react';
 import toast from 'react-hot-toast';
+
+// Simple auth hook replacement
+function useUser() {
+  const [user, setUser] = useState<{ id: string; email?: string } | null>(null);
+  
+  useEffect(() => {
+    // For now, return a mock user or null
+    // In production, this would check actual auth state
+    const mockUser = typeof window !== 'undefined' && localStorage.getItem('user_id') 
+      ? { id: localStorage.getItem('user_id')! }
+      : null;
+    setUser(mockUser);
+  }, []);
+  
+  return user;
+}
 
 interface Notification {
   id: string;

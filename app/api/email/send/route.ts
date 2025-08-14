@@ -70,13 +70,17 @@ export async function POST(request: NextRequest) {
     }
 
     // Log email send attempt
-    await supabase.from('email_logs').insert({
-      to,
-      subject,
-      type: type || 'custom',
-      status: success ? 'sent' : 'failed',
-      metadata: { template, variables }
-    }).catch(err => console.error('Failed to log email:', err));
+    try {
+      await supabase.from('email_logs').insert({
+        to,
+        subject,
+        type: type || 'custom',
+        status: success ? 'sent' : 'failed',
+        metadata: { template, variables }
+      });
+    } catch (err) {
+      console.error('Failed to log email:', err);
+    }
 
     if (success) {
       return NextResponse.json({
