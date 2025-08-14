@@ -452,6 +452,3 @@ class ABTestingService {
 
 // Create singleton instance
 export const abTestingService = new ABTestingService();
-
-// Export types
-export type { Experiment, Variant, TargetAudience, ExperimentMetrics, VariantMetrics };

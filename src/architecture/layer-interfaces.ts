@@ -283,7 +283,7 @@ export interface ICacheService {
   delete(key: string): Promise<void>;
   
   /**
-   * Clear cache
+   * Clear all cache
    */
   clear(): Promise<void>;
   
@@ -291,6 +291,41 @@ export interface ICacheService {
    * Check if key exists
    */
   exists(key: string): Promise<boolean>;
+  
+  /**
+   * Get multiple keys at once
+   */
+  mget<T>(keys: string[]): Promise<(T | null)[]>;
+  
+  /**
+   * Set multiple keys at once
+   */
+  mset<T>(keyValuePairs: Array<{ key: string; value: T; ttl?: number }>): Promise<void>;
+  
+  /**
+   * Increment numeric value
+   */
+  increment(key: string, amount?: number): Promise<number>;
+  
+  /**
+   * Get cache statistics
+   */
+  getStats(): Promise<{
+    redisAvailable: boolean;
+    memoryCacheSize: number;
+    memoryCacheHits: number;
+    memoryCacheMisses: number;
+  }>;
+  
+  /**
+   * Get keys matching pattern
+   */
+  getKeys(pattern: string): Promise<string[]>;
+  
+  /**
+   * Delete keys matching pattern
+   */
+  deletePattern(pattern: string): Promise<number>;
 }
 
 // ===============================

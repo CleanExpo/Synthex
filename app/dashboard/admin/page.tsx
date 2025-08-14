@@ -73,8 +73,8 @@ export default function AdminPanel() {
       
       if (error) throw error;
       
-      setUsers(users || []);
-      setFilteredUsers(users || []);
+      setUsers((users as any[]) || []);
+      setFilteredUsers((users as any[]) || []);
     } catch (error) {
       console.error('Error fetching users:', error);
       toast.error('Failed to fetch users');
