@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs';
 
 // Security headers configuration
 const securityHeaders = {
@@ -51,9 +52,15 @@ setInterval(() => {
   }
 }, RATE_LIMIT_WINDOW);
 
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const response = NextResponse.next();
   const pathname = request.nextUrl.pathname;
+  
+  // Create Supabase client for auth checks
+  const supabase = createMiddlewareClient({ req: request, res: response });
+  
+  // Refresh session if expired
+  const { data: { session } } = await supabase.auth.getSession();
   
   // Apply security headers to all responses
   Object.entries(securityHeaders).forEach(([key, value]) => {
@@ -101,19 +108,32 @@ export function middleware(request: NextRequest) {
   }
   
   // Authentication check for protected routes
-  const protectedPaths = ['/dashboard', '/api/protected'];
+  const protectedPaths = ['/dashboard', '/api/protected', '/api/user', '/api/integrations'];
+  const authPaths = ['/auth/login', '/auth/register'];
   const isProtectedPath = protectedPaths.some(path => pathname.startsWith(path));
+  const isAuthPath = authPaths.some(path => pathname.startsWith(path));
   
-  if (isProtectedPath) {
-    const token = request.cookies.get('auth-token');
-    
-    if (!token && !pathname.startsWith('/api/')) {
+  // Allow demo routes without authentication
+  if (pathname.startsWith('/demo')) {
+    return response;
+  }
+  
+  // Redirect to login if accessing protected route without session
+  if (isProtectedPath && !session) {
+    if (!pathname.startsWith('/api/')) {
       // Redirect to login for web pages
-      return NextResponse.redirect(new URL('/login', request.url));
-    } else if (!token && pathname.startsWith('/api/')) {
+      const redirectUrl = new URL('/auth/login', request.url);
+      redirectUrl.searchParams.set('redirectTo', pathname);
+      return NextResponse.redirect(redirectUrl);
+    } else {
       // Return 401 for API routes
       return new NextResponse('Unauthorized', { status: 401 });
     }
+  }
+  
+  // Redirect to dashboard if accessing auth routes with active session
+  if (isAuthPath && session) {
+    return NextResponse.redirect(new URL('/dashboard', request.url));
   }
   
   // CSRF protection for mutations
