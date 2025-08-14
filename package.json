@@ -82,6 +82,7 @@
     "@types/react": "^18.2.46",
     "@types/react-dom": "^18.2.18",
     "@types/three": "^0.159.0",
+    "@upstash/redis": "^1.35.3",
     "autoprefixer": "^10.4.16",
     "axios": "^1.11.0",
     "bcryptjs": "^3.0.2",
