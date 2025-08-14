@@ -1,0 +1,26 @@
+# Robots.txt for Synthex
+# https://synthex.social
+
+# Allow all bots
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://synthex.social/sitemap.xml
+
+# Disallow admin and API routes
+User-agent: *
+Disallow: /api/
+Disallow: /admin/
+Disallow: /_next/
+Disallow: /ship-audit/
+
+# Common bot rules
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+# Delay for polite crawling
+Crawl-delay: 1
