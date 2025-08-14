@@ -1,24 +1,30 @@
 import { NextResponse } from 'next/server';
-import prisma from '@/lib/prisma';
+import { testConnection } from '@/lib/supabase-client';
 
 export async function GET() {
   try {
     // Check database connectivity
     let dbStatus = 'healthy';
     let dbLatency = 0;
+    let dbMessage = 'Connected';
     
     try {
       const startTime = Date.now();
-      await prisma.$queryRaw`SELECT 1`;
+      const connectionTest = await testConnection();
       dbLatency = Date.now() - startTime;
-    } catch (dbError) {
+      dbStatus = connectionTest.connected ? 'healthy' : 'unhealthy';
+      dbMessage = connectionTest.message;
+    } catch (dbError: any) {
       dbStatus = 'unhealthy';
+      dbMessage = dbError.message || 'Connection failed';
       console.error('Database health check failed:', dbError);
     }
     
     // Check environment variables
     const requiredEnvVars = [
-      'DATABASE_URL',
+      'NEXT_PUBLIC_SUPABASE_URL',
+      'NEXT_PUBLIC_SUPABASE_ANON_KEY',
+      'ENCRYPTION_KEY',
       'JWT_SECRET',
       'OPENROUTER_API_KEY'
     ];
@@ -43,7 +49,8 @@ export async function GET() {
       checks: {
         database: {
           status: dbStatus,
-          latency: `${dbLatency}ms`
+          latency: `${dbLatency}ms`,
+          message: dbMessage
         },
         environment: {
           status: envStatus,
