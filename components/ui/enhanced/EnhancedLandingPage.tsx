@@ -9,8 +9,8 @@ import { Sparkles, Zap, Brain, Rocket, Shield, Users, TrendingUp, ArrowRight, Ch
 import Link from 'next/link';
 
 // 3D Animated Sphere Component
-function AnimatedSphere({ position = [0, 0, 0], color = "#8b5cf6", scale = 1 }) {
-  const meshRef = useRef<THREE.Mesh>();
+function AnimatedSphere({ position = [0, 0, 0] as [number, number, number], color = "#8b5cf6", scale = 1 }) {
+  const meshRef = useRef<THREE.Mesh>(null);
   const [hovered, setHovered] = useState(false);
 
   useFrame((state) => {
@@ -26,7 +26,7 @@ function AnimatedSphere({ position = [0, 0, 0], color = "#8b5cf6", scale = 1 }) 
       <Sphere
         ref={meshRef}
         args={[1, 64, 64]}
-        position={position}
+        position={position as [number, number, number]}
         onPointerOver={() => setHovered(true)}
         onPointerOut={() => setHovered(false)}
       >
@@ -44,8 +44,8 @@ function AnimatedSphere({ position = [0, 0, 0], color = "#8b5cf6", scale = 1 }) 
 }
 
 // 3D Text Component
-function Text3DComponent({ text, position = [0, 0, 0] }) {
-  const meshRef = useRef<THREE.Mesh>();
+function Text3DComponent({ text, position = [0, 0, 0] as [number, number, number] }: { text: string; position?: [number, number, number] }) {
+  const meshRef = useRef<THREE.Mesh>(null);
 
   useFrame((state) => {
     if (meshRef.current) {
@@ -59,7 +59,7 @@ function Text3DComponent({ text, position = [0, 0, 0] }) {
       font="/fonts/helvetiker_bold.typeface.json"
       size={0.5}
       height={0.1}
-      position={position}
+      position={position as [number, number, number]}
       curveSegments={12}
       bevelEnabled
       bevelThickness={0.02}
@@ -75,7 +75,7 @@ function Text3DComponent({ text, position = [0, 0, 0] }) {
 
 // Particle Field Background
 function ParticleField() {
-  const points = useRef<THREE.Points>();
+  const points = useRef<THREE.Points>(null);
   const particlesCount = 5000;
 
   const positions = new Float32Array(particlesCount * 3);
@@ -108,7 +108,7 @@ function ParticleField() {
 }
 
 // Animated Feature Card
-function FeatureCard3D({ icon: Icon, title, description, delay = 0 }) {
+function FeatureCard3D({ icon: Icon, title, description, delay = 0 }: { icon: any; title: string; description: string; delay?: number }) {
   const cardRef = useRef(null);
   const isInView = useInView(cardRef, { once: true });
   const [isHovered, setIsHovered] = useState(false);
@@ -212,7 +212,7 @@ function MorphingShape() {
 }
 
 // Interactive 3D Profile Card
-function Profile3DCard({ name, role, image, delay = 0 }) {
+function Profile3DCard({ name, role, image, delay = 0 }: { name: string; role: string; image: string; delay?: number }) {
   const [isFlipped, setIsFlipped] = useState(false);
   
   return (

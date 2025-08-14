@@ -76,7 +76,7 @@ export default function PsychologyBrandGenerator() {
       psychographics: [],
       painPoints: []
     },
-    brandGoals: [],
+    brandGoals: [] as string[],
     tonePreference: '',
     selectedPrinciples: [] as string[],
     competitorContext: ''

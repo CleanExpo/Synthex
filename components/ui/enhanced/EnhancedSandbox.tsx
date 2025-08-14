@@ -15,8 +15,8 @@ import {
 } from 'lucide-react';
 
 // 3D Preview Component
-function Preview3D({ content, platform }) {
-  const meshRef = useRef();
+function Preview3D({ content, platform }: { content: string; platform: string }) {
+  const meshRef = useRef(null);
   
   return (
     <Canvas camera={{ position: [0, 0, 5], fov: 50 }}>
@@ -57,7 +57,7 @@ function Preview3D({ content, platform }) {
 }
 
 // Draggable Card Component
-function DraggableCard({ children, id, onDragEnd }) {
+function DraggableCard({ children, id, onDragEnd }: { children: React.ReactNode; id: string; onDragEnd?: (id: string, info: any) => void }) {
   const dragControls = useDragControls();
   const [isDragging, setIsDragging] = useState(false);
 
@@ -86,7 +86,7 @@ function DraggableCard({ children, id, onDragEnd }) {
 }
 
 // Animated Tool Button
-function ToolButton({ icon: Icon, label, isActive, onClick, color = 'purple' }) {
+function ToolButton({ icon: Icon, label, isActive, onClick, color = 'purple' }: { icon: any; label: string; isActive: boolean; onClick: () => void; color?: string }) {
   const [isHovered, setIsHovered] = useState(false);
   
   return (
@@ -120,7 +120,7 @@ function ToolButton({ icon: Icon, label, isActive, onClick, color = 'purple' }) 
 }
 
 // Platform Selector with 3D Icons
-function PlatformSelector({ selected, onSelect }) {
+function PlatformSelector({ selected, onSelect }: { selected: string; onSelect: (platform: string) => void }) {
   const platforms = [
     { id: 'twitter', icon: Twitter, color: '#1DA1F2' },
     { id: 'instagram', icon: Instagram, color: '#E4405F' },
@@ -166,7 +166,7 @@ function PlatformSelector({ selected, onSelect }) {
 }
 
 // AI Content Generator Panel
-function AIGeneratorPanel({ onGenerate }) {
+function AIGeneratorPanel({ onGenerate }: { onGenerate: (data: any) => void }) {
   const [prompt, setPrompt] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [tone, setTone] = useState('professional');
@@ -341,10 +341,10 @@ export default function EnhancedSandbox() {
   const [selectedPlatform, setSelectedPlatform] = useState('twitter');
   const [content, setContent] = useState('');
   const [isPreviewMode, setIsPreviewMode] = useState(false);
-  const [selectedTools, setSelectedTools] = useState([]);
+  const [selectedTools, setSelectedTools] = useState<string[]>([]);
   const [devicePreview, setDevicePreview] = useState('desktop');
 
-  const toggleTool = (tool) => {
+  const toggleTool = (tool: string) => {
     setSelectedTools(prev => 
       prev.includes(tool) 
         ? prev.filter(t => t !== tool)
