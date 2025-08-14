@@ -38,7 +38,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
       scope.setExtras(errorInfo);
       scope.setTag('errorBoundary', true);
       scope.setContext('errorInfo', {
-        componentStack: errorInfo.componentStack,
+        componentStack: errorInfo.componentStack || 'No component stack available',
         url: typeof window !== 'undefined' ? window.location.href : 'unknown'
       });
       Sentry.captureException(error);
