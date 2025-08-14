@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import jwt from 'jsonwebtoken';
+import { encryptCredentials, decryptCredentials } from '@/lib/encryption';
 
 // Mock database for demo purposes
+// In production, this would be stored in Supabase
 const integrationConnections = new Map();
 
 export async function POST(
@@ -36,12 +38,16 @@ export async function POST(
       );
     }
 
-    // Store connection (in production, encrypt and store in database)
+    // Encrypt and store credentials
+    const encryptionKey = process.env.ENCRYPTION_KEY || 'demo_encryption_key_32_characters';
+    const encryptedCredentials = encryptCredentials(body, encryptionKey);
+    
+    // Store connection (in production, this would go to Supabase)
     const connectionKey = `${userId}-${integrationId}`;
     integrationConnections.set(connectionKey, {
       integrationId,
       userId,
-      credentials: body,
+      credentials: encryptedCredentials, // Store encrypted version
       connectedAt: new Date().toISOString(),
       accountName: `@${integrationId}_user`,
       status: 'active'
