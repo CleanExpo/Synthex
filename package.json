@@ -65,6 +65,7 @@
     "@radix-ui/react-switch": "^1.2.5",
     "@radix-ui/react-tabs": "^1.1.12",
     "@radix-ui/react-toast": "^1.2.14",
+    "@radix-ui/react-tooltip": "^1.2.8",
     "@react-three/drei": "^9.88.17",
     "@react-three/fiber": "^8.15.12",
     "@sentry/nextjs": "^7.90.0",
@@ -76,7 +77,10 @@
     "@tiptap/starter-kit": "^2.1.0",
     "@types/bcryptjs": "^2.4.6",
     "@types/jsonwebtoken": "^9.0.10",
+    "@types/node": "^20.10.6",
     "@types/nodemailer": "^6.4.17",
+    "@types/react": "^18.2.46",
+    "@types/react-dom": "^18.2.18",
     "@types/three": "^0.159.0",
     "autoprefixer": "^10.4.16",
     "axios": "^1.11.0",
@@ -122,13 +126,10 @@
     "tailwindcss": "^3.4.0",
     "tailwindcss-animate": "^1.0.7",
     "three": "^0.159.0",
+    "typescript": "^5.3.3",
     "ws": "^8.14.0",
     "zod": "^3.25.76",
-    "zustand": "^4.4.0",
-    "typescript": "^5.3.3",
-    "@types/node": "^20.10.6",
-    "@types/react": "^18.2.46",
-    "@types/react-dom": "^18.2.18"
+    "zustand": "^4.4.0"
   },
   "prisma": {
     "seed": "node prisma/seed.js"
@@ -155,7 +156,7 @@
     "@types/ws": "^8.5.0",
     "concurrently": "^8.2.0",
     "css-loader": "^6.8.1",
-    "eslint": "^8.56.0",
+    "eslint": "^8.57.1",
     "eslint-config-next": "14.0.4",
     "husky": "^8.0.0",
     "jest": "^29.7.0",
