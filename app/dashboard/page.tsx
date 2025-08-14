@@ -129,7 +129,7 @@ export default function DashboardPage() {
     recentActivity: []
   });
 
-  const handleFeatureToggle = (feature: string) => {
+  const handleFeatureToggle = (feature: keyof typeof features) => {
         setFeatures(prev => ({ ...prev, [feature]: !prev[feature] }));
         toast.success(`${feature} ${features[feature] ? 'disabled' : 'enabled'}`);
       };
