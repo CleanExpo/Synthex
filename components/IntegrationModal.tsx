@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   ExternalLink, 
   Shield, 
@@ -20,8 +21,12 @@ import {
   AlertTriangle, 
   Loader2,
   Key,
-  Link2
+  Link2,
+  Info,
+  Copy,
+  Book
 } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface IntegrationModalProps {
   isOpen: boolean;
@@ -35,6 +40,81 @@ interface IntegrationModalProps {
   onConnect: (credentials?: any) => Promise<void>;
 }
 
+// Platform-specific credential requirements
+const platformCredentials: Record<string, Array<{
+  key: string;
+  label: string;
+  type: string;
+  placeholder: string;
+  required: boolean;
+  help?: string;
+}>> = {
+  twitter: [
+    { key: 'apiKey', label: 'API Key', type: 'password', placeholder: 'Enter your Twitter API Key', required: true },
+    { key: 'apiSecret', label: 'API Secret', type: 'password', placeholder: 'Enter your Twitter API Secret', required: true },
+    { key: 'accessToken', label: 'Access Token', type: 'password', placeholder: 'Enter your Access Token', required: true },
+    { key: 'accessTokenSecret', label: 'Access Token Secret', type: 'password', placeholder: 'Enter your Access Token Secret', required: true },
+  ],
+  linkedin: [
+    { key: 'clientId', label: 'Client ID', type: 'password', placeholder: 'Enter your LinkedIn Client ID', required: true },
+    { key: 'clientSecret', label: 'Client Secret', type: 'password', placeholder: 'Enter your LinkedIn Client Secret', required: true },
+    { key: 'accessToken', label: 'Access Token', type: 'password', placeholder: 'Enter your Access Token', required: true, help: 'Generate from LinkedIn Developer Portal' },
+  ],
+  instagram: [
+    { key: 'accessToken', label: 'Access Token', type: 'password', placeholder: 'Enter your Instagram Access Token', required: true },
+    { key: 'businessAccountId', label: 'Business Account ID', type: 'text', placeholder: 'Enter your Business Account ID', required: true },
+  ],
+  facebook: [
+    { key: 'pageAccessToken', label: 'Page Access Token', type: 'password', placeholder: 'Enter your Page Access Token', required: true },
+    { key: 'pageId', label: 'Page ID', type: 'text', placeholder: 'Enter your Facebook Page ID', required: true },
+  ],
+  tiktok: [
+    { key: 'accessToken', label: 'Access Token', type: 'password', placeholder: 'Enter your TikTok Access Token', required: true },
+    { key: 'openId', label: 'Open ID', type: 'text', placeholder: 'Enter your TikTok Open ID', required: true },
+  ],
+};
+
+// Instructions for getting API keys
+const platformInstructions: Record<string, Array<{ step: number; text: string }>> = {
+  twitter: [
+    { step: 1, text: 'Go to developer.twitter.com and sign in' },
+    { step: 2, text: 'Create a new app or select existing one' },
+    { step: 3, text: 'Navigate to "Keys and tokens" tab' },
+    { step: 4, text: 'Generate API Key & Secret' },
+    { step: 5, text: 'Generate Access Token & Secret' },
+    { step: 6, text: 'Copy all four values to Synthex' },
+  ],
+  linkedin: [
+    { step: 1, text: 'Visit linkedin.com/developers' },
+    { step: 2, text: 'Create a new app or select existing' },
+    { step: 3, text: 'Go to "Auth" tab for Client ID & Secret' },
+    { step: 4, text: 'Use OAuth 2.0 tools to generate Access Token' },
+    { step: 5, text: 'Copy credentials to Synthex' },
+  ],
+  instagram: [
+    { step: 1, text: 'Go to developers.facebook.com' },
+    { step: 2, text: 'Create/select app with Instagram Basic Display' },
+    { step: 3, text: 'Generate long-lived Access Token' },
+    { step: 4, text: 'Get your Instagram Business Account ID' },
+    { step: 5, text: 'Enter both values in Synthex' },
+  ],
+  facebook: [
+    { step: 1, text: 'Visit developers.facebook.com' },
+    { step: 2, text: 'Create app or use existing' },
+    { step: 3, text: 'Go to Graph API Explorer' },
+    { step: 4, text: 'Generate Page Access Token with required permissions' },
+    { step: 5, text: 'Get your Page ID from page settings' },
+    { step: 6, text: 'Enter both in Synthex' },
+  ],
+  tiktok: [
+    { step: 1, text: 'Go to developers.tiktok.com' },
+    { step: 2, text: 'Create or select your app' },
+    { step: 3, text: 'Generate Access Token via OAuth' },
+    { step: 4, text: 'Get your Open ID from user info' },
+    { step: 5, text: 'Copy both to Synthex' },
+  ],
+};
+
 export function IntegrationModal({ 
   isOpen, 
   onClose, 
@@ -42,82 +122,19 @@ export function IntegrationModal({
   onConnect 
 }: IntegrationModalProps) {
   const [isConnecting, setIsConnecting] = useState(false);
-  const [step, setStep] = useState<'info' | 'auth' | 'success'>('info');
-  const [apiKey, setApiKey] = useState('');
-  const [apiSecret, setApiSecret] = useState('');
+  const [credentials, setCredentials] = useState<Record<string, string>>({});
   const [error, setError] = useState('');
+  const [activeTab, setActiveTab] = useState('credentials');
 
-  const handleOAuthConnect = async () => {
-    setIsConnecting(true);
-    setError('');
-    
-    try {
-      // Construct OAuth URL based on platform
-      const oauthUrls: Record<string, string> = {
-        twitter: `https://twitter.com/i/oauth2/authorize?response_type=code&client_id=${process.env.NEXT_PUBLIC_TWITTER_CLIENT_ID}&redirect_uri=${encodeURIComponent(window.location.origin + '/api/auth/oauth/twitter')}&scope=tweet.read%20tweet.write%20users.read&state=state&code_challenge=challenge&code_challenge_method=plain`,
-        linkedin: `https://www.linkedin.com/oauth/v2/authorization?response_type=code&client_id=${process.env.NEXT_PUBLIC_LINKEDIN_CLIENT_ID}&redirect_uri=${encodeURIComponent(window.location.origin + '/api/auth/oauth/linkedin')}&scope=r_liteprofile%20r_emailaddress%20w_member_social`,
-        instagram: `https://api.instagram.com/oauth/authorize?client_id=${process.env.NEXT_PUBLIC_INSTAGRAM_CLIENT_ID}&redirect_uri=${encodeURIComponent(window.location.origin + '/api/auth/oauth/instagram')}&scope=user_profile,user_media&response_type=code`,
-        facebook: `https://www.facebook.com/v18.0/dialog/oauth?client_id=${process.env.NEXT_PUBLIC_FACEBOOK_APP_ID}&redirect_uri=${encodeURIComponent(window.location.origin + '/api/auth/oauth/facebook')}&scope=pages_show_list,pages_manage_posts,pages_read_engagement`,
-        tiktok: `https://www.tiktok.com/auth/authorize?client_key=${process.env.NEXT_PUBLIC_TIKTOK_CLIENT_KEY}&redirect_uri=${encodeURIComponent(window.location.origin + '/api/auth/oauth/tiktok')}&response_type=code&scope=user.info.basic,video.list`
-      };
+  const handleConnect = async () => {
+    // Validate required fields
+    const requiredFields = platformCredentials[integration.id] || [];
+    const missingFields = requiredFields
+      .filter(field => field.required && !credentials[field.key])
+      .map(field => field.label);
 
-      const url = oauthUrls[integration.id];
-      
-      if (!url || url.includes('undefined')) {
-        // Fallback to manual API key entry
-        setStep('auth');
-        setIsConnecting(false);
-        return;
-      }
-
-      // Open OAuth window
-      const width = 600;
-      const height = 700;
-      const left = window.screen.width / 2 - width / 2;
-      const top = window.screen.height / 2 - height / 2;
-      
-      const authWindow = window.open(
-        url,
-        `${integration.name} OAuth`,
-        `width=${width},height=${height},left=${left},top=${top}`
-      );
-
-      // Poll for completion
-      const pollTimer = setInterval(async () => {
-        try {
-          if (authWindow?.closed) {
-            clearInterval(pollTimer);
-            // Check if connection was successful
-            const response = await fetch(`/api/integrations/${integration.id}/status`);
-            if (response.ok) {
-              const data = await response.json();
-              if (data.connected) {
-                setStep('success');
-                setTimeout(() => {
-                  onConnect();
-                  handleClose();
-                }, 2000);
-              } else {
-                throw new Error('Connection failed');
-              }
-            }
-          }
-        } catch (err) {
-          clearInterval(pollTimer);
-          setError('Connection failed. Please try again.');
-          setIsConnecting(false);
-        }
-      }, 1000);
-
-    } catch (err: any) {
-      setError(err.message || 'Failed to connect. Please try again.');
-      setIsConnecting(false);
-    }
-  };
-
-  const handleManualConnect = async () => {
-    if (!apiKey) {
-      setError('Please enter an API key');
+    if (missingFields.length > 0) {
+      setError(`Please fill in required fields: ${missingFields.join(', ')}`);
       return;
     }
 
@@ -125,11 +142,9 @@ export function IntegrationModal({
     setError('');
 
     try {
-      await onConnect({ apiKey, apiSecret });
-      setStep('success');
-      setTimeout(() => {
-        handleClose();
-      }, 2000);
+      await onConnect(credentials);
+      toast.success(`${integration.name} connected successfully!`);
+      handleClose();
     } catch (err: any) {
       setError(err.message || 'Failed to connect. Please check your credentials.');
       setIsConnecting(false);
@@ -137,19 +152,25 @@ export function IntegrationModal({
   };
 
   const handleClose = () => {
-    setStep('info');
-    setApiKey('');
-    setApiSecret('');
+    setCredentials({});
     setError('');
     setIsConnecting(false);
+    setActiveTab('credentials');
     onClose();
   };
 
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+    toast.success('Copied to clipboard!');
+  };
+
   const Icon = integration.icon;
+  const fields = platformCredentials[integration.id] || [];
+  const instructions = platformInstructions[integration.id] || [];
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-md glass-card border-white/10">
+      <DialogContent className="sm:max-w-2xl glass-card border-white/10">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-3">
             <div className={`p-2 rounded-lg bg-gray-800/50 ${integration.color}`}>
@@ -158,107 +179,47 @@ export function IntegrationModal({
             Connect {integration.name}
           </DialogTitle>
           <DialogDescription>
-            {step === 'info' && 'Authorize Synthex to manage your account'}
-            {step === 'auth' && 'Enter your API credentials'}
-            {step === 'success' && 'Successfully connected!'}
+            Enter your {integration.name} API credentials to connect your account
           </DialogDescription>
         </DialogHeader>
 
-        {step === 'info' && (
-          <div className="space-y-4 py-4">
-            <div className="space-y-3">
-              <div className="flex items-start gap-3">
-                <CheckCircle className="w-5 h-5 text-green-400 mt-0.5" />
-                <div>
-                  <p className="font-medium text-white">Post & Schedule Content</p>
-                  <p className="text-sm text-gray-400">Create and schedule posts directly from Synthex</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-3">
-                <CheckCircle className="w-5 h-5 text-green-400 mt-0.5" />
-                <div>
-                  <p className="font-medium text-white">Analytics & Insights</p>
-                  <p className="text-sm text-gray-400">Track performance and engagement metrics</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-3">
-                <CheckCircle className="w-5 h-5 text-green-400 mt-0.5" />
-                <div>
-                  <p className="font-medium text-white">Secure Connection</p>
-                  <p className="text-sm text-gray-400">Your data is encrypted and secure</p>
-                </div>
-              </div>
-            </div>
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-4">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="credentials">API Credentials</TabsTrigger>
+            <TabsTrigger value="instructions">How to Get Keys</TabsTrigger>
+          </TabsList>
 
-            <Alert className="border-amber-500/20 bg-amber-500/5">
-              <AlertTriangle className="h-4 w-4 text-amber-500" />
-              <AlertDescription className="text-gray-300">
-                You'll be redirected to {integration.name} to authorize the connection. 
-                You can revoke access at any time.
-              </AlertDescription>
-            </Alert>
-
-            <DialogFooter className="gap-2">
-              <Button variant="outline" onClick={handleClose}>
-                Cancel
-              </Button>
-              <Button 
-                onClick={handleOAuthConnect}
-                disabled={isConnecting}
-                className="gradient-primary text-white"
-              >
-                {isConnecting ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Connecting...
-                  </>
-                ) : (
-                  <>
-                    <Link2 className="w-4 h-4 mr-2" />
-                    Connect with {integration.name}
-                  </>
-                )}
-              </Button>
-            </DialogFooter>
-          </div>
-        )}
-
-        {step === 'auth' && (
-          <div className="space-y-4 py-4">
+          <TabsContent value="credentials" className="space-y-4 mt-4">
             <Alert className="border-blue-500/20 bg-blue-500/5">
               <Shield className="h-4 w-4 text-blue-500" />
               <AlertDescription className="text-gray-300">
-                Enter your API credentials for {integration.name}. 
-                These will be encrypted and stored securely.
+                Your credentials are encrypted and stored securely. We never share them with third parties.
               </AlertDescription>
             </Alert>
 
-            <div className="space-y-3">
-              <div className="space-y-2">
-                <Label htmlFor="apiKey">API Key</Label>
-                <Input
-                  id="apiKey"
-                  type="password"
-                  placeholder="Enter your API key"
-                  value={apiKey}
-                  onChange={(e) => setApiKey(e.target.value)}
-                  className="bg-white/5 border-white/10"
-                />
-              </div>
-              
-              {integration.id === 'twitter' && (
-                <div className="space-y-2">
-                  <Label htmlFor="apiSecret">API Secret</Label>
+            <div className="space-y-4">
+              {fields.map((field) => (
+                <div key={field.key} className="space-y-2">
+                  <Label htmlFor={field.key}>
+                    {field.label}
+                    {field.required && <span className="text-red-400 ml-1">*</span>}
+                  </Label>
                   <Input
-                    id="apiSecret"
-                    type="password"
-                    placeholder="Enter your API secret (optional)"
-                    value={apiSecret}
-                    onChange={(e) => setApiSecret(e.target.value)}
+                    id={field.key}
+                    type={field.type}
+                    placeholder={field.placeholder}
+                    value={credentials[field.key] || ''}
+                    onChange={(e) => setCredentials(prev => ({
+                      ...prev,
+                      [field.key]: e.target.value
+                    }))}
                     className="bg-white/5 border-white/10"
                   />
+                  {field.help && (
+                    <p className="text-xs text-gray-400">{field.help}</p>
+                  )}
                 </div>
-              )}
+              ))}
             </div>
 
             {error && (
@@ -268,57 +229,120 @@ export function IntegrationModal({
               </Alert>
             )}
 
-            <div className="text-sm text-gray-400">
-              <p>Need help finding your API credentials?</p>
-              <a 
-                href={`https://synthex.ai/docs/integrations/${integration.id}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-purple-400 hover:text-purple-300 inline-flex items-center gap-1 mt-1"
-              >
-                View documentation
-                <ExternalLink className="w-3 h-3" />
-              </a>
+            <Alert className="border-amber-500/20 bg-amber-500/5">
+              <Info className="h-4 w-4 text-amber-500" />
+              <AlertDescription className="text-gray-300">
+                Don't have API keys yet? Switch to the "How to Get Keys" tab for step-by-step instructions.
+              </AlertDescription>
+            </Alert>
+          </TabsContent>
+
+          <TabsContent value="instructions" className="space-y-4 mt-4">
+            <Alert className="border-green-500/20 bg-green-500/5">
+              <Book className="h-4 w-4 text-green-500" />
+              <AlertDescription className="text-gray-300">
+                Follow these steps to get your {integration.name} API credentials
+              </AlertDescription>
+            </Alert>
+
+            <div className="space-y-3">
+              {instructions.map((instruction) => (
+                <div key={instruction.step} className="flex items-start gap-3">
+                  <div className="flex-shrink-0 w-7 h-7 rounded-full bg-purple-500/20 flex items-center justify-center">
+                    <span className="text-xs font-semibold text-purple-400">
+                      {instruction.step}
+                    </span>
+                  </div>
+                  <p className="text-sm text-gray-300 pt-1">{instruction.text}</p>
+                </div>
+              ))}
             </div>
 
-            <DialogFooter className="gap-2">
-              <Button variant="outline" onClick={() => setStep('info')}>
-                Back
-              </Button>
-              <Button 
-                onClick={handleManualConnect}
-                disabled={isConnecting || !apiKey}
-                className="gradient-primary text-white"
-              >
-                {isConnecting ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Connecting...
-                  </>
-                ) : (
-                  <>
-                    <Key className="w-4 h-4 mr-2" />
-                    Connect
-                  </>
-                )}
-              </Button>
-            </DialogFooter>
-          </div>
-        )}
-
-        {step === 'success' && (
-          <div className="py-8 text-center">
-            <div className="w-16 h-16 rounded-full bg-green-500/20 flex items-center justify-center mx-auto mb-4">
-              <CheckCircle className="w-8 h-8 text-green-400" />
+            <div className="p-4 bg-white/5 rounded-lg space-y-3">
+              <div className="flex items-center justify-between">
+                <h4 className="text-sm font-semibold text-white">Quick Links</h4>
+              </div>
+              {integration.id === 'twitter' && (
+                <a 
+                  href="https://developer.twitter.com/en/portal/dashboard"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 text-sm text-purple-400 hover:text-purple-300"
+                >
+                  Twitter Developer Portal
+                  <ExternalLink className="w-3 h-3" />
+                </a>
+              )}
+              {integration.id === 'linkedin' && (
+                <a 
+                  href="https://www.linkedin.com/developers/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 text-sm text-purple-400 hover:text-purple-300"
+                >
+                  LinkedIn Developer Portal
+                  <ExternalLink className="w-3 h-3" />
+                </a>
+              )}
+              {integration.id === 'facebook' && (
+                <a 
+                  href="https://developers.facebook.com/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 text-sm text-purple-400 hover:text-purple-300"
+                >
+                  Facebook Developer Portal
+                  <ExternalLink className="w-3 h-3" />
+                </a>
+              )}
+              {integration.id === 'instagram' && (
+                <a 
+                  href="https://developers.facebook.com/docs/instagram-basic-display-api"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 text-sm text-purple-400 hover:text-purple-300"
+                >
+                  Instagram Basic Display API
+                  <ExternalLink className="w-3 h-3" />
+                </a>
+              )}
+              {integration.id === 'tiktok' && (
+                <a 
+                  href="https://developers.tiktok.com/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 text-sm text-purple-400 hover:text-purple-300"
+                >
+                  TikTok Developer Portal
+                  <ExternalLink className="w-3 h-3" />
+                </a>
+              )}
             </div>
-            <h3 className="text-lg font-semibold text-white mb-2">
-              Successfully Connected!
-            </h3>
-            <p className="text-gray-400">
-              {integration.name} has been connected to your account.
-            </p>
-          </div>
-        )}
+          </TabsContent>
+        </Tabs>
+
+        <DialogFooter className="gap-2 mt-4">
+          <Button variant="outline" onClick={handleClose}>
+            Cancel
+          </Button>
+          <Button 
+            onClick={handleConnect}
+            disabled={isConnecting || activeTab !== 'credentials'}
+            className="gradient-primary text-white"
+          >
+            {isConnecting ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Connecting...
+              </>
+            ) : (
+              <>
+                <Key className="w-4 h-4 mr-2" />
+                Connect Account
+              </>
+            )}
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
