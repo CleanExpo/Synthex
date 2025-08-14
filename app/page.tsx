@@ -2,16 +2,10 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { ArrowRight, Sparkles, TrendingUp, Users, Calendar, BarChart3, Zap } from 'lucide-react';
-import DeploymentTest from '@/app/components/deployment-test';
 
 export default function HomePage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900">
-      {/* DEPLOYMENT TEST BANNER - Remove after verification */}
-      <div className="bg-gradient-to-r from-purple-600 to-pink-600 text-white text-center py-3 font-bold animate-pulse">
-        🚀 SYNTHEX.SOCIAL DEPLOYMENT TEST - {new Date().toLocaleString()} - If you see this, the deployment is working!
-      </div>
-      <DeploymentTest />
       {/* Navigation */}
       <nav className="fixed top-0 w-full z-50 glass-card border-b">
         <div className="container mx-auto px-6 py-4">
