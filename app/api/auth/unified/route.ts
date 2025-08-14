@@ -159,12 +159,14 @@ async function handleSignup(body: any) {
         email,
         password: hashedPassword,
         name,
-        company,
+        // Company can be stored in preferences JSON field if needed
+        preferences: company ? { company } : undefined,
       },
       select: {
         id: true,
         email: true,
         name: true,
+        preferences: true,
       },
     });
 
