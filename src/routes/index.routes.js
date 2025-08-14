@@ -239,7 +239,7 @@ router.get('/docs', (req, res) => {
 // ============================================
 
 // Health and status endpoints
-router.get('/status', (req: Request, res: Response) => {
+router.get('/status', (req, res) => {
   res.json({
     status: 'operational',
     timestamp: new Date().toISOString()
@@ -316,7 +316,7 @@ router.use('/email', authenticateToken, emailRoutes);
 router.get('/analytics/summary', 
   authenticateToken, 
   cacheMiddleware({ ttl: 300, keyPrefix: 'analytics-summary' }), // Cache for 5 minutes
-  async (req: Request, res: Response) => {
+  async (req, res) => {
     // This will use the actual analytics service when integrated
     res.json({
       success: true,
@@ -338,7 +338,7 @@ router.get('/analytics/summary',
 router.get('/content/trending',
   authenticateToken,
   cacheMiddleware({ ttl: 600, keyPrefix: 'trending' }), // Cache for 10 minutes
-  async (req: Request, res: Response) => {
+  async (req, res) => {
     res.json({
       success: true,
       data: {
@@ -354,7 +354,7 @@ router.get('/content/trending',
 // Feature Flags Endpoint
 // ============================================
 
-router.get('/features', authenticateToken, (req: Request, res: Response) => {
+router.get('/features', authenticateToken, (req, res) => {
   res.json({
     success: true,
     data: {
@@ -377,7 +377,7 @@ router.get('/features', authenticateToken, (req: Request, res: Response) => {
 // ============================================
 
 // 404 handler for undefined routes
-router.use('*', (req: Request, res: Response) => {
+router.use('*', (req, res) => {
   res.status(404).json({
     success: false,
     error: 'Not Found',
@@ -388,7 +388,7 @@ router.use('*', (req: Request, res: Response) => {
 });
 
 // Error handling middleware
-router.use((err: any, req: Request, res: Response, next: any) => {
+router.use((err, req, res, next) => {
   console.error('API Error:', err);
   
   const status = err.status || err.statusCode || 500;
