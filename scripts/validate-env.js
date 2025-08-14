@@ -5,6 +5,16 @@
  * Run before build and deployment to ensure all required variables are set
  */
 
+// Load environment variables from .env.local
+const path = require('path');
+const fs = require('fs');
+
+// Load .env.local if it exists
+const envPath = path.join(process.cwd(), '.env.local');
+if (fs.existsSync(envPath)) {
+  require('dotenv').config({ path: envPath });
+}
+
 // Simple color codes without chalk dependency
 const colors = {
   reset: '\x1b[0m',
