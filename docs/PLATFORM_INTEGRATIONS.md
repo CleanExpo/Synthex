@@ -1,183 +1,176 @@
-# Platform Integrations Setup Guide
+# Platform Integrations - User Guide
 
-## Overview
-Synthex supports integration with major social media platforms through OAuth authentication and API connections. This guide explains how to set up and configure each platform integration.
+## How Synthex Integrations Work
 
-## Quick Status Check
+**IMPORTANT:** Synthex is a SaaS platform where **each user connects their own social media accounts** using their own API credentials. You (as the platform owner) do NOT provide OAuth apps or API keys for users.
 
-### ✅ Working Components:
-- **Integration UI**: `/dashboard/integrations` page with Connect buttons
-- **Modal System**: OAuth flow and manual API key entry
-- **API Routes**: `/api/integrations/[platform]/connect` endpoints
-- **Google OAuth**: Properly configured and redirecting
+## For Platform Owners (You)
 
-### 🔧 Required Configuration:
-To make platform integrations fully functional, you need to:
+### What You Need to Set Up:
+1. **Database** (Supabase) - To store encrypted user credentials
+2. **Authentication** - So users can sign up and log in
+3. **Encryption Key** - To securely encrypt user API keys
+4. **AI Service** (OpenRouter) - For content generation
 
-1. **Configure Supabase** for authentication
-2. **Set up OAuth apps** on each platform
-3. **Add environment variables** to Vercel
+### What You DON'T Need:
+- ❌ Twitter OAuth App
+- ❌ Facebook App ID
+- ❌ LinkedIn Client ID
+- ❌ Any social media developer accounts
 
-## Environment Variables Required
+## For Your Users (Your Clients)
 
-Copy `.env.example` to `.env.local` and fill in the values:
+### How Users Connect Their Accounts:
 
-```bash
-# Database (Required for auth)
-SUPABASE_URL=your_supabase_project_url
-SUPABASE_ANON_KEY=your_supabase_anon_key
+1. **User signs up** for Synthex
+2. **User navigates** to Dashboard → Integrations
+3. **User clicks** "Connect" on any platform
+4. **Modal opens** with two tabs:
+   - **API Credentials**: Where they enter their keys
+   - **How to Get Keys**: Step-by-step instructions
 
-# OAuth Keys (Required for each platform)
-NEXT_PUBLIC_GOOGLE_CLIENT_ID=your_google_client_id
-GOOGLE_CLIENT_SECRET=your_google_client_secret
+### What Each User Needs:
 
-NEXT_PUBLIC_TWITTER_CLIENT_ID=your_twitter_client_id
-TWITTER_CLIENT_SECRET=your_twitter_client_secret
+#### Twitter/X
+- API Key
+- API Secret
+- Access Token
+- Access Token Secret
+- (From their own Twitter Developer account)
 
-NEXT_PUBLIC_LINKEDIN_CLIENT_ID=your_linkedin_client_id
-LINKEDIN_CLIENT_SECRET=your_linkedin_client_secret
+#### LinkedIn
+- Client ID
+- Client Secret
+- Access Token
+- (From their own LinkedIn Developer account)
 
-NEXT_PUBLIC_FACEBOOK_APP_ID=your_facebook_app_id
-FACEBOOK_APP_SECRET=your_facebook_app_secret
+#### Instagram
+- Access Token
+- Business Account ID
+- (From Facebook Developer Console)
 
-NEXT_PUBLIC_INSTAGRAM_CLIENT_ID=your_instagram_client_id
-INSTAGRAM_CLIENT_SECRET=your_instagram_client_secret
+#### Facebook
+- Page Access Token
+- Page ID
+- (From Facebook Developer Console)
 
-NEXT_PUBLIC_TIKTOK_CLIENT_KEY=your_tiktok_client_key
-TIKTOK_CLIENT_SECRET=your_tiktok_client_secret
+#### TikTok
+- Access Token
+- Open ID
+- (From TikTok Developer Portal)
+
+## Security Architecture
+
 ```
-
-## Platform-Specific Setup
-
-### 1. Google OAuth
-1. Go to [Google Cloud Console](https://console.cloud.google.com/)
-2. Create a new project or select existing
-3. Enable Google+ API
-4. Create OAuth 2.0 credentials
-5. Add redirect URI: `https://synthex.social/api/auth/oauth/google`
-6. Copy Client ID and Secret to environment variables
-
-### 2. Twitter/X OAuth
-1. Go to [Twitter Developer Portal](https://developer.twitter.com/)
-2. Create a new app
-3. Enable OAuth 2.0
-4. Add callback URL: `https://synthex.social/api/auth/oauth/twitter`
-5. Copy API Key and Secret
-
-### 3. LinkedIn OAuth
-1. Go to [LinkedIn Developer Portal](https://www.linkedin.com/developers/)
-2. Create a new app
-3. Add redirect URL: `https://synthex.social/api/auth/oauth/linkedin`
-4. Request necessary permissions
-5. Copy Client ID and Secret
-
-### 4. Facebook/Instagram
-1. Go to [Facebook Developers](https://developers.facebook.com/)
-2. Create a new app
-3. Add Facebook Login product
-4. Configure OAuth redirect: `https://synthex.social/api/auth/oauth/facebook`
-5. For Instagram, add Instagram Basic Display product
-6. Copy App ID and Secret
-
-### 5. TikTok
-1. Go to [TikTok Developer Portal](https://developers.tiktok.com/)
-2. Create a new app
-3. Add redirect URI: `https://synthex.social/api/auth/oauth/tiktok`
-4. Copy Client Key and Secret
-
-## How the Integration Flow Works
-
-### OAuth Flow (Preferred):
-1. User clicks "Connect" button on `/dashboard/integrations`
-2. Modal opens with platform information
-3. User clicks "Connect with [Platform]"
-4. OAuth window opens for authorization
-5. Platform redirects back to Synthex with auth code
-6. Backend exchanges code for access token
-7. Connection is saved and user sees success
-
-### Manual API Key Flow (Fallback):
-1. If OAuth keys are not configured
-2. Modal shows API key input form
-3. User enters their API credentials
-4. Credentials are encrypted and stored
-5. Connection is established
+User's API Keys
+    ↓
+Entered in UI
+    ↓
+Encrypted with ENCRYPTION_KEY
+    ↓
+Stored in Database (per user)
+    ↓
+Decrypted when needed
+    ↓
+Used to post to user's accounts
+```
 
 ## File Structure
 
 ```
-app/
-├── dashboard/
-│   └── integrations/
-│       └── page.tsx          # Main integrations page
-├── api/
-│   └── integrations/
-│       ├── route.ts          # List all integrations
-│       └── [integrationId]/
-│           ├── connect/
-│           │   └── route.ts  # Connect/disconnect platform
-│           └── status/
-│               └── route.ts  # Check connection status
-components/
-└── IntegrationModal.tsx      # OAuth/API key modal
+app/dashboard/integrations/page.tsx
+- Shows all available platforms
+- "Connect" buttons for each
+- Displays connection status
+
+components/IntegrationModal.tsx
+- Tab 1: Input fields for API credentials
+- Tab 2: Instructions to get credentials
+- Validates and saves credentials
+
+app/api/integrations/[platform]/connect/route.ts
+- Receives credentials from frontend
+- Encrypts credentials
+- Stores in database per user
+- Returns success/failure
 ```
 
-## Testing the Integrations
+## Database Schema
 
-### Without Environment Variables:
-1. Navigate to `/dashboard/integrations` (requires login)
-2. Click "Connect" on any platform
-3. Modal will fallback to manual API key entry
+Each user's integrations are stored like:
 
-### With Environment Variables:
-1. Add OAuth credentials to Vercel dashboard
-2. Navigate to `/dashboard/integrations`
-3. Click "Connect" on configured platform
-4. OAuth flow will open in popup window
-5. Authorize the app
-6. Connection will be established
+```sql
+user_integrations {
+  id: uuid
+  user_id: uuid (references users table)
+  platform: string (twitter, linkedin, etc)
+  credentials: jsonb (encrypted)
+  connected_at: timestamp
+  last_used: timestamp
+  status: string (active, expired, error)
+}
+```
 
-## Troubleshooting
+## Testing the System
 
-### Common Issues:
+### As Platform Owner:
+1. Set up Supabase database
+2. Add ENCRYPTION_KEY to environment
+3. Deploy to Vercel
 
-1. **"Continue with Google" redirects to Google but fails**
-   - ✅ This is expected behavior - OAuth is configured but needs valid credentials
-   - Add proper Google OAuth credentials to fix
+### As a Test User:
+1. Sign up for an account
+2. Go to /dashboard/integrations
+3. Click "Connect" on Twitter
+4. Enter test API credentials
+5. Verify connection saves successfully
 
-2. **Integrations page redirects to login**
-   - ✅ This is correct - integrations require authentication
-   - Configure Supabase to enable user login
+## Common Issues & Solutions
 
-3. **Connect buttons show "Connecting..." but nothing happens**
-   - Check browser console for errors
-   - Verify API routes are accessible
-   - Check network tab for failed requests
+### Issue: "Connect" button does nothing
+**Solution:** Check console for errors. Ensure API routes are deployed.
 
-4. **OAuth window opens but shows error**
-   - Verify redirect URIs match exactly
-   - Check OAuth app is approved/published
-   - Ensure all required scopes are configured
+### Issue: Credentials not saving
+**Solution:** Verify ENCRYPTION_KEY is set in environment variables.
 
-## Next Steps
+### Issue: Can't post to social media
+**Solution:** User's API keys may be invalid or expired. They need to regenerate them.
 
-1. **Set up Supabase**:
-   - Create project at [supabase.com](https://supabase.com)
-   - Enable authentication
-   - Add environment variables
+## Platform Owner Checklist
 
-2. **Configure OAuth Apps**:
-   - Follow platform-specific setup above
-   - Add all credentials to Vercel environment variables
+✅ Set up Supabase project  
+✅ Add SUPABASE_URL and SUPABASE_ANON_KEY to Vercel  
+✅ Generate and add ENCRYPTION_KEY  
+✅ Add OPENROUTER_API_KEY for AI features  
+✅ Deploy application  
+✅ Test with a demo user account  
 
-3. **Test Each Integration**:
-   - Login to dashboard
-   - Navigate to `/dashboard/integrations`
-   - Test each platform connection
+## User Onboarding Flow
 
-## Support
+1. **Sign Up** → Create account
+2. **Tutorial** → Show how to get API keys
+3. **Connect** → Enter their credentials
+4. **Test Post** → Verify connection works
+5. **Start Using** → Create AI content
 
-For issues or questions:
-- Check console for detailed error messages
-- Review API route logs in Vercel dashboard
-- Contact support@synthex.social
+## Support Resources
+
+### For Your Users:
+- In-app instructions for each platform
+- Direct links to developer portals
+- Video tutorials (create these)
+- FAQ section
+
+### Error Messages to Handle:
+- "Invalid API credentials"
+- "Rate limit exceeded"
+- "Token expired"
+- "Insufficient permissions"
+
+## Important Notes
+
+1. **Users own their data**: Each user's posts go directly to their accounts
+2. **No middleman**: Synthex doesn't post through your accounts
+3. **Compliance**: Users are responsible for their content
+4. **Rate limits**: Each user has their own rate limits
+5. **Security**: Credentials are encrypted and isolated per user
