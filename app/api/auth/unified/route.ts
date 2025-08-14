@@ -90,7 +90,6 @@ async function handleLogin(body: any) {
         email: true,
         name: true,
         password: true,
-        role: true,
       },
     });
 
@@ -161,13 +160,11 @@ async function handleSignup(body: any) {
         password: hashedPassword,
         name,
         company,
-        role: 'user',
       },
       select: {
         id: true,
         email: true,
         name: true,
-        role: true,
       },
     });
 
