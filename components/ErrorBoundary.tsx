@@ -35,7 +35,10 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
 
     // Report to Sentry
     Sentry.withScope((scope) => {
-      scope.setExtras(errorInfo);
+      scope.setExtras({
+        componentStack: errorInfo.componentStack,
+        digest: (errorInfo as any).digest || undefined
+      });
       scope.setTag('errorBoundary', true);
       scope.setContext('errorInfo', {
         componentStack: errorInfo.componentStack || 'No component stack available',
