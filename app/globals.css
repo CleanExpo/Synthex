@@ -328,3 +328,20 @@
   transform: translateY(-2px);
   box-shadow: 0 12px 40px 0 rgba(31, 38, 135, 0.5);
 }
+
+/* Mobile Navigation Fixes */
+@media (max-width: 768px) {
+  nav {
+    padding: 1rem;
+  }
+  
+  nav .flex {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  
+  nav .space-x-6 {
+    space-x: 0;
+    gap: 0.5rem;
+  }
+}
