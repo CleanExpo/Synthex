@@ -220,7 +220,7 @@ export function NotificationBell() {
               <Button 
                 variant="ghost" 
                 className="w-full text-xs text-gray-400 hover:text-white"
-                onClick={() => setNotifications([])
+                onClick={() => setNotifications([])}
               >
                 Clear all
               </Button>
