@@ -1,0 +1,829 @@
+{
+  "timestamp": "2025-08-14T04:58:15.799Z",
+  "result": "FAIL",
+  "totalIssues": 184,
+  "issues": {
+    "placeholderLinks": [],
+    "missingEnvVars": [
+      "ANALYZE",
+      "API_URL",
+      "NEXT_PUBLIC_VERCEL_GIT_COMMIT_SHA",
+      "PW_SKIP_WEBSERVER",
+      "CI",
+      "OPENAI_API_KEY",
+      "LOG_LEVEL",
+      "NEXT_PUBLIC_WS_URL"
+    ],
+    "oauthMissing": [],
+    "inertButtons": [
+      {
+        "file": "stories\\Card.stories.tsx",
+        "line": 42
+      },
+      {
+        "file": "stories\\Card.stories.tsx",
+        "line": 43
+      },
+      {
+        "file": "stories\\Card.stories.tsx",
+        "line": 97
+      },
+      {
+        "file": "stories\\Card.stories.tsx",
+        "line": 140
+      },
+      {
+        "file": "stories\\Card.stories.tsx",
+        "line": 191
+      },
+      {
+        "file": "stories\\Button.stories.tsx",
+        "line": 172
+      },
+      {
+        "file": "stories\\Button.stories.tsx",
+        "line": 176
+      },
+      {
+        "file": "stories\\Button.stories.tsx",
+        "line": 180
+      },
+      {
+        "file": "stories\\Button.stories.tsx",
+        "line": 199
+      },
+      {
+        "file": "stories\\Button.stories.tsx",
+        "line": 202
+      },
+      {
+        "file": "stories\\Button.stories.tsx",
+        "line": 205
+      },
+      {
+        "file": "hooks\\useUndoRedo.tsx",
+        "line": 165
+      },
+      {
+        "file": "hooks\\useUndoRedo.tsx",
+        "line": 184
+      },
+      {
+        "file": "hooks\\useMultiSelect.tsx",
+        "line": 175
+      },
+      {
+        "file": "hooks\\useMultiSelect.tsx",
+        "line": 188
+      },
+      {
+        "file": "hooks\\useMultiSelect.tsx",
+        "line": 201
+      },
+      {
+        "file": "hooks\\useMultiSelect.tsx",
+        "line": 214
+      },
+      {
+        "file": "hooks\\useMultiSelect.tsx",
+        "line": 231
+      },
+      {
+        "file": "hooks\\useMultiSelect.tsx",
+        "line": 247
+      },
+      {
+        "file": "components\\WorkflowAutomation.tsx",
+        "line": 466
+      },
+      {
+        "file": "components\\WorkflowAutomation.tsx",
+        "line": 481
+      },
+      {
+        "file": "components\\WorkflowAutomation.tsx",
+        "line": 490
+      },
+      {
+        "file": "components\\WorkflowAutomation.tsx",
+        "line": 500
+      },
+      {
+        "file": "components\\WorkflowAutomation.tsx",
+        "line": 509
+      },
+      {
+        "file": "components\\WorkflowAutomation.tsx",
+        "line": 598
+      },
+      {
+        "file": "components\\WorkflowAutomation.tsx",
+        "line": 612
+      },
+      {
+        "file": "components\\WorkflowAutomation.tsx",
+        "line": 636
+      },
+      {
+        "file": "components\\WorkflowAutomation.tsx",
+        "line": 657
+      },
+      {
+        "file": "components\\WorkflowAutomation.tsx",
+        "line": 677
+      },
+      {
+        "file": "components\\WorkflowAutomation.tsx",
+        "line": 685
+      },
+      {
+        "file": "components\\WorkflowAutomation.tsx",
+        "line": 736
+      },
+      {
+        "file": "components\\WebSocketProvider.tsx",
+        "line": 81
+      },
+      {
+        "file": "components\\TemplateSelector.tsx",
+        "line": 187
+      },
+      {
+        "file": "components\\TemplateSelector.tsx",
+        "line": 198
+      },
+      {
+        "file": "components\\StreakCounter.tsx",
+        "line": 202
+      },
+      {
+        "file": "components\\StreakCounter.tsx",
+        "line": 283
+      },
+      {
+        "file": "components\\SmartSuggestions.tsx",
+        "line": 140
+      },
+      {
+        "file": "components\\SmartSuggestions.tsx",
+        "line": 271
+      },
+      {
+        "file": "components\\SmartSuggestions.tsx",
+        "line": 301
+      },
+      {
+        "file": "components\\SentimentAnalysis.tsx",
+        "line": 407
+      },
+      {
+        "file": "components\\SentimentAnalysis.tsx",
+        "line": 415
+      },
+      {
+        "file": "components\\SentimentAnalysis.tsx",
+        "line": 700
+      },
+      {
+        "file": "components\\SearchBar.tsx",
+        "line": 207
+      },
+      {
+        "file": "components\\SearchBar.tsx",
+        "line": 216
+      },
+      {
+        "file": "components\\ROICalculator.tsx",
+        "line": 299
+      },
+      {
+        "file": "components\\ROICalculator.tsx",
+        "line": 306
+      },
+      {
+        "file": "components\\RichTextEditor.tsx",
+        "line": 99
+      },
+      {
+        "file": "components\\RichTextEditor.tsx",
+        "line": 385
+      },
+      {
+        "file": "components\\RichTextEditor.tsx",
+        "line": 397
+      },
+      {
+        "file": "components\\RealTimeAnalytics.tsx",
+        "line": 250
+      },
+      {
+        "file": "components\\ProductTour.tsx",
+        "line": 246
+      },
+      {
+        "file": "components\\ProductTour.tsx",
+        "line": 280
+      },
+      {
+        "file": "components\\ProductTour.tsx",
+        "line": 291
+      },
+      {
+        "file": "components\\ProductTour.tsx",
+        "line": 301
+      },
+      {
+        "file": "components\\ProductTour.tsx",
+        "line": 333
+      },
+      {
+        "file": "components\\PostScheduler.tsx",
+        "line": 376
+      },
+      {
+        "file": "components\\PostScheduler.tsx",
+        "line": 383
+      },
+      {
+        "file": "components\\PostScheduler.tsx",
+        "line": 390
+      },
+      {
+        "file": "components\\PostScheduler.tsx",
+        "line": 428
+      },
+      {
+        "file": "components\\PostScheduler.tsx",
+        "line": 436
+      },
+      {
+        "file": "components\\PostScheduler.tsx",
+        "line": 466
+      },
+      {
+        "file": "components\\PostScheduler.tsx",
+        "line": 473
+      },
+      {
+        "file": "components\\PostScheduler.tsx",
+        "line": 479
+      },
+      {
+        "file": "components\\PostScheduler.tsx",
+        "line": 520
+      },
+      {
+        "file": "components\\PostScheduler.tsx",
+        "line": 531
+      },
+      {
+        "file": "components\\PostScheduler.tsx",
+        "line": 593
+      },
+      {
+        "file": "components\\PostScheduler.tsx",
+        "line": 678
+      },
+      {
+        "file": "components\\OptimizedImage.tsx",
+        "line": 268
+      },
+      {
+        "file": "components\\OptimizedImage.tsx",
+        "line": 280
+      },
+      {
+        "file": "components\\NotificationBell.tsx",
+        "line": 140
+      },
+      {
+        "file": "components\\NotificationBell.tsx",
+        "line": 220
+      },
+      {
+        "file": "components\\MobileMenu.tsx",
+        "line": 44
+      },
+      {
+        "file": "components\\MobileMenu.tsx",
+        "line": 117
+      },
+      {
+        "file": "components\\IntegrationModal.tsx",
+        "line": 205
+      },
+      {
+        "file": "components\\IntegrationModal.tsx",
+        "line": 288
+      },
+      {
+        "file": "components\\FloatingActionButton.tsx",
+        "line": 169
+      },
+      {
+        "file": "components\\FloatingActionButton.tsx",
+        "line": 221
+      },
+      {
+        "file": "components\\FileUpload.tsx",
+        "line": 253
+      },
+      {
+        "file": "components\\FileUpload.tsx",
+        "line": 317
+      },
+      {
+        "file": "components\\FileUpload.tsx",
+        "line": 357
+      },
+      {
+        "file": "components\\ErrorBoundary.tsx",
+        "line": 74
+      },
+      {
+        "file": "components\\EmptyState.tsx",
+        "line": 104
+      },
+      {
+        "file": "components\\EmptyState.tsx",
+        "line": 116
+      },
+      {
+        "file": "components\\EmptyState.tsx",
+        "line": 120
+      },
+      {
+        "file": "components\\DashboardWidget.tsx",
+        "line": 78
+      },
+      {
+        "file": "components\\DashboardWidget.tsx",
+        "line": 89
+      },
+      {
+        "file": "components\\CustomReportBuilder.tsx",
+        "line": 160
+      },
+      {
+        "file": "components\\CustomReportBuilder.tsx",
+        "line": 167
+      },
+      {
+        "file": "components\\CustomReportBuilder.tsx",
+        "line": 425
+      },
+      {
+        "file": "components\\CustomReportBuilder.tsx",
+        "line": 481
+      },
+      {
+        "file": "components\\CustomReportBuilder.tsx",
+        "line": 500
+      },
+      {
+        "file": "components\\CustomReportBuilder.tsx",
+        "line": 508
+      },
+      {
+        "file": "components\\CustomReportBuilder.tsx",
+        "line": 516
+      },
+      {
+        "file": "components\\CustomReportBuilder.tsx",
+        "line": 524
+      },
+      {
+        "file": "components\\CustomReportBuilder.tsx",
+        "line": 531
+      },
+      {
+        "file": "components\\CustomReportBuilder.tsx",
+        "line": 547
+      },
+      {
+        "file": "components\\CustomReportBuilder.tsx",
+        "line": 678
+      },
+      {
+        "file": "components\\CustomReportBuilder.tsx",
+        "line": 684
+      },
+      {
+        "file": "components\\CustomReportBuilder.tsx",
+        "line": 771
+      },
+      {
+        "file": "components\\CustomReportBuilder.tsx",
+        "line": 781
+      },
+      {
+        "file": "components\\CompetitorAnalysis.tsx",
+        "line": 406
+      },
+      {
+        "file": "components\\CompetitorAnalysis.tsx",
+        "line": 414
+      },
+      {
+        "file": "components\\CompetitorAnalysis.tsx",
+        "line": 438
+      },
+      {
+        "file": "components\\CommandPalette.tsx",
+        "line": 260
+      },
+      {
+        "file": "components\\CollaborationTools.tsx",
+        "line": 282
+      },
+      {
+        "file": "components\\CollaborationTools.tsx",
+        "line": 297
+      },
+      {
+        "file": "components\\CollaborationTools.tsx",
+        "line": 320
+      },
+      {
+        "file": "components\\CollaborationTools.tsx",
+        "line": 370
+      },
+      {
+        "file": "components\\CollaborationTools.tsx",
+        "line": 396
+      },
+      {
+        "file": "components\\CollaborationTools.tsx",
+        "line": 517
+      },
+      {
+        "file": "components\\CollaborationTools.tsx",
+        "line": 529
+      },
+      {
+        "file": "components\\CollaborationTools.tsx",
+        "line": 542
+      },
+      {
+        "file": "components\\CollaborationTools.tsx",
+        "line": 603
+      },
+      {
+        "file": "components\\ApprovalWorkflow.tsx",
+        "line": 355
+      },
+      {
+        "file": "components\\ApprovalWorkflow.tsx",
+        "line": 452
+      },
+      {
+        "file": "components\\ApprovalWorkflow.tsx",
+        "line": 463
+      },
+      {
+        "file": "components\\ApprovalWorkflow.tsx",
+        "line": 605
+      },
+      {
+        "file": "components\\ApprovalWorkflow.tsx",
+        "line": 612
+      },
+      {
+        "file": "components\\ApprovalWorkflow.tsx",
+        "line": 620
+      },
+      {
+        "file": "components\\AIWritingAssistant.tsx",
+        "line": 205
+      },
+      {
+        "file": "components\\AIWritingAssistant.tsx",
+        "line": 308
+      },
+      {
+        "file": "components\\AIWritingAssistant.tsx",
+        "line": 342
+      },
+      {
+        "file": "components\\AIWritingAssistant.tsx",
+        "line": 371
+      },
+      {
+        "file": "components\\AIWritingAssistant.tsx",
+        "line": 381
+      },
+      {
+        "file": "components\\AIWritingAssistant.tsx",
+        "line": 468
+      }
+    ],
+    "unresolvedRoutes": [
+      {
+        "endpoint": "${BASE_URL}/research/capabilities",
+        "file": "test-research.js",
+        "line": 12,
+        "method": "GET"
+      },
+      {
+        "endpoint": "${BASE_URL}/research/trends",
+        "file": "test-research.js",
+        "line": 24,
+        "method": "GET"
+      },
+      {
+        "endpoint": "${BASE_URL}/research/implementation-plan",
+        "file": "test-research.js",
+        "line": 36,
+        "method": "GET"
+      },
+      {
+        "endpoint": "${BASE_URL}/analytics/aggregate",
+        "file": "test-research.js",
+        "line": 50,
+        "method": "GET"
+      },
+      {
+        "endpoint": "${BASE_URL}/analytics/predict",
+        "file": "test-research.js",
+        "line": 64,
+        "method": "GET"
+      },
+      {
+        "endpoint": "${BASE_URL}/analytics/trending",
+        "file": "test-research.js",
+        "line": 79,
+        "method": "GET"
+      },
+      {
+        "endpoint": "${BASE_URL}/research/insights",
+        "file": "test-research.js",
+        "line": 102,
+        "method": "GET"
+      },
+      {
+        "endpoint": "${BASE_URL}/research/roadmap",
+        "file": "test-research.js",
+        "line": 118,
+        "method": "GET"
+      },
+      {
+        "endpoint": "${BASE_URL}/api/openrouter/status",
+        "file": "test-openrouter.js",
+        "line": 16,
+        "method": "GET"
+      },
+      {
+        "endpoint": "${BASE_URL}/api/openrouter/models",
+        "file": "test-openrouter.js",
+        "line": 29,
+        "method": "GET"
+      },
+      {
+        "endpoint": "${BASE_URL}/api/openrouter/test",
+        "file": "test-openrouter.js",
+        "line": 36,
+        "method": "GET"
+      },
+      {
+        "endpoint": "${BASE_URL}/api/openrouter/marketing/generate",
+        "file": "test-openrouter.js",
+        "line": 43,
+        "method": "POST"
+      },
+      {
+        "endpoint": "${BASE_URL}/api/openrouter/marketing/variations",
+        "file": "test-openrouter.js",
+        "line": 53,
+        "method": "POST"
+      },
+      {
+        "endpoint": "${BASE_URL}/api/openrouter/marketing/optimize",
+        "file": "test-openrouter.js",
+        "line": 66,
+        "method": "POST"
+      },
+      {
+        "endpoint": "${BASE_URL}/evaluate/scoping",
+        "file": "test-mle-star.js",
+        "line": 12,
+        "method": "GET"
+      },
+      {
+        "endpoint": "${BASE_URL}/evaluate/training",
+        "file": "test-mle-star.js",
+        "line": 35,
+        "method": "GET"
+      },
+      {
+        "endpoint": "${BASE_URL}/evaluate/analysis",
+        "file": "test-mle-star.js",
+        "line": 58,
+        "method": "GET"
+      },
+      {
+        "endpoint": "${BASE_URL}/evaluate/reliability",
+        "file": "test-mle-star.js",
+        "line": 81,
+        "method": "GET"
+      },
+      {
+        "endpoint": "${BASE_URL}/evaluate/excellence",
+        "file": "test-mle-star.js",
+        "line": 104,
+        "method": "GET"
+      },
+      {
+        "endpoint": "${BASE_URL}/score",
+        "file": "test-mle-star.js",
+        "line": 127,
+        "method": "GET"
+      },
+      {
+        "endpoint": "${BASE_URL}/context7/update",
+        "file": "test-mle-star.js",
+        "line": 147,
+        "method": "GET"
+      },
+      {
+        "endpoint": "${BASE_URL}/context7/sequential-think",
+        "file": "test-mle-star.js",
+        "line": 164,
+        "method": "GET"
+      },
+      {
+        "endpoint": "${BASE_URL}/context7/report",
+        "file": "test-mle-star.js",
+        "line": 184,
+        "method": "GET"
+      },
+      {
+        "endpoint": "${BASE_URL}/pipeline/create",
+        "file": "test-mle-star.js",
+        "line": 197,
+        "method": "GET"
+      },
+      {
+        "endpoint": "${BASE_URL}/pipeline/execute/${pipeline.pipeline.id}",
+        "file": "test-mle-star.js",
+        "line": 229,
+        "method": "GET"
+      },
+      {
+        "endpoint": "${BASE_URL}/report",
+        "file": "test-mle-star.js",
+        "line": 242,
+        "method": "GET"
+      },
+      {
+        "endpoint": "${BASE_URL}/mcp/status",
+        "file": "test-mcp-ttd.js",
+        "line": 8,
+        "method": "GET"
+      },
+      {
+        "endpoint": "${BASE_URL}/mcp/sequential-think",
+        "file": "test-mcp-ttd.js",
+        "line": 19,
+        "method": "GET"
+      },
+      {
+        "endpoint": "${BASE_URL}/ttd/create-tests",
+        "file": "test-mcp-ttd.js",
+        "line": 46,
+        "method": "GET"
+      },
+      {
+        "endpoint": "${BASE_URL}/ttd/implement-feature",
+        "file": "test-mcp-ttd.js",
+        "line": 88,
+        "method": "GET"
+      },
+      {
+        "endpoint": "${BASE_URL}/health",
+        "file": "test-critical-flows.js",
+        "line": 40,
+        "method": "GET"
+      },
+      {
+        "endpoint": "${BASE_URL}/health/db",
+        "file": "test-critical-flows.js",
+        "line": 46,
+        "method": "GET"
+      },
+      {
+        "endpoint": "${API_BASE}/auth/register",
+        "file": "test-critical-flows.js",
+        "line": 59,
+        "method": "POST"
+      },
+      {
+        "endpoint": "${API_BASE}/auth/login",
+        "file": "test-critical-flows.js",
+        "line": 74,
+        "method": "POST"
+      },
+      {
+        "endpoint": "${API_BASE}/audit/logs",
+        "file": "test-critical-flows.js",
+        "line": 105,
+        "method": "GET"
+      },
+      {
+        "endpoint": "${API_BASE}/dashboard/data",
+        "file": "test-critical-flows.js",
+        "line": 131,
+        "method": "GET"
+      },
+      {
+        "endpoint": "${API_BASE}/auth/google/status",
+        "file": "test-critical-flows.js",
+        "line": 137,
+        "method": "GET"
+      },
+      {
+        "endpoint": "${BASE_URL}/api/openrouter/status",
+        "file": "test-critical-flows.js",
+        "line": 144,
+        "method": "GET"
+      },
+      {
+        "endpoint": "${API_BASE_URL}/auth/register",
+        "file": "test-auth-api.js",
+        "line": 18,
+        "method": "POST"
+      },
+      {
+        "endpoint": "${API_BASE_URL}/auth/login",
+        "file": "test-auth-api.js",
+        "line": 38,
+        "method": "POST"
+      },
+      {
+        "endpoint": "${API_BASE_URL}/auth/verify",
+        "file": "test-auth-api.js",
+        "line": 50,
+        "method": "GET"
+      },
+      {
+        "endpoint": "${API_BASE_URL}/auth/profile",
+        "file": "test-auth-api.js",
+        "line": 62,
+        "method": "GET"
+      },
+      {
+        "endpoint": "${baseUrl}${file}",
+        "file": "scripts\\ultimate-deploy.ts",
+        "line": 390,
+        "method": "GET"
+      },
+      {
+        "endpoint": "${baseUrl}/health",
+        "file": "scripts\\ultimate-deploy.ts",
+        "line": 431,
+        "method": "GET"
+      },
+      {
+        "endpoint": "${baseUrl}${endpoint}",
+        "file": "scripts\\ultimate-deploy.ts",
+        "line": 510,
+        "method": "GET"
+      },
+      {
+        "endpoint": "${this.PRODUCTION_URL}/health",
+        "file": "scripts\\ultimate-deploy.ts",
+        "line": 648,
+        "method": "GET"
+      },
+      {
+        "endpoint": "${url}/health",
+        "file": "scripts\\ultimate-deploy.ts",
+        "line": 915,
+        "method": "GET"
+      },
+      {
+        "endpoint": "${baseUrl}${file}",
+        "file": "scripts\\real-deploy-check.ts",
+        "line": 183,
+        "method": "GET"
+      },
+      {
+        "endpoint": "${baseUrl}/api/auth/register",
+        "file": "scripts\\real-deploy-check.ts",
+        "line": 210,
+        "method": "POST"
+      },
+      {
+        "endpoint": "${baseUrl}/health",
+        "file": "scripts\\real-deploy-check.ts",
+        "line": 237,
+        "method": "GET"
+      },
+      {
+        "endpoint": "${this.apiUrl}${endpoint.path}",
+        "file": "scripts\\feature-activation.js",
+        "line": 208,
+        "method": "GET"
+      }
+    ]
+  }
+}
