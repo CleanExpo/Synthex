@@ -229,7 +229,6 @@ async function handleVerify(request: NextRequest) {
         id: true,
         email: true,
         name: true,
-        role: true,
       },
     });
 
