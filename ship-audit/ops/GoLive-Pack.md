@@ -1,7 +1,7 @@
 # 🚀 SYNTHEX GoLive-Pack - Production Launch Control
 
-**Launch Date:** _______________  
-**Launch Window:** _______________  
+**Launch Date:** _______14/08/2025________  
+**Launch Window:** _______30-days________  
 **Go/No-Go Decision:** _______________  
 **Final Ship Readiness:** **96%**
 
