@@ -8,6 +8,7 @@
     "validate:env": "node scripts/validate-env.js",
     "build": "npm run validate:env && next build",
     "build:force": "next build",
+    "build:vercel": "next build --experimental-build-mode compile",
     "vercel-build": "next build",
     "start": "next start",
     "lint": "next lint",

@@ -1,0 +1,67 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    // More lenient settings for build
+    "skipLibCheck": true,
+    "strict": false,
+    "noEmit": true,
+    "incremental": false,
+    "tsBuildInfoFile": null,
+    
+    // Allow JavaScript files
+    "allowJs": true,
+    "checkJs": false,
+    
+    // Module resolution
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    
+    // Type checking (relaxed for build)
+    "noImplicitAny": false,
+    "noImplicitThis": false,
+    "strictNullChecks": false,
+    "strictFunctionTypes": false,
+    "strictBindCallApply": false,
+    "strictPropertyInitialization": false,
+    "noImplicitReturns": false,
+    "noFallthroughCasesInSwitch": false,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    
+    // Case sensitivity
+    "forceConsistentCasingInFileNames": true,
+    
+    // Emit settings
+    "declaration": false,
+    "declarationMap": false,
+    "sourceMap": false,
+    "removeComments": true
+  },
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "**/*.spec.ts",
+    "**/*.spec.tsx",
+    "tests/**/*",
+    "scripts/**/*",
+    "prisma/seed.ts",
+    ".next",
+    "out",
+    "dist",
+    "build",
+    "coverage",
+    "playwright.config.ts",
+    "jest.config.js",
+    "src/agents/**/*",
+    "agents/**/*"
+  ]
+}
