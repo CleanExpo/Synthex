@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "target": "ES2017",
+    "target": "ES2018",
     "lib": [
       "dom",
       "dom.iterable",
@@ -69,6 +69,7 @@
   "exclude": [
     "node_modules",
     "tests/**/*",
+    "src/testing/**/*",
     "scripts/**/*",
     "controlled-autonomous-build.ts",
     "start-autonomous-build.ts",

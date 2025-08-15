@@ -234,3 +234,5 @@ export async function DELETE(request: Request) {
     );
   }
 }
+// Node.js runtime required for Prisma
+export const runtime = 'nodejs';

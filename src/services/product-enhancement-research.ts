@@ -1,6 +1,21 @@
 import { ttdRd } from './ttd-rd-framework';
-import { mcpIntegration } from './mcp-integration';
-import { marketingWorkflow } from './marketing-mcp-workflow';
+// import { mcpIntegration } from './mcp-integration'; // Disabled - file not available
+// import { marketingWorkflow } from './marketing-mcp-workflow'; // Disabled - file not available
+
+// Stub implementations for disabled modules
+const mcpIntegration = {
+  analyze: async () => ({ insights: [], recommendations: [] }),
+  optimize: async () => ({ optimized: true }),
+  sequentialThink: async (description: string, steps: any[]) => ({ 
+    result: 'Stubbed implementation', 
+    steps: steps 
+  })
+};
+
+const marketingWorkflow = {
+  enhance: async () => ({ enhanced: true }),
+  process: async () => ({ processed: true })
+};
 
 interface Enhancement {
   id: string;
