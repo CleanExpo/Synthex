@@ -44,8 +44,8 @@ const nextConfig = {
     },
   },
   
-  // Output standalone for better Vercel compatibility
-  output: 'standalone',
+  // Output configuration - commenting out standalone for now
+  // output: 'standalone',
   
   // Disable source maps to reduce memory usage
   productionBrowserSourceMaps: false,
