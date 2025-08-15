@@ -10,15 +10,18 @@ interface RateLimitStore {
 // In-memory store (consider using Redis for production)
 const rateLimitStore: RateLimitStore = {};
 
-// Clean up old entries periodically
-setInterval(() => {
+// Clean up old entries on each request (Vercel serverless compatible)
+function cleanupOldEntries() {
   const now = Date.now();
   Object.keys(rateLimitStore).forEach(key => {
     if (rateLimitStore[key].resetTime < now) {
       delete rateLimitStore[key];
     }
   });
-}, 60000); // Clean every minute
+}
+
+// Note: setInterval doesn't work in serverless environments
+// Cleanup happens on each request instead
 
 export interface RateLimitConfig {
   windowMs: number;  // Time window in milliseconds
@@ -47,6 +50,9 @@ export function rateLimit(config: RateLimitConfig) {
     request: NextRequest,
     handler: () => Promise<NextResponse>
   ): Promise<NextResponse> {
+    // Clean up old entries on each request
+    cleanupOldEntries();
+    
     const key = keyGenerator(request);
     const now = Date.now();
     const resetTime = now + windowMs;

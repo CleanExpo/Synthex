@@ -39,6 +39,13 @@ class RedisService {
 
   // Initialize Redis connection
   async init() {
+    // Skip Redis initialization in Vercel Edge Runtime
+    if (typeof EdgeRuntime !== 'undefined') {
+      console.log('Edge Runtime detected - using memory fallback');
+      this.setupMemoryFallback();
+      return;
+    }
+    
     if (!REDIS_CONFIG.url && !REDIS_CONFIG.host) {
       console.warn('Redis not configured - session management will use memory fallback');
       this.setupMemoryFallback();
@@ -51,14 +58,32 @@ class RedisService {
         // Use URL connection (for services like Upstash, Redis Cloud)
         this.client = createClient({
           url: REDIS_CONFIG.url,
-          password: REDIS_CONFIG.password
+          password: REDIS_CONFIG.password,
+          socket: {
+            connectTimeout: 5000,
+            reconnectStrategy: (retries) => {
+              if (retries > 3) {
+                console.log('Max Redis reconnection attempts reached');
+                return null;
+              }
+              return Math.min(retries * 100, 3000);
+            }
+          }
         });
       } else {
         // Use host/port connection
         this.client = createClient({
           socket: {
             host: REDIS_CONFIG.host,
-            port: REDIS_CONFIG.port
+            port: REDIS_CONFIG.port,
+            connectTimeout: 5000,
+            reconnectStrategy: (retries) => {
+              if (retries > 3) {
+                console.log('Max Redis reconnection attempts reached');
+                return null;
+              }
+              return Math.min(retries * 100, 3000);
+            }
           },
           password: REDIS_CONFIG.password
         });
@@ -116,15 +141,20 @@ class RedisService {
     this.memoryStore = new Map();
     this.isConnected = false;
     
-    // Clean up memory store every 30 minutes
-    setInterval(() => {
-      const now = Date.now();
-      for (const [key, value] of this.memoryStore.entries()) {
-        if (value.expires && value.expires < now) {
-          this.memoryStore.delete(key);
-        }
+    // Note: setInterval doesn't work in serverless environments
+    // Cleanup happens on each operation instead
+  }
+  
+  // Clean up expired entries from memory store
+  cleanupMemoryStore() {
+    if (!this.memoryStore) return;
+    
+    const now = Date.now();
+    for (const [key, value] of this.memoryStore.entries()) {
+      if (value.expires && value.expires < now) {
+        this.memoryStore.delete(key);
       }
-    }, 30 * 60 * 1000);
+    }
   }
 
   // Session Management
@@ -171,7 +201,8 @@ class RedisService {
         const sessionData = await this.client.get(sessionKey);
         return sessionData ? JSON.parse(sessionData) : null;
       } else {
-        // Memory fallback
+        // Memory fallback - cleanup expired entries first
+        this.cleanupMemoryStore();
         const stored = this.memoryStore.get(sessionKey);
         if (stored && (!stored.expires || stored.expires > Date.now())) {
           return stored.data;
