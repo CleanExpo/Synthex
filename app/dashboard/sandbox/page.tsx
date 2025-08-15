@@ -200,7 +200,7 @@ export default function SandboxPage() {
                 <div className="mt-2 text-white whitespace-pre-wrap">{content || 'Your content will appear here...'}</div>
                 {mediaType !== 'none' && (
                   <div className="mt-3 bg-gray-800 rounded-lg h-48 flex items-center justify-center">
-                    {mediaType === 'image' && <Image alt="" className="h-12 w-12 text-gray-600" />}
+                    {mediaType === 'image' && <Image className="h-12 w-12 text-gray-600" />}
                     {mediaType === 'video' && <Video className="h-12 w-12 text-gray-600" />}
                   </div>
                 )}
@@ -244,7 +244,7 @@ export default function SandboxPage() {
             </div>
             {mediaType !== 'none' ? (
               <div className="bg-gray-200 h-96 flex items-center justify-center">
-                {mediaType === 'image' && <Image alt="" className="h-16 w-16 text-gray-400" />}
+                {mediaType === 'image' && <Image className="h-16 w-16 text-gray-400" />}
                 {mediaType === 'video' && <Video className="h-16 w-16 text-gray-400" />}
               </div>
             ) : (
@@ -285,7 +285,7 @@ export default function SandboxPage() {
                 </div>
                 {mediaType !== 'none' && (
                   <div className="mt-3 bg-gray-100 rounded-lg h-48 flex items-center justify-center border">
-                    {mediaType === 'image' && <Image alt="" className="h-12 w-12 text-gray-400" />}
+                    {mediaType === 'image' && <Image className="h-12 w-12 text-gray-400" />}
                     {mediaType === 'video' && <Video className="h-12 w-12 text-gray-400" />}
                   </div>
                 )}

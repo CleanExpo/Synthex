@@ -57,7 +57,7 @@ class RealtimeService {
     // Handle broadcast messages
     if (options?.onMessage) {
       channel.on('broadcast', { event: 'message' }, (payload: any) => {
-        options.onMessage(payload.payload as RealtimeMessage);
+        options.onMessage?.(payload.payload as RealtimeMessage);
       });
     }
 
@@ -66,7 +66,7 @@ class RealtimeService {
       channel.on('presence', { event: 'sync' }, () => {
         const state = channel.presenceState();
         const presenceList = Object.values(state).flat() as RealtimePresence[];
-        options.onPresence(presenceList);
+        options.onPresence?.(presenceList);
         
         // Update local presence data
         presenceList.forEach(p => {
@@ -89,7 +89,7 @@ class RealtimeService {
         'postgres_changes',
         { event: '*', schema: 'public' },
         (payload: any) => {
-          options.onUpdate(payload);
+          options.onUpdate?.(payload);
         }
       );
     }

@@ -34,15 +34,11 @@ export class CacheService implements ICacheService {
   private async initializeRedis(connectionString: string): Promise<void> {
     try {
       this.redis = new Redis(connectionString, {
-        retryDelayOnFailover: 100,
         maxRetriesPerRequest: 3,
         connectTimeout: 5000,
         lazyConnect: true,
         keepAlive: 30000,
         family: 4,
-        // Connection pool settings
-        maxRetriesPerRequest: 3,
-        retryDelayOnFailover: 100,
         // Error handling
         showFriendlyErrorStack: process.env.NODE_ENV === 'development'
       });
