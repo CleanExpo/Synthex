@@ -7,6 +7,10 @@ import { NextResponse } from 'next/server';
 import { signInFlow } from '@/src/lib/auth/signInFlow';
 import { authMonitor } from '@/src/lib/auth/monitoring';
 
+// Force dynamic rendering - prevent static generation
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
 export async function GET() {
   const checks = {
     timestamp: new Date().toISOString(),

@@ -7,6 +7,10 @@ import { NextResponse } from 'next/server';
 
 const redis = require('@/lib/redis-client');
 
+// Force dynamic rendering - prevent static generation
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
 export async function GET(request) {
   try {
     const startTime = Date.now();
