@@ -159,6 +159,17 @@ const nextConfig = {
       );
     }
     
+    // Fix "self is not defined" error - provide global polyfills
+    if (isServer) {
+      config.plugins.push(
+        new webpack.DefinePlugin({
+          self: 'global',
+          window: 'undefined',
+          document: 'undefined',
+        })
+      );
+    }
+    
     // Add fallbacks for Node.js modules
     if (!isServer) {
       config.resolve.fallback = {
@@ -207,7 +218,7 @@ const nextConfig = {
       moduleIds: 'deterministic',
       minimize: !dev,
       splitChunks: {
-        chunks: 'all',
+        chunks: isServer ? 'async' : 'all',  // Only split async chunks on server
         minSize: 20000,
         minRemainingSize: 0,
         minChunks: 1,
@@ -216,25 +227,29 @@ const nextConfig = {
         cacheGroups: {
           default: false,
           vendors: false,
-          framework: {
-            name: 'framework',
-            chunks: 'all',
-            test: /[\\/]node_modules[\\/](react|react-dom|next)[\\/]/,
-            priority: 40,
-            enforce: true,
-          },
-          lib: {
-            test: /[\\/]node_modules[\\/]/,
-            name(module) {
-              const packageName = module.context.match(
-                /[\\/]node_modules[\\/](.*?)([[\\/]|$)/
-              )?.[1];
-              return `npm.${packageName?.replace('@', '').replace('/', '-')}`;
+          // Only create framework chunk for client-side
+          ...(isServer ? {} : {
+            framework: {
+              name: 'framework',
+              chunks: 'all',
+              test: /[\\/]node_modules[\\/](react|react-dom|next)[\\/]/,
+              priority: 40,
+              enforce: true,
+              reuseExistingChunk: true,
             },
-            priority: 30,
-            minChunks: 1,
-            reuseExistingChunk: true,
-          },
+            lib: {
+              test: /[\\/]node_modules[\\/]/,
+              name(module) {
+                const packageName = module.context.match(
+                  /[\\/]node_modules[\\/](.*?)([[\\/]|$)/
+                )?.[1];
+                return `npm.${packageName?.replace('@', '').replace('/', '-')}`;
+              },
+              priority: 30,
+              minChunks: 1,
+              reuseExistingChunk: true,
+            },
+          }),
           commons: {
             name: 'commons',
             minChunks: 2,
