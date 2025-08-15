@@ -194,7 +194,82 @@ claude code --mcp-config mcp.deployment.json
 - ✅ Enhanced workflow scripts with resource monitoring
 - ✅ Improved spinner animations and UI feedback
 
-## 🛡️ Anthropic-Level Security & Best Practices [ENHANCED v2.0]
+## 🛡️ CRITICAL SECURITY REQUIREMENTS [MANDATORY v3.0]
+
+### ⚠️ ENVIRONMENT VARIABLE SECURITY [MUST FOLLOW]
+
+**EVERY piece of code that uses environment variables MUST:**
+
+1. **EXPLICITLY DECLARE** all required env vars with:
+   - Variable name and purpose
+   - Security classification (PUBLIC/INTERNAL/SECRET/CRITICAL)
+   - Format validation requirements
+   - Example values (never real secrets)
+   - Failure consequences if missing
+
+2. **VALIDATE AT STARTUP** using our env-validator:
+   ```typescript
+   import { envValidator } from '@/lib/security/env-validator';
+   
+   // MUST be called before any other code
+   const validation = envValidator.validate();
+   if (!validation.isValid) {
+     throw new Error('Critical env vars missing!');
+   }
+   ```
+
+3. **NEVER EXPOSE SECRETS** to client-side:
+   - ❌ NEVER: Use SECRET/CRITICAL vars in client components
+   - ❌ NEVER: Include in API responses
+   - ❌ NEVER: Log sensitive values
+   - ✅ ALWAYS: Use NEXT_PUBLIC_ prefix for client-safe vars
+
+4. **SECURE API ENDPOINTS** with security checker:
+   ```typescript
+   import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
+   
+   export async function POST(request: NextRequest) {
+     // MANDATORY security check
+     const security = await APISecurityChecker.check(
+       request, 
+       DEFAULT_POLICIES.AUTHENTICATED_WRITE
+     );
+     
+     if (!security.allowed) {
+       return APISecurityChecker.createSecureResponse(
+         { error: security.error },
+         403
+       );
+     }
+     
+     // Your API logic here...
+   }
+   ```
+
+5. **DOCUMENT ENV REQUIREMENTS** in every file:
+   ```typescript
+   /**
+    * ENVIRONMENT VARIABLES REQUIRED:
+    * - DATABASE_URL: PostgreSQL connection (CRITICAL)
+    * - JWT_SECRET: Token signing key (CRITICAL)
+    * - OPENROUTER_API_KEY: AI service key (SECRET)
+    * 
+    * FAILURE MODE: Service will not start if missing
+    */
+   ```
+
+### 🔒 Security Validation Checklist
+
+**Before EVERY commit, verify:**
+- [ ] No hardcoded secrets in code
+- [ ] All env vars validated with env-validator
+- [ ] API endpoints use APISecurityChecker
+- [ ] Sensitive operations have audit logging
+- [ ] Error messages don't expose system details
+- [ ] Input validation on all user data
+- [ ] Output sanitization before sending to client
+
+## 🛡️ Anthropic-Level Security & Best Practices [ENHANCED v3.0]
 
 ### Security-First Implementation:
 - **Never expose secrets:** All API keys and sensitive data in environment variables only

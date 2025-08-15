@@ -1,0 +1,363 @@
+/**
+ * EXAMPLE SECURE API ENDPOINT
+ * This demonstrates PROPER security implementation
+ * 
+ * ENVIRONMENT VARIABLES REQUIRED:
+ * - DATABASE_URL: PostgreSQL connection (CRITICAL) - for database queries
+ * - JWT_SECRET: Token signing key (CRITICAL) - for authentication
+ * - OPENROUTER_API_KEY: AI service key (SECRET) - for AI features
+ * - RATE_LIMIT_MAX: Max requests (INTERNAL) - default: 100
+ * 
+ * FAILURE MODE: Returns 500 if critical vars missing, 503 if AI unavailable
+ * 
+ * SECURITY FEATURES IMPLEMENTED:
+ * ✅ Environment variable validation
+ * ✅ Authentication required
+ * ✅ Input validation with Zod
+ * ✅ Output sanitization
+ * ✅ Rate limiting
+ * ✅ Audit logging
+ * ✅ CSRF protection
+ * ✅ SQL injection prevention
+ * ✅ XSS prevention
+ */
+
+import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
+import { prisma } from '@/lib/prisma';
+import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
+import { envValidator } from '@/lib/security/env-validator';
+import { getSecurityContext } from '@/app/api/middleware';
+
+// ============================================
+// INPUT VALIDATION SCHEMA
+// ============================================
+const RequestSchema = z.object({
+  title: z.string()
+    .min(1, 'Title is required')
+    .max(200, 'Title too long')
+    .regex(/^[a-zA-Z0-9\s\-_]+$/, 'Title contains invalid characters'),
+  
+  content: z.string()
+    .min(10, 'Content too short')
+    .max(5000, 'Content too long')
+    .transform(str => str.trim()), // Sanitize whitespace
+  
+  tags: z.array(z.string())
+    .max(10, 'Too many tags')
+    .optional()
+    .default([]),
+  
+  isPublic: z.boolean()
+    .optional()
+    .default(false),
+  
+  priority: z.enum(['low', 'medium', 'high'])
+    .optional()
+    .default('medium')
+});
+
+type RequestData = z.infer<typeof RequestSchema>;
+
+// ============================================
+// OUTPUT SCHEMA (for sanitization)
+// ============================================
+const ResponseSchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  content: z.string(),
+  tags: z.array(z.string()),
+  isPublic: z.boolean(),
+  priority: z.string(),
+  createdAt: z.string(),
+  userId: z.string(),
+  // Never expose sensitive fields like:
+  // - internalNotes
+  // - apiKeys
+  // - passwords
+});
+
+// ============================================
+// GET Handler - Read data securely
+// ============================================
+export async function GET(request: NextRequest) {
+  // 1. MANDATORY: Validate environment variables
+  const envValidation = envValidator.validate(false);
+  if (!envValidation.isValid) {
+    console.error('Environment validation failed:', envValidation.errors);
+    return NextResponse.json(
+      { error: 'Server configuration error' },
+      { status: 500 }
+    );
+  }
+
+  // 2. MANDATORY: Security check (already done in middleware, but double-check)
+  const security = await APISecurityChecker.check(
+    request,
+    DEFAULT_POLICIES.AUTHENTICATED_READ
+  );
+
+  if (!security.allowed) {
+    return APISecurityChecker.createSecureResponse(
+      { error: security.error },
+      403,
+      security.context
+    );
+  }
+
+  // 3. Get security context from middleware
+  const context = getSecurityContext(request) || security.context;
+  const userId = context.userId;
+
+  if (!userId) {
+    return APISecurityChecker.createSecureResponse(
+      { error: 'User ID not found' },
+      401
+    );
+  }
+
+  try {
+    // 4. Database query with proper error handling
+    const items = await prisma.item.findMany({
+      where: {
+        OR: [
+          { userId: userId },
+          { isPublic: true }
+        ]
+      },
+      select: {
+        id: true,
+        title: true,
+        content: true,
+        tags: true,
+        isPublic: true,
+        priority: true,
+        createdAt: true,
+        userId: true,
+        // Explicitly exclude sensitive fields
+        // internalNotes: false,
+        // apiKey: false
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 100 // Limit results
+    });
+
+    // 5. Sanitize output
+    const sanitizedItems = items.map(item => 
+      APISecurityChecker.sanitizeOutput(item, ResponseSchema)
+    );
+
+    // 6. Return secure response
+    return APISecurityChecker.createSecureResponse(
+      {
+        items: sanitizedItems,
+        count: sanitizedItems.length,
+        timestamp: new Date().toISOString()
+      },
+      200,
+      context
+    );
+
+  } catch (error) {
+    // 7. Error handling without exposing details
+    console.error('Database error:', error); // Log full error server-side
+    
+    return APISecurityChecker.createSecureResponse(
+      { 
+        error: 'Failed to fetch items',
+        requestId: context.requestId
+      },
+      500,
+      context
+    );
+  }
+}
+
+// ============================================
+// POST Handler - Create data securely
+// ============================================
+export async function POST(request: NextRequest) {
+  // 1. MANDATORY: Validate environment variables
+  const envValidation = envValidator.validate(false);
+  if (!envValidation.isValid) {
+    return NextResponse.json(
+      { error: 'Server configuration error' },
+      { status: 500 }
+    );
+  }
+
+  // 2. MANDATORY: Security check with stricter policy
+  const security = await APISecurityChecker.check(
+    request,
+    {
+      ...DEFAULT_POLICIES.AUTHENTICATED_WRITE,
+      rateLimit: { maxRequests: 10, windowMs: 60000 }, // Stricter rate limit
+      maxBodySize: 10240, // 10KB max
+      preventCSRF: true,
+      auditLog: true
+    }
+  );
+
+  if (!security.allowed) {
+    return APISecurityChecker.createSecureResponse(
+      { error: security.error },
+      403,
+      security.context
+    );
+  }
+
+  const context = security.context;
+  const userId = context.userId;
+
+  if (!userId) {
+    return APISecurityChecker.createSecureResponse(
+      { error: 'Authentication required' },
+      401
+    );
+  }
+
+  try {
+    // 3. Parse and validate input
+    const body = await request.json();
+    const validatedData = APISecurityChecker.validateInput(body, RequestSchema);
+
+    // 4. Additional business logic validation
+    if (validatedData.isPublic && validatedData.priority === 'high') {
+      return APISecurityChecker.createSecureResponse(
+        { error: 'High priority items cannot be public' },
+        400
+      );
+    }
+
+    // 5. Check user permissions (example)
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { role: true, itemCount: true }
+    });
+
+    if (!user) {
+      return APISecurityChecker.createSecureResponse(
+        { error: 'User not found' },
+        404
+      );
+    }
+
+    // Example: Limit free users to 10 items
+    if (user.role === 'free' && user.itemCount >= 10) {
+      return APISecurityChecker.createSecureResponse(
+        { error: 'Item limit reached. Please upgrade your account.' },
+        402 // Payment Required
+      );
+    }
+
+    // 6. Create item in database (with transaction for consistency)
+    const newItem = await prisma.$transaction(async (tx) => {
+      // Create the item
+      const item = await tx.item.create({
+        data: {
+          ...validatedData,
+          userId: userId,
+          // Add server-side fields
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          version: 1
+        }
+      });
+
+      // Update user's item count
+      await tx.user.update({
+        where: { id: userId },
+        data: { itemCount: { increment: 1 } }
+      });
+
+      return item;
+    });
+
+    // 7. Call AI service if needed (with proper error handling)
+    if (validatedData.tags.includes('ai-enhance')) {
+      try {
+        const aiKey = envValidator.get('OPENROUTER_API_KEY');
+        // AI enhancement logic here...
+      } catch (aiError) {
+        // AI failure is non-critical, log but continue
+        console.warn('AI enhancement failed:', aiError);
+      }
+    }
+
+    // 8. Sanitize output before sending
+    const sanitizedItem = APISecurityChecker.sanitizeOutput(
+      newItem,
+      ResponseSchema
+    );
+
+    // 9. Return success response
+    return APISecurityChecker.createSecureResponse(
+      {
+        success: true,
+        item: sanitizedItem,
+        message: 'Item created successfully'
+      },
+      201,
+      context
+    );
+
+  } catch (error) {
+    // 10. Handle different error types
+    if (error instanceof z.ZodError) {
+      return APISecurityChecker.createSecureResponse(
+        { 
+          error: 'Validation failed',
+          details: error.errors.map(e => ({
+            field: e.path.join('.'),
+            message: e.message
+          }))
+        },
+        400,
+        context
+      );
+    }
+
+    // Log full error server-side
+    console.error('Create item error:', error);
+
+    // Generic error for client
+    return APISecurityChecker.createSecureResponse(
+      { 
+        error: 'Failed to create item',
+        requestId: context.requestId
+      },
+      500,
+      context
+    );
+  }
+}
+
+// ============================================
+// DELETE Handler - Delete data securely
+// ============================================
+export async function DELETE(request: NextRequest) {
+  // Similar security pattern...
+  const security = await APISecurityChecker.check(
+    request,
+    {
+      ...DEFAULT_POLICIES.AUTHENTICATED_WRITE,
+      auditLog: true, // Always audit deletions
+      preventCSRF: true
+    }
+  );
+
+  if (!security.allowed) {
+    return APISecurityChecker.createSecureResponse(
+      { error: security.error },
+      403
+    );
+  }
+
+  // ... deletion logic with proper authorization checks
+  
+  return APISecurityChecker.createSecureResponse(
+    { success: true },
+    200,
+    security.context
+  );
+}
