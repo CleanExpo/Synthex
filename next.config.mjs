@@ -1,40 +1,20 @@
 /** @type {import('next').NextConfig} */
-
 const nextConfig = {
-  reactStrictMode: true,
+  reactStrictMode: false,
   swcMinify: true,
-  output: 'standalone',
-  
   typescript: {
     ignoreBuildErrors: true,
   },
-  
   eslint: {
     ignoreDuringBuilds: true,
   },
-  
-  images: {
-    domains: [
-      'localhost',
-      'synthex.social',
-      'synthex.vercel.app',
-      'images.unsplash.com',
-      'avatars.githubusercontent.com'
-    ],
-    unoptimized: true,
-  },
-  
   experimental: {
-    serverComponentsExternalPackages: [
-      '@prisma/client',
-      'bcryptjs',
-      'redis'
-    ],
+    forceSwcTransforms: true,
   },
-  
   webpack: (config, { isServer }) => {
     if (!isServer) {
       config.resolve.fallback = {
+        ...config.resolve.fallback,
         fs: false,
         net: false,
         tls: false,
@@ -43,6 +23,6 @@ const nextConfig = {
     }
     return config;
   },
-};
+}
 
 export default nextConfig;
