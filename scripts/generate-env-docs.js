@@ -14,51 +14,242 @@
 const fs = require('fs');
 const path = require('path');
 
-// Import the env validator definitions
-const { ENV_VAR_DEFINITIONS } = require('../src/lib/security/env-validator.ts');
-
+// Define env var definitions directly (since we can't import TypeScript)
 class EnvDocGenerator {
   constructor() {
-    this.definitions = ENV_VAR_DEFINITIONS || this.getDefaultDefinitions();
+    this.definitions = this.getDefinitions();
   }
 
-  // Fallback definitions if import fails
-  getDefaultDefinitions() {
+  // Complete env var definitions
+  getDefinitions() {
     return [
+      // ========== DATABASE ==========
       {
         key: 'DATABASE_URL',
-        description: 'PostgreSQL connection string',
+        description: 'PostgreSQL connection string with credentials',
         required: true,
         securityLevel: 'CRITICAL',
         example: 'postgresql://user:password@host:5432/dbname'
       },
+      
+      // ========== AUTHENTICATION ==========
       {
         key: 'JWT_SECRET',
-        description: 'Secret key for JWT tokens',
+        description: 'Secret key for signing JWT tokens (min 32 chars)',
         required: true,
         securityLevel: 'CRITICAL',
         example: 'base64EncodedRandomStringAtLeast32CharsLong=='
       },
       {
+        key: 'NEXTAUTH_SECRET',
+        description: 'NextAuth.js secret for session encryption',
+        required: false,
+        securityLevel: 'CRITICAL',
+        example: 'generated-random-string-for-nextauth',
+        dependsOn: ['NEXTAUTH_URL']
+      },
+      {
+        key: 'NEXTAUTH_URL',
+        description: 'Canonical URL of the site for NextAuth',
+        required: false,
+        securityLevel: 'INTERNAL',
+        example: 'https://synthex.vercel.app'
+      },
+      
+      // ========== SUPABASE ==========
+      {
         key: 'NEXT_PUBLIC_SUPABASE_URL',
-        description: 'Supabase project URL',
+        description: 'Supabase project URL (public)',
         required: true,
         securityLevel: 'PUBLIC',
         example: 'https://project.supabase.co'
       },
       {
         key: 'NEXT_PUBLIC_SUPABASE_ANON_KEY',
-        description: 'Supabase anonymous key',
+        description: 'Supabase anonymous/public key (safe for client)',
         required: true,
         securityLevel: 'PUBLIC',
         example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
       },
       {
+        key: 'SUPABASE_SERVICE_ROLE_KEY',
+        description: 'Supabase service role key (NEVER expose to client)',
+        required: false,
+        securityLevel: 'CRITICAL',
+        example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
+      },
+      
+      // ========== AI/LLM SERVICES ==========
+      {
         key: 'OPENROUTER_API_KEY',
-        description: 'OpenRouter API key',
+        description: 'OpenRouter API key for AI services',
         required: true,
         securityLevel: 'SECRET',
         example: 'sk-or-v1-xxxxxxxxxxxxx'
+      },
+      {
+        key: 'OPENAI_API_KEY',
+        description: 'OpenAI API key (alternative to OpenRouter)',
+        required: false,
+        securityLevel: 'SECRET',
+        example: 'sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
+        conflictsWith: ['ANTHROPIC_API_KEY']
+      },
+      {
+        key: 'ANTHROPIC_API_KEY',
+        description: 'Anthropic Claude API key',
+        required: false,
+        securityLevel: 'SECRET',
+        example: 'sk-ant-xxxxxxxxxxxxx',
+        conflictsWith: ['OPENAI_API_KEY']
+      },
+      
+      // ========== PAYMENT PROCESSING ==========
+      {
+        key: 'STRIPE_SECRET_KEY',
+        description: 'Stripe secret key for payment processing',
+        required: false,
+        securityLevel: 'CRITICAL',
+        example: 'sk_test_xxxxxxxxxx',
+        dependsOn: ['STRIPE_PUBLISHABLE_KEY', 'STRIPE_WEBHOOK_SECRET']
+      },
+      {
+        key: 'STRIPE_PUBLISHABLE_KEY',
+        description: 'Stripe publishable key (safe for client)',
+        required: false,
+        securityLevel: 'PUBLIC',
+        example: 'pk_test_xxxxxxxxxx'
+      },
+      {
+        key: 'STRIPE_WEBHOOK_SECRET',
+        description: 'Stripe webhook endpoint secret',
+        required: false,
+        securityLevel: 'SECRET',
+        example: 'whsec_xxxxxxxxxx'
+      },
+      
+      // ========== EMAIL SERVICE ==========
+      {
+        key: 'EMAIL_PROVIDER',
+        description: 'Email service provider',
+        required: false,
+        securityLevel: 'INTERNAL',
+        example: 'smtp',
+        dependsOn: ['SMTP_HOST', 'SMTP_PORT', 'SMTP_USER', 'SMTP_PASS']
+      },
+      {
+        key: 'SMTP_HOST',
+        description: 'SMTP server hostname',
+        required: false,
+        securityLevel: 'INTERNAL',
+        example: 'smtp.gmail.com'
+      },
+      {
+        key: 'SMTP_PORT',
+        description: 'SMTP server port',
+        required: false,
+        securityLevel: 'INTERNAL',
+        example: '587',
+        defaultValue: '587'
+      },
+      {
+        key: 'SMTP_USER',
+        description: 'SMTP authentication username',
+        required: false,
+        securityLevel: 'SECRET',
+        example: 'your-email@gmail.com'
+      },
+      {
+        key: 'SMTP_PASS',
+        description: 'SMTP authentication password',
+        required: false,
+        securityLevel: 'SECRET',
+        example: 'your-app-specific-password'
+      },
+      
+      // ========== OAUTH PROVIDERS ==========
+      {
+        key: 'GOOGLE_CLIENT_ID',
+        description: 'Google OAuth client ID',
+        required: false,
+        securityLevel: 'INTERNAL',
+        example: 'xxxxx.apps.googleusercontent.com',
+        dependsOn: ['GOOGLE_CLIENT_SECRET']
+      },
+      {
+        key: 'GOOGLE_CLIENT_SECRET',
+        description: 'Google OAuth client secret',
+        required: false,
+        securityLevel: 'SECRET',
+        example: 'GOCSPX-xxxxxxxxxxxxx'
+      },
+      
+      // ========== MONITORING & ANALYTICS ==========
+      {
+        key: 'SENTRY_DSN',
+        description: 'Sentry error tracking DSN',
+        required: false,
+        securityLevel: 'INTERNAL',
+        example: 'https://xxx@xxx.ingest.sentry.io/xxx'
+      },
+      {
+        key: 'NEXT_PUBLIC_SENTRY_DSN',
+        description: 'Sentry DSN for client-side',
+        required: false,
+        securityLevel: 'PUBLIC',
+        example: 'https://xxx@xxx.ingest.sentry.io/xxx'
+      },
+      {
+        key: 'NEXT_PUBLIC_GA_ID',
+        description: 'Google Analytics tracking ID',
+        required: false,
+        securityLevel: 'PUBLIC',
+        example: 'G-XXXXXXXXXX'
+      },
+      
+      // ========== APPLICATION CONFIG ==========
+      {
+        key: 'NEXT_PUBLIC_APP_URL',
+        description: 'Public application URL',
+        required: false,
+        securityLevel: 'PUBLIC',
+        example: 'https://synthex.vercel.app',
+        defaultValue: 'http://localhost:3000'
+      },
+      {
+        key: 'NODE_ENV',
+        description: 'Node environment',
+        required: false,
+        securityLevel: 'INTERNAL',
+        example: 'production',
+        defaultValue: 'development'
+      },
+      
+      // ========== REDIS/CACHING ==========
+      {
+        key: 'REDIS_URL',
+        description: 'Redis connection URL for caching',
+        required: false,
+        securityLevel: 'SECRET',
+        example: 'redis://username:password@host:6379'
+      },
+      
+      // ========== RATE LIMITING ==========
+      {
+        key: 'RATE_LIMIT_MAX',
+        description: 'Maximum requests per window',
+        required: false,
+        securityLevel: 'INTERNAL',
+        example: '100',
+        defaultValue: '100'
+      },
+      {
+        key: 'RATE_LIMIT_WINDOW_MS',
+        description: 'Rate limit window in milliseconds',
+        required: false,
+        securityLevel: 'INTERNAL',
+        example: '900000',
+        defaultValue: '900000'
       }
     ];
   }

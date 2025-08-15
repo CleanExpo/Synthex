@@ -40,7 +40,11 @@
     "e2e:ui": "playwright test --ui",
     "audit": "npm audit --omit=dev",
     "release:check": "npm run type-check && npm run lint && npm test && npm run e2e && npm run build",
-    "ci:verify": "node agents/tools/ci-verify.js"
+    "ci:verify": "node agents/tools/ci-verify.js",
+    "validate:env:enhanced": "node scripts/validate-env-enhanced.js",
+    "env:generate": "node scripts/generate-env-docs.js",
+    "security:audit": "npm run env:generate && npm run validate:env:enhanced && npm audit",
+    "security:check": "node scripts/validate-env-enhanced.js"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.20.0",
