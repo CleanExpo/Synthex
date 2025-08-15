@@ -14,6 +14,10 @@ import {
 } from '@/src/lib/redis-unified';
 import { withOptionalSession } from '@/src/middleware/session';
 
+// Force dynamic rendering - prevent static generation
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
 // Performance test configuration
 const PERF_TEST_CONFIG = {
   iterations: 10,
