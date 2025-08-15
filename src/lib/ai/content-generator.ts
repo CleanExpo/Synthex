@@ -4,7 +4,7 @@
  */
 
 // TODO: Create viral-patterns module
-// import { viralPatterns } from '@/lib/viral-patterns';
+// import { viralPatterns } from '@/src/lib/viral-patterns';
 
 export interface ContentRequest {
   type: 'post' | 'caption' | 'thread' | 'story' | 'reel' | 'article';

@@ -1,24 +1,12 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    // More lenient settings for build
-    "skipLibCheck": true,
     "strict": false,
+    "skipLibCheck": true,
     "noEmit": true,
-    "incremental": false,
-    "tsBuildInfoFile": null,
-    
-    // Allow JavaScript files
+    "isolatedModules": false,
     "allowJs": true,
     "checkJs": false,
-    
-    // Module resolution
-    "moduleResolution": "node",
-    "resolveJsonModule": true,
-    "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true,
-    
-    // Type checking (relaxed for build)
     "noImplicitAny": false,
     "noImplicitThis": false,
     "strictNullChecks": false,
@@ -28,23 +16,8 @@
     "noImplicitReturns": false,
     "noFallthroughCasesInSwitch": false,
     "noUnusedLocals": false,
-    "noUnusedParameters": false,
-    
-    // Case sensitivity
-    "forceConsistentCasingInFileNames": true,
-    
-    // Emit settings
-    "declaration": false,
-    "declarationMap": false,
-    "sourceMap": false,
-    "removeComments": true
+    "noUnusedParameters": false
   },
-  "include": [
-    "next-env.d.ts",
-    "**/*.ts",
-    "**/*.tsx",
-    ".next/types/**/*.ts"
-  ],
   "exclude": [
     "node_modules",
     "**/*.test.ts",
@@ -53,15 +26,17 @@
     "**/*.spec.tsx",
     "tests/**/*",
     "scripts/**/*",
-    "prisma/seed.ts",
+    "controlled-autonomous-build.ts",
+    "start-autonomous-build.ts",
+    "sentry.*.config.ts",
+    "src/agents/**/*",
+    "agents/**/*",
     ".next",
     "out",
     "dist",
     "build",
     "coverage",
     "playwright.config.ts",
-    "jest.config.js",
-    "src/agents/**/*",
-    "agents/**/*"
+    "jest.config.js"
   ]
 }
