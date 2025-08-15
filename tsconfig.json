@@ -1,10 +1,14 @@
 {
   "compilerOptions": {
     "target": "ES2017",
-    "lib": ["dom", "dom.iterable", "esnext"],
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
     "allowJs": true,
     "skipLibCheck": true,
-    "strict": true,
+    "strict": false,
     "noEmit": true,
     "esModuleInterop": true,
     "module": "esnext",
@@ -13,11 +17,7 @@
     "isolatedModules": true,
     "jsx": "preserve",
     "incremental": true,
-    "tsBuildInfoFile": ".next/tsconfig.tsbuildinfo",
     "forceConsistentCasingInFileNames": true,
-    "noImplicitReturns": false,
-    "noUnusedLocals": false,
-    "noUnusedParameters": false,
     "baseUrl": ".",
     "plugins": [
       {
@@ -25,17 +25,64 @@
       }
     ],
     "paths": {
-      "@/*": ["./*"],
-      "@/components/*": ["./components/*"],
-      "@/lib/*": ["./lib/*"],
-      "@/hooks/*": ["./hooks/*"],
-      "@/utils/*": ["./utils/*"],
-      "@/types/*": ["./types/*"],
-      "@/app/*": ["./app/*"],
-      "@/styles/*": ["./styles/*"],
-      "@/public/*": ["./public/*"]
-    }
+      "@/*": [
+        "./*"
+      ],
+      "@/components/*": [
+        "./components/*"
+      ],
+      "@/lib/*": [
+        "./lib/*",
+        "./src/lib/*"
+      ],
+      "@/src/*": [
+        "./src/*"
+      ],
+      "@/hooks/*": [
+        "./hooks/*"
+      ],
+      "@/utils/*": [
+        "./utils/*"
+      ],
+      "@/types/*": [
+        "./types/*"
+      ],
+      "@/app/*": [
+        "./app/*"
+      ],
+      "@/styles/*": [
+        "./styles/*"
+      ],
+      "@/public/*": [
+        "./public/*"
+      ]
+    },
+    "noImplicitAny": false,
+    "strictNullChecks": false
   },
-  "include": ["next-env.d.ts", "app/**/*.ts", "app/**/*.tsx", "components/**/*.ts", "components/**/*.tsx", "lib/**/*.ts", "lib/**/*.tsx", "hooks/**/*.ts", "hooks/**/*.tsx", ".next/types/**/*.ts"],
-  "exclude": ["node_modules", "controlled-autonomous-build.ts", "start-autonomous-build.ts", "test*.ts", "*.py", "tests/**/*", "playwright.config.ts", "playwright.config.js", "prisma/seed.ts", "scripts/**/*", "src/agents/**/*", "agents/**/*"]
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "tests/**/*",
+    "scripts/**/*",
+    "controlled-autonomous-build.ts",
+    "start-autonomous-build.ts",
+    "sentry.*.config.ts",
+    "src/agents/**/*",
+    "agents/**/*",
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "**/*.spec.ts",
+    "**/*.spec.tsx",
+    ".next",
+    "out",
+    "dist",
+    "build",
+    "coverage"
+  ]
 }

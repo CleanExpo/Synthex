@@ -1,9 +1,13 @@
 import { NextResponse } from 'next/server';
 import { createAuthClient, serverDb } from '@/lib/supabase-server';
 import { z } from 'zod';
-
-// Import Redis client
-const redis = require('@/lib/redis-client');
+import { 
+  checkRateLimit, 
+  createSession, 
+  deleteSession,
+  set,
+  get 
+} from '@/src/lib/redis-unified';
 
 // Input validation schema
 const loginSchema = z.object({
@@ -12,40 +16,45 @@ const loginSchema = z.object({
 });
 
 // Rate limiting configuration
-const MAX_ATTEMPTS = 5;
-const LOCKOUT_DURATION = 15 * 60 * 1000; // 15 minutes
-
-async function checkRateLimitRedis(identifier: string): Promise<{ allowed: boolean; retryAfter?: number }> {
-  const rateLimitKey = `login:${identifier}`;
-  const result = await redis.checkRateLimit(rateLimitKey, MAX_ATTEMPTS, LOCKOUT_DURATION);
-  
-  if (!result.allowed) {
-    const retryAfter = Math.ceil((result.resetTime - Date.now()) / 1000);
-    return { allowed: false, retryAfter };
-  }
-  
-  return { allowed: true };
-}
+const RATE_LIMIT_CONFIG = {
+  maxAttempts: 5,
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  prefix: 'login'
+};
 
 export async function POST(request: Request) {
   try {
     // Get client IP for rate limiting
-    const clientIp = request.headers.get('x-forwarded-for') || 
+    const clientIp = request.headers.get('x-forwarded-for')?.split(',')[0].trim() || 
                      request.headers.get('x-real-ip') || 
                      'unknown';
     
     // Check rate limiting using Redis
-    const rateLimit = await checkRateLimitRedis(clientIp);
+    const rateLimitKey = `${RATE_LIMIT_CONFIG.prefix}:${clientIp}`;
+    const rateLimit = await checkRateLimit(
+      rateLimitKey, 
+      RATE_LIMIT_CONFIG.maxAttempts, 
+      RATE_LIMIT_CONFIG.windowMs
+    );
+    
     if (!rateLimit.allowed) {
+      const retryAfter = Math.ceil((rateLimit.resetTime - Date.now()) / 1000);
+      
+      // Log rate limit exceeded
+      console.warn(`Rate limit exceeded for IP: ${clientIp}`);
+      
       return NextResponse.json(
         { 
           error: 'Too many login attempts. Please try again later.',
-          retryAfter: rateLimit.retryAfter 
+          retryAfter 
         },
         { 
           status: 429,
           headers: {
-            'Retry-After': rateLimit.retryAfter?.toString() || '900'
+            'Retry-After': retryAfter.toString(),
+            'X-RateLimit-Limit': rateLimit.limit.toString(),
+            'X-RateLimit-Remaining': Math.max(0, rateLimit.limit - rateLimit.count).toString(),
+            'X-RateLimit-Reset': new Date(rateLimit.resetTime).toISOString()
           }
         }
       );
@@ -82,6 +91,11 @@ export async function POST(request: Request) {
     if (authError) {
       console.error('Login error:', authError);
       
+      // Cache failed attempt information in Redis for security monitoring
+      const failedAttemptKey = `failed_login:${email}`;
+      const failedAttempts = await get(failedAttemptKey) || 0;
+      await set(failedAttemptKey, failedAttempts + 1, 3600); // Track for 1 hour
+      
       // Log failed attempt
       try {
         await serverDb.audit.log({
@@ -89,10 +103,12 @@ export async function POST(request: Request) {
           resource: 'authentication',
           outcome: 'failure',
           category: 'auth',
-          severity: 'medium',
+          severity: failedAttempts > 3 ? 'high' : 'medium',
           details: {
             email,
             error: authError.message,
+            failedAttempts: failedAttempts + 1,
+            clientIp,
             timestamp: new Date().toISOString()
           }
         });
@@ -128,6 +144,28 @@ export async function POST(request: Request) {
       );
     }
 
+    // Clear failed attempts on successful login
+    await set(`failed_login:${email}`, 0, 1);
+    
+    // Create Redis session for additional session management
+    const redisSessionId = await createSession(authData.user.id, {
+      email: authData.user.email,
+      provider: 'email',
+      supabaseSessionId: authData.session.access_token,
+      loginTime: new Date().toISOString(),
+      clientIp,
+      userAgent: request.headers.get('user-agent') || 'unknown'
+    }, 60 * 60 * 24 * 7); // 7 days TTL
+    
+    // Cache user profile data for quick access
+    await set(`user_profile:${authData.user.id}`, {
+      id: authData.user.id,
+      email: authData.user.email,
+      name: authData.user.user_metadata?.name || authData.user.email?.split('@')[0],
+      emailVerified: !!authData.user.email_confirmed_at,
+      lastSignIn: new Date().toISOString()
+    }, 60 * 60 * 24); // Cache for 24 hours
+
     // Log successful login
     try {
       await serverDb.audit.log({
@@ -140,6 +178,8 @@ export async function POST(request: Request) {
         details: {
           email,
           provider: 'email',
+          redisSessionId,
+          clientIp,
           timestamp: new Date().toISOString()
         }
       });
@@ -158,6 +198,7 @@ export async function POST(request: Request) {
         emailVerified: !!authData.user.email_confirmed_at,
         lastSignIn: authData.user.last_sign_in_at
       },
+      sessionId: redisSessionId,
       message: 'Successfully logged in',
       redirectTo: '/dashboard'
     });
@@ -186,6 +227,12 @@ export async function POST(request: Request) {
     response.cookies.set('supabase-refresh-token', authData.session.refresh_token, {
       ...cookieOptions,
       maxAge: 60 * 60 * 24 * 30, // 30 days
+    });
+    
+    // Set Redis session ID cookie for session management
+    response.cookies.set('redis-session-id', redisSessionId, {
+      ...cookieOptions,
+      maxAge: 60 * 60 * 24 * 7, // 7 days
     });
 
     // Set user ID cookie for client-side access (non-httpOnly for client access)
@@ -232,10 +279,23 @@ export async function DELETE(request: Request) {
   try {
     const supabase = createAuthClient();
     
-    // Get user ID from cookie for audit logging
+    // Get session IDs from cookies
     const cookieStore = request.headers.get('cookie');
     const userIdMatch = cookieStore?.match(/user-id=([^;]+)/);
+    const redisSessionMatch = cookieStore?.match(/redis-session-id=([^;]+)/);
+    
     const userId = userIdMatch ? userIdMatch[1] : null;
+    const redisSessionId = redisSessionMatch ? redisSessionMatch[1] : null;
+    
+    // Delete Redis session if exists
+    if (redisSessionId) {
+      await deleteSession(redisSessionId);
+    }
+    
+    // Clear cached user profile
+    if (userId) {
+      await set(`user_profile:${userId}`, null, 1);
+    }
     
     // Sign out from Supabase
     const { error } = await supabase.auth.signOut();
@@ -255,6 +315,7 @@ export async function DELETE(request: Request) {
           outcome: 'success',
           category: 'auth',
           details: {
+            redisSessionId,
             timestamp: new Date().toISOString()
           }
         });
@@ -283,6 +344,7 @@ export async function DELETE(request: Request) {
 
     response.cookies.set('supabase-auth-token', '', clearCookieOptions);
     response.cookies.set('supabase-refresh-token', '', clearCookieOptions);
+    response.cookies.set('redis-session-id', '', clearCookieOptions);
     response.cookies.set('user-id', '', {
       ...clearCookieOptions,
       httpOnly: false // Match original setting

@@ -4,7 +4,7 @@
  */
 
 import { describe, it, expect, beforeAll, afterAll } from '@jest/globals';
-import BrandPsychologyOrchestrator from '@/lib/ai/agents/strategic-marketing/brand-orchestrator';
+import BrandPsychologyOrchestrator from '@/src/lib/ai/agents/strategic-marketing/brand-orchestrator';
 import PsychologyEffectivenessTester from '@/lib/ai/agents/strategic-marketing/psychology-testing';
 import testData from './sample-data.json';
 
