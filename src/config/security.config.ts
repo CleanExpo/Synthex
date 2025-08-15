@@ -387,7 +387,6 @@ export const securityMiddlewareStack = [
 ];
 
 const securityConfig = {
-};
   corsConfig,
   helmetConfig,
   rateLimitConfigs,

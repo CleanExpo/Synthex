@@ -27,11 +27,11 @@ import { translations } from './translations';
 import { useTranslation } from './hooks/useTranslation';
 import { LanguageSwitch } from './components/LanguageSwitch';
 
-const i18nConfig = {
-// Export configuration
-export default i18nConfig;
+const i18nExport = {
   config: i18nConfig,
   translations,
   useTranslation,
   LanguageSwitch,
 };
+
+export default i18nExport;
