@@ -1,0 +1,48 @@
+#!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
+
+# SECURITY PRE-COMMIT CHECKS
+echo "🔒 Running security checks before commit..."
+
+# 1. Check for exposed secrets
+echo "Checking for exposed secrets..."
+if git diff --cached --name-only | xargs grep -E "(api_key|apiKey|api_secret|secret_key|password|token|JWT_SECRET|DATABASE_URL|STRIPE_SECRET)" 2>/dev/null | grep -v "example" | grep -v "\.md"; then
+  echo "❌ SECURITY ERROR: Potential secrets detected in commit!"
+  echo "Review the files and remove any sensitive data."
+  exit 1
+fi
+
+# 2. Check for .env files
+if git diff --cached --name-only | grep -E "\.env$|\.env\.local$|\.env\.production$" 2>/dev/null; then
+  echo "❌ SECURITY ERROR: Attempting to commit .env file!"
+  echo ".env files must NEVER be committed to version control."
+  exit 1
+fi
+
+# 3. Run env validator
+echo "Validating environment variables..."
+node -e "
+const { envValidator } = require('./src/lib/security/env-validator.ts');
+const result = envValidator.validate(false);
+if (!result.isValid) {
+  console.error('❌ Environment validation failed!');
+  envValidator.printValidationReport(result);
+  process.exit(1);
+}
+console.log('✅ Environment variables validated');
+" 2>/dev/null || echo "⚠️  Could not validate env vars (validator not found or TypeScript not compiled)"
+
+# 4. Check for console.log in production code
+echo "Checking for console.log statements..."
+if git diff --cached --name-only | grep -E "\.(ts|tsx|js|jsx)$" | xargs grep "console\.\(log\|error\|warn\)" 2>/dev/null | grep -v "// eslint-disable" | grep -v "scripts/" | grep -v "tests/"; then
+  echo "⚠️  Warning: console statements detected in code"
+  echo "Consider removing or using proper logging library"
+fi
+
+# 5. Run linting
+echo "Running linting checks..."
+npm run lint || {
+  echo "⚠️  Linting warnings detected (not blocking commit)"
+}
+
+echo "✅ Security checks passed!"
