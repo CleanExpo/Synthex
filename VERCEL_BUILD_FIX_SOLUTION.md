@@ -18,6 +18,7 @@ Type error: Could not find a declaration file for module 'express'
 Error: Command "next build" exited with 1
 SIGKILL - Out of memory
 Failed to compile
+ReferenceError: self is not defined
 ```
 
 ### The Real Issue:
@@ -53,6 +54,11 @@ Your code builds perfectly locally but fails on Vercel because:
 - Previous failed builds leaving corrupted cache
 - Incompatible cached dependencies
 - Stale TypeScript build info
+
+### 5. Webpack Chunk Optimization Issues
+- Browser-specific code running on server ("self is not defined")
+- Incorrect chunk splitting configuration
+- Framework chunks being loaded server-side
 
 ---
 
@@ -136,7 +142,18 @@ const nextConfig = {
     forceSwcTransforms: true
   },
   
-  webpack: (config, { isServer }) => {
+  webpack: (config, { isServer, webpack }) => {
+    // FIX for "self is not defined" error
+    if (isServer) {
+      config.plugins.push(
+        new webpack.DefinePlugin({
+          self: 'global',
+          window: 'undefined',
+          document: 'undefined',
+        })
+      );
+    }
+    
     if (!isServer) {
       config.resolve.fallback = {
         fs: false,
@@ -147,19 +164,22 @@ const nextConfig = {
       };
     }
     
-    // Optimize chunks
+    // Optimize chunks - prevent browser code on server
     config.optimization.splitChunks = {
-      chunks: 'all',
+      chunks: isServer ? 'async' : 'all',  // Critical!
       cacheGroups: {
         default: false,
         vendors: false,
-        framework: {
-          name: 'framework',
-          chunks: 'all',
-          test: /[\\/]node_modules[\\/](react|react-dom|next)[\\/]/,
-          priority: 40,
-          enforce: true
-        }
+        // Only create framework chunk for client-side
+        ...(isServer ? {} : {
+          framework: {
+            name: 'framework',
+            chunks: 'all',
+            test: /[\\/]node_modules[\\/](react|react-dom|next)[\\/]/,
+            priority: 40,
+            enforce: true
+          }
+        })
       }
     };
     
