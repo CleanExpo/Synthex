@@ -39,20 +39,67 @@ const securityHeaders = {
 const RATE_LIMIT_WINDOW = 60 * 1000; // 1 minute
 const RATE_LIMIT_MAX_REQUESTS = 60; // 60 requests per minute
 
-// In-memory store for rate limiting (use Redis in production)
-const rateLimitStore = new Map<string, { count: number; resetTime: number }>();
-
-// Clean up old entries on each request (Vercel serverless compatible)
-function cleanupOldEntries() {
+// Upstash Redis REST API helper
+async function checkRateLimit(key: string): Promise<{ allowed: boolean; remaining: number; resetTime: number }> {
   const now = Date.now();
-  for (const [key, value] of rateLimitStore.entries()) {
-    if (value.resetTime < now) {
-      rateLimitStore.delete(key);
+  const window = RATE_LIMIT_WINDOW;
+  const resetTime = now + window;
+  
+  // If Upstash is not configured, allow all requests
+  if (!process.env.UPSTASH_REDIS_REST_URL || !process.env.UPSTASH_REDIS_REST_TOKEN) {
+    return { allowed: true, remaining: RATE_LIMIT_MAX_REQUESTS, resetTime };
+  }
+  
+  try {
+    // Use Upstash REST API for rate limiting
+    const url = `${process.env.UPSTASH_REDIS_REST_URL}`;
+    const token = process.env.UPSTASH_REDIS_REST_TOKEN;
+    const rateLimitKey = `ratelimit:${key}`;
+    
+    // Get current count
+    const getResponse = await fetch(`${url}/get/${rateLimitKey}`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    
+    let count = 0;
+    let currentResetTime = resetTime;
+    
+    if (getResponse.ok) {
+      const data = await getResponse.json();
+      if (data.result) {
+        const parsed = JSON.parse(data.result);
+        if (parsed.resetTime > now) {
+          count = parsed.count;
+          currentResetTime = parsed.resetTime;
+        }
+      }
     }
+    
+    // Check if limit exceeded
+    if (count >= RATE_LIMIT_MAX_REQUESTS) {
+      return { allowed: false, remaining: 0, resetTime: currentResetTime };
+    }
+    
+    // Increment count
+    count++;
+    const ttl = Math.ceil(window / 1000);
+    const value = JSON.stringify({ count, resetTime: currentResetTime });
+    
+    await fetch(`${url}/setex/${rateLimitKey}/${ttl}/${encodeURIComponent(value)}`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    
+    return { 
+      allowed: true, 
+      remaining: RATE_LIMIT_MAX_REQUESTS - count, 
+      resetTime: currentResetTime 
+    };
+  } catch (error) {
+    console.error('Rate limit check failed:', error);
+    // On error, allow the request but log it
+    return { allowed: true, remaining: RATE_LIMIT_MAX_REQUESTS, resetTime };
   }
 }
-
-// Note: setInterval doesn't work in serverless environments
 
 export async function middleware(request: NextRequest) {
   let response = NextResponse.next({
@@ -99,45 +146,28 @@ export async function middleware(request: NextRequest) {
   
   // Rate limiting for API routes
   if (pathname.startsWith('/api/')) {
-    // Clean up old entries on each request
-    cleanupOldEntries();
-    
     const ip = request.ip || request.headers.get('x-forwarded-for') || 'unknown';
-    const now = Date.now();
-    
     const rateLimitKey = `${ip}:${pathname}`;
-    const rateLimitData = rateLimitStore.get(rateLimitKey);
     
-    if (rateLimitData) {
-      if (rateLimitData.resetTime > now) {
-        if (rateLimitData.count >= RATE_LIMIT_MAX_REQUESTS) {
-          return new NextResponse('Too Many Requests', {
-            status: 429,
-            headers: {
-              'Retry-After': String(Math.ceil((rateLimitData.resetTime - now) / 1000)),
-              'X-RateLimit-Limit': String(RATE_LIMIT_MAX_REQUESTS),
-              'X-RateLimit-Remaining': '0',
-              'X-RateLimit-Reset': new Date(rateLimitData.resetTime).toISOString()
-            }
-          });
+    const { allowed, remaining, resetTime } = await checkRateLimit(rateLimitKey);
+    
+    if (!allowed) {
+      const retryAfter = Math.ceil((resetTime - Date.now()) / 1000);
+      return new NextResponse('Too Many Requests', {
+        status: 429,
+        headers: {
+          'Retry-After': String(retryAfter),
+          'X-RateLimit-Limit': String(RATE_LIMIT_MAX_REQUESTS),
+          'X-RateLimit-Remaining': '0',
+          'X-RateLimit-Reset': new Date(resetTime).toISOString()
         }
-        rateLimitData.count++;
-      } else {
-        rateLimitData.count = 1;
-        rateLimitData.resetTime = now + RATE_LIMIT_WINDOW;
-      }
-    } else {
-      rateLimitStore.set(rateLimitKey, {
-        count: 1,
-        resetTime: now + RATE_LIMIT_WINDOW
       });
     }
     
     // Add rate limit headers
-    const currentLimit = rateLimitStore.get(rateLimitKey)!;
     response.headers.set('X-RateLimit-Limit', String(RATE_LIMIT_MAX_REQUESTS));
-    response.headers.set('X-RateLimit-Remaining', String(Math.max(0, RATE_LIMIT_MAX_REQUESTS - currentLimit.count)));
-    response.headers.set('X-RateLimit-Reset', new Date(currentLimit.resetTime).toISOString());
+    response.headers.set('X-RateLimit-Remaining', String(remaining));
+    response.headers.set('X-RateLimit-Reset', new Date(resetTime).toISOString());
   }
   
   // Authentication check for protected routes
@@ -203,6 +233,6 @@ export const config = {
      * - favicon.ico (favicon file)
      * - public folder
      */
-    '/((?!_next/static|_next/image|favicon.ico|public/|api/).*)',
+    '/((?!_next/static|_next/image|favicon.ico|public/).*)',
   ],
 };
