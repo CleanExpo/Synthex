@@ -1,0 +1,470 @@
+/**
+ * SYNTHEX Micro-Interactions & Animations
+ * Delightful, performant animations that respect user preferences
+ * 
+ * Design Principle: Motion should be meaningful, not decorative
+ * Every animation serves a purpose: feedback, guidance, or delight
+ */
+
+/* ========================================
+   Animation Variables & Timing Functions
+   ======================================== */
+
+:root {
+  /* Timing - Following Material Design principles */
+  --duration-instant: 100ms;
+  --duration-fast: 200ms;
+  --duration-normal: 300ms;
+  --duration-slow: 400ms;
+  --duration-slower: 600ms;
+  
+  /* Easing - Natural motion curves */
+  --ease-out: cubic-bezier(0.0, 0.0, 0.2, 1);
+  --ease-in: cubic-bezier(0.4, 0.0, 1, 1);
+  --ease-in-out: cubic-bezier(0.4, 0.0, 0.2, 1);
+  --ease-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  --ease-smooth: cubic-bezier(0.4, 0.0, 0.2, 1);
+  
+  /* Spring animations */
+  --spring-bounce: cubic-bezier(0.68, -0.6, 0.32, 1.6);
+  --spring-smooth: cubic-bezier(0.15, 0.85, 0.25, 1);
+}
+
+/* ========================================
+   Respect User Preferences
+   ======================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ========================================
+   Button Interactions
+   ======================================== */
+
+.btn-interactive {
+  position: relative;
+  transition: all var(--duration-fast) var(--ease-out);
+  transform-style: preserve-3d;
+}
+
+.btn-interactive::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(45deg, 
+    rgba(255, 255, 255, 0) 30%, 
+    rgba(255, 255, 255, 0.3) 50%, 
+    rgba(255, 255, 255, 0) 70%);
+  transform: translateX(-100%);
+  transition: transform var(--duration-slow) var(--ease-out);
+  opacity: 0;
+}
+
+.btn-interactive:hover::before {
+  transform: translateX(100%);
+  opacity: 1;
+}
+
+.btn-interactive:active {
+  transform: scale(0.97);
+}
+
+/* Ripple effect for touch feedback */
+.ripple {
+  position: relative;
+  overflow: hidden;
+}
+
+.ripple::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.5);
+  transform: translate(-50%, -50%);
+  transition: width var(--duration-slow) var(--ease-out),
+              height var(--duration-slow) var(--ease-out);
+}
+
+.ripple:active::after {
+  width: 300px;
+  height: 300px;
+}
+
+/* ========================================
+   Loading States
+   ======================================== */
+
+.skeleton-loading {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(90deg,
+    rgba(255, 255, 255, 0.1) 0%,
+    rgba(255, 255, 255, 0.2) 50%,
+    rgba(255, 255, 255, 0.1) 100%);
+  background-size: 200% 100%;
+  animation: skeleton-shimmer var(--duration-slower) ease-in-out infinite;
+}
+
+@keyframes skeleton-shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+/* Pulse for attention */
+.pulse-attention {
+  animation: pulse var(--duration-normal) var(--ease-in-out) infinite alternate;
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); opacity: 1; }
+  100% { transform: scale(1.05); opacity: 0.8; }
+}
+
+/* ========================================
+   Card Hover Effects
+   ======================================== */
+
+.card-lift {
+  transition: all var(--duration-normal) var(--ease-out);
+  transform: translateY(0);
+}
+
+.card-lift:hover {
+  transform: translateY(-4px);
+  box-shadow: 
+    0 10px 20px rgba(0, 0, 0, 0.1),
+    0 6px 6px rgba(0, 0, 0, 0.1);
+}
+
+.card-tilt {
+  transition: transform var(--duration-normal) var(--ease-smooth);
+  transform-style: preserve-3d;
+}
+
+.card-tilt:hover {
+  transform: rotateY(5deg) rotateX(-5deg) scale(1.02);
+}
+
+/* ========================================
+   Form Interactions
+   ======================================== */
+
+.input-focus {
+  position: relative;
+  transition: all var(--duration-fast) var(--ease-out);
+}
+
+.input-focus::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  width: 0;
+  height: 2px;
+  background: var(--primary);
+  transition: all var(--duration-normal) var(--ease-out);
+  transform: translateX(-50%);
+}
+
+.input-focus:focus-within::after {
+  width: 100%;
+}
+
+/* Floating label */
+.floating-label {
+  position: relative;
+}
+
+.floating-label label {
+  position: absolute;
+  top: 50%;
+  left: 12px;
+  transform: translateY(-50%);
+  transition: all var(--duration-fast) var(--ease-out);
+  pointer-events: none;
+}
+
+.floating-label input:focus + label,
+.floating-label input:not(:placeholder-shown) + label {
+  top: -8px;
+  left: 8px;
+  font-size: 12px;
+  background: white;
+  padding: 0 4px;
+}
+
+/* ========================================
+   Success/Error Feedback
+   ======================================== */
+
+.success-check {
+  animation: success-check-mark var(--duration-normal) var(--ease-bounce);
+}
+
+@keyframes success-check-mark {
+  0% { transform: scale(0) rotate(45deg); opacity: 0; }
+  50% { transform: scale(1.2) rotate(45deg); opacity: 1; }
+  100% { transform: scale(1) rotate(45deg); opacity: 1; }
+}
+
+.error-shake {
+  animation: error-shake var(--duration-fast) var(--ease-out) 3;
+}
+
+@keyframes error-shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-10px); }
+  75% { transform: translateX(10px); }
+}
+
+/* ========================================
+   Content Reveal Animations
+   ======================================== */
+
+.fade-in-up {
+  animation: fade-in-up var(--duration-normal) var(--ease-out) both;
+}
+
+@keyframes fade-in-up {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.slide-in-right {
+  animation: slide-in-right var(--duration-normal) var(--ease-out) both;
+}
+
+@keyframes slide-in-right {
+  0% {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  100% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* Stagger children animations */
+.stagger-children > * {
+  animation: fade-in-up var(--duration-normal) var(--ease-out) both;
+}
+
+.stagger-children > *:nth-child(1) { animation-delay: 0ms; }
+.stagger-children > *:nth-child(2) { animation-delay: 50ms; }
+.stagger-children > *:nth-child(3) { animation-delay: 100ms; }
+.stagger-children > *:nth-child(4) { animation-delay: 150ms; }
+.stagger-children > *:nth-child(5) { animation-delay: 200ms; }
+
+/* ========================================
+   Smooth Scroll Indicators
+   ======================================== */
+
+.scroll-indicator {
+  animation: scroll-bounce var(--duration-slow) var(--ease-in-out) infinite;
+}
+
+@keyframes scroll-bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(10px); }
+}
+
+/* ========================================
+   Toast/Notification Animations
+   ======================================== */
+
+.toast-enter {
+  animation: toast-slide-in var(--duration-normal) var(--ease-bounce);
+}
+
+.toast-exit {
+  animation: toast-slide-out var(--duration-fast) var(--ease-in);
+}
+
+@keyframes toast-slide-in {
+  0% {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  100% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes toast-slide-out {
+  0% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+}
+
+/* ========================================
+   Modal/Dialog Animations
+   ======================================== */
+
+.modal-backdrop {
+  animation: fade-in var(--duration-fast) var(--ease-out);
+}
+
+.modal-content {
+  animation: modal-zoom-in var(--duration-normal) var(--ease-bounce);
+}
+
+@keyframes modal-zoom-in {
+  0% {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* ========================================
+   Progress Indicators
+   ======================================== */
+
+.progress-fill {
+  transition: width var(--duration-slow) var(--ease-out);
+}
+
+.progress-indeterminate {
+  background: linear-gradient(90deg,
+    transparent 0%,
+    var(--primary) 50%,
+    transparent 100%);
+  background-size: 200% 100%;
+  animation: progress-indeterminate 1.5s linear infinite;
+}
+
+@keyframes progress-indeterminate {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+/* ========================================
+   Tooltip Reveal
+   ======================================== */
+
+.tooltip {
+  opacity: 0;
+  transform: translateY(-5px);
+  transition: all var(--duration-fast) var(--ease-out);
+  pointer-events: none;
+}
+
+.tooltip-trigger:hover .tooltip {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+/* ========================================
+   Glassmorphism Effects
+   ======================================== */
+
+.glass-morphism {
+  backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  transition: all var(--duration-normal) var(--ease-out);
+}
+
+.glass-morphism:hover {
+  backdrop-filter: blur(15px);
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+/* ========================================
+   Magnetic Button Effect
+   ======================================== */
+
+.magnetic-btn {
+  transition: transform var(--duration-fast) var(--ease-out);
+}
+
+/* JavaScript will calculate transform based on mouse position */
+
+/* ========================================
+   Typewriter Effect
+   ======================================== */
+
+.typewriter {
+  overflow: hidden;
+  white-space: nowrap;
+  border-right: 2px solid var(--primary);
+  animation: 
+    typing 3s steps(40, end),
+    blink-caret 0.75s step-end infinite;
+}
+
+@keyframes typing {
+  from { width: 0; }
+  to { width: 100%; }
+}
+
+@keyframes blink-caret {
+  from, to { border-color: transparent; }
+  50% { border-color: var(--primary); }
+}
+
+/* ========================================
+   Performance Optimizations
+   ======================================== */
+
+/* Use will-change sparingly for known animations */
+.will-animate {
+  will-change: transform, opacity;
+}
+
+/* Hardware acceleration for smooth animations */
+.hw-accelerated {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+/* ========================================
+   Accessibility Enhancements
+   ======================================== */
+
+/* Ensure focus is visible for keyboard users */
+.keyboard-focus:focus {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+/* High contrast mode adjustments */
+@media (prefers-contrast: high) {
+  .btn-interactive,
+  .card-lift,
+  .input-focus {
+    border: 2px solid currentColor;
+  }
+}

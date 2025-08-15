@@ -93,7 +93,7 @@ export default function SettingsPage() {
   // Load initial data
   useEffect(() => {
     loadUserData();
-  }, []);
+  }, [loadUserData]);
 
   const loadUserData = async () => {
     try {

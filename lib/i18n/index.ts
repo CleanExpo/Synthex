@@ -27,7 +27,9 @@ import { translations } from './translations';
 import { useTranslation } from './hooks/useTranslation';
 import { LanguageSwitch } from './components/LanguageSwitch';
 
-export default {
+const i18nConfig = {
+// Export configuration
+export default i18nConfig;
   config: i18nConfig,
   translations,
   useTranslation,

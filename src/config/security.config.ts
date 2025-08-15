@@ -386,7 +386,8 @@ export const securityMiddlewareStack = [
   sessionValidationMiddleware
 ];
 
-export default {
+const securityConfig = {
+};
   corsConfig,
   helmetConfig,
   rateLimitConfigs,
@@ -394,3 +395,5 @@ export default {
   securityMiddlewareStack,
   errorLoggingMiddleware
 };
+
+export default securityConfig;
