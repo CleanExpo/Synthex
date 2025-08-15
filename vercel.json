@@ -2,7 +2,7 @@
   "framework": "nextjs",
   "buildCommand": "rm -rf .next && next build",
   "outputDirectory": ".next",
-  "installCommand": "npm ci --legacy-peer-deps",
+  "installCommand": "npm ci --legacy-peer-deps && npm install --save-dev @types/express",
   "devCommand": "npm run dev",
   "regions": ["iad1"],
   "functions": {
