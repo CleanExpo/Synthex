@@ -199,39 +199,44 @@ export class UserRepository extends BaseRepository<User> {
 
   /**
    * Find active users by team ID
+   * NOTE: This method is currently disabled as teamMemberships relation is not defined in the schema
    */
   async findByTeamId(teamId: string): Promise<User[]> {
-    try {
-      const users = await this.prisma.user.findMany({
-        where: {
-          teamMemberships: {
-            some: {
-              teamId,
-              isActive: true
-            }
-          },
-          isDeleted: false
-        },
-        include: {
-          teamMemberships: {
-            where: {
-              teamId,
-              isActive: true
-            }
-          }
-        }
-      });
-
-      return users;
-    } catch (error) {
-      throw new DomainError(
-        `Failed to find users by team ID: ${teamId}`,
-        'FIND_USERS_BY_TEAM_ERROR',
-        500,
-        { teamId },
-        error as Error
-      );
-    }
+    // TODO: Implement when teamMemberships relation is added to schema
+    return [];
+    
+    // Original implementation commented out:
+    // try {
+    //   const users = await this.prisma.user.findMany({
+    //     where: {
+    //       teamMemberships: {
+    //         some: {
+    //           teamId,
+    //           isActive: true
+    //         }
+    //       },
+    //       isDeleted: false
+    //     },
+    //     include: {
+    //       teamMemberships: {
+    //         where: {
+    //           teamId,
+    //           isActive: true
+    //         }
+    //       }
+    //     }
+    //   });
+    //
+    //   return users;
+    // } catch (error) {
+    //   throw new DomainError(
+    //     `Failed to find users by team ID: ${teamId}`,
+    //     'FIND_USERS_BY_TEAM_ERROR',
+    //     500,
+    //     { teamId },
+    //     error as Error
+    //   );
+    // }
   }
 
   /**
@@ -339,14 +344,14 @@ export class UserRepository extends BaseRepository<User> {
       const [campaignsCount, projectsCount] = await Promise.all([
         this.prisma.campaign.count({
           where: {
-            userId,
-            isDeleted: false
+            userId
+            // isDeleted field not available in schema
           }
         }),
         this.prisma.project.count({
           where: {
-            userId,
-            isDeleted: false
+            userId
+            // isDeleted field not available in schema
           }
         })
       ]);
@@ -354,12 +359,12 @@ export class UserRepository extends BaseRepository<User> {
       // Get last activity from various sources
       const [lastCampaign, lastProject] = await Promise.all([
         this.prisma.campaign.findFirst({
-          where: { userId, isDeleted: false },
+          where: { userId }, // isDeleted field not available in schema
           orderBy: { updatedAt: 'desc' },
           select: { updatedAt: true }
         }),
         this.prisma.project.findFirst({
-          where: { userId, isDeleted: false },
+          where: { userId }, // isDeleted field not available in schema
           orderBy: { updatedAt: 'desc' },
           select: { updatedAt: true }
         })
@@ -389,18 +394,18 @@ export class UserRepository extends BaseRepository<User> {
 
   /**
    * Soft delete user and related data
+   * NOTE: Soft delete is not fully implemented as isDeleted and deletedAt fields are not in the schema
    */
   async softDelete(userId: string): Promise<void> {
     try {
       await this.executeInTransaction(async (tx) => {
         const now = new Date();
 
-        // Soft delete user
+        // Delete user - since soft delete fields don't exist, we'll just anonymize the data
         await tx.user.update({
           where: { id: userId },
           data: {
-            isDeleted: true,
-            deletedAt: now,
+            // isDeleted and deletedAt fields not available in schema
             updatedAt: now,
             // Anonymize sensitive data
             email: `deleted_${userId}@deleted.local`,
@@ -410,34 +415,32 @@ export class UserRepository extends BaseRepository<User> {
           }
         });
 
-        // Soft delete related campaigns
+        // Update related campaigns
         await tx.campaign.updateMany({
           where: { userId },
           data: {
-            isDeleted: true,
-            deletedAt: now,
+            // isDeleted and deletedAt fields not available in schema
             updatedAt: now
           }
         });
 
-        // Soft delete related projects
+        // Update related projects
         await tx.project.updateMany({
           where: { userId },
           data: {
-            isDeleted: true,
-            deletedAt: now,
+            // isDeleted and deletedAt fields not available in schema
             updatedAt: now
           }
         });
 
-        // Deactivate team memberships
-        await tx.teamMember.updateMany({
-          where: { userId },
-          data: {
-            isActive: false,
-            updatedAt: now
-          }
-        });
+        // Deactivate team memberships if the model exists
+        // await tx.teamMember.updateMany({
+        //   where: { userId },
+        //   data: {
+        //     isActive: false,
+        //     updatedAt: now
+        //   }
+        // });
       });
     } catch (error) {
       throw new DomainError(

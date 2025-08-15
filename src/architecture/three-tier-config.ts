@@ -253,8 +253,13 @@ export const defaultThreeTierConfig: ThreeTierConfig = {
   }
 };
 
+// Deep partial type helper
+type DeepPartial<T> = T extends object ? {
+  [P in keyof T]?: DeepPartial<T[P]>;
+} : T;
+
 // Environment-specific configurations
-export const configs: Record<string, Partial<ThreeTierConfig>> = {
+export const configs: Record<string, DeepPartial<ThreeTierConfig>> = {
   development: {
     data: {
       primary: {
@@ -262,6 +267,19 @@ export const configs: Record<string, Partial<ThreeTierConfig>> = {
         connectionString: 'file:./dev.db',
         poolSize: 5,
         ssl: false
+      },
+      cache: {
+        provider: 'redis',
+        connectionString: 'redis://localhost:6379',
+        cluster: false
+      },
+      search: {
+        provider: 'postgres-fts'
+      },
+      migrations: {
+        enabled: true,
+        autoRun: true,
+        directory: './src/db/migrations'
       }
     },
     infrastructure: {

@@ -4,16 +4,16 @@
 
 ![SYNTHEX Banner](https://img.shields.io/badge/SYNTHEX-Social_Media_Automation-blue?style=for-the-badge&logo=robot&logoColor=white)
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/unite-group/synthex)
-[![Version](https://img.shields.io/badge/version-2.0.1-blue)](https://github.com/unite-group/synthex)
-[![Next.js](https://img.shields.io/badge/Next.js-14.0.4-black)](https://nextjs.org)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/CleanExpo/Synthex)
+[![Version](https://img.shields.io/badge/version-2.0.1-blue)](https://github.com/CleanExpo/Synthex)
+[![Next.js](https://img.shields.io/badge/Next.js-14.2.31-black)](https://nextjs.org)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.3-blue)](https://www.typescriptlang.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Node Version](https://img.shields.io/badge/node-%3E%3D18.17.0-green)](https://nodejs.org)
 
 **Transform Your Social Media Presence with AI-Driven Automation**
 
-[Live Demo](https://synthex-l8vugw0we-unite-group.vercel.app) | [Documentation](./docs) | [API Reference](#-api-documentation) | [Quick Start](#-quick-start)
+[Live Demo](https://synthex.vercel.app) | [Documentation](./docs) | [API Reference](#-api-documentation) | [Quick Start](#-quick-start)
 
 </div>
 
@@ -21,89 +21,71 @@
 
 ## 🌟 Overview
 
-SYNTHEX is a cutting-edge marketing automation platform that combines the power of multiple AI technologies to revolutionize how businesses create, optimize, and deploy marketing content across all major social media platforms.
+SYNTHEX is a cutting-edge marketing automation platform built with Next.js 14 that combines the power of multiple AI technologies to revolutionize how businesses create, optimize, and deploy marketing content across all major social media platforms.
 
 ### 🎯 Why SYNTHEX?
 
 - **🚀 10x Faster Content Creation** - Generate platform-optimized content in seconds
-- **🧠 AI-Powered Intelligence** - Leverage GPT-4, Claude, and 50+ AI models
+- **🧠 AI-Powered Intelligence** - Leverage GPT-4, Claude, and 50+ AI models via OpenRouter
 - **📊 Predictive Analytics** - Know what works before you post
 - **🔬 Scientific Approach** - Google's MLE Star framework ensures quality
-- **⚡ Instant Deployment** - One-click deploy with auto-rollback protection
-- **🌐 Multi-Platform Mastery** - Optimize for Twitter, LinkedIn, Instagram, Facebook, YouTube, and TikTok
+- **⚡ Modern Stack** - Next.js 14 App Router with React Server Components
+- **🌐 Multi-Platform Mastery** - Optimize for Twitter, LinkedIn, Instagram, Facebook, YouTube, TikTok, Pinterest, and Reddit
 
-## ✨ Key Features
+## ✨ Tech Stack
 
-### 🤖 Advanced AI Integration
+### Core Technologies
 
 <table>
 <tr>
 <td width="50%">
 
-**Multi-Model AI System**
-- OpenRouter integration with 50+ models
-- Anthropic Claude for complex reasoning
-- GPT-4 for creative content
-- Automatic model selection based on task
+**Frontend & Framework**
+- Next.js 14.2.31 (App Router)
+- React 18 with Server Components
+- TypeScript 5.3
+- Tailwind CSS for styling
+- Framer Motion for animations
 
 </td>
 <td width="50%">
 
-**Sequential Thinking (MCP)**
-- Break complex problems into steps
-- Context-aware decision making
-- 7-window context management
-- Memory retention across operations
+**Backend & Database**
+- Supabase (Auth & Database)
+- Prisma ORM
+- PostgreSQL
+- Redis for caching
+- Stripe for payments
 
 </td>
 </tr>
 </table>
 
-### 📊 Analytics & Intelligence
+### AI & Integrations
 
 <table>
 <tr>
 <td width="50%">
 
-**Real-Time Analytics Dashboard**
-- Live performance metrics
-- Cross-platform aggregation
-- Engagement prediction (85% accuracy)
-- Viral content identification
+**AI Models & Services**
+- OpenRouter (50+ AI models)
+- Anthropic Claude 3
+- GPT-4 and GPT-4 Turbo
+- Google Gemini
+- Sequential Thinking (MCP)
 
 </td>
 <td width="50%">
 
-**Predictive Performance**
-- ML-powered forecasting
-- Trend analysis
-- Optimal posting time prediction
-- ROI estimation
-
-</td>
-</tr>
-</table>
-
-### 🔬 Engineering Excellence
-
-<table>
-<tr>
-<td width="50%">
-
-**Google's MLE Star Framework**
-- 5-dimension quality scoring
-- Production readiness assessment
-- Automated ML pipelines
-- Continuous improvement loops
-
-</td>
-<td width="50%">
-
-**TTD RD Methodology**
-- Test-first development
-- Rapid deployment (<2 min)
-- Auto-rollback on failures
-- 99.9% uptime guarantee
+**Platform Integrations**
+- Twitter/X API
+- LinkedIn API
+- Instagram Graph API
+- Facebook Marketing API
+- YouTube Data API
+- TikTok API
+- Pinterest API
+- Reddit API
 
 </td>
 </tr>
@@ -113,9 +95,10 @@ SYNTHEX is a cutting-edge marketing automation platform that combines the power 
 
 ### Prerequisites
 
-- Node.js >= 16.0.0
+- Node.js >= 18.17.0
 - npm or yarn
-- API keys from [Anthropic](https://console.anthropic.com/) and [OpenRouter](https://openrouter.ai/)
+- PostgreSQL database (or Supabase account)
+- API keys from required services
 
 ### Installation
 
@@ -128,54 +111,142 @@ cd Synthex
 npm install
 
 # Set up environment variables
-cp env-example.txt .env
-# Edit .env and add your API keys
+cp .env.example .env.local
+# Edit .env.local and add your API keys
 
 # Generate Prisma client
 npx prisma generate
 
-# Build the project
-npm run build
+# Run database migrations
+npx prisma migrate dev
 
 # Start development server
 npm run dev
 
-# Or start production server
-npm run start:prod
+# Or build for production
+npm run build:vercel
+npm run start
 ```
 
 ### 🔑 Environment Setup
 
-Create a `.env` file with your API keys:
+Create a `.env.local` file with your API keys:
 
 ```env
-# Required API Keys
-ANTHROPIC_API_KEY=your_anthropic_api_key_here
-OPENROUTER_API_KEY=your_openrouter_api_key_here
+# Database (Supabase)
+DATABASE_URL=postgresql://[user]:[password]@[host]:[port]/[database]
+POSTGRES_URL_NON_POOLING=postgresql://[user]:[password]@[host]:[port]/[database]
+DIRECT_URL=postgresql://[user]:[password]@[host]:[port]/[database]
 
-# Database Configuration
-DATABASE_URL=postgresql://user:password@localhost:5432/synthex
-POSTGRES_URL_NON_POOLING=postgresql://user:password@localhost:5432/synthex
+# Supabase
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
 
 # Authentication
 JWT_SECRET=your_jwt_secret_here
+NEXTAUTH_SECRET=your_nextauth_secret
+NEXTAUTH_URL=http://localhost:3000
+
+# AI Services
+ANTHROPIC_API_KEY=your_anthropic_api_key
+OPENROUTER_API_KEY=your_openrouter_api_key
+
+# Stripe
+STRIPE_SECRET_KEY=your_stripe_secret_key
+STRIPE_WEBHOOK_SECRET=your_webhook_secret
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=your_publishable_key
+
+# Redis (Optional)
+REDIS_URL=redis://localhost:6379
+UPSTASH_REDIS_REST_URL=your_upstash_url
+UPSTASH_REDIS_REST_TOKEN=your_upstash_token
 
 # Google OAuth (Optional)
 GOOGLE_CLIENT_ID=your_google_client_id
 GOOGLE_CLIENT_SECRET=your_google_client_secret
-GOOGLE_CALLBACK_URL=http://localhost:3000/auth/google/callback
 
 # Server Configuration
 NODE_ENV=development
 PORT=3000
 
-# Optional: Advanced Configuration
+# MCP Configuration
 MCP_SEQUENTIAL_THINKING_ENABLED=true
 MCP_CONTEXT7_ENABLED=true
-MLE_STAR_MIN_PRODUCTION_SCORE=70
 ```
 
-## 📚 API Reference
+## 🏗️ Architecture
+
+### Next.js 14 App Router Structure
+
+```
+Synthex/
+├── app/                      # Next.js App Router
+│   ├── (auth)/              # Authentication routes
+│   │   ├── login/
+│   │   └── register/
+│   ├── api/                 # API routes
+│   │   ├── openrouter/
+│   │   ├── stripe/
+│   │   └── auth/
+│   ├── dashboard/           # Dashboard pages
+│   │   ├── page.tsx
+│   │   ├── admin/
+│   │   ├── analytics/
+│   │   ├── sandbox/
+│   │   └── settings/
+│   ├── layout.tsx          # Root layout
+│   └── page.tsx            # Home page
+├── components/              # React components
+│   ├── ui/                 # UI components
+│   ├── dashboard/
+│   └── forms/
+├── src/
+│   ├── architecture/       # Three-tier architecture
+│   ├── business/           # Business logic layer
+│   │   └── services/
+│   ├── data/              # Data access layer
+│   │   └── repositories/
+│   ├── config/            # Platform configurations
+│   │   └── platforms/
+│   ├── lib/               # Utilities and integrations
+│   │   ├── ai/
+│   │   ├── cache/
+│   │   ├── prisma.ts
+│   │   └── supabase/
+│   ├── middleware/        # Next.js middleware
+│   └── services/          # Service layer
+├── prisma/
+│   └── schema.prisma      # Database schema
+├── public/                # Static assets
+└── tests/                 # Test suites
+```
+
+### System Architecture
+
+```mermaid
+graph TB
+    A[Next.js Frontend] --> B[App Router]
+    B --> C[API Routes]
+    C --> D[Business Service Layer]
+    D --> E[Data Repository Layer]
+    
+    D --> F[External Services]
+    F --> F1[OpenRouter AI]
+    F --> F2[Supabase Auth]
+    F --> F3[Stripe Payments]
+    
+    E --> G[Database]
+    G --> G1[PostgreSQL/Supabase]
+    G --> G2[Redis Cache]
+    G --> G3[Prisma ORM]
+    
+    C --> H[Platform APIs]
+    H --> H1[Social Media APIs]
+    H --> H2[Analytics Services]
+```
+
+## 📚 API Routes
 
 ### Content Generation
 
@@ -192,22 +263,6 @@ Content-Type: application/json
 }
 ```
 
-<details>
-<summary>View Response</summary>
-
-```json
-{
-  "success": true,
-  "content": {
-    "text": "🚀 Excited to announce...",
-    "hashtags": ["#ProductLaunch", "#Innovation"],
-    "optimizationScore": 0.92,
-    "predictedEngagement": 0.85
-  }
-}
-```
-</details>
-
 #### Chat with AI
 ```http
 POST /api/openrouter/chat
@@ -219,130 +274,32 @@ Content-Type: application/json
 }
 ```
 
-### Analytics & Insights
+### Analytics
 
-#### Aggregate Platform Metrics
+#### Get Dashboard Stats
 ```http
-POST /api/enhancement/analytics/aggregate
+GET /api/analytics/dashboard
+```
+
+#### Platform Metrics
+```http
+POST /api/analytics/platforms
 Content-Type: application/json
 
 {
   "platforms": ["twitter", "linkedin"],
-  "timeRange": "7d"
+  "dateRange": "last7days"
 }
-```
-
-#### Predict Performance
-```http
-POST /api/enhancement/analytics/predict
-Content-Type: application/json
-
-{
-  "historicalData": [100, 150, 200, 180, 250],
-  "model": "linear"
-}
-```
-
-### MLE Star Evaluation
-
-#### Get Production Readiness Score
-```http
-GET /api/mle-star/score
-```
-
-<details>
-<summary>View Response</summary>
-
-```json
-{
-  "score": {
-    "scoping": 85,
-    "training": 78,
-    "analysis": 82,
-    "reliability": 75,
-    "excellence": 80,
-    "overall": 80
-  },
-  "productionReady": true
-}
-```
-</details>
-
-### Sequential Thinking
-
-#### Context-Aware Problem Solving
-```http
-POST /api/mle-star/context7/sequential-think
-Content-Type: application/json
-
-{
-  "problem": "Increase engagement by 50%",
-  "steps": [
-    "Analyze current performance",
-    "Identify improvement areas",
-    "Generate optimization strategies",
-    "Test and validate",
-    "Deploy best performers"
-  ]
-}
-```
-
-[View Full API Documentation →](./docs/API.md)
-
-## 🏗️ Architecture
-
-```mermaid
-graph TB
-    A[Client] --> B[Express Server]
-    B --> C[Route Layer]
-    C --> D[Service Layer]
-    D --> E[AI Integration]
-    D --> F[Analytics Engine]
-    D --> G[ML Pipeline]
-    
-    E --> E1[OpenRouter]
-    E --> E2[Anthropic]
-    E --> E3[MCP]
-    
-    F --> F1[Real-time Metrics]
-    F --> F2[Predictions]
-    F --> F3[Insights]
-    
-    G --> G1[MLE Star]
-    G --> G2[TTD RD]
-    G --> G3[Context7]
-```
-
-### Project Structure
-
-```
-Synthex/
-├── src/
-│   ├── index.ts              # Main server entry
-│   ├── routes/               # API endpoints
-│   │   ├── openrouter.ts    # AI integration routes
-│   │   ├── mcp-ttd.ts       # MCP & TTD routes
-│   │   ├── mle-star.ts      # ML pipeline routes
-│   │   └── enhancement-research.ts
-│   └── services/            # Business logic
-│       ├── mcp-integration.ts
-│       ├── ttd-rd-framework.ts
-│       ├── mle-star-framework.ts
-│       ├── mcp-context7-integration.ts
-│       └── analytics-dashboard.ts
-├── public/                  # Static assets
-├── docs/                    # Documentation
-├── tests/                   # Test suites
-└── dist/                    # Compiled output
 ```
 
 ## 🧪 Testing
 
-Run comprehensive test suites:
-
 ```bash
 # Run all tests
 npm test
+
+# Run with coverage
+npm run test:coverage
 
 # Type checking
 npm run typecheck
@@ -350,189 +307,101 @@ npm run typecheck
 # Linting
 npm run lint
 
-# Test specific features
-node test-openrouter.js     # AI integration tests
-node test-mcp-ttd.js        # MCP & TTD tests
-node test-mle-star.js       # MLE Star tests
-node test-research.js       # Analytics tests
-
-# Run with coverage
-npm run test:coverage
+# Format code
+npm run format
 
 # Playwright E2E tests
-npx playwright test
+npm run test:e2e
 ```
 
 ## 🚀 Deployment
 
-### Automatic CI/CD Pipeline
+### Recent Deployment Updates (January 2025)
 
-This project features a fully automated CI/CD pipeline with GitHub Actions:
+✅ **Fixed Issues:**
+- Resolved build configuration errors that were suppressing compilation failures
+- Fixed TypeScript type mismatches in three-tier architecture
+- Corrected Prisma schema field inconsistencies
+- Fixed method visibility issues in platform service classes
+- Resolved all missing dependency errors
+- Updated build scripts to properly surface errors
 
-- **Automatic Deployment**: Every push to `main` branch triggers automatic deployment
-- **CI/CD Pipeline**: Tests, linting, and type checking before deployment
-- **Manual Trigger**: Deploy manually from GitHub Actions tab
-- **Zero Downtime**: Seamless deployments with Vercel's infrastructure
-
-#### Current Deployment Status
-[![Deploy Status](https://github.com/CleanExpo/Synthex/actions/workflows/deploy.yml/badge.svg)](https://github.com/CleanExpo/Synthex/actions/workflows/deploy.yml)
-[![CI/CD](https://github.com/CleanExpo/Synthex/actions/workflows/ci.yml/badge.svg)](https://github.com/CleanExpo/Synthex/actions/workflows/ci.yml)
-
-### One-Click Deploy to Vercel
+### Deploy to Vercel
 
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/CleanExpo/Synthex)
 
-### Manual Deployment
+### Build Commands
 
 ```bash
-# Build for production
-npm run build:prod
+# Development build
+npm run dev
 
-# Deploy with Vercel CLI
-npm i -g vercel
-vercel --prod
+# Production build
+npm run build:vercel
 
-# Or trigger deployment via webhook
-./trigger-deploy.ps1  # Windows
-./trigger-deploy.sh   # Mac/Linux
+# Start production server
+npm run start
+
+# Check deployment status
+./check-deployment-status.ps1  # Windows
+./check-deployment.js           # Cross-platform
 ```
 
-### GitHub Actions Workflows
+### Vercel Configuration
 
-The project includes two automated workflows:
+The project includes a `vercel.json` configuration file optimized for Next.js 14:
 
-1. **Deploy Workflow** (`deploy.yml`): Triggers Vercel deployment on push to main
-2. **CI/CD Workflow** (`ci.yml`): Runs tests, linting, and builds before deployment
-
-### Required Environment Variables
-
-Configure these in your deployment platform:
-
-| Variable | Description | Required |
-|----------|-------------|----------|
-| `ANTHROPIC_API_KEY` | Anthropic API key | ✅ |
-| `OPENROUTER_API_KEY` | OpenRouter API key | ✅ |
-| `DATABASE_URL` | PostgreSQL connection string | ✅ |
-| `JWT_SECRET` | JWT secret for authentication | ✅ |
-| `GOOGLE_CLIENT_ID` | Google OAuth client ID | ❌ |
-| `GOOGLE_CLIENT_SECRET` | Google OAuth secret | ❌ |
-| `NODE_ENV` | Set to `production` | ✅ |
-| `PORT` | Server port (default: 3000) | ❌ |
-
-### Deployment Scripts
-
-| Script | Description |
-|--------|-------------|
-| `npm run build:prod` | Build for production |
-| `npm run deploy:prod` | Run tests and deploy to production |
-| `./trigger-deploy.ps1` | Trigger Vercel deployment (Windows) |
-| `./check-deployment-status.ps1` | Check deployment status (Windows) |
-
-## 📊 Performance Metrics
-
-<table>
-<tr>
-<td align="center">
-
-**Response Time**
-<br>
-< 100ms
-<br>
-<sub>P95 latency</sub>
-
-</td>
-<td align="center">
-
-**Uptime**
-<br>
-99.9%
-<br>
-<sub>SLA guarantee</sub>
-
-</td>
-<td align="center">
-
-**Accuracy**
-<br>
-92%
-<br>
-<sub>Prediction accuracy</sub>
-
-</td>
-<td align="center">
-
-**Scale**
-<br>
-10K+
-<br>
-<sub>Requests/minute</sub>
-
-</td>
-</tr>
-</table>
-
-## 🛠️ Advanced Configuration
-
-### Custom AI Models
-
-```javascript
-// Configure custom model preferences
-const modelConfig = {
-  preferred: 'claude-3-opus',
-  fallback: 'gpt-4',
-  specialized: {
-    'twitter': 'claude-instant',
-    'linkedin': 'gpt-4',
-    'technical': 'claude-3-opus'
-  }
-};
+```json
+{
+  "framework": "nextjs",
+  "buildCommand": "npm run build:vercel",
+  "outputDirectory": ".next",
+  "devCommand": "npm run dev"
+}
 ```
 
-### Rate Limiting
+## 📈 Recent Updates
 
-```javascript
-// Customize rate limits in .env
-RATE_LIMIT_WINDOW_API=60000      # 1 minute
-RATE_LIMIT_MAX_API=20            # 20 requests
-RATE_LIMIT_WINDOW_CONTENT=60000  # 1 minute
-RATE_LIMIT_MAX_CONTENT=10        # 10 requests
+### Version 2.0.1 (January 2025)
+- 🔧 **Major Architecture Migration**: Migrated from Express.js to Next.js 14.2.31
+- ✅ **Deployment Fixes**: Resolved 2-week deployment blocking issues
+- 🏗️ **Three-Tier Architecture**: Implemented clean separation of concerns
+- 🔐 **Enhanced Security**: Added Supabase authentication with JWT
+- 💳 **Payment Integration**: Integrated Stripe for subscription management
+- ⚡ **Performance**: Added Redis caching layer for improved response times
+- 🎨 **Modern UI**: Rebuilt dashboard with React Server Components
+- 📊 **Real-time Analytics**: Added live dashboard with WebSocket updates
+
+### Coming Soon
+- 🔄 Advanced A/B testing framework
+- 📅 Smart content scheduling
+- 🌍 Multi-language support
+- 🎥 Video content generation
+- 🤖 Custom AI model training
+
+## 🛠️ Troubleshooting
+
+### Common Issues
+
+#### Build Errors
+```bash
+# Clear cache and rebuild
+rm -rf .next node_modules
+npm install
+npm run build:vercel
 ```
 
-### Context Windows
+#### Database Connection
+```bash
+# Test database connection
+npx prisma db push
 
-```javascript
-// Configure Context7 settings
-MCP_MAX_CONTEXT_WINDOWS=7
-MCP_MAX_TOKENS_PER_WINDOW=4000
-MCP_MEMORY_RETENTION=0.95
+# Reset database (development only)
+npx prisma migrate reset
 ```
 
-## 📈 Roadmap
-
-### Current Version (v1.0.0)
-- ✅ Multi-platform content generation
-- ✅ MCP Sequential Thinking
-- ✅ MLE Star framework
-- ✅ TTD RD methodology
-- ✅ Real-time analytics
-- ✅ Automatic CI/CD with GitHub Actions
-- ✅ Vercel deployment integration
-- ✅ OpenRouter multi-model support
-- ✅ Prisma ORM integration
-
-### Coming Soon (v1.1.0)
-- 🔄 Advanced A/B testing
-- 🔄 Smart scheduling
-- 🔄 Competitor analysis
-- 🔄 Sentiment analysis
-- 🔄 Multi-language support
-
-### Future (v2.0.0)
-- 📅 Voice content optimization
-- 📅 Video generation with Veo3
-- 📅 Blockchain verification
-- 📅 Custom ML models
-- 📅 White-label solution
+#### Environment Variables
+Ensure all required environment variables are set in `.env.local` for development or in your Vercel project settings for production.
 
 ## 🤝 Contributing
 
@@ -558,22 +427,18 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🙏 Acknowledgments
 
-- **Google** - For MLE Star and TTD RD methodologies
+- **Next.js Team** - For the amazing React framework
+- **Vercel** - For hosting and deployment platform
+- **Supabase** - For backend as a service
 - **Anthropic** - For Claude AI integration
 - **OpenRouter** - For multi-model AI access
-- **Model Context Protocol** - For sequential thinking framework
-- **Vercel** - For hosting and deployment
+- **Stripe** - For payment processing
 
 ## 💬 Support
 
 - 📧 Email: support@synthex.dev
-- 💬 Discord: [Join our community](https://discord.gg/synthex)
 - 🐛 Issues: [GitHub Issues](https://github.com/CleanExpo/Synthex/issues)
 - 📖 Docs: [Full Documentation](./docs)
-
-## ⭐ Star History
-
-[![Star History Chart](https://api.star-history.com/svg?repos=CleanExpo/Synthex&type=Date)](https://star-history.com/#CleanExpo/Synthex&Date)
 
 ---
 
@@ -581,7 +446,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 **Built with ❤️ by the SYNTHEX Team**
 
-[Website](https://synthex.dev) • [Twitter](https://twitter.com/synthex) • [LinkedIn](https://linkedin.com/company/synthex)
+[Website](https://synthex.vercel.app) • [GitHub](https://github.com/CleanExpo/Synthex)
 
 **If you find SYNTHEX useful, please ⭐ star this repository!**
 

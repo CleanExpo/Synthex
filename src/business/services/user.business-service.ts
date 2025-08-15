@@ -122,13 +122,12 @@ export class UserBusinessService extends BaseService {
         return await this.unitOfWork.userRepository.create({
           email: data.email.toLowerCase(),
           name: data.name || 'New User',
-          passwordHash,
-          role: data.role || 'user',
+          password: passwordHash,
           googleId: data.googleId,
           avatar: data.avatar,
           preferences: data.preferences || {},
-          isEmailVerified: !!data.googleId, // Google users are pre-verified
-          createdBy: context.userId
+          emailVerified: !!data.googleId, // Google users are pre-verified
+          authProvider: data.googleId ? 'google' : 'local'
         });
       });
 
@@ -177,9 +176,7 @@ export class UserBusinessService extends BaseService {
         return await this.unitOfWork.userRepository.update(data.userId, {
           name: data.name,
           avatar: data.avatar,
-          preferences: data.preferences,
-          role: data.role,
-          updatedBy: context.userId
+          preferences: data.preferences
         });
       });
 
@@ -386,8 +383,7 @@ export class UserBusinessService extends BaseService {
       // Update password within transaction
       await this.executeInTransaction(async () => {
         await this.unitOfWork.userRepository.update(userId, {
-          passwordHash,
-          updatedBy: context.userId
+          password: passwordHash
         });
       });
 

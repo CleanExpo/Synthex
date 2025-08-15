@@ -9,7 +9,7 @@ import { UserRepository } from './repositories/user.repository';
 
 export class UnitOfWork implements IUnitOfWork {
   private prisma: PrismaClient;
-  private transaction: PrismaClient | null = null;
+  private transaction: any = null; // Transaction client has a different type than full PrismaClient
   private isInTransaction = false;
 
   // Repository instances

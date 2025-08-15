@@ -179,14 +179,8 @@ export class YouTubeService extends BasePlatformService {
       },
     };
     
-    // Add thumbnail if provided
-    if (content.thumbnail) {
-      videoMetadata.snippet.thumbnails = {
-        default: {
-          url: content.thumbnail,
-        },
-      };
-    }
+    // Note: Thumbnails are uploaded separately after video creation, not during initial upload
+    // The thumbnail upload would be handled in a separate API call after video is created
     
     // Step 2: Upload video using resumable upload
     const uploadResponse = await this.initiateResumableUpload(accessToken, videoMetadata, content.videoFile);
@@ -386,7 +380,7 @@ export class YouTubeService extends BasePlatformService {
     );
   }
   
-  protected formatContent(content: any): any {
+  public formatContent(content: any): any {
     // YouTube-specific content formatting
     const formatted = { ...content };
     

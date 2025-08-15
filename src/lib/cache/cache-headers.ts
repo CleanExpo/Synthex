@@ -54,7 +54,8 @@ export const CacheConfigs: Record<string, CacheConfig> = {
   USER_CONTENT: {
     noStore: true,
     noCache: true,
-    private: true
+    private: true,
+    maxAge: 0
   },
   
   // Marketing pages - moderate cache
