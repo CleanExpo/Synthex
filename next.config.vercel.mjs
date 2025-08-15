@@ -247,7 +247,7 @@ const nextConfig = {
     // Add custom aliases to prevent case sensitivity issues
     config.resolve.alias = {
       ...config.resolve.alias,
-      '@': process.cwd(),
+      '@': require('path').resolve('./'),
     };
     
     // Ensure consistent module resolution
@@ -261,6 +261,8 @@ const nextConfig = {
     NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
     NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
     NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+    // Increase Node memory for build
+    NODE_OPTIONS: '--max-old-space-size=7680',
   },
 };
 
