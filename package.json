@@ -45,7 +45,8 @@
     "validate:env:enhanced": "node scripts/validate-env-enhanced.js",
     "env:generate": "node scripts/generate-env-docs.js",
     "security:audit": "npm run env:generate && npm run validate:env:enhanced && npm audit",
-    "security:check": "node scripts/validate-env-enhanced.js"
+    "security:check": "node scripts/validate-env-enhanced.js",
+    "build:production": "NODE_ENV=production next build"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.20.0",
@@ -129,6 +130,7 @@
     "react-use": "^17.4.0",
     "recharts": "^2.10.3",
     "redis": "^5.8.1",
+    "server-only": "^0.0.1",
     "sonner": "^1.3.0",
     "stripe": "^18.4.0",
     "swr": "^2.2.0",
