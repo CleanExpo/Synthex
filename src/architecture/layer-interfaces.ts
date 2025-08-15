@@ -3,7 +3,7 @@
  * Defines contracts and abstractions for each architectural layer
  */
 
-import { Request, Response, NextFunction } from 'express';
+import { NextRequest, NextResponse } from 'next/server';
 
 // ===============================
 // PRESENTATION LAYER INTERFACES
@@ -13,14 +13,14 @@ export interface IController {
   /**
    * Handle HTTP request and return response
    */
-  handle(req: Request, res: Response, next: NextFunction): Promise<void> | void;
+  handle(req: NextRequest): Promise<NextResponse> | NextResponse;
 }
 
 export interface IMiddleware {
   /**
    * Process HTTP request before reaching controller
    */
-  execute(req: Request, res: Response, next: NextFunction): Promise<void> | void;
+  execute(req: NextRequest, next: () => Promise<NextResponse>): Promise<NextResponse> | NextResponse;
 }
 
 export interface IValidator {
