@@ -1,62 +1,10 @@
-# Version control
-.git/
-.gitignore
-.gitattributes
 
-# Dependencies (will be installed by Vercel)
-node_modules/
-.pnp
-.pnp.js
-
-# Testing
-coverage/
-.nyc_output
-cypress/videos
-cypress/screenshots
-test-results/
-
-# IDE files
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
-.DS_Store
-
-# Debug logs
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-.pnpm-debug.log*
-
-# Environment variables (Vercel manages these)
-.env*.local
-
-# Temporary files
-tmp/
-temp/
-*.tmp
-
-# Development-only files
-.eslintcache
-.turbo
-
-# Documentation (keep for reference)
-# NOTE: Some .md files may contain runtime data
-# Only ignore truly static docs
-CONTRIBUTING.md
-CHANGELOG.md
-
-# External/unused directories
-synth-magic-studio/
-external/
-backup-before-cleanup/
-
-# Python files (only if truly not needed)
-# WARNING: Check if any API routes use these
-__pycache__/
-*.pyc
-
-# Keep all data/ files that might be needed at runtime
-# Keep all public/ files
-# Keep all .md files that contain content data
+node_modules
+.next
+.git
+*.log
+.env.local
+tests
+scripts
+docs
+*.md
