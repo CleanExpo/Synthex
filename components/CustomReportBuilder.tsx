@@ -125,7 +125,7 @@ function SortableWidget({ widget, onEdit, onDelete }: {
       case 'table': return <Table className="h-4 w-4" />;
       case 'metric': return <TrendingUp className="h-4 w-4" />;
       case 'text': return <Type className="h-4 w-4" />;
-      case 'image': return <Image alt="Report preview" className="h-4 w-4" />;
+      case 'image': return <Image className="h-4 w-4" />;
       default: return <Layout className="h-4 w-4" />;
     }
   };

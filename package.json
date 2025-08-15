@@ -161,6 +161,7 @@
     "@testing-library/jest-dom": "^6.1.0",
     "@testing-library/react": "^14.1.0",
     "@types/dompurify": "^3.0.0",
+    "@types/express": "^5.0.3",
     "@types/glob": "^8.1.0",
     "@types/ws": "^8.5.0",
     "concurrently": "^8.2.0",

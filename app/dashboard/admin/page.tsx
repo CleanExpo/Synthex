@@ -54,7 +54,7 @@ export default function AdminPanel() {
   useEffect(() => {
     fetchUsers();
     fetchStats();
-  }, [fetchStats]);
+  }, []);
 
   useEffect(() => {
     // Filter users based on search term
