@@ -27,7 +27,7 @@ import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
 import { envValidator } from '@/lib/security/env-validator';
-import { getSecurityContext } from '@/app/api/middleware';
+// import { getSecurityContext } from '@/app/api/middleware'; // Commented out - middleware not implemented yet
 
 // ============================================
 // INPUT VALIDATION SCHEMA
@@ -105,8 +105,8 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  // 3. Get security context from middleware
-  const context = getSecurityContext(request) || security.context;
+  // 3. Get security context
+  const context = security.context;
   const userId = context.userId;
 
   if (!userId) {

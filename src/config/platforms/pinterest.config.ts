@@ -371,7 +371,7 @@ export class PinterestService extends BasePlatformService {
     return this.makeApiRequest(`/user_account/followers?${params}`, accessToken);
   }
   
-  protected formatContent(content: any): any {
+  public formatContent(content: any): any {
     // Pinterest-specific content formatting
     const formatted = { ...content };
     

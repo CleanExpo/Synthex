@@ -267,7 +267,7 @@ export class TikTokService extends BasePlatformService {
     );
   }
   
-  protected formatContent(content: any): any {
+  public formatContent(content: any): any {
     // TikTok-specific content formatting
     const formatted = { ...content };
     

@@ -469,7 +469,7 @@ export class RedditService extends BasePlatformService {
     });
   }
   
-  protected formatContent(content: any): any {
+  public formatContent(content: any): any {
     // Reddit-specific content formatting
     const formatted = { ...content };
     

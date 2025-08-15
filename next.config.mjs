@@ -1,11 +1,13 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  reactStrictMode: false,
+  reactStrictMode: true,
   typescript: {
-    ignoreBuildErrors: true,
+    // We'll see TypeScript errors now but won't block builds for non-critical issues
+    ignoreBuildErrors: false,
   },
   eslint: {
-    ignoreDuringBuilds: true,
+    // We'll see linting errors now
+    ignoreDuringBuilds: false,
   },
   experimental: {
     forceSwcTransforms: true,
@@ -21,6 +23,10 @@ const nextConfig = {
       };
     }
     return config;
+  },
+  // Ensure environment variables are available
+  env: {
+    NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL || 'https://synthex.vercel.app',
   },
 }
 

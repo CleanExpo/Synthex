@@ -100,12 +100,11 @@ export async function withSession(
   }
   
   // Add session data to request headers for downstream use
-  const modifiedRequest = request.clone();
-  modifiedRequest.headers.set('x-user-id', session.user.id);
-  modifiedRequest.headers.set('x-session-id', session.sessionId);
-  modifiedRequest.headers.set('x-user-email', session.user.email);
+  request.headers.set('x-user-id', session.user.id);
+  request.headers.set('x-session-id', session.sessionId);
+  request.headers.set('x-user-email', session.user.email);
   
-  return handler(modifiedRequest, session);
+  return handler(request, session);
 }
 
 /**
@@ -119,11 +118,10 @@ export async function withOptionalSession(
   
   if (session) {
     // Add session data to request headers if available
-    const modifiedRequest = request.clone();
-    modifiedRequest.headers.set('x-user-id', session.user.id);
-    modifiedRequest.headers.set('x-session-id', session.sessionId);
-    modifiedRequest.headers.set('x-user-email', session.user.email);
-    return handler(modifiedRequest, session);
+    request.headers.set('x-user-id', session.user.id);
+    request.headers.set('x-session-id', session.sessionId);
+    request.headers.set('x-user-email', session.user.email);
+    return handler(request, session);
   }
   
   return handler(request);
