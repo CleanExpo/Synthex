@@ -82,3 +82,5 @@ export async function POST(request: Request) {
     );
   }
 }
+// Node.js runtime required for Prisma
+export const runtime = 'nodejs';

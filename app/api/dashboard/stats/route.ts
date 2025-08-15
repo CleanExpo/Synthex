@@ -121,3 +121,5 @@ export async function GET() {
     });
   }
 }
+// Node.js runtime required for Prisma
+export const runtime = 'nodejs';

@@ -1,13 +1,33 @@
-import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
-import passport from 'passport';
+/** @server-only */
 import jwt from 'jsonwebtoken';
 import { PrismaClient } from '@prisma/client';
 import AuditService from './audit';
 
 const prisma = new PrismaClient();
 
+// Check if OAuth is enabled
+const isOAuthEnabled = () => {
+  return process.env.OAUTH_GOOGLE_ENABLED === 'true';
+};
+
+/**
+ * Stub type definitions for when passport is not installed
+ */
+interface PassportUser {
+  id: string;
+  email: string;
+  name?: string;
+  googleId?: string;
+  avatar?: string;
+}
+
 // Google OAuth Strategy Configuration
-export function configureGoogleOAuth() {
+export async function configureGoogleOAuth() {
+  if (!isOAuthEnabled()) {
+    console.log('Google OAuth is disabled via OAUTH_GOOGLE_ENABLED environment variable');
+    return;
+  }
+
   const googleClientId = process.env.GOOGLE_CLIENT_ID;
   const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET;
   const callbackUrl = process.env.GOOGLE_CALLBACK_URL || 'http://localhost:3000/auth/google/callback';
@@ -17,116 +37,134 @@ export function configureGoogleOAuth() {
     return;
   }
 
-  passport.use(new GoogleStrategy({
-    clientID: googleClientId,
-    clientSecret: googleClientSecret,
-    callbackURL: callbackUrl
-  },
-  async (accessToken: string, refreshToken: string, profile: any, done: Function) => {
-    try {
-      const email = profile.emails?.[0]?.value;
-      const name = profile.displayName;
-      const googleId = profile.id;
-      const avatar = profile.photos?.[0]?.value;
+  console.warn('Google OAuth is enabled but passport packages are not installed.');
+  console.warn('To enable Google OAuth, run: npm install passport passport-google-oauth20 @types/passport @types/passport-google-oauth20');
+  
+  // The actual passport configuration is commented out to prevent build errors
+  // Uncomment this code after installing the required packages
+  /*
+  try {
+    const { Strategy: GoogleStrategy } = await import('passport-google-oauth20');
+    const passport = (await import('passport')).default;
 
-      if (!email) {
-        return done(new Error('No email found in Google profile'), null);
-      }
+    passport.use(new GoogleStrategy({
+      clientID: googleClientId,
+      clientSecret: googleClientSecret,
+      callbackURL: callbackUrl
+    },
+    async (accessToken: string, refreshToken: string, profile: any, done: Function) => {
+      try {
+        const email = profile.emails?.[0]?.value;
+        const name = profile.displayName;
+        const googleId = profile.id;
+        const avatar = profile.photos?.[0]?.value;
 
-      // Check if user already exists
-      let user = await prisma.user.findUnique({
-        where: { email }
-      });
+        if (!email) {
+          return done(new Error('No email found in Google profile'), null);
+        }
 
-      if (user) {
-        // Update existing user with Google info if not already set
-        if (!user.googleId) {
-          user = await prisma.user.update({
-            where: { email },
-            data: {
+        // Check if user already exists
+        let user = await prisma.user.findUnique({
+          where: { email }
+        });
+
+        if (user) {
+          // Update existing user with Google info if not already set
+          if (!user.googleId) {
+            user = await prisma.user.update({
+              where: { email },
+              data: {
+                googleId,
+                avatar: avatar || user.avatar,
+                name: name || user.name,
+                emailVerified: true,
+                updatedAt: new Date()
+              }
+            });
+          }
+
+          // Log successful OAuth login
+          await AuditService.log({
+            userId: user.id,
+            action: 'oauth_login',
+            resource: 'authentication',
+            details: {
+              provider: 'google',
               googleId,
-              avatar: avatar || user.avatar,
-              name: name || user.name,
-              emailVerified: true,
-              updatedAt: new Date()
+              email,
+              loginMethod: 'oauth'
+            },
+            severity: 'low',
+            category: 'auth',
+            outcome: 'success'
+          });
+        } else {
+          // Create new user
+          user = await prisma.user.create({
+            data: {
+              email,
+              name: name || 'Google User',
+              password: '', // Empty password for OAuth users
+              googleId,
+              avatar: avatar,
+              authProvider: 'google',
+              emailVerified: true
             }
+          });
+
+          // Log new user creation via OAuth
+          await AuditService.log({
+            userId: user.id,
+            action: 'user_created_oauth',
+            resource: 'user',
+            details: {
+              provider: 'google',
+              googleId,
+              email,
+              name
+            },
+            severity: 'medium',
+            category: 'auth',
+            outcome: 'success'
           });
         }
 
-        // Log successful OAuth login
-        await AuditService.log({
-          userId: user.id,
-          action: 'oauth_login',
-          resource: 'authentication',
-          details: {
-            provider: 'google',
-            googleId,
-            email,
-            loginMethod: 'oauth'
-          },
-          severity: 'low',
-          category: 'auth',
-          outcome: 'success'
-        });
-      } else {
-        // Create new user
-        user = await prisma.user.create({
-          data: {
-            email,
-            name: name || 'Google User',
-            password: '', // Empty password for OAuth users
-            googleId,
-            avatar: avatar,
-            authProvider: 'google',
-            emailVerified: true
-          }
-        });
-
-        // Log new user creation via OAuth
-        await AuditService.log({
-          userId: user.id,
-          action: 'user_created_oauth',
-          resource: 'user',
-          details: {
-            provider: 'google',
-            googleId,
-            email,
-            name
-          },
-          severity: 'medium',
-          category: 'auth',
-          outcome: 'success'
-        });
+        return done(null, user);
+      } catch (error) {
+        console.error('Google OAuth error:', error);
+        return done(error, null);
       }
+    }));
 
-      return done(null, user);
-    } catch (error) {
-      console.error('Google OAuth error:', error);
-      return done(error, null);
-    }
-  }));
+    // Serialize/deserialize user for session
+    passport.serializeUser((user: any, done) => {
+      done(null, user.id);
+    });
 
-  // Serialize/deserialize user for session
-  passport.serializeUser((user: any, done) => {
-    done(null, user.id);
-  });
-
-  passport.deserializeUser(async (id: string, done) => {
-    try {
-      const user = await prisma.user.findUnique({
-        where: { id }
-      });
-      done(null, user);
-    } catch (error) {
-      done(error, null);
-    }
-  });
+    passport.deserializeUser(async (id: string, done) => {
+      try {
+        const user = await prisma.user.findUnique({
+          where: { id }
+        });
+        done(null, user);
+      } catch (error) {
+        done(error, null);
+      }
+    });
+  } catch (error) {
+    console.error('Failed to load passport modules:', error);
+    console.log('To enable Google OAuth, install: npm i passport passport-google-oauth20');
+  }
+  */
 }
 
 /**
  * Generate JWT token for OAuth user
  */
 export function generateOAuthToken(user: any): string {
+  if (!isOAuthEnabled() && !user) {
+    throw new Error('OAuth is disabled and no user provided');
+  }
   const payload = {
     userId: user.id,
     email: user.email,
@@ -150,6 +188,9 @@ export function generateOAuthToken(user: any): string {
  * Link existing account with Google OAuth
  */
 export async function linkGoogleAccount(userId: string, googleId: string, profile: any) {
+  if (!isOAuthEnabled()) {
+    throw new Error('Google OAuth is disabled via OAUTH_GOOGLE_ENABLED environment variable');
+  }
   try {
     const user = await prisma.user.update({
       where: { id: userId },
@@ -187,6 +228,9 @@ export async function linkGoogleAccount(userId: string, googleId: string, profil
  * Unlink Google account
  */
 export async function unlinkGoogleAccount(userId: string) {
+  if (!isOAuthEnabled()) {
+    throw new Error('Google OAuth is disabled via OAUTH_GOOGLE_ENABLED environment variable');
+  }
   try {
     // Check if user has password set before unlinking
     const user = await prisma.user.findUnique({

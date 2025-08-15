@@ -106,3 +106,6 @@ export async function PUT(req: NextRequest) {
     );
   }
 }
+
+// Node.js runtime required for Prisma
+export const runtime = 'nodejs';

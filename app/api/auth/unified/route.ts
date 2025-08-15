@@ -255,3 +255,5 @@ async function handleVerify(request: NextRequest) {
 export async function GET(request: NextRequest) {
   return handleVerify(request);
 }
+// Node.js runtime required for Prisma
+export const runtime = 'nodejs';
