@@ -8,17 +8,8 @@
     "NEXT_TELEMETRY_DISABLED": "1"
   },
   "functions": {
-    "app/**/*.ts": {
-      "maxDuration": 30
-    },
-    "api/**/*.ts": {
+    "src/app/api/**/*.ts": {
       "maxDuration": 30
     }
-  },
-  "rewrites": [
-    {
-      "source": "/(.*)",
-      "destination": "/"
-    }
-  ]
+  }
 }
