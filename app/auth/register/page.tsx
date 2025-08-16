@@ -1,4 +1,4 @@
-'use client';
+curl -I https://synthex.vercel.app'use client';
 
 import { useState } from 'react';
 import Link from 'next/link';
