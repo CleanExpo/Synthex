@@ -1,5 +1,5 @@
 {
-  "buildCommand": "npm run build:vercel",
+  "buildCommand": "npx prisma generate && npm run build:vercel",
   "outputDirectory": ".next",
   "framework": "nextjs",
   "installCommand": "npm ci --legacy-peer-deps",
