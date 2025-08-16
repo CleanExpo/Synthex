@@ -1,6 +1,6 @@
 /**
  * Advanced AI Content Generation System
- * Integrates with OpenRouter for multi-model content creation
+ * Integrates with OpenAI for multi-model content creation
  */
 
 // TODO: Create viral-patterns module
@@ -46,17 +46,28 @@ export interface ContentVariation {
 }
 
 export class AIContentGenerator {
-  private apiKey: string;
-  private baseUrl = 'https://openrouter.ai/api/v1';
+  private openai: any;
   private models = {
-    creative: 'anthropic/claude-3-opus',
-    balanced: 'anthropic/claude-3-sonnet', 
-    fast: 'anthropic/claude-3-haiku',
-    specialized: 'meta-llama/llama-3-70b-instruct'
+    creative: 'gpt-4-turbo-preview',
+    balanced: 'gpt-4-turbo-preview', 
+    fast: 'gpt-3.5-turbo',
+    specialized: 'gpt-4-turbo-preview'
   };
 
   constructor() {
-    this.apiKey = process.env.OPENROUTER_API_KEY || '';
+    const apiKey = process.env.OPENAI_API_KEY;
+    if (apiKey) {
+      // Dynamically import OpenAI to avoid build issues
+      try {
+        const OpenAI = require('openai').default || require('openai');
+        this.openai = new OpenAI({ apiKey });
+      } catch (error) {
+        console.error('Failed to load OpenAI library:', error);
+        this.openai = null;
+      }
+    } else {
+      this.openai = null;
+    }
   }
 
   /**
@@ -158,50 +169,39 @@ Generate content that will maximize engagement and shares.
   }
 
   /**
-   * Call OpenRouter API
+   * Call OpenAI API
    */
   private async callAI(prompt: string, model: string): Promise<string> {
-    if (!this.apiKey || this.apiKey === '') {
-      // Fallback to template-based generation
-      return this.generateFromTemplate(prompt);
+    if (!this.openai) {
+      throw new Error('OpenAI API key not configured. Please set OPENAI_API_KEY environment variable.');
     }
 
     try {
-      const response = await fetch(`${this.baseUrl}/chat/completions`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${this.apiKey}`,
-          'Content-Type': 'application/json',
-          'HTTP-Referer': 'https://synthex.app',
-          'X-Title': 'SYNTHEX Content Generator'
-        },
-        body: JSON.stringify({
-          model,
-          messages: [
-            {
-              role: 'system',
-              content: 'You are a viral content expert specializing in creating highly engaging social media content.'
-            },
-            {
-              role: 'user',
-              content: prompt
-            }
-          ],
-          temperature: 0.8,
-          max_tokens: 1000
-        })
+      const completion = await this.openai.chat.completions.create({
+        model,
+        messages: [
+          {
+            role: 'system',
+            content: 'You are a viral content expert specializing in creating highly engaging social media content. Generate unique, creative content optimized for maximum engagement.'
+          },
+          {
+            role: 'user',
+            content: prompt
+          }
+        ],
+        temperature: 0.8,
+        max_tokens: 1000
       });
 
-      if (!response.ok) {
-        throw new Error(`API error: ${response.status}`);
+      const content = completion.choices[0].message.content;
+      if (!content) {
+        throw new Error('No content generated');
       }
-
-      const data = await response.json();
-      return data.choices[0].message.content;
+      
+      return content;
     } catch (error) {
-      console.error('OpenRouter API error:', error);
-      // Fallback to template generation
-      return this.generateFromTemplate(prompt);
+      console.error('OpenAI API error:', error);
+      throw new Error(`Failed to generate content: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
