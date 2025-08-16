@@ -401,3 +401,20 @@ model CompetitiveAnalysis {
 
   @@map("competitive_analyses")
 }
+
+model AnalyticsEvent {
+  id          String   @id @default(cuid())
+  type        String   // Event type
+  userId      String?
+  sessionId   String
+  timestamp   DateTime @default(now())
+  metadata    Json?
+  platform    String?
+  contentId   String?
+  campaignId  String?
+  
+  @@index([userId])
+  @@index([sessionId])
+  @@index([timestamp])
+  @@map("analytics_events")
+}

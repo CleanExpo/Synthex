@@ -111,12 +111,13 @@ export class SignInFlow {
    * Handle email/password authentication
    */
   private async handleEmailAuth(email: string, password: string): Promise<AuthResult> {
+    // Always check for demo credentials first
+    if (email === 'demo@synthex.com' && password === 'demo123') {
+      return this.handleDemoAuth();
+    }
+
     // Check if Supabase is configured
     if (!this.isSupabaseConfigured()) {
-      // Fall back to demo mode for development
-      if (email === 'demo@synthex.com' && password === 'demo123') {
-        return this.handleDemoAuth();
-      }
       return {
         success: false,
         error: 'Authentication service not configured. Use demo@synthex.com / demo123'

@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { ArrowRight, Sparkles, TrendingUp, Users, Calendar, BarChart3, Zap } from 'lucide-react';
+import { UserCount, EngagementBoost } from '@/components/real-stats';
 
 export default function HomePage() {
   return (
@@ -67,11 +68,11 @@ export default function HomePage() {
           <div className="mt-10 flex justify-center space-x-8 text-gray-400">
             <div className="flex items-center space-x-2">
               <Users className="w-5 h-5" />
-              <span>10,000+ Users</span>
+              <UserCount />
             </div>
             <div className="flex items-center space-x-2">
               <TrendingUp className="w-5 h-5" />
-              <span>3x Engagement</span>
+              <EngagementBoost />
             </div>
             <div className="flex items-center space-x-2">
               <Zap className="w-5 h-5" />

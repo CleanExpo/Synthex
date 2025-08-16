@@ -84,7 +84,7 @@ Coordinates all sub-agents and maintains project coherence. The Orchestra Agent 
    - Document recovery steps in session log
    - Test incrementally after each recovery step
 
-## 🌐 MCP Integration [ENHANCED with Claude Code v1.2]
+## 🌐 MCP Integration [ENHANCED with Claude Code v1.3]
 **Active MCPs (Maximum Collaboration Protocol):**
 - **Sequential Thinking** - Step-by-step problem solving with hypothesis generation and verification
 - **Context7** - Enhanced context management for library documentation and code examples
@@ -118,12 +118,17 @@ claude code --mcp-config mcp.deployment.json
 - Document MCP usage in session logs
 - Press ESC to cancel OAuth authentication flows
 
-## 📁 Session Persistence
+## 📁 Session Persistence & Configuration
 - **Session Directory:** `.claude-session/`
   - `/history.log` - Timestamped operation log
   - `/project-state.json` - Current project state and metadata
   - `/backups/` - Checkpoint backups before major changes
   - `/agents/` - Individual agent workspaces
+- **Settings Management:** `.claude/settings.json`
+  - Automatic validation prevents invalid fields
+  - Type checking for all configuration options
+  - Clear error messages for misconfigured settings
+  - Safe defaults for missing configurations
 - **Auto-save Frequency:** Every 10 operations
 - **Checkpoint Creation:** Before any major structural changes
 - **Session Recovery:** Automatic state restoration on restart
@@ -184,7 +189,7 @@ claude code --mcp-config mcp.deployment.json
 - Theme manager with dark/light modes (theme-manager.js)
 - Enhanced loading states CSS
 
-**Claude Code v1.2 Enhancements (NEW):**
+**Claude Code v1.2 Enhancements:**
 - ✅ Multiple MCP config file support for specialized workflows
 - ✅ Context7 integration for real-time library documentation
 - ✅ Playwright integration for automated E2E testing
@@ -193,6 +198,14 @@ claude code --mcp-config mcp.deployment.json
 - ✅ OAuth testing utilities with ESC cancellation support
 - ✅ Enhanced workflow scripts with resource monitoring
 - ✅ Improved spinner animations and UI feedback
+
+**Claude Code v1.3 Enhancements (LATEST):**
+- ✅ **SDK Request Cancellation:** Support for canceling in-flight SDK requests
+- ✅ **Additional Directories Option:** New `additionalDirectories` option to search custom paths with improved slash command processing
+- ✅ **Settings Validation:** Automatic validation prevents invalid fields in `.claude/settings.json` files
+- ✅ **MCP Tool Name Consistency:** Improved tool name consistency across all MCP integrations
+- ✅ **Bash Tool Improvements:** Fixed crash issues when Claude attempts to automatically read large files
+- ✅ **Enhanced File Handling:** Better performance and stability with large file operations
 
 ## 🛡️ CRITICAL SECURITY REQUIREMENTS [MANDATORY v3.0]
 
@@ -377,6 +390,11 @@ bash scripts/enhanced-workflows.sh  # Interactive menu for all workflows
 claude code --mcp-config mcp.development.json  # Dev mode
 claude code --mcp-config mcp.marketing.json    # Marketing mode
 claude code --mcp-config mcp.deployment.json   # Deploy mode
+
+# Claude Code v1.3 Features
+claude code --additional-directories ./custom,./extra  # Search custom paths
+claude code --cancel-request                          # Cancel current SDK request
+claude code --validate-settings                       # Check settings.json validity
 
 # Testing with Playwright MCP
 node tests/playwright/marketing-ui.test.js     # Run UI tests
