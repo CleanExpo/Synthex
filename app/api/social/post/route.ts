@@ -5,6 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
+import { TwitterApi } from 'twitter-api-v2';
 
 const prisma = new PrismaClient();
 
@@ -59,7 +60,7 @@ interface PostRequest {
   campaignId?: string;
 }
 
-// Mock function to simulate posting to social media
+// Real function to post to social media platforms
 async function postToSocialPlatform(
   platform: string, 
   content: string, 
@@ -77,24 +78,79 @@ async function postToSocialPlatform(
     throw new Error(`Content exceeds ${platform} character limit of ${config.maxLength}`);
   }
 
-  // In production, this would make actual API calls to each platform
-  // For now, we'll simulate success
-  console.log(`[SOCIAL] Posting to ${platform}:`, { 
-    content: content.substring(0, 100) + '...', 
-    mediaCount: mediaUrls?.length || 0 
-  });
+  // Handle Twitter/X posting
+  if (platform === 'twitter') {
+    try {
+      const twitterClient = new TwitterApi({
+        appKey: process.env.TWITTER_API_KEY!,
+        appSecret: process.env.TWITTER_API_SECRET!,
+        accessToken: process.env.TWITTER_ACCESS_TOKEN!,
+        accessSecret: process.env.TWITTER_ACCESS_TOKEN_SECRET!,
+      });
 
-  // Simulate API delay
-  await new Promise(resolve => setTimeout(resolve, 500));
+      // Post tweet
+      const tweet = await twitterClient.v2.tweet(content);
+      
+      return {
+        platform,
+        postId: tweet.data.id,
+        url: `https://twitter.com/i/web/status/${tweet.data.id}`,
+        publishedAt: new Date().toISOString(),
+        status: 'published'
+      };
+    } catch (error) {
+      console.error('Twitter API error:', error);
+      throw new Error(`Failed to post to Twitter: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+  
+  // Handle LinkedIn posting
+  if (platform === 'linkedin' && process.env.LINKEDIN_ACCESS_TOKEN) {
+    try {
+      const response = await fetch('https://api.linkedin.com/v2/ugcPosts', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${process.env.LINKEDIN_ACCESS_TOKEN}`,
+          'Content-Type': 'application/json',
+          'X-Restli-Protocol-Version': '2.0.0'
+        },
+        body: JSON.stringify({
+          author: `urn:li:person:${process.env.LINKEDIN_PERSON_ID}`,
+          lifecycleState: 'PUBLISHED',
+          specificContent: {
+            'com.linkedin.ugc.ShareContent': {
+              shareCommentary: {
+                text: content
+              },
+              shareMediaCategory: 'NONE'
+            }
+          },
+          visibility: {
+            'com.linkedin.ugc.MemberNetworkVisibility': 'PUBLIC'
+          }
+        })
+      });
 
-  // Return mock response
-  return {
-    platform,
-    postId: `${platform}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-    url: `https://${platform}.com/posts/mock-${Date.now()}`,
-    publishedAt: new Date().toISOString(),
-    status: 'published'
-  };
+      if (!response.ok) {
+        throw new Error(`LinkedIn API error: ${response.status}`);
+      }
+
+      const data = await response.json();
+      return {
+        platform,
+        postId: data.id,
+        url: data.id,
+        publishedAt: new Date().toISOString(),
+        status: 'published'
+      };
+    } catch (error) {
+      console.error('LinkedIn API error:', error);
+      throw new Error(`Failed to post to LinkedIn: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  // For other platforms, return a clear message that they need configuration
+  throw new Error(`${platform} API integration not configured. Please add API credentials for ${platform}.`);
 }
 
 export async function POST(request: NextRequest) {

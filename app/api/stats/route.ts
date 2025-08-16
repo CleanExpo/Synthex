@@ -1,6 +1,6 @@
 /**
  * Statistics API Endpoint
- * Returns real metrics from the database
+ * Returns real metrics from the database with mock user count for launch
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -12,6 +12,10 @@ const prisma = new PrismaClient();
 let statsCache: any = null;
 let cacheTimestamp = 0;
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
+// Configuration flags
+const USE_MOCK_PAID_USERS = true; // Set to false when ready to use real Stripe data
+const MOCK_PAID_USER_COUNT = 1000; // Mock number for launch
 
 export async function GET(request: NextRequest) {
   try {
@@ -35,6 +39,26 @@ export async function GET(request: NextRequest) {
         where: { status: 'published' }
       })
     ]);
+
+    // Determine paid user count
+    let paidUserCount = MOCK_PAID_USER_COUNT;
+    let paidUserLabel = 'Paid Users';
+    
+    if (!USE_MOCK_PAID_USERS) {
+      // TODO: When ready, integrate with Stripe to get real customer count
+      // const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
+      // const customers = await stripe.customers.list({ limit: 1 });
+      // paidUserCount = customers.data.length;
+      
+      // For now, just use total user count until subscription model is ready
+      // Future: Filter by subscription status when that field is added to the schema
+      // paidUserCount = await prisma.user.count({
+      //   where: {
+      //     subscriptionStatus: 'active'
+      //   }
+      // });
+      paidUserCount = await prisma.user.count(); // Temporary: use all users
+    }
 
     // Calculate engagement multiplier (mock for now, will be real when we have analytics)
     // In production, this would be calculated from actual engagement metrics
@@ -64,10 +88,12 @@ export async function GET(request: NextRequest) {
 
     const stats = {
       users: {
-        total: userCount,
-        formatted: formatNumber(userCount),
-        label: userCount === 1 ? 'User' : 'Users',
-        growth: growthRate
+        total: USE_MOCK_PAID_USERS ? paidUserCount : userCount,
+        formatted: USE_MOCK_PAID_USERS ? `${formatNumber(paidUserCount)}+` : formatNumber(userCount),
+        label: USE_MOCK_PAID_USERS ? paidUserLabel : (userCount === 1 ? 'User' : 'Users'),
+        growth: growthRate,
+        isPaid: USE_MOCK_PAID_USERS,
+        mockData: USE_MOCK_PAID_USERS
       },
       engagement: {
         multiplier: engagementMultiplier.toFixed(1),
@@ -99,7 +125,13 @@ export async function GET(request: NextRequest) {
           'Smart Scheduling'
         ]
       },
-      lastUpdated: new Date().toISOString()
+      lastUpdated: new Date().toISOString(),
+      // Additional metadata for tracking
+      dataSource: {
+        users: USE_MOCK_PAID_USERS ? 'mock' : 'database',
+        campaigns: 'database',
+        posts: 'database'
+      }
     };
 
     // Update cache
