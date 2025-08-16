@@ -2,12 +2,11 @@
 
 import { createContext, useContext, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { User } from '@supabase/supabase-js';
-import { auth } from '@/lib/supabase-client';
+import { authService, type AuthUser } from '@/lib/auth/auth-service';
 import toast from 'react-hot-toast';
 
 interface AuthContextType {
-  user: User | null;
+  user: AuthUser | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, name?: string) => Promise<void>;
@@ -19,7 +18,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
@@ -31,22 +30,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     checkUser();
 
     // Listen for auth changes
-    const { data: listener } = auth.onAuthStateChange(async (event: any, session: any) => {
-      if (event === 'SIGNED_IN') {
-        setUser(session?.user ?? null);
-        router.push('/dashboard');
-      } else if (event === 'SIGNED_OUT') {
-        setUser(null);
-        router.push('/login');
-      } else if (event === 'USER_UPDATED') {
-        setUser(session?.user ?? null);
-      }
+    const unsubscribe = authService.onAuthStateChange((authUser) => {
+      setUser(authUser);
+      // Don't auto-redirect on auth state changes to avoid unexpected navigation
     });
 
     return () => {
-      listener?.subscription.unsubscribe();
+      unsubscribe();
     };
-  }, [router]);
+  }, []);
 
   async function checkUser() {
     try {
@@ -59,25 +51,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Add small delay to ensure localStorage is available
       await new Promise(resolve => setTimeout(resolve, 100));
       
-      const user = await auth.getCurrentUser();
-      setUser(user);
-      
-      // If user exists but was not set, try to refresh the session
-      if (!user) {
-        const storedToken = localStorage.getItem('synthex-auth-token');
-        if (storedToken) {
-          try {
-            // Try to recover session from stored token
-            const { data } = JSON.parse(storedToken);
-            if (data?.session?.user) {
-              setUser(data.session.user);
-            }
-          } catch (e) {
-            // Token might be invalid, clear it
-            localStorage.removeItem('synthex-auth-token');
-          }
-        }
-      }
+      const currentUser = await authService.getCurrentUser();
+      setUser(currentUser);
     } catch (error) {
       console.error('Error checking user:', error);
       // Don't treat auth errors as fatal - user may just not be logged in
@@ -90,10 +65,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   async function signIn(email: string, password: string) {
     try {
       setLoading(true);
-      const { user } = await auth.signIn(email, password);
-      setUser(user);
-      toast.success('Welcome back!');
-      router.push('/dashboard');
+      const response = await authService.signIn(email, password);
+      
+      if (response.success && response.user) {
+        setUser(response.user);
+        toast.success('Welcome back!');
+        router.push('/dashboard');
+      } else {
+        throw new Error(response.error || 'Failed to sign in');
+      }
     } catch (error: any) {
       toast.error(error.message || 'Failed to sign in');
       throw error;
@@ -105,10 +85,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   async function signUp(email: string, password: string, name?: string) {
     try {
       setLoading(true);
-      const { user } = await auth.signUp(email, password, name);
-      if (user) {
-        toast.success('Account created! Please check your email to verify.');
+      const response = await authService.signUp(email, password, name);
+      
+      if (response.success) {
+        if (response.requiresVerification) {
+          toast.success('Account created! Please check your email to verify.');
+        } else {
+          toast.success('Account created successfully!');
+        }
         router.push('/login');
+      } else {
+        throw new Error(response.error || 'Failed to create account');
       }
     } catch (error: any) {
       toast.error(error.message || 'Failed to create account');
@@ -121,7 +108,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   async function signOut() {
     try {
       setLoading(true);
-      await auth.signOut();
+      await authService.signOut();
       setUser(null);
       toast.success('Signed out successfully');
       router.push('/');
@@ -135,8 +122,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   async function signInWithGoogle() {
     try {
       setLoading(true);
-      await auth.signInWithGoogle();
-      // The redirect will be handled by Supabase OAuth
+      await authService.signInWithOAuth('google');
+      // The redirect will be handled by OAuth flow
     } catch (error: any) {
       toast.error(error.message || 'Failed to sign in with Google');
     } finally {
@@ -147,8 +134,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   async function signInWithGithub() {
     try {
       setLoading(true);
-      await auth.signInWithGithub();
-      // The redirect will be handled by Supabase OAuth
+      await authService.signInWithOAuth('github');
+      // The redirect will be handled by OAuth flow
     } catch (error: any) {
       toast.error(error.message || 'Failed to sign in with GitHub');
     } finally {
