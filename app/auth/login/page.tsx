@@ -35,17 +35,32 @@ export default function LoginPage() {
     setError('');
 
     try {
-      const data = await auth.signIn(email, password);
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await response.json();
       
-      if (data.session) {
+      if (data.success) {
+        // Store token in localStorage
+        localStorage.setItem('token', data.token);
+        localStorage.setItem('user', JSON.stringify(data.user));
+        
         toast.success('Welcome back! Redirecting to dashboard...');
         setTimeout(() => {
           router.push('/dashboard');
         }, 1000);
+      } else {
+        setError(data.error || 'Failed to sign in. Please check your credentials.');
+        toast.error(data.error || 'Login failed. Please try again.');
       }
     } catch (err: any) {
-      setError(err.message || 'Failed to sign in. Please check your credentials.');
-      toast.error('Login failed. Please try again.');
+      setError('Network error. Please try again.');
+      toast.error('Connection failed. Please try again.');
     } finally {
       setIsLoading(false);
     }
