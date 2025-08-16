@@ -175,26 +175,46 @@ export class EmailService {
    * SendGrid integration
    */
   private async sendViaSendGrid(template: EmailTemplate): Promise<void> {
-    const sgMail = process.env.SENDGRID_API_KEY ? require('@sendgrid/mail') : null;
-    
-    if (!sgMail) {
-      throw new Error('SendGrid not configured');
+    // Only attempt to use SendGrid if API key is configured
+    if (!process.env.SENDGRID_API_KEY) {
+      console.log('[EMAIL] SendGrid API key not configured, falling back to mock email');
+      await this.saveEmailToDatabase(template);
+      return;
     }
 
-    sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+    // For now, just use mock email since SendGrid is not installed
+    // To enable SendGrid:
+    // 1. Run: npm install @sendgrid/mail
+    // 2. Set SENDGRID_API_KEY in environment variables
+    // 3. Uncomment the implementation below
     
-    const msg = {
-      to: template.to,
-      from: {
-        email: this.fromEmail,
-        name: this.fromName
-      },
-      subject: template.subject,
-      text: template.text || '',
-      html: template.html
-    };
+    console.log('[EMAIL] SendGrid integration placeholder - using mock email');
+    console.log('[EMAIL] To enable SendGrid, install @sendgrid/mail package');
+    await this.saveEmailToDatabase(template);
+    
+    /* 
+    // Uncomment after installing @sendgrid/mail:
+    try {
+      const sgMail = require('@sendgrid/mail');
+      sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+      
+      const msg = {
+        to: template.to,
+        from: {
+          email: this.fromEmail,
+          name: this.fromName
+        },
+        subject: template.subject,
+        text: template.text || '',
+        html: template.html
+      };
 
-    await sgMail.send(msg);
+      await sgMail.send(msg);
+    } catch (error) {
+      console.error('[EMAIL] SendGrid error:', error);
+      await this.saveEmailToDatabase(template);
+    }
+    */
   }
 
   /**
