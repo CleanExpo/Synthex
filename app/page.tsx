@@ -1,3 +1,7 @@
+'use client';
+
+import { Suspense } from 'react';
+import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -8,6 +12,22 @@ import {
   Star, BadgeCheck, ArrowUpRight
 } from 'lucide-react';
 import { UserCount, EngagementBoost } from '@/components/real-stats';
+
+// Dynamic import 3D components to avoid SSR issues
+const SocialNetworkOrb = dynamic(() => import('@/components/3d/SocialNetworkOrb'), {
+  ssr: false,
+  loading: () => <div className="h-[500px] bg-black/50 animate-pulse rounded-lg" />
+});
+
+const FloatingPostCards = dynamic(() => import('@/components/3d/FloatingPostCard'), {
+  ssr: false,
+  loading: () => <div className="h-[600px] bg-black/50 animate-pulse rounded-lg" />
+});
+
+const ActivityStream3D = dynamic(() => import('@/components/3d/ActivityStream3D'), {
+  ssr: false,
+  loading: () => <div className="h-[500px] bg-black/50 animate-pulse rounded-lg" />
+});
 
 export default function HomePage() {
   return (
@@ -20,41 +40,52 @@ export default function HomePage() {
         <div className="absolute -bottom-8 left-20 w-96 h-96 bg-pink-500 rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-blob animation-delay-4000"></div>
       </div>
 
-      {/* Navigation */}
+      {/* Navigation - Responsive */}
       <nav className="fixed top-0 w-full z-50 backdrop-blur-xl bg-black/50 border-b border-white/10">
-        <div className="container mx-auto px-6 py-4">
+        <div className="container mx-auto px-4 sm:px-6 py-3 sm:py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
+            <div className="flex items-center space-x-2 sm:space-x-3">
               <div className="relative">
-                <Sparkles className="w-8 h-8 text-purple-500" />
-                <div className="absolute inset-0 w-8 h-8 bg-purple-500 blur-xl opacity-50"></div>
+                <Sparkles className="w-6 sm:w-8 h-6 sm:h-8 text-purple-500" />
+                <div className="absolute inset-0 w-6 sm:w-8 h-6 sm:h-8 bg-purple-500 blur-xl opacity-50"></div>
               </div>
-              <span className="text-2xl font-bold text-white">SYNTHEX</span>
-              <span className="px-2 py-0.5 text-xs font-semibold bg-gradient-to-r from-purple-500 to-blue-500 text-white rounded-full">
+              <span className="text-xl sm:text-2xl font-bold text-white">SYNTHEX</span>
+              <span className="hidden sm:inline-block px-2 py-0.5 text-xs font-semibold bg-gradient-to-r from-purple-500 to-blue-500 text-white rounded-full">
                 AGENCY
               </span>
             </div>
-            <div className="hidden md:flex items-center space-x-8">
-              <Link href="/features" className="text-gray-300 hover:text-white transition font-medium">
+            
+            {/* Mobile Menu Button */}
+            <button className="md:hidden p-2 text-gray-300 hover:text-white" aria-label="Open menu">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            </button>
+            
+            {/* Desktop Navigation */}
+            <div className="hidden md:flex items-center space-x-4 lg:space-x-8">
+              <Link href="/features" className="text-gray-300 hover:text-white transition font-medium text-sm lg:text-base">
                 Features
               </Link>
-              <Link href="/case-studies" className="text-gray-300 hover:text-white transition font-medium">
+              <Link href="/case-studies" className="text-gray-300 hover:text-white transition font-medium text-sm lg:text-base">
                 Case Studies
               </Link>
-              <Link href="/pricing" className="text-gray-300 hover:text-white transition font-medium">
+              <Link href="/pricing" className="text-gray-300 hover:text-white transition font-medium text-sm lg:text-base">
                 Pricing
               </Link>
-              <Link href="/docs" className="text-gray-300 hover:text-white transition font-medium">
+              <Link href="/docs" className="text-gray-300 hover:text-white transition font-medium text-sm lg:text-base">
                 Resources
               </Link>
               <Link href="/login">
-                <Button variant="ghost" className="text-gray-300 hover:text-white">
+                <Button variant="ghost" className="text-gray-300 hover:text-white text-sm lg:text-base">
                   Login
                 </Button>
               </Link>
               <Link href="/signup">
-                <Button className="bg-gradient-to-r from-purple-600 to-blue-600 text-white hover:from-purple-700 hover:to-blue-700">
-                  Start Free Trial <ArrowRight className="ml-2 w-4 h-4" />
+                <Button className="bg-gradient-to-r from-purple-600 to-blue-600 text-white hover:from-purple-700 hover:to-blue-700 text-sm lg:text-base">
+                  <span className="hidden xl:inline">Start Free Trial</span>
+                  <span className="xl:hidden">Start</span>
+                  <ArrowRight className="ml-2 w-4 h-4" />
                 </Button>
               </Link>
             </div>
@@ -62,17 +93,17 @@ export default function HomePage() {
         </div>
       </nav>
 
-      {/* Hero Section - Redesigned */}
-      <section className="relative pt-32 pb-20 px-6 overflow-hidden">
+      {/* Hero Section - Fully Responsive */}
+      <section className="relative pt-24 sm:pt-32 pb-12 sm:pb-20 px-4 sm:px-6 overflow-hidden">
         <div className="container mx-auto">
           <div className="max-w-5xl mx-auto text-center">
             {/* Trust Badge */}
-            <div className="inline-flex items-center space-x-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 backdrop-blur-sm mb-8">
-              <BadgeCheck className="w-4 h-4 text-green-400" />
-              <span className="text-sm text-gray-300">Trusted by 1000+ businesses worldwide</span>
+            <div className="inline-flex items-center space-x-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-white/5 border border-white/10 backdrop-blur-sm mb-6 sm:mb-8">
+              <BadgeCheck className="w-3 sm:w-4 h-3 sm:h-4 text-green-400" />
+              <span className="text-xs sm:text-sm text-gray-300">Trusted by 1000+ businesses worldwide</span>
             </div>
             
-            <h1 className="text-5xl md:text-7xl font-bold text-white mb-6 leading-tight">
+            <h1 className="text-3xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold text-white mb-4 sm:mb-6 leading-tight">
               Your Complete
               <br />
               <span className="bg-gradient-to-r from-purple-400 via-pink-400 to-blue-400 bg-clip-text text-transparent">
@@ -82,61 +113,61 @@ export default function HomePage() {
               In One Platform
             </h1>
             
-            <p className="text-xl md:text-2xl text-gray-300 mb-8 max-w-3xl mx-auto leading-relaxed">
+            <p className="text-base sm:text-xl lg:text-2xl text-gray-300 mb-6 sm:mb-8 max-w-3xl mx-auto leading-relaxed px-4 sm:px-0">
               Stop paying $10,000/month for an agency. Get AI-powered viral analysis, 
               content generation, and strategic automation that delivers 
               <span className="text-white font-semibold"> 2.2x engagement boost</span> guaranteed.
             </p>
 
-            {/* Value Props */}
-            <div className="flex flex-wrap justify-center gap-4 mb-10">
-              <div className="flex items-center space-x-2 text-gray-300">
-                <CheckCircle2 className="w-5 h-5 text-green-400" />
+            {/* Value Props - Responsive Grid */}
+            <div className="grid grid-cols-2 sm:flex sm:flex-wrap justify-center gap-3 sm:gap-4 mb-8 sm:mb-10 px-4 sm:px-0">
+              <div className="flex items-center space-x-1 sm:space-x-2 text-gray-300 text-xs sm:text-sm">
+                <CheckCircle2 className="w-4 sm:w-5 h-4 sm:h-5 text-green-400 flex-shrink-0" />
                 <span>No Agency Fees</span>
               </div>
-              <div className="flex items-center space-x-2 text-gray-300">
-                <CheckCircle2 className="w-5 h-5 text-green-400" />
+              <div className="flex items-center space-x-1 sm:space-x-2 text-gray-300 text-xs sm:text-sm">
+                <CheckCircle2 className="w-4 sm:w-5 h-4 sm:h-5 text-green-400 flex-shrink-0" />
                 <span>24/7 AI Strategy</span>
               </div>
-              <div className="flex items-center space-x-2 text-gray-300">
-                <CheckCircle2 className="w-5 h-5 text-green-400" />
-                <span>Viral Pattern Analysis</span>
+              <div className="flex items-center space-x-1 sm:space-x-2 text-gray-300 text-xs sm:text-sm">
+                <CheckCircle2 className="w-4 sm:w-5 h-4 sm:h-5 text-green-400 flex-shrink-0" />
+                <span>Viral Analysis</span>
               </div>
-              <div className="flex items-center space-x-2 text-gray-300">
-                <CheckCircle2 className="w-5 h-5 text-green-400" />
+              <div className="flex items-center space-x-1 sm:space-x-2 text-gray-300 text-xs sm:text-sm">
+                <CheckCircle2 className="w-4 sm:w-5 h-4 sm:h-5 text-green-400 flex-shrink-0" />
                 <span>All Platforms</span>
               </div>
             </div>
 
-            {/* CTA Buttons */}
-            <div className="flex flex-col sm:flex-row justify-center gap-4 mb-12">
-              <Link href="/signup">
-                <Button size="lg" className="bg-gradient-to-r from-purple-600 to-blue-600 text-white px-8 py-6 text-lg hover:from-purple-700 hover:to-blue-700 shadow-2xl shadow-purple-500/25">
+            {/* CTA Buttons - Mobile Optimized */}
+            <div className="flex flex-col sm:flex-row justify-center gap-3 sm:gap-4 mb-8 sm:mb-12 px-4 sm:px-0">
+              <Link href="/signup" className="w-full sm:w-auto">
+                <Button size="lg" className="w-full sm:w-auto bg-gradient-to-r from-purple-600 to-blue-600 text-white px-6 sm:px-8 py-4 sm:py-6 text-base sm:text-lg hover:from-purple-700 hover:to-blue-700 shadow-2xl shadow-purple-500/25">
                   Start Free 14-Day Trial
                   <ArrowRight className="ml-2" />
                 </Button>
               </Link>
-              <Link href="/demo">
-                <Button size="lg" variant="outline" className="bg-white/5 border-white/20 text-white px-8 py-6 text-lg hover:bg-white/10 backdrop-blur-sm">
+              <Link href="/demo" className="w-full sm:w-auto">
+                <Button size="lg" variant="outline" className="w-full sm:w-auto bg-white/5 border-white/20 text-white px-6 sm:px-8 py-4 sm:py-6 text-base sm:text-lg hover:bg-white/10 backdrop-blur-sm">
                   Watch 3-Min Demo
                 </Button>
               </Link>
             </div>
 
-            {/* Live Stats */}
-            <div className="flex justify-center flex-wrap gap-8 text-gray-400">
-              <div className="flex items-center space-x-2">
-                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                <Users className="w-5 h-5" />
+            {/* Live Stats - Mobile Responsive */}
+            <div className="flex justify-center flex-wrap gap-4 sm:gap-6 lg:gap-8 text-gray-400 text-xs sm:text-sm">
+              <div className="flex items-center space-x-1 sm:space-x-2">
+                <div className="w-1.5 sm:w-2 h-1.5 sm:h-2 bg-green-400 rounded-full animate-pulse"></div>
+                <Users className="w-4 sm:w-5 h-4 sm:h-5" />
                 <UserCount />
               </div>
-              <div className="flex items-center space-x-2">
-                <TrendingUp className="w-5 h-5 text-green-400" />
+              <div className="flex items-center space-x-1 sm:space-x-2">
+                <TrendingUp className="w-4 sm:w-5 h-4 sm:h-5 text-green-400" />
                 <EngagementBoost />
               </div>
-              <div className="flex items-center space-x-2">
-                <Brain className="w-5 h-5 text-purple-400" />
-                <span>AI-Powered Analysis</span>
+              <div className="hidden sm:flex items-center space-x-1 sm:space-x-2">
+                <Brain className="w-4 sm:w-5 h-4 sm:h-5 text-purple-400" />
+                <span>AI-Powered</span>
               </div>
             </div>
           </div>
@@ -195,6 +226,37 @@ export default function HomePage() {
               </div>
             </Card>
           </div>
+        </div>
+      </section>
+
+      {/* 3D Social Network Visualization */}
+      <section className="py-20 px-6 border-t border-white/10 bg-gradient-to-b from-black/50 to-purple-900/10">
+        <div className="container mx-auto">
+          <div className="text-center mb-12">
+            <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">
+              <span className="bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
+                Connected to Every Platform
+              </span>
+            </h2>
+            <p className="text-xl text-gray-200">Visualize your social media ecosystem in real-time</p>
+          </div>
+          <SocialNetworkOrb />
+        </div>
+      </section>
+
+      {/* 3D Floating Posts Section */}
+      <section className="py-20 px-6 border-t border-white/10 bg-gradient-to-b from-blue-900/10 to-black/50">
+        <div className="container mx-auto">
+          <div className="text-center mb-12">
+            <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">
+              <span className="bg-gradient-to-r from-blue-400 to-pink-400 bg-clip-text text-transparent">
+                Real Social Media Posts in 3D
+              </span>
+            </h2>
+            <p className="text-xl text-gray-200">Experience engagement like never before - interact with live posts</p>
+            <p className="text-sm text-gray-300 mt-2">Hover to interact • Click hearts to like • Real engagement in 3D</p>
+          </div>
+          <FloatingPostCards />
         </div>
       </section>
 

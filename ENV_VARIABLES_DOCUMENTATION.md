@@ -1,194 +1,192 @@
-# Environment Variables Documentation for SYNTHEX
+# Environment Variables Documentation
 
-## Summary of Terminal Freezing Issue
-The terminal was freezing due to multiple Node.js processes consuming excessive resources. We identified and terminated processes using:
-- 815 seconds of CPU time (Process 63712)
-- 188MB of memory (Process 5492)
-- 341MB of memory (Process 57804)
+## Overview
+This document details all environment variables used in SYNTHEX, their purpose, security level, and whether they're required or optional.
 
-## Currently Used Environment Variables
+## Security Levels
 
-Based on comprehensive codebase analysis, here are the environment variables **actually in use**:
+- **PUBLIC**: Safe to expose in client-side code (prefixed with `NEXT_PUBLIC_`)
+- **SECRET**: Server-side only, never expose to client
+- **SENSITIVE**: Contains credentials or tokens, must be kept secure
 
-### ✅ CORE VARIABLES (Required)
+## Required Variables
+
+### Core Configuration
+
+| Variable | Security | Purpose | Example |
+|----------|----------|---------|---------|
+| `NODE_ENV` | PUBLIC | Environment mode | `development`, `production` |
+| `NEXT_PUBLIC_APP_URL` | PUBLIC | Application base URL | `https://synthex.social` |
+
+### Database & Authentication (Supabase)
+
+| Variable | Security | Purpose | Required |
+|----------|----------|---------|----------|
+| `NEXT_PUBLIC_SUPABASE_URL` | PUBLIC | Supabase project URL | ✅ |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | PUBLIC | Anonymous access key | ✅ |
+| `SUPABASE_SERVICE_ROLE_KEY` | **SECRET** | Service role key for server operations | ✅ |
+| `DATABASE_URL` | **SECRET** | PostgreSQL connection with pooler | ✅ |
+| `DIRECT_URL` | **SECRET** | Direct PostgreSQL connection | ✅ |
+| `JWT_SECRET` | **SECRET** | JWT signing secret | ✅ |
+
+## Optional Variables (Based on Features)
+
+### Email Service
+
+| Variable | Security | Purpose | When Needed |
+|----------|----------|---------|-------------|
+| `EMAIL_PROVIDER` | PUBLIC | Email service provider | When sending emails |
+| `EMAIL_ENABLED` | PUBLIC | Enable/disable email sending | Email features |
+| `EMAIL_FROM_ADDRESS` | PUBLIC | Sender email address | Email features |
+| `EMAIL_FROM_NAME` | PUBLIC | Sender display name | Email features |
+| `SENDGRID_API_KEY` | **SECRET** | SendGrid authentication | SendGrid emails |
+
+### Redis Cache (Performance)
+
+| Variable | Security | Purpose | When Needed |
+|----------|----------|---------|-------------|
+| `UPSTASH_REDIS_REST_URL` | **SECRET** | Upstash Redis URL | Caching/Rate limiting |
+| `UPSTASH_REDIS_REST_TOKEN` | **SECRET** | Upstash authentication | Caching/Rate limiting |
+
+### Monitoring & Analytics
+
+| Variable | Security | Purpose | When Needed |
+|----------|----------|---------|-------------|
+| `SENTRY_DSN` | PUBLIC | Sentry error tracking | Error monitoring |
+| `SENTRY_AUTH_TOKEN` | **SECRET** | Sentry authentication | Source map uploads |
+
+### Payment Processing
+
+| Variable | Security | Purpose | When Needed |
+|----------|----------|---------|-------------|
+| `STRIPE_SECRET_KEY` | **SECRET** | Stripe API authentication | Payment processing |
+| `STRIPE_PUBLISHABLE_KEY` | PUBLIC | Stripe client-side key | Payment UI |
+| `STRIPE_WEBHOOK_SECRET` | **SECRET** | Webhook signature verification | Stripe webhooks |
+
+### Social OAuth
+
+| Variable | Security | Purpose | When Needed |
+|----------|----------|---------|-------------|
+| `GOOGLE_CLIENT_ID` | PUBLIC | Google OAuth app ID | Google login |
+| `GOOGLE_CLIENT_SECRET` | **SECRET** | Google OAuth secret | Google login |
+
+## Environment-Specific Files
+
+### Development
+`.env.local` - Local development environment variables
+
+### Production
+`.env.production` - Production environment variables (set in Vercel Dashboard)
+
+### Testing
+`.env.test` - Test environment variables
+
+## Setting Variables in Different Environments
+
+### Local Development
+1. Copy `.env.clean` to `.env.local`
+2. Fill in required values
+3. Add optional values as needed
+
+### Vercel Production
+1. Go to Vercel Dashboard → Settings → Environment Variables
+2. Add each variable with production values
+3. Select "Production" environment
+4. Save changes
+
+### Docker
+Use `docker-compose.yml` environment section or `.env` file
+
+## Security Best Practices
+
+### DO's ✅
+- Use `.env.local` for local development
+- Add `.env.local` to `.gitignore`
+- Use Vercel Dashboard for production secrets
+- Rotate secrets regularly
+- Use strong, randomly generated secrets
+
+### DON'Ts ❌
+- Never commit `.env.local` to git
+- Never expose `SERVICE_ROLE_KEY` to client
+- Never log sensitive variables
+- Never use production keys in development
+- Never share secrets in plain text
+
+## Variable Usage in Code
+
+### Client-Side (React Components)
+```typescript
+// Only NEXT_PUBLIC_ variables are available
+const appUrl = process.env.NEXT_PUBLIC_APP_URL;
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 ```
-NODE_ENV                           - Used in: components/ErrorBoundary.tsx, lib/email/email-config-validator.ts
-NEXT_PUBLIC_APP_URL               - Used in: lib/email/email-service.ts
+
+### Server-Side (API Routes, Server Components)
+```typescript
+// All variables are available
+const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const jwtSecret = process.env.JWT_SECRET;
 ```
 
-### ✅ SUPABASE (Database & Auth) - All Required
-```
-NEXT_PUBLIC_SUPABASE_URL         - Used in: lib/ab-testing.ts, lib/auth/oauth-handler.ts
-NEXT_PUBLIC_SUPABASE_ANON_KEY    - Used in: lib/ab-testing.ts
-SUPABASE_SERVICE_ROLE_KEY        - Used in: lib/ab-testing.ts
-```
-
-### ✅ DATABASE CONNECTIONS - Required
-```
-DATABASE_URL                      - Used by Prisma ORM
-DIRECT_URL                        - Used by Prisma for migrations
+### Edge Functions
+```typescript
+// Limited to Edge-compatible variables
+const url = process.env.NEXT_PUBLIC_APP_URL;
 ```
 
-### ✅ AUTHENTICATION - Required
-```
-JWT_SECRET                        - Used for session tokens
-```
+## Troubleshooting
 
-### ✅ EMAIL SERVICE - Core Variables Used
-```
-EMAIL_PROVIDER                    - Used in: lib/email/email-config-validator.ts, lib/email/email-service.ts
-EMAIL_ENABLED                     - Used in: lib/email/email-config-validator.ts
-EMAIL_FROM_ADDRESS               - Used in: lib/email/email-config-validator.ts
-EMAIL_FROM_NAME                  - Used in: lib/email/email-config-validator.ts
-EMAIL_REPLY_TO                   - Used in: lib/email/email-config-validator.ts
-SENDGRID_API_KEY                 - Used in: lib/email/email-config-validator.ts, lib/email/email-service.ts
-```
+### Variable Not Working?
+1. Check spelling (case-sensitive)
+2. Restart dev server after changes
+3. Clear `.next` cache: `rm -rf .next`
+4. Verify in correct environment
 
-### ⚠️ EMAIL SERVICE - Optional/Conditional Variables
-These are only used if specific email providers are configured:
-```
-# SendGrid specific
-SENDGRID_WELCOME_TEMPLATE_ID
-SENDGRID_RESET_PASSWORD_TEMPLATE_ID
-SENDGRID_VERIFICATION_TEMPLATE_ID
+### Production Issues?
+1. Check Vercel Dashboard settings
+2. Verify environment selected
+3. Redeploy after changes
+4. Check build logs for errors
 
-# Mailgun specific
-MAILGUN_API_KEY
-MAILGUN_DOMAIN
-MAILGUN_HOST
+## Minimal Setup for Quick Start
 
-# Postmark specific
-POSTMARK_API_KEY
-POSTMARK_SERVER_TOKEN
-POSTMARK_MESSAGE_STREAM
-
-# AWS SES specific
-AWS_SES_REGION
-AWS_SES_ACCESS_KEY_ID
-AWS_SES_SECRET_ACCESS_KEY
-
-# Resend specific
-RESEND_API_KEY
-
-# SMTP specific
-SMTP_HOST
-SMTP_PORT
-SMTP_SECURE
-SMTP_USER
-SMTP_PASSWORD
-```
-
-### ⚠️ EMAIL FEATURES - Optional
-```
-EMAIL_RATE_LIMIT_MAX
-EMAIL_RATE_LIMIT_WINDOW_MS
-EMAIL_QUEUE_ENABLED
-EMAIL_RETRY_ATTEMPTS
-EMAIL_RETRY_DELAY_MS
-EMAIL_TRACK_OPENS
-EMAIL_TRACK_CLICKS
-EMAIL_TRACK_BOUNCES
-EMAIL_WEBHOOK_URL
-EMAIL_WEBHOOK_SECRET
-```
-
-### 🔧 DEVELOPMENT ONLY
-```
-DEV_EMAIL_RECIPIENT
-DEV_EMAIL_LOG_ENABLED
-EMAIL_TEST_MODE
-```
-
-## Variables Prepared for Future Implementation
-The following variables are included in the .env file for upcoming features:
-
-### 📊 Monitoring & Analytics
-- **Sentry**: SENTRY_DSN, SENTRY_AUTH_TOKEN, SENTRY_ORG, SENTRY_PROJECT
-- **Google Analytics**: NEXT_PUBLIC_GA_MEASUREMENT_ID
-
-### 💳 Payment Processing
-- **Stripe**: STRIPE_SECRET_KEY, STRIPE_PUBLISHABLE_KEY, STRIPE_WEBHOOK_SECRET
-
-### ⚡ Performance & Caching
-- **Redis/Upstash**: REDIS_URL, UPSTASH_REDIS_REST_URL, UPSTASH_REDIS_REST_TOKEN
-
-### 🤖 AI/ML Services
-- **OpenAI**: OPENAI_API_KEY
-- **Anthropic**: ANTHROPIC_API_KEY
-- **HuggingFace**: HUGGINGFACE_API_KEY
-
-### 🔐 Social Authentication
-- **Google OAuth**: GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET
-- **GitHub OAuth**: GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET
-- **Discord OAuth**: DISCORD_CLIENT_ID, DISCORD_CLIENT_SECRET
-
-### 🛡️ Security & Rate Limiting
-- RATE_LIMIT_MAX_REQUESTS
-- RATE_LIMIT_WINDOW_MS
-- ALLOWED_ORIGINS
-
-### 🎛️ Feature Flags
-- FEATURE_SOCIAL_AUTH
-- FEATURE_PAYMENTS
-- FEATURE_AI_ASSISTANT
-- FEATURE_ANALYTICS
-
-These variables are ready to be populated when you implement the corresponding features.
-
-## Recommended Actions
-
-### 1. Immediate Cleanup
-- Use `.env.final` as your primary environment file
-- Remove all unused variables to reduce confusion
-- Keep commented placeholders for future features
-
-### 2. Security Recommendations
-- **NEVER** commit the following to Git:
-  - SUPABASE_SERVICE_ROLE_KEY
-  - JWT_SECRET
-  - Any API keys (SENDGRID_API_KEY, etc.)
-  - Database passwords
-
-### 3. For Production Deployment
-Required minimum variables:
 ```env
-NODE_ENV=production
-NEXT_PUBLIC_APP_URL=https://synthex.social
-NEXT_PUBLIC_SUPABASE_URL=<your-supabase-url>
-NEXT_PUBLIC_SUPABASE_ANON_KEY=<your-anon-key>
-SUPABASE_SERVICE_ROLE_KEY=<your-service-key>
-DATABASE_URL=<your-database-url>
-DIRECT_URL=<your-direct-url>
-JWT_SECRET=<your-jwt-secret>
+# Copy these to .env.local for minimum functionality
+NODE_ENV=development
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
+SUPABASE_SERVICE_ROLE_KEY=your_service_key
+DATABASE_URL=your_database_url
+JWT_SECRET=your_jwt_secret
 ```
 
-### 4. For Email Functionality
-If using SendGrid (current configuration):
-```env
-EMAIL_PROVIDER=sendgrid
-EMAIL_ENABLED=true
-EMAIL_FROM_ADDRESS=noreply@synthex.social
-EMAIL_FROM_NAME=SYNTHEX
-SENDGRID_API_KEY=<your-sendgrid-key>
-```
+## Feature-Specific Requirements
 
-## File Structure Recommendation
-```
-.env.local          # Local development (git-ignored)
-.env.production     # Production values (git-ignored)
-.env.example        # Template with all vars (committed to git)
-```
+### To Enable Email
+1. Get SendGrid API key from sendgrid.com
+2. Add `SENDGRID_API_KEY=your_key`
+3. Set `EMAIL_ENABLED=true`
 
-## Terminal Performance Tips
-To prevent future freezing:
-1. Regularly check for runaway processes: `Get-Process node | Sort-Object CPU -Descending`
-2. Kill stuck processes: `taskkill /F /PID <process-id>`
-3. Clear npm cache if needed: `npm cache clean --force`
-4. Use `--max-old-space-size` flag for memory-intensive operations
+### To Enable Payments
+1. Get Stripe keys from stripe.com
+2. Add `STRIPE_SECRET_KEY=your_secret`
+3. Add `STRIPE_PUBLISHABLE_KEY=your_publishable`
 
-## Migration Steps
-1. Backup current .env: `cp .env .env.backup`
-2. Copy new configuration: `cp .env.final .env`
-3. Test application: `npm run dev`
-4. Verify all features work correctly
-5. Deploy to production with updated variables
+### To Enable OAuth
+1. Create OAuth app (Google/GitHub/etc)
+2. Add `PROVIDER_CLIENT_ID=your_id`
+3. Add `PROVIDER_CLIENT_SECRET=your_secret`
+
+## Environment Variable Validation
+
+The app validates required variables on startup. Missing required variables will show warnings but won't crash the app in development mode.
+
+## Questions?
+
+For help with environment variables:
+1. Check this documentation
+2. Review `.env.clean` for examples
+3. Check error messages in console
+4. Verify Vercel Dashboard settings

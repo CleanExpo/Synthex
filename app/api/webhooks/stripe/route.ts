@@ -2,13 +2,10 @@ import { headers } from 'next/headers';
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
+import { stripe } from '@/lib/stripe/config';
+import { getProductByPriceId } from '@/lib/stripe/config';
 
-const stripeSecretKey = process.env.STRIPE_SECRET_KEY || 'sk_test_dummy';
-const stripe = new Stripe(stripeSecretKey, {
-  apiVersion: '2025-07-30.basil',
-});
-
-const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET || 'whsec_dummy';
+const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET || '';
 
 // Initialize Supabase client with service role for admin operations
 const supabase = createClient(
@@ -17,6 +14,15 @@ const supabase = createClient(
 );
 
 export async function POST(req: NextRequest) {
+  // Check if Stripe is configured
+  if (!stripe) {
+    console.log('Stripe webhook received but Stripe is not configured');
+    return NextResponse.json(
+      { message: 'Stripe not configured, webhook ignored' },
+      { status: 200 }
+    );
+  }
+
   const body = await req.text();
   const signature = headers().get('stripe-signature');
 

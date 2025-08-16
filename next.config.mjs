@@ -12,7 +12,32 @@ const nextConfig = {
   experimental: {
     forceSwcTransforms: true,
   },
-  webpack: (config, { isServer }) => {
+  webpack: (config, { dev, isServer }) => {
+    // File watcher optimization for Windows - fixes terminal freezing
+    if (dev && !isServer) {
+      config.watchOptions = {
+        poll: 1000, // Use polling mode (check every 1 second)
+        aggregateTimeout: 300, // Delay rebuild after first change
+        ignored: [
+          '**/node_modules',
+          '**/.git',
+          '**/.next',
+          '**/dist',
+          '**/build',
+          '**/.vercel',
+          '**/logs',
+          '**/backup-before-cleanup',
+          '**/deployment',
+          '**/monitoring',
+          '**/coverage',
+          '**/.cache',
+          '**/tmp',
+          '**/*.log'
+        ]
+      };
+    }
+    
+    // Existing fallback configuration
     if (!isServer) {
       config.resolve.fallback = {
         ...config.resolve.fallback,
@@ -22,6 +47,7 @@ const nextConfig = {
         crypto: false,
       };
     }
+    
     return config;
   },
   // Ensure environment variables are available
