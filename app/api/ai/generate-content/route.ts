@@ -7,16 +7,20 @@ import { NextRequest, NextResponse } from 'next/server';
 import { aiContentGenerator } from '@/src/lib/ai/content-generator';
 import { authMonitor } from '@/src/lib/auth/monitoring';
 
+import { withRateLimit, UsageTracker } from '@/lib/middleware/rate-limiter';
+
 export async function POST(request: NextRequest) {
-  try {
-    // Verify authentication
-    const authToken = request.cookies.get('auth-token')?.value;
-    if (!authToken) {
-      return NextResponse.json(
-        { error: 'Authentication required' },
-        { status: 401 }
-      );
-    }
+  // Apply rate limiting
+  return withRateLimit(request, async () => {
+    try {
+      // Verify authentication
+      const authToken = request.cookies.get('auth-token')?.value;
+      if (!authToken) {
+        return NextResponse.json(
+          { error: 'Authentication required' },
+          { status: 401 }
+        );
+      }
 
     // Parse request body
     const body = await request.json();
@@ -74,12 +78,15 @@ export async function POST(request: NextRequest) {
       includeCTA
     });
 
+    // Track usage for subscription limits
+    await UsageTracker.track('user_id_here', 'ai_posts', 1);
+
     return NextResponse.json({
       success: true,
       data: generatedContent
     });
 
-  } catch (error) {
+    } catch (error) {
     console.error('Content generation error:', error);
     
     // Track error
@@ -97,7 +104,8 @@ export async function POST(request: NextRequest) {
       },
       { status: 500 }
     );
-  }
+    }
+  });
 }
 
 export async function GET(request: NextRequest) {
@@ -147,5 +155,6 @@ export async function GET(request: NextRequest) {
       { error: 'Failed to generate content calendar' },
       { status: 500 }
     );
-  }
+    }
+  });
 }

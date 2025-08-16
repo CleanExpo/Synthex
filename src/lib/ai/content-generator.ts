@@ -1,7 +1,9 @@
 /**
  * Advanced AI Content Generation System
- * Integrates with OpenAI for multi-model content creation
+ * Integrates with OpenRouter for multi-model content creation
  */
+
+import { openRouterClient } from '@/lib/ai/openrouter-client';
 
 // TODO: Create viral-patterns module
 // import { viralPatterns } from '@/src/lib/viral-patterns';
@@ -46,27 +48,12 @@ export interface ContentVariation {
 }
 
 export class AIContentGenerator {
-  private openai: any;
-  private models = {
-    creative: 'gpt-4-turbo-preview',
-    balanced: 'gpt-4-turbo-preview', 
-    fast: 'gpt-3.5-turbo',
-    specialized: 'gpt-4-turbo-preview'
-  };
+  private client = openRouterClient;
+  private models = openRouterClient.models;
 
   constructor() {
-    const apiKey = process.env.OPENAI_API_KEY;
-    if (apiKey) {
-      // Dynamically import OpenAI to avoid build issues
-      try {
-        const OpenAI = require('openai').default || require('openai');
-        this.openai = new OpenAI({ apiKey });
-      } catch (error) {
-        console.error('Failed to load OpenAI library:', error);
-        this.openai = null;
-      }
-    } else {
-      this.openai = null;
+    if (!process.env.OPENROUTER_API_KEY) {
+      console.warn('OpenRouter API key not configured. AI features will be limited.');
     }
   }
 
@@ -169,15 +156,17 @@ Generate content that will maximize engagement and shares.
   }
 
   /**
-   * Call OpenAI API
+   * Call OpenRouter API
    */
   private async callAI(prompt: string, model: string): Promise<string> {
-    if (!this.openai) {
-      throw new Error('OpenAI API key not configured. Please set OPENAI_API_KEY environment variable.');
+    if (!process.env.OPENROUTER_API_KEY) {
+      // Fallback to template generation if no API key
+      console.warn('OpenRouter API key not configured. Using template generation.');
+      return this.generateFromTemplate(prompt);
     }
 
     try {
-      const completion = await this.openai.chat.completions.create({
+      const response = await this.client.complete({
         model,
         messages: [
           {
@@ -193,15 +182,17 @@ Generate content that will maximize engagement and shares.
         max_tokens: 1000
       });
 
-      const content = completion.choices[0].message.content;
+      const content = response.choices[0]?.message?.content;
       if (!content) {
         throw new Error('No content generated');
       }
       
       return content;
     } catch (error) {
-      console.error('OpenAI API error:', error);
-      throw new Error(`Failed to generate content: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      console.error('OpenRouter API error:', error);
+      // Fallback to template generation on error
+      console.warn('Falling back to template generation due to API error');
+      return this.generateFromTemplate(prompt);
     }
   }
 

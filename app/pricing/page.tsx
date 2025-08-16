@@ -2,53 +2,59 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Check, X, Sparkles } from 'lucide-react';
+import { CheckoutButton } from '@/components/stripe/checkout-button';
 
 const plans = [
   {
-    name: 'Starter',
-    price: '$29',
-    description: 'Perfect for individuals and small creators',
+    name: 'Professional',
+    price: '$49',
+    description: 'Perfect for professionals and content creators',
     features: [
-      '3 social media accounts',
-      '30 AI-generated posts/month',
-      'Basic analytics',
+      '5 social media accounts',
+      '100 AI-generated posts/month',
+      'Professional analytics',
       'Email support',
-      '1 persona profile',
-      'Standard scheduling',
+      '3 persona profiles',
+      'Smart scheduling',
+      'Content library access',
+      'Basic automation',
     ],
     notIncluded: [
       'Advanced pattern analysis',
       'Custom AI training',
-      'API access',
+      'Team collaboration',
       'Priority support',
     ],
   },
   {
-    name: 'Pro',
+    name: 'Business',
     price: '$99',
     popular: true,
-    description: 'For growing businesses and agencies',
+    description: 'For businesses and marketing teams',
     features: [
       '10 social media accounts',
       'Unlimited AI-generated posts',
       'Advanced analytics & insights',
       'Priority email & chat support',
-      '5 persona profiles',
+      '10 persona profiles',
       'Smart scheduling with AI optimization',
       'Viral pattern analysis',
       'Custom AI training',
       'Competitor analysis',
       'A/B testing tools',
+      'Team collaboration tools',
+      'Brand voice customization',
     ],
     notIncluded: [
       'White-label solution',
       'Dedicated account manager',
+      'API access',
     ],
   },
   {
-    name: 'Enterprise',
+    name: 'Custom',
     price: 'Custom',
-    description: 'For large teams and organizations',
+    description: 'Enterprise solutions tailored to your needs',
     features: [
       'Unlimited social media accounts',
       'Unlimited AI-generated posts',
@@ -56,12 +62,14 @@ const plans = [
       'Dedicated account manager',
       'Unlimited persona profiles',
       'Custom AI model training',
-      'API access',
+      'Full API access',
       'White-label solution',
       'SLA guarantee',
       'Custom integrations',
       'On-premise deployment option',
       'Advanced security features',
+      'Custom workflows',
+      'Priority development',
     ],
     notIncluded: [],
   },
@@ -158,18 +166,27 @@ export default function PricingPage() {
                   ))}
                 </div>
 
-                <Link href="/signup" className="block">
-                  <Button
+                {plan.price === 'Custom' ? (
+                  <Link href="/contact" className="block">
+                    <Button
+                      className="w-full bg-white/10 border border-white/20 text-white hover:bg-white/20"
+                      size="lg"
+                    >
+                      Contact Sales
+                    </Button>
+                  </Link>
+                ) : (
+                  <CheckoutButton
+                    planName={plan.name}
                     className={`w-full ${
                       plan.popular
                         ? 'gradient-primary text-white'
                         : 'bg-white/10 border border-white/20 text-white hover:bg-white/20'
                     }`}
-                    size="lg"
                   >
-                    {plan.price === 'Custom' ? 'Contact Sales' : 'Start Free Trial'}
-                  </Button>
-                </Link>
+                    Start Free Trial
+                  </CheckoutButton>
+                )}
               </Card>
             ))}
           </div>
