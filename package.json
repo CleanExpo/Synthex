@@ -47,7 +47,16 @@
     "security:audit": "npm run env:generate && npm run validate:env:enhanced && npm audit",
     "security:check": "node scripts/validate-env-enhanced.js",
     "build:production": "NODE_ENV=production next build",
-    "build:emergency": "next build || true"
+    "build:emergency": "next build || true",
+    "deploy": "node scripts/deploy-assistant.js",
+    "diagnose": "node scripts/diagnose-build.js",
+    "check:quick": "bash scripts/final-check.sh",
+    "check:deploy": "node scripts/diagnose-build.js && bash scripts/final-check.sh",
+    "deploy:safe": "npm run check:deploy && git add -A && git commit -m 'chore: deploy to production' && git push origin main",
+    "deploy:push": "git add -A && git commit -m 'chore: deploy to production' && git push origin main",
+    "deploy:emergency": "git add -A && git commit -m 'emergency: force deployment' --no-verify && git push origin main",
+    "fix:deps": "rm -rf node_modules package-lock.json && npm install --legacy-peer-deps",
+    "db:validate": "npx prisma validate && npx prisma generate"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.20.0",
