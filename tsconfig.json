@@ -80,6 +80,8 @@
     "**/*.test.tsx",
     "**/*.spec.ts",
     "**/*.spec.tsx",
+    "playwright.config.ts",
+    "playwright.config.js",
     ".next",
     "out",
     "dist",
