@@ -155,6 +155,5 @@ export async function GET(request: NextRequest) {
       { error: 'Failed to generate content calendar' },
       { status: 500 }
     );
-    }
-  });
+  }
 }
