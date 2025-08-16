@@ -63,20 +63,35 @@ export default function RegisterPage() {
     setIsLoading(true);
 
     try {
-      const data = await auth.signUp(email, password, name);
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password, name }),
+      });
+
+      const data = await response.json();
       
-      if (data.user) {
+      if (data.success) {
+        // Store token in localStorage
+        localStorage.setItem('token', data.token);
+        localStorage.setItem('user', JSON.stringify(data.user));
+        
         setSuccess(true);
         toast.success('Account created! Please check your email to verify your account.');
         
-        // Optionally redirect after a delay
+        // Redirect after a delay
         setTimeout(() => {
-          router.push('/auth/login');
+          router.push('/dashboard');
         }, 3000);
+      } else {
+        setError(data.error || 'Failed to create account. Please try again.');
+        toast.error(data.error || 'Registration failed. Please try again.');
       }
     } catch (err: any) {
-      setError(err.message || 'Failed to create account. Please try again.');
-      toast.error('Registration failed. Please try again.');
+      setError('Network error. Please try again.');
+      toast.error('Connection failed. Please try again.');
     } finally {
       setIsLoading(false);
     }
