@@ -71,6 +71,7 @@
     "tests/**/*",
     "src/testing/**/*",
     "scripts/**/*",
+    "ship-audit/**/*",
     "controlled-autonomous-build.ts",
     "start-autonomous-build.ts",
     "sentry.*.config.ts",
