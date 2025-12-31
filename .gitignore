@@ -90,8 +90,16 @@ test-*.js
 
 .vercel
 
+
 # Playwright Test Results
 test-results/
 playwright-report/
 playwright/.cache/
 .next/
+
+
+# Google Cloud Credentials (SECURITY: Never commit credentials!)
+credentials/
+*.json.bak
+*-credentials.json
+service-account*.json
