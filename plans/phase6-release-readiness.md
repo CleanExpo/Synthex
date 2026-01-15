@@ -11,10 +11,10 @@ Updated: 2026-01-16
 ## Checklist
 - [x] Run `npm run type-check`
 - [x] Run `npm run lint`
-- [x] Run `npm run test`
-- [ ] Run `npm run build`
-- [ ] Run `npm audit --omit=dev`
-- [ ] Verify `.env.example` matches required production variables
+- [x] Run `npm run test` (105 passed, 110 integration skipped)
+- [x] Run `npm run build` (137 pages generated - 2026-01-16)
+- [x] Run `npm audit --omit=dev` (22 vulnerabilities - documented in Phase 8)
+- [x] Verify `.env.example` matches required production variables (updated 2026-01-16)
 - [ ] Smoke test auth + dashboard navigation
 
 ## Exit Criteria
