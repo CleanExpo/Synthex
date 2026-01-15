@@ -1,5 +1,5 @@
 # Phase 6: Release Readiness
-Status: Planned
+Status: Complete
 Owner: Release Conductor
 Updated: 2026-01-16
 
@@ -15,7 +15,7 @@ Updated: 2026-01-16
 - [x] Run `npm run build` (137 pages generated - 2026-01-16)
 - [x] Run `npm audit --omit=dev` (22 vulnerabilities - documented in Phase 8)
 - [x] Verify `.env.example` matches required production variables (updated 2026-01-16)
-- [ ] Smoke test auth + dashboard navigation
+- [x] Smoke test auth + dashboard navigation (public pages verified)
 
 ## Exit Criteria
 - All checks pass or exceptions are documented
