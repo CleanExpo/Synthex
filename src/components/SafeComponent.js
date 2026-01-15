@@ -3,7 +3,7 @@
  * Provides error handling and fallback for new components
  */
 
-class ErrorBoundary {
+export class ErrorBoundary {
   constructor(options = {}) {
     this.fallbackComponent = options.fallback || this.defaultFallback;
     this.onError = options.onError || this.defaultErrorHandler;
@@ -71,6 +71,10 @@ class ErrorBoundary {
           isRetrying: false
         };
       }
+
+      setState(nextState) {
+        this.state = { ...this.state, ...nextState };
+      }
       
       componentDidCatch(error, errorInfo) {
         boundary.onError(error, errorInfo);
@@ -100,6 +104,11 @@ class ErrorBoundary {
         
         setTimeout(() => {
           this.setState({ isRetrying: false });
+          try {
+            this.render();
+          } catch (error) {
+            this.componentDidCatch(error, { componentStack: '' });
+          }
         }, 100);
       }
       
@@ -126,6 +135,14 @@ class ErrorBoundary {
           return component(this.props);
         } catch (error) {
           this.componentDidCatch(error, { componentStack: '' });
+          if (legacyComponent) {
+            try {
+              return legacyComponent(this.props);
+            } catch (legacyError) {
+              console.error('Legacy component also failed:', legacyError);
+            }
+          }
+
           return boundary.fallbackComponent(error);
         }
       }

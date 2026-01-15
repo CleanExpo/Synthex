@@ -59,27 +59,7 @@ export function SearchBar({
   useDebounce(() => setDebouncedQuery(query), 300, [query]);
   
   // Perform search when debounced query changes
-  useEffect(() => {
-    if (debouncedQuery.length > 2) {
-      performSearch(debouncedQuery, filters);
-    } else {
-      setResults([]);
-    }
-  }, [debouncedQuery, filters]);
-  
-  // Close results when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (searchRef.current && !searchRef.current.contains(e.target as Node)) {
-        setShowResults(false);
-      }
-    };
-    
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-  
-  const performSearch = async (searchQuery: string, searchFilters: SearchFilters) => {
+  const performSearch = useCallback(async (searchQuery: string, searchFilters: SearchFilters) => {
     setIsLoading(true);
     setShowResults(true);
     
@@ -106,7 +86,27 @@ export function SearchBar({
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [onSearch]);
+
+  useEffect(() => {
+    if (debouncedQuery.length > 2) {
+      performSearch(debouncedQuery, filters);
+    } else {
+      setResults([]);
+    }
+  }, [debouncedQuery, filters, performSearch]);
+  
+  // Close results when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (searchRef.current && !searchRef.current.contains(e.target as Node)) {
+        setShowResults(false);
+      }
+    };
+    
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
   
   const getMockResults = (searchQuery: string): SearchResult[] => {
     return [

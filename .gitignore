@@ -103,3 +103,4 @@ credentials/
 *.json.bak
 *-credentials.json
 service-account*.json
+_framework

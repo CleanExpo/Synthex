@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -91,7 +91,7 @@ export function CollaborationTools({
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
   const [replyContent, setReplyContent] = useState('');
   const [typingUsers, setTypingUsers] = useState<Set<string>>(new Set());
-  const currentUser = getCurrentUser();
+  const currentUser = useMemo(() => getCurrentUser(), []);
   
   // Initialize collaboration
   useEffect(() => {
@@ -148,7 +148,7 @@ export function CollaborationTools({
     return () => {
       collabManager.leaveSession(documentId, currentUser.id);
     };
-  }, [documentId]);
+  }, [documentId, currentUser]);
   
   // Send comment
   const sendComment = () => {

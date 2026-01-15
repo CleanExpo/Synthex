@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -17,25 +17,8 @@ export default function VerifyEmailPage() {
   const [error, setError] = useState('');
   const [code, setCode] = useState('');
 
-  useEffect(() => {
-    // Check for verification code in URL
-    const urlCode = searchParams.get('code');
-    const success = searchParams.get('success');
-    const errorMsg = searchParams.get('error');
-
-    if (success === 'true') {
-      setVerified(true);
-    } else if (errorMsg) {
-      setError(decodeURIComponent(errorMsg));
-    } else if (urlCode) {
-      // Auto-verify if code is in URL
-      verifyEmail(urlCode);
-    }
-  }, [searchParams]);
-
-  const verifyEmail = async (verificationCode?: string) => {
-    const codeToVerify = verificationCode || code;
-    
+  const verifyEmail = useCallback(async (verificationCode: string) => {
+    const codeToVerify = verificationCode.trim();
     if (!codeToVerify) {
       setError('Please enter a verification code');
       return;
@@ -72,7 +55,23 @@ export default function VerifyEmailPage() {
     } finally {
       setVerifying(false);
     }
-  };
+  }, [router]);
+
+  useEffect(() => {
+    // Check for verification code in URL
+    const urlCode = searchParams.get('code');
+    const success = searchParams.get('success');
+    const errorMsg = searchParams.get('error');
+
+    if (success === 'true') {
+      setVerified(true);
+    } else if (errorMsg) {
+      setError(decodeURIComponent(errorMsg));
+    } else if (urlCode) {
+      // Auto-verify if code is in URL
+      verifyEmail(urlCode);
+    }
+  }, [searchParams, verifyEmail]);
 
   if (verified) {
     return (
@@ -136,7 +135,7 @@ export default function VerifyEmailPage() {
             </div>
 
             <Button
-              onClick={() => verifyEmail()}
+              onClick={() => verifyEmail(code)}
               disabled={verifying || !code}
               className="w-full"
             >

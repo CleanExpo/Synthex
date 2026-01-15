@@ -137,9 +137,13 @@ export class PsychologyEffectivenessTester {
     // Check principle-specific criteria
     const principleChecks = this.getPrincipleValidationCriteria(intendedPrinciple);
     
+    let totalWeight = 0;
+
     for (const check of principleChecks) {
+      const weight = typeof check.weight === 'number' ? check.weight : 1;
       const result = this.evaluateCriterion(brandElement, check, context);
       validation.score += result.score;
+      totalWeight += weight;
       
       if (!result.passed) {
         validation.isValid = false;
@@ -148,7 +152,8 @@ export class PsychologyEffectivenessTester {
       }
     }
     
-    validation.score = Math.round(validation.score / principleChecks.length);
+    const divisor = totalWeight || principleChecks.length || 1;
+    validation.score = Math.round(validation.score / divisor);
     
     return validation;
   }
@@ -342,6 +347,10 @@ export class PsychologyEffectivenessTester {
     
     if (winner.metrics.emotionalResonance > 80) {
       recommendations.push(`Strong emotional connection achieved. Amplify this in storytelling and content.`);
+    }
+
+    if (recommendations.length === 0) {
+      recommendations.push('Maintain the winning approach and keep monitoring performance trends.');
     }
     
     return recommendations;
@@ -556,7 +565,8 @@ export class PsychologyEffectivenessTester {
   ): { passed: boolean; score: number; issue: string; suggestion: string } {
     // Simplified criterion evaluation
     const passed = Math.random() > 0.3; // Mock evaluation
-    const score = passed ? criterion.weight * 100 : criterion.weight * 40;
+    const weight = typeof criterion.weight === 'number' ? criterion.weight : 1;
+    const score = passed ? weight * 100 : weight * 40;
     
     return {
       passed,

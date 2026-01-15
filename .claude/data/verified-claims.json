@@ -1,0 +1,5 @@
+{
+  "version": "1.0.0",
+  "purpose": "Cache for verified claims to avoid re-verification",
+  "claims": []
+}

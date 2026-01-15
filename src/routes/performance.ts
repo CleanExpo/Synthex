@@ -67,10 +67,11 @@ router.get('/health', async (req: Request, res: Response) => {
  * @desc    Get performance stats for specific endpoint
  * @access  Private (Admin)
  */
-router.get('/endpoint/*', requireAdmin, async (req: Request, res: Response) => {
+router.get('/endpoint/*endpoint', requireAdmin, async (req: Request, res: Response) => {
   try {
     // Get the full path after /endpoint/
-    const endpoint = req.params[0];
+    const rawEndpoint = req.params.endpoint;
+    const endpoint = rawEndpoint.startsWith('/') ? rawEndpoint : `/${rawEndpoint}`;
     const timeRange = req.query.timeRange ? parseInt(req.query.timeRange as string) : 3600000;
     
     const stats = PerformanceService.getEndpointStats(endpoint, timeRange);

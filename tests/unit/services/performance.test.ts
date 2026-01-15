@@ -3,6 +3,7 @@ import AuditService from '../../../src/services/audit';
 
 // Mock AuditService
 jest.mock('../../../src/services/audit', () => ({
+  __esModule: true,
   default: {
     log: jest.fn()
   }
@@ -225,7 +226,7 @@ describe('PerformanceService', () => {
   });
 
   describe('clearMetrics', () => {
-    it('should clear all metrics when no time specified', () => {
+    it('should clear all metrics when threshold is zero', () => {
       // Add some metrics
       PerformanceService.recordMetric({
         endpoint: '/api/test',
@@ -236,7 +237,7 @@ describe('PerformanceService', () => {
         cpuUsage: process.cpuUsage()
       });
 
-      const cleared = PerformanceService.clearMetrics();
+      const cleared = PerformanceService.clearMetrics(0);
       const stats = PerformanceService.getStats();
       
       expect(cleared).toBe(1);

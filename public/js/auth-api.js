@@ -14,6 +14,39 @@ class AuthAPI {
         this.retryDelay = 1000;
     }
 
+    extractAuthData(response) {
+        if (response && response.data) {
+            return response.data;
+        }
+        return response || {};
+    }
+
+    setTokens(token, refreshToken, rememberMe = true) {
+        this.token = token;
+        this.refreshToken = refreshToken;
+
+        if (token) {
+            localStorage.setItem('synthex_token', token);
+        }
+        if (refreshToken) {
+            localStorage.setItem('synthex_refresh_token', refreshToken);
+        }
+
+        if (typeof sessionStorage !== 'undefined') {
+            if (rememberMe) {
+                sessionStorage.removeItem('synthex_token');
+                sessionStorage.removeItem('synthex_refresh_token');
+            } else {
+                if (token) {
+                    sessionStorage.setItem('synthex_token', token);
+                }
+                if (refreshToken) {
+                    sessionStorage.setItem('synthex_refresh_token', refreshToken);
+                }
+            }
+        }
+    }
+
     /**
      * Set authorization headers
      */
@@ -37,16 +70,7 @@ class AuthAPI {
         const data = await response.json();
         
         if (!response.ok) {
-            if (response.status === 401) {
-                // Token expired, try to refresh
-                const refreshed = await this.refreshAccessToken();
-                if (!refreshed) {
-                    this.logout();
-                    window.location.href = '/login';
-                }
-                throw new Error('Token refreshed, please retry');
-            }
-            throw new Error(data.message || 'API request failed');
+            throw new Error(data.error || data.message || 'API request failed');
         }
         
         return data;
@@ -59,17 +83,44 @@ class AuthAPI {
         try {
             const response = await fetch(url, {
                 ...options,
-                headers: this.getHeaders()
+                headers: {
+                    ...this.getHeaders(),
+                    ...(options.headers || {})
+                }
             });
             
             return await this.handleResponse(response);
         } catch (error) {
-            if (retryCount < this.maxRetries && error.message === 'Token refreshed, please retry') {
-                await new Promise(resolve => setTimeout(resolve, this.retryDelay));
-                return this.makeRequest(url, options, retryCount + 1);
-            }
             throw error;
         }
+    }
+
+    /**
+     * Make an authenticated request with token refresh support
+     */
+    async makeAuthenticatedRequest(endpoint, options = {}) {
+        const url = endpoint.startsWith('http') ? endpoint : `${this.baseURL}${endpoint}`;
+        const response = await fetch(url, {
+            ...options,
+            headers: {
+                ...this.getHeaders(),
+                ...(options.headers || {})
+            }
+        });
+
+        if (response.status === 401 && this.refreshToken) {
+            await this.refreshAccessToken();
+            const retryResponse = await fetch(url, {
+                ...options,
+                headers: {
+                    ...this.getHeaders(),
+                    ...(options.headers || {})
+                }
+            });
+            return this.handleResponse(retryResponse);
+        }
+
+        return this.handleResponse(response);
     }
 
     /**
@@ -82,19 +133,12 @@ class AuthAPI {
                 body: JSON.stringify({ email, password, rememberMe })
             });
             
-            if (data.token) {
-                this.token = data.token;
-                this.refreshToken = data.refreshToken;
-                
-                if (rememberMe) {
-                    localStorage.setItem('synthex_token', data.token);
-                    localStorage.setItem('synthex_refresh_token', data.refreshToken);
-                } else {
-                    sessionStorage.setItem('synthex_token', data.token);
-                    sessionStorage.setItem('synthex_refresh_token', data.refreshToken);
+            const authData = this.extractAuthData(data);
+            if (authData.token) {
+                this.setTokens(authData.token, authData.refreshToken, rememberMe);
+                if (authData.user) {
+                    localStorage.setItem('synthex_user', JSON.stringify(authData.user));
                 }
-                
-                localStorage.setItem('synthex_user', JSON.stringify(data.user));
             }
             
             return data;
@@ -107,19 +151,23 @@ class AuthAPI {
     /**
      * Register new user
      */
-    async register(userData) {
+    async register(nameOrData, email, password) {
         try {
+            const userData = typeof nameOrData === 'object'
+                ? nameOrData
+                : { name: nameOrData, email, password };
+
             const data = await this.makeRequest(`${this.baseURL}/auth/register`, {
                 method: 'POST',
                 body: JSON.stringify(userData)
             });
             
-            if (data.token) {
-                this.token = data.token;
-                this.refreshToken = data.refreshToken;
-                localStorage.setItem('synthex_token', data.token);
-                localStorage.setItem('synthex_refresh_token', data.refreshToken);
-                localStorage.setItem('synthex_user', JSON.stringify(data.user));
+            const authData = this.extractAuthData(data);
+            if (authData.token) {
+                this.setTokens(authData.token, authData.refreshToken, true);
+                if (authData.user) {
+                    localStorage.setItem('synthex_user', JSON.stringify(authData.user));
+                }
             }
             
             return data;
@@ -146,8 +194,10 @@ class AuthAPI {
             localStorage.removeItem('synthex_token');
             localStorage.removeItem('synthex_refresh_token');
             localStorage.removeItem('synthex_user');
-            sessionStorage.removeItem('synthex_token');
-            sessionStorage.removeItem('synthex_refresh_token');
+            if (typeof sessionStorage !== 'undefined') {
+                sessionStorage.removeItem('synthex_token');
+                sessionStorage.removeItem('synthex_refresh_token');
+            }
         }
     }
 
@@ -155,7 +205,9 @@ class AuthAPI {
      * Refresh access token
      */
     async refreshAccessToken() {
-        if (!this.refreshToken) return false;
+        if (!this.refreshToken) {
+            throw new Error('No refresh token available');
+        }
         
         try {
             const response = await fetch(`${this.baseURL}/auth/refresh`, {
@@ -166,17 +218,21 @@ class AuthAPI {
                 body: JSON.stringify({ refreshToken: this.refreshToken })
             });
             
-            if (response.ok) {
-                const data = await response.json();
-                this.token = data.token;
-                localStorage.setItem('synthex_token', data.token);
-                return true;
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error || data.message || 'Token refresh failed');
             }
-            
-            return false;
+
+            const authData = this.extractAuthData(data);
+            if (authData.token) {
+                this.setTokens(authData.token, authData.refreshToken || this.refreshToken, true);
+            }
+
+            return data;
         } catch (error) {
             console.error('Token refresh error:', error);
-            return false;
+            throw error;
         }
     }
 
@@ -242,6 +298,28 @@ class AuthAPI {
     }
 
     /**
+     * Validate email format
+     */
+    validateEmail(email) {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return emailRegex.test(email);
+    }
+
+    /**
+     * Validate password strength
+     */
+    validatePassword(password) {
+        if (typeof password !== 'string') return false;
+
+        const hasLowercase = /[a-z]/.test(password);
+        const hasUppercase = /[A-Z]/.test(password);
+        const hasNumber = /\d/.test(password);
+        const hasSpecial = /[^A-Za-z0-9]/.test(password);
+
+        return password.length >= 8 && hasLowercase && hasUppercase && hasNumber && hasSpecial;
+    }
+
+    /**
      * Google OAuth login
      */
     async googleLogin(googleToken) {
@@ -300,16 +378,24 @@ class AuthAPI {
 window.authAPI = new AuthAPI();
 
 // Auto-refresh token before expiry
-setInterval(async () => {
-    if (window.authAPI.isAuthenticated()) {
-        const tokenData = JSON.parse(atob(window.authAPI.token.split('.')[1]));
-        const expiryTime = tokenData.exp * 1000;
-        const currentTime = Date.now();
-        const timeUntilExpiry = expiryTime - currentTime;
-        
-        // Refresh if token expires in less than 5 minutes
-        if (timeUntilExpiry < 5 * 60 * 1000) {
-            await window.authAPI.refreshAccessToken();
+const isTestEnv = typeof process !== 'undefined' && process.env && process.env.NODE_ENV === 'test';
+
+if (!isTestEnv) {
+    setInterval(async () => {
+        if (window.authAPI.isAuthenticated()) {
+            const tokenData = JSON.parse(atob(window.authAPI.token.split('.')[1]));
+            const expiryTime = tokenData.exp * 1000;
+            const currentTime = Date.now();
+            const timeUntilExpiry = expiryTime - currentTime;
+            
+            // Refresh if token expires in less than 5 minutes
+            if (timeUntilExpiry < 5 * 60 * 1000) {
+                await window.authAPI.refreshAccessToken();
+            }
         }
-    }
-}, 60000); // Check every minute
+    }, 60000); // Check every minute
+}
+
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = AuthAPI;
+}

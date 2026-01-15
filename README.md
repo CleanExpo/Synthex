@@ -100,7 +100,7 @@ Launch and grow your social presence from day one with proven strategies and aut
 ## 🚀 Getting Started
 
 ### Prerequisites
-- Node.js 18+ 
+- Node.js 22 LTS
 - PostgreSQL database (or Supabase account)
 - Redis instance (or Upstash account)
 - API keys for social platforms

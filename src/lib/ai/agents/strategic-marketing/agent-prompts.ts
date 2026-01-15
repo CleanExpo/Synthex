@@ -375,7 +375,7 @@ export const PSYCHOLOGY_PRINCIPLES = {
   ]
 };
 
-export default {
+const agentPrompts = {
   AGENT_CONFIG,
   PSYCHOLOGY_PRINCIPLES,
   MASTER_ORCHESTRATOR_PROMPT,
@@ -384,3 +384,5 @@ export default {
   TAGLINE_SPECIALIST_PROMPT,
   METADATA_OPTIMIZER_PROMPT
 };
+
+export default agentPrompts;

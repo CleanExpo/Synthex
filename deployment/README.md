@@ -20,7 +20,7 @@ python -m http.server 8000
 
 1. **Prerequisites**
    - Docker installed and running
-   - Node.js 20.x installed
+   - Node.js 22.x installed
    - Git repository access
 
 2. **Deploy to Staging**

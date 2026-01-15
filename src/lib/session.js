@@ -275,7 +275,7 @@ export async function trackSessionActivity(sessionId, activity) {
   }
 }
 
-export default {
+const sessionService = {
   middleware: sessionMiddleware,
   create: createUserSession,
   verify: verifySession,
@@ -288,3 +288,5 @@ export default {
   stats: getSessionStats,
   track: trackSessionActivity
 };
+
+export default sessionService;

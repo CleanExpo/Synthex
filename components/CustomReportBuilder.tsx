@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -24,7 +24,7 @@ import {
   PieChart,
   LineChart,
   Table,
-  Image,
+  Image as ImageIcon,
   Type,
   Move,
   Settings,
@@ -125,7 +125,7 @@ function SortableWidget({ widget, onEdit, onDelete }: {
       case 'table': return <Table className="h-4 w-4" />;
       case 'metric': return <TrendingUp className="h-4 w-4" />;
       case 'text': return <Type className="h-4 w-4" />;
-      case 'image': return <Image className="h-4 w-4" />;
+      case 'image': return <ImageIcon className="h-4 w-4" />;
       default: return <Layout className="h-4 w-4" />;
     }
   };
@@ -226,12 +226,7 @@ export function CustomReportBuilder() {
     })
   );
   
-  useEffect(() => {
-    loadTemplates();
-    loadDataSources();
-  }, []);
-  
-  const loadTemplates = () => {
+  const loadTemplates = useCallback(() => {
     const mockTemplates: ReportTemplate[] = [
       {
         id: 'template-1',
@@ -259,9 +254,9 @@ export function CustomReportBuilder() {
       }
     ];
     setTemplates(mockTemplates);
-  };
+  }, []);
   
-  const loadDataSources = () => {
+  const loadDataSources = useCallback(() => {
     const sources: DataSource[] = [
       {
         id: 'analytics',
@@ -298,7 +293,12 @@ export function CustomReportBuilder() {
       }
     ];
     setDataSources(sources);
-  };
+  }, []);
+
+  useEffect(() => {
+    loadTemplates();
+    loadDataSources();
+  }, [loadTemplates, loadDataSources]);
   
   const handleDragEnd = (event: any) => {
     const { active, over } = event;

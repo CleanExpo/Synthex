@@ -383,7 +383,7 @@ export const localizedErrorHandler = async (error, req, res, next) => {
   }
 };
 
-export default {
+const i18nMiddlewareBundle = {
   i18nMiddleware,
   contentLocalizationMiddleware,
   changeLocaleHandler,
@@ -392,3 +392,5 @@ export default {
   contentAdaptationUtils,
   localizedErrorHandler
 };
+
+export default i18nMiddlewareBundle;

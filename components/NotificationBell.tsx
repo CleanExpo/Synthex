@@ -25,29 +25,12 @@ export function NotificationBell() {
   const [isAnimating, setIsAnimating] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // Load initial notifications
-  useEffect(() => {
-    loadNotifications();
-    
-    // Set up polling for new notifications
-    const interval = setInterval(checkForNewNotifications, 30000);
-    
-    // Click outside handler
-    const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setIsOpen(false);
-      }
-    };
-    
-    document.addEventListener('mousedown', handleClickOutside);
-    
-    return () => {
-      clearInterval(interval);
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
+  const updateUnreadCount = useCallback((notifs: Notification[]) => {
+    const count = notifs.filter(n => !n.read).length;
+    setUnreadCount(count);
   }, []);
 
-  const loadNotifications = async () => {
+  const loadNotifications = useCallback(async () => {
     try {
       const response = await fetch('/api/notifications');
       if (response.ok) {
@@ -87,9 +70,9 @@ export function NotificationBell() {
       setNotifications(mockNotifications);
       updateUnreadCount(mockNotifications);
     }
-  };
+  }, [updateUnreadCount]);
 
-  const checkForNewNotifications = async () => {
+  const checkForNewNotifications = useCallback(async () => {
     try {
       const response = await fetch('/api/notifications?unread=true');
       if (response.ok) {
@@ -103,20 +86,38 @@ export function NotificationBell() {
     } catch (error) {
       console.error('Failed to check notifications:', error);
     }
-  };
+  }, [loadNotifications]);
 
-  const updateUnreadCount = (notifs: Notification[]) => {
-    const count = notifs.filter(n => !n.read).length;
-    setUnreadCount(count);
-  };
+  // Load initial notifications
+  useEffect(() => {
+    loadNotifications();
+    
+    // Set up polling for new notifications
+    const interval = setInterval(checkForNewNotifications, 30000);
+    
+    // Click outside handler
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    
+    document.addEventListener('mousedown', handleClickOutside);
+    
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [checkForNewNotifications, loadNotifications]);
 
   const markAsRead = async (id: string) => {
     try {
       await fetch(`/api/notifications/${id}/read`, { method: 'POST' });
-      setNotifications(prev => 
-        prev.map(n => n.id === id ? { ...n, read: true } : n)
-      );
-      updateUnreadCount(notifications.map(n => n.id === id ? { ...n, read: true } : n));
+      setNotifications(prev => {
+        const updated = prev.map(n => n.id === id ? { ...n, read: true } : n);
+        updateUnreadCount(updated);
+        return updated;
+      });
     } catch (error) {
       console.error('Failed to mark as read:', error);
     }

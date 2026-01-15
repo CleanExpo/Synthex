@@ -73,6 +73,7 @@
     "scripts/**/*",
     "ship-audit/**/*",
     "stories/**/*",
+    "_framework/**/*",
     "**/*.stories.ts",
     "**/*.stories.tsx",
     ".storybook/**/*",

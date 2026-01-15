@@ -76,6 +76,13 @@ const defaultStats: Stat[] = [
   }
 ];
 
+const tickerStats = [
+  { label: 'Views Today', value: '2.3K', icon: Eye },
+  { label: 'Engagement', value: '4.5%', icon: Heart },
+  { label: 'New Followers', value: '+127', icon: Users },
+  { label: 'Viral Score', value: '92/100', icon: Zap },
+];
+
 function Sparkline({ data, color = 'text-purple-400' }: { data: number[]; color?: string }) {
   const max = Math.max(...data);
   const min = Math.min(...data);
@@ -199,22 +206,16 @@ export function QuickStats({
 // Live Stats Ticker
 export function StatsTickker() {
   const [currentStat, setCurrentStat] = useState(0);
-  const stats = [
-    { label: 'Views Today', value: '2.3K', icon: Eye },
-    { label: 'Engagement', value: '4.5%', icon: Heart },
-    { label: 'New Followers', value: '+127', icon: Users },
-    { label: 'Viral Score', value: '92/100', icon: Zap },
-  ];
   
   useEffect(() => {
     const interval = setInterval(() => {
-      setCurrentStat((prev) => (prev + 1) % stats.length);
+      setCurrentStat((prev) => (prev + 1) % tickerStats.length);
     }, 3000);
     
     return () => clearInterval(interval);
   }, []);
   
-  const stat = stats[currentStat];
+  const stat = tickerStats[currentStat];
   const Icon = stat.icon;
   
   return (

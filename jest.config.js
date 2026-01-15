@@ -1,13 +1,19 @@
 module.exports = {
   preset: 'ts-jest',
-  testEnvironment: 'node',
+  testEnvironment: 'jsdom',
+  setupFiles: ['<rootDir>/tests/jest.setup.js'],
   
   // Test file patterns
   testMatch: [
-    '<rootDir>/tests/**/*.test.ts',
-    '<rootDir>/tests/**/*.spec.ts',
-    '<rootDir>/src/**/*.test.ts',
-    '<rootDir>/src/**/*.spec.ts'
+    '<rootDir>/tests/unit/**/*.test.{ts,js}',
+    '<rootDir>/tests/unit/**/*.spec.{ts,js}',
+    '<rootDir>/tests/integration/**/*.test.{ts,js}',
+    '<rootDir>/tests/integration/**/*.spec.{ts,js}',
+    '<rootDir>/tests/strategic-marketing/**/*.test.{ts,js}',
+    '<rootDir>/tests/strategic-marketing/**/*.spec.{ts,js}',
+    '<rootDir>/src/**/*.test.{ts,js}',
+    '<rootDir>/src/**/*.spec.{ts,js}',
+    '<rootDir>/src/**/__tests__/**/*.{ts,js}'
   ],
   
   // Coverage configuration
@@ -40,9 +46,10 @@ module.exports = {
   },
   
   // Module resolution
-  moduleFileExtensions: ['ts', 'js', 'json'],
+  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json'],
   transform: {
-    '^.+\\.(ts|tsx)$': 'ts-jest'
+    '^.+\\.(ts|tsx)$': ['ts-jest', { tsconfig: 'tsconfig.json' }],
+    '^.+\\.(js|jsx)$': 'babel-jest'
   },
   
   // Test timeout
@@ -58,23 +65,20 @@ module.exports = {
   
   // Module path mapping
   moduleNameMapper: {
-    '^@/(.*)$': '<rootDir>/src/$1'
+    '^@/src/(.*)$': '<rootDir>/src/$1',
+    '^@/lib/(.*)$': '<rootDir>/src/lib/$1',
+    '^@/components/(.*)$': '<rootDir>/components/$1',
+    '^@/(.*)$': '<rootDir>/$1'
   },
   
   // Ignore patterns
   testPathIgnorePatterns: [
     '/node_modules/',
     '/dist/',
-    '/coverage/'
+    '/coverage/',
+    '/tests/e2e/',
+    '/tests/playwright/'
   ],
-  
-  // Global variables
-  globals: {
-    'ts-jest': {
-      tsconfig: 'tsconfig.json',
-      isolatedModules: true
-    }
-  },
   
   // Reporter configuration
   reporters: [

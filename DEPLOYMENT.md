@@ -2,7 +2,7 @@
 
 ## Prerequisites
 
-- Node.js 20.x installed
+- Node.js 22.x installed
 - Vercel CLI installed (`npm i -g vercel`)
 - Access to Vercel dashboard
 - Access to Supabase dashboard

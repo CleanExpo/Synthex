@@ -1,23 +1,31 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import dynamic from 'next/dynamic';
+import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import { SkeletonChart } from '@/components/ui/skeleton';
 import { 
-  LineChart, Line, BarChart, Bar, PieChart, Pie, Cell,
-  XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
-} from 'recharts';
-import { 
-  TrendingUp, TrendingDown, Activity, Users, 
-  Eye, Heart, Share2, MessageCircle, MousePointer,
-  Calendar, Clock, Award, Target, Zap, BarChart3,
+  TrendingUp, TrendingDown, Activity,
+  Heart, Share2, MessageCircle, MousePointer,
+  Clock, Award, Target, Zap, BarChart3,
   Twitter, Linkedin, Instagram, Facebook, Video
 } from 'lucide-react';
 import { toast } from 'sonner';
+
+const EngagementTrendsChart = dynamic(
+  () => import('@/components/analytics/EngagementTrendsChart'),
+  { loading: () => <SkeletonChart />, ssr: false }
+);
+
+const PlatformDistributionChart = dynamic(
+  () => import('@/components/analytics/PlatformDistributionChart'),
+  { loading: () => <SkeletonChart />, ssr: false }
+);
 
 const PLATFORM_ICONS = {
   twitter: Twitter,
@@ -42,16 +50,15 @@ export default function AnalyticsDashboard() {
   const [dateRange, setDateRange] = useState('7d');
   const [refreshing, setRefreshing] = useState(false);
 
-  useEffect(() => {
-    loadDashboardData();
-  }, [selectedPlatform, dateRange]);
-
-  const loadDashboardData = async () => {
+  const loadDashboardData = useCallback(async () => {
     setLoading(true);
     try {
-      const response = await fetch(`/api/analytics?type=dashboard&userId=demo-user-001`, {
-        credentials: 'include'
-      });
+      const response = await fetch(
+        `/api/analytics?type=dashboard&userId=demo-user-001&platform=${selectedPlatform}&range=${dateRange}`,
+        {
+          credentials: 'include'
+        }
+      );
 
       if (!response.ok) {
         throw new Error('Failed to load analytics');
@@ -67,7 +74,11 @@ export default function AnalyticsDashboard() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [selectedPlatform, dateRange]);
+
+  useEffect(() => {
+    loadDashboardData();
+  }, [loadDashboardData]);
 
   const refreshData = async () => {
     setRefreshing(true);
@@ -241,18 +252,7 @@ export default function AnalyticsDashboard() {
                 <CardDescription>Daily engagement metrics over time</CardDescription>
               </CardHeader>
               <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
-                  <LineChart data={engagementData || []}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="date" />
-                    <YAxis />
-                    <Tooltip />
-                    <Legend />
-                    <Line type="monotone" dataKey="likes" stroke="#ef4444" name="Likes" />
-                    <Line type="monotone" dataKey="shares" stroke="#3b82f6" name="Shares" />
-                    <Line type="monotone" dataKey="comments" stroke="#10b981" name="Comments" />
-                  </LineChart>
-                </ResponsiveContainer>
+                <EngagementTrendsChart data={engagementData || []} />
               </CardContent>
             </Card>
 
@@ -336,15 +336,7 @@ export default function AnalyticsDashboard() {
                 <CardDescription>Posts across different social media platforms</CardDescription>
               </CardHeader>
               <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={platformBreakdown || []}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="platform" />
-                    <YAxis />
-                    <Tooltip />
-                    <Bar dataKey="posts" fill="#3b82f6" />
-                  </BarChart>
-                </ResponsiveContainer>
+                <PlatformDistributionChart data={platformBreakdown || []} />
               </CardContent>
             </Card>
 

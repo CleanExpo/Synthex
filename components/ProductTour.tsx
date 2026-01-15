@@ -119,38 +119,39 @@ export function ProductTour() {
   }, [isActive, step, currentStep]);
   
   // Handle step navigation
-  const nextStep = () => {
-    if (currentStep < tourSteps.length - 1) {
-      setCurrentStep(currentStep + 1);
-      if (tourSteps[currentStep + 1].action) {
-        tourSteps[currentStep + 1].action?.();
-      }
-    } else {
-      completeTour();
-    }
-  };
-  
-  const prevStep = () => {
-    if (currentStep > 0) {
-      setCurrentStep(currentStep - 1);
-    }
-  };
-  
-  const skipTour = () => {
-    setIsActive(false);
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('hasSeenTour', 'true');
-    }
-    notify.custom('Tour skipped. Press ? anytime for help!');
-  };
-  
-  const completeTour = () => {
+  const completeTour = useCallback(() => {
     setIsActive(false);
     if (typeof window !== 'undefined') {
       localStorage.setItem('hasSeenTour', 'true');
     }
     if (step.action) step.action();
-  };
+  }, [step]);
+
+  const nextStep = useCallback(() => {
+    if (currentStep < tourSteps.length - 1) {
+      const nextIndex = currentStep + 1;
+      setCurrentStep(nextIndex);
+      if (tourSteps[nextIndex].action) {
+        tourSteps[nextIndex].action?.();
+      }
+    } else {
+      completeTour();
+    }
+  }, [completeTour, currentStep]);
+  
+  const prevStep = useCallback(() => {
+    if (currentStep > 0) {
+      setCurrentStep(currentStep - 1);
+    }
+  }, [currentStep]);
+  
+  const skipTour = useCallback(() => {
+    setIsActive(false);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('hasSeenTour', 'true');
+    }
+    notify.custom('Tour skipped. Press ? anytime for help!');
+  }, []);
   
   // Keyboard navigation
   useEffect(() => {
@@ -172,7 +173,7 @@ export function ProductTour() {
     
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isActive, currentStep]);
+  }, [isActive, nextStep, prevStep, skipTour]);
   
   if (!isActive) return null;
   

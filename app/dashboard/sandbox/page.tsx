@@ -30,7 +30,7 @@ import {
   Share2,
   Palette,
   Type,
-  Image,
+  Image as ImageIcon,
   Video,
   Link2,
   Hash,
@@ -107,6 +107,33 @@ const devicePresets = {
   desktop: { width: 1440, height: 900, label: 'Desktop', icon: Monitor },
 };
 
+const getValidationErrors = (
+  content: string,
+  config: { maxChars: number },
+  platform: string,
+  hashtags: string[]
+) => {
+  const errors: string[] = [];
+
+  if (content.length > config.maxChars) {
+    errors.push(`Content exceeds ${config.maxChars} character limit`);
+  }
+
+  if (platform === 'twitter' && hashtags.length > 3) {
+    errors.push('Too many hashtags (max 3 recommended)');
+  }
+
+  if (platform === 'instagram' && hashtags.length > 30) {
+    errors.push('Too many hashtags (max 30)');
+  }
+
+  if (platform === 'tiktok' && !content.includes('#')) {
+    errors.push('TikTok posts perform better with hashtags');
+  }
+
+  return errors;
+};
+
 export default function SandboxPage() {
   const [content, setContent] = useState('');
   const [platform, setPlatform] = useState('twitter');
@@ -135,30 +162,8 @@ export default function SandboxPage() {
     setMentions(mentionMatches);
 
     // Validate content
-    validateContent();
-  }, [content, platform]);
-
-  const validateContent = () => {
-    const errors: string[] = [];
-    
-    if (content.length > config.maxChars) {
-      errors.push(`Content exceeds ${config.maxChars} character limit`);
-    }
-
-    if (platform === 'twitter' && hashtags.length > 3) {
-      errors.push('Too many hashtags (max 3 recommended)');
-    }
-
-    if (platform === 'instagram' && hashtags.length > 30) {
-      errors.push('Too many hashtags (max 30)');
-    }
-
-    if (platform === 'tiktok' && !content.includes('#')) {
-      errors.push('TikTok posts perform better with hashtags');
-    }
-
-    setValidationErrors(errors);
-  };
+    setValidationErrors(getValidationErrors(content, config, platform, hashtagMatches));
+  }, [content, platform, config]);
 
   const handleCopy = () => {
     navigator.clipboard.writeText(content);
@@ -200,7 +205,7 @@ export default function SandboxPage() {
                 <div className="mt-2 text-white whitespace-pre-wrap">{content || 'Your content will appear here...'}</div>
                 {mediaType !== 'none' && (
                   <div className="mt-3 bg-gray-800 rounded-lg h-48 flex items-center justify-center">
-                    {mediaType === 'image' && <Image className="h-12 w-12 text-gray-600" />}
+                    {mediaType === 'image' && <ImageIcon className="h-12 w-12 text-gray-600" />}
                     {mediaType === 'video' && <Video className="h-12 w-12 text-gray-600" />}
                   </div>
                 )}
@@ -244,7 +249,7 @@ export default function SandboxPage() {
             </div>
             {mediaType !== 'none' ? (
               <div className="bg-gray-200 h-96 flex items-center justify-center">
-                {mediaType === 'image' && <Image className="h-16 w-16 text-gray-400" />}
+                {mediaType === 'image' && <ImageIcon className="h-16 w-16 text-gray-400" />}
                 {mediaType === 'video' && <Video className="h-16 w-16 text-gray-400" />}
               </div>
             ) : (
@@ -285,7 +290,7 @@ export default function SandboxPage() {
                 </div>
                 {mediaType !== 'none' && (
                   <div className="mt-3 bg-gray-100 rounded-lg h-48 flex items-center justify-center border">
-                    {mediaType === 'image' && <Image className="h-12 w-12 text-gray-400" />}
+                    {mediaType === 'image' && <ImageIcon className="h-12 w-12 text-gray-400" />}
                     {mediaType === 'video' && <Video className="h-12 w-12 text-gray-400" />}
                   </div>
                 )}

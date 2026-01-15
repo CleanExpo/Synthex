@@ -1,0 +1,87 @@
+{
+  "mcpServers": {
+    "supabase": {
+      "type": "http",
+      "url": "https://mcp.supabase.com/mcp?project_ref=pwwwhoaxxtkmowifpuwf",
+      "enabled": true,
+      "description": "Supabase MCP server for database operations"
+    },
+    "filesystem": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "D:\\Node JS Starter V1"
+      ],
+      "enabled": true,
+      "description": "File system operations (read, write, list)"
+    },
+    "git": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-git"],
+      "enabled": true,
+      "description": "Git operations (status, diff, commit, branch)"
+    },
+    "github": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-github"],
+      "env": {
+        "GITHUB_TOKEN": "${GITHUB_TOKEN}"
+      },
+      "enabled": false,
+      "description": "GitHub API operations (requires GITHUB_TOKEN env var)"
+    },
+    "postgres": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-postgres",
+        "${DATABASE_URL}"
+      ],
+      "enabled": false,
+      "description": "PostgreSQL database queries (requires DATABASE_URL env var)"
+    },
+    "memory": {
+      "command": "uv",
+      "args": ["run", "python", "-m", "src.tools.mcp_server"],
+      "enabled": true,
+      "description": "Domain memory operations (custom server)"
+    },
+    "brave-search": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-brave-search"],
+      "env": {
+        "BRAVE_API_KEY": "${BRAVE_API_KEY}"
+      },
+      "enabled": false,
+      "description": "Web search via Brave API (requires BRAVE_API_KEY)"
+    },
+    "slack": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-slack"],
+      "env": {
+        "SLACK_BOT_TOKEN": "${SLACK_BOT_TOKEN}",
+        "SLACK_TEAM_ID": "${SLACK_TEAM_ID}"
+      },
+      "enabled": false,
+      "description": "Slack integration for notifications (requires Slack tokens)"
+    }
+  },
+  "settings": {
+    "max_concurrent_servers": 5,
+    "connection_timeout_seconds": 30,
+    "tool_call_timeout_seconds": 300,
+    "enable_resource_caching": true,
+    "cache_ttl_seconds": 3600,
+    "log_level": "info"
+  },
+  "security": {
+    "allowed_paths": [
+      "D:\\Node JS Starter V1",
+      "D:\\Node JS Starter V1\\apps",
+      "D:\\Node JS Starter V1\\supabase"
+    ],
+    "blocked_operations": ["rm -rf", "DROP DATABASE", "DELETE FROM"],
+    "require_confirmation": ["write_file", "delete_file", "execute_command"]
+  }
+}
