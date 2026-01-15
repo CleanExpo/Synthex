@@ -1,12 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-import { headers } from 'next/headers';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
-// Initialize Supabase admin client
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+// Lazy-initialize Supabase admin client (avoids build-time errors)
+let supabaseAdmin: SupabaseClient | null = null;
+
+function getSupabaseAdmin(): SupabaseClient {
+  if (!supabaseAdmin) {
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+    if (!url || !key) {
+      throw new Error('Supabase configuration missing. Set NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY.');
+    }
+
+    supabaseAdmin = createClient(url, key);
+  }
+  return supabaseAdmin;
+}
 
 // Verify cron secret for security
 function verifyCronSecret(request: NextRequest): boolean {
@@ -27,6 +37,8 @@ export async function POST(request: NextRequest) {
       tables: {},
       statistics: {}
     };
+
+    const supabase = getSupabaseAdmin();
 
     // Backup user profiles
     const { data: profiles, error: profilesError } = await supabase
@@ -113,6 +125,8 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
+    const supabase = getSupabaseAdmin();
+
     // Get backup history
     const { data: backups, error } = await supabase
       .from('system_backups')
