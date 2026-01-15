@@ -1,12 +1,11 @@
-# SYNTHEX Marketing Automation Agent
-
-## Agent Configuration
-```yaml
+---
 name: marketing-automation
 type: platform-specialist
 description: Comprehensive marketing workflow automation for SYNTHEX platform
 tools: [web_search, data_analysis, file_editor, content_generation]
-```
+---
+
+# SYNTHEX Marketing Automation Agent
 
 ## Core Responsibilities
 

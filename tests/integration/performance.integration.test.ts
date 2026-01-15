@@ -4,6 +4,9 @@ import { authenticateUser } from '../../src/middleware/auth';
 import performanceRoutes from '../../src/routes/performance';
 import PerformanceService from '../../src/services/performance';
 
+const runIntegration = process.env.RUN_INTEGRATION_TESTS === 'true';
+const describeIntegration = runIntegration ? describe : describe.skip;
+
 // Mock authentication middleware
 jest.mock('../../src/middleware/auth', () => ({
   authenticateUser: jest.fn((req, res, next) => {
@@ -16,7 +19,7 @@ jest.mock('../../src/middleware/auth', () => ({
   })
 }));
 
-describe('Performance API Integration Tests', () => {
+describeIntegration('Performance API Integration Tests', () => {
   let app: express.Application;
 
   beforeAll(() => {

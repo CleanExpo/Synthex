@@ -109,6 +109,154 @@ interface TopicSentiment {
   trend: 'rising' | 'falling' | 'stable';
 }
 
+const generateSampleContent = (sentiment: string): string => {
+  const positive = [
+    "Love this product! Best purchase ever!",
+    "Amazing customer service, highly recommend!",
+    "This completely exceeded my expectations!",
+    "Fantastic experience from start to finish!"
+  ];
+  
+  const negative = [
+    "Very disappointed with the quality.",
+    "Customer service was unhelpful and rude.",
+    "Product broke after just one week.",
+    "Would not recommend to anyone."
+  ];
+  
+  const neutral = [
+    "The product is okay, nothing special.",
+    "Average experience overall.",
+    "It works as described.",
+    "Neither good nor bad, just standard."
+  ];
+  
+  const options = sentiment === 'positive' ? positive :
+                  sentiment === 'negative' ? negative : neutral;
+  
+  return options[Math.floor(Math.random() * options.length)];
+};
+
+const generateEmotions = (sentiment: string): EmotionScore[] => {
+  const emotions: EmotionScore[] = [
+    { emotion: 'joy', score: sentiment === 'positive' ? 0.7 + Math.random() * 0.3 : Math.random() * 0.3 },
+    { emotion: 'anger', score: sentiment === 'negative' ? 0.5 + Math.random() * 0.5 : Math.random() * 0.2 },
+    { emotion: 'sadness', score: sentiment === 'negative' ? 0.3 + Math.random() * 0.4 : Math.random() * 0.2 },
+    { emotion: 'fear', score: Math.random() * 0.3 },
+    { emotion: 'surprise', score: Math.random() * 0.4 },
+    { emotion: 'disgust', score: sentiment === 'negative' ? Math.random() * 0.5 : Math.random() * 0.1 }
+  ];
+  
+  return emotions.sort((a, b) => b.score - a.score).slice(0, 3);
+};
+
+const generateTopics = (): string[] => {
+  const allTopics = [
+    'product quality', 'customer service', 'pricing', 'shipping',
+    'user experience', 'features', 'performance', 'design'
+  ];
+  
+  const numTopics = 1 + Math.floor(Math.random() * 3);
+  const topics: string[] = [];
+  
+  for (let i = 0; i < numTopics; i++) {
+    const topic = allTopics[Math.floor(Math.random() * allTopics.length)];
+    if (!topics.includes(topic)) {
+      topics.push(topic);
+    }
+  }
+  
+  return topics;
+};
+
+const generateEntities = (): Entity[] => {
+  return [
+    {
+      text: 'Your Brand',
+      type: 'brand',
+      sentiment: -0.5 + Math.random()
+    },
+    {
+      text: 'Product X',
+      type: 'product',
+      sentiment: -0.5 + Math.random()
+    }
+  ];
+};
+
+const generateMockData = (): SentimentData[] => {
+  const platforms = ['Twitter', 'Instagram', 'LinkedIn', 'Facebook'];
+  const sentiments: ('positive' | 'negative' | 'neutral')[] = ['positive', 'negative', 'neutral'];
+  
+  return Array.from({ length: 50 }, (_, i) => {
+    const sentiment = sentiments[Math.floor(Math.random() * 3)];
+    const score = sentiment === 'positive' ? 
+      0.3 + Math.random() * 0.7 :
+      sentiment === 'negative' ?
+      -0.3 - Math.random() * 0.7 :
+      -0.2 + Math.random() * 0.4;
+    
+    return {
+      id: `sent-${i}`,
+      content: generateSampleContent(sentiment),
+      platform: platforms[Math.floor(Math.random() * platforms.length)],
+      author: `User${Math.floor(Math.random() * 100)}`,
+      timestamp: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000),
+      sentiment,
+      score,
+      confidence: 70 + Math.random() * 30,
+      emotions: generateEmotions(sentiment),
+      topics: generateTopics(),
+      entities: generateEntities(),
+      engagement: {
+        likes: Math.floor(Math.random() * 1000),
+        comments: Math.floor(Math.random() * 100),
+        shares: Math.floor(Math.random() * 50),
+        reach: Math.floor(Math.random() * 10000)
+      },
+      actionable: Math.random() > 0.7,
+      priority: ['low', 'medium', 'high', 'urgent'][Math.floor(Math.random() * 4)] as any
+    };
+  });
+};
+
+const generateTrends = (): SentimentTrend[] => {
+  return Array.from({ length: 7 }, (_, i) => ({
+    date: new Date(Date.now() - (6 - i) * 24 * 60 * 60 * 1000),
+    positive: 30 + Math.random() * 40,
+    negative: 10 + Math.random() * 30,
+    neutral: 20 + Math.random() * 30,
+    volume: 100 + Math.floor(Math.random() * 200)
+  }));
+};
+
+const generateTopicSentiments = (): TopicSentiment[] => {
+  const topics = [
+    'product quality', 'customer service', 'pricing', 'shipping',
+    'user experience', 'features', 'performance', 'design'
+  ];
+  
+  return topics.map(topic => ({
+    topic,
+    mentions: Math.floor(Math.random() * 100) + 20,
+    sentiment: -0.5 + Math.random(),
+    trend: ['rising', 'falling', 'stable'][Math.floor(Math.random() * 3)] as any
+  }));
+};
+
+const extractKeyPhrases = (text: string): string[] => {
+  const words = text.split(' ');
+  const phrases: string[] = [];
+  
+  for (let i = 0; i < words.length - 1; i++) {
+    if (Math.random() > 0.7) {
+      phrases.push(`${words[i]} ${words[i + 1]}`);
+    }
+  }
+  
+  return phrases.slice(0, 3);
+};
+
 export function SentimentAnalysis() {
   const [sentimentData, setSentimentData] = useState<SentimentData[]>([]);
   const [trends, setTrends] = useState<SentimentTrend[]>([]);
@@ -128,161 +276,8 @@ export function SentimentAnalysis() {
     neutral: 0,
     trend: 0
   });
-  
-  useEffect(() => {
-    loadSentimentData();
-  }, [selectedPlatform, selectedTimeRange]);
-  
-  const loadSentimentData = () => {
-    setLoading(true);
-    
-    // Simulate API call
-    setTimeout(() => {
-      const mockData = generateMockData();
-      setSentimentData(mockData);
-      setTrends(generateTrends());
-      setTopicSentiments(generateTopicSentiments());
-      calculateOverallSentiment(mockData);
-      setLoading(false);
-    }, 1000);
-  };
-  
-  const generateMockData = (): SentimentData[] => {
-    const platforms = ['Twitter', 'Instagram', 'LinkedIn', 'Facebook'];
-    const sentiments: ('positive' | 'negative' | 'neutral')[] = ['positive', 'negative', 'neutral'];
-    
-    return Array.from({ length: 50 }, (_, i) => {
-      const sentiment = sentiments[Math.floor(Math.random() * 3)];
-      const score = sentiment === 'positive' ? 
-        0.3 + Math.random() * 0.7 :
-        sentiment === 'negative' ?
-        -0.3 - Math.random() * 0.7 :
-        -0.2 + Math.random() * 0.4;
-      
-      return {
-        id: `sent-${i}`,
-        content: generateSampleContent(sentiment),
-        platform: platforms[Math.floor(Math.random() * platforms.length)],
-        author: `User${Math.floor(Math.random() * 100)}`,
-        timestamp: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000),
-        sentiment,
-        score,
-        confidence: 70 + Math.random() * 30,
-        emotions: generateEmotions(sentiment),
-        topics: generateTopics(),
-        entities: generateEntities(),
-        engagement: {
-          likes: Math.floor(Math.random() * 1000),
-          comments: Math.floor(Math.random() * 100),
-          shares: Math.floor(Math.random() * 50),
-          reach: Math.floor(Math.random() * 10000)
-        },
-        actionable: Math.random() > 0.7,
-        priority: ['low', 'medium', 'high', 'urgent'][Math.floor(Math.random() * 4)] as any
-      };
-    });
-  };
-  
-  const generateSampleContent = (sentiment: string): string => {
-    const positive = [
-      "Love this product! Best purchase ever!",
-      "Amazing customer service, highly recommend!",
-      "This completely exceeded my expectations!",
-      "Fantastic experience from start to finish!"
-    ];
-    
-    const negative = [
-      "Very disappointed with the quality.",
-      "Customer service was unhelpful and rude.",
-      "Product broke after just one week.",
-      "Would not recommend to anyone."
-    ];
-    
-    const neutral = [
-      "The product is okay, nothing special.",
-      "Average experience overall.",
-      "It works as described.",
-      "Neither good nor bad, just standard."
-    ];
-    
-    const options = sentiment === 'positive' ? positive :
-                    sentiment === 'negative' ? negative : neutral;
-    
-    return options[Math.floor(Math.random() * options.length)];
-  };
-  
-  const generateEmotions = (sentiment: string): EmotionScore[] => {
-    const emotions: EmotionScore[] = [
-      { emotion: 'joy', score: sentiment === 'positive' ? 0.7 + Math.random() * 0.3 : Math.random() * 0.3 },
-      { emotion: 'anger', score: sentiment === 'negative' ? 0.5 + Math.random() * 0.5 : Math.random() * 0.2 },
-      { emotion: 'sadness', score: sentiment === 'negative' ? 0.3 + Math.random() * 0.4 : Math.random() * 0.2 },
-      { emotion: 'fear', score: Math.random() * 0.3 },
-      { emotion: 'surprise', score: Math.random() * 0.4 },
-      { emotion: 'disgust', score: sentiment === 'negative' ? Math.random() * 0.5 : Math.random() * 0.1 }
-    ];
-    
-    return emotions.sort((a, b) => b.score - a.score).slice(0, 3);
-  };
-  
-  const generateTopics = (): string[] => {
-    const allTopics = [
-      'product quality', 'customer service', 'pricing', 'shipping',
-      'user experience', 'features', 'performance', 'design'
-    ];
-    
-    const numTopics = 1 + Math.floor(Math.random() * 3);
-    const topics: string[] = [];
-    
-    for (let i = 0; i < numTopics; i++) {
-      const topic = allTopics[Math.floor(Math.random() * allTopics.length)];
-      if (!topics.includes(topic)) {
-        topics.push(topic);
-      }
-    }
-    
-    return topics;
-  };
-  
-  const generateEntities = (): Entity[] => {
-    return [
-      {
-        text: 'Your Brand',
-        type: 'brand',
-        sentiment: -0.5 + Math.random()
-      },
-      {
-        text: 'Product X',
-        type: 'product',
-        sentiment: -0.5 + Math.random()
-      }
-    ];
-  };
-  
-  const generateTrends = (): SentimentTrend[] => {
-    return Array.from({ length: 7 }, (_, i) => ({
-      date: new Date(Date.now() - (6 - i) * 24 * 60 * 60 * 1000),
-      positive: 30 + Math.random() * 40,
-      negative: 10 + Math.random() * 30,
-      neutral: 20 + Math.random() * 30,
-      volume: 100 + Math.floor(Math.random() * 200)
-    }));
-  };
-  
-  const generateTopicSentiments = (): TopicSentiment[] => {
-    const topics = [
-      'product quality', 'customer service', 'pricing', 'shipping',
-      'user experience', 'features', 'performance', 'design'
-    ];
-    
-    return topics.map(topic => ({
-      topic,
-      mentions: Math.floor(Math.random() * 100) + 20,
-      sentiment: -0.5 + Math.random(),
-      trend: ['rising', 'falling', 'stable'][Math.floor(Math.random() * 3)] as any
-    }));
-  };
-  
-  const calculateOverallSentiment = (data: SentimentData[]) => {
+
+  const calculateOverallSentiment = useCallback((data: SentimentData[]) => {
     const positive = data.filter(d => d.sentiment === 'positive').length;
     const negative = data.filter(d => d.sentiment === 'negative').length;
     const neutral = data.filter(d => d.sentiment === 'neutral').length;
@@ -297,8 +292,26 @@ export function SentimentAnalysis() {
       neutral: (neutral / total) * 100,
       trend: Math.random() * 20 - 10 // -10 to +10
     });
-  };
+  }, []);
   
+  const loadSentimentData = useCallback(() => {
+    setLoading(true);
+    
+    // Simulate API call
+    setTimeout(() => {
+      const mockData = generateMockData();
+      setSentimentData(mockData);
+      setTrends(generateTrends());
+      setTopicSentiments(generateTopicSentiments());
+      calculateOverallSentiment(mockData);
+      setLoading(false);
+    }, 1000);
+  }, [calculateOverallSentiment]);
+
+  useEffect(() => {
+    loadSentimentData();
+  }, [loadSentimentData, selectedPlatform, selectedTimeRange]);
+
   const analyzeSentiment = () => {
     if (!testText.trim()) {
       notify.error('Please enter text to analyze');
@@ -332,20 +345,7 @@ export function SentimentAnalysis() {
       notify.success('Sentiment analysis complete!');
     }, 1000);
   };
-  
-  const extractKeyPhrases = (text: string): string[] => {
-    const words = text.split(' ');
-    const phrases: string[] = [];
-    
-    for (let i = 0; i < words.length - 1; i++) {
-      if (Math.random() > 0.7) {
-        phrases.push(`${words[i]} ${words[i + 1]}`);
-      }
-    }
-    
-    return phrases.slice(0, 3);
-  };
-  
+
   const getSentimentIcon = (sentiment: string) => {
     switch (sentiment) {
       case 'positive': return <Smile className="h-5 w-5 text-green-400" />;

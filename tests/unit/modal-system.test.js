@@ -10,6 +10,7 @@ describe('ModalSystem', () => {
     document.body.innerHTML = '';
     
     // Create mock ModalSystem
+    let modalCounter = 0;
     modalSystem = {
       modals: new Map(),
       activeModal: null,
@@ -17,7 +18,7 @@ describe('ModalSystem', () => {
       create(options = {}) {
         const modal = document.createElement('div');
         modal.className = 'modal-overlay';
-        modal.dataset.modalId = options.id || `modal-${Date.now()}`;
+        modal.dataset.modalId = options.id || `modal-${Date.now()}-${modalCounter++}`;
         
         const content = document.createElement('div');
         content.className = 'modal-content';

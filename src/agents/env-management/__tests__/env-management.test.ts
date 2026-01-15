@@ -18,9 +18,9 @@ describe('Environment Variable Management System', () => {
   const testEnvContent = `
 NODE_ENV=development
 PORT=3000
-DATABASE_URL=postgresql://user:password@localhost:5432/testdb
-API_KEY=test-api-key-12345
-JWT_SECRET=test-jwt-secret
+DATABASE_URL=postgresql://user:securepass@localhost:5432/appdb
+API_KEY=live-api-key-9876543210
+JWT_SECRET=jwtvalue-abcdef6789abcdef
 REDIS_URL=redis://localhost:6379
 DEBUG=true
 FEATURE_FLAG_NEW_UI=false
@@ -29,6 +29,8 @@ FEATURE_FLAG_NEW_UI=false
   beforeEach(async () => {
     await fs.mkdir(testProjectPath, { recursive: true });
     await fs.writeFile(testEnvFile, testEnvContent);
+    await fs.writeFile(path.join(testProjectPath, '.env.development'), testEnvContent);
+    await fs.writeFile(path.join(testProjectPath, '.gitignore'), '.env*\n');
   });
 
   afterEach(async () => {
@@ -58,7 +60,15 @@ FEATURE_FLAG_NEW_UI=false
     });
 
     it('should detect missing required variables', async () => {
+      const originalEnv = {
+        PORT: process.env.PORT,
+        DATABASE_URL: process.env.DATABASE_URL
+      };
+      delete process.env.PORT;
+      delete process.env.DATABASE_URL;
+
       await fs.writeFile(testEnvFile, 'NODE_ENV=development\n');
+      await fs.writeFile(path.join(testProjectPath, '.env.development'), 'NODE_ENV=development\n');
       
       const validator = new EnvValidator({
         projectPath: testProjectPath,
@@ -76,10 +86,29 @@ FEATURE_FLAG_NEW_UI=false
       expect(result.success).toBe(false);
       expect(result.errors).toContain('PORT: Required variable is missing or empty');
       expect(result.errors).toContain('DATABASE_URL: Required variable is missing or empty');
+
+      if (originalEnv.PORT) {
+        process.env.PORT = originalEnv.PORT;
+      } else {
+        delete process.env.PORT;
+      }
+      if (originalEnv.DATABASE_URL) {
+        process.env.DATABASE_URL = originalEnv.DATABASE_URL;
+      } else {
+        delete process.env.DATABASE_URL;
+      }
     });
 
     it('should validate variable types', async () => {
+      const originalEnv = {
+        PORT: process.env.PORT,
+        DEBUG: process.env.DEBUG
+      };
+      delete process.env.PORT;
+      delete process.env.DEBUG;
+
       await fs.writeFile(testEnvFile, 'PORT=not-a-number\nDEBUG=not-a-boolean\n');
+      await fs.writeFile(path.join(testProjectPath, '.env.development'), 'PORT=not-a-number\nDEBUG=not-a-boolean\n');
       
       const validator = new EnvValidator({
         projectPath: testProjectPath,
@@ -95,6 +124,17 @@ FEATURE_FLAG_NEW_UI=false
       const result = await validator.execute();
       expect(result.success).toBe(false);
       expect(result.errors?.length).toBeGreaterThan(0);
+
+      if (originalEnv.PORT) {
+        process.env.PORT = originalEnv.PORT;
+      } else {
+        delete process.env.PORT;
+      }
+      if (originalEnv.DEBUG) {
+        process.env.DEBUG = originalEnv.DEBUG;
+      } else {
+        delete process.env.DEBUG;
+      }
     });
 
     it('should generate schema from existing environment', async () => {

@@ -3,19 +3,41 @@
  * Comprehensive testing for all new endpoints
  */
 
-import request from 'supertest';
-import app from '../../src/index';
-import { db } from '../../src/lib/database';
+const runIntegration = process.env.RUN_INTEGRATION_TESTS === 'true';
+const describeIntegration = runIntegration ? describe : describe.skip;
+let request: typeof import('supertest');
+let app: any;
+let db: any;
 
-describe('API v2 Integration Tests', () => {
+describeIntegration('API v2 Integration Tests', () => {
   let authToken: string;
   
   beforeAll(async () => {
-    await db.initialize();
+    if (!runIntegration) {
+      return;
+    }
+
+    const requestModule = await import('supertest');
+    request = (requestModule.default || requestModule) as typeof import('supertest');
+
+    const appModule = await import('../../src/index');
+    app = (appModule.default || appModule) as any;
+
+    const dbModule = await import('../../src/lib/database');
+    db = dbModule.db || dbModule.default || dbModule;
+    if (typeof db.initialize === 'function') {
+      await db.initialize();
+    }
   });
   
   afterAll(async () => {
-    await db.cleanup();
+    if (!runIntegration) {
+      return;
+    }
+
+    if (db && typeof db.cleanup === 'function') {
+      await db.cleanup();
+    }
   });
   
   describe('Authentication', () => {

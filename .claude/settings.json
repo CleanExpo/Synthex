@@ -1,0 +1,195 @@
+{
+  "name": "Node.js Foundation Starter",
+  "version": "1.0.0",
+  "description": "Foundation-first architecture - prevents problems before they exist",
+
+  "model": "claude-opus-4-5-20251101",
+  "maxTokens": 64000,
+
+  "permissions": {
+    "allow": [
+      "Read", "Write", "Edit", "Bash(npm *)", "Bash(npx *)", "Bash(mkdir *)",
+      "Bash(cat *)", "Bash(echo *)", "Bash(chmod *)", "Bash(touch *)",
+      "Bash(git *)", "Bash(supabase *)"
+    ],
+    "deny": ["Bash(rm -rf /)", "Bash(sudo *)"]
+  },
+
+  "init": {
+    "message": "Run 'claude bootstrap' to set up foundation-first architecture",
+    "commands": ["bootstrap"]
+  },
+
+  "commands": {
+    "bootstrap": {
+      "description": "Full foundation setup - run ONCE on new project",
+      "steps": [
+        {
+          "name": "Create directory structure",
+          "run": "mkdir -p src/app/api src/components/ui src/components/layout src/components/features src/server/services src/server/repositories src/server/validators src/server/errors src/lib/supabase src/lib/utils src/types/api src/hooks src/config supabase/migrations supabase/seeds .github/workflows"
+        },
+        {
+          "name": "Create strict tsconfig.json",
+          "file": "tsconfig.json",
+          "content": {
+            "compilerOptions": {
+              "strict": true,
+              "noImplicitAny": true,
+              "strictNullChecks": true,
+              "strictFunctionTypes": true,
+              "strictBindCallApply": true,
+              "strictPropertyInitialization": true,
+              "noImplicitThis": true,
+              "useUnknownInCatchVariables": true,
+              "alwaysStrict": true,
+              "noImplicitReturns": true,
+              "noFallthroughCasesInSwitch": true,
+              "noUncheckedIndexedAccess": true,
+              "noImplicitOverride": true,
+              "noPropertyAccessFromIndexSignature": true,
+              "exactOptionalPropertyTypes": true,
+              "forceConsistentCasingInFileNames": true,
+              "isolatedModules": true,
+              "moduleResolution": "bundler",
+              "module": "esnext",
+              "target": "ES2022",
+              "lib": ["ES2022", "DOM", "DOM.Iterable"],
+              "jsx": "preserve",
+              "esModuleInterop": true,
+              "resolveJsonModule": true,
+              "noEmit": true,
+              "incremental": true,
+              "baseUrl": ".",
+              "paths": {
+                "@/*": ["./src/*"],
+                "@/components/*": ["./src/components/*"],
+                "@/server/*": ["./src/server/*"],
+                "@/lib/*": ["./src/lib/*"],
+                "@/types/*": ["./src/types/*"],
+                "@/hooks/*": ["./src/hooks/*"]
+              },
+              "skipLibCheck": true
+            },
+            "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
+            "exclude": ["node_modules", ".next", "out", "dist"]
+          }
+        },
+        {
+          "name": "Create .prettierrc",
+          "file": ".prettierrc",
+          "content": {
+            "semi": true,
+            "singleQuote": true,
+            "tabWidth": 2,
+            "trailingComma": "es5",
+            "printWidth": 100
+          }
+        },
+        {
+          "name": "Install dependencies",
+          "run": "npm install -D typescript @types/node @types/react @types/react-dom eslint @typescript-eslint/eslint-plugin @typescript-eslint/parser eslint-plugin-import prettier husky lint-staged madge && npm install zod"
+        },
+        {
+          "name": "Setup Husky",
+          "run": "npx husky init && echo '#!/bin/sh\nnpm run typecheck || exit 1\nnpx lint-staged || exit 1' > .husky/pre-commit && chmod +x .husky/pre-commit"
+        },
+        {
+          "name": "Create error handling",
+          "file": "src/server/errors/index.ts",
+          "content": "import { NextResponse } from 'next/server';\nimport { ZodError } from 'zod';\n\nexport class AppError extends Error {\n  constructor(\n    message: string,\n    public readonly code: string,\n    public readonly statusCode: number = 500,\n    public readonly details?: Record<string, unknown>\n  ) {\n    super(message);\n    this.name = 'AppError';\n  }\n}\n\nexport class NotFoundError extends AppError {\n  constructor(resource: string, id: string) {\n    super(`${resource} not found: ${id}`, 'NOT_FOUND', 404, { resource, id });\n  }\n}\n\nexport class ValidationError extends AppError {\n  constructor(message: string, details?: Record<string, unknown>) {\n    super(message, 'VALIDATION_ERROR', 400, details);\n  }\n}\n\nexport class UnauthorizedError extends AppError {\n  constructor(message = 'Authentication required') {\n    super(message, 'UNAUTHORIZED', 401);\n  }\n}\n\nexport class ForbiddenError extends AppError {\n  constructor(message = 'Permission denied') {\n    super(message, 'FORBIDDEN', 403);\n  }\n}\n\nexport function handleApiError(error: unknown): NextResponse {\n  console.error('[API Error]', error);\n\n  if (error instanceof AppError) {\n    return NextResponse.json(\n      { error: { message: error.message, code: error.code, details: error.details } },\n      { status: error.statusCode }\n    );\n  }\n\n  if (error instanceof ZodError) {\n    return NextResponse.json(\n      { error: { message: 'Validation failed', code: 'VALIDATION_ERROR', details: error.errors } },\n      { status: 400 }\n    );\n  }\n\n  return NextResponse.json(\n    { error: { message: 'Internal server error', code: 'INTERNAL_ERROR' } },\n    { status: 500 }\n  );\n}"
+        },
+        {
+          "name": "Create barrel files",
+          "run": "echo '// Export services' > src/server/services/index.ts && echo '// Export repositories' > src/server/repositories/index.ts && echo '// Export validators' > src/server/validators/index.ts && echo '// Export components' > src/components/ui/index.ts && echo '// Export features' > src/components/features/index.ts && echo '// Export hooks' > src/hooks/index.ts && echo '// Export types' > src/types/index.ts"
+        },
+        {
+          "name": "Create CI workflow",
+          "file": ".github/workflows/ci.yml",
+          "content": "name: CI\n\non:\n  push:\n    branches: [main]\n  pull_request:\n    branches: [main]\n\njobs:\n  validate:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: actions/checkout@v4\n      - uses: actions/setup-node@v4\n        with:\n          node-version: '20'\n          cache: 'npm'\n      - run: npm ci\n      - run: npm run typecheck\n      - run: npm run lint\n      - run: npm run check:circular\n      - run: npm test --if-present\n      - run: npm run build"
+        },
+        {
+          "name": "Update package.json scripts",
+          "prompt": "Add these scripts to package.json:\n- typecheck: tsc --noEmit\n- lint: eslint . --ext .ts,.tsx\n- lint:fix: eslint . --ext .ts,.tsx --fix\n- validate: npm run typecheck && npm run lint\n- check:circular: madge --circular --extensions ts,tsx src/\n- db:types: supabase gen types typescript --local > src/types/database.ts\n- prepare: husky\n\nAlso add lint-staged config:\n\"lint-staged\": {\n  \"*.{ts,tsx}\": [\"eslint --fix\", \"prettier --write\"],\n  \"*.{json,md}\": [\"prettier --write\"]\n}"
+        },
+        {
+          "name": "Verify setup",
+          "run": "npm run typecheck && echo '✅ Foundation setup complete!'"
+        }
+      ]
+    },
+
+    "new-feature": {
+      "description": "Scaffold a complete feature with all required files",
+      "args": ["name"],
+      "prompt": "Create a complete feature called '{{name}}':\n\n1. API ROUTES:\n   Create src/app/api/{{name}}/route.ts:\n   ```typescript\n   import { NextRequest, NextResponse } from 'next/server';\n   import { handleApiError } from '@/server/errors';\n   import { {{Name}}Service } from '@/server/services';\n   import { {{Name}}Validator } from '@/server/validators';\n\n   export async function GET(): Promise<NextResponse> {\n     try {\n       const result = await {{Name}}Service.list();\n       return NextResponse.json({ data: result });\n     } catch (error) {\n       return handleApiError(error);\n     }\n   }\n\n   export async function POST(request: NextRequest): Promise<NextResponse> {\n     try {\n       const body: unknown = await request.json();\n       const validated = {{Name}}Validator.create.parse(body);\n       const result = await {{Name}}Service.create(validated);\n       return NextResponse.json({ data: result }, { status: 201 });\n     } catch (error) {\n       return handleApiError(error);\n     }\n   }\n   ```\n\n   Create src/app/api/{{name}}/[id]/route.ts with GET, PUT, DELETE\n\n2. SERVICE (src/server/services/{{name}}.service.ts):\n   - list(), getById(id), create(data), update(id, data), delete(id)\n   - Calls repository, contains business logic\n   - Throws NotFoundError when not found\n\n3. REPOSITORY (src/server/repositories/{{name}}.repository.ts):\n   - findAll(), findById(id), create(data), update(id, data), delete(id)\n   - Direct database calls only, no business logic\n\n4. VALIDATOR (src/server/validators/{{name}}.validator.ts):\n   - Zod schemas: create, update, id\n   - Export types: Create{{Name}}Input, Update{{Name}}Input\n\n5. TYPES (src/types/api/{{name}}.ts):\n   - Import from database.ts if exists\n   - Define {{Name}}, Create{{Name}}, Update{{Name}}\n\n6. COMPONENT with ALL STATES:\n   - src/components/features/{{name}}/index.tsx (exports)\n   - src/components/features/{{name}}/{{name}}.tsx (main component)\n   - src/components/features/{{name}}/{{name}}.types.ts\n   - src/components/features/{{name}}/{{name}}.hooks.ts\n   - src/components/features/{{name}}/{{name}}.skeleton.tsx (loading)\n   - src/components/features/{{name}}/{{name}}.error.tsx (error)\n   - src/components/features/{{name}}/{{name}}.empty.tsx (empty)\n\n7. Export from barrel files:\n   - Add to src/server/services/index.ts\n   - Add to src/server/repositories/index.ts\n   - Add to src/server/validators/index.ts\n   - Add to src/components/features/index.ts\n\n8. Run typecheck to verify"
+    },
+
+    "verify": {
+      "description": "Verify foundation is intact",
+      "prompt": "Check project foundation:\n\n1. tsconfig.json has strict: true and ALL strict options\n2. Directory structure exists:\n   - src/server/services, repositories, validators, errors\n   - src/components/ui, features\n   - src/types, hooks, lib\n3. Barrel files (index.ts) exist in each directory\n4. Error handling exists in src/server/errors/index.ts\n5. Run: npx madge --circular --extensions ts,tsx src/\n6. Run: npm run typecheck\n\nReport: ✅ PASS or list specific issues"
+    },
+
+    "audit": {
+      "description": "Full architecture audit",
+      "prompt": "Audit the codebase:\n\n1. LAYER VIOLATIONS (Critical):\n   - Components importing from src/server/\n   - API routes importing from repositories/ directly\n   - Repositories importing from services/\n\n2. TYPE ISSUES (High):\n   - Any use of 'any' type\n   - Type assertions without runtime validation\n   - Missing return types on functions\n   - Manual database types (should be generated)\n\n3. ASYNC ISSUES (High):\n   - Unhandled promises (no await or .catch)\n   - async functions without await\n\n4. ERROR HANDLING (High):\n   - Empty catch blocks\n   - API routes without try/catch\n   - API routes not using handleApiError\n\n5. COMPONENT ISSUES (Medium):\n   - Missing loading state\n   - Missing error state\n   - Missing empty state\n\n6. VALIDATION ISSUES (Medium):\n   - API routes not validating input with Zod\n\nReport by severity with file locations."
+    },
+
+    "fix-types": {
+      "description": "Regenerate database types from Supabase",
+      "run": "supabase gen types typescript --local > src/types/database.ts && npm run typecheck"
+    }
+  },
+
+  "rules": {
+    "architecture": {
+      "layers": ["components", "hooks", "api", "services", "repositories", "database"],
+      "prohibited": [
+        "components/ cannot import from server/",
+        "app/api/ cannot import from repositories/ (must use services)",
+        "repositories/ cannot import from services/"
+      ]
+    },
+    "types": [
+      "Never use 'any' - find the real type or use 'unknown'",
+      "Never use type assertions (as Type) without runtime validation",
+      "Database types are GENERATED, never manually written",
+      "All functions must have explicit return types",
+      "Use type imports: import type { X } from ..."
+    ],
+    "patterns": {
+      "api-route": "try { validate → service → respond } catch { handleApiError }",
+      "service": "Business logic only, calls repository, throws AppError",
+      "repository": "Data access only, no business logic",
+      "component": "Must handle: loading, error, empty, success states"
+    }
+  },
+
+  "templates": {
+    "api-route": {
+      "pattern": "try/catch + Zod validation + service call + handleApiError",
+      "required": ["handleApiError import", "validator import", "service import"]
+    },
+    "service": {
+      "pattern": "async methods calling repository + business logic",
+      "required": ["repository import", "error imports"]
+    },
+    "repository": {
+      "pattern": "async methods with direct database calls",
+      "forbidden": ["service imports", "business logic"]
+    },
+    "component": {
+      "pattern": "hook for data + conditional rendering for states",
+      "required": ["loading state", "error state", "empty state", "success state"]
+    }
+  },
+
+  "memory": {
+    "project": {
+      "type": "nextjs-app-router",
+      "database": "supabase",
+      "validation": "zod"
+    },
+    "architecture": "foundation-first",
+    "enforcement": "strict"
+  }
+}

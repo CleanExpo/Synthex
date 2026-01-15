@@ -48,22 +48,22 @@ export function AIPersonaManager() {
   const [activeTab, setActiveTab] = useState('overview');
   
   // Load personas
-  useEffect(() => {
-    loadPersonas();
-  }, []);
-  
-  const loadPersonas = () => {
+  const loadPersonas = useCallback(() => {
     if (typeof window === 'undefined') return;
     
     const stored = localStorage.getItem('ai_personas');
     if (stored) {
       const data = JSON.parse(stored);
       setPersonas(data);
-      if (data.length > 0 && !selectedPersona) {
-        setSelectedPersona(data[0]);
+      if (data.length > 0) {
+        setSelectedPersona((current) => current || data[0]);
       }
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    loadPersonas();
+  }, [loadPersonas]);
   
   // Create new persona
   const createPersona = () => {

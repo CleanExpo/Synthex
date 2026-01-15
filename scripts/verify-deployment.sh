@@ -34,7 +34,7 @@ echo "━━━━━━━━━━━━━━━━━━━━━━━━�
 # 1. Environment Checks
 echo ""
 echo "📋 Environment Configuration:"
-check "Node.js v20+" "[[ $(node -v | cut -d'v' -f2 | cut -d'.' -f1) -ge 20 ]]"
+check "Node.js v22+" "[[ $(node -v | cut -d'v' -f2 | cut -d'.' -f1) -ge 22 ]]"
 check "NPM installed" "command -v npm > /dev/null 2>&1"
 check "Production config exists" "[ -f config/.env.production ]"
 check "App config exists" "[ -f config/app.config.js ]"

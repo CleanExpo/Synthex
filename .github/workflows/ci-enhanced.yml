@@ -10,7 +10,7 @@ on:
     - cron: '0 0 * * *'
 
 env:
-  NODE_VERSION: '18.17.0'
+  NODE_VERSION: '22.x'
 
 jobs:
   # Code quality and security checks
@@ -63,7 +63,7 @@ jobs:
     
     strategy:
       matrix:
-        node-version: [18.17.0, 20.x]
+        node-version: [22.x]
     
     steps:
       - name: Checkout code
@@ -96,7 +96,7 @@ jobs:
           NODE_ENV: test
           
       - name: Upload build artifacts
-        if: matrix.node-version == '18.17.0'
+        if: matrix.node-version == '22.x'
         uses: actions/upload-artifact@v3
         with:
           name: build-artifacts

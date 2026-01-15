@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -51,21 +51,7 @@ export default function AdminPanel() {
     bannedUsers: 0
   });
 
-  useEffect(() => {
-    fetchUsers();
-    fetchStats();
-  }, []);
-
-  useEffect(() => {
-    // Filter users based on search term
-    const filtered = users.filter(user => 
-      user.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.id?.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-    setFilteredUsers(filtered);
-  }, [searchTerm, users]);
-
-  const fetchUsers = async () => {
+  const fetchUsers = useCallback(async () => {
     setIsLoading(true);
     try {
       // Fetch users from Supabase Auth Admin API
@@ -100,27 +86,40 @@ export default function AdminPanel() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
-  const fetchStats = async () => {
+  useEffect(() => {
+    fetchUsers();
+  }, [fetchUsers]);
+
+  useEffect(() => {
+    // Filter users based on search term
+    const filtered = users.filter(user => 
+      user.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.id?.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+    setFilteredUsers(filtered);
+  }, [searchTerm, users]);
+
+  useEffect(() => {
     try {
       const now = new Date();
       const today = new Date(now.setHours(0, 0, 0, 0));
       const weekAgo = new Date(now.setDate(now.getDate() - 7));
       
       // Calculate statistics
-      const stats = {
+      const nextStats = {
         totalUsers: users.length,
         activeToday: users.filter(u => u.last_sign_in_at && new Date(u.last_sign_in_at) > today).length,
         newThisWeek: users.filter(u => new Date(u.created_at) > weekAgo).length,
         bannedUsers: users.filter(u => u.status === 'banned').length
       };
       
-      setStats(stats);
+      setStats(nextStats);
     } catch (error) {
       console.error('Error calculating stats:', error);
     }
-  };
+  }, [users]);
 
   const handleUserAction = async (userId: string, action: string) => {
     try {

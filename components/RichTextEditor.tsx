@@ -13,7 +13,7 @@ import {
   Undo,
   Redo,
   Link,
-  Image,
+  Image as ImageIcon,
   AlignLeft,
   AlignCenter,
   AlignRight,
@@ -257,7 +257,7 @@ export function RichTextEditor({
               onClick={addImage}
               tooltip="Add Image"
             >
-              <Image className="h-4 w-4" />
+              <ImageIcon className="h-4 w-4" />
             </ToolbarButton>
           </div>
           

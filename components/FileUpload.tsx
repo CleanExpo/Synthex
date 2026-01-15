@@ -7,7 +7,7 @@ import {
   Upload, 
   X, 
   File, 
-  Image, 
+  Image as ImageIcon, 
   Video, 
   Music, 
   FileText,
@@ -162,7 +162,7 @@ export function FileUpload({
   
   const getFileIcon = (file: File) => {
     const type = file.type;
-    if (type.startsWith('image/')) return <Image className="h-4 w-4" />;
+    if (type.startsWith('image/')) return <ImageIcon className="h-4 w-4" />;
     if (type.startsWith('video/')) return <Video className="h-4 w-4" />;
     if (type.startsWith('audio/')) return <Music className="h-4 w-4" />;
     if (type.includes('pdf')) return <FileText className="h-4 w-4" />;

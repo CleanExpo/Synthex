@@ -120,11 +120,7 @@ export function PredictiveAnalytics() {
   const [loading, setLoading] = useState(false);
   const [accuracyScore, setAccuracyScore] = useState(0);
   
-  useEffect(() => {
-    loadPredictions();
-  }, [selectedMetric, selectedTimeframe]);
-  
-  const loadPredictions = () => {
+  const loadPredictions = useCallback(() => {
     setLoading(true);
     
     // Simulate API call
@@ -136,7 +132,11 @@ export function PredictiveAnalytics() {
       setAccuracyScore(85 + Math.random() * 10);
       setLoading(false);
     }, 1000);
-  };
+  }, []);
+
+  useEffect(() => {
+    loadPredictions();
+  }, [loadPredictions, selectedMetric, selectedTimeframe]);
   
   const generatePredictions = (): Prediction[] => {
     return [

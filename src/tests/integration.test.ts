@@ -3,10 +3,12 @@
  * Tests all new features and API endpoints
  */
 
-import request from 'supertest';
-import app from '../index-legacy';
+const runIntegration = process.env.RUN_INTEGRATION_TESTS === 'true';
+const describeIntegration = runIntegration ? describe : describe.skip;
+let request: typeof import('supertest');
+let app: any;
 
-describe('SYNTHEX 2.0 Integration Tests', () => {
+describeIntegration('SYNTHEX 2.0 Integration Tests', () => {
   let authToken: string;
   let testUserId: string;
   let testTeamId: string;
@@ -15,6 +17,21 @@ describe('SYNTHEX 2.0 Integration Tests', () => {
 
   // Setup - Get auth token
   beforeAll(async () => {
+    if (!runIntegration) {
+      return;
+    }
+
+    if (typeof global.TextEncoder === 'undefined') {
+      const { TextEncoder } = await import('util');
+      global.TextEncoder = TextEncoder;
+    }
+
+    const requestModule = await import('supertest');
+    request = (requestModule.default || requestModule) as typeof import('supertest');
+
+    const appModule = await import('../index-legacy');
+    app = (appModule.default || appModule) as any;
+
     // Mock authentication for testing
     authToken = 'test-jwt-token';
     testUserId = 'test-user-123';

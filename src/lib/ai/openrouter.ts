@@ -219,10 +219,12 @@ export const TEMPERATURE_PRESETS = {
   experimental: 1.0
 };
 
-export default {
+const openRouter = {
   callOpenRouter,
   streamOpenRouter,
   getOpenRouterClient,
   MODEL_PRESETS,
   TEMPERATURE_PRESETS
 };
+
+export default openRouter;

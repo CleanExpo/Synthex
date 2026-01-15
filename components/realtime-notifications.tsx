@@ -41,6 +41,40 @@ export default function RealtimeNotifications() {
   const [isOpen, setIsOpen] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
 
+  const handleNewNotification = useCallback((message: RealtimeMessage) => {
+    const notification: Notification = {
+      id: message.id,
+      title: message.title || 'New Notification',
+      message: message.content,
+      type: (message.metadata?.type as any) || 'info',
+      timestamp: message.timestamp,
+      read: message.metadata?.read || false,
+      actionUrl: message.metadata?.actionUrl
+    };
+
+    setNotifications(prev => [notification, ...prev].slice(0, 50)); // Keep last 50
+    
+    if (!notification.read) {
+      setUnreadCount(prev => prev + 1);
+      
+      // Show toast notification
+      const toastMessage = `${notification.title}: ${notification.message}`;
+      switch (notification.type) {
+        case 'success':
+          toast.success(toastMessage);
+          break;
+        case 'error':
+          toast.error(toastMessage);
+          break;
+        case 'warning':
+          toast(toastMessage, { icon: '⚠️' });
+          break;
+        default:
+          toast(toastMessage);
+      }
+    }
+  }, []);
+
   useEffect(() => {
     if (!user) return;
 
@@ -89,41 +123,7 @@ export default function RealtimeNotifications() {
     return () => {
       realtimeService.unsubscribe(`notifications:${user.id}`);
     };
-  }, [user]);
-
-  const handleNewNotification = useCallback((message: RealtimeMessage) => {
-    const notification: Notification = {
-      id: message.id,
-      title: message.title || 'New Notification',
-      message: message.content,
-      type: (message.metadata?.type as any) || 'info',
-      timestamp: message.timestamp,
-      read: message.metadata?.read || false,
-      actionUrl: message.metadata?.actionUrl
-    };
-
-    setNotifications(prev => [notification, ...prev].slice(0, 50)); // Keep last 50
-    
-    if (!notification.read) {
-      setUnreadCount(prev => prev + 1);
-      
-      // Show toast notification
-      const toastMessage = `${notification.title}: ${notification.message}`;
-      switch (notification.type) {
-        case 'success':
-          toast.success(toastMessage);
-          break;
-        case 'error':
-          toast.error(toastMessage);
-          break;
-        case 'warning':
-          toast(toastMessage, { icon: '⚠️' });
-          break;
-        default:
-          toast(toastMessage);
-      }
-    }
-  }, []);
+  }, [handleNewNotification, user]);
 
   const markAsRead = async (notificationId: string) => {
     const success = await realtimeService.markNotificationsRead([notificationId]);

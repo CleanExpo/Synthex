@@ -79,11 +79,7 @@ export function AIABTesting() {
   const [loading, setLoading] = useState(false);
   
   // Load tests
-  useEffect(() => {
-    loadTests();
-  }, []);
-  
-  const loadTests = () => {
+  const loadTests = useCallback(() => {
     if (typeof window === 'undefined') return;
     
     const stored = localStorage.getItem('ab_tests');
@@ -96,7 +92,11 @@ export function AIABTesting() {
       setTests(sampleTests);
       localStorage.setItem('ab_tests', JSON.stringify(sampleTests));
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    loadTests();
+  }, [loadTests]);
   
   // Create sample tests
   const createSampleTests = (): ABTest[] => {

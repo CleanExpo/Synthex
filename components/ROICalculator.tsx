@@ -131,12 +131,7 @@ export function ROICalculator() {
   const [costPerClick, setCostPerClick] = useState('0.50');
   const [retentionRate, setRetentionRate] = useState('80');
   
-  useEffect(() => {
-    calculateROI();
-    loadCampaignData();
-  }, [monthlyBudget, avgConversionRate, avgOrderValue, monthlyTraffic, costPerClick, retentionRate]);
-  
-  const calculateROI = () => {
+  const calculateROI = useCallback(() => {
     const budget = parseFloat(monthlyBudget) || 0;
     const convRate = parseFloat(avgConversionRate) / 100 || 0;
     const orderValue = parseFloat(avgOrderValue) || 0;
@@ -165,9 +160,9 @@ export function ROICalculator() {
       conversionRate: convRate * 100,
       averageOrderValue: orderValue
     });
-  };
-  
-  const loadCampaignData = () => {
+  }, [monthlyBudget, avgConversionRate, avgOrderValue, monthlyTraffic, costPerClick, retentionRate]);
+
+  const loadCampaignData = useCallback(() => {
     // Generate mock campaign data
     const mockCampaigns: Campaign[] = [
       {
@@ -240,7 +235,15 @@ export function ROICalculator() {
     ];
     
     setFunnelData(funnel);
-  };
+  }, []);
+
+  useEffect(() => {
+    calculateROI();
+  }, [calculateROI]);
+
+  useEffect(() => {
+    loadCampaignData();
+  }, [loadCampaignData]);
   
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('en-US', {

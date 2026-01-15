@@ -41,7 +41,13 @@ export class OptimizerAPI {
       console.error('Optimizer API error, falling back:', error);
       
       // Fallback to legacy analysis
-      return this.legacyAnalysis(platform, content);
+      const fallbackResult = await this.legacyAnalysis(platform, content);
+
+      if (!options.skipCache) {
+        this.cache.set(cacheKey, fallbackResult);
+      }
+
+      return fallbackResult;
     }
   }
   
@@ -162,6 +168,8 @@ export class OptimizerAPI {
         
       default:
         analysis.suggestions.push('Platform-specific optimization not available');
+        analysis.error = true;
+        analysis.message = 'Unsupported platform';
     }
     
     // Calculate overall optimization score

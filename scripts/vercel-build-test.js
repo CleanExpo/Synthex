@@ -29,8 +29,8 @@ console.log(chalk.yellow('\nStep 2: Checking Node version...'));
 try {
   const nodeVersion = process.version;
   console.log(`Current Node version: ${nodeVersion}`);
-  if (!nodeVersion.startsWith('v20')) {
-    warnings.push('Node version should be 20.x for Vercel compatibility');
+  if (!nodeVersion.startsWith('v22')) {
+    warnings.push('Node version should be 22.x for Vercel compatibility');
   }
   console.log(chalk.green('✓ Node version checked'));
 } catch (error) {

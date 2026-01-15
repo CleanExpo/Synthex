@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { profileAPI, settingsAPI, integrationsAPI, billingAPI } from '@/lib/api/settings';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -57,6 +57,21 @@ import {
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
+const defaultNotifications = {
+  email: true,
+  push: false,
+  sms: false,
+  weeklyReport: true,
+  viralAlert: true,
+  systemUpdates: false,
+};
+
+const defaultPrivacy = {
+  profilePublic: false,
+  showAnalytics: true,
+  allowDataCollection: true,
+};
+
 export default function SettingsPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
@@ -69,19 +84,8 @@ export default function SettingsPage() {
     avatar_url: '',
   });
   const [theme, setTheme] = useState('dark');
-  const [notifications, setNotifications] = useState({
-    email: true,
-    push: false,
-    sms: false,
-    weeklyReport: true,
-    viralAlert: true,
-    systemUpdates: false,
-  });
-  const [privacy, setPrivacy] = useState({
-    profilePublic: false,
-    showAnalytics: true,
-    allowDataCollection: true,
-  });
+  const [notifications, setNotifications] = useState(defaultNotifications);
+  const [privacy, setPrivacy] = useState(defaultPrivacy);
   const [integrations, setIntegrations] = useState({
     twitter: false,
     linkedin: false,
@@ -91,11 +95,7 @@ export default function SettingsPage() {
   });
 
   // Load initial data
-  useEffect(() => {
-    loadUserData();
-  }, []);
-
-  const loadUserData = async () => {
+  const loadUserData = useCallback(async () => {
     try {
       // Load profile
       const profileData = await profileAPI.getProfile();
@@ -106,8 +106,8 @@ export default function SettingsPage() {
       // Load settings
       const settingsData = await settingsAPI.getSettings();
       if (settingsData.settings) {
-        setNotifications(settingsData.settings.notifications || notifications);
-        setPrivacy(settingsData.settings.privacy || privacy);
+        setNotifications(settingsData.settings.notifications || defaultNotifications);
+        setPrivacy(settingsData.settings.privacy || defaultPrivacy);
         setTheme(settingsData.settings.theme || 'dark');
       }
 
@@ -120,7 +120,11 @@ export default function SettingsPage() {
       console.error('Error loading user data:', error);
       toast.error('Failed to load settings');
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    loadUserData();
+  }, [loadUserData]);
 
   const handleSave = async (section: string) => {
     setIsLoading(true);

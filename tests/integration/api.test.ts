@@ -4,8 +4,10 @@ import { PrismaClient } from '@prisma/client';
 
 const API_URL = process.env.API_URL || 'http://localhost:3000';
 const prisma = new PrismaClient();
+const runIntegration = process.env.RUN_INTEGRATION_TESTS === 'true';
+const describeIntegration = runIntegration ? describe : describe.skip;
 
-describe('API Integration Tests', () => {
+describeIntegration('API Integration Tests', () => {
   let authToken: string;
   let refreshToken: string;
   let userId: string;

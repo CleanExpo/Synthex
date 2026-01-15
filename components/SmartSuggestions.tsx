@@ -48,12 +48,7 @@ export function SmartSuggestions({
   const [selectedType, setSelectedType] = useState<string>('all');
   const router = useRouter();
   
-  // Load suggestions
-  useEffect(() => {
-    loadSuggestions();
-  }, [context]);
-  
-  const loadSuggestions = async () => {
+  const loadSuggestions = useCallback(async () => {
     setLoading(true);
     // Simulate API call
     setTimeout(() => {
@@ -61,7 +56,12 @@ export function SmartSuggestions({
       setSuggestions(newSuggestions);
       setLoading(false);
     }, 500);
-  };
+  }, [context]);
+
+  // Load suggestions
+  useEffect(() => {
+    loadSuggestions();
+  }, [loadSuggestions]);
   
   const handleSelectSuggestion = (suggestion: ContentSuggestion) => {
     if (onSelectSuggestion) {

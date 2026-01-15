@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Image, Pin, Palette, TrendingUp, Eye, Heart, Save, Search } from 'lucide-react';
+import { Image as ImageIcon, Pin, Palette, TrendingUp, Eye, Heart, Save, Search } from 'lucide-react';
 
 /**
  * Pinterest Platform Optimizer Component
@@ -272,7 +272,7 @@ export const PinterestOptimizer = () => {
                 <div className="metric-label">SEO Score</div>
               </div>
               <div className="metric-card">
-                <div className="metric-icon"><Image /></div>
+                <div className="metric-icon"><ImageIcon /></div>
                 <div className="metric-value">{metrics.visualAppeal}%</div>
                 <div className="metric-label">Visual Appeal</div>
               </div>

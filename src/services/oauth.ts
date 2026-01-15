@@ -313,7 +313,7 @@ export function validateOAuthState(state: string, sessionState: string): boolean
   return state === sessionState;
 }
 
-export default {
+const oauthService = {
   configureGoogleOAuth,
   generateOAuthToken,
   linkGoogleAccount,
@@ -322,3 +322,5 @@ export default {
   generateOAuthState,
   validateOAuthState
 };
+
+export default oauthService;

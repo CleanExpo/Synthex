@@ -19,7 +19,7 @@ on:
         default: 'true'
 
 env:
-  NODE_VERSION: '20.x'
+  NODE_VERSION: '22.x'
   VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
   VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_STAGING }}
 
