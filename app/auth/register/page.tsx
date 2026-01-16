@@ -118,20 +118,26 @@ export default function RegisterPage() {
   if (success) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-gray-950 via-purple-950/20 to-gray-950 flex items-center justify-center p-4">
-        <Card className="glass-card max-w-md w-full">
+        {/* Background effects */}
+        <div className="fixed inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute top-1/4 -left-32 w-64 h-64 bg-emerald-500/20 rounded-full blur-3xl" />
+          <div className="absolute bottom-1/4 -right-32 w-64 h-64 bg-green-500/20 rounded-full blur-3xl" />
+        </div>
+
+        <Card variant="glass-success" className="max-w-md w-full relative z-10">
           <CardContent className="pt-6">
             <div className="text-center">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-green-500/20 mb-4">
-                <CheckCircle className="w-8 h-8 text-green-400" />
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-emerald-500/20 mb-4 shadow-lg shadow-emerald-500/25">
+                <CheckCircle className="w-8 h-8 text-emerald-400" />
               </div>
               <h2 className="text-2xl font-bold text-white mb-2">Account Created!</h2>
-              <p className="text-gray-400 mb-6">
-                We've sent a verification email to <strong>{email}</strong>. 
+              <p className="text-white/60 mb-6">
+                We've sent a verification email to <strong className="text-white">{email}</strong>.
                 Please check your inbox and click the verification link to activate your account.
               </p>
               <Button
                 onClick={() => router.push('/auth/login')}
-                className="gradient-primary text-white"
+                variant="premium-primary"
               >
                 Go to Login
                 <ArrowRight className="w-4 h-4 ml-2" />
@@ -146,27 +152,33 @@ export default function RegisterPage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-950 via-purple-950/20 to-gray-950 flex items-center justify-center p-4">
       <Toaster position="top-right" />
-      
-      <div className="w-full max-w-md">
+
+      {/* Background effects */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-1/4 -left-32 w-64 h-64 bg-purple-500/20 rounded-full blur-3xl" />
+        <div className="absolute bottom-1/4 -right-32 w-64 h-64 bg-cyan-500/20 rounded-full blur-3xl" />
+      </div>
+
+      <div className="w-full max-w-md relative z-10">
         {/* Logo and Title */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 mb-4">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-r from-purple-500 to-cyan-500 mb-4 shadow-lg shadow-purple-500/25">
             <Sparkles className="w-8 h-8 text-white" />
           </div>
           <h1 className="text-3xl font-bold text-white mb-2">Create Account</h1>
-          <p className="text-gray-400">Join SYNTHEX to supercharge your social media</p>
+          <p className="text-white/60">Join SYNTHEX to supercharge your social media</p>
         </div>
 
-        <Card className="glass-card">
+        <Card variant="glass-secondary">
           <CardHeader>
-            <CardTitle>Sign Up</CardTitle>
-            <CardDescription>
+            <CardTitle className="text-white">Sign Up</CardTitle>
+            <CardDescription className="text-white/60">
               Create your account to get started
             </CardDescription>
           </CardHeader>
           <CardContent>
             {error && (
-              <Alert variant="destructive" className="mb-4">
+              <Alert variant="glass-destructive" className="mb-4">
                 <AlertCircle className="h-4 w-4" />
                 <AlertDescription>{error}</AlertDescription>
               </Alert>
@@ -174,91 +186,96 @@ export default function RegisterPage() {
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="name">Full Name</Label>
+                <Label variant="glass" htmlFor="name">Full Name</Label>
                 <div className="relative">
                   <Input
                     id="name"
                     type="text"
+                    variant="glass"
                     placeholder="John Doe"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     required
                     disabled={isLoading}
-                    className="pl-10 bg-white/5 border-white/10"
+                    className="pl-10"
                   />
-                  <User className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                  <User className="absolute left-3 top-3 h-4 w-4 text-white/40" />
                 </div>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+                <Label variant="glass" htmlFor="email">Email</Label>
                 <div className="relative">
                   <Input
                     id="email"
                     type="email"
+                    variant="glass"
                     placeholder="you@example.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
                     disabled={isLoading}
-                    className="pl-10 bg-white/5 border-white/10"
+                    className="pl-10"
                   />
-                  <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                  <Mail className="absolute left-3 top-3 h-4 w-4 text-white/40" />
                 </div>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
+                <Label variant="glass" htmlFor="password">Password</Label>
                 <div className="relative">
                   <Input
                     id="password"
                     type="password"
+                    variant="glass"
                     placeholder="••••••••"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
                     disabled={isLoading}
-                    className="pl-10 bg-white/5 border-white/10"
+                    className="pl-10"
                   />
-                  <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                  <Lock className="absolute left-3 top-3 h-4 w-4 text-white/40" />
                 </div>
-                <p className="text-xs text-gray-400">Must be at least 8 characters</p>
+                <p className="text-xs text-white/40">Must be at least 8 characters</p>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="confirmPassword">Confirm Password</Label>
+                <Label variant="glass" htmlFor="confirmPassword">Confirm Password</Label>
                 <div className="relative">
                   <Input
                     id="confirmPassword"
                     type="password"
+                    variant="glass"
                     placeholder="••••••••"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     required
                     disabled={isLoading}
-                    className="pl-10 bg-white/5 border-white/10"
+                    className="pl-10"
                   />
-                  <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                  <Lock className="absolute left-3 top-3 h-4 w-4 text-white/40" />
                 </div>
               </div>
 
               <div className="flex items-center space-x-2">
-                <Checkbox 
-                  id="terms" 
+                <Checkbox
+                  id="terms"
+                  variant="glass"
                   checked={agreeToTerms}
                   onCheckedChange={(checked) => setAgreeToTerms(checked as boolean)}
                   disabled={isLoading}
                 />
                 <label
                   htmlFor="terms"
-                  className="text-sm text-gray-400 cursor-pointer"
+                  className="text-sm text-white/60 cursor-pointer"
                 >
                   I agree to the{' '}
-                  <Link href="/terms" className="text-purple-400 hover:text-purple-300">
+                  <Link href="/terms" className="text-cyan-400 hover:text-cyan-300 transition-colors">
                     Terms of Service
                   </Link>{' '}
                   and{' '}
-                  <Link href="/privacy" className="text-purple-400 hover:text-purple-300">
+                  <Link href="/privacy" className="text-cyan-400 hover:text-cyan-300 transition-colors">
                     Privacy Policy
                   </Link>
                 </label>
@@ -267,7 +284,8 @@ export default function RegisterPage() {
               <Button
                 type="submit"
                 disabled={isLoading || !agreeToTerms}
-                className="w-full gradient-primary text-white"
+                variant="premium-primary"
+                className="w-full"
               >
                 {isLoading ? (
                   <>
@@ -283,9 +301,9 @@ export default function RegisterPage() {
               </Button>
             </form>
 
-            <div className="my-6">
-              <Separator className="bg-white/10" />
-              <span className="absolute left-1/2 -translate-x-1/2 -translate-y-1/2 bg-gray-900 px-2 text-xs text-gray-400">
+            <div className="my-6 relative">
+              <Separator variant="glass" />
+              <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-transparent backdrop-blur-sm px-3 text-xs text-white/50">
                 OR SIGN UP WITH
               </span>
             </div>
@@ -293,7 +311,7 @@ export default function RegisterPage() {
             <div className="space-y-3">
               <Button
                 type="button"
-                variant="outline"
+                variant="glass"
                 onClick={() => handleOAuthSignup('google')}
                 disabled={isLoading}
                 className="w-full"
@@ -304,7 +322,7 @@ export default function RegisterPage() {
 
               <Button
                 type="button"
-                variant="outline"
+                variant="glass"
                 onClick={() => handleOAuthSignup('github')}
                 disabled={isLoading}
                 className="w-full"
@@ -314,13 +332,13 @@ export default function RegisterPage() {
               </Button>
             </div>
 
-            <Separator className="my-6 bg-white/10" />
+            <Separator variant="glass" className="my-6" />
 
-            <p className="text-center text-sm text-gray-400">
+            <p className="text-center text-sm text-white/50">
               Already have an account?{' '}
-              <Link 
-                href="/auth/login" 
-                className="text-purple-400 hover:text-purple-300 font-medium"
+              <Link
+                href="/auth/login"
+                className="text-cyan-400 hover:text-cyan-300 font-medium transition-colors"
               >
                 Sign in
               </Link>

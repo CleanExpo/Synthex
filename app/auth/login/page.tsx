@@ -92,27 +92,33 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-950 via-purple-950/20 to-gray-950 flex items-center justify-center p-4">
       <Toaster position="top-right" />
-      
-      <div className="w-full max-w-md">
+
+      {/* Background effects */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-1/4 -left-32 w-64 h-64 bg-purple-500/20 rounded-full blur-3xl" />
+        <div className="absolute bottom-1/4 -right-32 w-64 h-64 bg-pink-500/20 rounded-full blur-3xl" />
+      </div>
+
+      <div className="w-full max-w-md relative z-10">
         {/* Logo and Title */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 mb-4">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 mb-4 shadow-lg shadow-purple-500/25">
             <Sparkles className="w-8 h-8 text-white" />
           </div>
           <h1 className="text-3xl font-bold text-white mb-2">Welcome Back</h1>
-          <p className="text-gray-400">Sign in to your SYNTHEX account</p>
+          <p className="text-white/60">Sign in to your SYNTHEX account</p>
         </div>
 
-        <Card className="glass-card">
+        <Card variant="glass-primary">
           <CardHeader>
-            <CardTitle>Sign In</CardTitle>
-            <CardDescription>
+            <CardTitle className="text-white">Sign In</CardTitle>
+            <CardDescription className="text-white/60">
               Enter your credentials to access your dashboard
             </CardDescription>
           </CardHeader>
           <CardContent>
             {error && (
-              <Alert variant="destructive" className="mb-4">
+              <Alert variant="glass-destructive" className="mb-4">
                 <AlertCircle className="h-4 w-4" />
                 <AlertDescription>{error}</AlertDescription>
               </Alert>
@@ -120,28 +126,29 @@ export default function LoginPage() {
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+                <Label variant="glass" htmlFor="email">Email</Label>
                 <div className="relative">
                   <Input
                     id="email"
                     type="email"
+                    variant="glass"
                     placeholder="you@example.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
                     disabled={isLoading}
-                    className="pl-10 bg-white/5 border-white/10"
+                    className="pl-10"
                   />
-                  <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                  <Mail className="absolute left-3 top-3 h-4 w-4 text-white/40" />
                 </div>
               </div>
 
               <div className="space-y-2">
                 <div className="flex justify-between">
-                  <Label htmlFor="password">Password</Label>
-                  <Link 
-                    href="/auth/forgot-password" 
-                    className="text-sm text-purple-400 hover:text-purple-300"
+                  <Label variant="glass" htmlFor="password">Password</Label>
+                  <Link
+                    href="/auth/forgot-password"
+                    className="text-sm text-violet-400 hover:text-violet-300 transition-colors"
                   >
                     Forgot password?
                   </Link>
@@ -150,21 +157,23 @@ export default function LoginPage() {
                   <Input
                     id="password"
                     type="password"
+                    variant="glass"
                     placeholder="••••••••"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
                     disabled={isLoading}
-                    className="pl-10 bg-white/5 border-white/10"
+                    className="pl-10"
                   />
-                  <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                  <Lock className="absolute left-3 top-3 h-4 w-4 text-white/40" />
                 </div>
               </div>
 
               <Button
                 type="submit"
                 disabled={isLoading}
-                className="w-full gradient-primary text-white"
+                variant="premium-primary"
+                className="w-full"
               >
                 {isLoading ? (
                   <>
@@ -180,9 +189,9 @@ export default function LoginPage() {
               </Button>
             </form>
 
-            <div className="my-6">
-              <Separator className="bg-white/10" />
-              <span className="absolute left-1/2 -translate-x-1/2 -translate-y-1/2 bg-gray-900 px-2 text-xs text-gray-400">
+            <div className="my-6 relative">
+              <Separator variant="glass" />
+              <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-transparent backdrop-blur-sm px-3 text-xs text-white/50">
                 OR CONTINUE WITH
               </span>
             </div>
@@ -190,7 +199,7 @@ export default function LoginPage() {
             <div className="space-y-3">
               <Button
                 type="button"
-                variant="outline"
+                variant="glass"
                 onClick={() => handleOAuthLogin('google')}
                 disabled={isLoading}
                 className="w-full"
@@ -201,7 +210,7 @@ export default function LoginPage() {
 
               <Button
                 type="button"
-                variant="outline"
+                variant="glass"
                 onClick={() => handleOAuthLogin('github')}
                 disabled={isLoading}
                 className="w-full"
@@ -211,12 +220,12 @@ export default function LoginPage() {
               </Button>
             </div>
 
-            <Separator className="my-6 bg-white/10" />
+            <Separator variant="glass" className="my-6" />
 
             <div className="space-y-3">
               <Button
                 type="button"
-                variant="secondary"
+                variant="glass-secondary"
                 onClick={handleDemoMode}
                 className="w-full"
               >
@@ -224,11 +233,11 @@ export default function LoginPage() {
                 Try Demo Mode
               </Button>
 
-              <p className="text-center text-sm text-gray-400">
+              <p className="text-center text-sm text-white/50">
                 Don't have an account?{' '}
-                <Link 
-                  href="/auth/register" 
-                  className="text-purple-400 hover:text-purple-300 font-medium"
+                <Link
+                  href="/auth/register"
+                  className="text-violet-400 hover:text-violet-300 font-medium transition-colors"
                 >
                   Sign up for free
                 </Link>
@@ -237,13 +246,13 @@ export default function LoginPage() {
           </CardContent>
         </Card>
 
-        <p className="text-center text-xs text-gray-500 mt-6">
+        <p className="text-center text-xs text-white/40 mt-6">
           By signing in, you agree to our{' '}
-          <Link href="/terms" className="underline hover:text-gray-400">
+          <Link href="/terms" className="underline hover:text-white/60 transition-colors">
             Terms of Service
           </Link>{' '}
           and{' '}
-          <Link href="/privacy" className="underline hover:text-gray-400">
+          <Link href="/privacy" className="underline hover:text-white/60 transition-colors">
             Privacy Policy
           </Link>
         </p>
