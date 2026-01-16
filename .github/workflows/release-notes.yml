@@ -150,7 +150,7 @@ jobs:
           generate_release_notes: false
       
       - name: Upload release notes artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: release-notes-${{ steps.version.outputs.version }}
           path: RELEASE_NOTES.md

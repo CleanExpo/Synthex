@@ -57,7 +57,7 @@ jobs:
 
       - name: Upload test results
         if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: auth-test-results
           path: test-results/
@@ -84,7 +84,7 @@ jobs:
           echo "Hash comparison would go here"
 
       - name: Store current hashes
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: auth-file-hashes
           path: auth-hashes.txt
