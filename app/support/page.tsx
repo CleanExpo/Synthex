@@ -7,7 +7,7 @@ import {
   Sparkles, MessageCircle, Book, Video, Mail, Phone, 
   Clock, Search, ChevronRight, HelpCircle, FileText,
   Users, Zap, Settings, Shield, CreditCard, BarChart3
-} from 'lucide-react';
+} from '@/components/icons';
 import { useState } from 'react';
 
 interface FAQItem {

@@ -8,7 +8,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useWebSocket, type UseWebSocketReturn } from '@/hooks/useWebSocket';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Wifi, WifiOff, RefreshCw } from 'lucide-react';
+import { Wifi, WifiOff, RefreshCw } from '@/components/icons';
 import { toast } from '@/hooks/useToast';
 
 // WebSocket Context

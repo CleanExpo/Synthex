@@ -10,7 +10,7 @@ import {
   Maximize2, 
   Minimize2,
   MoreVertical 
-} from 'lucide-react';
+} from '@/components/icons';
 import {
   DropdownMenu,
   DropdownMenuContent,

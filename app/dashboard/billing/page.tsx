@@ -11,7 +11,7 @@ import {
   ArrowUpRight,
   Download,
   AlertCircle 
-} from 'lucide-react';
+} from '@/components/icons';
 import toast from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
 

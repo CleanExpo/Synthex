@@ -3,7 +3,7 @@
 import { useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Card } from '@/components/ui/card';
-import { Loader2 } from 'lucide-react';
+import { Loader2 } from '@/components/icons';
 import { handleOAuthCallback } from '@/lib/auth/oauth-handler';
 
 function OAuthCallbackContent() {

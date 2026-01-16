@@ -14,7 +14,7 @@ import {
   TrendingUp, TrendingDown, Users, Eye, Heart, MessageSquare, Share2,
   Clock, Calendar, Globe, Target, Zap, Activity, ArrowUp, ArrowDown,
   Twitter, Instagram, Linkedin, Youtube, Facebook, RefreshCw, Download
-} from 'lucide-react';
+} from '@/components/icons';
 import toast from 'react-hot-toast';
 
 interface AnalyticsData {

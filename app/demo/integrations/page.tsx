@@ -19,7 +19,7 @@ import {
   Loader2,
   RefreshCw,
   Info
-} from 'lucide-react';
+} from '@/components/icons';
 import toast, { Toaster } from 'react-hot-toast';
 
 interface Integration {

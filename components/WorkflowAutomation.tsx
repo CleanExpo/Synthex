@@ -45,7 +45,7 @@ import {
   Target,
   TrendingUp,
   Bot
-} from 'lucide-react';
+} from '@/components/icons';
 import { notify } from '@/lib/notifications';
 
 interface WorkflowNode {

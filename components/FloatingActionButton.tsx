@@ -18,7 +18,7 @@ import {
   Image,
   Video,
   Send
-} from 'lucide-react';
+} from '@/components/icons';
 import { Button } from '@/components/ui/button';
 import { notify } from '@/lib/notifications';
 import { useRouter } from 'next/navigation';

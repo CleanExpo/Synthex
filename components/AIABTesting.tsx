@@ -27,7 +27,7 @@ import {
   Copy,
   RefreshCw,
   ChevronRight
-} from 'lucide-react';
+} from '@/components/icons';
 import { notify } from '@/lib/notifications';
 import { fadeInUp, scaleIn } from '@/lib/animations';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
@@ -678,4 +678,4 @@ export function AIABTesting() {
 }
 
 // Import Plus icon
-import { Plus } from 'lucide-react';
+import { Plus } from '@/components/icons';

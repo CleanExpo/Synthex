@@ -22,7 +22,7 @@ import {
   Shield,
   BarChart,
   LineChart
-} from 'lucide-react';
+} from '@/components/icons';
 import { Line, Bar } from 'recharts';
 import { supabase } from '@/lib/supabase-client';
 

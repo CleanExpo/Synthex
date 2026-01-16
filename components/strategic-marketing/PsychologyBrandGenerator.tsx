@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Brain, Sparkles, Target, Zap, TrendingUp, Users, Award, Package } from 'lucide-react';
+import { Brain, Sparkles, Target, Zap, TrendingUp, Users, Award, Package } from '@/components/icons';
 
 interface PsychologyPrinciple {
   name: string;

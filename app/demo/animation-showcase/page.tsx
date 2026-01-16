@@ -24,7 +24,7 @@ import {
 const ParticleEffect = dynamic(() => import('@/components/ui/enhanced/AnimationLibrary').then(mod => ({ default: mod.ParticleEffect })), { ssr: false });
 const CursorTrail = dynamic(() => import('@/components/ui/enhanced/AnimationLibrary').then(mod => ({ default: mod.CursorTrail })), { ssr: false });
 import { motion } from 'framer-motion';
-import { Sparkles, Zap, Heart, Star, Globe, Cpu, Layers, Shield } from 'lucide-react';
+import { Sparkles, Zap, Heart, Star, Globe, Cpu, Layers, Shield } from '@/components/icons';
 
 export default function AnimationShowcase() {
   return (

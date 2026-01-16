@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { Bell, X, Check, AlertCircle, Info, CheckCircle } from 'lucide-react';
+import { Bell, X, Check, AlertCircle, Info, CheckCircle } from '@/components/icons';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';

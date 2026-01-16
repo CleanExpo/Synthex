@@ -7,7 +7,7 @@ import {
   Sparkles, MapPin, Clock, DollarSign, Users, 
   Heart, Rocket, Globe, Code, Palette, TrendingUp,
   ArrowRight, CheckCircle, Briefcase
-} from 'lucide-react';
+} from '@/components/icons';
 import { useState } from 'react';
 
 interface Job {

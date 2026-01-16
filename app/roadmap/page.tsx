@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Sparkles, CheckCircle, Circle, Clock, Rocket, Zap, Brain, Shield, Globe, Users } from 'lucide-react';
+import { Sparkles, CheckCircle, Circle, Clock, Rocket, Zap, Brain, Shield, Globe, Users } from '@/components/icons';
 
 const quarters = [
   {

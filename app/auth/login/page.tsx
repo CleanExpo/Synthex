@@ -19,7 +19,7 @@ import {
   Chrome,
   ArrowRight,
   Sparkles
-} from 'lucide-react';
+} from '@/components/icons';
 import toast, { Toaster } from 'react-hot-toast';
 
 export default function LoginPage() {

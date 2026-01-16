@@ -33,7 +33,7 @@ import {
   AlertCircle,
   CheckCircle,
   Info
-} from 'lucide-react';
+} from '@/components/icons';
 
 interface HelpCategory {
   id: string;

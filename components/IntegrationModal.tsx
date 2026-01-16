@@ -25,7 +25,7 @@ import {
   Info,
   Copy,
   Book
-} from 'lucide-react';
+} from '@/components/icons';
 import { toast } from 'sonner';
 
 interface IntegrationModalProps {

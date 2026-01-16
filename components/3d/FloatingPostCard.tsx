@@ -4,7 +4,7 @@ import { useRef, useState } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { RoundedBox, Text, Float, Html } from '@react-three/drei';
 import * as THREE from 'three';
-import { Heart, MessageCircle, Share2, Bookmark } from 'lucide-react';
+import { Heart, MessageCircle, Share2, Bookmark } from '@/components/icons';
 
 interface PostData {
   username: string;

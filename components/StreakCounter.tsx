@@ -14,7 +14,7 @@ import {
   Zap,
   Target,
   CheckCircle
-} from 'lucide-react';
+} from '@/components/icons';
 import { streakAnimation, levelUp, confetti } from '@/lib/celebrations';
 import { notify } from '@/lib/notifications';
 

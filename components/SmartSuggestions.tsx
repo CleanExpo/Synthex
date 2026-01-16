@@ -22,7 +22,7 @@ import {
   Filter,
   ThumbsUp,
   BarChart
-} from 'lucide-react';
+} from '@/components/icons';
 import { 
   getContentSuggestions, 
   getTimeBasedSuggestions,

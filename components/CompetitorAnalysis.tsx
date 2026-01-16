@@ -35,7 +35,7 @@ import {
   Crown,
   Zap,
   Clock
-} from 'lucide-react';
+} from '@/components/icons';
 import {
   LineChart,
   Line,

@@ -28,7 +28,7 @@ import {
   Trash2,
   CheckCircle,
   Activity
-} from 'lucide-react';
+} from '@/components/icons';
 import {
   personaLearning,
   type PersonaProfile,

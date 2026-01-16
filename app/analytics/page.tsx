@@ -14,7 +14,7 @@ import {
   Heart, Share2, MessageCircle, MousePointer,
   Clock, Award, Target, Zap, BarChart3,
   Twitter, Linkedin, Instagram, Facebook, Video
-} from 'lucide-react';
+} from '@/components/icons';
 import { toast } from 'sonner';
 
 const EngagementTrendsChart = dynamic(

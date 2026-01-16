@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Menu, X, Home, BarChart3, FileText, Calendar, Settings, LogOut, User } from 'lucide-react';
+import { Menu, X, Home, BarChart3, FileText, Calendar, Settings, LogOut, User } from '@/components/icons';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';

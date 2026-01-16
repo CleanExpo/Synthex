@@ -4,7 +4,7 @@ import { useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { AlertTriangle, RefreshCw, Home, ChevronLeft } from 'lucide-react';
+import { AlertTriangle, RefreshCw, Home, ChevronLeft } from '@/components/icons';
 import { fadeInUp, scaleIn } from '@/lib/animations';
 import { useRouter } from 'next/navigation';
 

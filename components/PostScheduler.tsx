@@ -17,7 +17,7 @@ import {
   Plus, ChevronLeft, ChevronRight, Filter, Download,
   Repeat, Bell, Eye, MoreVertical, Copy, CheckCircle,
   AlertCircle, XCircle, Loader2, Sparkles, TrendingUp
-} from 'lucide-react';
+} from '@/components/icons';
 import { format, addDays, startOfWeek, endOfWeek, eachDayOfInterval, 
          isSameDay, isToday, isPast, isFuture, startOfMonth, endOfMonth } from 'date-fns';
 import toast from 'react-hot-toast';

@@ -52,7 +52,7 @@ import {
   Crown,
   Settings,
   Loader2,
-} from 'lucide-react';
+} from '@/components/icons';
 import toast from 'react-hot-toast';
 
 // Types

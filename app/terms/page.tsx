@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Sparkles, FileText, Scale, AlertCircle, CheckCircle, XCircle, Shield, DollarSign } from 'lucide-react';
+import { Sparkles, FileText, Scale, AlertCircle, CheckCircle, XCircle, Shield, DollarSign } from '@/components/icons';
 
 const sections = [
   {

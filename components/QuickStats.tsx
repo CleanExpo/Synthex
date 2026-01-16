@@ -16,7 +16,7 @@ import {
   Activity,
   Zap,
   Target
-} from 'lucide-react';
+} from '@/components/icons';
 import { Skeleton } from '@/components/ui/skeleton';
 
 interface Stat {

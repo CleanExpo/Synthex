@@ -27,7 +27,7 @@ import {
   Calendar,
   Flag,
   ChevronRight
-} from 'lucide-react';
+} from '@/components/icons';
 import { notify } from '@/lib/notifications';
 import { fadeInUp, scaleIn } from '@/lib/animations';
 
@@ -666,4 +666,4 @@ export function ApprovalWorkflow() {
 }
 
 // Import Circle icon
-import { Circle } from 'lucide-react';
+import { Circle } from '@/components/icons';

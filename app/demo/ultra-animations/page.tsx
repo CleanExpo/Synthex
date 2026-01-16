@@ -36,7 +36,7 @@ import {
   Star,
   Heart,
   Diamond
-} from 'lucide-react';
+} from '@/components/icons';
 
 export default function UltraAnimationsShowcase() {
   const [activeSection, setActiveSection] = React.useState('hero');

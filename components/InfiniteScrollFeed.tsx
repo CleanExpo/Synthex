@@ -6,7 +6,7 @@ import { useInfiniteScroll, useInfiniteScrollTrigger } from '@/hooks/useInfinite
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { RefreshCw, AlertCircle, ChevronUp } from 'lucide-react';
+import { RefreshCw, AlertCircle, ChevronUp } from '@/components/icons';
 import { staggerContainer, staggerItem } from '@/lib/animations';
 
 interface FeedItem {

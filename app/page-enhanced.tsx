@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { ArrowRight, Sparkles, TrendingUp, Users, Calendar, BarChart3, Zap, Brain, Palette, Target } from 'lucide-react';
+import { ArrowRight, Sparkles, TrendingUp, Users, Calendar, BarChart3, Zap, Brain, Palette, Target } from '@/components/icons';
 import { useEffect } from 'react';
 
 export default function EnhancedHomePage() {

@@ -3,7 +3,7 @@
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Search, Home, ArrowLeft } from 'lucide-react';
+import { Search, Home, ArrowLeft } from '@/components/icons';
 import { fadeInUp, float } from '@/lib/animations';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';

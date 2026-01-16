@@ -53,7 +53,7 @@ import {
   RotateCcw,
   Maximize2,
   Minimize2,
-} from 'lucide-react';
+} from '@/components/icons';
 import toast from 'react-hot-toast';
 
 // Platform configurations

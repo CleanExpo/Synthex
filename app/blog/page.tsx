@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Sparkles, ArrowRight, Calendar, Clock, User, TrendingUp, Brain, Zap } from 'lucide-react';
+import { Sparkles, ArrowRight, Calendar, Clock, User, TrendingUp, Brain, Zap } from '@/components/icons';
 import { useState, useEffect } from 'react';
 
 interface BlogPost {

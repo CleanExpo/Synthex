@@ -18,6 +18,7 @@ import {
   FaReddit,
   FaThreads,
   FaXTwitter,
+  FaGithub,
 } from 'react-icons/fa6';
 
 // Re-export with consistent naming
@@ -31,6 +32,7 @@ export const TikTok = FaTiktok;
 export const Pinterest = FaPinterest;
 export const Reddit = FaReddit;
 export const Threads = FaThreads;
+export const Github = FaGithub;
 
 // Platform colors for reference
 export const SocialColors = {

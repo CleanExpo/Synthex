@@ -21,7 +21,7 @@ import {
   Users,
   Zap,
   RefreshCw
-} from 'lucide-react';
+} from '@/components/icons';
 import { notify } from '@/lib/notifications';
 import { fadeInUp, staggerContainer, staggerItem } from '@/lib/animations';
 

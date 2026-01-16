@@ -16,7 +16,7 @@ import {
   CheckCircle,
   AlertCircle,
   Loader2
-} from 'lucide-react';
+} from '@/components/icons';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';

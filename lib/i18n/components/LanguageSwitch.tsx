@@ -13,7 +13,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Globe, Check } from 'lucide-react';
+import { Globe, Check } from '@/components/icons';
 import { i18nConfig, type Locale } from '../config';
 
 interface LanguageSwitchProps {

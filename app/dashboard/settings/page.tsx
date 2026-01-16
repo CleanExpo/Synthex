@@ -54,7 +54,7 @@ import {
   Upload,
   Trash2,
   Camera,
-} from 'lucide-react';
+} from '@/components/icons';
 import toast from 'react-hot-toast';
 
 const defaultNotifications = {

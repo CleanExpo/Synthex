@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Calendar, Clock, User, Share2, Twitter, Linkedin, Facebook, Copy, Check } from 'lucide-react';
+import { ArrowLeft, Calendar, Clock, User, Share2, Twitter, Linkedin, Facebook, Copy, Check } from '@/components/icons';
 
 // Sample blog post data - in production, this would come from a database
 const blogPosts = {

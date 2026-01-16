@@ -14,7 +14,7 @@ import {
   Star,
   Code2,
   Cpu
-} from 'lucide-react';
+} from '@/components/icons';
 
 const demos = [
   {

@@ -20,7 +20,7 @@ import {
   Play,
   Pause,
   Settings
-} from 'lucide-react';
+} from '@/components/icons';
 import toast, { Toaster } from 'react-hot-toast';
 
 interface Backup {

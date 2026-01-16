@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { MessageSquare, ArrowUp, Award, Users, TrendingUp, BookOpen, MessageCircle, Star } from 'lucide-react';
+import { MessageSquare, ArrowUp, Award, Users, TrendingUp, BookOpen, MessageCircle, Star } from '@/components/icons';
 
 /**
  * Reddit Platform Optimizer Component

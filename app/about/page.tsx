@@ -7,7 +7,7 @@ import {
   Sparkles, Target, Users, Rocket, Award, Globe, 
   TrendingUp, Shield, Heart, ArrowRight, Brain,
   Zap, BarChart3, CheckCircle
-} from 'lucide-react';
+} from '@/components/icons';
 
 const stats = [
   { value: '10,000+', label: 'Active Users' },

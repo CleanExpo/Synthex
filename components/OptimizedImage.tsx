@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ImageOff, ZoomIn } from 'lucide-react';
+import { ImageOff, ZoomIn } from '@/components/icons';
 import { fadeIn } from '@/lib/animations';
 
 interface OptimizedImageProps {

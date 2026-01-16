@@ -21,7 +21,7 @@ import {
   Hash,
   AtSign,
   Calendar
-} from 'lucide-react';
+} from '@/components/icons';
 import { toast } from 'sonner';
 
 const PLATFORMS = [

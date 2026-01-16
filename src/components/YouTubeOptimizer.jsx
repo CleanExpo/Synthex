@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Youtube, PlayCircle, ThumbsUp, MessageSquare, Share2, Bell, TrendingUp, Clock } from 'lucide-react';
+import { Youtube, PlayCircle, ThumbsUp, MessageSquare, Share2, Bell, TrendingUp, Clock } from '@/components/icons';
 
 /**
  * YouTube Platform Optimizer Component

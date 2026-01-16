@@ -4,7 +4,7 @@ import { Card } from '@/components/ui/card';
 import { 
   Sparkles, BookOpen, Code, Zap, Users, 
   Settings, Shield, HelpCircle, ArrowRight 
-} from 'lucide-react';
+} from '@/components/icons';
 
 export default function DocsPage() {
   return (

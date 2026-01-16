@@ -15,7 +15,7 @@ import {
   Sparkles, Copy, Download, Share2, RefreshCw, Zap, TrendingUp,
   Calendar, Hash, Smile, Target, Wand2, Loader2, Check,
   Twitter, Instagram, Linkedin, Youtube, Facebook, MessageSquare
-} from 'lucide-react';
+} from '@/components/icons';
 import toast from 'react-hot-toast';
 
 interface GeneratedContent {

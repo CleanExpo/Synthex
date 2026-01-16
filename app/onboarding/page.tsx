@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Progress } from '@/components/ui/progress';
-import { CheckCircle, ChevronRight, Building, User, Sparkles, Target, Users, Zap } from 'lucide-react';
+import { CheckCircle, ChevronRight, Building, User, Sparkles, Target, Users, Zap } from '@/components/icons';
 
 export default function OnboardingPage() {
   const router = useRouter();

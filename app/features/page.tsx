@@ -5,7 +5,7 @@ import {
   Sparkles, TrendingUp, Users, Calendar, BarChart3, Zap,
   Brain, Target, Palette, Shield, Globe, Smartphone,
   ArrowRight, CheckCircle2
-} from 'lucide-react';
+} from '@/components/icons';
 
 export default function FeaturesPage() {
   return (

@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Check, X, Sparkles } from 'lucide-react';
+import { Check, X, Sparkles } from '@/components/icons';
 import { CheckoutButton } from '@/components/stripe/checkout-button';
 
 const plans = [

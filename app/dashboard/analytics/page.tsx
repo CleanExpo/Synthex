@@ -41,7 +41,7 @@ import {
   Instagram,
   Facebook,
   Video,
-} from 'lucide-react';
+} from '@/components/icons';
 import {
   LineChart as RechartsLineChart,
   Line,

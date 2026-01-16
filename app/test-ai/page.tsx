@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Loader2, Sparkles, Copy, CheckCircle } from 'lucide-react';
+import { Loader2, Sparkles, Copy, CheckCircle } from '@/components/icons';
 import { toast } from 'sonner';
 
 export default function TestAI() {

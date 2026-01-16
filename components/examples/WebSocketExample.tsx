@@ -24,7 +24,7 @@ import {
   MessageSquare, 
   Activity,
   RefreshCw 
-} from 'lucide-react';
+} from '@/components/icons';
 
 export function WebSocketExample() {
   const ws = useWebSocketContext();

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Image as ImageIcon, Pin, Palette, TrendingUp, Eye, Heart, Save, Search } from 'lucide-react';
+import { Image as ImageIcon, Pin, Palette, TrendingUp, Eye, Heart, Save, Search } from '@/components/icons';
 
 /**
  * Pinterest Platform Optimizer Component

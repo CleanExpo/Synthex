@@ -19,7 +19,7 @@ import {
   Clock,
   Database,
   Search
-} from 'lucide-react';
+} from '@/components/icons';
 import { useRouter } from 'next/navigation';
 import { fadeInUp, popIn } from '@/lib/animations';
 

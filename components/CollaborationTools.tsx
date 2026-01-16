@@ -31,7 +31,7 @@ import {
   XCircle,
   MousePointer,
   Type
-} from 'lucide-react';
+} from '@/components/icons';
 import {
   CollaborationManager,
   type Participant,

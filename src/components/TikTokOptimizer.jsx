@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { TrendingUp, Music, Users, Video, Heart, MessageCircle, Share2, Eye } from 'lucide-react';
+import { TrendingUp, Music, Users, Video, Heart, MessageCircle, Share2, Eye } from '@/components/icons';
 
 /**
  * TikTok Platform Optimizer Component

@@ -10,7 +10,7 @@ import {
   Upload,
   Search,
   Inbox
-} from 'lucide-react';
+} from '@/components/icons';
 
 interface EmptyStateProps {
   type: 'content' | 'analytics' | 'campaigns' | 'schedule' | 'search' | 'generic';

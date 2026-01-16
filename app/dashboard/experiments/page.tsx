@@ -18,7 +18,7 @@ import {
   Plus,
   Settings,
   RefreshCw
-} from 'lucide-react';
+} from '@/components/icons';
 import { abTestingService, Experiment } from '@/lib/ab-testing';
 import toast, { Toaster } from 'react-hot-toast';
 

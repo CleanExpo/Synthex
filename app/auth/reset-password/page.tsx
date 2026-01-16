@@ -16,7 +16,7 @@ import {
   Sparkles,
   Eye,
   EyeOff
-} from 'lucide-react';
+} from '@/components/icons';
 import toast, { Toaster } from 'react-hot-toast';
 
 function ResetPasswordForm() {

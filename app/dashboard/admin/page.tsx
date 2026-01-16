@@ -23,7 +23,7 @@ import {
   RefreshCw,
   Download,
   UserPlus
-} from 'lucide-react';
+} from '@/components/icons';
 import { supabase } from '@/lib/supabase-client';
 import toast, { Toaster } from 'react-hot-toast';
 

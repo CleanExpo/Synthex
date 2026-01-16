@@ -2,7 +2,7 @@
 
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { AlertOctagon, RefreshCw } from 'lucide-react';
+import { AlertOctagon, RefreshCw } from '@/components/icons';
 import { fadeInUp } from '@/lib/animations';
 
 export default function GlobalError({

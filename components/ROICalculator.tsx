@@ -34,7 +34,7 @@ import {
   ChevronRight,
   Sparkles,
   Coins
-} from 'lucide-react';
+} from '@/components/icons';
 import {
   LineChart,
   Line,

@@ -45,7 +45,7 @@ import {
   Instagram,
   Facebook,
   Video,
-} from 'lucide-react';
+} from '@/components/icons';
 import toast from 'react-hot-toast';
 
 // Platform icons

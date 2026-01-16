@@ -17,7 +17,7 @@ import {
   BookOpen,
   Megaphone,
   User
-} from 'lucide-react';
+} from '@/components/icons';
 import { 
   contentTemplates, 
   getTemplatesByCategory, 

@@ -33,7 +33,7 @@ import {
   Loader2,
   Copy,
   Settings,
-} from 'lucide-react';
+} from '@/components/icons';
 import toast from 'react-hot-toast';
 
 // Mock personas data

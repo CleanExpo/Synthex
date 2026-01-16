@@ -26,7 +26,7 @@ import {
   BarChart2 as ChartBar,
   CalendarDays,
   BrainCircuit
-} from 'lucide-react';
+} from '@/components/icons';
 import { QuickStats } from '@/components/QuickStats';
 import { StreakCounter } from '@/components/StreakCounter';
 import { SmartSuggestions } from '@/components/SmartSuggestions';

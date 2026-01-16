@@ -28,7 +28,7 @@ import {
   ChevronRight,
   Settings,
   Loader2
-} from 'lucide-react';
+} from '@/components/icons';
 import {
   generateContent,
   rewriteWithTone,
@@ -478,4 +478,4 @@ function CompactAIAssistant({
 }
 
 // Import required icons
-import { Heart, BookOpen } from 'lucide-react';
+import { Heart, BookOpen } from '@/components/icons';

@@ -31,7 +31,7 @@ import {
   ChevronRight,
   Info,
   AlertCircle
-} from 'lucide-react';
+} from '@/components/icons';
 import {
   LineChart,
   Line,

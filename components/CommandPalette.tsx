@@ -16,7 +16,7 @@ import {
   Home,
   Command,
   ArrowRight
-} from 'lucide-react';
+} from '@/components/icons';
 import { notify } from '@/lib/notifications';
 
 interface CommandItem {
