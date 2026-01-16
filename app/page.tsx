@@ -5,6 +5,8 @@ import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
 import {
   ArrowRight, Sparkles, TrendingUp, Users, Calendar, BarChart3, Zap,
   CheckCircle2, Brain, Shield, Globe, Rocket, Award, LineChart,
@@ -77,7 +79,7 @@ export default function HomePage() {
                 Resources
               </Link>
               <Link href="/login">
-                <Button variant="ghost" className="text-gray-300 hover:text-white text-sm lg:text-base">
+                <Button variant="glass" size="sm" className="text-sm lg:text-base">
                   Login
                 </Button>
               </Link>
@@ -98,10 +100,10 @@ export default function HomePage() {
         <div className="container mx-auto">
           <div className="max-w-5xl mx-auto text-center">
             {/* Trust Badge */}
-            <div className="inline-flex items-center space-x-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full glass-premium mb-6 sm:mb-8">
-              <BadgeCheck className="w-3 sm:w-4 h-3 sm:h-4 text-green-400" />
-              <span className="text-xs sm:text-sm text-gray-300">Trusted by 1000+ businesses worldwide</span>
-            </div>
+            <Badge variant="glass-success" size="lg" className="mb-6 sm:mb-8">
+              <BadgeCheck className="w-3 sm:w-4 h-3 sm:h-4 mr-2" />
+              Trusted by 1000+ businesses worldwide
+            </Badge>
             
             <h1 className="text-3xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold text-white mb-4 sm:mb-6 leading-tight">
               Your Complete
@@ -113,28 +115,28 @@ export default function HomePage() {
               In One Platform
             </h1>
             
-            <p className="text-base sm:text-xl lg:text-2xl text-gray-300 mb-6 sm:mb-8 max-w-3xl mx-auto leading-relaxed px-4 sm:px-0">
-              Stop paying $10,000/month for an agency. Get AI-powered viral analysis, 
-              content generation, and strategic automation that delivers 
+            <p className="text-base sm:text-xl lg:text-2xl text-white/70 mb-6 sm:mb-8 max-w-3xl mx-auto leading-relaxed px-4 sm:px-0">
+              Stop paying $10,000/month for an agency. Get AI-powered viral analysis,
+              content generation, and strategic automation that delivers
               <span className="text-white font-semibold"> 2.2x engagement boost</span> guaranteed.
             </p>
 
             {/* Value Props - Responsive Grid */}
             <div className="grid grid-cols-2 sm:flex sm:flex-wrap justify-center gap-3 sm:gap-4 mb-8 sm:mb-10 px-4 sm:px-0">
-              <div className="flex items-center space-x-1 sm:space-x-2 text-gray-300 text-xs sm:text-sm">
-                <CheckCircle2 className="w-4 sm:w-5 h-4 sm:h-5 text-green-400 flex-shrink-0" />
+              <div className="flex items-center space-x-1 sm:space-x-2 text-white/70 text-xs sm:text-sm">
+                <CheckCircle2 className="w-4 sm:w-5 h-4 sm:h-5 text-emerald-400 flex-shrink-0" />
                 <span>No Agency Fees</span>
               </div>
-              <div className="flex items-center space-x-1 sm:space-x-2 text-gray-300 text-xs sm:text-sm">
-                <CheckCircle2 className="w-4 sm:w-5 h-4 sm:h-5 text-green-400 flex-shrink-0" />
+              <div className="flex items-center space-x-1 sm:space-x-2 text-white/70 text-xs sm:text-sm">
+                <CheckCircle2 className="w-4 sm:w-5 h-4 sm:h-5 text-emerald-400 flex-shrink-0" />
                 <span>24/7 AI Strategy</span>
               </div>
-              <div className="flex items-center space-x-1 sm:space-x-2 text-gray-300 text-xs sm:text-sm">
-                <CheckCircle2 className="w-4 sm:w-5 h-4 sm:h-5 text-green-400 flex-shrink-0" />
+              <div className="flex items-center space-x-1 sm:space-x-2 text-white/70 text-xs sm:text-sm">
+                <CheckCircle2 className="w-4 sm:w-5 h-4 sm:h-5 text-emerald-400 flex-shrink-0" />
                 <span>Viral Analysis</span>
               </div>
-              <div className="flex items-center space-x-1 sm:space-x-2 text-gray-300 text-xs sm:text-sm">
-                <CheckCircle2 className="w-4 sm:w-5 h-4 sm:h-5 text-green-400 flex-shrink-0" />
+              <div className="flex items-center space-x-1 sm:space-x-2 text-white/70 text-xs sm:text-sm">
+                <CheckCircle2 className="w-4 sm:w-5 h-4 sm:h-5 text-emerald-400 flex-shrink-0" />
                 <span>All Platforms</span>
               </div>
             </div>
@@ -155,18 +157,18 @@ export default function HomePage() {
             </div>
 
             {/* Live Stats - Mobile Responsive */}
-            <div className="flex justify-center flex-wrap gap-4 sm:gap-6 lg:gap-8 text-gray-400 text-xs sm:text-sm">
+            <div className="flex justify-center flex-wrap gap-4 sm:gap-6 lg:gap-8 text-white/50 text-xs sm:text-sm">
               <div className="flex items-center space-x-1 sm:space-x-2">
-                <div className="w-1.5 sm:w-2 h-1.5 sm:h-2 bg-green-400 rounded-full animate-pulse"></div>
+                <div className="w-1.5 sm:w-2 h-1.5 sm:h-2 bg-emerald-400 rounded-full animate-pulse"></div>
                 <Users className="w-4 sm:w-5 h-4 sm:h-5" />
                 <UserCount />
               </div>
               <div className="flex items-center space-x-1 sm:space-x-2">
-                <TrendingUp className="w-4 sm:w-5 h-4 sm:h-5 text-green-400" />
+                <TrendingUp className="w-4 sm:w-5 h-4 sm:h-5 text-emerald-400" />
                 <EngagementBoost />
               </div>
               <div className="hidden sm:flex items-center space-x-1 sm:space-x-2">
-                <Brain className="w-4 sm:w-5 h-4 sm:h-5 text-purple-400" />
+                <Brain className="w-4 sm:w-5 h-4 sm:h-5 text-violet-400" />
                 <span>AI-Powered</span>
               </div>
             </div>
@@ -238,7 +240,7 @@ export default function HomePage() {
                 Connected to Every Platform
               </span>
             </h2>
-            <p className="text-xl text-gray-200">Visualize your social media ecosystem in real-time</p>
+            <p className="text-xl text-white/70">Visualize your social media ecosystem in real-time</p>
           </div>
           <SocialNetworkOrb />
         </div>
@@ -253,8 +255,8 @@ export default function HomePage() {
                 Real Social Media Posts in 3D
               </span>
             </h2>
-            <p className="text-xl text-gray-200">Experience engagement like never before - interact with live posts</p>
-            <p className="text-sm text-gray-300 mt-2">Hover to interact • Click hearts to like • Real engagement in 3D</p>
+            <p className="text-xl text-white/70">Experience engagement like never before - interact with live posts</p>
+            <p className="text-sm text-white/50 mt-2">Hover to interact • Click hearts to like • Real engagement in 3D</p>
           </div>
           <FloatingPostCards />
         </div>
@@ -267,63 +269,66 @@ export default function HomePage() {
             <h2 className="text-3xl font-bold text-white mb-4">
               Replacing $120,000/Year Agencies
             </h2>
-            <p className="text-gray-400">See why businesses are switching from traditional agencies to SYNTHEX</p>
+            <p className="text-white/50">See why businesses are switching from traditional agencies to SYNTHEX</p>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-            <Card className="glass-premium p-6 hover:border-violet-500/30 transition-all">
+            <Card variant="glass" className="p-6 hover:border-violet-500/30 transition-all">
               <div className="flex mb-4">
                 {[...Array(5)].map((_, i) => (
                   <Star key={i} className="w-5 h-5 fill-yellow-400 text-yellow-400" />
                 ))}
               </div>
-              <p className="text-gray-300 mb-4">
+              <p className="text-white/70 mb-4">
                 "Replaced our $8k/month agency. Better results, fraction of the cost.
                 The AI understands our brand voice perfectly."
               </p>
+              <Separator variant="glass" className="mb-4" />
               <div className="flex items-center space-x-3">
                 <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full"></div>
                 <div>
                   <p className="text-white font-semibold">Sarah Chen</p>
-                  <p className="text-xs text-gray-400">CEO, TechStart Inc.</p>
+                  <p className="text-xs text-white/50">CEO, TechStart Inc.</p>
                 </div>
               </div>
             </Card>
 
-            <Card className="glass-premium p-6 hover:border-fuchsia-500/30 transition-all">
+            <Card variant="glass-primary" className="p-6 hover:border-fuchsia-500/30 transition-all">
               <div className="flex mb-4">
                 {[...Array(5)].map((_, i) => (
                   <Star key={i} className="w-5 h-5 fill-yellow-400 text-yellow-400" />
                 ))}
               </div>
-              <p className="text-gray-300 mb-4">
+              <p className="text-white/70 mb-4">
                 "3x our engagement in 30 days. The viral pattern analysis is game-changing.
                 It's like having a team of experts 24/7."
               </p>
+              <Separator variant="glass-primary" className="mb-4" />
               <div className="flex items-center space-x-3">
                 <div className="w-10 h-10 bg-gradient-to-r from-pink-500 to-purple-500 rounded-full"></div>
                 <div>
                   <p className="text-white font-semibold">Marcus Johnson</p>
-                  <p className="text-xs text-gray-400">Influencer, 500K followers</p>
+                  <p className="text-xs text-white/50">Influencer, 500K followers</p>
                 </div>
               </div>
             </Card>
 
-            <Card className="glass-premium p-6 hover:border-cyan-500/30 transition-all">
+            <Card variant="glass-secondary" className="p-6 hover:border-cyan-500/30 transition-all">
               <div className="flex mb-4">
                 {[...Array(5)].map((_, i) => (
                   <Star key={i} className="w-5 h-5 fill-yellow-400 text-yellow-400" />
                 ))}
               </div>
-              <p className="text-gray-300 mb-4">
+              <p className="text-white/70 mb-4">
                 "From 100 to 50K followers in 6 months. The AI-generated content
                 consistently outperforms what we created manually."
               </p>
+              <Separator variant="glass-secondary" className="mb-4" />
               <div className="flex items-center space-x-3">
                 <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-green-500 rounded-full"></div>
                 <div>
                   <p className="text-white font-semibold">Emma Rodriguez</p>
-                  <p className="text-xs text-gray-400">CMO, Fashion Brand</p>
+                  <p className="text-xs text-white/50">CMO, Fashion Brand</p>
                 </div>
               </div>
             </Card>
@@ -339,157 +344,157 @@ export default function HomePage() {
               Your AI-Powered Social Media
               <span className="gradient-text-premium"> Agency Team</span>
             </h2>
-            <p className="text-xl text-gray-400 max-w-3xl mx-auto">
+            <p className="text-xl text-white/50 max-w-3xl mx-auto">
               Every tool a $10,000/month agency uses, powered by AI and available 24/7
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
             {/* Strategy Analyst */}
-            <Card className="group bg-gradient-to-br from-purple-900/20 to-transparent border-white/10 p-8 hover:border-purple-500/50 transition-all">
-              <div className="w-14 h-14 rounded-xl bg-gradient-to-r from-purple-500 to-purple-600 flex items-center justify-center mb-6">
+            <Card variant="glass-primary" className="group p-8 hover:border-purple-500/50 transition-all">
+              <div className="w-14 h-14 rounded-xl bg-gradient-to-r from-purple-500 to-purple-600 flex items-center justify-center mb-6 shadow-lg shadow-purple-500/25">
                 <Brain className="w-7 h-7 text-white" />
               </div>
               <h3 className="text-2xl font-bold text-white mb-3">AI Strategy Analyst</h3>
-              <p className="text-gray-400 mb-4">
+              <p className="text-white/60 mb-4">
                 Analyzes millions of posts to identify viral patterns and optimal strategies for your niche.
               </p>
               <ul className="space-y-2 text-sm">
-                <li className="flex items-center text-gray-300">
-                  <CheckCircle2 className="w-4 h-4 text-green-400 mr-2" />
+                <li className="flex items-center text-white/80">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400 mr-2" />
                   Viral pattern recognition
                 </li>
-                <li className="flex items-center text-gray-300">
-                  <CheckCircle2 className="w-4 h-4 text-green-400 mr-2" />
+                <li className="flex items-center text-white/80">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400 mr-2" />
                   Competitor analysis
                 </li>
-                <li className="flex items-center text-gray-300">
-                  <CheckCircle2 className="w-4 h-4 text-green-400 mr-2" />
+                <li className="flex items-center text-white/80">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400 mr-2" />
                   Trend forecasting
                 </li>
               </ul>
             </Card>
 
             {/* Content Creator */}
-            <Card className="group bg-gradient-to-br from-blue-900/20 to-transparent border-white/10 p-8 hover:border-blue-500/50 transition-all">
-              <div className="w-14 h-14 rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 flex items-center justify-center mb-6">
+            <Card variant="glass-secondary" className="group p-8 hover:border-blue-500/50 transition-all">
+              <div className="w-14 h-14 rounded-xl bg-gradient-to-r from-blue-500 to-cyan-500 flex items-center justify-center mb-6 shadow-lg shadow-cyan-500/25">
                 <Sparkles className="w-7 h-7 text-white" />
               </div>
               <h3 className="text-2xl font-bold text-white mb-3">AI Content Creator</h3>
-              <p className="text-gray-400 mb-4">
+              <p className="text-white/60 mb-4">
                 Generates authentic, on-brand content that maintains your voice while maximizing engagement.
               </p>
               <ul className="space-y-2 text-sm">
-                <li className="flex items-center text-gray-300">
-                  <CheckCircle2 className="w-4 h-4 text-green-400 mr-2" />
+                <li className="flex items-center text-white/80">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400 mr-2" />
                   Brand voice learning
                 </li>
-                <li className="flex items-center text-gray-300">
-                  <CheckCircle2 className="w-4 h-4 text-green-400 mr-2" />
+                <li className="flex items-center text-white/80">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400 mr-2" />
                   10+ variations per post
                 </li>
-                <li className="flex items-center text-gray-300">
-                  <CheckCircle2 className="w-4 h-4 text-green-400 mr-2" />
+                <li className="flex items-center text-white/80">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400 mr-2" />
                   Platform optimization
                 </li>
               </ul>
             </Card>
 
             {/* Campaign Manager */}
-            <Card className="group bg-gradient-to-br from-pink-900/20 to-transparent border-white/10 p-8 hover:border-pink-500/50 transition-all">
-              <div className="w-14 h-14 rounded-xl bg-gradient-to-r from-pink-500 to-pink-600 flex items-center justify-center mb-6">
+            <Card variant="glass" className="group p-8 hover:border-pink-500/50 transition-all">
+              <div className="w-14 h-14 rounded-xl bg-gradient-to-r from-pink-500 to-fuchsia-500 flex items-center justify-center mb-6 shadow-lg shadow-pink-500/25">
                 <Calendar className="w-7 h-7 text-white" />
               </div>
               <h3 className="text-2xl font-bold text-white mb-3">AI Campaign Manager</h3>
-              <p className="text-gray-400 mb-4">
+              <p className="text-white/60 mb-4">
                 Schedules and manages campaigns across all platforms with perfect timing for each audience.
               </p>
               <ul className="space-y-2 text-sm">
-                <li className="flex items-center text-gray-300">
-                  <CheckCircle2 className="w-4 h-4 text-green-400 mr-2" />
+                <li className="flex items-center text-white/80">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400 mr-2" />
                   Optimal time scheduling
                 </li>
-                <li className="flex items-center text-gray-300">
-                  <CheckCircle2 className="w-4 h-4 text-green-400 mr-2" />
+                <li className="flex items-center text-white/80">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400 mr-2" />
                   Multi-platform sync
                 </li>
-                <li className="flex items-center text-gray-300">
-                  <CheckCircle2 className="w-4 h-4 text-green-400 mr-2" />
+                <li className="flex items-center text-white/80">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400 mr-2" />
                   A/B testing
                 </li>
               </ul>
             </Card>
 
             {/* Analytics Expert */}
-            <Card className="group bg-gradient-to-br from-green-900/20 to-transparent border-white/10 p-8 hover:border-green-500/50 transition-all">
-              <div className="w-14 h-14 rounded-xl bg-gradient-to-r from-green-500 to-green-600 flex items-center justify-center mb-6">
+            <Card variant="glass-success" className="group p-8 hover:border-green-500/50 transition-all">
+              <div className="w-14 h-14 rounded-xl bg-gradient-to-r from-emerald-500 to-green-500 flex items-center justify-center mb-6 shadow-lg shadow-emerald-500/25">
                 <BarChart3 className="w-7 h-7 text-white" />
               </div>
               <h3 className="text-2xl font-bold text-white mb-3">AI Analytics Expert</h3>
-              <p className="text-gray-400 mb-4">
+              <p className="text-white/60 mb-4">
                 Provides deep insights and actionable recommendations based on real-time performance data.
               </p>
               <ul className="space-y-2 text-sm">
-                <li className="flex items-center text-gray-300">
-                  <CheckCircle2 className="w-4 h-4 text-green-400 mr-2" />
+                <li className="flex items-center text-white/80">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400 mr-2" />
                   Real-time tracking
                 </li>
-                <li className="flex items-center text-gray-300">
-                  <CheckCircle2 className="w-4 h-4 text-green-400 mr-2" />
+                <li className="flex items-center text-white/80">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400 mr-2" />
                   ROI measurement
                 </li>
-                <li className="flex items-center text-gray-300">
-                  <CheckCircle2 className="w-4 h-4 text-green-400 mr-2" />
+                <li className="flex items-center text-white/80">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400 mr-2" />
                   Custom reports
                 </li>
               </ul>
             </Card>
 
             {/* Growth Hacker */}
-            <Card className="group bg-gradient-to-br from-orange-900/20 to-transparent border-white/10 p-8 hover:border-orange-500/50 transition-all">
-              <div className="w-14 h-14 rounded-xl bg-gradient-to-r from-orange-500 to-orange-600 flex items-center justify-center mb-6">
+            <Card variant="glass-warning" className="group p-8 hover:border-orange-500/50 transition-all">
+              <div className="w-14 h-14 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 flex items-center justify-center mb-6 shadow-lg shadow-amber-500/25">
                 <Rocket className="w-7 h-7 text-white" />
               </div>
               <h3 className="text-2xl font-bold text-white mb-3">AI Growth Hacker</h3>
-              <p className="text-gray-400 mb-4">
+              <p className="text-white/60 mb-4">
                 Implements advanced growth strategies and optimizations to accelerate your follower growth.
               </p>
               <ul className="space-y-2 text-sm">
-                <li className="flex items-center text-gray-300">
-                  <CheckCircle2 className="w-4 h-4 text-green-400 mr-2" />
+                <li className="flex items-center text-white/80">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400 mr-2" />
                   Hashtag research
                 </li>
-                <li className="flex items-center text-gray-300">
-                  <CheckCircle2 className="w-4 h-4 text-green-400 mr-2" />
+                <li className="flex items-center text-white/80">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400 mr-2" />
                   Engagement tactics
                 </li>
-                <li className="flex items-center text-gray-300">
-                  <CheckCircle2 className="w-4 h-4 text-green-400 mr-2" />
+                <li className="flex items-center text-white/80">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400 mr-2" />
                   Audience targeting
                 </li>
               </ul>
             </Card>
 
             {/* Compliance Officer */}
-            <Card className="group bg-gradient-to-br from-red-900/20 to-transparent border-white/10 p-8 hover:border-red-500/50 transition-all">
-              <div className="w-14 h-14 rounded-xl bg-gradient-to-r from-red-500 to-red-600 flex items-center justify-center mb-6">
+            <Card variant="glass-destructive" className="group p-8 hover:border-red-500/50 transition-all">
+              <div className="w-14 h-14 rounded-xl bg-gradient-to-r from-red-500 to-rose-500 flex items-center justify-center mb-6 shadow-lg shadow-red-500/25">
                 <Shield className="w-7 h-7 text-white" />
               </div>
               <h3 className="text-2xl font-bold text-white mb-3">AI Compliance Officer</h3>
-              <p className="text-gray-400 mb-4">
+              <p className="text-white/60 mb-4">
                 Ensures all content follows platform guidelines and best practices to maximize reach.
               </p>
               <ul className="space-y-2 text-sm">
-                <li className="flex items-center text-gray-300">
-                  <CheckCircle2 className="w-4 h-4 text-green-400 mr-2" />
+                <li className="flex items-center text-white/80">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400 mr-2" />
                   Platform compliance
                 </li>
-                <li className="flex items-center text-gray-300">
-                  <CheckCircle2 className="w-4 h-4 text-green-400 mr-2" />
+                <li className="flex items-center text-white/80">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400 mr-2" />
                   Content moderation
                 </li>
-                <li className="flex items-center text-gray-300">
-                  <CheckCircle2 className="w-4 h-4 text-green-400 mr-2" />
+                <li className="flex items-center text-white/80">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400 mr-2" />
                   Brand safety
                 </li>
               </ul>
@@ -505,7 +510,7 @@ export default function HomePage() {
             <h2 className="text-4xl font-bold text-white mb-4">
               One Platform. All Networks.
             </h2>
-            <p className="text-xl text-gray-400">
+            <p className="text-xl text-white/50">
               Manage your entire social media presence from a single dashboard
             </p>
           </div>
@@ -519,9 +524,9 @@ export default function HomePage() {
               { name: 'Facebook', icon: 'f' },
               { name: 'YouTube', icon: '▶' }
             ].map((platform) => (
-              <Card key={platform.name} className="bg-white/5 backdrop-blur-sm border-white/10 p-6 text-center hover:bg-white/10 transition-all group">
+              <Card key={platform.name} variant="glass" className="p-6 text-center hover:bg-white/[0.08] transition-all group">
                 <div className="text-3xl mb-2 group-hover:scale-110 transition-transform">{platform.icon}</div>
-                <p className="text-sm text-gray-300">{platform.name}</p>
+                <p className="text-sm text-white/70">{platform.name}</p>
               </Card>
             ))}
           </div>
@@ -531,12 +536,12 @@ export default function HomePage() {
       {/* ROI Calculator */}
       <section className="py-20 px-6">
         <div className="container mx-auto">
-          <Card className="bg-gradient-to-r from-purple-900/50 to-blue-900/50 backdrop-blur-xl border-white/10 p-12 max-w-4xl mx-auto">
+          <Card variant="gradient-primary" className="p-12 max-w-4xl mx-auto">
             <div className="text-center mb-8">
               <h2 className="text-4xl font-bold text-white mb-4">
                 Save $120,000+ Per Year
               </h2>
-              <p className="text-xl text-gray-300">
+              <p className="text-xl text-white/70">
                 See how much you'll save compared to a traditional agency
               </p>
             </div>
@@ -545,54 +550,56 @@ export default function HomePage() {
               <div className="space-y-4">
                 <h3 className="text-xl font-semibold text-white mb-4">Traditional Agency</h3>
                 <div className="space-y-3">
-                  <div className="flex justify-between text-gray-300">
+                  <div className="flex justify-between text-white/70">
                     <span>Monthly Retainer</span>
                     <span className="text-red-400">$10,000</span>
                   </div>
-                  <div className="flex justify-between text-gray-300">
+                  <div className="flex justify-between text-white/70">
                     <span>Setup Fee</span>
                     <span className="text-red-400">$5,000</span>
                   </div>
-                  <div className="flex justify-between text-gray-300">
+                  <div className="flex justify-between text-white/70">
                     <span>Additional Services</span>
                     <span className="text-red-400">$2,000+</span>
                   </div>
-                  <div className="border-t border-white/20 pt-3 flex justify-between text-white font-bold">
+                  <Separator variant="glass" className="my-3" />
+                  <div className="flex justify-between text-white font-bold">
                     <span>Annual Cost</span>
                     <span className="text-red-400">$144,000+</span>
                   </div>
                 </div>
               </div>
-              
+
               <div className="space-y-4">
                 <h3 className="text-xl font-semibold text-white mb-4">SYNTHEX Platform</h3>
                 <div className="space-y-3">
-                  <div className="flex justify-between text-gray-300">
+                  <div className="flex justify-between text-white/70">
                     <span>Monthly Subscription</span>
-                    <span className="text-green-400">$297</span>
+                    <span className="text-emerald-400">$297</span>
                   </div>
-                  <div className="flex justify-between text-gray-300">
+                  <div className="flex justify-between text-white/70">
                     <span>Setup Fee</span>
-                    <span className="text-green-400">$0</span>
+                    <span className="text-emerald-400">$0</span>
                   </div>
-                  <div className="flex justify-between text-gray-300">
+                  <div className="flex justify-between text-white/70">
                     <span>All Features Included</span>
-                    <span className="text-green-400">✓</span>
+                    <span className="text-emerald-400">✓</span>
                   </div>
-                  <div className="border-t border-white/20 pt-3 flex justify-between text-white font-bold">
+                  <Separator variant="glass-success" className="my-3" />
+                  <div className="flex justify-between text-white font-bold">
                     <span>Annual Cost</span>
-                    <span className="text-green-400">$3,564</span>
+                    <span className="text-emerald-400">$3,564</span>
                   </div>
                 </div>
               </div>
             </div>
             
             <div className="mt-12 text-center">
-              <div className="inline-flex items-center space-x-2 px-6 py-3 rounded-full bg-gradient-to-r from-green-500/20 to-green-600/20 border border-green-500/30">
-                <Award className="w-5 h-5 text-green-400" />
-                <span className="text-xl font-bold text-green-400">You Save $140,436/Year</span>
-              </div>
-              <p className="mt-4 text-gray-400">Plus get better results with AI that never sleeps</p>
+              <Badge variant="glass-success" size="lg" className="px-6 py-3">
+                <Award className="w-5 h-5 mr-2" />
+                <span className="text-xl font-bold">You Save $140,436/Year</span>
+              </Badge>
+              <p className="mt-4 text-white/50">Plus get better results with AI that never sleeps</p>
             </div>
           </Card>
         </div>
@@ -605,7 +612,7 @@ export default function HomePage() {
             <h2 className="text-5xl font-bold text-white mb-6">
               Stop Overpaying for Social Media Management
             </h2>
-            <p className="text-xl text-gray-300 mb-8">
+            <p className="text-xl text-white/70 mb-8">
               Join 1000+ businesses getting agency-level results at 97% less cost
             </p>
             
@@ -623,21 +630,21 @@ export default function HomePage() {
               </Link>
             </div>
             
-            <div className="flex flex-wrap justify-center gap-6 text-sm text-gray-400">
+            <div className="flex flex-wrap justify-center gap-6 text-sm text-white/50">
               <div className="flex items-center space-x-2">
-                <CheckCircle2 className="w-4 h-4 text-green-400" />
+                <CheckCircle2 className="w-4 h-4 text-emerald-400" />
                 <span>No credit card required</span>
               </div>
               <div className="flex items-center space-x-2">
-                <CheckCircle2 className="w-4 h-4 text-green-400" />
+                <CheckCircle2 className="w-4 h-4 text-emerald-400" />
                 <span>14-day free trial</span>
               </div>
               <div className="flex items-center space-x-2">
-                <CheckCircle2 className="w-4 h-4 text-green-400" />
+                <CheckCircle2 className="w-4 h-4 text-emerald-400" />
                 <span>Cancel anytime</span>
               </div>
               <div className="flex items-center space-x-2">
-                <CheckCircle2 className="w-4 h-4 text-green-400" />
+                <CheckCircle2 className="w-4 h-4 text-emerald-400" />
                 <span>24/7 support</span>
               </div>
             </div>
@@ -657,22 +664,22 @@ export default function HomePage() {
                 </div>
                 <span className="text-2xl font-bold text-white">SYNTHEX</span>
               </div>
-              <p className="text-gray-400 mb-4">
+              <p className="text-white/50 mb-4">
                 Your complete social media agency powered by artificial intelligence.
               </p>
               <div className="space-y-2">
-                <p className="text-gray-400 text-sm">
+                <p className="text-white/50 text-sm">
                   <a href="mailto:support@synthex.social" className="hover:text-white transition">
                     support@synthex.social
                   </a>
                 </p>
-                <p className="text-gray-400 text-sm">1-800-SYNTHEX</p>
+                <p className="text-white/50 text-sm">1-800-SYNTHEX</p>
               </div>
             </div>
             
             <div>
               <h4 className="text-white font-semibold mb-4">Product</h4>
-              <ul className="space-y-2 text-gray-400">
+              <ul className="space-y-2 text-white/50">
                 <li><Link href="/features" className="hover:text-white transition">Features</Link></li>
                 <li><Link href="/pricing" className="hover:text-white transition">Pricing</Link></li>
                 <li><Link href="/case-studies" className="hover:text-white transition">Case Studies</Link></li>
@@ -680,10 +687,10 @@ export default function HomePage() {
                 <li><Link href="/roadmap" className="hover:text-white transition">Roadmap</Link></li>
               </ul>
             </div>
-            
+
             <div>
               <h4 className="text-white font-semibold mb-4">Resources</h4>
-              <ul className="space-y-2 text-gray-400">
+              <ul className="space-y-2 text-white/50">
                 <li><Link href="/docs" className="hover:text-white transition">Documentation</Link></li>
                 <li><Link href="/api" className="hover:text-white transition">API Reference</Link></li>
                 <li><Link href="/blog" className="hover:text-white transition">Blog</Link></li>
@@ -691,10 +698,10 @@ export default function HomePage() {
                 <li><Link href="/support" className="hover:text-white transition">Support Center</Link></li>
               </ul>
             </div>
-            
+
             <div>
               <h4 className="text-white font-semibold mb-4">Company</h4>
-              <ul className="space-y-2 text-gray-400">
+              <ul className="space-y-2 text-white/50">
                 <li><Link href="/about" className="hover:text-white transition">About Us</Link></li>
                 <li><Link href="/careers" className="hover:text-white transition">Careers</Link></li>
                 <li><Link href="/partners" className="hover:text-white transition">Partners</Link></li>
@@ -704,18 +711,19 @@ export default function HomePage() {
             </div>
           </div>
           
-          <div className="border-t border-white/10 pt-8 flex flex-col md:flex-row justify-between items-center">
-            <p className="text-gray-400 text-sm mb-4 md:mb-0">
+          <Separator variant="glass" className="mb-8" />
+          <div className="flex flex-col md:flex-row justify-between items-center">
+            <p className="text-white/40 text-sm mb-4 md:mb-0">
               © 2025 SYNTHEX. All rights reserved.
             </p>
             <div className="flex space-x-6">
-              <a href="https://twitter.com/synthexai" className="text-gray-400 hover:text-white transition">
+              <a href="https://twitter.com/synthexai" className="text-white/40 hover:text-white transition">
                 Twitter
               </a>
-              <a href="https://linkedin.com/company/synthex" className="text-gray-400 hover:text-white transition">
+              <a href="https://linkedin.com/company/synthex" className="text-white/40 hover:text-white transition">
                 LinkedIn
               </a>
-              <a href="https://github.com/synthex" className="text-gray-400 hover:text-white transition">
+              <a href="https://github.com/synthex" className="text-white/40 hover:text-white transition">
                 GitHub
               </a>
             </div>
