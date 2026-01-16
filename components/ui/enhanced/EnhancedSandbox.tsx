@@ -5,14 +5,14 @@ import { motion, AnimatePresence, useMotionValue, useTransform, useSpring, useDr
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, Box, Sphere, Text, Float, MeshWobbleMaterial } from '@react-three/drei';
 import {
-  Code, Eye, Smartphone, Monitor, Tablet, Copy, Download, Share2, 
+  Code, Eye, Smartphone, Monitor, Tablet, Copy, Download, Share2,
   Palette, Type, Image, Video, Link2, Hash, AtSign, MessageSquare,
   Heart, Repeat, Bookmark, Send, MoreHorizontal, CheckCircle,
   Twitter, Linkedin, Instagram, Facebook, Youtube, Sparkles,
   Layers, Settings, Wand2, Brain, Zap, TrendingUp, BarChart3,
   Calendar, Clock, Users, Globe, Cpu, Database, Cloud, Shield,
   RefreshCw, Save, Play, Pause, SkipForward, Volume2, Mic, Camera
-} from 'lucide-react';
+} from '@/components/icons';
 
 // 3D Preview Component
 function Preview3D({ content, platform }: { content: string; platform: string }) {
