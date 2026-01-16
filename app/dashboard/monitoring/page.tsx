@@ -155,7 +155,7 @@ export default function MonitoringDashboard() {
 
       {/* System Status Overview */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="glass-card">
+        <Card variant="glass">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium flex items-center">
               <Server className="w-4 h-4 mr-2 text-purple-400" />
@@ -168,7 +168,7 @@ export default function MonitoringDashboard() {
           </CardContent>
         </Card>
 
-        <Card className="glass-card">
+        <Card variant="glass">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium flex items-center">
               <Database className="w-4 h-4 mr-2 text-blue-400" />
@@ -183,7 +183,7 @@ export default function MonitoringDashboard() {
           </CardContent>
         </Card>
 
-        <Card className="glass-card">
+        <Card variant="glass">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium flex items-center">
               <Zap className="w-4 h-4 mr-2 text-yellow-400" />
@@ -196,7 +196,7 @@ export default function MonitoringDashboard() {
           </CardContent>
         </Card>
 
-        <Card className="glass-card">
+        <Card variant="glass">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium flex items-center">
               <Shield className="w-4 h-4 mr-2 text-green-400" />
@@ -220,7 +220,7 @@ export default function MonitoringDashboard() {
         </TabsList>
 
         <TabsContent value="performance" className="space-y-4">
-          <Card className="glass-card">
+          <Card variant="glass">
             <CardHeader>
               <CardTitle>System Performance</CardTitle>
               <CardDescription>Response time and request volume over 24 hours</CardDescription>
@@ -254,7 +254,7 @@ export default function MonitoringDashboard() {
         </TabsContent>
 
         <TabsContent value="database" className="space-y-4">
-          <Card className="glass-card">
+          <Card variant="glass">
             <CardHeader>
               <CardTitle>Database Metrics</CardTitle>
               <CardDescription>Connection pool and query performance</CardDescription>
@@ -298,7 +298,7 @@ export default function MonitoringDashboard() {
         </TabsContent>
 
         <TabsContent value="api" className="space-y-4">
-          <Card className="glass-card">
+          <Card variant="glass">
             <CardHeader>
               <CardTitle>API Health</CardTitle>
               <CardDescription>Endpoint performance and reliability</CardDescription>
@@ -340,7 +340,7 @@ export default function MonitoringDashboard() {
         </TabsContent>
 
         <TabsContent value="security" className="space-y-4">
-          <Card className="glass-card">
+          <Card variant="glass">
             <CardHeader>
               <CardTitle>Security Overview</CardTitle>
               <CardDescription>Threat detection and prevention status</CardDescription>
@@ -392,7 +392,7 @@ export default function MonitoringDashboard() {
       </Tabs>
 
       {/* Active Users and Sessions */}
-      <Card className="glass-card">
+      <Card variant="glass">
         <CardHeader>
           <CardTitle className="flex items-center">
             <Users className="w-5 h-5 mr-2 text-purple-400" />

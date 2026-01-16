@@ -66,7 +66,7 @@ const StatCard = ({
   icon: React.ElementType;
   description?: string;
 }) => (
-  <Card className="glass-card hover:scale-105 transition-transform">
+  <Card variant="glass-interactive">
     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
       <CardTitle className="text-sm font-medium text-gray-400">{title}</CardTitle>
       <Icon className="h-4 w-4 text-purple-500" />
@@ -213,7 +213,7 @@ export default function DashboardPage() {
             <div className="md:col-span-2">
               <StreakCounter />
             </div>
-            <Card className="glass-card">
+            <Card variant="glass">
               <CardHeader>
                 <CardTitle>Today's Goal</CardTitle>
               </CardHeader>
@@ -233,7 +233,7 @@ export default function DashboardPage() {
           {/* Main Content Grid */}
           <div className="grid gap-6 lg:grid-cols-2">
             {/* Engagement Chart */}
-            <Card className="glass-card col-span-1">
+            <Card variant="glass" className="col-span-1">
               <CardHeader>
                 <CardTitle className="flex items-center justify-between">
                   <span>Weekly Engagement</span>
@@ -269,7 +269,7 @@ export default function DashboardPage() {
             </Card>
 
             {/* Platform Performance */}
-            <Card className="glass-card col-span-1">
+            <Card variant="glass" className="col-span-1">
               <CardHeader>
                 <CardTitle className="flex items-center justify-between">
                   <span>Platform Performance</span>
@@ -302,7 +302,7 @@ export default function DashboardPage() {
           {/* Additional Sections */}
           <div className="grid gap-6 lg:grid-cols-3">
             {/* AI Content Queue */}
-            <Card className="glass-card">
+            <Card variant="glass">
               <CardHeader>
                 <CardTitle className="flex items-center justify-between">
                   <span>AI Content Queue</span>
@@ -338,7 +338,7 @@ export default function DashboardPage() {
             </Card>
 
             {/* Upcoming Posts */}
-            <Card className="glass-card">
+            <Card variant="glass">
               <CardHeader>
                 <CardTitle className="flex items-center justify-between">
                   <span>Upcoming Posts</span>
@@ -382,7 +382,7 @@ export default function DashboardPage() {
             </Card>
 
             {/* Top Performing Content */}
-            <Card className="glass-card">
+            <Card variant="glass">
               <CardHeader>
                 <CardTitle className="flex items-center justify-between">
                   <span>Top Performing</span>
@@ -443,7 +443,7 @@ export default function DashboardPage() {
 
         {/* Automation Tab */}
         <TabsContent value="automation" className="space-y-6">
-          <Card className="glass-card">
+          <Card variant="glass">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <BrainCircuit className="w-5 h-5 text-purple-500" />

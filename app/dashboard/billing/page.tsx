@@ -135,7 +135,7 @@ export default function BillingPage() {
         <h1 className="text-3xl font-bold text-white mb-8">Billing & Subscription</h1>
 
         {/* Current Plan */}
-        <Card className="glass-card p-6 mb-6">
+        <Card variant="glass" className="p-6 mb-6">
           <div className="flex items-start justify-between mb-4">
             <div className="flex items-center space-x-3">
               <Package className="w-6 h-6 text-purple-400" />
@@ -179,7 +179,7 @@ export default function BillingPage() {
         </Card>
 
         {/* Billing Management */}
-        <Card className="glass-card p-6 mb-6">
+        <Card variant="glass" className="p-6 mb-6">
           <div className="flex items-center space-x-3 mb-4">
             <CreditCard className="w-6 h-6 text-purple-400" />
             <h2 className="text-xl font-semibold text-white">Billing Management</h2>
@@ -227,7 +227,7 @@ export default function BillingPage() {
         </Card>
 
         {/* Usage & Limits */}
-        <Card className="glass-card p-6">
+        <Card variant="glass" className="p-6">
           <div className="flex items-center space-x-3 mb-4">
             <Calendar className="w-6 h-6 text-purple-400" />
             <h2 className="text-xl font-semibold text-white">Usage & Limits</h2>

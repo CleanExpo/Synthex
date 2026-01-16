@@ -242,7 +242,7 @@ export default function SettingsPage() {
 
         {/* Profile Tab */}
         <TabsContent value="profile" className="space-y-6">
-          <Card className="glass-card">
+          <Card variant="glass">
             <CardHeader>
               <CardTitle>Profile Information</CardTitle>
               <CardDescription className="text-gray-400">
@@ -369,7 +369,7 @@ export default function SettingsPage() {
 
         {/* Notifications Tab */}
         <TabsContent value="notifications" className="space-y-6">
-          <Card className="glass-card">
+          <Card variant="glass">
             <CardHeader>
               <CardTitle>Notification Preferences</CardTitle>
               <CardDescription className="text-gray-400">
@@ -487,7 +487,7 @@ export default function SettingsPage() {
 
         {/* Integrations Tab */}
         <TabsContent value="integrations" className="space-y-6">
-          <Card className="glass-card">
+          <Card variant="glass">
             <CardHeader>
               <CardTitle>Platform Integrations</CardTitle>
               <CardDescription className="text-gray-400">
@@ -547,7 +547,7 @@ export default function SettingsPage() {
           </Card>
 
           {/* API Keys */}
-          <Card className="glass-card">
+          <Card variant="glass">
             <CardHeader>
               <CardTitle>API Configuration</CardTitle>
               <CardDescription className="text-gray-400">
@@ -585,7 +585,7 @@ export default function SettingsPage() {
 
         {/* Privacy Tab */}
         <TabsContent value="privacy" className="space-y-6">
-          <Card className="glass-card">
+          <Card variant="glass">
             <CardHeader>
               <CardTitle>Privacy Settings</CardTitle>
               <CardDescription className="text-gray-400">
@@ -652,7 +652,7 @@ export default function SettingsPage() {
 
         {/* Billing Tab */}
         <TabsContent value="billing" className="space-y-6">
-          <Card className="glass-card">
+          <Card variant="glass">
             <CardHeader>
               <CardTitle>Subscription & Billing</CardTitle>
               <CardDescription className="text-gray-400">
@@ -737,7 +737,7 @@ export default function SettingsPage() {
 
         {/* Advanced Tab */}
         <TabsContent value="advanced" className="space-y-6">
-          <Card className="glass-card">
+          <Card variant="glass">
             <CardHeader>
               <CardTitle>Advanced Settings</CardTitle>
               <CardDescription className="text-gray-400">

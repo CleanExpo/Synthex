@@ -234,7 +234,7 @@ export default function SchedulePage() {
 
       {/* Stats */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card className="glass-card">
+        <Card variant="glass">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-gray-400">Scheduled</CardTitle>
             <Clock className="h-4 w-4 text-purple-500" />
@@ -244,7 +244,7 @@ export default function SchedulePage() {
             <p className="text-xs text-gray-500 mt-1">Ready to publish</p>
           </CardContent>
         </Card>
-        <Card className="glass-card">
+        <Card variant="glass">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-gray-400">Published</CardTitle>
             <CheckCircle className="h-4 w-4 text-green-500" />
@@ -254,7 +254,7 @@ export default function SchedulePage() {
             <p className="text-xs text-gray-500 mt-1">This month</p>
           </CardContent>
         </Card>
-        <Card className="glass-card">
+        <Card variant="glass">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-gray-400">Avg Engagement</CardTitle>
             <TrendingUp className="h-4 w-4 text-purple-500" />
@@ -264,7 +264,7 @@ export default function SchedulePage() {
             <p className="text-xs text-gray-500 mt-1">Across all posts</p>
           </CardContent>
         </Card>
-        <Card className="glass-card">
+        <Card variant="glass">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-gray-400">Best Time</CardTitle>
             <Zap className="h-4 w-4 text-yellow-500" />
@@ -332,7 +332,7 @@ export default function SchedulePage() {
 
       {/* Main Content */}
       {viewMode === 'calendar' ? (
-        <Card className="glass-card">
+        <Card variant="glass">
           <CardHeader>
             <div className="flex items-center justify-between">
               <CardTitle>
@@ -423,7 +423,7 @@ export default function SchedulePage() {
       ) : (
         <div className="space-y-4">
           {filteredPosts.map(post => (
-            <Card key={post.id} className="glass-card">
+            <Card key={post.id} variant="glass">
               <CardContent className="pt-6">
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
@@ -510,7 +510,7 @@ export default function SchedulePage() {
       )}
 
       {/* Best Times Sidebar */}
-      <Card className="glass-card">
+      <Card variant="glass">
         <CardHeader>
           <CardTitle className="text-lg">Optimal Posting Times</CardTitle>
           <CardDescription className="text-gray-400">

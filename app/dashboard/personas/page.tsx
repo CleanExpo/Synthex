@@ -203,7 +203,7 @@ export default function PersonasPage() {
 
       {/* Stats */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card className="glass-card">
+        <Card variant="glass">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-gray-400">Active Personas</CardTitle>
             <User className="h-4 w-4 text-purple-500" />
@@ -213,7 +213,7 @@ export default function PersonasPage() {
             <p className="text-xs text-gray-500 mt-1">Ready to use</p>
           </CardContent>
         </Card>
-        <Card className="glass-card">
+        <Card variant="glass">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-gray-400">Training Data</CardTitle>
             <Brain className="h-4 w-4 text-purple-500" />
@@ -223,7 +223,7 @@ export default function PersonasPage() {
             <p className="text-xs text-gray-500 mt-1">Total words analyzed</p>
           </CardContent>
         </Card>
-        <Card className="glass-card">
+        <Card variant="glass">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-gray-400">Avg Accuracy</CardTitle>
             <BarChart3 className="h-4 w-4 text-purple-500" />
@@ -233,7 +233,7 @@ export default function PersonasPage() {
             <p className="text-xs text-gray-500 mt-1">Voice matching score</p>
           </CardContent>
         </Card>
-        <Card className="glass-card">
+        <Card variant="glass">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-gray-400">Content Sources</CardTitle>
             <FileText className="h-4 w-4 text-purple-500" />
@@ -249,7 +249,7 @@ export default function PersonasPage() {
       <div className="grid gap-6 lg:grid-cols-3">
         {/* Personas List */}
         <div className="lg:col-span-1">
-          <Card className="glass-card">
+          <Card variant="glass">
             <CardHeader>
               <CardTitle>Your Personas</CardTitle>
               <CardDescription className="text-gray-400">
@@ -305,7 +305,7 @@ export default function PersonasPage() {
           {selectedPersona ? (
             <>
               {/* Persona Details */}
-              <Card className="glass-card mb-6">
+              <Card variant="glass" className="mb-6">
                 <CardHeader>
                   <div className="flex items-center justify-between">
                     <div>
@@ -383,7 +383,7 @@ export default function PersonasPage() {
               </Card>
 
               {/* Upload Training Data */}
-              <Card className="glass-card">
+              <Card variant="glass">
                 <CardHeader>
                   <CardTitle>Add Training Data</CardTitle>
                   <CardDescription className="text-gray-400">
@@ -500,7 +500,7 @@ export default function PersonasPage() {
               </Card>
             </>
           ) : (
-            <Card className="glass-card">
+            <Card variant="glass">
               <CardContent className="pt-20 pb-20 text-center">
                 <Brain className="h-16 w-16 mx-auto mb-4 text-gray-500" />
                 <h3 className="text-xl font-semibold text-white mb-2">Select a Persona</h3>

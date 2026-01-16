@@ -350,7 +350,7 @@ export default function SandboxPage() {
 
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Editor */}
-        <Card className="glass-card">
+        <Card variant="glass">
           <CardHeader>
             <CardTitle>Content Editor</CardTitle>
             <CardDescription className="text-gray-400">
@@ -482,7 +482,7 @@ export default function SandboxPage() {
         </Card>
 
         {/* Preview */}
-        <Card className="glass-card">
+        <Card variant="glass">
           <CardHeader>
             <div className="flex items-center justify-between">
               <div>

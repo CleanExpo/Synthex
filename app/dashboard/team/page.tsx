@@ -375,7 +375,7 @@ export default function TeamPage() {
                 Invite Member
               </Button>
             </DialogTrigger>
-            <DialogContent className="liquid-glass border border-white/10">
+            <DialogContent className="bg-white/[0.02] backdrop-blur-xl border border-white/[0.08]">
               <DialogHeader>
                 <DialogTitle className="text-white">Invite Team Member</DialogTitle>
                 <DialogDescription className="text-gray-400">
@@ -403,7 +403,7 @@ export default function TeamPage() {
                     <SelectTrigger className="bg-white/5 border-white/10 text-white mt-1">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent className="liquid-glass border-white/10">
+                    <SelectContent className="bg-white/[0.02] backdrop-blur-xl border-white/[0.08]">
                       <SelectItem value="Admin">
                         <div className="flex items-center">
                           <Crown className="mr-2 h-4 w-4 text-red-400" />
@@ -479,7 +479,7 @@ export default function TeamPage() {
 
       {/* Stats Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card className="liquid-glass">
+        <Card variant="glass">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
@@ -490,7 +490,7 @@ export default function TeamPage() {
             </div>
           </CardContent>
         </Card>
-        <Card className="liquid-glass">
+        <Card variant="glass">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
@@ -503,7 +503,7 @@ export default function TeamPage() {
             </div>
           </CardContent>
         </Card>
-        <Card className="liquid-glass">
+        <Card variant="glass">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
@@ -516,7 +516,7 @@ export default function TeamPage() {
             </div>
           </CardContent>
         </Card>
-        <Card className="liquid-glass">
+        <Card variant="glass">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
@@ -532,7 +532,7 @@ export default function TeamPage() {
       </div>
 
       {/* Filters and Search */}
-      <Card className="liquid-glass">
+      <Card variant="glass">
         <CardContent className="p-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0 sm:space-x-4">
             <div className="relative flex-1 max-w-sm">
@@ -550,7 +550,7 @@ export default function TeamPage() {
                 <SelectTrigger className="w-32 bg-white/5 border-white/10 text-white">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="liquid-glass border-white/10">
+                <SelectContent className="bg-white/[0.02] backdrop-blur-xl border-white/[0.08]">
                   <SelectItem value="all">All Roles</SelectItem>
                   <SelectItem value="Admin">Admin</SelectItem>
                   <SelectItem value="Editor">Editor</SelectItem>
@@ -561,7 +561,7 @@ export default function TeamPage() {
                 <SelectTrigger className="w-32 bg-white/5 border-white/10 text-white">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="liquid-glass border-white/10">
+                <SelectContent className="bg-white/[0.02] backdrop-blur-xl border-white/[0.08]">
                   <SelectItem value="all">All Status</SelectItem>
                   <SelectItem value="Active">Active</SelectItem>
                   <SelectItem value="Pending">Pending</SelectItem>
@@ -576,7 +576,7 @@ export default function TeamPage() {
       <div className="grid gap-6 lg:grid-cols-3">
         {/* Team Members List */}
         <div className="lg:col-span-2">
-          <Card className="liquid-glass">
+          <Card variant="glass">
             <CardHeader>
               <CardTitle className="text-white">Team Members</CardTitle>
               <CardDescription className="text-gray-400">
@@ -626,7 +626,7 @@ export default function TeamPage() {
                           <MoreVertical className="h-4 w-4" />
                         </Button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent className="liquid-glass border-white/10" align="end">
+                      <DropdownMenuContent className="bg-white/[0.02] backdrop-blur-xl border-white/[0.08]" align="end">
                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
                         <DropdownMenuSeparator className="bg-white/10" />
                         
@@ -682,7 +682,7 @@ export default function TeamPage() {
 
         {/* Activity Log */}
         <div>
-          <Card className="liquid-glass">
+          <Card variant="glass">
             <CardHeader>
               <CardTitle className="text-white flex items-center">
                 <Activity className="mr-2 h-5 w-5" />
@@ -717,7 +717,7 @@ export default function TeamPage() {
           </Card>
 
           {/* Role Permissions Guide */}
-          <Card className="liquid-glass mt-6">
+          <Card variant="glass" className="mt-6">
             <CardHeader>
               <CardTitle className="text-white flex items-center">
                 <Shield className="mr-2 h-5 w-5" />

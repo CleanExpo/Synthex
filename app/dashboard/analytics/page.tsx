@@ -188,7 +188,7 @@ export default function AnalyticsPage() {
 
       {/* Key Metrics */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card className="glass-card">
+        <Card variant="glass">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-gray-400">Total Reach</CardTitle>
             <Eye className="h-4 w-4 text-purple-500" />
@@ -202,7 +202,7 @@ export default function AnalyticsPage() {
             </div>
           </CardContent>
         </Card>
-        <Card className="glass-card">
+        <Card variant="glass">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-gray-400">Total Engagement</CardTitle>
             <Heart className="h-4 w-4 text-purple-500" />
@@ -216,7 +216,7 @@ export default function AnalyticsPage() {
             </div>
           </CardContent>
         </Card>
-        <Card className="glass-card">
+        <Card variant="glass">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-gray-400">Engagement Rate</CardTitle>
             <Activity className="h-4 w-4 text-purple-500" />
@@ -230,7 +230,7 @@ export default function AnalyticsPage() {
             </div>
           </CardContent>
         </Card>
-        <Card className="glass-card">
+        <Card variant="glass">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-gray-400">Follower Growth</CardTitle>
             <Users className="h-4 w-4 text-purple-500" />
@@ -249,7 +249,7 @@ export default function AnalyticsPage() {
       {/* Charts */}
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Engagement Trend */}
-        <Card className="glass-card">
+        <Card variant="glass">
           <CardHeader>
             <CardTitle>Engagement Trend</CardTitle>
             <CardDescription className="text-gray-400">
@@ -310,7 +310,7 @@ export default function AnalyticsPage() {
         </Card>
 
         {/* Platform Distribution */}
-        <Card className="glass-card">
+        <Card variant="glass">
           <CardHeader>
             <CardTitle>Platform Distribution</CardTitle>
             <CardDescription className="text-gray-400">
@@ -348,7 +348,7 @@ export default function AnalyticsPage() {
       </div>
 
       {/* Content Performance */}
-      <Card className="glass-card">
+      <Card variant="glass">
         <CardHeader>
           <CardTitle>Content Performance by Type</CardTitle>
           <CardDescription className="text-gray-400">
@@ -398,7 +398,7 @@ export default function AnalyticsPage() {
       {/* Growth & Top Posts */}
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Follower Growth */}
-        <Card className="glass-card">
+        <Card variant="glass">
           <CardHeader>
             <CardTitle>Growth Metrics</CardTitle>
             <CardDescription className="text-gray-400">
@@ -442,7 +442,7 @@ export default function AnalyticsPage() {
         </Card>
 
         {/* Top Posts */}
-        <Card className="glass-card">
+        <Card variant="glass">
           <CardHeader>
             <CardTitle>Top Performing Posts</CardTitle>
             <CardDescription className="text-gray-400">
@@ -492,7 +492,7 @@ export default function AnalyticsPage() {
       </div>
 
       {/* Detailed Metrics Table */}
-      <Card className="glass-card">
+      <Card variant="glass">
         <CardHeader>
           <CardTitle>Detailed Metrics</CardTitle>
           <CardDescription className="text-gray-400">

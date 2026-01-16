@@ -199,7 +199,7 @@ export default function ViralPatternsPage() {
 
       {/* Analysis Progress */}
       {isAnalyzing && (
-        <Card className="glass-card">
+        <Card variant="glass">
           <CardContent className="pt-6">
             <div className="space-y-2">
               <div className="flex justify-between text-sm">
@@ -216,7 +216,7 @@ export default function ViralPatternsPage() {
       )}
 
       {/* Filters */}
-      <Card className="glass-card">
+      <Card variant="glass">
         <CardContent className="pt-6">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div>
@@ -269,7 +269,7 @@ export default function ViralPatternsPage() {
 
       {/* Key Insights */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card className="glass-card">
+        <Card variant="glass">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-gray-400">Avg Virality Score</CardTitle>
             <TrendingUp className="h-4 w-4 text-purple-500" />
@@ -279,7 +279,7 @@ export default function ViralPatternsPage() {
             <p className="text-xs text-gray-500 mt-1">+12.3% from last week</p>
           </CardContent>
         </Card>
-        <Card className="glass-card">
+        <Card variant="glass">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-gray-400">Best Time to Post</CardTitle>
             <Clock className="h-4 w-4 text-purple-500" />
@@ -289,7 +289,7 @@ export default function ViralPatternsPage() {
             <p className="text-xs text-gray-500 mt-1">Peak engagement window</p>
           </CardContent>
         </Card>
-        <Card className="glass-card">
+        <Card variant="glass">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-gray-400">Top Hook Type</CardTitle>
             <Zap className="h-4 w-4 text-purple-500" />
@@ -299,7 +299,7 @@ export default function ViralPatternsPage() {
             <p className="text-xs text-gray-500 mt-1">30% of viral posts</p>
           </CardContent>
         </Card>
-        <Card className="glass-card">
+        <Card variant="glass">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-gray-400">Avg Growth Rate</CardTitle>
             <Activity className="h-4 w-4 text-purple-500" />
@@ -314,7 +314,7 @@ export default function ViralPatternsPage() {
       {/* Charts */}
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Engagement Timeline */}
-        <Card className="glass-card">
+        <Card variant="glass">
           <CardHeader>
             <CardTitle className="flex items-center justify-between">
               <span>Engagement Timeline</span>
@@ -378,7 +378,7 @@ export default function ViralPatternsPage() {
         </Card>
 
         {/* Hook Types Distribution */}
-        <Card className="glass-card">
+        <Card variant="glass">
           <CardHeader>
             <CardTitle className="flex items-center justify-between">
               <span>Viral Hook Types</span>
@@ -419,7 +419,7 @@ export default function ViralPatternsPage() {
       </div>
 
       {/* Top Viral Patterns */}
-      <Card className="glass-card">
+      <Card variant="glass">
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
             <span>Top Viral Patterns</span>
@@ -498,7 +498,7 @@ export default function ViralPatternsPage() {
       </Card>
 
       {/* Platform Performance Radar */}
-      <Card className="glass-card">
+      <Card variant="glass">
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
             <span>Platform Performance Matrix</span>

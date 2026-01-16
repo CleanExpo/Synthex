@@ -180,7 +180,7 @@ export default function IntegrationsPage() {
           const isConnecting = connectingId === integration.id;
           
           return (
-            <Card key={integration.id} className="liquid-glass">
+            <Card key={integration.id} variant="glass">
               <CardHeader>
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-3">
@@ -274,7 +274,7 @@ export default function IntegrationsPage() {
         })}
       </div>
 
-      <Card className="liquid-glass mt-8">
+      <Card variant="glass" className="mt-8">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Shield className="w-5 h-5 text-green-400" />

@@ -142,7 +142,7 @@ export default function ExperimentsPage() {
 
       {/* Active Experiments Overview */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="glass-card">
+        <Card variant="glass">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium flex items-center">
               <Beaker className="w-4 h-4 mr-2 text-purple-400" />
@@ -155,7 +155,7 @@ export default function ExperimentsPage() {
           </CardContent>
         </Card>
 
-        <Card className="glass-card">
+        <Card variant="glass">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium flex items-center">
               <Play className="w-4 h-4 mr-2 text-green-400" />
@@ -170,7 +170,7 @@ export default function ExperimentsPage() {
           </CardContent>
         </Card>
 
-        <Card className="glass-card">
+        <Card variant="glass">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium flex items-center">
               <Users className="w-4 h-4 mr-2 text-blue-400" />
@@ -185,7 +185,7 @@ export default function ExperimentsPage() {
           </CardContent>
         </Card>
 
-        <Card className="glass-card">
+        <Card variant="glass">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium flex items-center">
               <TrendingUp className="w-4 h-4 mr-2 text-green-400" />
@@ -200,7 +200,7 @@ export default function ExperimentsPage() {
       </div>
 
       {/* Experiments List */}
-      <Card className="glass-card">
+      <Card variant="glass">
         <CardHeader>
           <CardTitle>Experiments</CardTitle>
           <CardDescription>Manage and monitor your A/B tests</CardDescription>
@@ -306,7 +306,7 @@ export default function ExperimentsPage() {
       </Card>
 
       {/* Best Practices */}
-      <Card className="glass-card">
+      <Card variant="glass">
         <CardHeader>
           <CardTitle className="flex items-center">
             <Target className="w-5 h-5 mr-2 text-purple-400" />

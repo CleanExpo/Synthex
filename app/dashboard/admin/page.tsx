@@ -197,7 +197,7 @@ export default function AdminPanel() {
 
       {/* Statistics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="glass-card">
+        <Card variant="glass">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium flex items-center">
               <Users className="w-4 h-4 mr-2 text-purple-400" />
@@ -210,7 +210,7 @@ export default function AdminPanel() {
           </CardContent>
         </Card>
 
-        <Card className="glass-card">
+        <Card variant="glass">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium flex items-center">
               <Activity className="w-4 h-4 mr-2 text-green-400" />
@@ -223,7 +223,7 @@ export default function AdminPanel() {
           </CardContent>
         </Card>
 
-        <Card className="glass-card">
+        <Card variant="glass">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium flex items-center">
               <UserPlus className="w-4 h-4 mr-2 text-blue-400" />
@@ -236,7 +236,7 @@ export default function AdminPanel() {
           </CardContent>
         </Card>
 
-        <Card className="glass-card">
+        <Card variant="glass">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium flex items-center">
               <Ban className="w-4 h-4 mr-2 text-red-400" />
@@ -251,7 +251,7 @@ export default function AdminPanel() {
       </div>
 
       {/* User Management */}
-      <Card className="glass-card">
+      <Card variant="glass">
         <CardHeader>
           <CardTitle>User Management</CardTitle>
           <CardDescription>View and manage all registered users</CardDescription>

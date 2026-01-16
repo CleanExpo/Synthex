@@ -186,7 +186,7 @@ export default function HelpPage() {
       </div>
 
       {/* Search Bar */}
-      <Card className="liquid-glass mb-8">
+      <Card variant="glass" className=" mb-8">
         <CardContent className="p-6">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
@@ -203,7 +203,7 @@ export default function HelpPage() {
 
       {/* Quick Links */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 mb-8">
-        <Card className="liquid-glass hover:scale-105 transition-transform cursor-pointer">
+        <Card variant="glass" className=" hover:scale-105 transition-transform cursor-pointer">
           <CardContent className="p-6">
             <div className="flex items-center gap-4">
               <div className="p-3 rounded-lg bg-gradient-to-br from-cyan-500/20 to-purple-500/20">
@@ -218,7 +218,7 @@ export default function HelpPage() {
           </CardContent>
         </Card>
 
-        <Card className="liquid-glass hover:scale-105 transition-transform cursor-pointer">
+        <Card variant="glass" className=" hover:scale-105 transition-transform cursor-pointer">
           <CardContent className="p-6">
             <div className="flex items-center gap-4">
               <div className="p-3 rounded-lg bg-gradient-to-br from-purple-500/20 to-pink-500/20">
@@ -233,7 +233,7 @@ export default function HelpPage() {
           </CardContent>
         </Card>
 
-        <Card className="liquid-glass hover:scale-105 transition-transform cursor-pointer">
+        <Card variant="glass" className=" hover:scale-105 transition-transform cursor-pointer">
           <Link href="/docs" className="block">
             <CardContent className="p-6">
               <div className="flex items-center gap-4">
@@ -260,7 +260,7 @@ export default function HelpPage() {
             return (
               <Card 
                 key={category.id} 
-                className={`liquid-glass hover:scale-105 transition-transform cursor-pointer ${
+                variant="glass" className={` hover:scale-105 transition-transform cursor-pointer ${
                   selectedCategory === category.id ? 'ring-2 ring-purple-500' : ''
                 }`}
                 onClick={() => setSelectedCategory(
@@ -301,7 +301,7 @@ export default function HelpPage() {
       </div>
 
       {/* FAQs */}
-      <Card className="liquid-glass">
+      <Card variant="glass" className="">
         <CardHeader>
           <CardTitle>Frequently Asked Questions</CardTitle>
           {selectedCategory && (
@@ -335,7 +335,7 @@ export default function HelpPage() {
       </Card>
 
       {/* Contact Support */}
-      <Card className="liquid-glass mt-8">
+      <Card variant="glass" className=" mt-8">
         <CardHeader>
           <CardTitle>Still need help?</CardTitle>
           <CardDescription>Our support team is here to assist you</CardDescription>

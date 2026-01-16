@@ -188,7 +188,7 @@ export default function ContentPage() {
 
       {/* Stats */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card className="glass-card">
+        <Card variant="glass">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-gray-400">Generated Today</CardTitle>
             <Sparkles className="h-4 w-4 text-purple-500" />
@@ -198,7 +198,7 @@ export default function ContentPage() {
             <p className="text-xs text-gray-500 mt-1">+12% from yesterday</p>
           </CardContent>
         </Card>
-        <Card className="glass-card">
+        <Card variant="glass">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-gray-400">Avg Engagement</CardTitle>
             <BarChart3 className="h-4 w-4 text-purple-500" />
@@ -208,7 +208,7 @@ export default function ContentPage() {
             <p className="text-xs text-gray-500 mt-1">Above industry avg</p>
           </CardContent>
         </Card>
-        <Card className="glass-card">
+        <Card variant="glass">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-gray-400">Scheduled</CardTitle>
             <Clock className="h-4 w-4 text-purple-500" />
@@ -218,7 +218,7 @@ export default function ContentPage() {
             <p className="text-xs text-gray-500 mt-1">Next 7 days</p>
           </CardContent>
         </Card>
-        <Card className="glass-card">
+        <Card variant="glass">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-gray-400">Success Rate</CardTitle>
             <Target className="h-4 w-4 text-purple-500" />
@@ -233,7 +233,7 @@ export default function ContentPage() {
       {/* Main Content */}
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Generation Settings */}
-        <Card className="glass-card">
+        <Card variant="glass">
           <CardHeader>
             <CardTitle>Generation Settings</CardTitle>
             <CardDescription className="text-gray-400">
@@ -395,7 +395,7 @@ export default function ContentPage() {
         </Card>
 
         {/* Generated Content */}
-        <Card className="glass-card">
+        <Card variant="glass">
           <CardHeader>
             <div className="flex items-center justify-between">
               <div>

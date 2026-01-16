@@ -185,7 +185,7 @@ export default function BackupsPage() {
 
       {/* Backup Status Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="glass-card">
+        <Card variant="glass">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium flex items-center">
               <Shield className="w-4 h-4 mr-2 text-green-400" />
@@ -202,7 +202,7 @@ export default function BackupsPage() {
           </CardContent>
         </Card>
 
-        <Card className="glass-card">
+        <Card variant="glass">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium flex items-center">
               <Clock className="w-4 h-4 mr-2 text-blue-400" />
@@ -219,7 +219,7 @@ export default function BackupsPage() {
           </CardContent>
         </Card>
 
-        <Card className="glass-card">
+        <Card variant="glass">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium flex items-center">
               <Calendar className="w-4 h-4 mr-2 text-purple-400" />
@@ -236,7 +236,7 @@ export default function BackupsPage() {
           </CardContent>
         </Card>
 
-        <Card className="glass-card">
+        <Card variant="glass">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium flex items-center">
               <HardDrive className="w-4 h-4 mr-2 text-yellow-400" />
@@ -251,7 +251,7 @@ export default function BackupsPage() {
       </div>
 
       {/* Backup Settings */}
-      <Card className="glass-card">
+      <Card variant="glass">
         <CardHeader>
           <CardTitle className="flex items-center">
             <Settings className="w-5 h-5 mr-2" />
@@ -309,7 +309,7 @@ export default function BackupsPage() {
       </Card>
 
       {/* Backup History */}
-      <Card className="glass-card">
+      <Card variant="glass">
         <CardHeader>
           <CardTitle className="flex items-center">
             <Archive className="w-5 h-5 mr-2" />
