@@ -10,7 +10,7 @@ export default function DocsPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900">
       {/* Navigation */}
-      <nav className="fixed top-0 w-full z-50 glass-card border-b">
+      <nav className="fixed top-0 w-full z-50 bg-white/[0.02] backdrop-blur-xl border-b border-white/[0.08]">
         <div className="container mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <Link href="/" className="flex items-center space-x-2">
@@ -51,7 +51,7 @@ export default function DocsPage() {
 
           {/* Documentation Categories */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
-            <Card className="glass-card p-6 hover:scale-105 transition-transform cursor-pointer">
+            <Card variant="glass" className="p-6 hover:scale-105 transition-transform cursor-pointer">
               <Zap className="w-10 h-10 text-purple-500 mb-4" />
               <h3 className="text-xl font-semibold text-white mb-2">Getting Started</h3>
               <p className="text-gray-400 mb-4">
@@ -65,7 +65,7 @@ export default function DocsPage() {
               </ul>
             </Card>
 
-            <Card className="glass-card p-6 hover:scale-105 transition-transform cursor-pointer">
+            <Card variant="glass" className="p-6 hover:scale-105 transition-transform cursor-pointer">
               <BookOpen className="w-10 h-10 text-purple-500 mb-4" />
               <h3 className="text-xl font-semibold text-white mb-2">User Guide</h3>
               <p className="text-gray-400 mb-4">
@@ -79,7 +79,7 @@ export default function DocsPage() {
               </ul>
             </Card>
 
-            <Card className="glass-card p-6 hover:scale-105 transition-transform cursor-pointer">
+            <Card variant="glass" className="p-6 hover:scale-105 transition-transform cursor-pointer">
               <Code className="w-10 h-10 text-purple-500 mb-4" />
               <h3 className="text-xl font-semibold text-white mb-2">API Reference</h3>
               <p className="text-gray-400 mb-4">
@@ -93,7 +93,7 @@ export default function DocsPage() {
               </ul>
             </Card>
 
-            <Card className="glass-card p-6 hover:scale-105 transition-transform cursor-pointer">
+            <Card variant="glass" className="p-6 hover:scale-105 transition-transform cursor-pointer">
               <Settings className="w-10 h-10 text-purple-500 mb-4" />
               <h3 className="text-xl font-semibold text-white mb-2">Advanced Features</h3>
               <p className="text-gray-400 mb-4">
@@ -107,7 +107,7 @@ export default function DocsPage() {
               </ul>
             </Card>
 
-            <Card className="glass-card p-6 hover:scale-105 transition-transform cursor-pointer">
+            <Card variant="glass" className="p-6 hover:scale-105 transition-transform cursor-pointer">
               <Users className="w-10 h-10 text-purple-500 mb-4" />
               <h3 className="text-xl font-semibold text-white mb-2">Team Collaboration</h3>
               <p className="text-gray-400 mb-4">
@@ -121,7 +121,7 @@ export default function DocsPage() {
               </ul>
             </Card>
 
-            <Card className="glass-card p-6 hover:scale-105 transition-transform cursor-pointer">
+            <Card variant="glass" className="p-6 hover:scale-105 transition-transform cursor-pointer">
               <Shield className="w-10 h-10 text-purple-500 mb-4" />
               <h3 className="text-xl font-semibold text-white mb-2">Security & Privacy</h3>
               <p className="text-gray-400 mb-4">
@@ -139,7 +139,7 @@ export default function DocsPage() {
       </section>
 
       {/* Popular Articles */}
-      <section className="py-20 px-6 glass-card">
+      <section className="py-20 px-6 bg-white/[0.02] backdrop-blur-xl border-y border-white/[0.08]">
         <div className="container mx-auto">
           <h2 className="text-3xl font-bold text-center text-white mb-12">Popular Articles</h2>
           <div className="max-w-4xl mx-auto space-y-4">
@@ -151,7 +151,7 @@ export default function DocsPage() {
               'Setting up automated workflows',
               'Interpreting your analytics dashboard',
             ].map((article) => (
-              <Card key={article} className="glass-card p-4 hover:bg-white/10 transition cursor-pointer">
+              <Card key={article} variant="glass" className="p-4 hover:bg-white/10 transition cursor-pointer">
                 <div className="flex items-center justify-between">
                   <span className="text-white">{article}</span>
                   <ArrowRight className="w-5 h-5 text-gray-400" />
@@ -165,7 +165,7 @@ export default function DocsPage() {
       {/* Help Section */}
       <section className="py-20 px-6">
         <div className="container mx-auto">
-          <Card className="glass-card p-12 text-center max-w-2xl mx-auto">
+          <Card variant="glass-primary" className="p-12 text-center max-w-2xl mx-auto">
             <HelpCircle className="w-16 h-16 text-purple-500 mx-auto mb-4" />
             <h2 className="text-3xl font-bold text-white mb-4">
               Need Help?
