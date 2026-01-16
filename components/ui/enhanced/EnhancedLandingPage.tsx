@@ -5,7 +5,7 @@ import { motion, useScroll, useTransform, useSpring, useInView, AnimatePresence 
 import { Canvas, useFrame, useLoader } from '@react-three/fiber';
 import { OrbitControls, Sphere, MeshDistortMaterial, Float, Text3D, Environment, PerspectiveCamera, Stars } from '@react-three/drei';
 import * as THREE from 'three';
-import { Sparkles, Zap, Brain, Rocket, Shield, Users, TrendingUp, ArrowRight, Check, Star, Globe, Cpu, Layers, BarChart3 } from 'lucide-react';
+import { Sparkles, Zap, Brain, Rocket, Shield, Users, TrendingUp, ArrowRight, Check, Star, Globe, Cpu, Layers, BarChart3 } from '@/components/icons';
 import Link from 'next/link';
 
 // 3D Animated Sphere Component

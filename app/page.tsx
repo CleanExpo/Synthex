@@ -5,12 +5,12 @@ import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { 
+import {
   ArrowRight, Sparkles, TrendingUp, Users, Calendar, BarChart3, Zap,
   CheckCircle2, Brain, Shield, Globe, Rocket, Award, LineChart,
   MessageSquare, Hash, Clock, Target, Lightbulb, ChevronRight,
   Star, BadgeCheck, ArrowUpRight
-} from 'lucide-react';
+} from '@/components/icons';
 import { UserCount, EngagementBoost } from '@/components/real-stats';
 
 // Dynamic import 3D components to avoid SSR issues
@@ -40,8 +40,8 @@ export default function HomePage() {
         <div className="absolute -bottom-8 left-20 w-96 h-96 bg-pink-500 rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-blob animation-delay-4000"></div>
       </div>
 
-      {/* Navigation - Responsive */}
-      <nav className="fixed top-0 w-full z-50 backdrop-blur-xl bg-black/50 border-b border-white/10">
+      {/* Navigation - Responsive with Premium Glass */}
+      <nav className="fixed top-0 w-full z-50 glass-premium-solid border-b border-white/[0.06]">
         <div className="container mx-auto px-4 sm:px-6 py-3 sm:py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2 sm:space-x-3">
@@ -82,7 +82,7 @@ export default function HomePage() {
                 </Button>
               </Link>
               <Link href="/signup">
-                <Button className="bg-gradient-to-r from-purple-600 to-blue-600 text-white hover:from-purple-700 hover:to-blue-700 text-sm lg:text-base">
+                <Button variant="premium-primary" className="text-sm lg:text-base">
                   <span className="hidden xl:inline">Start Free Trial</span>
                   <span className="xl:hidden">Start</span>
                   <ArrowRight className="ml-2 w-4 h-4" />
@@ -98,7 +98,7 @@ export default function HomePage() {
         <div className="container mx-auto">
           <div className="max-w-5xl mx-auto text-center">
             {/* Trust Badge */}
-            <div className="inline-flex items-center space-x-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-white/5 border border-white/10 backdrop-blur-sm mb-6 sm:mb-8">
+            <div className="inline-flex items-center space-x-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full glass-premium mb-6 sm:mb-8">
               <BadgeCheck className="w-3 sm:w-4 h-3 sm:h-4 text-green-400" />
               <span className="text-xs sm:text-sm text-gray-300">Trusted by 1000+ businesses worldwide</span>
             </div>
@@ -106,7 +106,7 @@ export default function HomePage() {
             <h1 className="text-3xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold text-white mb-4 sm:mb-6 leading-tight">
               Your Complete
               <br />
-              <span className="bg-gradient-to-r from-purple-400 via-pink-400 to-blue-400 bg-clip-text text-transparent">
+              <span className="gradient-text-premium">
                 Social Media Agency
               </span>
               <br />
@@ -139,16 +139,16 @@ export default function HomePage() {
               </div>
             </div>
 
-            {/* CTA Buttons - Mobile Optimized */}
+            {/* CTA Buttons - Mobile Optimized with Premium Glass */}
             <div className="flex flex-col sm:flex-row justify-center gap-3 sm:gap-4 mb-8 sm:mb-12 px-4 sm:px-0">
               <Link href="/signup" className="w-full sm:w-auto">
-                <Button size="lg" className="w-full sm:w-auto bg-gradient-to-r from-purple-600 to-blue-600 text-white px-6 sm:px-8 py-4 sm:py-6 text-base sm:text-lg hover:from-purple-700 hover:to-blue-700 shadow-2xl shadow-purple-500/25">
+                <Button size="xl" variant="premium-primary" className="w-full sm:w-auto shadow-2xl shadow-purple-500/25">
                   Start Free 14-Day Trial
                   <ArrowRight className="ml-2" />
                 </Button>
               </Link>
               <Link href="/demo" className="w-full sm:w-auto">
-                <Button size="lg" variant="outline" className="w-full sm:w-auto bg-white/5 border-white/20 text-white px-6 sm:px-8 py-4 sm:py-6 text-base sm:text-lg hover:bg-white/10 backdrop-blur-sm">
+                <Button size="xl" variant="glass" className="w-full sm:w-auto">
                   Watch 3-Min Demo
                 </Button>
               </Link>
@@ -173,11 +173,11 @@ export default function HomePage() {
           </div>
         </div>
 
-        {/* Dashboard Preview */}
+        {/* Dashboard Preview with Premium Glass */}
         <div className="container mx-auto mt-20">
           <div className="relative max-w-6xl mx-auto">
             <div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-blue-500 rounded-2xl blur-3xl opacity-20"></div>
-            <Card className="relative bg-black/50 backdrop-blur-xl border border-white/10 rounded-2xl p-2 shadow-2xl">
+            <Card className="relative glass-premium-gradient rounded-2xl p-2 shadow-2xl">
               <div className="aspect-video bg-gradient-to-br from-gray-900 to-black rounded-lg p-8">
                 <div className="grid grid-cols-3 gap-4 h-full">
                   <div className="col-span-2 space-y-4">
@@ -234,7 +234,7 @@ export default function HomePage() {
         <div className="container mx-auto">
           <div className="text-center mb-12">
             <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">
-              <span className="bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
+              <span className="gradient-text-premium">
                 Connected to Every Platform
               </span>
             </h2>
@@ -249,7 +249,7 @@ export default function HomePage() {
         <div className="container mx-auto">
           <div className="text-center mb-12">
             <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">
-              <span className="bg-gradient-to-r from-blue-400 to-pink-400 bg-clip-text text-transparent">
+              <span className="gradient-text-premium">
                 Real Social Media Posts in 3D
               </span>
             </h2>
@@ -271,14 +271,14 @@ export default function HomePage() {
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-            <Card className="bg-white/5 backdrop-blur-sm border-white/10 p-6">
+            <Card className="glass-premium p-6 hover:border-violet-500/30 transition-all">
               <div className="flex mb-4">
                 {[...Array(5)].map((_, i) => (
                   <Star key={i} className="w-5 h-5 fill-yellow-400 text-yellow-400" />
                 ))}
               </div>
               <p className="text-gray-300 mb-4">
-                "Replaced our $8k/month agency. Better results, fraction of the cost. 
+                "Replaced our $8k/month agency. Better results, fraction of the cost.
                 The AI understands our brand voice perfectly."
               </p>
               <div className="flex items-center space-x-3">
@@ -290,14 +290,14 @@ export default function HomePage() {
               </div>
             </Card>
 
-            <Card className="bg-white/5 backdrop-blur-sm border-white/10 p-6">
+            <Card className="glass-premium p-6 hover:border-fuchsia-500/30 transition-all">
               <div className="flex mb-4">
                 {[...Array(5)].map((_, i) => (
                   <Star key={i} className="w-5 h-5 fill-yellow-400 text-yellow-400" />
                 ))}
               </div>
               <p className="text-gray-300 mb-4">
-                "3x our engagement in 30 days. The viral pattern analysis is game-changing. 
+                "3x our engagement in 30 days. The viral pattern analysis is game-changing.
                 It's like having a team of experts 24/7."
               </p>
               <div className="flex items-center space-x-3">
@@ -309,14 +309,14 @@ export default function HomePage() {
               </div>
             </Card>
 
-            <Card className="bg-white/5 backdrop-blur-sm border-white/10 p-6">
+            <Card className="glass-premium p-6 hover:border-cyan-500/30 transition-all">
               <div className="flex mb-4">
                 {[...Array(5)].map((_, i) => (
                   <Star key={i} className="w-5 h-5 fill-yellow-400 text-yellow-400" />
                 ))}
               </div>
               <p className="text-gray-300 mb-4">
-                "From 100 to 50K followers in 6 months. The AI-generated content 
+                "From 100 to 50K followers in 6 months. The AI-generated content
                 consistently outperforms what we created manually."
               </p>
               <div className="flex items-center space-x-3">
@@ -337,7 +337,7 @@ export default function HomePage() {
           <div className="text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">
               Your AI-Powered Social Media
-              <span className="bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent"> Agency Team</span>
+              <span className="gradient-text-premium"> Agency Team</span>
             </h2>
             <p className="text-xl text-gray-400 max-w-3xl mx-auto">
               Every tool a $10,000/month agency uses, powered by AI and available 24/7
@@ -611,13 +611,13 @@ export default function HomePage() {
             
             <div className="flex flex-col sm:flex-row justify-center gap-4 mb-8">
               <Link href="/signup">
-                <Button size="lg" className="bg-gradient-to-r from-purple-600 to-blue-600 text-white px-10 py-6 text-lg hover:from-purple-700 hover:to-blue-700 shadow-2xl shadow-purple-500/25">
+                <Button size="xl" variant="premium-primary" className="shadow-2xl shadow-purple-500/25">
                   Start Your Free Trial Now
                   <ArrowRight className="ml-2" />
                 </Button>
               </Link>
               <Link href="/demo">
-                <Button size="lg" variant="outline" className="bg-white/5 border-white/20 text-white px-10 py-6 text-lg hover:bg-white/10 backdrop-blur-sm">
+                <Button size="xl" variant="glass">
                   Schedule a Demo
                 </Button>
               </Link>
@@ -645,8 +645,8 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="bg-black/50 backdrop-blur-xl border-t border-white/10 py-16 px-6">
+      {/* Footer with Premium Glass */}
+      <footer className="glass-premium-solid border-t border-white/[0.06] py-16 px-6">
         <div className="container mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
             <div>
