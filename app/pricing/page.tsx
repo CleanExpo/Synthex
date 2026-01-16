@@ -79,7 +79,7 @@ export default function PricingPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900">
       {/* Navigation */}
-      <nav className="fixed top-0 w-full z-50 glass-card border-b">
+      <nav className="fixed top-0 w-full z-50 bg-white/[0.02] backdrop-blur-xl border-b border-white/[0.08]">
         <div className="container mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <Link href="/" className="flex items-center space-x-2">
@@ -130,8 +130,9 @@ export default function PricingPage() {
             {plans.map((plan) => (
               <Card
                 key={plan.name}
-                className={`glass-card p-8 relative ${
-                  plan.popular ? 'border-purple-500 scale-105' : ''
+                variant={plan.popular ? 'glass-primary' : 'glass'}
+                className={`p-8 relative ${
+                  plan.popular ? 'scale-105' : ''
                 }`}
               >
                 {plan.popular && (
@@ -218,7 +219,7 @@ export default function PricingPage() {
                 a: 'Absolutely. You can cancel your subscription at any time with no cancellation fees.',
               },
             ].map((faq) => (
-              <Card key={faq.q} className="glass-card p-6">
+              <Card key={faq.q} variant="glass" className="p-6">
                 <h3 className="text-lg font-semibold text-white mb-2">{faq.q}</h3>
                 <p className="text-gray-400">{faq.a}</p>
               </Card>
@@ -230,7 +231,7 @@ export default function PricingPage() {
       {/* CTA Section */}
       <section className="py-20 px-6">
         <div className="container mx-auto">
-          <Card className="glass-card p-12 text-center">
+          <Card variant="glass-primary" className="p-12 text-center">
             <h2 className="text-3xl font-bold text-white mb-4">
               Start Your 14-Day Free Trial
             </h2>
