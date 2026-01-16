@@ -1,19 +1,50 @@
 import * as React from 'react';
+import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '@/lib/utils';
 
-const Card = React.forwardRef<
-  HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement>
->(({ className, ...props }, ref) => (
-  <div
-    ref={ref}
-    className={cn(
-      'rounded-lg border bg-card text-card-foreground shadow-sm',
-      className
-    )}
-    {...props}
-  />
-));
+const cardVariants = cva(
+  'rounded-lg text-card-foreground transition-all duration-300',
+  {
+    variants: {
+      variant: {
+        default: 'border bg-card shadow-sm',
+        // Premium Glassmorphism variants (2026 Design System)
+        glass:
+          'bg-white/[0.02] backdrop-blur-xl border border-white/[0.06] shadow-[0_0_0_1px_rgba(255,255,255,0.03)_inset,0_4px_24px_rgba(0,0,0,0.12)] hover:bg-white/[0.05] hover:border-white/[0.12]',
+        'glass-solid':
+          'bg-slate-900/80 backdrop-blur-xl border border-white/[0.08] shadow-[0_0_0_1px_rgba(255,255,255,0.02)_inset,0_4px_24px_rgba(0,0,0,0.2)]',
+        'glass-gradient':
+          'bg-gradient-to-br from-white/[0.04] to-white/[0.01] backdrop-blur-xl border border-white/[0.08] shadow-[0_0_0_1px_rgba(255,255,255,0.03)_inset,0_4px_24px_rgba(0,0,0,0.12)]',
+        'glass-primary':
+          'bg-gradient-to-br from-violet-500/10 to-fuchsia-500/10 backdrop-blur-xl border border-violet-500/20 shadow-[0_0_0_1px_rgba(139,92,246,0.05)_inset,0_4px_24px_rgba(139,92,246,0.1)] hover:border-violet-500/30 hover:shadow-[0_0_30px_rgba(139,92,246,0.15)]',
+        'glass-secondary':
+          'bg-gradient-to-br from-cyan-500/10 to-blue-500/10 backdrop-blur-xl border border-cyan-500/20 shadow-[0_0_0_1px_rgba(6,182,212,0.05)_inset,0_4px_24px_rgba(6,182,212,0.1)] hover:border-cyan-500/30 hover:shadow-[0_0_30px_rgba(6,182,212,0.15)]',
+        // Interactive variants with hover lift
+        interactive:
+          'border bg-card shadow-sm hover:shadow-lg hover:-translate-y-1 cursor-pointer',
+        'glass-interactive':
+          'bg-white/[0.02] backdrop-blur-xl border border-white/[0.06] shadow-[0_4px_24px_rgba(0,0,0,0.12)] hover:bg-white/[0.05] hover:border-white/[0.12] hover:-translate-y-1 hover:shadow-[0_8px_32px_rgba(0,0,0,0.16)] cursor-pointer',
+      },
+    },
+    defaultVariants: {
+      variant: 'default',
+    },
+  }
+);
+
+export interface CardProps
+  extends React.HTMLAttributes<HTMLDivElement>,
+    VariantProps<typeof cardVariants> {}
+
+const Card = React.forwardRef<HTMLDivElement, CardProps>(
+  ({ className, variant, ...props }, ref) => (
+    <div
+      ref={ref}
+      className={cn(cardVariants({ variant, className }))}
+      {...props}
+    />
+  )
+);
 Card.displayName = 'Card';
 
 const CardHeader = React.forwardRef<
@@ -75,4 +106,12 @@ const CardFooter = React.forwardRef<
 ));
 CardFooter.displayName = 'CardFooter';
 
-export { Card, CardHeader, CardFooter, CardTitle, CardDescription, CardContent };
+export {
+  Card,
+  CardHeader,
+  CardFooter,
+  CardTitle,
+  CardDescription,
+  CardContent,
+  cardVariants,
+};
