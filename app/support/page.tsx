@@ -77,7 +77,7 @@ export default function SupportPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-cyan-900/20 to-gray-900">
       {/* Navigation */}
-      <nav className="fixed top-0 w-full z-50 liquid-glass border-b border-white/10">
+      <nav className="fixed top-0 w-full z-50 bg-white/[0.02] backdrop-blur-xl border-b border-white/[0.08]">
         <div className="container mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <Link href="/" className="flex items-center space-x-2">
@@ -123,22 +123,22 @@ export default function SupportPage() {
       <section className="px-6 pb-12">
         <div className="container mx-auto">
           <div className="grid md:grid-cols-4 gap-4">
-            <Card className="liquid-glass p-6 hover:scale-105 transition-transform cursor-pointer">
+            <Card variant="glass" className="p-6 hover:scale-105 transition-transform cursor-pointer">
               <Book className="w-8 h-8 text-cyan-400 mb-3" />
               <h3 className="text-white font-semibold mb-1">Documentation</h3>
               <p className="text-gray-400 text-sm">Comprehensive guides and tutorials</p>
             </Card>
-            <Card className="liquid-glass p-6 hover:scale-105 transition-transform cursor-pointer">
+            <Card variant="glass" className="p-6 hover:scale-105 transition-transform cursor-pointer">
               <Video className="w-8 h-8 text-amber-400 mb-3" />
               <h3 className="text-white font-semibold mb-1">Video Tutorials</h3>
               <p className="text-gray-400 text-sm">Step-by-step video walkthroughs</p>
             </Card>
-            <Card className="liquid-glass p-6 hover:scale-105 transition-transform cursor-pointer">
+            <Card variant="glass" className="p-6 hover:scale-105 transition-transform cursor-pointer">
               <MessageCircle className="w-8 h-8 text-purple-400 mb-3" />
               <h3 className="text-white font-semibold mb-1">Live Chat</h3>
               <p className="text-gray-400 text-sm">Chat with our support team</p>
             </Card>
-            <Card className="liquid-glass p-6 hover:scale-105 transition-transform cursor-pointer">
+            <Card variant="glass" className="p-6 hover:scale-105 transition-transform cursor-pointer">
               <Mail className="w-8 h-8 text-green-400 mb-3" />
               <h3 className="text-white font-semibold mb-1">Email Support</h3>
               <p className="text-gray-400 text-sm">support@synthex.social</p>
@@ -174,9 +174,10 @@ export default function SupportPage() {
           {/* FAQ Items */}
           <div className="max-w-3xl mx-auto space-y-4">
             {filteredFAQs.map((faq, index) => (
-              <Card 
-                key={index} 
-                className="liquid-glass overflow-hidden"
+              <Card
+                key={index}
+                variant="glass"
+                className="overflow-hidden"
               >
                 <button
                   onClick={() => setExpandedFAQ(expandedFAQ === index ? null : index)}
@@ -207,7 +208,7 @@ export default function SupportPage() {
             Browse Help Topics
           </h2>
           <div className="grid md:grid-cols-3 gap-6">
-            <Card className="liquid-glass p-6">
+            <Card variant="glass" className="p-6">
               <Zap className="w-10 h-10 text-cyan-400 mb-4" />
               <h3 className="text-xl font-semibold text-white mb-3">Getting Started</h3>
               <ul className="space-y-2">
@@ -223,7 +224,7 @@ export default function SupportPage() {
               </ul>
             </Card>
 
-            <Card className="liquid-glass p-6">
+            <Card variant="glass" className="p-6">
               <Settings className="w-10 h-10 text-amber-400 mb-4" />
               <h3 className="text-xl font-semibold text-white mb-3">Features & Tools</h3>
               <ul className="space-y-2">
@@ -239,7 +240,7 @@ export default function SupportPage() {
               </ul>
             </Card>
 
-            <Card className="liquid-glass p-6">
+            <Card variant="glass" className="p-6">
               <CreditCard className="w-10 h-10 text-purple-400 mb-4" />
               <h3 className="text-xl font-semibold text-white mb-3">Billing & Plans</h3>
               <ul className="space-y-2">
@@ -261,7 +262,7 @@ export default function SupportPage() {
       {/* Contact Section */}
       <section className="px-6 pb-20">
         <div className="container mx-auto">
-          <Card className="modern-skeu p-12">
+          <Card variant="glass-primary" className="p-12">
             <div className="grid md:grid-cols-2 gap-8">
               <div>
                 <h2 className="text-3xl font-bold text-white mb-4">

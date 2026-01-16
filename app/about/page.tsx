@@ -79,7 +79,7 @@ export default function AboutPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-cyan-900/20 to-gray-900">
       {/* Navigation */}
-      <nav className="fixed top-0 w-full z-50 liquid-glass border-b border-white/10">
+      <nav className="fixed top-0 w-full z-50 bg-white/[0.02] backdrop-blur-xl border-b border-white/[0.08]">
         <div className="container mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <Link href="/" className="flex items-center space-x-2">
@@ -111,7 +111,7 @@ export default function AboutPage() {
           {/* Stats */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-4xl mx-auto">
             {stats.map((stat, index) => (
-              <Card key={index} className="liquid-glass p-6 text-center">
+              <Card key={index} variant="glass" className="p-6 text-center">
                 <div className="text-3xl font-bold gradient-text-cyan mb-2">{stat.value}</div>
                 <div className="text-gray-400">{stat.label}</div>
               </Card>
@@ -123,7 +123,7 @@ export default function AboutPage() {
       {/* Our Story */}
       <section className="px-6 pb-20">
         <div className="container mx-auto">
-          <Card className="liquid-glass p-12">
+          <Card variant="glass" className="p-12">
             <div className="grid md:grid-cols-2 gap-12 items-center">
               <div>
                 <h2 className="text-4xl font-bold text-white mb-6 heading-serif">
@@ -162,7 +162,7 @@ export default function AboutPage() {
       <section className="px-6 pb-20">
         <div className="container mx-auto">
           <div className="grid md:grid-cols-2 gap-8">
-            <Card className="liquid-glass p-8">
+            <Card variant="glass" className="p-8">
               <Target className="w-12 h-12 text-cyan-400 mb-4" />
               <h3 className="text-2xl font-bold text-white mb-4">Our Mission</h3>
               <p className="text-gray-300">
@@ -171,7 +171,7 @@ export default function AboutPage() {
                 engaging, and successful social media presence.
               </p>
             </Card>
-            <Card className="liquid-glass p-8">
+            <Card variant="glass" className="p-8">
               <Rocket className="w-12 h-12 text-amber-400 mb-4" />
               <h3 className="text-2xl font-bold text-white mb-4">Our Vision</h3>
               <p className="text-gray-300">
@@ -192,7 +192,7 @@ export default function AboutPage() {
           </h2>
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
             {values.map((value, index) => (
-              <Card key={index} className="liquid-glass p-6 text-center hover:scale-105 transition-transform">
+              <Card key={index} variant="glass" className="p-6 text-center hover:scale-105 transition-transform">
                 <value.icon className="w-10 h-10 text-cyan-400 mx-auto mb-4" />
                 <h3 className="text-xl font-semibold text-white mb-2">{value.title}</h3>
                 <p className="text-gray-400 text-sm">{value.description}</p>
@@ -214,7 +214,7 @@ export default function AboutPage() {
           </p>
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
             {teamMembers.map((member, index) => (
-              <Card key={index} className="liquid-glass p-6 hover:transform hover:scale-105 transition-all">
+              <Card key={index} variant="glass" className="p-6 hover:transform hover:scale-105 transition-all">
                 <div className="w-20 h-20 bg-gradient-to-br from-cyan-500/20 to-purple-500/20 rounded-full mx-auto mb-4 flex items-center justify-center">
                   <Users className="w-10 h-10 text-cyan-400" />
                 </div>
@@ -248,7 +248,7 @@ export default function AboutPage() {
                   )}
                 </div>
                 <div className="flex-grow">
-                  <div className="liquid-glass p-4 rounded-lg">
+                  <div className="bg-white/[0.02] backdrop-blur-xl border border-white/[0.08] p-4 rounded-lg">
                     <div className="text-cyan-400 font-semibold mb-1">{milestone.year}</div>
                     <div className="text-gray-300">{milestone.event}</div>
                   </div>
@@ -262,7 +262,7 @@ export default function AboutPage() {
       {/* CTA Section */}
       <section className="px-6 pb-20">
         <div className="container mx-auto">
-          <Card className="modern-skeu p-12 text-center">
+          <Card variant="glass-primary" className="p-12 text-center">
             <h2 className="text-4xl font-bold text-white mb-4">
               Ready to Join the <span className="gradient-text-mixed">AI Revolution?</span>
             </h2>
