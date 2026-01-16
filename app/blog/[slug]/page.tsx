@@ -342,7 +342,7 @@ export default function BlogPostPage() {
           </div>
           
           {/* CTA Section */}
-          <Card className="mt-12 glass-card">
+          <Card variant="glass-primary" className="mt-12">
             <CardContent className="p-8 text-center">
               <h3 className="text-2xl font-bold text-white mb-4">
                 Ready to Transform Your Social Media Strategy?

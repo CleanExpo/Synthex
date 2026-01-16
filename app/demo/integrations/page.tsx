@@ -171,7 +171,7 @@ export default function DemoIntegrationsPage() {
         </div>
 
         {/* How It Works Section */}
-        <Card className="glass-card mb-8">
+        <Card variant="glass" className="mb-8">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Shield className="w-5 h-5 text-purple-400" />
@@ -206,7 +206,7 @@ export default function DemoIntegrationsPage() {
             const isConnecting = connectingId === integration.id;
             
             return (
-              <Card key={integration.id} className="glass-card">
+              <Card key={integration.id} variant="glass">
                 <CardHeader>
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-3">
@@ -286,7 +286,7 @@ export default function DemoIntegrationsPage() {
           })}
         </div>
 
-        <Card className="glass-card mt-8">
+        <Card variant="glass" className="mt-8">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Shield className="w-5 h-5 text-green-400" />

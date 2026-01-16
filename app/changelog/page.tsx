@@ -5,7 +5,7 @@ import { Sparkles } from '@/components/icons';
 export default function ChangelogPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900">
-      <nav className="fixed top-0 w-full z-50 glass-card border-b">
+      <nav className="fixed top-0 w-full z-50 bg-white/[0.02] backdrop-blur-xl border-b border-white/[0.08]">
         <div className="container mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <Link href="/" className="flex items-center space-x-2">

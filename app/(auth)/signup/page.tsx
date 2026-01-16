@@ -121,7 +121,7 @@ export default function SignupPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 px-4 py-8">
-      <Card className="w-full max-w-md glass-card">
+      <Card variant="glass" className="w-full max-w-md">
         <CardHeader className="space-y-1">
           <div className="flex items-center justify-center mb-4">
             <Sparkles className="w-10 h-10 text-purple-500" />

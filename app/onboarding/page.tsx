@@ -126,7 +126,7 @@ export default function OnboardingPage() {
           <Progress value={progress} className="h-2" />
         </div>
 
-        <Card className="glass-card">
+        <Card variant="glass">
           <CardHeader>
             <CardTitle className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
               Welcome to SYNTHEX

@@ -172,7 +172,7 @@ export default function DemoSettingsPage() {
 
           <TabsContent value="profile" className="space-y-6">
             {/* Avatar Section */}
-            <Card className="glass-card">
+            <Card variant="glass">
               <CardHeader>
                 <CardTitle>Profile Picture</CardTitle>
                 <CardDescription>
@@ -215,7 +215,7 @@ export default function DemoSettingsPage() {
             </Card>
 
             {/* Profile Information */}
-            <Card className="glass-card">
+            <Card variant="glass">
               <CardHeader>
                 <CardTitle>Profile Information</CardTitle>
                 <CardDescription>
@@ -322,7 +322,7 @@ export default function DemoSettingsPage() {
           </TabsContent>
 
           <TabsContent value="security" className="space-y-6">
-            <Card className="glass-card">
+            <Card variant="glass">
               <CardHeader>
                 <CardTitle>Change Password</CardTitle>
                 <CardDescription>
@@ -385,7 +385,7 @@ export default function DemoSettingsPage() {
               </CardContent>
             </Card>
 
-            <Card className="glass-card">
+            <Card variant="glass">
               <CardHeader>
                 <CardTitle>Security Settings</CardTitle>
                 <CardDescription>
@@ -464,7 +464,7 @@ export default function DemoSettingsPage() {
           </TabsContent>
 
           <TabsContent value="notifications" className="space-y-6">
-            <Card className="glass-card">
+            <Card variant="glass">
               <CardHeader>
                 <CardTitle>Email Notifications</CardTitle>
                 <CardDescription>
@@ -513,7 +513,7 @@ export default function DemoSettingsPage() {
               </CardContent>
             </Card>
 
-            <Card className="glass-card">
+            <Card variant="glass">
               <CardHeader>
                 <CardTitle>Activity Notifications</CardTitle>
                 <CardDescription>
@@ -581,7 +581,7 @@ export default function DemoSettingsPage() {
           </TabsContent>
 
           <TabsContent value="appearance" className="space-y-6">
-            <Card className="glass-card">
+            <Card variant="glass">
               <CardHeader>
                 <CardTitle>Theme Preferences</CardTitle>
                 <CardDescription>
@@ -665,7 +665,7 @@ export default function DemoSettingsPage() {
           </TabsContent>
 
           <TabsContent value="billing" className="space-y-6">
-            <Card className="glass-card">
+            <Card variant="glass">
               <CardHeader>
                 <CardTitle>Current Plan</CardTitle>
                 <CardDescription>
@@ -712,7 +712,7 @@ export default function DemoSettingsPage() {
               </CardContent>
             </Card>
 
-            <Card className="glass-card">
+            <Card variant="glass">
               <CardHeader>
                 <CardTitle>Payment Method</CardTitle>
                 <CardDescription>

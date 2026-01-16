@@ -49,7 +49,7 @@ const quarters = [
 export default function RoadmapPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900">
-      <nav className="fixed top-0 w-full z-50 glass-card border-b">
+      <nav className="fixed top-0 w-full z-50 bg-white/[0.02] backdrop-blur-xl border-b border-white/[0.08]">
         <div className="container mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <Link href="/" className="flex items-center space-x-2">
@@ -76,7 +76,7 @@ export default function RoadmapPage() {
 
           <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
             {quarters.map((quarter, idx) => (
-              <Card key={idx} className={`glass-card p-6 ${
+              <Card key={idx} variant="glass" className={`p-6 ${
                 quarter.status === 'completed' ? 'border-green-500/50' :
                 quarter.status === 'in-progress' ? 'border-purple-500/50 animate-pulse-glow' :
                 'border-white/10'
@@ -134,7 +134,7 @@ export default function RoadmapPage() {
           </div>
 
           <div className="mt-16">
-            <Card className="glass-card p-8 text-center">
+            <Card variant="glass-primary" className="p-8 text-center">
               <h2 className="text-3xl font-bold text-white mb-4">Have a Feature Request?</h2>
               <p className="text-gray-300 mb-6">
                 We're always looking for ways to improve Synthex. Share your ideas and help shape the future of our platform.

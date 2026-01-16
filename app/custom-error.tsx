@@ -114,7 +114,7 @@ export function CustomErrorPage({
         variants={fadeInUp}
         className="max-w-md w-full"
       >
-        <Card className="glass-card p-8 text-center">
+        <Card variant="glass" className="p-8 text-center">
           {/* Error icon */}
           <motion.div
             variants={popIn}
@@ -238,7 +238,7 @@ export function MaintenancePage() {
         variants={fadeInUp}
         className="max-w-md w-full"
       >
-        <Card className="glass-card p-8 text-center">
+        <Card variant="glass" className="p-8 text-center">
           <motion.div
             variants={popIn}
             className="mb-6 flex justify-center"

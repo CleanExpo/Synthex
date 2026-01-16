@@ -30,7 +30,7 @@ export default function Error({
         variants={fadeInUp}
         className="max-w-lg w-full"
       >
-        <Card className="glass-card p-8 text-center">
+        <Card variant="glass" className="p-8 text-center">
           <motion.div
             variants={scaleIn}
             className="mb-6"
