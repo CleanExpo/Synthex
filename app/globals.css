@@ -160,9 +160,84 @@
   transition: all 0.3s ease;
 }
 
+/* Premium Glass Effects - 2026 Design System */
+.glass-premium {
+  @apply bg-white/[0.02] backdrop-blur-xl;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.03) inset,
+    0 4px 24px rgba(0, 0, 0, 0.12);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.glass-premium:hover {
+  @apply bg-white/[0.05];
+  border-color: rgba(255, 255, 255, 0.12);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.05) inset,
+    0 8px 32px rgba(0, 0, 0, 0.16);
+}
+
+.glass-premium-solid {
+  @apply bg-slate-900/80 backdrop-blur-xl;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.02) inset,
+    0 4px 24px rgba(0, 0, 0, 0.2);
+}
+
+.glass-premium-gradient {
+  @apply bg-gradient-to-br from-white/[0.04] to-white/[0.01] backdrop-blur-xl;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.03) inset,
+    0 4px 24px rgba(0, 0, 0, 0.12);
+}
+
+/* Premium Glass Button States */
+.glass-btn {
+  @apply bg-white/[0.05] backdrop-blur-md;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.2s ease;
+}
+
+.glass-btn:hover {
+  @apply bg-white/[0.1];
+  border-color: rgba(255, 255, 255, 0.2);
+  transform: translateY(-1px);
+}
+
+.glass-btn:active {
+  transform: translateY(0);
+}
+
+.glass-btn-primary {
+  @apply bg-gradient-to-r from-violet-500/20 to-fuchsia-500/20 backdrop-blur-md;
+  border: 1px solid rgba(139, 92, 246, 0.3);
+}
+
+.glass-btn-primary:hover {
+  @apply from-violet-500/30 to-fuchsia-500/30;
+  border-color: rgba(139, 92, 246, 0.5);
+  box-shadow: 0 0 20px rgba(139, 92, 246, 0.2);
+}
+
 /* Gradient Text */
 .gradient-text {
   @apply bg-gradient-to-r from-purple-400 via-pink-400 to-blue-400 bg-clip-text text-transparent;
+}
+
+/* Premium Gradient Text - 2026 Design System */
+.gradient-text-premium {
+  @apply bg-gradient-to-r from-violet-400 via-fuchsia-400 to-cyan-400 bg-clip-text text-transparent;
+}
+
+.gradient-text-subtle {
+  @apply bg-gradient-to-r from-slate-200 via-white to-slate-200 bg-clip-text text-transparent;
+}
+
+.gradient-text-gold {
+  @apply bg-gradient-to-r from-amber-200 via-yellow-300 to-amber-200 bg-clip-text text-transparent;
 }
 
 /* Gradient Backgrounds */

@@ -1,59 +1,168 @@
 {
-  "version": "1.0.0",
-  "aesthetic": "2025-2026 Modern",
+  "version": "2.0.0",
+  "aesthetic": "Premium Glassmorphism 2026",
+  "updated": "2026-01-16",
   "colors": {
     "primary": {
-      "DEFAULT": "#0D9488",
-      "50": "#F0FDFA",
-      "100": "#CCFBF1",
-      "600": "#0D9488",
-      "700": "#0F766E",
-      "900": "#134E4A"
+      "DEFAULT": "#8B5CF6",
+      "50": "#F5F3FF",
+      "100": "#EDE9FE",
+      "200": "#DDD6FE",
+      "300": "#C4B5FD",
+      "400": "#A78BFA",
+      "500": "#8B5CF6",
+      "600": "#7C3AED",
+      "700": "#6D28D9",
+      "800": "#5B21B6",
+      "900": "#4C1D95"
+    },
+    "secondary": {
+      "DEFAULT": "#EC4899",
+      "50": "#FDF2F8",
+      "100": "#FCE7F3",
+      "200": "#FBCFE8",
+      "300": "#F9A8D4",
+      "400": "#F472B6",
+      "500": "#EC4899",
+      "600": "#DB2777",
+      "700": "#BE185D",
+      "800": "#9D174D",
+      "900": "#831843"
+    },
+    "accent": {
+      "cyan": "#06B6D4",
+      "blue": "#3B82F6",
+      "emerald": "#10B981"
+    },
+    "glass": {
+      "background": "rgba(255, 255, 255, 0.02)",
+      "backgroundHover": "rgba(255, 255, 255, 0.05)",
+      "backgroundSolid": "rgba(15, 23, 42, 0.8)",
+      "border": "rgba(255, 255, 255, 0.06)",
+      "borderHover": "rgba(255, 255, 255, 0.12)",
+      "borderAccent": "rgba(139, 92, 246, 0.3)"
+    },
+    "gradient": {
+      "primary": ["#7C3AED", "#2563EB"],
+      "secondary": ["#EC4899", "#8B5CF6"],
+      "accent": ["#06B6D4", "#3B82F6"],
+      "premium": ["#A78BFA", "#F472B6", "#06B6D4"],
+      "surface": ["rgba(15, 23, 42, 0.8)", "rgba(30, 41, 59, 0.6)"]
+    },
+    "semantic": {
+      "success": "#22C55E",
+      "successMuted": "rgba(34, 197, 94, 0.1)",
+      "warning": "#F59E0B",
+      "warningMuted": "rgba(245, 158, 11, 0.1)",
+      "error": "#EF4444",
+      "errorMuted": "rgba(239, 68, 68, 0.1)",
+      "info": "#3B82F6",
+      "infoMuted": "rgba(59, 130, 246, 0.1)"
     },
     "gray": {
       "50": "#F9FAFB",
       "100": "#F3F4F6",
+      "200": "#E5E7EB",
+      "300": "#D1D5DB",
+      "400": "#9CA3AF",
       "500": "#6B7280",
-      "900": "#111827"
-    },
-    "semantic": {
-      "success": "#10B981",
-      "warning": "#F59E0B",
-      "error": "#EF4444",
-      "info": "#3B82F6"
+      "600": "#4B5563",
+      "700": "#374151",
+      "800": "#1F2937",
+      "900": "#111827",
+      "950": "#030712"
     }
   },
   "typography": {
     "fontFamily": {
-      "sans": ["Inter", "system-ui", "sans-serif"],
-      "heading": ["Cal Sans", "Inter", "sans-serif"],
-      "mono": ["JetBrains Mono", "monospace"]
+      "sans": ["Inter", "system-ui", "-apple-system", "sans-serif"],
+      "heading": ["Cal Sans", "Inter", "system-ui", "sans-serif"],
+      "mono": ["JetBrains Mono", "Fira Code", "monospace"]
     },
     "fontSize": {
+      "xs": "0.75rem",
       "sm": "0.875rem",
       "base": "1rem",
       "lg": "1.125rem",
-      "2xl": "1.5rem"
+      "xl": "1.25rem",
+      "2xl": "1.5rem",
+      "3xl": "1.875rem",
+      "4xl": "2.25rem",
+      "5xl": "3rem",
+      "6xl": "3.75rem"
+    },
+    "fontWeight": {
+      "normal": 400,
+      "medium": 500,
+      "semibold": 600,
+      "bold": 700,
+      "extrabold": 800
     }
   },
   "spacing": {
     "base": "8px",
-    "scale": [4, 8, 12, 16, 24, 32, 48, 64, 96]
+    "scale": [4, 8, 12, 16, 20, 24, 32, 40, 48, 64, 80, 96]
   },
   "borderRadius": {
+    "none": "0",
     "sm": "6px",
     "md": "8px",
     "lg": "12px",
-    "xl": "16px"
+    "xl": "16px",
+    "2xl": "24px",
+    "full": "9999px"
+  },
+  "glassmorphism": {
+    "blur": {
+      "sm": "8px",
+      "md": "16px",
+      "lg": "24px",
+      "xl": "40px"
+    },
+    "opacity": {
+      "ultraLight": 0.01,
+      "light": 0.02,
+      "medium": 0.05,
+      "heavy": 0.1
+    }
   },
   "shadows": {
-    "style": "soft colored (NEVER pure black)",
-    "md": "0 4px 6px rgba(13, 148, 136, 0.1)",
-    "lg": "0 10px 15px rgba(13, 148, 136, 0.1)"
+    "style": "soft colored with glow (NEVER pure black)",
+    "sm": "0 2px 8px rgba(0, 0, 0, 0.08)",
+    "md": "0 4px 16px rgba(0, 0, 0, 0.12)",
+    "lg": "0 8px 32px rgba(0, 0, 0, 0.16)",
+    "xl": "0 12px 48px rgba(0, 0, 0, 0.2)",
+    "glow": {
+      "violet": "0 0 20px rgba(139, 92, 246, 0.3)",
+      "fuchsia": "0 0 20px rgba(236, 72, 153, 0.3)",
+      "cyan": "0 0 20px rgba(6, 182, 212, 0.3)"
+    },
+    "inset": "0 0 0 1px rgba(255, 255, 255, 0.03) inset"
+  },
+  "animation": {
+    "duration": {
+      "fast": "150ms",
+      "normal": "300ms",
+      "slow": "500ms"
+    },
+    "easing": {
+      "default": "cubic-bezier(0.4, 0, 0.2, 1)",
+      "spring": "cubic-bezier(0.34, 1.56, 0.64, 1)",
+      "smooth": "cubic-bezier(0.22, 1, 0.36, 1)"
+    }
   },
   "iconography": {
-    "deprecated": ["Lucide"],
-    "recommended": ["AI-generated custom"],
-    "rule": "NO generic icon libraries"
+    "library": "@heroicons/react",
+    "variant": "24/outline",
+    "fallback": "react-icons",
+    "sizes": {
+      "xs": "16px",
+      "sm": "20px",
+      "md": "24px",
+      "lg": "32px",
+      "xl": "48px"
+    },
+    "deprecated": ["lucide-react"],
+    "customIcons": ["Brain", "Target", "BrainCircuit"]
   }
 }
