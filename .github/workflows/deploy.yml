@@ -170,9 +170,8 @@ jobs:
       - name: Deploy to Vercel Staging
         run: |
           npx vercel --token=${{ secrets.VERCEL_TOKEN }} \
-            --prod \
-            --env DATABASE_URL=${{ secrets.STAGING_DATABASE_URL }} \
-            --env REDIS_URL=${{ secrets.STAGING_REDIS_URL }}
+            --yes \
+            --prod
   
   deploy-production:
     needs: [build, security-scan]
@@ -191,9 +190,8 @@ jobs:
       - name: Deploy to Vercel Production
         run: |
           npx vercel --token=${{ secrets.VERCEL_TOKEN }} \
-            --prod \
-            --env DATABASE_URL=${{ secrets.PRODUCTION_DATABASE_URL }} \
-            --env REDIS_URL=${{ secrets.PRODUCTION_REDIS_URL }}
+            --yes \
+            --prod
       
       - name: Run database migrations
         continue-on-error: true  # Skip if DATABASE_URL not configured
