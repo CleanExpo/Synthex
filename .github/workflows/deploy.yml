@@ -201,7 +201,7 @@ jobs:
           DATABASE_URL: ${{ secrets.PRODUCTION_DATABASE_URL }}
 
       - name: Notify deployment
-        if: always() && secrets.SLACK_WEBHOOK != ''
+        if: always()
         uses: 8398a7/action-slack@v3
         continue-on-error: true
         env:
@@ -245,7 +245,6 @@ jobs:
           # Add rollback logic here
       
       - name: Notify rollback
-        if: secrets.SLACK_WEBHOOK != ''
         uses: 8398a7/action-slack@v3
         continue-on-error: true
         env:
