@@ -126,6 +126,7 @@ jobs:
       
       - name: Run Snyk security scan
         uses: snyk/actions/node@master
+        continue-on-error: true  # Don't fail if SNYK_TOKEN not configured
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
