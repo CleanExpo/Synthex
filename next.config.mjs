@@ -1,5 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  output: 'standalone', // Required for Docker deployments
   reactStrictMode: true,
   typescript: {
     // We'll see TypeScript errors now but won't block builds for non-critical issues
