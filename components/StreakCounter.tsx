@@ -199,7 +199,7 @@ export function StreakCounter({ compact = false }: { compact?: boolean }) {
   
   if (compact) {
     return (
-      <button className="flex items-center gap-2 px-3 py-2 glass-card rounded-lg hover:bg-white/5 transition-colors">
+      <button className="flex items-center gap-2 px-3 py-2 bg-white/[0.02] backdrop-blur-xl border border-white/[0.08] rounded-lg hover:bg-white/5 transition-colors">
         <Flame className={`h-5 w-5 ${streakData.currentStreak > 0 ? 'text-orange-400' : 'text-gray-400'}`} />
         <span className="font-bold text-white">{streakData.currentStreak}</span>
         <span className="text-xs text-gray-400">day streak</span>
@@ -208,7 +208,7 @@ export function StreakCounter({ compact = false }: { compact?: boolean }) {
   }
   
   return (
-    <Card className="glass-card p-6 space-y-4">
+    <Card variant="glass" className="p-6 space-y-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className={`p-3 rounded-xl bg-gradient-to-br ${
@@ -311,7 +311,7 @@ export function FloatingStreak() {
   
   return (
     <div className="fixed top-20 right-6 z-40">
-      <div className="flex items-center gap-2 px-3 py-2 glass-card rounded-full shadow-lg">
+      <div className="flex items-center gap-2 px-3 py-2 bg-white/[0.02] backdrop-blur-xl border border-white/[0.08] rounded-full shadow-lg">
         <Flame className="h-4 w-4 text-orange-400 animate-pulse" />
         <span className="text-sm font-bold text-white">{streakData.currentStreak}</span>
         <span className="text-xs text-gray-400">streak</span>

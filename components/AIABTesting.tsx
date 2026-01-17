@@ -391,7 +391,7 @@ export function AIABTesting() {
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
         >
-          <Card className="glass-card">
+          <Card variant="glass">
             <CardHeader>
               <CardTitle>Create A/B Test</CardTitle>
               <CardDescription>Set up your experiment with AI guidance</CardDescription>
@@ -476,7 +476,8 @@ export function AIABTesting() {
             whileTap={{ scale: 0.98 }}
           >
             <Card
-              className="glass-card cursor-pointer"
+              variant="glass"
+              className="cursor-pointer"
               onClick={() => setSelectedTest(test)}
             >
               <CardContent className="p-4">
@@ -565,7 +566,7 @@ export function AIABTesting() {
       
       {/* Selected Test Details */}
       {selectedTest && (
-        <Card className="glass-card">
+        <Card variant="glass">
           <CardHeader>
             <div className="flex items-center justify-between">
               <div>

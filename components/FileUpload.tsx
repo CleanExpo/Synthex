@@ -268,7 +268,7 @@ export function FileUpload({
                 initial="hidden"
                 animate="visible"
                 exit="hidden"
-                className="glass-card p-3 rounded-lg"
+                className="bg-white/[0.02] backdrop-blur-xl border border-white/[0.08] p-3 rounded-lg"
               >
                 <div className="flex items-center gap-3">
                   {/* Preview */}

@@ -151,7 +151,7 @@ export function RichTextEditor({
   }
   
   return (
-    <div className="glass-card rounded-lg overflow-hidden">
+    <div className="bg-white/[0.02] backdrop-blur-xl border border-white/[0.08] rounded-lg overflow-hidden">
       {/* Toolbar */}
       {showToolbar && editable && (
         <div className="border-b border-white/10 p-2 flex flex-wrap items-center gap-1">
@@ -293,7 +293,7 @@ export function RichTextEditor({
           <BubbleMenu 
             editor={editor} 
             tippyOptions={{ duration: 100 }}
-            className="glass-card p-1 flex items-center gap-1 rounded-lg shadow-xl"
+            className="bg-white/[0.02] backdrop-blur-xl border border-white/[0.08] p-1 flex items-center gap-1 rounded-lg shadow-xl"
           >
             <ToolbarButton
               onClick={() => editor.chain().focus().toggleBold().run()}

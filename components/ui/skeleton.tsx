@@ -36,7 +36,7 @@ function Skeleton({ className, variant, ...props }: SkeletonProps) {
 
 function SkeletonCard({ variant = 'glass' }: { variant?: SkeletonProps['variant'] }) {
   return (
-    <div className="glass-card p-6 space-y-4">
+    <div className="bg-white/[0.02] backdrop-blur-xl border border-white/[0.08] rounded-lg p-6 space-y-4">
       <div className="flex items-center justify-between">
         <Skeleton variant={variant} className="h-4 w-24" />
         <Skeleton variant={variant} className="h-8 w-8 rounded-full" />
@@ -53,7 +53,7 @@ function SkeletonCard({ variant = 'glass' }: { variant?: SkeletonProps['variant'
 
 function SkeletonChart({ variant = 'glass' }: { variant?: SkeletonProps['variant'] }) {
   return (
-    <div className="glass-card p-6">
+    <div className="bg-white/[0.02] backdrop-blur-xl border border-white/[0.08] rounded-lg p-6">
       <div className="space-y-2 mb-4">
         <Skeleton variant={variant} className="h-5 w-32" />
         <Skeleton variant={variant} className="h-3 w-48" />
@@ -74,7 +74,7 @@ function SkeletonChart({ variant = 'glass' }: { variant?: SkeletonProps['variant
 
 function SkeletonTable({ variant = 'glass' }: { variant?: SkeletonProps['variant'] }) {
   return (
-    <div className="glass-card p-6">
+    <div className="bg-white/[0.02] backdrop-blur-xl border border-white/[0.08] rounded-lg p-6">
       <Skeleton variant={variant} className="h-5 w-32 mb-4" />
       <div className="space-y-3">
         {[...Array(5)].map((_, i) => (

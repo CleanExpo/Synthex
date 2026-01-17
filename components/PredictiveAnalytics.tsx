@@ -398,7 +398,7 @@ export function PredictiveAnalytics() {
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
           >
-            <Card className="glass-card">
+            <Card variant="glass">
               <CardContent className="p-4">
                 <div className="flex items-start justify-between mb-3">
                   <div>
@@ -439,7 +439,7 @@ export function PredictiveAnalytics() {
       </div>
       
       {/* Time Series Forecast */}
-      <Card className="glass-card">
+      <Card variant="glass">
         <CardHeader>
           <CardTitle>Forecast Visualization</CardTitle>
           <CardDescription>Historical data and future predictions</CardDescription>
@@ -503,7 +503,7 @@ export function PredictiveAnalytics() {
       
       {/* Scenario Analysis */}
       <div className="grid gap-6 lg:grid-cols-2">
-        <Card className="glass-card">
+        <Card variant="glass">
           <CardHeader>
             <CardTitle>Scenario Planning</CardTitle>
             <CardDescription>Possible future outcomes</CardDescription>
@@ -541,7 +541,7 @@ export function PredictiveAnalytics() {
         </Card>
         
         {/* Anomaly Detection */}
-        <Card className="glass-card">
+        <Card variant="glass">
           <CardHeader>
             <CardTitle>Anomaly Detection</CardTitle>
             <CardDescription>Unusual patterns requiring attention</CardDescription>
@@ -594,7 +594,7 @@ export function PredictiveAnalytics() {
       </div>
       
       {/* AI Insights */}
-      <Card className="glass-card">
+      <Card variant="glass">
         <CardHeader>
           <div className="flex items-center gap-2">
             <Sparkles className="h-5 w-5 text-purple-400" />

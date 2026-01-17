@@ -24,7 +24,7 @@ export function DashboardSkeleton() {
       {/* Stats grid skeleton */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {[...Array(4)].map((_, i) => (
-          <Card key={i} className="glass-card p-4">
+          <Card key={i} variant="glass" className="p-4">
             <div className="space-y-3">
               <div className="flex justify-between">
                 <Skeleton className="h-4 w-20" />
@@ -39,11 +39,11 @@ export function DashboardSkeleton() {
       
       {/* Charts skeleton */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card className="glass-card p-6">
+        <Card variant="glass" className="p-6">
           <Skeleton className="h-6 w-32 mb-4" />
           <Skeleton className="h-64 w-full" />
         </Card>
-        <Card className="glass-card p-6">
+        <Card variant="glass" className="p-6">
           <Skeleton className="h-6 w-32 mb-4" />
           <Skeleton className="h-64 w-full" />
         </Card>
@@ -55,7 +55,7 @@ export function DashboardSkeleton() {
 // Post card skeleton
 export function PostCardSkeleton() {
   return (
-    <Card className="glass-card p-4">
+    <Card variant="glass" className="p-4">
       <motion.div 
         className="space-y-3"
         animate={skeletonPulse}
@@ -102,7 +102,7 @@ export function ContentListSkeleton({ count = 5 }: { count?: number }) {
           animate={{ opacity: 1 }}
           transition={{ delay: i * 0.1 }}
         >
-          <Card className="glass-card p-4">
+          <Card variant="glass" className="p-4">
             <div className="flex items-center gap-4">
               <Skeleton className="h-16 w-16 rounded-lg" />
               <div className="flex-1 space-y-2">
@@ -129,7 +129,7 @@ export function AnalyticsSkeleton() {
       {/* Metrics cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {[...Array(3)].map((_, i) => (
-          <Card key={i} className="glass-card p-4">
+          <Card key={i} variant="glass" className="p-4">
             <div className="space-y-3">
               <Skeleton className="h-4 w-24" />
               <Skeleton className="h-10 w-32" />
@@ -140,7 +140,7 @@ export function AnalyticsSkeleton() {
       </div>
       
       {/* Main chart */}
-      <Card className="glass-card p-6">
+      <Card variant="glass" className="p-6">
         <div className="space-y-4">
           <div className="flex justify-between items-center">
             <Skeleton className="h-6 w-32" />
@@ -162,7 +162,7 @@ export function ProfileSkeleton() {
   return (
     <div className="space-y-6">
       {/* Profile header */}
-      <Card className="glass-card p-6">
+      <Card variant="glass" className="p-6">
         <div className="flex items-center gap-4">
           <Skeleton className="h-24 w-24 rounded-full" />
           <div className="flex-1 space-y-2">
@@ -179,7 +179,7 @@ export function ProfileSkeleton() {
       {/* Stats */}
       <div className="grid grid-cols-3 gap-4">
         {[...Array(3)].map((_, i) => (
-          <Card key={i} className="glass-card p-4 text-center">
+          <Card key={i} variant="glass" className="p-4 text-center">
             <Skeleton className="h-8 w-16 mx-auto mb-2" />
             <Skeleton className="h-4 w-20 mx-auto" />
           </Card>
@@ -199,7 +199,7 @@ export function ProfileSkeleton() {
 // Table skeleton
 export function TableSkeleton({ rows = 5, cols = 4 }: { rows?: number; cols?: number }) {
   return (
-    <Card className="glass-card overflow-hidden">
+    <Card variant="glass" className="overflow-hidden">
       {/* Header */}
       <div className="border-b border-white/10 p-4">
         <div className="grid grid-cols-4 gap-4">
@@ -231,7 +231,7 @@ export function TableSkeleton({ rows = 5, cols = 4 }: { rows?: number; cols?: nu
 // Form skeleton
 export function FormSkeleton() {
   return (
-    <Card className="glass-card p-6">
+    <Card variant="glass" className="p-6">
       <div className="space-y-6">
         {/* Title */}
         <Skeleton className="h-8 w-48" />
@@ -280,7 +280,7 @@ export function CommentSkeleton() {
 // Navigation skeleton
 export function NavigationSkeleton() {
   return (
-    <div className="flex items-center justify-between p-4 glass-card">
+    <div className="flex items-center justify-between p-4 bg-white/[0.02] backdrop-blur-xl border border-white/[0.08] rounded-lg">
       <Skeleton className="h-8 w-32" />
       <div className="flex gap-4">
         {[...Array(4)].map((_, i) => (

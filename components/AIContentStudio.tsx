@@ -182,7 +182,7 @@ export default function AIContentStudio() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Generation Form */}
-        <Card className="glass-card">
+        <Card variant="glass">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Wand2 className="w-5 h-5 text-purple-500" />
@@ -361,7 +361,7 @@ export default function AIContentStudio() {
         </Card>
 
         {/* Generated Content Display */}
-        <Card className="glass-card">
+        <Card variant="glass">
           <CardHeader>
             <CardTitle className="flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -529,7 +529,7 @@ export default function AIContentStudio() {
 
       {/* Content History */}
       {contentHistory.length > 0 && (
-        <Card className="glass-card">
+        <Card variant="glass">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Calendar className="w-5 h-5 text-purple-500" />

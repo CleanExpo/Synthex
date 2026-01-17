@@ -189,7 +189,7 @@ export function AIWritingAssistant({
   }
   
   return (
-    <Card className="glass-card">
+    <Card variant="glass">
       <CardHeader>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -462,7 +462,7 @@ function CompactAIAssistant({
   onGenerate: () => void;
 }) {
   return (
-    <div className="flex items-center gap-2 p-2 glass-card rounded-lg">
+    <div className="flex items-center gap-2 p-2 bg-white/[0.02] backdrop-blur-xl border border-white/[0.08] rounded-lg">
       <Wand2 className="h-4 w-4 text-purple-400" />
       <span className="text-sm text-gray-400">AI Assistant</span>
       <Button

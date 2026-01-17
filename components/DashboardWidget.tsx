@@ -63,9 +63,10 @@ export function DashboardWidget({
   };
   
   return (
-    <Card 
+    <Card
+      variant="glass"
       className={`
-        glass-card relative group transition-all duration-200
+        relative group transition-all duration-200
         ${getSizeClasses()}
         ${isDragging ? 'opacity-50 cursor-move' : 'hover:scale-[1.02]'}
         ${isExpanded ? 'z-50 fixed inset-4 !col-span-1 !row-span-1' : ''}

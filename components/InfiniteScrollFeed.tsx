@@ -86,7 +86,7 @@ export function InfiniteScrollFeed<T extends FeedItem>({
   const LoadingSkeleton = () => (
     <div className={`space-y-${gap}`}>
       {[...Array(3)].map((_, i) => (
-        <Card key={`skeleton-${i}`} className="glass-card p-4">
+        <Card key={`skeleton-${i}`} variant="glass" className="p-4">
           <div className="space-y-3">
             <div className="flex items-center gap-3">
               <Skeleton className="h-10 w-10 rounded-full" />
@@ -110,7 +110,7 @@ export function InfiniteScrollFeed<T extends FeedItem>({
   // Error state
   if (error && items.length === 0) {
     return (
-      <Card className="glass-card p-8 text-center">
+      <Card variant="glass" className="p-8 text-center">
         <AlertCircle className="h-12 w-12 text-red-400 mx-auto mb-4" />
         <p className="text-lg font-semibold text-white mb-2">Error Loading Feed</p>
         <p className="text-gray-400 mb-4">{errorMessage}</p>
@@ -125,7 +125,7 @@ export function InfiniteScrollFeed<T extends FeedItem>({
   // Empty state
   if (!loading && items.length === 0) {
     return (
-      <Card className="glass-card p-8 text-center">
+      <Card variant="glass" className="p-8 text-center">
         <p className="text-gray-400">{emptyMessage}</p>
       </Card>
     );
@@ -184,7 +184,7 @@ export function InfiniteScrollFeed<T extends FeedItem>({
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0 }}
           onClick={scrollToTop}
-          className="fixed bottom-20 right-6 z-30 p-3 glass-card rounded-full shadow-lg"
+          className="fixed bottom-20 right-6 z-30 p-3 bg-white/[0.02] backdrop-blur-xl border border-white/[0.08] rounded-full shadow-lg"
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.9 }}
         >

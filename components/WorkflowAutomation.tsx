@@ -429,7 +429,7 @@ export function WorkflowAutomation() {
           {/* Workflow List */}
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {workflows.map(workflow => (
-              <Card key={workflow.id} className="glass-card">
+              <Card key={workflow.id} variant="glass">
                 <CardHeader>
                   <div className="flex items-start justify-between">
                     <div>
@@ -522,7 +522,7 @@ export function WorkflowAutomation() {
             
             {/* Create New Card */}
             <Card 
-              className="glass-card cursor-pointer hover:bg-white/10 transition-colors"
+              className="bg-white/[0.02] backdrop-blur-xl border border-white/[0.08] cursor-pointer hover:bg-white/10 transition-colors"
               onClick={() => setShowBuilder(true)}
             >
               <CardContent className="flex flex-col items-center justify-center h-full min-h-[250px]">
@@ -534,7 +534,7 @@ export function WorkflowAutomation() {
           
           {/* Recent Runs */}
           {workflowRuns.length > 0 && (
-            <Card className="glass-card">
+            <Card variant="glass">
               <CardHeader>
                 <CardTitle>Recent Runs</CardTitle>
                 <CardDescription>Monitor workflow executions</CardDescription>
@@ -571,7 +571,7 @@ export function WorkflowAutomation() {
           {/* Sidebar */}
           <div className="lg:col-span-1 space-y-4">
             {/* Workflow Info */}
-            <Card className="glass-card">
+            <Card variant="glass">
               <CardHeader>
                 <CardTitle>Workflow Details</CardTitle>
               </CardHeader>
@@ -626,7 +626,7 @@ export function WorkflowAutomation() {
             </Card>
             
             {/* Triggers */}
-            <Card className="glass-card">
+            <Card variant="glass">
               <CardHeader>
                 <CardTitle>Triggers</CardTitle>
                 <CardDescription>Start your workflow</CardDescription>
@@ -647,7 +647,7 @@ export function WorkflowAutomation() {
             </Card>
             
             {/* Actions */}
-            <Card className="glass-card">
+            <Card variant="glass">
               <CardHeader>
                 <CardTitle>Actions</CardTitle>
                 <CardDescription>What to do</CardDescription>
@@ -668,7 +668,7 @@ export function WorkflowAutomation() {
             </Card>
             
             {/* Conditions */}
-            <Card className="glass-card">
+            <Card variant="glass">
               <CardHeader>
                 <CardTitle>Logic</CardTitle>
                 <CardDescription>Control flow</CardDescription>
@@ -696,7 +696,7 @@ export function WorkflowAutomation() {
           
           {/* Canvas */}
           <div className="lg:col-span-3">
-            <Card className="glass-card h-[600px]">
+            <Card variant="glass" className="h-[600px]">
               <CardContent className="p-6 h-full">
                 <div 
                   ref={canvasRef}
@@ -728,7 +728,7 @@ export function WorkflowAutomation() {
                             ));
                           }}
                         >
-                          <Card className="glass-card cursor-move">
+                          <Card variant="glass" className="cursor-move">
                             <CardContent className="p-3">
                               <div className="flex items-center gap-2">
                                 {getNodeIcon(node.type)}

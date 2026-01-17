@@ -209,7 +209,7 @@ export function AIHashtagGenerator({
   };
   
   return (
-    <Card className="glass-card">
+    <Card variant="glass">
       <CardHeader>
         <div className="flex items-center gap-3">
           <div className="p-2 rounded-lg bg-gradient-to-br from-purple-500/20 to-pink-500/20">

@@ -170,7 +170,7 @@ export function IntegrationModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-2xl glass-card border-white/10">
+      <DialogContent className="sm:max-w-2xl bg-white/[0.02] backdrop-blur-xl border border-white/[0.08]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-3">
             <div className={`p-2 rounded-lg bg-gray-800/50 ${integration.color}`}>

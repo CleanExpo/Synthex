@@ -115,7 +115,7 @@ export function SmartSuggestions({
     return (
       <div className="space-y-4">
         {[1, 2, 3].map(i => (
-          <div key={i} className="h-32 glass-card animate-pulse rounded-lg" />
+          <div key={i} className="h-32 bg-white/[0.02] backdrop-blur-xl border border-white/[0.08] animate-pulse rounded-lg" />
         ))}
       </div>
     );
@@ -172,7 +172,8 @@ export function SmartSuggestions({
           return (
             <Card
               key={suggestion.id}
-              className="glass-card hover:scale-[1.02] transition-all cursor-pointer"
+              variant="glass"
+              className="hover:scale-[1.02] transition-all cursor-pointer"
               onClick={() => handleSelectSuggestion(suggestion)}
             >
               <CardHeader>
@@ -301,7 +302,7 @@ function CompactSuggestions({
           <button
             key={suggestion.id}
             onClick={() => onSelect(suggestion)}
-            className="w-full p-3 glass-card hover:bg-white/5 rounded-lg transition-colors text-left"
+            className="w-full p-3 bg-white/[0.02] backdrop-blur-xl border border-white/[0.08] hover:bg-white/5 rounded-lg transition-colors text-left"
           >
             <div className="flex items-center gap-3">
               <Icon className="h-4 w-4 text-purple-400 flex-shrink-0" />
@@ -330,7 +331,7 @@ export function SuggestionCards() {
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
       {/* Time-based suggestion */}
-      <Card className="glass-card border-purple-500/30">
+      <Card variant="glass" className="border-purple-500/30">
         <CardHeader>
           <div className="flex items-center gap-2">
             <Clock className="h-5 w-5 text-purple-400" />
@@ -352,7 +353,7 @@ export function SuggestionCards() {
       
       {/* Other suggestions */}
       {allSuggestions.slice(0, 2).map(suggestion => (
-        <Card key={suggestion.id} className="glass-card">
+        <Card key={suggestion.id} variant="glass">
           <CardHeader>
             <div className="flex items-center gap-2">
               <Zap className="h-5 w-5 text-yellow-400" />
@@ -402,7 +403,7 @@ export function IdeaScorer({ idea }: { idea: string }) {
   };
   
   return (
-    <div className="p-3 glass-card rounded-lg">
+    <div className="p-3 bg-white/[0.02] backdrop-blur-xl border border-white/[0.08] rounded-lg">
       <div className="flex items-center justify-between mb-2">
         <span className="text-sm text-gray-400">Idea Score</span>
         <span className={`text-2xl font-bold ${getScoreColor()}`}>

@@ -146,7 +146,7 @@ function SortableWidget({ widget, onEdit, onDelete }: {
       style={style}
       className={`${getSizeClass(widget.size)}`}
     >
-      <Card className={`glass-card ${!widget.visible ? 'opacity-50' : ''}`}>
+      <Card variant="glass" className={`${!widget.visible ? 'opacity-50' : ''}`}>
         <CardHeader className="p-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -441,7 +441,7 @@ export function CustomReportBuilder() {
         {/* Sidebar */}
         <div className="lg:col-span-1 space-y-4">
           {/* Report Details */}
-          <Card className="glass-card">
+          <Card variant="glass">
             <CardHeader>
               <CardTitle>Report Details</CardTitle>
             </CardHeader>
@@ -471,7 +471,7 @@ export function CustomReportBuilder() {
           </Card>
           
           {/* Templates */}
-          <Card className="glass-card">
+          <Card variant="glass">
             <CardHeader>
               <CardTitle>Templates</CardTitle>
               <CardDescription>Start with a template</CardDescription>
@@ -492,7 +492,7 @@ export function CustomReportBuilder() {
           </Card>
           
           {/* Export Options */}
-          <Card className="glass-card">
+          <Card variant="glass">
             <CardHeader>
               <CardTitle>Export Options</CardTitle>
             </CardHeader>
@@ -542,7 +542,7 @@ export function CustomReportBuilder() {
         {/* Main Content */}
         <div className="lg:col-span-3 space-y-4">
           {/* Add Widget Button */}
-          <Card className="glass-card">
+          <Card variant="glass">
             <CardContent className="p-4">
               <Button
                 onClick={() => setShowAddWidget(true)}
@@ -585,7 +585,7 @@ export function CustomReportBuilder() {
           </DndContext>
           
           {widgets.length === 0 && (
-            <Card className="glass-card p-12 text-center">
+            <Card variant="glass" className="p-12 text-center">
               <Layout className="h-12 w-12 text-gray-400 mx-auto mb-4" />
               <p className="text-gray-400">No widgets added yet</p>
               <p className="text-sm text-gray-500 mt-1">Click "Add Widget" to get started</p>

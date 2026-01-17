@@ -232,7 +232,7 @@ export function SearchBar({
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            className="mt-2 p-3 glass-card rounded-lg"
+            className="mt-2 p-3 bg-white/[0.02] backdrop-blur-xl border border-white/[0.08] rounded-lg"
           >
             <div className="space-y-3">
               <div>
@@ -263,7 +263,7 @@ export function SearchBar({
             initial="hidden"
             animate="visible"
             exit="hidden"
-            className="absolute top-full mt-2 w-full z-50 glass-card rounded-lg shadow-xl max-h-96 overflow-y-auto"
+            className="absolute top-full mt-2 w-full z-50 bg-white/[0.02] backdrop-blur-xl border border-white/[0.08] rounded-lg shadow-xl max-h-96 overflow-y-auto"
           >
             <div className="p-2">
               {results.map((result, index) => (
@@ -309,7 +309,7 @@ export function SearchBar({
             initial="hidden"
             animate="visible"
             exit="hidden"
-            className="absolute top-full mt-2 w-full z-50 glass-card rounded-lg shadow-xl p-8 text-center"
+            className="absolute top-full mt-2 w-full z-50 bg-white/[0.02] backdrop-blur-xl border border-white/[0.08] rounded-lg shadow-xl p-8 text-center"
           >
             <p className="text-gray-400">No results found for "{query}"</p>
             <p className="text-sm text-gray-500 mt-2">Try adjusting your filters or search terms</p>

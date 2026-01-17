@@ -101,8 +101,9 @@ export function TemplateSelector({ onSelectTemplate, platform }: TemplateSelecto
         {filteredTemplates.map((template) => (
           <Card
             key={template.id}
+            variant="glass"
             className={`
-              glass-card cursor-pointer transition-all duration-200
+              cursor-pointer transition-all duration-200
               hover:scale-[1.02] hover:border-purple-500/50
               ${hoveredTemplate === template.id ? 'ring-2 ring-purple-500' : ''}
             `}

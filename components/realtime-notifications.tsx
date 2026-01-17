@@ -197,7 +197,7 @@ export default function RealtimeNotifications() {
 
       {/* Notifications Dropdown */}
       {isOpen && (
-        <Card className="absolute right-0 top-12 w-96 max-h-[500px] glass-card z-50 overflow-hidden">
+        <Card variant="glass" className="absolute right-0 top-12 w-96 max-h-[500px] z-50 overflow-hidden">
           {/* Header */}
           <div className="p-4 border-b border-white/10 flex items-center justify-between">
             <h3 className="font-semibold text-white">Notifications</h3>

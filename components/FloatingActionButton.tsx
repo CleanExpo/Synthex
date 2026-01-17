@@ -216,7 +216,7 @@ export function FloatingActionButton() {
           animate={{ opacity: 1, y: 0 }}
           className="fixed bottom-6 left-6 right-20 z-40 md:hidden"
         >
-          <div className="glass-card rounded-full px-4 py-2 flex items-center justify-around">
+          <div className="bg-white/[0.02] backdrop-blur-xl border border-white/[0.08] rounded-full px-4 py-2 flex items-center justify-around">
             {quickActions.map((action) => (
               <button
                 key={action.action}
@@ -298,7 +298,7 @@ export function SmartFAB({ context }: { context?: string }) {
       <motion.div
         initial={{ opacity: 0, x: 50 }}
         animate={{ opacity: 1, x: 0 }}
-        className="glass-card px-4 py-2 rounded-full flex items-center gap-2 mb-2"
+        className="bg-white/[0.02] backdrop-blur-xl border border-white/[0.08] px-4 py-2 rounded-full flex items-center gap-2 mb-2"
       >
         <Sparkles className="h-4 w-4 text-purple-400" />
         <span className="text-sm text-white">{suggestion}</span>

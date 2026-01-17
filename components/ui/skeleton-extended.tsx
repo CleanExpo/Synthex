@@ -11,7 +11,7 @@ import { motion } from 'framer-motion';
 // Dashboard stats skeleton
 export function StatsCardSkeleton() {
   return (
-    <div className="glass-card p-6">
+    <div className="bg-white/[0.02] backdrop-blur-xl border border-white/[0.08] rounded-lg p-6">
       <div className="flex items-center justify-between mb-4">
         <Skeleton className="h-5 w-24" />
         <Skeleton className="h-8 w-8 rounded-full" />
@@ -25,7 +25,7 @@ export function StatsCardSkeleton() {
 // Content card skeleton
 export function ContentCardSkeleton() {
   return (
-    <div className="glass-card p-6">
+    <div className="bg-white/[0.02] backdrop-blur-xl border border-white/[0.08] rounded-lg p-6">
       <div className="flex items-center gap-3 mb-4">
         <Skeleton className="h-10 w-10 rounded-full" />
         <div className="flex-1">
@@ -49,7 +49,7 @@ export function ContentCardSkeleton() {
 // Table skeleton
 export function TableSkeleton({ rows = 5, columns = 4 }) {
   return (
-    <div className="glass-card p-6">
+    <div className="bg-white/[0.02] backdrop-blur-xl border border-white/[0.08] rounded-lg p-6">
       <div className="space-y-4">
         {/* Header */}
         <div className="grid grid-cols-{columns} gap-4 pb-4 border-b border-white/10">
@@ -73,7 +73,7 @@ export function TableSkeleton({ rows = 5, columns = 4 }) {
 // Analytics chart skeleton
 export function ChartSkeleton() {
   return (
-    <div className="glass-card p-6">
+    <div className="bg-white/[0.02] backdrop-blur-xl border border-white/[0.08] rounded-lg p-6">
       <div className="flex items-center justify-between mb-6">
         <Skeleton className="h-6 w-32" />
         <div className="flex gap-2">
@@ -89,7 +89,7 @@ export function ChartSkeleton() {
 // Profile skeleton
 export function ProfileSkeleton() {
   return (
-    <div className="glass-card p-6">
+    <div className="bg-white/[0.02] backdrop-blur-xl border border-white/[0.08] rounded-lg p-6">
       <div className="flex items-center gap-4">
         <Skeleton className="h-20 w-20 rounded-full" />
         <div className="flex-1">

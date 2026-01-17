@@ -115,7 +115,7 @@ function StatCard({ stat, compact = false }: { stat: Stat; compact?: boolean }) 
   
   if (compact) {
     return (
-      <div className="flex items-center justify-between p-3 glass-card rounded-lg hover:bg-white/5 transition-colors">
+      <div className="flex items-center justify-between p-3 bg-white/[0.02] backdrop-blur-xl border border-white/[0.08] rounded-lg hover:bg-white/5 transition-colors">
         <div className="flex items-center gap-3">
           <Icon className={`h-4 w-4 ${stat.color || 'text-gray-400'}`} />
           <div>
@@ -136,7 +136,7 @@ function StatCard({ stat, compact = false }: { stat: Stat; compact?: boolean }) 
   }
   
   return (
-    <Card className="glass-card hover:scale-[1.02] transition-transform">
+    <Card variant="glass" className="hover:scale-[1.02] transition-transform">
       <div className="p-4 space-y-3">
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-2">
@@ -219,7 +219,7 @@ export function StatsTickker() {
   const Icon = stat.icon;
   
   return (
-    <div className="flex items-center gap-2 px-4 py-2 glass-card rounded-full">
+    <div className="flex items-center gap-2 px-4 py-2 bg-white/[0.02] backdrop-blur-xl border border-white/[0.08] rounded-full">
       <Icon className="h-4 w-4 text-purple-400" />
       <span className="text-sm text-gray-400">{stat.label}:</span>
       <span className="text-sm font-semibold text-white">{stat.value}</span>

@@ -268,7 +268,7 @@ export default function RealTimeAnalytics() {
 
       {/* Key Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
-        <Card className="glass-card">
+        <Card variant="glass">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm text-gray-400">Total Reach</CardTitle>
           </CardHeader>
@@ -284,7 +284,7 @@ export default function RealTimeAnalytics() {
           </CardContent>
         </Card>
 
-        <Card className="glass-card">
+        <Card variant="glass">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm text-gray-400">Engagement</CardTitle>
           </CardHeader>
@@ -300,7 +300,7 @@ export default function RealTimeAnalytics() {
           </CardContent>
         </Card>
 
-        <Card className="glass-card">
+        <Card variant="glass">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm text-gray-400">Followers</CardTitle>
           </CardHeader>
@@ -318,7 +318,7 @@ export default function RealTimeAnalytics() {
           </CardContent>
         </Card>
 
-        <Card className="glass-card">
+        <Card variant="glass">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm text-gray-400">Posts</CardTitle>
           </CardHeader>
@@ -334,7 +334,7 @@ export default function RealTimeAnalytics() {
           </CardContent>
         </Card>
 
-        <Card className="glass-card">
+        <Card variant="glass">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm text-gray-400">Engagement Rate</CardTitle>
           </CardHeader>
@@ -347,7 +347,7 @@ export default function RealTimeAnalytics() {
           </CardContent>
         </Card>
 
-        <Card className="glass-card">
+        <Card variant="glass">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm text-gray-400">Growth Rate</CardTitle>
           </CardHeader>
@@ -364,7 +364,7 @@ export default function RealTimeAnalytics() {
       {/* Charts Row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Engagement Over Time */}
-        <Card className="glass-card">
+        <Card variant="glass">
           <CardHeader>
             <CardTitle>Engagement Over Time</CardTitle>
             <CardDescription>Daily engagement and reach trends</CardDescription>
@@ -402,7 +402,7 @@ export default function RealTimeAnalytics() {
         </Card>
 
         {/* Platform Distribution */}
-        <Card className="glass-card">
+        <Card variant="glass">
           <CardHeader>
             <CardTitle>Platform Distribution</CardTitle>
             <CardDescription>Follower distribution across platforms</CardDescription>
@@ -437,7 +437,7 @@ export default function RealTimeAnalytics() {
       </div>
 
       {/* Platform Performance */}
-      <Card className="glass-card">
+      <Card variant="glass">
         <CardHeader>
           <CardTitle>Platform Performance</CardTitle>
           <CardDescription>Detailed metrics for each social platform</CardDescription>
@@ -491,7 +491,7 @@ export default function RealTimeAnalytics() {
       {/* Top Content & Trends */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Top Performing Content */}
-        <Card className="glass-card">
+        <Card variant="glass">
           <CardHeader>
             <CardTitle>Top Performing Content</CardTitle>
             <CardDescription>Your best performing posts</CardDescription>
@@ -531,7 +531,7 @@ export default function RealTimeAnalytics() {
         </Card>
 
         {/* Trending Hashtags */}
-        <Card className="glass-card">
+        <Card variant="glass">
           <CardHeader>
             <CardTitle>Trending Hashtags</CardTitle>
             <CardDescription>Popular hashtags in your niche</CardDescription>
@@ -573,7 +573,7 @@ export default function RealTimeAnalytics() {
       </div>
 
       {/* Demographics */}
-      <Card className="glass-card">
+      <Card variant="glass">
         <CardHeader>
           <CardTitle>Audience Demographics</CardTitle>
           <CardDescription>Understanding your audience composition</CardDescription>

@@ -48,7 +48,7 @@ export function AnimatedCard({
   
   return (
     <motion.div
-      className={`glass-card ${className}`}
+      className={`bg-white/[0.02] backdrop-blur-xl border border-white/[0.08] rounded-lg ${className}`}
       variants={fadeInUp}
       initial="hidden"
       animate="visible"

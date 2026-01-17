@@ -230,7 +230,7 @@ export function CommandPalette() {
       
       {/* Command Palette */}
       <div className="fixed top-1/4 left-1/2 transform -translate-x-1/2 w-full max-w-2xl z-50">
-        <div className="glass-card rounded-xl shadow-2xl overflow-hidden">
+        <div className="bg-white/[0.02] backdrop-blur-xl border border-white/[0.08] rounded-xl shadow-2xl overflow-hidden">
           {/* Search Input */}
           <div className="flex items-center border-b border-white/10 px-4">
             <Search className="w-5 h-5 text-gray-400" />

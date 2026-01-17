@@ -374,7 +374,8 @@ export function ApprovalWorkflow() {
             whileTap={{ scale: 0.98 }}
           >
             <Card
-              className="glass-card cursor-pointer"
+              variant="glass"
+              className="cursor-pointer"
               onClick={() => setSelectedRequest(request)}
             >
               <CardContent className="p-4">
@@ -482,7 +483,7 @@ export function ApprovalWorkflow() {
       
       {/* Empty State */}
       {filteredRequests.length === 0 && (
-        <Card className="glass-card p-12 text-center">
+        <Card variant="glass" className="p-12 text-center">
           <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
           <p className="text-gray-400">No {filter !== 'all' ? filter : ''} requests</p>
         </Card>
@@ -490,7 +491,7 @@ export function ApprovalWorkflow() {
       
       {/* Selected Request Details */}
       {selectedRequest && (
-        <Card className="glass-card">
+        <Card variant="glass">
           <CardHeader>
             <div className="flex items-start justify-between">
               <div>

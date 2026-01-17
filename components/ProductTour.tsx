@@ -240,7 +240,7 @@ export function ProductTour() {
       
       {/* Tooltip */}
       <div
-        className="fixed z-[9999] glass-card p-6 rounded-xl max-w-md animate-in fade-in slide-in-from-bottom-4"
+        className="fixed z-[9999] bg-white/[0.02] backdrop-blur-xl border border-white/[0.08] p-6 rounded-xl max-w-md animate-in fade-in slide-in-from-bottom-4"
         style={getTooltipPosition()}
       >
         {/* Close button */}

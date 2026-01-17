@@ -315,7 +315,7 @@ export function ROICalculator() {
       
       {/* Key Metrics */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
-        <Card className="glass-card">
+        <Card variant="glass">
           <CardContent className="p-4">
             <div className="flex items-center justify-between mb-2">
               <DollarSign className="h-4 w-4 text-green-400" />
@@ -326,7 +326,7 @@ export function ROICalculator() {
           </CardContent>
         </Card>
         
-        <Card className="glass-card">
+        <Card variant="glass">
           <CardContent className="p-4">
             <div className="flex items-center justify-between mb-2">
               <TrendingUp className="h-4 w-4 text-purple-400" />
@@ -337,7 +337,7 @@ export function ROICalculator() {
           </CardContent>
         </Card>
         
-        <Card className="glass-card">
+        <Card variant="glass">
           <CardContent className="p-4">
             <div className="flex items-center justify-between mb-2">
               <Users className="h-4 w-4 text-blue-400" />
@@ -348,7 +348,7 @@ export function ROICalculator() {
           </CardContent>
         </Card>
         
-        <Card className="glass-card">
+        <Card variant="glass">
           <CardContent className="p-4">
             <div className="flex items-center justify-between mb-2">
               <Award className="h-4 w-4 text-yellow-400" />
@@ -359,7 +359,7 @@ export function ROICalculator() {
           </CardContent>
         </Card>
         
-        <Card className="glass-card">
+        <Card variant="glass">
           <CardContent className="p-4">
             <div className="flex items-center justify-between mb-2">
               <Target className="h-4 w-4 text-orange-400" />
@@ -383,7 +383,7 @@ export function ROICalculator() {
         <TabsContent value="calculator" className="space-y-6">
           <div className="grid gap-6 lg:grid-cols-2">
             {/* Calculator Inputs */}
-            <Card className="glass-card">
+            <Card variant="glass">
               <CardHeader>
                 <CardTitle>ROI Parameters</CardTitle>
                 <CardDescription>Adjust values to calculate ROI</CardDescription>
@@ -478,7 +478,7 @@ export function ROICalculator() {
             </Card>
             
             {/* Results */}
-            <Card className="glass-card">
+            <Card variant="glass">
               <CardHeader>
                 <CardTitle>Calculated Results</CardTitle>
                 <CardDescription>Based on your inputs</CardDescription>
@@ -558,7 +558,7 @@ export function ROICalculator() {
           </div>
           
           {/* ROI Trend Chart */}
-          <Card className="glass-card">
+          <Card variant="glass">
             <CardHeader>
               <CardTitle>ROI Trend</CardTitle>
               <CardDescription>Monthly return on investment</CardDescription>
@@ -587,7 +587,7 @@ export function ROICalculator() {
         
         <TabsContent value="campaigns" className="space-y-4">
           {campaigns.map(campaign => (
-            <Card key={campaign.id} className="glass-card">
+            <Card key={campaign.id} variant="glass">
               <CardContent className="p-4">
                 <div className="flex items-start justify-between mb-3">
                   <div>
@@ -640,7 +640,7 @@ export function ROICalculator() {
         </TabsContent>
         
         <TabsContent value="channels" className="space-y-6">
-          <Card className="glass-card">
+          <Card variant="glass">
             <CardHeader>
               <CardTitle>Channel Performance</CardTitle>
               <CardDescription>ROI by marketing channel</CardDescription>
@@ -667,7 +667,7 @@ export function ROICalculator() {
           
           <div className="grid gap-4">
             {channelPerformance.map(channel => (
-              <Card key={channel.channel} className="glass-card">
+              <Card key={channel.channel} variant="glass">
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
                     <div className="flex-1">
@@ -705,7 +705,7 @@ export function ROICalculator() {
         </TabsContent>
         
         <TabsContent value="funnel" className="space-y-6">
-          <Card className="glass-card">
+          <Card variant="glass">
             <CardHeader>
               <CardTitle>Conversion Funnel</CardTitle>
               <CardDescription>Track drop-off at each stage</CardDescription>
@@ -769,7 +769,7 @@ export function ROICalculator() {
           </Card>
           
           {/* Cost Breakdown */}
-          <Card className="glass-card">
+          <Card variant="glass">
             <CardHeader>
               <CardTitle>Cost Breakdown</CardTitle>
               <CardDescription>Marketing spend allocation</CardDescription>

@@ -318,7 +318,7 @@ export default function PostScheduler() {
     return (
       <div className="space-y-3">
         {filteredPosts.map(post => (
-          <Card key={post.id} className="glass-card">
+          <Card key={post.id} variant="glass">
             <CardContent className="p-4">
               <div className="flex items-start justify-between">
                 <div className="flex-1">
@@ -458,7 +458,7 @@ export default function PostScheduler() {
         </TabsList>
 
         <TabsContent value="calendar" className="mt-6">
-          <Card className="glass-card">
+          <Card variant="glass">
             <CardHeader>
               <div className="flex items-center justify-between">
                 <CardTitle>{format(selectedDate, 'MMMM yyyy')}</CardTitle>
@@ -492,7 +492,7 @@ export default function PostScheduler() {
           </Card>
 
           {/* Selected Date Posts */}
-          <Card className="glass-card">
+          <Card variant="glass">
             <CardHeader>
               <CardTitle>Posts for {format(selectedDate, 'MMMM d, yyyy')}</CardTitle>
               <CardDescription>
@@ -543,7 +543,7 @@ export default function PostScheduler() {
         </TabsContent>
 
         <TabsContent value="timeline" className="mt-6">
-          <Card className="glass-card">
+          <Card variant="glass">
             <CardContent className="p-6">
               <TimelineView />
             </CardContent>
@@ -558,7 +558,7 @@ export default function PostScheduler() {
       {/* Create/Edit Post Modal */}
       {(isCreatingPost || editingPost) && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <Card className="glass-card w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+          <Card variant="glass" className="w-full max-w-2xl max-h-[90vh] overflow-y-auto">
             <CardHeader>
               <CardTitle>
                 {editingPost ? 'Edit Post' : 'Schedule New Post'}

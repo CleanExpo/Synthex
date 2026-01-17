@@ -420,7 +420,7 @@ export function SentimentAnalysis() {
       </div>
       
       {/* Overall Sentiment Score */}
-      <Card className="glass-card">
+      <Card variant="glass">
         <CardContent className="p-6">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             {/* Main Score */}
@@ -526,7 +526,7 @@ export function SentimentAnalysis() {
         
         <TabsContent value="overview" className="space-y-6">
           {/* Sentiment Trend */}
-          <Card className="glass-card">
+          <Card variant="glass">
             <CardHeader>
               <CardTitle>Sentiment Trend</CardTitle>
               <CardDescription>Track emotional patterns over time</CardDescription>
@@ -558,7 +558,7 @@ export function SentimentAnalysis() {
           </Card>
           
           {/* Emotion Analysis */}
-          <Card className="glass-card">
+          <Card variant="glass">
             <CardHeader>
               <CardTitle>Emotion Breakdown</CardTitle>
               <CardDescription>Detailed emotional analysis</CardDescription>
@@ -584,7 +584,7 @@ export function SentimentAnalysis() {
         </TabsContent>
         
         <TabsContent value="topics" className="space-y-4">
-          <Card className="glass-card">
+          <Card variant="glass">
             <CardHeader>
               <CardTitle>Topic Sentiment</CardTitle>
               <CardDescription>Sentiment analysis by topic</CardDescription>
@@ -624,7 +624,7 @@ export function SentimentAnalysis() {
           {/* Recent Mentions */}
           <div className="space-y-3">
             {sentimentData.slice(0, 10).map(item => (
-              <Card key={item.id} className="glass-card">
+              <Card key={item.id} variant="glass">
                 <CardContent className="p-4">
                   <div className="flex items-start justify-between mb-2">
                     <div className="flex items-center gap-2">
@@ -684,7 +684,7 @@ export function SentimentAnalysis() {
         </TabsContent>
         
         <TabsContent value="analyzer" className="space-y-4">
-          <Card className="glass-card">
+          <Card variant="glass">
             <CardHeader>
               <CardTitle>Real-time Sentiment Analyzer</CardTitle>
               <CardDescription>Test sentiment analysis on any text</CardDescription>

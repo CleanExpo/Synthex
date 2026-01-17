@@ -423,7 +423,7 @@ export function CompetitorAnalysis() {
       
       {/* Add Competitor Form */}
       {showAddForm && (
-        <Card className="glass-card">
+        <Card variant="glass">
           <CardContent className="p-4">
             <div className="flex gap-2">
               <Input
@@ -456,7 +456,8 @@ export function CompetitorAnalysis() {
             whileTap={{ scale: 0.98 }}
           >
             <Card
-              className={`glass-card cursor-pointer ${
+              variant="glass"
+              className={`cursor-pointer ${
                 selectedCompetitor?.id === competitor.id ? 'ring-2 ring-purple-500' : ''
               } ${
                 selectedForComparison.includes(competitor.id) ? 'ring-2 ring-blue-500' : ''
@@ -552,7 +553,7 @@ export function CompetitorAnalysis() {
       
       {/* Comparison View */}
       {comparisonMode && selectedForComparison.length > 1 && (
-        <Card className="glass-card">
+        <Card variant="glass">
           <CardHeader>
             <CardTitle>Competitor Comparison</CardTitle>
             <CardDescription>
@@ -637,7 +638,7 @@ export function CompetitorAnalysis() {
       
       {/* Selected Competitor Details */}
       {selectedCompetitor && !comparisonMode && (
-        <Card className="glass-card">
+        <Card variant="glass">
           <CardHeader>
             <div className="flex items-center justify-between">
               <div>

@@ -164,7 +164,7 @@ export function AIPersonaManager() {
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
         >
-          <Card className="glass-card">
+          <Card variant="glass">
             <CardHeader>
               <CardTitle>Create New Persona</CardTitle>
             </CardHeader>
@@ -208,7 +208,8 @@ export function AIPersonaManager() {
               whileTap={{ scale: 0.98 }}
             >
               <Card
-                className={`glass-card cursor-pointer transition-all ${
+                variant="glass"
+                className={`cursor-pointer transition-all ${
                   selectedPersona?.id === persona.id
                     ? 'ring-2 ring-purple-500'
                     : ''
@@ -258,7 +259,7 @@ export function AIPersonaManager() {
       
       {/* Selected Persona Details */}
       {selectedPersona && (
-        <Card className="glass-card">
+        <Card variant="glass">
           <CardHeader>
             <div className="flex items-center justify-between">
               <div>
@@ -428,7 +429,7 @@ export function AIPersonaManager() {
       
       {/* Empty State */}
       {personas.length === 0 && !showCreateForm && (
-        <Card className="glass-card p-12 text-center">
+        <Card variant="glass" className="p-12 text-center">
           <Brain className="h-12 w-12 text-gray-400 mx-auto mb-4" />
           <h3 className="text-lg font-semibold text-white mb-2">No Personas Yet</h3>
           <p className="text-gray-400 mb-6">

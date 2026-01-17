@@ -282,7 +282,7 @@ export function CollaborationTools({
         <Button
           size="sm"
           variant="outline"
-          className="relative glass-card border-white/10"
+          className="relative bg-white/[0.02] backdrop-blur-xl border border-white/[0.08]"
           onClick={() => setShowNotifications(!showNotifications)}
         >
           <Bell className="h-4 w-4" />
@@ -297,7 +297,7 @@ export function CollaborationTools({
         <Button
           size="sm"
           variant="outline"
-          className="glass-card border-white/10"
+          className="bg-white/[0.02] backdrop-blur-xl border border-white/[0.08]"
           onClick={() => setShowComments(!showComments)}
         >
           <MessageSquare className="h-4 w-4 mr-2" />
@@ -312,7 +312,7 @@ export function CollaborationTools({
             initial={{ opacity: 0, y: 20, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
-            className="w-96 max-h-[600px] glass-card rounded-lg shadow-2xl overflow-hidden"
+            className="w-96 max-h-[600px] bg-white/[0.02] backdrop-blur-xl border border-white/[0.08] rounded-lg shadow-2xl overflow-hidden"
           >
             <div className="p-4 border-b border-white/10">
               <div className="flex items-center justify-between">
@@ -388,7 +388,7 @@ export function CollaborationTools({
             initial={{ opacity: 0, y: 20, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
-            className="w-80 max-h-[400px] glass-card rounded-lg shadow-2xl overflow-hidden"
+            className="w-80 max-h-[400px] bg-white/[0.02] backdrop-blur-xl border border-white/[0.08] rounded-lg shadow-2xl overflow-hidden"
           >
             <div className="p-4 border-b border-white/10">
               <div className="flex items-center justify-between">
