@@ -1,11 +1,51 @@
-// Performance monitoring utilities for SYNTHEX
+/**
+ * Performance Monitoring Utilities for SYNTHEX
+ *
+ * Provides Web Vitals collection, performance marks,
+ * and RUM (Real User Monitoring) capabilities.
+ *
+ * @module lib/performance
+ */
 
 export interface PerformanceMetrics {
   fcp: number; // First Contentful Paint
   lcp: number; // Largest Contentful Paint
   fid: number; // First Input Delay
+  inp: number; // Interaction to Next Paint
   cls: number; // Cumulative Layout Shift
   ttfb: number; // Time to First Byte
+}
+
+export interface WebVitalsMetric {
+  name: 'CLS' | 'FCP' | 'FID' | 'INP' | 'LCP' | 'TTFB';
+  value: number;
+  rating: 'good' | 'needs-improvement' | 'poor';
+  delta: number;
+  id: string;
+  navigationType: string;
+}
+
+// Web Vitals Thresholds (based on Google's standards)
+const VITALS_THRESHOLDS = {
+  CLS: { good: 0.1, poor: 0.25 },
+  FCP: { good: 1800, poor: 3000 },
+  FID: { good: 100, poor: 300 },
+  INP: { good: 200, poor: 500 },
+  LCP: { good: 2500, poor: 4000 },
+  TTFB: { good: 800, poor: 1800 },
+};
+
+/**
+ * Get rating for a metric value
+ */
+export function getMetricRating(
+  name: WebVitalsMetric['name'],
+  value: number
+): WebVitalsMetric['rating'] {
+  const thresholds = VITALS_THRESHOLDS[name];
+  if (value <= thresholds.good) return 'good';
+  if (value <= thresholds.poor) return 'needs-improvement';
+  return 'poor';
 }
 
 // Web Vitals collection
@@ -14,6 +54,7 @@ export function collectWebVitals(metric: any) {
     fcp: 0,
     lcp: 0,
     fid: 0,
+    inp: 0,
     cls: 0,
     ttfb: 0,
   };
@@ -30,6 +71,10 @@ export function collectWebVitals(metric: any) {
     case 'FID':
       metrics.fid = metric.value;
       console.log('FID:', metric.value);
+      break;
+    case 'INP':
+      metrics.inp = metric.value;
+      console.log('INP:', metric.value);
       break;
     case 'CLS':
       metrics.cls = metric.value;

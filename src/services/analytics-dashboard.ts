@@ -1,5 +1,13 @@
-import { mcpIntegration } from './mcp-integration';
-import { openRouterService } from './openrouter';
+/**
+ * Analytics Dashboard Service
+ *
+ * Provides aggregated metrics, performance predictions, and trending content analysis.
+ *
+ * ENVIRONMENT VARIABLES REQUIRED:
+ * - DATABASE_URL (CRITICAL)
+ *
+ * @module src/services/analytics-dashboard
+ */
 
 interface PlatformMetrics {
   platform: string;
@@ -31,7 +39,7 @@ interface TrendingContent {
 export class AnalyticsDashboard {
   private metricsCache: Map<string, PlatformMetrics[]> = new Map();
   private predictions: Map<string, PerformancePrediction> = new Map();
-  
+
   async aggregateMetrics(platforms: string[], timeRange: string): Promise<any> {
     const aggregated = {
       total: {
@@ -45,21 +53,21 @@ export class AnalyticsDashboard {
       byTime: [] as any[],
       visualization: 'chart'
     };
-    
+
     for (const platform of platforms) {
       const metrics = await this.fetchPlatformMetrics(platform, timeRange);
-      
+
       aggregated.byPlatform[platform] = metrics;
-      
+
       aggregated.total.impressions += metrics.reduce((sum, m) => sum + m.impressions, 0);
       aggregated.total.engagement += metrics.reduce((sum, m) => sum + m.engagement, 0);
       aggregated.total.clicks += metrics.reduce((sum, m) => sum + m.clicks, 0);
       aggregated.total.shares += metrics.reduce((sum, m) => sum + m.shares, 0);
       aggregated.total.comments += metrics.reduce((sum, m) => sum + m.comments, 0);
     }
-    
+
     aggregated.byTime = this.aggregateByTime(Array.from(this.metricsCache.values()).flat(), timeRange);
-    
+
     return {
       aggregated: true,
       metrics: ['impressions', 'engagement', 'clicks'],
@@ -67,11 +75,11 @@ export class AnalyticsDashboard {
       data: aggregated
     };
   }
-  
+
   async predictPerformance(historicalData: number[], model: string = 'linear'): Promise<any> {
     let prediction = 0;
     let confidence = 0;
-    
+
     if (model === 'linear') {
       const trend = this.calculateLinearTrend(historicalData);
       prediction = Math.round(historicalData[historicalData.length - 1] + trend);
@@ -84,18 +92,18 @@ export class AnalyticsDashboard {
       prediction = aiPrediction.value;
       confidence = aiPrediction.confidence;
     }
-    
+
     const performancePrediction: PerformancePrediction = {
       metric: 'engagement',
       current: historicalData[historicalData.length - 1],
       predicted: prediction,
       confidence,
-      trend: prediction > historicalData[historicalData.length - 1] ? 'up' : 
-             prediction < historicalData[historicalData.length - 1] ? 'down' : 'stable'
+      trend: prediction > historicalData[historicalData.length - 1] ? 'up' :
+        prediction < historicalData[historicalData.length - 1] ? 'down' : 'stable'
     };
-    
+
     this.predictions.set(`${model}-${Date.now()}`, performancePrediction);
-    
+
     return {
       prediction,
       confidence,
@@ -103,14 +111,14 @@ export class AnalyticsDashboard {
       trend: performancePrediction.trend
     };
   }
-  
+
   async identifyTrendingContent(posts: any[], threshold: number = 0.7): Promise<any> {
     const trending: TrendingContent[] = [];
     const suggestions: string[] = [];
-    
+
     for (const post of posts) {
       const viralScore = await this.calculateViralScore(post);
-      
+
       if (viralScore >= threshold) {
         trending.push({
           id: post.id,
@@ -122,16 +130,16 @@ export class AnalyticsDashboard {
         });
       }
     }
-    
+
     if (trending.length > 0) {
       suggestions.push('Create similar content to trending posts');
       suggestions.push('Increase posting frequency during peak engagement times');
       suggestions.push('Use trending hashtags and topics');
     }
-    
+
     const insights = await this.generateTrendingInsights(trending);
     suggestions.push(...insights);
-    
+
     return {
       trending,
       suggestions,
@@ -139,7 +147,7 @@ export class AnalyticsDashboard {
       analyzed: posts.length
     };
   }
-  
+
   async generateRealTimeInsights(): Promise<any> {
     const insights = {
       performance: {
@@ -161,10 +169,10 @@ export class AnalyticsDashboard {
       },
       alerts: await this.generateAlerts()
     };
-    
+
     return insights;
   }
-  
+
   async createVisualization(data: any, type: string): Promise<any> {
     const visualizations: Record<string, any> = {
       chart: {
@@ -194,19 +202,19 @@ export class AnalyticsDashboard {
         ]
       }
     };
-    
+
     return visualizations[type] || visualizations.chart;
   }
-  
+
   private async fetchPlatformMetrics(platform: string, timeRange: string): Promise<PlatformMetrics[]> {
     const cached = this.metricsCache.get(`${platform}-${timeRange}`);
     if (cached && this.isCacheValid(cached)) {
       return cached;
     }
-    
+
     const mockMetrics: PlatformMetrics[] = [];
     const days = parseInt(timeRange) || 7;
-    
+
     for (let i = 0; i < days; i++) {
       mockMetrics.push({
         platform,
@@ -218,34 +226,35 @@ export class AnalyticsDashboard {
         timestamp: new Date(Date.now() - i * 24 * 60 * 60 * 1000)
       });
     }
-    
+
     this.metricsCache.set(`${platform}-${timeRange}`, mockMetrics);
     return mockMetrics;
   }
-  
+
   private calculateLinearTrend(data: number[]): number {
     const n = data.length;
     let sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0;
-    
+
     for (let i = 0; i < n; i++) {
       sumX += i;
       sumY += data[i];
       sumXY += i * data[i];
       sumX2 += i * i;
     }
-    
+
     const slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
     return slope;
   }
-  
+
   private calculateExponentialPrediction(data: number[]): number {
     const lastValue = data[data.length - 1];
     const secondLast = data[data.length - 2] || lastValue;
     const growthRate = lastValue / secondLast;
     return Math.round(lastValue * growthRate);
   }
-  
+
   private async getAIPrediction(data: number[]): Promise<{ value: number; confidence: number }> {
+    // Sequential thinking approach for prediction
     const steps = [
       'Analyze historical patterns',
       'Identify seasonality',
@@ -253,99 +262,109 @@ export class AnalyticsDashboard {
       'Factor in external events',
       'Generate prediction'
     ];
-    
-    const result = await mcpIntegration.sequentialThink(
-      `Predict next value based on data: ${data.join(', ')}`,
-      steps
-    );
-    
+
+    // Simulate AI prediction with statistical analysis
+    const avg = data.reduce((a, b) => a + b, 0) / data.length;
+    const trend = this.calculateLinearTrend(data);
+    const lastValue = data[data.length - 1];
+
+    // Weighted prediction combining trend and recent values
+    const prediction = Math.round(lastValue * 0.6 + (lastValue + trend) * 0.4);
+
+    console.log('AI Prediction steps:', steps);
+
     return {
-      value: Math.round(data[data.length - 1] * 1.15),
+      value: prediction,
       confidence: 0.85
     };
   }
-  
+
   private calculateConfidence(historicalData: number[], prediction: number): number {
     const avg = historicalData.reduce((a, b) => a + b, 0) / historicalData.length;
     const variance = historicalData.reduce((sum, val) => sum + Math.pow(val - avg, 2), 0) / historicalData.length;
     const stdDev = Math.sqrt(variance);
-    
-    const deviation = Math.abs(prediction - avg) / stdDev;
+
+    const deviation = Math.abs(prediction - avg) / (stdDev || 1);
     const confidence = Math.max(0, Math.min(1, 1 - deviation / 3));
-    
+
     return Number(confidence.toFixed(2));
   }
-  
+
   private async calculateViralScore(post: any): Promise<number> {
+    const views = post.views || 1;
     const factors = {
-      engagement: (post.likes + post.shares * 2 + post.comments * 1.5) / post.views,
-      velocity: post.engagementRate / (Date.now() - post.timestamp),
-      reach: post.impressions / 10000,
+      engagement: ((post.likes || 0) + (post.shares || 0) * 2 + (post.comments || 0) * 1.5) / views,
+      velocity: (post.engagementRate || 0) / Math.max(1, Date.now() - (post.timestamp || Date.now())),
+      reach: (post.impressions || 0) / 10000,
       sentiment: 0.8
     };
-    
+
     const weights: Record<string, number> = { engagement: 0.4, velocity: 0.3, reach: 0.2, sentiment: 0.1 };
-    
+
     let score = 0;
     for (const [factor, value] of Object.entries(factors)) {
       score += value * weights[factor];
     }
-    
+
     return Math.min(1, score);
   }
-  
+
   private async generateOptimizationRecommendations(post: any): Promise<string[]> {
     const recommendations = [];
-    
-    if (post.engagementRate < 0.02) {
+
+    if ((post.engagementRate || 0) < 0.02) {
       recommendations.push('Add more engaging visuals');
       recommendations.push('Improve headline hook');
     }
-    
-    if (post.shares < post.likes * 0.1) {
+
+    if ((post.shares || 0) < (post.likes || 0) * 0.1) {
       recommendations.push('Make content more shareable');
       recommendations.push('Add clear call-to-action');
     }
-    
-    if (post.comments < post.likes * 0.05) {
+
+    if ((post.comments || 0) < (post.likes || 0) * 0.05) {
       recommendations.push('Ask questions to encourage discussion');
-      recommendations.push('Create controversial or thought-provoking content');
+      recommendations.push('Create thought-provoking content');
     }
-    
+
     return recommendations;
   }
-  
+
   private async generateTrendingInsights(trending: TrendingContent[]): Promise<string[]> {
-    const insights = [];
-    
+    const insights: string[] = [];
+
+    if (trending.length === 0) {
+      return ['No trending content found. Consider increasing engagement strategies.'];
+    }
+
     const platforms = [...new Set(trending.map(t => t.platform))];
     insights.push(`Trending content found on: ${platforms.join(', ')}`);
-    
+
     const avgViralScore = trending.reduce((sum, t) => sum + t.viralScore, 0) / trending.length;
     insights.push(`Average viral score: ${(avgViralScore * 100).toFixed(0)}%`);
-    
+
     const topRecommendations = trending.flatMap(t => t.recommendations)
       .reduce((acc, rec) => {
         acc[rec] = (acc[rec] || 0) + 1;
         return acc;
       }, {} as Record<string, number>);
-    
+
     const mostCommon = Object.entries(topRecommendations)
       .sort(([, a], [, b]) => b - a)
       .slice(0, 3)
       .map(([rec]) => rec);
-    
+
     insights.push(...mostCommon);
-    
+
     return insights;
   }
-  
+
   private aggregateByTime(metrics: PlatformMetrics[], timeRange: string): any[] {
     const aggregated = new Map<string, any>();
-    
+
     for (const metric of metrics) {
       const dateKey = metric.timestamp.toISOString().split('T')[0];
-      
+
       if (!aggregated.has(dateKey)) {
         aggregated.set(dateKey, {
           date: dateKey,
@@ -354,25 +373,25 @@ export class AnalyticsDashboard {
           clicks: 0
         });
       }
-      
+
       const day = aggregated.get(dateKey);
       day.impressions += metric.impressions;
       day.engagement += metric.engagement;
       day.clicks += metric.clicks;
     }
-    
-    return Array.from(aggregated.values()).sort((a, b) => 
+
+    return Array.from(aggregated.values()).sort((a, b) =>
       new Date(a.date).getTime() - new Date(b.date).getTime()
     );
   }
-  
+
   private isCacheValid(cache: any[]): boolean {
     if (!cache || cache.length === 0) return false;
     const latest = cache[0].timestamp;
     const age = Date.now() - latest.getTime();
-    return age < 5 * 60 * 1000;
+    return age < 5 * 60 * 1000; // 5 minute cache
   }
-  
+
   private generateHeatmapData(data: any): any {
     return {
       labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
@@ -382,21 +401,21 @@ export class AnalyticsDashboard {
       }]
     };
   }
-  
+
   private async getTopPerformingContent(): Promise<any[]> {
     return [
       { id: '1', content: 'AI Marketing Tips', engagement: 0.12 },
       { id: '2', content: 'Social Media Trends 2025', engagement: 0.10 }
     ];
   }
-  
+
   private async getUnderperformingContent(): Promise<any[]> {
     return [
       { id: '3', content: 'Generic Product Update', engagement: 0.01 },
       { id: '4', content: 'Company News', engagement: 0.02 }
     ];
   }
-  
+
   private async identifyOpportunities(): Promise<string[]> {
     return [
       'Video content shows 3x higher engagement',
@@ -404,7 +423,7 @@ export class AnalyticsDashboard {
       'Weekend posts have lower competition'
     ];
   }
-  
+
   private async generateAlerts(): Promise<any[]> {
     return [
       { type: 'success', message: 'Engagement up 25% this week' },
@@ -412,22 +431,23 @@ export class AnalyticsDashboard {
       { type: 'info', message: 'Best time to post: 2 PM today' }
     ];
   }
-  
+
   async execute(input: any): Promise<any> {
     if (input.platforms && input.timeRange) {
       return this.aggregateMetrics(input.platforms, input.timeRange);
     }
-    
+
     if (input.historicalData && input.model) {
       return this.predictPerformance(input.historicalData, input.model);
     }
-    
+
     if (input.posts !== undefined) {
       return this.identifyTrendingContent(input.posts, input.threshold);
     }
-    
+
     return { error: 'Invalid input' };
   }
 }
 
 export const analyticsDashboard = new AnalyticsDashboard();
+export default analyticsDashboard;

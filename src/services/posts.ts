@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { prisma } from '../lib/prisma';
 import { platformFactory } from './platforms/platform-factory';
 import { BasePlatformPost, PlatformConfig } from './platforms/base-platform';
-// import NotificationService from './notification'; // Disabled - file not available
+import NotificationService from './notification';
 
 // Validation schemas
 export const CreatePostSchema = z.object({
@@ -641,27 +641,25 @@ export class PostService {
       });
 
       // Create success notification
-      // Disabled - notification service not available
-      console.log('Notification would be sent:', {
+      await NotificationService.createPlatformNotification(
         userId,
         platform,
-        action: 'configure',
-        success: true
-      });
+        'configure',
+        true
+      );
 
       return true;
     } catch (error) {
       console.error('Failed to configure platform:', error);
-      
+
       // Create error notification
-      // Disabled - notification service not available
-      console.log('Error notification would be sent:', {
+      await NotificationService.createPlatformNotification(
         userId,
         platform,
-        action: 'configure',
-        success: false,
-        error: error instanceof Error ? error.message : 'Unknown error'
-      });
+        'configure',
+        false,
+        { error: error instanceof Error ? error.message : 'Unknown error' }
+      );
       
       return false;
     }
