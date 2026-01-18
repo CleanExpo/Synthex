@@ -1,6 +1,23 @@
 # Environment Variables Documentation
 
+**Last Updated:** 2026-01-18
+**Version:** 2.0.0
+
 > **⚠️ SECURITY NOTICE:** This document contains example values only. Never commit real secrets!
+
+---
+
+## Quick Start
+
+```bash
+# Copy example to local
+cp .env.example .env.local
+
+# Edit with your values
+code .env.local
+```
+
+---
 
 ## Required Variables
 
@@ -12,37 +29,132 @@ These variables MUST be set for the application to function:
 | `JWT_SECRET` | Secret key for signing JWT tokens (min 32 chars) | **CRITICAL** | `base6...g==` |
 | `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL (public) | **PUBLIC** | `https....co` |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anonymous/public key (safe for client) | **PUBLIC** | `eyJhb......` |
+| `SUPABASE_SERVICE_ROLE_KEY` | Supabase service role key (NEVER expose to client) | **CRITICAL** | `eyJhb......` |
 | `OPENROUTER_API_KEY` | OpenRouter API key for AI services | **SECRET** | `sk-or...xxx` |
+| `NEXT_PUBLIC_APP_URL` | Public application URL | **PUBLIC** | `https://synthex.vercel.app` |
+
+## OAuth Providers
+
+### Google OAuth
+| Variable | Required | Security | Description |
+|----------|----------|----------|-------------|
+| `GOOGLE_CLIENT_ID` | For OAuth | INTERNAL | Google OAuth client ID |
+| `GOOGLE_CLIENT_SECRET` | For OAuth | **SECRET** | Google OAuth client secret |
+
+**Setup:** https://console.cloud.google.com/apis/credentials
+
+### GitHub OAuth
+| Variable | Required | Security | Description |
+|----------|----------|----------|-------------|
+| `GITHUB_CLIENT_ID` | For OAuth | INTERNAL | GitHub OAuth App client ID |
+| `GITHUB_CLIENT_SECRET` | For OAuth | **SECRET** | GitHub OAuth App client secret |
+
+**Setup:** https://github.com/settings/applications/new
+
+### Twitter/X OAuth
+| Variable | Required | Security | Description |
+|----------|----------|----------|-------------|
+| `TWITTER_CLIENT_ID` | For OAuth | INTERNAL | Twitter API client ID |
+| `TWITTER_CLIENT_SECRET` | For OAuth | **SECRET** | Twitter API client secret |
+
+**Setup:** https://developer.twitter.com/en/portal/projects
+
+### LinkedIn OAuth
+| Variable | Required | Security | Description |
+|----------|----------|----------|-------------|
+| `LINKEDIN_CLIENT_ID` | For OAuth | INTERNAL | LinkedIn client ID |
+| `LINKEDIN_CLIENT_SECRET` | For OAuth | **SECRET** | LinkedIn client secret |
+
+**Setup:** https://www.linkedin.com/developers/apps
+
+### Facebook OAuth
+| Variable | Required | Security | Description |
+|----------|----------|----------|-------------|
+| `FACEBOOK_CLIENT_ID` | For OAuth | INTERNAL | Facebook App ID |
+| `FACEBOOK_CLIENT_SECRET` | For OAuth | **SECRET** | Facebook App secret |
+
+**Setup:** https://developers.facebook.com/apps
+
+### Instagram OAuth
+| Variable | Required | Security | Description |
+|----------|----------|----------|-------------|
+| `INSTAGRAM_CLIENT_ID` | For OAuth | INTERNAL | Instagram App ID |
+| `INSTAGRAM_CLIENT_SECRET` | For OAuth | **SECRET** | Instagram App secret |
+
+### TikTok OAuth
+| Variable | Required | Security | Description |
+|----------|----------|----------|-------------|
+| `TIKTOK_CLIENT_KEY` | For OAuth | INTERNAL | TikTok client key |
+| `TIKTOK_CLIENT_SECRET` | For OAuth | **SECRET** | TikTok client secret |
+
+---
+
+## Webhook Secrets
+
+### Incoming Webhook Verification
+| Variable | Required | Security | Description |
+|----------|----------|----------|-------------|
+| `STRIPE_WEBHOOK_SECRET` | For Stripe | **SECRET** | Stripe webhook signing secret |
+| `TWITTER_WEBHOOK_SECRET` | For Twitter | **SECRET** | Twitter webhook secret |
+| `LINKEDIN_WEBHOOK_SECRET` | For LinkedIn | **SECRET** | LinkedIn webhook secret |
+| `FACEBOOK_WEBHOOK_SECRET` | For FB/IG | **SECRET** | Facebook/Instagram webhook secret |
+| `INSTAGRAM_WEBHOOK_SECRET` | For Instagram | **SECRET** | Instagram webhook secret |
+| `TIKTOK_WEBHOOK_SECRET` | For TikTok | **SECRET** | TikTok webhook secret |
+| `GITHUB_WEBHOOK_SECRET` | For GitHub | **SECRET** | GitHub webhook secret |
+| `SLACK_SIGNING_SECRET` | For Slack | **SECRET** | Slack signing secret |
+| `FACEBOOK_WEBHOOK_VERIFY_TOKEN` | For FB/IG | SECRET | Facebook webhook verify token |
+
+### Outgoing Webhooks
+| Variable | Required | Security | Description |
+|----------|----------|----------|-------------|
+| `WEBHOOK_SIGNING_SECRET` | Optional | **SECRET** | Default outgoing webhook signing secret |
+
+---
 
 ## Optional Variables
 
 These variables enable additional features:
 
-| Variable | Description | Security Level | Default | Example |
-|----------|-------------|---------------|---------|---------|
-| `NEXTAUTH_SECRET` | NextAuth.js secret for session encryption | CRITICAL | None | `gener...uth` |
-| `NEXTAUTH_URL` | Canonical URL of the site for NextAuth | INTERNAL | None | `https...app` |
-| `SUPABASE_SERVICE_ROLE_KEY` | Supabase service role key (NEVER expose to client) | CRITICAL | None | `eyJhb......` |
-| `OPENAI_API_KEY` | OpenAI API key (alternative to OpenRouter) | SECRET | None | `sk-xx...xxx` |
-| `ANTHROPIC_API_KEY` | Anthropic Claude API key | SECRET | None | `sk-an...xxx` |
-| `STRIPE_SECRET_KEY` | Stripe secret key for payment processing | CRITICAL | None | `sk_te...xxx` |
-| `STRIPE_PUBLISHABLE_KEY` | Stripe publishable key (safe for client) | PUBLIC | None | `pk_te...xxx` |
-| `STRIPE_WEBHOOK_SECRET` | Stripe webhook endpoint secret | SECRET | None | `whsec...xxx` |
-| `EMAIL_PROVIDER` | Email service provider | INTERNAL | None | `xxx` |
-| `SMTP_HOST` | SMTP server hostname | INTERNAL | None | `smtp....com` |
-| `SMTP_PORT` | SMTP server port | INTERNAL | 587 | `xxx` |
-| `SMTP_USER` | SMTP authentication username | SECRET | None | `your-...com` |
-| `SMTP_PASS` | SMTP authentication password | SECRET | None | `your-...ord` |
-| `GOOGLE_CLIENT_ID` | Google OAuth client ID | INTERNAL | None | `xxxxx...com` |
-| `GOOGLE_CLIENT_SECRET` | Google OAuth client secret | SECRET | None | `GOCSP...xxx` |
-| `SENTRY_DSN` | Sentry error tracking DSN | INTERNAL | None | `https...xxx` |
-| `NEXT_PUBLIC_SENTRY_DSN` | Sentry DSN for client-side | PUBLIC | None | `https...xxx` |
-| `NEXT_PUBLIC_GA_ID` | Google Analytics tracking ID | PUBLIC | None | `G-XXX...XXX` |
-| `NEXT_PUBLIC_APP_URL` | Public application URL | PUBLIC | http://localhost:3000 | `https...app` |
-| `NODE_ENV` | Node environment | INTERNAL | development | `xxx` |
-| `REDIS_URL` | Redis connection URL for caching | SECRET | None | `redis...379` |
-| `RATE_LIMIT_MAX` | Maximum requests per window | INTERNAL | 100 | `xxx` |
-| `RATE_LIMIT_WINDOW_MS` | Rate limit window in milliseconds | INTERNAL | 900000 | `xxx` |
+| Variable | Description | Security Level | Default |
+|----------|-------------|----------------|---------|
+| `OPENAI_API_KEY` | OpenAI API key (fallback to OpenRouter) | **SECRET** | None |
+| `ANTHROPIC_API_KEY` | Anthropic Claude API key | **SECRET** | None |
+| `STRIPE_SECRET_KEY` | Stripe secret key for payment processing | **CRITICAL** | None |
+| `STRIPE_PUBLISHABLE_KEY` | Stripe publishable key (safe for client) | PUBLIC | None |
+| `SENDGRID_API_KEY` | SendGrid API key for email | **SECRET** | None |
+| `SENDGRID_FROM_EMAIL` | Sender email address | INTERNAL | None |
+| `SENDGRID_FROM_NAME` | Sender display name | INTERNAL | None |
+| `SENTRY_DSN` | Sentry error tracking DSN | INTERNAL | None |
+| `SENTRY_AUTH_TOKEN` | Sentry auth token for sourcemaps | **SECRET** | None |
+| `NEXT_PUBLIC_POSTHOG_KEY` | PostHog project API key | PUBLIC | None |
+| `NEXT_PUBLIC_POSTHOG_HOST` | PostHog host URL | PUBLIC | None |
+| `NODE_ENV` | Node environment | INTERNAL | development |
+
+---
+
+## Redis Caching
+
+### Option 1: Standard Redis
+| Variable | Required | Security | Description |
+|----------|----------|----------|-------------|
+| `REDIS_URL` | Optional | SECRET | Redis connection URL |
+
+### Option 2: Upstash (Recommended for Vercel)
+| Variable | Required | Security | Description |
+|----------|----------|----------|-------------|
+| `UPSTASH_REDIS_REST_URL` | Optional | INTERNAL | Upstash REST API URL |
+| `UPSTASH_REDIS_REST_TOKEN` | Optional | **SECRET** | Upstash REST API token |
+
+**Setup:** https://upstash.com/
+
+---
+
+## Rate Limiting
+
+| Variable | Description | Security Level | Default |
+|----------|-------------|----------------|---------|
+| `RATE_LIMIT_MAX` | Maximum requests per window | INTERNAL | 100 |
+| `RATE_LIMIT_WINDOW_MS` | Rate limit window in milliseconds | INTERNAL | 900000 |
 
 ## Security Classifications
 

@@ -1,18 +1,80 @@
+import bundleAnalyzer from '@next/bundle-analyzer';
+
+const withBundleAnalyzer = bundleAnalyzer({
+  enabled: process.env.ANALYZE === 'true',
+});
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   output: 'standalone', // Required for Docker deployments
   reactStrictMode: true,
+
+  // TypeScript configuration
   typescript: {
     // We'll see TypeScript errors now but won't block builds for non-critical issues
     ignoreBuildErrors: false,
   },
+
+  // ESLint configuration
   eslint: {
     // Disable ESLint during builds to prevent blocking on Vercel
     ignoreDuringBuilds: true,
   },
+
+  // Experimental features
   experimental: {
     forceSwcTransforms: true,
+    // Optimize package imports for smaller bundles
+    optimizePackageImports: [
+      '@heroicons/react',
+      '@radix-ui/react-dialog',
+      '@radix-ui/react-dropdown-menu',
+      '@radix-ui/react-popover',
+      '@radix-ui/react-tooltip',
+      'framer-motion',
+      'react-icons',
+      'date-fns',
+      'lodash',
+    ],
   },
+
+  // Image optimization
+  images: {
+    // Enable remote images from these domains
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'images.unsplash.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'avatars.githubusercontent.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'lh3.googleusercontent.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'pbs.twimg.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'platform-lookaside.fbsbx.com',
+      },
+      {
+        protocol: 'https',
+        hostname: '*.supabase.co',
+      },
+    ],
+    // Optimize images
+    formats: ['image/avif', 'image/webp'],
+    // Minimize number of image sizes generated
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920],
+    imageSizes: [16, 32, 48, 64, 96, 128, 256],
+  },
+
+  // Webpack configuration
   webpack: (config, { dev, isServer }) => {
     // File watcher optimization for Windows - fixes terminal freezing
     if (dev && !isServer) {
@@ -57,4 +119,5 @@ const nextConfig = {
   },
 }
 
-export default nextConfig;
+// Export with bundle analyzer wrapper
+export default withBundleAnalyzer(nextConfig);
