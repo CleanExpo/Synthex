@@ -1,13 +1,19 @@
 /**
+ * OpenRouter Client (Legacy)
+ *
+ * Prefer using the provider abstraction instead:
+ *   import { getAIProvider } from '@/lib/ai/providers';
+ *
  * ENVIRONMENT VARIABLES REQUIRED:
  * - OPENROUTER_API_KEY: OpenRouter API key for AI operations (SECRET)
  * - OPENROUTER_SITE_NAME: Your app name for OpenRouter (PUBLIC)
  * - OPENROUTER_SITE_URL: Your app URL for OpenRouter (PUBLIC)
- * 
+ *
  * FAILURE MODE: Service will fail gracefully with error messages
  */
 
 import axios from 'axios';
+import { logger } from '@/lib/logger';
 
 export interface OpenRouterMessage {
   role: 'system' | 'user' | 'assistant';
@@ -71,7 +77,7 @@ export class OpenRouterClient {
     this.apiKey = process.env.OPENROUTER_API_KEY || '';
     
     if (!this.apiKey) {
-      console.warn('OpenRouter API key not configured. AI features will be limited.');
+      logger.warn('OpenRouter API key not configured. AI features will be limited.');
     }
   }
 
@@ -106,13 +112,13 @@ export class OpenRouterClient {
       return response.data;
     } catch (error: any) {
       if (error.response) {
-        console.error('OpenRouter API error:', error.response.data);
+        logger.error('OpenRouter API error', { status: error.response.status, data: error.response.data });
         throw new Error(error.response.data.error?.message || 'OpenRouter API request failed');
       } else if (error.request) {
-        console.error('OpenRouter network error:', error.message);
+        logger.error('OpenRouter network error', { error });
         throw new Error('Network error connecting to OpenRouter');
       } else {
-        console.error('OpenRouter error:', error.message);
+        logger.error('OpenRouter error', { error });
         throw error;
       }
     }
@@ -180,7 +186,7 @@ export class OpenRouterClient {
       });
       return response.data;
     } catch (error) {
-      console.error('Failed to fetch models:', error);
+      logger.error('Failed to fetch models', { error });
       return null;
     }
   }

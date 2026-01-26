@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
+import { logger } from '@/lib/logger';
 
 // Security headers configuration
 const securityHeaders = {
@@ -17,42 +18,23 @@ const securityHeaders = {
     "form-action 'self'",
     "upgrade-insecure-requests"
   ].join('; '),
-  
+
   // Strict Transport Security
   'Strict-Transport-Security': 'max-age=31536000; includeSubDomains; preload',
-  
+
   // Other security headers
   'X-Frame-Options': 'DENY',
   'X-Content-Type-Options': 'nosniff',
   'X-XSS-Protection': '1; mode=block',
   'Referrer-Policy': 'strict-origin-when-cross-origin',
   'Permissions-Policy': 'camera=(), microphone=(), geolocation=()',
-  
+
   // CORS headers for API routes
   'Access-Control-Allow-Credentials': 'true',
   'Access-Control-Allow-Origin': process.env.NEXT_PUBLIC_APP_URL || 'https://synthex.ai',
   'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
   'Access-Control-Allow-Headers': 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, Authorization'
 };
-
-// Rate limiting configuration
-const RATE_LIMIT_WINDOW = 60 * 1000; // 1 minute
-const RATE_LIMIT_MAX_REQUESTS = 60; // 60 requests per minute
-
-// In-memory store for rate limiting (use Redis in production)
-const rateLimitStore = new Map<string, { count: number; resetTime: number }>();
-
-// Clean up old entries on each request (Vercel serverless compatible)
-function cleanupOldEntries() {
-  const now = Date.now();
-  for (const [key, value] of rateLimitStore.entries()) {
-    if (value.resetTime < now) {
-      rateLimitStore.delete(key);
-    }
-  }
-}
-
-// Note: setInterval doesn't work in serverless environments
 
 export async function middleware(request: NextRequest) {
   let response = NextResponse.next({
@@ -61,7 +43,7 @@ export async function middleware(request: NextRequest) {
     },
   });
   const pathname = request.nextUrl.pathname;
-  
+
   // Create Supabase client for auth checks
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -88,69 +70,30 @@ export async function middleware(request: NextRequest) {
       },
     }
   );
-  
+
   // Refresh session if expired
   const { data: { session } } = await supabase.auth.getSession();
-  
+
   // Apply security headers to all responses
   Object.entries(securityHeaders).forEach(([key, value]) => {
     response.headers.set(key, value);
   });
-  
-  // Rate limiting for API routes
-  if (pathname.startsWith('/api/')) {
-    // Clean up old entries on each request
-    cleanupOldEntries();
-    
-    const ip = request.ip || request.headers.get('x-forwarded-for') || 'unknown';
-    const now = Date.now();
-    
-    const rateLimitKey = `${ip}:${pathname}`;
-    const rateLimitData = rateLimitStore.get(rateLimitKey);
-    
-    if (rateLimitData) {
-      if (rateLimitData.resetTime > now) {
-        if (rateLimitData.count >= RATE_LIMIT_MAX_REQUESTS) {
-          return new NextResponse('Too Many Requests', {
-            status: 429,
-            headers: {
-              'Retry-After': String(Math.ceil((rateLimitData.resetTime - now) / 1000)),
-              'X-RateLimit-Limit': String(RATE_LIMIT_MAX_REQUESTS),
-              'X-RateLimit-Remaining': '0',
-              'X-RateLimit-Reset': new Date(rateLimitData.resetTime).toISOString()
-            }
-          });
-        }
-        rateLimitData.count++;
-      } else {
-        rateLimitData.count = 1;
-        rateLimitData.resetTime = now + RATE_LIMIT_WINDOW;
-      }
-    } else {
-      rateLimitStore.set(rateLimitKey, {
-        count: 1,
-        resetTime: now + RATE_LIMIT_WINDOW
-      });
-    }
-    
-    // Add rate limit headers
-    const currentLimit = rateLimitStore.get(rateLimitKey)!;
-    response.headers.set('X-RateLimit-Limit', String(RATE_LIMIT_MAX_REQUESTS));
-    response.headers.set('X-RateLimit-Remaining', String(Math.max(0, RATE_LIMIT_MAX_REQUESTS - currentLimit.count)));
-    response.headers.set('X-RateLimit-Reset', new Date(currentLimit.resetTime).toISOString());
-  }
-  
+
+  // Note: API rate limiting is handled per-route via withRateLimit() in
+  // lib/middleware/rate-limiter.ts (backed by Upstash Redis in production).
+  // The middleware matcher below excludes /api/ routes.
+
   // Authentication check for protected routes
   const protectedPaths = ['/dashboard', '/api/protected', '/api/user', '/api/integrations'];
   const authPaths = ['/auth/login', '/auth/register'];
   const isProtectedPath = protectedPaths.some(path => pathname.startsWith(path));
   const isAuthPath = authPaths.some(path => pathname.startsWith(path));
-  
+
   // Allow demo routes without authentication
   if (pathname.startsWith('/demo')) {
     return response;
   }
-  
+
   // Redirect to login if accessing protected route without session
   if (isProtectedPath && !session) {
     if (!pathname.startsWith('/api/')) {
@@ -163,33 +106,35 @@ export async function middleware(request: NextRequest) {
       return new NextResponse('Unauthorized', { status: 401 });
     }
   }
-  
+
   // Redirect to dashboard if accessing auth routes with active session
   if (isAuthPath && session) {
     return NextResponse.redirect(new URL('/dashboard', request.url));
   }
-  
+
   // CSRF protection for mutations
   if (['POST', 'PUT', 'DELETE', 'PATCH'].includes(request.method)) {
-    const csrfToken = request.headers.get('x-csrf-token');
     const origin = request.headers.get('origin');
-    const referer = request.headers.get('referer');
-    
+
     // Verify origin/referer for CSRF protection
     if (origin && !origin.includes(request.nextUrl.hostname)) {
       return new NextResponse('Forbidden', { status: 403 });
     }
   }
-  
+
   // Add request ID for tracing
   const requestId = crypto.randomUUID();
   response.headers.set('X-Request-Id', requestId);
-  
-  // Log security events (integrate with monitoring service)
+
+  // Log security events with structured logging
   if (pathname.startsWith('/api/auth')) {
-    console.log(`[Security] Auth attempt from ${request.ip} at ${pathname}`);
+    logger.info('Auth attempt', {
+      requestId,
+      ip: request.ip || request.headers.get('x-forwarded-for') || 'unknown',
+      path: pathname,
+    });
   }
-  
+
   return response;
 }
 
@@ -202,6 +147,7 @@ export const config = {
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
      * - public folder
+     * - api routes (rate limited per-route via withRateLimit)
      */
     '/((?!_next/static|_next/image|favicon.ico|public/|api/).*)',
   ],

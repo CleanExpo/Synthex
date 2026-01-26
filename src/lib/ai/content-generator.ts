@@ -3,7 +3,9 @@
  * Integrates with OpenRouter for multi-model content creation
  */
 
-import { openRouterClient } from '@/lib/ai/openrouter-client';
+import { getAIProvider } from '@/lib/ai/providers';
+import type { AIProvider } from '@/lib/ai/providers';
+import { logger } from '@/lib/logger';
 
 // TODO: Create viral-patterns module
 // import { viralPatterns } from '@/src/lib/viral-patterns';
@@ -48,13 +50,16 @@ export interface ContentVariation {
 }
 
 export class AIContentGenerator {
-  private client = openRouterClient;
-  private models = openRouterClient.models;
+  private get client(): AIProvider {
+    return getAIProvider();
+  }
+
+  private get models() {
+    return this.client.models;
+  }
 
   constructor() {
-    if (!process.env.OPENROUTER_API_KEY) {
-      console.warn('OpenRouter API key not configured. AI features will be limited.');
-    }
+    // Provider availability is checked lazily when first used
   }
 
   /**
@@ -108,7 +113,7 @@ export class AIContentGenerator {
         }
       };
     } catch (error) {
-      console.error('Content generation error:', error);
+      logger.error('Content generation pipeline failed', { error });
       throw new Error('Failed to generate content');
     }
   }
@@ -159,12 +164,6 @@ Generate content that will maximize engagement and shares.
    * Call OpenRouter API
    */
   private async callAI(prompt: string, model: string): Promise<string> {
-    if (!process.env.OPENROUTER_API_KEY) {
-      // Fallback to template generation if no API key
-      console.warn('OpenRouter API key not configured. Using template generation.');
-      return this.generateFromTemplate(prompt);
-    }
-
     try {
       const response = await this.client.complete({
         model,
@@ -186,12 +185,10 @@ Generate content that will maximize engagement and shares.
       if (!content) {
         throw new Error('No content generated');
       }
-      
+
       return content;
     } catch (error) {
-      console.error('OpenRouter API error:', error);
-      // Fallback to template generation on error
-      console.warn('Falling back to template generation due to API error');
+      logger.error('AI content generation failed, falling back to templates', { error });
       return this.generateFromTemplate(prompt);
     }
   }

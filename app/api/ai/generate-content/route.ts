@@ -6,6 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { aiContentGenerator } from '@/src/lib/ai/content-generator';
 import { authMonitor } from '@/src/lib/auth/monitoring';
+import { logger } from '@/lib/logger';
 
 import { withRateLimit, UsageTracker } from '@/lib/middleware/rate-limiter';
 
@@ -87,7 +88,7 @@ export async function POST(request: NextRequest) {
     });
 
     } catch (error) {
-    console.error('Content generation error:', error);
+    logger.error('Content generation API error', { error });
     
     // Track error
     authMonitor.trackEvent({
@@ -150,7 +151,7 @@ export async function GET(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Calendar generation error:', error);
+    logger.error('Calendar generation error', { error });
     return NextResponse.json(
       { error: 'Failed to generate content calendar' },
       { status: 500 }

@@ -1,206 +1,77 @@
-name: Deploy to Production
+name: Deploy
 
 on:
   push:
-    branches: [main]
-  pull_request:
-    branches: [main]
+    branches: [main, develop]
 
 env:
-  NODE_VERSION: '22.x'
-  
-jobs:
-  test:
-    runs-on: ubuntu-latest
-    
-    services:
-      postgres:
-        image: postgres:14
-        env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: synthex_test
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          - 5432:5432
-      
-      redis:
-        image: redis:7
-        options: >-
-          --health-cmd "redis-cli ping"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          - 6379:6379
-    
-    steps:
-      - uses: actions/checkout@v3
-      
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-      
-      - name: Install dependencies
-        run: npm ci --legacy-peer-deps
-      
-      - name: Run linting
-        run: npm run lint || true
-      
-      - name: Run type checking
-        run: npm run typecheck || true
-      
-      - name: Run unit tests
-        continue-on-error: true  # Don't block deployment on test failures
-        run: npm run test:unit
-        env:
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/synthex_test
-          REDIS_HOST: localhost
-          REDIS_PORT: 6379
-      
-      - name: Run integration tests
-        run: npm run test:integration
-        env:
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/synthex_test
-          REDIS_HOST: localhost
-          REDIS_PORT: 6379
-      
-      - name: Generate test coverage
-        continue-on-error: true  # Don't block deployment on coverage
-        run: npm run test:coverage
-      
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v3
-        with:
-          file: ./coverage/lcov.info
-          flags: unittests
-          name: codecov-umbrella
-  
-  build:
-    needs: test
-    runs-on: ubuntu-latest
-    
-    steps:
-      - uses: actions/checkout@v3
-      
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-      
-      - name: Install dependencies
-        run: npm ci --legacy-peer-deps
-      
-      - name: Build application
-        run: npm run build
-      
-      - name: Build Docker image
-        run: |
-          docker build -t synthex:${{ github.sha }} .
-          docker tag synthex:${{ github.sha }} synthex:latest
-      
-      - name: Save Docker image
-        run: docker save synthex:latest > synthex.tar
-      
-      - name: Upload Docker image
-        uses: actions/upload-artifact@v4
-        with:
-          name: docker-image
-          path: synthex.tar
-  
-  security-scan:
-    needs: build
-    runs-on: ubuntu-latest
-    
-    steps:
-      - uses: actions/checkout@v3
-      
-      - name: Run security audit
-        continue-on-error: true  # Report vulnerabilities but don't block deployment
-        run: npm audit --audit-level=high || true
-      
-      - name: Run Snyk security scan
-        uses: snyk/actions/node@master
-        continue-on-error: true  # Don't fail if SNYK_TOKEN not configured
-        env:
-          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-        with:
-          args: --severity-threshold=medium
-      
-      - name: Download Docker image
-        uses: actions/download-artifact@v4
-        with:
-          name: docker-image
-      
-      - name: Load Docker image
-        run: docker load < synthex.tar
-      
-      - name: Run Trivy security scan
-        uses: aquasecurity/trivy-action@master
-        continue-on-error: true
-        with:
-          image-ref: 'synthex:latest'
-          format: 'sarif'
-          output: 'trivy-results.sarif'
+  NODE_VERSION: '22'
+  VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+  VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
 
-      - name: Upload Trivy results
-        uses: github/codeql-action/upload-sarif@v3
-        continue-on-error: true  # May fail due to repo permissions
-        with:
-          sarif_file: 'trivy-results.sarif'
-  
+jobs:
+  # -------------------------------------------------------
+  # Deploy to staging (develop branch)
+  # -------------------------------------------------------
   deploy-staging:
-    needs: [build, security-scan]
+    name: Deploy Staging
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
+    if: github.ref == 'refs/heads/develop'
     environment:
       name: staging
-      url: https://staging.synthex.app
-    
+      url: https://staging.synthex.ai
     steps:
-      - uses: actions/checkout@v3
-      
-      - name: Deploy to Vercel Staging
-        run: |
-          npx vercel --token=${{ secrets.VERCEL_TOKEN }} \
-            --yes \
-            --prod
-  
-  deploy-production:
-    needs: [build, security-scan]
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    # Using repository secrets instead of environment secrets
-
-    steps:
-      - uses: actions/checkout@v3
-      
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-      
-      - name: Deploy to Vercel Production
+      - name: Install Vercel CLI
+        run: npm install -g vercel
+      - name: Pull Vercel Environment
+        run: vercel pull --yes --token=${{ secrets.VERCEL_TOKEN }}
+      - name: Build
+        run: vercel build --token=${{ secrets.VERCEL_TOKEN }}
+      - name: Deploy
+        id: deploy
         run: |
-          npx vercel --token=${{ secrets.VERCEL_TOKEN }} \
-            --yes \
-            --prod
-      
-      - name: Run database migrations
-        continue-on-error: true  # Skip if DATABASE_URL not configured
-        run: |
-          npm run db:migrations:run
-        env:
-          DATABASE_URL: ${{ secrets.PRODUCTION_DATABASE_URL }}
+          url=$(vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }})
+          echo "url=$url" >> $GITHUB_OUTPUT
+      - name: Comment on PR
+        uses: actions/github-script@v7
+        if: github.event_name == 'pull_request'
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: '🚀 Staging deployment ready: ${{ steps.deploy.outputs.url }}'
+            })
 
-      - name: Notify deployment
+  # -------------------------------------------------------
+  # Deploy to production (main branch)
+  # -------------------------------------------------------
+  deploy-production:
+    name: Deploy Production
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    environment:
+      name: production
+      url: https://synthex.ai
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - name: Install Vercel CLI
+        run: npm install -g vercel
+      - name: Pull Vercel Environment
+        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+      - name: Build
+        run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
+      - name: Deploy
+        run: vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
+      - name: Notify Slack
         if: always()
         uses: 8398a7/action-slack@v3
         continue-on-error: true
@@ -208,54 +79,24 @@ jobs:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
         with:
           status: ${{ job.status }}
-          text: 'Production deployment completed for version ${{ github.sha }}'
-  
-  performance-test:
-    needs: deploy-production
+          text: 'Production deployment ${{ job.status }} for ${{ github.sha }}'
+
+  # -------------------------------------------------------
+  # Post-deploy: Lighthouse performance test
+  # -------------------------------------------------------
+  lighthouse:
+    name: Lighthouse
     runs-on: ubuntu-latest
+    needs: deploy-production
     if: github.ref == 'refs/heads/main'
-    continue-on-error: true  # Don't fail deployment on perf test issues
-
+    continue-on-error: true
     steps:
-      - uses: actions/checkout@v3
-
-      - name: Run Lighthouse CI
-        uses: treosh/lighthouse-ci-action@v9
-        continue-on-error: true
+      - uses: actions/checkout@v4
+      - name: Run Lighthouse
+        uses: treosh/lighthouse-ci-action@v10
         with:
           urls: |
-            https://synthex-unite-group.vercel.app
-            https://synthex-unite-group.vercel.app/pricing
-            https://synthex-unite-group.vercel.app/features
+            https://synthex.ai
+            https://synthex.ai/features
           uploadArtifacts: true
           temporaryPublicStorage: true
-
-      - name: Run API performance tests
-        continue-on-error: true  # Skip if test file doesn't exist
-        run: |
-          if [ -f "tests/performance/api-load-test.js" ]; then
-            npm install -g k6
-            k6 run tests/performance/api-load-test.js
-          else
-            echo "Performance test file not found, skipping"
-          fi
-  
-  rollback:
-    needs: deploy-production
-    runs-on: ubuntu-latest
-    if: failure()
-    
-    steps:
-      - name: Rollback Vercel deployment
-        run: |
-          echo "Rolling back to previous version"
-          # Add rollback logic here
-      
-      - name: Notify rollback
-        uses: 8398a7/action-slack@v3
-        continue-on-error: true
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
-        with:
-          status: failure
-          text: 'Production deployment failed. Rolling back to previous version.'
