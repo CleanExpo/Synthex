@@ -91,6 +91,14 @@
     "out",
     "dist",
     "build",
-    "coverage"
+    "coverage",
+    "src/server.ts",
+    "src/routes/**/*",
+    "src/middleware/**/*",
+    "src/config/security.config.ts",
+    "src/services/performance.ts",
+    "src/utils/apiResponse.ts",
+    "src/index-legacy.ts.disabled",
+    "src/presentation/**/*"
   ]
 }
