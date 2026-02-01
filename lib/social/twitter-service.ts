@@ -114,7 +114,7 @@ export class TwitterService {
       throw new Error('Twitter API not configured');
     }
 
-    const results = [];
+    const results: any[] = [];
     let previousTweetId: string | undefined;
 
     for (let i = 0; i < thread.tweets.length; i++) {

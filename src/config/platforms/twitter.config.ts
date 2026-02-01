@@ -206,8 +206,8 @@ export class TwitterService extends BasePlatformService {
   }
   
   async uploadMedia(accessToken: string, mediaUrls: string[], mediaType: string): Promise<string[]> {
-    const mediaIds = [];
-    
+    const mediaIds: string[] = [];
+
     for (const mediaUrl of mediaUrls) {
       // Download media
       const mediaResponse = await fetch(mediaUrl);
@@ -303,8 +303,8 @@ export class TwitterService extends BasePlatformService {
   }
   
   async createThread(accessToken: string, tweets: string[]): Promise<any> {
-    const tweetIds = [];
-    let replyToId = null;
+    const tweetIds: string[] = [];
+    let replyToId: string | null = null;
     
     for (const tweetText of tweets) {
       const tweetData: any = {

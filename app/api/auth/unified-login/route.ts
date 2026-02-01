@@ -4,7 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { signInFlow } from '@/src/lib/auth/signInFlow';
+import { signInFlow } from '@/lib/auth/signInFlow';
 
 export async function POST(request: NextRequest) {
   try {

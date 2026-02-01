@@ -214,8 +214,8 @@ export class LinkedInService extends BasePlatformService {
   }
   
   async uploadImages(accessToken: string, imageUrls: string[], ownerId: string): Promise<string[]> {
-    const mediaUrns = [];
-    
+    const mediaUrns: string[] = [];
+
     for (const imageUrl of imageUrls) {
       // Register upload
       const registerResponse = await fetch(

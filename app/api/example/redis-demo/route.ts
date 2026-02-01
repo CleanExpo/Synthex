@@ -6,7 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { withSession } from '@/src/middleware/session';
 import { withRateLimit, RATE_LIMIT_PRESETS } from '@/src/middleware/rate-limit';
-import { set, get, del, exists } from '@/src/lib/redis-unified';
+import { set, get, del, exists } from '@/lib/redis-unified';
 
 /**
  * GET /api/example/redis-demo

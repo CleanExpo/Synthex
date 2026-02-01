@@ -4,8 +4,8 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { aiContentGenerator } from '@/src/lib/ai/content-generator';
-import { authMonitor } from '@/src/lib/auth/monitoring';
+import { aiContentGenerator } from '@/lib/ai/content-generator';
+import { authMonitor } from '@/lib/auth/monitoring';
 import { logger } from '@/lib/logger';
 
 import { withRateLimit, UsageTracker } from '@/lib/middleware/rate-limiter';

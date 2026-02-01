@@ -26,7 +26,7 @@ export async function POST(request: Request) {
     }
 
     // Fetch persona if provided
-    let persona = null;
+    let persona: { id: string; name: string; attributes: Record<string, string> } | null = null;
     if (personaId) {
       // In production, fetch from database
       // For now, use mock persona

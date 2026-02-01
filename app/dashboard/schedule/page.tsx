@@ -128,7 +128,7 @@ export default function SchedulePage() {
     const daysInMonth = lastDay.getDate();
     const startingDayOfWeek = firstDay.getDay();
     
-    const days = [];
+    const days: (Date | null)[] = [];
     
     // Add empty cells for days before month starts
     for (let i = 0; i < startingDayOfWeek; i++) {

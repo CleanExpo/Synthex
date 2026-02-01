@@ -33,7 +33,7 @@ export async function GET() {
     ]);
     
     // Calculate engagement by day
-    const engagementByDay = [];
+    const engagementByDay: { name: string; value: number }[] = [];
     for (let i = 6; i >= 0; i--) {
       const date = new Date();
       date.setDate(date.getDate() - i);

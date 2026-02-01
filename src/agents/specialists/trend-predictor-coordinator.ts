@@ -426,7 +426,8 @@ export class TrendPredictorCoordinator extends EventEmitter {
         emerging: 0,
         rising: 0,
         peak: 0,
-        declining: 0
+        declining: 0,
+        dead: 0
       },
       topTrends: [] as Trend[],
       predictions: Array.from(this.predictions.values()).slice(0, 5),

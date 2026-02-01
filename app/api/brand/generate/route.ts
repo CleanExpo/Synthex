@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import BrandPsychologyOrchestrator, { BrandGenerationInput } from '@/src/lib/ai/agents/strategic-marketing/brand-orchestrator';
+import BrandPsychologyOrchestrator, { BrandGenerationInput } from '@/lib/ai/agents/strategic-marketing/brand-orchestrator';
 
 export async function POST(request: NextRequest) {
   try {

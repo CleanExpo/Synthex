@@ -3,26 +3,10 @@
  * Centralized auth service that uses our API routes instead of direct Supabase
  */
 
-export interface AuthUser {
-  id: string;
-  email: string;
-  name?: string;
-  avatar?: string;
-  provider?: 'email' | 'google' | 'github' | 'demo';
-  emailVerified?: boolean;
-}
+import type { AuthUser, AuthResponse } from '@/types/auth';
 
-export interface AuthResponse {
-  success: boolean;
-  user?: AuthUser;
-  session?: {
-    accessToken: string;
-    expiresAt: number;
-  };
-  error?: string;
-  demoMode?: boolean;
-  requiresVerification?: boolean;
-}
+// Re-export for backward compatibility
+export type { AuthUser, AuthResponse } from '@/types/auth';
 
 class AuthService {
   private baseUrl = '/api/auth';

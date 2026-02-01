@@ -135,7 +135,7 @@ export async function POST(req: NextRequest) {
     }
     
     // Warm up cache with provided patterns
-    const results = [];
+    const results: { key: string; success: boolean; error?: string }[] = [];
     
     for (const pattern of patterns) {
       try {

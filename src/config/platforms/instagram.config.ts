@@ -232,8 +232,8 @@ export class InstagramService extends BasePlatformService {
     caption: string
   ): Promise<string> {
     // Create individual item containers
-    const itemIds = [];
-    
+    const itemIds: string[] = [];
+
     for (const imageUrl of imageUrls) {
       const response = await this.makeApiRequest(
         '/me/media',

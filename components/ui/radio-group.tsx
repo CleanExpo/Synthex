@@ -85,7 +85,7 @@ const RadioGroupVariantContext = React.createContext<{
 }>({});
 
 export interface RadioGroupProps
-  extends React.ComponentPropsWithoutRef<typeof RadioGroupPrimitive.Root>,
+  extends Omit<React.ComponentPropsWithoutRef<typeof RadioGroupPrimitive.Root>, 'orientation'>,
     VariantProps<typeof radioGroupVariants> {
   variant?: VariantProps<typeof radioGroupItemVariants>['variant'];
   size?: VariantProps<typeof radioGroupItemVariants>['size'];

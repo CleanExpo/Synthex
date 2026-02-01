@@ -159,8 +159,8 @@ export class FacebookService extends BasePlatformService {
   }
   
   async uploadImages(accessToken: string, images: string[]): Promise<string[]> {
-    const photoIds = [];
-    
+    const photoIds: string[] = [];
+
     for (const imageUrl of images) {
       const response = await this.makeApiRequest(
         this.config.api.endpoints.media!,

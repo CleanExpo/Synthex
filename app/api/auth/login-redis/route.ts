@@ -7,7 +7,7 @@ import {
   deleteSession,
   set,
   get 
-} from '@/src/lib/redis-unified';
+} from '@/lib/redis-unified';
 
 // Input validation schema
 const loginSchema = z.object({

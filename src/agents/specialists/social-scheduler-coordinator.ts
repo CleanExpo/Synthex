@@ -363,8 +363,8 @@ export class SocialSchedulerCoordinator extends EventEmitter {
     // Sort by priority and platform
     const sorted = posts.sort((a, b) => {
       const priorityOrder = { urgent: 0, high: 1, medium: 2, low: 3 };
-      const aPriority = a.options?.priority || 'medium';
-      const bPriority = b.options?.priority || 'medium';
+      const aPriority = (a.options?.priority || 'medium') as keyof typeof priorityOrder;
+      const bPriority = (b.options?.priority || 'medium') as keyof typeof priorityOrder;
       return priorityOrder[aPriority] - priorityOrder[bPriority];
     });
 

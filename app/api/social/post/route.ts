@@ -215,8 +215,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Post to each platform
-    const results = [];
-    const errors = [];
+    const results: { platform: string; success: boolean; postId: string; platformPostId: string; url: string; message: string }[] = [];
+    const errors: { platform: string; success: boolean; error: string }[] = [];
 
     for (const platform of platforms) {
       try {

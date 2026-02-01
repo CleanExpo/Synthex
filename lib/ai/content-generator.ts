@@ -7,8 +7,6 @@ import { getAIProvider } from '@/lib/ai/providers';
 import type { AIProvider } from '@/lib/ai/providers';
 import { logger } from '@/lib/logger';
 
-// TODO: Create viral-patterns module
-// import { viralPatterns } from '@/src/lib/viral-patterns';
 
 export interface ContentRequest {
   type: 'post' | 'caption' | 'thread' | 'story' | 'reel' | 'article';

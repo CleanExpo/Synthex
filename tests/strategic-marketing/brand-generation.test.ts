@@ -4,7 +4,7 @@
  */
 
 import { describe, it, expect, beforeAll, afterAll, beforeEach, afterEach, jest } from '@jest/globals';
-import BrandPsychologyOrchestrator from '@/src/lib/ai/agents/strategic-marketing/brand-orchestrator';
+import BrandPsychologyOrchestrator from '@/lib/ai/agents/strategic-marketing/brand-orchestrator';
 import PsychologyEffectivenessTester from '@/lib/ai/agents/strategic-marketing/psychology-testing';
 import { callOpenRouter } from '@/lib/ai/openrouter';
 import testData from './sample-data.json';

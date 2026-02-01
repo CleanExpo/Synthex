@@ -7,6 +7,10 @@
 import { createClient } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
 import jwt from 'jsonwebtoken';
+import type { AuthUser, AuthSession, AuthResult } from '@/types/auth';
+
+// Re-export for backward compatibility
+export type { AuthUser, AuthSession, AuthResult } from '@/types/auth';
 
 // Environment configuration with fallbacks
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
@@ -16,29 +20,6 @@ const IS_PRODUCTION = process.env.NODE_ENV === 'production';
 
 // Initialize Supabase client once
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-export interface AuthUser {
-  id: string;
-  email: string;
-  name?: string;
-  avatar?: string;
-  provider?: 'email' | 'google' | 'github' | 'demo';
-  emailVerified?: boolean;
-}
-
-export interface AuthSession {
-  user: AuthUser;
-  accessToken: string;
-  refreshToken?: string;
-  expiresAt: number;
-}
-
-export interface AuthResult {
-  success: boolean;
-  session?: AuthSession;
-  error?: string;
-  requiresVerification?: boolean;
-}
 
 /**
  * Central authentication flow - ALL auth methods MUST use this

@@ -4,7 +4,8 @@
  */
 
 import { AGENT_CONFIG, PSYCHOLOGY_PRINCIPLES } from './agent-prompts';
-import { callOpenRouter } from '../../openrouter';
+import { getAIProvider } from '@/lib/ai/providers';
+import { logger } from '@/lib/logger';
 
 export interface BrandGenerationInput {
   businessType: string;
@@ -80,6 +81,20 @@ export class BrandPsychologyOrchestrator {
   private config = AGENT_CONFIG;
   private principles = PSYCHOLOGY_PRINCIPLES;
 
+  /** Call the AI provider and return the response text */
+  private async callAI(request: {
+    model: string;
+    messages: Array<{ role: 'system' | 'user' | 'assistant'; content: string }>;
+    temperature?: number;
+    max_tokens?: number;
+  }): Promise<string> {
+    const provider = getAIProvider();
+    const response = await provider.complete(request);
+    const content = response.choices[0]?.message?.content;
+    if (!content) throw new Error('No content in AI response');
+    return content;
+  }
+
   async generateBrand(input: BrandGenerationInput): Promise<BrandGenerationResult> {
     try {
       // Step 1: Analyze psychological strategy
@@ -109,7 +124,7 @@ export class BrandPsychologyOrchestrator {
         effectivenessScore
       };
     } catch (error) {
-      console.error('Brand generation error:', error);
+      logger.error('Brand generation error', { error });
       throw new Error('Failed to generate brand with psychological strategy');
     }
   }
@@ -117,7 +132,7 @@ export class BrandPsychologyOrchestrator {
   private async analyzePsychology(input: BrandGenerationInput): Promise<any> {
     const prompt = this.buildPsychologyAnalysisPrompt(input);
     
-    const response = await callOpenRouter({
+    const response = await this.callAI({
       model: this.config.psychologyAnalyzer.model,
       messages: [
         { role: 'system', content: this.config.psychologyAnalyzer.systemPrompt },
@@ -136,7 +151,7 @@ export class BrandPsychologyOrchestrator {
   ): Promise<BrandNameOption[]> {
     const prompt = this.buildBrandNamePrompt(input, psychologyAnalysis);
     
-    const response = await callOpenRouter({
+    const response = await this.callAI({
       model: this.config.brandNameGenerator.model,
       messages: [
         { role: 'system', content: this.config.brandNameGenerator.systemPrompt },
@@ -156,7 +171,7 @@ export class BrandPsychologyOrchestrator {
   ): Promise<TaglineVariation[]> {
     const prompt = this.buildTaglinePrompt(input, psychologyAnalysis, primaryBrandName);
     
-    const response = await callOpenRouter({
+    const response = await this.callAI({
       model: this.config.taglineSpecialist.model,
       messages: [
         { role: 'system', content: this.config.taglineSpecialist.systemPrompt },
@@ -181,7 +196,7 @@ export class BrandPsychologyOrchestrator {
     for (const platform of platforms) {
       const prompt = this.buildMetadataPrompt(input, psychologyAnalysis, brandName, tagline, platform);
       
-      const response = await callOpenRouter({
+      const response = await this.callAI({
         model: this.config.metadataOptimizer.model,
         messages: [
           { role: 'system', content: this.config.metadataOptimizer.systemPrompt },
@@ -258,7 +273,7 @@ export class BrandPsychologyOrchestrator {
         rationale: parsed.rationale || ''
       };
     } catch (error) {
-      console.error('Failed to parse psychology analysis:', error);
+      logger.error('Failed to parse psychology analysis', { error });
       return {
         primaryTriggers: [],
         secondaryTriggers: [],
@@ -272,7 +287,7 @@ export class BrandPsychologyOrchestrator {
       const parsed = JSON.parse(response);
       return parsed.brandNames || [];
     } catch (error) {
-      console.error('Failed to parse brand names:', error);
+      logger.error('Failed to parse brand names', { error });
       return [];
     }
   }
@@ -282,7 +297,7 @@ export class BrandPsychologyOrchestrator {
       const parsed = JSON.parse(response);
       return parsed.taglines || [];
     } catch (error) {
-      console.error('Failed to parse taglines:', error);
+      logger.error('Failed to parse taglines', { error });
       return [];
     }
   }
@@ -296,7 +311,7 @@ export class BrandPsychologyOrchestrator {
         psychologicalRationale: parsed.psychologicalRationale
       };
     } catch (error) {
-      console.error(`Failed to parse metadata for ${platform}:`, error);
+      logger.error(`Failed to parse metadata for ${platform}`, { error });
       return {
         platform,
         primaryTrigger: '',

@@ -78,7 +78,7 @@ export class PatternScraperService {
    * Scrape and analyze viral patterns from all platforms
    */
   async scrapeAllPlatforms() {
-    const results = [];
+    const results: any[] = [];
 
     for (const platform of this.platforms) {
       try {
@@ -100,8 +100,8 @@ export class PatternScraperService {
     // For now, we'll use mock data
     const mockContent = MOCK_VIRAL_CONTENT[platform as keyof typeof MOCK_VIRAL_CONTENT] || [];
     
-    const patterns = [];
-    
+    const patterns: any[] = [];
+
     for (const content of mockContent) {
       const pattern = await this.analyzeContent(content, platform);
       patterns.push(pattern);

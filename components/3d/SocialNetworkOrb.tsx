@@ -62,7 +62,7 @@ function ConnectionLine({ start, end }: any) {
   useFrame((state) => {
     if (ref.current) {
       const time = state.clock.getElapsedTime();
-      const points = [];
+      const points: THREE.Vector3[] = [];
       for (let i = 0; i <= 20; i++) {
         const t = i / 20;
         const x = start[0] + (end[0] - start[0]) * t;

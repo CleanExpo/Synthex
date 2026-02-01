@@ -349,8 +349,8 @@ export function AIABTesting() {
     if (!test.startDate) return [];
     
     const days = Math.min(7, Math.floor((Date.now() - test.startDate.getTime()) / (24 * 60 * 60 * 1000)));
-    const data = [];
-    
+    const data: { day: string; variantA: number; variantB: number }[] = [];
+
     for (let i = 0; i <= days; i++) {
       data.push({
         day: `Day ${i + 1}`,

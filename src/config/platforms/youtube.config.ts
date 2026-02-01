@@ -387,7 +387,7 @@ export class YouTubeService extends BasePlatformService {
     // Extract tags from description
     if (formatted.text && formatted.text.includes('#')) {
       const hashtags = formatted.text.match(/#[\w\u4e00-\u9fff]+/g) || [];
-      formatted.tags = [...(formatted.tags || []), ...hashtags.map(tag => tag.slice(1))];
+      formatted.tags = [...(formatted.tags || []), ...hashtags.map((tag: string) => tag.slice(1))];
     }
     
     // Ensure title is within limits

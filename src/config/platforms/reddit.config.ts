@@ -250,8 +250,8 @@ export class RedditService extends BasePlatformService {
   
   async publishGallery(accessToken: string, content: any): Promise<any> {
     // First, upload all images
-    const mediaItems = [];
-    
+    const mediaItems: { media_id: string; caption: string }[] = [];
+
     for (let i = 0; i < content.images.length; i++) {
       const image = content.images[i];
       const mediaAsset = await this.uploadMedia(accessToken, image);

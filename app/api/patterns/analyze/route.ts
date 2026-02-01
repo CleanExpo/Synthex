@@ -295,7 +295,7 @@ function analyzePatterns(patterns: any[]) {
 
 // Generate recommendations based on analysis
 function generateRecommendations(analysis: any, platform: string) {
-  const recommendations = [];
+  const recommendations: string[] = [];
 
   // Length recommendations
   if (platform === 'twitter' && !analysis.isOptimalLength) {

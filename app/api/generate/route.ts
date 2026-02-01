@@ -34,7 +34,7 @@ async function generateContent(req: NextRequest): Promise<NextResponse> {
     }
     
     // Get user from auth header (optional - works for anonymous too)
-    let userId = null;
+    let userId: string | null = null;
     const authHeader = req.headers.get('authorization');
     if (authHeader && authHeader.startsWith('Bearer ')) {
       // Extract user ID from token (simplified - use proper JWT validation)
@@ -42,7 +42,7 @@ async function generateContent(req: NextRequest): Promise<NextResponse> {
     }
     
     // Simulate AI generation (replace with actual AI service)
-    const generatedContent = [];
+    const generatedContent: Record<string, any>[] = [];
     for (let i = 0; i < count; i++) {
       generatedContent.push({
         id: `gen-${Date.now()}-${i}`,

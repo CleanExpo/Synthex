@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
     });
 
     // Check for poor performance
-    const warnings = [];
+    const warnings: string[] = [];
     if (metrics.lcp > 2500) {
       warnings.push(`LCP is ${metrics.lcp}ms (should be < 2500ms)`);
     }

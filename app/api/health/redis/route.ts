@@ -11,7 +11,7 @@ import {
   get, 
   del,
   getImplementationType 
-} from '@/src/lib/redis-unified';
+} from '@/lib/redis-unified';
 import { withOptionalSession } from '@/src/middleware/session';
 
 // Force dynamic rendering - prevent static generation
