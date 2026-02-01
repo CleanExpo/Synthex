@@ -5,7 +5,9 @@ const withBundleAnalyzer = process.env.ANALYZE === 'true'
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: 'standalone', // Required for Docker deployments
+  // Note: 'standalone' output is only needed for Docker deployments
+  // Vercel handles deployment differently and doesn't need standalone mode
+  output: process.env.DOCKER_BUILD === 'true' ? 'standalone' : undefined,
   reactStrictMode: true,
 
   // TypeScript configuration
