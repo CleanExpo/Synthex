@@ -4,7 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getSession, updateSession, get } from '@/src/lib/redis-unified';
+import { getSession, updateSession, get } from '@/lib/redis-unified';
 
 export interface SessionUser {
   id: string;

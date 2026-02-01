@@ -5,6 +5,8 @@ import dotenv from 'dotenv';
 import { rateLimit } from 'express-rate-limit';
 import session from 'express-session';
 import { PrismaClient } from '@prisma/client';
+import i18nMiddleware from './middleware/i18n';
+import { cacheMiddleware } from './middleware/caching';
 
 // Load environment variables
 dotenv.config();
@@ -59,6 +61,12 @@ const limiter = rateLimit({
 });
 
 app.use('/api/', limiter);
+
+// Internationalization middleware
+app.use(i18nMiddleware);
+
+// Caching middleware for GET requests (5 minute cache)
+app.use(cacheMiddleware({ ttl: 300 }));
 
 // Health check endpoint
 app.get('/api/health', async (req, res) => {

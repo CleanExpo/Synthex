@@ -4,7 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { checkRateLimit } from '@/src/lib/redis-unified';
+import { checkRateLimit } from '@/lib/redis-unified';
 
 export interface RateLimitConfig {
   limit: number;

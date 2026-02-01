@@ -88,7 +88,7 @@ export function compressionMiddleware(options: CompressionOptions = {}) {
           compressor = createBrotliCompress({
             params: {
               [require('zlib').constants.BROTLI_PARAM_QUALITY]: config.level
-            }
+            } as Record<number, number>
           });
           res.setHeader('Content-Encoding', 'br');
           break;
