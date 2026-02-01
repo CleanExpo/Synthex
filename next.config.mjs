@@ -1,7 +1,13 @@
 // Conditionally load bundle analyzer only when ANALYZE=true
-const withBundleAnalyzer = process.env.ANALYZE === 'true'
-  ? (await import('@next/bundle-analyzer')).default({ enabled: true })
-  : (config) => config;
+let withBundleAnalyzer = (config) => config;
+if (process.env.ANALYZE === 'true') {
+  try {
+    const analyzer = await import('@next/bundle-analyzer');
+    withBundleAnalyzer = analyzer.default({ enabled: true });
+  } catch (e) {
+    console.warn('Bundle analyzer not available, skipping...');
+  }
+}
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
