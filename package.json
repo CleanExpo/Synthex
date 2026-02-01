@@ -224,5 +224,25 @@
   "engines": {
     "node": "22.x",
     "npm": ">=10 <12"
-  }
+  },
+  "packageManager": "pnpm@9.15.0",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.mjs"
+      },
+      "require": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      }
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist"
+  ],
+  "workspaces": [
+    "packages/*"
+  ]
 }
