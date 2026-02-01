@@ -19,6 +19,18 @@
         "prompts": false,
         "resources": true
       }
+    },
+    "linear": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-linear"],
+      "env": {
+        "LINEAR_API_KEY": "lin_api_8M0bmmAHL6ovhBsZKIpYVWz23RVGDSE9HSZdgAtD"
+      },
+      "capabilities": {
+        "tools": true,
+        "prompts": false,
+        "resources": true
+      }
     }
   },
   "ttdRd": {
