@@ -83,12 +83,34 @@ app.get('/api/health', async (req, res) => {
   }
 });
 
-// API Routes
+// API Routes - Core
 app.use('/api/auth', require('./routes/auth').default);
 app.use('/api/content', require('./routes/content').default);
 app.use('/api/campaigns', require('./routes/campaigns').default);
 app.use('/api/analytics', require('./routes/analytics').default);
 app.use('/api/platforms', require('./routes/platforms').default);
+
+// API Routes - New Features (Phase 1 Integration)
+app.use('/api/ab-testing', require('./routes/ab-testing.routes').default);
+app.use('/api/ai-content', require('./routes/ai-content.routes').default);
+app.use('/api/competitor', require('./routes/competitor.routes').default);
+app.use('/api/library', require('./routes/library.routes').default);
+app.use('/api/mobile', require('./routes/mobile.routes').default);
+app.use('/api/reporting', require('./routes/reporting.routes').default);
+app.use('/api/scheduler', require('./routes/scheduler.routes').default);
+app.use('/api/team', require('./routes/team.routes').default);
+app.use('/api/white-label', require('./routes/white-label.routes').default);
+
+// API Routes - Utilities
+app.use('/api/dashboard', require('./routes/dashboard').default);
+app.use('/api/email', require('./routes/email').default);
+app.use('/api/mcp', require('./routes/mcp').default);
+app.use('/api/performance', require('./routes/performance').default);
+app.use('/api/posts', require('./routes/posts').default);
+app.use('/api/projects', require('./routes/projects').default);
+app.use('/api/team-management', require('./routes/team').default);
+app.use('/api/two-factor', require('./routes/twoFactor').default);
+app.use('/api/user-management', require('./routes/userManagement').default);
 
 // Error handling middleware
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
