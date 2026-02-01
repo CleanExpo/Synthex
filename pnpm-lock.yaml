@@ -245,6 +245,9 @@ importers:
       postcss:
         specifier: ^8.4.33
         version: 8.5.6
+      prisma:
+        specifier: 6.14.0
+        version: 6.14.0(typescript@5.9.3)
       react:
         specifier: ^18.2.0
         version: 18.3.1
@@ -438,9 +441,6 @@ importers:
       prettier:
         specifier: ^3.1.1
         version: 3.8.1
-      prisma:
-        specifier: 6.14.0
-        version: 6.14.0(typescript@5.9.3)
       storybook:
         specifier: ^8.6.15
         version: 8.6.15(prettier@3.8.1)
