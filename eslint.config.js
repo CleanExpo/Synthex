@@ -1,15 +1,24 @@
-export default [
+import { dirname } from 'path';
+import { fileURLToPath } from 'url';
+import { FlatCompat } from '@eslint/eslintrc';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+const compat = new FlatCompat({
+  baseDirectory: __dirname,
+});
+
+const eslintConfig = [
+  ...compat.extends('next/core-web-vitals', 'next/typescript'),
   {
-    files: ['src/**/*.ts', 'src/**/*.js'],
-    languageOptions: {
-      ecmaVersion: 2022,
-      sourceType: 'module'
-    },
     rules: {
-      'no-console': 'off',
-      'no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
-      'prefer-const': 'error',
-      'no-var': 'error'
-    }
-  }
+      'react/no-unescaped-entities': 'off',
+      '@next/next/no-img-element': 'off',
+      '@typescript-eslint/no-unused-vars': 'off',
+      '@typescript-eslint/no-explicit-any': 'off',
+    },
+  },
 ];
+
+export default eslintConfig;
