@@ -1,8 +1,8 @@
 {
-  "buildCommand": "npx prisma generate && npm run build:vercel",
+  "buildCommand": "npx prisma generate && pnpm run build:vercel",
   "outputDirectory": ".next",
   "framework": "nextjs",
-  "installCommand": "npm ci --legacy-peer-deps",
+  "installCommand": "pnpm install",
   "env": {
     "NODE_ENV": "production",
     "NEXT_TELEMETRY_DISABLED": "1"
