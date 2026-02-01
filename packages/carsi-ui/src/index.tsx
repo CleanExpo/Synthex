@@ -1,4 +1,4 @@
-import React from 'react';
+import * as React from 'react';
 
 // Button Component
 export interface ButtonProps {
@@ -30,15 +30,11 @@ export const Button: React.FC<ButtonProps> = ({
     lg: 'px-6 py-3 text-lg',
   };
 
-  return (
-    <button
-      className={`${baseStyles} ${variantStyles[variant]} ${sizeStyles[size]} ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-      disabled={disabled}
-      onClick={onClick}
-    >
-      {children}
-    </button>
-  );
+  return React.createElement('button', {
+    className: `${baseStyles} ${variantStyles[variant]} ${sizeStyles[size]} ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`,
+    disabled: disabled,
+    onClick: onClick,
+  }, children);
 };
 
 // Card Component
@@ -48,11 +44,9 @@ export interface CardProps {
 }
 
 export const Card: React.FC<CardProps> = ({ children, className = '' }) => {
-  return (
-    <div className={`bg-white rounded-lg shadow-md p-6 ${className}`}>
-      {children}
-    </div>
-  );
+  return React.createElement('div', {
+    className: `bg-white rounded-lg shadow-md p-6 ${className}`,
+  }, children);
 };
 
 // Input Component
@@ -71,16 +65,14 @@ export const Input: React.FC<InputProps> = ({
   onChange,
   disabled = false,
 }) => {
-  return (
-    <input
-      type={type}
-      placeholder={placeholder}
-      value={value}
-      onChange={(e) => onChange?.(e.target.value)}
-      disabled={disabled}
-      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
-    />
-  );
+  return React.createElement('input', {
+    type: type,
+    placeholder: placeholder,
+    value: value,
+    onChange: (e: React.ChangeEvent<HTMLInputElement>) => onChange?.(e.target.value),
+    disabled: disabled,
+    className: "w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed",
+  });
 };
 
 // Badge Component
@@ -97,11 +89,9 @@ export const Badge: React.FC<BadgeProps> = ({ children, variant = 'default' }) =
     error: 'bg-red-100 text-red-800',
   };
 
-  return (
-    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${variantStyles[variant]}`}>
-      {children}
-    </span>
-  );
+  return React.createElement('span', {
+    className: `inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${variantStyles[variant]}`,
+  }, children);
 };
 
 // Spinner Component
@@ -116,9 +106,9 @@ export const Spinner: React.FC<SpinnerProps> = ({ size = 'md' }) => {
     lg: 'w-8 h-8',
   };
 
-  return (
-    <div className={`animate-spin rounded-full border-2 border-gray-300 border-t-blue-600 ${sizeStyles[size]}`} />
-  );
+  return React.createElement('div', {
+    className: `animate-spin rounded-full border-2 border-gray-300 border-t-blue-600 ${sizeStyles[size]}`,
+  });
 };
 
 export { Button as default };
