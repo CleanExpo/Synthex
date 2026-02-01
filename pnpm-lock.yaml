@@ -149,6 +149,9 @@ importers:
       '@types/three':
         specifier: ^0.159.0
         version: 0.159.0
+      '@types/ws':
+        specifier: ^8.5.0
+        version: 8.18.1
       '@upstash/redis':
         specifier: ^1.35.3
         version: 1.36.1
@@ -390,9 +393,6 @@ importers:
       '@types/supertest':
         specifier: ^6.0.3
         version: 6.0.3
-      '@types/ws':
-        specifier: ^8.5.0
-        version: 8.18.1
       babel-jest:
         specifier: ^30.2.0
         version: 30.2.0(@babel/core@7.29.0)
