@@ -1,5 +1,5 @@
 {
-  "buildCommand": "npx prisma generate && pnpm run build:vercel",
+  "buildCommand": "npx prisma@6 generate && pnpm run build:vercel",
   "outputDirectory": ".next",
   "framework": "nextjs",
   "installCommand": "pnpm install",
