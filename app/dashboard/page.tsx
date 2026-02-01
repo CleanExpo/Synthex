@@ -92,143 +92,147 @@ export default function DashboardPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background p-6 space-y-6">
-        <div className="flex items-center justify-between">
-          <Skeleton className="h-10 w-64" />
-          <Skeleton className="h-10 w-32" />
+      <div className="min-h-screen bg-background p-3 sm:p-6 space-y-4 sm:space-y-6">
+        <div className="flex items-center justify-between gap-2">
+          <Skeleton className="h-8 sm:h-10 w-40 sm:w-64" />
+          <Skeleton className="h-8 sm:h-10 w-20 sm:w-32" />
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-6">
           {[...Array(4)].map((_, i) => (
-            <Skeleton key={i} className="h-32" />
+            <Skeleton key={i} className="h-20 sm:h-32" />
           ))}
         </div>
-        <Skeleton className="h-96" />
+        <Skeleton className="h-64 sm:h-96" />
       </div>
     );
   }
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
+      {/* Header - Mobile Optimized */}
       <header className={cn(
         "sticky top-0 z-40 border-b border-white/10",
         glassStyles.solid
       )}>
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold gradient-text-premium">
+        <div className="container mx-auto px-3 sm:px-4 py-3 sm:py-4">
+          <div className="flex items-center justify-between gap-2">
+            <div className="min-w-0 flex-1">
+              <h1 className="text-xl sm:text-2xl font-bold gradient-text-premium truncate">
                 Dashboard
               </h1>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-xs sm:text-sm text-muted-foreground line-clamp-1 sm:line-clamp-none">
                 Welcome back! Here's what's happening with your social media.
               </p>
             </div>
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0">
               <Button
                 variant="outline"
                 size="icon"
-                className={cn(glassStyles.button, "relative")}
+                className={cn(glassStyles.button, "relative h-9 w-9 sm:h-10 sm:w-10")}
               >
                 <Bell className="h-4 w-4" />
-                <span className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-violet-500 animate-pulse" />
+                <span className="absolute -top-1 -right-1 h-2.5 w-2.5 sm:h-3 sm:w-3 rounded-full bg-violet-500 animate-pulse" />
               </Button>
-              <Button 
-                className={cn(glassStyles.buttonPrimary, "gap-2")}
+              <Button
+                className={cn(glassStyles.buttonPrimary, "gap-1 sm:gap-2 text-sm sm:text-base px-3 sm:px-4")}
               >
                 <Plus className="h-4 w-4" />
-                New Post
+                <span className="hidden xs:inline sm:inline">New Post</span>
+                <span className="xs:hidden sm:hidden">Post</span>
               </Button>
             </div>
           </div>
         </div>
       </header>
 
-      {/* Main Content */}
-      <main className="container mx-auto px-4 py-6 space-y-6">
-        {/* Quick Stats Placeholder - Phase 4B: Integrate QuickStats component */}
+      {/* Main Content - Mobile Optimized */}
+      <main className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-6">
+        {/* Quick Stats - Mobile Optimized */}
         <AnimatedCard delay={0}>
           <Card className={cn(glassStyles.base, glassStyles.hover)}>
-            <CardHeader>
-              <CardTitle>Quick Stats</CardTitle>
-              <CardDescription>Real-time performance metrics</CardDescription>
+            <CardHeader className="pb-2 sm:pb-4">
+              <CardTitle className="text-base sm:text-lg">Quick Stats</CardTitle>
+              <CardDescription className="text-xs sm:text-sm">Real-time performance metrics</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="p-4 rounded-lg bg-white/5">
-                  <div className="text-2xl font-bold">{stats?.totalPosts || 0}</div>
-                  <div className="text-xs text-muted-foreground">Total Posts</div>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4">
+                <div className="p-3 sm:p-4 rounded-lg bg-white/5 touch-manipulation">
+                  <div className="text-lg sm:text-2xl font-bold">{stats?.totalPosts || 0}</div>
+                  <div className="text-[10px] sm:text-xs text-muted-foreground">Total Posts</div>
                 </div>
-                <div className="p-4 rounded-lg bg-white/5">
-                  <div className="text-2xl font-bold">{stats?.engagementRate || 0}%</div>
-                  <div className="text-xs text-muted-foreground">Engagement</div>
+                <div className="p-3 sm:p-4 rounded-lg bg-white/5 touch-manipulation">
+                  <div className="text-lg sm:text-2xl font-bold">{stats?.engagementRate || 0}%</div>
+                  <div className="text-[10px] sm:text-xs text-muted-foreground">Engagement</div>
                 </div>
-                <div className="p-4 rounded-lg bg-white/5">
-                  <div className="text-2xl font-bold">{stats?.followers?.toLocaleString() || '0'}</div>
-                  <div className="text-xs text-muted-foreground">Followers</div>
+                <div className="p-3 sm:p-4 rounded-lg bg-white/5 touch-manipulation">
+                  <div className="text-lg sm:text-2xl font-bold">{stats?.followers?.toLocaleString() || '0'}</div>
+                  <div className="text-[10px] sm:text-xs text-muted-foreground">Followers</div>
                 </div>
-                <div className="p-4 rounded-lg bg-white/5">
-                  <div className="text-2xl font-bold">{stats?.scheduledPosts || 0}</div>
-                  <div className="text-xs text-muted-foreground">Scheduled</div>
+                <div className="p-3 sm:p-4 rounded-lg bg-white/5 touch-manipulation">
+                  <div className="text-lg sm:text-2xl font-bold">{stats?.scheduledPosts || 0}</div>
+                  <div className="text-[10px] sm:text-xs text-muted-foreground">Scheduled</div>
                 </div>
               </div>
             </CardContent>
           </Card>
         </AnimatedCard>
 
-        {/* Main Dashboard Tabs */}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+        {/* Main Dashboard Tabs - Mobile Optimized */}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 sm:space-y-6">
           <TabsList className={cn(
-            "grid w-full grid-cols-2 md:grid-cols-5 lg:w-fit",
+            "grid w-full grid-cols-3 sm:grid-cols-5 lg:w-fit h-auto p-1",
             glassStyles.base
           )}>
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="analytics">Analytics</TabsTrigger>
-            <TabsTrigger value="ai-studio">AI Studio</TabsTrigger>
-            <TabsTrigger value="team">Team</TabsTrigger>
-            <TabsTrigger value="scheduler">Scheduler</TabsTrigger>
+            <TabsTrigger value="overview" className="text-xs sm:text-sm py-2 sm:py-2.5 px-2 sm:px-4">Overview</TabsTrigger>
+            <TabsTrigger value="analytics" className="text-xs sm:text-sm py-2 sm:py-2.5 px-2 sm:px-4">Analytics</TabsTrigger>
+            <TabsTrigger value="ai-studio" className="text-xs sm:text-sm py-2 sm:py-2.5 px-2 sm:px-4">
+              <span className="hidden sm:inline">AI Studio</span>
+              <span className="sm:hidden">AI</span>
+            </TabsTrigger>
+            <TabsTrigger value="team" className="text-xs sm:text-sm py-2 sm:py-2.5 px-2 sm:px-4 col-span-1">Team</TabsTrigger>
+            <TabsTrigger value="scheduler" className="text-xs sm:text-sm py-2 sm:py-2.5 px-2 sm:px-4 col-span-2 sm:col-span-1">Scheduler</TabsTrigger>
           </TabsList>
 
-          {/* Overview Tab */}
-          <TabsContent value="overview" className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Overview Tab - Mobile Optimized */}
+          <TabsContent value="overview" className="space-y-4 sm:space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
               {/* Main Stats Cards */}
               <AnimatedCard delay={0.1} className="lg:col-span-2">
                 <Card className={cn(glassStyles.base, glassStyles.hover)}>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <BarChart3 className="h-5 w-5 text-violet-500" />
+                  <CardHeader className="pb-2 sm:pb-4">
+                    <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                      <BarChart3 className="h-4 w-4 sm:h-5 sm:w-5 text-violet-500" />
                       Performance Overview
                     </CardTitle>
-                    <CardDescription>
+                    <CardDescription className="text-xs sm:text-sm">
                       Track your social media performance across all platforms
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4">
                       <StatCard
-                        icon={<Share2 className="h-5 w-5" />}
+                        icon={<Share2 className="h-4 w-4 sm:h-5 sm:w-5" />}
                         label="Total Posts"
                         value={stats?.totalPosts || 0}
                         trend="+12%"
                         trendUp={true}
                       />
                       <StatCard
-                        icon={<Calendar className="h-5 w-5" />}
+                        icon={<Calendar className="h-4 w-4 sm:h-5 sm:w-5" />}
                         label="Scheduled"
                         value={stats?.scheduledPosts || 0}
                         trend="+5"
                         trendUp={true}
                       />
                       <StatCard
-                        icon={<TrendingUp className="h-5 w-5" />}
+                        icon={<TrendingUp className="h-4 w-4 sm:h-5 sm:w-5" />}
                         label="Engagement"
                         value={`${stats?.engagementRate || 0}%`}
                         trend="+0.8%"
                         trendUp={true}
                       />
                       <StatCard
-                        icon={<Users className="h-5 w-5" />}
+                        icon={<Users className="h-4 w-4 sm:h-5 sm:w-5" />}
                         label="Followers"
                         value={stats?.followers?.toLocaleString() || '0'}
                         trend="+2.4%"
@@ -242,20 +246,20 @@ export default function DashboardPage() {
               {/* Trending Topics */}
               <AnimatedCard delay={0.2}>
                 <Card className={cn(glassStyles.base, glassStyles.hover)}>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Zap className="h-5 w-5 text-amber-500" />
+                  <CardHeader className="pb-2 sm:pb-4">
+                    <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                      <Zap className="h-4 w-4 sm:h-5 sm:w-5 text-amber-500" />
                       Trending Topics
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="flex flex-wrap gap-2">
+                    <div className="flex flex-wrap gap-1.5 sm:gap-2">
                       {stats?.trendingTopics?.map((topic, index) => (
                         <Badge
                           key={index}
                           variant="secondary"
                           className={cn(
-                            "cursor-pointer transition-all hover:scale-105",
+                            "cursor-pointer transition-all hover:scale-105 text-xs sm:text-sm py-1 px-2 sm:py-1.5 sm:px-3",
                             glassStyles.button
                           )}
                         >
@@ -268,35 +272,35 @@ export default function DashboardPage() {
               </AnimatedCard>
             </div>
 
-            {/* Recent Activity */}
+            {/* Recent Activity - Mobile Optimized */}
             <AnimatedCard delay={0.3}>
               <Card className={cn(glassStyles.base, glassStyles.hover)}>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <MessageSquare className="h-5 w-5 text-cyan-500" />
+                <CardHeader className="pb-2 sm:pb-4">
+                  <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                    <MessageSquare className="h-4 w-4 sm:h-5 sm:w-5 text-cyan-500" />
                     Recent Activity
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-4">
+                  <div className="space-y-2 sm:space-y-4">
                     {stats?.recentActivity?.map((activity, index) => (
                       <motion.div
                         key={activity.id}
                         initial={{ opacity: 0, x: -20 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: 0.1 * index }}
-                        className="flex items-center justify-between p-3 rounded-lg hover:bg-white/5 transition-colors"
+                        className="flex items-start sm:items-center justify-between p-2 sm:p-3 rounded-lg hover:bg-white/5 transition-colors touch-manipulation gap-2"
                       >
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-start sm:items-center gap-2 sm:gap-3 min-w-0 flex-1">
                           <div className={cn(
-                            "h-2 w-2 rounded-full",
+                            "h-2 w-2 rounded-full mt-1.5 sm:mt-0 flex-shrink-0",
                             activity.type === 'post' && "bg-violet-500",
                             activity.type === 'engagement' && "bg-cyan-500",
                             activity.type === 'milestone' && "bg-amber-500"
                           )} />
-                          <span className="text-sm">{activity.message}</span>
+                          <span className="text-xs sm:text-sm line-clamp-2 sm:line-clamp-1">{activity.message}</span>
                         </div>
-                        <span className="text-xs text-muted-foreground">
+                        <span className="text-[10px] sm:text-xs text-muted-foreground whitespace-nowrap flex-shrink-0">
                           {activity.timestamp}
                         </span>
                       </motion.div>
@@ -307,57 +311,57 @@ export default function DashboardPage() {
             </AnimatedCard>
           </TabsContent>
 
-          {/* Analytics Tab - Real-time Analytics */}
-          <TabsContent value="analytics" className="space-y-6">
+          {/* Analytics Tab - Mobile Optimized */}
+          <TabsContent value="analytics" className="space-y-4 sm:space-y-6">
             <AnimatedCard delay={0.1}>
               <Card className={cn(glassStyles.base, glassStyles.hover)}>
-                <CardHeader className="flex flex-row items-center justify-between">
+                <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 sm:pb-4">
                   <div>
-                    <CardTitle className="flex items-center gap-2">
-                      <TrendingUp className="h-5 w-5 text-violet-500" />
+                    <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                      <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 text-violet-500" />
                       Real-Time Analytics
                     </CardTitle>
-                    <CardDescription>
+                    <CardDescription className="text-xs sm:text-sm">
                       Live performance metrics across all platforms
                     </CardDescription>
                   </div>
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     size="sm"
                     onClick={() => window.location.reload()}
-                    className={glassStyles.button}
+                    className={cn(glassStyles.button, "w-full sm:w-auto")}
                   >
                     <RefreshCw className="h-4 w-4 mr-2" />
                     Refresh
                   </Button>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
                     {/* Engagement Chart Placeholder */}
-                    <div className="md:col-span-2 space-y-4">
-                      <div className="h-64 rounded-lg bg-white/5 flex items-center justify-center">
-                        <div className="text-center">
-                          <BarChart3 className="h-12 w-12 mx-auto mb-4 text-violet-500/50" />
-                          <p className="text-muted-foreground">Engagement Over Time</p>
-                          <p className="text-sm text-muted-foreground/60">Chart visualization connected to backend</p>
+                    <div className="md:col-span-2 space-y-4 order-2 md:order-1">
+                      <div className="h-48 sm:h-64 rounded-lg bg-white/5 flex items-center justify-center">
+                        <div className="text-center px-4">
+                          <BarChart3 className="h-8 w-8 sm:h-12 sm:w-12 mx-auto mb-2 sm:mb-4 text-violet-500/50" />
+                          <p className="text-sm sm:text-base text-muted-foreground">Engagement Over Time</p>
+                          <p className="text-xs sm:text-sm text-muted-foreground/60">Chart visualization connected to backend</p>
                         </div>
                       </div>
                     </div>
-                    
+
                     {/* Platform Breakdown */}
-                    <div className="space-y-4">
-                      <h4 className="font-medium">Platform Breakdown</h4>
+                    <div className="space-y-3 sm:space-y-4 order-1 md:order-2">
+                      <h4 className="font-medium text-sm sm:text-base">Platform Breakdown</h4>
                       {['Twitter', 'Instagram', 'LinkedIn', 'YouTube'].map((platform, i) => (
-                        <div key={platform} className="flex items-center justify-between p-3 rounded-lg bg-white/5">
-                          <span className="text-sm">{platform}</span>
+                        <div key={platform} className="flex items-center justify-between p-2 sm:p-3 rounded-lg bg-white/5 touch-manipulation">
+                          <span className="text-xs sm:text-sm">{platform}</span>
                           <div className="flex items-center gap-2">
-                            <div className="h-2 w-24 rounded-full bg-white/10 overflow-hidden">
-                              <div 
-                                className="h-full bg-violet-500" 
+                            <div className="h-1.5 sm:h-2 w-16 sm:w-24 rounded-full bg-white/10 overflow-hidden">
+                              <div
+                                className="h-full bg-violet-500"
                                 style={{ width: `${[65, 45, 30, 25][i]}%` }}
                               />
                             </div>
-                            <span className="text-xs text-muted-foreground">{[65, 45, 30, 25][i]}%</span>
+                            <span className="text-[10px] sm:text-xs text-muted-foreground w-6 text-right">{[65, 45, 30, 25][i]}%</span>
                           </div>
                         </div>
                       ))}
@@ -368,54 +372,56 @@ export default function DashboardPage() {
             </AnimatedCard>
           </TabsContent>
 
-          {/* AI Studio Tab - AI Content Generation */}
-          <TabsContent value="ai-studio" className="space-y-6">
+          {/* AI Studio Tab - Mobile Optimized */}
+          <TabsContent value="ai-studio" className="space-y-4 sm:space-y-6">
             <AnimatedCard delay={0.1}>
               <Card className={cn(glassStyles.base, glassStyles.hover)}>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Zap className="h-5 w-5 text-amber-500" />
+                <CardHeader className="pb-2 sm:pb-4">
+                  <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                    <Zap className="h-4 w-4 sm:h-5 sm:w-5 text-amber-500" />
                     AI Content Studio
                   </CardTitle>
-                  <CardDescription>
+                  <CardDescription className="text-xs sm:text-sm">
                     Generate viral content with AI-powered tools
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-6">
+                <CardContent className="space-y-4 sm:space-y-6">
                   {/* Quick Actions */}
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-4">
                     {[
-                      { icon: <MessageSquare className="h-5 w-5" />, title: 'Generate Post', desc: 'Create engaging social posts' },
-                      { icon: <Target className="h-5 w-5" />, title: 'Hashtag Ideas', desc: 'Find trending hashtags' },
-                      { icon: <Calendar className="h-5 w-5" />, title: 'Content Calendar', desc: 'Plan your content strategy' },
+                      { icon: <MessageSquare className="h-4 w-4 sm:h-5 sm:w-5" />, title: 'Generate Post', desc: 'Create engaging social posts' },
+                      { icon: <Target className="h-4 w-4 sm:h-5 sm:w-5" />, title: 'Hashtag Ideas', desc: 'Find trending hashtags' },
+                      { icon: <Calendar className="h-4 w-4 sm:h-5 sm:w-5" />, title: 'Content Calendar', desc: 'Plan your content strategy' },
                     ].map((action, i) => (
                       <Button
                         key={i}
                         variant="outline"
-                        className={cn(glassStyles.button, "h-auto py-4 flex flex-col items-center gap-2")}
+                        className={cn(glassStyles.button, "h-auto py-3 sm:py-4 flex flex-row sm:flex-col items-center gap-2 sm:gap-2 justify-start sm:justify-center touch-manipulation")}
                       >
                         {action.icon}
-                        <span className="font-medium">{action.title}</span>
-                        <span className="text-xs text-muted-foreground">{action.desc}</span>
+                        <div className="text-left sm:text-center">
+                          <span className="font-medium text-sm sm:text-base block">{action.title}</span>
+                          <span className="text-[10px] sm:text-xs text-muted-foreground">{action.desc}</span>
+                        </div>
                       </Button>
                     ))}
                   </div>
-                  
+
                   {/* Recent AI Generations */}
                   <div>
-                    <h4 className="font-medium mb-4">Recent AI Generations</h4>
-                    <div className="space-y-3">
+                    <h4 className="font-medium mb-3 sm:mb-4 text-sm sm:text-base">Recent AI Generations</h4>
+                    <div className="space-y-2 sm:space-y-3">
                       {[
                         { type: 'Post', content: '10 tips for growing your audience...', time: '2 min ago' },
                         { type: 'Hashtags', content: '#SocialMedia #Growth #Marketing', time: '15 min ago' },
                         { type: 'Caption', content: 'New product launch announcement...', time: '1 hour ago' },
                       ].map((item, i) => (
-                        <div key={i} className="flex items-center justify-between p-3 rounded-lg bg-white/5">
-                          <div className="flex items-center gap-3">
-                            <Badge variant="outline" className="text-xs">{item.type}</Badge>
-                            <span className="text-sm truncate max-w-md">{item.content}</span>
+                        <div key={i} className="flex items-start sm:items-center justify-between p-2 sm:p-3 rounded-lg bg-white/5 gap-2 touch-manipulation">
+                          <div className="flex items-start sm:items-center gap-2 sm:gap-3 min-w-0 flex-1">
+                            <Badge variant="outline" className="text-[10px] sm:text-xs flex-shrink-0">{item.type}</Badge>
+                            <span className="text-xs sm:text-sm truncate">{item.content}</span>
                           </div>
-                          <span className="text-xs text-muted-foreground">{item.time}</span>
+                          <span className="text-[10px] sm:text-xs text-muted-foreground whitespace-nowrap flex-shrink-0">{item.time}</span>
                         </div>
                       ))}
                     </div>
@@ -425,57 +431,57 @@ export default function DashboardPage() {
             </AnimatedCard>
           </TabsContent>
 
-          {/* Team Tab - Team Collaboration */}
-          <TabsContent value="team" className="space-y-6">
+          {/* Team Tab - Mobile Optimized */}
+          <TabsContent value="team" className="space-y-4 sm:space-y-6">
             <AnimatedCard delay={0.1}>
               <Card className={cn(glassStyles.base, glassStyles.hover)}>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Users className="h-5 w-5 text-cyan-500" />
+                <CardHeader className="pb-2 sm:pb-4">
+                  <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                    <Users className="h-4 w-4 sm:h-5 sm:w-5 text-cyan-500" />
                     Team Collaboration
                   </CardTitle>
-                  <CardDescription>
+                  <CardDescription className="text-xs sm:text-sm">
                     Manage your team and collaborate on content
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-6">
+                <CardContent className="space-y-4 sm:space-y-6">
                   {/* Team Members */}
                   <div>
-                    <h4 className="font-medium mb-4">Team Members</h4>
-                    <div className="space-y-3">
+                    <h4 className="font-medium mb-3 sm:mb-4 text-sm sm:text-base">Team Members</h4>
+                    <div className="space-y-2 sm:space-y-3">
                       {[
                         { name: 'John Doe', role: 'Admin', status: 'online' },
                         { name: 'Jane Smith', role: 'Editor', status: 'online' },
                         { name: 'Mike Johnson', role: 'Viewer', status: 'offline' },
                       ].map((member, i) => (
-                        <div key={i} className="flex items-center justify-between p-3 rounded-lg bg-white/5">
-                          <div className="flex items-center gap-3">
-                            <div className="h-8 w-8 rounded-full bg-violet-500/20 flex items-center justify-center">
-                              <span className="text-sm font-medium">{member.name.charAt(0)}</span>
+                        <div key={i} className="flex items-center justify-between p-2 sm:p-3 rounded-lg bg-white/5 touch-manipulation">
+                          <div className="flex items-center gap-2 sm:gap-3">
+                            <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-full bg-violet-500/20 flex items-center justify-center flex-shrink-0">
+                              <span className="text-xs sm:text-sm font-medium">{member.name.charAt(0)}</span>
                             </div>
-                            <div>
-                              <p className="text-sm font-medium">{member.name}</p>
-                              <p className="text-xs text-muted-foreground">{member.role}</p>
+                            <div className="min-w-0">
+                              <p className="text-xs sm:text-sm font-medium truncate">{member.name}</p>
+                              <p className="text-[10px] sm:text-xs text-muted-foreground">{member.role}</p>
                             </div>
                           </div>
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
                             <div className={cn(
-                              "h-2 w-2 rounded-full",
+                              "h-1.5 w-1.5 sm:h-2 sm:w-2 rounded-full",
                               member.status === 'online' ? "bg-emerald-500" : "bg-gray-500"
                             )} />
-                            <span className="text-xs text-muted-foreground capitalize">{member.status}</span>
+                            <span className="text-[10px] sm:text-xs text-muted-foreground capitalize">{member.status}</span>
                           </div>
                         </div>
                       ))}
                     </div>
                   </div>
-                  
+
                   {/* Pending Invites */}
                   <div>
-                    <h4 className="font-medium mb-4">Pending Invites</h4>
-                    <div className="flex items-center justify-between p-3 rounded-lg bg-white/5">
-                      <span className="text-sm text-muted-foreground">No pending invites</span>
-                      <Button size="sm" variant="outline" className={glassStyles.button}>
+                    <h4 className="font-medium mb-3 sm:mb-4 text-sm sm:text-base">Pending Invites</h4>
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2 sm:gap-0 p-2 sm:p-3 rounded-lg bg-white/5">
+                      <span className="text-xs sm:text-sm text-muted-foreground">No pending invites</span>
+                      <Button size="sm" variant="outline" className={cn(glassStyles.button, "w-full sm:w-auto text-xs sm:text-sm")}>
                         Invite Member
                       </Button>
                     </div>
@@ -485,40 +491,40 @@ export default function DashboardPage() {
             </AnimatedCard>
           </TabsContent>
 
-          {/* Scheduler Tab - Post Scheduler */}
-          <TabsContent value="scheduler" className="space-y-6">
+          {/* Scheduler Tab - Mobile Optimized */}
+          <TabsContent value="scheduler" className="space-y-4 sm:space-y-6">
             <AnimatedCard delay={0.1}>
               <Card className={cn(glassStyles.base, glassStyles.hover)}>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Calendar className="h-5 w-5 text-violet-500" />
+                <CardHeader className="pb-2 sm:pb-4">
+                  <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                    <Calendar className="h-4 w-4 sm:h-5 sm:w-5 text-violet-500" />
                     Post Scheduler
                   </CardTitle>
-                  <CardDescription>
+                  <CardDescription className="text-xs sm:text-sm">
                     Schedule and manage your upcoming posts
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-6">
+                <CardContent className="space-y-4 sm:space-y-6">
                   {/* Upcoming Posts */}
                   <div>
-                    <h4 className="font-medium mb-4">Upcoming Posts</h4>
-                    <div className="space-y-3">
+                    <h4 className="font-medium mb-3 sm:mb-4 text-sm sm:text-base">Upcoming Posts</h4>
+                    <div className="space-y-2 sm:space-y-3">
                       {[
                         { platform: 'Twitter', content: 'Product launch announcement', time: 'Today, 2:00 PM', status: 'scheduled' },
                         { platform: 'Instagram', content: 'Behind the scenes photo', time: 'Tomorrow, 10:00 AM', status: 'scheduled' },
                         { platform: 'LinkedIn', content: 'Industry insights article', time: 'Feb 3, 9:00 AM', status: 'draft' },
                       ].map((post, i) => (
-                        <div key={i} className="flex items-center justify-between p-3 rounded-lg bg-white/5">
-                          <div className="flex items-center gap-3">
-                            <Badge variant="outline" className="text-xs">{post.platform}</Badge>
-                            <span className="text-sm truncate max-w-xs">{post.content}</span>
+                        <div key={i} className="flex flex-col sm:flex-row sm:items-center justify-between p-2 sm:p-3 rounded-lg bg-white/5 gap-2 sm:gap-3 touch-manipulation">
+                          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                            <Badge variant="outline" className="text-[10px] sm:text-xs flex-shrink-0">{post.platform}</Badge>
+                            <span className="text-xs sm:text-sm truncate">{post.content}</span>
                           </div>
-                          <div className="flex items-center gap-3">
-                            <span className="text-xs text-muted-foreground">{post.time}</span>
-                            <Badge 
-                              variant="secondary" 
+                          <div className="flex items-center justify-between sm:justify-end gap-2 sm:gap-3 flex-shrink-0">
+                            <span className="text-[10px] sm:text-xs text-muted-foreground">{post.time}</span>
+                            <Badge
+                              variant="secondary"
                               className={cn(
-                                "text-xs",
+                                "text-[10px] sm:text-xs",
                                 post.status === 'scheduled' ? "bg-emerald-500/20 text-emerald-400" : "bg-amber-500/20 text-amber-400"
                               )}
                             >
@@ -529,9 +535,9 @@ export default function DashboardPage() {
                       ))}
                     </div>
                   </div>
-                  
+
                   {/* Schedule New Post Button */}
-                  <Button className={cn(glassStyles.buttonPrimary, "w-full")}>
+                  <Button className={cn(glassStyles.buttonPrimary, "w-full text-sm sm:text-base py-2.5 sm:py-3")}>
                     <Plus className="h-4 w-4 mr-2" />
                     Schedule New Post
                   </Button>
@@ -541,15 +547,15 @@ export default function DashboardPage() {
           </TabsContent>
         </Tabs>
 
-        {/* Competitor Analysis - Phase 4B: Integrate CompetitorAnalysis */}
+        {/* Competitor Analysis - Mobile Optimized */}
         <AnimatedCard delay={0.4}>
           <Card className={cn(glassStyles.base)}>
-            <CardHeader>
-              <CardTitle>Competitor Analysis</CardTitle>
-              <CardDescription>Track your competitors (Phase 4B)</CardDescription>
+            <CardHeader className="pb-2 sm:pb-4">
+              <CardTitle className="text-base sm:text-lg">Competitor Analysis</CardTitle>
+              <CardDescription className="text-xs sm:text-sm">Track your competitors (Phase 4B)</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="h-32 flex items-center justify-center text-muted-foreground">
+              <div className="h-24 sm:h-32 flex items-center justify-center text-xs sm:text-sm text-muted-foreground">
                 Competitor analysis integration in progress
               </div>
             </CardContent>
@@ -560,29 +566,29 @@ export default function DashboardPage() {
   );
 }
 
-// Stat Card Component
-function StatCard({ 
-  icon, 
-  label, 
-  value, 
-  trend, 
-  trendUp 
-}: { 
-  icon: React.ReactNode; 
-  label: string; 
-  value: string | number; 
-  trend: string; 
+// Stat Card Component - Mobile Optimized
+function StatCard({
+  icon,
+  label,
+  value,
+  trend,
+  trendUp
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: string | number;
+  trend: string;
   trendUp: boolean;
 }) {
   return (
-    <div className="p-4 rounded-lg bg-white/5 hover:bg-white/10 transition-colors">
-      <div className="flex items-center gap-2 text-muted-foreground mb-2">
+    <div className="p-2 sm:p-4 rounded-lg bg-white/5 hover:bg-white/10 transition-colors touch-manipulation">
+      <div className="flex items-center gap-1.5 sm:gap-2 text-muted-foreground mb-1 sm:mb-2">
         {icon}
-        <span className="text-xs">{label}</span>
+        <span className="text-[10px] sm:text-xs truncate">{label}</span>
       </div>
-      <div className="text-2xl font-bold">{value}</div>
+      <div className="text-lg sm:text-2xl font-bold">{value}</div>
       <div className={cn(
-        "text-xs mt-1",
+        "text-[10px] sm:text-xs mt-0.5 sm:mt-1",
         trendUp ? "text-emerald-500" : "text-rose-500"
       )}>
         {trendUp ? "↑" : "↓"} {trend}
