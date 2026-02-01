@@ -43,6 +43,26 @@ const nextConfig = {
       'date-fns',
       'lodash',
     ],
+    // Reduce tracing to speed up builds
+    outputFileTracingExcludes: {
+      '*': [
+        'node_modules/@swc/core-linux-x64-gnu',
+        'node_modules/@swc/core-linux-x64-musl',
+        'node_modules/@esbuild/linux-x64',
+        'node_modules/esbuild',
+        'node_modules/sharp',
+        'node_modules/playwright',
+        'node_modules/@playwright',
+        'node_modules/storybook',
+        'node_modules/@storybook',
+        'node_modules/jest',
+        'node_modules/typescript',
+        '.git',
+        '.next/cache',
+        'tests',
+        'stories',
+      ],
+    },
   },
 
   // Image optimization
