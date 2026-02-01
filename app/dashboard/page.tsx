@@ -12,7 +12,8 @@ import {
   Share2,
   Target,
   Bell,
-  Plus
+  Plus,
+  RefreshCw
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -20,13 +21,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { glassStyles, animationVariants } from '@/components/ui/index';
-// Phase 4B: Dashboard Integration - Components ready for connection
-// import { QuickStats } from '@/components/QuickStats';
-// import RealTimeAnalytics from '@/components/RealTimeAnalytics';
-// import AIContentStudio from '@/components/AIContentStudio';
-// import { CollaborationTools } from '@/components/CollaborationTools';
-// import PostScheduler from '@/components/PostScheduler';
-// import { CompetitorAnalysis } from '@/components/CompetitorAnalysis';
+import { fetchDashboardStats, QuickStatsData, invalidateDashboardCache } from '@/lib/api/dashboard';
+import { useUser } from '@supabase/auth-helpers-react';
 import { cn } from '@/lib/utils';
 
 // Animation wrapper component
