@@ -368,49 +368,176 @@ export default function DashboardPage() {
             </AnimatedCard>
           </TabsContent>
 
-          {/* AI Studio Tab - Phase 4B: Integrate AIContentStudio */}
-          <TabsContent value="ai-studio">
-            <Card className={cn(glassStyles.base)}>
-              <CardHeader>
-                <CardTitle>AI Studio</CardTitle>
-                <CardDescription>AI content generation coming in Phase 4B</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="h-64 flex items-center justify-center text-muted-foreground">
-                  AI Studio integration in progress
-                </div>
-              </CardContent>
-            </Card>
+          {/* AI Studio Tab - AI Content Generation */}
+          <TabsContent value="ai-studio" className="space-y-6">
+            <AnimatedCard delay={0.1}>
+              <Card className={cn(glassStyles.base, glassStyles.hover)}>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Zap className="h-5 w-5 text-amber-500" />
+                    AI Content Studio
+                  </CardTitle>
+                  <CardDescription>
+                    Generate viral content with AI-powered tools
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  {/* Quick Actions */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {[
+                      { icon: <MessageSquare className="h-5 w-5" />, title: 'Generate Post', desc: 'Create engaging social posts' },
+                      { icon: <Target className="h-5 w-5" />, title: 'Hashtag Ideas', desc: 'Find trending hashtags' },
+                      { icon: <Calendar className="h-5 w-5" />, title: 'Content Calendar', desc: 'Plan your content strategy' },
+                    ].map((action, i) => (
+                      <Button
+                        key={i}
+                        variant="outline"
+                        className={cn(glassStyles.button, "h-auto py-4 flex flex-col items-center gap-2")}
+                      >
+                        {action.icon}
+                        <span className="font-medium">{action.title}</span>
+                        <span className="text-xs text-muted-foreground">{action.desc}</span>
+                      </Button>
+                    ))}
+                  </div>
+                  
+                  {/* Recent AI Generations */}
+                  <div>
+                    <h4 className="font-medium mb-4">Recent AI Generations</h4>
+                    <div className="space-y-3">
+                      {[
+                        { type: 'Post', content: '10 tips for growing your audience...', time: '2 min ago' },
+                        { type: 'Hashtags', content: '#SocialMedia #Growth #Marketing', time: '15 min ago' },
+                        { type: 'Caption', content: 'New product launch announcement...', time: '1 hour ago' },
+                      ].map((item, i) => (
+                        <div key={i} className="flex items-center justify-between p-3 rounded-lg bg-white/5">
+                          <div className="flex items-center gap-3">
+                            <Badge variant="outline" className="text-xs">{item.type}</Badge>
+                            <span className="text-sm truncate max-w-md">{item.content}</span>
+                          </div>
+                          <span className="text-xs text-muted-foreground">{item.time}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </AnimatedCard>
           </TabsContent>
 
-          {/* Team Tab - Phase 4B: Integrate CollaborationTools */}
-          <TabsContent value="team">
-            <Card className={cn(glassStyles.base)}>
-              <CardHeader>
-                <CardTitle>Team Collaboration</CardTitle>
-                <CardDescription>Team features coming in Phase 4B</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="h-64 flex items-center justify-center text-muted-foreground">
-                  Team collaboration integration in progress
-                </div>
-              </CardContent>
-            </Card>
+          {/* Team Tab - Team Collaboration */}
+          <TabsContent value="team" className="space-y-6">
+            <AnimatedCard delay={0.1}>
+              <Card className={cn(glassStyles.base, glassStyles.hover)}>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Users className="h-5 w-5 text-cyan-500" />
+                    Team Collaboration
+                  </CardTitle>
+                  <CardDescription>
+                    Manage your team and collaborate on content
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  {/* Team Members */}
+                  <div>
+                    <h4 className="font-medium mb-4">Team Members</h4>
+                    <div className="space-y-3">
+                      {[
+                        { name: 'John Doe', role: 'Admin', status: 'online' },
+                        { name: 'Jane Smith', role: 'Editor', status: 'online' },
+                        { name: 'Mike Johnson', role: 'Viewer', status: 'offline' },
+                      ].map((member, i) => (
+                        <div key={i} className="flex items-center justify-between p-3 rounded-lg bg-white/5">
+                          <div className="flex items-center gap-3">
+                            <div className="h-8 w-8 rounded-full bg-violet-500/20 flex items-center justify-center">
+                              <span className="text-sm font-medium">{member.name.charAt(0)}</span>
+                            </div>
+                            <div>
+                              <p className="text-sm font-medium">{member.name}</p>
+                              <p className="text-xs text-muted-foreground">{member.role}</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <div className={cn(
+                              "h-2 w-2 rounded-full",
+                              member.status === 'online' ? "bg-emerald-500" : "bg-gray-500"
+                            )} />
+                            <span className="text-xs text-muted-foreground capitalize">{member.status}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  
+                  {/* Pending Invites */}
+                  <div>
+                    <h4 className="font-medium mb-4">Pending Invites</h4>
+                    <div className="flex items-center justify-between p-3 rounded-lg bg-white/5">
+                      <span className="text-sm text-muted-foreground">No pending invites</span>
+                      <Button size="sm" variant="outline" className={glassStyles.button}>
+                        Invite Member
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </AnimatedCard>
           </TabsContent>
 
-          {/* Scheduler Tab - Phase 4B: Integrate PostScheduler */}
-          <TabsContent value="scheduler">
-            <Card className={cn(glassStyles.base)}>
-              <CardHeader>
-                <CardTitle>Post Scheduler</CardTitle>
-                <CardDescription>Advanced scheduling coming in Phase 4B</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="h-64 flex items-center justify-center text-muted-foreground">
-                  Post scheduler integration in progress
-                </div>
-              </CardContent>
-            </Card>
+          {/* Scheduler Tab - Post Scheduler */}
+          <TabsContent value="scheduler" className="space-y-6">
+            <AnimatedCard delay={0.1}>
+              <Card className={cn(glassStyles.base, glassStyles.hover)}>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Calendar className="h-5 w-5 text-violet-500" />
+                    Post Scheduler
+                  </CardTitle>
+                  <CardDescription>
+                    Schedule and manage your upcoming posts
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  {/* Upcoming Posts */}
+                  <div>
+                    <h4 className="font-medium mb-4">Upcoming Posts</h4>
+                    <div className="space-y-3">
+                      {[
+                        { platform: 'Twitter', content: 'Product launch announcement', time: 'Today, 2:00 PM', status: 'scheduled' },
+                        { platform: 'Instagram', content: 'Behind the scenes photo', time: 'Tomorrow, 10:00 AM', status: 'scheduled' },
+                        { platform: 'LinkedIn', content: 'Industry insights article', time: 'Feb 3, 9:00 AM', status: 'draft' },
+                      ].map((post, i) => (
+                        <div key={i} className="flex items-center justify-between p-3 rounded-lg bg-white/5">
+                          <div className="flex items-center gap-3">
+                            <Badge variant="outline" className="text-xs">{post.platform}</Badge>
+                            <span className="text-sm truncate max-w-xs">{post.content}</span>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <span className="text-xs text-muted-foreground">{post.time}</span>
+                            <Badge 
+                              variant="secondary" 
+                              className={cn(
+                                "text-xs",
+                                post.status === 'scheduled' ? "bg-emerald-500/20 text-emerald-400" : "bg-amber-500/20 text-amber-400"
+                              )}
+                            >
+                              {post.status}
+                            </Badge>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  
+                  {/* Schedule New Post Button */}
+                  <Button className={cn(glassStyles.buttonPrimary, "w-full")}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Schedule New Post
+                  </Button>
+                </CardContent>
+              </Card>
+            </AnimatedCard>
           </TabsContent>
         </Tabs>
 
