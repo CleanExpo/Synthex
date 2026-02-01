@@ -1,80 +1,100 @@
 -- Migration: Create Analytics Tables
--- Description: Tables for advanced analytics and real-time metrics tracking
+-- Description: Sets up analytics tracking tables for user behavior, page views, and event tracking
 
--- Analytics Events Table
+-- Create analytics_events table
 CREATE TABLE IF NOT EXISTS analytics_events (
-    id SERIAL PRIMARY KEY,
-    event_id VARCHAR(255) UNIQUE NOT NULL,
-    user_id UUID NOT NULL,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+    session_id VARCHAR(255),
     event_type VARCHAR(100) NOT NULL,
+    event_name VARCHAR(255) NOT NULL,
+    properties JSONB DEFAULT '{}',
     platform VARCHAR(50),
-    metadata JSONB DEFAULT '{}',
-    timestamp TIMESTAMPTZ NOT NULL,
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    
-    CONSTRAINT fk_analytics_user
-        FOREIGN KEY(user_id) 
-        REFERENCES profiles(id)
-        ON DELETE CASCADE
+    url TEXT,
+    referrer TEXT,
+    user_agent TEXT,
+    ip_address INET,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Indexes for performance
-CREATE INDEX idx_analytics_user ON analytics_events(user_id);
-CREATE INDEX idx_analytics_type ON analytics_events(event_type);
-CREATE INDEX idx_analytics_timestamp ON analytics_events(timestamp);
-CREATE INDEX idx_analytics_platform ON analytics_events(platform);
-CREATE INDEX idx_analytics_metadata ON analytics_events USING GIN(metadata);
-
--- Aggregated Analytics Table (for faster queries)
-CREATE TABLE IF NOT EXISTS analytics_aggregates (
-    id SERIAL PRIMARY KEY,
-    user_id UUID,
-    date DATE NOT NULL,
+-- Create analytics_page_views table
+CREATE TABLE IF NOT EXISTS analytics_page_views (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+    session_id VARCHAR(255) NOT NULL,
+    path TEXT NOT NULL,
+    title VARCHAR(500),
+    referrer TEXT,
+    duration_ms INTEGER DEFAULT 0,
     platform VARCHAR(50),
-    metrics JSONB DEFAULT '{}',
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    
-    UNIQUE(user_id, date, platform)
+    user_agent TEXT,
+    ip_address INET,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
-CREATE INDEX idx_aggregates_user_date ON analytics_aggregates(user_id, date);
-CREATE INDEX idx_aggregates_platform ON analytics_aggregates(platform);
-
--- Predictions Table
-CREATE TABLE IF NOT EXISTS analytics_predictions (
-    id SERIAL PRIMARY KEY,
-    user_id UUID,
-    model_type VARCHAR(50) NOT NULL,
-    prediction JSONB NOT NULL,
-    confidence DECIMAL(3,2),
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    expires_at TIMESTAMPTZ
+-- Create analytics_sessions table
+CREATE TABLE IF NOT EXISTS analytics_sessions (
+    id VARCHAR(255) PRIMARY KEY,
+    user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+    started_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    ended_at TIMESTAMP WITH TIME ZONE,
+    duration_ms INTEGER DEFAULT 0,
+    page_views INTEGER DEFAULT 0,
+    events_count INTEGER DEFAULT 0,
+    platform VARCHAR(50),
+    user_agent TEXT,
+    ip_address INET,
+    country VARCHAR(100),
+    city VARCHAR(100),
+    device_type VARCHAR(50),
+    browser VARCHAR(100),
+    os VARCHAR(100)
 );
 
-CREATE INDEX idx_predictions_user ON analytics_predictions(user_id);
-CREATE INDEX idx_predictions_type ON analytics_predictions(model_type);
+-- Create indexes for performance
+CREATE INDEX idx_analytics_events_user_id ON analytics_events(user_id);
+CREATE INDEX idx_analytics_events_event_type ON analytics_events(event_type);
+CREATE INDEX idx_analytics_events_created_at ON analytics_events(created_at);
+CREATE INDEX idx_analytics_events_session_id ON analytics_events(session_id);
 
--- Real-time Metrics Table
-CREATE TABLE IF NOT EXISTS realtime_metrics (
-    id SERIAL PRIMARY KEY,
-    metric_key VARCHAR(255) UNIQUE NOT NULL,
-    value JSONB NOT NULL,
-    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
-);
+CREATE INDEX idx_analytics_page_views_user_id ON analytics_page_views(user_id);
+CREATE INDEX idx_analytics_page_views_session_id ON analytics_page_views(session_id);
+CREATE INDEX idx_analytics_page_views_created_at ON analytics_page_views(created_at);
+CREATE INDEX idx_analytics_page_views_path ON analytics_page_views(path);
 
-CREATE INDEX idx_realtime_key ON realtime_metrics(metric_key);
+CREATE INDEX idx_analytics_sessions_user_id ON analytics_sessions(user_id);
+CREATE INDEX idx_analytics_sessions_started_at ON analytics_sessions(started_at);
 
--- Create update trigger for aggregates
-CREATE OR REPLACE FUNCTION update_analytics_aggregates_timestamp()
+-- Add RLS policies
+ALTER TABLE analytics_events ENABLE ROW LEVEL SECURITY;
+ALTER TABLE analytics_page_views ENABLE ROW LEVEL SECURITY;
+ALTER TABLE analytics_sessions ENABLE ROW LEVEL SECURITY;
+
+-- Policy: Users can only view their own analytics data
+CREATE POLICY analytics_events_user_isolation ON analytics_events
+    FOR ALL USING (user_id = auth.uid());
+
+CREATE POLICY analytics_page_views_user_isolation ON analytics_page_views
+    FOR ALL USING (user_id = auth.uid());
+
+CREATE POLICY analytics_sessions_user_isolation ON analytics_sessions
+    FOR ALL USING (user_id = auth.uid());
+
+-- Add updated_at trigger
+CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$
 BEGIN
-    NEW.updated_at = CURRENT_TIMESTAMP;
+    NEW.updated_at = NOW();
     RETURN NEW;
 END;
-$$ LANGUAGE plpgsql;
+$$ language 'plpgsql';
 
-CREATE TRIGGER update_analytics_aggregates_timestamp
-BEFORE UPDATE ON analytics_aggregates
-FOR EACH ROW
-EXECUTE FUNCTION update_analytics_aggregates_timestamp();
+CREATE TRIGGER update_analytics_events_updated_at
+    BEFORE UPDATE ON analytics_events
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+-- Add migration record
+INSERT INTO schema_migrations (version, name, applied_at)
+VALUES ('001', 'create_analytics_tables', NOW())
+ON CONFLICT (version) DO NOTHING;

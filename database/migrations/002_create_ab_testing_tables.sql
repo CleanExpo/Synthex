@@ -1,84 +1,82 @@
 -- Migration: Create A/B Testing Tables
--- Description: Tables for A/B testing experiments, assignments, and conversions
+-- Description: Sets up A/B testing infrastructure for experiments
 
--- A/B Testing Experiments Table
+-- Create ab_experiments table
 CREATE TABLE IF NOT EXISTS ab_experiments (
-    id SERIAL PRIMARY KEY,
-    experiment_id VARCHAR(255) UNIQUE NOT NULL,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
     name VARCHAR(255) NOT NULL,
     description TEXT,
-    hypothesis TEXT,
-    status VARCHAR(50) DEFAULT 'draft',
-    config JSONB NOT NULL,
-    created_by UUID NOT NULL,
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    started_at TIMESTAMPTZ,
-    completed_at TIMESTAMPTZ,
-    final_results JSONB,
-    
-    CONSTRAINT fk_experiment_creator
-        FOREIGN KEY(created_by) 
-        REFERENCES profiles(id)
-        ON DELETE CASCADE,
-        
-    CONSTRAINT check_status 
-        CHECK (status IN ('draft', 'running', 'paused', 'completed', 'cancelled'))
+    status VARCHAR(50) DEFAULT 'draft' CHECK (status IN ('draft', 'running', 'paused', 'completed')),
+    start_date TIMESTAMP WITH TIME ZONE,
+    end_date TIMESTAMP WITH TIME ZONE,
+    target_audience JSONB DEFAULT '{}',
+    success_metrics JSONB DEFAULT '[]',
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
-CREATE INDEX idx_experiments_status ON ab_experiments(status);
-CREATE INDEX idx_experiments_creator ON ab_experiments(created_by);
-CREATE INDEX idx_experiments_dates ON ab_experiments(started_at, completed_at);
-
--- A/B Testing Assignments Table
-CREATE TABLE IF NOT EXISTS ab_assignments (
-    id SERIAL PRIMARY KEY,
-    user_id UUID NOT NULL,
-    experiment_id VARCHAR(255) NOT NULL,
-    variant VARCHAR(100) NOT NULL,
-    assigned_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    context JSONB DEFAULT '{}',
-    
-    CONSTRAINT fk_assignment_user
-        FOREIGN KEY(user_id) 
-        REFERENCES profiles(id)
-        ON DELETE CASCADE,
-        
-    CONSTRAINT fk_assignment_experiment
-        FOREIGN KEY(experiment_id) 
-        REFERENCES ab_experiments(experiment_id)
-        ON DELETE CASCADE,
-        
-    UNIQUE(user_id, experiment_id)
+-- Create ab_variants table
+CREATE TABLE IF NOT EXISTS ab_variants (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    experiment_id UUID REFERENCES ab_experiments(id) ON DELETE CASCADE,
+    name VARCHAR(255) NOT NULL,
+    description TEXT,
+    content JSONB NOT NULL,
+    traffic_percentage INTEGER CHECK (traffic_percentage >= 0 AND traffic_percentage <= 100),
+    is_control BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
-CREATE INDEX idx_assignments_user ON ab_assignments(user_id);
-CREATE INDEX idx_assignments_experiment ON ab_assignments(experiment_id);
-CREATE INDEX idx_assignments_variant ON ab_assignments(variant);
-
--- A/B Testing Conversions Table
-CREATE TABLE IF NOT EXISTS ab_conversions (
-    id SERIAL PRIMARY KEY,
-    user_id UUID NOT NULL,
-    experiment_id VARCHAR(255) NOT NULL,
-    variant VARCHAR(100) NOT NULL,
-    conversion_type VARCHAR(100) DEFAULT 'default',
-    value DECIMAL(10,2) DEFAULT 1,
-    metadata JSONB DEFAULT '{}',
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    
-    CONSTRAINT fk_conversion_user
-        FOREIGN KEY(user_id) 
-        REFERENCES profiles(id)
-        ON DELETE CASCADE,
-        
-    CONSTRAINT fk_conversion_experiment
-        FOREIGN KEY(experiment_id) 
-        REFERENCES ab_experiments(experiment_id)
-        ON DELETE CASCADE
+-- Create ab_participants table
+CREATE TABLE IF NOT EXISTS ab_participants (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    experiment_id UUID REFERENCES ab_experiments(id) ON DELETE CASCADE,
+    variant_id UUID REFERENCES ab_variants(id) ON DELETE CASCADE,
+    user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+    session_id VARCHAR(255),
+    enrolled_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    converted_at TIMESTAMP WITH TIME ZONE,
+    conversion_value DECIMAL(10,2) DEFAULT 0,
+    UNIQUE(experiment_id, user_id)
 );
 
-CREATE INDEX idx_conversions_user ON ab_conversions(user_id);
-CREATE INDEX idx_conversions_experiment ON ab_conversions(experiment_id);
-CREATE INDEX idx_conversions_variant ON ab_conversions(variant);
-CREATE INDEX idx_conversions_type ON ab_conversions(conversion_type);
-CREATE INDEX idx_conversions_created ON ab_conversions(created_at);
+-- Create ab_events table
+CREATE TABLE IF NOT EXISTS ab_events (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    experiment_id UUID REFERENCES ab_experiments(id) ON DELETE CASCADE,
+    variant_id UUID REFERENCES ab_variants(id) ON DELETE CASCADE,
+    user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+    event_type VARCHAR(100) NOT NULL,
+    event_data JSONB DEFAULT '{}',
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Create indexes
+CREATE INDEX idx_ab_experiments_user_id ON ab_experiments(user_id);
+CREATE INDEX idx_ab_experiments_status ON ab_experiments(status);
+CREATE INDEX idx_ab_variants_experiment_id ON ab_variants(experiment_id);
+CREATE INDEX idx_ab_participants_experiment_id ON ab_participants(experiment_id);
+CREATE INDEX idx_ab_participants_variant_id ON ab_participants(variant_id);
+CREATE INDEX idx_ab_events_experiment_id ON ab_events(experiment_id);
+CREATE INDEX idx_ab_events_created_at ON ab_events(created_at);
+
+-- Enable RLS
+ALTER TABLE ab_experiments ENABLE ROW LEVEL SECURITY;
+ALTER TABLE ab_variants ENABLE ROW LEVEL SECURITY;
+ALTER TABLE ab_participants ENABLE ROW LEVEL SECURITY;
+ALTER TABLE ab_events ENABLE ROW LEVEL SECURITY;
+
+-- RLS Policies
+CREATE POLICY ab_experiments_user_isolation ON ab_experiments
+    FOR ALL USING (user_id = auth.uid());
+
+CREATE POLICY ab_variants_user_isolation ON ab_variants
+    FOR ALL USING (experiment_id IN (
+        SELECT id FROM ab_experiments WHERE user_id = auth.uid()
+    ));
+
+-- Migration record
+INSERT INTO schema_migrations (version, name, applied_at)
+VALUES ('002', 'create_ab_testing_tables', NOW())
+ON CONFLICT (version) DO NOTHING;
