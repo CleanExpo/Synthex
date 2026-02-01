@@ -128,6 +128,9 @@ importers:
       '@tiptap/starter-kit':
         specifier: ^2.1.0
         version: 2.27.2
+      '@types/express':
+        specifier: ^5.0.3
+        version: 5.0.6
       '@types/jsonwebtoken':
         specifier: ^9.0.10
         version: 9.0.10
@@ -387,9 +390,6 @@ importers:
       '@types/dompurify':
         specifier: ^3.0.0
         version: 3.2.0
-      '@types/express':
-        specifier: ^5.0.3
-        version: 5.0.6
       '@types/glob':
         specifier: ^8.1.0
         version: 8.1.0

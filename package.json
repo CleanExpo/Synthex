@@ -117,6 +117,7 @@
     "@types/three": "^0.159.0",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/ws": "^8.5.0",
+    "@types/express": "^5.0.3",
     "@upstash/redis": "^1.35.3",
     "ai": "^6.0.37",
     "autoprefixer": "^10.4.16",
