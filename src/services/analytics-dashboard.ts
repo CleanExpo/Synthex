@@ -310,7 +310,7 @@ export class AnalyticsDashboard {
   }
 
   private async generateOptimizationRecommendations(post: any): Promise<string[]> {
-    const recommendations = [];
+    const recommendations: string[] = [];
 
     if ((post.engagementRate || 0) < 0.02) {
       recommendations.push('Add more engaging visuals');

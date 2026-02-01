@@ -257,7 +257,7 @@ export async function unlinkGoogleAccount(userId: string) {
       resource: 'authentication',
       details: {
         provider: 'google',
-        email: user.email
+        email: user!.email
       },
       severity: 'medium',
       category: 'auth',

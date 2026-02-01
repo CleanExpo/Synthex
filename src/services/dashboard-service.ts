@@ -583,7 +583,7 @@ export class DashboardService {
   }
 
   private static generateTrendData(days: number, min: number, max: number): Array<{ date: string; value: number }> {
-    const data = [];
+    const data: Array<{ date: string; value: number }> = [];
     for (let i = days - 1; i >= 0; i--) {
       const date = new Date();
       date.setDate(date.getDate() - i);

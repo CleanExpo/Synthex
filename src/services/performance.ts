@@ -213,7 +213,7 @@ export class PerformanceService {
     
     // Determine health status
     let status = 'healthy';
-    const issues = [];
+    const issues: string[] = [];
     
     if (stats.averageResponseTime > 2000) {
       status = 'degraded';

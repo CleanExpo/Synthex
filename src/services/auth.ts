@@ -3,7 +3,7 @@ import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 
 // Import centralized Prisma client with Accelerate
-import { prisma } from '../lib/prisma';
+import { prisma } from '@/lib/prisma';
 import { appConfig } from '../config/app-config';
 
 // Connect to database (required - no fallback)

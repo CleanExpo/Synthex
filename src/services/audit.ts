@@ -1,6 +1,6 @@
 import { type User } from '@prisma/client';
 import { z } from 'zod';
-import { prisma } from '../lib/prisma';
+import { prisma } from '@/lib/prisma';
 
 // Validation schemas
 export const CreateAuditLogSchema = z.object({

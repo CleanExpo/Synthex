@@ -1,6 +1,6 @@
 import { type User } from '@prisma/client';
 import { z } from 'zod';
-import { prisma } from '../lib/prisma';
+import { prisma } from '@/lib/prisma';
 import AuditService from './audit';
 // import NotificationService from './notification'; // Disabled - file not available
 
@@ -350,23 +350,23 @@ export class UserManagementService {
     });
 
     const total = users.length;
-    const active = users.filter(u => u.isActive).length;
+    const active = users.filter((u: any) => u.isActive).length;
     const inactive = total - active;
-    
-    const byRole = users.reduce((acc, user) => {
+
+    const byRole = users.reduce((acc: Record<string, number>, user: any) => {
       acc[user.role] = (acc[user.role] || 0) + 1;
       return acc;
-    }, {});
-    
+    }, {} as Record<string, number>);
+
     // Recent registrations (last 30 days)
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-    const recentRegistrations = users.filter(u => u.createdAt > thirtyDaysAgo).length;
-    
+    const recentRegistrations = users.filter((u: any) => u.createdAt > thirtyDaysAgo).length;
+
     // Recent logins (last 7 days)
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-    const recentLogins = users.filter(u => u.lastLoginAt && u.lastLoginAt > sevenDaysAgo).length;
+    const recentLogins = users.filter((u: any) => u.lastLoginAt && u.lastLoginAt > sevenDaysAgo).length;
     
     return {
       total,

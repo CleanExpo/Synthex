@@ -1,5 +1,5 @@
 import { openRouterService } from './openrouter';
-import { prisma } from '../lib/prisma';
+import { prisma } from '@/lib/prisma';
 
 interface GenerateContentParams {
   prompt: string;
@@ -214,7 +214,7 @@ export async function getDrafts(userId: string) {
     take: 20
   });
 
-  return drafts.map(draft => ({
+  return drafts.map((draft: any) => ({
     id: draft.id,
     ...draft.data as any,
     createdAt: draft.createdAt,

@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { prisma } from '../lib/prisma';
+import { prisma } from '@/lib/prisma';
 import * as crypto from 'crypto';
 import AuditService from './audit';
 
@@ -61,7 +61,7 @@ export class TwoFactorService {
    * Generate backup codes
    */
   private static generateBackupCodes(): string[] {
-    const codes = [];
+    const codes: string[] = [];
     for (let i = 0; i < this.BACKUP_CODES_COUNT; i++) {
       // Generate 8-digit backup code
       const code = Math.floor(10000000 + Math.random() * 90000000).toString();

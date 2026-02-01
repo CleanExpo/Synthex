@@ -376,8 +376,8 @@ export class AgentIntegrationService {
     
     // Emit events for UI updates
     // Using global event emitter pattern for cross-module communication
-    if (global.eventEmitter) {
-      global.eventEmitter.emit('agent:data:update', { type, data });
+    if ((globalThis as any).eventEmitter) {
+      (globalThis as any).eventEmitter.emit('agent:data:update', { type, data });
     }
     
     // Log the update

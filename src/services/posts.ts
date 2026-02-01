@@ -1,6 +1,6 @@
 import { type Post } from '@prisma/client';
 import { z } from 'zod';
-import { prisma } from '../lib/prisma';
+import { prisma } from '@/lib/prisma';
 import { platformFactory } from './platforms/platform-factory';
 import { BasePlatformPost, PlatformConfig } from './platforms/base-platform';
 import NotificationService from './notification';
