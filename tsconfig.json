@@ -32,8 +32,7 @@
         "./components/*"
       ],
       "@/lib/*": [
-        "./lib/*",
-        "./src/lib/*"
+        "./lib/*"
       ],
       "@/src/*": [
         "./src/*"
@@ -57,8 +56,8 @@
         "./public/*"
       ]
     },
-    "noImplicitAny": false,
-    "strictNullChecks": false
+    "noImplicitAny": true,
+    "strictNullChecks": true
   },
   "include": [
     "next-env.d.ts",
