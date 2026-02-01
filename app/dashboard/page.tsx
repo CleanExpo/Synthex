@@ -1,491 +1,423 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { toast } from 'sonner';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { SkeletonCard, SkeletonChart } from '@/components/ui/skeleton';
-import { EmptyState } from '@/components/EmptyState';
-import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useEffect, useState } from 'react';
+import { motion } from 'framer-motion';
 import { 
-  TrendingUp, 
+  BarChart3, 
   Users, 
-  FileText, 
+  Zap, 
+  TrendingUp, 
   Calendar,
-  ArrowUpRight,
-  ArrowDownRight,
-  Sparkles,
-  Clock,
+  MessageSquare,
+  Share2,
   Target,
-  Zap,
-  BarChart3,
-  Activity,
-  Wand2,
-  BarChart2 as ChartBar,
-  CalendarDays,
-  BrainCircuit
-} from '@/components/icons';
-import { QuickStats } from '@/components/QuickStats';
-import { StreakCounter } from '@/components/StreakCounter';
-import { SmartSuggestions } from '@/components/SmartSuggestions';
-import { TemplateSelector } from '@/components/TemplateSelector';
-import { useMultiSelect, BulkActionsMenu } from '@/hooks/useMultiSelect';
-import AIContentStudio from '@/components/AIContentStudio';
-import RealTimeAnalytics from '@/components/RealTimeAnalytics';
-import PostScheduler from '@/components/PostScheduler';
-import {
-  LineChart,
-  Line,
-  AreaChart,
-  Area,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-} from 'recharts';
+  Bell,
+  Plus
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
+import { glassStyles, animationVariants } from '@/components/ui/index';
+// Phase 4B: Dashboard Integration - Components ready for connection
+// import { QuickStats } from '@/components/QuickStats';
+// import RealTimeAnalytics from '@/components/RealTimeAnalytics';
+// import AIContentStudio from '@/components/AIContentStudio';
+// import { CollaborationTools } from '@/components/CollaborationTools';
+// import PostScheduler from '@/components/PostScheduler';
+// import { CompetitorAnalysis } from '@/components/CompetitorAnalysis';
+import { cn } from '@/lib/utils';
 
-// Data will be fetched from API
-
-const StatCard = ({ 
-  title, 
-  value, 
-  change, 
-  changeType, 
-  icon: Icon,
-  description 
-}: {
-  title: string;
-  value: string;
-  change?: string;
-  changeType?: 'positive' | 'negative';
-  icon: React.ElementType;
-  description?: string;
-}) => (
-  <Card variant="glass-interactive">
-    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-      <CardTitle className="text-sm font-medium text-gray-400">{title}</CardTitle>
-      <Icon className="h-4 w-4 text-purple-500" />
-    </CardHeader>
-    <CardContent>
-      <div className="text-2xl font-bold text-white">{value}</div>
-      {description && (
-        <p className="text-xs text-gray-500 mt-1">{description}</p>
-      )}
-      {change && (
-        <div className="flex items-center mt-2">
-          {changeType === 'positive' ? (
-            <ArrowUpRight className="h-4 w-4 text-green-500" />
-          ) : (
-            <ArrowDownRight className="h-4 w-4 text-red-500" />
-          )}
-          <span className={`text-xs ml-1 ${
-            changeType === 'positive' ? 'text-green-500' : 'text-red-500'
-          }`}>
-            {change}
-          </span>
-        </div>
-      )}
-    </CardContent>
-  </Card>
+// Animation wrapper component
+const AnimatedCard = ({ children, className, delay = 0 }: { children: React.ReactNode; className?: string; delay?: number }) => (
+  <motion.div
+    initial={animationVariants.cardEntrance.initial}
+    animate={animationVariants.cardEntrance.animate}
+    transition={{ ...animationVariants.cardEntrance.transition, delay }}
+    className={className}
+  >
+    {children}
+  </motion.div>
 );
 
-export default function DashboardPage() {
-  const [aiProgress, setAiProgress] = useState(0);
-  const [isLoading, setIsLoading] = useState(true);
-  const router = useRouter();
-  const [showAutomationSetup, setShowAutomationSetup] = useState(false);
-  const [features, setFeatures] = useState({ smartScheduling: false, trendDetection: false });
-  const [activeTab, setActiveTab] = useState('overview');
-  const [dashboardData, setDashboardData] = useState<any>({
-    stats: {
-      totalReach: 245780,
-      totalEngagement: 18945,
-      totalFollowers: 12456,
-      totalPosts: 147,
-      engagementRate: 7.71,
-      growthRate: 12.5
-    },
-    engagementData: [
-      { name: 'Mon', value: 4000 },
-      { name: 'Tue', value: 3000 },
-      { name: 'Wed', value: 5000 },
-      { name: 'Thu', value: 2780 },
-      { name: 'Fri', value: 6890 },
-      { name: 'Sat', value: 7390 },
-      { name: 'Sun', value: 5490 }
-    ],
-    platformData: [
-      { platform: 'Twitter', engagement: 4500 },
-      { platform: 'Instagram', engagement: 6200 },
-      { platform: 'LinkedIn', engagement: 3800 },
-      { platform: 'TikTok', engagement: 8900 },
-      { platform: 'YouTube', engagement: 5400 }
-    ],
-    recentActivity: []
-  });
+interface DashboardStats {
+  totalPosts: number;
+  scheduledPosts: number;
+  engagementRate: number;
+  followers: number;
+  trendingTopics: string[];
+  recentActivity: Array<{
+    id: string;
+    type: 'post' | 'engagement' | 'milestone';
+    message: string;
+    timestamp: string;
+  }>;
+}
 
-  const handleFeatureToggle = (feature: keyof typeof features) => {
-        setFeatures(prev => ({ ...prev, [feature]: !prev[feature] }));
-        toast.success(`${feature} ${features[feature] ? 'disabled' : 'enabled'}`);
-      };
+export default function DashboardPage() {
+  const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('overview');
 
   useEffect(() => {
+    // Simulate fetching dashboard data
+    const fetchDashboardData = async () => {
+      try {
+        // In production, this would call the actual API
+        // const response = await fetch('/api/dashboard/stats');
+        // const data = await response.json();
+        
+        // Simulated data for now
+        const mockData: DashboardStats = {
+          totalPosts: 156,
+          scheduledPosts: 23,
+          engagementRate: 4.8,
+          followers: 12543,
+          trendingTopics: ['#AI', '#SocialMedia', '#Marketing', '#Automation'],
+          recentActivity: [
+            { id: '1', type: 'post', message: 'Published post on Twitter', timestamp: '2 min ago' },
+            { id: '2', type: 'engagement', message: 'Post reached 1K impressions', timestamp: '15 min ago' },
+            { id: '3', type: 'milestone', message: 'Gained 100 new followers', timestamp: '1 hour ago' },
+            { id: '4', type: 'post', message: 'Scheduled 5 posts for next week', timestamp: '2 hours ago' },
+          ]
+        };
+        
+        setStats(mockData);
+      } catch (error) {
+        console.error('Error fetching dashboard data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
     fetchDashboardData();
-    const timer = setTimeout(() => setAiProgress(75), 500);
-    return () => clearTimeout(timer);
   }, []);
 
-  const fetchDashboardData = async () => {
-    try {
-      // Simulated API call - replace with actual endpoint
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      setIsLoading(false);
-    } catch (error) {
-      console.error('Failed to fetch dashboard data:', error);
-      setIsLoading(false);
-    }
-  };
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background p-6 space-y-6">
+        <div className="flex items-center justify-between">
+          <Skeleton className="h-10 w-64" />
+          <Skeleton className="h-10 w-32" />
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {[...Array(4)].map((_, i) => (
+            <Skeleton key={i} className="h-32" />
+          ))}
+        </div>
+        <Skeleton className="h-96" />
+      </div>
+    );
+  }
 
   return (
-    <div className="space-y-6">
+    <div className="min-h-screen bg-background">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-3xl font-bold gradient-text">Welcome back!</h1>
-          <p className="text-gray-400 mt-1">Your AI-powered marketing command center</p>
-        </div>
-        <div className="flex space-x-3 mt-4 sm:mt-0">
-          <Button 
-            className="gradient-primary text-white"
-            onClick={() => setActiveTab('ai-studio')}
-          >
-            <Sparkles className="mr-2 h-4 w-4" />
-            Generate Content
-          </Button>
-          <Button 
-            variant="outline" 
-            className="bg-white/5 border-white/10 text-white hover:bg-white/10"
-            onClick={() => setActiveTab('schedule')}
-          >
-            <Calendar className="mr-2 h-4 w-4" />
-            View Schedule
-          </Button>
-        </div>
-      </div>
-
-      {/* Main Dashboard Tabs */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid grid-cols-5 w-full">
-          <TabsTrigger value="overview">
-            <Activity className="w-4 h-4 mr-2 hidden sm:inline" />
-            Overview
-          </TabsTrigger>
-          <TabsTrigger value="ai-studio">
-            <Wand2 className="w-4 h-4 mr-2 hidden sm:inline" />
-            AI Studio
-          </TabsTrigger>
-          <TabsTrigger value="analytics">
-            <ChartBar className="w-4 h-4 mr-2 hidden sm:inline" />
-            Analytics
-          </TabsTrigger>
-          <TabsTrigger value="schedule">
-            <CalendarDays className="w-4 h-4 mr-2 hidden sm:inline" />
-            Schedule
-          </TabsTrigger>
-          <TabsTrigger value="automation">
-            <BrainCircuit className="w-4 h-4 mr-2 hidden sm:inline" />
-            Automation
-          </TabsTrigger>
-        </TabsList>
-
-        {/* Overview Tab */}
-        <TabsContent value="overview" className="space-y-6">
-          {/* Quick Stats Widget */}
-          <QuickStats />
-          
-          {/* Streak & Gamification */}
-          <div className="grid gap-4 md:grid-cols-3">
-            <div className="md:col-span-2">
-              <StreakCounter />
+      <header className={cn(
+        "sticky top-0 z-40 border-b border-white/10",
+        glassStyles.solid
+      )}>
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl font-bold gradient-text-premium">
+                Dashboard
+              </h1>
+              <p className="text-sm text-muted-foreground">
+                Welcome back! Here's what's happening with your social media.
+              </p>
             </div>
-            <Card variant="glass">
-              <CardHeader>
-                <CardTitle>Today's Goal</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-400">Posts Created</span>
-                    <span className="text-white">3/5</span>
-                  </div>
-                  <Progress value={60} className="h-2" />
-                  <p className="text-xs text-gray-400">2 more posts to complete your daily goal!</p>
-                </div>
-              </CardContent>
-            </Card>
+            <div className="flex items-center gap-4">
+              <Button
+                variant="outline"
+                size="icon"
+                className={cn(glassStyles.button, "relative")}
+              >
+                <Bell className="h-4 w-4" />
+                <span className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-violet-500 animate-pulse" />
+              </Button>
+              <Button 
+                className={cn(glassStyles.buttonPrimary, "gap-2")}
+              >
+                <Plus className="h-4 w-4" />
+                New Post
+              </Button>
+            </div>
           </div>
+        </div>
+      </header>
 
-          {/* Main Content Grid */}
-          <div className="grid gap-6 lg:grid-cols-2">
-            {/* Engagement Chart */}
-            <Card variant="glass" className="col-span-1">
-              <CardHeader>
-                <CardTitle className="flex items-center justify-between">
-                  <span>Weekly Engagement</span>
-                  <Activity className="h-4 w-4 text-purple-500" />
-                </CardTitle>
-                <CardDescription className="text-gray-400">
-                  Your engagement trends over the past week
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={250}>
-                  <AreaChart data={dashboardData.engagementData}>
-                    <defs>
-                      <linearGradient id="colorGradient" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.8}/>
-                        <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0}/>
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#333" />
-                    <XAxis dataKey="name" stroke="#666" />
-                    <YAxis stroke="#666" />
-                    <Tooltip 
-                      contentStyle={{ 
-                        backgroundColor: 'rgba(0,0,0,0.8)', 
-                        border: '1px solid rgba(139, 92, 246, 0.3)',
-                        borderRadius: '8px'
-                      }}
-                    />
-                    <Area type="monotone" dataKey="value" stroke="#8b5cf6" fillOpacity={1} fill="url(#colorGradient)" />
-                  </AreaChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-
-            {/* Platform Performance */}
-            <Card variant="glass" className="col-span-1">
-              <CardHeader>
-                <CardTitle className="flex items-center justify-between">
-                  <span>Platform Performance</span>
-                  <BarChart3 className="h-4 w-4 text-purple-500" />
-                </CardTitle>
-                <CardDescription className="text-gray-400">
-                  Engagement by social platform
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={250}>
-                  <BarChart data={dashboardData.platformData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#333" />
-                    <XAxis dataKey="platform" stroke="#666" />
-                    <YAxis stroke="#666" />
-                    <Tooltip 
-                      contentStyle={{ 
-                        backgroundColor: 'rgba(0,0,0,0.8)', 
-                        border: '1px solid rgba(139, 92, 246, 0.3)',
-                        borderRadius: '8px'
-                      }}
-                    />
-                    <Bar dataKey="engagement" fill="#8b5cf6" radius={[8, 8, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Additional Sections */}
-          <div className="grid gap-6 lg:grid-cols-3">
-            {/* AI Content Queue */}
-            <Card variant="glass">
-              <CardHeader>
-                <CardTitle className="flex items-center justify-between">
-                  <span>AI Content Queue</span>
-                  <Zap className="h-4 w-4 text-purple-500" />
-                </CardTitle>
-                <CardDescription className="text-gray-400">
-                  Content being generated
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-400">Processing</span>
-                    <span className="text-white">{aiProgress}%</span>
-                  </div>
-                  <Progress value={aiProgress} className="h-2" />
-                </div>
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between p-3 rounded-lg bg-white/5">
-                    <span className="text-sm">LinkedIn Article</span>
-                    <span className="text-xs text-green-400">Complete</span>
-                  </div>
-                  <div className="flex items-center justify-between p-3 rounded-lg bg-white/5">
-                    <span className="text-sm">Twitter Thread</span>
-                    <span className="text-xs text-yellow-400">Processing</span>
-                  </div>
-                  <div className="flex items-center justify-between p-3 rounded-lg bg-white/5">
-                    <span className="text-sm">Instagram Carousel</span>
-                    <span className="text-xs text-gray-400">Queued</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Upcoming Posts */}
-            <Card variant="glass">
-              <CardHeader>
-                <CardTitle className="flex items-center justify-between">
-                  <span>Upcoming Posts</span>
-                  <Clock className="h-4 w-4 text-purple-500" />
-                </CardTitle>
-                <CardDescription className="text-gray-400">
-                  Scheduled for today
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between p-3 rounded-lg bg-white/5">
-                    <div>
-                      <p className="text-sm font-medium">Product Launch Teaser</p>
-                      <p className="text-xs text-gray-400">Twitter • 2:00 PM</p>
-                    </div>
-                    <Button size="sm" variant="ghost" className="text-purple-400">
-                      Edit
-                    </Button>
-                  </div>
-                  <div className="flex items-center justify-between p-3 rounded-lg bg-white/5">
-                    <div>
-                      <p className="text-sm font-medium">Behind the Scenes</p>
-                      <p className="text-xs text-gray-400">Instagram • 4:30 PM</p>
-                    </div>
-                    <Button size="sm" variant="ghost" className="text-purple-400">
-                      Edit
-                    </Button>
-                  </div>
-                  <div className="flex items-center justify-between p-3 rounded-lg bg-white/5">
-                    <div>
-                      <p className="text-sm font-medium">Industry Insights</p>
-                      <p className="text-xs text-gray-400">LinkedIn • 6:00 PM</p>
-                    </div>
-                    <Button size="sm" variant="ghost" className="text-purple-400">
-                      Edit
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Top Performing Content */}
-            <Card variant="glass">
-              <CardHeader>
-                <CardTitle className="flex items-center justify-between">
-                  <span>Top Performing</span>
-                  <TrendingUp className="h-4 w-4 text-purple-500" />
-                </CardTitle>
-                <CardDescription className="text-gray-400">
-                  Your best content this week
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="space-y-3">
-                  <div className="p-3 rounded-lg bg-white/5">
-                    <div className="flex items-center justify-between mb-1">
-                      <p className="text-sm font-medium">AI Tools Comparison</p>
-                      <span className="text-xs text-green-400">↑ 234%</span>
-                    </div>
-                    <p className="text-xs text-gray-400">LinkedIn • 45K impressions</p>
-                  </div>
-                  <div className="p-3 rounded-lg bg-white/5">
-                    <div className="flex items-center justify-between mb-1">
-                      <p className="text-sm font-medium">Quick Tutorial Video</p>
-                      <span className="text-xs text-green-400">↑ 189%</span>
-                    </div>
-                    <p className="text-xs text-gray-400">TikTok • 128K views</p>
-                  </div>
-                  <div className="p-3 rounded-lg bg-white/5">
-                    <div className="flex items-center justify-between mb-1">
-                      <p className="text-sm font-medium">Meme Monday</p>
-                      <span className="text-xs text-green-400">↑ 156%</span>
-                    </div>
-                    <p className="text-xs text-gray-400">Twitter • 892 retweets</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-          
-          {/* Smart Suggestions Section */}
-          <div className="mt-6">
-            <SmartSuggestions context={{ dashboard: true }} compact={false} />
-          </div>
-        </TabsContent>
-
-        {/* AI Studio Tab */}
-        <TabsContent value="ai-studio" className="space-y-6">
-          <AIContentStudio />
-        </TabsContent>
-
-        {/* Analytics Tab */}
-        <TabsContent value="analytics" className="space-y-6">
-          <RealTimeAnalytics />
-        </TabsContent>
-
-        {/* Schedule Tab */}
-        <TabsContent value="schedule" className="space-y-6">
-          <PostScheduler />
-        </TabsContent>
-
-        {/* Automation Tab */}
-        <TabsContent value="automation" className="space-y-6">
-          <Card variant="glass">
+      {/* Main Content */}
+      <main className="container mx-auto px-4 py-6 space-y-6">
+        {/* Quick Stats Placeholder - Phase 4B: Integrate QuickStats component */}
+        <AnimatedCard delay={0}>
+          <Card className={cn(glassStyles.base, glassStyles.hover)}>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <BrainCircuit className="w-5 h-5 text-purple-500" />
-                Smart Automation
-              </CardTitle>
-              <CardDescription>AI-powered workflows and optimization</CardDescription>
+              <CardTitle>Quick Stats</CardTitle>
+              <CardDescription>Real-time performance metrics</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="p-6 bg-white/5 rounded-lg">
-                  <h3 className="font-semibold mb-2">Auto-Optimization</h3>
-                  <p className="text-sm text-gray-400 mb-4">
-                    AI automatically optimizes your content for maximum engagement
-                  </p>
-                  <Button variant="outline" className="w-full" onClick={() => router.push("/dashboard/settings")}>Configure</Button>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="p-4 rounded-lg bg-white/5">
+                  <div className="text-2xl font-bold">{stats?.totalPosts || 0}</div>
+                  <div className="text-xs text-muted-foreground">Total Posts</div>
                 </div>
-                <div className="p-6 bg-white/5 rounded-lg">
-                  <h3 className="font-semibold mb-2">Smart Scheduling</h3>
-                  <p className="text-sm text-gray-400 mb-4">
-                    Post at optimal times based on audience activity patterns
-                  </p>
-                  <Button variant="outline" className="w-full" onClick={() => handleFeatureToggle("smartScheduling")}>Enable</Button>
+                <div className="p-4 rounded-lg bg-white/5">
+                  <div className="text-2xl font-bold">{stats?.engagementRate || 0}%</div>
+                  <div className="text-xs text-muted-foreground">Engagement</div>
                 </div>
-                <div className="p-6 bg-white/5 rounded-lg">
-                  <h3 className="font-semibold mb-2">Response Automation</h3>
-                  <p className="text-sm text-gray-400 mb-4">
-                    AI-powered responses to comments and messages
-                  </p>
-                  <Button variant="outline" className="w-full" onClick={() => setShowAutomationSetup(true)}>Set Up</Button>
+                <div className="p-4 rounded-lg bg-white/5">
+                  <div className="text-2xl font-bold">{stats?.followers?.toLocaleString() || '0'}</div>
+                  <div className="text-xs text-muted-foreground">Followers</div>
                 </div>
-                <div className="p-6 bg-white/5 rounded-lg">
-                  <h3 className="font-semibold mb-2">Trend Detection</h3>
-                  <p className="text-sm text-gray-400 mb-4">
-                    Automatically identify and capitalize on trending topics
-                  </p>
-                  <Button variant="outline" className="w-full" onClick={() => handleFeatureToggle("trendDetection")}>Activate</Button>
+                <div className="p-4 rounded-lg bg-white/5">
+                  <div className="text-2xl font-bold">{stats?.scheduledPosts || 0}</div>
+                  <div className="text-xs text-muted-foreground">Scheduled</div>
                 </div>
               </div>
             </CardContent>
           </Card>
-        </TabsContent>
-      </Tabs>
+        </AnimatedCard>
+
+        {/* Main Dashboard Tabs */}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+          <TabsList className={cn(
+            "grid w-full grid-cols-2 md:grid-cols-5 lg:w-fit",
+            glassStyles.base
+          )}>
+            <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="analytics">Analytics</TabsTrigger>
+            <TabsTrigger value="ai-studio">AI Studio</TabsTrigger>
+            <TabsTrigger value="team">Team</TabsTrigger>
+            <TabsTrigger value="scheduler">Scheduler</TabsTrigger>
+          </TabsList>
+
+          {/* Overview Tab */}
+          <TabsContent value="overview" className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Main Stats Cards */}
+              <AnimatedCard delay={0.1} className="lg:col-span-2">
+                <Card className={cn(glassStyles.base, glassStyles.hover)}>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <BarChart3 className="h-5 w-5 text-violet-500" />
+                      Performance Overview
+                    </CardTitle>
+                    <CardDescription>
+                      Track your social media performance across all platforms
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      <StatCard
+                        icon={<Share2 className="h-5 w-5" />}
+                        label="Total Posts"
+                        value={stats?.totalPosts || 0}
+                        trend="+12%"
+                        trendUp={true}
+                      />
+                      <StatCard
+                        icon={<Calendar className="h-5 w-5" />}
+                        label="Scheduled"
+                        value={stats?.scheduledPosts || 0}
+                        trend="+5"
+                        trendUp={true}
+                      />
+                      <StatCard
+                        icon={<TrendingUp className="h-5 w-5" />}
+                        label="Engagement"
+                        value={`${stats?.engagementRate || 0}%`}
+                        trend="+0.8%"
+                        trendUp={true}
+                      />
+                      <StatCard
+                        icon={<Users className="h-5 w-5" />}
+                        label="Followers"
+                        value={stats?.followers?.toLocaleString() || '0'}
+                        trend="+2.4%"
+                        trendUp={true}
+                      />
+                    </div>
+                  </CardContent>
+                </Card>
+              </AnimatedCard>
+
+              {/* Trending Topics */}
+              <AnimatedCard delay={0.2}>
+                <Card className={cn(glassStyles.base, glassStyles.hover)}>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Zap className="h-5 w-5 text-amber-500" />
+                      Trending Topics
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex flex-wrap gap-2">
+                      {stats?.trendingTopics?.map((topic, index) => (
+                        <Badge
+                          key={index}
+                          variant="secondary"
+                          className={cn(
+                            "cursor-pointer transition-all hover:scale-105",
+                            glassStyles.button
+                          )}
+                        >
+                          {topic}
+                        </Badge>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              </AnimatedCard>
+            </div>
+
+            {/* Recent Activity */}
+            <AnimatedCard delay={0.3}>
+              <Card className={cn(glassStyles.base, glassStyles.hover)}>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <MessageSquare className="h-5 w-5 text-cyan-500" />
+                    Recent Activity
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {stats?.recentActivity?.map((activity, index) => (
+                      <motion.div
+                        key={activity.id}
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 0.1 * index }}
+                        className="flex items-center justify-between p-3 rounded-lg hover:bg-white/5 transition-colors"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className={cn(
+                            "h-2 w-2 rounded-full",
+                            activity.type === 'post' && "bg-violet-500",
+                            activity.type === 'engagement' && "bg-cyan-500",
+                            activity.type === 'milestone' && "bg-amber-500"
+                          )} />
+                          <span className="text-sm">{activity.message}</span>
+                        </div>
+                        <span className="text-xs text-muted-foreground">
+                          {activity.timestamp}
+                        </span>
+                      </motion.div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </AnimatedCard>
+          </TabsContent>
+
+          {/* Analytics Tab - Phase 4B: Integrate RealTimeAnalytics */}
+          <TabsContent value="analytics">
+            <Card className={cn(glassStyles.base)}>
+              <CardHeader>
+                <CardTitle>Analytics</CardTitle>
+                <CardDescription>Detailed analytics coming in Phase 4B</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="h-64 flex items-center justify-center text-muted-foreground">
+                  Real-time analytics integration in progress
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* AI Studio Tab - Phase 4B: Integrate AIContentStudio */}
+          <TabsContent value="ai-studio">
+            <Card className={cn(glassStyles.base)}>
+              <CardHeader>
+                <CardTitle>AI Studio</CardTitle>
+                <CardDescription>AI content generation coming in Phase 4B</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="h-64 flex items-center justify-center text-muted-foreground">
+                  AI Studio integration in progress
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Team Tab - Phase 4B: Integrate CollaborationTools */}
+          <TabsContent value="team">
+            <Card className={cn(glassStyles.base)}>
+              <CardHeader>
+                <CardTitle>Team Collaboration</CardTitle>
+                <CardDescription>Team features coming in Phase 4B</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="h-64 flex items-center justify-center text-muted-foreground">
+                  Team collaboration integration in progress
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Scheduler Tab - Phase 4B: Integrate PostScheduler */}
+          <TabsContent value="scheduler">
+            <Card className={cn(glassStyles.base)}>
+              <CardHeader>
+                <CardTitle>Post Scheduler</CardTitle>
+                <CardDescription>Advanced scheduling coming in Phase 4B</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="h-64 flex items-center justify-center text-muted-foreground">
+                  Post scheduler integration in progress
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+
+        {/* Competitor Analysis - Phase 4B: Integrate CompetitorAnalysis */}
+        <AnimatedCard delay={0.4}>
+          <Card className={cn(glassStyles.base)}>
+            <CardHeader>
+              <CardTitle>Competitor Analysis</CardTitle>
+              <CardDescription>Track your competitors (Phase 4B)</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="h-32 flex items-center justify-center text-muted-foreground">
+                Competitor analysis integration in progress
+              </div>
+            </CardContent>
+          </Card>
+        </AnimatedCard>
+      </main>
+    </div>
+  );
+}
+
+// Stat Card Component
+function StatCard({ 
+  icon, 
+  label, 
+  value, 
+  trend, 
+  trendUp 
+}: { 
+  icon: React.ReactNode; 
+  label: string; 
+  value: string | number; 
+  trend: string; 
+  trendUp: boolean;
+}) {
+  return (
+    <div className="p-4 rounded-lg bg-white/5 hover:bg-white/10 transition-colors">
+      <div className="flex items-center gap-2 text-muted-foreground mb-2">
+        {icon}
+        <span className="text-xs">{label}</span>
+      </div>
+      <div className="text-2xl font-bold">{value}</div>
+      <div className={cn(
+        "text-xs mt-1",
+        trendUp ? "text-emerald-500" : "text-rose-500"
+      )}>
+        {trendUp ? "↑" : "↓"} {trend}
+      </div>
     </div>
   );
 }

@@ -137,6 +137,7 @@
     "jsonwebtoken": "^9.0.2",
     "jspdf": "^4.0.0",
     "jspdf-autotable": "^5.0.7",
+    "lucide-react": "^0.563.0",
     "multer": "^2.0.2",
     "next": "^14.2.31",
     "next-auth": "^4.24.11",
