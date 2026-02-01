@@ -15,7 +15,7 @@
     "validate:all": "npm run validate:env && npm run validate:claude",
     "build:force": "next build",
     "build:vercel": "prisma generate && next build",
-    "vercel-build": "npm ci --legacy-peer-deps && prisma generate && next build",
+    "vercel-build": "prisma generate && next build",
     "start": "next start",
     "typecheck": "npm run type-check",
     "format": "prettier --write \"**/*.{js,jsx,ts,tsx,json,css,md}\"",
