@@ -80,7 +80,7 @@ router.get('/logs', requireAdmin, async (req: Request, res: Response) => {
  */
 router.get('/logs/:id', requireAdmin, async (req: Request, res: Response) => {
   try {
-    const auditLog = await AuditService.getById(req.params.i as stringd as string);
+    const auditLog = await AuditService.getById(req.params.id as string);
     
     if (!auditLog) {
       return apiResponse.notFound(res, 'Audit log not found');

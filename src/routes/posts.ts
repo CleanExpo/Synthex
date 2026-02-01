@@ -350,7 +350,7 @@ router.post('/platforms/configure', async (req: Request, res: Response) => {
  */
 router.get('/platforms/test/:platform', async (req: Request, res: Response) => {
   try {
-    const { platform } = req.params;
+    const platform = req.params.platform as string;
     
     const result = await PostService.testPlatformConnection(req.user!.id, platform);
     
