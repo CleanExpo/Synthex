@@ -372,12 +372,12 @@ router.get('/logs/stats', async (req: Request, res: Response) => {
  */
 router.get('/logs/:id', async (req: Request, res: Response) => {
   try {
-    const log = await contentLogger.getLogById(req.params.id);
+    const log = await contentLogger.getLogById(req.params.id as string);
     
     if (!log) {
       return res.status(404).json({
         error: 'Log not found',
-        message: `No log entry found with ID: ${req.params.id}`
+        message: `No log entry found with ID: ${req.params.id as string}`
       });
     }
     

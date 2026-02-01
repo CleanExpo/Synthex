@@ -73,7 +73,7 @@ router.get('/statistics', async (req: Request, res: Response) => {
  */
 router.get('/:id', async (req: Request, res: Response) => {
   try {
-    const campaign = await CampaignService.getById(req.params.id, req.user!.id);
+    const campaign = await CampaignService.getById(req.params.id as string, req.user!.id);
     
     if (!campaign) {
       return apiResponse.notFound(res, 'Campaign not found');
@@ -94,7 +94,7 @@ router.get('/:id', async (req: Request, res: Response) => {
 router.put('/:id', async (req: Request, res: Response) => {
   try {
     const campaign = await CampaignService.update(
-      req.params.id,
+      req.params.id as string,
       req.user!.id,
       req.body
     );
@@ -119,7 +119,7 @@ router.put('/:id', async (req: Request, res: Response) => {
  */
 router.delete('/:id', async (req: Request, res: Response) => {
   try {
-    await CampaignService.delete(req.params.id, req.user!.id);
+    await CampaignService.delete(req.params.id as string, req.user!.id);
     return apiResponse.success(res, null, 'Campaign deleted successfully');
   } catch (error) {
     if ((error as Error).message === 'Campaign not found') {
@@ -137,7 +137,7 @@ router.delete('/:id', async (req: Request, res: Response) => {
  */
 router.post('/:id/clone', async (req: Request, res: Response) => {
   try {
-    const campaign = await CampaignService.clone(req.params.id, req.user!.id);
+    const campaign = await CampaignService.clone(req.params.id as string, req.user!.id);
     return apiResponse.created(res, campaign, 'Campaign cloned successfully');
   } catch (error) {
     if ((error as Error).message === 'Campaign not found') {
@@ -156,12 +156,12 @@ router.post('/:id/clone', async (req: Request, res: Response) => {
 router.put('/:id/analytics', async (req: Request, res: Response) => {
   try {
     // Verify ownership first
-    const campaign = await CampaignService.getById(req.params.id, req.user!.id);
+    const campaign = await CampaignService.getById(req.params.id as string, req.user!.id);
     if (!campaign) {
       return apiResponse.notFound(res, 'Campaign not found');
     }
     
-    const updated = await CampaignService.updateAnalytics(req.params.id, req.body);
+    const updated = await CampaignService.updateAnalytics(req.params.id as string, req.body);
     return apiResponse.success(res, updated, 'Analytics updated successfully');
   } catch (error) {
     console.error('Error updating analytics:', error);

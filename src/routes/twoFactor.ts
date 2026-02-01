@@ -217,7 +217,7 @@ router.get('/requires/:userId', async (req: Request, res: Response) => {
   try {
     // This endpoint might be called before full authentication
     // so we'll allow it but limit the information returned
-    const requires2FA = await TwoFactorService.requiresTwoFactor(req.params.userId);
+    const requires2FA = await TwoFactorService.requiresTwoFactor(req.params.userId as string);
     
     return apiResponse.success(res, { requires2FA }, 'Two-factor requirement checked');
   } catch (error) {

@@ -162,7 +162,7 @@ router.get('/scheduled', async (req: Request, res: Response) => {
  */
 router.get('/:id', async (req: Request, res: Response) => {
   try {
-    const post = await PostService.getById(req.params.id, req.user!.id);
+    const post = await PostService.getById(req.params.id as string, req.user!.id);
     
     if (!post) {
       return apiResponse.notFound(res, 'Post not found');
@@ -183,7 +183,7 @@ router.get('/:id', async (req: Request, res: Response) => {
 router.put('/:id', async (req: Request, res: Response) => {
   try {
     const post = await PostService.update(
-      req.params.id,
+      req.params.id as string,
       req.user!.id,
       req.body
     );
@@ -211,7 +211,7 @@ router.put('/:id', async (req: Request, res: Response) => {
  */
 router.delete('/:id', async (req: Request, res: Response) => {
   try {
-    await PostService.delete(req.params.id, req.user!.id);
+    await PostService.delete(req.params.id as string, req.user!.id);
     return apiResponse.success(res, null, 'Post deleted successfully');
   } catch (error) {
     if ((error as Error).message === 'Post not found') {
@@ -230,7 +230,7 @@ router.delete('/:id', async (req: Request, res: Response) => {
 router.post('/:id/publish', async (req: Request, res: Response) => {
   try {
     const post = await PostService.publish(
-      req.params.id,
+      req.params.id as string,
       req.user!.id,
       req.body
     );
@@ -255,7 +255,7 @@ router.post('/:id/publish', async (req: Request, res: Response) => {
  */
 router.post('/:id/duplicate', async (req: Request, res: Response) => {
   try {
-    const post = await PostService.duplicate(req.params.id, req.user!.id);
+    const post = await PostService.duplicate(req.params.id as string, req.user!.id);
     return apiResponse.created(res, post, 'Post duplicated successfully');
   } catch (error) {
     if ((error as Error).message === 'Post not found') {
@@ -274,12 +274,12 @@ router.post('/:id/duplicate', async (req: Request, res: Response) => {
 router.put('/:id/analytics', async (req: Request, res: Response) => {
   try {
     // Verify ownership first
-    const post = await PostService.getById(req.params.id, req.user!.id);
+    const post = await PostService.getById(req.params.id as string, req.user!.id);
     if (!post) {
       return apiResponse.notFound(res, 'Post not found');
     }
     
-    const updated = await PostService.updateAnalytics(req.params.id, req.body);
+    const updated = await PostService.updateAnalytics(req.params.id as string, req.body);
     return apiResponse.success(res, updated, 'Analytics updated successfully');
   } catch (error) {
     console.error('Error updating analytics:', error);
@@ -302,9 +302,9 @@ router.put('/:id/publish-status', async (req: Request, res: Response) => {
     
     let post;
     if (status === 'published') {
-      post = await PostService.markAsPublished(req.params.id);
+      post = await PostService.markAsPublished(req.params.id as string);
     } else {
-      post = await PostService.markAsFailed(req.params.id, errorMessage);
+      post = await PostService.markAsFailed(req.params.id as string, errorMessage);
     }
     
     return apiResponse.success(res, post, `Post marked as ${status} successfully`);
@@ -372,7 +372,7 @@ router.get('/platforms/test/:platform', async (req: Request, res: Response) => {
  */
 router.post('/:id/publish-to-platform', async (req: Request, res: Response) => {
   try {
-    const result = await PostService.publishToPlatform(req.params.id, req.user!.id);
+    const result = await PostService.publishToPlatform(req.params.id as string, req.user!.id);
     
     if (result.success) {
       return apiResponse.success(res, { 
@@ -395,7 +395,7 @@ router.post('/:id/publish-to-platform', async (req: Request, res: Response) => {
  */
 router.post('/:id/sync-analytics', async (req: Request, res: Response) => {
   try {
-    const result = await PostService.syncPlatformAnalytics(req.params.id, req.user!.id);
+    const result = await PostService.syncPlatformAnalytics(req.params.id as string, req.user!.id);
     
     if (result.success) {
       return apiResponse.success(res, result.analytics, 'Analytics synced successfully');

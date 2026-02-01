@@ -158,7 +158,7 @@ router.get('/permissions', requirePermission('users.read'), async (req: Request,
  */
 router.get('/:id', requirePermission('users.read'), async (req: Request, res: Response) => {
   try {
-    const user = await UserManagementService.getUserById(req.params.id);
+    const user = await UserManagementService.getUserById(req.params.id as string);
     
     if (!user) {
       return apiResponse.notFound(res, 'User not found');
@@ -181,7 +181,7 @@ router.put('/:id', requirePermission('users.update'), async (req: Request, res: 
     const ipAddress = req.ip || req.connection.remoteAddress;
     
     const user = await UserManagementService.updateUser(
-      req.params.id,
+      req.params.id as string,
       req.body,
       req.user!.id,
       ipAddress
@@ -214,7 +214,7 @@ router.post('/:id/deactivate', requirePermission('users.delete'), async (req: Re
     const ipAddress = req.ip || req.connection.remoteAddress;
     
     const user = await UserManagementService.deactivateUser(
-      req.params.id,
+      req.params.id as string,
       req.user!.id,
       reason,
       ipAddress
@@ -237,7 +237,7 @@ router.post('/:id/reactivate', requirePermission('users.update'), async (req: Re
     const ipAddress = req.ip || req.connection.remoteAddress;
     
     const user = await UserManagementService.reactivateUser(
-      req.params.id,
+      req.params.id as string,
       req.user!.id,
       ipAddress
     );

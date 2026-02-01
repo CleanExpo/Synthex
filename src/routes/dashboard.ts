@@ -151,7 +151,7 @@ router.get('/quick-actions', async (req: Request, res: Response) => {
 // Helper functions
 function generateMetrics(min: number, max: number, peak: number): number[] {
   const points = 30;
-  const data = [];
+  const data: number[] = [];
   for (let i = 0; i < points; i++) {
     const trend = Math.sin((i / points) * Math.PI) * (peak - min) + min;
     const noise = (Math.random() - 0.5) * (max - min) * 0.1;
@@ -162,7 +162,7 @@ function generateMetrics(min: number, max: number, peak: number): number[] {
 
 function generateLabels(timeframe: string): string[] {
   const now = new Date();
-  const labels = [];
+  const labels: string[] = [];
   let days = 7;
   
   if (timeframe === '30d') days = 30;

@@ -102,7 +102,7 @@ router.get('/search', async (req: Request, res: Response) => {
  */
 router.get('/:id', async (req: Request, res: Response) => {
   try {
-    const project = await ProjectService.getById(req.params.id, req.user!.id);
+    const project = await ProjectService.getById(req.params.id as string, req.user!.id);
     
     if (!project) {
       return apiResponse.notFound(res, 'Project not found');
@@ -123,7 +123,7 @@ router.get('/:id', async (req: Request, res: Response) => {
 router.put('/:id', async (req: Request, res: Response) => {
   try {
     const project = await ProjectService.update(
-      req.params.id,
+      req.params.id as string,
       req.user!.id,
       req.body
     );
@@ -148,7 +148,7 @@ router.put('/:id', async (req: Request, res: Response) => {
  */
 router.delete('/:id', async (req: Request, res: Response) => {
   try {
-    await ProjectService.delete(req.params.id, req.user!.id);
+    await ProjectService.delete(req.params.id as string, req.user!.id);
     return apiResponse.success(res, null, 'Project deleted successfully');
   } catch (error) {
     if ((error as Error).message === 'Project not found') {
@@ -166,7 +166,7 @@ router.delete('/:id', async (req: Request, res: Response) => {
  */
 router.post('/:id/clone', async (req: Request, res: Response) => {
   try {
-    const project = await ProjectService.clone(req.params.id, req.user!.id);
+    const project = await ProjectService.clone(req.params.id as string, req.user!.id);
     return apiResponse.created(res, project, 'Project cloned successfully');
   } catch (error) {
     if ((error as Error).message === 'Project not found') {
@@ -191,7 +191,7 @@ router.post('/:id/items', async (req: Request, res: Response) => {
     }
     
     const project = await ProjectService.addItem(
-      req.params.id,
+      req.params.id as string,
       req.user!.id,
       { title, description, type, data, completed }
     );
@@ -214,9 +214,9 @@ router.post('/:id/items', async (req: Request, res: Response) => {
 router.put('/:id/items/:itemId', async (req: Request, res: Response) => {
   try {
     const project = await ProjectService.updateItem(
-      req.params.id,
+      req.params.id as string,
       req.user!.id,
-      req.params.itemId,
+      req.params.itemId as string,
       req.body
     );
     
@@ -241,9 +241,9 @@ router.put('/:id/items/:itemId', async (req: Request, res: Response) => {
 router.delete('/:id/items/:itemId', async (req: Request, res: Response) => {
   try {
     const project = await ProjectService.deleteItem(
-      req.params.id,
+      req.params.id as string,
       req.user!.id,
-      req.params.itemId
+      req.params.itemId as string
     );
     
     return apiResponse.success(res, project, 'Item deleted successfully');

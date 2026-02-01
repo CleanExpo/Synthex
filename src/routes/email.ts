@@ -51,17 +51,17 @@ router.post('/test', async (req: Request, res: Response) => {
       subject: `[TEST] ${subject}`,
       html: `
         <h2>SYNTHEX Email Test</h2>
-        <p><strong>From:</strong> ${req.user.name} (${req.user.email})</p>
+        <p><strong>From:</strong> ${req.user!.name} (${req.user!.email})</p>
         <p><strong>Message:</strong> ${message}</p>
         <hr>
         <p><small>This is a test email from SYNTHEX email service.</small></p>
       `,
-      text: `SYNTHEX Email Test\nFrom: ${req.user.name} (${req.user.email})\nMessage: ${message}`
+      text: `SYNTHEX Email Test\nFrom: ${req.user!.name} (${req.user!.email})\nMessage: ${message}`
     });
 
     // Log test email
     await AuditService.log({
-      userId: req.user.id,
+      userId: req.user!.id,
       action: 'email_test_sent',
       resource: 'email',
       details: {
@@ -151,7 +151,7 @@ router.post('/bulk-send', async (req: Request, res: Response) => {
 
     // Log bulk email send
     await AuditService.log({
-      userId: req.user.id,
+      userId: req.user!.id,
       action: 'bulk_email_sent',
       resource: 'email',
       details: {

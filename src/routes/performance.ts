@@ -70,7 +70,7 @@ router.get('/health', async (req: Request, res: Response) => {
 router.get('/endpoint/*endpoint', requireAdmin, async (req: Request, res: Response) => {
   try {
     // Get the full path after /endpoint/
-    const rawEndpoint = req.params.endpoint;
+    const rawEndpoint = req.params.endpoint as string;
     const endpoint = rawEndpoint.startsWith('/') ? rawEndpoint : `/${rawEndpoint}`;
     const timeRange = req.query.timeRange ? parseInt(req.query.timeRange as string) : 3600000;
     
@@ -228,7 +228,7 @@ router.get('/trends', requireAdmin, async (req: Request, res: Response) => {
     const intervals = parseInt(req.query.intervals as string) || 24; // Default 24 data points
     
     const intervalMs = (hours * 60 * 60 * 1000) / intervals;
-    const trends = [];
+    const trends: { timestamp: Date; responseTime: number; requestsPerSecond: number; errorRate: number; memoryUsagePercent: number }[] = [];
     
     for (let i = intervals - 1; i >= 0; i--) {
       const endTime = Date.now() - (i * intervalMs);
@@ -273,7 +273,7 @@ router.get('/alerts', requireAdmin, async (req: Request, res: Response) => {
       p95ResponseTime: { warning: 3000, critical: 8000 }
     };
     
-    const alerts = [];
+    const alerts: { type: string; metric: string; message: string; value: number; threshold: number }[] = [];
     
     // Check response time
     if (stats.averageResponseTime > thresholds.responseTime.critical) {

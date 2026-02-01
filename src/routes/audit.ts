@@ -80,7 +80,7 @@ router.get('/logs', requireAdmin, async (req: Request, res: Response) => {
  */
 router.get('/logs/:id', requireAdmin, async (req: Request, res: Response) => {
   try {
-    const auditLog = await AuditService.getById(req.params.id);
+    const auditLog = await AuditService.getById(req.params.i as stringd as string);
     
     if (!auditLog) {
       return apiResponse.notFound(res, 'Audit log not found');
@@ -157,7 +157,7 @@ router.post('/cleanup', requireAdmin, async (req: Request, res: Response) => {
  */
 router.get('/user/:userId', async (req: Request, res: Response) => {
   try {
-    const requestedUserId = req.params.userId;
+    const requestedUserId = req.params.userId as string;
     const currentUserId = req.user!.id;
     const userRole = (req.user as any)?.role || 'user';
     
