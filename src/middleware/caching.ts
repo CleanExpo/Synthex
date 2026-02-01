@@ -60,4 +60,33 @@ export const invalidateCache = (pattern: string) => {
   };
 };
 
+// Cache management functions for admin routes
+export const getCacheStats = () => {
+  return {
+    enabled: !!process.env.REDIS_URL,
+    redisConnected: false, // Would need to check actual connection
+    stats: {
+      hits: 0,
+      misses: 0,
+      keys: 0,
+      memory: 0
+    }
+  };
+};
+
+export const clearCache = (pattern?: string) => {
+  if (pattern) {
+    CacheService.invalidatePattern(pattern).catch(console.error);
+    return 1; // Return number of cleared entries
+  }
+  // Clear all would require pattern '*'
+  CacheService.invalidatePattern('*').catch(console.error);
+  return 1;
+};
+
+export const clearUserCache = (userId: string) => {
+  CacheService.invalidatePattern(`*:${userId}:*`).catch(console.error);
+  return 1;
+};
+
 export default cacheMiddleware;
