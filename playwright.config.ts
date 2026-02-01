@@ -29,7 +29,7 @@ export default defineConfig({
   webServer: SKIP_WS
     ? undefined
     : {
-        command: 'npm run dev -- -p 3001',
+        command: 'npm run dev:next -- -p 3001',
         url: 'http://localhost:3001',
         reuseExistingServer: true,
         timeout: 300 * 1000,
