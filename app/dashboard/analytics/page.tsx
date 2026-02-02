@@ -153,6 +153,31 @@ export default function AnalyticsPage() {
     return Icon ? <Icon className="h-4 w-4" /> : null;
   };
 
+  const handleFilter = () => {
+    // TODO: Implement filter modal
+    alert('Filter options coming soon');
+  };
+
+  const handleExport = () => {
+    // Export analytics data
+    const data = JSON.stringify({ engagementData, platformDistribution, timeRange }, null, 2);
+    const blob = new Blob([data], { type: 'application/json' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `analytics-${timeRange}.json`;
+    a.click();
+  };
+
+  const handleViewPostDetails = (postId: number) => {
+    // TODO: Open post details modal
+    alert(`Viewing details for post ${postId}`);
+  };
+
+  const handleViewAllPosts = () => {
+    window.location.href = '/dashboard/content';
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -175,11 +200,11 @@ export default function AnalyticsPage() {
               <SelectItem value="90d">Last 90 days</SelectItem>
             </SelectContent>
           </Select>
-          <Button variant="outline" className="bg-white/5 border-white/10 text-white hover:bg-white/10">
+          <Button onClick={handleFilter} variant="outline" className="bg-white/5 border-white/10 text-white hover:bg-white/10">
             <Filter className="mr-2 h-4 w-4" />
             Filter
           </Button>
-          <Button className="gradient-primary text-white">
+          <Button onClick={handleExport} className="gradient-primary text-white">
             <Download className="mr-2 h-4 w-4" />
             Export
           </Button>
@@ -475,13 +500,14 @@ export default function AnalyticsPage() {
                       </div>
                     </div>
                   </div>
-                  <Button size="sm" variant="ghost" className="text-gray-400">
+                  <Button onClick={() => handleViewPostDetails(post.id)} size="sm" variant="ghost" className="text-gray-400">
                     <BarChart3 className="h-4 w-4" />
                   </Button>
                 </div>
               ))}
             </div>
             <Button
+              onClick={handleViewAllPosts}
               variant="outline"
               className="w-full mt-4 bg-white/5 border-white/10 text-white hover:bg-white/10"
             >

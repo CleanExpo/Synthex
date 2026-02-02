@@ -155,6 +155,14 @@ export default function ContentPage() {
     toast.success('Opening scheduler...');
   };
 
+  const handleTrainAI = () => {
+    toast.success('AI training feature coming soon');
+  };
+
+  const handleViewAnalytics = () => {
+    window.location.href = '/dashboard/analytics';
+  };
+
   const getContentToDisplay = () => {
     if (!generatedContent) return '';
     if (editMode) return editedContent;
@@ -175,11 +183,11 @@ export default function ContentPage() {
           </p>
         </div>
         <div className="flex space-x-3 mt-4 sm:mt-0">
-          <Button variant="outline" className="bg-white/5 border-white/10 text-white hover:bg-white/10">
+          <Button onClick={handleTrainAI} variant="outline" className="bg-white/5 border-white/10 text-white hover:bg-white/10">
             <Brain className="mr-2 h-4 w-4" />
             Train AI
           </Button>
-          <Button className="gradient-primary text-white">
+          <Button onClick={handleViewAnalytics} className="gradient-primary text-white">
             <TrendingUp className="mr-2 h-4 w-4" />
             View Analytics
           </Button>

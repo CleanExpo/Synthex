@@ -164,13 +164,21 @@ export default function AdminPanel() {
         u.status || 'active'
       ])
     ].map(row => row.join(',')).join('\n');
-    
+
     const blob = new Blob([csv], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
     a.download = 'users.csv';
     a.click();
+  };
+
+  const handleAddUser = () => {
+    toast.success('Add User dialog coming soon');
+  };
+
+  const handleFilter = () => {
+    toast.success('Filter options coming soon');
   };
 
   return (
@@ -188,7 +196,7 @@ export default function AdminPanel() {
             <Download className="w-4 h-4 mr-2" />
             Export Users
           </Button>
-          <Button className="gradient-primary text-white">
+          <Button onClick={handleAddUser} className="gradient-primary text-white">
             <UserPlus className="w-4 h-4 mr-2" />
             Add User
           </Button>
@@ -268,7 +276,7 @@ export default function AdminPanel() {
                 className="pl-10 bg-white/5 border-white/10"
               />
             </div>
-            <Button variant="outline" className="border-white/10">
+            <Button onClick={handleFilter} variant="outline" className="border-white/10">
               <Filter className="w-4 h-4 mr-2" />
               Filter
             </Button>
