@@ -35,6 +35,8 @@ export * from './dropdown-menu';
 export * from './tabs';
 export * from './command';
 export * from './scroll-area';
+export * from './breadcrumb';
+export * from './pagination';
 
 // ============================================================================
 // DISPLAY COMPONENTS
@@ -46,6 +48,13 @@ export * from './separator';
 export * from './progress';
 export * from './skeleton';
 export * from './skeleton-extended';
+export * from './accordion';
+export * from './spinner';
+
+// ============================================================================
+// DATA DISPLAY COMPONENTS
+// ============================================================================
+export * from './data-table';
 
 // ============================================================================
 // DATE & TIME COMPONENTS
