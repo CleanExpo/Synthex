@@ -16,10 +16,6 @@ const nextConfig = {
   output: process.env.DOCKER_BUILD === 'true' ? 'standalone' : undefined,
   reactStrictMode: true,
 
-  // CRITICAL: Disable output file tracing to fix 21-minute build timeout
-  // The "Collecting build traces..." phase was consuming most of the build time
-  outputFileTracing: false,
-
   // TypeScript configuration
   typescript: {
     // We'll see TypeScript errors now but won't block builds for non-critical issues
@@ -47,24 +43,61 @@ const nextConfig = {
       'date-fns',
       'lodash',
     ],
-    // Reduce tracing to speed up builds
+    // Comprehensive exclusions to speed up build tracing
     outputFileTracingExcludes: {
       '*': [
+        // Platform-specific binaries
         'node_modules/@swc/core-linux-x64-gnu',
         'node_modules/@swc/core-linux-x64-musl',
+        'node_modules/@swc/core-win32-x64-msvc',
+        'node_modules/@swc/core-darwin-x64',
+        'node_modules/@swc/core-darwin-arm64',
         'node_modules/@esbuild/linux-x64',
+        'node_modules/@esbuild/darwin-x64',
+        'node_modules/@esbuild/win32-x64',
         'node_modules/esbuild',
         'node_modules/sharp',
+        // Testing tools
         'node_modules/playwright',
         'node_modules/@playwright',
+        'node_modules/jest',
+        'node_modules/@testing-library',
+        'node_modules/cypress',
+        // Dev tools
         'node_modules/storybook',
         'node_modules/@storybook',
-        'node_modules/jest',
         'node_modules/typescript',
+        'node_modules/eslint',
+        'node_modules/prettier',
+        'node_modules/husky',
+        'node_modules/lint-staged',
+        // Build tools
+        'node_modules/webpack',
+        'node_modules/rollup',
+        'node_modules/terser',
+        'node_modules/@babel',
+        'node_modules/babel-*',
+        'node_modules/tsx',
+        'node_modules/ts-node',
+        'node_modules/concurrently',
+        'node_modules/turbo',
+        // Directories
         '.git',
         '.next/cache',
+        '.vercel',
+        '.husky',
+        '.github',
         'tests',
         'stories',
+        'coverage',
+        'backup-before-cleanup',
+        'deployment',
+        'monitoring',
+        'logs',
+        // Large unused packages
+        'node_modules/@sentry/cli',
+        'node_modules/@next/bundle-analyzer',
+        'node_modules/prisma/engines',
       ],
     },
   },
