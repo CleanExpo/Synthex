@@ -106,13 +106,13 @@ export class MigrationTracker {
         await prisma.auditLog.create({
           data: {
             action: 'migration_started',
-            entityType: 'migration',
-            entityId: id,
-            details: {
+            resource: 'migration',
+            resourceId: id,
+            details: JSON.parse(JSON.stringify({
               name,
-              description,
-              metadata,
-            },
+              description: description || null,
+              metadata: metadata || null,
+            })),
           },
         });
       } catch (error) {
@@ -220,8 +220,8 @@ export class MigrationTracker {
         await prisma.auditLog.create({
           data: {
             action: `migration_${status}`,
-            entityType: 'migration',
-            entityId: migrationId,
+            resource: 'migration',
+            resourceId: migrationId,
             details: {
               name: migration.name,
               duration: migration.duration,

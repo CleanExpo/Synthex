@@ -261,7 +261,7 @@ class PerformanceMonitor {
       const existingMetrics = existing ? JSON.parse(existing) : [];
       const combined = [...existingMetrics, ...metrics];
 
-      await redis.setex(key, this.METRICS_TTL, JSON.stringify(combined));
+      await redis.set(key, JSON.stringify(combined), this.METRICS_TTL);
     } catch (error) {
       // Re-add metrics to buffer on failure
       this.metricsBuffer.push(...metrics);
@@ -283,7 +283,7 @@ class PerformanceMonitor {
       const existingMetrics = existing ? JSON.parse(existing) : [];
       const combined = [...existingMetrics, ...metrics];
 
-      await redis.setex(key, this.METRICS_TTL, JSON.stringify(combined));
+      await redis.set(key, JSON.stringify(combined), this.METRICS_TTL);
     } catch (error) {
       this.systemMetricsBuffer.push(...metrics);
       console.error('Failed to flush system metrics:', error);
@@ -304,7 +304,7 @@ class PerformanceMonitor {
       const existingMetrics = existing ? JSON.parse(existing) : [];
       const combined = [...existingMetrics, ...metrics];
 
-      await redis.setex(key, this.METRICS_TTL, JSON.stringify(combined));
+      await redis.set(key, JSON.stringify(combined), this.METRICS_TTL);
     } catch (error) {
       this.dbMetricsBuffer.push(...metrics);
       console.error('Failed to flush database metrics:', error);
@@ -376,8 +376,11 @@ class PerformanceMonitor {
       const key = 'perf:alerts:recent';
 
       // Add to list, keep last 100 alerts
-      await redis.lpush(key, JSON.stringify(alert));
-      await redis.ltrim(key, 0, 99);
+      const existing = await redis.get(key);
+      const alerts = existing ? JSON.parse(existing) : [];
+      alerts.unshift(alert);
+      const trimmed = alerts.slice(0, 100);
+      await redis.set(key, JSON.stringify(trimmed));
     } catch (error) {
       console.error('Failed to store alert:', error);
     }
@@ -581,8 +584,10 @@ class PerformanceMonitor {
   async getRecentAlerts(count: number = 20): Promise<any[]> {
     try {
       const redis = getRedisClient();
-      const alerts = await redis.lrange('perf:alerts:recent', 0, count - 1);
-      return alerts.map((a) => JSON.parse(a));
+      const data = await redis.get('perf:alerts:recent');
+      if (!data) return [];
+      const alerts = JSON.parse(data);
+      return alerts.slice(0, count);
     } catch (error) {
       console.error('Failed to get alerts:', error);
       return [];

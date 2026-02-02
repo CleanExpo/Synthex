@@ -576,7 +576,7 @@ export class AlertManager {
         minSeverity: (process.env.ALERT_SLACK_MIN_SEVERITY as AlertSeverity) || AlertSeverity.WARNING,
         config: {
           webhookUrl: process.env.ALERT_SLACK_WEBHOOK_URL,
-          channel: process.env.ALERT_SLACK_CHANNEL,
+          channel: process.env.ALERT_SLACK_CHANNEL || '#alerts',
           username: process.env.ALERT_SLACK_USERNAME || 'SYNTHEX Bot',
           iconEmoji: process.env.ALERT_SLACK_ICON_EMOJI || ':robot_face:',
         },
@@ -585,31 +585,39 @@ export class AlertManager {
 
     // Discord channel
     if (process.env.ALERT_DISCORD_WEBHOOK_URL) {
-      this.channels.push({
+      const discordConfig: DiscordConfig = {
         type: NotificationChannel.DISCORD,
         enabled: true,
         minSeverity: (process.env.ALERT_DISCORD_MIN_SEVERITY as AlertSeverity) || AlertSeverity.WARNING,
         config: {
           webhookUrl: process.env.ALERT_DISCORD_WEBHOOK_URL,
           username: process.env.ALERT_DISCORD_USERNAME || 'SYNTHEX Bot',
-          avatarUrl: process.env.ALERT_DISCORD_AVATAR_URL,
         },
-      });
+      };
+      if (process.env.ALERT_DISCORD_AVATAR_URL) {
+        discordConfig.config.avatarUrl = process.env.ALERT_DISCORD_AVATAR_URL;
+      }
+      this.channels.push(discordConfig);
     }
 
     // Generic webhook channel
     if (process.env.ALERT_WEBHOOK_URL) {
-      this.channels.push({
+      const webhookConfig: WebhookConfig = {
         type: NotificationChannel.WEBHOOK,
         enabled: true,
         minSeverity: (process.env.ALERT_WEBHOOK_MIN_SEVERITY as AlertSeverity) || AlertSeverity.WARNING,
         config: {
           url: process.env.ALERT_WEBHOOK_URL,
           method: process.env.ALERT_WEBHOOK_METHOD || 'POST',
-          headers: process.env.ALERT_WEBHOOK_HEADERS,
-          authHeader: process.env.ALERT_WEBHOOK_AUTH,
         },
-      });
+      };
+      if (process.env.ALERT_WEBHOOK_HEADERS) {
+        webhookConfig.config.headers = process.env.ALERT_WEBHOOK_HEADERS;
+      }
+      if (process.env.ALERT_WEBHOOK_AUTH) {
+        webhookConfig.config.authHeader = process.env.ALERT_WEBHOOK_AUTH;
+      }
+      this.channels.push(webhookConfig);
     }
 
     logger.info('Alert channels loaded', {

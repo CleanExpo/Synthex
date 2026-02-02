@@ -23,6 +23,20 @@
 
 import { NextRequest } from 'next/server';
 
+// Declare Jest globals for test helper functions
+declare const expect: {
+  (value: unknown): {
+    toBe: (expected: unknown) => void;
+    toBeGreaterThanOrEqual: (expected: number) => void;
+    toBeLessThan: (expected: number) => void;
+    toContain: (expected: string) => void;
+    toMatch: (expected: string | RegExp) => void;
+    not: {
+      toBeNull: () => void;
+    };
+  };
+};
+
 // ============================================================================
 // REQUEST CREATION
 // ============================================================================
@@ -65,8 +79,12 @@ export function createTestRequest(
     requestHeaders.set('Cookie', cookieString);
   }
 
-  // Create request init
-  const init: RequestInit = {
+  // Create request init with explicit type to avoid signal compatibility issues
+  const init: {
+    method: string;
+    headers: Headers;
+    body?: BodyInit;
+  } = {
     method,
     headers: requestHeaders,
   };

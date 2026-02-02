@@ -317,7 +317,8 @@ export function getRecentErrors(
     errors = errors.filter((e) => e.category === filter.category);
   }
   if (filter?.since) {
-    errors = errors.filter((e) => e.timestamp >= filter.since);
+    const since = filter.since;
+    errors = errors.filter((e) => e.timestamp >= since);
   }
 
   return errors

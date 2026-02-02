@@ -29,10 +29,13 @@ export const userSchema = z.object({
   email: z.string().email('Invalid email format'),
   password: z.string().min(8, 'Password must be at least 8 characters').optional(),
   name: z.string().min(1).max(100).optional(),
-  authProvider: z.enum(['local', 'google']).default('local'),
-  emailVerified: z.boolean().default(false),
+  authProvider: z.enum(['local', 'google']).optional().default('local'),
+  emailVerified: z.boolean().optional().default(false),
   preferences: z.record(z.unknown()).optional(),
 });
+
+// Output type with defaults applied
+export type User = z.output<typeof userSchema>;
 
 /**
  * Campaign validation schema
@@ -118,7 +121,7 @@ export const platformConnectionSchema = z.object({
 // VALIDATION TYPES
 // ============================================================================
 
-export type User = z.infer<typeof userSchema>;
+// User type is defined alongside schema with z.output
 export type Campaign = z.infer<typeof campaignSchema>;
 export type Post = z.infer<typeof postSchema>;
 export type Quote = z.infer<typeof quoteSchema>;
@@ -173,42 +176,42 @@ function validate<T>(schema: z.ZodSchema<T>, data: unknown): ValidationResult<T>
  * Validate user data
  */
 export function validateUser(data: unknown): ValidationResult<User> {
-  return validate(userSchema, data);
+  return validate(userSchema, data) as ValidationResult<User>;
 }
 
 /**
  * Validate campaign data
  */
 export function validateCampaign(data: unknown): ValidationResult<Campaign> {
-  return validate(campaignSchema, data);
+  return validate(campaignSchema, data) as ValidationResult<Campaign>;
 }
 
 /**
  * Validate post data
  */
 export function validatePost(data: unknown): ValidationResult<Post> {
-  return validate(postSchema, data);
+  return validate(postSchema, data) as ValidationResult<Post>;
 }
 
 /**
  * Validate quote data
  */
 export function validateQuote(data: unknown): ValidationResult<Quote> {
-  return validate(quoteSchema, data);
+  return validate(quoteSchema, data) as ValidationResult<Quote>;
 }
 
 /**
  * Validate project data
  */
 export function validateProject(data: unknown): ValidationResult<Project> {
-  return validate(projectSchema, data);
+  return validate(projectSchema, data) as ValidationResult<Project>;
 }
 
 /**
  * Validate platform connection data
  */
 export function validatePlatformConnection(data: unknown): ValidationResult<PlatformConnection> {
-  return validate(platformConnectionSchema, data);
+  return validate(platformConnectionSchema, data) as ValidationResult<PlatformConnection>;
 }
 
 // ============================================================================

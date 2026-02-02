@@ -46,7 +46,7 @@ export interface MarketingProfile {
   /** Content types that perform well */
   highPerformingContent: ContentType[];
   /** Typical customer journey */
-  customerJourney: JourneyStage[];
+  customerJourney?: JourneyStage[];
   /** Seasonal trends */
   seasonalTrends?: SeasonalTrend[];
   /** Regulatory considerations */
@@ -57,13 +57,13 @@ export interface IndustryAIPersona {
   /** Tone of voice for this industry */
   tone: 'professional' | 'conversational' | 'technical' | 'playful' | 'empathetic';
   /** Writing style */
-  style: 'formal' | 'casual' | 'educational' | 'persuasive' | 'storytelling';
+  style: 'formal' | 'casual' | 'educational' | 'persuasive' | 'storytelling' | 'conversational';
   /** Industry-specific vocabulary */
   vocabulary: string[];
   /** Topics to emphasize */
   emphasisTopics: string[];
   /** Topics to avoid */
-  avoidTopics: string[];
+  avoidTopics?: string[];
   /** Sample phrases */
   samplePhrases: string[];
 }
@@ -118,7 +118,10 @@ export type MarketingChannel =
   | 'BLOG'
   | 'GOOGLE_MY_BUSINESS'
   | 'YELP'
-  | 'NEXTDOOR';
+  | 'NEXTDOOR'
+  | 'HOUZZ'
+  | 'ZILLOW'
+  | 'TRULIA';
 
 export type ContentType =
   | 'EDUCATIONAL'
@@ -131,7 +134,10 @@ export type ContentType =
   | 'CASE_STUDY'
   | 'PRODUCT_DEMO'
   | 'FAQ'
-  | 'TIPS_TRICKS';
+  | 'TIPS_TRICKS'
+  | 'SEASONAL_PROMOTION'
+  | 'BEFORE_AFTER'
+  | 'LOCAL_EVENT';
 
 export type JourneyStage =
   | 'AWARENESS'
@@ -155,6 +161,7 @@ export interface TargetAudience {
     ageRange?: string;
     incomeLevel?: string;
     location?: string;
+    businessSize?: string;
   };
   painPoints: string[];
   motivations: string[];
@@ -170,7 +177,14 @@ export type ContentTemplateType =
   | 'BEHIND_THE_SCENES'
   | 'INDUSTRY_NEWS'
   | 'FAQ_RESPONSE'
-  | 'CASE_STUDY';
+  | 'CASE_STUDY'
+  | 'USER_GENERATED'
+  | 'MENU_FEATURE'
+  | 'RECIPE_SHARE'
+  | 'LOCAL_EVENT'
+  | 'HOW_TO'
+  | 'PRODUCT_DEMO'
+  | 'BEFORE_AFTER';
 
 // ============================================================================
 // INDUSTRY DATABASE - 50+ SMB VERTICALS
@@ -652,6 +666,7 @@ export const INDUSTRY_TAXONOMY: Record<string, IndustryVertical> = {
       style: 'educational',
       vocabulary: ['craftsmanship', 'quality', 'timeline', 'budget', 'transparency', 'expertise'],
       emphasisTopics: ['Quality workmanship', 'On-time delivery', 'Transparent pricing', 'Communication'],
+      avoidTopics: ['Unrealistic timelines', 'Hidden costs', 'Unlicensed work'],
       samplePhrases: [
         "Building your vision with precision and care...",
         "Quality craftsmanship that stands the test of time...",
@@ -683,6 +698,7 @@ export const INDUSTRY_TAXONOMY: Record<string, IndustryVertical> = {
     marketingProfile: {
       primaryChannels: ['FACEBOOK', 'INSTAGRAM', 'NEXTDOOR', 'HOUZZ'],
       highPerformingContent: ['BEFORE_AFTER', 'SEASONAL_PROMOTION', 'EDUCATIONAL'],
+      customerJourney: ['AWARENESS', 'CONSIDERATION', 'INTENT', 'PURCHASE', 'RETENTION'],
       seasonalTrends: [
         { season: 'Spring', months: [3, 4, 5], trend: 'Planting season', contentRecommendations: ['Spring cleanup', 'Planting guides', 'Design inspiration'] },
         { season: 'Fall', months: [9, 10, 11], trend: 'Cleanup & prep', contentRecommendations: ['Fall cleanup', 'Winterization', 'Spring planning'] }
@@ -693,6 +709,7 @@ export const INDUSTRY_TAXONOMY: Record<string, IndustryVertical> = {
       style: 'educational',
       vocabulary: ['curb appeal', 'outdoor oasis', 'seasonal', 'maintenance', 'transform'],
       emphasisTopics: ['Curb appeal', 'Outdoor living', 'Seasonal care', 'Sustainability'],
+      avoidTopics: ['Pesticide overuse', 'Environmental concerns', 'Pricing guarantees'],
       samplePhrases: [
         "Transform your outdoor space into an oasis...",
         "Seasonal care for year-round beauty...",
@@ -861,5 +878,5 @@ export function getIndustryKPIs(code: string): IndustryKPI[] {
 // EXPORTS
 // ============================================================================
 
-export { INDUSTRY_TAXONOMY };
+// INDUSTRY_TAXONOMY is already exported at its declaration
 export default INDUSTRY_TAXONOMY;

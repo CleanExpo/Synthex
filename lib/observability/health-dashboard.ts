@@ -87,7 +87,7 @@ async function checkDatabase(): Promise<ComponentHealth> {
         status: 'degraded',
         message: `High error count: ${poolMetrics.errors}`,
         latency: result.latency,
-        details: poolMetrics,
+        details: poolMetrics as unknown as Record<string, unknown>,
       };
     }
 
@@ -95,7 +95,7 @@ async function checkDatabase(): Promise<ComponentHealth> {
       name: 'database',
       status: 'healthy',
       latency: result.latency,
-      details: poolMetrics,
+      details: poolMetrics as unknown as Record<string, unknown>,
     };
   } catch (error) {
     return {

@@ -125,7 +125,7 @@ export class TestDatabase {
    * Create transaction for test isolation
    */
   async inTransaction<T>(fn: (prisma: PrismaClient) => Promise<T>): Promise<T> {
-    return this.prisma.$transaction(fn as any);
+    return this.prisma.$transaction(fn as any) as Promise<T>;
   }
 }
 
@@ -185,6 +185,7 @@ export class TestDataFactory {
       name: `Test Campaign ${suffix}`,
       description: 'Test campaign description',
       status: 'draft' as const,
+      platform: 'twitter' as const,
       userId,
       ...overrides,
     };
@@ -226,7 +227,7 @@ export class TestDataFactory {
     const projectData = {
       name: `Test Project ${suffix}`,
       description: 'Test project description',
-      status: 'active' as const,
+      type: 'marketing',
       userId,
       ...overrides,
     };
@@ -242,9 +243,9 @@ export class TestDataFactory {
   async createQuote(overrides: Partial<CreateQuoteInput> = {}): Promise<TestQuote> {
     const suffix = this.generateSuffix();
     const quoteData = {
-      content: `Test quote content ${suffix}`,
+      text: `Test quote text ${suffix}`,
       author: 'Test Author',
-      aiGenerated: false,
+      category: 'inspirational',
       usageCount: 0,
       ...overrides,
     };
@@ -263,9 +264,9 @@ export class TestDataFactory {
   ): Promise<TestPlatformConnection> {
     const suffix = this.generateSuffix();
     const connectionData = {
-      platform: 'twitter' as const,
-      accountId: `account_${suffix}`,
-      accountName: `Test Account ${suffix}`,
+      platform: 'twitter',
+      profileId: `profile_${suffix}`,
+      profileName: `Test Account ${suffix}`,
       accessToken: `token_${suffix}`,
       isActive: true,
       userId,
@@ -405,8 +406,9 @@ export interface TestPost {
 export interface TestProject {
   id: string;
   name: string;
-  description?: string;
-  status: string;
+  description?: string | null;
+  type: string;
+  data?: unknown;
   userId: string;
   createdAt: Date;
   updatedAt: Date;
@@ -414,10 +416,17 @@ export interface TestProject {
 
 export interface TestQuote {
   id: string;
-  content: string;
-  author?: string;
-  aiGenerated: boolean;
+  text: string;
+  author?: string | null;
+  source?: string | null;
+  category: string;
+  tags: string[];
+  isCustom: boolean;
+  isPublic: boolean;
+  language: string;
   usageCount: number;
+  likeCount: number;
+  shareCount: number;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -425,10 +434,15 @@ export interface TestQuote {
 export interface TestPlatformConnection {
   id: string;
   platform: string;
-  accountId: string;
-  accountName?: string;
+  profileId?: string | null;
+  profileName?: string | null;
   accessToken: string;
+  refreshToken?: string | null;
+  expiresAt?: Date | null;
+  scope?: string | null;
   isActive: boolean;
+  lastSync?: Date | null;
+  metadata?: unknown;
   userId: string;
   createdAt: Date;
   updatedAt: Date;

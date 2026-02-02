@@ -107,6 +107,7 @@ export {
   LinkIcon as Link2,
   ListBulletIcon as List,
   NumberedListIcon as ListOrdered,
+  ClipboardDocumentListIcon as ListTodo,
   ArrowPathIcon as Loader2,
   ArrowRightOnRectangleIcon as LogOut,
 

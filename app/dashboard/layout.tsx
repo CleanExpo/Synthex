@@ -5,11 +5,11 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import MobileMenu from '@/components/MobileMenu';
 import { NotificationBell } from '@/components/NotificationBell';
-import { 
-  Sparkles, 
-  Home, 
-  FileText, 
-  Users, 
+import {
+  Sparkles,
+  Home,
+  FileText,
+  Users,
   Calendar,
   BarChart3,
   Settings,
@@ -23,7 +23,8 @@ import {
   Zap,
   Brain,
   Palette,
-  Menu
+  Menu,
+  ListTodo
 } from '@/components/icons';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -45,6 +46,7 @@ const sidebarItems = [
   { icon: FileText, label: 'Content', href: '/dashboard/content' },
   { icon: Palette, label: 'Sandbox', href: '/dashboard/sandbox' },
   { icon: Calendar, label: 'Schedule', href: '/dashboard/schedule' },
+  { icon: ListTodo, label: 'Tasks', href: '/dashboard/tasks' },
   { icon: BarChart3, label: 'Analytics', href: '/dashboard/analytics' },
   { icon: Users, label: 'Team', href: '/dashboard/team' },
   { icon: Zap, label: 'Integrations', href: '/dashboard/integrations' },
