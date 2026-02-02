@@ -16,6 +16,10 @@ const nextConfig = {
   output: process.env.DOCKER_BUILD === 'true' ? 'standalone' : undefined,
   reactStrictMode: true,
 
+  // CRITICAL: Disable output file tracing to fix 21-minute build timeout
+  // The "Collecting build traces..." phase was consuming most of the build time
+  outputFileTracing: false,
+
   // TypeScript configuration
   typescript: {
     // We'll see TypeScript errors now but won't block builds for non-critical issues

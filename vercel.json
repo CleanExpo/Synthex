@@ -1,7 +1,7 @@
 {
   "buildCommand": "pnpm run build:vercel",
   "outputDirectory": ".next",
-  "framework": null,
+  "framework": "nextjs",
   "installCommand": "pnpm install",
   "env": {
     "NODE_ENV": "production",
