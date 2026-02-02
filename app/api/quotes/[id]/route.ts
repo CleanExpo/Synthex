@@ -1,0 +1,353 @@
+/**
+ * Quote API Endpoint - Individual Quote Operations
+ * GET, PUT, DELETE for specific quote by ID
+ *
+ * @task UNI-418 - Implement Quote Module Integration Tests
+ */
+
+import { NextRequest, NextResponse } from 'next/server';
+import { prisma } from '@/lib/prisma';
+
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
+interface UpdateQuoteRequest {
+  text?: string;
+  author?: string;
+  source?: string;
+  category?: string;
+  tags?: string[];
+  isPublic?: boolean;
+  sentiment?: string;
+  readingLevel?: string;
+  expiresAt?: string | null;
+}
+
+/**
+ * GET /api/quotes/[id]
+ * Get a specific quote by ID
+ */
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params;
+
+    if (!id) {
+      return NextResponse.json(
+        { success: false, error: 'Quote ID is required' },
+        { status: 400 }
+      );
+    }
+
+    const quote = await prisma.quote.findUnique({
+      where: { id },
+    });
+
+    if (!quote) {
+      return NextResponse.json(
+        { success: false, error: 'Quote not found' },
+        { status: 404 }
+      );
+    }
+
+    // Check if quote has expired
+    if (quote.expiresAt && quote.expiresAt < new Date()) {
+      return NextResponse.json(
+        { success: false, error: 'Quote has expired' },
+        { status: 410 } // Gone
+      );
+    }
+
+    // Increment usage count (fire and forget)
+    prisma.quote.update({
+      where: { id },
+      data: { usageCount: { increment: 1 } },
+    }).catch(() => {}); // Ignore errors for usage tracking
+
+    return NextResponse.json({
+      success: true,
+      data: quote,
+    });
+  } catch (error: any) {
+    console.error('GET /api/quotes/[id] error:', error);
+    return NextResponse.json(
+      {
+        success: false,
+        error: 'Failed to fetch quote',
+        message: error.message,
+      },
+      { status: 500 }
+    );
+  }
+}
+
+/**
+ * PUT /api/quotes/[id]
+ * Update a specific quote
+ */
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params;
+
+    // Check authentication
+    const authToken = request.cookies.get('auth-token')?.value;
+    const authHeader = request.headers.get('authorization');
+
+    if (!authToken && !authHeader) {
+      return NextResponse.json(
+        { success: false, error: 'Authentication required' },
+        { status: 401 }
+      );
+    }
+
+    if (!id) {
+      return NextResponse.json(
+        { success: false, error: 'Quote ID is required' },
+        { status: 400 }
+      );
+    }
+
+    // Check if quote exists
+    const existingQuote = await prisma.quote.findUnique({
+      where: { id },
+    });
+
+    if (!existingQuote) {
+      return NextResponse.json(
+        { success: false, error: 'Quote not found' },
+        { status: 404 }
+      );
+    }
+
+    // Parse request body
+    const body: UpdateQuoteRequest = await request.json();
+
+    // Validate text if provided
+    if (body.text !== undefined) {
+      if (body.text.trim().length === 0) {
+        return NextResponse.json(
+          { success: false, error: 'Quote text cannot be empty' },
+          { status: 400 }
+        );
+      }
+      if (body.text.length > 1000) {
+        return NextResponse.json(
+          { success: false, error: 'Quote text exceeds maximum length of 1000 characters' },
+          { status: 400 }
+        );
+      }
+    }
+
+    // Validate expiration date if provided
+    let expiresAt: Date | null | undefined = undefined;
+    if (body.expiresAt !== undefined) {
+      if (body.expiresAt === null) {
+        expiresAt = null;
+      } else {
+        expiresAt = new Date(body.expiresAt);
+        if (isNaN(expiresAt.getTime())) {
+          return NextResponse.json(
+            { success: false, error: 'Invalid expiration date format' },
+            { status: 400 }
+          );
+        }
+        if (expiresAt <= new Date()) {
+          return NextResponse.json(
+            { success: false, error: 'Expiration date must be in the future' },
+            { status: 400 }
+          );
+        }
+      }
+    }
+
+    // Build update data
+    const updateData: any = {};
+
+    if (body.text !== undefined) updateData.text = body.text.trim();
+    if (body.author !== undefined) updateData.author = body.author?.trim() || null;
+    if (body.source !== undefined) updateData.source = body.source?.trim() || null;
+    if (body.category !== undefined) updateData.category = body.category;
+    if (body.tags !== undefined) updateData.tags = body.tags;
+    if (body.isPublic !== undefined) updateData.isPublic = body.isPublic;
+    if (body.sentiment !== undefined) updateData.sentiment = body.sentiment;
+    if (body.readingLevel !== undefined) updateData.readingLevel = body.readingLevel;
+    if (expiresAt !== undefined) updateData.expiresAt = expiresAt;
+
+    // Update quote
+    const updatedQuote = await prisma.quote.update({
+      where: { id },
+      data: updateData,
+    });
+
+    return NextResponse.json({
+      success: true,
+      data: updatedQuote,
+      message: 'Quote updated successfully',
+    });
+  } catch (error: any) {
+    console.error('PUT /api/quotes/[id] error:', error);
+    return NextResponse.json(
+      {
+        success: false,
+        error: 'Failed to update quote',
+        message: error.message,
+      },
+      { status: 500 }
+    );
+  }
+}
+
+/**
+ * DELETE /api/quotes/[id]
+ * Delete a specific quote
+ */
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params;
+
+    // Check authentication
+    const authToken = request.cookies.get('auth-token')?.value;
+    const authHeader = request.headers.get('authorization');
+
+    if (!authToken && !authHeader) {
+      return NextResponse.json(
+        { success: false, error: 'Authentication required' },
+        { status: 401 }
+      );
+    }
+
+    if (!id) {
+      return NextResponse.json(
+        { success: false, error: 'Quote ID is required' },
+        { status: 400 }
+      );
+    }
+
+    // Check if quote exists
+    const existingQuote = await prisma.quote.findUnique({
+      where: { id },
+    });
+
+    if (!existingQuote) {
+      return NextResponse.json(
+        { success: false, error: 'Quote not found' },
+        { status: 404 }
+      );
+    }
+
+    // Delete quote
+    await prisma.quote.delete({
+      where: { id },
+    });
+
+    return NextResponse.json({
+      success: true,
+      message: 'Quote deleted successfully',
+    });
+  } catch (error: any) {
+    console.error('DELETE /api/quotes/[id] error:', error);
+    return NextResponse.json(
+      {
+        success: false,
+        error: 'Failed to delete quote',
+        message: error.message,
+      },
+      { status: 500 }
+    );
+  }
+}
+
+/**
+ * PATCH /api/quotes/[id]
+ * Partial update for engagement metrics (like, share)
+ */
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params;
+
+    if (!id) {
+      return NextResponse.json(
+        { success: false, error: 'Quote ID is required' },
+        { status: 400 }
+      );
+    }
+
+    // Check if quote exists
+    const existingQuote = await prisma.quote.findUnique({
+      where: { id },
+    });
+
+    if (!existingQuote) {
+      return NextResponse.json(
+        { success: false, error: 'Quote not found' },
+        { status: 404 }
+      );
+    }
+
+    // Parse request body
+    const body = await request.json();
+    const { action } = body;
+
+    // Handle engagement actions
+    let updateData: any = {};
+
+    switch (action) {
+      case 'like':
+        updateData = { likeCount: { increment: 1 } };
+        break;
+      case 'unlike':
+        updateData = { likeCount: { decrement: 1 } };
+        break;
+      case 'share':
+        updateData = { shareCount: { increment: 1 } };
+        break;
+      case 'use':
+        updateData = { usageCount: { increment: 1 } };
+        break;
+      default:
+        return NextResponse.json(
+          { success: false, error: 'Invalid action. Must be: like, unlike, share, or use' },
+          { status: 400 }
+        );
+    }
+
+    // Update quote
+    const updatedQuote = await prisma.quote.update({
+      where: { id },
+      data: updateData,
+    });
+
+    return NextResponse.json({
+      success: true,
+      data: {
+        id: updatedQuote.id,
+        likeCount: updatedQuote.likeCount,
+        shareCount: updatedQuote.shareCount,
+        usageCount: updatedQuote.usageCount,
+      },
+      message: `Quote ${action} recorded`,
+    });
+  } catch (error: any) {
+    console.error('PATCH /api/quotes/[id] error:', error);
+    return NextResponse.json(
+      {
+        success: false,
+        error: 'Failed to update quote engagement',
+        message: error.message,
+      },
+      { status: 500 }
+    );
+  }
+}

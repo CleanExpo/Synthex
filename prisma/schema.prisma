@@ -412,9 +412,65 @@ model AnalyticsEvent {
   platform    String?
   contentId   String?
   campaignId  String?
-  
+
   @@index([userId])
   @@index([sessionId])
   @@index([timestamp])
   @@map("analytics_events")
+}
+
+// ==========================================
+// Quote Module - Content Quotes for Social Media
+// @task UNI-418 - Quote Module Integration Tests
+// ==========================================
+
+model Quote {
+  id           String   @id @default(cuid())
+  text         String   @db.Text
+  author       String?
+  source       String?  // Where the quote is from (book, speech, etc.)
+  category     String   // 'inspirational', 'motivational', 'business', 'humor', etc.
+  tags         String[]
+  isCustom     Boolean  @default(false)  // User-generated vs system
+  isPublic     Boolean  @default(true)
+  language     String   @default("en")
+
+  // Engagement tracking
+  usageCount   Int      @default(0)
+  likeCount    Int      @default(0)
+  shareCount   Int      @default(0)
+
+  // AI metadata
+  aiGenerated  Boolean  @default(false)
+  sentiment    String?  // 'positive', 'neutral', 'negative'
+  readingLevel String?  // 'easy', 'medium', 'advanced'
+
+  // Relations
+  userId       String?
+  campaignId   String?
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  expiresAt    DateTime?  // Optional expiration for time-sensitive quotes
+
+  @@index([category])
+  @@index([userId])
+  @@index([tags])
+  @@index([aiGenerated])
+  @@map("quotes")
+}
+
+model QuoteCollection {
+  id           String   @id @default(cuid())
+  name         String
+  description  String?
+  userId       String
+  isPublic     Boolean  @default(false)
+  quoteIds     String[]  // Array of quote IDs in this collection
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([userId])
+  @@map("quote_collections")
 }
