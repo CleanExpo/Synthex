@@ -6,10 +6,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@/lib/prisma';
 import { emailService } from '@/lib/email/email-service';
-
-const prisma = new PrismaClient();
 
 // JWT Secret (should be in environment variables)
 const JWT_SECRET = process.env.JWT_SECRET || 'your-jwt-secret-key-change-this';

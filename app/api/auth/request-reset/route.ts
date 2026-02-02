@@ -4,10 +4,8 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@/lib/prisma';
 import { emailService } from '@/lib/email/email-service';
-
-const prisma = new PrismaClient();
 
 // Request password reset
 export async function POST(request: NextRequest) {

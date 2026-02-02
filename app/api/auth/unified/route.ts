@@ -1,11 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { z } from 'zod';
 import { rateLimiters } from '@/lib/rate-limit';
-
-const prisma = new PrismaClient();
 
 // Validation schemas
 const loginSchema = z.object({
