@@ -256,9 +256,35 @@ export const zIndex = {
 } as const;
 
 // ============================================================================
-// GLASS MORPHISM PRESETS
+// GLASS MORPHISM PRESETS (Unified v3.0)
+// These values map to CSS custom properties defined in globals.css
 // ============================================================================
 export const glass = {
+  /** Base tier - subtle, minimal glass effect */
+  base: {
+    background: 'var(--glass-bg-base)',        // rgba(255, 255, 255, 0.02)
+    border: 'var(--glass-border-subtle)',      // rgba(255, 255, 255, 0.06)
+    blur: 'var(--glass-blur-md)',              // 12px
+  },
+  /** Elevated tier - standard components */
+  elevated: {
+    background: 'var(--glass-bg-elevated)',    // rgba(255, 255, 255, 0.05)
+    border: 'var(--glass-border-default)',     // rgba(255, 255, 255, 0.1)
+    blur: 'var(--glass-blur-xl)',              // 20px
+  },
+  /** Premium tier - hero sections, featured content */
+  premium: {
+    background: 'var(--glass-bg-premium)',     // rgba(255, 255, 255, 0.08)
+    border: 'var(--glass-border-prominent)',   // rgba(255, 255, 255, 0.15)
+    blur: 'var(--glass-blur-xl)',              // 20px
+  },
+  /** Solid glass - dark background variant */
+  solid: {
+    background: 'var(--glass-bg-solid)',       // rgba(15, 23, 42, 0.8)
+    border: 'var(--glass-border-default)',     // rgba(255, 255, 255, 0.1)
+    blur: 'var(--glass-blur-xl)',              // 20px
+  },
+  // Legacy aliases for backward compatibility
   light: {
     background: 'rgba(255, 255, 255, 0.7)',
     border: 'rgba(255, 255, 255, 0.5)',
@@ -269,11 +295,6 @@ export const glass = {
     border: 'rgba(255, 255, 255, 0.1)',
     blur: '12px',
   },
-  premium: {
-    background: 'rgba(255, 255, 255, 0.02)',
-    border: 'rgba(255, 255, 255, 0.06)',
-    blur: '20px',
-  }
 } as const;
 
 // ============================================================================

@@ -44,7 +44,7 @@ const avatarFallbackVariants = cva(
   {
     variants: {
       variant: {
-        default: 'bg-muted',
+        default: 'bg-muted dark:bg-slate-800 dark:text-slate-200',
         glass: 'bg-white/[0.08] backdrop-blur-md text-white',
         'glass-solid': 'bg-slate-800/80 backdrop-blur-md text-white',
         'glass-primary': 'bg-violet-500/20 backdrop-blur-md text-violet-200',
@@ -57,8 +57,8 @@ const avatarFallbackVariants = cva(
       },
       size: {
         default: 'text-sm',
-        xs: 'text-[10px]',
-        sm: 'text-xs',
+        xs: 'text-[9px] font-medium',
+        sm: 'text-[11px] font-medium',
         lg: 'text-base',
         xl: 'text-lg',
         '2xl': 'text-xl',

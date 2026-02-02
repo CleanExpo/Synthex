@@ -7,12 +7,13 @@ const cardVariants = cva(
   {
     variants: {
       variant: {
-        default: 'border bg-card shadow-sm',
+        default:
+          'border bg-card shadow-sm dark:bg-slate-900/50 dark:border-slate-800 dark:shadow-lg',
         // Premium Glassmorphism variants (2026 Design System)
         glass:
-          'bg-white/[0.02] backdrop-blur-xl border border-white/[0.06] shadow-[0_0_0_1px_rgba(255,255,255,0.03)_inset,0_4px_24px_rgba(0,0,0,0.12)] hover:bg-white/[0.05] hover:border-white/[0.12]',
+          'bg-white/[0.02] backdrop-blur-xl border border-white/[0.06] shadow-[0_0_0_1px_rgba(255,255,255,0.03)_inset,0_4px_24px_rgba(0,0,0,0.12)] hover:bg-white/[0.05] hover:border-white/[0.12] dark:bg-white/[0.02] dark:border-white/[0.06] dark:hover:bg-white/[0.05] dark:hover:border-white/[0.1]',
         'glass-solid':
-          'bg-slate-900/80 backdrop-blur-xl border border-white/[0.08] shadow-[0_0_0_1px_rgba(255,255,255,0.02)_inset,0_4px_24px_rgba(0,0,0,0.2)]',
+          'bg-slate-900/80 backdrop-blur-xl border border-white/[0.08] shadow-[0_0_0_1px_rgba(255,255,255,0.02)_inset,0_4px_24px_rgba(0,0,0,0.2)] dark:bg-slate-950/90 dark:border-slate-800',
         'glass-gradient':
           'bg-gradient-to-br from-white/[0.04] to-white/[0.01] backdrop-blur-xl border border-white/[0.08] shadow-[0_0_0_1px_rgba(255,255,255,0.03)_inset,0_4px_24px_rgba(0,0,0,0.12)]',
         'glass-primary':
@@ -32,9 +33,9 @@ const cardVariants = cva(
           'bg-gradient-to-r from-cyan-900/50 to-teal-900/50 backdrop-blur-xl border border-white/[0.08] shadow-[0_0_0_1px_rgba(255,255,255,0.02)_inset,0_8px_32px_rgba(6,182,212,0.15)]',
         // Interactive variants with hover lift
         interactive:
-          'border bg-card shadow-sm hover:shadow-lg hover:-translate-y-1 cursor-pointer',
+          'border bg-card shadow-sm hover:shadow-lg hover:-translate-y-1 cursor-pointer dark:bg-slate-900/50 dark:border-slate-800 dark:hover:bg-slate-800/70',
         'glass-interactive':
-          'bg-white/[0.02] backdrop-blur-xl border border-white/[0.06] shadow-[0_4px_24px_rgba(0,0,0,0.12)] hover:bg-white/[0.05] hover:border-white/[0.12] hover:-translate-y-1 hover:shadow-[0_8px_32px_rgba(0,0,0,0.16)] cursor-pointer',
+          'bg-white/[0.02] backdrop-blur-xl border border-white/[0.06] shadow-[0_4px_24px_rgba(0,0,0,0.12)] hover:bg-white/[0.05] hover:border-white/[0.12] hover:-translate-y-1 hover:shadow-[0_8px_32px_rgba(0,0,0,0.16)] cursor-pointer dark:bg-white/[0.02] dark:hover:bg-white/[0.05]',
       },
     },
     defaultVariants: {

@@ -32,7 +32,8 @@ const dialogContentVariants = cva(
   {
     variants: {
       variant: {
-        default: 'border bg-background',
+        default:
+          'border bg-background dark:bg-slate-900 dark:border-slate-800 dark:text-slate-100',
         // Premium Glassmorphism variants
         glass:
           'bg-white/[0.02] backdrop-blur-xl border border-white/[0.06] shadow-[0_0_0_1px_rgba(255,255,255,0.03)_inset,0_8px_32px_rgba(0,0,0,0.3)]',
@@ -133,7 +134,7 @@ const DialogTitle = React.forwardRef<
   <DialogPrimitive.Title
     ref={ref}
     className={cn(
-      'text-lg font-semibold leading-none tracking-tight text-white',
+      'text-lg font-semibold leading-none tracking-tight text-foreground dark:text-white',
       className
     )}
     {...props}
@@ -147,7 +148,7 @@ const DialogDescription = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <DialogPrimitive.Description
     ref={ref}
-    className={cn('text-sm text-white/60', className)}
+    className={cn('text-sm text-muted-foreground dark:text-white/60', className)}
     {...props}
   />
 ));

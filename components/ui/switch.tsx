@@ -11,7 +11,7 @@ const switchVariants = cva(
     variants: {
       variant: {
         default:
-          'data-[state=checked]:bg-primary data-[state=unchecked]:bg-input',
+          'data-[state=checked]:bg-primary data-[state=unchecked]:bg-input dark:data-[state=checked]:bg-violet-600 dark:data-[state=unchecked]:bg-slate-700',
         // Premium Glassmorphism variants
         glass:
           'data-[state=checked]:bg-white/30 data-[state=unchecked]:bg-white/[0.08] backdrop-blur-md border-white/[0.1]',

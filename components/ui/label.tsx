@@ -10,7 +10,7 @@ const labelVariants = cva(
   {
     variants: {
       variant: {
-        default: 'text-foreground',
+        default: 'text-foreground dark:text-slate-200',
         // Premium Glassmorphism variants
         glass: 'text-white/90',
         'glass-muted': 'text-white/60',
@@ -26,7 +26,7 @@ const labelVariants = cva(
         lg: 'text-base',
       },
       required: {
-        true: "after:content-['*'] after:ml-0.5 after:text-red-400",
+        true: "after:content-['*'] after:ml-0.5 after:text-red-400 dark:after:text-red-500",
         false: '',
       },
     },

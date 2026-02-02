@@ -31,21 +31,35 @@ export interface SkeletonProps
     VariantProps<typeof skeletonVariants> {}
 
 function Skeleton({ className, variant, ...props }: SkeletonProps) {
-  return <div className={cn(skeletonVariants({ variant, className }))} {...props} />;
+  return (
+    <div
+      className={cn(skeletonVariants({ variant, className }))}
+      role="status"
+      aria-busy="true"
+      aria-label="Loading"
+      {...props}
+    />
+  );
 }
 
 function SkeletonCard({ variant = 'glass' }: { variant?: SkeletonProps['variant'] }) {
   return (
-    <div className="bg-white/[0.02] backdrop-blur-xl border border-white/[0.08] rounded-lg p-6 space-y-4">
+    <div
+      className="bg-white/[0.02] backdrop-blur-xl border border-white/[0.08] rounded-lg p-6 space-y-4"
+      role="status"
+      aria-busy="true"
+      aria-label="Loading card content"
+    >
+      <span className="sr-only">Loading card content...</span>
       <div className="flex items-center justify-between">
-        <Skeleton variant={variant} className="h-4 w-24" />
-        <Skeleton variant={variant} className="h-8 w-8 rounded-full" />
+        <Skeleton variant={variant} className="h-4 w-24" aria-hidden="true" />
+        <Skeleton variant={variant} className="h-8 w-8 rounded-full" aria-hidden="true" />
       </div>
-      <Skeleton variant={variant} className="h-8 w-32" />
-      <Skeleton variant={variant} className="h-3 w-full" />
+      <Skeleton variant={variant} className="h-8 w-32" aria-hidden="true" />
+      <Skeleton variant={variant} className="h-3 w-full" aria-hidden="true" />
       <div className="flex gap-2">
-        <Skeleton variant={variant} className="h-3 w-16" />
-        <Skeleton variant={variant} className="h-3 w-20" />
+        <Skeleton variant={variant} className="h-3 w-16" aria-hidden="true" />
+        <Skeleton variant={variant} className="h-3 w-20" aria-hidden="true" />
       </div>
     </div>
   );
@@ -53,10 +67,16 @@ function SkeletonCard({ variant = 'glass' }: { variant?: SkeletonProps['variant'
 
 function SkeletonChart({ variant = 'glass' }: { variant?: SkeletonProps['variant'] }) {
   return (
-    <div className="bg-white/[0.02] backdrop-blur-xl border border-white/[0.08] rounded-lg p-6">
+    <div
+      className="bg-white/[0.02] backdrop-blur-xl border border-white/[0.08] rounded-lg p-6"
+      role="status"
+      aria-busy="true"
+      aria-label="Loading chart"
+    >
+      <span className="sr-only">Loading chart data...</span>
       <div className="space-y-2 mb-4">
-        <Skeleton variant={variant} className="h-5 w-32" />
-        <Skeleton variant={variant} className="h-3 w-48" />
+        <Skeleton variant={variant} className="h-5 w-32" aria-hidden="true" />
+        <Skeleton variant={variant} className="h-3 w-48" aria-hidden="true" />
       </div>
       <div className="h-64 flex items-end justify-between gap-2">
         {[...Array(7)].map((_, i) => (
@@ -65,6 +85,7 @@ function SkeletonChart({ variant = 'glass' }: { variant?: SkeletonProps['variant
             variant={variant}
             className="flex-1"
             style={{ height: `${Math.random() * 80 + 20}%` }}
+            aria-hidden="true"
           />
         ))}
       </div>
@@ -74,17 +95,23 @@ function SkeletonChart({ variant = 'glass' }: { variant?: SkeletonProps['variant
 
 function SkeletonTable({ variant = 'glass' }: { variant?: SkeletonProps['variant'] }) {
   return (
-    <div className="bg-white/[0.02] backdrop-blur-xl border border-white/[0.08] rounded-lg p-6">
-      <Skeleton variant={variant} className="h-5 w-32 mb-4" />
+    <div
+      className="bg-white/[0.02] backdrop-blur-xl border border-white/[0.08] rounded-lg p-6"
+      role="status"
+      aria-busy="true"
+      aria-label="Loading table"
+    >
+      <span className="sr-only">Loading table data...</span>
+      <Skeleton variant={variant} className="h-5 w-32 mb-4" aria-hidden="true" />
       <div className="space-y-3">
         {[...Array(5)].map((_, i) => (
           <div key={i} className="flex items-center gap-4">
-            <Skeleton variant={variant} className="h-10 w-10 rounded-full" />
+            <Skeleton variant={variant} className="h-10 w-10 rounded-full" aria-hidden="true" />
             <div className="flex-1 space-y-2">
-              <Skeleton variant={variant} className="h-3 w-24" />
-              <Skeleton variant={variant} className="h-2 w-full" />
+              <Skeleton variant={variant} className="h-3 w-24" aria-hidden="true" />
+              <Skeleton variant={variant} className="h-2 w-full" aria-hidden="true" />
             </div>
-            <Skeleton variant={variant} className="h-4 w-16" />
+            <Skeleton variant={variant} className="h-4 w-16" aria-hidden="true" />
           </div>
         ))}
       </div>

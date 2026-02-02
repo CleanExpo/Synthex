@@ -11,13 +11,19 @@ import { motion } from 'framer-motion';
 // Dashboard stats skeleton
 export function StatsCardSkeleton() {
   return (
-    <div className="bg-white/[0.02] backdrop-blur-xl border border-white/[0.08] rounded-lg p-6">
+    <div
+      className="bg-white/[0.02] backdrop-blur-xl border border-white/[0.08] rounded-lg p-6"
+      role="status"
+      aria-busy="true"
+      aria-label="Loading statistics"
+    >
+      <span className="sr-only">Loading statistics...</span>
       <div className="flex items-center justify-between mb-4">
-        <Skeleton className="h-5 w-24" />
-        <Skeleton className="h-8 w-8 rounded-full" />
+        <Skeleton className="h-5 w-24" aria-hidden="true" />
+        <Skeleton className="h-8 w-8 rounded-full" aria-hidden="true" />
       </div>
-      <Skeleton className="h-10 w-32 mb-2" />
-      <Skeleton className="h-4 w-20" />
+      <Skeleton className="h-10 w-32 mb-2" aria-hidden="true" />
+      <Skeleton className="h-4 w-20" aria-hidden="true" />
     </div>
   );
 }
@@ -25,22 +31,28 @@ export function StatsCardSkeleton() {
 // Content card skeleton
 export function ContentCardSkeleton() {
   return (
-    <div className="bg-white/[0.02] backdrop-blur-xl border border-white/[0.08] rounded-lg p-6">
+    <div
+      className="bg-white/[0.02] backdrop-blur-xl border border-white/[0.08] rounded-lg p-6"
+      role="status"
+      aria-busy="true"
+      aria-label="Loading content"
+    >
+      <span className="sr-only">Loading content...</span>
       <div className="flex items-center gap-3 mb-4">
-        <Skeleton className="h-10 w-10 rounded-full" />
+        <Skeleton className="h-10 w-10 rounded-full" aria-hidden="true" />
         <div className="flex-1">
-          <Skeleton className="h-4 w-32 mb-2" />
-          <Skeleton className="h-3 w-24" />
+          <Skeleton className="h-4 w-32 mb-2" aria-hidden="true" />
+          <Skeleton className="h-3 w-24" aria-hidden="true" />
         </div>
       </div>
-      <Skeleton className="h-4 w-full mb-2" />
-      <Skeleton className="h-4 w-4/5 mb-2" />
-      <Skeleton className="h-4 w-3/4 mb-4" />
-      <Skeleton className="h-40 w-full rounded-lg mb-4" />
+      <Skeleton className="h-4 w-full mb-2" aria-hidden="true" />
+      <Skeleton className="h-4 w-4/5 mb-2" aria-hidden="true" />
+      <Skeleton className="h-4 w-3/4 mb-4" aria-hidden="true" />
+      <Skeleton className="h-40 w-full rounded-lg mb-4" aria-hidden="true" />
       <div className="flex gap-2">
-        <Skeleton className="h-8 w-20" />
-        <Skeleton className="h-8 w-20" />
-        <Skeleton className="h-8 w-20" />
+        <Skeleton className="h-8 w-20" aria-hidden="true" />
+        <Skeleton className="h-8 w-20" aria-hidden="true" />
+        <Skeleton className="h-8 w-20" aria-hidden="true" />
       </div>
     </div>
   );
@@ -73,15 +85,21 @@ export function TableSkeleton({ rows = 5, columns = 4 }) {
 // Analytics chart skeleton
 export function ChartSkeleton() {
   return (
-    <div className="bg-white/[0.02] backdrop-blur-xl border border-white/[0.08] rounded-lg p-6">
+    <div
+      className="bg-white/[0.02] backdrop-blur-xl border border-white/[0.08] rounded-lg p-6"
+      role="status"
+      aria-busy="true"
+      aria-label="Loading chart"
+    >
+      <span className="sr-only">Loading chart data...</span>
       <div className="flex items-center justify-between mb-6">
-        <Skeleton className="h-6 w-32" />
+        <Skeleton className="h-6 w-32" aria-hidden="true" />
         <div className="flex gap-2">
-          <Skeleton className="h-8 w-20" />
-          <Skeleton className="h-8 w-20" />
+          <Skeleton className="h-8 w-20" aria-hidden="true" />
+          <Skeleton className="h-8 w-20" aria-hidden="true" />
         </div>
       </div>
-      <Skeleton className="h-64 w-full" />
+      <Skeleton className="h-64 w-full" aria-hidden="true" />
     </div>
   );
 }

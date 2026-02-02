@@ -10,7 +10,7 @@ const progressVariants = cva(
   {
     variants: {
       variant: {
-        default: 'bg-secondary',
+        default: 'bg-secondary dark:bg-slate-800',
         // Premium Glassmorphism variants
         glass: 'bg-white/[0.08] backdrop-blur-md',
         'glass-solid': 'bg-slate-800/80 backdrop-blur-md',
@@ -36,7 +36,7 @@ const progressVariants = cva(
 const progressIndicatorVariants = cva('h-full w-full flex-1 transition-all', {
   variants: {
     variant: {
-      default: 'bg-primary',
+      default: 'bg-primary dark:bg-violet-600',
       glass: 'bg-white/40',
       'glass-solid': 'bg-slate-500',
       'glass-primary': 'bg-violet-500/70',

@@ -12,7 +12,7 @@ const checkboxVariants = cva(
     variants: {
       variant: {
         default:
-          'border border-primary data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground',
+          'border border-primary data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground dark:border-slate-600 dark:data-[state=checked]:bg-violet-600 dark:data-[state=checked]:text-white',
         // Premium Glassmorphism variants
         glass:
           'border border-white/[0.15] bg-white/[0.03] backdrop-blur-md data-[state=checked]:bg-white/[0.15] data-[state=checked]:text-white',
@@ -46,9 +46,9 @@ const checkboxVariants = cva(
 const checkboxIndicatorVariants = cva('flex items-center justify-center text-current', {
   variants: {
     size: {
-      default: '[&>svg]:h-4 [&>svg]:w-4',
-      sm: '[&>svg]:h-3 [&>svg]:w-3',
-      lg: '[&>svg]:h-4.5 [&>svg]:w-4.5',
+      default: '[&>svg]:h-3 [&>svg]:w-3',
+      sm: '[&>svg]:h-2.5 [&>svg]:w-2.5',
+      lg: '[&>svg]:h-3.5 [&>svg]:w-3.5',
     },
   },
   defaultVariants: {

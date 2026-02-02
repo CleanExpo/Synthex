@@ -8,18 +8,20 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: 'bg-primary text-primary-foreground hover:bg-primary/90',
+        default:
+          'bg-primary text-primary-foreground hover:bg-primary/90 dark:bg-primary dark:text-primary-foreground dark:hover:bg-primary/90',
         destructive:
-          'bg-destructive text-destructive-foreground hover:bg-destructive/90',
+          'bg-red-600 text-white hover:bg-red-700 dark:bg-red-700 dark:text-white dark:hover:bg-red-800 focus-visible:ring-red-500',
         outline:
-          'border border-input bg-background hover:bg-accent hover:text-accent-foreground',
+          'border border-input bg-background hover:bg-accent hover:text-accent-foreground dark:border-slate-700 dark:bg-transparent dark:hover:bg-slate-800 dark:hover:text-slate-100',
         secondary:
-          'bg-secondary text-secondary-foreground hover:bg-secondary/80',
-        ghost: 'hover:bg-accent hover:text-accent-foreground',
-        link: 'text-primary underline-offset-4 hover:underline',
+          'bg-secondary text-secondary-foreground hover:bg-secondary/80 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700',
+        ghost:
+          'hover:bg-accent hover:text-accent-foreground dark:hover:bg-slate-800 dark:hover:text-slate-100',
+        link: 'text-primary underline-offset-4 hover:underline dark:text-violet-400',
         // Premium Glassmorphism variants (2026 Design System)
         glass:
-          'bg-white/[0.05] backdrop-blur-md border border-white/10 text-white hover:bg-white/[0.1] hover:border-white/20 hover:-translate-y-0.5 active:translate-y-0',
+          'bg-white/[0.05] backdrop-blur-md border border-white/10 text-white hover:bg-white/[0.1] hover:border-white/20 hover:-translate-y-0.5 active:translate-y-0 dark:bg-white/[0.03] dark:border-white/[0.08] dark:hover:bg-white/[0.08] dark:hover:border-white/[0.15]',
         'glass-primary':
           'bg-gradient-to-r from-violet-500/20 to-fuchsia-500/20 backdrop-blur-md border border-violet-500/30 text-white hover:from-violet-500/30 hover:to-fuchsia-500/30 hover:border-violet-500/50 hover:shadow-[0_0_20px_rgba(139,92,246,0.2)] hover:-translate-y-0.5 active:translate-y-0',
         'glass-secondary':

@@ -16,7 +16,7 @@ const selectTriggerVariants = cva(
     variants: {
       variant: {
         default:
-          'border border-input bg-background focus:ring-2 focus:ring-ring focus:ring-offset-2',
+          'border border-input bg-background focus:ring-2 focus:ring-ring focus:ring-offset-2 dark:bg-slate-900/50 dark:border-slate-700 dark:text-slate-100 dark:focus:ring-violet-500/50',
         // Premium Glassmorphism variants
         glass:
           'bg-white/[0.03] backdrop-blur-md border border-white/[0.08] text-white focus:bg-white/[0.06] focus:border-white/[0.15] focus:ring-2 focus:ring-white/[0.1]',
@@ -39,7 +39,8 @@ const selectContentVariants = cva(
   {
     variants: {
       variant: {
-        default: 'border bg-popover text-popover-foreground',
+        default:
+          'border bg-popover text-popover-foreground dark:bg-slate-900 dark:border-slate-800 dark:text-slate-100',
         glass:
           'bg-white/[0.03] backdrop-blur-xl border border-white/[0.08] text-white shadow-[0_8px_32px_rgba(0,0,0,0.3)]',
         'glass-solid':
@@ -61,7 +62,8 @@ const selectItemVariants = cva(
   {
     variants: {
       variant: {
-        default: 'focus:bg-accent focus:text-accent-foreground',
+        default:
+          'focus:bg-accent focus:text-accent-foreground dark:focus:bg-slate-800 dark:text-slate-200 dark:focus:text-white',
         glass: 'focus:bg-white/[0.08] text-white/90 focus:text-white',
         'glass-primary': 'focus:bg-violet-500/20 text-white/90 focus:text-white',
         'glass-secondary': 'focus:bg-cyan-500/20 text-white/90 focus:text-white',

@@ -8,12 +8,13 @@ const badgeVariants = cva(
     variants: {
       variant: {
         default:
-          'border-transparent bg-primary text-primary-foreground hover:bg-primary/80',
+          'border-transparent bg-primary text-primary-foreground hover:bg-primary/80 dark:bg-violet-600 dark:text-white dark:hover:bg-violet-700',
         secondary:
-          'border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80',
+          'border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80 dark:bg-slate-700 dark:text-slate-100 dark:hover:bg-slate-600',
         destructive:
-          'border-transparent bg-destructive text-destructive-foreground hover:bg-destructive/80',
-        outline: 'text-foreground',
+          'border-transparent bg-destructive text-destructive-foreground hover:bg-destructive/80 dark:bg-red-600 dark:text-white dark:hover:bg-red-700',
+        outline:
+          'text-foreground dark:text-slate-200 dark:border-slate-700',
         // Premium Glassmorphism variants
         glass:
           'bg-white/[0.08] backdrop-blur-md border-white/[0.12] text-white hover:bg-white/[0.12]',
@@ -47,7 +48,7 @@ const badgeVariants = cva(
       size: {
         default: 'px-2.5 py-0.5 text-xs',
         sm: 'px-2 py-0.5 text-[10px]',
-        lg: 'px-3 py-1 text-sm',
+        lg: 'px-4 py-1.5 text-sm',
       },
     },
     defaultVariants: {
