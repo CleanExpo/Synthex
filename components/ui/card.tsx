@@ -11,11 +11,11 @@ const cardVariants = cva(
           'border bg-card shadow-sm dark:bg-slate-900/50 dark:border-slate-800 dark:shadow-lg',
         // Premium Glassmorphism variants (2026 Design System)
         glass:
-          'bg-white/[0.02] backdrop-blur-xl border border-white/[0.06] shadow-[0_0_0_1px_rgba(255,255,255,0.03)_inset,0_4px_24px_rgba(0,0,0,0.12)] hover:bg-white/[0.05] hover:border-white/[0.12] dark:bg-white/[0.02] dark:border-white/[0.06] dark:hover:bg-white/[0.05] dark:hover:border-white/[0.1]',
+          'bg-white/[0.06] backdrop-blur-xl border border-white/[0.12] shadow-[0_0_0_1px_rgba(255,255,255,0.05)_inset,0_8px_32px_rgba(0,0,0,0.2)] hover:bg-white/[0.10] hover:border-white/[0.18] dark:bg-white/[0.06] dark:border-white/[0.12] dark:hover:bg-white/[0.10] dark:hover:border-white/[0.18]',
         'glass-solid':
-          'bg-slate-900/80 backdrop-blur-xl border border-white/[0.08] shadow-[0_0_0_1px_rgba(255,255,255,0.02)_inset,0_4px_24px_rgba(0,0,0,0.2)] dark:bg-slate-950/90 dark:border-slate-800',
+          'bg-slate-900/85 backdrop-blur-xl border border-white/[0.12] shadow-[0_0_0_1px_rgba(255,255,255,0.04)_inset,0_8px_32px_rgba(0,0,0,0.3)] dark:bg-slate-950/92 dark:border-slate-700',
         'glass-gradient':
-          'bg-gradient-to-br from-white/[0.04] to-white/[0.01] backdrop-blur-xl border border-white/[0.08] shadow-[0_0_0_1px_rgba(255,255,255,0.03)_inset,0_4px_24px_rgba(0,0,0,0.12)]',
+          'bg-gradient-to-br from-white/[0.08] to-white/[0.03] backdrop-blur-xl border border-white/[0.12] shadow-[0_0_0_1px_rgba(255,255,255,0.05)_inset,0_8px_32px_rgba(0,0,0,0.2)]',
         'glass-primary':
           'bg-gradient-to-br from-violet-500/10 to-fuchsia-500/10 backdrop-blur-xl border border-violet-500/20 shadow-[0_0_0_1px_rgba(139,92,246,0.05)_inset,0_4px_24px_rgba(139,92,246,0.1)] hover:border-violet-500/30 hover:shadow-[0_0_30px_rgba(139,92,246,0.15)]',
         'glass-secondary':
@@ -35,7 +35,7 @@ const cardVariants = cva(
         interactive:
           'border bg-card shadow-sm hover:shadow-lg hover:-translate-y-1 cursor-pointer dark:bg-slate-900/50 dark:border-slate-800 dark:hover:bg-slate-800/70',
         'glass-interactive':
-          'bg-white/[0.02] backdrop-blur-xl border border-white/[0.06] shadow-[0_4px_24px_rgba(0,0,0,0.12)] hover:bg-white/[0.05] hover:border-white/[0.12] hover:-translate-y-1 hover:shadow-[0_8px_32px_rgba(0,0,0,0.16)] cursor-pointer dark:bg-white/[0.02] dark:hover:bg-white/[0.05]',
+          'bg-white/[0.06] backdrop-blur-xl border border-white/[0.12] shadow-[0_8px_32px_rgba(0,0,0,0.2)] hover:bg-white/[0.10] hover:border-white/[0.18] hover:-translate-y-1 hover:shadow-[0_12px_40px_rgba(0,0,0,0.25)] cursor-pointer dark:bg-white/[0.06] dark:hover:bg-white/[0.10]',
       },
     },
     defaultVariants: {
