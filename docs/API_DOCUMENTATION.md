@@ -1,8 +1,31 @@
 # SYNTHEX API Documentation
 
-**Version:** 1.0.0  
-**Base URL:** `https://synthex-a3f0o7y9q-unite-group.vercel.app/api/v1`  
-**Authentication:** Bearer Token (JWT)
+**Version:** 2.0.1
+**Base URL:** `https://synthex.social/api`
+**Authentication:** Bearer Token (JWT) or API Key
+
+---
+
+## Table of Contents
+
+1. [Authentication](#-authentication)
+2. [Health Check APIs](#-health-check-apis)
+3. [Analytics & Reporting](#-analytics--reporting)
+4. [Content Generation](#-content-generation)
+5. [Campaign Management](#-campaign-management)
+6. [Post Scheduling](#-post-scheduling)
+7. [Quotes API](#-quotes-api)
+8. [Team Management](#-team-management)
+9. [Notifications](#-notifications)
+10. [Enterprise Security](#-enterprise-security-features)
+11. [Performance Monitoring](#-performance-monitoring)
+12. [Content Library](#-content-library)
+13. [Workflows](#-workflows)
+14. [Platform Integrations](#-platform-integrations)
+15. [Error Responses](#-error-responses)
+16. [Rate Limiting](#-rate-limiting)
+17. [Webhooks](#-webhooks)
+18. [SDK & Libraries](#-sdk--libraries)
 
 ---
 
@@ -40,6 +63,100 @@ Content-Type: application/json
   },
   "message": "Login successful"
 }
+```
+
+---
+
+## 🏥 Health Check APIs
+
+Health check endpoints for monitoring and load balancer integration.
+
+### Comprehensive Health Check
+```http
+GET /api/health
+```
+
+**Response:**
+```json
+{
+  "status": "healthy",
+  "timestamp": "2026-02-02T12:00:00Z",
+  "version": "2.0.1",
+  "buildId": "abc1234",
+  "environment": "production",
+  "region": "iad1",
+  "uptime": 86400,
+  "responseTime": 45,
+  "checks": {
+    "database": { "status": "healthy", "latency": 12, "message": "Connected" },
+    "cache": { "status": "healthy", "latency": 3, "message": "Mode: upstash" },
+    "environment": { "status": "healthy", "message": "All configured" },
+    "resources": { "status": "healthy", "message": "Heap: 45%" }
+  },
+  "endpoints": {
+    "live": "/api/health/live",
+    "ready": "/api/health/ready",
+    "database": "/api/health/db",
+    "redis": "/api/health/redis"
+  }
+}
+```
+
+### Liveness Probe
+```http
+GET /api/health/live
+```
+
+Lightweight check for load balancer liveness probes. Returns 200 if process is alive.
+
+**Response:**
+```json
+{
+  "status": "alive",
+  "timestamp": "2026-02-02T12:00:00Z",
+  "uptime": 86400
+}
+```
+
+### Readiness Probe
+```http
+GET /api/health/ready
+```
+
+Checks if service can accept traffic (database, cache connections).
+
+**Response:**
+```json
+{
+  "status": "ready",
+  "timestamp": "2026-02-02T12:00:00Z",
+  "responseTime": 25,
+  "checks": {
+    "database": { "status": "healthy", "latency": 10 },
+    "cache": { "status": "healthy", "latency": 2 }
+  },
+  "summary": {
+    "healthy": 2,
+    "degraded": 0,
+    "unhealthy": 0,
+    "total": 2
+  }
+}
+```
+
+### Database Health
+```http
+GET /api/health/db
+```
+
+### Redis/Cache Health
+```http
+GET /api/health/redis
+```
+
+### Authentication Health
+```http
+GET /api/health/auth
 ```
 
 ---
@@ -206,6 +323,147 @@ GET /api/v1/posts
 - `status`: `scheduled`, `published`, `failed`
 - `platform`: Filter by platform
 - `startDate`, `endDate`: Date range filter
+
+---
+
+## 💬 Quotes API
+
+Manage inspirational quotes for content generation.
+
+### List Quotes
+```http
+GET /api/quotes
+Authorization: Bearer <token>
+```
+
+**Query Parameters:**
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| category | string | Filter by category (inspirational, motivational, business, humor, etc.) |
+| tags | string | Filter by tags (comma-separated) |
+| aiGenerated | boolean | Filter AI-generated quotes |
+| page | number | Page number (default: 1) |
+| limit | number | Items per page (default: 20, max: 100) |
+
+**Response:**
+```json
+{
+  "success": true,
+  "quotes": [
+    {
+      "id": "quote_123",
+      "text": "Innovation distinguishes between a leader and a follower.",
+      "author": "Steve Jobs",
+      "category": "business",
+      "tags": ["leadership", "innovation"],
+      "aiGenerated": false,
+      "usageCount": 156,
+      "likeCount": 45,
+      "createdAt": "2026-01-15T00:00:00Z"
+    }
+  ],
+  "pagination": {
+    "page": 1,
+    "limit": 20,
+    "total": 250,
+    "totalPages": 13
+  }
+}
+```
+
+### Get Quote
+```http
+GET /api/quotes/[id]
+Authorization: Bearer <token>
+```
+
+### Create Quote
+```http
+POST /api/quotes
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "text": "Your quote text here",
+  "author": "Author Name",
+  "source": "Source reference",
+  "category": "motivational",
+  "tags": ["success", "mindset"],
+  "isPublic": true
+}
+```
+
+**Response (201):**
+```json
+{
+  "success": true,
+  "quote": {
+    "id": "quote_456",
+    "text": "Your quote text here",
+    "author": "Author Name",
+    "category": "motivational",
+    "tags": ["success", "mindset"],
+    "isPublic": true,
+    "aiGenerated": false,
+    "createdAt": "2026-02-02T12:00:00Z"
+  }
+}
+```
+
+### Update Quote
+```http
+PUT /api/quotes/[id]
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "text": "Updated quote text",
+  "category": "inspirational"
+}
+```
+
+### Delete Quote
+```http
+DELETE /api/quotes/[id]
+Authorization: Bearer <token>
+```
+
+### Track Engagement
+```http
+PATCH /api/quotes/[id]
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "action": "like"
+}
+```
+
+**Actions:** `like`, `use`, `share`
+
+**Response:**
+```json
+{
+  "success": true,
+  "quote": {
+    "id": "quote_123",
+    "likeCount": 46,
+    "usageCount": 157,
+    "shareCount": 23
+  }
+}
+```
+
+### Bulk Delete Quotes
+```http
+DELETE /api/quotes
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "ids": ["quote_123", "quote_456", "quote_789"]
+}
+```
 
 ---
 
@@ -725,4 +983,13 @@ analytics = client.analytics.overview(
 
 ---
 
-*Last updated: January 2024 | Version 1.0.0*
+## 📞 Support
+
+- **API Status:** https://status.synthex.social
+- **Documentation:** https://docs.synthex.social
+- **Support Email:** api-support@synthex.social
+- **GitHub Issues:** https://github.com/CleanExpo/Synthex/issues
+
+---
+
+*Last updated: February 2026 | Version 2.0.1*
