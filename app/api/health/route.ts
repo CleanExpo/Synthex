@@ -1,96 +1,288 @@
-import { NextResponse } from 'next/server';
+/**
+ * Comprehensive Health Check Endpoint
+ * Main health check for SYNTHEX API
+ *
+ * @task UNI-438 - Implement Load Balancer Health Checks
+ *
+ * Available health check endpoints:
+ * - GET /api/health       - Comprehensive health (this endpoint)
+ * - GET /api/health/live  - Liveness probe (is process alive?)
+ * - GET /api/health/ready - Readiness probe (can accept traffic?)
+ * - GET /api/health/db    - Database-specific health
+ * - GET /api/health/redis - Redis/cache health
+ * - GET /api/health/scaling - Scaling metrics
+ *
+ * Load Balancer Configuration:
+ * - AWS ALB: Use /api/health/ready with 200 success codes
+ * - Kubernetes: livenessProbe=/api/health/live, readinessProbe=/api/health/ready
+ * - Vercel: Automatic edge health checks
+ */
+
+import { NextRequest, NextResponse } from 'next/server';
 import { testConnection } from '@/lib/supabase-client';
+import { checkDatabaseHealth, getPoolMetrics } from '@/lib/prisma';
 
 // Force dynamic rendering - prevent static generation
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
-export async function GET() {
+// Track server start time
+const serverStartTime = Date.now();
+
+// Version info
+const VERSION = process.env.npm_package_version || '2.0.1';
+const BUILD_ID = process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 7) || 'local';
+
+interface HealthCheckResult {
+  status: 'healthy' | 'degraded' | 'unhealthy';
+  latency?: number;
+  message?: string;
+  details?: Record<string, any>;
+}
+
+/**
+ * Check database health with timeout
+ */
+async function checkDatabase(): Promise<HealthCheckResult> {
+  const startTime = Date.now();
+
   try {
-    // Check database connectivity
-    let dbStatus = 'healthy';
-    let dbLatency = 0;
-    let dbMessage = 'Connected';
-    
-    try {
-      const startTime = Date.now();
-      const connectionTest = await testConnection();
-      dbLatency = Date.now() - startTime;
-      dbStatus = connectionTest.connected ? 'healthy' : 'unhealthy';
-      dbMessage = connectionTest.message;
-    } catch (dbError: any) {
-      dbStatus = 'unhealthy';
-      dbMessage = dbError.message || 'Connection failed';
-      console.error('Database health check failed:', dbError);
-    }
-    
-    // Check environment variables
-    const requiredEnvVars = [
-      'NEXT_PUBLIC_SUPABASE_URL',
-      'NEXT_PUBLIC_SUPABASE_ANON_KEY',
-      'ENCRYPTION_KEY',
-      'JWT_SECRET',
-      'OPENROUTER_API_KEY'
-    ];
-    
-    const missingEnvVars = requiredEnvVars.filter(
-      varName => !process.env[varName]
-    );
-    
-    const envStatus = missingEnvVars.length === 0 ? 'healthy' : 'degraded';
-    
-    // Determine overall health status
-    const overallStatus = dbStatus === 'unhealthy' ? 'unhealthy' : 
-                         envStatus === 'degraded' ? 'degraded' : 'healthy';
-    
-    // Prepare response
-    const healthResponse = {
-      status: overallStatus === 'healthy' ? 'ok' : overallStatus,
-      timestamp: new Date().toISOString(),
-      environment: process.env.NODE_ENV || 'development',
-      version: '2.0.1',
-      message: `SYNTHEX API is ${overallStatus}`,
-      checks: {
-        database: {
-          status: dbStatus,
-          latency: `${dbLatency}ms`,
-          message: dbMessage
-        },
-        environment: {
-          status: envStatus,
-          missingVars: missingEnvVars.length > 0 ? missingEnvVars : undefined
-        }
-      }
+    const result = await Promise.race([
+      checkDatabaseHealth(),
+      new Promise<{ healthy: false; error: string }>((resolve) =>
+        setTimeout(() => resolve({ healthy: false, error: 'Timeout' }), 5000)
+      ),
+    ]);
+
+    const latency = Date.now() - startTime;
+
+    return {
+      status: result.healthy ? (latency > 1000 ? 'degraded' : 'healthy') : 'unhealthy',
+      latency,
+      message: result.healthy ? 'Connected' : result.error || 'Connection failed',
+      details: {
+        pool: getPoolMetrics(),
+      },
     };
-    
-    // Return appropriate status code based on health
-    const statusCode = overallStatus === 'healthy' ? 200 : 
-                       overallStatus === 'degraded' ? 200 : 503;
-    
-    return NextResponse.json(healthResponse, { 
+  } catch (error: any) {
+    return {
+      status: 'unhealthy',
+      latency: Date.now() - startTime,
+      message: error.message || 'Connection failed',
+    };
+  }
+}
+
+/**
+ * Check cache health
+ */
+async function checkCache(): Promise<HealthCheckResult> {
+  const startTime = Date.now();
+
+  try {
+    const { getRedisClient } = await import('@/lib/redis-client');
+    const redis = getRedisClient();
+    const health = await redis.healthCheck();
+
+    return {
+      status: health.connected ? 'healthy' : (health.mode === 'memory' ? 'degraded' : 'unhealthy'),
+      latency: health.latency || (Date.now() - startTime),
+      message: `Mode: ${health.mode}`,
+      details: {
+        mode: health.mode,
+        nodes: health.nodes,
+      },
+    };
+  } catch (error: any) {
+    return {
+      status: 'degraded',
+      latency: Date.now() - startTime,
+      message: 'Using memory fallback',
+    };
+  }
+}
+
+/**
+ * Check environment configuration
+ */
+function checkEnvironment(): HealthCheckResult {
+  const critical = ['DATABASE_URL', 'JWT_SECRET'];
+  const important = ['OPENROUTER_API_KEY', 'NEXT_PUBLIC_SUPABASE_URL'];
+
+  const missingCritical = critical.filter((v) => !process.env[v]);
+  const missingImportant = important.filter((v) => !process.env[v]);
+
+  if (missingCritical.length > 0) {
+    return {
+      status: 'unhealthy',
+      message: `Missing critical vars: ${missingCritical.join(', ')}`,
+    };
+  }
+
+  if (missingImportant.length > 0) {
+    return {
+      status: 'degraded',
+      message: `Missing vars: ${missingImportant.join(', ')}`,
+    };
+  }
+
+  return {
+    status: 'healthy',
+    message: 'All configured',
+  };
+}
+
+/**
+ * Check system resources
+ */
+function checkResources(): HealthCheckResult {
+  const mem = process.memoryUsage();
+  const heapPercent = (mem.heapUsed / mem.heapTotal) * 100;
+
+  return {
+    status: heapPercent > 90 ? 'unhealthy' : heapPercent > 75 ? 'degraded' : 'healthy',
+    message: `Heap: ${Math.round(heapPercent)}%`,
+    details: {
+      heapUsedMB: Math.round(mem.heapUsed / 1024 / 1024),
+      heapTotalMB: Math.round(mem.heapTotal / 1024 / 1024),
+      rssMB: Math.round(mem.rss / 1024 / 1024),
+      externalMB: Math.round(mem.external / 1024 / 1024),
+    },
+  };
+}
+
+export async function GET(request: NextRequest) {
+  const startTime = Date.now();
+
+  try {
+    // Check if this is a simple ping (for load balancers that just need 200)
+    const { searchParams } = new URL(request.url);
+    const simple = searchParams.get('simple') === 'true';
+
+    if (simple) {
+      // Ultra-lightweight response for frequent polling
+      return NextResponse.json(
+        { status: 'ok', timestamp: new Date().toISOString() },
+        {
+          status: 200,
+          headers: {
+            'Cache-Control': 'no-store, max-age=0',
+            'X-Health-Check': 'simple',
+          },
+        }
+      );
+    }
+
+    // Run all health checks in parallel
+    const [database, cache, environment, resources] = await Promise.all([
+      checkDatabase(),
+      checkCache(),
+      Promise.resolve(checkEnvironment()),
+      Promise.resolve(checkResources()),
+    ]);
+
+    const checks = { database, cache, environment, resources };
+
+    // Determine overall status
+    const statuses = Object.values(checks).map((c) => c.status);
+    const hasUnhealthy = statuses.includes('unhealthy');
+    const hasDegraded = statuses.includes('degraded');
+
+    let overallStatus: 'healthy' | 'degraded' | 'unhealthy' = 'healthy';
+    if (hasUnhealthy) overallStatus = 'unhealthy';
+    else if (hasDegraded) overallStatus = 'degraded';
+
+    // Build response
+    const response = {
+      status: overallStatus,
+      timestamp: new Date().toISOString(),
+      version: VERSION,
+      buildId: BUILD_ID,
+      environment: process.env.NODE_ENV || 'development',
+      region: process.env.VERCEL_REGION || 'local',
+      uptime: Math.floor((Date.now() - serverStartTime) / 1000),
+      responseTime: Date.now() - startTime,
+      checks: Object.fromEntries(
+        Object.entries(checks).map(([key, value]) => [
+          key,
+          {
+            status: value.status,
+            latency: value.latency,
+            message: value.message,
+            ...(searchParams.get('details') === 'true' && value.details
+              ? { details: value.details }
+              : {}),
+          },
+        ])
+      ),
+      endpoints: {
+        live: '/api/health/live',
+        ready: '/api/health/ready',
+        database: '/api/health/db',
+        redis: '/api/health/redis',
+        scaling: '/api/health/scaling',
+      },
+    };
+
+    // Determine HTTP status code
+    const statusCode = overallStatus === 'unhealthy' ? 503 : 200;
+
+    return NextResponse.json(response, {
       status: statusCode,
       headers: {
-        'Cache-Control': 'no-cache, no-store, must-revalidate',
-        'Access-Control-Allow-Origin': '*'
-      }
+        'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
+        'X-Health-Status': overallStatus,
+        'X-Response-Time': `${Date.now() - startTime}ms`,
+      },
     });
-    
   } catch (error: any) {
     console.error('Health check error:', error);
-    
-    return NextResponse.json({
-      status: 'error',
-      timestamp: new Date().toISOString(),
-      environment: process.env.NODE_ENV || 'development',
-      version: '2.0.1',
-      message: 'SYNTHEX API health check failed',
-      error: error.message || 'Unknown error occurred'
-    }, { 
+
+    return NextResponse.json(
+      {
+        status: 'unhealthy',
+        timestamp: new Date().toISOString(),
+        version: VERSION,
+        buildId: BUILD_ID,
+        environment: process.env.NODE_ENV || 'development',
+        responseTime: Date.now() - startTime,
+        error: error.message || 'Health check failed',
+      },
+      {
+        status: 503,
+        headers: {
+          'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
+          'X-Health-Status': 'unhealthy',
+        },
+      }
+    );
+  }
+}
+
+// HEAD request for minimal overhead health checks
+export async function HEAD() {
+  try {
+    const result = await Promise.race([
+      checkDatabaseHealth(),
+      new Promise<{ healthy: boolean }>((resolve) =>
+        setTimeout(() => resolve({ healthy: false }), 2000)
+      ),
+    ]);
+
+    return new NextResponse(null, {
+      status: result.healthy ? 200 : 503,
+      headers: {
+        'Cache-Control': 'no-store, max-age=0',
+        'X-Health-Status': result.healthy ? 'healthy' : 'unhealthy',
+      },
+    });
+  } catch {
+    return new NextResponse(null, {
       status: 503,
       headers: {
-        'Cache-Control': 'no-cache, no-store, must-revalidate',
-        'Access-Control-Allow-Origin': '*'
-      }
+        'Cache-Control': 'no-store, max-age=0',
+        'X-Health-Status': 'unhealthy',
+      },
     });
   }
 }
