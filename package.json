@@ -65,7 +65,12 @@
     "deploy:push": "git add -A && git commit -m 'chore: deploy to production' && git push origin main",
     "deploy:emergency": "git add -A && git commit -m 'emergency: force deployment' --no-verify && git push origin main",
     "fix:deps": "rm -rf node_modules package-lock.json && npm install --legacy-peer-deps",
-    "db:validate": "npx prisma validate && npx prisma generate"
+    "db:validate": "npx prisma validate && npx prisma generate",
+    "backup:verify": "node scripts/backup-verification.js verify",
+    "backup:verify-all": "node scripts/backup-verification.js verify-all",
+    "backup:run-verification": "node scripts/run-backup-verification.js",
+    "backup:checksum": "node scripts/generate-backup-checksum.js",
+    "backup:checksum-all": "node scripts/generate-backup-checksum.js generate-all"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^3.0.14",
