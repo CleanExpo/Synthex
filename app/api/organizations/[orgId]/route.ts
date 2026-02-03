@@ -1,0 +1,317 @@
+/**
+ * Organization Detail API
+ *
+ * @description API endpoints for single organization management:
+ * - GET: Get organization details
+ * - PATCH: Update organization
+ * - DELETE: Delete organization (soft delete)
+ *
+ * ENVIRONMENT VARIABLES REQUIRED:
+ * - DATABASE_URL: PostgreSQL connection (CRITICAL)
+ *
+ * FAILURE MODE: Returns appropriate error responses
+ */
+
+import { NextRequest, NextResponse } from 'next/server';
+import { prisma } from '@/lib/prisma';
+import { logger } from '@/lib/logger';
+import { ResponseOptimizer } from '@/lib/api/response-optimizer';
+import { getCache } from '@/lib/cache/cache-manager';
+import { PLAN_LIMITS, TenantPlan } from '@/lib/multi-tenant';
+
+// ============================================================================
+// GET - Get Organization Details
+// ============================================================================
+
+export async function GET(
+  request: NextRequest,
+  { params }: { params: { orgId: string } }
+) {
+  try {
+    const { orgId } = params;
+    const cache = getCache();
+
+    // Try cache first
+    const cacheKey = `org:${orgId}`;
+    const cached = await cache.get(cacheKey);
+    if (cached) {
+      return ResponseOptimizer.createResponse(cached, {
+        cacheType: 'api',
+        cacheDuration: 300,
+      });
+    }
+
+    // Fetch from database
+    const organization = await prisma.organization.findUnique({
+      where: { id: orgId },
+      include: {
+        users: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            avatar: true,
+            createdAt: true,
+          },
+        },
+        roles: {
+          select: {
+            id: true,
+            name: true,
+            description: true,
+            permissions: true,
+            isDefault: true,
+            isSystem: true,
+          },
+        },
+        _count: {
+          select: {
+            users: true,
+            campaigns: true,
+            teamInvitations: true,
+          },
+        },
+      },
+    });
+
+    if (!organization) {
+      return ResponseOptimizer.createErrorResponse('Organization not found', 404);
+    }
+
+    const response = {
+      id: organization.id,
+      name: organization.name,
+      slug: organization.slug,
+      description: organization.description,
+      plan: organization.plan,
+      status: organization.status,
+      domain: organization.domain,
+      customDomain: organization.customDomain,
+      logo: organization.logo,
+      primaryColor: organization.primaryColor,
+      settings: organization.settings,
+      limits: {
+        maxUsers: organization.maxUsers,
+        maxPosts: organization.maxPosts,
+        maxCampaigns: organization.maxCampaigns,
+      },
+      usage: {
+        users: organization._count.users,
+        campaigns: organization._count.campaigns,
+        pendingInvitations: organization._count.teamInvitations,
+      },
+      users: organization.users,
+      roles: organization.roles,
+      billing: {
+        stripeCustomerId: organization.stripeCustomerId,
+        billingEmail: organization.billingEmail,
+        billingStatus: organization.billingStatus,
+      },
+      createdAt: organization.createdAt,
+      updatedAt: organization.updatedAt,
+    };
+
+    // Cache the response
+    await cache.set(cacheKey, response, { ttl: 300, tags: [`org:${orgId}`] });
+
+    return ResponseOptimizer.createResponse(response, {
+      cacheType: 'api',
+      cacheDuration: 300,
+    });
+  } catch (error) {
+    logger.error('Failed to get organization', { error, orgId: params.orgId });
+    return ResponseOptimizer.createErrorResponse('Failed to get organization', 500);
+  }
+}
+
+// ============================================================================
+// PATCH - Update Organization
+// ============================================================================
+
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: { orgId: string } }
+) {
+  try {
+    const { orgId } = params;
+    const body = await request.json();
+
+    // Check organization exists
+    const existing = await prisma.organization.findUnique({
+      where: { id: orgId },
+    });
+
+    if (!existing) {
+      return ResponseOptimizer.createErrorResponse('Organization not found', 404);
+    }
+
+    // Build update data
+    const updateData: Record<string, unknown> = {};
+    const allowedFields = [
+      'name',
+      'description',
+      'logo',
+      'primaryColor',
+      'favicon',
+      'customDomain',
+      'settings',
+      'billingEmail',
+    ];
+
+    for (const field of allowedFields) {
+      if (body[field] !== undefined) {
+        updateData[field] = body[field];
+      }
+    }
+
+    // Handle plan change (requires billing verification in production)
+    if (body.plan && body.plan !== existing.plan) {
+      const newPlan = body.plan as TenantPlan;
+      const planLimits = PLAN_LIMITS[newPlan];
+
+      if (!planLimits) {
+        return ResponseOptimizer.createErrorResponse('Invalid plan', 400);
+      }
+
+      updateData.plan = newPlan;
+      updateData.maxUsers = planLimits.maxUsers === -1 ? 999999 : planLimits.maxUsers;
+      updateData.maxPosts = planLimits.maxPosts === -1 ? 999999 : planLimits.maxPosts;
+      updateData.maxCampaigns = planLimits.maxCampaigns === -1 ? 999999 : planLimits.maxCampaigns;
+    }
+
+    // Check slug uniqueness if changing
+    if (body.slug && body.slug !== existing.slug) {
+      const slugExists = await prisma.organization.findUnique({
+        where: { slug: body.slug },
+      });
+
+      if (slugExists) {
+        return ResponseOptimizer.createErrorResponse(
+          'Organization slug already exists',
+          409,
+          { field: 'slug' }
+        );
+      }
+
+      updateData.slug = body.slug;
+      updateData.domain = `${body.slug}.synthex.app`;
+    }
+
+    // Check custom domain uniqueness
+    if (body.customDomain && body.customDomain !== existing.customDomain) {
+      const domainExists = await prisma.organization.findFirst({
+        where: {
+          customDomain: body.customDomain,
+          id: { not: orgId },
+        },
+      });
+
+      if (domainExists) {
+        return ResponseOptimizer.createErrorResponse(
+          'Custom domain already in use',
+          409,
+          { field: 'customDomain' }
+        );
+      }
+    }
+
+    // Update organization
+    const organization = await prisma.organization.update({
+      where: { id: orgId },
+      data: updateData,
+    });
+
+    // Invalidate cache
+    const cache = getCache();
+    await cache.invalidateByTag(`org:${orgId}`);
+
+    logger.info('Organization updated', {
+      organizationId: organization.id,
+      updatedFields: Object.keys(updateData),
+    });
+
+    return ResponseOptimizer.createResponse(
+      {
+        success: true,
+        organization: {
+          id: organization.id,
+          name: organization.name,
+          slug: organization.slug,
+          plan: organization.plan,
+          status: organization.status,
+          domain: organization.domain,
+          customDomain: organization.customDomain,
+          updatedAt: organization.updatedAt,
+        },
+      },
+      { cacheType: 'none' }
+    );
+  } catch (error) {
+    logger.error('Failed to update organization', { error, orgId: params.orgId });
+    return ResponseOptimizer.createErrorResponse('Failed to update organization', 500);
+  }
+}
+
+// ============================================================================
+// DELETE - Delete Organization (Soft Delete)
+// ============================================================================
+
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: { orgId: string } }
+) {
+  try {
+    const { orgId } = params;
+
+    // Check organization exists
+    const existing = await prisma.organization.findUnique({
+      where: { id: orgId },
+      include: {
+        _count: {
+          select: { users: true },
+        },
+      },
+    });
+
+    if (!existing) {
+      return ResponseOptimizer.createErrorResponse('Organization not found', 404);
+    }
+
+    // Soft delete - set status to 'deleted'
+    await prisma.organization.update({
+      where: { id: orgId },
+      data: {
+        status: 'deleted',
+        // Clear domain to allow reuse
+        domain: null,
+        customDomain: null,
+      },
+    });
+
+    // Remove all users from organization
+    await prisma.user.updateMany({
+      where: { organizationId: orgId },
+      data: { organizationId: null },
+    });
+
+    // Invalidate cache
+    const cache = getCache();
+    await cache.invalidateByTag(`org:${orgId}`);
+
+    logger.info('Organization deleted', {
+      organizationId: orgId,
+      userCount: existing._count.users,
+    });
+
+    return ResponseOptimizer.createResponse(
+      {
+        success: true,
+        message: 'Organization deleted successfully',
+      },
+      { cacheType: 'none' }
+    );
+  } catch (error) {
+    logger.error('Failed to delete organization', { error, orgId: params.orgId });
+    return ResponseOptimizer.createErrorResponse('Failed to delete organization', 500);
+  }
+}

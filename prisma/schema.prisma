@@ -67,17 +67,22 @@ model Campaign {
   status      String   @default("draft") // 'draft', 'active', 'paused', 'completed'
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-  
+
   // Campaign data
   content     Json?    // Generated content, variations, etc.
   analytics   Json?    // Performance metrics
   settings    Json?    // Platform-specific settings
-  
+
   // Relations
   userId      String
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   posts       Post[]
-  
+
+  // Organization (multi-tenant)
+  organizationId String?
+  organization   Organization? @relation("OrganizationCampaigns", fields: [organizationId], references: [id], onDelete: SetNull)
+
+  @@index([organizationId])
   @@map("campaigns")
 }
 
@@ -197,19 +202,40 @@ model Organization {
   slug        String   @unique
   description String?
   plan        String   @default("free") // 'free', 'starter', 'pro', 'enterprise'
+  status      String   @default("active") // 'active', 'suspended', 'pending', 'deleted'
   settings    Json?    // Organization-wide settings
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-  
+
+  // Domain configuration (multi-tenant)
+  domain       String?  @unique // Primary subdomain (e.g., acme.synthex.app)
+  customDomain String?  @unique // Custom domain (e.g., marketing.acme.com)
+
+  // Branding
+  logo         String?
+  primaryColor String?
+  favicon      String?
+
   // Billing
   stripeCustomerId String?
   billingEmail     String?
   billingStatus    String @default("active") // 'active', 'past_due', 'canceled'
-  
+
+  // Usage limits
+  maxUsers      Int @default(5)
+  maxPosts      Int @default(500)
+  maxCampaigns  Int @default(10)
+
   // Relations
   users             User[]
   teamInvitations   TeamInvitation[]
-  
+  roles             Role[]
+  campaigns         Campaign[]       @relation("OrganizationCampaigns")
+
+  // Indices for multi-tenant queries
+  @@index([slug])
+  @@index([status])
+  @@index([plan])
   @@map("organizations")
 }
 
@@ -558,4 +584,67 @@ model Persona {
   @@index([userId])
   @@index([status])
   @@map("personas")
+}
+
+// ==========================================
+// Role-Based Access Control (RBAC) Module
+// ==========================================
+
+model Role {
+  id           String   @id @default(cuid())
+  name         String
+  description  String?
+  permissions  String[] // Array of permission strings
+  isDefault    Boolean  @default(false)
+  isSystem     Boolean  @default(false) // System roles cannot be deleted
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Organization scope
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  // Relations
+  userRoles      UserRole[]
+
+  @@unique([organizationId, name])
+  @@index([organizationId])
+  @@map("roles")
+}
+
+model UserRole {
+  id        String   @id @default(cuid())
+  userId    String
+  roleId    String
+  grantedAt DateTime @default(now())
+  grantedBy String?  // ID of user who granted the role
+  expiresAt DateTime?
+
+  // Relations
+  role      Role     @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, roleId])
+  @@index([userId])
+  @@index([roleId])
+  @@map("user_roles")
+}
+
+model PermissionAudit {
+  id           String   @id @default(cuid())
+  action       String   // 'grant', 'revoke', 'create_role', 'update_role', 'delete_role'
+  targetUserId String?
+  targetRoleId String?
+  performedBy  String
+  details      Json?
+  ipAddress    String?
+  userAgent    String?
+  createdAt    DateTime @default(now())
+
+  // Organization scope
+  organizationId String
+
+  @@index([organizationId])
+  @@index([performedBy])
+  @@index([createdAt])
+  @@map("permission_audits")
 }
