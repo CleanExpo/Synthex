@@ -63,11 +63,14 @@ module.exports = {
   resetMocks: true,
   restoreMocks: true,
   
-  // Module path mapping
+  // Module path mapping (must match tsconfig.json paths)
   moduleNameMapper: {
-    '^@/src/(.*)$': '<rootDir>/src/$1',
-    '^@/lib/(.*)$': '<rootDir>/src/lib/$1',
     '^@/components/(.*)$': '<rootDir>/components/$1',
+    '^@/lib/(.*)$': '<rootDir>/lib/$1',
+    '^@/src/(.*)$': '<rootDir>/src/$1',
+    '^@/hooks/(.*)$': '<rootDir>/hooks/$1',
+    '^@/utils/(.*)$': '<rootDir>/utils/$1',
+    '^@/types/(.*)$': '<rootDir>/types/$1',
     '^@/(.*)$': '<rootDir>/$1'
   },
   

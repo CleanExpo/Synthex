@@ -49,7 +49,7 @@ export interface PlanLimits {
   maxPersonas: number;
 }
 
-const PLAN_LIMITS: Record<string, PlanLimits> = {
+export const PLAN_LIMITS: Record<string, PlanLimits> = {
   free: { maxSocialAccounts: 2, maxAiPosts: 10, maxPersonas: 1 },
   professional: { maxSocialAccounts: 5, maxAiPosts: 100, maxPersonas: 3 },
   business: { maxSocialAccounts: 10, maxAiPosts: -1, maxPersonas: 10 }, // -1 = unlimited
