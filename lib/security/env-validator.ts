@@ -201,6 +201,42 @@ export const ENV_VAR_DEFINITIONS: EnvVarDefinition[] = [
     example: 'whsec_xxxxxxxxxx'
   },
 
+  {
+    key: 'STRIPE_PROFESSIONAL_PRICE_ID',
+    description: 'Stripe price ID for Professional plan',
+    required: false,
+    securityLevel: SecurityLevel.INTERNAL,
+    validator: z.string()
+      .regex(/^price_/, 'Must be a valid Stripe price ID')
+      .optional(),
+    example: 'price_1xxxxxxxxxxxxxxxxx',
+    dependsOn: ['STRIPE_SECRET_KEY']
+  },
+
+  {
+    key: 'STRIPE_BUSINESS_PRICE_ID',
+    description: 'Stripe price ID for Business plan',
+    required: false,
+    securityLevel: SecurityLevel.INTERNAL,
+    validator: z.string()
+      .regex(/^price_/, 'Must be a valid Stripe price ID')
+      .optional(),
+    example: 'price_1xxxxxxxxxxxxxxxxx',
+    dependsOn: ['STRIPE_SECRET_KEY']
+  },
+
+  {
+    key: 'STRIPE_CUSTOM_PRICE_ID',
+    description: 'Stripe price ID for Custom/Enterprise plan',
+    required: false,
+    securityLevel: SecurityLevel.INTERNAL,
+    validator: z.string()
+      .regex(/^price_/, 'Must be a valid Stripe price ID')
+      .optional(),
+    example: 'price_1xxxxxxxxxxxxxxxxx',
+    dependsOn: ['STRIPE_SECRET_KEY']
+  },
+
   // ========== EMAIL SERVICE ==========
   {
     key: 'EMAIL_PROVIDER',
@@ -269,6 +305,86 @@ export const ENV_VAR_DEFINITIONS: EnvVarDefinition[] = [
     securityLevel: SecurityLevel.SECRET,
     validator: z.string().min(20).optional(),
     example: 'GOCSPX-xxxxxxxxxxxxx'
+  },
+
+  // ========== TWITTER/X OAUTH ==========
+  {
+    key: 'TWITTER_CLIENT_ID',
+    description: 'Twitter/X OAuth 2.0 client ID',
+    required: false,
+    securityLevel: SecurityLevel.INTERNAL,
+    validator: z.string().min(10).optional(),
+    example: 'xxxxxxxxxxxxxxxxxxxxxxxx',
+    dependsOn: ['TWITTER_CLIENT_SECRET']
+  },
+
+  {
+    key: 'TWITTER_CLIENT_SECRET',
+    description: 'Twitter/X OAuth 2.0 client secret',
+    required: false,
+    securityLevel: SecurityLevel.SECRET,
+    validator: z.string().min(20).optional(),
+    example: 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
+  },
+
+  // ========== META (FACEBOOK/INSTAGRAM) OAUTH ==========
+  {
+    key: 'FACEBOOK_CLIENT_ID',
+    description: 'Meta/Facebook OAuth app ID',
+    required: false,
+    securityLevel: SecurityLevel.INTERNAL,
+    validator: z.string().regex(/^\d+$/).optional(),
+    example: '1234567890123456',
+    dependsOn: ['FACEBOOK_CLIENT_SECRET']
+  },
+
+  {
+    key: 'FACEBOOK_CLIENT_SECRET',
+    description: 'Meta/Facebook OAuth app secret',
+    required: false,
+    securityLevel: SecurityLevel.SECRET,
+    validator: z.string().min(20).optional(),
+    example: 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
+  },
+
+  // ========== LINKEDIN OAUTH ==========
+  {
+    key: 'LINKEDIN_CLIENT_ID',
+    description: 'LinkedIn OAuth client ID',
+    required: false,
+    securityLevel: SecurityLevel.INTERNAL,
+    validator: z.string().min(10).optional(),
+    example: 'xxxxxxxxxxxx',
+    dependsOn: ['LINKEDIN_CLIENT_SECRET']
+  },
+
+  {
+    key: 'LINKEDIN_CLIENT_SECRET',
+    description: 'LinkedIn OAuth client secret',
+    required: false,
+    securityLevel: SecurityLevel.SECRET,
+    validator: z.string().min(10).optional(),
+    example: 'xxxxxxxxxxxxxxxx'
+  },
+
+  // ========== TIKTOK OAUTH ==========
+  {
+    key: 'TIKTOK_CLIENT_KEY',
+    description: 'TikTok OAuth client key',
+    required: false,
+    securityLevel: SecurityLevel.INTERNAL,
+    validator: z.string().min(10).optional(),
+    example: 'xxxxxxxxxxxxxxxxxxxx',
+    dependsOn: ['TIKTOK_CLIENT_SECRET']
+  },
+
+  {
+    key: 'TIKTOK_CLIENT_SECRET',
+    description: 'TikTok OAuth client secret',
+    required: false,
+    securityLevel: SecurityLevel.SECRET,
+    validator: z.string().min(20).optional(),
+    example: 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
   },
 
   // ========== MONITORING & ANALYTICS ==========

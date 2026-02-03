@@ -16,8 +16,10 @@ import { queueContentPublish } from '@/lib/queue';
 import { z } from 'zod';
 
 // =============================================================================
-// Auth Helper
+// Auth Helper - Uses centralized JWT utilities (no fallback secrets)
 // =============================================================================
+
+import { verifyToken } from '@/lib/auth/jwt-utils';
 
 async function getUserFromRequest(request: NextRequest): Promise<{ id: string; email: string } | null> {
   const authHeader = request.headers.get('authorization');
@@ -25,10 +27,8 @@ async function getUserFromRequest(request: NextRequest): Promise<{ id: string; e
 
   try {
     const token = authHeader.replace('Bearer ', '');
-    const jwt = await import('jsonwebtoken');
-    const secret = process.env.JWT_SECRET || 'default-secret';
-    const decoded = jwt.default.verify(token, secret) as { userId: string; email: string };
-    return { id: decoded.userId, email: decoded.email };
+    const decoded = verifyToken(token);
+    return { id: decoded.userId, email: decoded.email || '' };
   } catch {
     return null;
   }

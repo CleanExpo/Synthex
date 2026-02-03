@@ -26,6 +26,22 @@ import { fetchDashboardStats, QuickStatsData, invalidateDashboardCache } from '@
 import { useUser } from '@supabase/auth-helpers-react';
 import { cn } from '@/lib/utils';
 
+// Helper function to format timestamps
+function formatTimeAgo(date: Date): string {
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffSec = Math.floor(diffMs / 1000);
+  const diffMin = Math.floor(diffSec / 60);
+  const diffHour = Math.floor(diffMin / 60);
+  const diffDay = Math.floor(diffHour / 24);
+
+  if (diffSec < 60) return 'just now';
+  if (diffMin < 60) return `${diffMin} min ago`;
+  if (diffHour < 24) return `${diffHour} hour${diffHour > 1 ? 's' : ''} ago`;
+  if (diffDay < 7) return `${diffDay} day${diffDay > 1 ? 's' : ''} ago`;
+  return date.toLocaleDateString();
+}
+
 // Animation wrapper component
 const AnimatedCard = ({ children, className, delay = 0 }: { children: React.ReactNode; className?: string; delay?: number }) => (
   <motion.div
@@ -60,31 +76,48 @@ export default function DashboardPage() {
   const [showNotifications, setShowNotifications] = useState(false);
 
   useEffect(() => {
-    // Simulate fetching dashboard data
     const fetchDashboardData = async () => {
       try {
-        // In production, this would call the actual API
-        // const response = await fetch('/api/dashboard/stats');
-        // const data = await response.json();
-        
-        // Simulated data for now
-        const mockData: DashboardStats = {
-          totalPosts: 156,
-          scheduledPosts: 23,
-          engagementRate: 4.8,
-          followers: 12543,
-          trendingTopics: ['#AI', '#SocialMedia', '#Marketing', '#Automation'],
-          recentActivity: [
-            { id: '1', type: 'post', message: 'Published post on Twitter', timestamp: '2 min ago' },
-            { id: '2', type: 'engagement', message: 'Post reached 1K impressions', timestamp: '15 min ago' },
-            { id: '3', type: 'milestone', message: 'Gained 100 new followers', timestamp: '1 hour ago' },
-            { id: '4', type: 'post', message: 'Scheduled 5 posts for next week', timestamp: '2 hours ago' },
-          ]
+        // Get token from localStorage or session
+        const token = localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token');
+
+        const response = await fetch('/api/dashboard/stats', {
+          headers: token ? { 'Authorization': `Bearer ${token}` } : {},
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch dashboard stats');
+        }
+
+        const data = await response.json();
+
+        // Map API response to DashboardStats interface
+        const dashboardStats: DashboardStats = {
+          totalPosts: data.stats?.totalPosts || 0,
+          scheduledPosts: data.stats?.scheduledPosts || 0,
+          engagementRate: parseFloat(data.stats?.avgEngagementRate || '0'),
+          followers: data.stats?.totalFollowers || 0,
+          trendingTopics: data.trendingTopics || ['#AI', '#SocialMedia', '#Marketing', '#Growth'],
+          recentActivity: (data.recentActivity || []).map((activity: { platform: string; action: string; time: string; engagement?: number }, index: number) => ({
+            id: String(index + 1),
+            type: activity.engagement && activity.engagement > 100 ? 'engagement' : 'post' as const,
+            message: `${activity.action} on ${activity.platform}`,
+            timestamp: formatTimeAgo(new Date(activity.time)),
+          })),
         };
-        
-        setStats(mockData);
+
+        setStats(dashboardStats);
       } catch (error) {
         console.error('Error fetching dashboard data:', error);
+        // Fallback to default values on error
+        setStats({
+          totalPosts: 0,
+          scheduledPosts: 0,
+          engagementRate: 0,
+          followers: 0,
+          trendingTopics: ['#AI', '#SocialMedia', '#Marketing', '#Growth'],
+          recentActivity: [],
+        });
       } finally {
         setLoading(false);
       }

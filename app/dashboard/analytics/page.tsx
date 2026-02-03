@@ -139,23 +139,66 @@ const topPosts = [
   },
 ];
 
+// API response types
+interface AnalyticsData {
+  totals: {
+    posts: number;
+    published: number;
+    scheduled: number;
+    draft: number;
+    reach: number;
+    engagement: number;
+    impressions: number;
+    clicks: number;
+    engagementRate: number;
+  };
+  platformBreakdown: Record<string, { posts: number; published: number }>;
+  chartData: Array<{ date: string; posts: number }>;
+  recentActivity: Array<{ endpoint: string; status: string; createdAt: string }>;
+}
+
 export default function AnalyticsPage() {
   const [timeRange, setTimeRange] = useState('7d');
   const [platform, setPlatform] = useState('all');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(null);
 
-  // Simulate data loading
+  // Helper to get auth token
+  const getAuthToken = () => {
+    return localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token') || localStorage.getItem('token');
+  };
+
+  // Fetch real analytics data
   useEffect(() => {
     const loadAnalytics = async () => {
       setIsLoading(true);
       setError(null);
       try {
-        // Simulate API call delay
-        await new Promise(resolve => setTimeout(resolve, 800));
-        // In production, this would fetch from /api/analytics
+        const token = getAuthToken();
+        const params = new URLSearchParams({ timeRange });
+        if (platform !== 'all') {
+          params.append('platform', platform);
+        }
+
+        if (token) {
+          const response = await fetch(`/api/analytics?${params.toString()}`, {
+            headers: { 'Authorization': `Bearer ${token}` },
+          });
+
+          if (response.ok) {
+            const { data } = await response.json();
+            setAnalyticsData(data);
+            setIsLoading(false);
+            return;
+          }
+        }
+
+        // Fall back to demo data if not authenticated
+        setAnalyticsData(null);
         setIsLoading(false);
       } catch (err) {
+        console.error('Error loading analytics:', err);
         setError('Failed to load analytics data');
         setIsLoading(false);
       }
@@ -163,10 +206,42 @@ export default function AnalyticsPage() {
     loadAnalytics();
   }, [timeRange, platform]);
 
-  const handleRetry = () => {
+  const handleRetry = async () => {
     setError(null);
     setIsLoading(true);
-    setTimeout(() => setIsLoading(false), 800);
+    try {
+      const token = getAuthToken();
+      const params = new URLSearchParams({ timeRange });
+      if (platform !== 'all') {
+        params.append('platform', platform);
+      }
+
+      if (token) {
+        const response = await fetch(`/api/analytics?${params.toString()}`, {
+          headers: { 'Authorization': `Bearer ${token}` },
+        });
+
+        if (response.ok) {
+          const { data } = await response.json();
+          setAnalyticsData(data);
+          setIsLoading(false);
+          return;
+        }
+      }
+      setAnalyticsData(null);
+      setIsLoading(false);
+    } catch {
+      setError('Failed to load analytics data');
+      setIsLoading(false);
+    }
+  };
+
+  // Use real data if available, otherwise fall back to mock
+  const displayData = {
+    reach: analyticsData?.totals?.reach ?? 2400000,
+    engagement: analyticsData?.totals?.engagement ?? 184500,
+    engagementRate: analyticsData?.totals?.engagementRate ?? 7.8,
+    followerGrowth: 12400, // Would come from platform connections in future
   };
 
   const PlatformIcon = ({ platform }: { platform: string }) => {
@@ -265,7 +340,13 @@ export default function AnalyticsPage() {
             <Eye className="h-4 w-4 text-purple-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-white">2.4M</div>
+            <div className="text-2xl font-bold text-white">
+              {displayData.reach >= 1000000
+                ? `${(displayData.reach / 1000000).toFixed(1)}M`
+                : displayData.reach >= 1000
+                ? `${(displayData.reach / 1000).toFixed(1)}K`
+                : displayData.reach.toLocaleString()}
+            </div>
             <div className="flex items-center mt-1">
               <TrendingUp className="h-3 w-3 text-green-500 mr-1" />
               <span className="text-xs text-green-500">+18.2%</span>
@@ -279,7 +360,11 @@ export default function AnalyticsPage() {
             <Heart className="h-4 w-4 text-purple-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-white">184.5K</div>
+            <div className="text-2xl font-bold text-white">
+              {displayData.engagement >= 1000
+                ? `${(displayData.engagement / 1000).toFixed(1)}K`
+                : displayData.engagement.toLocaleString()}
+            </div>
             <div className="flex items-center mt-1">
               <TrendingUp className="h-3 w-3 text-green-500 mr-1" />
               <span className="text-xs text-green-500">+12.5%</span>
@@ -293,11 +378,19 @@ export default function AnalyticsPage() {
             <Activity className="h-4 w-4 text-purple-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-white">7.8%</div>
+            <div className="text-2xl font-bold text-white">{displayData.engagementRate.toFixed(1)}%</div>
             <div className="flex items-center mt-1">
-              <TrendingDown className="h-3 w-3 text-red-500 mr-1" />
-              <span className="text-xs text-red-500">-0.3%</span>
-              <span className="text-xs text-gray-500 ml-1">from last period</span>
+              {displayData.engagementRate > 5 ? (
+                <>
+                  <TrendingUp className="h-3 w-3 text-green-500 mr-1" />
+                  <span className="text-xs text-green-500">Good</span>
+                </>
+              ) : (
+                <>
+                  <TrendingDown className="h-3 w-3 text-red-500 mr-1" />
+                  <span className="text-xs text-red-500">Needs improvement</span>
+                </>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -307,7 +400,11 @@ export default function AnalyticsPage() {
             <Users className="h-4 w-4 text-purple-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-white">+12.4K</div>
+            <div className="text-2xl font-bold text-white">
+              +{displayData.followerGrowth >= 1000
+                ? `${(displayData.followerGrowth / 1000).toFixed(1)}K`
+                : displayData.followerGrowth.toLocaleString()}
+            </div>
             <div className="flex items-center mt-1">
               <TrendingUp className="h-3 w-3 text-green-500 mr-1" />
               <span className="text-xs text-green-500">+24.8%</span>

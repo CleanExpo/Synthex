@@ -64,22 +64,13 @@ const updatePostSchema = z.object({
 });
 
 // =============================================================================
-// Auth Helper
+// Auth Helper - Uses centralized JWT utilities (no fallback secrets)
 // =============================================================================
 
-async function getUserId(request: NextRequest): Promise<string | null> {
-  const authHeader = request.headers.get('authorization');
-  if (!authHeader) return null;
+import { getUserIdFromRequest } from '@/lib/auth/jwt-utils';
 
-  try {
-    const token = authHeader.replace('Bearer ', '');
-    const jwt = await import('jsonwebtoken');
-    const secret = process.env.JWT_SECRET || 'default-secret';
-    const decoded = jwt.default.verify(token, secret) as { userId: string };
-    return decoded.userId;
-  } catch {
-    return null;
-  }
+async function getUserId(request: NextRequest): Promise<string | null> {
+  return getUserIdFromRequest(request);
 }
 
 // Get user's campaign IDs for authorization

@@ -792,14 +792,38 @@ export default function TasksPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Helper to get auth token
+  const getAuthToken = useCallback(() => {
+    return localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token') || localStorage.getItem('token');
+  }, []);
+
+  // Map API response to frontend Task format
+  const mapApiTaskToTask = useCallback((t: Record<string, unknown>): Task => ({
+    id: t.id as string,
+    title: t.title as string,
+    description: (t.description as string) || '',
+    status: ((t.status as string) || 'todo').replace('-', '_') as Task['status'],
+    priority: ((t.priority as string) || 'medium') as Task['priority'],
+    type: ((t.category as string) || 'other') as Task['type'],
+    assignees: t.assigneeId ? [{ id: t.assigneeId as string, name: 'Assigned' }] : [],
+    dueDate: t.dueDate ? new Date(t.dueDate as string).toISOString().split('T')[0] : '',
+    createdAt: (t.createdAt as string) || new Date().toISOString(),
+    updatedAt: (t.updatedAt as string) || new Date().toISOString(),
+    tags: (t.tags as string[]) || [],
+    subtasks: [],
+    comments: 0,
+    attachments: 0,
+    progress: (t.progress as number) || 0,
+    campaignId: t.campaignId as string | undefined,
+  }), []);
+
   // Load tasks on mount
   useEffect(() => {
     const loadTasks = async () => {
       setIsLoading(true);
       setError(null);
       try {
-        // Try to fetch from API
-        const token = localStorage.getItem('token');
+        const token = getAuthToken();
         if (token) {
           const response = await fetch('/api/tasks', {
             headers: { 'Authorization': `Bearer ${token}` },
@@ -807,25 +831,7 @@ export default function TasksPage() {
 
           if (response.ok) {
             const { data } = await response.json();
-            // Map API data to frontend Task format
-            const apiTasks: Task[] = data.map((t: Record<string, unknown>) => ({
-              id: t.id as string,
-              title: t.title as string,
-              description: (t.description as string) || '',
-              status: ((t.status as string) || 'todo').replace('-', '_') as Task['status'],
-              priority: (t.priority as string) || 'medium' as Task['priority'],
-              type: (t.category as string) || 'other' as Task['type'],
-              assignees: t.assigneeId ? [{ id: t.assigneeId as string, name: 'Assigned' }] : [],
-              dueDate: t.dueDate ? new Date(t.dueDate as string).toISOString().split('T')[0] : '',
-              createdAt: (t.createdAt as string) || new Date().toISOString(),
-              updatedAt: (t.updatedAt as string) || new Date().toISOString(),
-              tags: (t.tags as string[]) || [],
-              subtasks: [],
-              comments: 0,
-              attachments: 0,
-              progress: (t.progress as number) || 0,
-              campaignId: t.campaignId as string | undefined,
-            }));
+            const apiTasks: Task[] = data.map(mapApiTaskToTask);
 
             if (apiTasks.length > 0) {
               setTasks(apiTasks);
@@ -834,32 +840,32 @@ export default function TasksPage() {
             }
           }
         }
-        // Fall back to mock data for demo
+        // Fall back to mock data for demo (unauthenticated users)
         await new Promise(resolve => setTimeout(resolve, 500));
         setTasks(mockTasks);
         setIsLoading(false);
       } catch (err) {
-        // Fall back to mock data on error
         console.log('Using mock data:', err);
         setTasks(mockTasks);
         setIsLoading(false);
       }
     };
     loadTasks();
-  }, []);
+  }, [getAuthToken, mapApiTaskToTask]);
 
   const handleRetry = async () => {
     setError(null);
     setIsLoading(true);
     try {
-      const token = localStorage.getItem('token');
+      const token = getAuthToken();
       if (token) {
         const response = await fetch('/api/tasks', {
           headers: { 'Authorization': `Bearer ${token}` },
         });
         if (response.ok) {
           const { data } = await response.json();
-          setTasks(data.length > 0 ? data : mockTasks);
+          const apiTasks = data.map(mapApiTaskToTask);
+          setTasks(apiTasks.length > 0 ? apiTasks : mockTasks);
           setIsLoading(false);
           return;
         }
@@ -901,9 +907,13 @@ export default function TasksPage() {
   }), [tasks]);
 
   // Handlers
-  const handleCreateTask = useCallback((taskData: Partial<Task>) => {
+  const handleCreateTask = useCallback(async (taskData: Partial<Task>) => {
+    const token = getAuthToken();
+
+    // Optimistically add to UI with temp ID
+    const tempId = `temp-${Date.now()}`;
     const newTask: Task = {
-      id: `task-${Date.now()}`,
+      id: tempId,
       title: taskData.title || '',
       description: taskData.description || '',
       status: 'todo',
@@ -919,27 +929,110 @@ export default function TasksPage() {
       attachments: 0,
       progress: 0,
     };
-    setTasks([newTask, ...tasks]);
-    toast.success('Task created successfully!');
-  }, [tasks]);
+    setTasks(prev => [newTask, ...prev]);
+
+    if (token) {
+      try {
+        const response = await fetch('/api/tasks', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            title: taskData.title,
+            description: taskData.description,
+            status: 'todo',
+            priority: taskData.priority || 'medium',
+            category: taskData.type || 'content',
+            tags: taskData.tags || [],
+            dueDate: taskData.dueDate ? new Date(taskData.dueDate).toISOString() : null,
+          }),
+        });
+
+        if (response.ok) {
+          const { data } = await response.json();
+          // Replace temp task with real one from API
+          setTasks(prev => prev.map(t => t.id === tempId ? mapApiTaskToTask(data) : t));
+          toast.success('Task created successfully!');
+        } else {
+          toast.success('Task created locally');
+        }
+      } catch (err) {
+        console.error('Failed to sync task to API:', err);
+        toast.success('Task created locally');
+      }
+    } else {
+      toast.success('Task created successfully!');
+    }
+  }, [getAuthToken, mapApiTaskToTask]);
 
   const handleEditTask = useCallback((task: Task) => {
     setEditingTask(task);
-    // In production, open edit dialog
     toast.success('Edit dialog would open here');
   }, []);
 
-  const handleDeleteTask = useCallback((taskId: string) => {
-    setTasks(tasks.filter((t) => t.id !== taskId));
-    toast.success('Task deleted');
-  }, [tasks]);
+  const handleDeleteTask = useCallback(async (taskId: string) => {
+    const token = getAuthToken();
 
-  const handleStatusChange = useCallback((taskId: string, status: Task['status']) => {
-    setTasks(tasks.map((t) =>
+    // Optimistically remove from UI
+    setTasks(prev => prev.filter((t) => t.id !== taskId));
+
+    if (token && !taskId.startsWith('temp-') && !taskId.startsWith('task-')) {
+      try {
+        const response = await fetch(`/api/tasks?id=${taskId}`, {
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${token}` },
+        });
+
+        if (response.ok) {
+          toast.success('Task deleted');
+        } else {
+          toast.success('Task deleted locally');
+        }
+      } catch (err) {
+        console.error('Failed to delete task from API:', err);
+        toast.success('Task deleted locally');
+      }
+    } else {
+      toast.success('Task deleted');
+    }
+  }, [getAuthToken]);
+
+  const handleStatusChange = useCallback(async (taskId: string, status: Task['status']) => {
+    const token = getAuthToken();
+
+    // Optimistically update in UI
+    setTasks(prev => prev.map((t) =>
       t.id === taskId ? { ...t, status, updatedAt: new Date().toISOString() } : t
     ));
-    toast.success(`Task moved to ${statusConfig[status].label}`);
-  }, [tasks]);
+
+    if (token && !taskId.startsWith('temp-') && !taskId.startsWith('task-')) {
+      try {
+        // Map frontend status to API status format
+        const apiStatus = status.replace('_', '-');
+        const response = await fetch('/api/tasks', {
+          method: 'PATCH',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ id: taskId, status: apiStatus }),
+        });
+
+        if (response.ok) {
+          toast.success(`Task moved to ${statusConfig[status].label}`);
+        } else {
+          toast.success(`Task moved to ${statusConfig[status].label} (locally)`);
+        }
+      } catch (err) {
+        console.error('Failed to update task status:', err);
+        toast.success(`Task moved to ${statusConfig[status].label} (locally)`);
+      }
+    } else {
+      toast.success(`Task moved to ${statusConfig[status].label}`);
+    }
+  }, [getAuthToken]);
 
   // Show loading skeleton
   if (isLoading) {

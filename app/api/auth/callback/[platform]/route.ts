@@ -222,9 +222,14 @@ async function fetchUserInfo(
 
 /**
  * Generate JWT token for authenticated user
+ * Uses centralized JWT utilities - no fallback secrets allowed
  */
 function generateToken(user: { id: string; email: string; name?: string | null }): string {
-  const secret = process.env.JWT_SECRET || 'default-secret-change-in-production';
+  const secret = process.env.JWT_SECRET;
+
+  if (!secret) {
+    throw new Error('JWT_SECRET environment variable is required but not set');
+  }
 
   return jwt.sign(
     {

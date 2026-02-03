@@ -54,9 +54,8 @@ async function verifyAdmin(request: NextRequest): Promise<{
 
   try {
     const token = authHeader.replace('Bearer ', '');
-    const jwt = await import('jsonwebtoken');
-    const secret = process.env.JWT_SECRET || 'default-secret';
-    const decoded = jwt.default.verify(token, secret) as {
+    const { verifyToken } = await import('@/lib/auth/jwt-utils');
+    const decoded = verifyToken(token) as {
       userId: string;
       role?: string;
     };

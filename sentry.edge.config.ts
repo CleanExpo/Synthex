@@ -5,8 +5,15 @@
 
 import * as Sentry from "@sentry/nextjs";
 
+const SENTRY_DSN = process.env.SENTRY_DSN || process.env.NEXT_PUBLIC_SENTRY_DSN;
+
+// Only initialize Sentry if DSN is configured
+if (!SENTRY_DSN) {
+  console.warn('[Sentry] SENTRY_DSN not configured - edge error tracking disabled');
+}
+
 Sentry.init({
-  dsn: process.env.SENTRY_DSN || process.env.NEXT_PUBLIC_SENTRY_DSN,
+  dsn: SENTRY_DSN || undefined, // undefined disables Sentry gracefully
 
   // Organization: cleanexpo247
   // Project: synthex

@@ -2,8 +2,13 @@ import * as Sentry from '@sentry/nextjs';
 
 const SENTRY_DSN = process.env.NEXT_PUBLIC_SENTRY_DSN;
 
+// Only initialize Sentry if DSN is configured
+if (!SENTRY_DSN) {
+  console.warn('[Sentry] NEXT_PUBLIC_SENTRY_DSN not configured - error tracking disabled');
+}
+
 Sentry.init({
-  dsn: SENTRY_DSN || 'YOUR_SENTRY_DSN_HERE',
+  dsn: SENTRY_DSN || undefined, // undefined disables Sentry gracefully
   
   // Organization: cleanexpo247
   // Project: synthex

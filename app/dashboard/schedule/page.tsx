@@ -116,6 +116,11 @@ export default function SchedulePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Helper to get auth token
+  const getAuthToken = () => {
+    return localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token') || localStorage.getItem('token');
+  };
+
   // Load schedule data
   useEffect(() => {
     const loadSchedule = async () => {
@@ -123,7 +128,7 @@ export default function SchedulePage() {
       setError(null);
       try {
         // Try to fetch from API
-        const token = localStorage.getItem('token');
+        const token = getAuthToken();
         if (token) {
           const response = await fetch('/api/scheduler/posts', {
             headers: { 'Authorization': `Bearer ${token}` },
@@ -175,7 +180,7 @@ export default function SchedulePage() {
     setError(null);
     setIsLoading(true);
     try {
-      const token = localStorage.getItem('token');
+      const token = getAuthToken();
       if (token) {
         const response = await fetch('/api/scheduler/posts', {
           headers: { 'Authorization': `Bearer ${token}` },
