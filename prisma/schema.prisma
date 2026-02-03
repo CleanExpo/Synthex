@@ -587,6 +587,48 @@ model Persona {
 }
 
 // ==========================================
+// Subscription & Billing Module
+// ==========================================
+
+model Subscription {
+  id                   String    @id @default(cuid())
+  userId               String    @unique
+  stripeCustomerId     String?   @unique
+  stripeSubscriptionId String?   @unique
+  stripePriceId        String?
+
+  // Subscription details
+  plan                 String    @default("free") // 'free', 'professional', 'business', 'custom'
+  status               String    @default("inactive") // 'active', 'inactive', 'past_due', 'cancelled', 'trialing'
+
+  // Billing period
+  currentPeriodStart   DateTime?
+  currentPeriodEnd     DateTime?
+  cancelAtPeriodEnd    Boolean   @default(false)
+  cancelledAt          DateTime?
+
+  // Trial
+  trialStart           DateTime?
+  trialEnd             DateTime?
+
+  // Usage limits (based on plan)
+  maxSocialAccounts    Int       @default(2)
+  maxAiPosts           Int       @default(10)
+  maxPersonas          Int       @default(1)
+
+  // Usage tracking
+  currentAiPosts       Int       @default(0)
+  lastResetAt          DateTime  @default(now())
+
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+
+  @@index([status])
+  @@index([plan])
+  @@map("subscriptions")
+}
+
+// ==========================================
 // Role-Based Access Control (RBAC) Module
 // ==========================================
 
