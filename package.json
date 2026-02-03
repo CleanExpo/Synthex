@@ -194,6 +194,7 @@
     "three": "^0.159.0",
     "twitter-api-v2": "^1.24.0",
     "typescript": "^5.7.2",
+    "uuid": "^13.0.0",
     "ws": "^8.14.0",
     "zod": "^3.25.76",
     "zustand": "^4.4.0"
@@ -227,6 +228,7 @@
     "@types/glob": "^8.1.0",
     "@types/ioredis": "^5.0.0",
     "@types/supertest": "^6.0.3",
+    "@types/uuid": "^11.0.0",
     "babel-jest": "^30.2.0",
     "concurrently": "^8.2.0",
     "css-loader": "^6.8.1",
