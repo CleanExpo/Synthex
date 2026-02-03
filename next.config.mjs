@@ -16,6 +16,12 @@ const nextConfig = {
   output: process.env.DOCKER_BUILD === 'true' ? 'standalone' : undefined,
   reactStrictMode: true,
 
+  // Enable gzip compression
+  compress: true,
+
+  // Power by header removal for security
+  poweredByHeader: false,
+
   // TypeScript configuration
   typescript: {
     // We'll see TypeScript errors now but won't block builds for non-critical issues
@@ -26,6 +32,41 @@ const nextConfig = {
   eslint: {
     // Disable ESLint during builds to prevent blocking on Vercel
     ignoreDuringBuilds: true,
+  },
+
+  // HTTP headers for performance and security
+  async headers() {
+    return [
+      {
+        source: '/(.*)',
+        headers: [
+          {
+            key: 'X-DNS-Prefetch-Control',
+            value: 'on',
+          },
+        ],
+      },
+      {
+        // Cache static assets aggressively
+        source: '/static/(.*)',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
+      {
+        // Cache fonts
+        source: '/fonts/(.*)',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
+    ];
   },
 
   // Experimental features
@@ -42,6 +83,8 @@ const nextConfig = {
       'react-icons',
       'date-fns',
       'lodash',
+      'lucide-react',
+      'recharts',
     ],
     // Comprehensive exclusions to speed up build tracing
     outputFileTracingExcludes: {
