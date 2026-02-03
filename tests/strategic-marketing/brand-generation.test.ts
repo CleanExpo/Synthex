@@ -6,15 +6,16 @@
 import { describe, it, expect, beforeAll, afterAll, beforeEach, afterEach, jest } from '@jest/globals';
 import BrandPsychologyOrchestrator from '@/lib/ai/agents/strategic-marketing/brand-orchestrator';
 import PsychologyEffectivenessTester from '@/lib/ai/agents/strategic-marketing/psychology-testing';
-import { callOpenRouter } from '@/lib/ai/openrouter';
+import { getAIProvider } from '@/lib/ai/providers';
 import testData from './sample-data.json';
 
-jest.mock('@/lib/ai/openrouter', () => ({
+// Mock the AI provider module
+jest.mock('@/lib/ai/providers', () => ({
   __esModule: true,
-  callOpenRouter: jest.fn()
+  getAIProvider: jest.fn()
 }));
 
-const callOpenRouterMock = callOpenRouter as jest.MockedFunction<typeof callOpenRouter>;
+const getAIProviderMock = getAIProvider as jest.MockedFunction<typeof getAIProvider>;
 
 const mockPsychologyResponse = JSON.stringify({
   primaryTriggers: [
@@ -119,14 +120,23 @@ const resolveMockResponse = (systemPrompt: string) => {
 };
 
 beforeEach(() => {
-  callOpenRouterMock.mockImplementation(async (request) => {
-    const systemPrompt = request.messages?.[0]?.content ?? '';
-    return resolveMockResponse(systemPrompt);
-  });
+  // Mock the AI provider to return responses based on system prompt
+  getAIProviderMock.mockReturnValue({
+    complete: jest.fn().mockImplementation(async (request: { messages?: Array<{ content: string }> }) => {
+      const systemPrompt = request.messages?.[0]?.content ?? '';
+      const content = resolveMockResponse(systemPrompt);
+      return {
+        choices: [{ message: { content } }]
+      };
+    }),
+    stream: jest.fn(),
+    getModels: jest.fn(),
+    estimateCost: jest.fn().mockReturnValue(0.01),
+  } as ReturnType<typeof getAIProvider>);
 });
 
 afterEach(() => {
-  callOpenRouterMock.mockReset();
+  getAIProviderMock.mockReset();
 });
 
 describe('Brand Psychology Generation System', () => {
