@@ -1,7 +1,38 @@
 /**
  * Service Worker for SYNTHEX
  * Handles caching, offline support, and performance optimization
+ *
+ * NOTE: This service worker is for the legacy static HTML site only.
+ * The Next.js app does not use this service worker.
  */
+
+// Self-unregister on production domains (Next.js app doesn't need this SW)
+const PRODUCTION_DOMAINS = ['synthex.social', 'synthex.vercel.app', 'synthex.ai'];
+const isProduction = PRODUCTION_DOMAINS.some(domain => self.location.hostname.includes(domain));
+
+if (isProduction) {
+  // Unregister this service worker on production
+  self.addEventListener('install', () => {
+    self.skipWaiting();
+  });
+
+  self.addEventListener('activate', async () => {
+    // Clear all caches
+    const cacheNames = await caches.keys();
+    await Promise.all(cacheNames.map(name => caches.delete(name)));
+
+    // Unregister this service worker
+    const registrations = await self.registration.unregister();
+    console.log('Service worker unregistered on production:', registrations);
+
+    // Reload all clients to clear SW control
+    const clients = await self.clients.matchAll({ type: 'window' });
+    clients.forEach(client => client.navigate(client.url));
+  });
+
+  // Don't do anything else on production
+  return;
+}
 
 const CACHE_NAME = 'synthex-v1.0.0';
 const RUNTIME_CACHE = 'synthex-runtime';
