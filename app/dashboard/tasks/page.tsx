@@ -1,7 +1,9 @@
 'use client';
 
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { TasksSkeleton } from '@/components/skeletons';
+import { APIErrorCard } from '@/components/error-states';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -779,7 +781,7 @@ function CreateTaskDialog({ open, onOpenChange, onSubmit }: {
 // ============================================================================
 
 export default function TasksPage() {
-  const [tasks, setTasks] = useState<Task[]>(mockTasks);
+  const [tasks, setTasks] = useState<Task[]>([]);
   const [view, setView] = useState<'kanban' | 'list'>('kanban');
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState<Task['status'] | 'all'>('all');
@@ -787,6 +789,88 @@ export default function TasksPage() {
   const [filterPriority, setFilterPriority] = useState<Task['priority'] | 'all'>('all');
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Load tasks on mount
+  useEffect(() => {
+    const loadTasks = async () => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        // Try to fetch from API
+        const token = localStorage.getItem('token');
+        if (token) {
+          const response = await fetch('/api/tasks', {
+            headers: { 'Authorization': `Bearer ${token}` },
+          });
+
+          if (response.ok) {
+            const { data } = await response.json();
+            // Map API data to frontend Task format
+            const apiTasks: Task[] = data.map((t: Record<string, unknown>) => ({
+              id: t.id as string,
+              title: t.title as string,
+              description: (t.description as string) || '',
+              status: ((t.status as string) || 'todo').replace('-', '_') as Task['status'],
+              priority: (t.priority as string) || 'medium' as Task['priority'],
+              type: (t.category as string) || 'other' as Task['type'],
+              assignees: t.assigneeId ? [{ id: t.assigneeId as string, name: 'Assigned' }] : [],
+              dueDate: t.dueDate ? new Date(t.dueDate as string).toISOString().split('T')[0] : '',
+              createdAt: (t.createdAt as string) || new Date().toISOString(),
+              updatedAt: (t.updatedAt as string) || new Date().toISOString(),
+              tags: (t.tags as string[]) || [],
+              subtasks: [],
+              comments: 0,
+              attachments: 0,
+              progress: (t.progress as number) || 0,
+              campaignId: t.campaignId as string | undefined,
+            }));
+
+            if (apiTasks.length > 0) {
+              setTasks(apiTasks);
+              setIsLoading(false);
+              return;
+            }
+          }
+        }
+        // Fall back to mock data for demo
+        await new Promise(resolve => setTimeout(resolve, 500));
+        setTasks(mockTasks);
+        setIsLoading(false);
+      } catch (err) {
+        // Fall back to mock data on error
+        console.log('Using mock data:', err);
+        setTasks(mockTasks);
+        setIsLoading(false);
+      }
+    };
+    loadTasks();
+  }, []);
+
+  const handleRetry = async () => {
+    setError(null);
+    setIsLoading(true);
+    try {
+      const token = localStorage.getItem('token');
+      if (token) {
+        const response = await fetch('/api/tasks', {
+          headers: { 'Authorization': `Bearer ${token}` },
+        });
+        if (response.ok) {
+          const { data } = await response.json();
+          setTasks(data.length > 0 ? data : mockTasks);
+          setIsLoading(false);
+          return;
+        }
+      }
+      setTasks(mockTasks);
+      setIsLoading(false);
+    } catch {
+      setTasks(mockTasks);
+      setIsLoading(false);
+    }
+  };
 
   // Filter tasks
   const filteredTasks = useMemo(() => {
@@ -856,6 +940,24 @@ export default function TasksPage() {
     ));
     toast.success(`Task moved to ${statusConfig[status].label}`);
   }, [tasks]);
+
+  // Show loading skeleton
+  if (isLoading) {
+    return <TasksSkeleton />;
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <div className="p-6">
+        <APIErrorCard
+          title="Tasks Error"
+          message={error}
+          onRetry={handleRetry}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

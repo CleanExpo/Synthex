@@ -622,7 +622,7 @@ export default function TeamPage() {
                     
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="text-gray-400">
+                        <Button variant="ghost" size="icon" className="text-gray-400" aria-label="Member actions">
                           <MoreVertical className="h-4 w-4" />
                         </Button>
                       </DropdownMenuTrigger>

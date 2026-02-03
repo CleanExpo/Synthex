@@ -35,17 +35,24 @@ const alertVariants = cva(
   }
 );
 
-const Alert = React.forwardRef<
-  HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement> & VariantProps<typeof alertVariants>
->(({ className, variant, ...props }, ref) => (
-  <div
-    ref={ref}
-    role="alert"
-    className={cn(alertVariants({ variant }), className)}
-    {...props}
-  />
-));
+export interface AlertProps
+  extends React.HTMLAttributes<HTMLDivElement>,
+    VariantProps<typeof alertVariants> {
+  /** For dynamic alerts that appear after page load, use "polite" for non-urgent, "assertive" for urgent */
+  'aria-live'?: 'polite' | 'assertive' | 'off';
+}
+
+const Alert = React.forwardRef<HTMLDivElement, AlertProps>(
+  ({ className, variant, 'aria-live': ariaLive, ...props }, ref) => (
+    <div
+      ref={ref}
+      role="alert"
+      aria-live={ariaLive}
+      className={cn(alertVariants({ variant }), className)}
+      {...props}
+    />
+  )
+);
 Alert.displayName = 'Alert';
 
 const alertTitleVariants = cva('mb-1 font-medium leading-none tracking-tight', {

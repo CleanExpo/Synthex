@@ -88,6 +88,7 @@ export default function DashboardLayout({
               size="icon"
               onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
               className="hidden lg:flex"
+              aria-label={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
             >
               {sidebarCollapsed ? (
                 <ChevronRight className="h-4 w-4" />
@@ -145,6 +146,8 @@ export default function DashboardLayout({
               size="icon"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="lg:hidden"
+              aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
+              aria-expanded={mobileMenuOpen}
             >
               <Menu className="h-5 w-5" />
             </Button>

@@ -417,7 +417,7 @@ export abstract class BaseRepository<T extends BaseEntity> implements IRepositor
    * Execute operation within transaction
    */
   async executeInTransaction<TResult>(
-    operation: (tx: PrismaClient) => Promise<TResult>
+    operation: (tx: Omit<PrismaClient, '$connect' | '$disconnect' | '$on' | '$transaction' | '$extends'>) => Promise<TResult>
   ): Promise<TResult> {
     return await this.prisma.$transaction(operation);
   }

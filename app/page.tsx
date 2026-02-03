@@ -11,7 +11,7 @@ import {
   ArrowRight, Sparkles, TrendingUp, Users, Calendar, BarChart3, Zap,
   CheckCircle2, Brain, Shield, Globe, Rocket, Award, LineChart,
   MessageSquare, Hash, Clock, Target, Lightbulb, ChevronRight,
-  Star, BadgeCheck, ArrowUpRight, Globe2
+  Star, BadgeCheck, ArrowUpRight
 } from '@/components/icons';
 import { UserCount, EngagementBoost } from '@/components/real-stats';
 

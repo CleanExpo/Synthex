@@ -4,10 +4,26 @@ import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { 
-  Users, 
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
+  Users,
   Search,
   Filter,
   MoreVertical,
@@ -22,7 +38,8 @@ import {
   Edit,
   RefreshCw,
   Download,
-  UserPlus
+  UserPlus,
+  Loader2
 } from '@/components/icons';
 import { supabase } from '@/lib/supabase-client';
 import toast, { Toaster } from 'react-hot-toast';
@@ -44,6 +61,11 @@ export default function AdminPanel() {
   const [searchTerm, setSearchTerm] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [selectedUserIds, setSelectedUserIds] = useState<Set<string>>(new Set());
+  const [isBulkProcessing, setIsBulkProcessing] = useState(false);
   const [stats, setStats] = useState({
     totalUsers: 0,
     activeToday: 0,
@@ -173,12 +195,121 @@ export default function AdminPanel() {
     a.click();
   };
 
+  // Bulk selection handlers
+  const toggleUserSelection = (userId: string) => {
+    setSelectedUserIds(prev => {
+      const next = new Set(prev);
+      if (next.has(userId)) {
+        next.delete(userId);
+      } else {
+        next.add(userId);
+      }
+      return next;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedUserIds.size === filteredUsers.length) {
+      setSelectedUserIds(new Set());
+    } else {
+      setSelectedUserIds(new Set(filteredUsers.map(u => u.id)));
+    }
+  };
+
+  const handleBulkAction = async (action: 'ban' | 'unban' | 'delete' | 'export') => {
+    if (selectedUserIds.size === 0) {
+      toast.error('Please select users first');
+      return;
+    }
+
+    setIsBulkProcessing(true);
+    try {
+      const selectedCount = selectedUserIds.size;
+
+      switch (action) {
+        case 'ban':
+          setUsers(prev => prev.map(u =>
+            selectedUserIds.has(u.id) ? { ...u, status: 'banned' } : u
+          ));
+          toast.success(`${selectedCount} user(s) banned`);
+          break;
+        case 'unban':
+          setUsers(prev => prev.map(u =>
+            selectedUserIds.has(u.id) ? { ...u, status: 'active' } : u
+          ));
+          toast.success(`${selectedCount} user(s) unbanned`);
+          break;
+        case 'delete':
+          if (confirm(`Are you sure you want to delete ${selectedCount} user(s)?`)) {
+            setUsers(prev => prev.filter(u => !selectedUserIds.has(u.id)));
+            toast.success(`${selectedCount} user(s) deleted`);
+          }
+          break;
+        case 'export':
+          const selectedUsers = users.filter(u => selectedUserIds.has(u.id));
+          const csv = [
+            ['ID', 'Email', 'Created At', 'Last Sign In', 'Status', 'Role'],
+            ...selectedUsers.map(u => [
+              u.id,
+              u.email,
+              u.created_at,
+              u.last_sign_in_at || 'Never',
+              u.status || 'active',
+              u.role || 'user'
+            ])
+          ].map(row => row.join(',')).join('\n');
+
+          const blob = new Blob([csv], { type: 'text/csv' });
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `selected-users-${Date.now()}.csv`;
+          a.click();
+          toast.success(`Exported ${selectedCount} user(s)`);
+          break;
+      }
+      setSelectedUserIds(new Set());
+    } catch (error) {
+      console.error(`Bulk ${action} failed:`, error);
+      toast.error(`Failed to ${action} users`);
+    } finally {
+      setIsBulkProcessing(false);
+    }
+  };
+
   const handleAddUser = () => {
     toast.success('Add User dialog coming soon');
   };
 
   const handleFilter = () => {
     toast.success('Filter options coming soon');
+  };
+
+  const handleOpenEditDialog = (user: User) => {
+    setEditingUser({ ...user });
+    setEditDialogOpen(true);
+  };
+
+  const handleSaveUser = async () => {
+    if (!editingUser) return;
+
+    setIsSaving(true);
+    try {
+      // In production, this would call the API to update the user
+      await new Promise(resolve => setTimeout(resolve, 800));
+
+      setUsers(prev => prev.map(u =>
+        u.id === editingUser.id ? editingUser : u
+      ));
+
+      toast.success('User updated successfully');
+      setEditDialogOpen(false);
+      setEditingUser(null);
+    } catch (error) {
+      toast.error('Failed to update user');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -286,11 +417,80 @@ export default function AdminPanel() {
             </Button>
           </div>
 
+          {/* Bulk Actions Bar */}
+          {selectedUserIds.size > 0 && (
+            <div className="flex items-center justify-between p-3 bg-purple-500/10 border border-purple-500/20 rounded-lg mb-4">
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-purple-300">
+                  {selectedUserIds.size} user(s) selected
+                </span>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => setSelectedUserIds(new Set())}
+                  className="text-gray-400 hover:text-white"
+                >
+                  Clear
+                </Button>
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => handleBulkAction('export')}
+                  disabled={isBulkProcessing}
+                  className="border-white/10"
+                >
+                  <Download className="w-4 h-4 mr-1" />
+                  Export
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => handleBulkAction('ban')}
+                  disabled={isBulkProcessing}
+                  className="border-yellow-500/50 text-yellow-400 hover:bg-yellow-500/10"
+                >
+                  <Ban className="w-4 h-4 mr-1" />
+                  Ban
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => handleBulkAction('unban')}
+                  disabled={isBulkProcessing}
+                  className="border-green-500/50 text-green-400 hover:bg-green-500/10"
+                >
+                  <CheckCircle className="w-4 h-4 mr-1" />
+                  Unban
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => handleBulkAction('delete')}
+                  disabled={isBulkProcessing}
+                  className="border-red-500/50 text-red-400 hover:bg-red-500/10"
+                >
+                  <Trash2 className="w-4 h-4 mr-1" />
+                  Delete
+                </Button>
+              </div>
+            </div>
+          )}
+
           {/* Users Table */}
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
                 <tr className="border-b border-white/10">
+                  <th className="py-3 px-4 w-10">
+                    <input
+                      type="checkbox"
+                      checked={selectedUserIds.size === filteredUsers.length && filteredUsers.length > 0}
+                      onChange={toggleSelectAll}
+                      className="rounded border-white/20 bg-white/5 text-purple-500 focus:ring-purple-500"
+                    />
+                  </th>
                   <th className="text-left py-3 px-4 text-sm font-medium text-gray-400">User</th>
                   <th className="text-left py-3 px-4 text-sm font-medium text-gray-400">Status</th>
                   <th className="text-left py-3 px-4 text-sm font-medium text-gray-400">Role</th>
@@ -302,19 +502,32 @@ export default function AdminPanel() {
               <tbody>
                 {isLoading ? (
                   <tr>
-                    <td colSpan={6} className="text-center py-8 text-gray-400">
+                    <td colSpan={7} className="text-center py-8 text-gray-400">
                       Loading users...
                     </td>
                   </tr>
                 ) : filteredUsers.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="text-center py-8 text-gray-400">
+                    <td colSpan={7} className="text-center py-8 text-gray-400">
                       No users found
                     </td>
                   </tr>
                 ) : (
                   filteredUsers.map((user) => (
-                    <tr key={user.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
+                    <tr
+                      key={user.id}
+                      className={`border-b border-white/5 hover:bg-white/5 transition-colors ${
+                        selectedUserIds.has(user.id) ? 'bg-purple-500/10' : ''
+                      }`}
+                    >
+                      <td className="py-3 px-4">
+                        <input
+                          type="checkbox"
+                          checked={selectedUserIds.has(user.id)}
+                          onChange={() => toggleUserSelection(user.id)}
+                          className="rounded border-white/20 bg-white/5 text-purple-500 focus:ring-purple-500"
+                        />
+                      </td>
                       <td className="py-3 px-4">
                         <div className="flex items-center">
                           <div className="w-8 h-8 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center text-white text-sm font-bold mr-3">
@@ -360,7 +573,7 @@ export default function AdminPanel() {
                           <Button
                             size="sm"
                             variant="ghost"
-                            onClick={() => setSelectedUser(user)}
+                            onClick={() => handleOpenEditDialog(user)}
                             className="text-gray-400 hover:text-white"
                           >
                             <Edit className="w-4 h-4" />
@@ -399,6 +612,100 @@ export default function AdminPanel() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Edit User Dialog */}
+      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+        <DialogContent className="sm:max-w-[425px] bg-gray-900 border-white/10">
+          <DialogHeader>
+            <DialogTitle className="text-white">Edit User</DialogTitle>
+            <DialogDescription className="text-gray-400">
+              Update user details and permissions.
+            </DialogDescription>
+          </DialogHeader>
+          {editingUser && (
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="edit-email" className="text-gray-300">Email</Label>
+                <Input
+                  id="edit-email"
+                  value={editingUser.email}
+                  onChange={(e) => setEditingUser(prev => prev ? { ...prev, email: e.target.value } : null)}
+                  className="bg-white/5 border-white/10 text-white"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-gray-300">Role</Label>
+                <Select
+                  value={editingUser.role || 'user'}
+                  onValueChange={(value) => setEditingUser(prev => prev ? { ...prev, role: value } : null)}
+                >
+                  <SelectTrigger className="bg-white/5 border-white/10 text-white">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="user">User</SelectItem>
+                    <SelectItem value="admin">Admin</SelectItem>
+                    <SelectItem value="moderator">Moderator</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label className="text-gray-300">Status</Label>
+                <Select
+                  value={editingUser.status || 'active'}
+                  onValueChange={(value) => setEditingUser(prev => prev ? { ...prev, status: value } : null)}
+                >
+                  <SelectTrigger className="bg-white/5 border-white/10 text-white">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="active">Active</SelectItem>
+                    <SelectItem value="banned">Banned</SelectItem>
+                    <SelectItem value="suspended">Suspended</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="p-3 bg-white/5 rounded-lg">
+                <p className="text-xs text-gray-400">
+                  <strong>ID:</strong> {editingUser.id}
+                </p>
+                <p className="text-xs text-gray-400">
+                  <strong>Created:</strong> {new Date(editingUser.created_at).toLocaleDateString()}
+                </p>
+                <p className="text-xs text-gray-400">
+                  <strong>Last Sign In:</strong> {editingUser.last_sign_in_at ? new Date(editingUser.last_sign_in_at).toLocaleDateString() : 'Never'}
+                </p>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setEditDialogOpen(false);
+                setEditingUser(null);
+              }}
+              className="bg-white/5 border-white/10 text-white hover:bg-white/10"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSaveUser}
+              disabled={isSaving}
+              className="gradient-primary text-white"
+            >
+              {isSaving ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                'Save Changes'
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

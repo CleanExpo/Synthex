@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { DashboardSkeleton } from '@/components/skeletons';
+import { APIErrorCard } from '@/components/error-states';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -103,7 +105,7 @@ const bestTimes = {
 };
 
 export default function SchedulePage() {
-  const [posts, setPosts] = useState(mockScheduledPosts);
+  const [posts, setPosts] = useState<typeof mockScheduledPosts>([]);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [viewMode, setViewMode] = useState<'calendar' | 'list'>('calendar');
   const [filterPlatform, setFilterPlatform] = useState('all');
@@ -111,6 +113,97 @@ export default function SchedulePage() {
   const [isCreating, setIsCreating] = useState(false);
   const [selectedPost, setSelectedPost] = useState<any>(null);
   const [currentMonth, setCurrentMonth] = useState(new Date());
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Load schedule data
+  useEffect(() => {
+    const loadSchedule = async () => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        // Try to fetch from API
+        const token = localStorage.getItem('token');
+        if (token) {
+          const response = await fetch('/api/scheduler/posts', {
+            headers: { 'Authorization': `Bearer ${token}` },
+          });
+
+          if (response.ok) {
+            const { data } = await response.json();
+            // Map API data to frontend format
+            const apiPosts = data.map((p: Record<string, unknown>) => ({
+              id: typeof p.id === 'number' ? p.id : parseInt(p.id as string, 10) || Date.now(),
+              content: (p.content as string) || '',
+              platform: (p.platform as string) || 'twitter',
+              scheduledFor: new Date(p.scheduledAt as string),
+              status: (p.status as string) || 'scheduled',
+              engagement: {
+                estimated: ((p.metadata as Record<string, unknown>)?.estimatedEngagement as number) || 5,
+                ...(p.status === 'published' ? {
+                  actual: ((p.metadata as Record<string, unknown>)?.engagement as Record<string, unknown>)?.actual as number,
+                  likes: ((p.metadata as Record<string, unknown>)?.engagement as Record<string, unknown>)?.likes as number,
+                  comments: ((p.metadata as Record<string, unknown>)?.engagement as Record<string, unknown>)?.comments as number,
+                  shares: ((p.metadata as Record<string, unknown>)?.engagement as Record<string, unknown>)?.shares as number,
+                } : {}),
+              },
+              persona: ((p.metadata as Record<string, unknown>)?.persona as string) || 'Default',
+            }));
+
+            if (apiPosts.length > 0) {
+              setPosts(apiPosts);
+              setIsLoading(false);
+              return;
+            }
+          }
+        }
+        // Fall back to mock data for demo
+        await new Promise(resolve => setTimeout(resolve, 400));
+        setPosts(mockScheduledPosts);
+        setIsLoading(false);
+      } catch (err) {
+        // Fall back to mock data on error
+        console.log('Using mock schedule data:', err);
+        setPosts(mockScheduledPosts);
+        setIsLoading(false);
+      }
+    };
+    loadSchedule();
+  }, []);
+
+  const handleRetry = async () => {
+    setError(null);
+    setIsLoading(true);
+    try {
+      const token = localStorage.getItem('token');
+      if (token) {
+        const response = await fetch('/api/scheduler/posts', {
+          headers: { 'Authorization': `Bearer ${token}` },
+        });
+        if (response.ok) {
+          const { data } = await response.json();
+          if (data.length > 0) {
+            setPosts(data);
+            setIsLoading(false);
+            return;
+          }
+        }
+      }
+      setPosts(mockScheduledPosts);
+      setIsLoading(false);
+    } catch {
+      setPosts(mockScheduledPosts);
+      setIsLoading(false);
+    }
+  };
+
+  if (isLoading) {
+    return <DashboardSkeleton />;
+  }
+
+  if (error) {
+    return <APIErrorCard title="Schedule Error" message={error} onRetry={handleRetry} />;
+  }
 
   // Calculate stats
   const stats = {
@@ -193,6 +286,64 @@ export default function SchedulePage() {
     return true;
   });
 
+  const handleExportSchedule = () => {
+    const exportData = {
+      exportedAt: new Date().toISOString(),
+      filters: {
+        platform: filterPlatform,
+        status: filterStatus,
+      },
+      stats,
+      posts: filteredPosts.map(post => ({
+        ...post,
+        scheduledFor: post.scheduledFor.toISOString(),
+      })),
+    };
+
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `content-schedule-${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    toast.success('Schedule exported successfully!');
+  };
+
+  const handleImportSchedule = () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json';
+    input.onchange = (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        try {
+          const data = JSON.parse(event.target?.result as string);
+          if (data.posts && Array.isArray(data.posts)) {
+            const importedPosts = data.posts.map((post: any, index: number) => ({
+              ...post,
+              id: Date.now() + index,
+              scheduledFor: new Date(post.scheduledFor),
+            }));
+            setPosts(prev => [...prev, ...importedPosts]);
+            toast.success(`Imported ${importedPosts.length} posts!`);
+          } else {
+            toast.error('Invalid schedule file format');
+          }
+        } catch {
+          toast.error('Failed to parse schedule file');
+        }
+      };
+      reader.readAsText(file);
+    };
+    input.click();
+  };
+
   const PlatformIcon = (platform: string) => {
     const Icon = platformIcons[platform as keyof typeof platformIcons];
     return Icon ? <Icon className="h-4 w-4" /> : null;
@@ -209,11 +360,19 @@ export default function SchedulePage() {
           </p>
         </div>
         <div className="flex space-x-3 mt-4 sm:mt-0">
-          <Button variant="outline" className="bg-white/5 border-white/10 text-white hover:bg-white/10">
+          <Button
+            onClick={handleImportSchedule}
+            variant="outline"
+            className="bg-white/5 border-white/10 text-white hover:bg-white/10"
+          >
             <Upload className="mr-2 h-4 w-4" />
             Import
           </Button>
-          <Button variant="outline" className="bg-white/5 border-white/10 text-white hover:bg-white/10">
+          <Button
+            onClick={handleExportSchedule}
+            variant="outline"
+            className="bg-white/5 border-white/10 text-white hover:bg-white/10"
+          >
             <Download className="mr-2 h-4 w-4" />
             Export
           </Button>

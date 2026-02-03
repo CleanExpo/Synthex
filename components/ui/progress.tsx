@@ -65,12 +65,16 @@ export interface ProgressProps
     VariantProps<typeof progressVariants> {
   indicatorVariant?: VariantProps<typeof progressIndicatorVariants>['variant'];
   animated?: boolean;
+  /** Accessible label for screen readers */
+  'aria-label'?: string;
+  /** Custom value text for screen readers (e.g., "75% complete") */
+  'aria-valuetext'?: string;
 }
 
 const Progress = React.forwardRef<
   React.ElementRef<typeof ProgressPrimitive.Root>,
   ProgressProps
->(({ className, value, variant, size, indicatorVariant, animated, ...props }, ref) => {
+>(({ className, value, variant, size, indicatorVariant, animated, 'aria-label': ariaLabel, 'aria-valuetext': ariaValueText, ...props }, ref) => {
   // Determine indicator variant based on track variant if not explicitly set
   const resolvedIndicatorVariant =
     indicatorVariant ||
@@ -88,6 +92,8 @@ const Progress = React.forwardRef<
     <ProgressPrimitive.Root
       ref={ref}
       className={cn(progressVariants({ variant, size, className }))}
+      aria-label={ariaLabel}
+      aria-valuetext={ariaValueText || (value !== undefined ? `${value}% complete` : undefined)}
       {...props}
     >
       <ProgressPrimitive.Indicator

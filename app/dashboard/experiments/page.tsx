@@ -26,6 +26,7 @@ export default function ExperimentsPage() {
   const [experiments, setExperiments] = useState<Experiment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedExperiment, setSelectedExperiment] = useState<Experiment | null>(null);
+  const [showNewExperimentForm, setShowNewExperimentForm] = useState(false);
 
   useEffect(() => {
     fetchExperiments();
@@ -133,7 +134,13 @@ export default function ExperimentsPage() {
             <RefreshCw className={`w-4 h-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
             Refresh
           </Button>
-          <Button className="gradient-primary text-white">
+          <Button
+            className="gradient-primary text-white"
+            onClick={() => {
+              setShowNewExperimentForm(true);
+              toast.success('New experiment form coming soon!', { icon: '🧪' });
+            }}
+          >
             <Plus className="w-4 h-4 mr-2" />
             New Experiment
           </Button>
@@ -240,7 +247,15 @@ export default function ExperimentsPage() {
                         Resume
                       </Button>
                     ) : null}
-                    <Button size="sm" variant="outline">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        setSelectedExperiment(experiment);
+                        toast('Experiment settings: ' + experiment.name, { icon: '⚙️' });
+                      }}
+                      aria-label="Experiment settings"
+                    >
                       <Settings className="w-4 h-4" />
                     </Button>
                   </div>

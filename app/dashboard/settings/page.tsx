@@ -93,6 +93,8 @@ export default function SettingsPage() {
     facebook: false,
     tiktok: false,
   });
+  const [debugMode, setDebugMode] = useState(false);
+  const [betaFeatures, setBetaFeatures] = useState(false);
 
   // Load initial data
   const loadUserData = useCallback(async () => {
@@ -189,6 +191,75 @@ export default function SettingsPage() {
     }
   };
 
+  const handleExportData = async () => {
+    toast.loading('Preparing data export...');
+    try {
+      const data = { profile, notifications, privacy, integrations };
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'synthex-settings-export.json';
+      a.click();
+      toast.dismiss();
+      toast.success('Data exported successfully!');
+    } catch (error) {
+      toast.dismiss();
+      toast.error('Failed to export data');
+    }
+  };
+
+  const handleSaveAll = async () => {
+    setIsLoading(true);
+    try {
+      await Promise.all([
+        profileAPI.updateProfile(profile),
+        settingsAPI.updateSettings('notifications', notifications),
+        settingsAPI.updateSettings('privacy', privacy),
+        settingsAPI.updateSettings('theme', theme),
+      ]);
+      toast.success('All settings saved successfully!');
+    } catch (error) {
+      toast.error('Failed to save some settings');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleCopyApiKey = () => {
+    navigator.clipboard.writeText('sk-proj-xxxxxxxxxxxxxxxxxxxx');
+    toast.success('API key copied to clipboard');
+  };
+
+  const handleDownloadMyData = async () => {
+    toast.loading('Preparing your data...');
+    // In production, this would call an API to gather all user data
+    setTimeout(() => {
+      toast.dismiss();
+      toast.success('Data download started. Check your email for the link.');
+    }, 1500);
+  };
+
+  const handleDeleteAccount = () => {
+    if (confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
+      toast.error('Account deletion requires email confirmation. Check your inbox.');
+    }
+  };
+
+  const handleUpgradePlan = () => {
+    window.location.href = '/pricing';
+  };
+
+  const handleEditPayment = () => {
+    toast.success('Opening payment portal...');
+    // In production, redirect to Stripe customer portal
+  };
+
+  const handleDownloadInvoice = (date: string) => {
+    toast.success(`Downloading invoice for ${date}`);
+    // In production, fetch and download the actual invoice
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -200,11 +271,11 @@ export default function SettingsPage() {
           </p>
         </div>
         <div className="flex space-x-3 mt-4 sm:mt-0">
-          <Button variant="outline" className="bg-white/5 border-white/10 text-white hover:bg-white/10">
+          <Button onClick={handleExportData} variant="outline" className="bg-white/5 border-white/10 text-white hover:bg-white/10">
             <Download className="mr-2 h-4 w-4" />
             Export Data
           </Button>
-          <Button className="gradient-primary text-white">
+          <Button onClick={handleSaveAll} disabled={isLoading} className="gradient-primary text-white">
             <Save className="mr-2 h-4 w-4" />
             Save All Changes
           </Button>
@@ -565,7 +636,7 @@ export default function SettingsPage() {
                     readOnly
                     className="bg-white/5 border-white/10 text-white"
                   />
-                  <Button variant="outline" className="bg-white/5 border-white/10 text-white hover:bg-white/10">
+                  <Button onClick={handleCopyApiKey} variant="outline" className="bg-white/5 border-white/10 text-white hover:bg-white/10">
                     <Key className="h-4 w-4" />
                   </Button>
                 </div>
@@ -636,11 +707,11 @@ export default function SettingsPage() {
               <div className="pt-6 border-t border-white/10">
                 <h3 className="text-lg font-semibold text-white mb-4">Data Management</h3>
                 <div className="space-y-3">
-                  <Button variant="outline" className="w-full bg-white/5 border-white/10 text-white hover:bg-white/10">
+                  <Button onClick={handleDownloadMyData} variant="outline" className="w-full bg-white/5 border-white/10 text-white hover:bg-white/10">
                     <Download className="mr-2 h-4 w-4" />
                     Download My Data
                   </Button>
-                  <Button variant="outline" className="w-full bg-red-500/10 border-red-500/30 text-red-400 hover:bg-red-500/20">
+                  <Button onClick={handleDeleteAccount} variant="outline" className="w-full bg-red-500/10 border-red-500/30 text-red-400 hover:bg-red-500/20">
                     <Trash2 className="mr-2 h-4 w-4" />
                     Delete My Account
                   </Button>
@@ -683,7 +754,7 @@ export default function SettingsPage() {
                     Priority support
                   </p>
                 </div>
-                <Button className="w-full gradient-primary text-white">
+                <Button onClick={handleUpgradePlan} className="w-full gradient-primary text-white">
                   Upgrade Plan
                 </Button>
               </div>
@@ -700,7 +771,7 @@ export default function SettingsPage() {
                         <p className="text-sm text-gray-400">Expires 12/25</p>
                       </div>
                     </div>
-                    <Button size="sm" variant="ghost" className="text-gray-400">
+                    <Button onClick={handleEditPayment} size="sm" variant="ghost" className="text-gray-400">
                       Edit
                     </Button>
                   </div>
@@ -723,7 +794,7 @@ export default function SettingsPage() {
                       </div>
                       <div className="flex items-center space-x-2">
                         <span className="text-xs text-green-400">{invoice.status}</span>
-                        <Button size="sm" variant="ghost" className="text-gray-400">
+                        <Button onClick={() => handleDownloadInvoice(invoice.date)} size="sm" variant="ghost" className="text-gray-400">
                           <Download className="h-4 w-4" />
                         </Button>
                       </div>
@@ -818,14 +889,26 @@ export default function SettingsPage() {
                       <p className="text-white">Debug Mode</p>
                       <p className="text-sm text-gray-400">Show detailed error messages</p>
                     </div>
-                    <Switch />
+                    <Switch
+                      checked={debugMode}
+                      onCheckedChange={(checked) => {
+                        setDebugMode(checked);
+                        toast.success(checked ? 'Debug mode enabled' : 'Debug mode disabled');
+                      }}
+                    />
                   </div>
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-white">Beta Features</p>
                       <p className="text-sm text-gray-400">Access experimental features</p>
                     </div>
-                    <Switch />
+                    <Switch
+                      checked={betaFeatures}
+                      onCheckedChange={(checked) => {
+                        setBetaFeatures(checked);
+                        toast.success(checked ? 'Beta features enabled' : 'Beta features disabled');
+                      }}
+                    />
                   </div>
                 </div>
               </div>

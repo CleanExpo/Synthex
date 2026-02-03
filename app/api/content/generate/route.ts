@@ -1,29 +1,52 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { contentGenerator } from '@/lib/services/content-generator';
 import { db } from '@/lib/supabase-client';
+import { withAuth, AuthenticatedRequest } from '@/lib/middleware/withAuth';
+import { z } from 'zod';
 
-export async function POST(request: Request) {
+// Input validation schema
+const generateContentSchema = z.object({
+  platform: z.enum(['twitter', 'linkedin', 'instagram', 'facebook', 'tiktok', 'threads']),
+  topic: z.string().min(1, 'Topic is required').max(500, 'Topic too long'),
+  personaId: z.string().uuid().optional(),
+  hookType: z.string().optional(),
+  tone: z.string().optional(),
+  includeHashtags: z.boolean().optional().default(true),
+  includeEmojis: z.boolean().optional().default(true),
+  targetLength: z.enum(['short', 'medium', 'long']).optional().default('medium'),
+  useAI: z.boolean().optional().default(false),
+});
+
+async function handlePost(request: AuthenticatedRequest) {
   try {
     const body = await request.json();
+
+    // Validate input
+    const validationResult = generateContentSchema.safeParse(body);
+    if (!validationResult.success) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Validation failed',
+          details: validationResult.error.flatten().fieldErrors
+        },
+        { status: 400 }
+      );
+    }
+
     const {
       platform,
       personaId,
       topic,
       hookType,
       tone,
-      includeHashtags = true,
-      includeEmojis = true,
-      targetLength = 'medium',
-      useAI = false,
-    } = body;
+      includeHashtags,
+      includeEmojis,
+      targetLength,
+    } = validationResult.data;
 
-    // Validate required fields
-    if (!platform || !topic) {
-      return NextResponse.json(
-        { error: 'Platform and topic are required' },
-        { status: 400 }
-      );
-    }
+    // Get authenticated user ID
+    const userId = request.userId;
 
     // Fetch persona if provided
     let persona: { id: string; name: string; attributes: Record<string, string> } | null = null;
@@ -54,47 +77,64 @@ export async function POST(request: Request) {
       targetLength,
     });
 
-    // Save to database (commented out - requires authenticated user)
-    // In production, get userId from session
-    // try {
-    //   const userId = 'user-id-from-session';
-    //   await db.content.create(userId, {
-    //     platform,
-    //     content: result.primary,
-    //     persona_id: personaId || null,
-    //     metadata: result.metadata,
-    //     status: 'draft',
-    //   });
-    // } catch (dbError) {
-    //   console.error('Failed to save content:', dbError);
-    // }
+    // Save to database with authenticated user
+    try {
+      await db.content.create(userId, {
+        platform,
+        content: result.primary,
+        persona_id: personaId || null,
+        metadata: result.metadata,
+        status: 'draft',
+      });
+    } catch (dbError) {
+      console.error('Failed to save content:', dbError);
+      // Non-critical error - continue returning the generated content
+    }
 
     return NextResponse.json({
       success: true,
       content: result,
+      userId,
       timestamp: new Date().toISOString(),
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Content generation error:', error);
+    const message = error instanceof Error ? error.message : 'Failed to generate content';
     return NextResponse.json(
-      { error: error.message || 'Failed to generate content' },
+      { success: false, error: message },
       { status: 500 }
     );
   }
 }
 
+// Export with authentication wrapper
+export const POST = withAuth(handlePost);
+
+// AI generation input schema
+const aiGenerateSchema = z.object({
+  prompt: z.string().min(1, 'Prompt is required').max(2000, 'Prompt too long'),
+  maxTokens: z.number().int().min(50).max(2000).optional().default(500),
+});
+
 // Generate content with AI
-export async function PUT(request: Request) {
+async function handlePut(request: AuthenticatedRequest) {
   try {
     const body = await request.json();
-    const { prompt, maxTokens = 500 } = body;
 
-    if (!prompt) {
+    // Validate input
+    const validationResult = aiGenerateSchema.safeParse(body);
+    if (!validationResult.success) {
       return NextResponse.json(
-        { error: 'Prompt is required' },
+        {
+          success: false,
+          error: 'Validation failed',
+          details: validationResult.error.flatten().fieldErrors
+        },
         { status: 400 }
       );
     }
+
+    const { prompt, maxTokens } = validationResult.data;
 
     // Generate with AI
     const content = await contentGenerator.generateWithAI(prompt, maxTokens);
@@ -102,13 +142,18 @@ export async function PUT(request: Request) {
     return NextResponse.json({
       success: true,
       content,
+      userId: request.userId,
       timestamp: new Date().toISOString(),
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('AI generation error:', error);
+    const message = error instanceof Error ? error.message : 'Failed to generate with AI';
     return NextResponse.json(
-      { error: error.message || 'Failed to generate with AI' },
+      { success: false, error: message },
       { status: 500 }
     );
   }
 }
+
+// Export with authentication wrapper
+export const PUT = withAuth(handlePut);

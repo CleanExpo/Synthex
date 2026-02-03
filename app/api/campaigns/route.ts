@@ -1,9 +1,57 @@
+/**
+ * Campaigns API Route
+ * CRUD operations for marketing campaigns
+ *
+ * ENVIRONMENT VARIABLES REQUIRED:
+ * - JWT_SECRET: Token signing key (CRITICAL)
+ * - DATABASE_URL: PostgreSQL connection (CRITICAL)
+ */
+
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import prisma from '@/lib/prisma';
 import jwt from 'jsonwebtoken';
+import { z } from 'zod';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
+// JWT Secret - CRITICAL: Never use fallback
+function getJWTSecret(): string {
+  const secret = process.env.JWT_SECRET;
+  if (!secret) {
+    throw new Error('JWT_SECRET environment variable is required');
+  }
+  return secret;
+}
+
+const JWT_SECRET = getJWTSecret();
+
+// Validation schemas
+const campaignCreateSchema = z.object({
+  name: z.string().min(1, 'Name is required').max(100, 'Name too long'),
+  description: z.string().max(1000, 'Description too long').optional(),
+  platform: z.enum(['twitter', 'linkedin', 'instagram', 'facebook', 'tiktok', 'threads', 'multi']),
+  content: z.string().max(10000, 'Content too long').optional(),
+  settings: z.object({
+    hashtags: z.array(z.string()).optional(),
+    mentions: z.array(z.string()).optional(),
+    scheduledAt: z.string().datetime().optional(),
+    targetAudience: z.string().optional(),
+  }).passthrough().optional(),
+});
+
+const campaignUpdateSchema = z.object({
+  id: z.string().uuid('Invalid campaign ID'),
+  name: z.string().min(1).max(100).optional(),
+  description: z.string().max(1000).optional(),
+  platform: z.enum(['twitter', 'linkedin', 'instagram', 'facebook', 'tiktok', 'threads', 'multi']).optional(),
+  content: z.string().max(10000).optional(),
+  settings: z.object({
+    hashtags: z.array(z.string()).optional(),
+    mentions: z.array(z.string()).optional(),
+    scheduledAt: z.string().datetime().optional(),
+    targetAudience: z.string().optional(),
+  }).passthrough().optional(),
+  status: z.enum(['draft', 'scheduled', 'active', 'paused', 'completed', 'archived']).optional(),
+}).strict();
 
 // Helper to get user from token
 async function getUserFromRequest(request: Request) {
@@ -52,7 +100,7 @@ export async function GET(request: Request) {
     });
 
     return NextResponse.json({ campaigns });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Get campaigns error:', error);
     return NextResponse.json(
       { error: 'Failed to fetch campaigns' },
@@ -65,7 +113,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const user = await getUserFromRequest(request);
-    
+
     if (!user) {
       return NextResponse.json(
         { error: 'Unauthorized' },
@@ -73,14 +121,21 @@ export async function POST(request: Request) {
       );
     }
 
-    const { name, description, platform, content, settings } = await request.json();
+    const body = await request.json();
 
-    if (!name || !platform) {
+    // Validate input
+    const validationResult = campaignCreateSchema.safeParse(body);
+    if (!validationResult.success) {
       return NextResponse.json(
-        { error: 'Name and platform are required' },
+        {
+          error: 'Validation failed',
+          details: validationResult.error.flatten().fieldErrors
+        },
         { status: 400 }
       );
     }
+
+    const { name, description, platform, content, settings } = validationResult.data;
 
     const campaign = await prisma.campaign.create({
       data: {
@@ -88,7 +143,7 @@ export async function POST(request: Request) {
         description,
         platform,
         content,
-        settings,
+        settings: settings as object | undefined,
         userId: user.id,
         status: 'draft',
       }
@@ -111,7 +166,7 @@ export async function POST(request: Request) {
       success: true,
       campaign
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Create campaign error:', error);
     return NextResponse.json(
       { error: 'Failed to create campaign' },
@@ -124,7 +179,7 @@ export async function POST(request: Request) {
 export async function PUT(request: Request) {
   try {
     const user = await getUserFromRequest(request);
-    
+
     if (!user) {
       return NextResponse.json(
         { error: 'Unauthorized' },
@@ -132,14 +187,21 @@ export async function PUT(request: Request) {
       );
     }
 
-    const { id, ...updateData } = await request.json();
+    const body = await request.json();
 
-    if (!id) {
+    // Validate input
+    const validationResult = campaignUpdateSchema.safeParse(body);
+    if (!validationResult.success) {
       return NextResponse.json(
-        { error: 'Campaign ID is required' },
+        {
+          error: 'Validation failed',
+          details: validationResult.error.flatten().fieldErrors
+        },
         { status: 400 }
       );
     }
+
+    const { id, settings, ...restUpdateData } = validationResult.data;
 
     // Verify ownership
     const existingCampaign = await prisma.campaign.findFirst({
@@ -155,14 +217,17 @@ export async function PUT(request: Request) {
 
     const campaign = await prisma.campaign.update({
       where: { id },
-      data: updateData
+      data: {
+        ...restUpdateData,
+        ...(settings !== undefined && { settings: settings as object })
+      }
     });
 
     return NextResponse.json({
       success: true,
       campaign
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Update campaign error:', error);
     return NextResponse.json(
       { error: 'Failed to update campaign' },
@@ -226,7 +291,7 @@ export async function DELETE(request: Request) {
       success: true,
       message: 'Campaign deleted successfully'
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Delete campaign error:', error);
     return NextResponse.json(
       { error: 'Failed to delete campaign' },

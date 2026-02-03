@@ -6,6 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { DashboardSkeleton } from '@/components/skeletons';
+import { APIErrorCard } from '@/components/error-states';
 import {
   Select,
   SelectContent,
@@ -146,9 +148,25 @@ export default function SandboxPage() {
   const [characterCount, setCharacterCount] = useState(0);
   const [wordCount, setWordCount] = useState(0);
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const config = platformConfigs[platform as keyof typeof platformConfigs];
   const DeviceIcon = devicePresets[device as keyof typeof devicePresets].icon;
+
+  // Initialize sandbox
+  useEffect(() => {
+    const initSandbox = async () => {
+      try {
+        await new Promise(resolve => setTimeout(resolve, 400));
+        setIsLoading(false);
+      } catch (err) {
+        setError('Failed to initialize sandbox');
+        setIsLoading(false);
+      }
+    };
+    initSandbox();
+  }, []);
 
   useEffect(() => {
     // Update counts
@@ -187,6 +205,34 @@ export default function SandboxPage() {
     setMentions([]);
     setValidationErrors([]);
     toast.success('Content reset');
+  };
+
+  const handleShare = async () => {
+    if (!content.trim()) {
+      toast.error('Please add some content first');
+      return;
+    }
+
+    // Try to use Web Share API if available
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: `${config.name} Post Preview`,
+          text: content,
+        });
+        toast.success('Content shared!');
+      } catch (err) {
+        if ((err as Error).name !== 'AbortError') {
+          // Fallback to copy
+          navigator.clipboard.writeText(content);
+          toast.success('Content copied to clipboard!');
+        }
+      }
+    } else {
+      // Fallback for browsers without Web Share API
+      navigator.clipboard.writeText(content);
+      toast.success('Content copied to clipboard for sharing!');
+    }
   };
 
   const renderMockup = () => {
@@ -325,6 +371,26 @@ export default function SandboxPage() {
         );
     }
   };
+
+  if (isLoading) {
+    return <DashboardSkeleton />;
+  }
+
+  if (error) {
+    return (
+      <div className="p-6">
+        <APIErrorCard
+          title="Sandbox Error"
+          message={error}
+          onRetry={() => {
+            setError(null);
+            setIsLoading(true);
+            setTimeout(() => setIsLoading(false), 400);
+          }}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -473,7 +539,7 @@ export default function SandboxPage() {
                 <Copy className="mr-2 h-4 w-4" />
                 Copy
               </Button>
-              <Button className="flex-1 gradient-primary text-white">
+              <Button onClick={handleShare} className="flex-1 gradient-primary text-white">
                 <Share2 className="mr-2 h-4 w-4" />
                 Share
               </Button>

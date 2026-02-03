@@ -10,6 +10,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { extractUserId } from '@/lib/middleware/withAuth';
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic';
@@ -162,12 +163,14 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   try {
-    // Check authentication
-    const authToken = request.cookies.get('auth-token')?.value;
-    const authHeader = request.headers.get('authorization');
+    // Extract authenticated user ID
+    const userId = await extractUserId(request);
 
-    if (!authToken && !authHeader) {
-      return NextResponse.json({ success: false, error: 'Authentication required' }, { status: 401 });
+    if (!userId) {
+      return NextResponse.json(
+        { success: false, error: 'Authentication required' },
+        { status: 401 }
+      );
     }
 
     // Parse request body
@@ -225,10 +228,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // TODO: Extract userId from auth token
-    const userId = 'demo-user-001';
-
-    // Create quote
+    // Create quote using authenticated userId
     const quote = await prisma.quote.create({
       data: {
         text: body.text.trim(),
@@ -275,12 +275,14 @@ export async function POST(request: NextRequest) {
  */
 export async function DELETE(request: NextRequest) {
   try {
-    // Check authentication
-    const authToken = request.cookies.get('auth-token')?.value;
-    const authHeader = request.headers.get('authorization');
+    // Extract authenticated user ID
+    const userId = await extractUserId(request);
 
-    if (!authToken && !authHeader) {
-      return NextResponse.json({ success: false, error: 'Authentication required' }, { status: 401 });
+    if (!userId) {
+      return NextResponse.json(
+        { success: false, error: 'Authentication required' },
+        { status: 401 }
+      );
     }
 
     // Parse request body
@@ -302,10 +304,11 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    // Delete quotes
+    // Delete only quotes owned by the user (security: prevent unauthorized deletion)
     const result = await prisma.quote.deleteMany({
       where: {
         id: { in: ids },
+        userId: userId, // Only delete user's own quotes
       },
     });
 

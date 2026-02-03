@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { 
   BarChart3, 
@@ -52,9 +53,11 @@ interface DashboardStats {
 }
 
 export default function DashboardPage() {
+  const router = useRouter();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
+  const [showNotifications, setShowNotifications] = useState(false);
 
   useEffect(() => {
     // Simulate fetching dashboard data
@@ -129,12 +132,15 @@ export default function DashboardPage() {
                 variant="outline"
                 size="icon"
                 className={cn(glassStyles.button, "relative h-9 w-9 sm:h-10 sm:w-10")}
+                onClick={() => setShowNotifications(!showNotifications)}
+                aria-label="Toggle notifications"
               >
                 <Bell className="h-4 w-4" />
                 <span className="absolute -top-1 -right-1 h-2.5 w-2.5 sm:h-3 sm:w-3 rounded-full bg-violet-500 animate-pulse" />
               </Button>
               <Button
                 className={cn(glassStyles.buttonPrimary, "gap-1 sm:gap-2 text-sm sm:text-base px-3 sm:px-4")}
+                onClick={() => router.push('/dashboard/content')}
               >
                 <Plus className="h-4 w-4" />
                 <span className="hidden xs:inline sm:inline">New Post</span>
@@ -481,7 +487,12 @@ export default function DashboardPage() {
                     <h4 className="font-medium mb-3 sm:mb-4 text-sm sm:text-base">Pending Invites</h4>
                     <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2 sm:gap-0 p-2 sm:p-3 rounded-lg bg-white/5">
                       <span className="text-xs sm:text-sm text-muted-foreground">No pending invites</span>
-                      <Button size="sm" variant="outline" className={cn(glassStyles.button, "w-full sm:w-auto text-xs sm:text-sm")}>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className={cn(glassStyles.button, "w-full sm:w-auto text-xs sm:text-sm")}
+                        onClick={() => router.push('/dashboard/team')}
+                      >
                         Invite Member
                       </Button>
                     </div>

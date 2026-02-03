@@ -474,3 +474,78 @@ model QuoteCollection {
   @@index([userId])
   @@map("quote_collections")
 }
+
+// ==========================================
+// Task Management Module
+// ==========================================
+
+model Task {
+  id           String   @id @default(cuid())
+  title        String
+  description  String?  @db.Text
+  status       String   @default("todo") // 'todo', 'in-progress', 'review', 'done'
+  priority     String   @default("medium") // 'low', 'medium', 'high', 'urgent'
+  dueDate      DateTime?
+
+  // Task metadata
+  tags         String[]
+  category     String?  // 'marketing', 'content', 'analytics', 'campaign'
+  estimatedTime Int?     // In minutes
+  actualTime   Int?      // In minutes
+  progress     Int      @default(0) // 0-100 percent
+
+  // Task organization
+  columnId     String?  // For Kanban board columns
+  order        Int      @default(0) // Position in list
+
+  // Relations
+  userId       String
+  assigneeId   String?
+  campaignId   String?
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  completedAt  DateTime?
+
+  @@index([userId])
+  @@index([status])
+  @@index([priority])
+  @@index([dueDate])
+  @@map("tasks")
+}
+
+// ==========================================
+// AI Persona Module
+// ==========================================
+
+model Persona {
+  id           String   @id @default(cuid())
+  name         String
+  description  String?  @db.Text
+  status       String   @default("draft") // 'draft', 'training', 'active', 'archived'
+
+  // Persona attributes
+  tone         String   @default("professional") // 'professional', 'casual', 'authoritative', etc.
+  style        String   @default("formal") // 'formal', 'conversational', 'thought-provoking'
+  vocabulary   String   @default("standard") // 'simple', 'standard', 'technical', 'sophisticated'
+  emotion      String   @default("neutral") // 'neutral', 'friendly', 'confident', 'inspiring'
+
+  // Training data stats
+  trainingSourcesCount Int @default(0)
+  trainingWordsCount   Int @default(0)
+  trainingSamplesCount Int @default(0)
+
+  // Performance metrics
+  accuracy     Int      @default(0) // 0-100
+  lastTrained  DateTime?
+
+  // Relations
+  userId       String
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([userId])
+  @@index([status])
+  @@map("personas")
+}

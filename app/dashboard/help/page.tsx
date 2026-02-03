@@ -1,8 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { DashboardSkeleton } from '@/components/skeletons';
+import { APIErrorCard } from '@/components/error-states';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -54,6 +56,30 @@ interface FAQ {
 export default function HelpPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const loadHelp = async () => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        // Simulate loading help content
+        await new Promise(resolve => setTimeout(resolve, 400));
+        setIsLoading(false);
+      } catch (err) {
+        setError('Failed to load help content');
+        setIsLoading(false);
+      }
+    };
+    loadHelp();
+  }, []);
+
+  const handleRetry = () => {
+    setError(null);
+    setIsLoading(true);
+    setTimeout(() => setIsLoading(false), 400);
+  };
 
   const categories: HelpCategory[] = [
     {
@@ -169,12 +195,20 @@ export default function HelpPage() {
     }
   ];
 
-  const filteredFAQs = faqs.filter(faq => 
+  const filteredFAQs = faqs.filter(faq =>
     (!selectedCategory || faq.category === selectedCategory) &&
-    (!searchQuery || 
+    (!searchQuery ||
       faq.question.toLowerCase().includes(searchQuery.toLowerCase()) ||
       faq.answer.toLowerCase().includes(searchQuery.toLowerCase()))
   );
+
+  if (isLoading) {
+    return <DashboardSkeleton />;
+  }
+
+  if (error) {
+    return <APIErrorCard title="Help Center Error" message={error} onRetry={handleRetry} />;
+  }
 
   return (
     <div className="p-6 max-w-7xl mx-auto">
@@ -203,7 +237,11 @@ export default function HelpPage() {
 
       {/* Quick Links */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 mb-8">
-        <Card variant="glass" className=" hover:scale-105 transition-transform cursor-pointer">
+        <Card
+          variant="glass"
+          className="hover:scale-105 transition-transform cursor-pointer"
+          onClick={() => window.open('https://www.youtube.com/@synthex', '_blank')}
+        >
           <CardContent className="p-6">
             <div className="flex items-center gap-4">
               <div className="p-3 rounded-lg bg-gradient-to-br from-cyan-500/20 to-purple-500/20">
@@ -218,7 +256,18 @@ export default function HelpPage() {
           </CardContent>
         </Card>
 
-        <Card variant="glass" className=" hover:scale-105 transition-transform cursor-pointer">
+        <Card
+          variant="glass"
+          className="hover:scale-105 transition-transform cursor-pointer"
+          onClick={() => {
+            // Open Intercom or similar chat widget
+            if (typeof window !== 'undefined' && (window as any).Intercom) {
+              (window as any).Intercom('show');
+            } else {
+              window.location.href = 'mailto:support@synthex.social?subject=Support Request';
+            }
+          }}
+        >
           <CardContent className="p-6">
             <div className="flex items-center gap-4">
               <div className="p-3 rounded-lg bg-gradient-to-br from-purple-500/20 to-pink-500/20">
@@ -342,15 +391,33 @@ export default function HelpPage() {
         </CardHeader>
         <CardContent>
           <div className="grid gap-4 md:grid-cols-3">
-            <Button variant="outline" className="justify-start">
+            <Button
+              variant="outline"
+              className="justify-start"
+              onClick={() => window.location.href = 'mailto:support@synthex.social'}
+            >
               <Mail className="w-4 h-4 mr-2" />
               support@synthex.social
             </Button>
-            <Button variant="outline" className="justify-start">
+            <Button
+              variant="outline"
+              className="justify-start"
+              onClick={() => {
+                if (typeof window !== 'undefined' && (window as any).Intercom) {
+                  (window as any).Intercom('show');
+                } else {
+                  window.location.href = 'mailto:support@synthex.social?subject=Live Chat Request';
+                }
+              }}
+            >
               <MessageCircle className="w-4 h-4 mr-2" />
               Start Live Chat
             </Button>
-            <Button variant="outline" className="justify-start">
+            <Button
+              variant="outline"
+              className="justify-start"
+              onClick={() => window.open('https://calendly.com/synthex/support', '_blank')}
+            >
               <Phone className="w-4 h-4 mr-2" />
               Schedule a Call
             </Button>

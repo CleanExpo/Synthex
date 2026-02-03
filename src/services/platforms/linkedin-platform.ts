@@ -200,9 +200,10 @@ export class LinkedInPlatformService extends BasePlatformService {
           },
         });
         impressionData = impressionResponse.data?.elements?.[0];
-      } catch (error) {
+      } catch (error: unknown) {
         // Impression data might not be available for personal posts
-        console.log('LinkedIn impression data not available:', error.response?.status);
+        const axiosError = error as { response?: { status?: number } };
+        console.log('LinkedIn impression data not available:', axiosError.response?.status);
       }
 
       this.lastRequestTime = new Date();

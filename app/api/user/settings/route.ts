@@ -1,7 +1,57 @@
+/**
+ * User Settings API Route
+ * GET /api/user/settings - Get user settings
+ * PUT /api/user/settings - Update user settings
+ *
+ * ENVIRONMENT VARIABLES REQUIRED:
+ * - NEXT_PUBLIC_SUPABASE_URL: Supabase URL (PUBLIC)
+ * - NEXT_PUBLIC_SUPABASE_ANON_KEY: Supabase anon key (PUBLIC)
+ */
+
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase-client';
+import { z } from 'zod';
 
 export const dynamic = 'force-dynamic';
+
+// Validation schemas for different setting types
+const notificationSettingsSchema = z.object({
+  email: z.boolean().optional(),
+  push: z.boolean().optional(),
+  sms: z.boolean().optional(),
+  weeklyReport: z.boolean().optional(),
+  viralAlert: z.boolean().optional(),
+  systemUpdates: z.boolean().optional(),
+});
+
+const privacySettingsSchema = z.object({
+  profilePublic: z.boolean().optional(),
+  showAnalytics: z.boolean().optional(),
+  allowDataCollection: z.boolean().optional(),
+});
+
+const settingsUpdateSchema = z.discriminatedUnion('type', [
+  z.object({
+    type: z.literal('notifications'),
+    settings: notificationSettingsSchema,
+  }),
+  z.object({
+    type: z.literal('privacy'),
+    settings: privacySettingsSchema,
+  }),
+  z.object({
+    type: z.literal('theme'),
+    settings: z.enum(['light', 'dark', 'system']),
+  }),
+  z.object({
+    type: z.literal('language'),
+    settings: z.string().min(2).max(10),
+  }),
+  z.object({
+    type: z.literal('timezone'),
+    settings: z.string().max(50),
+  }),
+]);
 
 // GET user settings
 export async function GET(request: NextRequest) {
@@ -67,10 +117,11 @@ export async function GET(request: NextRequest) {
     }
 
     return NextResponse.json({ settings });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Settings fetch error:', error);
+    const message = error instanceof Error ? error.message : 'Unknown error';
     return NextResponse.json(
-      { error: 'Failed to fetch settings', details: error.message },
+      { error: 'Failed to fetch settings', details: message },
       { status: 500 }
     );
   }
@@ -92,7 +143,21 @@ export async function PUT(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { type, settings } = body;
+
+    // Validate input
+    const validationResult = settingsUpdateSchema.safeParse(body);
+    if (!validationResult.success) {
+      return NextResponse.json(
+        {
+          error: 'Validation failed',
+          details: validationResult.error.flatten().fieldErrors,
+          message: 'Valid types: notifications, privacy, theme, language, timezone'
+        },
+        { status: 400 }
+      );
+    }
+
+    const { type, settings } = validationResult.data;
 
     // Get current settings
     const { data: currentSettings } = await supabase
@@ -101,44 +166,27 @@ export async function PUT(request: NextRequest) {
       .eq('user_id', user.id)
       .single();
 
-    let updatedData = {};
+    // Build update data based on validated type
+    let updatedData: Record<string, unknown> = {
+      updated_at: new Date().toISOString()
+    };
 
     switch (type) {
       case 'notifications':
-        updatedData = {
-          notifications: settings,
-          updated_at: new Date().toISOString()
-        };
+        updatedData.notifications = settings;
         break;
       case 'privacy':
-        updatedData = {
-          privacy: settings,
-          updated_at: new Date().toISOString()
-        };
+        updatedData.privacy = settings;
         break;
       case 'theme':
-        updatedData = {
-          theme: settings,
-          updated_at: new Date().toISOString()
-        };
+        updatedData.theme = settings;
         break;
       case 'language':
-        updatedData = {
-          language: settings,
-          updated_at: new Date().toISOString()
-        };
+        updatedData.language = settings;
         break;
       case 'timezone':
-        updatedData = {
-          timezone: settings,
-          updated_at: new Date().toISOString()
-        };
+        updatedData.timezone = settings;
         break;
-      default:
-        updatedData = {
-          ...settings,
-          updated_at: new Date().toISOString()
-        };
     }
 
     // Update or create settings
@@ -173,10 +221,11 @@ export async function PUT(request: NextRequest) {
       settings: result,
       message: 'Settings updated successfully'
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Settings update error:', error);
+    const message = error instanceof Error ? error.message : 'Unknown error';
     return NextResponse.json(
-      { error: 'Failed to update settings', details: error.message },
+      { error: 'Failed to update settings', details: message },
       { status: 500 }
     );
   }

@@ -1,14 +1,39 @@
 /**
  * Get Current User API Route
  * GET /api/auth/user
+ * PUT /api/auth/user
+ *
+ * ENVIRONMENT VARIABLES REQUIRED:
+ * - JWT_SECRET: Token signing key (CRITICAL)
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import jwt from 'jsonwebtoken';
 import { prisma } from '@/lib/prisma';
+import { z } from 'zod';
 
-// JWT Secret
-const JWT_SECRET = process.env.JWT_SECRET || 'your-jwt-secret-key-change-this';
+// JWT Secret - CRITICAL: Never use fallback
+function getJWTSecret(): string {
+  const secret = process.env.JWT_SECRET;
+  if (!secret) {
+    throw new Error('JWT_SECRET environment variable is required');
+  }
+  return secret;
+}
+
+const JWT_SECRET = getJWTSecret();
+
+// Validation schema for user update
+const userUpdateSchema = z.object({
+  name: z.string().min(1, 'Name cannot be empty').max(100, 'Name too long').optional(),
+  preferences: z.object({
+    theme: z.enum(['light', 'dark', 'system']).optional(),
+    emailNotifications: z.boolean().optional(),
+    pushNotifications: z.boolean().optional(),
+    language: z.string().max(10).optional(),
+    timezone: z.string().max(50).optional(),
+  }).passthrough().optional(),
+}).strict();
 
 // Helper function to verify JWT token
 async function verifyToken(token: string) {
@@ -108,7 +133,7 @@ export async function GET(request: NextRequest) {
       }
     });
 
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Get user error:', error);
     return NextResponse.json(
       { error: 'Failed to fetch user data' },
@@ -147,16 +172,28 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    // Parse request body
+    // Parse and validate request body
     const body = await request.json();
-    const { name, preferences } = body;
+    const validationResult = userUpdateSchema.safeParse(body);
 
-    // Update user
+    if (!validationResult.success) {
+      return NextResponse.json(
+        {
+          error: 'Validation failed',
+          details: validationResult.error.flatten().fieldErrors
+        },
+        { status: 400 }
+      );
+    }
+
+    const { name, preferences } = validationResult.data;
+
+    // Update user with validated data
     const updatedUser = await prisma.user.update({
       where: { id: decoded.userId },
       data: {
         ...(name !== undefined && { name }),
-        ...(preferences !== undefined && { preferences })
+        ...(preferences !== undefined && { preferences: preferences as object })
       },
       select: {
         id: true,
@@ -189,7 +226,7 @@ export async function PUT(request: NextRequest) {
       user: updatedUser
     });
 
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Update user error:', error);
     return NextResponse.json(
       { error: 'Failed to update user data' },

@@ -6,6 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
+import { AnalyticsSkeleton } from '@/components/skeletons';
+import { APIErrorCard } from '@/components/error-states';
 import {
   Select,
   SelectContent,
@@ -136,6 +138,31 @@ export default function ViralPatternsPage() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisProgress, setAnalysisProgress] = useState(0);
   const [searchQuery, setSearchQuery] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Simulate initial data loading
+  useEffect(() => {
+    const loadPatterns = async () => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        // Simulate API call
+        await new Promise(resolve => setTimeout(resolve, 600));
+        setIsLoading(false);
+      } catch (err) {
+        setError('Failed to load viral patterns');
+        setIsLoading(false);
+      }
+    };
+    loadPatterns();
+  }, [selectedPlatform, selectedTimeRange]);
+
+  const handleRetry = () => {
+    setError(null);
+    setIsLoading(true);
+    setTimeout(() => setIsLoading(false), 600);
+  };
 
   const handleAnalyze = async () => {
     setIsAnalyzing(true);
@@ -161,6 +188,60 @@ export default function ViralPatternsPage() {
                           pattern.type.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesPlatform && matchesSearch;
   });
+
+  const handleExportReport = () => {
+    const reportData = {
+      exportedAt: new Date().toISOString(),
+      filters: {
+        platform: selectedPlatform,
+        timeRange: selectedTimeRange,
+        searchQuery: searchQuery || null,
+      },
+      summary: {
+        avgViralityScore: 91.7,
+        bestTimeToPost: '2-3 PM EST',
+        topHookType: 'Questions',
+        avgGrowthRate: '+327%',
+      },
+      patterns: filteredPatterns,
+      hookTypeDistribution: hookTypes,
+      engagementTimeline: engagementData,
+    };
+
+    const blob = new Blob([JSON.stringify(reportData, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `viral-patterns-report-${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    toast.success('Report exported successfully!');
+  };
+
+  const handleAnalyzePattern = (pattern: typeof viralPatterns[0]) => {
+    toast.success(`Analyzing "${pattern.content.substring(0, 30)}..." pattern`);
+    // In production, this would open a detailed analysis modal or navigate to a pattern detail page
+  };
+
+  // Show loading skeleton
+  if (isLoading) {
+    return <AnalyticsSkeleton />;
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <div className="p-6">
+        <APIErrorCard
+          title="Pattern Analysis Error"
+          message={error}
+          onRetry={handleRetry}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -190,7 +271,11 @@ export default function ViralPatternsPage() {
               </>
             )}
           </Button>
-          <Button variant="outline" className="bg-white/5 border-white/10 text-white hover:bg-white/10">
+          <Button
+            onClick={handleExportReport}
+            variant="outline"
+            className="bg-white/5 border-white/10 text-white hover:bg-white/10"
+          >
             <Download className="mr-2 h-4 w-4" />
             Export Report
           </Button>
@@ -486,7 +571,12 @@ export default function ViralPatternsPage() {
                     </div>
                     <span className="text-xs text-gray-400">{(pattern.sentiment * 100).toFixed(0)}%</span>
                   </div>
-                  <Button size="sm" variant="ghost" className="text-purple-400 hover:text-purple-300">
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="text-purple-400 hover:text-purple-300"
+                    onClick={() => handleAnalyzePattern(pattern)}
+                  >
                     Analyze Pattern
                     <ChevronRight className="ml-1 w-4 h-4" />
                   </Button>

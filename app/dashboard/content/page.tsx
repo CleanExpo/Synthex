@@ -6,6 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { DashboardSkeleton } from '@/components/skeletons';
+import { APIErrorCard } from '@/components/error-states';
 import {
   Select,
   SelectContent,
@@ -93,6 +95,22 @@ export default function ContentPage() {
   const [selectedVariation, setSelectedVariation] = useState(0);
   const [editMode, setEditMode] = useState(false);
   const [editedContent, setEditedContent] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Initialize page
+  useEffect(() => {
+    const init = async () => {
+      try {
+        await new Promise(resolve => setTimeout(resolve, 500));
+        setIsLoading(false);
+      } catch (err) {
+        setError('Failed to load content generator');
+        setIsLoading(false);
+      }
+    };
+    init();
+  }, []);
 
   // Mock personas (in production, fetch from database)
   const personas = [
@@ -171,6 +189,26 @@ export default function ContentPage() {
   };
 
   const PlatformIcon = platformIcons[platform as keyof typeof platformIcons];
+
+  if (isLoading) {
+    return <DashboardSkeleton />;
+  }
+
+  if (error) {
+    return (
+      <div className="p-6">
+        <APIErrorCard
+          title="Content Generator Error"
+          message={error}
+          onRetry={() => {
+            setError(null);
+            setIsLoading(true);
+            setTimeout(() => setIsLoading(false), 500);
+          }}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

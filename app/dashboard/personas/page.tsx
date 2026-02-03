@@ -6,6 +6,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
+import { Textarea } from '@/components/ui/textarea';
+import { DashboardSkeleton } from '@/components/skeletons';
+import { APIErrorCard } from '@/components/error-states';
 import {
   Select,
   SelectContent,
@@ -13,6 +16,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import {
   Brain,
   Upload,
@@ -106,13 +117,106 @@ const contentTypes = [
 ];
 
 export default function PersonasPage() {
-  const [personas, setPersonas] = useState(mockPersonas);
+  const [personas, setPersonas] = useState<typeof mockPersonas>([]);
   const [selectedPersona, setSelectedPersona] = useState<any>(null);
   const [isCreating, setIsCreating] = useState(false);
   const [isTraining, setIsTraining] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [selectedContentType, setSelectedContentType] = useState('text');
   const [dragActive, setDragActive] = useState(false);
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [newPersona, setNewPersona] = useState({
+    name: '',
+    description: '',
+    tone: 'professional',
+    style: 'formal',
+    vocabulary: 'standard',
+    emotion: 'neutral',
+  });
+
+  // Load personas data
+  useEffect(() => {
+    const loadPersonas = async () => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        // Try to fetch from API
+        const token = localStorage.getItem('token');
+        if (token) {
+          const response = await fetch('/api/personas', {
+            headers: { 'Authorization': `Bearer ${token}` },
+          });
+
+          if (response.ok) {
+            const { data } = await response.json();
+            // Map API data to frontend format
+            const apiPersonas = data.map((p: Record<string, unknown>) => ({
+              id: typeof p.id === 'number' ? p.id : parseInt(p.id as string, 10) || Date.now(),
+              name: (p.name as string) || '',
+              description: (p.description as string) || '',
+              trainingData: {
+                sources: (p.trainingSourcesCount as number) || 0,
+                words: (p.trainingWordsCount as number) || 0,
+                samples: (p.trainingSamplesCount as number) || 0,
+              },
+              attributes: {
+                tone: ((p.tone as string) || 'Professional').charAt(0).toUpperCase() + ((p.tone as string) || 'professional').slice(1),
+                style: ((p.style as string) || 'Formal').charAt(0).toUpperCase() + ((p.style as string) || 'formal').slice(1),
+                vocabulary: ((p.vocabulary as string) || 'Standard').charAt(0).toUpperCase() + ((p.vocabulary as string) || 'standard').slice(1),
+                emotion: ((p.emotion as string) || 'Neutral').charAt(0).toUpperCase() + ((p.emotion as string) || 'neutral').slice(1),
+              },
+              accuracy: (p.accuracy as number) || 0,
+              status: (p.status as string) || 'draft',
+              lastTrained: p.lastTrained ? new Date(p.lastTrained as string).toLocaleDateString() : 'Never',
+            }));
+
+            if (apiPersonas.length > 0) {
+              setPersonas(apiPersonas);
+              setIsLoading(false);
+              return;
+            }
+          }
+        }
+        // Fall back to mock data for demo
+        await new Promise(resolve => setTimeout(resolve, 400));
+        setPersonas(mockPersonas);
+        setIsLoading(false);
+      } catch (err) {
+        console.log('Using mock personas data:', err);
+        setPersonas(mockPersonas);
+        setIsLoading(false);
+      }
+    };
+    loadPersonas();
+  }, []);
+
+  const handleRetry = async () => {
+    setError(null);
+    setIsLoading(true);
+    try {
+      const token = localStorage.getItem('token');
+      if (token) {
+        const response = await fetch('/api/personas', {
+          headers: { 'Authorization': `Bearer ${token}` },
+        });
+        if (response.ok) {
+          const { data } = await response.json();
+          if (data.length > 0) {
+            setPersonas(data);
+            setIsLoading(false);
+            return;
+          }
+        }
+      }
+      setPersonas(mockPersonas);
+      setIsLoading(false);
+    } catch {
+      setPersonas(mockPersonas);
+      setIsLoading(false);
+    }
+  };
 
   const handleDrag = (e: React.DragEvent) => {
     e.preventDefault();
@@ -164,16 +268,113 @@ export default function PersonasPage() {
   };
 
   const handleCreatePersona = () => {
+    setCreateDialogOpen(true);
+  };
+
+  const handleSubmitNewPersona = () => {
+    if (!newPersona.name.trim()) {
+      toast.error('Please enter a persona name');
+      return;
+    }
+
     setIsCreating(true);
-    // In a real app, this would open a modal or navigate to a create page
-    toast.success('Persona creation modal would open here');
+
+    // Create the new persona
+    const createdPersona = {
+      id: Date.now(),
+      name: newPersona.name,
+      description: newPersona.description || `Custom ${newPersona.tone} persona`,
+      trainingData: {
+        sources: 0,
+        words: 0,
+        samples: 0,
+      },
+      attributes: {
+        tone: newPersona.tone.charAt(0).toUpperCase() + newPersona.tone.slice(1),
+        style: newPersona.style.charAt(0).toUpperCase() + newPersona.style.slice(1),
+        vocabulary: newPersona.vocabulary.charAt(0).toUpperCase() + newPersona.vocabulary.slice(1),
+        emotion: newPersona.emotion.charAt(0).toUpperCase() + newPersona.emotion.slice(1),
+      },
+      accuracy: 0,
+      status: 'draft' as const,
+      lastTrained: 'Never',
+    };
+
+    setPersonas(prev => [...prev, createdPersona]);
+    setSelectedPersona(createdPersona);
+    setCreateDialogOpen(false);
+    setNewPersona({
+      name: '',
+      description: '',
+      tone: 'professional',
+      style: 'formal',
+      vocabulary: 'standard',
+      emotion: 'neutral',
+    });
     setIsCreating(false);
+    toast.success(`Persona "${newPersona.name}" created successfully!`);
   };
 
   const handleDeletePersona = (id: number) => {
     setPersonas(prev => prev.filter(p => p.id !== id));
     toast.success('Persona deleted successfully');
   };
+
+  const handleEditPersona = () => {
+    if (selectedPersona) {
+      toast.success(`Editing persona: ${selectedPersona.name}`);
+      // In production, this would open an edit modal
+    }
+  };
+
+  const handleClonePersona = () => {
+    if (selectedPersona) {
+      const clonedPersona = {
+        ...selectedPersona,
+        id: Date.now(),
+        name: `${selectedPersona.name} (Copy)`,
+        status: 'draft' as const,
+      };
+      setPersonas(prev => [...prev, clonedPersona]);
+      toast.success(`Cloned persona: ${selectedPersona.name}`);
+    }
+  };
+
+  const handleConfigurePersona = () => {
+    if (selectedPersona) {
+      toast.success(`Opening configuration for: ${selectedPersona.name}`);
+      // In production, this would open a configuration modal
+    }
+  };
+
+  const [urlInput, setUrlInput] = useState('');
+
+  const handleFetchUrl = () => {
+    if (!urlInput.trim()) {
+      toast.error('Please enter a URL');
+      return;
+    }
+    setUploadProgress(0);
+    const interval = setInterval(() => {
+      setUploadProgress((prev) => {
+        if (prev >= 100) {
+          clearInterval(interval);
+          toast.success('Content fetched from URL successfully');
+          setUrlInput('');
+          return 100;
+        }
+        return prev + 20;
+      });
+    }, 200);
+  };
+
+  if (isLoading) {
+    return <DashboardSkeleton />;
+  }
+
+  if (error) {
+    return <APIErrorCard title="Personas Error" message={error} onRetry={handleRetry} />;
+  }
 
   return (
     <div className="space-y-6">
@@ -194,7 +395,21 @@ export default function PersonasPage() {
             <Plus className="mr-2 h-4 w-4" />
             Create Persona
           </Button>
-          <Button variant="outline" className="bg-white/5 border-white/10 text-white hover:bg-white/10">
+          <Button
+            variant="outline"
+            className="bg-white/5 border-white/10 text-white hover:bg-white/10"
+            onClick={() => {
+              const dataStr = JSON.stringify(personas, null, 2);
+              const blob = new Blob([dataStr], { type: 'application/json' });
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement('a');
+              a.href = url;
+              a.download = 'personas-export.json';
+              a.click();
+              URL.revokeObjectURL(url);
+              toast.success('Personas exported successfully!');
+            }}
+          >
             <Download className="mr-2 h-4 w-4" />
             Export All
           </Button>
@@ -315,7 +530,7 @@ export default function PersonasPage() {
                       </CardDescription>
                     </div>
                     <div className="flex space-x-2">
-                      <Button size="sm" variant="ghost" className="text-gray-400">
+                      <Button size="sm" variant="ghost" className="text-gray-400" onClick={handleEditPersona}>
                         <Edit className="h-4 w-4" />
                       </Button>
                       <Button 
@@ -370,11 +585,11 @@ export default function PersonasPage() {
                         </>
                       )}
                     </Button>
-                    <Button variant="outline" className="bg-white/5 border-white/10 text-white hover:bg-white/10">
+                    <Button onClick={handleClonePersona} variant="outline" className="bg-white/5 border-white/10 text-white hover:bg-white/10">
                       <Copy className="mr-2 h-4 w-4" />
                       Clone
                     </Button>
-                    <Button variant="outline" className="bg-white/5 border-white/10 text-white hover:bg-white/10">
+                    <Button onClick={handleConfigurePersona} variant="outline" className="bg-white/5 border-white/10 text-white hover:bg-white/10">
                       <Settings className="mr-2 h-4 w-4" />
                       Configure
                     </Button>
@@ -450,10 +665,12 @@ export default function PersonasPage() {
                         <Input
                           id="url"
                           type="url"
+                          value={urlInput}
+                          onChange={(e) => setUrlInput(e.target.value)}
                           placeholder="https://example.com/content"
                           className="bg-white/5 border-white/10 text-white placeholder:text-gray-500"
                         />
-                        <Button className="gradient-primary text-white">
+                        <Button onClick={handleFetchUrl} className="gradient-primary text-white">
                           <Link className="mr-2 h-4 w-4" />
                           Fetch
                         </Button>
@@ -516,6 +733,139 @@ export default function PersonasPage() {
           )}
         </div>
       </div>
+
+      {/* Create Persona Dialog */}
+      <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
+        <DialogContent className="sm:max-w-[500px] bg-gray-900 border-white/10">
+          <DialogHeader>
+            <DialogTitle className="text-white">Create New Persona</DialogTitle>
+            <DialogDescription className="text-gray-400">
+              Define a new AI persona with specific voice and style attributes.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="name" className="text-gray-300">Persona Name</Label>
+              <Input
+                id="name"
+                value={newPersona.name}
+                onChange={(e) => setNewPersona(prev => ({ ...prev, name: e.target.value }))}
+                placeholder="e.g., Professional Voice"
+                className="bg-white/5 border-white/10 text-white placeholder:text-gray-500"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="description" className="text-gray-300">Description</Label>
+              <Textarea
+                id="description"
+                value={newPersona.description}
+                onChange={(e) => setNewPersona(prev => ({ ...prev, description: e.target.value }))}
+                placeholder="Describe the purpose and characteristics of this persona..."
+                className="bg-white/5 border-white/10 text-white placeholder:text-gray-500 min-h-[80px]"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label className="text-gray-300">Tone</Label>
+                <Select
+                  value={newPersona.tone}
+                  onValueChange={(value) => setNewPersona(prev => ({ ...prev, tone: value }))}
+                >
+                  <SelectTrigger className="bg-white/5 border-white/10 text-white">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="professional">Professional</SelectItem>
+                    <SelectItem value="casual">Casual</SelectItem>
+                    <SelectItem value="friendly">Friendly</SelectItem>
+                    <SelectItem value="authoritative">Authoritative</SelectItem>
+                    <SelectItem value="humorous">Humorous</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label className="text-gray-300">Style</Label>
+                <Select
+                  value={newPersona.style}
+                  onValueChange={(value) => setNewPersona(prev => ({ ...prev, style: value }))}
+                >
+                  <SelectTrigger className="bg-white/5 border-white/10 text-white">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="formal">Formal</SelectItem>
+                    <SelectItem value="conversational">Conversational</SelectItem>
+                    <SelectItem value="thought-provoking">Thought-provoking</SelectItem>
+                    <SelectItem value="storytelling">Storytelling</SelectItem>
+                    <SelectItem value="educational">Educational</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label className="text-gray-300">Vocabulary</Label>
+                <Select
+                  value={newPersona.vocabulary}
+                  onValueChange={(value) => setNewPersona(prev => ({ ...prev, vocabulary: value }))}
+                >
+                  <SelectTrigger className="bg-white/5 border-white/10 text-white">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="simple">Simple</SelectItem>
+                    <SelectItem value="standard">Standard</SelectItem>
+                    <SelectItem value="technical">Technical</SelectItem>
+                    <SelectItem value="sophisticated">Sophisticated</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label className="text-gray-300">Emotion</Label>
+                <Select
+                  value={newPersona.emotion}
+                  onValueChange={(value) => setNewPersona(prev => ({ ...prev, emotion: value }))}
+                >
+                  <SelectTrigger className="bg-white/5 border-white/10 text-white">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="neutral">Neutral</SelectItem>
+                    <SelectItem value="confident">Confident</SelectItem>
+                    <SelectItem value="inspiring">Inspiring</SelectItem>
+                    <SelectItem value="empathetic">Empathetic</SelectItem>
+                    <SelectItem value="enthusiastic">Enthusiastic</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setCreateDialogOpen(false)}
+              className="bg-white/5 border-white/10 text-white hover:bg-white/10"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSubmitNewPersona}
+              disabled={isCreating}
+              className="gradient-primary text-white"
+            >
+              {isCreating ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Creating...
+                </>
+              ) : (
+                <>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Create Persona
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -8,8 +8,16 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { prisma } from '@/lib/prisma';
 
-// JWT Secret
-const JWT_SECRET = process.env.JWT_SECRET || 'your-jwt-secret-key-change-this';
+// JWT Secret - CRITICAL: Never use fallback in production
+function getJWTSecret(): string {
+  const secret = process.env.JWT_SECRET;
+  if (!secret) {
+    throw new Error('JWT_SECRET environment variable is required');
+  }
+  return secret;
+}
+
+const JWT_SECRET = getJWTSecret();
 
 export async function POST(request: NextRequest) {
   try {

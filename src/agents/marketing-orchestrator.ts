@@ -90,10 +90,10 @@ export interface PerformanceMetrics {
 }
 
 export class MarketingOrchestrator extends EventEmitter {
-  public platformAgents: Map<string, any>;
-  private coreAgents: Map<string, any>;
-  private innovationAgents: Map<string, any>;
-  private specialistCoordinators: Map<string, any>;
+  public platformAgents: Map<string, any> = new Map();
+  private coreAgents: Map<string, any> = new Map();
+  private innovationAgents: Map<string, any> = new Map();
+  private specialistCoordinators: Map<string, any> = new Map();
   private taskQueue: AgentTask[] = [];
   private activeTask: Map<string, AgentTask> = new Map();
   private performanceData: Map<string, PerformanceMetrics> = new Map();

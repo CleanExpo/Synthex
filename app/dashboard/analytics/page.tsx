@@ -1,7 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { AnalyticsSkeleton } from '@/components/skeletons';
+import { APIErrorCard } from '@/components/error-states';
 import { Button } from '@/components/ui/button';
 import {
   Select,
@@ -140,6 +142,32 @@ const topPosts = [
 export default function AnalyticsPage() {
   const [timeRange, setTimeRange] = useState('7d');
   const [platform, setPlatform] = useState('all');
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Simulate data loading
+  useEffect(() => {
+    const loadAnalytics = async () => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        // Simulate API call delay
+        await new Promise(resolve => setTimeout(resolve, 800));
+        // In production, this would fetch from /api/analytics
+        setIsLoading(false);
+      } catch (err) {
+        setError('Failed to load analytics data');
+        setIsLoading(false);
+      }
+    };
+    loadAnalytics();
+  }, [timeRange, platform]);
+
+  const handleRetry = () => {
+    setError(null);
+    setIsLoading(true);
+    setTimeout(() => setIsLoading(false), 800);
+  };
 
   const PlatformIcon = ({ platform }: { platform: string }) => {
     const icons = {
@@ -177,6 +205,24 @@ export default function AnalyticsPage() {
   const handleViewAllPosts = () => {
     window.location.href = '/dashboard/content';
   };
+
+  // Show loading skeleton
+  if (isLoading) {
+    return <AnalyticsSkeleton />;
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <div className="p-6">
+        <APIErrorCard
+          title="Analytics Error"
+          message={error}
+          onRetry={handleRetry}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
