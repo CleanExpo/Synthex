@@ -13,15 +13,12 @@
  * - DATABASE_URL: PostgreSQL connection (CRITICAL)
  *
  * FAILURE MODE: Returns cached schedule on DB failure
- *
- * NOTE: This service uses cache-based storage until schema migration is complete.
- * Required schema additions for Post model:
- * - title, platforms (array), scheduledFor, mediaUrls, tags
- * - organizationId, createdBy, parentPostId, recurrenceConfig
  */
 
+import { prisma } from '@/lib/prisma';
 import { getCache } from '@/lib/cache/cache-manager';
 import { logger } from '@/lib/logger';
+import type { CalendarPost as PrismaCalendarPost } from '@prisma/client';
 
 // ============================================================================
 // TYPES
@@ -330,35 +327,137 @@ export class CalendarService {
   // ============================================================================
 
   private async getPosts(startDate: Date, endDate: Date): Promise<CalendarPost[]> {
-    const cache = getCache();
-    const allPosts = await cache.get<CalendarPost[]>(`${this.cachePrefix}:posts`) || [];
+    try {
+      const posts = await prisma.calendarPost.findMany({
+        where: {
+          organizationId: this.organizationId,
+          scheduledFor: {
+            gte: startDate,
+            lte: endDate,
+          },
+          status: {
+            in: ['draft', 'scheduled', 'published'],
+          },
+        },
+        orderBy: {
+          scheduledFor: 'asc',
+        },
+      });
 
-    return allPosts.filter(
-      p =>
-        new Date(p.scheduledFor) >= startDate &&
-        new Date(p.scheduledFor) <= endDate &&
-        ['draft', 'scheduled', 'published'].includes(p.status)
-    );
+      return posts.map(this.mapPrismaToCalendarPost);
+    } catch (error) {
+      logger.error('Failed to get posts from database, falling back to cache', { error });
+      // Fallback to cache on DB failure
+      const cache = getCache();
+      const allPosts = await cache.get<CalendarPost[]>(`${this.cachePrefix}:posts`) || [];
+      return allPosts.filter(
+        p =>
+          new Date(p.scheduledFor) >= startDate &&
+          new Date(p.scheduledFor) <= endDate &&
+          ['draft', 'scheduled', 'published'].includes(p.status)
+      );
+    }
   }
 
   private async getPost(postId: string): Promise<CalendarPost | null> {
-    const cache = getCache();
-    const allPosts = await cache.get<CalendarPost[]>(`${this.cachePrefix}:posts`) || [];
-    return allPosts.find(p => p.id === postId) || null;
+    try {
+      const post = await prisma.calendarPost.findUnique({
+        where: { id: postId },
+      });
+
+      return post ? this.mapPrismaToCalendarPost(post) : null;
+    } catch (error) {
+      logger.error('Failed to get post from database, falling back to cache', { error });
+      const cache = getCache();
+      const allPosts = await cache.get<CalendarPost[]>(`${this.cachePrefix}:posts`) || [];
+      return allPosts.find(p => p.id === postId) || null;
+    }
   }
 
   private async savePost(post: CalendarPost): Promise<void> {
-    const cache = getCache();
-    const allPosts = await cache.get<CalendarPost[]>(`${this.cachePrefix}:posts`) || [];
+    try {
+      const data = {
+        title: post.title,
+        content: post.content,
+        platforms: post.platforms,
+        status: post.status,
+        scheduledFor: post.scheduledFor,
+        mediaUrls: post.mediaUrls || [],
+        tags: post.tags || [],
+        hashtags: [],
+        mentions: [],
+        recurrenceType: post.recurrence?.type || null,
+        recurrenceInterval: post.recurrence?.interval || null,
+        recurrenceEndDate: post.recurrence?.endDate || null,
+        recurrenceOccurrences: post.recurrence?.occurrences || null,
+        recurrenceDaysOfWeek: post.recurrence?.daysOfWeek || [],
+        recurrenceDayOfMonth: post.recurrence?.dayOfMonth || null,
+        campaignId: post.campaignId || null,
+        organizationId: post.organizationId,
+        userId: post.createdBy,
+        updatedAt: new Date(),
+      };
 
-    const index = allPosts.findIndex(p => p.id === post.id);
-    if (index >= 0) {
-      allPosts[index] = post;
-    } else {
-      allPosts.push(post);
+      await prisma.calendarPost.upsert({
+        where: { id: post.id },
+        update: data,
+        create: {
+          id: post.id,
+          ...data,
+        },
+      });
+
+      // Also update cache for fast reads
+      const cache = getCache();
+      const allPosts = await cache.get<CalendarPost[]>(`${this.cachePrefix}:posts`) || [];
+      const index = allPosts.findIndex(p => p.id === post.id);
+      if (index >= 0) {
+        allPosts[index] = post;
+      } else {
+        allPosts.push(post);
+      }
+      await cache.set(`${this.cachePrefix}:posts`, allPosts, { ttl: 86400 * 30 });
+    } catch (error) {
+      logger.error('Failed to save post to database, saving to cache only', { error });
+      // Fallback to cache-only on DB failure
+      const cache = getCache();
+      const allPosts = await cache.get<CalendarPost[]>(`${this.cachePrefix}:posts`) || [];
+      const index = allPosts.findIndex(p => p.id === post.id);
+      if (index >= 0) {
+        allPosts[index] = post;
+      } else {
+        allPosts.push(post);
+      }
+      await cache.set(`${this.cachePrefix}:posts`, allPosts, { ttl: 86400 * 30 });
     }
+  }
 
-    await cache.set(`${this.cachePrefix}:posts`, allPosts, { ttl: 86400 * 30 });
+  private mapPrismaToCalendarPost(post: PrismaCalendarPost): CalendarPost {
+    return {
+      id: post.id,
+      title: post.title,
+      content: post.content,
+      platforms: post.platforms,
+      scheduledFor: post.scheduledFor,
+      status: post.status as PostStatus,
+      mediaUrls: post.mediaUrls,
+      tags: post.tags,
+      campaignId: post.campaignId || undefined,
+      recurrence: post.recurrenceType
+        ? {
+            type: post.recurrenceType as RecurrenceType,
+            interval: post.recurrenceInterval || 1,
+            endDate: post.recurrenceEndDate || undefined,
+            occurrences: post.recurrenceOccurrences || undefined,
+            daysOfWeek: post.recurrenceDaysOfWeek,
+            dayOfMonth: post.recurrenceDayOfMonth || undefined,
+          }
+        : undefined,
+      organizationId: post.organizationId,
+      createdBy: post.userId,
+      createdAt: post.createdAt,
+      updatedAt: post.updatedAt,
+    };
   }
 
   private generateTimeSlots(
@@ -457,33 +556,62 @@ export class CalendarService {
 
   private async checkTimeConflicts(time: Date, platforms: string[]): Promise<Conflict[]> {
     const conflicts: Conflict[] = [];
-    const cache = getCache();
-    const allPosts = await cache.get<CalendarPost[]>(`${this.cachePrefix}:posts`) || [];
 
     for (const platform of platforms) {
       const cooldown = PLATFORM_COOLDOWNS[platform] || 30;
       const windowStart = new Date(time.getTime() - cooldown * 60 * 1000);
       const windowEnd = new Date(time.getTime() + cooldown * 60 * 1000);
 
-      const nearbyPosts = allPosts.filter(
-        p =>
-          p.platforms.includes(platform) &&
-          p.status === 'scheduled' &&
-          new Date(p.scheduledFor) >= windowStart &&
-          new Date(p.scheduledFor) <= windowEnd
-      );
-
-      for (const post of nearbyPosts) {
-        const postTime = new Date(post.scheduledFor).getTime();
-        const diffMinutes = Math.abs(postTime - time.getTime()) / (1000 * 60);
-
-        conflicts.push({
-          postId: post.id,
-          conflictWith: [],
-          type: diffMinutes === 0 ? 'overlap' : 'too_close',
-          severity: diffMinutes === 0 ? 'error' : 'warning',
-          message: `Conflict with existing post on ${platform}`,
+      try {
+        const nearbyPosts = await prisma.calendarPost.findMany({
+          where: {
+            organizationId: this.organizationId,
+            platforms: { has: platform },
+            status: 'scheduled',
+            scheduledFor: {
+              gte: windowStart,
+              lte: windowEnd,
+            },
+          },
         });
+
+        for (const post of nearbyPosts) {
+          const postTime = new Date(post.scheduledFor).getTime();
+          const diffMinutes = Math.abs(postTime - time.getTime()) / (1000 * 60);
+
+          conflicts.push({
+            postId: post.id,
+            conflictWith: [],
+            type: diffMinutes === 0 ? 'overlap' : 'too_close',
+            severity: diffMinutes === 0 ? 'error' : 'warning',
+            message: `Conflict with existing post on ${platform}`,
+          });
+        }
+      } catch (error) {
+        logger.error('Failed to check conflicts in database, falling back to cache', { error });
+        // Fallback to cache
+        const cache = getCache();
+        const allPosts = await cache.get<CalendarPost[]>(`${this.cachePrefix}:posts`) || [];
+        const nearbyPosts = allPosts.filter(
+          p =>
+            p.platforms.includes(platform) &&
+            p.status === 'scheduled' &&
+            new Date(p.scheduledFor) >= windowStart &&
+            new Date(p.scheduledFor) <= windowEnd
+        );
+
+        for (const post of nearbyPosts) {
+          const postTime = new Date(post.scheduledFor).getTime();
+          const diffMinutes = Math.abs(postTime - time.getTime()) / (1000 * 60);
+
+          conflicts.push({
+            postId: post.id,
+            conflictWith: [],
+            type: diffMinutes === 0 ? 'overlap' : 'too_close',
+            severity: diffMinutes === 0 ? 'error' : 'warning',
+            message: `Conflict with existing post on ${platform}`,
+          });
+        }
       }
     }
 

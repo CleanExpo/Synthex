@@ -648,3 +648,57 @@ model PermissionAudit {
   @@index([createdAt])
   @@map("permission_audits")
 }
+
+// ==========================================
+// Content Calendar Module
+// ==========================================
+
+model CalendarPost {
+  id             String   @id @default(cuid())
+  title          String
+  content        String   @db.Text
+  platforms      String[] // Multi-platform support
+  status         String   @default("draft") // 'draft', 'scheduled', 'published', 'failed', 'cancelled'
+  scheduledFor   DateTime
+  publishedAt    DateTime?
+
+  // Media and content metadata
+  mediaUrls      String[]
+  tags           String[]
+  hashtags       String[]
+  mentions       String[]
+
+  // Recurrence support
+  recurrenceType String?  // 'none', 'daily', 'weekly', 'biweekly', 'monthly'
+  recurrenceInterval Int?
+  recurrenceEndDate DateTime?
+  recurrenceOccurrences Int?
+  recurrenceDaysOfWeek Int[] // 0-6 for Sunday-Saturday
+  recurrenceDayOfMonth Int?
+  parentPostId   String?  // Links to parent for recurring posts
+
+  // Campaign and organization
+  campaignId     String?
+  organizationId String
+  userId         String   // Created by
+
+  // Metadata
+  metadata       Json?    // Platform-specific settings
+  analytics      Json?    // Engagement metrics after publish
+  errorMessage   String?  // For failed posts
+
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  // Self-referential relation for recurring posts
+  parentPost     CalendarPost?  @relation("RecurringPosts", fields: [parentPostId], references: [id], onDelete: SetNull)
+  childPosts     CalendarPost[] @relation("RecurringPosts")
+
+  // Performance indices
+  @@index([organizationId, scheduledFor(sort: Desc)])
+  @@index([userId, status])
+  @@index([status, scheduledFor])
+  @@index([campaignId])
+  @@index([parentPostId])
+  @@map("calendar_posts")
+}
