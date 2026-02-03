@@ -53,10 +53,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if user registered with OAuth
-    if (user.authProvider !== 'local') {
+    // Check if user registered with OAuth (no password)
+    if (!user.password || user.authProvider !== 'local') {
       return NextResponse.json(
-        { error: `Please login with ${user.authProvider}` },
+        { error: `Please login with ${user.authProvider || 'your linked account'}` },
         { status: 400 }
       );
     }

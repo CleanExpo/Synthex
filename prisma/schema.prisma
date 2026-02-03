@@ -14,36 +14,38 @@ datasource db {
 model User {
   id        String   @id @default(cuid())
   email     String   @unique
-  password  String
+  password  String?  // Nullable for OAuth-only users
   name      String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  
-  // Google OAuth fields
+
+  // Legacy Google OAuth fields (deprecated - use Account model)
+  // Keep temporarily for migration
   googleId        String?  @unique
   avatar          String?
   authProvider    String   @default("local") // 'local', 'google'
   emailVerified   Boolean  @default(false)
   lastLogin       DateTime?
-  
+
   // API Keys (encrypted)
   openrouterApiKey String?
   anthropicApiKey  String?
-  
+
   // User settings
   preferences      Json?
-  
+
   // Password reset fields
   resetCode        String?
   resetCodeExpires DateTime?
   resetToken       String?
   resetTokenExpires DateTime?
-  
+
   // Email verification
   verificationCode String?
   verificationExpires DateTime?
-  
+
   // Relations
+  accounts         Account[]  // Multi-provider authentication accounts
   campaigns        Campaign[]
   projects         Project[]
   apiUsage         ApiUsage[]
@@ -55,8 +57,40 @@ model User {
   teamInvitations  TeamInvitation[]
   brandGenerations BrandGeneration[]
   psychologyPreferences UserPsychologyPreference?
-  
+
   @@map("users")
+}
+
+// ==========================================
+// OAuth Account Model for Multi-Provider Authentication
+// Supports linking multiple auth methods to a single user
+// ==========================================
+
+model Account {
+  id                String   @id @default(cuid())
+  userId            String
+  type              String   // "oauth" or "credentials"
+  provider          String   // "google", "github", "email"
+  providerAccountId String   // Google ID, GitHub ID, or email
+
+  // OAuth tokens (encrypted at rest in production)
+  accessToken       String?  @db.Text
+  refreshToken      String?  @db.Text
+  expiresAt         Int?     // Unix timestamp
+  tokenType         String?  // "Bearer", etc.
+  scope             String?  // OAuth scopes granted
+  idToken           String?  @db.Text  // OIDC ID token
+
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  // Relations
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Constraints
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+  @@map("accounts")
 }
 
 model Campaign {

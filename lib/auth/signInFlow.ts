@@ -2,12 +2,22 @@
  * Centralized Authentication Flow Service
  * Single source of truth for ALL authentication methods
  * This ensures consistency across OAuth and email/password flows
+ *
+ * @module lib/auth/signInFlow
+ *
+ * ENVIRONMENT VARIABLES REQUIRED:
+ * - JWT_SECRET: Secret for JWT token generation (CRITICAL)
+ * - NEXT_PUBLIC_SUPABASE_URL: Supabase project URL (optional)
+ * - NEXT_PUBLIC_SUPABASE_ANON_KEY: Supabase anonymous key (optional)
+ *
+ * FAILURE MODE: Falls back to demo mode if Supabase not configured
  */
 
 import { createClient } from '@supabase/supabase-js';
-import { NextResponse } from 'next/server';
 import jwt from 'jsonwebtoken';
-import type { AuthUser, AuthSession, AuthResult } from '@/types/auth';
+import type { AuthUser, AuthSession, AuthResult, AuthProvider, OAuthProfile } from '@/types/auth';
+import { accountService } from './account-service';
+import prisma from '@/lib/prisma';
 
 // Re-export for backward compatibility
 export type { AuthUser, AuthSession, AuthResult } from '@/types/auth';
@@ -155,19 +165,10 @@ export class SignInFlow {
 
   /**
    * Handle OAuth authentication (Google/GitHub)
+   * Now uses AccountService for proper multi-provider support
    */
   private async handleOAuthAuth(provider: 'google' | 'github', oauthUser: any): Promise<AuthResult> {
-    if (!this.isSupabaseConfigured()) {
-      return {
-        success: false,
-        error: `${provider} authentication not configured. Please use email/password or demo mode.`
-      };
-    }
-
     try {
-      // For OAuth, we typically get the user data from the provider callback
-      // This assumes NextAuth or similar has already validated the OAuth token
-      
       if (!oauthUser || !oauthUser.email) {
         return {
           success: false,
@@ -175,58 +176,149 @@ export class SignInFlow {
         };
       }
 
-      // Check if user exists in database
-      const { data: existingUser } = await supabase
-        .from('users')
-        .select('*')
-        .eq('email', oauthUser.email)
-        .single();
-
-      let userId = existingUser?.id;
-
-      // Create user if doesn't exist
-      if (!existingUser) {
-        const { data: newUser, error: createError } = await supabase
-          .from('users')
-          .insert({
-            email: oauthUser.email,
-            name: oauthUser.name,
-            avatar_url: oauthUser.image,
-            provider: provider,
-            created_at: new Date().toISOString()
-          })
-          .select()
-          .single();
-
-        if (createError) {
-          throw createError;
-        }
-
-        userId = newUser.id;
-      }
-
-      // Create session
-      const session: AuthSession = {
-        user: {
-          id: userId || oauthUser.id,
-          email: oauthUser.email,
-          name: oauthUser.name,
-          avatar: oauthUser.image,
-          provider: provider,
-          emailVerified: true // OAuth users are pre-verified
-        },
-        accessToken: this.generateJWT(userId || oauthUser.id),
-        expiresAt: Date.now() + (7 * 24 * 60 * 60 * 1000)
-      };
-
-      return {
-        success: true,
-        session
-      };
+      // Use AccountService to handle OAuth login
+      return this.handleOAuthLogin(provider, {
+        id: oauthUser.id,
+        email: oauthUser.email,
+        name: oauthUser.name,
+        avatar: oauthUser.image,
+        emailVerified: true,
+      });
     } catch (error) {
       return {
         success: false,
         error: error instanceof Error ? error.message : 'OAuth authentication failed'
+      };
+    }
+  }
+
+  /**
+   * Handle OAuth login with account lookup and linking logic
+   * This is the main entry point for OAuth authentication
+   */
+  async handleOAuthLogin(
+    provider: AuthProvider,
+    profile: OAuthProfile
+  ): Promise<AuthResult> {
+    try {
+      // 1. Check if this OAuth account is already linked
+      const existingByProvider = await accountService.findUserByProviderAccount(
+        provider,
+        profile.id
+      );
+
+      if (existingByProvider) {
+        // Existing OAuth user - create session
+        const user = await prisma.user.findUnique({
+          where: { id: existingByProvider.userId },
+        });
+
+        if (!user) {
+          return { success: false, error: 'User not found' };
+        }
+
+        // Update last login
+        await prisma.user.update({
+          where: { id: user.id },
+          data: { lastLogin: new Date() },
+        });
+
+        const session: AuthSession = {
+          user: {
+            id: user.id,
+            email: user.email,
+            name: user.name || undefined,
+            avatar: user.avatar || profile.avatar,
+            provider,
+            emailVerified: user.emailVerified,
+          },
+          accessToken: this.generateJWT(user.id),
+          expiresAt: Date.now() + (7 * 24 * 60 * 60 * 1000),
+        };
+
+        return { success: true, session };
+      }
+
+      // 2. Check if user exists by email (potential linking scenario)
+      const existingByEmail = await accountService.findUserByEmail(profile.email);
+
+      if (existingByEmail) {
+        // User exists with this email - check providers
+        const existingProviders = existingByEmail.providers.filter(p => p !== 'demo');
+
+        if (existingProviders.length > 0) {
+          // User has other auth methods - return info for linking prompt
+          return {
+            success: false,
+            error: 'An account with this email already exists',
+            existingProvider: existingProviders[0],
+            existingEmail: existingByEmail.email,
+          };
+        }
+      }
+
+      // 3. New user - create account (password is null for OAuth-only users)
+      const newUser = await prisma.user.create({
+        data: {
+          email: profile.email,
+          password: null, // OAuth-only user - no password
+          name: profile.name || profile.email.split('@')[0],
+          avatar: profile.avatar,
+          googleId: provider === 'google' ? profile.id : null,
+          authProvider: provider,
+          emailVerified: profile.emailVerified ?? true,
+        },
+      });
+
+      // Create Account record
+      await accountService.createAccount(newUser.id, provider, profile);
+
+      const session: AuthSession = {
+        user: {
+          id: newUser.id,
+          email: newUser.email,
+          name: newUser.name || undefined,
+          avatar: newUser.avatar || undefined,
+          provider,
+          emailVerified: newUser.emailVerified,
+        },
+        accessToken: this.generateJWT(newUser.id),
+        expiresAt: Date.now() + (7 * 24 * 60 * 60 * 1000),
+      };
+
+      return { success: true, session };
+    } catch (error) {
+      console.error('[SignInFlow] OAuth login error:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'OAuth authentication failed',
+      };
+    }
+  }
+
+  /**
+   * Link an OAuth provider to an existing authenticated user
+   */
+  async linkOAuthProvider(
+    userId: string,
+    provider: AuthProvider,
+    profile: OAuthProfile
+  ): Promise<AuthResult> {
+    try {
+      const result = await accountService.linkAccount(userId, provider, profile);
+
+      if (!result.success) {
+        return {
+          success: false,
+          error: result.error || 'Failed to link account',
+        };
+      }
+
+      return { success: true };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to link account',
       };
     }
   }

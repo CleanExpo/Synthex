@@ -1,22 +1,53 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Sparkles, Mail, Lock, Github, Chrome, Loader2 } from '@/components/icons';
+import { Sparkles, Mail, Lock, Github, Chrome, Loader2, AlertCircle } from '@/components/icons';
 import toast from 'react-hot-toast';
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [isLoading, setIsLoading] = useState(false);
+  const [oauthLoading, setOauthLoading] = useState(false);
+  const [accountExistsError, setAccountExistsError] = useState<{
+    email: string;
+    existingProvider: string;
+    newProvider: string;
+  } | null>(null);
   const [formData, setFormData] = useState({
     email: '',
     password: '',
   });
+
+  // Handle URL parameters (errors from OAuth callback)
+  useEffect(() => {
+    const error = searchParams.get('error');
+    const email = searchParams.get('email');
+    const existingProvider = searchParams.get('existingProvider');
+    const newProvider = searchParams.get('newProvider');
+
+    if (error === 'account_exists' && email && existingProvider) {
+      setAccountExistsError({
+        email,
+        existingProvider,
+        newProvider: newProvider || 'google',
+      });
+    } else if (error) {
+      toast.error(decodeURIComponent(error));
+    }
+
+    // Handle successful auth redirect
+    if (searchParams.get('auth') === 'success') {
+      toast.success('Welcome back!');
+      router.push('/dashboard');
+    }
+  }, [searchParams, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -61,35 +92,47 @@ export default function LoginPage() {
   };
 
   const handleGoogleLogin = async () => {
-    setIsLoading(true);
+    setOauthLoading(true);
     try {
-      const { supabase } = await import('@/lib/supabase-client');
-      
-      // Check if Supabase is properly configured
-      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-      if (!supabaseUrl || supabaseUrl === 'https://placeholder.supabase.co') {
-        toast.error('OAuth login is not configured. Please use demo credentials: demo@synthex.com / demo123');
-        return;
+      // Use our new OAuth route with PKCE
+      const response = await fetch('/api/auth/oauth/google');
+      const data = await response.json();
+
+      if (!response.ok) {
+        // Handle demo mode gracefully
+        if (data.error?.includes('not configured')) {
+          toast.error('Google login is not configured. Please use demo credentials: demo@synthex.com / demo123');
+          return;
+        }
+        throw new Error(data.error || 'Failed to initiate Google login');
       }
-      
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: `${window.location.origin}/dashboard`,
-        },
-      });
-      
-      if (error) throw error;
-    } catch (error: any) {
-      // Handle specific OAuth errors
-      if (error.message?.includes('provider is not enabled')) {
-        toast.error('Google login is not enabled. Please use email/password or demo credentials.');
+
+      if (data.authorizationUrl) {
+        // Redirect to Google OAuth
+        window.location.href = data.authorizationUrl;
       } else {
-        toast.error(`Login error: ${error.message}`);
+        throw new Error('No authorization URL received');
       }
-    } finally {
-      setIsLoading(false);
+    } catch (error: any) {
+      console.error('Google login error:', error);
+      toast.error(error.message || 'Failed to connect with Google');
+      setOauthLoading(false);
     }
+  };
+
+  const dismissAccountExistsError = () => {
+    setAccountExistsError(null);
+    // Clear URL params
+    router.replace('/login');
+  };
+
+  const getProviderDisplayName = (provider: string) => {
+    const names: Record<string, string> = {
+      email: 'Email/Password',
+      google: 'Google',
+      github: 'GitHub',
+    };
+    return names[provider] || provider;
   };
 
   return (
@@ -103,8 +146,35 @@ export default function LoginPage() {
           <CardDescription className="text-center text-gray-400">
             Enter your credentials to access your dashboard
           </CardDescription>
+          {/* Account exists error message */}
+          {accountExistsError && (
+            <div className="mt-4 p-3 bg-amber-500/10 border border-amber-500/30 rounded-lg">
+              <div className="flex items-start gap-2">
+                <AlertCircle className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
+                <div className="flex-1">
+                  <p className="text-sm text-amber-300 font-medium">
+                    Account already exists
+                  </p>
+                  <p className="text-xs text-amber-200/80 mt-1">
+                    An account with <strong>{accountExistsError.email}</strong> already exists
+                    using {getProviderDisplayName(accountExistsError.existingProvider)}.
+                  </p>
+                  <p className="text-xs text-amber-200/80 mt-1">
+                    Sign in with {getProviderDisplayName(accountExistsError.existingProvider)} first,
+                    then link {getProviderDisplayName(accountExistsError.newProvider)} from your account settings.
+                  </p>
+                  <button
+                    onClick={dismissAccountExistsError}
+                    className="text-xs text-amber-400 hover:text-amber-300 mt-2 underline"
+                  >
+                    Dismiss
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
           {/* Demo credentials notice */}
-          {(process.env.NODE_ENV === 'development' || !process.env.NEXT_PUBLIC_SUPABASE_URL) && (
+          {!accountExistsError && (process.env.NODE_ENV === 'development' || !process.env.NEXT_PUBLIC_SUPABASE_URL) && (
             <div className="mt-4 p-3 bg-purple-500/10 border border-purple-500/30 rounded-lg">
               <p className="text-xs text-purple-300 text-center">
                 Demo Mode: Use <strong>demo@synthex.com</strong> / <strong>demo123</strong>
@@ -188,10 +258,19 @@ export default function LoginPage() {
               variant="outline"
               className="w-full bg-white/5 border-white/10 text-white hover:bg-white/10"
               onClick={handleGoogleLogin}
-              disabled={isLoading}
+              disabled={isLoading || oauthLoading}
             >
-              <Chrome className="mr-2 h-4 w-4" />
-              Continue with Google
+              {oauthLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Connecting to Google...
+                </>
+              ) : (
+                <>
+                  <Chrome className="mr-2 h-4 w-4" />
+                  Continue with Google
+                </>
+              )}
             </Button>
           </div>
         </CardContent>

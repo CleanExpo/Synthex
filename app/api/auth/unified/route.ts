@@ -98,6 +98,14 @@ async function handleLogin(body: any) {
       );
     }
 
+    // Check if user has a password (OAuth-only users don't)
+    if (!user.password) {
+      return NextResponse.json(
+        { error: 'Please login with your linked account (Google or other provider)' },
+        { status: 400 }
+      );
+    }
+
     // Verify password
     const isValid = await bcrypt.compare(password, user.password);
     if (!isValid) {
