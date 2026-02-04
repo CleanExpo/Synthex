@@ -8,20 +8,6 @@
     "NODE_ENV": "production",
     "NEXT_TELEMETRY_DISABLED": "1"
   },
-  "functions": {
-    "app/api/**/*.ts": {
-      "maxDuration": 30,
-      "memory": 1024
-    },
-    "app/api/ai/**/*.ts": {
-      "maxDuration": 60,
-      "memory": 1024
-    },
-    "app/api/generate/**/*.ts": {
-      "maxDuration": 60,
-      "memory": 1024
-    }
-  },
   "headers": [
     {
       "source": "/api/(.*)",
