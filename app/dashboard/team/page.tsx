@@ -1,7 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { DashboardSkeleton } from '@/components/skeletons';
+import { APIErrorCard } from '@/components/error-states';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -55,6 +57,97 @@ import {
 } from '@/components/icons';
 import toast from 'react-hot-toast';
 
+// Mock data for fallback
+const mockTeamMembers: TeamMember[] = [
+  {
+    id: '1',
+    name: 'John Smith',
+    email: 'john@synthex.social',
+    role: 'Admin',
+    avatar: '',
+    status: 'Active',
+    joinedAt: '2024-01-15',
+    lastActive: '2 hours ago',
+    permissions: ['all']
+  },
+  {
+    id: '2',
+    name: 'Sarah Johnson',
+    email: 'sarah@company.com',
+    role: 'Editor',
+    avatar: '',
+    status: 'Active',
+    joinedAt: '2024-02-20',
+    lastActive: '5 minutes ago',
+    permissions: ['create', 'edit', 'publish']
+  },
+  {
+    id: '3',
+    name: 'Mike Chen',
+    email: 'mike@company.com',
+    role: 'Viewer',
+    avatar: '',
+    status: 'Pending',
+    joinedAt: '2024-03-01',
+    lastActive: 'Never',
+    permissions: ['view']
+  },
+  {
+    id: '4',
+    name: 'Emily Davis',
+    email: 'emily@company.com',
+    role: 'Editor',
+    avatar: '',
+    status: 'Inactive',
+    joinedAt: '2024-01-30',
+    lastActive: '2 days ago',
+    permissions: ['create', 'edit']
+  }
+];
+
+const mockActivityLog: ActivityLog[] = [
+  {
+    id: '1',
+    userId: '2',
+    userName: 'Sarah Johnson',
+    action: 'Created new content',
+    timestamp: '2 hours ago',
+    details: 'Instagram post for Q1 campaign'
+  },
+  {
+    id: '2',
+    userId: '1',
+    userName: 'John Smith',
+    action: 'Updated team permissions',
+    timestamp: '4 hours ago',
+    details: 'Added publishing rights to Mike Chen'
+  },
+  {
+    id: '3',
+    userId: '4',
+    userName: 'Emily Davis',
+    action: 'Accessed analytics',
+    timestamp: '1 day ago',
+    details: 'Viewed Q4 performance report'
+  },
+  {
+    id: '4',
+    userId: '2',
+    userName: 'Sarah Johnson',
+    action: 'Scheduled content',
+    timestamp: '1 day ago',
+    details: 'LinkedIn post for tomorrow 9 AM'
+  },
+  {
+    id: '5',
+    userId: '1',
+    userName: 'John Smith',
+    action: 'Invited team member',
+    timestamp: '3 days ago',
+    details: 'Sent invitation to mike@company.com'
+  }
+];
+
 // Types
 interface TeamMember {
   id: string;
@@ -84,96 +177,89 @@ interface InviteFormData {
 }
 
 export default function TeamPage() {
-  const [isLoading, setIsLoading] = useState(false);
-  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([
-    {
-      id: '1',
-      name: 'John Smith',
-      email: 'john@synthex.social',
-      role: 'Admin',
-      avatar: '',
-      status: 'Active',
-      joinedAt: '2024-01-15',
-      lastActive: '2 hours ago',
-      permissions: ['all']
-    },
-    {
-      id: '2',
-      name: 'Sarah Johnson',
-      email: 'sarah@company.com',
-      role: 'Editor',
-      avatar: '',
-      status: 'Active',
-      joinedAt: '2024-02-20',
-      lastActive: '5 minutes ago',
-      permissions: ['create', 'edit', 'publish']
-    },
-    {
-      id: '3',
-      name: 'Mike Chen',
-      email: 'mike@company.com',
-      role: 'Viewer',
-      avatar: '',
-      status: 'Pending',
-      joinedAt: '2024-03-01',
-      lastActive: 'Never',
-      permissions: ['view']
-    },
-    {
-      id: '4',
-      name: 'Emily Davis',
-      email: 'emily@company.com',
-      role: 'Editor',
-      avatar: '',
-      status: 'Inactive',
-      joinedAt: '2024-01-30',
-      lastActive: '2 days ago',
-      permissions: ['create', 'edit']
-    }
-  ]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isInviting, setIsInviting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
+  const [activityLog, setActivityLog] = useState<ActivityLog[]>(mockActivityLog);
 
-  const [activityLog, setActivityLog] = useState<ActivityLog[]>([
-    {
-      id: '1',
-      userId: '2',
-      userName: 'Sarah Johnson',
-      action: 'Created new content',
-      timestamp: '2 hours ago',
-      details: 'Instagram post for Q1 campaign'
-    },
-    {
-      id: '2',
-      userId: '1',
-      userName: 'John Smith',
-      action: 'Updated team permissions',
-      timestamp: '4 hours ago',
-      details: 'Added publishing rights to Mike Chen'
-    },
-    {
-      id: '3',
-      userId: '4',
-      userName: 'Emily Davis',
-      action: 'Accessed analytics',
-      timestamp: '1 day ago',
-      details: 'Viewed Q4 performance report'
-    },
-    {
-      id: '4',
-      userId: '2',
-      userName: 'Sarah Johnson',
-      action: 'Scheduled content',
-      timestamp: '1 day ago',
-      details: 'LinkedIn post for tomorrow 9 AM'
-    },
-    {
-      id: '5',
-      userId: '1',
-      userName: 'John Smith',
-      action: 'Invited team member',
-      timestamp: '3 days ago',
-      details: 'Sent invitation to mike@company.com'
+  // Helper to get auth token
+  const getAuthToken = useCallback(() => {
+    return localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token') || localStorage.getItem('token');
+  }, []);
+
+  // Fetch team members from API
+  const fetchTeamMembers = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const token = getAuthToken();
+      if (token) {
+        const response = await fetch('/api/teams/members', {
+          headers: { 'Authorization': `Bearer ${token}` },
+        });
+
+        if (response.ok) {
+          const { data } = await response.json();
+          // Map API data to frontend format
+          const apiMembers: TeamMember[] = data.map((m: Record<string, unknown>) => ({
+            id: m.id as string,
+            name: (m.name as string) || 'Unknown',
+            email: m.email as string,
+            role: capitalizeRole((m.role as string) || 'viewer'),
+            avatar: (m.avatar as string) || '',
+            status: m.lastActive ? 'Active' : 'Pending',
+            joinedAt: (m.joinedAt as string)?.split('T')[0] || '',
+            lastActive: formatLastActive(m.lastActive as string | null),
+            permissions: getRolePermissions((m.role as string) || 'viewer')
+          }));
+
+          if (apiMembers.length > 0) {
+            setTeamMembers(apiMembers);
+            setIsLoading(false);
+            return;
+          }
+        }
+      }
+      // Fallback to mock data for demo
+      setTeamMembers(mockTeamMembers);
+      setIsLoading(false);
+    } catch (err) {
+      console.log('Using mock team data:', err);
+      setTeamMembers(mockTeamMembers);
+      setIsLoading(false);
     }
-  ]);
+  }, [getAuthToken]);
+
+  // Load team members on mount
+  useEffect(() => {
+    fetchTeamMembers();
+  }, [fetchTeamMembers]);
+
+  // Helper to format last active time
+  const formatLastActive = (lastActive: string | null): string => {
+    if (!lastActive) return 'Never';
+    const date = new Date(lastActive);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    if (diffMins < 5) return 'Just now';
+    if (diffMins < 60) return `${diffMins} minutes ago`;
+    if (diffHours < 24) return `${diffHours} hours ago`;
+    if (diffDays < 7) return `${diffDays} days ago`;
+    return date.toLocaleDateString();
+  };
+
+  // Helper to capitalize role
+  const capitalizeRole = (role: string): 'Admin' | 'Editor' | 'Viewer' => {
+    const lower = role.toLowerCase();
+    if (lower === 'admin') return 'Admin';
+    if (lower === 'editor') return 'Editor';
+    return 'Viewer';
+  };
 
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState<string>('all');
@@ -201,11 +287,66 @@ export default function TeamPage() {
       return;
     }
 
-    setIsLoading(true);
+    setIsInviting(true);
     try {
-      // Simulate API call
+      const token = getAuthToken();
+      if (token) {
+        const response = await fetch('/api/teams/members', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            email: inviteForm.email,
+            role: inviteForm.role.toLowerCase(),
+            message: inviteForm.message || undefined,
+          }),
+        });
+
+        if (response.ok) {
+          const { data } = await response.json();
+
+          // Add to local state
+          const newMember: TeamMember = {
+            id: data.id || Date.now().toString(),
+            name: inviteForm.email.split('@')[0],
+            email: inviteForm.email,
+            role: inviteForm.role,
+            status: 'Pending',
+            joinedAt: new Date().toISOString().split('T')[0],
+            lastActive: 'Never',
+            permissions: getRolePermissions(inviteForm.role)
+          };
+          setTeamMembers(prev => [...prev, newMember]);
+
+          // Add to activity log
+          const newActivity: ActivityLog = {
+            id: Date.now().toString(),
+            userId: '1',
+            userName: 'You',
+            action: 'Invited team member',
+            timestamp: 'Just now',
+            details: `Sent invitation to ${inviteForm.email}`
+          };
+          setActivityLog(prev => [newActivity, ...prev]);
+
+          toast.success(`Invitation sent to ${inviteForm.email}`);
+          setInviteDialogOpen(false);
+          setInviteForm({ email: '', role: 'Viewer', message: '' });
+          setIsInviting(false);
+          return;
+        } else {
+          const errorData = await response.json();
+          toast.error(errorData.error || 'Failed to send invitation');
+          setIsInviting(false);
+          return;
+        }
+      }
+
+      // Fallback: simulate for demo
       await new Promise(resolve => setTimeout(resolve, 1500));
-      
+
       const newMember: TeamMember = {
         id: Date.now().toString(),
         name: inviteForm.email.split('@')[0],
@@ -218,12 +359,11 @@ export default function TeamPage() {
       };
 
       setTeamMembers(prev => [...prev, newMember]);
-      
-      // Add to activity log
+
       const newActivity: ActivityLog = {
         id: Date.now().toString(),
-        userId: '1', // Current user
-        userName: 'John Smith', // Current user name
+        userId: '1',
+        userName: 'You',
         action: 'Invited team member',
         timestamp: 'Just now',
         details: `Sent invitation to ${inviteForm.email}`
@@ -233,10 +373,11 @@ export default function TeamPage() {
       toast.success(`Invitation sent to ${inviteForm.email}`);
       setInviteDialogOpen(false);
       setInviteForm({ email: '', role: 'Viewer', message: '' });
-    } catch (error) {
+    } catch (err) {
+      console.error('Invite error:', err);
       toast.error('Failed to send invitation');
     } finally {
-      setIsLoading(false);
+      setIsInviting(false);
     }
   };
 
@@ -357,6 +498,14 @@ export default function TeamPage() {
     }
   };
 
+  if (isLoading) {
+    return <DashboardSkeleton />;
+  }
+
+  if (error) {
+    return <APIErrorCard title="Team Error" message={error} onRetry={fetchTeamMembers} />;
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -456,10 +605,10 @@ export default function TeamPage() {
                 </Button>
                 <Button
                   onClick={handleInviteMember}
-                  disabled={isLoading}
+                  disabled={isInviting}
                   className="gradient-primary text-white"
                 >
-                  {isLoading ? (
+                  {isInviting ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                       Sending...
