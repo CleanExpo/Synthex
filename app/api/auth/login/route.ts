@@ -12,6 +12,10 @@ import jwt from 'jsonwebtoken';
 import { prisma } from '@/lib/prisma';
 import { supabase } from '@/lib/supabase-client';
 
+// Force dynamic rendering for this API route
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
 // JWT Secret - CRITICAL: Never use fallback in production
 function getJWTSecret(): string {
   const secret = process.env.JWT_SECRET;
