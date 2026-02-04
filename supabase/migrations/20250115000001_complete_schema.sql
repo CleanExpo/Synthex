@@ -8,15 +8,15 @@ CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 CREATE EXTENSION IF NOT EXISTS "pg_stat_statements";
 
 -- Create enum types
-CREATE TYPE subscription_plan AS ENUM ('free', 'starter', 'pro', 'enterprise');
-CREATE TYPE content_status AS ENUM ('draft', 'scheduled', 'published', 'failed', 'archived');
-CREATE TYPE platform_type AS ENUM ('twitter', 'instagram', 'linkedin', 'tiktok', 'facebook', 'youtube', 'threads');
+CREATE TYPE IF NOT EXISTS subscription_plan AS ENUM ('free', 'starter', 'pro', 'enterprise');
+CREATE TYPE IF NOT EXISTS content_status AS ENUM ('draft', 'scheduled', 'published', 'failed', 'archived');
+CREATE TYPE IF NOT EXISTS platform_type AS ENUM ('twitter', 'instagram', 'linkedin', 'tiktok', 'facebook', 'youtube', 'threads');
 
 -- ==========================================
 -- 1. USERS TABLE
 -- ==========================================
 CREATE TABLE IF NOT EXISTS users (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     email TEXT UNIQUE NOT NULL,
     encrypted_password TEXT,
     full_name TEXT,
@@ -63,7 +63,7 @@ CREATE TABLE IF NOT EXISTS profiles (
 -- 3. PERSONAS TABLE
 -- ==========================================
 CREATE TABLE IF NOT EXISTS personas (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID REFERENCES users(id) ON DELETE CASCADE,
     name TEXT NOT NULL,
     description TEXT,
@@ -82,7 +82,7 @@ CREATE TABLE IF NOT EXISTS personas (
 -- 4. VIRAL PATTERNS TABLE
 -- ==========================================
 CREATE TABLE IF NOT EXISTS viral_patterns (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     platform platform_type NOT NULL,
     pattern_name TEXT NOT NULL,
     pattern_description TEXT,
@@ -105,7 +105,7 @@ CREATE TABLE IF NOT EXISTS viral_patterns (
 -- 5. CONTENT POSTS TABLE
 -- ==========================================
 CREATE TABLE IF NOT EXISTS content_posts (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID REFERENCES users(id) ON DELETE CASCADE,
     persona_id UUID REFERENCES personas(id) ON DELETE SET NULL,
     platform platform_type NOT NULL,
@@ -133,7 +133,7 @@ CREATE TABLE IF NOT EXISTS content_posts (
 -- 6. CAMPAIGNS TABLE
 -- ==========================================
 CREATE TABLE IF NOT EXISTS campaigns (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID REFERENCES users(id) ON DELETE CASCADE,
     name TEXT NOT NULL,
     description TEXT,
@@ -166,7 +166,7 @@ CREATE TABLE IF NOT EXISTS campaign_posts (
 -- 8. ANALYTICS TABLE
 -- ==========================================
 CREATE TABLE IF NOT EXISTS analytics (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID REFERENCES users(id) ON DELETE CASCADE,
     post_id UUID REFERENCES content_posts(id) ON DELETE CASCADE,
     platform platform_type NOT NULL,
@@ -191,7 +191,7 @@ CREATE TABLE IF NOT EXISTS analytics (
 -- 9. SCHEDULES TABLE
 -- ==========================================
 CREATE TABLE IF NOT EXISTS schedules (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID REFERENCES users(id) ON DELETE CASCADE,
     post_id UUID REFERENCES content_posts(id) ON DELETE CASCADE,
     platform platform_type NOT NULL,
@@ -212,7 +212,7 @@ CREATE TABLE IF NOT EXISTS schedules (
 -- 10. INTEGRATIONS TABLE
 -- ==========================================
 CREATE TABLE IF NOT EXISTS integrations (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID REFERENCES users(id) ON DELETE CASCADE,
     platform platform_type NOT NULL,
     is_active BOOLEAN DEFAULT true,
@@ -234,7 +234,7 @@ CREATE TABLE IF NOT EXISTS integrations (
 -- 11. TEAMS TABLE
 -- ==========================================
 CREATE TABLE IF NOT EXISTS teams (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name TEXT NOT NULL,
     slug TEXT UNIQUE NOT NULL,
     owner_id UUID REFERENCES users(id) ON DELETE CASCADE,
@@ -264,7 +264,7 @@ CREATE TABLE IF NOT EXISTS team_members (
 -- 13. AUDIT LOGS TABLE
 -- ==========================================
 CREATE TABLE IF NOT EXISTS audit_logs (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID REFERENCES users(id) ON DELETE SET NULL,
     action TEXT NOT NULL,
     entity_type TEXT,
@@ -282,7 +282,7 @@ CREATE TABLE IF NOT EXISTS audit_logs (
 -- 14. API KEYS TABLE
 -- ==========================================
 CREATE TABLE IF NOT EXISTS api_keys (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID REFERENCES users(id) ON DELETE CASCADE,
     name TEXT NOT NULL,
     key_hash TEXT UNIQUE NOT NULL,
@@ -298,7 +298,7 @@ CREATE TABLE IF NOT EXISTS api_keys (
 -- 15. NOTIFICATIONS TABLE
 -- ==========================================
 CREATE TABLE IF NOT EXISTS notifications (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID REFERENCES users(id) ON DELETE CASCADE,
     type TEXT NOT NULL,
     title TEXT NOT NULL,
@@ -313,7 +313,7 @@ CREATE TABLE IF NOT EXISTS notifications (
 -- 16. BILLING/SUBSCRIPTIONS TABLE
 -- ==========================================
 CREATE TABLE IF NOT EXISTS subscriptions (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID REFERENCES users(id) ON DELETE CASCADE,
     team_id UUID REFERENCES teams(id) ON DELETE CASCADE,
     plan subscription_plan NOT NULL,
@@ -333,7 +333,7 @@ CREATE TABLE IF NOT EXISTS subscriptions (
 -- 17. GENERATION LOGS TABLE
 -- ==========================================
 CREATE TABLE IF NOT EXISTS generation_logs (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID REFERENCES users(id) ON DELETE CASCADE,
     prompt TEXT NOT NULL,
     platform platform_type,
@@ -351,7 +351,7 @@ CREATE TABLE IF NOT EXISTS generation_logs (
 -- 18. EXPERIMENTS TABLE (A/B Testing)
 -- ==========================================
 CREATE TABLE IF NOT EXISTS experiments (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID REFERENCES users(id) ON DELETE CASCADE,
     name TEXT NOT NULL,
     description TEXT,
@@ -370,24 +370,24 @@ CREATE TABLE IF NOT EXISTS experiments (
 -- ==========================================
 -- CREATE INDEXES FOR PERFORMANCE
 -- ==========================================
-CREATE INDEX idx_users_email ON users(email);
-CREATE INDEX idx_users_subscription_plan ON users(subscription_plan);
-CREATE INDEX idx_content_posts_user_id ON content_posts(user_id);
-CREATE INDEX idx_content_posts_status ON content_posts(status);
-CREATE INDEX idx_content_posts_scheduled_for ON content_posts(scheduled_for);
-CREATE INDEX idx_content_posts_platform ON content_posts(platform);
-CREATE INDEX idx_viral_patterns_platform ON viral_patterns(platform);
-CREATE INDEX idx_viral_patterns_trending ON viral_patterns(is_trending);
-CREATE INDEX idx_analytics_user_id ON analytics(user_id);
-CREATE INDEX idx_analytics_post_id ON analytics(post_id);
-CREATE INDEX idx_analytics_metric_date ON analytics(metric_date);
-CREATE INDEX idx_schedules_user_id ON schedules(user_id);
-CREATE INDEX idx_schedules_scheduled_time ON schedules(scheduled_time);
-CREATE INDEX idx_integrations_user_platform ON integrations(user_id, platform);
-CREATE INDEX idx_audit_logs_user_id ON audit_logs(user_id);
-CREATE INDEX idx_audit_logs_created_at ON audit_logs(created_at);
-CREATE INDEX idx_notifications_user_id ON notifications(user_id);
-CREATE INDEX idx_notifications_is_read ON notifications(is_read);
+CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
+CREATE INDEX IF NOT EXISTS idx_users_subscription_plan ON users(subscription_plan);
+CREATE INDEX IF NOT EXISTS idx_content_posts_user_id ON content_posts(user_id);
+CREATE INDEX IF NOT EXISTS idx_content_posts_status ON content_posts(status);
+CREATE INDEX IF NOT EXISTS idx_content_posts_scheduled_for ON content_posts(scheduled_for);
+CREATE INDEX IF NOT EXISTS idx_content_posts_platform ON content_posts(platform);
+CREATE INDEX IF NOT EXISTS idx_viral_patterns_platform ON viral_patterns(platform);
+CREATE INDEX IF NOT EXISTS idx_viral_patterns_trending ON viral_patterns(is_trending);
+CREATE INDEX IF NOT EXISTS idx_analytics_user_id ON analytics(user_id);
+CREATE INDEX IF NOT EXISTS idx_analytics_post_id ON analytics(post_id);
+CREATE INDEX IF NOT EXISTS idx_analytics_metric_date ON analytics(metric_date);
+CREATE INDEX IF NOT EXISTS idx_schedules_user_id ON schedules(user_id);
+CREATE INDEX IF NOT EXISTS idx_schedules_scheduled_time ON schedules(scheduled_time);
+CREATE INDEX IF NOT EXISTS idx_integrations_user_platform ON integrations(user_id, platform);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_user_id ON audit_logs(user_id);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_created_at ON audit_logs(created_at);
+CREATE INDEX IF NOT EXISTS idx_notifications_user_id ON notifications(user_id);
+CREATE INDEX IF NOT EXISTS idx_notifications_is_read ON notifications(is_read);
 
 -- ==========================================
 -- ROW LEVEL SECURITY POLICIES
@@ -466,33 +466,43 @@ END;
 $$ language 'plpgsql';
 
 -- Apply update trigger to all tables with updated_at
+DROP TRIGGER IF EXISTS update_users_updated_at ON users;
 CREATE TRIGGER update_users_updated_at BEFORE UPDATE ON users
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_profiles_updated_at ON profiles;
 CREATE TRIGGER update_profiles_updated_at BEFORE UPDATE ON profiles
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_personas_updated_at ON personas;
 CREATE TRIGGER update_personas_updated_at BEFORE UPDATE ON personas
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_content_posts_updated_at ON content_posts;
 CREATE TRIGGER update_content_posts_updated_at BEFORE UPDATE ON content_posts
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_campaigns_updated_at ON campaigns;
 CREATE TRIGGER update_campaigns_updated_at BEFORE UPDATE ON campaigns
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_schedules_updated_at ON schedules;
 CREATE TRIGGER update_schedules_updated_at BEFORE UPDATE ON schedules
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_integrations_updated_at ON integrations;
 CREATE TRIGGER update_integrations_updated_at BEFORE UPDATE ON integrations
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_teams_updated_at ON teams;
 CREATE TRIGGER update_teams_updated_at BEFORE UPDATE ON teams
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_subscriptions_updated_at ON subscriptions;
 CREATE TRIGGER update_subscriptions_updated_at BEFORE UPDATE ON subscriptions
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_experiments_updated_at ON experiments;
 CREATE TRIGGER update_experiments_updated_at BEFORE UPDATE ON experiments
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 

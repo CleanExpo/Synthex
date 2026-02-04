@@ -22,7 +22,7 @@ DROP TABLE IF EXISTS organizations CASCADE;
 
 -- Organizations table
 CREATE TABLE organizations (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name VARCHAR(255) NOT NULL,
   slug VARCHAR(255) UNIQUE NOT NULL,
   description TEXT,
@@ -37,7 +37,7 @@ CREATE TABLE organizations (
 
 -- Users table (main auth table)
 CREATE TABLE users (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   email VARCHAR(255) UNIQUE NOT NULL,
   password VARCHAR(255),
   name VARCHAR(255),
@@ -62,7 +62,7 @@ CREATE TABLE users (
 
 -- Campaigns table
 CREATE TABLE campaigns (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   name VARCHAR(255) NOT NULL,
   description TEXT,
@@ -77,7 +77,7 @@ CREATE TABLE campaigns (
 
 -- Posts table
 CREATE TABLE posts (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   campaign_id UUID NOT NULL REFERENCES campaigns(id) ON DELETE CASCADE,
   content TEXT NOT NULL,
   platform VARCHAR(50) NOT NULL,
@@ -92,7 +92,7 @@ CREATE TABLE posts (
 
 -- Projects table
 CREATE TABLE projects (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   name VARCHAR(255) NOT NULL,
   description TEXT,
@@ -104,7 +104,7 @@ CREATE TABLE projects (
 
 -- API Usage tracking
 CREATE TABLE api_usage (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   endpoint VARCHAR(255) NOT NULL,
   model VARCHAR(100),
@@ -119,7 +119,7 @@ CREATE TABLE api_usage (
 
 -- Sessions table
 CREATE TABLE sessions (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   token VARCHAR(255) UNIQUE NOT NULL,
   user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
@@ -128,7 +128,7 @@ CREATE TABLE sessions (
 
 -- Notifications table
 CREATE TABLE notifications (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   type VARCHAR(50) NOT NULL,
   title VARCHAR(255) NOT NULL,
@@ -140,7 +140,7 @@ CREATE TABLE notifications (
 
 -- Audit logs table
 CREATE TABLE audit_logs (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID REFERENCES users(id) ON DELETE CASCADE,
   action VARCHAR(100) NOT NULL,
   resource VARCHAR(100) NOT NULL,
@@ -156,7 +156,7 @@ CREATE TABLE audit_logs (
 
 -- Platform connections table
 CREATE TABLE platform_connections (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   platform VARCHAR(50) NOT NULL,
   access_token TEXT NOT NULL,
@@ -175,7 +175,7 @@ CREATE TABLE platform_connections (
 
 -- Platform posts table
 CREATE TABLE platform_posts (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   connection_id UUID NOT NULL REFERENCES platform_connections(id) ON DELETE CASCADE,
   platform_id VARCHAR(255) NOT NULL,
   content TEXT NOT NULL,
@@ -194,7 +194,7 @@ CREATE TABLE platform_posts (
 
 -- Platform metrics table
 CREATE TABLE platform_metrics (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   post_id UUID NOT NULL REFERENCES platform_posts(id) ON DELETE CASCADE,
   likes INTEGER DEFAULT 0,
   shares INTEGER DEFAULT 0,
@@ -210,26 +210,26 @@ CREATE TABLE platform_metrics (
 );
 
 -- Create indexes for better performance
-CREATE INDEX idx_users_email ON users(email);
-CREATE INDEX idx_users_organization ON users(organization_id);
-CREATE INDEX idx_campaigns_user ON campaigns(user_id);
-CREATE INDEX idx_campaigns_status ON campaigns(status);
-CREATE INDEX idx_posts_campaign ON posts(campaign_id);
-CREATE INDEX idx_posts_status ON posts(status);
-CREATE INDEX idx_posts_scheduled ON posts(scheduled_at);
-CREATE INDEX idx_projects_user ON projects(user_id);
-CREATE INDEX idx_api_usage_user ON api_usage(user_id);
-CREATE INDEX idx_api_usage_created ON api_usage(created_at);
-CREATE INDEX idx_sessions_token ON sessions(token);
-CREATE INDEX idx_sessions_expires ON sessions(expires_at);
-CREATE INDEX idx_notifications_user ON notifications(user_id);
-CREATE INDEX idx_notifications_read ON notifications(read);
-CREATE INDEX idx_audit_logs_user ON audit_logs(user_id);
-CREATE INDEX idx_audit_logs_created ON audit_logs(created_at);
-CREATE INDEX idx_platform_connections_user ON platform_connections(user_id);
-CREATE INDEX idx_platform_posts_connection ON platform_posts(connection_id);
-CREATE INDEX idx_platform_posts_status ON platform_posts(status);
-CREATE INDEX idx_platform_metrics_post ON platform_metrics(post_id);
+CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
+CREATE INDEX IF NOT EXISTS idx_users_organization ON users(organization_id);
+CREATE INDEX IF NOT EXISTS idx_campaigns_user ON campaigns(user_id);
+CREATE INDEX IF NOT EXISTS idx_campaigns_status ON campaigns(status);
+CREATE INDEX IF NOT EXISTS idx_posts_campaign ON posts(campaign_id);
+CREATE INDEX IF NOT EXISTS idx_posts_status ON posts(status);
+CREATE INDEX IF NOT EXISTS idx_posts_scheduled ON posts(scheduled_at);
+CREATE INDEX IF NOT EXISTS idx_projects_user ON projects(user_id);
+CREATE INDEX IF NOT EXISTS idx_api_usage_user ON api_usage(user_id);
+CREATE INDEX IF NOT EXISTS idx_api_usage_created ON api_usage(created_at);
+CREATE INDEX IF NOT EXISTS idx_sessions_token ON sessions(token);
+CREATE INDEX IF NOT EXISTS idx_sessions_expires ON sessions(expires_at);
+CREATE INDEX IF NOT EXISTS idx_notifications_user ON notifications(user_id);
+CREATE INDEX IF NOT EXISTS idx_notifications_read ON notifications(read);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_user ON audit_logs(user_id);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_created ON audit_logs(created_at);
+CREATE INDEX IF NOT EXISTS idx_platform_connections_user ON platform_connections(user_id);
+CREATE INDEX IF NOT EXISTS idx_platform_posts_connection ON platform_posts(connection_id);
+CREATE INDEX IF NOT EXISTS idx_platform_posts_status ON platform_posts(status);
+CREATE INDEX IF NOT EXISTS idx_platform_metrics_post ON platform_metrics(post_id);
 
 -- Create updated_at trigger function
 CREATE OR REPLACE FUNCTION update_updated_at_column()
