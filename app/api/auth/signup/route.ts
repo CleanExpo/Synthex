@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createAuthClient, serverDb } from '@/lib/supabase-server';
+import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
 
 // Input validation schema
@@ -123,8 +124,36 @@ export async function POST(request: Request) {
       );
     }
 
-    // Create user record in our database
+    // Create user record in Prisma database (CRITICAL - this was missing!)
     try {
+      // Check if user already exists in Prisma (edge case - Supabase has user but Prisma doesn't)
+      const existingPrismaUser = await prisma.user.findUnique({
+        where: { id: authData.user.id }
+      });
+
+      if (!existingPrismaUser) {
+        // Also check by email in case of ID mismatch
+        const existingByEmail = await prisma.user.findUnique({
+          where: { email: authData.user.email! }
+        });
+
+        if (!existingByEmail) {
+          await prisma.user.create({
+            data: {
+              id: authData.user.id,
+              email: authData.user.email!,
+              name: name || authData.user.user_metadata?.name || email.split('@')[0],
+              authProvider: 'email',
+              emailVerified: false,
+              createdAt: new Date(),
+              updatedAt: new Date(),
+            }
+          });
+          console.log('[SIGNUP] Created Prisma user:', authData.user.id);
+        }
+      }
+
+      // Log signup action to audit
       await serverDb.audit.log({
         user_id: authData.user.id,
         action: 'user_signup',
@@ -139,8 +168,9 @@ export async function POST(request: Request) {
         }
       });
     } catch (dbError) {
-      console.error('Database error during signup:', dbError);
-      // Continue even if audit log fails
+      console.error('[SIGNUP] Database error during signup:', dbError);
+      // Don't fail signup if Prisma fails - user can still use Supabase Auth
+      // But log the error for debugging
     }
 
     // Set auth cookie for immediate login

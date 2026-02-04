@@ -3,7 +3,7 @@
   "buildCommand": "pnpm run build:vercel",
   "outputDirectory": ".next",
   "framework": "nextjs",
-  "installCommand": "pnpm install",
+  "installCommand": "pnpm install --frozen-lockfile --prefer-offline",
   "env": {
     "NODE_ENV": "production",
     "NEXT_TELEMETRY_DISABLED": "1"
