@@ -21,7 +21,6 @@ function getJWTSecret(): string {
   return secret;
 }
 
-const JWT_SECRET = getJWTSecret();
 
 export async function POST(request: NextRequest) {
   try {
@@ -98,7 +97,7 @@ export async function POST(request: NextRequest) {
         userId: user.id, 
         email: user.email 
       },
-      JWT_SECRET,
+      getJWTSecret(),
       { 
         expiresIn: '7d' 
       }

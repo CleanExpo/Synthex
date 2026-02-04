@@ -21,7 +21,6 @@ function getJWTSecret(): string {
   return secret;
 }
 
-const JWT_SECRET = getJWTSecret();
 
 // Validation schema for user update
 const userUpdateSchema = z.object({
@@ -38,7 +37,7 @@ const userUpdateSchema = z.object({
 // Helper function to verify JWT token
 async function verifyToken(token: string) {
   try {
-    const decoded = jwt.verify(token, JWT_SECRET) as { userId: string; email: string };
+    const decoded = jwt.verify(token, getJWTSecret()) as { userId: string; email: string };
     return decoded;
   } catch (error) {
     return null;

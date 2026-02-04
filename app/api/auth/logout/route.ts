@@ -8,12 +8,12 @@ import jwt from 'jsonwebtoken';
 import { prisma } from '@/lib/prisma';
 
 // JWT Secret
-const JWT_SECRET = process.env.JWT_SECRET || 'your-jwt-secret-key-change-this';
+function getJWTSecret(): string { const s = process.env.JWT_SECRET; if (!s) throw new Error('JWT_SECRET required'); return s; }
 
 // Helper function to verify JWT token
 async function verifyToken(token: string) {
   try {
-    const decoded = jwt.verify(token, JWT_SECRET) as { userId: string; email: string };
+    const decoded = jwt.verify(token, getJWTSecret()) as { userId: string; email: string };
     return decoded;
   } catch (error) {
     return null;

@@ -15,7 +15,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import jwt from 'jsonwebtoken';
 import { accountService } from '@/lib/auth/account-service';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-change-in-production';
+// Lazy getter to avoid module load crash
+function getJWTSecret(): string {
+  const secret = process.env.JWT_SECRET;
+  if (!secret) throw new Error('JWT_SECRET required');
+  return secret;
+}
 
 export async function GET(request: NextRequest) {
   try {
@@ -34,7 +39,7 @@ export async function GET(request: NextRequest) {
     // Verify token and get user ID
     let userId: string;
     try {
-      const decoded = jwt.verify(token, JWT_SECRET) as { sub: string };
+      const decoded = jwt.verify(token, getJWTSecret()) as { sub: string };
       userId = decoded.sub;
     } catch {
       return NextResponse.json(
