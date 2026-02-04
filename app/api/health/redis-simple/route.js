@@ -1,11 +1,10 @@
 /**
  * Simple Redis Health Check
- * Uses CommonJS-compatible Redis client
+ * Uses unified Redis service with proper ES module imports
  */
 
 import { NextResponse } from 'next/server';
-
-const redis = require('@/lib/redis-client');
+import { healthCheck, getStats, set, get, del } from '@/lib/redis-unified';
 
 // Force dynamic rendering - prevent static generation
 export const dynamic = 'force-dynamic';
@@ -14,16 +13,16 @@ export const runtime = 'nodejs';
 export async function GET(request) {
   try {
     const startTime = Date.now();
-    
+
     // Basic health check
-    const health = await redis.healthCheck();
-    const stats = await redis.getStats();
+    const health = await healthCheck();
+    const stats = await getStats();
     
     // Test basic operations
     const testKey = `health_check_${Date.now()}`;
-    await redis.set(testKey, 'test', 10);
-    const testValue = await redis.get(testKey);
-    await redis.del(testKey);
+    await set(testKey, 'test', 10);
+    const testValue = await get(testKey);
+    await del(testKey);
     
     const responseData = {
       status: health.status,
