@@ -123,12 +123,19 @@ const getPrismaClient = (): PrismaClient | null => {
   return globalForPrisma.prisma;
 };
 
-// Create singleton instance
-export const prisma = getPrismaClient()!;
+// Create singleton instance with proper null handling
+const client = getPrismaClient();
+
+if (!client && process.env.NODE_ENV === 'production' && process.env.DATABASE_URL) {
+  throw new Error('[Prisma] Failed to initialize client - check DATABASE_URL configuration');
+}
+
+// Export prisma client (may be null during SSG/build without DATABASE_URL)
+export const prisma = client as PrismaClient;
 
 // Ensure singleton in development (hot reload protection)
-if (process.env.NODE_ENV !== 'production' && prisma) {
-  globalForPrisma.prisma = prisma;
+if (process.env.NODE_ENV !== 'production' && client) {
+  globalForPrisma.prisma = client;
 }
 
 /**

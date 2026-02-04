@@ -22,7 +22,7 @@
     "test:unit": "npm test",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
-    "postinstall": "prisma generate || echo 'Prisma generation skipped'",
+    "postinstall": "echo 'Skipping postinstall - Prisma generated during build'",
     "db:push": "prisma db push",
     "db:migrate": "node scripts/db/migrate.js up",
     "db:migrate:dev": "prisma migrate dev",

@@ -1,12 +1,16 @@
 /**
  * User Login API Route
  * POST /api/auth/login
+ *
+ * FIXED: Now uses Supabase Auth for password verification
+ * instead of bcrypt against Prisma User.password field.
+ * This aligns with signup which stores passwords in Supabase.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { prisma } from '@/lib/prisma';
+import { supabase } from '@/lib/supabase-client';
 
 // JWT Secret - CRITICAL: Never use fallback in production
 function getJWTSecret(): string {
@@ -33,13 +37,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Find user by email
+    // Find user in Prisma to get user ID and check OAuth
     const user = await prisma.user.findUnique({
       where: { email },
       select: {
         id: true,
         email: true,
-        password: true,
         name: true,
         emailVerified: true,
         authProvider: true
@@ -53,18 +56,21 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if user registered with OAuth (no password)
-    if (!user.password || user.authProvider !== 'local') {
+    // Check if user registered with OAuth (should use OAuth flow)
+    if (user.authProvider && user.authProvider !== 'local' && user.authProvider !== 'email') {
       return NextResponse.json(
-        { error: `Please login with ${user.authProvider || 'your linked account'}` },
+        { error: `Please login with ${user.authProvider}` },
         { status: 400 }
       );
     }
 
-    // Verify password
-    const isPasswordValid = await bcrypt.compare(password, user.password);
+    // Verify password using Supabase Auth
+    const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+      email,
+      password
+    });
 
-    if (!isPasswordValid) {
+    if (authError || !authData.user) {
       // Log failed login attempt
       await prisma.auditLog.create({
         data: {
@@ -75,7 +81,7 @@ export async function POST(request: NextRequest) {
           outcome: 'failure',
           details: {
             email: user.email,
-            reason: 'invalid_password'
+            reason: authError?.message || 'invalid_password'
           }
         }
       });
@@ -157,7 +163,6 @@ export async function POST(request: NextRequest) {
       { error: 'Login failed. Please try again.' },
       { status: 500 }
     );
-  } finally {
-    await prisma.$disconnect();
   }
+  // Note: Using connection pooling, no need for prisma.$disconnect()
 }
