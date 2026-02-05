@@ -93,12 +93,8 @@ export async function GET(request: NextRequest) {
 
     const authorizationUrl = `${GOOGLE_CONFIG.authUrl}?${authParams.toString()}`;
 
-    // Return the authorization URL for client-side redirect
-    return NextResponse.json({
-      authorizationUrl,
-      state,
-      message: 'Redirecting to Google for authorization...',
-    });
+    // Redirect to Google for authorization
+    return NextResponse.redirect(authorizationUrl);
   } catch (error) {
     console.error('[Google OAuth] Initiation error:', error);
     return NextResponse.json(
