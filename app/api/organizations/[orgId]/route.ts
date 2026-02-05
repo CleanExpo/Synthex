@@ -8,6 +8,9 @@
  *
  * ENVIRONMENT VARIABLES REQUIRED:
  * - DATABASE_URL: PostgreSQL connection (CRITICAL)
+ * - JWT_SECRET: For authentication (CRITICAL)
+ *
+ * SECURITY: All endpoints require authentication and organization membership
  *
  * FAILURE MODE: Returns appropriate error responses
  */
@@ -18,6 +21,74 @@ import { logger } from '@/lib/logger';
 import { ResponseOptimizer } from '@/lib/api/response-optimizer';
 import { getCache } from '@/lib/cache/cache-manager';
 import { PLAN_LIMITS, TenantPlan } from '@/lib/multi-tenant';
+import { verifyToken } from '@/lib/auth/jwt-utils';
+
+// =============================================================================
+// Auth Helper - Verify user and organization membership
+// =============================================================================
+
+async function getUserFromRequest(request: NextRequest): Promise<{ id: string; email: string } | null> {
+  // Try Authorization header first
+  const authHeader = request.headers.get('authorization');
+  if (authHeader) {
+    try {
+      const token = authHeader.replace('Bearer ', '');
+      const decoded = verifyToken(token);
+      return { id: decoded.userId, email: decoded.email || '' };
+    } catch {
+      // Fall through to cookie check
+    }
+  }
+
+  // Try auth-token cookie
+  const authToken = request.cookies.get('auth-token')?.value;
+  if (authToken) {
+    try {
+      const decoded = verifyToken(authToken);
+      return { id: decoded.userId, email: decoded.email || '' };
+    } catch {
+      return null;
+    }
+  }
+
+  return null;
+}
+
+/**
+ * Check if user is a member of the organization
+ */
+async function isOrgMember(userId: string, orgId: string): Promise<boolean> {
+  const user = await prisma.user.findFirst({
+    where: {
+      id: userId,
+      organizationId: orgId,
+    },
+  });
+  return !!user;
+}
+
+/**
+ * Check if user is an admin of the organization
+ */
+async function isOrgAdmin(userId: string, orgId: string): Promise<boolean> {
+  const user = await prisma.user.findFirst({
+    where: {
+      id: userId,
+      organizationId: orgId,
+    },
+  });
+
+  if (!user) return false;
+
+  // Check organization settings for admin list
+  const org = await prisma.organization.findUnique({
+    where: { id: orgId },
+    select: { settings: true },
+  });
+
+  const settings = org?.settings as { admins?: string[] } | null;
+  return settings?.admins?.includes(userId) || false;
+}
 
 // ============================================================================
 // GET - Get Organization Details
@@ -28,11 +99,24 @@ export async function GET(
   { params }: { params: { orgId: string } }
 ) {
   try {
+    // Authenticate user
+    const user = await getUserFromRequest(request);
+    if (!user) {
+      return ResponseOptimizer.createErrorResponse('Authentication required', 401);
+    }
+
     const { orgId } = params;
+
+    // Verify user is a member of the organization
+    const isMember = await isOrgMember(user.id, orgId);
+    if (!isMember) {
+      return ResponseOptimizer.createErrorResponse('Organization not found or access denied', 404);
+    }
+
     const cache = getCache();
 
-    // Try cache first
-    const cacheKey = `org:${orgId}`;
+    // Try cache first (user-specific cache key)
+    const cacheKey = `org:${orgId}:user:${user.id}`;
     const cached = await cache.get(cacheKey);
     if (cached) {
       return ResponseOptimizer.createResponse(cached, {
@@ -111,8 +195,8 @@ export async function GET(
       updatedAt: organization.updatedAt,
     };
 
-    // Cache the response
-    await cache.set(cacheKey, response, { ttl: 300, tags: [`org:${orgId}`] });
+    // Cache the response (user-specific)
+    await cache.set(cacheKey, response, { ttl: 300, tags: [`org:${orgId}`, `user:${user.id}`] });
 
     return ResponseOptimizer.createResponse(response, {
       cacheType: 'api',
@@ -133,7 +217,25 @@ export async function PATCH(
   { params }: { params: { orgId: string } }
 ) {
   try {
+    // Authenticate user
+    const user = await getUserFromRequest(request);
+    if (!user) {
+      return ResponseOptimizer.createErrorResponse('Authentication required', 401);
+    }
+
     const { orgId } = params;
+
+    // Verify user is an admin of the organization
+    const isAdmin = await isOrgAdmin(user.id, orgId);
+    if (!isAdmin) {
+      // Check if they're at least a member (for better error message)
+      const isMember = await isOrgMember(user.id, orgId);
+      if (!isMember) {
+        return ResponseOptimizer.createErrorResponse('Organization not found or access denied', 404);
+      }
+      return ResponseOptimizer.createErrorResponse('Admin privileges required to update organization', 403);
+    }
+
     const body = await request.json();
 
     // Check organization exists
@@ -228,7 +330,22 @@ export async function PATCH(
     logger.info('Organization updated', {
       organizationId: organization.id,
       updatedFields: Object.keys(updateData),
+      userId: user.id,
     });
+
+    // Audit log for security tracking
+    await prisma.auditLog.create({
+      data: {
+        userId: user.id,
+        action: 'organization_updated',
+        resource: 'organization',
+        resourceId: orgId,
+        details: { updatedFields: Object.keys(updateData) },
+        severity: 'medium',
+        category: 'admin',
+        outcome: 'success',
+      },
+    }).catch(() => {}); // Don't fail if audit log fails
 
     return ResponseOptimizer.createResponse(
       {
@@ -261,7 +378,24 @@ export async function DELETE(
   { params }: { params: { orgId: string } }
 ) {
   try {
+    // Authenticate user
+    const user = await getUserFromRequest(request);
+    if (!user) {
+      return ResponseOptimizer.createErrorResponse('Authentication required', 401);
+    }
+
     const { orgId } = params;
+
+    // Verify user is an admin of the organization
+    const isAdmin = await isOrgAdmin(user.id, orgId);
+    if (!isAdmin) {
+      // Check if they're at least a member (for better error message)
+      const isMember = await isOrgMember(user.id, orgId);
+      if (!isMember) {
+        return ResponseOptimizer.createErrorResponse('Organization not found or access denied', 404);
+      }
+      return ResponseOptimizer.createErrorResponse('Admin privileges required to delete organization', 403);
+    }
 
     // Check organization exists
     const existing = await prisma.organization.findUnique({
@@ -301,7 +435,22 @@ export async function DELETE(
     logger.info('Organization deleted', {
       organizationId: orgId,
       userCount: existing._count.users,
+      userId: user.id,
     });
+
+    // Audit log for security tracking
+    await prisma.auditLog.create({
+      data: {
+        userId: user.id,
+        action: 'organization_deleted',
+        resource: 'organization',
+        resourceId: orgId,
+        details: { organizationName: existing.name, userCount: existing._count.users },
+        severity: 'high',
+        category: 'admin',
+        outcome: 'success',
+      },
+    }).catch(() => {}); // Don't fail if audit log fails
 
     return ResponseOptimizer.createResponse(
       {
