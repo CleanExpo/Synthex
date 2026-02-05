@@ -6,9 +6,9 @@ services:
     image: postgres:15-alpine
     container_name: synthex-postgres-staging
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: synthex_staging
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+      POSTGRES_DB: ${POSTGRES_DB:-synthex_staging}
     ports:
       - "5433:5432"
     volumes:
@@ -51,7 +51,7 @@ services:
       - "3001:3001"
     environment:
       - NODE_ENV=staging
-      - DATABASE_URL=postgresql://postgres:postgres@postgres-staging:5432/synthex_staging
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD}@postgres-staging:5432/${POSTGRES_DB:-synthex_staging}
       - REDIS_URL=redis://redis-staging:6379
     env_file:
       - .env.staging

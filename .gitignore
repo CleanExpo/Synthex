@@ -36,6 +36,7 @@ ENV/
 *.env
 .env.*
 !.env.example
+!.env.docker.example
 !.env.production.secure
 .env.txt
 *.env

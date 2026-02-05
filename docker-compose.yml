@@ -12,9 +12,11 @@ services:
       - "9229:9229"  # Debug port
     environment:
       - NODE_ENV=development
-      - DATABASE_URL=postgresql://synthex_user:synthex_pass@postgres:5432/synthex_dev
-      - REDIS_URL=redis://redis:6379
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-synthex_user}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-synthex_dev}
+      - REDIS_URL=redis://:${REDIS_PASSWORD}@redis:6379
       - PORT=3000
+    env_file:
+      - .env.docker
     volumes:
       - .:/usr/src/app
       - /usr/src/app/node_modules
@@ -29,9 +31,9 @@ services:
   postgres:
     image: postgres:15-alpine
     environment:
-      - POSTGRES_USER=synthex_user
-      - POSTGRES_PASSWORD=synthex_pass
-      - POSTGRES_DB=synthex_dev
+      - POSTGRES_USER=${POSTGRES_USER:-synthex_user}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+      - POSTGRES_DB=${POSTGRES_DB:-synthex_dev}
     ports:
       - "5432:5432"
     volumes:
@@ -51,7 +53,7 @@ services:
     restart: unless-stopped
     networks:
       - synthex-network
-    command: redis-server --appendonly yes --requirepass synthex_redis_pass
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:?REDIS_PASSWORD is required}
 
   # Nginx reverse proxy
   nginx:
@@ -92,7 +94,7 @@ services:
     ports:
       - "3001:3000"
     environment:
-      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-admin}
     volumes:
       - grafana_data:/var/lib/grafana
       - ./monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
