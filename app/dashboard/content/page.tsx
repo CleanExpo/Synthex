@@ -120,6 +120,7 @@ export default function ContentPage() {
   ];
 
   const handleGenerate = async () => {
+    console.log('[ContentGen] handleGenerate called, topic:', topic);
     if (!topic) {
       toast.error('Please enter a topic');
       return;
@@ -145,6 +146,7 @@ export default function ContentPage() {
       });
 
       const data = await response.json();
+      console.log('[ContentGen] API response:', response.status, data.success);
       if (data.success && data.data) {
         // Transform API response to match dashboard expected format
         const aiData = data.data;
@@ -159,10 +161,12 @@ export default function ContentPage() {
             hashtags: aiData.hashtags || [],
           }
         };
+        console.log('[ContentGen] Setting content:', transformedContent.primary?.slice(0, 50));
         setGeneratedContent(transformedContent);
         setEditedContent(transformedContent.primary);
         toast.success('Content generated successfully!');
       } else {
+        console.log('[ContentGen] API error:', data.error || data.message);
         toast.error(data.error || data.message || 'Failed to generate content');
       }
     } catch (error) {
