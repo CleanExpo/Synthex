@@ -6,6 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { TwitterApi } from 'twitter-api-v2';
+import { getUserIdFromCookies, unauthorizedResponse } from '@/lib/auth/jwt-utils';
 
 // Platform posting configurations
 const PLATFORM_CONFIGS = {
@@ -153,25 +154,22 @@ async function postToSocialPlatform(
 
 export async function POST(request: NextRequest) {
   try {
-    // Check authentication
-    const authToken = request.cookies.get('auth-token')?.value;
-    if (!authToken) {
-      return NextResponse.json(
-        { error: 'Authentication required' },
-        { status: 401 }
-      );
+    // Check authentication and get user ID
+    const userId = await getUserIdFromCookies();
+    if (!userId) {
+      return unauthorizedResponse();
     }
 
     // Parse request body
     const body: PostRequest = await request.json();
-    const { 
-      content, 
-      platforms, 
-      mediaUrls, 
-      scheduledAt, 
-      hashtags = [], 
+    const {
+      content,
+      platforms,
+      mediaUrls,
+      scheduledAt,
+      hashtags = [],
       mentions = [],
-      campaignId 
+      campaignId
     } = body;
 
     // Validate required fields
@@ -181,9 +179,6 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-
-    // Get user ID from session (mock for now)
-    const userId = 'demo-user-001'; // In production, get from JWT token
 
     // Process hashtags
     const processedHashtags = hashtags.map(tag => 
@@ -316,13 +311,10 @@ export async function POST(request: NextRequest) {
 // Get posting history
 export async function GET(request: NextRequest) {
   try {
-    // Check authentication
-    const authToken = request.cookies.get('auth-token')?.value;
-    if (!authToken) {
-      return NextResponse.json(
-        { error: 'Authentication required' },
-        { status: 401 }
-      );
+    // Check authentication and get user ID
+    const userId = await getUserIdFromCookies();
+    if (!userId) {
+      return unauthorizedResponse();
     }
 
     // Get query parameters

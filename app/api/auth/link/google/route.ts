@@ -70,9 +70,16 @@ export async function GET(request: NextRequest) {
     const pkce = generatePKCEChallenge();
     const state = generateState();
 
-    // Build redirect URI
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
-    const redirectUri = `${baseUrl}/api/auth/oauth/google/callback`;
+    // Build redirect URI - require NEXT_PUBLIC_APP_URL in production
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL;
+    if (!baseUrl && process.env.NODE_ENV === 'production') {
+      return NextResponse.json(
+        { error: 'NEXT_PUBLIC_APP_URL must be configured' },
+        { status: 500 }
+      );
+    }
+    const effectiveBaseUrl = baseUrl || 'http://localhost:3000';
+    const redirectUri = `${effectiveBaseUrl}/api/auth/oauth/google/callback`;
 
     // Store PKCE state with linkToUserId to indicate account linking
     await storePKCEState(state, pkce.codeVerifier, 'google', redirectUri, userId);

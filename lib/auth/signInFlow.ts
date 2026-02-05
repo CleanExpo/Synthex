@@ -25,8 +25,17 @@ export type { AuthUser, AuthSession, AuthResult } from '@/types/auth';
 // Environment configuration with fallbacks
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
 const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-key';
-const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-change-in-production';
 const IS_PRODUCTION = process.env.NODE_ENV === 'production';
+
+// JWT_SECRET must be set in production - no fallback allowed
+const JWT_SECRET = (() => {
+  const secret = process.env.JWT_SECRET;
+  if (!secret && IS_PRODUCTION) {
+    throw new Error('JWT_SECRET must be set in production environment');
+  }
+  // Only allow fallback in development/test for local development convenience
+  return secret || 'dev-secret-change-in-production';
+})();
 
 // Initialize Supabase client once
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);

@@ -11,6 +11,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { psychologyAnalyzer } from '@/lib/ai/psychology-analyzer';
 import { z } from 'zod';
+import { getUserIdFromCookies } from '@/lib/auth/jwt-utils';
 
 const AnalyzeRequestSchema = z.object({
   content: z.string().min(1, 'Content is required').max(5000, 'Content too long'),
@@ -19,11 +20,9 @@ const AnalyzeRequestSchema = z.object({
   contentType: z.enum(['post', 'ad', 'email', 'landing', 'tagline', 'headline']).optional(),
 });
 
-// Helper to get user ID from auth
-async function getUserId(request: NextRequest): Promise<string | null> {
-  const authToken = request.cookies.get('auth-token')?.value;
-  if (!authToken) return null;
-  return 'demo-user-001';
+// Helper to get user ID from auth (uses centralized JWT verification)
+async function getUserId(_request: NextRequest): Promise<string | null> {
+  return getUserIdFromCookies();
 }
 
 /**

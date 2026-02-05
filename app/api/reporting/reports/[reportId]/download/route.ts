@@ -9,12 +9,11 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { reportGenerator } from '@/lib/reports/report-generator';
+import { getUserIdFromCookies } from '@/lib/auth/jwt-utils';
 
-// Helper to get user ID from auth
-async function getUserId(request: NextRequest): Promise<string | null> {
-  const authToken = request.cookies.get('auth-token')?.value;
-  if (!authToken) return null;
-  return 'demo-user-001';
+// Helper to get user ID from auth (uses centralized JWT verification)
+async function getUserId(_request: NextRequest): Promise<string | null> {
+  return getUserIdFromCookies();
 }
 
 /**

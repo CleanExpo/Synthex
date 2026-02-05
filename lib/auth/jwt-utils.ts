@@ -12,6 +12,7 @@
 
 import jwt, { JwtPayload, SignOptions } from 'jsonwebtoken';
 import { NextRequest, NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
 
 // =============================================================================
 // Types
@@ -211,4 +212,66 @@ export function withAuth<T extends NextResponse>(
 
     return handler(request, userId);
   };
+}
+
+// =============================================================================
+// Cookie-Based Authentication (for API routes using httpOnly cookies)
+// =============================================================================
+
+/**
+ * Extract user ID from auth-token cookie.
+ * This is the primary method for authenticated API routes using httpOnly cookies.
+ * Falls back to Authorization header if cookie is not present.
+ *
+ * Usage in API routes:
+ *   const userId = await getUserIdFromCookies();
+ *   if (!userId) return unauthorizedResponse();
+ *
+ * @returns User ID if authenticated, null otherwise
+ */
+export async function getUserIdFromCookies(): Promise<string | null> {
+  try {
+    const cookieStore = await cookies();
+    const token = cookieStore.get('auth-token')?.value;
+
+    if (!token) {
+      return null;
+    }
+
+    const payload = verifyTokenSafe(token);
+    return payload?.userId || null;
+  } catch (error) {
+    // Cookie access may fail in certain contexts
+    console.error('[AUTH] Cookie access failed:', error instanceof Error ? error.message : 'Unknown error');
+    return null;
+  }
+}
+
+/**
+ * Combined auth check: tries cookies first, then Authorization header.
+ * Use this for maximum compatibility across different client implementations.
+ */
+export async function getUserIdFromRequestOrCookies(request: NextRequest): Promise<string | null> {
+  // First try cookies (preferred for httpOnly security)
+  const cookieUserId = await getUserIdFromCookies();
+  if (cookieUserId) {
+    return cookieUserId;
+  }
+
+  // Fallback to Authorization header
+  return getUserIdFromRequest(request);
+}
+
+/**
+ * Require authentication - throws/returns early if not authenticated.
+ * Convenience wrapper that returns an error response if not authenticated.
+ */
+export async function requireAuth(request: NextRequest): Promise<{ userId: string } | NextResponse> {
+  const userId = await getUserIdFromRequestOrCookies(request);
+
+  if (!userId) {
+    return unauthorizedResponse();
+  }
+
+  return { userId };
 }

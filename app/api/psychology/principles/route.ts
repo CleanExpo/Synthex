@@ -11,6 +11,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { psychologyAnalyzer } from '@/lib/ai/psychology-analyzer';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
+import { getUserIdFromCookies } from '@/lib/auth/jwt-utils';
 
 const UpdatePreferencesSchema = z.object({
   preferredPrinciples: z.array(z.string()).optional(),
@@ -23,11 +24,9 @@ const UpdatePreferencesSchema = z.object({
   }).optional(),
 });
 
-// Helper to get user ID from auth
-async function getUserId(request: NextRequest): Promise<string | null> {
-  const authToken = request.cookies.get('auth-token')?.value;
-  if (!authToken) return null;
-  return 'demo-user-001';
+// Helper to get user ID from auth (uses centralized JWT verification)
+async function getUserId(_request: NextRequest): Promise<string | null> {
+  return getUserIdFromCookies();
 }
 
 /**

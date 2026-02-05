@@ -40,7 +40,15 @@ interface GoogleUserInfo {
 }
 
 export async function GET(request: NextRequest) {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+  // Require NEXT_PUBLIC_APP_URL in production
+  const effectiveBaseUrl = process.env.NEXT_PUBLIC_APP_URL;
+  if (!effectiveBaseUrl && process.env.NODE_ENV === 'production') {
+    return NextResponse.json(
+      { error: 'NEXT_PUBLIC_APP_URL must be configured' },
+      { status: 500 }
+    );
+  }
+  const effectiveBaseUrl = effectiveBaseUrl || 'http://localhost:3000';
 
   try {
     // Parse callback parameters
@@ -53,24 +61,24 @@ export async function GET(request: NextRequest) {
     // Handle OAuth errors from Google
     if (error) {
       console.error('[Google OAuth] Error from Google:', error, errorDescription);
-      return redirectWithError(baseUrl, errorDescription || error);
+      return redirectWithError(effectiveBaseUrl, errorDescription || error);
     }
 
     // Validate required parameters
     if (!code || !state) {
-      return redirectWithError(baseUrl, 'Missing authorization code or state');
+      return redirectWithError(effectiveBaseUrl, 'Missing authorization code or state');
     }
 
     // Retrieve and verify PKCE state
     const pkceState = await retrievePKCEState(state.split('|')[0]); // Handle state|returnTo format
 
     if (!pkceState) {
-      return redirectWithError(baseUrl, 'Invalid or expired state. Please try again.');
+      return redirectWithError(effectiveBaseUrl, 'Invalid or expired state. Please try again.');
     }
 
     // Validate Google OAuth is configured
     if (!GOOGLE_CONFIG.clientId || !GOOGLE_CONFIG.clientSecret) {
-      return redirectWithError(baseUrl, 'Google OAuth not configured');
+      return redirectWithError(effectiveBaseUrl, 'Google OAuth not configured');
     }
 
     // Exchange authorization code for tokens
@@ -81,14 +89,14 @@ export async function GET(request: NextRequest) {
     );
 
     if (!tokens) {
-      return redirectWithError(baseUrl, 'Failed to exchange authorization code');
+      return redirectWithError(effectiveBaseUrl, 'Failed to exchange authorization code');
     }
 
     // Get user info from Google
     const googleUser = await getGoogleUserInfo(tokens.accessToken);
 
     if (!googleUser) {
-      return redirectWithError(baseUrl, 'Failed to get user information from Google');
+      return redirectWithError(effectiveBaseUrl, 'Failed to get user information from Google');
     }
 
     // Check if this is an account linking flow
@@ -115,12 +123,12 @@ export async function GET(request: NextRequest) {
       );
 
       if (!linkResult.success) {
-        return redirectWithError(baseUrl, linkResult.error || 'Failed to link account');
+        return redirectWithError(effectiveBaseUrl, linkResult.error || 'Failed to link account');
       }
 
       // Redirect to account settings with success
       return NextResponse.redirect(
-        `${baseUrl}/dashboard/settings/accounts?linked=google`
+        `${effectiveBaseUrl}/dashboard/settings/accounts?linked=google`
       );
     }
 
@@ -134,7 +142,7 @@ export async function GET(request: NextRequest) {
     if (existingByGoogle) {
       // Existing Google user - login
       const session = await createSessionForUser(existingByGoogle.userId, googleUser, tokens);
-      return redirectWithSession(baseUrl, session);
+      return redirectWithSession(effectiveBaseUrl, session);
     }
 
     // Check if user exists by email
@@ -153,7 +161,7 @@ export async function GET(request: NextRequest) {
           existingProvider: providers[0],
           newProvider: 'google',
         });
-        return NextResponse.redirect(`${baseUrl}/login?${params.toString()}`);
+        return NextResponse.redirect(`${effectiveBaseUrl}/login?${params.toString()}`);
       }
     }
 
@@ -161,11 +169,11 @@ export async function GET(request: NextRequest) {
     const newUser = await createNewGoogleUser(googleUser, tokens);
     const session = await createSessionForUser(newUser.id, googleUser, tokens);
 
-    return redirectWithSession(baseUrl, session);
+    return redirectWithSession(effectiveBaseUrl, session);
   } catch (error) {
     console.error('[Google OAuth] Callback error:', error);
     return redirectWithError(
-      baseUrl,
+      effectiveBaseUrl,
       error instanceof Error ? error.message : 'Authentication failed'
     );
   }
@@ -349,7 +357,7 @@ async function createSessionForUser(
 }
 
 function redirectWithSession(
-  baseUrl: string,
+  effectiveBaseUrl: string,
   session: {
     accessToken: string;
     expiresAt: number;
@@ -357,7 +365,7 @@ function redirectWithSession(
   }
 ): NextResponse {
   // Create redirect response
-  const redirectUrl = new URL('/dashboard', baseUrl);
+  const redirectUrl = new URL('/dashboard', effectiveBaseUrl);
 
   // Add success indicator
   redirectUrl.searchParams.set('auth', 'success');
@@ -394,8 +402,8 @@ function redirectWithSession(
   return response;
 }
 
-function redirectWithError(baseUrl: string, error: string): NextResponse {
-  const redirectUrl = new URL('/login', baseUrl);
+function redirectWithError(effectiveBaseUrl: string, error: string): NextResponse {
+  const redirectUrl = new URL('/login', effectiveBaseUrl);
   redirectUrl.searchParams.set('error', error);
   return NextResponse.redirect(redirectUrl);
 }

@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
-import jwt from 'jsonwebtoken';
+import { getUserIdFromCookies, unauthorizedResponse } from '@/lib/auth/jwt-utils';
 
 // Mock database for demo purposes (shared with connect route)
 const integrationConnections = new Map();
@@ -11,19 +10,11 @@ export async function GET(
 ) {
   try {
     const { integrationId } = params;
-    
-    // Get user from session/cookie
-    const cookieStore = cookies();
-    const token = cookieStore.get('auth-token')?.value;
-    
-    let userId = 'demo-user';
-    if (token) {
-      try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret') as any;
-        userId = decoded.userId;
-      } catch {
-        // Use demo user if token is invalid
-      }
+
+    // Get authenticated user ID from JWT in cookie
+    const userId = await getUserIdFromCookies();
+    if (!userId) {
+      return unauthorizedResponse();
     }
 
     // Check if integration is connected

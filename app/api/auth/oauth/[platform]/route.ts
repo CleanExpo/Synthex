@@ -114,8 +114,15 @@ export async function GET(
       timestamp: Date.now()
     })).toString('base64');
 
-    // Build redirect URL
-    const redirectUri = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/auth/oauth/${platform}/callback`;
+    // Build redirect URL - require NEXT_PUBLIC_APP_URL in production
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL;
+    if (!appUrl && process.env.NODE_ENV === 'production') {
+      return NextResponse.json(
+        { error: 'NEXT_PUBLIC_APP_URL must be configured for OAuth' },
+        { status: 500 }
+      );
+    }
+    const redirectUri = `${appUrl || 'http://localhost:3000'}/api/auth/oauth/${platform}/callback`;
 
     // Build authorization URL
     const authParams = new URLSearchParams({
@@ -171,7 +178,15 @@ export async function POST(
       return NextResponse.json({ error: 'Invalid state parameter' }, { status: 400 });
     }
 
-    const redirectUri = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/auth/oauth/${platform}/callback`;
+    // Build redirect URL - require NEXT_PUBLIC_APP_URL in production
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL;
+    if (!appUrl && process.env.NODE_ENV === 'production') {
+      return NextResponse.json(
+        { error: 'NEXT_PUBLIC_APP_URL must be configured for OAuth' },
+        { status: 500 }
+      );
+    }
+    const redirectUri = `${appUrl || 'http://localhost:3000'}/api/auth/oauth/${platform}/callback`;
 
     // Exchange code for access token
     const tokenParams = new URLSearchParams({

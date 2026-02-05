@@ -7,6 +7,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
+import { getUserIdFromCookies } from '@/lib/auth/jwt-utils';
 
 const RecordResultSchema = z.object({
   variantId: z.string(),
@@ -16,11 +17,9 @@ const RecordResultSchema = z.object({
   conversions: z.number().min(0).optional(),
 });
 
-// Helper to get user ID from auth
-async function getUserId(request: NextRequest): Promise<string | null> {
-  const authToken = request.cookies.get('auth-token')?.value;
-  if (!authToken) return null;
-  return 'demo-user-001';
+// Helper to get user ID from auth (uses centralized JWT verification)
+async function getUserId(_request: NextRequest): Promise<string | null> {
+  return getUserIdFromCookies();
 }
 
 // Statistical functions

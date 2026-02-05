@@ -96,7 +96,7 @@ export async function POST(request: Request) {
         data: {
           name: name || email.split('@')[0],
         },
-        emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/dashboard`
+        emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : '')}/dashboard`
       }
     });
 

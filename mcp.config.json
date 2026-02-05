@@ -1,8 +1,8 @@
 {
   "mcpServers": {
     "sequential-thinking": {
-      "command": "npx",
-      "args": ["@modelcontextprotocol/server-sequential-thinking"],
+      "command": "cmd",
+      "args": ["/c", "npx", "@modelcontextprotocol/server-sequential-thinking"],
       "env": {},
       "capabilities": {
         "tools": true,
@@ -11,8 +11,8 @@
       }
     },
     "filesystem": {
-      "command": "npx",
-      "args": ["@modelcontextprotocol/server-filesystem", "--allowed-directories", "D:\\Synthex"],
+      "command": "cmd",
+      "args": ["/c", "npx", "@modelcontextprotocol/server-filesystem", "--allowed-directories", "D:\\Synthex"],
       "env": {},
       "capabilities": {
         "tools": true,
@@ -21,8 +21,8 @@
       }
     },
     "linear": {
-      "command": "npx",
-      "args": ["-y", "@modelcontextprotocol/server-linear"],
+      "command": "cmd",
+      "args": ["/c", "npx", "-y", "@modelcontextprotocol/server-linear"],
       "env": {
         "LINEAR_API_KEY": "lin_api_8M0bmmAHL6ovhBsZKIpYVWz23RVGDSE9HSZdgAtD"
       },

@@ -5,21 +5,18 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { analyticsTracker } from '@/lib/analytics/analytics-tracker';
+import { getUserIdFromCookies, unauthorizedResponse } from '@/lib/auth/jwt-utils';
 
 export async function GET(request: NextRequest) {
   try {
-    // Check authentication
-    const authToken = request.cookies.get('auth-token')?.value;
-    if (!authToken) {
-      return NextResponse.json(
-        { error: 'Authentication required' },
-        { status: 401 }
-      );
+    // Check authentication and get user ID
+    const userId = await getUserIdFromCookies();
+    if (!userId) {
+      return unauthorizedResponse();
     }
 
     // Get query parameters
     const { searchParams } = new URL(request.url);
-    const userId = searchParams.get('userId') || 'demo-user-001';
     const type = searchParams.get('type') || 'dashboard';
 
     // Get dashboard metrics

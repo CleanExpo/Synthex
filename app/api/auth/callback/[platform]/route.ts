@@ -305,8 +305,14 @@ export async function GET(
       );
     }
 
-    // Build redirect URI
-    const redirectUri = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/auth/callback/${platform}`;
+    // Build redirect URI - require NEXT_PUBLIC_APP_URL in production
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL;
+    if (!appUrl && process.env.NODE_ENV === 'production') {
+      return NextResponse.redirect(
+        new URL('/auth/login?error=NEXT_PUBLIC_APP_URL must be configured', request.url)
+      );
+    }
+    const redirectUri = `${appUrl || 'http://localhost:3000'}/api/auth/callback/${platform}`;
 
     // Get code verifier for Twitter PKCE
     const codeVerifier = searchParams.get('code_verifier');

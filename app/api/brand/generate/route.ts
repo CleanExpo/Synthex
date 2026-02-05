@@ -1,12 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import BrandPsychologyOrchestrator, { BrandGenerationInput } from '@/lib/ai/agents/strategic-marketing/brand-orchestrator';
+import { getUserIdFromCookies, getUserIdFromRequest, unauthorizedResponse } from '@/lib/auth/jwt-utils';
 
 export async function POST(request: NextRequest) {
   try {
-    // Simple auth check - you can enhance this with your auth system
-    const authHeader = request.headers.get('authorization');
-    const userId = authHeader || 'demo-user'; // Use demo user for testing
+    // Get authenticated user ID from cookie or Authorization header
+    const userId = await getUserIdFromCookies() || await getUserIdFromRequest(request);
+    if (!userId) {
+      return unauthorizedResponse();
+    }
 
     // Parse request body
     const body = await request.json();
@@ -107,9 +110,11 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
-    // Simple auth check
-    const authHeader = request.headers.get('authorization');
-    const userId = authHeader || 'demo-user';
+    // Get authenticated user ID from cookie or Authorization header
+    const userId = await getUserIdFromCookies() || await getUserIdFromRequest(request);
+    if (!userId) {
+      return unauthorizedResponse();
+    }
 
     // Get user's brand generations
     const generations = await prisma.brandGeneration.findMany({
