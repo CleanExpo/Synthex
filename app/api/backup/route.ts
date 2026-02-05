@@ -124,6 +124,20 @@ export async function POST(request: NextRequest) {
 }
 
 export async function GET(request: NextRequest) {
+  // Verify admin access - either cron secret or admin API key
+  const authHeader = request.headers.get('authorization');
+  const adminApiKey = request.headers.get('x-admin-api-key');
+
+  const isCronAuth = authHeader === `Bearer ${process.env.CRON_SECRET}`;
+  const isAdminAuth = adminApiKey && adminApiKey === process.env.ADMIN_API_KEY;
+
+  if (!isCronAuth && !isAdminAuth) {
+    return NextResponse.json(
+      { error: 'Unauthorized - Admin access required' },
+      { status: 401 }
+    );
+  }
+
   try {
     const supabase = getSupabaseAdmin();
 

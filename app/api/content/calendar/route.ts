@@ -8,6 +8,9 @@
  *
  * ENVIRONMENT VARIABLES REQUIRED:
  * - DATABASE_URL: PostgreSQL connection (CRITICAL)
+ * - JWT_SECRET: For authentication (CRITICAL)
+ *
+ * SECURITY: All endpoints require authentication and organization membership
  *
  * FAILURE MODE: Returns cached data on failure
  */
@@ -16,6 +19,52 @@ import { NextRequest, NextResponse } from 'next/server';
 import { ResponseOptimizer } from '@/lib/api/response-optimizer';
 import { logger } from '@/lib/logger';
 import { CalendarService, type ScheduleOptions } from '@/src/services/content/calendar-service';
+import { verifyToken } from '@/lib/auth/jwt-utils';
+import { prisma } from '@/lib/prisma';
+
+// =============================================================================
+// Auth Helpers - Verify user and organization membership
+// =============================================================================
+
+async function getUserFromRequest(request: NextRequest): Promise<{ id: string; email: string } | null> {
+  // Try Authorization header first
+  const authHeader = request.headers.get('authorization');
+  if (authHeader) {
+    try {
+      const token = authHeader.replace('Bearer ', '');
+      const decoded = verifyToken(token);
+      return { id: decoded.userId, email: decoded.email || '' };
+    } catch {
+      // Fall through to cookie check
+    }
+  }
+
+  // Try auth-token cookie
+  const authToken = request.cookies.get('auth-token')?.value;
+  if (authToken) {
+    try {
+      const decoded = verifyToken(authToken);
+      return { id: decoded.userId, email: decoded.email || '' };
+    } catch {
+      return null;
+    }
+  }
+
+  return null;
+}
+
+/**
+ * Check if user is a member of the organization
+ */
+async function isOrgMember(userId: string, orgId: string): Promise<boolean> {
+  const user = await prisma.user.findFirst({
+    where: {
+      id: userId,
+      organizationId: orgId,
+    },
+  });
+  return !!user;
+}
 
 // ============================================================================
 // GET - Get Calendar View
@@ -23,6 +72,12 @@ import { CalendarService, type ScheduleOptions } from '@/src/services/content/ca
 
 export async function GET(request: NextRequest) {
   try {
+    // Authenticate user
+    const user = await getUserFromRequest(request);
+    if (!user) {
+      return ResponseOptimizer.createErrorResponse('Authentication required', 401);
+    }
+
     const { searchParams } = new URL(request.url);
     const organizationId = searchParams.get('organizationId');
     const startDate = searchParams.get('startDate');
@@ -31,6 +86,12 @@ export async function GET(request: NextRequest) {
     // Validate required fields
     if (!organizationId) {
       return ResponseOptimizer.createErrorResponse('Organization ID is required', 400);
+    }
+
+    // Verify user is a member of the organization
+    const isMember = await isOrgMember(user.id, organizationId);
+    if (!isMember) {
+      return ResponseOptimizer.createErrorResponse('Organization not found or access denied', 404);
     }
 
     // Default to current week if no dates provided
@@ -81,6 +142,12 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    // Authenticate user
+    const user = await getUserFromRequest(request);
+    if (!user) {
+      return ResponseOptimizer.createErrorResponse('Authentication required', 401);
+    }
+
     const body = await request.json();
     const {
       organizationId,
@@ -95,12 +162,17 @@ export async function POST(request: NextRequest) {
       autoOptimize = false,
       checkConflicts = true,
       createRecurrences = true,
-      createdBy,
     } = body;
 
     // Validate required fields
     if (!organizationId) {
       return ResponseOptimizer.createErrorResponse('Organization ID is required', 400);
+    }
+
+    // Verify user is a member of the organization
+    const isMember = await isOrgMember(user.id, organizationId);
+    if (!isMember) {
+      return ResponseOptimizer.createErrorResponse('Organization not found or access denied', 404);
     }
 
     if (!content) {
@@ -127,7 +199,7 @@ export async function POST(request: NextRequest) {
         tags,
         campaignId,
         recurrence,
-        createdBy: createdBy || 'system',
+        createdBy: user.id, // Use authenticated user ID, not from request body
       },
       autoOptimize,
       checkConflicts,
@@ -140,6 +212,7 @@ export async function POST(request: NextRequest) {
       postId: post.id,
       organizationId,
       platforms,
+      userId: user.id,
     });
 
     return ResponseOptimizer.createResponse(
@@ -170,12 +243,24 @@ export async function POST(request: NextRequest) {
 
 export async function PATCH(request: NextRequest) {
   try {
+    // Authenticate user
+    const user = await getUserFromRequest(request);
+    if (!user) {
+      return ResponseOptimizer.createErrorResponse('Authentication required', 401);
+    }
+
     const body = await request.json();
     const { organizationId, postId, newTime, updateRecurrences = false } = body;
 
     // Validate required fields
     if (!organizationId) {
       return ResponseOptimizer.createErrorResponse('Organization ID is required', 400);
+    }
+
+    // Verify user is a member of the organization
+    const isMember = await isOrgMember(user.id, organizationId);
+    if (!isMember) {
+      return ResponseOptimizer.createErrorResponse('Organization not found or access denied', 404);
     }
 
     if (!postId) {
@@ -198,6 +283,7 @@ export async function PATCH(request: NextRequest) {
       postId,
       newTime,
       organizationId,
+      userId: user.id,
     });
 
     return ResponseOptimizer.createResponse(
