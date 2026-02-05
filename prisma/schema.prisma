@@ -57,6 +57,7 @@ model User {
   teamInvitations  TeamInvitation[]
   brandGenerations BrandGeneration[]
   psychologyPreferences UserPsychologyPreference?
+  reports          Report[]
 
   @@map("users")
 }
@@ -484,6 +485,32 @@ model AnalyticsEvent {
   @@index([sessionId])
   @@index([timestamp])
   @@map("analytics_events")
+}
+
+model Report {
+  id             String   @id @default(cuid())
+  userId         String
+  organizationId String?
+  name           String
+  type           String   // campaign, analytics, ab-test, psychology, comprehensive
+  status         String   @default("pending") // pending, generating, completed, failed
+  format         String   @default("pdf") // pdf, csv, json
+  dateRange      Json?    // { start, end }
+  filters        Json?    // Report-specific filters
+  data           Json?    // Cached report data
+  fileUrl        String?  // URL to generated file
+  fileSize       Int?     // File size in bytes
+  generatedAt    DateTime?
+  expiresAt      DateTime?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([status])
+  @@index([type])
+  @@map("reports")
 }
 
 // ==========================================
