@@ -30,8 +30,8 @@ const nextConfig = {
 
   // ESLint configuration
   eslint: {
-    // Disable ESLint during builds to prevent blocking on Vercel
-    ignoreDuringBuilds: true,
+    // Enable ESLint during builds for code quality enforcement
+    ignoreDuringBuilds: false,
   },
 
   // HTTP headers for performance and security

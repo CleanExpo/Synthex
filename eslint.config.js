@@ -17,6 +17,15 @@ const eslintConfig = [
       '@next/next/no-img-element': 'off',
       '@typescript-eslint/no-unused-vars': 'off',
       '@typescript-eslint/no-explicit-any': 'off',
+      // Warn on console statements - use lib/logger.ts instead
+      'no-console': ['warn', { allow: ['warn', 'error', 'debug', 'info'] }],
+    },
+  },
+  // Allow console in specific utility files
+  {
+    files: ['lib/logger.ts', 'scripts/**/*', 'tests/**/*'],
+    rules: {
+      'no-console': 'off',
     },
   },
 ];
