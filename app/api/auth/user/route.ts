@@ -65,17 +65,24 @@ const DEMO_USER = {
 
 export async function GET(request: NextRequest) {
   try {
-    // Get token from Authorization header
+    // Get token from Authorization header OR auth-token cookie
     const authHeader = request.headers.get('authorization');
-    
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    const cookieToken = request.cookies.get('auth-token')?.value;
+
+    let token: string | null = null;
+
+    if (authHeader?.startsWith('Bearer ')) {
+      token = authHeader.substring(7); // Remove 'Bearer ' prefix
+    } else if (cookieToken) {
+      token = cookieToken;
+    }
+
+    if (!token) {
       return NextResponse.json(
         { error: 'No authorization token provided' },
         { status: 401 }
       );
     }
-
-    const token = authHeader.substring(7); // Remove 'Bearer ' prefix
 
     // Verify token
     const decoded = await verifyToken(token);

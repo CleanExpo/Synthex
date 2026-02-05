@@ -344,18 +344,27 @@ export class APISecurityChecker {
     context: SecurityContext
   ): Promise<{ isValid: boolean; userId?: string; userRole?: string; error?: string }> {
     try {
-      // Check Authorization header
+      // Check Authorization header OR auth-token cookie
       const authHeader = request.headers.get('authorization');
-      if (!authHeader?.startsWith('Bearer ')) {
+      const cookieToken = request.cookies.get('auth-token')?.value;
+
+      let token: string | null = null;
+
+      if (authHeader?.startsWith('Bearer ')) {
+        token = authHeader.substring(7);
+      } else if (cookieToken) {
+        token = cookieToken;
+      }
+
+      if (!token) {
         return { isValid: false, error: 'No bearer token provided' };
       }
 
-      const token = authHeader.substring(7);
       const jwtSecret = envValidator.get('JWT_SECRET');
 
       // Verify JWT
       const decoded = jwt.verify(token, jwtSecret) as any;
-      
+
       // Check expiration
       if (decoded.exp && decoded.exp < Date.now() / 1000) {
         return { isValid: false, error: 'Token expired' };
