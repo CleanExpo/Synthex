@@ -127,28 +127,43 @@ export default function ContentPage() {
 
     setIsGenerating(true);
     try {
-      const response = await fetch('/api/content/generate', {
+      const response = await fetch('/api/ai/generate-content', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({
+          type: 'post',
           platform,
-          personaId: personaId === 'none' ? null : personaId,
           topic,
-          hookType,
           tone,
           includeHashtags,
           includeEmojis,
-          targetLength,
+          includeCTA: hookType === 'achievement',
+          length: targetLength,
+          targetAudience: personaId !== 'none' ? personaId : undefined,
         }),
       });
 
       const data = await response.json();
-      if (data.success) {
-        setGeneratedContent(data.content);
-        setEditedContent(data.content.primary);
+      if (data.success && data.data) {
+        // Transform API response to match dashboard expected format
+        const aiData = data.data;
+        const transformedContent = {
+          primary: aiData.content,
+          variations: aiData.variations?.map((v: any) => v.content) || [],
+          metadata: {
+            platform: aiData.platform,
+            hookType: hookType,
+            length: aiData.content?.length || 0,
+            estimatedEngagement: aiData.estimatedEngagement || aiData.viralScore || 75,
+            hashtags: aiData.hashtags || [],
+          }
+        };
+        setGeneratedContent(transformedContent);
+        setEditedContent(transformedContent.primary);
         toast.success('Content generated successfully!');
       } else {
-        toast.error(data.error || 'Failed to generate content');
+        toast.error(data.error || data.message || 'Failed to generate content');
       }
     } catch (error) {
       console.error('Generation error:', error);
