@@ -151,7 +151,7 @@ export function decryptField(encrypted: string | null | undefined): string | nul
 
     return plaintext.toString('utf8');
   } catch (error) {
-    if (error instanceof Error && error.message.includes('Unsupported state')) {
+    if (error instanceof Error && error instanceof Error ? error.message : String(error).includes('Unsupported state')) {
       throw new Error('Decryption failed: Invalid authentication tag. Data may be corrupted or tampered.');
     }
     throw error;
@@ -213,7 +213,7 @@ export function validateEncryptionConfig(): { valid: boolean; error?: string } {
   } catch (error) {
     return {
       valid: false,
-      error: error instanceof Error ? error.message : 'Unknown encryption config error'
+      error: error instanceof Error ? error instanceof Error ? error.message : String(error) : 'Unknown encryption config error'
     };
   }
 }

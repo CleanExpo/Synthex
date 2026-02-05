@@ -48,7 +48,6 @@ export default function ForgotPasswordPage() {
     } catch (err: any) {
       // For now, simulate success in development
       if (process.env.NODE_ENV === 'development') {
-        console.log('Development mode: Simulating password reset email sent to:', email);
         setIsSubmitted(true);
       } else {
         setError(err.message || 'An error occurred. Please try again.');

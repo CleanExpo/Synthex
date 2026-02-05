@@ -98,7 +98,7 @@ export class SignInFlow {
 
       return authResult;
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const errorMessage = error instanceof Error ? error instanceof Error ? error.message : String(error) : 'Unknown error';
       await this.logAuthError(method, credentials.email || 'unknown', errorMessage);
       return {
         success: false,
@@ -133,7 +133,7 @@ export class SignInFlow {
       if (error) {
         return {
           success: false,
-          error: error.message
+          error: error instanceof Error ? error.message : String(error)
         };
       }
 
@@ -167,7 +167,7 @@ export class SignInFlow {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Authentication failed'
+        error: error instanceof Error ? error instanceof Error ? error.message : String(error) : 'Authentication failed'
       };
     }
   }
@@ -196,7 +196,7 @@ export class SignInFlow {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'OAuth authentication failed'
+        error: error instanceof Error ? error instanceof Error ? error.message : String(error) : 'OAuth authentication failed'
       };
     }
   }
@@ -300,7 +300,7 @@ export class SignInFlow {
       console.error('[SignInFlow] OAuth login error:', error);
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'OAuth authentication failed',
+        error: error instanceof Error ? error instanceof Error ? error.message : String(error) : 'OAuth authentication failed',
       };
     }
   }
@@ -327,7 +327,7 @@ export class SignInFlow {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Failed to link account',
+        error: error instanceof Error ? error instanceof Error ? error.message : String(error) : 'Failed to link account',
       };
     }
   }
@@ -479,12 +479,10 @@ export class SignInFlow {
    * Logging methods for monitoring
    */
   private async logAuthAttempt(method: string, email: string): Promise<void> {
-    console.log(`[AUTH] Attempt: ${method} - ${email} - ${new Date().toISOString()}`);
     // TODO: Send to monitoring service (Sentry/Datadog)
   }
 
   private async logAuthSuccess(method: string, email: string): Promise<void> {
-    console.log(`[AUTH] Success: ${method} - ${email} - ${new Date().toISOString()}`);
     // TODO: Send to monitoring service
   }
 

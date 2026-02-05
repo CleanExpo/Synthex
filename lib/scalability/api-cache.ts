@@ -248,7 +248,6 @@ export async function invalidateCache(tag: string): Promise<number> {
       tagIndex.delete(tag);
     }
 
-    console.log(`[API Cache] Invalidated ${count} entries for tag: ${tag}`);
     return count;
   } catch (error) {
     console.error('[API Cache] Invalidation error:', error);
@@ -294,7 +293,6 @@ export async function clearAllCache(): Promise<void> {
     memoryCache.clear();
     tagIndex.clear();
 
-    console.log('[API Cache] All cache cleared');
   } catch (error) {
     console.error('[API Cache] Clear all error:', error);
   }
@@ -331,7 +329,6 @@ function cleanupMemoryCache(): void {
   }
 
   if (cleaned > 0) {
-    console.log(`[API Cache] Cleaned up ${cleaned} expired entries`);
   }
 }
 

@@ -60,16 +60,16 @@ export async function signInWithOAuth(provider: string) {
     } else {
       throw new Error('No authorization URL received');
     }
-  } catch (error: any) {
+  } catch (error) {
     console.error(`OAuth ${provider} error:`, error);
     
     // Provide helpful error messages
-    if (error.message?.includes('not configured')) {
+    if (error instanceof Error ? error.message : String(error)?.includes('not configured')) {
       toast.error(`${provider} login is not set up yet. Please use email/password or demo login.`);
-    } else if (error.message?.includes('CLIENT_ID')) {
+    } else if (error instanceof Error ? error.message : String(error)?.includes('CLIENT_ID')) {
       toast.error(`${provider} OAuth is not configured. Contact support for assistance.`);
     } else {
-      toast.error(error.message || `Failed to connect with ${provider}`);
+      toast.error(error instanceof Error ? error.message : String(error) || `Failed to connect with ${provider}`);
     }
   }
 }
@@ -100,9 +100,9 @@ export async function handleOAuthCallback(platform: string, code: string, state:
     } else {
       throw new Error(data.error || 'OAuth connection failed');
     }
-  } catch (error: any) {
+  } catch (error) {
     console.error('OAuth callback error:', error);
-    toast.error(error.message || 'Failed to complete OAuth connection');
+    toast.error(error instanceof Error ? error.message : String(error) || 'Failed to complete OAuth connection');
     
     // Redirect to login on error
     window.location.href = '/login';
@@ -128,7 +128,7 @@ export async function disconnectOAuth(platform: string) {
 
     toast.success(`${platform} disconnected successfully`);
     return true;
-  } catch (error: any) {
+  } catch (error) {
     console.error('Disconnect error:', error);
     toast.error(`Failed to disconnect ${platform}`);
     return false;

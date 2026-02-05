@@ -85,7 +85,6 @@ export default function RealtimeNotifications() {
         {
           onMessage: handleNewNotification,
           onPresence: (presence) => {
-            console.log('Presence update:', presence);
           }
         }
       );

@@ -117,7 +117,7 @@ function getRedisClient(): Redis | null {
 
     redisClient.on('error', (error) => {
       redisConnected = false;
-      logger.error('Redis rate limiter error', { error: error.message });
+      logger.error('Redis rate limiter error', { error: error instanceof Error ? error.message : String(error) });
     });
 
     redisClient.on('close', () => {

@@ -180,7 +180,6 @@ async function isRedisAvailable(): Promise<boolean> {
     redisClient = createClient({ url: redisUrl });
     await redisClient.connect();
     redisAvailable = true;
-    console.log('[PKCE] Redis connected for state storage');
     return true;
   } catch (error) {
     console.warn('[PKCE] Redis not available, using in-memory storage:', error);

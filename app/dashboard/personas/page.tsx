@@ -184,7 +184,6 @@ export default function PersonasPage() {
         setPersonas(mockPersonas);
         setIsLoading(false);
       } catch (err) {
-        console.log('Using mock personas data:', err);
         setPersonas(mockPersonas);
         setIsLoading(false);
       }

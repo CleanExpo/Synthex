@@ -194,14 +194,18 @@ export class EnvDiscovery extends EnvAgent {
     try {
       new URL(value);
       return 'url';
-    } catch {}
-    
+    } catch {
+      // Not a valid URL, continue type detection
+    }
+
     if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) return 'email';
-    
+
     try {
       JSON.parse(value);
       return 'json';
-    } catch {}
+    } catch {
+      // Not valid JSON, continue type detection
+    }
     
     if (/^[A-Za-z0-9+/]*={0,2}$/.test(value) && value.length > 20) return 'base64';
     

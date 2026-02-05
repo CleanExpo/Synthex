@@ -178,11 +178,11 @@ export class PersonaTrainingPipeline {
     } catch (error) {
       this.updateProgress('failed', this.progress.progress, `Error: ${error}`);
 
-      // Revert persona status
+      // Revert persona status - best effort cleanup, don't mask original error
       await prisma.persona.update({
         where: { id: personaId },
         data: { status: 'draft' },
-      }).catch(() => {});
+      }).catch(() => { /* Cleanup failed, continue with error throw */ });
 
       throw error;
     }

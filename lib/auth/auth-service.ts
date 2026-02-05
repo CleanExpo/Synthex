@@ -48,7 +48,7 @@ class AuthService {
       console.error('Sign in error:', error);
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Failed to sign in',
+        error: error instanceof Error ? error instanceof Error ? error.message : String(error) : 'Failed to sign in',
       };
     }
   }
@@ -86,7 +86,7 @@ class AuthService {
       console.error('Sign up error:', error);
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Failed to create account',
+        error: error instanceof Error ? error instanceof Error ? error.message : String(error) : 'Failed to create account',
       };
     }
   }
@@ -212,7 +212,7 @@ class AuthService {
       console.error('Update profile error:', error);
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Failed to update profile',
+        error: error instanceof Error ? error instanceof Error ? error.message : String(error) : 'Failed to update profile',
       };
     }
   }
@@ -235,7 +235,7 @@ class AuthService {
       console.error('Reset password error:', error);
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Failed to reset password',
+        error: error instanceof Error ? error instanceof Error ? error.message : String(error) : 'Failed to reset password',
       };
     }
   }

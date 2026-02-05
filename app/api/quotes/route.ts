@@ -144,13 +144,13 @@ export async function GET(request: NextRequest) {
         hasMore: filters.offset! + quotes.length < total,
       },
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('GET /api/quotes error:', error);
     return NextResponse.json(
       {
         success: false,
         error: 'Failed to fetch quotes',
-        message: error.message,
+        message: error instanceof Error ? error.message : 'An error occurred',
       },
       { status: 500 }
     );
@@ -256,13 +256,13 @@ export async function POST(request: NextRequest) {
       },
       { status: 201 }
     );
-  } catch (error: any) {
+  } catch (error) {
     console.error('POST /api/quotes error:', error);
     return NextResponse.json(
       {
         success: false,
         error: 'Failed to create quote',
-        message: error.message,
+        message: error instanceof Error ? error.message : 'An error occurred',
       },
       { status: 500 }
     );
@@ -317,13 +317,13 @@ export async function DELETE(request: NextRequest) {
       deleted: result.count,
       message: `${result.count} quote(s) deleted successfully`,
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('DELETE /api/quotes error:', error);
     return NextResponse.json(
       {
         success: false,
         error: 'Failed to delete quotes',
-        message: error.message,
+        message: error instanceof Error ? error.message : 'An error occurred',
       },
       { status: 500 }
     );

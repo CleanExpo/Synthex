@@ -163,8 +163,8 @@ export default function SettingsPage() {
       const result = await profileAPI.uploadAvatar(file);
       setProfile(prev => ({ ...prev, avatar_url: result.avatar_url }));
       toast.success('Avatar uploaded successfully!');
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to upload avatar');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to upload avatar');
     } finally {
       setUploadingAvatar(false);
     }
@@ -176,8 +176,8 @@ export default function SettingsPage() {
       await integrationsAPI.connectPlatform(platform.toLowerCase());
       await loadUserData(); // Reload integrations
       toast.success(`Connected to ${platform} successfully!`);
-    } catch (error: any) {
-      toast.error(error.message || `Failed to connect to ${platform}`);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : `Failed to connect to ${platform}`);
     }
   };
 

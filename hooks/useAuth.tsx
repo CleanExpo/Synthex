@@ -74,8 +74,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       } else {
         throw new Error(response.error || 'Failed to sign in');
       }
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to sign in');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to sign in');
       throw error;
     } finally {
       setLoading(false);
@@ -97,8 +97,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       } else {
         throw new Error(response.error || 'Failed to create account');
       }
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to create account');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to create account');
       throw error;
     } finally {
       setLoading(false);
@@ -112,8 +112,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(null);
       toast.success('Signed out successfully');
       router.push('/');
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to sign out');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to sign out');
     } finally {
       setLoading(false);
     }
@@ -124,8 +124,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setLoading(true);
       await authService.signInWithOAuth('google');
       // The redirect will be handled by OAuth flow
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to sign in with Google');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to sign in with Google');
     } finally {
       setLoading(false);
     }
@@ -136,8 +136,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setLoading(true);
       await authService.signInWithOAuth('github');
       // The redirect will be handled by OAuth flow
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to sign in with GitHub');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to sign in with GitHub');
     } finally {
       setLoading(false);
     }

@@ -75,11 +75,9 @@ class RealtimeService {
       });
 
       channel.on('presence', { event: 'join' }, ({ key, newPresences }: any) => {
-        console.log('User joined:', key, newPresences);
       });
 
       channel.on('presence', { event: 'leave' }, ({ key, leftPresences }: any) => {
-        console.log('User left:', key, leftPresences);
       });
     }
 

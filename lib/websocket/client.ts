@@ -136,7 +136,6 @@ class WebSocketClient {
    * Handle WebSocket open
    */
   private handleOpen(): void {
-    console.log('WebSocket connected');
     this.reconnectAttempts = 0;
     this.isReconnecting = false;
     
@@ -246,7 +245,6 @@ class WebSocketClient {
    * Handle WebSocket close
    */
   private handleClose(event: CloseEvent): void {
-    console.log('WebSocket disconnected:', event.code, event.reason);
     
     if (this.heartbeatInterval) {
       clearInterval(this.heartbeatInterval);
@@ -280,7 +278,6 @@ class WebSocketClient {
     this.isReconnecting = true;
     const delay = this.reconnectDelay * Math.pow(2, this.reconnectAttempts);
     
-    console.log(`Attempting to reconnect in ${delay}ms (attempt ${this.reconnectAttempts + 1}/${this.maxReconnectAttempts})`);
     
     setTimeout(() => {
       this.reconnectAttempts++;

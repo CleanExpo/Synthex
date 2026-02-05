@@ -140,7 +140,7 @@ export async function getUserIdFromRequest(request: NextRequest): Promise<string
     return payload.userId || null;
   } catch (error) {
     // Log for debugging but don't expose details
-    console.error('[AUTH] Token verification failed:', error instanceof Error ? error.message : 'Unknown error');
+    console.error('[AUTH] Token verification failed:', error instanceof Error ? error instanceof Error ? error.message : String(error) : 'Unknown error');
     return null;
   }
 }
@@ -166,7 +166,7 @@ export async function authenticateRequest(request: NextRequest): Promise<AuthRes
   } catch (error) {
     return {
       authenticated: false,
-      error: error instanceof Error ? error.message : 'Authentication failed',
+      error: error instanceof Error ? error instanceof Error ? error.message : String(error) : 'Authentication failed',
     };
   }
 }
@@ -242,7 +242,7 @@ export async function getUserIdFromCookies(): Promise<string | null> {
     return payload?.userId || null;
   } catch (error) {
     // Cookie access may fail in certain contexts
-    console.error('[AUTH] Cookie access failed:', error instanceof Error ? error.message : 'Unknown error');
+    console.error('[AUTH] Cookie access failed:', error instanceof Error ? error instanceof Error ? error.message : String(error) : 'Unknown error');
     return null;
   }
 }

@@ -84,7 +84,6 @@ export async function enqueue<T>(
 
   jobs.set(job.id, job);
 
-  console.log(`[Queue] Job enqueued: ${job.id} (${type})`);
 
   // Auto-process if handler exists and not scheduled for later
   if (!job.scheduledFor || job.scheduledFor <= new Date()) {
@@ -99,7 +98,6 @@ export async function enqueue<T>(
  */
 export function registerHandler(type: string, handler: JobHandler): void {
   handlers.set(type, handler);
-  console.log(`[Queue] Handler registered: ${type}`);
 }
 
 /**
@@ -138,7 +136,6 @@ async function processNextJob(type?: string): Promise<void> {
     job.attempts++;
     job.updatedAt = new Date();
 
-    console.log(`[Queue] Processing job: ${job.id} (attempt ${job.attempts}/${job.maxAttempts})`);
 
     const result = await handler(job);
 
@@ -147,9 +144,8 @@ async function processNextJob(type?: string): Promise<void> {
     job.result = result;
     job.updatedAt = new Date();
 
-    console.log(`[Queue] Job completed: ${job.id}`);
-  } catch (error: any) {
-    job.error = error.message;
+  } catch (error) {
+    job.error = error instanceof Error ? error.message : String(error);
     job.updatedAt = new Date();
 
     if (job.attempts >= job.maxAttempts) {
@@ -392,7 +388,6 @@ export async function queueContentPublish(
  * Start the job processing worker
  */
 export function startWorker(): void {
-  console.log('[Queue] Worker started');
 
   // Process pending jobs every 5 seconds
   setInterval(() => {
@@ -408,7 +403,6 @@ export function startWorker(): void {
 export function registerDefaultHandlers(): void {
   // Email handler (stub - implement with actual email service)
   registerHandler(JobTypes.EMAIL_SEND, async (job: Job<EmailJobData>) => {
-    console.log(`[Email] Sending to: ${job.data.to}`);
     // Implement actual email sending
     return { sent: true, timestamp: new Date() };
   });
@@ -416,7 +410,6 @@ export function registerDefaultHandlers(): void {
   // Webhook delivery handler
   registerHandler(JobTypes.WEBHOOK_DELIVER, async (job: Job<WebhookDeliveryJobData>) => {
     const { url, event, payload, secret } = job.data;
-    console.log(`[Webhook] Delivering to: ${url}`);
 
     const response = await fetch(url, {
       method: 'POST',
@@ -434,5 +427,4 @@ export function registerDefaultHandlers(): void {
     return { delivered: true, status: response.status };
   });
 
-  console.log('[Queue] Default handlers registered');
 }

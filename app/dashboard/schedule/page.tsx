@@ -168,7 +168,6 @@ export default function SchedulePage() {
         setIsLoading(false);
       } catch (err) {
         // Fall back to mock data on error
-        console.log('Using mock schedule data:', err);
         setPosts(mockScheduledPosts);
         setIsLoading(false);
       }

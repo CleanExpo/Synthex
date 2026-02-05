@@ -84,8 +84,8 @@ export default function LoginPage() {
       
       toast.success('Welcome back!');
       router.push('/dashboard');
-    } catch (error: any) {
-      toast.error(error.message || 'Invalid email or password');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Invalid email or password');
     } finally {
       setIsLoading(false);
     }
@@ -113,9 +113,9 @@ export default function LoginPage() {
       } else {
         throw new Error('No authorization URL received');
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error('Google login error:', error);
-      toast.error(error.message || 'Failed to connect with Google');
+      toast.error(error instanceof Error ? error.message : 'Failed to connect with Google');
       setOauthLoading(false);
     }
   };

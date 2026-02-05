@@ -127,17 +127,7 @@ export async function middleware(request: NextRequest) {
   const requestId = crypto.randomUUID();
   response.headers.set('X-Request-Id', requestId);
 
-  // Log security events with structured logging (Edge-compatible)
-  if (pathname.startsWith('/api/auth')) {
-    console.log(JSON.stringify({
-      level: 'info',
-      message: 'Auth attempt',
-      requestId,
-      ip: request.headers.get('x-forwarded-for')?.split(',')[0].trim() || 'unknown',
-      path: pathname,
-      timestamp: new Date().toISOString(),
-    }));
-  }
+  // Security logging handled by API routes
 
   return response;
 }

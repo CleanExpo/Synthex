@@ -217,7 +217,6 @@ export async function middleware(request: NextRequest) {
   
   // Log security events (integrate with monitoring service)
   if (pathname.startsWith('/api/auth')) {
-    console.log(`[Security] Auth attempt from ${request.headers.get('x-forwarded-for')?.split(',')[0].trim() || 'unknown'} at ${pathname}`);
   }
   
   return response;

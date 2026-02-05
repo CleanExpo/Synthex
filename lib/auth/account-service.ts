@@ -212,7 +212,7 @@ export class AccountService {
       console.error('[AccountService] Link error:', error);
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Failed to link account',
+        error: error instanceof Error ? error instanceof Error ? error.message : String(error) : 'Failed to link account',
       };
     }
   }
@@ -513,7 +513,7 @@ export class AccountService {
       console.error('[AccountService] Unlink error:', error);
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Failed to unlink account',
+        error: error instanceof Error ? error instanceof Error ? error.message : String(error) : 'Failed to unlink account',
       };
     }
   }

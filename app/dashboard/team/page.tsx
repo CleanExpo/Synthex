@@ -225,7 +225,6 @@ export default function TeamPage() {
       setTeamMembers(mockTeamMembers);
       setIsLoading(false);
     } catch (err) {
-      console.log('Using mock team data:', err);
       setTeamMembers(mockTeamMembers);
       setIsLoading(false);
     }

@@ -104,7 +104,7 @@ export class GoogleProvider implements AIProvider {
           : undefined,
       };
     } catch (error) {
-      if (error instanceof Error && error.message.includes('Google AI')) {
+      if (error instanceof Error && error instanceof Error ? error.message : String(error).includes('Google AI')) {
         throw error;
       }
       logger.error('Google provider error', { error });
@@ -170,7 +170,7 @@ export class GoogleProvider implements AIProvider {
               .join('');
             if (text) yield text;
           } catch {
-            // skip
+            // Malformed SSE frame, skip to next
           }
         }
       }

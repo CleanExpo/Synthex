@@ -62,27 +62,21 @@ export function collectWebVitals(metric: any) {
   switch (metric.name) {
     case 'FCP':
       metrics.fcp = metric.value;
-      console.log('FCP:', metric.value);
       break;
     case 'LCP':
       metrics.lcp = metric.value;
-      console.log('LCP:', metric.value);
       break;
     case 'FID':
       metrics.fid = metric.value;
-      console.log('FID:', metric.value);
       break;
     case 'INP':
       metrics.inp = metric.value;
-      console.log('INP:', metric.value);
       break;
     case 'CLS':
       metrics.cls = metric.value;
-      console.log('CLS:', metric.value);
       break;
     case 'TTFB':
       metrics.ttfb = metric.value;
-      console.log('TTFB:', metric.value);
       break;
   }
 
@@ -146,7 +140,6 @@ export function monitorMemoryUsage() {
       jsHeapSizeLimit: (memory.jsHeapSizeLimit / 1048576).toFixed(2) + ' MB',
     };
     
-    console.log('Memory usage:', memoryInfo);
     
     // Warn if memory usage is high
     const usagePercent = (memory.usedJSHeapSize / memory.jsHeapSizeLimit) * 100;
@@ -260,7 +253,6 @@ export class PerformanceTracker {
     
     if (start && end) {
       const duration = end - (typeof start === 'number' ? start : 0);
-      console.log(`${name}: ${duration.toFixed(2)}ms`);
       
       if (window.performance && window.performance.measure) {
         window.performance.measure(name, startMark, endMark);

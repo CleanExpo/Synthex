@@ -64,11 +64,11 @@ async function checkDatabase(): Promise<HealthCheckResult> {
         pool: getPoolMetrics(),
       },
     };
-  } catch (error: any) {
+  } catch (error) {
     return {
       status: 'unhealthy',
       latency: Date.now() - startTime,
-      message: error.message || 'Connection failed',
+      message: error instanceof Error ? error.message : 'Connection failed',
     };
   }
 }
@@ -93,7 +93,7 @@ async function checkCache(): Promise<HealthCheckResult> {
         nodes: health.nodes,
       },
     };
-  } catch (error: any) {
+  } catch (error) {
     return {
       status: 'degraded',
       latency: Date.now() - startTime,
@@ -235,7 +235,7 @@ export async function GET(request: NextRequest) {
         'X-Response-Time': `${Date.now() - startTime}ms`,
       },
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Health check error:', error);
 
     return NextResponse.json(
@@ -246,7 +246,7 @@ export async function GET(request: NextRequest) {
         buildId: BUILD_ID,
         environment: process.env.NODE_ENV || 'development',
         responseTime: Date.now() - startTime,
-        error: error.message || 'Health check failed',
+        error: error instanceof Error ? error.message : 'Health check failed',
       },
       {
         status: 503,

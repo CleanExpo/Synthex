@@ -246,10 +246,10 @@ export async function sendWebhook(options: SendWebhookOptions): Promise<Delivery
         break;
       }
 
-    } catch (error: any) {
-      lastError = error.name === 'AbortError'
+    } catch (error) {
+      lastError = (error as Error).name === 'AbortError'
         ? `Request timeout after ${timeout}ms`
-        : error.message;
+        : error instanceof Error ? error.message : String(error);
     }
 
     // Wait before retry (exponential backoff)

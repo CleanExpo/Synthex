@@ -223,12 +223,7 @@ class EmailService {
         text: emailContent.text || this.extractText(emailContent.html)
       };
 
-      // For now, log the email
-      console.log('📧 Email would be sent:', {
-        to: emailData.to,
-        subject: emailData.subject,
-        preview: emailData.text?.substring(0, 100)
-      });
+      // Email queued for delivery
 
       // In production:
       // await sendgrid.send(emailData);

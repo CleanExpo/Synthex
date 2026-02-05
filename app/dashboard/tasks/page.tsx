@@ -845,7 +845,6 @@ export default function TasksPage() {
         setTasks(mockTasks);
         setIsLoading(false);
       } catch (err) {
-        console.log('Using mock data:', err);
         setTasks(mockTasks);
         setIsLoading(false);
       }

@@ -91,12 +91,13 @@ export default function SignupPage() {
       });
       
       if (error) throw error;
-    } catch (error: any) {
+    } catch (error) {
       // Handle specific OAuth errors
-      if (error.message?.includes('provider is not enabled')) {
+      const message = error instanceof Error ? error.message : 'An unknown error occurred';
+      if (message.includes('provider is not enabled')) {
         toast.error('Google signup is not enabled. Please use the regular signup form.');
       } else {
-        toast.error(`Signup error: ${error.message}`);
+        toast.error(`Signup error: ${message}`);
       }
     } finally {
       setIsLoading(false);

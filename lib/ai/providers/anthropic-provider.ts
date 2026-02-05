@@ -107,7 +107,7 @@ export class AnthropicProvider implements AIProvider {
           : undefined,
       };
     } catch (error) {
-      if (error instanceof Error && error.message.includes('Anthropic API')) {
+      if (error instanceof Error && error instanceof Error ? error.message : String(error).includes('Anthropic API')) {
         throw error;
       }
       logger.error('Anthropic provider error', { error });
@@ -175,7 +175,7 @@ export class AnthropicProvider implements AIProvider {
               yield event.delta.text;
             }
           } catch {
-            // skip
+            // Malformed SSE frame, skip to next
           }
         }
       }

@@ -45,10 +45,10 @@ export async function GET(request: NextRequest) {
     });
 
     return NextResponse.json({ integrations: formattedIntegrations, raw: integrations });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Integrations fetch error:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch integrations', details: error.message },
+      { error: 'Failed to fetch integrations', details: error instanceof Error ? error.message : String(error) },
       { status: 500 }
     );
   }
@@ -128,10 +128,10 @@ export async function POST(request: NextRequest) {
       integration: result,
       message: `Connected to ${platform} successfully`
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Integration connection error:', error);
     return NextResponse.json(
-      { error: 'Failed to connect integration', details: error.message },
+      { error: 'Failed to connect integration', details: error instanceof Error ? error.message : String(error) },
       { status: 500 }
     );
   }
@@ -177,10 +177,10 @@ export async function DELETE(request: NextRequest) {
       success: true,
       message: `Disconnected from ${platform} successfully`
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Integration disconnection error:', error);
     return NextResponse.json(
-      { error: 'Failed to disconnect integration', details: error.message },
+      { error: 'Failed to disconnect integration', details: error instanceof Error ? error.message : String(error) },
       { status: 500 }
     );
   }

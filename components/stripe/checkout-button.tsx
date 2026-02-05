@@ -79,9 +79,9 @@ export function CheckoutButton({
           throw error;
         }
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error('Checkout error:', error);
-      toast.error(error.message || 'Something went wrong');
+      toast.error(error instanceof Error ? error.message : 'Something went wrong');
     } finally {
       setLoading(false);
     }

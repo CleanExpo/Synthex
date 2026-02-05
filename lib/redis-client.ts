@@ -264,7 +264,6 @@ export function createRedisClient(): RedisClientWrapper {
   const mode = determineRedisMode();
   let client: RedisClient | null = null;
 
-  console.log(`[Redis] Initializing in ${mode} mode`);
 
   // For memory or upstash mode, we don't create an ioredis client
   if (mode !== 'memory' && mode !== 'upstash') {
@@ -289,19 +288,15 @@ export function createRedisClient(): RedisClientWrapper {
         });
 
         client.on('connect', () => {
-          console.log('[Redis] Connected successfully');
         });
 
         client.on('ready', () => {
-          console.log('[Redis] Ready to accept commands');
         });
 
         client.on('close', () => {
-          console.log('[Redis] Connection closed');
         });
 
         client.on('reconnecting', () => {
-          console.log('[Redis] Reconnecting...');
         });
       }
     } catch (error) {
@@ -406,7 +401,7 @@ export function createRedisClient(): RedisClientWrapper {
           connected: false,
           mode,
           latency: Date.now() - startTime,
-          error: error instanceof Error ? error.message : 'Unknown error',
+          error: error instanceof Error ? error instanceof Error ? error.message : String(error) : 'Unknown error',
         };
       }
     },

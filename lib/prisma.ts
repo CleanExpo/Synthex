@@ -113,11 +113,7 @@ const getPrismaClient = (): PrismaClient | null => {
 
   if (!globalForPrisma.prisma) {
     globalForPrisma.prisma = createPrismaClient();
-    console.log('[Prisma] Client initialized with pool config:', {
-      connectionLimit: POOL_CONFIG.connectionLimit,
-      poolTimeout: POOL_CONFIG.poolTimeout,
-      environment: process.env.NODE_ENV,
-    });
+    // Prisma client initialized
   }
 
   return globalForPrisma.prisma;
@@ -166,7 +162,7 @@ export async function checkDatabaseHealth(): Promise<{
     return { healthy: true, latency };
   } catch (error) {
     const latency = Date.now() - startTime;
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    const errorMessage = error instanceof Error ? error instanceof Error ? error.message : String(error) : 'Unknown error';
 
     // Update metrics
     globalForPrisma.prismaMetrics.errors++;
@@ -191,10 +187,8 @@ export function getPoolMetrics(): ConnectionMetrics {
  */
 export async function disconnectPrisma(): Promise<void> {
   if (prisma) {
-    console.log('[Prisma] Disconnecting...');
     await prisma.$disconnect();
     globalForPrisma.prisma = null;
-    console.log('[Prisma] Disconnected successfully');
   }
 }
 

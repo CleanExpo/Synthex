@@ -60,18 +60,20 @@ export class OpenRouterProvider implements AIProvider {
         }
       );
       return response.data;
-    } catch (error: any) {
-      if (error.response) {
-        logger.error('OpenRouter API error', {
-          status: error.response.status,
-          data: error.response.data,
-        });
-        throw new Error(
-          error.response.data.error?.message || 'OpenRouter API request failed'
-        );
-      } else if (error.request) {
-        logger.error('OpenRouter network error', { error });
-        throw new Error('Network error connecting to OpenRouter');
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        if (error.response) {
+          logger.error('OpenRouter API error', {
+            status: error.response.status,
+            data: error.response.data,
+          });
+          throw new Error(
+            error.response.data?.error?.message || 'OpenRouter API request failed'
+          );
+        } else if (error.request) {
+          logger.error('OpenRouter network error', { error: error.message });
+          throw new Error('Network error connecting to OpenRouter');
+        }
       }
       throw error;
     }

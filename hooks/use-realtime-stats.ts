@@ -329,7 +329,6 @@ export function useRealtimeStats(
           setIsConnected(status === 'SUBSCRIBED');
 
           if (status === 'SUBSCRIBED') {
-            console.log('Real-time stats connected');
           } else if (status === 'CLOSED' || status === 'CHANNEL_ERROR') {
             console.warn('Real-time stats disconnected, falling back to polling');
             // Start polling fallback

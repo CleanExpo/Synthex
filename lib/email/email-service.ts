@@ -72,7 +72,6 @@ export class EmailService {
       // Send email (in production, integrate with email service)
       await this.sendEmail(template);
 
-      console.log('[EMAIL] Verification email sent to:', email);
     } catch (error) {
       console.error('[EMAIL] Error sending verification email:', error);
       throw new Error('Failed to send verification email');
@@ -114,7 +113,6 @@ export class EmailService {
       // Send email
       await this.sendEmail(template);
 
-      console.log('[EMAIL] Password reset email sent to:', email);
     } catch (error) {
       console.error('[EMAIL] Error sending password reset email:', error);
       throw new Error('Failed to send password reset email');
@@ -134,7 +132,6 @@ export class EmailService {
       };
 
       await this.sendEmail(template);
-      console.log('[EMAIL] Welcome email sent to:', email);
     } catch (error) {
       console.error('[EMAIL] Error sending welcome email:', error);
     }
@@ -159,10 +156,6 @@ export class EmailService {
       await this.sendViaResend(template);
     } else {
       // Log email for development
-      console.log('[EMAIL] Mock email service - Email details:');
-      console.log('To:', template.to);
-      console.log('Subject:', template.subject);
-      console.log('Preview:', template.text?.substring(0, 100));
       
       // In development, save to database for testing
       if (process.env.NODE_ENV === 'development') {
@@ -177,7 +170,6 @@ export class EmailService {
   private async sendViaSendGrid(template: EmailTemplate): Promise<void> {
     // Only attempt to use SendGrid if API key is configured
     if (!process.env.SENDGRID_API_KEY) {
-      console.log('[EMAIL] SendGrid API key not configured, falling back to mock email');
       await this.saveEmailToDatabase(template);
       return;
     }
@@ -188,8 +180,6 @@ export class EmailService {
     // 2. Set SENDGRID_API_KEY in environment variables
     // 3. Uncomment the implementation below
     
-    console.log('[EMAIL] SendGrid integration placeholder - using mock email');
-    console.log('[EMAIL] To enable SendGrid, install @sendgrid/mail package');
     await this.saveEmailToDatabase(template);
     
     /* 
@@ -222,7 +212,6 @@ export class EmailService {
    */
   private async sendViaAWSSES(template: EmailTemplate): Promise<void> {
     // AWS SES implementation
-    console.log('[EMAIL] AWS SES integration not implemented');
   }
 
   /**

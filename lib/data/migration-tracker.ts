@@ -19,7 +19,7 @@
  *
  *   await tracker.completeMigration(migration.id, 'success');
  * } catch (error) {
- *   await tracker.completeMigration(migration.id, 'failed', error.message);
+ *   await tracker.completeMigration(migration.id, 'failed', error instanceof Error ? error.message : String(error));
  *   throw error;
  * }
  * ```
@@ -98,7 +98,6 @@ export class MigrationTracker {
     this.migrations.set(id, migration);
 
     // Log start
-    console.log(`[Migration ${id}] Starting: ${name}`);
 
     // Persist to audit log if enabled
     if (this.persistToDb && prisma) {
@@ -155,7 +154,6 @@ export class MigrationTracker {
 
     // Log step
     const statusIcon = completed ? '✓' : '...';
-    console.log(`[Migration ${migrationId}] ${statusIcon} ${type}: ${description}`);
 
     return step;
   }
@@ -207,12 +205,7 @@ export class MigrationTracker {
 
     // Log completion
     const icon = status === 'success' ? '✅' : status === 'rolled_back' ? '⏪' : '❌';
-    console.log(
-      `[Migration ${migrationId}] ${icon} Completed with status: ${status} (${migration.duration}ms)`
-    );
-    if (errorMessage) {
-      console.log(`[Migration ${migrationId}] Error: ${errorMessage}`);
-    }
+    // Migration tracking: ${icon} ${migrationId} - ${status}
 
     // Persist to audit log
     if (this.persistToDb && prisma) {
@@ -334,7 +327,6 @@ export async function executeRollback(
         await prisma.$executeRawUnsafe(step.sql);
       }
 
-      console.log(`  [${step.order}/${plan.steps.length}] ${step.description} ✓`);
     }
 
     await tracker.completeMigration(migration.id, 'success');
@@ -342,7 +334,7 @@ export async function executeRollback(
     await tracker.completeMigration(
       migration.id,
       'failed',
-      error instanceof Error ? error.message : String(error)
+      error instanceof Error ? error instanceof Error ? error.message : String(error) : String(error)
     );
     throw error;
   }

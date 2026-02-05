@@ -92,7 +92,6 @@ export class AuthMonitor {
 
     // Log to console in development
     if (process.env.NODE_ENV === 'development') {
-      console.log('[AUTH_MONITOR]', fullEvent);
     }
 
     // Send to monitoring service

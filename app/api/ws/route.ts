@@ -47,11 +47,6 @@ export async function POST(request: NextRequest) {
     }
 
     // In a real implementation, this would send to the WebSocket server
-    // For now, we'll just log and return success
-    console.log('WebSocket notification request:', {
-      target,
-      notification,
-    });
 
     // TODO: Send to actual WebSocket server
     // const wsServer = getWebSocketServer();
@@ -79,7 +74,6 @@ const USAGE_EXAMPLES = {
     function MyComponent() {
       const { isConnected, subscribe, sendNotification } = useWebSocket({
         onNotification: (notification) => {
-          console.log('Received:', notification);
         }
       });
       

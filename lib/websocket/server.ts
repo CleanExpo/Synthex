@@ -39,7 +39,6 @@ class SynthexWebSocketServer {
     this.wss.on('connection', this.handleConnection.bind(this));
     this.startHeartbeat();
     
-    console.log(`WebSocket server running on port ${port}`);
   }
 
   /**
@@ -70,7 +69,6 @@ class SynthexWebSocketServer {
    * Handle new WebSocket connection
    */
   private handleConnection(ws: WebSocket, req: IncomingMessage): void {
-    console.log('New WebSocket connection');
     
     // Extract user ID from token if provided
     let userId: string | undefined;
@@ -139,7 +137,6 @@ class SynthexWebSocketServer {
           break;
 
         default:
-          console.log('Received message:', message);
       }
     } catch (error) {
       console.error('Failed to parse WebSocket message:', error);
@@ -167,7 +164,6 @@ class SynthexWebSocketServer {
     
     this.channels.get(channel)!.add(ws);
     
-    console.log(`Client subscribed to channel: ${channel}`);
   }
 
   /**
@@ -182,14 +178,12 @@ class SynthexWebSocketServer {
     client.subscriptions.delete(channel);
     this.channels.get(channel)?.delete(ws);
     
-    console.log(`Client unsubscribed from channel: ${channel}`);
   }
 
   /**
    * Handle WebSocket close
    */
   private handleClose(ws: WebSocket): void {
-    console.log('WebSocket connection closed');
     const client = this.clients.get(ws);
     
     if (client) {
@@ -305,7 +299,6 @@ class SynthexWebSocketServer {
 
       this.clients.forEach((client, ws) => {
         if (now.getTime() - client.lastPing.getTime() > timeout) {
-          console.log('Terminating dead connection');
           ws.terminate();
           this.clients.delete(ws);
         } else if (ws.readyState === WebSocket.OPEN) {

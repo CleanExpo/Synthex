@@ -325,12 +325,13 @@ export function createCacheMiddleware(config: CacheConfig) {
 
         // Revalidate in background if stale
         if (isStale && isWithinStaleWindow) {
+          // Background cache refresh - don't block response
           handler().then(async (freshResponse) => {
             if (freshResponse.ok) {
               const data = await freshResponse.json();
               await setCached(cacheKey, data, ttl, tags);
             }
-          }).catch(() => {});
+          }).catch(() => { /* Cache refresh failed silently */ });
         }
 
         return response;
@@ -443,7 +444,6 @@ export async function warmCache(routes: string[]): Promise<void> {
           method: 'GET',
           headers: { 'X-Cache-Warm': 'true' },
         });
-        console.log(`Cache warmed: ${route}`);
       } catch (error) {
         console.warn(`Failed to warm cache for ${route}:`, error);
       }

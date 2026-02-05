@@ -715,7 +715,7 @@ export class EnvValidator {
     if (result.errors.length > 0) {
       console.log('\n❌ CRITICAL ERRORS:');
       for (const error of result.errors) {
-        console.log(`   ${error.key}: ${error.message}`);
+        console.log(`   ${error.key}: ${error instanceof Error ? error.message : String(error)}`);
         if (error.suggestion) {
           console.log(`      💡 ${error.suggestion}`);
         }

@@ -104,14 +104,12 @@ export function WebSocketProvider({
     autoConnect,
     token,
     onConnect: () => {
-      console.log('WebSocket connected');
       if (connectionLost) {
         toast.success('Connection Restored', 'Real-time notifications are now active');
         setConnectionLost(false);
       }
     },
     onDisconnect: (event) => {
-      console.log('WebSocket disconnected:', event);
       if (event.code !== 1000) {
         setConnectionLost(true);
         toast.warning('Connection Lost', 'Attempting to reconnect...');
@@ -122,7 +120,6 @@ export function WebSocketProvider({
       toast.error('Connection Error', 'Failed to connect to real-time services');
     },
     onNotification: (notification) => {
-      console.log('Received notification:', notification);
       
       // Request browser notification permission if not granted
       if (notification.persistent && 'Notification' in window) {
@@ -137,7 +134,6 @@ export function WebSocketProvider({
   useEffect(() => {
     if ('Notification' in window && Notification.permission === 'default') {
       Notification.requestPermission().then(permission => {
-        console.log('Notification permission:', permission);
       });
     }
   }, []);
