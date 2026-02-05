@@ -35,21 +35,26 @@ export default function LoginPage() {
     setError('');
 
     try {
-      const response = await fetch('/api/auth/login', {
+      // Use unified-login endpoint which works without Prisma database
+      const response = await fetch('/api/auth/unified-login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({
+          method: email === 'demo@synthex.com' ? 'demo' : 'email',
+          email,
+          password,
+        }),
       });
 
       const data = await response.json();
-      
+
       if (data.success) {
         // Store token in localStorage
-        localStorage.setItem('token', data.token);
+        localStorage.setItem('token', data.session?.accessToken || 'authenticated');
         localStorage.setItem('user', JSON.stringify(data.user));
-        
+
         toast.success('Welcome back! Redirecting to dashboard...');
         setTimeout(() => {
           router.push('/dashboard');
