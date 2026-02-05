@@ -3,7 +3,13 @@
  *
  * @description Lists all platform connections for current user
  *
+ * ENVIRONMENT VARIABLES REQUIRED:
+ * - DATABASE_URL: PostgreSQL connection (CRITICAL)
+ * - FIELD_ENCRYPTION_KEY: 32-byte hex key for token encryption (CRITICAL)
+ *
  * FAILURE MODE: Returns error response with details
+ *
+ * NOTE: OAuth tokens are encrypted at rest using AES-256-GCM
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -11,6 +17,7 @@ import { cookies } from 'next/headers';
 import { getSupportedPlatforms, getOAuthProvider } from '@/lib/oauth';
 import { logger } from '@/lib/logger';
 import { prisma } from '@/lib/prisma';
+import { decryptField, encryptField } from '@/lib/security/field-encryption';
 
 // ============================================================================
 // TYPES
@@ -167,16 +174,27 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Decrypt the refresh token for API call
+    const decryptedRefreshToken = decryptField(connection.refreshToken);
+    if (!decryptedRefreshToken) {
+      return NextResponse.json(
+        { error: 'Failed to decrypt refresh token' },
+        { status: 500 }
+      );
+    }
+
     // Refresh the tokens
     const provider = getOAuthProvider(platform);
-    const newTokens = await provider.refreshAccessToken(connection.refreshToken);
+    const newTokens = await provider.refreshAccessToken(decryptedRefreshToken);
 
-    // Update connection in database
+    // Encrypt and update connection in database (accessToken is required)
     await prisma.platformConnection.update({
       where: { id: connection.id },
       data: {
-        accessToken: newTokens.accessToken,
-        refreshToken: newTokens.refreshToken || connection.refreshToken,
+        accessToken: encryptField(newTokens.accessToken) as string,
+        refreshToken: newTokens.refreshToken
+          ? (encryptField(newTokens.refreshToken) ?? connection.refreshToken)
+          : connection.refreshToken, // Keep old encrypted token if no new one
         expiresAt: newTokens.expiresAt,
         lastSync: new Date(),
       },

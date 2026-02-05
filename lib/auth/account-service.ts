@@ -8,12 +8,15 @@
  *
  * ENVIRONMENT VARIABLES REQUIRED:
  * - DATABASE_URL: PostgreSQL connection (CRITICAL)
+ * - FIELD_ENCRYPTION_KEY: 32-byte hex key for token encryption (CRITICAL)
  *
  * FAILURE MODE: Operations will throw if database unavailable
  * NOTE: During migration, some methods fall back to legacy fields if Account table doesn't exist
+ * NOTE: OAuth tokens are encrypted at rest using AES-256-GCM
  */
 
 import prisma from '@/lib/prisma';
+import { encryptField, decryptField } from '@/lib/security/field-encryption';
 import type {
   AuthProvider,
   OAuthProfile,
@@ -86,18 +89,19 @@ export class AccountService {
       };
     }
 
+    // Encrypt sensitive tokens before storing
     const account = await accountModel.create({
       data: {
         userId,
         type: 'oauth',
         provider,
         providerAccountId: profile.id,
-        accessToken: tokens?.accessToken || null,
-        refreshToken: tokens?.refreshToken || null,
+        accessToken: encryptField(tokens?.accessToken),
+        refreshToken: encryptField(tokens?.refreshToken),
         expiresAt: tokens?.expiresAt || null,
         tokenType: tokens?.tokenType || null,
         scope: tokens?.scope || null,
-        idToken: tokens?.idToken || null,
+        idToken: encryptField(tokens?.idToken),
       },
     });
 
@@ -158,16 +162,16 @@ export class AccountService {
 
         if (existingAccount) {
           if (existingAccount.userId === userId) {
-            // Already linked to this user - update tokens
+            // Already linked to this user - update tokens (encrypted)
             const updated = await accountModel.update({
               where: { id: existingAccount.id },
               data: {
-                accessToken: tokens?.accessToken || null,
-                refreshToken: tokens?.refreshToken || null,
+                accessToken: encryptField(tokens?.accessToken),
+                refreshToken: encryptField(tokens?.refreshToken),
                 expiresAt: tokens?.expiresAt || null,
                 tokenType: tokens?.tokenType || null,
                 scope: tokens?.scope || null,
-                idToken: tokens?.idToken || null,
+                idToken: encryptField(tokens?.idToken),
               },
             });
             return {
@@ -530,15 +534,16 @@ export class AccountService {
     if (!accountModel) return;
 
     try {
+      // Encrypt sensitive tokens before storing
       await accountModel.updateMany({
         where: { userId, provider },
         data: {
-          accessToken: tokens.accessToken,
-          refreshToken: tokens.refreshToken || null,
+          accessToken: encryptField(tokens.accessToken),
+          refreshToken: encryptField(tokens.refreshToken),
           expiresAt: tokens.expiresAt || null,
           tokenType: tokens.tokenType || null,
           scope: tokens.scope || null,
-          idToken: tokens.idToken || null,
+          idToken: encryptField(tokens.idToken),
         },
       });
     } catch {
@@ -571,13 +576,17 @@ export class AccountService {
 
       if (!account || !account.accessToken) return null;
 
+      // Decrypt sensitive tokens before returning
+      const decryptedAccessToken = decryptField(account.accessToken);
+      if (!decryptedAccessToken) return null;
+
       return {
-        accessToken: account.accessToken,
-        refreshToken: account.refreshToken ?? undefined,
+        accessToken: decryptedAccessToken,
+        refreshToken: decryptField(account.refreshToken) ?? undefined,
         expiresAt: account.expiresAt ?? undefined,
         tokenType: account.tokenType ?? undefined,
         scope: account.scope ?? undefined,
-        idToken: account.idToken ?? undefined,
+        idToken: decryptField(account.idToken) ?? undefined,
       };
     } catch {
       return null;

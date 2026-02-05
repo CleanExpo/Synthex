@@ -1,5 +1,6 @@
 import { openRouterService } from './openrouter';
 import { prisma } from '@/lib/prisma';
+import { decryptField } from '@/lib/security/field-encryption';
 
 interface GenerateContentParams {
   prompt: string;
@@ -69,13 +70,16 @@ export async function generateContent(params: GenerateContentParams): Promise<Co
   `;
 
   try {
-    // Get user's API key
+    // Get user's API key (encrypted at rest)
     const user = await (prisma as any).user.findUnique({
       where: { id: userId },
       select: { openrouterApiKey: true }
     });
 
-    const apiKey = user?.openrouterApiKey || undefined;
+    // Decrypt the API key before use
+    const apiKey = user?.openrouterApiKey
+      ? decryptField(user.openrouterApiKey) || undefined
+      : undefined;
     
     // Generate content using OpenRouter
     const response = await openRouterService.chat(

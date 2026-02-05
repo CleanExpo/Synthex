@@ -74,6 +74,18 @@ export const ENV_VAR_DEFINITIONS: EnvVarDefinition[] = [
   },
 
   {
+    key: 'FIELD_ENCRYPTION_KEY',
+    description: 'AES-256 encryption key for sensitive database fields (64 hex chars = 32 bytes)',
+    required: true,
+    securityLevel: SecurityLevel.CRITICAL,
+    validator: z.string()
+      .length(64, 'FIELD_ENCRYPTION_KEY must be exactly 64 hex characters (32 bytes)')
+      .regex(/^[A-Fa-f0-9]+$/, 'FIELD_ENCRYPTION_KEY must be valid hex encoding'),
+    example: '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef',
+    errorMessage: 'OAuth tokens and API keys cannot be encrypted - generate with: openssl rand -hex 32'
+  },
+
+  {
     key: 'NEXTAUTH_SECRET',
     description: 'NextAuth.js secret for session encryption',
     required: false,

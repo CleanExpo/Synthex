@@ -1,5 +1,16 @@
+/**
+ * API Keys Management Route
+ *
+ * ENVIRONMENT VARIABLES REQUIRED:
+ * - DATABASE_URL: PostgreSQL connection (CRITICAL)
+ * - FIELD_ENCRYPTION_KEY: 32-byte hex key for API key encryption (CRITICAL)
+ *
+ * NOTE: API keys are encrypted at rest using AES-256-GCM
+ */
+
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
+import { encryptField, isEncrypted } from '@/lib/security/field-encryption';
 
 type KeysBody = {
   email?: string;
@@ -93,19 +104,27 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    // Upsert user with keys
+    // Encrypt API keys before storing
+    const encryptedOpenRouterKey = body.openrouterApiKey
+      ? encryptField(body.openrouterApiKey)
+      : undefined;
+    const encryptedAnthropicKey = body.anthropicApiKey
+      ? encryptField(body.anthropicApiKey)
+      : undefined;
+
+    // Upsert user with encrypted keys
     const updated = await prisma.user.upsert({
       where: { email },
       update: {
-        openrouterApiKey: body.openrouterApiKey ?? undefined,
-        anthropicApiKey: body.anthropicApiKey ?? undefined,
+        openrouterApiKey: encryptedOpenRouterKey ?? undefined,
+        anthropicApiKey: encryptedAnthropicKey ?? undefined,
       },
       create: {
         email,
         password: '!', // placeholder for locally managed accounts
         name: email,
-        openrouterApiKey: body.openrouterApiKey ?? null,
-        anthropicApiKey: body.anthropicApiKey ?? null,
+        openrouterApiKey: encryptedOpenRouterKey ?? null,
+        anthropicApiKey: encryptedAnthropicKey ?? null,
       },
       select: { openrouterApiKey: true, anthropicApiKey: true },
     });

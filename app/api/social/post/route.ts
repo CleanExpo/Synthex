@@ -1,12 +1,19 @@
 /**
  * Unified Social Media Posting API
  * Handles posting to multiple social media platforms
+ *
+ * ENVIRONMENT VARIABLES REQUIRED:
+ * - DATABASE_URL: PostgreSQL connection (CRITICAL)
+ * - FIELD_ENCRYPTION_KEY: 32-byte hex key for token encryption (CRITICAL)
+ *
+ * NOTE: OAuth tokens are encrypted at rest using AES-256-GCM
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { TwitterApi } from 'twitter-api-v2';
 import { getUserIdFromCookies, unauthorizedResponse } from '@/lib/auth/jwt-utils';
+import { decryptField } from '@/lib/security/field-encryption';
 
 // Platform posting configurations
 const PLATFORM_CONFIGS = {
@@ -213,7 +220,7 @@ export async function POST(request: NextRequest) {
 
     for (const platform of platforms) {
       try {
-        // Get platform connection (mock for now)
+        // Get platform connection
         const connection = await prisma.platformConnection.findFirst({
           where: {
             userId,
@@ -222,12 +229,17 @@ export async function POST(request: NextRequest) {
           }
         });
 
+        // Decrypt access token if connection exists
+        const decryptedAccessToken = connection?.accessToken
+          ? decryptField(connection.accessToken)
+          : undefined;
+
         // Post to platform
         const result = await postToSocialPlatform(
           platform,
           finalContent,
           mediaUrls,
-          connection?.accessToken
+          decryptedAccessToken || undefined
         );
 
         // Save post to database

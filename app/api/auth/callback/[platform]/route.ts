@@ -11,13 +11,17 @@
  * - LINKEDIN_CLIENT_ID, LINKEDIN_CLIENT_SECRET (SECRET)
  * - NEXT_PUBLIC_APP_URL (PUBLIC)
  * - JWT_SECRET (CRITICAL)
+ * - FIELD_ENCRYPTION_KEY: 32-byte hex key for token encryption (CRITICAL)
  *
  * @module app/api/auth/callback/[platform]/route
+ *
+ * NOTE: OAuth tokens are encrypted at rest using AES-256-GCM
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import jwt from 'jsonwebtoken';
+import { encryptField } from '@/lib/security/field-encryption';
 
 // =============================================================================
 // OAuth Configuration
@@ -370,6 +374,12 @@ export async function GET(
         ? new Date(Date.now() + tokenData.expiresIn * 1000)
         : null;
 
+      // Encrypt tokens before storing (accessToken is required)
+      const encryptedAccessToken = encryptField(tokenData.accessToken) as string;
+      const encryptedRefreshToken = tokenData.refreshToken
+        ? encryptField(tokenData.refreshToken) ?? undefined
+        : undefined;
+
       await prisma.platformConnection.upsert({
         where: {
           userId_platform_profileId: {
@@ -379,8 +389,8 @@ export async function GET(
           },
         },
         update: {
-          accessToken: tokenData.accessToken,
-          refreshToken: tokenData.refreshToken || null,
+          accessToken: encryptedAccessToken,
+          refreshToken: encryptedRefreshToken ?? null,
           expiresAt,
           isActive: true,
           updatedAt: new Date(),
@@ -393,8 +403,8 @@ export async function GET(
         create: {
           userId: user.id,
           platform,
-          accessToken: tokenData.accessToken,
-          refreshToken: tokenData.refreshToken || null,
+          accessToken: encryptedAccessToken,
+          refreshToken: encryptedRefreshToken ?? null,
           expiresAt,
           scope: '',
           profileId: userInfo.id || 'default',
