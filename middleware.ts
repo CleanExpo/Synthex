@@ -75,6 +75,10 @@ export async function middleware(request: NextRequest) {
   // Refresh session if expired
   const { data: { session } } = await supabase.auth.getSession();
 
+  // Check for custom auth-token cookie (used by unified-login for demo/fallback auth)
+  const authToken = request.cookies.get('auth-token')?.value;
+  const hasCustomAuth = !!authToken;
+
   // Apply security headers to all responses
   Object.entries(securityHeaders).forEach(([key, value]) => {
     response.headers.set(key, value);
@@ -95,8 +99,8 @@ export async function middleware(request: NextRequest) {
     return response;
   }
 
-  // Redirect to login if accessing protected route without session
-  if (isProtectedPath && !session) {
+  // Redirect to login if accessing protected route without session OR custom auth token
+  if (isProtectedPath && !session && !hasCustomAuth) {
     if (!pathname.startsWith('/api/')) {
       // Redirect to login for web pages
       const redirectUrl = new URL('/auth/login', request.url);
@@ -108,8 +112,8 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // Redirect to dashboard if accessing auth routes with active session
-  if (isAuthPath && session) {
+  // Redirect to dashboard if accessing auth routes with active session OR custom auth
+  if (isAuthPath && (session || hasCustomAuth)) {
     return NextResponse.redirect(new URL('/dashboard', request.url));
   }
 
