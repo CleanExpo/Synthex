@@ -78,39 +78,15 @@ export const auth = {
   },
 
   async signInWithGoogle() {
-    const { data, error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: `${window.location.origin}/dashboard`,
-      },
-    });
-
-    if (error) throw error;
-
-    // With PKCE flow, we need to manually redirect to the OAuth URL
-    if (data?.url) {
-      window.location.href = data.url;
-    }
-
-    return data;
+    // Use custom OAuth route instead of Supabase OAuth
+    // This redirects to our /api/auth/oauth/google which handles the full flow
+    window.location.href = '/api/auth/oauth/google';
   },
 
   async signInWithGithub() {
-    const { data, error } = await supabase.auth.signInWithOAuth({
-      provider: 'github',
-      options: {
-        redirectTo: `${window.location.origin}/dashboard`,
-      },
-    });
-
-    if (error) throw error;
-
-    // With PKCE flow, we need to manually redirect to the OAuth URL
-    if (data?.url) {
-      window.location.href = data.url;
-    }
-
-    return data;
+    // Use custom OAuth route instead of Supabase OAuth
+    // This redirects to our /api/auth/oauth/github which handles the full flow
+    window.location.href = '/api/auth/oauth/github';
   },
 
   async signOut() {
