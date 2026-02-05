@@ -17,7 +17,7 @@ export async function POST(
     const body = await request.json();
     
     // Get user from session
-    const cookieStore = cookies();
+    const cookieStore = await cookies();
     const token = cookieStore.get('auth-token')?.value;
     
     // For demo mode (when no Supabase is configured)
@@ -119,7 +119,7 @@ export async function GET(
     const { integrationId } = params;
     
     // Get user from session
-    const cookieStore = cookies();
+    const cookieStore = await cookies();
     const token = cookieStore.get('auth-token')?.value;
     
     // For demo mode
@@ -187,7 +187,7 @@ export async function DELETE(
     const { integrationId } = params;
     
     // Get user from session
-    const cookieStore = cookies();
+    const cookieStore = await cookies();
     const token = cookieStore.get('auth-token')?.value;
     
     // For demo mode

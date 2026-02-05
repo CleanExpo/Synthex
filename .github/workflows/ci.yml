@@ -47,7 +47,7 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
       - run: npm ci --legacy-peer-deps
-      - run: npm test -- --passWithNoTests
+      - run: npm test -- --coverage --coverageThreshold='{"global":{"statements":5}}'
         env:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
@@ -63,7 +63,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: npm audit --audit-level=high || true
+      - run: npm audit --audit-level=critical
       - name: Check for secrets
         uses: trufflesecurity/trufflehog@main
         with:

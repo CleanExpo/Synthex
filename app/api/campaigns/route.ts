@@ -55,7 +55,7 @@ const campaignUpdateSchema = z.object({
 
 // Helper to get user from token
 async function getUserFromRequest(request: Request) {
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   const token = request.headers.get('authorization')?.replace('Bearer ', '') ||
                 cookieStore.get('session')?.value;
 

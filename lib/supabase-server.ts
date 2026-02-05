@@ -45,7 +45,7 @@ export function createAuthClient() {
 
 // Get authenticated user from cookies
 export async function getAuthUser() {
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   const token = cookieStore.get('supabase-auth-token');
   
   if (!token) return null;

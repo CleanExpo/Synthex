@@ -6,7 +6,7 @@ import { patternScraper } from '@/lib/services/pattern-scraper';
 export async function GET(request: Request) {
   try {
     // Verify the request is from an authorized source
-    const headersList = headers();
+    const headersList = await headers();
     const authHeader = headersList.get('authorization');
     
     // In production, verify this is from your cron service

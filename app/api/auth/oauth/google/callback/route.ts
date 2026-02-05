@@ -41,14 +41,14 @@ interface GoogleUserInfo {
 
 export async function GET(request: NextRequest) {
   // Require NEXT_PUBLIC_APP_URL in production
-  const effectiveBaseUrl = process.env.NEXT_PUBLIC_APP_URL;
-  if (!effectiveBaseUrl && process.env.NODE_ENV === 'production') {
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL;
+  if (!baseUrl && process.env.NODE_ENV === 'production') {
     return NextResponse.json(
       { error: 'NEXT_PUBLIC_APP_URL must be configured' },
       { status: 500 }
     );
   }
-  const effectiveBaseUrl = effectiveBaseUrl || 'http://localhost:3000';
+  const effectiveBaseUrl = baseUrl || 'http://localhost:3000';
 
   try {
     // Parse callback parameters

@@ -146,7 +146,7 @@ export async function middleware(request: NextRequest) {
   
   // Rate limiting for API routes
   if (pathname.startsWith('/api/')) {
-    const ip = request.ip || request.headers.get('x-forwarded-for') || 'unknown';
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0].trim() || 'unknown';
     const rateLimitKey = `${ip}:${pathname}`;
     
     const { allowed, remaining, resetTime } = await checkRateLimit(rateLimitKey);
@@ -217,7 +217,7 @@ export async function middleware(request: NextRequest) {
   
   // Log security events (integrate with monitoring service)
   if (pathname.startsWith('/api/auth')) {
-    console.log(`[Security] Auth attempt from ${request.ip} at ${pathname}`);
+    console.log(`[Security] Auth attempt from ${request.headers.get('x-forwarded-for')?.split(',')[0].trim() || 'unknown'} at ${pathname}`);
   }
   
   return response;

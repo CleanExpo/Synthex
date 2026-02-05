@@ -7,6 +7,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { aiContentGenerator } from '@/lib/ai/content-generator';
 import { authMonitor } from '@/lib/auth/monitoring';
 import { logger } from '@/lib/logger';
+import { verifyTokenSafe } from '@/lib/auth/jwt-utils';
 
 import { withRateLimit, UsageTracker } from '@/lib/middleware/rate-limiter';
 
@@ -14,7 +15,7 @@ export async function POST(request: NextRequest) {
   // Apply rate limiting
   return withRateLimit(request, async () => {
     try {
-      // Verify authentication
+      // Verify authentication and extract user ID
       const authToken = request.cookies.get('auth-token')?.value;
       if (!authToken) {
         return NextResponse.json(
@@ -22,6 +23,15 @@ export async function POST(request: NextRequest) {
           { status: 401 }
         );
       }
+
+      const tokenPayload = verifyTokenSafe(authToken);
+      if (!tokenPayload?.userId) {
+        return NextResponse.json(
+          { error: 'Invalid authentication token' },
+          { status: 401 }
+        );
+      }
+      const userId = tokenPayload.userId;
 
     // Parse request body
     const body = await request.json();
@@ -80,7 +90,7 @@ export async function POST(request: NextRequest) {
     });
 
     // Track usage for subscription limits
-    await UsageTracker.track('user_id_here', 'ai_posts', 1);
+    await UsageTracker.track(userId, 'ai_posts', 1);
 
     return NextResponse.json({
       success: true,

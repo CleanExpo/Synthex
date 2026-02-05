@@ -133,7 +133,7 @@ export async function middleware(request: NextRequest) {
       level: 'info',
       message: 'Auth attempt',
       requestId,
-      ip: request.ip || request.headers.get('x-forwarded-for') || 'unknown',
+      ip: request.headers.get('x-forwarded-for')?.split(',')[0].trim() || 'unknown',
       path: pathname,
       timestamp: new Date().toISOString(),
     }));
