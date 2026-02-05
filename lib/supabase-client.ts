@@ -86,6 +86,12 @@ export const auth = {
     });
 
     if (error) throw error;
+
+    // With PKCE flow, we need to manually redirect to the OAuth URL
+    if (data?.url) {
+      window.location.href = data.url;
+    }
+
     return data;
   },
 
@@ -98,6 +104,12 @@ export const auth = {
     });
 
     if (error) throw error;
+
+    // With PKCE flow, we need to manually redirect to the OAuth URL
+    if (data?.url) {
+      window.location.href = data.url;
+    }
+
     return data;
   },
 
