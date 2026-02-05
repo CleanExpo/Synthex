@@ -778,3 +778,100 @@ model CalendarPost {
   @@index([parentPostId])
   @@map("calendar_posts")
 }
+
+// ==========================================
+// A/B Testing Module
+// ==========================================
+
+model ABTest {
+  id             String   @id @default(cuid())
+  name           String
+  hypothesis     String?  @db.Text
+  status         String   @default("draft") // 'draft', 'running', 'paused', 'completed'
+
+  // Test configuration
+  duration       Int      @default(7) // Duration in days
+  platform       String?  // Target platform: 'instagram', 'twitter', etc.
+  targetAudience String?
+
+  // Timing
+  startDate      DateTime?
+  endDate        DateTime?
+
+  // Results
+  winner         String?  // 'A', 'B', or 'inconclusive'
+  confidence     Float    @default(0)
+
+  // AI-generated recommendations
+  recommendations String[]
+
+  // Ownership
+  userId         String
+  organizationId String?
+  campaignId     String?
+
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  // Relations
+  variants       ABTestVariant[]
+  results        ABTestResult[]
+
+  @@index([userId])
+  @@index([organizationId])
+  @@index([status])
+  @@map("ab_tests")
+}
+
+model ABTestVariant {
+  id             String   @id @default(cuid())
+  testId         String
+  name           String   // 'A', 'B', 'C', etc.
+
+  // Content
+  content        String   @db.Text
+  image          String?
+  cta            String?  // Call to action
+  hashtags       String[]
+
+  // Metrics
+  impressions    Int      @default(0)
+  engagement     Int      @default(0)
+  clicks         Int      @default(0)
+  conversions    Int      @default(0)
+
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  // Relations
+  test           ABTest   @relation(fields: [testId], references: [id], onDelete: Cascade)
+
+  @@index([testId])
+  @@map("ab_test_variants")
+}
+
+model ABTestResult {
+  id             String   @id @default(cuid())
+  testId         String
+  variantId      String
+
+  // Metrics snapshot
+  timestamp      DateTime @default(now())
+  impressions    Int      @default(0)
+  engagement     Int      @default(0)
+  clicks         Int      @default(0)
+  conversions    Int      @default(0)
+
+  // Statistical analysis
+  conversionRate Float    @default(0)
+  uplift         Float?   // Percentage improvement over control
+  pValue         Float?   // Statistical significance
+
+  // Relations
+  test           ABTest   @relation(fields: [testId], references: [id], onDelete: Cascade)
+
+  @@index([testId])
+  @@index([variantId])
+  @@index([timestamp])
+  @@map("ab_test_results")
+}
