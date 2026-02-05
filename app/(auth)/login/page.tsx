@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Sparkles, Mail, Lock, Github, Chrome, Loader2, AlertCircle } from '@/components/icons';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -255,6 +255,7 @@ export default function LoginPage() {
 
           <div className="w-full">
             <Button
+              type="button"
               variant="outline"
               className="w-full bg-white/5 border-white/10 text-white hover:bg-white/10"
               onClick={handleGoogleLogin}
