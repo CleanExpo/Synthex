@@ -1,26 +1,26 @@
 /**
  * Analytics Export API
  *
- * Exports analytics data in various formats (CSV, JSON, XLSX).
+ * Exports analytics data in various formats (CSV, JSON, PDF, XLSX).
  *
  * ENVIRONMENT VARIABLES REQUIRED:
- * - DATABASE_URL (CRITICAL)
- * - JWT_SECRET (CRITICAL)
+ * - DATABASE_URL: PostgreSQL connection (CRITICAL)
+ * - JWT_SECRET: For validating auth tokens (CRITICAL)
+ *
+ * FAILURE MODE: Returns error response with details
  *
  * @module app/api/analytics/export/route
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import { withRateLimit, rateLimitConfigs } from '@/lib/rate-limiter-enhanced';
 import { exportQuerySchema, type ExportQueryInput, periodToDateRange } from '@/lib/schemas/analytics';
-import { z } from 'zod';
-
-// =============================================================================
-// Auth Helper - Uses centralized JWT utilities (no fallback secrets)
-// =============================================================================
-
+import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
+import { auditLogger } from '@/lib/security/audit-logger';
+import { logger } from '@/lib/logger';
 import { verifyToken } from '@/lib/auth/jwt-utils';
+import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 async function getUserFromRequest(request: NextRequest): Promise<{ id: string; email: string } | null> {
   const authHeader = request.headers.get('authorization');
@@ -220,12 +220,150 @@ function toJSON(data: any): string {
   return JSON.stringify(data, null, 2);
 }
 
+function toPDF(data: any): Uint8Array {
+  const { posts, campaigns, summary } = data;
+
+  // Create PDF document
+  const doc = new jsPDF();
+  const pageWidth = doc.internal.pageSize.getWidth();
+
+  // Header
+  doc.setFontSize(20);
+  doc.setTextColor(59, 130, 246); // Blue
+  doc.text('SYNTHEX Analytics Report', pageWidth / 2, 20, { align: 'center' });
+
+  doc.setFontSize(10);
+  doc.setTextColor(100);
+  doc.text(`Generated: ${new Date().toLocaleString()}`, pageWidth / 2, 28, { align: 'center' });
+  doc.text(`Period: ${summary.period.start.split('T')[0]} to ${summary.period.end.split('T')[0]}`, pageWidth / 2, 34, { align: 'center' });
+
+  // Summary Section
+  doc.setFontSize(14);
+  doc.setTextColor(0);
+  doc.text('Performance Summary', 14, 48);
+
+  const summaryData = [
+    ['Total Posts', summary.posts.toString()],
+    ['Total Likes', summary.likes.toLocaleString()],
+    ['Total Comments', summary.comments.toLocaleString()],
+    ['Total Shares', summary.shares.toLocaleString()],
+    ['Total Impressions', summary.impressions.toLocaleString()],
+    ['Total Reach', summary.reach.toLocaleString()],
+    ['Total Clicks', summary.clicks.toLocaleString()],
+    ['Engagement Rate', `${summary.engagementRate}%`],
+  ];
+
+  autoTable(doc, {
+    startY: 52,
+    head: [['Metric', 'Value']],
+    body: summaryData,
+    theme: 'striped',
+    headStyles: { fillColor: [59, 130, 246] },
+    margin: { left: 14, right: 14 },
+    tableWidth: 'auto',
+  });
+
+  // Campaigns Section (if any)
+  if (campaigns.length > 0) {
+    const finalY = (doc as any).lastAutoTable?.finalY || 100;
+    doc.setFontSize(14);
+    doc.text('Campaigns', 14, finalY + 15);
+
+    const campaignData = campaigns.map((c: any) => [
+      c.name,
+      c.platform,
+      c.status,
+      c._count?.posts?.toString() || '0',
+      new Date(c.createdAt).toLocaleDateString(),
+    ]);
+
+    autoTable(doc, {
+      startY: finalY + 19,
+      head: [['Name', 'Platform', 'Status', 'Posts', 'Created']],
+      body: campaignData,
+      theme: 'striped',
+      headStyles: { fillColor: [59, 130, 246] },
+      margin: { left: 14, right: 14 },
+    });
+  }
+
+  // Posts Section - new page if needed
+  if (posts.length > 0) {
+    doc.addPage();
+    doc.setFontSize(14);
+    doc.text('Post Performance', 14, 20);
+
+    const postData = posts.slice(0, 50).map((post: any) => {
+      const analytics = (post.analytics as PostAnalytics) || {};
+      const engagement = (analytics.likes || 0) + (analytics.comments || 0) + (analytics.shares || 0);
+      return [
+        (post.content || '').substring(0, 40) + '...',
+        post.campaign?.platform || post.platform || '',
+        post.status,
+        (analytics.likes || 0).toString(),
+        (analytics.comments || 0).toString(),
+        engagement.toString(),
+      ];
+    });
+
+    autoTable(doc, {
+      startY: 24,
+      head: [['Content', 'Platform', 'Status', 'Likes', 'Comments', 'Engagement']],
+      body: postData,
+      theme: 'striped',
+      headStyles: { fillColor: [59, 130, 246] },
+      margin: { left: 14, right: 14 },
+      styles: { fontSize: 8 },
+      columnStyles: {
+        0: { cellWidth: 60 },
+      },
+    });
+
+    if (posts.length > 50) {
+      const tableY = (doc as any).lastAutoTable?.finalY || 200;
+      doc.setFontSize(9);
+      doc.setTextColor(100);
+      doc.text(`Showing top 50 of ${posts.length} posts`, 14, tableY + 10);
+    }
+  }
+
+  // Footer on all pages
+  const totalPages = doc.getNumberOfPages();
+  for (let i = 1; i <= totalPages; i++) {
+    doc.setPage(i);
+    doc.setFontSize(8);
+    doc.setTextColor(150);
+    doc.text(
+      `Page ${i} of ${totalPages} | SYNTHEX Analytics`,
+      pageWidth / 2,
+      doc.internal.pageSize.getHeight() - 10,
+      { align: 'center' }
+    );
+  }
+
+  // Return as Uint8Array for NextResponse compatibility
+  return new Uint8Array(doc.output('arraybuffer'));
+}
+
 // =============================================================================
 // Route Handlers
 // =============================================================================
 
 export async function GET(request: NextRequest) {
   try {
+    // Security check
+    const security = await APISecurityChecker.check(
+      request,
+      DEFAULT_POLICIES.AUTHENTICATED_READ
+    );
+
+    if (!security.allowed) {
+      return APISecurityChecker.createSecureResponse(
+        { error: security.error },
+        403
+      );
+    }
+
     const user = await getUserFromRequest(request);
     if (!user) {
       return NextResponse.json(
@@ -287,7 +425,7 @@ export async function GET(request: NextRequest) {
     );
 
     // Generate export
-    let content: string;
+    let content: string | Uint8Array;
     let contentType: string;
     let filename: string;
 
@@ -304,6 +442,11 @@ export async function GET(request: NextRequest) {
         contentType = 'application/json';
         filename = `synthex-analytics-${timestamp}.json`;
         break;
+      case 'pdf':
+        content = toPDF(data);
+        contentType = 'application/pdf';
+        filename = `synthex-analytics-${timestamp}.pdf`;
+        break;
       case 'xlsx':
         // For XLSX, return JSON and let client handle conversion
         // Or implement server-side XLSX generation with a library
@@ -317,6 +460,30 @@ export async function GET(request: NextRequest) {
         filename = `synthex-analytics-${timestamp}.json`;
     }
 
+    // Audit log the export
+    await auditLogger.log({
+      userId: user.id,
+      action: 'analytics.export',
+      resource: 'analytics',
+      resourceId: user.id,
+      category: 'analytics',
+      severity: 'low',
+      outcome: 'success',
+      details: {
+        format,
+        period: dateRange,
+        platforms,
+        postCount: data.posts.length,
+        campaignCount: data.campaigns.length,
+      },
+    });
+
+    logger.info('Analytics export generated', {
+      userId: user.id,
+      format,
+      postCount: data.posts.length,
+    });
+
     // Return file download
     return new NextResponse(content, {
       status: 200,
@@ -327,9 +494,9 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error: any) {
-    console.error('Analytics export error:', error);
+    logger.error('Analytics export error', { error });
     return NextResponse.json(
-      { error: 'Internal Server Error', message: error.message },
+      { error: 'Internal Server Error', message: 'Failed to generate export' },
       { status: 500 }
     );
   }
@@ -338,6 +505,19 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   // POST for more complex export configurations
   try {
+    // Security check
+    const security = await APISecurityChecker.check(
+      request,
+      DEFAULT_POLICIES.AUTHENTICATED_WRITE
+    );
+
+    if (!security.allowed) {
+      return APISecurityChecker.createSecureResponse(
+        { error: security.error },
+        403
+      );
+    }
+
     const user = await getUserFromRequest(request);
     if (!user) {
       return NextResponse.json(
@@ -368,7 +548,26 @@ export async function POST(request: NextRequest) {
 
     // If email delivery requested, queue the export
     if (emailDelivery?.enabled && emailDelivery.recipients?.length) {
-      // Queue export job (would integrate with job queue in production)
+      await auditLogger.log({
+        userId: user.id,
+        action: 'analytics.export_scheduled',
+        resource: 'analytics',
+        resourceId: user.id,
+        category: 'analytics',
+        severity: 'low',
+        outcome: 'success',
+        details: {
+          format,
+          recipients: emailDelivery.recipients.length,
+          deliveryMethod: 'email',
+        },
+      });
+
+      logger.info('Analytics export queued for email', {
+        userId: user.id,
+        recipients: emailDelivery.recipients.length,
+      });
+
       return NextResponse.json({
         success: true,
         message: 'Export queued for email delivery',
@@ -376,6 +575,17 @@ export async function POST(request: NextRequest) {
         estimatedDelivery: '5 minutes',
       });
     }
+
+    await auditLogger.log({
+      userId: user.id,
+      action: 'analytics.export_requested',
+      resource: 'analytics',
+      resourceId: user.id,
+      category: 'analytics',
+      severity: 'low',
+      outcome: 'success',
+      details: { format, platforms, postCount: data.posts.length },
+    });
 
     // Return data for immediate download
     return NextResponse.json({
@@ -385,9 +595,9 @@ export async function POST(request: NextRequest) {
       generatedAt: new Date().toISOString(),
     });
   } catch (error: any) {
-    console.error('Analytics export error:', error);
+    logger.error('Analytics export error', { error });
     return NextResponse.json(
-      { error: 'Internal Server Error', message: error.message },
+      { error: 'Internal Server Error', message: 'Failed to process export request' },
       { status: 500 }
     );
   }

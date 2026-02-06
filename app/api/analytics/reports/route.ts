@@ -7,13 +7,18 @@
  *
  * ENVIRONMENT VARIABLES REQUIRED:
  * - DATABASE_URL: PostgreSQL connection (CRITICAL)
+ * - JWT_SECRET: For validating auth tokens (CRITICAL)
  *
  * FAILURE MODE: Returns cached data on failure
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import jwt from 'jsonwebtoken';
+import { z } from 'zod';
 import { ResponseOptimizer } from '@/lib/api/response-optimizer';
 import { logger } from '@/lib/logger';
+import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
+import { auditLogger } from '@/lib/security/audit-logger';
 import {
   ReportBuilder,
   ReportExporter,
@@ -24,19 +29,112 @@ import {
   type ExportFormat,
 } from '@/src/services/analytics/report-builder';
 
+// Lazy getter to avoid module load crash
+function getJWTSecret(): string {
+  const secret = process.env.JWT_SECRET;
+  if (!secret) throw new Error('JWT_SECRET required');
+  return secret;
+}
+
+// Helper to extract user ID from request
+async function getUserIdFromRequest(request: NextRequest): Promise<string | null> {
+  const token =
+    request.cookies.get('auth-token')?.value ||
+    request.headers.get('Authorization')?.replace('Bearer ', '');
+
+  if (!token) return null;
+
+  try {
+    const decoded = jwt.verify(token, getJWTSecret()) as {
+      sub?: string;
+      userId?: string;
+      id?: string;
+    };
+    return decoded.sub || decoded.userId || decoded.id || null;
+  } catch {
+    return null;
+  }
+}
+
+// Validation schema for report generation
+const GenerateReportSchema = z.object({
+  type: z.enum(['overview', 'engagement', 'content', 'audience', 'campaigns', 'growth', 'custom']).default('overview'),
+  name: z.string().min(1).max(200).default('Custom Report'),
+  metrics: z.array(z.string()).default(['impressions', 'engagements', 'clicks']),
+  dimensions: z.array(z.string()).default(['date']),
+  granularity: z.enum(['hour', 'day', 'week', 'month', 'quarter', 'year']).default('day'),
+  dateRange: z.object({
+    start: z.string(),
+    end: z.string(),
+  }),
+  platforms: z.array(z.string()).optional(),
+  campaigns: z.array(z.string()).optional(),
+  compareWith: z.object({
+    start: z.string(),
+    end: z.string(),
+  }).optional(),
+  limit: z.number().positive().optional(),
+  sortBy: z.object({
+    field: z.string(),
+    direction: z.enum(['asc', 'desc']).default('desc'),
+  }).optional(),
+  exportFormat: z.enum(['json', 'csv', 'pdf']).optional(),
+  organizationId: z.string().optional(), // Optional now, will use userId if not provided
+});
+
 // ============================================================================
 // POST - Generate Report
 // ============================================================================
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
+    // Security check
+    const security = await APISecurityChecker.check(
+      request,
+      DEFAULT_POLICIES.AUTHENTICATED_WRITE
+    );
+
+    if (!security.allowed) {
+      return APISecurityChecker.createSecureResponse(
+        { error: security.error },
+        403
+      );
+    }
+
+    // Get user ID
+    const userId = await getUserIdFromRequest(request);
+    if (!userId) {
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      );
+    }
+
+    // Parse and validate body
+    let body: unknown;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json(
+        { error: 'Invalid JSON body' },
+        { status: 400 }
+      );
+    }
+
+    const parseResult = GenerateReportSchema.safeParse(body);
+    if (!parseResult.success) {
+      return NextResponse.json(
+        { error: 'Validation error', details: parseResult.error.flatten() },
+        { status: 400 }
+      );
+    }
+
     const {
-      type = 'overview',
-      name = 'Custom Report',
-      metrics = ['impressions', 'engagements', 'clicks'],
-      dimensions = ['date'],
-      granularity = 'day',
+      type,
+      name,
+      metrics,
+      dimensions,
+      granularity,
       dateRange,
       platforms,
       campaigns,
@@ -45,19 +143,13 @@ export async function POST(request: NextRequest) {
       sortBy,
       exportFormat,
       organizationId,
-    } = body;
+    } = parseResult.data;
 
-    // Validate required fields
-    if (!organizationId) {
-      return ResponseOptimizer.createErrorResponse('Organization ID is required', 400);
-    }
-
-    if (!dateRange?.start || !dateRange?.end) {
-      return ResponseOptimizer.createErrorResponse('Date range is required', 400);
-    }
+    // Use organizationId if provided, otherwise use userId
+    const effectiveOrgId = organizationId || userId;
 
     // Build report
-    const builder = new ReportBuilder(organizationId)
+    const builder = new ReportBuilder(effectiveOrgId)
       .type(type)
       .name(name)
       .metrics(metrics as MetricType[])
@@ -94,6 +186,18 @@ export async function POST(request: NextRequest) {
         ? new Uint8Array(exported.content)
         : exported.content;
 
+      // Audit log export
+      await auditLogger.log({
+        userId,
+        action: 'analytics.report_exported',
+        resource: 'report',
+        resourceId: report.id,
+        category: 'analytics',
+        severity: 'low',
+        outcome: 'success',
+        details: { type, exportFormat, rowCount: report.metadata.rowCount },
+      });
+
       // Return file download response
       const response = new NextResponse(content, {
         headers: {
@@ -105,10 +209,27 @@ export async function POST(request: NextRequest) {
       return response;
     }
 
+    // Audit log report generation
+    await auditLogger.log({
+      userId,
+      action: 'analytics.report_generated',
+      resource: 'report',
+      resourceId: report.id,
+      category: 'analytics',
+      severity: 'low',
+      outcome: 'success',
+      details: {
+        type,
+        name,
+        rowCount: report.metadata.rowCount,
+        executionTime: report.metadata.executionTime,
+      },
+    });
+
     logger.info('Report generated', {
       reportId: report.id,
       type: report.config.type,
-      organizationId,
+      userId,
       rowCount: report.metadata.rowCount,
       executionTime: report.metadata.executionTime,
     });
@@ -132,6 +253,28 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
+    // Security check
+    const security = await APISecurityChecker.check(
+      request,
+      DEFAULT_POLICIES.AUTHENTICATED_READ
+    );
+
+    if (!security.allowed) {
+      return APISecurityChecker.createSecureResponse(
+        { error: security.error },
+        403
+      );
+    }
+
+    // Get user ID for audit logging
+    const userId = await getUserIdFromRequest(request);
+    if (!userId) {
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      );
+    }
+
     const { searchParams } = new URL(request.url);
     const preset = searchParams.get('preset');
 
@@ -141,6 +284,17 @@ export async function GET(request: NextRequest) {
       if (!presetConfig) {
         return ResponseOptimizer.createErrorResponse(`Preset "${preset}" not found`, 404);
       }
+
+      await auditLogger.log({
+        userId,
+        action: 'analytics.preset_viewed',
+        resource: 'report_preset',
+        resourceId: preset,
+        category: 'analytics',
+        severity: 'low',
+        outcome: 'success',
+        details: { preset },
+      });
 
       return ResponseOptimizer.createResponse(
         {
@@ -200,3 +354,6 @@ function getPresetDescription(preset: string): string {
   };
   return descriptions[preset] || 'Custom report preset';
 }
+
+// Node.js runtime required
+export const runtime = 'nodejs';
