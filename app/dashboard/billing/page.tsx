@@ -4,13 +4,13 @@ import { useState, useEffect, useCallback } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { 
-  CreditCard, 
-  Package, 
-  Calendar, 
+import {
+  CreditCard,
+  Package,
+  Calendar,
   ArrowUpRight,
   Download,
-  AlertCircle 
+  AlertCircle
 } from '@/components/icons';
 import toast from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
@@ -22,8 +22,27 @@ interface Subscription {
   cancel_at_period_end?: boolean;
 }
 
+interface UsageData {
+  usage: {
+    aiPosts: number;
+    socialAccounts: number;
+    personas: number;
+  };
+  limits: {
+    aiPosts: number;
+    socialAccounts: number;
+    personas: number;
+  };
+  percentages: {
+    aiPosts: number;
+    socialAccounts: number;
+    personas: number;
+  };
+}
+
 export default function BillingPage() {
   const [subscription, setSubscription] = useState<Subscription | null>(null);
+  const [usageData, setUsageData] = useState<UsageData | null>(null);
   const [loading, setLoading] = useState(true);
   const [portalLoading, setPortalLoading] = useState(false);
   const router = useRouter();
@@ -36,15 +55,23 @@ export default function BillingPage() {
         return;
       }
 
-      const response = await fetch('/api/user/subscription', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
+      const [subResponse, usageResponse] = await Promise.all([
+        fetch('/api/user/subscription', {
+          headers: { 'Authorization': `Bearer ${token}` },
+        }),
+        fetch('/api/user/usage', {
+          headers: { 'Authorization': `Bearer ${token}` },
+        }),
+      ]);
 
-      if (response.ok) {
-        const data = await response.json();
+      if (subResponse.ok) {
+        const data = await subResponse.json();
         setSubscription(data);
+      }
+
+      if (usageResponse.ok) {
+        const usage = await usageResponse.json();
+        setUsageData(usage);
       }
     } catch (error) {
       console.error('Error fetching subscription:', error);
@@ -217,10 +244,11 @@ export default function BillingPage() {
               <Button
                 variant="outline"
                 className="w-full border-white/20 text-white hover:bg-white/10"
-                onClick={() => window.open('/api/invoices', '_blank')}
+                onClick={openBillingPortal}
+                disabled={portalLoading}
               >
                 <Download className="w-4 h-4 mr-2" />
-                Download Invoices
+                View Invoices
               </Button>
             </div>
           </div>
@@ -237,30 +265,45 @@ export default function BillingPage() {
             <div>
               <div className="flex justify-between mb-2">
                 <span className="text-gray-400">AI Posts Generated</span>
-                <span className="text-white">15 / 30</span>
+                <span className="text-white">
+                  {usageData?.usage.aiPosts ?? 0} / {usageData?.limits.aiPosts === -1 ? '∞' : (usageData?.limits.aiPosts ?? 10)}
+                </span>
               </div>
               <div className="w-full bg-white/10 rounded-full h-2">
-                <div className="bg-gradient-to-r from-purple-500 to-pink-500 h-2 rounded-full" style={{ width: '50%' }}></div>
+                <div
+                  className="bg-gradient-to-r from-purple-500 to-pink-500 h-2 rounded-full transition-all duration-300"
+                  style={{ width: `${usageData?.limits.aiPosts === -1 ? 0 : (usageData?.percentages.aiPosts ?? 0)}%` }}
+                ></div>
               </div>
             </div>
 
             <div>
               <div className="flex justify-between mb-2">
                 <span className="text-gray-400">Social Accounts</span>
-                <span className="text-white">2 / 3</span>
+                <span className="text-white">
+                  {usageData?.usage.socialAccounts ?? 0} / {usageData?.limits.socialAccounts === -1 ? '∞' : (usageData?.limits.socialAccounts ?? 2)}
+                </span>
               </div>
               <div className="w-full bg-white/10 rounded-full h-2">
-                <div className="bg-gradient-to-r from-purple-500 to-pink-500 h-2 rounded-full" style={{ width: '66%' }}></div>
+                <div
+                  className="bg-gradient-to-r from-purple-500 to-pink-500 h-2 rounded-full transition-all duration-300"
+                  style={{ width: `${usageData?.limits.socialAccounts === -1 ? 0 : (usageData?.percentages.socialAccounts ?? 0)}%` }}
+                ></div>
               </div>
             </div>
 
             <div>
               <div className="flex justify-between mb-2">
-                <span className="text-gray-400">Team Members</span>
-                <span className="text-white">1 / 1</span>
+                <span className="text-gray-400">AI Personas</span>
+                <span className="text-white">
+                  {usageData?.usage.personas ?? 0} / {usageData?.limits.personas === -1 ? '∞' : (usageData?.limits.personas ?? 1)}
+                </span>
               </div>
               <div className="w-full bg-white/10 rounded-full h-2">
-                <div className="bg-gradient-to-r from-purple-500 to-pink-500 h-2 rounded-full" style={{ width: '100%' }}></div>
+                <div
+                  className="bg-gradient-to-r from-purple-500 to-pink-500 h-2 rounded-full transition-all duration-300"
+                  style={{ width: `${usageData?.limits.personas === -1 ? 0 : (usageData?.percentages.personas ?? 0)}%` }}
+                ></div>
               </div>
             </div>
           </div>
