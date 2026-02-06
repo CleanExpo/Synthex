@@ -17,6 +17,15 @@ import sgMail from '@sendgrid/mail';
 import { logger } from '@/lib/logger';
 import { prisma } from '@/lib/prisma';
 
+// Resend SDK - dynamically imported to avoid issues if not configured
+let Resend: typeof import('resend').Resend | null = null;
+try {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  Resend = require('resend').Resend;
+} catch {
+  // Resend not installed, will use SendGrid
+}
+
 // ============================================================================
 // TYPES
 // ============================================================================
@@ -66,8 +75,10 @@ export interface EmailDeliveryStatus {
 // ============================================================================
 
 const REDIS_URL = process.env.REDIS_URL || process.env.UPSTASH_REDIS_URL || '';
+const EMAIL_PROVIDER = (process.env.EMAIL_PROVIDER || 'sendgrid') as 'sendgrid' | 'resend';
 const SENDGRID_API_KEY = process.env.SENDGRID_API_KEY || '';
-const DEFAULT_FROM = process.env.EMAIL_FROM || 'noreply@synthex.com';
+const RESEND_API_KEY = process.env.RESEND_API_KEY || '';
+const DEFAULT_FROM = process.env.EMAIL_FROM || 'noreply@synthex.social';
 const DEFAULT_FROM_NAME = process.env.EMAIL_FROM_NAME || 'SYNTHEX';
 
 // Queue configuration
@@ -309,12 +320,17 @@ class EmailQueueService {
       attempt: job.attemptsMade + 1,
     });
 
-    await this.sendViaSendGrid(data);
+    await this.sendEmail(data);
     await this.trackDelivery(data.id, 'sent', data.metadata, undefined, job.attemptsMade + 1);
   }
 
-  private async sendViaSendGrid(email: EmailJob): Promise<string> {
-    if (!SENDGRID_API_KEY) {
+  private async sendEmail(email: EmailJob): Promise<string> {
+    // Check which provider to use
+    if (EMAIL_PROVIDER === 'resend' && RESEND_API_KEY) {
+      return this.sendViaResend(email);
+    } else if (SENDGRID_API_KEY) {
+      return this.sendViaSendGrid(email);
+    } else {
       // Development fallback - log email
       logger.info('Email (dev mode - not sent)', {
         to: email.to,
@@ -323,7 +339,9 @@ class EmailQueueService {
       });
       return `dev_${email.id}`;
     }
+  }
 
+  private async sendViaSendGrid(email: EmailJob): Promise<string> {
     const msg = {
       to: email.to,
       from: {
@@ -355,13 +373,50 @@ class EmailQueueService {
     return messageId;
   }
 
+  private async sendViaResend(email: EmailJob): Promise<string> {
+    if (!Resend) {
+      throw new Error('Resend SDK not available');
+    }
+
+    const resend = new Resend(RESEND_API_KEY);
+
+    const { data, error } = await resend.emails.send({
+      from: `${DEFAULT_FROM_NAME} <${email.from || DEFAULT_FROM}>`,
+      to: email.to,
+      subject: email.subject,
+      html: email.html,
+      text: email.text || this.stripHtml(email.html),
+      replyTo: email.replyTo,
+      cc: email.cc,
+      bcc: email.bcc,
+      headers: {
+        'X-Email-Id': email.id,
+        'X-Email-Type': email.metadata?.type || 'transactional',
+      },
+    });
+
+    if (error) {
+      throw new Error(`Resend error: ${error.message}`);
+    }
+
+    const messageId = data?.id || email.id;
+
+    logger.info('Email sent via Resend', {
+      id: email.id,
+      to: email.to,
+      messageId,
+    });
+
+    return messageId;
+  }
+
   private async processInMemoryQueue(): Promise<void> {
     while (this.inMemoryQueue.length > 0) {
       const email = this.inMemoryQueue.shift();
       if (!email) continue;
 
       try {
-        await this.sendViaSendGrid(email);
+        await this.sendEmail(email);
         await this.trackDelivery(email.id, 'sent', email.metadata);
       } catch (error) {
         logger.error('In-memory email failed', { id: email.id, error });
