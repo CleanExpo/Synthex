@@ -105,7 +105,7 @@ export async function GET(
     });
 
     // Calculate current statistics
-    const variants = test.variants.map((variant) => ({
+    const variants = test.variants.map((variant: typeof test.variants[number]) => ({
       id: variant.id,
       name: variant.name,
       impressions: variant.impressions,
@@ -143,7 +143,7 @@ export async function GET(
     }
 
     // Generate time series data for charts
-    const timeSeriesData = results.map((r) => ({
+    const timeSeriesData = results.map((r: typeof results[number]) => ({
       timestamp: r.timestamp,
       conversionRate: r.conversionRate,
       impressions: r.impressions,
@@ -159,7 +159,7 @@ export async function GET(
           uplift,
           winner,
           isSignificant: pValue < 0.05,
-          sampleSize: variants.reduce((sum, v) => sum + v.impressions, 0),
+          sampleSize: variants.reduce((sum: number, v: typeof variants[number]) => sum + v.impressions, 0),
         },
         timeSeries: timeSeriesData,
         recommendations: generateRecommendations(variants, pValue, uplift),
@@ -294,7 +294,7 @@ export async function POST(
         data: {
           confidence: (1 - pValue) * 100,
           recommendations: generateRecommendations(
-            allVariants.map(v => ({
+            allVariants.map((v: typeof allVariants[number]) => ({
               ...v,
               conversionRate: v.impressions > 0 ? (v.conversions / v.impressions) * 100 : 0,
             })),
