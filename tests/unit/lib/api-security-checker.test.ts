@@ -180,7 +180,10 @@ describe('APISecurityChecker', () => {
         blockedIPs: ['192.168.1.1'],
       };
 
-      const request = createMockRequest({ ip: '192.168.1.1' });
+      // IP is read from x-forwarded-for header, not request.ip property
+      const request = createMockRequest({
+        headers: { 'x-forwarded-for': '192.168.1.1' }
+      });
 
       const result = await APISecurityChecker.check(request, policy);
 
@@ -195,7 +198,10 @@ describe('APISecurityChecker', () => {
         allowedIPs: ['127.0.0.1'],
       };
 
-      const request = createMockRequest({ ip: '127.0.0.1' });
+      // IP is read from x-forwarded-for header, not request.ip property
+      const request = createMockRequest({
+        headers: { 'x-forwarded-for': '127.0.0.1' }
+      });
 
       const result = await APISecurityChecker.check(request, policy);
 
@@ -399,9 +405,11 @@ describe('Rate Limiting', () => {
       rateLimit: { maxRequests: 5, windowMs: 1000 },
     };
 
-    // Make several requests
+    // Make several requests - IP is read from x-forwarded-for header
     for (let i = 0; i < 3; i++) {
-      const request = createMockRequest({ ip: '10.0.0.1' });
+      const request = createMockRequest({
+        headers: { 'x-forwarded-for': '10.0.0.1' }
+      });
       const result = await APISecurityChecker.check(request, policy);
       expect(result.allowed).toBe(true);
     }
