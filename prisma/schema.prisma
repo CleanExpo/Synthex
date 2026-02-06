@@ -642,9 +642,54 @@ model Persona {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
+  // Relations
+  trainingData PersonaTrainingData[]
+
   @@index([userId])
   @@index([status])
   @@map("personas")
+}
+
+// Persona Training Data - stores training samples and extracted insights
+model PersonaTrainingData {
+  id           String   @id @default(cuid())
+  personaId    String
+  persona      Persona  @relation(fields: [personaId], references: [id], onDelete: Cascade)
+
+  // Source information
+  sourceType   String   // 'text', 'social_post', 'document', 'website', 'conversation'
+  sourceUrl    String?
+  platform     String?  // 'twitter', 'linkedin', 'instagram', etc.
+
+  // Content
+  content      String   @db.Text
+  contentHash  String   // For deduplication
+
+  // Extracted characteristics (JSON)
+  extractedTone       Json?    // { primary, secondary, formality, energy, warmth, humor }
+  extractedVocabulary Json?    // { complexity, preferredWords, jargonLevel }
+  extractedPatterns   Json?    // { hooks, closings, ctas, signatures }
+
+  // AI Analysis results
+  aiAnalysis   Json?    // Full AI-generated analysis
+  sentiment    String?  // 'positive', 'neutral', 'negative'
+  topics       String[] // Extracted topics
+
+  // Embedding for semantic search (stored as JSON array for now, can migrate to pgvector later)
+  embedding    Json?    // Float array for semantic similarity
+
+  // Metadata
+  engagement   Int?     // Original engagement metrics if from social post
+  processedAt  DateTime?
+  confidence   Float    @default(0)
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@unique([personaId, contentHash])
+  @@index([personaId])
+  @@index([sourceType])
+  @@map("persona_training_data")
 }
 
 // ==========================================

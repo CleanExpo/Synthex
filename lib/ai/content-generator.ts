@@ -1,11 +1,26 @@
 /**
  * Advanced AI Content Generation System
  * Integrates with OpenRouter for multi-model content creation
+ * Supports persona-based content generation for brand consistency
  */
 
 import { getAIProvider } from '@/lib/ai/providers';
 import type { AIProvider } from '@/lib/ai/providers';
 import { logger } from '@/lib/logger';
+import prisma from '@/lib/prisma';
+
+// Persona type from database
+interface PersonaData {
+  id: string;
+  name: string;
+  description: string | null;
+  tone: string;
+  style: string;
+  vocabulary: string;
+  emotion: string;
+  trainingSourcesCount: number;
+  accuracy: number;
+}
 
 
 export interface ContentRequest {
@@ -19,6 +34,8 @@ export interface ContentRequest {
   includeEmojis?: boolean;
   includeHashtags?: boolean;
   includeCTA?: boolean;
+  // Persona integration
+  personaId?: string; // Use trained persona for voice/style
 }
 
 export interface GeneratedContent {
@@ -65,13 +82,39 @@ export class AIContentGenerator {
    */
   async generateContent(request: ContentRequest): Promise<GeneratedContent> {
     const startTime = Date.now();
-    
-    // Build the prompt based on request
-    const prompt = this.buildPrompt(request);
-    
+
+    // Fetch persona data if personaId provided
+    let persona: PersonaData | null = null;
+    if (request.personaId) {
+      try {
+        persona = await prisma.persona.findUnique({
+          where: { id: request.personaId },
+          select: {
+            id: true,
+            name: true,
+            description: true,
+            tone: true,
+            style: true,
+            vocabulary: true,
+            emotion: true,
+            trainingSourcesCount: true,
+            accuracy: true,
+          },
+        });
+        if (persona) {
+          logger.info('Generating content with persona', { personaId: persona.id, personaName: persona.name });
+        }
+      } catch (error) {
+        logger.warn('Failed to fetch persona, proceeding without', { personaId: request.personaId, error });
+      }
+    }
+
+    // Build the prompt based on request and persona
+    const prompt = this.buildPrompt(request, persona);
+
     // Select appropriate model based on content type
     const model = this.selectModel(request);
-    
+
     try {
       // Generate main content
       const mainContent = await this.callAI(prompt, model);
@@ -117,9 +160,9 @@ export class AIContentGenerator {
   }
 
   /**
-   * Build prompt for AI based on request
+   * Build prompt for AI based on request and optional persona
    */
-  private buildPrompt(request: ContentRequest): string {
+  private buildPrompt(request: ContentRequest, persona?: PersonaData | null): string {
     const platformGuides = {
       twitter: 'concise, engaging, max 280 characters, thread-friendly',
       instagram: 'visual storytelling, engaging captions, lifestyle-focused',
@@ -137,11 +180,46 @@ export class AIContentGenerator {
       educational: 'informative, clear, structured'
     };
 
+    // Build persona instructions if available
+    let personaInstructions = '';
+    if (persona) {
+      const vocabularyGuides: Record<string, string> = {
+        simple: 'Use simple, everyday language. Short sentences. Easy to understand.',
+        standard: 'Use standard vocabulary. Mix of simple and moderate complexity.',
+        technical: 'Use industry-specific terminology. Technical but accessible.',
+        sophisticated: 'Use sophisticated vocabulary. Eloquent and refined language.',
+      };
+
+      const emotionGuides: Record<string, string> = {
+        neutral: 'Maintain a balanced, objective emotional tone.',
+        friendly: 'Be warm, approachable, and personable.',
+        confident: 'Project authority and self-assurance.',
+        inspiring: 'Be uplifting and motivational.',
+      };
+
+      personaInstructions = `
+## PERSONA VOICE PROFILE: "${persona.name}"
+${persona.description ? `Brand Description: ${persona.description}` : ''}
+
+Voice Characteristics (MUST FOLLOW):
+- Primary Tone: ${persona.tone}
+- Writing Style: ${persona.style}
+- Vocabulary Level: ${vocabularyGuides[persona.vocabulary] || persona.vocabulary}
+- Emotional Register: ${emotionGuides[persona.emotion] || persona.emotion}
+
+IMPORTANT: Match this persona's unique voice exactly. The content should sound like it came from this specific brand/person, not generic AI.
+`;
+    }
+
+    // Determine effective tone (persona overrides request if available)
+    const effectiveTone = persona?.tone || request.tone;
+
     return `
+${personaInstructions}
 Generate a ${request.type} for ${request.platform}.
 
 Platform Style: ${platformGuides[request.platform]}
-Tone: ${request.tone ? toneGuides[request.tone] : 'balanced'}
+Tone: ${effectiveTone ? toneGuides[effectiveTone as keyof typeof toneGuides] || effectiveTone : 'balanced'}
 Topic: ${request.topic || 'trending content'}
 Target Audience: ${request.targetAudience || 'general audience'}
 Length: ${request.length || 'medium'}
@@ -153,6 +231,7 @@ Requirements:
 - Optimize for viral potential
 - Make it highly engaging
 ${request.keywords?.length ? `- Include keywords: ${request.keywords.join(', ')}` : ''}
+${persona ? '- CRITICAL: Match the persona voice profile exactly' : ''}
 
 Generate content that will maximize engagement and shares.
     `.trim();

@@ -15,6 +15,9 @@
 
 import { prisma } from '@/lib/prisma';
 import { logger } from '@/lib/logger';
+import { nlpAnalyzer, type NLPAnalysisResult } from '@/lib/ai/nlp-analyzer';
+import { embeddingService } from '@/lib/ai/embedding-service';
+import * as crypto from 'crypto';
 
 // ============================================================================
 // TYPES
@@ -149,9 +152,9 @@ export class PersonaTrainingPipeline {
         data: { status: 'training' },
       });
 
-      // Phase 2: Extract characteristics from each source
+      // Phase 2: Extract characteristics from each source and store training data
       this.updateProgress('extracting', 10, 'Processing training sources...');
-      const extractedData = await this.extractFromSources(sources);
+      const extractedData = await this.extractFromSources(sources, personaId);
 
       // Phase 3: Analyze and aggregate patterns
       this.updateProgress('analyzing', 50, 'Analyzing patterns...');
@@ -192,13 +195,18 @@ export class PersonaTrainingPipeline {
   // EXTRACTION
   // ============================================================================
 
-  private async extractFromSources(sources: TrainingSource[]): Promise<ExtractedCharacteristics[]> {
+  private async extractFromSources(sources: TrainingSource[], personaId: string): Promise<ExtractedCharacteristics[]> {
     const results: ExtractedCharacteristics[] = [];
 
     for (let i = 0; i < sources.length; i++) {
+      const source = sources[i];
       try {
-        const extracted = await this.extractFromSingleSource(sources[i]);
+        const extracted = await this.extractFromSingleSource(source);
         results.push(extracted);
+
+        // Store training data in database
+        await this.storeTrainingData(personaId, source, extracted);
+
         this.progress.sourcesProcessed = i + 1;
         this.updateProgress(
           'extracting',
@@ -207,16 +215,154 @@ export class PersonaTrainingPipeline {
         );
       } catch (error) {
         this.progress.errors.push(`Failed to process source ${i + 1}: ${error}`);
-        logger.warn('Failed to extract from source', { sourceId: sources[i].id, error });
+        logger.warn('Failed to extract from source', { sourceId: source.id, error });
       }
     }
 
     return results;
   }
 
+  /**
+   * Store training data with embeddings in database
+   */
+  private async storeTrainingData(
+    personaId: string,
+    source: TrainingSource,
+    characteristics: ExtractedCharacteristics
+  ): Promise<void> {
+    try {
+      // Generate content hash for deduplication
+      const contentHash = crypto
+        .createHash('sha256')
+        .update(source.content)
+        .digest('hex')
+        .substring(0, 32);
+
+      // Extract topics using NLP
+      const topics = await nlpAnalyzer.extractTopics(source.content).catch(() => []);
+
+      // Analyze sentiment
+      const sentiment = await nlpAnalyzer.analyzeSentiment(source.content).catch(() => null);
+
+      // Generate embedding for semantic search (optional, may fail without OPENAI_API_KEY)
+      let embedding: number[] | null = null;
+      try {
+        const embeddingResult = await embeddingService.embed(source.content);
+        embedding = embeddingResult.embedding;
+      } catch (embError) {
+        logger.debug('Embedding generation skipped (no API key or error)', { embError });
+      }
+
+      // Upsert training data (cast objects to JSON for Prisma)
+      await prisma.personaTrainingData.upsert({
+        where: {
+          personaId_contentHash: {
+            personaId,
+            contentHash,
+          },
+        },
+        update: {
+          extractedTone: characteristics.tone as unknown as object,
+          extractedVocabulary: characteristics.vocabulary as unknown as object,
+          extractedPatterns: characteristics.patterns as unknown as object,
+          aiAnalysis: characteristics as unknown as object,
+          topics,
+          sentiment: sentiment?.overall ?? undefined,
+          embedding: embedding ? (embedding as unknown as object) : undefined,
+          processedAt: new Date(),
+          confidence: characteristics.confidence,
+          updatedAt: new Date(),
+        },
+        create: {
+          personaId,
+          sourceType: source.type,
+          sourceUrl: source.metadata?.url ?? undefined,
+          platform: source.metadata?.platform ?? undefined,
+          content: source.content,
+          contentHash,
+          extractedTone: characteristics.tone as unknown as object,
+          extractedVocabulary: characteristics.vocabulary as unknown as object,
+          extractedPatterns: characteristics.patterns as unknown as object,
+          aiAnalysis: characteristics as unknown as object,
+          topics,
+          sentiment: sentiment?.overall ?? undefined,
+          embedding: embedding ? (embedding as unknown as object) : undefined,
+          engagement: source.metadata?.engagement ?? undefined,
+          processedAt: new Date(),
+          confidence: characteristics.confidence,
+        },
+      });
+
+      logger.debug('Training data stored', { personaId, contentHash });
+    } catch (error) {
+      // Don't fail the training if storage fails
+      logger.warn('Failed to store training data', { personaId, error });
+    }
+  }
+
   private async extractFromSingleSource(source: TrainingSource): Promise<ExtractedCharacteristics> {
     const content = source.content;
 
+    // Try AI-powered analysis first
+    try {
+      const aiAnalysis = await nlpAnalyzer.analyze(content);
+
+      // Map AI analysis to our ExtractedCharacteristics format
+      return this.mapNLPToCharacteristics(aiAnalysis);
+    } catch (error) {
+      logger.warn('AI analysis failed, falling back to rule-based', { error, sourceId: source.id });
+
+      // Fallback to rule-based analysis
+      return this.extractWithRules(content);
+    }
+  }
+
+  /**
+   * Map NLP analysis result to ExtractedCharacteristics
+   */
+  private mapNLPToCharacteristics(analysis: NLPAnalysisResult): ExtractedCharacteristics {
+    return {
+      tone: {
+        primary: analysis.tone.primary,
+        secondary: analysis.tone.secondary,
+        avoided: [],
+        formality: analysis.tone.formality,
+        energy: analysis.tone.energy,
+        warmth: analysis.tone.warmth,
+        humor: analysis.tone.humor,
+      },
+      vocabulary: {
+        complexity: analysis.vocabulary.complexity,
+        averageWordLength: 5, // Default, can be calculated
+        uniqueWordsRatio: 0.5,
+        preferredWords: analysis.vocabulary.preferredWords,
+        bannedWords: [],
+        jargonLevel: analysis.vocabulary.jargonLevel,
+      },
+      structure: {
+        averageSentenceLength: analysis.structure.averageSentenceLength,
+        paragraphLength: 3,
+        usesLists: analysis.structure.usesLists,
+        usesQuestions: analysis.structure.usesQuestions,
+        usesCTA: analysis.structure.usesCTA,
+        emojiUsage: analysis.structure.emojiUsage,
+        hashtagUsage: analysis.structure.hashtagUsage,
+      },
+      patterns: {
+        hookPatterns: analysis.patterns.hookPatterns,
+        closingPatterns: analysis.patterns.closingPatterns,
+        transitionPhrases: analysis.patterns.transitionPhrases,
+        callToActions: analysis.patterns.callToActions,
+        signatureElements: analysis.patterns.signatureElements,
+      },
+      confidence: analysis.confidence,
+    };
+  }
+
+  /**
+   * Rule-based extraction fallback
+   */
+  private extractWithRules(content: string): ExtractedCharacteristics {
     // Analyze tone
     const tone = this.analyzeTone(content);
 
