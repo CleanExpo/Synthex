@@ -6,6 +6,7 @@
  * ENVIRONMENT VARIABLES REQUIRED:
  * - DATABASE_URL: PostgreSQL connection (CRITICAL)
  * - FIELD_ENCRYPTION_KEY: 32-byte hex key for token encryption (CRITICAL)
+ * - JWT_SECRET: For validating auth tokens (CRITICAL)
  *
  * FAILURE MODE: Returns error response with details
  *
@@ -13,11 +14,27 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
-import { getSupportedPlatforms, getOAuthProvider } from '@/lib/oauth';
+import jwt from 'jsonwebtoken';
+import { z } from 'zod';
+import { getSupportedPlatforms, getOAuthProvider, isSupportedPlatform } from '@/lib/oauth';
+import type { OAuthPlatform } from '@/lib/oauth/types';
 import { logger } from '@/lib/logger';
 import { prisma } from '@/lib/prisma';
 import { decryptField, encryptField } from '@/lib/security/field-encryption';
+import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
+import { auditLogger } from '@/lib/security/audit-logger';
+
+// Lazy getter to avoid module load crash
+function getJWTSecret(): string {
+  const secret = process.env.JWT_SECRET;
+  if (!secret) throw new Error('JWT_SECRET required');
+  return secret;
+}
+
+// Zod schema for POST body
+const RefreshRequestSchema = z.object({
+  platform: z.string().min(1, 'Platform is required'),
+});
 
 // ============================================================================
 // TYPES
@@ -44,14 +61,39 @@ interface ConnectionStatus {
  */
 export async function GET(request: NextRequest) {
   try {
-    // Get user ID from session (simplified)
-    const cookieStore = await cookies();
-    const sessionCookie = cookieStore.get('session');
-    const userId = sessionCookie?.value;
+    // Security check
+    const security = await APISecurityChecker.check(
+      request,
+      DEFAULT_POLICIES.AUTHENTICATED_READ
+    );
 
-    if (!userId) {
+    if (!security.allowed) {
+      return APISecurityChecker.createSecureResponse(
+        { error: security.error },
+        403
+      );
+    }
+
+    // Get user ID from JWT token
+    const token =
+      request.cookies.get('auth-token')?.value ||
+      request.headers.get('Authorization')?.replace('Bearer ', '');
+
+    if (!token) {
       return NextResponse.json(
-        { error: 'Unauthorized' },
+        { error: 'Authentication required' },
+        { status: 401 }
+      );
+    }
+
+    let userId: string;
+    try {
+      const decoded = jwt.verify(token, getJWTSecret()) as { sub?: string; userId?: string; id?: string };
+      userId = decoded.sub || decoded.userId || decoded.id || '';
+      if (!userId) throw new Error('No user ID in token');
+    } catch {
+      return NextResponse.json(
+        { error: 'Invalid authentication token' },
         { status: 401 }
       );
     }
@@ -137,16 +179,63 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   try {
-    const { platform } = await request.json();
+    // Security check
+    const security = await APISecurityChecker.check(
+      request,
+      DEFAULT_POLICIES.AUTHENTICATED_WRITE
+    );
 
-    // Get user ID from session (simplified)
-    const cookieStore = await cookies();
-    const sessionCookie = cookieStore.get('session');
-    const userId = sessionCookie?.value;
+    if (!security.allowed) {
+      return APISecurityChecker.createSecureResponse(
+        { error: security.error },
+        403
+      );
+    }
 
-    if (!userId) {
+    // Validate input with Zod
+    const body = await request.json();
+    const parseResult = RefreshRequestSchema.safeParse(body);
+
+    if (!parseResult.success) {
       return NextResponse.json(
-        { error: 'Unauthorized' },
+        { error: 'Invalid request', details: parseResult.error.flatten() },
+        { status: 400 }
+      );
+    }
+
+    const { platform } = parseResult.data;
+
+    // Validate platform is a supported OAuth platform
+    if (!isSupportedPlatform(platform)) {
+      return NextResponse.json(
+        { error: `Unsupported platform: ${platform}` },
+        { status: 400 }
+      );
+    }
+
+    // Now platform is typed as OAuthPlatform
+    const validPlatform: OAuthPlatform = platform;
+
+    // Get user ID from JWT token
+    const token =
+      request.cookies.get('auth-token')?.value ||
+      request.headers.get('Authorization')?.replace('Bearer ', '');
+
+    if (!token) {
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      );
+    }
+
+    let userId: string;
+    try {
+      const decoded = jwt.verify(token, getJWTSecret()) as { sub?: string; userId?: string; id?: string };
+      userId = decoded.sub || decoded.userId || decoded.id || '';
+      if (!userId) throw new Error('No user ID in token');
+    } catch {
+      return NextResponse.json(
+        { error: 'Invalid authentication token' },
         { status: 401 }
       );
     }
@@ -184,7 +273,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Refresh the tokens
-    const provider = getOAuthProvider(platform);
+    const provider = getOAuthProvider(validPlatform);
     const newTokens = await provider.refreshAccessToken(decryptedRefreshToken);
 
     // Encrypt and update connection in database (accessToken is required)
@@ -202,6 +291,18 @@ export async function POST(request: NextRequest) {
 
     logger.info('Tokens refreshed', { platform, userId });
 
+    // Audit log the refresh
+    await auditLogger.log({
+      userId,
+      action: 'auth.tokens_refreshed',
+      resource: 'platform_connection',
+      resourceId: connection.id,
+      category: 'auth',
+      severity: 'medium',
+      outcome: 'success',
+      details: { platform },
+    });
+
     return NextResponse.json({
       success: true,
       expiresAt: newTokens.expiresAt,
@@ -215,3 +316,6 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
+// Node.js runtime required for Prisma
+export const runtime = 'nodejs';

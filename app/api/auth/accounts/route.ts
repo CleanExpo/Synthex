@@ -14,6 +14,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import jwt from 'jsonwebtoken';
 import { accountService } from '@/lib/auth/account-service';
+import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
+import { auditLogger } from '@/lib/security/audit-logger';
 
 // Lazy getter to avoid module load crash
 function getJWTSecret(): string {
@@ -24,6 +26,19 @@ function getJWTSecret(): string {
 
 export async function GET(request: NextRequest) {
   try {
+    // Security check
+    const security = await APISecurityChecker.check(
+      request,
+      DEFAULT_POLICIES.AUTHENTICATED_READ
+    );
+
+    if (!security.allowed) {
+      return APISecurityChecker.createSecureResponse(
+        { error: security.error },
+        403
+      );
+    }
+
     // Get and validate auth token
     const token =
       request.cookies.get('auth-token')?.value ||
@@ -65,6 +80,18 @@ export async function GET(request: NextRequest) {
         };
       })
     );
+
+    // Audit log the successful retrieval
+    await auditLogger.log({
+      userId,
+      action: 'auth.accounts_retrieved',
+      resource: 'accounts',
+      resourceId: userId,
+      category: 'auth',
+      severity: 'low',
+      outcome: 'success',
+      details: { accountCount: accounts.length },
+    });
 
     return NextResponse.json({
       accounts: accountsWithUnlinkStatus,
