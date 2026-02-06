@@ -466,7 +466,7 @@ export async function GET(request: NextRequest) {
       action: 'analytics.export',
       resource: 'analytics',
       resourceId: user.id,
-      category: 'analytics',
+      category: 'api',
       severity: 'low',
       outcome: 'success',
       details: {
@@ -485,7 +485,12 @@ export async function GET(request: NextRequest) {
     });
 
     // Return file download
-    return new NextResponse(content, {
+    // For Uint8Array (PDF), convert to Buffer; for strings, use directly
+    const body = content instanceof Uint8Array
+      ? Buffer.from(content)
+      : content;
+
+    return new NextResponse(body, {
       status: 200,
       headers: {
         'Content-Type': contentType,
@@ -553,7 +558,7 @@ export async function POST(request: NextRequest) {
         action: 'analytics.export_scheduled',
         resource: 'analytics',
         resourceId: user.id,
-        category: 'analytics',
+        category: 'api',
         severity: 'low',
         outcome: 'success',
         details: {
@@ -581,7 +586,7 @@ export async function POST(request: NextRequest) {
       action: 'analytics.export_requested',
       resource: 'analytics',
       resourceId: user.id,
-      category: 'analytics',
+      category: 'api',
       severity: 'low',
       outcome: 'success',
       details: { format, platforms, postCount: data.posts.length },

@@ -306,7 +306,7 @@ export async function GET(request: NextRequest) {
       action: 'analytics.performance_viewed',
       resource: 'analytics',
       resourceId: userId,
-      category: 'analytics',
+      category: 'api',
       severity: 'low',
       outcome: 'success',
       details: { period, platform: platform || 'all' },
