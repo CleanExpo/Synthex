@@ -14,9 +14,11 @@ import './globals.css';
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
-const inter = Inter({ 
+const inter = Inter({
   subsets: ['latin'],
   variable: '--font-inter',
+  display: 'swap',
+  preload: true,
 });
 
 export const metadata: Metadata = {
@@ -66,6 +68,12 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={inter.variable} suppressHydrationWarning>
+      <head>
+        {/* Preload critical resources */}
+        <link rel="preload" href="/grid.svg" as="image" type="image/svg+xml" />
+        <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+      </head>
       <body className="min-h-screen bg-background font-sans antialiased">
         {/* Skip to main content link for accessibility */}
         <a

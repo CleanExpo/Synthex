@@ -23,8 +23,16 @@ import {
   YouTubeIcon,
   PlatformCard,
 } from '@/components/icons/platform-icons';
-import { HowItWorks } from '@/components/landing/how-it-works';
-import { Testimonials } from '@/components/landing/testimonials';
+// Lazy load below-fold components for better initial load performance
+const HowItWorks = dynamic(() => import('@/components/landing/how-it-works').then(mod => ({ default: mod.HowItWorks })), {
+  ssr: true,
+  loading: () => <div className="py-20 lg:py-32 px-6" aria-label="Loading how it works section" />
+});
+
+const Testimonials = dynamic(() => import('@/components/landing/testimonials').then(mod => ({ default: mod.Testimonials })), {
+  ssr: true,
+  loading: () => <div className="py-20 lg:py-32 px-6" aria-label="Loading testimonials section" />
+});
 
 // Premium 3D Fallback Component
 const Premium3DFallback = ({ height = "500px", label = "3D Visualization" }: { height?: string; label?: string }) => (
