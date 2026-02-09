@@ -610,6 +610,123 @@ model ReportDelivery {
 }
 
 // ==========================================
+// Sentiment Analysis - Content & Engagement Optimization
+// ==========================================
+
+model SentimentAnalysis {
+  id             String    @id @default(cuid())
+  userId         String
+  contentType    String    // 'post', 'comment', 'campaign', 'text'
+  contentId      String?   // Reference to content being analyzed
+  text           String    @db.Text // The analyzed text
+
+  // Sentiment scores
+  sentiment      String    // 'positive', 'neutral', 'negative', 'mixed'
+  score          Float     // -100 to 100
+  confidence     Float     // 0 to 1
+
+  // Detailed analysis
+  emotions       Json?     // Array of { emotion, intensity }
+  toneIndicators Json?     // Array of tone indicators
+  keyPhrases     String[]  // Key phrases extracted
+
+  // Engagement prediction
+  predictedEngagement Json? // { likes, comments, shares, engagementRate }
+  actualEngagement    Json? // Populated after post goes live
+  predictionAccuracy  Float? // How accurate was the prediction
+
+  // Platform context
+  platform       String?   // twitter, instagram, linkedin, etc.
+
+  // Metadata
+  analyzedAt     DateTime  @default(now())
+  model          String?   // AI model used for analysis
+
+  @@index([userId])
+  @@index([contentType, contentId])
+  @@index([sentiment])
+  @@index([analyzedAt])
+  @@map("sentiment_analyses")
+}
+
+model SentimentTrend {
+  id             String    @id @default(cuid())
+  userId         String
+  organizationId String?
+  platform       String?   // null = all platforms
+  date           DateTime  @db.Date
+
+  // Aggregated sentiment
+  avgScore       Float     // Average sentiment score for the day
+  positiveCount  Int       @default(0)
+  neutralCount   Int       @default(0)
+  negativeCount  Int       @default(0)
+  mixedCount     Int       @default(0)
+  totalAnalyzed  Int       @default(0)
+
+  // Emotion distribution
+  emotionCounts  Json?     // { joy: 10, anger: 2, sadness: 1, ... }
+
+  // Engagement correlation
+  avgEngagement  Float?    // Average engagement rate for content with this sentiment
+  topPerforming  String?   // Sentiment type that performed best
+
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@unique([userId, platform, date])
+  @@index([userId, date])
+  @@index([organizationId, date])
+  @@map("sentiment_trends")
+}
+
+model EngagementPrediction {
+  id             String    @id @default(cuid())
+  userId         String
+  contentType    String    // 'post', 'campaign'
+  contentId      String?
+
+  // Input features
+  sentimentScore Float
+  sentiment      String
+  platform       String
+  contentLength  Int
+  hasMedia       Boolean   @default(false)
+  hasHashtags    Boolean   @default(false)
+  hasMentions    Boolean   @default(false)
+  postHour       Int?      // Hour of day (0-23)
+  postDayOfWeek  Int?      // Day of week (0-6)
+
+  // Predictions
+  predictedLikes     Int
+  predictedComments  Int
+  predictedShares    Int
+  predictedReach     Int?
+  predictedEngRate   Float   // Engagement rate
+  confidenceLevel    Float   // 0 to 1
+
+  // Actual results (populated after publishing)
+  actualLikes        Int?
+  actualComments     Int?
+  actualShares       Int?
+  actualReach        Int?
+  actualEngRate      Float?
+
+  // Accuracy tracking
+  accuracy           Float?  // Overall prediction accuracy
+
+  // Metadata
+  predictedAt    DateTime  @default(now())
+  publishedAt    DateTime?
+  resultsAt      DateTime?
+
+  @@index([userId])
+  @@index([platform])
+  @@index([predictedAt])
+  @@map("engagement_predictions")
+}
+
+// ==========================================
 // Quote Module - Content Quotes for Social Media
 // @task UNI-418 - Quote Module Integration Tests
 // ==========================================
@@ -948,6 +1065,11 @@ model ContentComment {
 
   // Author
   authorId       String
+
+  // Sentiment analysis
+  sentiment      String?  // 'positive', 'neutral', 'negative', 'mixed'
+  sentimentScore Float?   // -100 to 100
+  emotions       Json?    // Array of detected emotions
 
   // Status
   isResolved     Boolean  @default(false)
