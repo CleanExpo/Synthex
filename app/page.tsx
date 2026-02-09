@@ -57,18 +57,18 @@ const Premium3DFallback = ({ height = "500px", label = "3D Visualization" }: { h
   </div>
 );
 
-// Dynamic import 3D components to avoid SSR issues
-const SocialNetworkOrb = dynamic(() => import('@/components/3d/SocialNetworkOrb'), {
+// Dynamic import visual components (SVG-based for reliability)
+const SocialNetworkOrb = dynamic(() => import('@/components/visuals/SocialNetworkSVG'), {
   ssr: false,
   loading: () => <Premium3DFallback height="500px" label="Social Network Visualization" />
 });
 
-const FloatingPostCards = dynamic(() => import('@/components/3d/FloatingPostCard'), {
+const FloatingPostCards = dynamic(() => import('@/components/visuals/FloatingPostsSVG'), {
   ssr: false,
   loading: () => <Premium3DFallback height="600px" label="Interactive Post Gallery" />
 });
 
-const ActivityStream3D = dynamic(() => import('@/components/3d/ActivityStream3D'), {
+const ActivityStream3D = dynamic(() => import('@/components/visuals/ActivityStreamSVG'), {
   ssr: false,
   loading: () => <Premium3DFallback height="500px" label="Real-Time Activity Stream" />
 });
