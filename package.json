@@ -257,8 +257,7 @@
     "turbo": "^2.8.1"
   },
   "engines": {
-    "node": "22.x",
-    "npm": ">=10 <12"
+    "node": ">=18"
   },
   "exports": {
     ".": {
@@ -275,9 +274,6 @@
   },
   "files": [
     "dist"
-  ],
-  "workspaces": [
-    "packages/*"
   ],
   "eslintConfig": {
     "extends": "next/core-web-vitals",
