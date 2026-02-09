@@ -8,47 +8,49 @@
  * - /api/analytics/reports/scheduled
  */
 
+import { describe, it, expect, beforeEach, vi } from 'vitest';
+
 // Mock dependencies before any imports
 const mockPrisma = {
   post: {
-    findMany: jest.fn(),
+    findMany: vi.fn(),
   },
   report: {
-    create: jest.fn(),
-    findMany: jest.fn(),
-    findFirst: jest.fn(),
-    update: jest.fn(),
-    count: jest.fn(),
+    create: vi.fn(),
+    findMany: vi.fn(),
+    findFirst: vi.fn(),
+    update: vi.fn(),
+    count: vi.fn(),
   },
   campaign: {
-    findMany: jest.fn(),
+    findMany: vi.fn(),
   },
 };
 
 const mockSecurityChecker = {
-  check: jest.fn().mockResolvedValue({ allowed: true }),
-  createSecureResponse: jest.fn((body, status) => {
+  check: vi.fn().mockResolvedValue({ allowed: true }),
+  createSecureResponse: vi.fn((body, status) => {
     const response = new Response(JSON.stringify(body), { status });
     return response;
   }),
 };
 
 const mockAuditLogger = {
-  log: jest.fn().mockResolvedValue(undefined),
+  log: vi.fn().mockResolvedValue(undefined),
 };
 
 const mockLogger = {
-  info: jest.fn(),
-  error: jest.fn(),
-  warn: jest.fn(),
+  info: vi.fn(),
+  error: vi.fn(),
+  warn: vi.fn(),
 };
 
-jest.mock('@/lib/prisma', () => ({
+vi.mock('@/lib/prisma', () => ({
   __esModule: true,
   default: mockPrisma,
 }));
 
-jest.mock('@/lib/security/api-security-checker', () => ({
+vi.mock('@/lib/security/api-security-checker', () => ({
   APISecurityChecker: mockSecurityChecker,
   DEFAULT_POLICIES: {
     AUTHENTICATED_READ: {},
@@ -56,50 +58,50 @@ jest.mock('@/lib/security/api-security-checker', () => ({
   },
 }));
 
-jest.mock('@/lib/security/audit-logger', () => ({
+vi.mock('@/lib/security/audit-logger', () => ({
   auditLogger: mockAuditLogger,
 }));
 
-jest.mock('@/lib/logger', () => ({
+vi.mock('@/lib/logger', () => ({
   logger: mockLogger,
 }));
 
-jest.mock('jsonwebtoken', () => ({
-  verify: jest.fn().mockReturnValue({ sub: 'test-user-id', email: 'test@example.com' }),
+vi.mock('jsonwebtoken', () => ({
+  verify: vi.fn().mockReturnValue({ sub: 'test-user-id', email: 'test@example.com' }),
 }));
 
 // Mock jspdf
-jest.mock('jspdf', () => ({
-  jsPDF: jest.fn().mockImplementation(() => ({
-    setFontSize: jest.fn(),
-    setTextColor: jest.fn(),
-    text: jest.fn(),
-    addPage: jest.fn(),
-    setPage: jest.fn(),
-    getNumberOfPages: jest.fn().mockReturnValue(1),
+vi.mock('jspdf', () => ({
+  jsPDF: vi.fn().mockImplementation(() => ({
+    setFontSize: vi.fn(),
+    setTextColor: vi.fn(),
+    text: vi.fn(),
+    addPage: vi.fn(),
+    setPage: vi.fn(),
+    getNumberOfPages: vi.fn().mockReturnValue(1),
     internal: {
       pageSize: {
-        getWidth: jest.fn().mockReturnValue(210),
-        getHeight: jest.fn().mockReturnValue(297),
+        getWidth: vi.fn().mockReturnValue(210),
+        getHeight: vi.fn().mockReturnValue(297),
       },
     },
-    output: jest.fn().mockReturnValue(new ArrayBuffer(100)),
+    output: vi.fn().mockReturnValue(new ArrayBuffer(100)),
     lastAutoTable: { finalY: 100 },
   })),
 }));
 
-jest.mock('jspdf-autotable', () => jest.fn());
+vi.mock('jspdf-autotable', () => vi.fn());
 
 // Mock ResponseOptimizer
-jest.mock('@/lib/api/response-optimizer', () => ({
+vi.mock('@/lib/api/response-optimizer', () => ({
   ResponseOptimizer: {
-    createResponse: jest.fn((data, options) => {
+    createResponse: vi.fn((data, options) => {
       return new Response(JSON.stringify(data), {
         status: options?.status || 200,
         headers: { 'Content-Type': 'application/json' },
       });
     }),
-    createErrorResponse: jest.fn((message, status) => {
+    createErrorResponse: vi.fn((message, status) => {
       return new Response(JSON.stringify({ error: message }), {
         status,
         headers: { 'Content-Type': 'application/json' },
@@ -109,20 +111,20 @@ jest.mock('@/lib/api/response-optimizer', () => ({
 }));
 
 // Mock report builder
-jest.mock('@/src/services/analytics/report-builder', () => ({
-  ReportBuilder: jest.fn().mockImplementation(() => ({
-    type: jest.fn().mockReturnThis(),
-    name: jest.fn().mockReturnThis(),
-    metrics: jest.fn().mockReturnThis(),
-    dimensions: jest.fn().mockReturnThis(),
-    granularity: jest.fn().mockReturnThis(),
-    dateRange: jest.fn().mockReturnThis(),
-    platforms: jest.fn().mockReturnThis(),
-    campaigns: jest.fn().mockReturnThis(),
-    compareWith: jest.fn().mockReturnThis(),
-    limit: jest.fn().mockReturnThis(),
-    sortBy: jest.fn().mockReturnThis(),
-    execute: jest.fn().mockResolvedValue({
+vi.mock('@/src/services/analytics/report-builder', () => ({
+  ReportBuilder: vi.fn().mockImplementation(() => ({
+    type: vi.fn().mockReturnThis(),
+    name: vi.fn().mockReturnThis(),
+    metrics: vi.fn().mockReturnThis(),
+    dimensions: vi.fn().mockReturnThis(),
+    granularity: vi.fn().mockReturnThis(),
+    dateRange: vi.fn().mockReturnThis(),
+    platforms: vi.fn().mockReturnThis(),
+    campaigns: vi.fn().mockReturnThis(),
+    compareWith: vi.fn().mockReturnThis(),
+    limit: vi.fn().mockReturnThis(),
+    sortBy: vi.fn().mockReturnThis(),
+    execute: vi.fn().mockResolvedValue({
       id: 'report-1',
       config: { type: 'overview' },
       metadata: { rowCount: 10, executionTime: 50 },
@@ -130,7 +132,7 @@ jest.mock('@/src/services/analytics/report-builder', () => ({
     }),
   })),
   ReportExporter: {
-    export: jest.fn().mockResolvedValue({
+    export: vi.fn().mockResolvedValue({
       content: 'test content',
       mimeType: 'text/csv',
       filename: 'report.csv',
@@ -172,7 +174,7 @@ function createMockRequest(
 
 describe('Analytics Performance API', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     mockSecurityChecker.check.mockResolvedValue({ allowed: true });
   });
 
@@ -246,7 +248,7 @@ describe('Analytics Performance API', () => {
 
 describe('Analytics Export API', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
     const mockPosts = [
       {
@@ -303,7 +305,7 @@ describe('Analytics Export API', () => {
 
 describe('Analytics Reports API', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('Report Presets', () => {
@@ -336,7 +338,7 @@ describe('Analytics Reports API', () => {
 
 describe('Scheduled Reports API', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('Schedule Validation', () => {
