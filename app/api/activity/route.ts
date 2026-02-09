@@ -6,6 +6,7 @@
  * - Engagement events
  * - Follower changes
  * - Campaign activities
+ * - Real-time updates
  *
  * ENVIRONMENT VARIABLES REQUIRED:
  * - DATABASE_URL: PostgreSQL connection (CRITICAL)
@@ -20,14 +21,44 @@ import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-securit
 // TYPES
 // ============================================================================
 
+const VALID_ACTIVITY_TYPES = [
+  'post_created',
+  'post_published',
+  'post_scheduled',
+  'post_edited',
+  'post_deleted',
+  'engagement_spike',
+  'new_follower',
+  'comment_received',
+  'mention',
+  'team_member_joined',
+  'team_member_action',
+  'system_alert',
+  'campaign_started',
+  'campaign_ended',
+  'milestone_reached',
+  // Legacy types for backward compatibility
+  'post',
+  'engagement',
+  'follower',
+  'campaign',
+  'comment',
+] as const;
+
+type ActivityType = (typeof VALID_ACTIVITY_TYPES)[number];
+
 interface ActivityItem {
   id: string;
-  type: 'post' | 'engagement' | 'follower' | 'campaign' | 'comment';
+  type: ActivityType;
   title: string;
   description: string;
   timestamp: string;
   platform?: string;
+  userId?: string;
+  userName?: string;
+  userAvatar?: string;
   metadata?: Record<string, unknown>;
+  read?: boolean;
 }
 
 // ============================================================================
@@ -90,20 +121,22 @@ export async function GET(request: NextRequest) {
       const analytics = post.analytics as Record<string, number> | null;
       const hasEngagement = analytics && (analytics.likes || analytics.comments || analytics.shares);
 
-      let type: ActivityItem['type'] = 'post';
+      let type: ActivityType = 'post_created';
       let title = 'Draft created';
       let description = `Created a draft for ${post.platform}`;
 
       if (post.status === 'published') {
         if (hasEngagement && (analytics?.likes || 0) > 10) {
-          type = 'engagement';
+          type = 'engagement_spike';
           title = 'Post performing well';
           description = `Your ${post.platform} post got ${analytics?.likes || 0} likes`;
         } else {
+          type = 'post_published';
           title = 'Post published';
           description = `Published to ${post.platform}`;
         }
       } else if (post.status === 'scheduled') {
+        type = 'post_scheduled';
         title = 'Post scheduled';
         description = `Scheduled for ${post.platform}`;
       }
@@ -115,11 +148,13 @@ export async function GET(request: NextRequest) {
         description,
         timestamp: (post.publishedAt || post.createdAt).toISOString(),
         platform: post.platform,
+        userId,
         metadata: {
           postId: post.id,
           campaignName: post.campaign?.name,
           analytics,
         },
+        read: false,
       };
     });
 
@@ -138,7 +173,19 @@ export async function GET(request: NextRequest) {
       .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
       .slice(0, limit);
 
-    return NextResponse.json(allActivities);
+    // Filter by types if specified
+    const typesParam = searchParams.get('types');
+    const filteredActivities = typesParam
+      ? allActivities.filter((a) =>
+          typesParam.split(',').some((t) => a.type.includes(t) || t.includes(a.type))
+        )
+      : allActivities;
+
+    return NextResponse.json({
+      activities: filteredActivities,
+      total: filteredActivities.length,
+      hasMore: filteredActivities.length === limit,
+    });
   } catch (error) {
     console.error('Activity feed error:', error);
     return NextResponse.json(
@@ -163,6 +210,84 @@ function formatAuditAction(action: string): string {
   };
 
   return actionMap[action] || action.replace(/[._]/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+// ============================================================================
+// POST /api/activity
+// Create a new activity entry
+// ============================================================================
+
+export async function POST(request: NextRequest) {
+  try {
+    // Security check - requires authenticated write
+    const security = await APISecurityChecker.check(
+      request,
+      DEFAULT_POLICIES.AUTHENTICATED_WRITE
+    );
+
+    if (!security.allowed) {
+      return APISecurityChecker.createSecureResponse(
+        { error: security.error },
+        401
+      );
+    }
+
+    const body = await request.json();
+    const { type, title, description, platform, metadata, teamId } = body;
+
+    // Validate type
+    if (!VALID_ACTIVITY_TYPES.includes(type)) {
+      return NextResponse.json(
+        { error: 'Invalid activity type' },
+        { status: 400 }
+      );
+    }
+
+    // Create activity entry in audit log
+    const userId = security.context.userId || 'anonymous';
+
+    const activity = await prisma.auditLog.create({
+      data: {
+        userId,
+        action: `activity.${type}`,
+        resource: 'activity',
+        resourceId: `activity-${Date.now()}`,
+        outcome: 'success',
+        category: 'data',
+        details: {
+          type,
+          title,
+          description,
+          platform,
+          teamId,
+          ...metadata,
+        },
+      },
+    });
+
+    const activityItem: ActivityItem = {
+      id: `activity-${activity.id}`,
+      type: type as ActivityType,
+      title,
+      description,
+      timestamp: activity.createdAt.toISOString(),
+      platform,
+      userId,
+      metadata,
+      read: false,
+    };
+
+    return NextResponse.json({
+      activity: activityItem,
+      success: true,
+    });
+  } catch (error) {
+    console.error('Activity create error:', error);
+    return NextResponse.json(
+      { error: 'Failed to create activity' },
+      { status: 500 }
+    );
+  }
 }
 
 // Node.js runtime required for Prisma
