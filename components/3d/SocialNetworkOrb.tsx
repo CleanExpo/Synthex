@@ -1,136 +1,350 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState, useMemo } from 'react';
 import * as THREE from 'three';
-import { Canvas, useFrame } from '@react-three/fiber';
-import { OrbitControls, Sphere, MeshDistortMaterial, Float, Text } from '@react-three/drei';
+import { Canvas, useFrame, extend } from '@react-three/fiber';
+import {
+  OrbitControls,
+  Sphere,
+  MeshDistortMaterial,
+  Float,
+  Text,
+  Stars,
+  Sparkles,
+  Trail,
+  MeshTransmissionMaterial,
+  Environment
+} from '@react-three/drei';
 
-// Animated social network nodes
-function NetworkNode({ position, color, label }: any) {
-  const meshRef = useRef<THREE.Mesh>(null);
-  const [hovered, setHovered] = useState(false);
+// Premium glowing sphere with aura
+function GlowingSphere({ position, color, intensity = 0.5 }: { position: [number, number, number], color: string, intensity?: number }) {
+  return (
+    <mesh position={position}>
+      <sphereGeometry args={[0.8, 32, 32]} />
+      <meshBasicMaterial color={color} transparent opacity={intensity * 0.15} />
+    </mesh>
+  );
+}
+
+// Animated connection with trail effect
+function AnimatedConnection({ start, end, color }: { start: number[], end: number[], color: string }) {
+  const ref = useRef<THREE.Line>(null);
+  const particleRef = useRef<THREE.Mesh>(null);
+  const [progress, setProgress] = useState(0);
 
   useFrame((state) => {
-    if (meshRef.current) {
-      meshRef.current.rotation.x += 0.01;
-      meshRef.current.rotation.y += 0.01;
-      if (hovered) {
-        meshRef.current.scale.x = meshRef.current.scale.y = meshRef.current.scale.z = 1.2;
-      } else {
-        meshRef.current.scale.x = meshRef.current.scale.y = meshRef.current.scale.z = 1;
+    const time = state.clock.getElapsedTime();
+    setProgress((Math.sin(time * 2) + 1) / 2);
+
+    if (particleRef.current) {
+      const t = (Math.sin(time * 3) + 1) / 2;
+      particleRef.current.position.x = start[0] + (end[0] - start[0]) * t;
+      particleRef.current.position.y = start[1] + (end[1] - start[1]) * t;
+      particleRef.current.position.z = start[2] + (end[2] - start[2]) * t;
+    }
+
+    if (ref.current) {
+      const points: THREE.Vector3[] = [];
+      for (let i = 0; i <= 30; i++) {
+        const t = i / 30;
+        const x = start[0] + (end[0] - start[0]) * t;
+        const y = start[1] + (end[1] - start[1]) * t + Math.sin(time * 2 + t * 4) * 0.15;
+        const z = start[2] + (end[2] - start[2]) * t;
+        points.push(new THREE.Vector3(x, y, z));
       }
+      (ref.current.geometry as THREE.BufferGeometry).setFromPoints(points);
     }
   });
 
   return (
-    <Float speed={2} rotationIntensity={0.5} floatIntensity={0.5}>
-      <mesh
-        ref={meshRef}
-        position={position}
-        onPointerOver={() => setHovered(true)}
-        onPointerOut={() => setHovered(false)}
-      >
-        <sphereGeometry args={[0.5, 32, 32]} />
-        <MeshDistortMaterial
-          color={color}
-          attach="material"
-          distort={0.3}
-          speed={2}
-          roughness={0.1}
-          metalness={0.8}
-        />
+    <group>
+      <line ref={ref}>
+        <bufferGeometry />
+        <lineBasicMaterial color={color} opacity={0.4} transparent linewidth={2} />
+      </line>
+      {/* Traveling particle */}
+      <mesh ref={particleRef}>
+        <sphereGeometry args={[0.08, 16, 16]} />
+        <meshBasicMaterial color={color} />
       </mesh>
-      {hovered && (
-        <Text
-          position={[position[0], position[1] + 1, position[2]]}
-          fontSize={0.3}
-          color="white"
-          anchorX="center"
-          anchorY="middle"
+      {/* Particle glow */}
+      <mesh ref={particleRef}>
+        <sphereGeometry args={[0.15, 16, 16]} />
+        <meshBasicMaterial color={color} transparent opacity={0.3} />
+      </mesh>
+    </group>
+  );
+}
+
+// Premium network node with multiple layers
+function PremiumNetworkNode({ position, color, label, size = 0.5 }: { position: [number, number, number], color: string, label: string, size?: number }) {
+  const meshRef = useRef<THREE.Mesh>(null);
+  const glowRef = useRef<THREE.Mesh>(null);
+  const [hovered, setHovered] = useState(false);
+
+  useFrame((state) => {
+    const time = state.clock.getElapsedTime();
+    if (meshRef.current) {
+      meshRef.current.rotation.x = time * 0.3;
+      meshRef.current.rotation.y = time * 0.5;
+      const scale = hovered ? 1.3 : 1;
+      meshRef.current.scale.setScalar(scale);
+    }
+    if (glowRef.current) {
+      glowRef.current.scale.setScalar(1 + Math.sin(time * 2) * 0.1);
+    }
+  });
+
+  return (
+    <Float speed={1.5} rotationIntensity={0.3} floatIntensity={0.4}>
+      <group position={position}>
+        {/* Inner core */}
+        <mesh
+          ref={meshRef}
+          onPointerOver={() => setHovered(true)}
+          onPointerOut={() => setHovered(false)}
         >
-          {label}
-        </Text>
-      )}
+          <icosahedronGeometry args={[size, 1]} />
+          <MeshDistortMaterial
+            color={color}
+            distort={0.4}
+            speed={2}
+            roughness={0.1}
+            metalness={0.9}
+            emissive={color}
+            emissiveIntensity={0.3}
+          />
+        </mesh>
+
+        {/* Inner glow layer */}
+        <mesh ref={glowRef}>
+          <sphereGeometry args={[size * 1.3, 32, 32]} />
+          <meshBasicMaterial color={color} transparent opacity={0.15} />
+        </mesh>
+
+        {/* Outer glow */}
+        <mesh>
+          <sphereGeometry args={[size * 1.8, 32, 32]} />
+          <meshBasicMaterial color={color} transparent opacity={0.05} />
+        </mesh>
+
+        {/* Label */}
+        {hovered && (
+          <Text
+            position={[0, size + 0.8, 0]}
+            fontSize={0.25}
+            color="white"
+            anchorX="center"
+            anchorY="middle"
+            outlineWidth={0.02}
+            outlineColor="#000000"
+          >
+            {label}
+          </Text>
+        )}
+      </group>
     </Float>
   );
 }
 
-// Connection lines between nodes
-function ConnectionLine({ start, end }: any) {
-  const ref = useRef<THREE.BufferGeometry>(null);
-  
+// Central hub with pulsing effect
+function CentralHub() {
+  const meshRef = useRef<THREE.Mesh>(null);
+  const ringRef1 = useRef<THREE.Mesh>(null);
+  const ringRef2 = useRef<THREE.Mesh>(null);
+  const ringRef3 = useRef<THREE.Mesh>(null);
+
   useFrame((state) => {
-    if (ref.current) {
-      const time = state.clock.getElapsedTime();
-      const points: THREE.Vector3[] = [];
-      for (let i = 0; i <= 20; i++) {
-        const t = i / 20;
-        const x = start[0] + (end[0] - start[0]) * t;
-        const y = start[1] + (end[1] - start[1]) * t + Math.sin(time * 2 + t * 3) * 0.1;
-        const z = start[2] + (end[2] - start[2]) * t;
-        points.push(new THREE.Vector3(x, y, z));
-      }
-      ref.current.setFromPoints(points);
+    const time = state.clock.getElapsedTime();
+    if (meshRef.current) {
+      meshRef.current.rotation.y = time * 0.2;
+    }
+    if (ringRef1.current) {
+      ringRef1.current.rotation.x = time * 0.5;
+      ringRef1.current.rotation.y = time * 0.3;
+      ringRef1.current.scale.setScalar(1 + Math.sin(time * 2) * 0.05);
+    }
+    if (ringRef2.current) {
+      ringRef2.current.rotation.x = time * 0.3;
+      ringRef2.current.rotation.z = time * 0.5;
+      ringRef2.current.scale.setScalar(1 + Math.sin(time * 2 + 1) * 0.05);
+    }
+    if (ringRef3.current) {
+      ringRef3.current.rotation.y = time * 0.4;
+      ringRef3.current.rotation.z = time * 0.2;
+      ringRef3.current.scale.setScalar(1 + Math.sin(time * 2 + 2) * 0.05);
     }
   });
 
   return (
-    <line>
-      <bufferGeometry ref={ref} />
-      <lineBasicMaterial color="#8b5cf6" opacity={0.3} transparent />
-    </line>
+    <group>
+      {/* Central sphere */}
+      <mesh ref={meshRef}>
+        <icosahedronGeometry args={[0.8, 2]} />
+        <MeshDistortMaterial
+          color="#8b5cf6"
+          distort={0.5}
+          speed={3}
+          roughness={0}
+          metalness={1}
+          emissive="#8b5cf6"
+          emissiveIntensity={0.5}
+        />
+      </mesh>
+
+      {/* Glow layers */}
+      <mesh>
+        <sphereGeometry args={[1.0, 32, 32]} />
+        <meshBasicMaterial color="#8b5cf6" transparent opacity={0.2} />
+      </mesh>
+      <mesh>
+        <sphereGeometry args={[1.3, 32, 32]} />
+        <meshBasicMaterial color="#8b5cf6" transparent opacity={0.1} />
+      </mesh>
+      <mesh>
+        <sphereGeometry args={[1.6, 32, 32]} />
+        <meshBasicMaterial color="#8b5cf6" transparent opacity={0.05} />
+      </mesh>
+
+      {/* Orbital rings */}
+      <mesh ref={ringRef1} rotation={[Math.PI / 2, 0, 0]}>
+        <torusGeometry args={[1.5, 0.02, 16, 100]} />
+        <meshBasicMaterial color="#a78bfa" transparent opacity={0.6} />
+      </mesh>
+      <mesh ref={ringRef2} rotation={[Math.PI / 3, Math.PI / 4, 0]}>
+        <torusGeometry args={[1.8, 0.015, 16, 100]} />
+        <meshBasicMaterial color="#c4b5fd" transparent opacity={0.4} />
+      </mesh>
+      <mesh ref={ringRef3} rotation={[Math.PI / 6, Math.PI / 2, 0]}>
+        <torusGeometry args={[2.1, 0.01, 16, 100]} />
+        <meshBasicMaterial color="#ddd6fe" transparent opacity={0.3} />
+      </mesh>
+
+      {/* SYNTHEX label */}
+      <Text
+        position={[0, 0, 0]}
+        fontSize={0.15}
+        color="white"
+        anchorX="center"
+        anchorY="middle"
+      >
+        S
+      </Text>
+    </group>
   );
 }
 
-// Main 3D Social Network Visualization
-export default function SocialNetworkOrb() {
-  const networks = [
-    { position: [0, 0, 0], color: '#8b5cf6', label: 'SYNTHEX Hub' },
-    { position: [3, 1, -1], color: '#1DA1F2', label: 'Twitter/X' },
-    { position: [-3, -1, 1], color: '#0077B5', label: 'LinkedIn' },
-    { position: [2, -2, 2], color: '#E4405F', label: 'Instagram' },
-    { position: [-2, 2, -2], color: '#000000', label: 'TikTok' },
-    { position: [0, 3, 1], color: '#1877F2', label: 'Facebook' },
-    { position: [1, -3, -1], color: '#FF0000', label: 'YouTube' },
-  ];
+// Floating particles background
+function ParticleField() {
+  const count = 200;
+  const positions = useMemo(() => {
+    const pos = new Float32Array(count * 3);
+    for (let i = 0; i < count; i++) {
+      pos[i * 3] = (Math.random() - 0.5) * 30;
+      pos[i * 3 + 1] = (Math.random() - 0.5) * 30;
+      pos[i * 3 + 2] = (Math.random() - 0.5) * 30;
+    }
+    return pos;
+  }, []);
 
-  const connections = [
-    [networks[0].position, networks[1].position],
-    [networks[0].position, networks[2].position],
-    [networks[0].position, networks[3].position],
-    [networks[0].position, networks[4].position],
-    [networks[0].position, networks[5].position],
-    [networks[0].position, networks[6].position],
-  ];
+  const pointsRef = useRef<THREE.Points>(null);
+
+  useFrame((state) => {
+    if (pointsRef.current) {
+      pointsRef.current.rotation.y = state.clock.getElapsedTime() * 0.02;
+    }
+  });
 
   return (
-    <div className="w-full h-[500px] relative">
-      <Canvas camera={{ position: [0, 0, 10], fov: 60 }}>
-        <ambientLight intensity={0.5} />
-        <pointLight position={[10, 10, 10]} intensity={1} />
-        <pointLight position={[-10, -10, -10]} intensity={0.5} />
-        
-        {/* Animated background particles */}
-        <mesh>
-          <sphereGeometry args={[15, 32, 32]} />
-          <meshBasicMaterial color="#000000" side={THREE.BackSide} />
-        </mesh>
-        
+    <points ref={pointsRef}>
+      <bufferGeometry>
+        <bufferAttribute
+          attach="attributes-position"
+          count={count}
+          array={positions}
+          itemSize={3}
+        />
+      </bufferGeometry>
+      <pointsMaterial
+        size={0.05}
+        color="#8b5cf6"
+        transparent
+        opacity={0.6}
+        sizeAttenuation
+      />
+    </points>
+  );
+}
+
+export default function SocialNetworkOrb() {
+  const networks = [
+    { position: [3.5, 1.5, -1] as [number, number, number], color: '#1DA1F2', label: 'Twitter/X', size: 0.45 },
+    { position: [-3.5, -1, 1.5] as [number, number, number], color: '#0077B5', label: 'LinkedIn', size: 0.45 },
+    { position: [2.5, -2.5, 2.5] as [number, number, number], color: '#E4405F', label: 'Instagram', size: 0.45 },
+    { position: [-2.5, 2.5, -2] as [number, number, number], color: '#ffffff', label: 'TikTok', size: 0.45 },
+    { position: [0, 3.5, 1.5] as [number, number, number], color: '#1877F2', label: 'Facebook', size: 0.45 },
+    { position: [1.5, -3.5, -1.5] as [number, number, number], color: '#FF0000', label: 'YouTube', size: 0.45 },
+  ];
+
+  const connectionColor = '#8b5cf6';
+
+  return (
+    <div className="w-full h-[500px] relative rounded-2xl overflow-hidden">
+      <Canvas camera={{ position: [0, 0, 12], fov: 50 }}>
+        {/* Premium gradient background */}
+        <color attach="background" args={['#030014']} />
+
+        {/* Starfield */}
+        <Stars radius={50} depth={50} count={2000} factor={3} saturation={0} fade speed={0.5} />
+
+        {/* Sparkles */}
+        <Sparkles count={100} scale={15} size={1.5} speed={0.3} color="#8b5cf6" />
+
+        {/* Lighting */}
+        <ambientLight intensity={0.3} />
+        <pointLight position={[10, 10, 10]} intensity={1.5} color="#8b5cf6" />
+        <pointLight position={[-10, -10, -10]} intensity={0.8} color="#3b82f6" />
+        <pointLight position={[0, 10, 0]} intensity={0.5} color="#d946ef" />
+        <spotLight
+          position={[0, 15, 0]}
+          angle={0.3}
+          penumbra={1}
+          intensity={0.8}
+          color="#8b5cf6"
+        />
+
+        {/* Particle background */}
+        <ParticleField />
+
+        {/* Central hub */}
+        <CentralHub />
+
         {/* Network nodes */}
         {networks.map((network, i) => (
-          <NetworkNode key={i} {...network} />
+          <PremiumNetworkNode key={i} {...network} />
         ))}
-        
-        {/* Connection lines */}
-        {connections.map((conn, i) => (
-          <ConnectionLine key={i} start={conn[0]} end={conn[1]} />
+
+        {/* Connections */}
+        {networks.map((network, i) => (
+          <AnimatedConnection
+            key={`conn-${i}`}
+            start={[0, 0, 0]}
+            end={network.position}
+            color={connectionColor}
+          />
         ))}
-        
-        <OrbitControls enableZoom={false} autoRotate autoRotateSpeed={0.5} />
+
+        <OrbitControls
+          enableZoom={false}
+          autoRotate
+          autoRotateSpeed={0.3}
+          maxPolarAngle={Math.PI / 1.5}
+          minPolarAngle={Math.PI / 3}
+        />
       </Canvas>
-      
-      <div className="absolute bottom-4 left-4 right-4 text-center">
-        <p className="text-white/60 text-sm">
+
+      <div className="absolute bottom-4 left-4 right-4 text-center pointer-events-none">
+        <p className="text-white/60 text-sm backdrop-blur-sm bg-black/20 rounded-full px-4 py-2 inline-block">
           Drag to rotate • All platforms connected through SYNTHEX
         </p>
       </div>

@@ -1,8 +1,8 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useRef, useState, useMemo } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
-import { RoundedBox, Text, Float, Html } from '@react-three/drei';
+import { RoundedBox, Text, Float, Html, Stars, Sparkles } from '@react-three/drei';
 import * as THREE from 'three';
 import { Heart, MessageCircle, Share2, Bookmark } from '@/components/icons';
 
@@ -16,63 +16,127 @@ interface PostData {
   timestamp: string;
   verified: boolean;
   image?: string;
+  gradient: string;
 }
 
-function InteractivePost({ position, rotation, data, delay = 0 }: any) {
-  const meshRef = useRef<THREE.Group>(null);
-  const [hovered, setHovered] = useState(false);
-  const [liked, setLiked] = useState(false);
-  
+// Floating particles background
+function ParticleRing() {
+  const count = 150;
+  const positions = useMemo(() => {
+    const pos = new Float32Array(count * 3);
+    for (let i = 0; i < count; i++) {
+      const angle = (i / count) * Math.PI * 2;
+      const radius = 12 + Math.random() * 5;
+      pos[i * 3] = Math.cos(angle) * radius;
+      pos[i * 3 + 1] = (Math.random() - 0.5) * 10;
+      pos[i * 3 + 2] = Math.sin(angle) * radius;
+    }
+    return pos;
+  }, []);
+
+  const pointsRef = useRef<THREE.Points>(null);
+
   useFrame((state) => {
-    if (meshRef.current) {
-      const time = state.clock.getElapsedTime();
-      // Floating animation
-      meshRef.current.position.y = position[1] + Math.sin(time * 0.5 + delay) * 0.2;
-      // Gentle rotation when not hovered
-      if (!hovered) {
-        meshRef.current.rotation.y = rotation[1] + Math.sin(time * 0.3 + delay) * 0.1;
-      }
+    if (pointsRef.current) {
+      pointsRef.current.rotation.y = state.clock.getElapsedTime() * 0.05;
     }
   });
 
   return (
-    <Float
-      speed={2}
-      rotationIntensity={hovered ? 0 : 0.2}
-      floatIntensity={0.5}
-    >
+    <points ref={pointsRef}>
+      <bufferGeometry>
+        <bufferAttribute
+          attach="attributes-position"
+          count={count}
+          array={positions}
+          itemSize={3}
+        />
+      </bufferGeometry>
+      <pointsMaterial
+        size={0.08}
+        color="#8b5cf6"
+        transparent
+        opacity={0.5}
+        sizeAttenuation
+      />
+    </points>
+  );
+}
+
+function InteractivePost({ position, rotation, data, delay = 0 }: { position: [number, number, number], rotation: [number, number, number], data: PostData, delay: number }) {
+  const meshRef = useRef<THREE.Group>(null);
+  const glowRef = useRef<THREE.Mesh>(null);
+  const [hovered, setHovered] = useState(false);
+  const [liked, setLiked] = useState(false);
+
+  useFrame((state) => {
+    if (meshRef.current) {
+      const time = state.clock.getElapsedTime();
+      meshRef.current.position.y = position[1] + Math.sin(time * 0.5 + delay) * 0.3;
+      if (!hovered) {
+        meshRef.current.rotation.y = rotation[1] + Math.sin(time * 0.3 + delay) * 0.1;
+      }
+    }
+    if (glowRef.current) {
+      const time = state.clock.getElapsedTime();
+      glowRef.current.scale.setScalar(1 + Math.sin(time * 2 + delay) * 0.05);
+    }
+  });
+
+  return (
+    <Float speed={2} rotationIntensity={hovered ? 0 : 0.15} floatIntensity={0.4}>
       <group
         ref={meshRef}
         position={position}
         rotation={rotation}
         onPointerOver={() => setHovered(true)}
         onPointerOut={() => setHovered(false)}
-        scale={hovered ? 1.05 : 1}
+        scale={hovered ? 1.08 : 1}
       >
+        {/* Glow effect behind card */}
+        <mesh ref={glowRef} position={[0, 0, -0.2]}>
+          <planeGeometry args={[4.5, 5.5]} />
+          <meshBasicMaterial
+            color={data.gradient}
+            transparent
+            opacity={hovered ? 0.25 : 0.15}
+          />
+        </mesh>
+
         {/* Card background */}
-        <RoundedBox args={[4, 5, 0.1]} radius={0.1} smoothness={4}>
+        <RoundedBox args={[4, 5, 0.15]} radius={0.15} smoothness={4}>
           <meshPhysicalMaterial
             color="#1a1a2e"
-            roughness={0.1}
-            metalness={0.8}
+            roughness={0.05}
+            metalness={0.9}
             clearcoat={1}
-            clearcoatRoughness={0.2}
+            clearcoatRoughness={0.1}
+            emissive="#1a0a2e"
+            emissiveIntensity={0.1}
           />
         </RoundedBox>
-        
-        {/* Glass overlay effect */}
-        <RoundedBox args={[4.05, 5.05, 0.05]} radius={0.1} position={[0, 0, 0.1]}>
+
+        {/* Gradient border */}
+        <mesh position={[0, 0, 0.08]}>
+          <planeGeometry args={[4.05, 5.05]} />
+          <meshBasicMaterial
+            color={data.gradient}
+            transparent
+            opacity={0.1}
+          />
+        </mesh>
+
+        {/* Glass overlay */}
+        <RoundedBox args={[4.02, 5.02, 0.05]} radius={0.15} position={[0, 0, 0.1]}>
           <meshPhysicalMaterial
             color="#ffffff"
             transparent
-            opacity={0.1}
+            opacity={0.05}
             roughness={0}
             metalness={0.5}
-            transmission={0.9}
-            thickness={0.5}
           />
         </RoundedBox>
-        
+
         {/* HTML Content overlay */}
         <Html
           transform
@@ -82,20 +146,27 @@ function InteractivePost({ position, rotation, data, delay = 0 }: any) {
             width: '350px',
             padding: '20px',
             backgroundColor: 'rgba(26, 26, 46, 0.95)',
-            borderRadius: '12px',
-            backdropFilter: 'blur(10px)',
-            border: '1px solid rgba(139, 92, 246, 0.3)',
+            borderRadius: '16px',
+            backdropFilter: 'blur(20px)',
+            border: `1px solid rgba(139, 92, 246, ${hovered ? 0.5 : 0.2})`,
+            boxShadow: hovered
+              ? '0 0 40px rgba(139, 92, 246, 0.3), 0 20px 40px rgba(0, 0, 0, 0.4)'
+              : '0 10px 30px rgba(0, 0, 0, 0.3)',
             pointerEvents: hovered ? 'auto' : 'none',
+            transition: 'all 0.3s ease',
           }}
         >
           <div className="text-white">
             {/* Post header */}
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center space-x-3">
-                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-500 to-pink-500" />
+                <div
+                  className="w-12 h-12 rounded-full"
+                  style={{ background: `linear-gradient(135deg, ${data.gradient}, #8b5cf6)` }}
+                />
                 <div>
                   <div className="flex items-center space-x-1">
-                    <span className="font-bold">{data.username}</span>
+                    <span className="font-bold text-white">{data.username}</span>
                     {data.verified && (
                       <svg className="w-4 h-4 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
                         <path d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" />
@@ -106,40 +177,45 @@ function InteractivePost({ position, rotation, data, delay = 0 }: any) {
                 </div>
               </div>
             </div>
-            
+
             {/* Post content */}
-            <p className="mb-4 text-sm leading-relaxed">{data.content}</p>
-            
-            {/* Post image if exists */}
+            <p className="mb-4 text-sm leading-relaxed text-gray-100">{data.content}</p>
+
+            {/* Post image placeholder */}
             {data.image && (
-              <div className="mb-4 rounded-lg overflow-hidden">
-                <div className="h-40 bg-gradient-to-br from-purple-600/20 to-pink-600/20" />
+              <div className="mb-4 rounded-xl overflow-hidden">
+                <div
+                  className="h-36"
+                  style={{
+                    background: `linear-gradient(135deg, ${data.gradient}30, #8b5cf630)`,
+                  }}
+                />
               </div>
             )}
-            
+
             {/* Engagement bar */}
-            <div className="flex items-center justify-between pt-3 border-t border-gray-700">
+            <div className="flex items-center justify-between pt-3 border-t border-gray-700/50">
               <button
-                className={`flex items-center space-x-2 transition-colors ${
-                  liked ? 'text-red-500' : 'text-gray-400 hover:text-red-500'
+                className={`flex items-center space-x-2 transition-all duration-300 ${
+                  liked ? 'text-red-500 scale-110' : 'text-gray-400 hover:text-red-500 hover:scale-105'
                 }`}
                 onClick={() => setLiked(!liked)}
               >
                 <Heart className={`w-5 h-5 ${liked ? 'fill-current' : ''}`} />
-                <span className="text-sm">{data.likes}</span>
+                <span className="text-sm font-medium">{data.likes}</span>
               </button>
-              
-              <button className="flex items-center space-x-2 text-gray-400 hover:text-blue-400 transition-colors">
+
+              <button className="flex items-center space-x-2 text-gray-400 hover:text-blue-400 transition-all duration-300 hover:scale-105">
                 <MessageCircle className="w-5 h-5" />
-                <span className="text-sm">{data.comments}</span>
+                <span className="text-sm font-medium">{data.comments}</span>
               </button>
-              
-              <button className="flex items-center space-x-2 text-gray-400 hover:text-green-400 transition-colors">
+
+              <button className="flex items-center space-x-2 text-gray-400 hover:text-green-400 transition-all duration-300 hover:scale-105">
                 <Share2 className="w-5 h-5" />
-                <span className="text-sm">{data.shares}</span>
+                <span className="text-sm font-medium">{data.shares}</span>
               </button>
-              
-              <button className="text-gray-400 hover:text-purple-400 transition-colors" aria-label="Bookmark post">
+
+              <button className="text-gray-400 hover:text-purple-400 transition-all duration-300 hover:scale-110" aria-label="Bookmark post">
                 <Bookmark className="w-5 h-5" />
               </button>
             </div>
@@ -162,6 +238,7 @@ export default function FloatingPostCards() {
       timestamp: '2h',
       verified: true,
       image: '/placeholder-image.jpg',
+      gradient: '#8b5cf6',
     },
     {
       username: 'MarketingPro',
@@ -172,6 +249,7 @@ export default function FloatingPostCards() {
       shares: '567',
       timestamp: '4h',
       verified: false,
+      gradient: '#d946ef',
     },
     {
       username: 'StartupFounder',
@@ -182,58 +260,65 @@ export default function FloatingPostCards() {
       shares: '2.1K',
       timestamp: '1d',
       verified: true,
+      gradient: '#06b6d4',
     },
   ];
 
   return (
-    <div className="w-full h-[600px] relative">
-      <Canvas camera={{ position: [0, 0, 15], fov: 50 }}>
-        <ambientLight intensity={0.3} />
-        <pointLight position={[10, 10, 10]} intensity={0.8} />
-        <pointLight position={[-10, -10, -10]} intensity={0.4} />
+    <div className="w-full h-[600px] relative rounded-2xl overflow-hidden">
+      <Canvas camera={{ position: [0, 0, 16], fov: 45 }}>
+        {/* Premium dark background */}
+        <color attach="background" args={['#030014']} />
+
+        {/* Starfield */}
+        <Stars radius={60} depth={60} count={1500} factor={2.5} saturation={0} fade speed={0.3} />
+
+        {/* Sparkles */}
+        <Sparkles count={80} scale={20} size={1.2} speed={0.2} color="#d946ef" />
+
+        {/* Particle ring */}
+        <ParticleRing />
+
+        {/* Lighting */}
+        <ambientLight intensity={0.4} />
+        <pointLight position={[10, 10, 10]} intensity={1.2} color="#8b5cf6" />
+        <pointLight position={[-10, -10, -10]} intensity={0.6} color="#d946ef" />
+        <pointLight position={[0, 10, 5]} intensity={0.8} color="#06b6d4" />
         <spotLight
-          position={[0, 10, 0]}
-          angle={0.3}
+          position={[0, 15, 10]}
+          angle={0.4}
           penumbra={1}
-          intensity={0.5}
+          intensity={0.6}
+          color="#8b5cf6"
           castShadow
         />
-        
+
         {/* Floating posts */}
         <InteractivePost
-          position={[-5, 0, 0]}
-          rotation={[0, 0.2, 0]}
+          position={[-5.5, 0, 0]}
+          rotation={[0, 0.25, 0]}
           data={posts[0]}
           delay={0}
         />
         <InteractivePost
-          position={[0, 0, -2]}
+          position={[0, 0.5, -2]}
           rotation={[0, 0, 0]}
           data={posts[1]}
-          delay={1}
+          delay={1.2}
         />
         <InteractivePost
-          position={[5, 0, 0]}
-          rotation={[0, -0.2, 0]}
+          position={[5.5, 0, 0]}
+          rotation={[0, -0.25, 0]}
           data={posts[2]}
-          delay={2}
+          delay={2.4}
         />
-        
-        {/* Background gradient sphere */}
-        <mesh position={[0, 0, -10]}>
-          <sphereGeometry args={[20, 32, 32]} />
-          <meshBasicMaterial
-            side={THREE.BackSide}
-            transparent
-            opacity={0.3}
-          >
-            <primitive attach="map" object={new THREE.Texture()} />
-          </meshBasicMaterial>
-        </mesh>
+
+        {/* Ambient fog for depth */}
+        <fog attach="fog" args={['#030014', 15, 35]} />
       </Canvas>
-      
-      <div className="absolute bottom-4 left-4 right-4 text-center">
-        <p className="text-white/60 text-sm">
+
+      <div className="absolute bottom-4 left-4 right-4 text-center pointer-events-none">
+        <p className="text-white/60 text-sm backdrop-blur-sm bg-black/20 rounded-full px-4 py-2 inline-block">
           Hover to interact • Click hearts to like • Real engagement in 3D
         </p>
       </div>
