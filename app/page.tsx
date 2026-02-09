@@ -14,6 +14,17 @@ import {
   Star, BadgeCheck, ArrowUpRight
 } from '@/components/icons';
 import { UserCount, EngagementBoost } from '@/components/real-stats';
+import {
+  TwitterXIcon,
+  InstagramIcon,
+  LinkedInIcon,
+  TikTokIcon,
+  FacebookIcon,
+  YouTubeIcon,
+  PlatformCard,
+} from '@/components/icons/platform-icons';
+import { HowItWorks } from '@/components/landing/how-it-works';
+import { Testimonials } from '@/components/landing/testimonials';
 
 // Premium 3D Fallback Component
 const Premium3DFallback = ({ height = "500px", label = "3D Visualization" }: { height?: string; label?: string }) => (
@@ -424,79 +435,11 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Social Proof Section */}
-      <section className="py-20 px-6 border-t border-white/10">
-        <div className="container mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-white mb-4">
-              Replacing $120,000/Year Agencies
-            </h2>
-            <p className="text-slate-400">See why businesses are switching from traditional agencies to SYNTHEX</p>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-            <Card variant="glass" className="p-6 hover:border-violet-500/30 transition-all">
-              <div className="flex mb-4">
-                {[...Array(5)].map((_, i) => (
-                  <Star key={i} className="w-5 h-5 fill-yellow-400 text-yellow-400" />
-                ))}
-              </div>
-              <p className="text-slate-300 mb-4">
-                "Replaced our $8k/month agency. Better results, fraction of the cost.
-                The AI understands our brand voice perfectly."
-              </p>
-              <Separator variant="glass" className="mb-4" />
-              <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full"></div>
-                <div>
-                  <p className="text-white font-semibold">Sarah Chen</p>
-                  <p className="text-xs text-white/50">CEO, TechStart Inc.</p>
-                </div>
-              </div>
-            </Card>
+      {/* Social Proof Section - Enhanced */}
+      <Testimonials />
 
-            <Card variant="glass-primary" className="p-6 hover:border-fuchsia-500/30 transition-all">
-              <div className="flex mb-4">
-                {[...Array(5)].map((_, i) => (
-                  <Star key={i} className="w-5 h-5 fill-yellow-400 text-yellow-400" />
-                ))}
-              </div>
-              <p className="text-slate-300 mb-4">
-                "3x our engagement in 30 days. The viral pattern analysis is game-changing.
-                It's like having a team of experts 24/7."
-              </p>
-              <Separator variant="glass-primary" className="mb-4" />
-              <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-gradient-to-r from-pink-500 to-purple-500 rounded-full"></div>
-                <div>
-                  <p className="text-white font-semibold">Marcus Johnson</p>
-                  <p className="text-xs text-white/50">Influencer, 500K followers</p>
-                </div>
-              </div>
-            </Card>
-
-            <Card variant="glass-secondary" className="p-6 hover:border-cyan-500/30 transition-all">
-              <div className="flex mb-4">
-                {[...Array(5)].map((_, i) => (
-                  <Star key={i} className="w-5 h-5 fill-yellow-400 text-yellow-400" />
-                ))}
-              </div>
-              <p className="text-slate-300 mb-4">
-                "From 100 to 50K followers in 6 months. The AI-generated content
-                consistently outperforms what we created manually."
-              </p>
-              <Separator variant="glass-secondary" className="mb-4" />
-              <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-green-500 rounded-full"></div>
-                <div>
-                  <p className="text-white font-semibold">Emma Rodriguez</p>
-                  <p className="text-xs text-white/50">CMO, Fashion Brand</p>
-                </div>
-              </div>
-            </Card>
-          </div>
-        </div>
-      </section>
+      {/* How It Works Section */}
+      <HowItWorks />
 
       {/* Core Features - Agency Focus */}
       <section className="py-20 px-6">
@@ -665,33 +608,62 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Platform Support */}
-      <section className="py-20 px-6 border-t border-white/10">
-        <div className="container mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="text-4xl font-bold text-white mb-4">
-              One Platform. All Networks.
+      {/* Platform Support - Enhanced with SVG icons */}
+      <section className="py-20 lg:py-28 px-6 border-t border-white/10 relative overflow-hidden">
+        {/* Background glow */}
+        <div className="absolute inset-0 bg-gradient-to-b from-purple-900/10 via-transparent to-transparent" />
+
+        <div className="container mx-auto relative">
+          <div className="text-center mb-16">
+            <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/[0.05] border border-white/[0.08] text-sm font-medium text-cyan-300 mb-6">
+              <Globe className="w-4 h-4" />
+              Universal Integration
+            </span>
+            <h2 className="text-4xl lg:text-5xl font-bold text-white mb-4">
+              One Platform. <span className="gradient-text-premium">All Networks.</span>
             </h2>
-            <p className="text-xl text-slate-400">
+            <p className="text-lg lg:text-xl text-slate-400 max-w-2xl mx-auto">
               Manage your entire social media presence from a single dashboard
             </p>
           </div>
-          
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6 max-w-4xl mx-auto">
-            {[
-              { name: 'Twitter/X', icon: '𝕏' },
-              { name: 'LinkedIn', icon: 'in' },
-              { name: 'Instagram', icon: '📷' },
-              { name: 'TikTok', icon: '♪' },
-              { name: 'Facebook', icon: 'f' },
-              { name: 'YouTube', icon: '▶' }
-            ].map((platform) => (
-              <Card key={platform.name} variant="glass" className="p-6 text-center hover:bg-white/[0.08] transition-all group">
-                <div className="text-3xl mb-2 group-hover:scale-110 transition-transform">{platform.icon}</div>
-                <p className="text-sm text-slate-300">{platform.name}</p>
-              </Card>
-            ))}
+
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 lg:gap-6 max-w-5xl mx-auto">
+            <PlatformCard
+              name="Twitter/X"
+              icon={<TwitterXIcon size={28} color="#fff" />}
+              color="#1DA1F2"
+            />
+            <PlatformCard
+              name="Instagram"
+              icon={<InstagramIcon size={28} />}
+              color="#E4405F"
+            />
+            <PlatformCard
+              name="LinkedIn"
+              icon={<LinkedInIcon size={28} />}
+              color="#0A66C2"
+            />
+            <PlatformCard
+              name="TikTok"
+              icon={<TikTokIcon size={28} />}
+              color="#FF0050"
+            />
+            <PlatformCard
+              name="Facebook"
+              icon={<FacebookIcon size={28} />}
+              color="#1877F2"
+            />
+            <PlatformCard
+              name="YouTube"
+              icon={<YouTubeIcon size={28} />}
+              color="#FF0000"
+            />
           </div>
+
+          {/* Additional info */}
+          <p className="text-center text-sm text-slate-500 mt-8">
+            + Threads, Pinterest, Reddit, and more coming soon
+          </p>
         </div>
       </section>
 
