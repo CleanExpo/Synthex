@@ -105,3 +105,12 @@ credentials/
 *-credentials.json
 service-account*.json
 _framework
+
+# Build artifacts
+tsconfig.tsbuildinfo
+
+# Browser automation screenshots
+.playwright-mcp/
+
+# Windows artifacts
+nul
