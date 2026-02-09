@@ -798,6 +798,142 @@ model PermissionAudit {
 }
 
 // ==========================================
+// Content Sharing & Collaboration Models
+// ==========================================
+
+model ContentShare {
+  id             String   @id @default(cuid())
+  contentType    String   // 'campaign', 'post', 'calendar_post', 'project'
+  contentId      String   // ID of the shared content
+
+  // Sharing target (one of these should be set)
+  sharedWithUserId String?  // Direct user share
+  sharedWithTeamId String?  // Team/org share
+  sharedWithEmail  String?  // External share via email
+
+  // Permissions
+  permission     String   @default("view") // 'view', 'comment', 'edit', 'admin'
+  canDownload    Boolean  @default(true)
+  canReshare     Boolean  @default(false)
+
+  // Access control
+  accessLink     String?  @unique // Shareable link token
+  password       String?  // Optional password protection (hashed)
+  expiresAt      DateTime?
+  maxViews       Int?     // Optional view limit
+  viewCount      Int      @default(0)
+
+  // Ownership
+  sharedById     String   // Who created this share
+  organizationId String?
+
+  // Metadata
+  message        String?  // Optional message with share
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  lastAccessedAt DateTime?
+
+  @@index([contentType, contentId])
+  @@index([sharedWithUserId])
+  @@index([sharedWithTeamId])
+  @@index([sharedById])
+  @@index([accessLink])
+  @@map("content_shares")
+}
+
+model ContentComment {
+  id             String   @id @default(cuid())
+  contentType    String   // 'campaign', 'post', 'calendar_post', 'project'
+  contentId      String   // ID of the content being commented on
+
+  // Comment content
+  content        String   @db.Text
+  parentId       String?  // For threaded comments
+
+  // Author
+  authorId       String
+
+  // Status
+  isResolved     Boolean  @default(false)
+  resolvedAt     DateTime?
+  resolvedBy     String?
+
+  // Mentions
+  mentions       String[] // Array of user IDs mentioned
+
+  // Metadata
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  // Self-reference for threads
+  parent         ContentComment?  @relation("CommentThread", fields: [parentId], references: [id], onDelete: Cascade)
+  replies        ContentComment[] @relation("CommentThread")
+
+  @@index([contentType, contentId])
+  @@index([authorId])
+  @@index([parentId])
+  @@map("content_comments")
+}
+
+model ContentAccessLog {
+  id             String   @id @default(cuid())
+  contentType    String   // 'campaign', 'post', 'calendar_post', 'project'
+  contentId      String
+
+  // Access details
+  action         String   // 'view', 'edit', 'download', 'share', 'comment'
+  userId         String?  // May be null for anonymous/link access
+  shareId        String?  // If accessed via share link
+
+  // Context
+  ipAddress      String?
+  userAgent      String?
+  referrer       String?
+
+  createdAt      DateTime @default(now())
+
+  @@index([contentType, contentId])
+  @@index([userId])
+  @@index([createdAt])
+  @@map("content_access_logs")
+}
+
+model TeamNotification {
+  id             String   @id @default(cuid())
+
+  // Target
+  userId         String   // Recipient
+  organizationId String?  // Team/org context
+
+  // Notification content
+  type           String   // 'invitation', 'role_change', 'content_shared', 'mention', 'comment', 'access_request'
+  title          String
+  message        String
+  actionUrl      String?
+
+  // Related entities
+  relatedUserId  String?  // The user who triggered this notification
+  relatedContentType String?
+  relatedContentId String?
+
+  // Status
+  read           Boolean  @default(false)
+  readAt         DateTime?
+
+  // Preferences
+  emailSent      Boolean  @default(false)
+  emailSentAt    DateTime?
+
+  createdAt      DateTime @default(now())
+  expiresAt      DateTime?
+
+  @@index([userId, read])
+  @@index([organizationId])
+  @@index([createdAt])
+  @@map("team_notifications")
+}
+
+// ==========================================
 // Content Calendar Module
 // ==========================================
 
