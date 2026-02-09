@@ -75,6 +75,10 @@
     {
       "path": "/api/reports/scheduled/execute",
       "schedule": "0 * * * *"
+    },
+    {
+      "path": "/api/competitors/track/execute",
+      "schedule": "30 * * * *"
     }
   ]
 }

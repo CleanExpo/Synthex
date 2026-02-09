@@ -1301,3 +1301,201 @@ model ABTestResult {
   @@index([timestamp])
   @@map("ab_test_results")
 }
+
+// ==========================================
+// Competitor Tracking Module (P1-004)
+// Automated competitor monitoring and insights
+// ==========================================
+
+model TrackedCompetitor {
+  id             String    @id @default(cuid())
+  userId         String
+
+  // Basic info
+  name           String
+  domain         String?
+  logoUrl        String?
+  description    String?   @db.Text
+  industry       String?
+
+  // Social handles
+  twitterHandle  String?
+  instagramHandle String?
+  linkedinHandle String?
+  facebookHandle String?
+  youtubeHandle  String?
+  tiktokHandle   String?
+
+  // Tracking settings
+  isActive       Boolean   @default(true)
+  trackPosts     Boolean   @default(true)
+  trackMetrics   Boolean   @default(true)
+  trackingFrequency String @default("daily")  // 'hourly', 'daily', 'weekly'
+  alertsEnabled  Boolean   @default(true)
+
+  // Notes
+  notes          String?   @db.Text
+  tags           String[]
+
+  // Timestamps
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  lastTrackedAt  DateTime?
+
+  // Relations
+  snapshots      CompetitorSnapshot[]
+  posts          CompetitorPost[]
+  alerts         CompetitorAlert[]
+
+  @@unique([userId, domain])
+  @@index([userId])
+  @@index([isActive])
+  @@map("tracked_competitors")
+}
+
+model CompetitorSnapshot {
+  id              String    @id @default(cuid())
+  competitorId    String
+
+  // Platform metrics
+  platform        String    // 'twitter', 'instagram', etc. or 'all'
+
+  // Follower metrics
+  followersCount  Int?
+  followingCount  Int?
+  followerGrowth  Int?      // Change since last snapshot
+
+  // Engagement metrics
+  totalPosts      Int?
+  avgLikes        Float?
+  avgComments     Float?
+  avgShares       Float?
+  engagementRate  Float?
+  postFrequency   Float?    // Posts per day
+
+  // Content metrics
+  topHashtags     String[]
+  contentTypes    Json?     // Distribution of content types
+  postingTimes    Json?     // Typical posting times
+
+  // Calculated scores
+  performanceScore Float?   // 0-100 overall performance
+  growthScore     Float?    // 0-100 growth trajectory
+  engagementScore Float?    // 0-100 engagement health
+
+  // Metadata
+  snapshotAt      DateTime  @default(now())
+  dataSource      String    @default("api")  // 'api', 'scraper', 'manual'
+
+  // Relations
+  competitor      TrackedCompetitor @relation(fields: [competitorId], references: [id], onDelete: Cascade)
+
+  @@index([competitorId])
+  @@index([platform])
+  @@index([snapshotAt])
+  @@map("competitor_snapshots")
+}
+
+model CompetitorPost {
+  id              String    @id @default(cuid())
+  competitorId    String
+
+  // Post details
+  platform        String
+  externalId      String?   // Platform-specific post ID
+  postUrl         String?
+  content         String?   @db.Text
+  mediaUrls       String[]
+  mediaType       String?   // 'image', 'video', 'carousel', 'text'
+
+  // Engagement metrics
+  likes           Int       @default(0)
+  comments        Int       @default(0)
+  shares          Int       @default(0)
+  views           Int?
+  saves           Int?
+  engagementRate  Float?
+
+  // Content analysis
+  sentiment       String?   // 'positive', 'neutral', 'negative'
+  hashtags        String[]
+  mentions        String[]
+  topics          String[]
+
+  // Performance
+  isTopPerforming Boolean   @default(false)
+  performancePercentile Float?  // Where this post ranks (0-100)
+
+  // Timestamps
+  postedAt        DateTime?
+  trackedAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  // Relations
+  competitor      TrackedCompetitor @relation(fields: [competitorId], references: [id], onDelete: Cascade)
+
+  @@unique([competitorId, platform, externalId])
+  @@index([competitorId])
+  @@index([platform])
+  @@index([postedAt])
+  @@index([isTopPerforming])
+  @@map("competitor_posts")
+}
+
+model CompetitorAlert {
+  id              String    @id @default(cuid())
+  userId          String
+  competitorId    String
+
+  // Alert details
+  alertType       String    // 'viral_post', 'follower_spike', 'new_campaign', 'strategy_change', 'milestone'
+  severity        String    @default("info")  // 'info', 'warning', 'important'
+  title           String
+  description     String    @db.Text
+
+  // Related data
+  relatedPostId   String?
+  metrics         Json?     // Relevant metrics that triggered alert
+
+  // Status
+  isRead          Boolean   @default(false)
+  isDismissed     Boolean   @default(false)
+  actionTaken     String?   @db.Text
+
+  // Timestamps
+  createdAt       DateTime  @default(now())
+  readAt          DateTime?
+
+  // Relations
+  competitor      TrackedCompetitor @relation(fields: [competitorId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([competitorId])
+  @@index([isRead])
+  @@index([createdAt])
+  @@map("competitor_alerts")
+}
+
+model CompetitorComparison {
+  id              String    @id @default(cuid())
+  userId          String
+
+  // Comparison config
+  name            String
+  competitorIds   String[]
+  metrics         String[]  // Which metrics to compare
+
+  // Cached comparison data
+  comparisonData  Json?
+  lastUpdated     DateTime?
+
+  // Settings
+  autoRefresh     Boolean   @default(true)
+  refreshFrequency String   @default("daily")
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([userId])
+  @@map("competitor_comparisons")
+}
