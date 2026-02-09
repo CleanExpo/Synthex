@@ -514,6 +514,102 @@ model Report {
 }
 
 // ==========================================
+// Scheduled Reports - Automated Report Generation
+// ==========================================
+
+model ScheduledReport {
+  id             String    @id @default(cuid())
+  userId         String
+  organizationId String?
+  name           String
+  description    String?
+  templateId     String?   // Reference to ReportTemplate
+  reportType     String    // overview, engagement, content, audience, campaigns, growth, custom
+  frequency      String    // daily, weekly, biweekly, monthly, quarterly
+  schedule       Json      // { dayOfWeek?, dayOfMonth?, hour, minute, timezone }
+  format         String    @default("pdf") // pdf, csv, json
+  dateRangeType  String    @default("last_period") // last_period, custom, rolling_7d, rolling_30d
+  filters        Json?     // Platform, campaign, and other filters
+  metrics        String[]  // Selected metrics to include
+  recipients     String[]  // Email addresses
+  webhookUrl     String?   // Optional webhook delivery
+  isActive       Boolean   @default(true)
+  lastRunAt      DateTime?
+  lastRunStatus  String?   // success, failed, skipped
+  lastReportId   String?   // ID of last generated report
+  nextRunAt      DateTime?
+  runCount       Int       @default(0)
+  failureCount   Int       @default(0)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  template       ReportTemplate? @relation(fields: [templateId], references: [id])
+
+  @@index([userId])
+  @@index([isActive, nextRunAt])
+  @@index([organizationId])
+  @@map("scheduled_reports")
+}
+
+// ==========================================
+// Report Templates - Reusable Report Configurations
+// ==========================================
+
+model ReportTemplate {
+  id             String    @id @default(cuid())
+  userId         String?   // null = system template
+  organizationId String?
+  name           String
+  description    String?
+  category       String    // performance, engagement, growth, content, custom
+  reportType     String    // overview, engagement, content, audience, campaigns, growth, custom
+  metrics        String[]  // Default metrics
+  dimensions     String[]  // Grouping dimensions
+  filters        Json?     // Default filters
+  visualizations Json?     // Chart configurations
+  layout         Json?     // Report layout settings
+  branding       Json?     // Custom branding (logo, colors)
+  isSystem       Boolean   @default(false) // System-provided template
+  isPublic       Boolean   @default(false) // Shared with organization
+  usageCount     Int       @default(0)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  scheduledReports ScheduledReport[]
+
+  @@index([userId])
+  @@index([organizationId])
+  @@index([isSystem])
+  @@index([category])
+  @@map("report_templates")
+}
+
+// ==========================================
+// Report Delivery Log - Track Report Deliveries
+// ==========================================
+
+model ReportDelivery {
+  id             String    @id @default(cuid())
+  reportId       String
+  scheduledReportId String?
+  deliveryType   String    // email, webhook, download
+  recipient      String    // Email address or webhook URL
+  status         String    // pending, sent, delivered, failed, bounced
+  sentAt         DateTime?
+  deliveredAt    DateTime?
+  failedAt       DateTime?
+  failureReason  String?
+  retryCount     Int       @default(0)
+  metadata       Json?     // Provider response, message ID, etc.
+  createdAt      DateTime  @default(now())
+
+  @@index([reportId])
+  @@index([scheduledReportId])
+  @@index([status])
+  @@map("report_deliveries")
+}
+
+// ==========================================
 // Quote Module - Content Quotes for Social Media
 // @task UNI-418 - Quote Module Integration Tests
 // ==========================================

@@ -71,5 +71,10 @@
     }
   ],
   "regions": ["iad1", "sfo1", "cdg1"],
-  "crons": []
+  "crons": [
+    {
+      "path": "/api/reports/scheduled/execute",
+      "schedule": "0 * * * *"
+    }
+  ]
 }
