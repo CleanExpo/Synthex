@@ -2,18 +2,14 @@
 
 import { useRef, useState, useMemo } from 'react';
 import * as THREE from 'three';
-import { Canvas, useFrame, extend } from '@react-three/fiber';
+import { Canvas, useFrame } from '@react-three/fiber';
 import {
   OrbitControls,
-  Sphere,
   MeshDistortMaterial,
   Float,
   Text,
   Stars,
-  Sparkles,
-  Trail,
-  MeshTransmissionMaterial,
-  Environment
+  Sparkles
 } from '@react-three/drei';
 
 // Premium glowing sphere with aura
