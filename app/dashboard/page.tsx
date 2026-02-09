@@ -23,7 +23,7 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { glassStyles, animationVariants } from '@/components/ui/index';
 import { fetchDashboardStats, QuickStatsData, invalidateDashboardCache } from '@/lib/api/dashboard';
-import { useUser } from '@supabase/auth-helpers-react';
+import { useUser } from '@/hooks/use-user';
 import { cn } from '@/lib/utils';
 
 // Helper function to format timestamps
