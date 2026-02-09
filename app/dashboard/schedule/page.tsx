@@ -1,13 +1,17 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+/**
+ * Content Schedule Page
+ *
+ * Enhanced content calendar with drag-and-drop rescheduling,
+ * multiple views (week, month, list), and conflict detection.
+ */
+
+import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { DashboardSkeleton } from '@/components/skeletons';
 import { APIErrorCard } from '@/components/error-states';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import {
   Select,
   SelectContent,
@@ -19,12 +23,9 @@ import {
   Calendar,
   Clock,
   Plus,
-  Edit,
   Trash2,
   Send,
   CheckCircle,
-  XCircle,
-  AlertCircle,
   Twitter,
   Linkedin,
   Instagram,
@@ -35,19 +36,24 @@ import {
   BarChart3,
   TrendingUp,
   Zap,
-  Eye,
-  Copy,
-  MoreVertical,
-  Filter,
   Download,
   Upload,
-  RefreshCw,
   Loader2,
+  CalendarDays,
+  List,
+  AlertTriangle,
 } from '@/components/icons';
+import {
+  WeekView,
+  PostDetailModal,
+  ScheduledPost,
+  PLATFORM_COLORS,
+  OPTIMAL_TIMES,
+} from '@/components/calendar';
 import toast from 'react-hot-toast';
 
 // Platform icons
-const platformIcons = {
+const platformIcons: Record<string, React.ComponentType<{ className?: string; style?: React.CSSProperties }>> = {
   twitter: Twitter,
   linkedin: Linkedin,
   instagram: Instagram,
@@ -55,48 +61,56 @@ const platformIcons = {
   tiktok: Video,
 };
 
-// Mock scheduled posts
-const mockScheduledPosts = [
+// Mock scheduled posts for demo
+const mockScheduledPosts: ScheduledPost[] = [
   {
-    id: 1,
+    id: '1',
     content: "🚀 Just shipped our biggest feature yet! AI-powered content generation is now live. Who's ready to 10x their social media game?",
-    platform: 'twitter',
-    scheduledFor: new Date('2024-01-20T14:00:00'),
+    platforms: ['twitter'],
+    scheduledFor: new Date(Date.now() + 2 * 60 * 60 * 1000),
     status: 'scheduled',
     engagement: { estimated: 8.5 },
     persona: 'Professional Voice',
   },
   {
-    id: 2,
+    id: '2',
     content: "After 3 months of development, we're excited to announce that Synthex is transforming how businesses approach social media...",
-    platform: 'linkedin',
-    scheduledFor: new Date('2024-01-20T09:00:00'),
+    platforms: ['linkedin'],
+    scheduledFor: new Date(Date.now() + 24 * 60 * 60 * 1000),
     status: 'scheduled',
     engagement: { estimated: 12.3 },
     persona: 'Thought Leader',
   },
   {
-    id: 3,
+    id: '3',
     content: "POV: You just discovered the tool that writes viral content for you 🤯 #ContentCreation #AI #SocialMedia",
-    platform: 'tiktok',
-    scheduledFor: new Date('2024-01-21T19:00:00'),
+    platforms: ['tiktok', 'instagram'],
+    scheduledFor: new Date(Date.now() + 48 * 60 * 60 * 1000),
     status: 'scheduled',
     engagement: { estimated: 25.7 },
     persona: 'Casual Creator',
   },
   {
-    id: 4,
+    id: '4',
     content: "Behind the scenes of building an AI startup 📸 Swipe to see our journey from idea to launch →",
-    platform: 'instagram',
-    scheduledFor: new Date('2024-01-19T17:00:00'),
+    platforms: ['instagram'],
+    scheduledFor: new Date(Date.now() - 24 * 60 * 60 * 1000),
     status: 'published',
     engagement: { actual: 15.2, likes: 1250, comments: 89, shares: 45 },
     persona: 'Casual Creator',
   },
+  {
+    id: '5',
+    content: "New blog post: 10 AI tools that will transform your marketing in 2024. Link in bio! 🔗",
+    platforms: ['twitter', 'linkedin', 'facebook'],
+    scheduledFor: new Date(Date.now() + 72 * 60 * 60 * 1000),
+    status: 'scheduled',
+    engagement: { estimated: 6.8 },
+  },
 ];
 
 // Best times to post
-const bestTimes = {
+const bestTimes: Record<string, string[]> = {
   twitter: ['9:00 AM', '12:00 PM', '3:00 PM', '7:00 PM'],
   linkedin: ['8:00 AM', '12:00 PM', '5:00 PM'],
   instagram: ['11:00 AM', '1:00 PM', '5:00 PM', '8:00 PM'],
@@ -104,15 +118,16 @@ const bestTimes = {
   tiktok: ['6:00 AM', '10:00 AM', '7:00 PM', '10:00 PM'],
 };
 
+type ViewMode = 'week' | 'month' | 'list';
+
 export default function SchedulePage() {
-  const [posts, setPosts] = useState<typeof mockScheduledPosts>([]);
-  const [selectedDate, setSelectedDate] = useState(new Date());
-  const [viewMode, setViewMode] = useState<'calendar' | 'list'>('calendar');
+  const [posts, setPosts] = useState<ScheduledPost[]>([]);
+  const [currentDate, setCurrentDate] = useState(new Date());
+  const [viewMode, setViewMode] = useState<ViewMode>('week');
   const [filterPlatform, setFilterPlatform] = useState('all');
   const [filterStatus, setFilterStatus] = useState('all');
   const [isCreating, setIsCreating] = useState(false);
-  const [selectedPost, setSelectedPost] = useState<any>(null);
-  const [currentMonth, setCurrentMonth] = useState(new Date());
+  const [selectedPost, setSelectedPost] = useState<ScheduledPost | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -127,7 +142,6 @@ export default function SchedulePage() {
       setIsLoading(true);
       setError(null);
       try {
-        // Try to fetch from API
         const token = getAuthToken();
         if (token) {
           const response = await fetch('/api/scheduler/posts', {
@@ -136,13 +150,12 @@ export default function SchedulePage() {
 
           if (response.ok) {
             const { data } = await response.json();
-            // Map API data to frontend format
-            const apiPosts = data.map((p: Record<string, unknown>) => ({
-              id: typeof p.id === 'number' ? p.id : parseInt(p.id as string, 10) || Date.now(),
+            const apiPosts: ScheduledPost[] = data.map((p: Record<string, unknown>) => ({
+              id: String(p.id),
               content: (p.content as string) || '',
-              platform: (p.platform as string) || 'twitter',
+              platforms: (p.platforms as string[]) || [(p.platform as string) || 'twitter'],
               scheduledFor: new Date(p.scheduledAt as string),
-              status: (p.status as string) || 'scheduled',
+              status: (p.status as ScheduledPost['status']) || 'scheduled',
               engagement: {
                 estimated: ((p.metadata as Record<string, unknown>)?.estimatedEngagement as number) || 5,
                 ...(p.status === 'published' ? {
@@ -153,6 +166,8 @@ export default function SchedulePage() {
                 } : {}),
               },
               persona: ((p.metadata as Record<string, unknown>)?.persona as string) || 'Default',
+              hashtags: (p.hashtags as string[]) || [],
+              mediaUrls: (p.mediaUrls as string[]) || [],
             }));
 
             if (apiPosts.length > 0) {
@@ -166,8 +181,7 @@ export default function SchedulePage() {
         await new Promise(resolve => setTimeout(resolve, 400));
         setPosts(mockScheduledPosts);
         setIsLoading(false);
-      } catch (err) {
-        // Fall back to mock data on error
+      } catch {
         setPosts(mockScheduledPosts);
         setIsLoading(false);
       }
@@ -175,132 +189,118 @@ export default function SchedulePage() {
     loadSchedule();
   }, []);
 
-  const handleRetry = async () => {
-    setError(null);
-    setIsLoading(true);
+  // Handle post reschedule via drag-and-drop
+  const handlePostReschedule = useCallback(async (postId: string, newTime: Date) => {
+    const post = posts.find(p => p.id === postId);
+    if (!post) return;
+
+    // Optimistic update
+    setPosts(prev => prev.map(p =>
+      p.id === postId ? { ...p, scheduledFor: newTime } : p
+    ));
+
+    toast.success(`Rescheduled to ${newTime.toLocaleString()}`);
+
+    // Try to update via API
     try {
       const token = getAuthToken();
       if (token) {
-        const response = await fetch('/api/scheduler/posts', {
-          headers: { 'Authorization': `Bearer ${token}` },
+        await fetch('/api/content/calendar', {
+          method: 'PATCH',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            postId,
+            newTime: newTime.toISOString(),
+          }),
         });
-        if (response.ok) {
-          const { data } = await response.json();
-          if (data.length > 0) {
-            setPosts(data);
-            setIsLoading(false);
-            return;
-          }
-        }
       }
-      setPosts(mockScheduledPosts);
-      setIsLoading(false);
     } catch {
-      setPosts(mockScheduledPosts);
-      setIsLoading(false);
+      // Revert on error
+      setPosts(prev => prev.map(p =>
+        p.id === postId ? post : p
+      ));
+      toast.error('Failed to reschedule. Please try again.');
     }
-  };
+  }, [posts]);
 
-  if (isLoading) {
-    return <DashboardSkeleton />;
-  }
-
-  if (error) {
-    return <APIErrorCard title="Schedule Error" message={error} onRetry={handleRetry} />;
-  }
-
-  // Calculate stats
-  const stats = {
-    scheduled: posts.filter(p => p.status === 'scheduled').length,
-    published: posts.filter(p => p.status === 'published').length,
-    draft: posts.filter(p => p.status === 'draft').length,
-    avgEngagement: posts.reduce((sum, p) => sum + (p.engagement.actual || p.engagement.estimated || 0), 0) / posts.length,
-  };
-
-  const getDaysInMonth = (date: Date) => {
-    const year = date.getFullYear();
-    const month = date.getMonth();
-    const firstDay = new Date(year, month, 1);
-    const lastDay = new Date(year, month + 1, 0);
-    const daysInMonth = lastDay.getDate();
-    const startingDayOfWeek = firstDay.getDay();
-    
-    const days: (Date | null)[] = [];
-    
-    // Add empty cells for days before month starts
-    for (let i = 0; i < startingDayOfWeek; i++) {
-      days.push(null);
-    }
-    
-    // Add days of month
-    for (let i = 1; i <= daysInMonth; i++) {
-      days.push(new Date(year, month, i));
-    }
-    
-    return days;
-  };
-
-  const getPostsForDate = (date: Date | null) => {
-    if (!date) return [];
-    return posts.filter(post => {
-      const postDate = new Date(post.scheduledFor);
-      return postDate.toDateString() === date.toDateString();
-    });
-  };
-
-  const handleCreatePost = () => {
-    setIsCreating(true);
-    // In production, this would open a modal or navigate to content creation
-    toast.success('Opening content creator...');
-    setTimeout(() => setIsCreating(false), 1000);
-  };
-
-  const handleDeletePost = (id: number) => {
-    setPosts(prev => prev.filter(p => p.id !== id));
-    toast.success('Post deleted');
-  };
-
-  const handleReschedule = (post: any) => {
+  // Handle post click
+  const handlePostClick = useCallback((post: ScheduledPost) => {
     setSelectedPost(post);
-    toast.success('Reschedule modal would open here');
-  };
+  }, []);
 
-  const handlePublishNow = (post: any) => {
-    setPosts(prev => prev.map(p => 
-      p.id === post.id ? { ...p, status: 'published' } : p
+  // Handle post create
+  const handlePostCreate = useCallback((date: Date, hour: number) => {
+    const scheduledTime = new Date(date);
+    scheduledTime.setHours(hour, 0, 0, 0);
+
+    // Navigate to content creation with pre-filled schedule time
+    toast.success(`Creating post for ${scheduledTime.toLocaleString()}`);
+    setIsCreating(true);
+    setTimeout(() => setIsCreating(false), 1000);
+  }, []);
+
+  // Handle save post changes
+  const handleSavePost = useCallback(async (updatedPost: ScheduledPost) => {
+    setPosts(prev => prev.map(p =>
+      p.id === updatedPost.id ? updatedPost : p
+    ));
+    toast.success('Post updated successfully!');
+  }, []);
+
+  // Handle delete post
+  const handleDeletePost = useCallback(async (postId: string) => {
+    setPosts(prev => prev.filter(p => p.id !== postId));
+    toast.success('Post deleted');
+  }, []);
+
+  // Handle publish now
+  const handlePublishNow = useCallback(async (postId: string) => {
+    setPosts(prev => prev.map(p =>
+      p.id === postId ? { ...p, status: 'published' as const } : p
     ));
     toast.success('Post published successfully!');
-  };
+  }, []);
 
-  const navigateMonth = (direction: 'prev' | 'next') => {
-    setCurrentMonth(prev => {
+  // Handle duplicate post
+  const handleDuplicatePost = useCallback((post: ScheduledPost) => {
+    const newPost: ScheduledPost = {
+      ...post,
+      id: `${Date.now()}`,
+      status: 'draft',
+      scheduledFor: new Date(Date.now() + 24 * 60 * 60 * 1000),
+    };
+    setPosts(prev => [...prev, newPost]);
+    toast.success('Post duplicated!');
+  }, []);
+
+  // Week navigation
+  const handleWeekChange = useCallback((direction: 'prev' | 'next') => {
+    setCurrentDate(prev => {
       const newDate = new Date(prev);
-      if (direction === 'prev') {
-        newDate.setMonth(prev.getMonth() - 1);
-      } else {
-        newDate.setMonth(prev.getMonth() + 1);
-      }
+      newDate.setDate(prev.getDate() + (direction === 'next' ? 7 : -7));
+      return newDate;
+    });
+  }, []);
+
+  // Month navigation
+  const navigateMonth = (direction: 'prev' | 'next') => {
+    setCurrentDate(prev => {
+      const newDate = new Date(prev);
+      newDate.setMonth(prev.getMonth() + (direction === 'next' ? 1 : -1));
       return newDate;
     });
   };
 
-  const filteredPosts = posts.filter(post => {
-    if (filterPlatform !== 'all' && post.platform !== filterPlatform) return false;
-    if (filterStatus !== 'all' && post.status !== filterStatus) return false;
-    return true;
-  });
-
+  // Export schedule
   const handleExportSchedule = () => {
     const exportData = {
       exportedAt: new Date().toISOString(),
-      filters: {
-        platform: filterPlatform,
-        status: filterStatus,
-      },
-      stats,
       posts: filteredPosts.map(post => ({
         ...post,
-        scheduledFor: post.scheduledFor.toISOString(),
+        scheduledFor: new Date(post.scheduledFor).toISOString(),
       })),
     };
 
@@ -316,6 +316,7 @@ export default function SchedulePage() {
     toast.success('Schedule exported successfully!');
   };
 
+  // Import schedule
   const handleImportSchedule = () => {
     const input = document.createElement('input');
     input.type = 'file';
@@ -329,9 +330,9 @@ export default function SchedulePage() {
         try {
           const data = JSON.parse(event.target?.result as string);
           if (data.posts && Array.isArray(data.posts)) {
-            const importedPosts = data.posts.map((post: any, index: number) => ({
+            const importedPosts: ScheduledPost[] = data.posts.map((post: ScheduledPost, index: number) => ({
               ...post,
-              id: Date.now() + index,
+              id: `${Date.now()}-${index}`,
               scheduledFor: new Date(post.scheduledFor),
             }));
             setPosts(prev => [...prev, ...importedPosts]);
@@ -348,8 +349,65 @@ export default function SchedulePage() {
     input.click();
   };
 
+  const handleRetry = async () => {
+    setError(null);
+    setIsLoading(true);
+    setPosts(mockScheduledPosts);
+    setIsLoading(false);
+  };
+
+  if (isLoading) {
+    return <DashboardSkeleton />;
+  }
+
+  if (error) {
+    return <APIErrorCard title="Schedule Error" message={error} onRetry={handleRetry} />;
+  }
+
+  // Filter posts
+  const filteredPosts = posts.filter(post => {
+    if (filterPlatform !== 'all' && !post.platforms.includes(filterPlatform)) return false;
+    if (filterStatus !== 'all' && post.status !== filterStatus) return false;
+    return true;
+  });
+
+  // Calculate stats
+  const stats = {
+    scheduled: posts.filter(p => p.status === 'scheduled').length,
+    published: posts.filter(p => p.status === 'published').length,
+    draft: posts.filter(p => p.status === 'draft').length,
+    avgEngagement: posts.reduce((sum, p) => sum + (p.engagement?.actual || p.engagement?.estimated || 0), 0) / Math.max(posts.length, 1),
+  };
+
+  // Get days in month for month view
+  const getDaysInMonth = (date: Date) => {
+    const year = date.getFullYear();
+    const month = date.getMonth();
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const daysInMonth = lastDay.getDate();
+    const startingDayOfWeek = firstDay.getDay();
+
+    const days: (Date | null)[] = [];
+    for (let i = 0; i < startingDayOfWeek; i++) {
+      days.push(null);
+    }
+    for (let i = 1; i <= daysInMonth; i++) {
+      days.push(new Date(year, month, i));
+    }
+    return days;
+  };
+
+  const getPostsForDate = (date: Date | null) => {
+    if (!date) return [];
+    return filteredPosts.filter(post => {
+      const postDate = new Date(post.scheduledFor);
+      return postDate.toDateString() === date.toDateString();
+    });
+  };
+
   const PlatformIcon = (platform: string) => {
-    const Icon = platformIcons[platform as keyof typeof platformIcons];
+    const Icon = platformIcons[platform];
     return Icon ? <Icon className="h-4 w-4" /> : null;
   };
 
@@ -360,7 +418,7 @@ export default function SchedulePage() {
         <div>
           <h1 className="text-3xl font-bold gradient-text">Content Schedule</h1>
           <p className="text-gray-400 mt-1">
-            Plan and schedule your content across all platforms
+            Drag and drop to reschedule your content across all platforms
           </p>
         </div>
         <div className="flex space-x-3 mt-4 sm:mt-0">
@@ -380,8 +438,8 @@ export default function SchedulePage() {
             <Download className="mr-2 h-4 w-4" />
             Export
           </Button>
-          <Button 
-            onClick={handleCreatePost}
+          <Button
+            onClick={() => handlePostCreate(new Date(), new Date().getHours())}
             disabled={isCreating}
             className="gradient-primary text-white"
           >
@@ -467,39 +525,62 @@ export default function SchedulePage() {
             </SelectContent>
           </Select>
         </div>
-        <div className="flex space-x-2 bg-white/5 rounded-lg p-1">
+        <div className="flex space-x-1 bg-white/5 rounded-lg p-1">
           <button
-            onClick={() => setViewMode('calendar')}
-            className={`px-3 py-1.5 rounded text-sm transition-all ${
-              viewMode === 'calendar'
+            onClick={() => setViewMode('week')}
+            className={`px-3 py-1.5 rounded text-sm transition-all flex items-center gap-2 ${
+              viewMode === 'week'
                 ? 'bg-purple-500/20 text-purple-400'
                 : 'text-gray-400 hover:text-white'
             }`}
           >
-            <Calendar className="h-4 w-4 inline mr-2" />
-            Calendar
+            <CalendarDays className="h-4 w-4" />
+            Week
+          </button>
+          <button
+            onClick={() => setViewMode('month')}
+            className={`px-3 py-1.5 rounded text-sm transition-all flex items-center gap-2 ${
+              viewMode === 'month'
+                ? 'bg-purple-500/20 text-purple-400'
+                : 'text-gray-400 hover:text-white'
+            }`}
+          >
+            <Calendar className="h-4 w-4" />
+            Month
           </button>
           <button
             onClick={() => setViewMode('list')}
-            className={`px-3 py-1.5 rounded text-sm transition-all ${
+            className={`px-3 py-1.5 rounded text-sm transition-all flex items-center gap-2 ${
               viewMode === 'list'
                 ? 'bg-purple-500/20 text-purple-400'
                 : 'text-gray-400 hover:text-white'
             }`}
           >
-            <BarChart3 className="h-4 w-4 inline mr-2" />
+            <List className="h-4 w-4" />
             List
           </button>
         </div>
       </div>
 
       {/* Main Content */}
-      {viewMode === 'calendar' ? (
+      {viewMode === 'week' ? (
+        <div className="h-[600px]">
+          <WeekView
+            posts={filteredPosts}
+            currentDate={currentDate}
+            onPostClick={handlePostClick}
+            onPostReschedule={handlePostReschedule}
+            onPostCreate={handlePostCreate}
+            optimalTimes={OPTIMAL_TIMES}
+            onWeekChange={handleWeekChange}
+          />
+        </div>
+      ) : viewMode === 'month' ? (
         <Card variant="glass">
           <CardHeader>
             <div className="flex items-center justify-between">
               <CardTitle>
-                {currentMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+                {currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
               </CardTitle>
               <div className="flex space-x-2">
                 <Button
@@ -513,7 +594,7 @@ export default function SchedulePage() {
                 <Button
                   size="sm"
                   variant="outline"
-                  onClick={() => setCurrentMonth(new Date())}
+                  onClick={() => setCurrentDate(new Date())}
                   className="bg-white/5 border-white/10 text-white hover:bg-white/10"
                 >
                   Today
@@ -531,24 +612,23 @@ export default function SchedulePage() {
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-7 gap-px bg-white/10 rounded-lg overflow-hidden">
-              {/* Weekday headers */}
               {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
                 <div key={day} className="bg-gray-900 p-2 text-center text-xs font-medium text-gray-400">
                   {day}
                 </div>
               ))}
-              
-              {/* Calendar days */}
-              {getDaysInMonth(currentMonth).map((date, index) => {
+
+              {getDaysInMonth(currentDate).map((date, index) => {
                 const postsForDay = date ? getPostsForDate(date) : [];
                 const isToday = date && date.toDateString() === new Date().toDateString();
-                
+
                 return (
                   <div
                     key={index}
                     className={`bg-gray-900 min-h-[100px] p-2 ${
                       date ? 'hover:bg-white/5 cursor-pointer' : ''
                     } ${isToday ? 'ring-1 ring-purple-500' : ''}`}
+                    onClick={() => date && handlePostCreate(date, 12)}
                   >
                     {date && (
                       <>
@@ -559,13 +639,17 @@ export default function SchedulePage() {
                           {postsForDay.slice(0, 3).map(post => (
                             <div
                               key={post.id}
-                              className={`text-xs p-1 rounded flex items-center space-x-1 ${
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handlePostClick(post);
+                              }}
+                              className={`text-xs p-1 rounded flex items-center space-x-1 cursor-pointer hover:scale-[1.02] transition-transform ${
                                 post.status === 'published'
                                   ? 'bg-green-500/20 text-green-300'
                                   : 'bg-purple-500/20 text-purple-300'
                               }`}
                             >
-                              {PlatformIcon(post.platform)}
+                              {PlatformIcon(post.platforms[0])}
                               <span className="truncate flex-1">{post.content.slice(0, 20)}...</span>
                             </div>
                           ))}
@@ -585,90 +669,118 @@ export default function SchedulePage() {
         </Card>
       ) : (
         <div className="space-y-4">
-          {filteredPosts.map(post => (
-            <Card key={post.id} variant="glass">
-              <CardContent className="pt-6">
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center space-x-3 mb-2">
-                      <div className={`p-2 rounded-lg ${
-                        post.status === 'published'
-                          ? 'bg-green-500/20'
-                          : post.status === 'scheduled'
-                          ? 'bg-purple-500/20'
-                          : 'bg-gray-500/20'
-                      }`}>
-                        {PlatformIcon(post.platform)}
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-white capitalize">{post.platform}</p>
-                        <p className="text-xs text-gray-400">
-                          {new Date(post.scheduledFor).toLocaleString()}
-                        </p>
-                      </div>
-                      <span className={`px-2 py-1 text-xs rounded-full ${
-                        post.status === 'published'
-                          ? 'bg-green-500/20 text-green-300'
-                          : post.status === 'scheduled'
-                          ? 'bg-purple-500/20 text-purple-300'
-                          : 'bg-gray-500/20 text-gray-300'
-                      }`}>
-                        {post.status}
-                      </span>
-                    </div>
-                    <p className="text-white mb-3">{post.content}</p>
-                    <div className="flex items-center space-x-4 text-xs text-gray-400">
-                      <span>Persona: {post.persona}</span>
-                      {post.status === 'published' ? (
-                        <>
-                          <span>❤️ {post.engagement.likes}</span>
-                          <span>💬 {post.engagement.comments}</span>
-                          <span>🔄 {post.engagement.shares}</span>
-                          <span className="text-green-400">
-                            {post.engagement.actual}% engagement
-                          </span>
-                        </>
-                      ) : (
-                        <span className="text-purple-400">
-                          Est. {post.engagement.estimated}% engagement
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                  <div className="flex space-x-2">
-                    {post.status === 'scheduled' && (
-                      <>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => handleReschedule(post)}
-                          className="text-gray-400"
-                        >
-                          <Clock className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => handlePublishNow(post)}
-                          className="text-gray-400"
-                        >
-                          <Send className="h-4 w-4" />
-                        </Button>
-                      </>
-                    )}
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => handleDeletePost(post.id)}
-                      className="text-red-400"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
+          {filteredPosts.length === 0 ? (
+            <Card variant="glass">
+              <CardContent className="py-12 text-center">
+                <Calendar className="h-12 w-12 text-gray-500 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-white mb-2">No posts found</h3>
+                <p className="text-gray-400 mb-4">
+                  {filterPlatform !== 'all' || filterStatus !== 'all'
+                    ? 'Try adjusting your filters'
+                    : 'Create your first scheduled post to get started'}
+                </p>
+                <Button
+                  onClick={() => handlePostCreate(new Date(), new Date().getHours())}
+                  className="gradient-primary text-white"
+                >
+                  <Plus className="mr-2 h-4 w-4" />
+                  Create Post
+                </Button>
               </CardContent>
             </Card>
-          ))}
+          ) : (
+            filteredPosts
+              .sort((a, b) => new Date(a.scheduledFor).getTime() - new Date(b.scheduledFor).getTime())
+              .map(post => (
+                <Card key={post.id} variant="glass" className="cursor-pointer hover:border-purple-500/50 transition-colors" onClick={() => handlePostClick(post)}>
+                  <CardContent className="pt-6">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center space-x-3 mb-2">
+                          <div className="flex -space-x-1">
+                            {post.platforms.slice(0, 3).map(platform => {
+                              const color = PLATFORM_COLORS[platform];
+                              return (
+                                <div
+                                  key={platform}
+                                  className="p-2 rounded-lg border-2 border-gray-900"
+                                  style={{ backgroundColor: `${color}20` }}
+                                >
+                                  {PlatformIcon(platform)}
+                                </div>
+                              );
+                            })}
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium text-white">
+                              {post.platforms.map(p => p.charAt(0).toUpperCase() + p.slice(1)).join(', ')}
+                            </p>
+                            <p className="text-xs text-gray-400">
+                              {new Date(post.scheduledFor).toLocaleString()}
+                            </p>
+                          </div>
+                          <span className={`px-2 py-1 text-xs rounded-full ${
+                            post.status === 'published'
+                              ? 'bg-green-500/20 text-green-300'
+                              : post.status === 'scheduled'
+                              ? 'bg-purple-500/20 text-purple-300'
+                              : 'bg-gray-500/20 text-gray-300'
+                          }`}>
+                            {post.status}
+                          </span>
+                          {post.conflict && (
+                            <span className="px-2 py-1 text-xs rounded-full bg-yellow-500/20 text-yellow-300 flex items-center gap-1">
+                              <AlertTriangle className="h-3 w-3" />
+                              Conflict
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-white mb-3">{post.content}</p>
+                        <div className="flex items-center space-x-4 text-xs text-gray-400">
+                          {post.persona && <span>Persona: {post.persona}</span>}
+                          {post.status === 'published' && post.engagement ? (
+                            <>
+                              <span>❤️ {post.engagement.likes}</span>
+                              <span>💬 {post.engagement.comments}</span>
+                              <span>🔄 {post.engagement.shares}</span>
+                              <span className="text-green-400">
+                                {post.engagement.actual}% engagement
+                              </span>
+                            </>
+                          ) : post.engagement?.estimated ? (
+                            <span className="text-purple-400">
+                              Est. {post.engagement.estimated}% engagement
+                            </span>
+                          ) : null}
+                        </div>
+                      </div>
+                      <div className="flex space-x-2" onClick={e => e.stopPropagation()}>
+                        {post.status === 'scheduled' && (
+                          <>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => handlePublishNow(post.id)}
+                              className="text-gray-400 hover:text-green-400"
+                            >
+                              <Send className="h-4 w-4" />
+                            </Button>
+                          </>
+                        )}
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => handleDeletePost(post.id)}
+                          className="text-red-400"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))
+          )}
         </div>
       )}
 
@@ -681,13 +793,17 @@ export default function SchedulePage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
             {Object.entries(bestTimes).map(([platform, times]) => {
-              const Icon = platformIcons[platform as keyof typeof platformIcons];
+              const Icon = platformIcons[platform];
+              const color = PLATFORM_COLORS[platform];
               return (
                 <div key={platform} className="flex items-start space-x-3">
-                  <div className="p-2 bg-purple-500/20 rounded-lg">
-                    <Icon className="h-4 w-4 text-purple-400" />
+                  <div
+                    className="p-2 rounded-lg"
+                    style={{ backgroundColor: `${color}20` }}
+                  >
+                    <Icon className="h-4 w-4" style={{ color }} />
                   </div>
                   <div className="flex-1">
                     <p className="text-sm font-medium text-white capitalize mb-1">{platform}</p>
@@ -705,6 +821,17 @@ export default function SchedulePage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Post Detail Modal */}
+      <PostDetailModal
+        post={selectedPost}
+        isOpen={!!selectedPost}
+        onClose={() => setSelectedPost(null)}
+        onSave={handleSavePost}
+        onDelete={handleDeletePost}
+        onPublishNow={handlePublishNow}
+        onDuplicate={handleDuplicatePost}
+      />
     </div>
   );
 }

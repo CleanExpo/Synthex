@@ -294,6 +294,7 @@ export { Heading3 } from './custom/Heading3';
 // ============================================
 
 export { Columns } from './custom/Columns';
+export { GripVertical } from './custom/GripVertical';
 
 // ============================================
 // CLOCK ICON (Alias)
