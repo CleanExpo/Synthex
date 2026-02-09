@@ -409,6 +409,21 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* Real-Time Activity Stream Section */}
+      <section className="py-20 px-6 border-t border-white/10 bg-gradient-to-b from-black/50 to-violet-900/10">
+        <div className="container mx-auto">
+          <div className="text-center mb-12">
+            <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">
+              <span className="gradient-text-premium">
+                Real-Time Activity Stream
+              </span>
+            </h2>
+            <p className="text-xl text-slate-300">Watch engagement happen live across all your connected platforms</p>
+          </div>
+          <ActivityStream3D />
+        </div>
+      </section>
+
       {/* Social Proof Section */}
       <section className="py-20 px-6 border-t border-white/10">
         <div className="container mx-auto">
