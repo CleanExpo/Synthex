@@ -1,38 +1,34 @@
 /**
  * Social Media Icons
- * Using react-icons for platform-specific brand icons
+ * Using custom SVG icons for platform-specific brand icons
  *
- * @version 2.0.0
- * @updated 2026-01-16
+ * @version 3.0.0
+ * @updated 2026-02-10
+ *
+ * Migrated from react-icons to custom SVGs for smaller bundle size
  */
 
-import React from 'react';
 import {
-  FaTwitter,
-  FaFacebook,
-  FaInstagram,
-  FaLinkedin,
-  FaYoutube,
-  FaTiktok,
-  FaPinterest,
-  FaReddit,
-  FaThreads,
-  FaXTwitter,
-  FaGithub,
-} from 'react-icons/fa6';
+  TwitterXIcon,
+  InstagramIcon,
+  LinkedInIcon,
+  TikTokIcon,
+  FacebookIcon,
+  YouTubeIcon,
+  GithubIcon,
+} from './platform-icons';
 
-// Re-export with consistent naming
-export const Twitter = FaXTwitter; // Updated to X branding
-export const TwitterLegacy = FaTwitter; // Old bird logo
-export const Facebook = FaFacebook;
-export const Instagram = FaInstagram;
-export const Linkedin = FaLinkedin;
-export const Youtube = FaYoutube;
-export const TikTok = FaTiktok;
-export const Pinterest = FaPinterest;
-export const Reddit = FaReddit;
-export const Threads = FaThreads;
-export const Github = FaGithub;
+// Re-export with consistent naming (matching old react-icons API)
+export const Twitter = TwitterXIcon;
+export const TwitterLegacy = TwitterXIcon; // Legacy alias
+export const Facebook = FacebookIcon;
+export const Instagram = InstagramIcon;
+export const Linkedin = LinkedInIcon;
+export const Youtube = YouTubeIcon;
+export const TikTok = TikTokIcon;
+export const Github = GithubIcon;
+// Note: Pinterest, Reddit, Threads icons not yet implemented in platform-icons
+// Add custom SVGs if needed
 
 // Platform colors for reference
 export const SocialColors = {
@@ -57,9 +53,6 @@ export const SocialIcons = {
   linkedin: Linkedin,
   youtube: Youtube,
   tiktok: TikTok,
-  pinterest: Pinterest,
-  reddit: Reddit,
-  threads: Threads,
 } as const;
 
 // Type for social platform names
