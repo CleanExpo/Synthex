@@ -67,7 +67,7 @@ export async function GET(
     }
 
     // Calculate additional metrics
-    const variants = test.variants.map((variant) => ({
+    const variants = test.variants.map((variant: { impressions: number; conversions: number; engagement: number; clicks: number }) => ({
       ...variant,
       conversionRate: variant.impressions > 0
         ? (variant.conversions / variant.impressions) * 100
@@ -80,7 +80,7 @@ export async function GET(
         : 0,
     }));
 
-    const totalImpressions = variants.reduce((sum, v) => sum + v.impressions, 0);
+    const totalImpressions = variants.reduce((sum: number, v: { impressions: number }) => sum + v.impressions, 0);
     const latestResult = test.results[0];
 
     return NextResponse.json({

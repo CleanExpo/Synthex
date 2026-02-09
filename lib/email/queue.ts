@@ -20,7 +20,6 @@ import { prisma } from '@/lib/prisma';
 // Resend SDK - dynamically imported to avoid issues if not configured
 let Resend: typeof import('resend').Resend | null = null;
 try {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
   Resend = require('resend').Resend;
 } catch {
   // Resend not installed, will use SendGrid
