@@ -15,7 +15,7 @@
     "validate:claude": "node scripts/validate-claude-settings.js",
     "validate:all": "npm run validate:env && npm run validate:claude",
     "build:force": "next build",
-    "build:vercel": "npx prisma generate && next build",
+    "build:vercel": "npx prisma@6.14.0 generate && next build",
     "vercel-build": "prisma generate && next build",
     "start": "next start",
     "typecheck": "npm run type-check",
