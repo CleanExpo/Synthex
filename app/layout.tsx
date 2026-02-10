@@ -202,7 +202,7 @@ export default function RootLayout({
               thumbnailUrl: `${BASE_URL}/images/hero-robot.png`,
               uploadDate: '2026-02-10',
               contentUrl: 'https://www.youtube.com/@SynthexMedia-25',
-              embedUrl: 'https://www.youtube.com/embed/videoseries?list=UU-ds9Km8AJBrO67p2Up8M3dA',
+              embedUrl: 'https://www.youtube.com/channel/UCds9Km8AJBrO67p2Up8M3dA',
               publisher: {
                 '@type': 'Organization',
                 name: 'Synthex',

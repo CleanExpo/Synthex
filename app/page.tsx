@@ -285,30 +285,45 @@ export default function HomePage() {
 
           {/* Video Grid */}
           <div className="grid lg:grid-cols-2 gap-8 max-w-6xl mx-auto">
-            {/* Main Explainer Video - YouTube Embed */}
+            {/* Main YouTube Channel Promo */}
             <div className="lg:col-span-2">
-              <div className="relative rounded-2xl overflow-hidden border border-cyan-500/20 bg-[#0f172a]/80">
-                {/* YouTube Embed */}
-                <div className="relative aspect-video">
-                  <iframe
-                    className="absolute inset-0 w-full h-full"
-                    src="https://www.youtube.com/embed/videoseries?list=UU-ds9Km8AJBrO67p2Up8M3dA&autoplay=0&rel=0&modestbranding=1"
-                    title="Synthex AI Marketing Platform - Latest Videos"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                    allowFullScreen
-                    loading="lazy"
-                  />
+              <a
+                href="https://www.youtube.com/@SynthexMedia-25"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="relative block rounded-2xl overflow-hidden border border-cyan-500/20 bg-[#0f172a]/80 group hover:border-cyan-500/40 transition-all"
+              >
+                {/* YouTube Channel Banner */}
+                <div className="relative aspect-video bg-gradient-to-br from-red-600/20 via-[#0f172a] to-cyan-500/20">
+                  {/* Background Pattern */}
+                  <div className="absolute inset-0 opacity-30">
+                    <div className="absolute top-1/4 left-1/4 w-32 h-32 bg-red-500/30 rounded-full blur-3xl" />
+                    <div className="absolute bottom-1/4 right-1/4 w-40 h-40 bg-cyan-500/30 rounded-full blur-3xl" />
+                  </div>
+                  {/* Content */}
+                  <div className="absolute inset-0 flex flex-col items-center justify-center">
+                    {/* YouTube Icon */}
+                    <div className="w-20 h-20 rounded-2xl bg-red-600 flex items-center justify-center mb-6 shadow-xl shadow-red-500/30 group-hover:scale-110 transition-transform">
+                      <svg className="w-10 h-10 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+                    </div>
+                    <h3 className="text-2xl font-bold text-white mb-2">SynthexMedia</h3>
+                    <p className="text-gray-400 text-sm mb-4">@SynthexMedia-25</p>
+                    <div className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-full transition-colors">
+                      <Play className="w-4 h-4" />
+                      Watch Our Videos
+                    </div>
+                  </div>
                 </div>
                 {/* Video Info */}
                 <div className="p-6">
-                  <h3 className="text-xl font-semibold text-white mb-2">
+                  <h3 className="text-xl font-semibold text-white mb-2 group-hover:text-cyan-400 transition-colors">
                     Synthex AI Marketing Tutorials
                   </h3>
                   <p className="text-gray-400 text-sm">
                     Explore our video library featuring AI marketing strategies, platform guides, and automation tutorials.
                   </p>
                 </div>
-              </div>
+              </a>
             </div>
 
             {/* Feature Videos - YouTube Channel Links */}
