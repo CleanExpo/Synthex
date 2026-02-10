@@ -115,3 +115,19 @@ tsconfig.tsbuildinfo
 # Windows artifacts
 nul
 output/
+
+# Deployment docs with potential secrets (SECURITY: Never commit credentials!)
+deploy-to-vercel.md
+deploy-fix.ps1
+VERCEL_ENV_CHECKLIST.md
+VERCEL_ENV_SETTINGS.md
+VERCEL_ENV_SETUP.md
+VERCEL-ENV-SETUP.md
+VERCEL-ENV-VARIABLES.md
+FIX-DEPLOYMENT-ISSUES.md
+PRODUCTION_READY_STATUS.md
+*-deploy.md
+*-deployment.md
+setup-*-env.sh
+*-credentials-*.md
+*_READY_STATUS.md
