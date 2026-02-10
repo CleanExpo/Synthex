@@ -143,6 +143,7 @@ export default function RootLayout({
               description: "The world's first fully autonomous AI marketing agency. AI-powered social media automation, content generation, and analytics.",
               sameAs: [
                 'https://twitter.com/synthexai',
+                'https://www.youtube.com/@SynthexMedia-25',
                 'https://linkedin.com/company/synthex',
                 'https://github.com/synthex',
               ],
@@ -186,6 +187,30 @@ export default function RootLayout({
                 'Engagement Optimization',
                 'Bring Your Own API Keys',
               ],
+            }),
+          }}
+        />
+        {/* Video/YouTube Channel Schema */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              '@context': 'https://schema.org',
+              '@type': 'VideoObject',
+              name: 'Synthex AI Marketing Tutorials',
+              description: 'Learn how to leverage AI for social media marketing with Synthex. Tutorials covering AI content generation, smart scheduling, and automation strategies.',
+              thumbnailUrl: `${BASE_URL}/images/hero-robot.png`,
+              uploadDate: '2026-02-10',
+              contentUrl: 'https://www.youtube.com/@SynthexMedia-25',
+              embedUrl: 'https://www.youtube.com/embed/videoseries?list=UU-ds9Km8AJBrO67p2Up8M3dA',
+              publisher: {
+                '@type': 'Organization',
+                name: 'Synthex',
+                logo: {
+                  '@type': 'ImageObject',
+                  url: `${BASE_URL}/logo.png`,
+                },
+              },
             }),
           }}
         />
