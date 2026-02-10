@@ -135,7 +135,7 @@ def get_credentials() -> Dict[str, Optional[str]]:
     for env_file in env_files:
         env_path = Path(env_file)
         if env_path.exists():
-            for line in env_path.read_text().splitlines():
+            for line in env_path.read_text(encoding="utf-8", errors="ignore").splitlines():
                 line = line.strip()
                 if not line or line.startswith("#"):
                     continue
@@ -348,8 +348,7 @@ def generate_with_generative_api(
             }]
         }],
         "generationConfig": {
-            "responseModalities": ["image", "text"],
-            "responseMimeType": "image/png",
+            "responseModalities": ["IMAGE", "TEXT"],
         },
     }
 
