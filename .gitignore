@@ -114,3 +114,4 @@ tsconfig.tsbuildinfo
 
 # Windows artifacts
 nul
+output/
