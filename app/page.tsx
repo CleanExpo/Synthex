@@ -1,21 +1,11 @@
 'use client';
 
-import dynamic from 'next/dynamic';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import {
   ArrowRight, Sparkles, CheckCircle2, Zap, BarChart3, Globe, Bot
 } from 'lucide-react';
-
-// Lazy load the robot component
-const AIRobot = dynamic(() => import('@/components/visuals/AIRobot'), {
-  ssr: false,
-  loading: () => (
-    <div className="w-full h-full flex items-center justify-center">
-      <div className="w-64 h-80 bg-gradient-to-b from-cyan-500/20 via-cyan-400/10 to-transparent rounded-t-full animate-pulse" />
-    </div>
-  )
-});
 
 // Synthex Logo Component
 function SynthexLogo({ className = "w-10 h-10" }: { className?: string }) {
@@ -133,36 +123,29 @@ export default function HomePage() {
         <div className="container mx-auto px-6 relative z-10">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
 
-            {/* Left Side - AI Robot with Pixel Dispersion Effect */}
+            {/* Left Side - AI Robot Hero Image */}
             <div className="relative order-2 lg:order-1 flex justify-center lg:justify-start">
               <div className="relative">
-                {/* Robot Container with inverted filter for dark theme */}
-                <div className="relative w-[320px] h-[420px] sm:w-[400px] sm:h-[500px] lg:w-[480px] lg:h-[580px]">
-                  {/* Glow behind robot */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-cyan-500/20 via-cyan-400/10 to-transparent rounded-full blur-3xl" />
+                {/* Hero Image Container */}
+                <div className="relative w-full max-w-[600px]">
+                  {/* Glow behind image */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-cyan-500/30 via-cyan-400/10 to-transparent rounded-3xl blur-3xl scale-110" />
 
-                  {/* Robot with filter */}
-                  <div className="relative z-10 [filter:invert(1)_hue-rotate(180deg)_brightness(1.1)_contrast(0.9)]">
-                    <AIRobot />
+                  {/* Main Hero Image */}
+                  <div className="relative z-10 rounded-2xl overflow-hidden shadow-2xl shadow-cyan-500/20">
+                    <Image
+                      src="/images/hero-robot.png"
+                      alt="AI Marketing Automation Robot"
+                      width={2048}
+                      height={1152}
+                      priority
+                      className="w-full h-auto object-cover"
+                    />
                   </div>
 
-                  {/* Pixel dispersion particles */}
-                  <div className="absolute top-0 left-0 w-full h-full pointer-events-none">
-                    {[...Array(40)].map((_, i) => (
-                      <div
-                        key={i}
-                        className="absolute bg-cyan-400/60 animate-disperse"
-                        style={{
-                          width: `${4 + Math.random() * 8}px`,
-                          height: `${4 + Math.random() * 8}px`,
-                          left: `${10 + Math.random() * 30}%`,
-                          top: `${20 + Math.random() * 40}%`,
-                          animationDelay: `${Math.random() * 3}s`,
-                          animationDuration: `${3 + Math.random() * 4}s`,
-                        }}
-                      />
-                    ))}
-                  </div>
+                  {/* Floating accent elements */}
+                  <div className="absolute -top-4 -right-4 w-20 h-20 bg-gradient-to-br from-cyan-400 to-cyan-600 rounded-full blur-2xl opacity-40 animate-pulse" />
+                  <div className="absolute -bottom-4 -left-4 w-16 h-16 bg-gradient-to-br from-cyan-500 to-teal-500 rounded-full blur-xl opacity-30 animate-pulse" style={{ animationDelay: '1s' }} />
                 </div>
               </div>
             </div>
