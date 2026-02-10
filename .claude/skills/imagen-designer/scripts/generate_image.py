@@ -84,8 +84,9 @@ def generate_with_gemini(prompt: str, api_key: str, output_path: str, aspect: st
         return {"success": False, "error": "requests library not installed"}
 
     # Gemini API endpoint for image generation
-    # Note: Using the generative models endpoint with imagen
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent"
+    # FREE TIER: Nano Banana (gemini-2.5-flash-image)
+    # See: https://ai.google.dev/gemini-api/docs/image-generation
+    url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent"
 
     headers = {
         "Content-Type": "application/json",
@@ -166,9 +167,9 @@ def generate_with_openrouter(prompt: str, api_key: str, output_path: str, aspect
         "X-Title": "Synthex Image Generator",
     }
 
-    # Use gemini model via OpenRouter
+    # Use Nano Banana (gemini-2.5-flash-image) via OpenRouter
     payload = {
-        "model": "google/gemini-2.0-flash-exp:free",
+        "model": "google/gemini-2.5-flash-image",
         "messages": [{
             "role": "user",
             "content": f"Generate a high-quality image: {prompt}"

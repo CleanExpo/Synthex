@@ -22,16 +22,16 @@ different model options.
 ## Tier System
 
 ### FREE TIER
-- **Model**: `gemini-2.0-flash-exp`
-- **Scripts**: `generate_image.py`, `generate_nano_banana.py`
-- **Requirements**: `GEMINI_API_KEY` only
-- **Features**: Basic image generation, placeholder fallback
+- **Model**: Nano Banana (`gemini-2.5-flash-image`)
+- **Scripts**: `generate_image.py`, `generate_nano_banana.py --model flash`
+- **Requirements**: `GEMINI_API_KEY` or `OPENROUTER_API_KEY`
+- **Features**: Fast generation, high-volume, 1K resolution
 
-### PREMIUM TIER
-- **Models**: Imagen 4 Ultra, Imagen 4, Imagen 4 Fast, Imagen 3
-- **Script**: `generate_imagen.py`
-- **Requirements**: `VERTEX_AI_PROJECT`, Google Cloud authentication
-- **Features**: 2K resolution, multi-image generation, higher quality
+### PREMIUM TIER (After Paywall)
+- **Models**: Nano Banana 2 Pro (`gemini-3-pro-image-preview`)
+- **Script**: `generate_imagen.py`, `generate_nano_banana.py --model pro`
+- **Requirements**: Client's saved API keys from database
+- **Features**: 4K resolution, advanced text rendering, thinking mode, search grounding
 
 ## When to Use
 
@@ -75,17 +75,17 @@ python scripts/generate_nano_banana.py "Your prompt" \
   --output output/image.png
 ```
 
-| Model | Description | Timeout |
-|-------|-------------|---------|
-| pro | Higher quality, more detailed | 180s |
-| flash | Faster generation, good quality | 60s |
+| Model | Description | Tier |
+|-------|-------------|------|
+| flash | Nano Banana (gemini-2.5-flash-image) | FREE |
+| pro | Nano Banana 2 Pro (gemini-3-pro-image-preview) | PREMIUM |
 
-### 3. Imagen 4 (Premium Tier)
+### 3. Premium Generation (After Paywall)
 
 ```bash
 python scripts/generate_imagen.py "Your prompt" \
-  --model imagen-4-ultra \
-  --size 2K \
+  --model nano-banana-2-pro \
+  --size 4K \
   --aspect 16:9 \
   --count 1 \
   --output output/image.png
@@ -93,11 +93,10 @@ python scripts/generate_imagen.py "Your prompt" \
 
 | Model | Description | Max Resolution |
 |-------|-------------|----------------|
-| imagen-4-ultra | Highest quality | 2K |
-| imagen-4 | High quality | 2K |
-| imagen-4-fast | Fast generation | 1K |
-| imagen-3 | Previous generation | 1K |
-| imagen-3-fast | Fast, previous gen | 1K |
+| nano-banana-2-pro | 4K, advanced text, thinking mode | 4K |
+| nano-banana-pro | High quality, 2K output | 2K |
+| nano-banana | Fast generation (free) | 1K |
+| imagen-3 | Vertex AI Imagen 3 | 1K |
 
 ## Parameters
 

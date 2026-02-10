@@ -33,58 +33,58 @@ except ImportError:
     HAS_REQUESTS = False
 
 # ============================================================================
-# PREMIUM IMAGEN MODELS (Paid Tier Only)
+# PREMIUM IMAGE GENERATION MODELS (Paid Tier Only)
 # ============================================================================
-# These models require a paid Google Cloud / Vertex AI subscription
-# For free tier, use generate_nano_banana.py with gemini-2.0-flash-exp
+# Updated Feb 2026 - See: https://ai.google.dev/gemini-api/docs/image-generation
+# These models require paid subscription or Vertex AI access
+# For free tier, use generate_nano_banana.py with gemini-2.5-flash-image
 # ============================================================================
 
 MODELS = {
-    # Imagen 4 variants
-    "imagen-4-ultra": {
-        "id": "imagen-4.0-ultra-001",
-        "name": "Imagen 4 Ultra",
-        "description": "Highest quality, maximum detail (PREMIUM)",
+    # Nano Banana 2 Pro (Gemini 3 Pro Image) - FLAGSHIP
+    "nano-banana-2-pro": {
+        "id": "gemini-3-pro-image-preview",
+        "name": "Nano Banana 2 Pro",
+        "description": "Professional 4K, advanced text rendering (PREMIUM)",
         "tier": "premium",
-        "max_resolution": "2K",
-        "timeout": 300,
-    },
-    "imagen-4": {
-        "id": "imagen-4.0-generate-001",
-        "name": "Imagen 4",
-        "description": "High quality generation (PREMIUM)",
-        "tier": "premium",
-        "max_resolution": "2K",
+        "max_resolution": "4K",
         "timeout": 180,
+        "features": ["4K", "text-rendering", "thinking", "search-grounding"],
     },
-    "imagen-4-fast": {
-        "id": "imagen-4.0-fast-001",
-        "name": "Imagen 4 Fast",
-        "description": "Faster generation, great quality (PREMIUM)",
+    # Nano Banana Pro (Gemini 3 Pro Image)
+    "nano-banana-pro": {
+        "id": "gemini-3-pro-image-preview",
+        "name": "Nano Banana Pro",
+        "description": "High quality, 2K output (PREMIUM)",
         "tier": "premium",
+        "max_resolution": "2K",
+        "timeout": 120,
+        "features": ["2K", "text-rendering"],
+    },
+    # Nano Banana (Gemini 2.5 Flash Image) - Free tier fallback
+    "nano-banana": {
+        "id": "gemini-2.5-flash-image",
+        "name": "Nano Banana",
+        "description": "Fast generation, high-volume (FREE)",
+        "tier": "free",
         "max_resolution": "1K",
         "timeout": 60,
+        "features": ["fast", "high-volume"],
     },
-    # Imagen 3 variants
+    # Legacy Imagen models (Vertex AI)
     "imagen-3": {
         "id": "imagen-3.0-generate-001",
         "name": "Imagen 3",
-        "description": "Previous generation, stable (PREMIUM)",
+        "description": "Vertex AI Imagen 3 (PREMIUM)",
         "tier": "premium",
         "max_resolution": "1K",
         "timeout": 120,
-    },
-    "imagen-3-fast": {
-        "id": "imagen-3.0-fast-generate-001",
-        "name": "Imagen 3 Fast",
-        "description": "Fast generation (PREMIUM)",
-        "tier": "premium",
-        "max_resolution": "1K",
-        "timeout": 45,
+        "features": ["vertex-ai"],
     },
 }
 
 # Resolution configurations
+# Nano Banana Pro supports up to 4K output
 RESOLUTIONS = {
     "1K": {
         "16:9": (1024, 576),
@@ -101,6 +101,14 @@ RESOLUTIONS = {
         "4:3": (2048, 1536),
         "3:4": (1536, 2048),
         "21:9": (2048, 878),
+    },
+    "4K": {
+        "16:9": (3840, 2160),
+        "9:16": (2160, 3840),
+        "1:1": (3840, 3840),
+        "4:3": (3840, 2880),
+        "3:4": (2880, 3840),
+        "21:9": (3840, 1646),
     },
 }
 
@@ -396,14 +404,14 @@ Examples:
     parser.add_argument(
         "--model", "-m",
         choices=list(MODELS.keys()),
-        default="imagen-4",
-        help="Imagen model variant. Default: imagen-4"
+        default="nano-banana-2-pro",
+        help="Model variant. Default: nano-banana-2-pro (Gemini 3 Pro Image)"
     )
     parser.add_argument(
         "--size", "-s",
-        choices=["1K", "2K"],
-        default="1K",
-        help="Output resolution. Default: 1K"
+        choices=["1K", "2K", "4K"],
+        default="2K",
+        help="Output resolution. Default: 2K (4K requires Nano Banana 2 Pro)"
     )
     parser.add_argument(
         "--aspect", "-a",

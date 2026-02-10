@@ -32,9 +32,9 @@ for parallel generation workflows.
 
 ## Generation Commands
 
-### FREE TIER: Nano Banana Pro/Flash (gemini-2.0-flash-exp)
+### FREE TIER: Nano Banana (gemini-2.5-flash-image)
 
-Use this for free-tier users. Uses `gemini-2.0-flash-exp` model.
+Use this for free-tier users. Fast, high-volume generation.
 
 ```bash
 python scripts/generate_nano_banana.py "{prompt}" \
@@ -45,21 +45,21 @@ python scripts/generate_nano_banana.py "{prompt}" \
 
 | Parameter | Values | Default |
 |-----------|--------|---------|
-| --model | pro, flash | flash |
+| --model | flash (free), pro (premium) | flash |
 | --aspect | 16:9, 9:16, 1:1, 4:3, 3:4, 21:9 | 16:9 |
 | --output | File path | Required |
 
-**Pro**: Higher quality, more detailed (180s timeout)
-**Flash**: Faster generation, good quality (60s timeout)
+**flash**: Nano Banana (gemini-2.5-flash-image) - FREE tier
+**pro**: Nano Banana 2 Pro (gemini-3-pro-image-preview) - PREMIUM tier
 
-### PREMIUM TIER: Imagen 4 Variants (Paid API)
+### PREMIUM TIER: Nano Banana 2 Pro / Gemini 3 Pro Image (Paid API)
 
-Use this for paid-tier users. Requires Vertex AI subscription.
+Use this for paid-tier users. Uses client's saved API keys after paywall.
 
 ```bash
 python scripts/generate_imagen.py "{prompt}" \
   --model {model_id} \
-  --size {1K|2K} \
+  --size {1K|2K|4K} \
   --aspect {aspect_ratio} \
   --count 1 \
   --output {output_path}
@@ -67,16 +67,15 @@ python scripts/generate_imagen.py "{prompt}" \
 
 | Model | Description | Max Resolution |
 |-------|-------------|----------------|
-| imagen-4-ultra | Highest quality | 2K |
-| imagen-4 | High quality | 2K |
-| imagen-4-fast | Fast generation | 1K |
-| imagen-3 | Stable, previous gen | 1K |
-| imagen-3-fast | Fast, previous gen | 1K |
+| nano-banana-2-pro | 4K, advanced text rendering, thinking | 4K |
+| nano-banana-pro | High quality, 2K output | 2K |
+| nano-banana | Fast generation (free fallback) | 1K |
+| imagen-3 | Vertex AI Imagen 3 | 1K |
 
 | Parameter | Values | Default |
 |-----------|--------|---------|
-| --model | imagen-4-ultra, imagen-4, imagen-4-fast, imagen-3, imagen-3-fast | imagen-4 |
-| --size | 1K, 2K | 1K |
+| --model | nano-banana-2-pro, nano-banana-pro, nano-banana, imagen-3 | nano-banana-2-pro |
+| --size | 1K, 2K, 4K | 2K |
 | --aspect | 16:9, 9:16, 1:1, 4:3, 3:4, 21:9 | 16:9 |
 | --count | 1-4 | 1 |
 | --output | File path | Required |
@@ -84,11 +83,14 @@ python scripts/generate_imagen.py "{prompt}" \
 ## Tier Detection
 
 Check user tier before selecting the script:
-- **Free tier**: Use `generate_nano_banana.py` (gemini-2.0-flash-exp)
-- **Paid tier**: Use `generate_imagen.py` (Imagen 4 via Vertex AI)
+- **Free tier**: Use `generate_nano_banana.py --model flash` (gemini-2.5-flash-image)
+- **Paid tier**: Use `generate_imagen.py` with client's saved API keys (Nano Banana 2 Pro)
 
-If VERTEX_AI_PROJECT is set, assume paid tier.
-If only GEMINI_API_KEY is set, use free tier.
+Priority for paid users:
+1. Use saved client API keys from database (after paywall)
+2. VERTEX_AI_PROJECT for enterprise Imagen access
+3. GEMINI_API_KEY for Nano Banana Pro access
+4. OPENROUTER_API_KEY as fallback
 
 ## Error Handling
 

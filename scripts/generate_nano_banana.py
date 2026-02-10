@@ -29,20 +29,25 @@ except ImportError:
     HAS_REQUESTS = False
 
 # Model configurations
+# Updated Feb 2026 - See: https://ai.google.dev/gemini-api/docs/image-generation
 MODELS = {
-    "pro": {
-        "id": "gemini-2.0-flash-exp",  # Pro quality model
-        "name": "Nano Banana Pro",
-        "description": "Higher quality, more detailed images",
-        "timeout": 180,
-        "max_retries": 2,
-    },
+    # FREE TIER - Nano Banana (Gemini 2.5 Flash Image)
     "flash": {
-        "id": "gemini-2.0-flash-exp",  # Flash speed model
-        "name": "Nano Banana Flash",
-        "description": "Faster generation, good quality",
+        "id": "gemini-2.5-flash-image",
+        "name": "Nano Banana",
+        "description": "Fast generation, high-volume (FREE)",
+        "tier": "free",
         "timeout": 60,
         "max_retries": 1,
+    },
+    # PREMIUM TIER - Nano Banana 2 Pro (Gemini 3 Pro Image)
+    "pro": {
+        "id": "gemini-3-pro-image-preview",
+        "name": "Nano Banana 2 Pro",
+        "description": "Professional quality, 4K output (PREMIUM)",
+        "tier": "premium",
+        "timeout": 180,
+        "max_retries": 2,
     },
 }
 
@@ -242,9 +247,9 @@ def generate_with_openrouter(
     # Enhanced prompt
     enhanced_prompt = enhance_prompt(prompt, model)
 
-    # Use a model that supports image generation via OpenRouter
-    # google/gemini-2.0-flash-exp:free for free tier
-    openrouter_model = "google/gemini-2.0-flash-exp:free"
+    # Use Nano Banana via OpenRouter
+    # Free tier: gemini-2.5-flash-image, Premium: gemini-3-pro-image-preview
+    openrouter_model = "google/gemini-2.5-flash-image" if model_config["tier"] == "free" else "google/gemini-3-pro-image-preview"
 
     payload = {
         "model": openrouter_model,
