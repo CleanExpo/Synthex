@@ -159,7 +159,8 @@ def generate_image(
     # Enhanced prompt
     enhanced_prompt = enhance_prompt(prompt, model)
 
-    # Request payload
+    # Request payload for Gemini image generation
+    # See: https://ai.google.dev/gemini-api/docs/image-generation
     payload = {
         "contents": [{
             "parts": [{
@@ -167,8 +168,7 @@ def generate_image(
             }]
         }],
         "generationConfig": {
-            "responseModalities": ["image", "text"],
-            "responseMimeType": "image/png",
+            "responseModalities": ["IMAGE", "TEXT"],
         },
         "safetySettings": [
             {"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_ONLY_HIGH"},
