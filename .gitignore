@@ -131,3 +131,7 @@ PRODUCTION_READY_STATUS.md
 setup-*-env.sh
 *-credentials-*.md
 *_READY_STATUS.md
+
+# BFG/git-filter-repo secrets files (contain patterns for secret removal)
+bfg-secrets.txt
+*-secrets.txt
