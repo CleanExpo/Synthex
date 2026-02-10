@@ -23,6 +23,41 @@ export default function FeaturesPage() {
         </div>
       </section>
 
+      {/* Video Demos Section */}
+      <section className="pb-20 px-6">
+        <div className="container mx-auto">
+          <h2 className="text-3xl font-bold text-center text-white mb-4">See Features In Action</h2>
+          <p className="text-gray-400 text-center mb-12 max-w-2xl mx-auto">
+            Watch quick demos of each feature to see how Synthex can transform your social media workflow.
+          </p>
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto">
+            {[
+              { title: 'Content Generator', description: 'AI-powered post creation', videoId: 'RUrRF-2sEEA' },
+              { title: 'Analytics Dashboard', description: 'Real-time metrics', videoId: '8_v9wYkONcM' },
+              { title: 'Smart Scheduler', description: 'Optimal posting times', videoId: '30Q1nkjPklY' },
+              { title: 'Viral Patterns', description: 'Discover what works', videoId: 'DlkzDD7YQho' },
+            ].map((video, i) => (
+              <div key={i} className="rounded-2xl overflow-hidden border border-cyan-500/10 bg-[#0d1f35]/60 hover:border-cyan-500/30 transition-all">
+                <div className="aspect-video">
+                  <iframe
+                    src={`https://www.youtube.com/embed/${video.videoId}`}
+                    title={video.title}
+                    frameBorder="0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    allowFullScreen
+                    className="w-full h-full"
+                  />
+                </div>
+                <div className="p-4">
+                  <h4 className="font-semibold text-white mb-1">{video.title}</h4>
+                  <p className="text-gray-500 text-sm">{video.description}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* Core Features */}
       <section className="pb-20 px-6">
         <div className="container mx-auto">

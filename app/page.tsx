@@ -283,96 +283,69 @@ export default function HomePage() {
             </p>
           </div>
 
-          {/* Video Grid */}
-          <div className="grid lg:grid-cols-2 gap-8 max-w-6xl mx-auto">
-            {/* Main YouTube Channel Promo */}
-            <div className="lg:col-span-2">
-              <a
-                href="https://www.youtube.com/@SynthexMedia-25"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="relative block rounded-2xl overflow-hidden border border-cyan-500/20 bg-[#0f172a]/80 group hover:border-cyan-500/40 transition-all"
-              >
-                {/* YouTube Channel Banner */}
-                <div className="relative aspect-video bg-gradient-to-br from-red-600/20 via-[#0f172a] to-cyan-500/20">
-                  {/* Background Pattern */}
-                  <div className="absolute inset-0 opacity-30">
-                    <div className="absolute top-1/4 left-1/4 w-32 h-32 bg-red-500/30 rounded-full blur-3xl" />
-                    <div className="absolute bottom-1/4 right-1/4 w-40 h-40 bg-cyan-500/30 rounded-full blur-3xl" />
-                  </div>
-                  {/* Content */}
-                  <div className="absolute inset-0 flex flex-col items-center justify-center">
-                    {/* YouTube Icon */}
-                    <div className="w-20 h-20 rounded-2xl bg-red-600 flex items-center justify-center mb-6 shadow-xl shadow-red-500/30 group-hover:scale-110 transition-transform">
-                      <svg className="w-10 h-10 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
-                    </div>
-                    <h3 className="text-2xl font-bold text-white mb-2">SynthexMedia</h3>
-                    <p className="text-gray-400 text-sm mb-4">@SynthexMedia-25</p>
-                    <div className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-full transition-colors">
-                      <Play className="w-4 h-4" />
-                      Watch Our Videos
-                    </div>
-                  </div>
-                </div>
-                {/* Video Info */}
-                <div className="p-6">
-                  <h3 className="text-xl font-semibold text-white mb-2 group-hover:text-cyan-400 transition-colors">
-                    Synthex AI Marketing Tutorials
-                  </h3>
-                  <p className="text-gray-400 text-sm">
-                    Explore our video library featuring AI marketing strategies, platform guides, and automation tutorials.
-                  </p>
-                </div>
-              </a>
+          {/* Main Platform Overview Video */}
+          <div className="max-w-4xl mx-auto mb-12">
+            <div className="relative rounded-2xl overflow-hidden border border-cyan-500/20 bg-[#0f172a]/80 shadow-2xl shadow-cyan-500/10">
+              <div className="aspect-video">
+                <iframe
+                  src="https://www.youtube.com/embed/N1XWySnSPu4"
+                  title="Synthex Platform Overview"
+                  frameBorder="0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  allowFullScreen
+                  className="w-full h-full"
+                />
+              </div>
+              <div className="p-6">
+                <h3 className="text-xl font-semibold text-white mb-2">Platform Overview</h3>
+                <p className="text-gray-400 text-sm">Complete tour of Synthex dashboard showing all main features</p>
+              </div>
             </div>
+          </div>
 
-            {/* Feature Videos - YouTube Channel Links */}
+          {/* Feature Videos Grid */}
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto">
             {[
               {
-                title: 'AI Search Optimization',
-                description: 'Your playbook for AI-powered search visibility',
-                thumbnail: 'https://i.ytimg.com/vi/default/hqdefault.jpg',
-                link: 'https://www.youtube.com/@SynthexMedia-25/videos',
+                title: 'AI Content Generator',
+                description: 'Create engaging posts with AI',
+                videoId: 'RUrRF-2sEEA',
               },
               {
-                title: 'Claude Agent Configuration',
-                description: 'Dynamic agent configuration via CLI JSON',
-                thumbnail: 'https://i.ytimg.com/vi/default/hqdefault.jpg',
-                link: 'https://www.youtube.com/@SynthexMedia-25/videos',
+                title: 'Analytics Dashboard',
+                description: 'Real-time engagement metrics',
+                videoId: '8_v9wYkONcM',
+              },
+              {
+                title: 'Smart Scheduler',
+                description: 'Optimal posting times',
+                videoId: '30Q1nkjPklY',
+              },
+              {
+                title: 'Viral Patterns',
+                description: 'Discover what works',
+                videoId: 'DlkzDD7YQho',
               },
             ].map((video, i) => (
-              <a
+              <div
                 key={i}
-                href={video.link}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="relative group rounded-2xl overflow-hidden border border-cyan-500/10 bg-[#0f172a]/60 hover:border-cyan-500/30 transition-all block"
+                className="relative group rounded-2xl overflow-hidden border border-cyan-500/10 bg-[#0f172a]/60 hover:border-cyan-500/30 transition-all"
               >
-                {/* Video Thumbnail */}
-                <div className="relative aspect-video bg-gradient-to-br from-cyan-500/10 to-cyan-600/5">
-                  {/* Animated Background */}
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="w-32 h-32 rounded-full bg-cyan-500/20 animate-pulse" />
-                  </div>
-                  {/* Play Button */}
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div
-                      className="w-14 h-14 rounded-full bg-gradient-to-r from-cyan-500 to-cyan-600 flex items-center justify-center shadow-lg shadow-cyan-500/20 group-hover:scale-110 transition-transform"
-                    >
-                      <Play className="w-6 h-6 text-white ml-0.5" />
-                    </div>
-                  </div>
-                  {/* YouTube Badge */}
-                  <div className="absolute bottom-3 right-3 px-2 py-0.5 bg-red-600 rounded text-xs text-white font-medium">
-                    YouTube
-                  </div>
+                <div className="aspect-video">
+                  <iframe
+                    src={`https://www.youtube.com/embed/${video.videoId}`}
+                    title={video.title}
+                    frameBorder="0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    allowFullScreen
+                    className="w-full h-full"
+                  />
                 </div>
-                {/* Info */}
                 <div className="p-4">
-                  <h4 className="font-semibold text-white mb-1 group-hover:text-cyan-400 transition-colors">{video.title}</h4>
+                  <h4 className="font-semibold text-white mb-1">{video.title}</h4>
                   <p className="text-gray-500 text-sm">{video.description}</p>
                 </div>
-              </a>
+              </div>
             ))}
           </div>
 
