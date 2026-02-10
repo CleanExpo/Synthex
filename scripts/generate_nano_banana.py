@@ -70,29 +70,55 @@ def get_api_key() -> tuple[Optional[str], str]:
     """Get API key from environment or .env files.
 
     Returns:
-        Tuple of (api_key, provider) where provider is 'gemini' or 'openrouter'
+        Tuple of (api_key, provider) where provider is 'gemini', 'openrouter', or 'openai'
     """
-    # Try Gemini first
+    # Try Gemini API key first (specific Gemini key)
     key = os.environ.get("GEMINI_API_KEY")
     if key:
         return key, "gemini"
 
-    # Try OpenRouter as fallback
+    # Try OpenAI as second choice (DALL-E fallback)
+    openai_key = os.environ.get("OPENAI_API_KEY")
+    if openai_key:
+        return openai_key, "openai"
+
+    # Try OpenRouter as third choice
     openrouter_key = os.environ.get("OPENROUTER_API_KEY")
     if openrouter_key:
         return openrouter_key, "openrouter"
 
-    # Try loading from .env files
+    # Try GOOGLE_API_KEY last (may not be enabled for Gemini)
+    google_key = os.environ.get("GOOGLE_API_KEY")
+    if google_key:
+        return google_key, "gemini"
+
+    # Try loading from .env files - collect all keys first, then prioritize
     env_files = [".env.local", ".env", ".env.production.local"]
+    found_keys = {}
     for env_file in env_files:
         env_path = Path(env_file)
         if env_path.exists():
-            for line in env_path.read_text().splitlines():
+            for line in env_path.read_text(encoding="utf-8", errors="ignore").splitlines():
                 line = line.strip()
-                if line.startswith("GEMINI_API_KEY="):
-                    return line.split("=", 1)[1].strip().strip('"\''), "gemini"
-                if line.startswith("OPENROUTER_API_KEY="):
-                    return line.split("=", 1)[1].strip().strip('"\''), "openrouter"
+                if line.startswith("GEMINI_API_KEY=") and "GEMINI_API_KEY" not in found_keys:
+                    found_keys["GEMINI_API_KEY"] = line.split("=", 1)[1].strip().strip('"\'')
+                elif line.startswith("OPENAI_API_KEY=") and "OPENAI_API_KEY" not in found_keys:
+                    found_keys["OPENAI_API_KEY"] = line.split("=", 1)[1].strip().strip('"\'')
+                elif line.startswith("OPENROUTER_API_KEY=") and "OPENROUTER_API_KEY" not in found_keys:
+                    found_keys["OPENROUTER_API_KEY"] = line.split("=", 1)[1].strip().strip('"\'')
+                elif line.startswith("GOOGLE_API_KEY=") and "GOOGLE_API_KEY" not in found_keys:
+                    found_keys["GOOGLE_API_KEY"] = line.split("=", 1)[1].strip().strip('"\'')
+
+    # Return in priority order: GEMINI > OPENAI > OPENROUTER > GOOGLE
+    if "GEMINI_API_KEY" in found_keys:
+        return found_keys["GEMINI_API_KEY"], "gemini"
+    if "OPENAI_API_KEY" in found_keys:
+        return found_keys["OPENAI_API_KEY"], "openai"
+    if "OPENROUTER_API_KEY" in found_keys:
+        return found_keys["OPENROUTER_API_KEY"], "openrouter"
+    if "GOOGLE_API_KEY" in found_keys:
+        return found_keys["GOOGLE_API_KEY"], "gemini"
+
     return None, ""
 
 
@@ -312,6 +338,97 @@ def generate_with_openrouter(
         return {"success": False, "error": f"OpenRouter error: {str(e)}"}
 
 
+def generate_with_openai(
+    prompt: str,
+    model: str,
+    aspect: str,
+    output_path: str,
+    api_key: str,
+) -> Dict[str, Any]:
+    """Generate image using OpenAI DALL-E API as fallback."""
+    if not HAS_REQUESTS:
+        return {"success": False, "error": "requests library not installed. Run: pip install requests"}
+
+    model_config = MODELS.get(model, MODELS["flash"])
+
+    # OpenAI DALL-E endpoint
+    url = "https://api.openai.com/v1/images/generations"
+
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {api_key}",
+    }
+
+    # Map aspect ratio to DALL-E 3 size
+    size_map = {
+        "16:9": "1792x1024",
+        "9:16": "1024x1792",
+        "1:1": "1024x1024",
+        "4:3": "1024x1024",  # Closest supported
+        "3:4": "1024x1024",  # Closest supported
+        "21:9": "1792x1024",  # Closest supported
+        "9:21": "1024x1792",  # Closest supported
+    }
+    size = size_map.get(aspect, "1024x1024")
+
+    # Enhanced prompt
+    enhanced_prompt = enhance_prompt(prompt, model)
+
+    # Use DALL-E 3 for best quality
+    payload = {
+        "model": "dall-e-3",
+        "prompt": enhanced_prompt,
+        "n": 1,
+        "size": size,
+        "quality": "hd" if model_config["tier"] == "premium" else "standard",
+        "response_format": "b64_json",
+    }
+
+    try:
+        response = requests.post(url, headers=headers, json=payload, timeout=model_config["timeout"])
+
+        if response.status_code == 429:
+            return {"success": False, "error": "Rate limited. Please wait and try again."}
+
+        if response.status_code != 200:
+            error_detail = response.json().get("error", {}).get("message", response.text[:300])
+            return {"success": False, "error": f"OpenAI API error {response.status_code}: {error_detail}"}
+
+        result = response.json()
+
+        # Extract image from response
+        if "data" in result and len(result["data"]) > 0:
+            image_data = result["data"][0].get("b64_json")
+            if image_data:
+                image_bytes = base64.b64decode(image_data)
+                output_file = Path(output_path)
+                output_file.parent.mkdir(parents=True, exist_ok=True)
+                output_file.write_bytes(image_bytes)
+
+                # Parse size for dimensions
+                width, height = map(int, size.split("x"))
+
+                return {
+                    "success": True,
+                    "path": str(output_file.absolute()),
+                    "size_bytes": len(image_bytes),
+                    "mime_type": "image/png",
+                    "model": "DALL-E 3 (OpenAI fallback)",
+                    "model_id": "dall-e-3",
+                    "dimensions": {"width": width, "height": height},
+                    "aspect_ratio": aspect,
+                    "provider": "openai",
+                    "revised_prompt": result["data"][0].get("revised_prompt", ""),
+                }
+
+        return {"success": False, "error": "No image data in OpenAI response."}
+
+    except requests.exceptions.Timeout:
+        return {"success": False, "error": f"Request timed out after {model_config['timeout']} seconds"}
+    except Exception as e:
+        return {"success": False, "error": f"OpenAI error: {str(e)}"}
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="Generate images with Nano Banana Pro/Flash models",
@@ -362,15 +479,23 @@ Examples:
     print(f"  Prompt:  {args.prompt[:60]}{'...' if len(args.prompt) > 60 else ''}")
     print()
 
-    # Get API key (tries GEMINI_API_KEY first, then OPENROUTER_API_KEY)
+    # Get API key (priority: GEMINI > OPENAI > OPENROUTER > GOOGLE)
     api_key, provider = get_api_key()
     if not api_key:
         print("ERROR: No API key found!")
         print()
-        print("Please set one of the following:")
-        print("  export GEMINI_API_KEY=your-gemini-key")
-        print("  export OPENROUTER_API_KEY=your-openrouter-key")
-        print("  # or add to .env.local")
+        print("Please set one of the following (in priority order):")
+        print()
+        print("  1. GEMINI_API_KEY (recommended - get from https://aistudio.google.com/)")
+        print("     export GEMINI_API_KEY=your-gemini-key")
+        print()
+        print("  2. OPENAI_API_KEY (DALL-E 3 fallback)")
+        print("     export OPENAI_API_KEY=your-openai-key")
+        print()
+        print("  3. OPENROUTER_API_KEY (multi-model fallback)")
+        print("     export OPENROUTER_API_KEY=your-openrouter-key")
+        print()
+        print("Add to .env.local for persistence.")
         print()
         sys.exit(1)
 
@@ -379,7 +504,15 @@ Examples:
     start_time = time.time()
 
     # Use appropriate generator based on provider
-    if provider == "openrouter":
+    if provider == "openai":
+        result = generate_with_openai(
+            prompt=args.prompt,
+            model=args.model,
+            aspect=args.aspect,
+            output_path=args.output,
+            api_key=api_key,
+        )
+    elif provider == "openrouter":
         result = generate_with_openrouter(
             prompt=args.prompt,
             model=args.model,

@@ -29,26 +29,53 @@ except ImportError:
 
 
 def get_api_key():
-    """Get API key from environment (Gemini or OpenRouter fallback)."""
-    # Try Gemini first
+    """Get API key from environment (priority: GEMINI > OPENAI > OPENROUTER > GOOGLE)."""
+    # Try Gemini API key first (specific key for Gemini)
     key = os.environ.get("GEMINI_API_KEY")
     if key:
         return key, "gemini"
 
-    # Try OpenRouter as fallback
+    # Try OpenAI as second choice (DALL-E fallback)
+    openai_key = os.environ.get("OPENAI_API_KEY")
+    if openai_key:
+        return openai_key, "openai"
+
+    # Try OpenRouter as third choice
     openrouter_key = os.environ.get("OPENROUTER_API_KEY")
     if openrouter_key:
         return openrouter_key, "openrouter"
 
-    # Try loading from .env files
+    # Try GOOGLE_API_KEY last (may not be enabled for Gemini)
+    google_key = os.environ.get("GOOGLE_API_KEY")
+    if google_key:
+        return google_key, "gemini"
+
+    # Try loading from .env files - collect all keys first, then prioritize
     env_files = [Path(".env.local"), Path(".env"), Path(".env.production.local")]
+    found_keys = {}
     for env_path in env_files:
         if env_path.exists():
-            for line in env_path.read_text().splitlines():
-                if line.startswith("GEMINI_API_KEY="):
-                    return line.split("=", 1)[1].strip().strip('"\''), "gemini"
-                if line.startswith("OPENROUTER_API_KEY="):
-                    return line.split("=", 1)[1].strip().strip('"\''), "openrouter"
+            for line in env_path.read_text(encoding="utf-8", errors="ignore").splitlines():
+                line = line.strip()
+                if line.startswith("GEMINI_API_KEY=") and "GEMINI_API_KEY" not in found_keys:
+                    found_keys["GEMINI_API_KEY"] = line.split("=", 1)[1].strip().strip('"\'')
+                elif line.startswith("OPENAI_API_KEY=") and "OPENAI_API_KEY" not in found_keys:
+                    found_keys["OPENAI_API_KEY"] = line.split("=", 1)[1].strip().strip('"\'')
+                elif line.startswith("OPENROUTER_API_KEY=") and "OPENROUTER_API_KEY" not in found_keys:
+                    found_keys["OPENROUTER_API_KEY"] = line.split("=", 1)[1].strip().strip('"\'')
+                elif line.startswith("GOOGLE_API_KEY=") and "GOOGLE_API_KEY" not in found_keys:
+                    found_keys["GOOGLE_API_KEY"] = line.split("=", 1)[1].strip().strip('"\'')
+
+    # Return in priority order: GEMINI > OPENAI > OPENROUTER > GOOGLE
+    if "GEMINI_API_KEY" in found_keys:
+        return found_keys["GEMINI_API_KEY"], "gemini"
+    if "OPENAI_API_KEY" in found_keys:
+        return found_keys["OPENAI_API_KEY"], "openai"
+    if "OPENROUTER_API_KEY" in found_keys:
+        return found_keys["OPENROUTER_API_KEY"], "openrouter"
+    if "GOOGLE_API_KEY" in found_keys:
+        return found_keys["GOOGLE_API_KEY"], "gemini"
+
     return None, ""
 
 
