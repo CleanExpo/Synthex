@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { ArrowLeft, Mail, CheckCircle, AlertCircle } from '@/components/icons';
+import { SynthexLogo } from '@/components/marketing/MarketingLayout';
 
 export default function ForgotPasswordPage() {
   const router = useRouter();
@@ -59,40 +60,54 @@ export default function ForgotPasswordPage() {
 
   if (isSubmitted) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-[#0A0A0A] via-[#111111] to-[#1A1A1A] flex items-center justify-center p-4">
-        <Card variant="glass" className="w-full max-w-md">
+      <div className="min-h-screen bg-[#0a1628] flex items-center justify-center p-4 relative overflow-hidden">
+        {/* Deep Navy Gradient Background */}
+        <div className="fixed inset-0 bg-gradient-to-br from-[#0a1628] via-[#0f172a] to-[#0a1628]" />
+
+        {/* Subtle Grid Pattern */}
+        <div className="fixed inset-0 opacity-[0.02]" style={{
+          backgroundImage: `linear-gradient(rgba(6, 182, 212, 0.5) 1px, transparent 1px),
+                            linear-gradient(90deg, rgba(6, 182, 212, 0.5) 1px, transparent 1px)`,
+          backgroundSize: '50px 50px'
+        }} />
+
+        {/* Glow Effects */}
+        <div className="fixed top-1/4 left-1/4 w-96 h-96 bg-cyan-500/5 rounded-full blur-[150px] pointer-events-none" />
+        <div className="fixed bottom-1/4 right-1/4 w-96 h-96 bg-cyan-400/5 rounded-full blur-[150px] pointer-events-none" />
+
+        <Card className="relative z-10 w-full max-w-md bg-[#0f172a]/80 backdrop-blur-xl border border-cyan-500/10 shadow-2xl shadow-cyan-500/5">
           <CardHeader className="text-center">
-            <div className="mx-auto mb-4 w-12 h-12 bg-green-500/10 rounded-full flex items-center justify-center">
-              <CheckCircle className="h-6 w-6 text-green-500" />
+            <div className="mx-auto mb-4 w-12 h-12 bg-green-500/10 rounded-full flex items-center justify-center border border-green-500/20">
+              <CheckCircle className="h-6 w-6 text-green-400" />
             </div>
-            <CardTitle className="text-2xl font-bold">Check Your Email</CardTitle>
+            <CardTitle className="text-2xl font-bold text-white">Check Your Email</CardTitle>
             <CardDescription className="text-gray-400 mt-2">
-              We've sent password reset instructions to <span className="text-white font-medium">{email}</span>
+              We've sent password reset instructions to <span className="text-cyan-400 font-medium">{email}</span>
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <Alert className="bg-blue-500/10 border-blue-500/20">
-              <AlertCircle className="h-4 w-4 text-blue-400" />
+            <Alert className="bg-cyan-500/10 border-cyan-500/20">
+              <AlertCircle className="h-4 w-4 text-cyan-400" />
               <AlertDescription className="text-gray-300">
                 If you don't see the email, check your spam folder or try resending it.
               </AlertDescription>
             </Alert>
-            
+
             <div className="space-y-3">
-              <Button 
+              <Button
                 onClick={() => router.push('/login')}
-                className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
+                className="w-full bg-gradient-to-r from-cyan-500 to-cyan-600 hover:from-cyan-400 hover:to-cyan-500 text-white shadow-lg shadow-cyan-500/25 transition-all hover:shadow-cyan-500/40"
               >
                 Return to Login
               </Button>
-              
-              <Button 
+
+              <Button
                 variant="outline"
                 onClick={() => {
                   setIsSubmitted(false);
                   setEmail('');
                 }}
-                className="w-full border-gray-700 hover:bg-gray-900"
+                className="w-full border-cyan-500/20 bg-transparent text-gray-300 hover:bg-cyan-500/10 hover:text-white hover:border-cyan-500/40"
               >
                 Try Different Email
               </Button>
@@ -100,9 +115,9 @@ export default function ForgotPasswordPage() {
 
             <p className="text-center text-sm text-gray-400">
               Didn't receive the email?{' '}
-              <button 
+              <button
                 onClick={handleSubmit}
-                className="text-purple-400 hover:text-purple-300 font-medium"
+                className="text-cyan-400 hover:text-cyan-300 font-medium transition-colors"
                 disabled={isLoading}
               >
                 Resend
@@ -115,17 +130,38 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#0A0A0A] via-[#111111] to-[#1A1A1A] flex items-center justify-center p-4">
-      <Card variant="glass" className="w-full max-w-md">
+    <div className="min-h-screen bg-[#0a1628] flex items-center justify-center p-4 relative overflow-hidden">
+      {/* Deep Navy Gradient Background */}
+      <div className="fixed inset-0 bg-gradient-to-br from-[#0a1628] via-[#0f172a] to-[#0a1628]" />
+
+      {/* Subtle Grid Pattern */}
+      <div className="fixed inset-0 opacity-[0.02]" style={{
+        backgroundImage: `linear-gradient(rgba(6, 182, 212, 0.5) 1px, transparent 1px),
+                          linear-gradient(90deg, rgba(6, 182, 212, 0.5) 1px, transparent 1px)`,
+        backgroundSize: '50px 50px'
+      }} />
+
+      {/* Glow Effects */}
+      <div className="fixed top-1/4 left-1/4 w-96 h-96 bg-cyan-500/5 rounded-full blur-[150px] pointer-events-none" />
+      <div className="fixed bottom-1/4 right-1/4 w-96 h-96 bg-cyan-400/5 rounded-full blur-[150px] pointer-events-none" />
+
+      <Card className="relative z-10 w-full max-w-md bg-[#0f172a]/80 backdrop-blur-xl border border-cyan-500/10 shadow-2xl shadow-cyan-500/5">
         <CardHeader>
-          <Link 
+          <Link
             href="/login"
-            className="inline-flex items-center text-sm text-gray-400 hover:text-white transition mb-4"
+            className="inline-flex items-center text-sm text-gray-400 hover:text-cyan-400 transition mb-4"
           >
             <ArrowLeft className="h-4 w-4 mr-1" />
             Back to Login
           </Link>
-          <CardTitle className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+
+          {/* Synthex Logo */}
+          <div className="flex items-center space-x-3 mb-4">
+            <SynthexLogo className="w-10 h-10" />
+            <span className="text-xl font-bold tracking-tight text-white">SYNTHEX</span>
+          </div>
+
+          <CardTitle className="text-2xl font-bold bg-gradient-to-r from-cyan-400 to-cyan-300 bg-clip-text text-transparent">
             Reset Your Password
           </CardTitle>
           <CardDescription className="text-gray-400">
@@ -142,25 +178,25 @@ export default function ForgotPasswordPage() {
             )}
 
             <div className="space-y-2">
-              <Label htmlFor="email">Email Address</Label>
+              <Label htmlFor="email" className="text-gray-300">Email Address</Label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
                 <Input
                   id="email"
                   type="email"
                   placeholder="name@example.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="pl-10 bg-black/50 border-gray-800 focus:border-purple-500 text-white"
+                  className="pl-10 bg-[#0a1628]/50 border-cyan-500/20 focus:border-cyan-500/50 focus:ring-cyan-500/20 text-white placeholder:text-gray-500"
                   required
                   disabled={isLoading}
                 />
               </div>
             </div>
 
-            <Button 
+            <Button
               type="submit"
-              className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
+              className="w-full bg-gradient-to-r from-cyan-500 to-cyan-600 hover:from-cyan-400 hover:to-cyan-500 text-white shadow-lg shadow-cyan-500/25 transition-all hover:shadow-cyan-500/40"
               disabled={isLoading}
             >
               {isLoading ? (
@@ -177,13 +213,13 @@ export default function ForgotPasswordPage() {
           <div className="mt-6 text-center space-y-2">
             <p className="text-sm text-gray-400">
               Remember your password?{' '}
-              <Link href="/login" className="text-purple-400 hover:text-purple-300 font-medium">
+              <Link href="/login" className="text-cyan-400 hover:text-cyan-300 font-medium transition-colors">
                 Sign in
               </Link>
             </p>
             <p className="text-sm text-gray-400">
               Don't have an account?{' '}
-              <Link href="/signup" className="text-purple-400 hover:text-purple-300 font-medium">
+              <Link href="/signup" className="text-cyan-400 hover:text-cyan-300 font-medium transition-colors">
                 Sign up
               </Link>
             </p>

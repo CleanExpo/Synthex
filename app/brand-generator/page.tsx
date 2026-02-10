@@ -1,7 +1,12 @@
 import PsychologyBrandGenerator from '@/components/strategic-marketing/PsychologyBrandGenerator';
+import MarketingLayout from '@/components/marketing/MarketingLayout';
 
 export default function BrandGeneratorPage() {
-  return <PsychologyBrandGenerator />;
+  return (
+    <MarketingLayout currentPage="brand-generator" showFooter={true}>
+      <PsychologyBrandGenerator />
+    </MarketingLayout>
+  );
 }
 
 export const metadata = {

@@ -1,8 +1,9 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Check, X, Sparkles } from '@/components/icons';
+import { Check, X } from '@/components/icons';
 import { CheckoutButton } from '@/components/stripe/checkout-button';
+import MarketingLayout from '@/components/marketing/MarketingLayout';
 
 const plans = [
   {
@@ -77,47 +78,14 @@ const plans = [
 
 export default function PricingPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900">
-      {/* Navigation */}
-      <nav className="fixed top-0 w-full z-50 bg-white/[0.02] backdrop-blur-xl border-b border-white/[0.08]">
-        <div className="container mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <Link href="/" className="flex items-center space-x-2">
-              <Sparkles className="w-8 h-8 text-purple-500" />
-              <span className="text-2xl font-bold gradient-text">Synthex</span>
-            </Link>
-            <div className="flex items-center space-x-6">
-              <Link href="/features" className="text-gray-300 hover:text-white transition">
-                Features
-              </Link>
-              <Link href="/pricing" className="text-white">
-                Pricing
-              </Link>
-              <Link href="/docs" className="text-gray-300 hover:text-white transition">
-                Docs
-              </Link>
-              <Link href="/login">
-                <Button variant="ghost" className="text-gray-300 hover:text-white">
-                  Login
-                </Button>
-              </Link>
-              <Link href="/signup">
-                <Button className="gradient-primary text-white">
-                  Get Started
-                </Button>
-              </Link>
-            </div>
-          </div>
-        </div>
-      </nav>
-
+    <MarketingLayout currentPage="pricing">
       {/* Hero Section */}
-      <section className="pt-32 pb-20 px-6">
+      <section className="pt-16 pb-20 px-6">
         <div className="container mx-auto text-center">
           <h1 className="text-5xl font-bold text-white mb-6">
             Simple, Transparent Pricing
           </h1>
-          <p className="text-xl text-gray-300 mb-10 max-w-2xl mx-auto">
+          <p className="text-xl text-gray-400 mb-10 max-w-2xl mx-auto">
             Choose the perfect plan for your social media growth. All plans include our core AI features.
           </p>
         </div>
@@ -131,38 +99,38 @@ export default function PricingPage() {
               <Card
                 key={plan.name}
                 variant={plan.popular ? 'glass-primary' : 'glass'}
-                className={`p-8 relative ${
-                  plan.popular ? 'scale-105' : ''
+                className={`p-8 relative bg-[#0f172a]/80 backdrop-blur-sm border border-cyan-500/10 hover:border-cyan-500/30 transition-all duration-300 ${
+                  plan.popular ? 'scale-105 border-cyan-500/30 shadow-lg shadow-cyan-500/10' : ''
                 }`}
               >
                 {plan.popular && (
                   <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                    <span className="gradient-primary text-white px-4 py-1 rounded-full text-sm font-semibold">
+                    <span className="bg-gradient-to-r from-cyan-500 to-cyan-600 text-white px-4 py-1 rounded-full text-sm font-semibold shadow-lg shadow-cyan-500/25">
                       Most Popular
                     </span>
                   </div>
                 )}
-                
+
                 <div className="text-center mb-6">
                   <h3 className="text-2xl font-bold text-white mb-2">{plan.name}</h3>
                   <div className="mb-2">
-                    <span className="text-4xl font-bold gradient-text">{plan.price}</span>
-                    {plan.price !== 'Custom' && <span className="text-gray-400">/month</span>}
+                    <span className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-cyan-300">{plan.price}</span>
+                    {plan.price !== 'Custom' && <span className="text-gray-500">/month</span>}
                   </div>
-                  <p className="text-gray-400 text-sm">{plan.description}</p>
+                  <p className="text-gray-500 text-sm">{plan.description}</p>
                 </div>
 
                 <div className="space-y-4 mb-8">
                   {plan.features.map((feature) => (
                     <div key={feature} className="flex items-start space-x-3">
-                      <Check className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
+                      <Check className="w-5 h-5 text-cyan-400 flex-shrink-0 mt-0.5" />
                       <span className="text-gray-300 text-sm">{feature}</span>
                     </div>
                   ))}
                   {plan.notIncluded.map((feature) => (
                     <div key={feature} className="flex items-start space-x-3 opacity-50">
-                      <X className="w-5 h-5 text-gray-500 flex-shrink-0 mt-0.5" />
-                      <span className="text-gray-500 text-sm">{feature}</span>
+                      <X className="w-5 h-5 text-gray-600 flex-shrink-0 mt-0.5" />
+                      <span className="text-gray-600 text-sm">{feature}</span>
                     </div>
                   ))}
                 </div>
@@ -170,7 +138,7 @@ export default function PricingPage() {
                 {plan.price === 'Custom' ? (
                   <Link href="/contact" className="block">
                     <Button
-                      className="w-full bg-white/10 border border-white/20 text-white hover:bg-white/20"
+                      className="w-full bg-[#0a1628] border border-cyan-500/20 text-gray-300 hover:bg-cyan-500/10 hover:text-cyan-400 hover:border-cyan-500/40 transition-all duration-300"
                       size="lg"
                     >
                       Contact Sales
@@ -181,9 +149,9 @@ export default function PricingPage() {
                     planName={plan.name}
                     className={`w-full ${
                       plan.popular
-                        ? 'gradient-primary text-white'
-                        : 'bg-white/10 border border-white/20 text-white hover:bg-white/20'
-                    }`}
+                        ? 'bg-gradient-to-r from-cyan-500 to-cyan-600 hover:from-cyan-400 hover:to-cyan-500 text-white shadow-lg shadow-cyan-500/25 hover:shadow-cyan-500/40'
+                        : 'bg-[#0a1628] border border-cyan-500/20 text-gray-300 hover:bg-cyan-500/10 hover:text-cyan-400 hover:border-cyan-500/40'
+                    } transition-all duration-300`}
                   >
                     Start Free Trial
                   </CheckoutButton>
@@ -219,7 +187,7 @@ export default function PricingPage() {
                 a: 'Absolutely. You can cancel your subscription at any time with no cancellation fees.',
               },
             ].map((faq) => (
-              <Card key={faq.q} variant="glass" className="p-6">
+              <Card key={faq.q} variant="glass" className="p-6 bg-[#0f172a]/80 backdrop-blur-sm border border-cyan-500/10 hover:border-cyan-500/20 transition-all duration-300">
                 <h3 className="text-lg font-semibold text-white mb-2">{faq.q}</h3>
                 <p className="text-gray-400">{faq.a}</p>
               </Card>
@@ -231,21 +199,21 @@ export default function PricingPage() {
       {/* CTA Section */}
       <section className="py-20 px-6">
         <div className="container mx-auto">
-          <Card variant="glass-primary" className="p-12 text-center">
+          <Card variant="glass-primary" className="p-12 text-center bg-gradient-to-r from-cyan-500/10 to-cyan-600/10 backdrop-blur-sm border border-cyan-500/20">
             <h2 className="text-3xl font-bold text-white mb-4">
               Start Your 14-Day Free Trial
             </h2>
-            <p className="text-xl text-gray-300 mb-8">
+            <p className="text-xl text-gray-400 mb-8">
               No credit card required. Cancel anytime.
             </p>
             <Link href="/signup">
-              <Button size="lg" className="gradient-primary text-white px-10 py-6 text-lg">
+              <Button size="lg" className="bg-gradient-to-r from-cyan-500 to-cyan-600 hover:from-cyan-400 hover:to-cyan-500 text-white px-10 py-6 text-lg font-medium shadow-lg shadow-cyan-500/25 hover:shadow-cyan-500/40 transition-all duration-300">
                 Get Started Now
               </Button>
             </Link>
           </Card>
         </div>
       </section>
-    </div>
+    </MarketingLayout>
   );
 }

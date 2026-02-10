@@ -1,14 +1,14 @@
 'use client';
 
-import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { 
-  Sparkles, MapPin, Clock, DollarSign, Users, 
-  Heart, Rocket, Globe, Code, Palette, TrendingUp,
+import {
+  Clock, DollarSign, Users,
+  Heart, Rocket, Globe, Code, TrendingUp,
   ArrowRight, CheckCircle, Briefcase
 } from '@/components/icons';
 import { useState } from 'react';
+import MarketingLayout from '@/components/marketing/MarketingLayout';
 
 interface Job {
   id: string;
@@ -94,45 +94,28 @@ const culture = [
 
 export default function CareersPage() {
   const [selectedDepartment, setSelectedDepartment] = useState('All');
-  
+
   const departments = ['All', ...new Set(openPositions.map(job => job.department))];
-  
-  const filteredJobs = selectedDepartment === 'All' 
-    ? openPositions 
+
+  const filteredJobs = selectedDepartment === 'All'
+    ? openPositions
     : openPositions.filter(job => job.department === selectedDepartment);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-cyan-900/20 to-gray-900">
-      {/* Navigation */}
-      <nav className="fixed top-0 w-full z-50 liquid-glass border-b border-white/10">
-        <div className="container mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <Link href="/" className="flex items-center space-x-2">
-              <Sparkles className="w-8 h-8 text-cyan-400" />
-              <span className="text-2xl font-bold gradient-text-cyan">Synthex</span>
-            </Link>
-            <Link href="/">
-              <Button variant="ghost" className="text-gray-300 hover:text-white">
-                Back to Home
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </nav>
-
+    <MarketingLayout currentPage="careers">
       {/* Hero Section */}
-      <section className="pt-32 pb-20 px-6">
+      <section className="pt-12 pb-20 px-6">
         <div className="container mx-auto text-center">
           <h1 className="text-6xl font-bold text-white mb-6 heading-serif">
             Join Us in Building the
             <br />
-            <span className="gradient-text-cyan">Future of AI Marketing</span>
+            <span className="bg-gradient-to-r from-cyan-400 to-cyan-500 bg-clip-text text-transparent">Future of AI Marketing</span>
           </h1>
           <p className="text-xl text-gray-300 max-w-3xl mx-auto mb-8">
-            We\'re looking for passionate individuals who want to democratize AI-powered marketing 
+            We're looking for passionate individuals who want to democratize AI-powered marketing
             and help millions of creators succeed.
           </p>
-          <Button 
+          <Button
             onClick={() => document.getElementById('positions')?.scrollIntoView({ behavior: 'smooth' })}
             className="bg-gradient-to-r from-cyan-500 to-cyan-600 text-white px-8 py-3"
           >
@@ -146,25 +129,25 @@ export default function CareersPage() {
       <section className="px-6 pb-20">
         <div className="container mx-auto">
           <h2 className="text-4xl font-bold text-center text-white mb-12 heading-serif">
-            Why <span className="gradient-text-amber">Synthex?</span>
+            Why <span className="bg-gradient-to-r from-cyan-400 to-cyan-500 bg-clip-text text-transparent">Synthex?</span>
           </h2>
           <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-            <Card className="liquid-glass p-6 text-center">
+            <Card className="bg-[#0f172a]/80 border-cyan-500/10 p-6 text-center">
               <Rocket className="w-12 h-12 text-cyan-400 mx-auto mb-4" />
               <h3 className="text-xl font-semibold text-white mb-2">Massive Impact</h3>
               <p className="text-gray-400">
                 Help millions of creators and businesses succeed with AI-powered tools.
               </p>
             </Card>
-            <Card className="liquid-glass p-6 text-center">
-              <TrendingUp className="w-12 h-12 text-amber-400 mx-auto mb-4" />
+            <Card className="bg-[#0f172a]/80 border-cyan-500/10 p-6 text-center">
+              <TrendingUp className="w-12 h-12 text-cyan-400 mx-auto mb-4" />
               <h3 className="text-xl font-semibold text-white mb-2">Rapid Growth</h3>
               <p className="text-gray-400">
                 Join a fast-growing startup with 10x growth trajectory and unlimited potential.
               </p>
             </Card>
-            <Card className="liquid-glass p-6 text-center">
-              <Code className="w-12 h-12 text-purple-400 mx-auto mb-4" />
+            <Card className="bg-[#0f172a]/80 border-cyan-500/10 p-6 text-center">
+              <Code className="w-12 h-12 text-cyan-400 mx-auto mb-4" />
               <h3 className="text-xl font-semibold text-white mb-2">Cutting-Edge Tech</h3>
               <p className="text-gray-400">
                 Work with the latest AI/ML technologies and shape the future of marketing.
@@ -178,11 +161,11 @@ export default function CareersPage() {
       <section className="px-6 pb-20">
         <div className="container mx-auto">
           <h2 className="text-4xl font-bold text-center text-white mb-12 heading-serif">
-            Benefits & <span className="gradient-text-cyan">Perks</span>
+            Benefits & <span className="bg-gradient-to-r from-cyan-400 to-cyan-500 bg-clip-text text-transparent">Perks</span>
           </h2>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
             {benefits.map((benefit, index) => (
-              <Card key={index} className="liquid-glass p-6 hover:scale-105 transition-transform">
+              <Card key={index} className="bg-[#0f172a]/80 border-cyan-500/10 p-6 hover:scale-105 transition-transform">
                 <benefit.icon className="w-10 h-10 text-cyan-400 mb-3" />
                 <h3 className="text-lg font-semibold text-white mb-1">{benefit.title}</h3>
                 <p className="text-gray-400 text-sm">{benefit.description}</p>
@@ -195,14 +178,14 @@ export default function CareersPage() {
       {/* Culture */}
       <section className="px-6 pb-20">
         <div className="container mx-auto">
-          <Card className="liquid-glass p-12">
+          <Card className="bg-[#0f172a]/80 border-cyan-500/10 p-12">
             <div className="grid md:grid-cols-2 gap-12 items-center">
               <div>
                 <h2 className="text-4xl font-bold text-white mb-6 heading-serif">
-                  Our <span className="gradient-text-amber">Culture</span>
+                  Our <span className="bg-gradient-to-r from-cyan-400 to-cyan-500 bg-clip-text text-transparent">Culture</span>
                 </h2>
                 <p className="text-gray-300 mb-6">
-                  At Synthex, we believe in building a culture where everyone can do their best work, 
+                  At Synthex, we believe in building a culture where everyone can do their best work,
                   grow professionally, and have fun along the way.
                 </p>
                 <ul className="space-y-3">
@@ -215,7 +198,7 @@ export default function CareersPage() {
                 </ul>
               </div>
               <div className="relative">
-                <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/20 to-amber-500/20 rounded-2xl"></div>
+                <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/20 to-cyan-400/20 rounded-2xl"></div>
                 <div className="relative p-8">
                   <Users className="w-full h-64 text-white/20" />
                 </div>
@@ -229,7 +212,7 @@ export default function CareersPage() {
       <section id="positions" className="px-6 pb-20">
         <div className="container mx-auto">
           <h2 className="text-4xl font-bold text-center text-white mb-4 heading-serif">
-            Open <span className="gradient-text-cyan">Positions</span>
+            Open <span className="bg-gradient-to-r from-cyan-400 to-cyan-500 bg-clip-text text-transparent">Positions</span>
           </h2>
           <p className="text-center text-gray-300 mb-8">
             Join our team and help shape the future of AI-powered marketing
@@ -244,7 +227,7 @@ export default function CareersPage() {
                 className={`px-4 py-2 rounded-full transition-all ${
                   selectedDepartment === dept
                     ? 'bg-gradient-to-r from-cyan-500 to-cyan-600 text-white'
-                    : 'bg-white/5 text-gray-300 hover:bg-white/10 border border-white/10'
+                    : 'bg-[#0f172a]/80 text-gray-300 hover:bg-[#0f172a] border border-cyan-500/10'
                 }`}
               >
                 {dept}
@@ -255,7 +238,7 @@ export default function CareersPage() {
           {/* Job Listings */}
           <div className="space-y-4 max-w-4xl mx-auto">
             {filteredJobs.map((job) => (
-              <Card key={job.id} className="liquid-glass p-6 hover:shadow-xl transition-all">
+              <Card key={job.id} className="bg-[#0f172a]/80 border-cyan-500/10 p-6 hover:shadow-xl transition-all">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                   <div className="flex-grow">
                     <h3 className="text-xl font-semibold text-white mb-2">{job.title}</h3>
@@ -264,20 +247,20 @@ export default function CareersPage() {
                       <span className="px-3 py-1 bg-cyan-500/20 text-cyan-400 text-xs rounded-full">
                         {job.department}
                       </span>
-                      <span className="px-3 py-1 bg-amber-500/20 text-amber-400 text-xs rounded-full">
+                      <span className="px-3 py-1 bg-cyan-500/10 text-cyan-300 text-xs rounded-full">
                         {job.location}
                       </span>
-                      <span className="px-3 py-1 bg-purple-500/20 text-purple-400 text-xs rounded-full">
+                      <span className="px-3 py-1 bg-cyan-500/10 text-cyan-300 text-xs rounded-full">
                         {job.type}
                       </span>
-                      <span className="px-3 py-1 bg-green-500/20 text-green-400 text-xs rounded-full">
+                      <span className="px-3 py-1 bg-cyan-500/10 text-cyan-300 text-xs rounded-full">
                         {job.level}
                       </span>
                     </div>
                     <div className="flex flex-wrap gap-2">
                       {job.requirements.map((req, index) => (
                         <span key={index} className="text-gray-400 text-sm">
-                          {req} {index < job.requirements.length - 1 && '•'}
+                          {req} {index < job.requirements.length - 1 && '-'}
                         </span>
                       ))}
                     </div>
@@ -296,13 +279,13 @@ export default function CareersPage() {
       {/* CTA Section */}
       <section className="px-6 pb-20">
         <div className="container mx-auto">
-          <Card className="modern-skeu p-12 text-center">
+          <Card className="bg-[#0f172a]/80 border-cyan-500/10 p-12 text-center">
             <Briefcase className="w-16 h-16 text-cyan-400 mx-auto mb-6" />
             <h2 className="text-4xl font-bold text-white mb-4">
-              Don\'t See the Right Role?
+              Don't See the Right Role?
             </h2>
             <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
-              We\'re always looking for exceptional talent. Send us your resume and tell us how 
+              We're always looking for exceptional talent. Send us your resume and tell us how
               you can contribute to our mission.
             </p>
             <Button className="bg-gradient-to-r from-cyan-500 to-cyan-600 text-white px-8 py-3">
@@ -312,6 +295,6 @@ export default function CareersPage() {
           </Card>
         </div>
       </section>
-    </div>
+    </MarketingLayout>
   );
 }

@@ -7,7 +7,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Sparkles, Mail, Lock, Github, Chrome, Loader2, AlertCircle } from '@/components/icons';
+import { Mail, Lock, Chrome, Loader2, AlertCircle } from '@/components/icons';
+import { SynthexLogo } from '@/components/marketing/MarketingLayout';
 import { toast } from 'sonner';
 
 export default function LoginPage() {
@@ -70,7 +71,7 @@ export default function LoginPage() {
       if (!response.ok || !data.success) {
         throw new Error(data.error || 'Invalid credentials');
       }
-      
+
       // Store user data in localStorage for the sidebar and other components
       if (data.user && typeof window !== 'undefined') {
         localStorage.setItem('authToken', data.session?.accessToken || 'authenticated');
@@ -81,7 +82,7 @@ export default function LoginPage() {
           avatar: data.user.avatar
         }));
       }
-      
+
       toast.success('Welcome back!');
       router.push('/dashboard');
     } catch (error) {
@@ -136,13 +137,30 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 px-4">
-      <Card variant="glass" className="w-full max-w-md">
+    <div className="min-h-screen flex items-center justify-center bg-[#0a1628] px-4 relative overflow-hidden">
+      {/* Deep Navy Gradient Background */}
+      <div className="fixed inset-0 bg-gradient-to-br from-[#0a1628] via-[#0f172a] to-[#0a1628]" />
+
+      {/* Subtle Grid Pattern */}
+      <div className="fixed inset-0 opacity-[0.02]" style={{
+        backgroundImage: `linear-gradient(rgba(6, 182, 212, 0.5) 1px, transparent 1px),
+                          linear-gradient(90deg, rgba(6, 182, 212, 0.5) 1px, transparent 1px)`,
+        backgroundSize: '50px 50px'
+      }} />
+
+      {/* Glow Effects */}
+      <div className="fixed top-1/4 left-1/4 w-96 h-96 bg-cyan-500/5 rounded-full blur-[150px] pointer-events-none" />
+      <div className="fixed bottom-1/4 right-1/4 w-96 h-96 bg-cyan-400/5 rounded-full blur-[150px] pointer-events-none" />
+
+      {/* Card Container */}
+      <Card className="relative z-10 w-full max-w-md bg-[#0f172a]/80 backdrop-blur-xl border border-cyan-500/10 shadow-2xl shadow-cyan-500/5">
         <CardHeader className="space-y-1">
           <div className="flex items-center justify-center mb-4">
-            <Sparkles className="w-10 h-10 text-purple-500" />
+            <SynthexLogo className="w-12 h-12" />
           </div>
-          <CardTitle className="text-2xl text-center gradient-text">Welcome back</CardTitle>
+          <CardTitle className="text-2xl text-center text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-cyan-300">
+            Welcome back
+          </CardTitle>
           <CardDescription className="text-center text-gray-400">
             Enter your credentials to access your dashboard
           </CardDescription>
@@ -175,8 +193,8 @@ export default function LoginPage() {
           )}
           {/* Demo credentials notice */}
           {!accountExistsError && (process.env.NODE_ENV === 'development' || !process.env.NEXT_PUBLIC_SUPABASE_URL) && (
-            <div className="mt-4 p-3 bg-purple-500/10 border border-purple-500/30 rounded-lg">
-              <p className="text-xs text-purple-300 text-center">
+            <div className="mt-4 p-3 bg-cyan-500/10 border border-cyan-500/30 rounded-lg">
+              <p className="text-xs text-cyan-300 text-center">
                 Demo Mode: Use <strong>demo@synthex.com</strong> / <strong>demo123</strong>
               </p>
             </div>
@@ -194,7 +212,7 @@ export default function LoginPage() {
                   placeholder="you@example.com"
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className="pl-10 bg-white/5 border-white/10 text-white placeholder:text-gray-500"
+                  className="pl-10 bg-white/5 border-cyan-500/20 text-white placeholder:text-gray-500 focus:border-cyan-500/50 focus:ring-cyan-500/20"
                   aria-label="Email address"
                   aria-required="true"
                   aria-describedby="email-error"
@@ -213,7 +231,7 @@ export default function LoginPage() {
                   placeholder="••••••••"
                   value={formData.password}
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  className="pl-10 bg-white/5 border-white/10 text-white placeholder:text-gray-500"
+                  className="pl-10 bg-white/5 border-cyan-500/20 text-white placeholder:text-gray-500 focus:border-cyan-500/50 focus:ring-cyan-500/20"
                   required
                   disabled={isLoading}
                 />
@@ -221,16 +239,16 @@ export default function LoginPage() {
             </div>
             <div className="flex items-center justify-between">
               <label className="flex items-center space-x-2 text-sm">
-                <input type="checkbox" className="rounded border-gray-600" />
+                <input type="checkbox" className="rounded border-gray-600 bg-white/5 text-cyan-500 focus:ring-cyan-500/20" />
                 <span className="text-gray-400">Remember me</span>
               </label>
-              <Link href="/forgot-password" className="text-sm text-purple-400 hover:text-purple-300">
+              <Link href="/forgot-password" className="text-sm text-cyan-400 hover:text-cyan-300 transition-colors">
                 Forgot password?
               </Link>
             </div>
             <Button
               type="submit"
-              className="w-full gradient-primary text-white"
+              className="w-full bg-gradient-to-r from-cyan-500 to-cyan-600 hover:from-cyan-400 hover:to-cyan-500 text-white font-medium shadow-lg shadow-cyan-500/25 transition-all hover:shadow-cyan-500/40"
               disabled={isLoading}
             >
               {isLoading ? (
@@ -246,10 +264,10 @@ export default function LoginPage() {
 
           <div className="relative">
             <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t border-gray-700" />
+              <span className="w-full border-t border-cyan-500/10" />
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-transparent px-2 text-gray-500">Or continue with</span>
+              <span className="bg-[#0f172a] px-2 text-gray-500">Or continue with</span>
             </div>
           </div>
 
@@ -257,7 +275,7 @@ export default function LoginPage() {
             <Button
               type="button"
               variant="outline"
-              className="w-full bg-white/5 border-white/10 text-white hover:bg-white/10"
+              className="w-full bg-white/5 border-cyan-500/20 text-white hover:bg-cyan-500/10 hover:border-cyan-500/40 transition-all"
               onClick={handleGoogleLogin}
               disabled={isLoading || oauthLoading}
             >
@@ -278,7 +296,7 @@ export default function LoginPage() {
         <CardFooter>
           <p className="text-center text-sm text-gray-400 w-full">
             Don't have an account?{' '}
-            <Link href="/signup" className="text-purple-400 hover:text-purple-300">
+            <Link href="/signup" className="text-cyan-400 hover:text-cyan-300 transition-colors">
               Sign up
             </Link>
           </p>

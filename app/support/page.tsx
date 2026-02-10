@@ -3,12 +3,13 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { 
-  Sparkles, MessageCircle, Book, Video, Mail, Phone, 
-  Clock, Search, ChevronRight, HelpCircle, FileText,
-  Users, Zap, Settings, Shield, CreditCard, BarChart3
+import {
+  MessageCircle, Book, Video, Mail,
+  Clock, Search, ChevronRight,
+  Zap, Settings, CreditCard
 } from '@/components/icons';
 import { useState } from 'react';
+import MarketingLayout from '@/components/marketing/MarketingLayout';
 
 interface FAQItem {
   question: string;
@@ -68,36 +69,19 @@ export default function SupportPage() {
 
   const filteredFAQs = faqs.filter(faq => {
     const matchesCategory = selectedCategory === 'All' || faq.category === selectedCategory;
-    const matchesSearch = searchTerm === '' || 
+    const matchesSearch = searchTerm === '' ||
       faq.question.toLowerCase().includes(searchTerm.toLowerCase()) ||
       faq.answer.toLowerCase().includes(searchTerm.toLowerCase());
     return matchesCategory && matchesSearch;
   });
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-cyan-900/20 to-gray-900">
-      {/* Navigation */}
-      <nav className="fixed top-0 w-full z-50 bg-white/[0.02] backdrop-blur-xl border-b border-white/[0.08]">
-        <div className="container mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <Link href="/" className="flex items-center space-x-2">
-              <Sparkles className="w-8 h-8 text-cyan-400" />
-              <span className="text-2xl font-bold gradient-text-cyan">Synthex</span>
-            </Link>
-            <Link href="/">
-              <Button variant="ghost" className="text-gray-300 hover:text-white">
-                Back to Home
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </nav>
-
+    <MarketingLayout currentPage="support">
       {/* Hero Section */}
-      <section className="pt-32 pb-12 px-6">
+      <section className="pt-12 pb-12 px-6">
         <div className="container mx-auto text-center">
           <h1 className="text-5xl font-bold text-white mb-4 heading-serif">
-            How Can We <span className="gradient-text-cyan">Help You?</span>
+            How Can We <span className="bg-gradient-to-r from-cyan-400 to-cyan-500 bg-clip-text text-transparent">Help You?</span>
           </h1>
           <p className="text-xl text-gray-300 max-w-3xl mx-auto mb-8">
             Get instant answers, explore our documentation, or reach out to our support team
@@ -112,7 +96,7 @@ export default function SupportPage() {
                 placeholder="Search for help..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-12 pr-6 py-4 bg-white/5 backdrop-blur-md border border-white/10 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-cyan-400/50"
+                className="w-full pl-12 pr-6 py-4 bg-[#0f172a]/80 backdrop-blur-md border border-cyan-500/10 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-cyan-400/50"
               />
             </div>
           </div>
@@ -123,23 +107,23 @@ export default function SupportPage() {
       <section className="px-6 pb-12">
         <div className="container mx-auto">
           <div className="grid md:grid-cols-4 gap-4">
-            <Card variant="glass" className="p-6 hover:scale-105 transition-transform cursor-pointer">
+            <Card className="bg-[#0f172a]/80 border-cyan-500/10 p-6 hover:scale-105 transition-transform cursor-pointer">
               <Book className="w-8 h-8 text-cyan-400 mb-3" />
               <h3 className="text-white font-semibold mb-1">Documentation</h3>
               <p className="text-gray-400 text-sm">Comprehensive guides and tutorials</p>
             </Card>
-            <Card variant="glass" className="p-6 hover:scale-105 transition-transform cursor-pointer">
-              <Video className="w-8 h-8 text-amber-400 mb-3" />
+            <Card className="bg-[#0f172a]/80 border-cyan-500/10 p-6 hover:scale-105 transition-transform cursor-pointer">
+              <Video className="w-8 h-8 text-cyan-400 mb-3" />
               <h3 className="text-white font-semibold mb-1">Video Tutorials</h3>
               <p className="text-gray-400 text-sm">Step-by-step video walkthroughs</p>
             </Card>
-            <Card variant="glass" className="p-6 hover:scale-105 transition-transform cursor-pointer">
-              <MessageCircle className="w-8 h-8 text-purple-400 mb-3" />
+            <Card className="bg-[#0f172a]/80 border-cyan-500/10 p-6 hover:scale-105 transition-transform cursor-pointer">
+              <MessageCircle className="w-8 h-8 text-cyan-400 mb-3" />
               <h3 className="text-white font-semibold mb-1">Live Chat</h3>
               <p className="text-gray-400 text-sm">Chat with our support team</p>
             </Card>
-            <Card variant="glass" className="p-6 hover:scale-105 transition-transform cursor-pointer">
-              <Mail className="w-8 h-8 text-green-400 mb-3" />
+            <Card className="bg-[#0f172a]/80 border-cyan-500/10 p-6 hover:scale-105 transition-transform cursor-pointer">
+              <Mail className="w-8 h-8 text-cyan-400 mb-3" />
               <h3 className="text-white font-semibold mb-1">Email Support</h3>
               <p className="text-gray-400 text-sm">support@synthex.social</p>
             </Card>
@@ -163,7 +147,7 @@ export default function SupportPage() {
                 className={`px-4 py-2 rounded-full transition-all ${
                   selectedCategory === category
                     ? 'bg-gradient-to-r from-cyan-500 to-cyan-600 text-white'
-                    : 'bg-white/5 text-gray-300 hover:bg-white/10 border border-white/10'
+                    : 'bg-[#0f172a]/80 text-gray-300 hover:bg-[#0f172a] border border-cyan-500/10'
                 }`}
               >
                 {category}
@@ -176,22 +160,21 @@ export default function SupportPage() {
             {filteredFAQs.map((faq, index) => (
               <Card
                 key={index}
-                variant="glass"
-                className="overflow-hidden"
+                className="bg-[#0f172a]/80 border-cyan-500/10 overflow-hidden"
               >
                 <button
                   onClick={() => setExpandedFAQ(expandedFAQ === index ? null : index)}
-                  className="w-full px-6 py-4 flex items-center justify-between text-left hover:bg-white/5 transition-colors"
+                  className="w-full px-6 py-4 flex items-center justify-between text-left hover:bg-cyan-500/5 transition-colors"
                 >
                   <span className="text-white font-medium">{faq.question}</span>
-                  <ChevronRight 
+                  <ChevronRight
                     className={`w-5 h-5 text-gray-400 transition-transform ${
                       expandedFAQ === index ? 'rotate-90' : ''
                     }`}
                   />
                 </button>
                 {expandedFAQ === index && (
-                  <div className="px-6 py-4 border-t border-white/10">
+                  <div className="px-6 py-4 border-t border-cyan-500/10">
                     <p className="text-gray-300">{faq.answer}</p>
                   </div>
                 )}
@@ -208,7 +191,7 @@ export default function SupportPage() {
             Browse Help Topics
           </h2>
           <div className="grid md:grid-cols-3 gap-6">
-            <Card variant="glass" className="p-6">
+            <Card className="bg-[#0f172a]/80 border-cyan-500/10 p-6">
               <Zap className="w-10 h-10 text-cyan-400 mb-4" />
               <h3 className="text-xl font-semibold text-white mb-3">Getting Started</h3>
               <ul className="space-y-2">
@@ -224,33 +207,33 @@ export default function SupportPage() {
               </ul>
             </Card>
 
-            <Card variant="glass" className="p-6">
-              <Settings className="w-10 h-10 text-amber-400 mb-4" />
+            <Card className="bg-[#0f172a]/80 border-cyan-500/10 p-6">
+              <Settings className="w-10 h-10 text-cyan-400 mb-4" />
               <h3 className="text-xl font-semibold text-white mb-3">Features & Tools</h3>
               <ul className="space-y-2">
-                <li><Link href="/dashboard/content" className="text-gray-400 hover:text-amber-400 flex items-center gap-2">
+                <li><Link href="/dashboard/content" className="text-gray-400 hover:text-cyan-400 flex items-center gap-2">
                   <ChevronRight className="w-4 h-4" /> AI content generation
                 </Link></li>
-                <li><Link href="/dashboard/analytics" className="text-gray-400 hover:text-amber-400 flex items-center gap-2">
+                <li><Link href="/dashboard/analytics" className="text-gray-400 hover:text-cyan-400 flex items-center gap-2">
                   <ChevronRight className="w-4 h-4" /> Analytics dashboard
                 </Link></li>
-                <li><Link href="/dashboard/schedule" className="text-gray-400 hover:text-amber-400 flex items-center gap-2">
+                <li><Link href="/dashboard/schedule" className="text-gray-400 hover:text-cyan-400 flex items-center gap-2">
                   <ChevronRight className="w-4 h-4" /> Scheduling tools
                 </Link></li>
               </ul>
             </Card>
 
-            <Card variant="glass" className="p-6">
-              <CreditCard className="w-10 h-10 text-purple-400 mb-4" />
+            <Card className="bg-[#0f172a]/80 border-cyan-500/10 p-6">
+              <CreditCard className="w-10 h-10 text-cyan-400 mb-4" />
               <h3 className="text-xl font-semibold text-white mb-3">Billing & Plans</h3>
               <ul className="space-y-2">
-                <li><Link href="/pricing" className="text-gray-400 hover:text-purple-400 flex items-center gap-2">
+                <li><Link href="/pricing" className="text-gray-400 hover:text-cyan-400 flex items-center gap-2">
                   <ChevronRight className="w-4 h-4" /> Pricing comparison
                 </Link></li>
-                <li><Link href="/dashboard/settings" className="text-gray-400 hover:text-purple-400 flex items-center gap-2">
+                <li><Link href="/dashboard/settings" className="text-gray-400 hover:text-cyan-400 flex items-center gap-2">
                   <ChevronRight className="w-4 h-4" /> Upgrade or downgrade
                 </Link></li>
-                <li><Link href="/dashboard/settings" className="text-gray-400 hover:text-purple-400 flex items-center gap-2">
+                <li><Link href="/dashboard/settings" className="text-gray-400 hover:text-cyan-400 flex items-center gap-2">
                   <ChevronRight className="w-4 h-4" /> Payment methods
                 </Link></li>
               </ul>
@@ -262,7 +245,7 @@ export default function SupportPage() {
       {/* Contact Section */}
       <section className="px-6 pb-20">
         <div className="container mx-auto">
-          <Card variant="glass-primary" className="p-12">
+          <Card className="bg-[#0f172a]/80 border-cyan-500/10 p-12">
             <div className="grid md:grid-cols-2 gap-8">
               <div>
                 <h2 className="text-3xl font-bold text-white mb-4">
@@ -291,17 +274,17 @@ export default function SupportPage() {
                   <input
                     type="text"
                     placeholder="Your name"
-                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-cyan-400"
+                    className="w-full px-4 py-3 bg-[#0f172a]/80 border border-cyan-500/10 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-cyan-400"
                   />
                   <input
                     type="email"
                     placeholder="Your email"
-                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-cyan-400"
+                    className="w-full px-4 py-3 bg-[#0f172a]/80 border border-cyan-500/10 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-cyan-400"
                   />
                   <textarea
                     placeholder="How can we help?"
                     rows={4}
-                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-cyan-400 resize-none"
+                    className="w-full px-4 py-3 bg-[#0f172a]/80 border border-cyan-500/10 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-cyan-400 resize-none"
                   />
                   <Button className="w-full bg-gradient-to-r from-cyan-500 to-cyan-600 text-white">
                     Send Message
@@ -312,6 +295,6 @@ export default function SupportPage() {
           </Card>
         </div>
       </section>
-    </div>
+    </MarketingLayout>
   );
 }

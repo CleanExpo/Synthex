@@ -34,11 +34,11 @@ interface BrandResult {
 }
 
 const PSYCHOLOGY_CATEGORIES = [
-  { id: 'cognitive', name: 'Cognitive Biases', icon: Brain, color: 'from-purple-500 to-indigo-600' },
-  { id: 'social', name: 'Social Psychology', icon: Users, color: 'from-blue-500 to-cyan-600' },
+  { id: 'cognitive', name: 'Cognitive Biases', icon: Brain, color: 'from-cyan-500 to-cyan-600' },
+  { id: 'social', name: 'Social Psychology', icon: Users, color: 'from-cyan-400 to-cyan-500' },
   { id: 'behavioral', name: 'Behavioral Economics', icon: TrendingUp, color: 'from-green-500 to-emerald-600' },
   { id: 'memory', name: 'Memory & Learning', icon: Sparkles, color: 'from-yellow-500 to-orange-600' },
-  { id: 'perception', name: 'Perception & Reality', icon: Target, color: 'from-pink-500 to-rose-600' }
+  { id: 'perception', name: 'Perception & Reality', icon: Target, color: 'from-cyan-500 to-cyan-600' }
 ];
 
 const PSYCHOLOGY_PRINCIPLES: PsychologyPrinciple[] = [
@@ -46,21 +46,21 @@ const PSYCHOLOGY_PRINCIPLES: PsychologyPrinciple[] = [
   { name: 'Anchoring Bias', category: 'cognitive', description: 'First information influences all decisions', relevanceScore: 85 },
   { name: 'Confirmation Bias', category: 'cognitive', description: 'Seeking confirming information', relevanceScore: 75 },
   { name: 'Availability Heuristic', category: 'cognitive', description: 'Recent events seem more likely', relevanceScore: 70 },
-  
+
   // Social Psychology
   { name: 'Social Proof', category: 'social', description: 'Following the crowd', relevanceScore: 90 },
   { name: 'Authority Principle', category: 'social', description: 'Deferring to experts', relevanceScore: 88 },
   { name: 'Reciprocity', category: 'social', description: 'Returning favors', relevanceScore: 82 },
-  
+
   // Behavioral Economics
   { name: 'Loss Aversion', category: 'behavioral', description: 'Fear of missing out', relevanceScore: 87 },
   { name: 'Scarcity Principle', category: 'behavioral', description: 'Limited availability increases desire', relevanceScore: 92 },
   { name: 'Decoy Effect', category: 'behavioral', description: 'Third option influences choice', relevanceScore: 78 },
-  
+
   // Memory & Learning
   { name: 'Mere Exposure Effect', category: 'memory', description: 'Familiarity breeds preference', relevanceScore: 73 },
   { name: 'Primacy Effect', category: 'memory', description: 'First items remembered best', relevanceScore: 71 },
-  
+
   // Perception & Reality
   { name: 'Halo Effect', category: 'perception', description: 'One trait influences all', relevanceScore: 84 },
   { name: 'Contrast Principle', category: 'perception', description: 'Comparisons affect perception', relevanceScore: 80 }
@@ -104,7 +104,7 @@ export default function PsychologyBrandGenerator() {
           psychologyPreference: formData.selectedPrinciples
         })
       });
-      
+
       if (response.ok) {
         const data = await response.json();
         setResults(data.result);
@@ -118,10 +118,10 @@ export default function PsychologyBrandGenerator() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-violet-900 p-8">
+    <div className="min-h-screen p-8">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           className="text-center mb-12"
@@ -143,13 +143,13 @@ export default function PsychologyBrandGenerator() {
                   initial={{ scale: 0.8 }}
                   animate={{ scale: step >= s ? 1 : 0.8 }}
                   className={`w-12 h-12 rounded-full flex items-center justify-center font-bold ${
-                    step >= s ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white' : 'bg-gray-700 text-gray-400'
+                    step >= s ? 'bg-gradient-to-r from-cyan-500 to-cyan-600 text-white' : 'bg-gray-700 text-gray-400'
                   }`}
                 >
                   {s}
                 </motion.div>
                 {s < 4 && (
-                  <div className={`w-24 h-1 ${step > s ? 'bg-purple-500' : 'bg-gray-700'}`} />
+                  <div className={`w-24 h-1 ${step > s ? 'bg-cyan-500' : 'bg-gray-700'}`} />
                 )}
               </React.Fragment>
             ))}
@@ -164,16 +164,16 @@ export default function PsychologyBrandGenerator() {
               initial={{ opacity: 0, x: 100 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -100 }}
-              className="bg-gray-800/50 backdrop-blur-lg rounded-3xl p-8 border border-purple-500/20"
+              className="bg-[#0f172a]/50 backdrop-blur-lg rounded-3xl p-8 border border-cyan-500/20"
             >
               <h2 className="text-3xl font-bold text-white mb-6">Tell us about your business</h2>
-              
+
               <div className="space-y-6">
                 <div>
                   <label className="block text-gray-300 mb-2">Business Type</label>
                   <input
                     type="text"
-                    className="w-full px-4 py-3 bg-gray-900/50 border border-purple-500/30 rounded-xl text-white focus:border-purple-500 focus:outline-none"
+                    className="w-full px-4 py-3 bg-[#0a1628]/50 border border-cyan-500/30 rounded-xl text-white focus:border-cyan-500 focus:outline-none"
                     placeholder="e.g., SaaS, E-commerce, Consulting..."
                     value={formData.businessType}
                     onChange={(e) => setFormData({...formData, businessType: e.target.value})}
@@ -183,7 +183,7 @@ export default function PsychologyBrandGenerator() {
                 <div>
                   <label className="block text-gray-300 mb-2">Target Audience</label>
                   <textarea
-                    className="w-full px-4 py-3 bg-gray-900/50 border border-purple-500/30 rounded-xl text-white focus:border-purple-500 focus:outline-none"
+                    className="w-full px-4 py-3 bg-[#0a1628]/50 border border-cyan-500/30 rounded-xl text-white focus:border-cyan-500 focus:outline-none"
                     rows={3}
                     placeholder="Describe your ideal customers..."
                     onChange={(e) => setFormData({
@@ -210,8 +210,8 @@ export default function PsychologyBrandGenerator() {
                         })}
                         className={`px-4 py-3 rounded-xl border transition-all ${
                           (formData.brandGoals as any[]).includes(goal)
-                            ? 'bg-purple-500 border-purple-500 text-white'
-                            : 'bg-gray-900/50 border-purple-500/30 text-gray-300 hover:border-purple-500'
+                            ? 'bg-cyan-500 border-cyan-500 text-white'
+                            : 'bg-[#0a1628]/50 border-cyan-500/30 text-gray-300 hover:border-cyan-500'
                         }`}
                       >
                         {goal}
@@ -223,7 +223,7 @@ export default function PsychologyBrandGenerator() {
                 <button
                   onClick={() => setStep(2)}
                   disabled={!formData.businessType || formData.brandGoals.length === 0}
-                  className="w-full py-4 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold rounded-xl hover:from-purple-600 hover:to-pink-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full py-4 bg-gradient-to-r from-cyan-500 to-cyan-600 text-white font-bold rounded-xl hover:from-cyan-400 hover:to-cyan-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Continue to Psychology Selection
                 </button>
@@ -238,10 +238,10 @@ export default function PsychologyBrandGenerator() {
               initial={{ opacity: 0, x: 100 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -100 }}
-              className="bg-gray-800/50 backdrop-blur-lg rounded-3xl p-8 border border-purple-500/20"
+              className="bg-[#0f172a]/50 backdrop-blur-lg rounded-3xl p-8 border border-cyan-500/20"
             >
               <h2 className="text-3xl font-bold text-white mb-6">Select Psychological Principles</h2>
-              
+
               {/* Category Tabs */}
               <div className="flex flex-wrap gap-3 mb-8">
                 {PSYCHOLOGY_CATEGORIES.map(cat => (
@@ -251,7 +251,7 @@ export default function PsychologyBrandGenerator() {
                     className={`px-6 py-3 rounded-xl font-semibold transition-all flex items-center gap-2 ${
                       selectedCategory === cat.id
                         ? `bg-gradient-to-r ${cat.color} text-white`
-                        : 'bg-gray-900/50 text-gray-300 hover:bg-gray-900'
+                        : 'bg-[#0a1628]/50 text-gray-300 hover:bg-[#0a1628]'
                     }`}
                   >
                     <cat.icon className="w-5 h-5" />
@@ -272,13 +272,13 @@ export default function PsychologyBrandGenerator() {
                       onClick={() => handlePrincipleToggle(principle.name)}
                       className={`p-4 rounded-xl border transition-all text-left ${
                         formData.selectedPrinciples.includes(principle.name)
-                          ? 'bg-purple-500/20 border-purple-500 text-white'
-                          : 'bg-gray-900/50 border-gray-700 text-gray-300 hover:border-purple-500/50'
+                          ? 'bg-cyan-500/20 border-cyan-500 text-white'
+                          : 'bg-[#0a1628]/50 border-gray-700 text-gray-300 hover:border-cyan-500/50'
                       }`}
                     >
                       <div className="flex justify-between items-start mb-2">
                         <h3 className="font-semibold">{principle.name}</h3>
-                        <span className="text-xs px-2 py-1 bg-purple-500/20 rounded-full">
+                        <span className="text-xs px-2 py-1 bg-cyan-500/20 rounded-full">
                           {principle.relevanceScore}%
                         </span>
                       </div>
@@ -297,7 +297,7 @@ export default function PsychologyBrandGenerator() {
                 <button
                   onClick={() => setStep(3)}
                   disabled={formData.selectedPrinciples.length === 0}
-                  className="flex-1 py-4 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold rounded-xl hover:from-purple-600 hover:to-pink-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1 py-4 bg-gradient-to-r from-cyan-500 to-cyan-600 text-white font-bold rounded-xl hover:from-cyan-400 hover:to-cyan-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Continue to Tone Selection
                 </button>
@@ -312,10 +312,10 @@ export default function PsychologyBrandGenerator() {
               initial={{ opacity: 0, x: 100 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -100 }}
-              className="bg-gray-800/50 backdrop-blur-lg rounded-3xl p-8 border border-purple-500/20"
+              className="bg-[#0f172a]/50 backdrop-blur-lg rounded-3xl p-8 border border-cyan-500/20"
             >
               <h2 className="text-3xl font-bold text-white mb-6">Final Details</h2>
-              
+
               <div className="space-y-6">
                 <div>
                   <label className="block text-gray-300 mb-2">Brand Tone</label>
@@ -326,8 +326,8 @@ export default function PsychologyBrandGenerator() {
                         onClick={() => setFormData({...formData, tonePreference: tone})}
                         className={`px-4 py-3 rounded-xl border transition-all ${
                           formData.tonePreference === tone
-                            ? 'bg-purple-500 border-purple-500 text-white'
-                            : 'bg-gray-900/50 border-purple-500/30 text-gray-300 hover:border-purple-500'
+                            ? 'bg-cyan-500 border-cyan-500 text-white'
+                            : 'bg-[#0a1628]/50 border-cyan-500/30 text-gray-300 hover:border-cyan-500'
                         }`}
                       >
                         {tone}
@@ -339,7 +339,7 @@ export default function PsychologyBrandGenerator() {
                 <div>
                   <label className="block text-gray-300 mb-2">Competitor Context (Optional)</label>
                   <textarea
-                    className="w-full px-4 py-3 bg-gray-900/50 border border-purple-500/30 rounded-xl text-white focus:border-purple-500 focus:outline-none"
+                    className="w-full px-4 py-3 bg-[#0a1628]/50 border border-cyan-500/30 rounded-xl text-white focus:border-cyan-500 focus:outline-none"
                     rows={3}
                     placeholder="Describe your main competitors..."
                     value={formData.competitorContext}
@@ -347,7 +347,7 @@ export default function PsychologyBrandGenerator() {
                   />
                 </div>
 
-                <div className="bg-purple-500/10 border border-purple-500/30 rounded-xl p-6">
+                <div className="bg-cyan-500/10 border border-cyan-500/30 rounded-xl p-6">
                   <h3 className="text-xl font-semibold text-white mb-3">Summary</h3>
                   <div className="space-y-2 text-gray-300">
                     <p><span className="font-semibold">Business:</span> {formData.businessType}</p>
@@ -367,7 +367,7 @@ export default function PsychologyBrandGenerator() {
                   <button
                     onClick={generateBrand}
                     disabled={!formData.tonePreference || loading}
-                    className="flex-1 py-4 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold rounded-xl hover:from-purple-600 hover:to-pink-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    className="flex-1 py-4 bg-gradient-to-r from-cyan-500 to-cyan-600 text-white font-bold rounded-xl hover:from-cyan-400 hover:to-cyan-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                   >
                     {loading ? (
                       <>
@@ -395,7 +395,7 @@ export default function PsychologyBrandGenerator() {
               className="space-y-8"
             >
               {/* Effectiveness Score */}
-              <div className="bg-gradient-to-r from-purple-500 to-pink-500 rounded-3xl p-8 text-white">
+              <div className="bg-gradient-to-r from-cyan-500 to-cyan-600 rounded-3xl p-8 text-white">
                 <div className="flex items-center justify-between">
                   <div>
                     <h2 className="text-3xl font-bold mb-2">Your Psychology-Powered Brand</h2>
@@ -408,9 +408,9 @@ export default function PsychologyBrandGenerator() {
               </div>
 
               {/* Brand Names */}
-              <div className="bg-gray-800/50 backdrop-blur-lg rounded-3xl p-8 border border-purple-500/20">
+              <div className="bg-[#0f172a]/50 backdrop-blur-lg rounded-3xl p-8 border border-cyan-500/20">
                 <h3 className="text-2xl font-bold text-white mb-6 flex items-center gap-2">
-                  <Award className="w-6 h-6 text-purple-400" />
+                  <Award className="w-6 h-6 text-cyan-400" />
                   Brand Names
                 </h3>
                 <div className="grid gap-4">
@@ -420,16 +420,16 @@ export default function PsychologyBrandGenerator() {
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: idx * 0.1 }}
-                      className="bg-gray-900/50 rounded-xl p-6 border border-purple-500/20"
+                      className="bg-[#0a1628]/50 rounded-xl p-6 border border-cyan-500/20"
                     >
                       <div className="flex justify-between items-start mb-3">
                         <h4 className="text-2xl font-bold text-white">{name.name}</h4>
-                        <span className="px-3 py-1 bg-purple-500/20 text-purple-300 rounded-full text-sm">
+                        <span className="px-3 py-1 bg-cyan-500/20 text-cyan-300 rounded-full text-sm">
                           {name.memorabilityFactor}/10
                         </span>
                       </div>
                       <p className="text-gray-300 mb-2">
-                        <span className="font-semibold text-purple-400">Trigger:</span> {name.psychologicalTrigger}
+                        <span className="font-semibold text-cyan-400">Trigger:</span> {name.psychologicalTrigger}
                       </p>
                       <p className="text-gray-400">{name.rationale}</p>
                     </motion.div>
@@ -438,7 +438,7 @@ export default function PsychologyBrandGenerator() {
               </div>
 
               {/* Taglines */}
-              <div className="bg-gray-800/50 backdrop-blur-lg rounded-3xl p-8 border border-purple-500/20">
+              <div className="bg-[#0f172a]/50 backdrop-blur-lg rounded-3xl p-8 border border-cyan-500/20">
                 <h3 className="text-2xl font-bold text-white mb-6 flex items-center gap-2">
                   <Sparkles className="w-6 h-6 text-yellow-400" />
                   Taglines
@@ -450,16 +450,16 @@ export default function PsychologyBrandGenerator() {
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: idx * 0.1 }}
-                      className="bg-gray-900/50 rounded-xl p-6 border border-purple-500/20"
+                      className="bg-[#0a1628]/50 rounded-xl p-6 border border-cyan-500/20"
                     >
                       <h4 className="text-xl font-bold text-white mb-3">"{tagline.text}"</h4>
                       <div className="grid grid-cols-2 gap-4 text-sm">
                         <div>
-                          <span className="text-purple-400 font-semibold">Target:</span>
+                          <span className="text-cyan-400 font-semibold">Target:</span>
                           <p className="text-gray-300">{tagline.psychologicalTarget}</p>
                         </div>
                         <div>
-                          <span className="text-purple-400 font-semibold">Emotion:</span>
+                          <span className="text-cyan-400 font-semibold">Emotion:</span>
                           <p className="text-gray-300">{tagline.emotionalResonance}</p>
                         </div>
                       </div>
@@ -469,7 +469,7 @@ export default function PsychologyBrandGenerator() {
               </div>
 
               {/* Platform Metadata */}
-              <div className="bg-gray-800/50 backdrop-blur-lg rounded-3xl p-8 border border-purple-500/20">
+              <div className="bg-[#0f172a]/50 backdrop-blur-lg rounded-3xl p-8 border border-cyan-500/20">
                 <h3 className="text-2xl font-bold text-white mb-6 flex items-center gap-2">
                   <Package className="w-6 h-6 text-green-400" />
                   Platform Optimization
@@ -481,26 +481,26 @@ export default function PsychologyBrandGenerator() {
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: idx * 0.1 }}
-                      className="bg-gray-900/50 rounded-xl p-6 border border-purple-500/20"
+                      className="bg-[#0a1628]/50 rounded-xl p-6 border border-cyan-500/20"
                     >
                       <h4 className="text-lg font-bold text-white mb-3 capitalize">{pkg.platform}</h4>
                       <div className="space-y-3 text-sm">
                         <div>
-                          <span className="text-purple-400 font-semibold">Title:</span>
+                          <span className="text-cyan-400 font-semibold">Title:</span>
                           <p className="text-gray-300">{pkg.title}</p>
                         </div>
                         <div>
-                          <span className="text-purple-400 font-semibold">Keywords:</span>
+                          <span className="text-cyan-400 font-semibold">Keywords:</span>
                           <div className="flex flex-wrap gap-2 mt-1">
                             {pkg.keywords.map((kw, i) => (
-                              <span key={i} className="px-2 py-1 bg-purple-500/20 text-purple-300 rounded-full text-xs">
+                              <span key={i} className="px-2 py-1 bg-cyan-500/20 text-cyan-300 rounded-full text-xs">
                                 {kw}
                               </span>
                             ))}
                           </div>
                         </div>
                         <div>
-                          <span className="text-purple-400 font-semibold">Hashtags:</span>
+                          <span className="text-cyan-400 font-semibold">Hashtags:</span>
                           <p className="text-gray-300">{pkg.hashtags.join(' ')}</p>
                         </div>
                       </div>
@@ -529,7 +529,7 @@ export default function PsychologyBrandGenerator() {
                   Generate Another Brand
                 </button>
                 <button
-                  className="flex-1 py-4 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold rounded-xl hover:from-purple-600 hover:to-pink-600 transition-all"
+                  className="flex-1 py-4 bg-gradient-to-r from-cyan-500 to-cyan-600 text-white font-bold rounded-xl hover:from-cyan-400 hover:to-cyan-500 transition-all"
                 >
                   Save & Deploy Brand
                 </button>

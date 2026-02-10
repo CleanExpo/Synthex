@@ -1,10 +1,13 @@
+'use client';
+
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import MarketingLayout from '@/components/marketing/MarketingLayout';
 import {
-  Sparkles, TrendingUp, Users, ArrowRight, CheckCircle2,
-  Quote, Star, BarChart3, Target, Zap, Building, ShoppingCart,
-  Briefcase, Rocket, Award, Globe
+  TrendingUp, Users, ArrowRight,
+  Quote, Star, Rocket, Award, Globe,
+  Building, ShoppingCart, Briefcase
 } from '@/components/icons';
 
 const caseStudies = [
@@ -124,54 +127,18 @@ export default function CaseStudiesPage() {
   const moreStudies = caseStudies.filter(study => !study.featured);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900">
-      {/* Navigation */}
-      <nav className="fixed top-0 w-full z-50 bg-white/[0.02] backdrop-blur-xl border-b border-white/[0.08]">
-        <div className="container mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <Link href="/" className="flex items-center space-x-2">
-              <Sparkles className="w-8 h-8 text-purple-500" />
-              <span className="text-2xl font-bold gradient-text">Synthex</span>
-            </Link>
-            <div className="flex items-center space-x-6">
-              <Link href="/features" className="text-gray-300 hover:text-white transition">
-                Features
-              </Link>
-              <Link href="/case-studies" className="text-white">
-                Case Studies
-              </Link>
-              <Link href="/pricing" className="text-gray-300 hover:text-white transition">
-                Pricing
-              </Link>
-              <Link href="/docs" className="text-gray-300 hover:text-white transition">
-                Docs
-              </Link>
-              <Link href="/login">
-                <Button variant="ghost" className="text-gray-300 hover:text-white">
-                  Login
-                </Button>
-              </Link>
-              <Link href="/signup">
-                <Button className="gradient-primary text-white">
-                  Get Started
-                </Button>
-              </Link>
-            </div>
-          </div>
-        </div>
-      </nav>
-
+    <MarketingLayout currentPage="case-studies">
       {/* Hero Section */}
-      <section className="pt-32 pb-16 px-6">
+      <section className="pt-12 pb-16 px-6">
         <div className="container mx-auto text-center">
-          <div className="inline-flex items-center bg-purple-500/10 border border-purple-500/20 rounded-full px-4 py-2 mb-6">
-            <Award className="w-4 h-4 text-purple-400 mr-2" />
-            <span className="text-purple-300 text-sm">Real Results from Real Businesses</span>
+          <div className="inline-flex items-center bg-cyan-500/10 border border-cyan-500/20 rounded-full px-4 py-2 mb-6">
+            <Award className="w-4 h-4 text-cyan-400 mr-2" />
+            <span className="text-cyan-300 text-sm">Real Results from Real Businesses</span>
           </div>
           <h1 className="text-5xl font-bold text-white mb-6">
-            Success Stories That <span className="gradient-text">Inspire</span>
+            Success Stories That <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-cyan-300">Inspire</span>
           </h1>
-          <p className="text-xl text-gray-300 mb-10 max-w-3xl mx-auto">
+          <p className="text-xl text-gray-400 mb-10 max-w-3xl mx-auto">
             See how businesses of all sizes are transforming their social media presence
             and achieving remarkable growth with Synthex.
           </p>
@@ -181,12 +148,12 @@ export default function CaseStudiesPage() {
       {/* Stats Bar */}
       <section className="pb-16 px-6">
         <div className="container mx-auto">
-          <div className="bg-white/[0.03] backdrop-blur-xl border border-white/[0.08] rounded-2xl p-8">
+          <div className="bg-[#0f172a]/80 backdrop-blur-xl border border-cyan-500/10 rounded-2xl p-8">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
               {stats.map((stat, index) => (
                 <div key={index} className="text-center">
-                  <div className="text-3xl md:text-4xl font-bold gradient-text mb-2">{stat.value}</div>
-                  <div className="text-gray-400 text-sm">{stat.label}</div>
+                  <div className="text-3xl md:text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-cyan-300 mb-2">{stat.value}</div>
+                  <div className="text-gray-500 text-sm">{stat.label}</div>
                 </div>
               ))}
             </div>
@@ -198,15 +165,15 @@ export default function CaseStudiesPage() {
       <section className="pb-20 px-6">
         <div className="container mx-auto">
           <h2 className="text-3xl font-bold text-center text-white mb-4">Featured Success Stories</h2>
-          <p className="text-gray-400 text-center mb-12 max-w-2xl mx-auto">
+          <p className="text-gray-500 text-center mb-12 max-w-2xl mx-auto">
             Deep dives into how leading companies achieved extraordinary results
           </p>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {featuredStudies.map((study) => (
-              <Card key={study.id} variant="glass" className="p-8 relative overflow-hidden">
+              <Card key={study.id} className="bg-[#0f172a]/60 backdrop-blur-xl border border-cyan-500/10 p-8 relative overflow-hidden hover:border-cyan-500/30 transition-all">
                 <div className="absolute top-4 right-4">
-                  <span className="bg-purple-500/20 text-purple-300 text-xs px-3 py-1 rounded-full border border-purple-500/30">
+                  <span className="bg-cyan-500/20 text-cyan-300 text-xs px-3 py-1 rounded-full border border-cyan-500/30">
                     Featured
                   </span>
                 </div>
@@ -215,39 +182,39 @@ export default function CaseStudiesPage() {
                   <div className="text-4xl">{study.logo}</div>
                   <div>
                     <h3 className="text-xl font-bold text-white">{study.company}</h3>
-                    <p className="text-purple-400 text-sm">{study.industry}</p>
+                    <p className="text-cyan-400 text-sm">{study.industry}</p>
                   </div>
                 </div>
 
                 <div className="mb-6">
-                  <h4 className="text-sm font-semibold text-gray-300 mb-2">THE CHALLENGE</h4>
-                  <p className="text-gray-400">{study.challenge}</p>
+                  <h4 className="text-sm font-semibold text-gray-400 mb-2">THE CHALLENGE</h4>
+                  <p className="text-gray-500">{study.challenge}</p>
                 </div>
 
                 <div className="mb-6">
-                  <h4 className="text-sm font-semibold text-gray-300 mb-2">THE SOLUTION</h4>
-                  <p className="text-gray-400">{study.solution}</p>
+                  <h4 className="text-sm font-semibold text-gray-400 mb-2">THE SOLUTION</h4>
+                  <p className="text-gray-500">{study.solution}</p>
                 </div>
 
                 <div className="grid grid-cols-3 gap-4 mb-6">
                   {study.results.map((result, idx) => (
-                    <div key={idx} className="text-center bg-white/[0.03] rounded-lg p-3">
-                      <div className="text-2xl font-bold text-green-400">{result.metric}</div>
-                      <div className="text-xs text-gray-400">{result.label}</div>
+                    <div key={idx} className="text-center bg-[#0a1628]/60 border border-cyan-500/10 rounded-lg p-3">
+                      <div className="text-2xl font-bold text-emerald-400">{result.metric}</div>
+                      <div className="text-xs text-gray-500">{result.label}</div>
                     </div>
                   ))}
                 </div>
 
-                <div className="border-t border-white/[0.08] pt-6">
-                  <Quote className="w-8 h-8 text-purple-500/50 mb-3" />
-                  <p className="text-gray-300 italic mb-4">"{study.quote}"</p>
+                <div className="border-t border-cyan-500/10 pt-6">
+                  <Quote className="w-8 h-8 text-cyan-500/30 mb-3" />
+                  <p className="text-gray-400 italic mb-4">&quot;{study.quote}&quot;</p>
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white font-semibold">
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-500 to-cyan-600 flex items-center justify-center text-white font-semibold">
                       {study.author.split(' ').map(n => n[0]).join('')}
                     </div>
                     <div>
                       <div className="text-white font-medium">{study.author}</div>
-                      <div className="text-gray-400 text-sm">{study.role}, {study.company}</div>
+                      <div className="text-gray-500 text-sm">{study.role}, {study.company}</div>
                     </div>
                   </div>
                 </div>
@@ -258,30 +225,30 @@ export default function CaseStudiesPage() {
       </section>
 
       {/* More Case Studies */}
-      <section className="py-20 px-6 bg-white/[0.02] backdrop-blur-xl border-y border-white/[0.08]">
+      <section className="py-20 px-6 bg-[#0f172a]/50 border-y border-cyan-500/10">
         <div className="container mx-auto">
           <h2 className="text-3xl font-bold text-center text-white mb-4">More Success Stories</h2>
-          <p className="text-gray-400 text-center mb-12 max-w-2xl mx-auto">
+          <p className="text-gray-500 text-center mb-12 max-w-2xl mx-auto">
             Discover how businesses across industries are winning with Synthex
           </p>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {moreStudies.map((study) => (
-              <Card key={study.id} variant="glass" className="p-6 hover:border-purple-500/30 transition-all cursor-pointer group">
+              <Card key={study.id} className="bg-[#0f172a]/60 backdrop-blur-xl border border-cyan-500/10 p-6 hover:border-cyan-500/30 transition-all cursor-pointer group">
                 <div className="text-3xl mb-4">{study.logo}</div>
                 <h3 className="text-lg font-bold text-white mb-1">{study.company}</h3>
-                <p className="text-purple-400 text-xs mb-4">{study.industry}</p>
+                <p className="text-cyan-400 text-xs mb-4">{study.industry}</p>
 
                 <div className="space-y-2 mb-4">
                   {study.results.slice(0, 2).map((result, idx) => (
                     <div key={idx} className="flex items-center justify-between">
-                      <span className="text-gray-400 text-sm">{result.label}</span>
-                      <span className="text-green-400 font-semibold">{result.metric}</span>
+                      <span className="text-gray-500 text-sm">{result.label}</span>
+                      <span className="text-emerald-400 font-semibold">{result.metric}</span>
                     </div>
                   ))}
                 </div>
 
-                <div className="flex items-center text-purple-400 text-sm group-hover:text-purple-300 transition">
+                <div className="flex items-center text-cyan-400 text-sm group-hover:text-cyan-300 transition">
                   Read full story
                   <ArrowRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
                 </div>
@@ -295,7 +262,7 @@ export default function CaseStudiesPage() {
       <section className="py-20 px-6">
         <div className="container mx-auto">
           <h2 className="text-3xl font-bold text-center text-white mb-4">Trusted Across Industries</h2>
-          <p className="text-gray-400 text-center mb-12 max-w-2xl mx-auto">
+          <p className="text-gray-500 text-center mb-12 max-w-2xl mx-auto">
             From startups to enterprises, Synthex powers social media success everywhere
           </p>
 
@@ -308,10 +275,10 @@ export default function CaseStudiesPage() {
               { icon: Users, name: 'Creators', count: '5,100+' },
               { icon: Globe, name: 'Non-profits', count: '680+' },
             ].map((industry, index) => (
-              <div key={index} className="text-center bg-white/[0.03] backdrop-blur-xl border border-white/[0.08] rounded-xl p-4 hover:border-purple-500/30 transition-all">
-                <industry.icon className="w-8 h-8 text-purple-500 mx-auto mb-2" />
+              <div key={index} className="text-center bg-[#0f172a]/60 backdrop-blur-xl border border-cyan-500/10 rounded-xl p-4 hover:border-cyan-500/30 transition-all">
+                <industry.icon className="w-8 h-8 text-cyan-400 mx-auto mb-2" />
                 <div className="text-white font-medium mb-1">{industry.name}</div>
-                <div className="text-gray-400 text-sm">{industry.count}</div>
+                <div className="text-gray-500 text-sm">{industry.count}</div>
               </div>
             ))}
           </div>
@@ -319,26 +286,26 @@ export default function CaseStudiesPage() {
       </section>
 
       {/* Testimonials Grid */}
-      <section className="py-20 px-6 bg-white/[0.02] backdrop-blur-xl border-y border-white/[0.08]">
+      <section className="py-20 px-6 bg-[#0f172a]/50 border-y border-cyan-500/10">
         <div className="container mx-auto">
           <h2 className="text-3xl font-bold text-center text-white mb-12">What Our Customers Say</h2>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
             {caseStudies.slice(0, 3).map((study) => (
-              <Card key={study.id} variant="glass" className="p-6">
+              <Card key={study.id} className="bg-[#0f172a]/60 backdrop-blur-xl border border-cyan-500/10 p-6">
                 <div className="flex gap-1 mb-4">
                   {[1, 2, 3, 4, 5].map((star) => (
-                    <Star key={star} className="w-4 h-4 text-yellow-500 fill-yellow-500" />
+                    <Star key={star} className="w-4 h-4 text-amber-400 fill-amber-400" />
                   ))}
                 </div>
-                <p className="text-gray-300 mb-6 text-sm">"{study.quote}"</p>
+                <p className="text-gray-400 mb-6 text-sm">&quot;{study.quote}&quot;</p>
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white text-sm font-semibold">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-500 to-cyan-600 flex items-center justify-center text-white text-sm font-semibold">
                     {study.author.split(' ').map(n => n[0]).join('')}
                   </div>
                   <div>
                     <div className="text-white font-medium text-sm">{study.author}</div>
-                    <div className="text-gray-400 text-xs">{study.company}</div>
+                    <div className="text-gray-500 text-xs">{study.company}</div>
                   </div>
                 </div>
               </Card>
@@ -350,52 +317,32 @@ export default function CaseStudiesPage() {
       {/* CTA */}
       <section className="py-20 px-6">
         <div className="container mx-auto">
-          <Card variant="glass-primary" className="p-12 text-center">
+          <div className="bg-gradient-to-br from-cyan-500/10 to-cyan-600/10 backdrop-blur-xl border border-cyan-500/20 rounded-2xl p-12 text-center">
             <h2 className="text-3xl font-bold text-white mb-4">
               Ready to Write Your Success Story?
             </h2>
-            <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
+            <p className="text-xl text-gray-400 mb-8 max-w-2xl mx-auto">
               Join thousands of businesses achieving remarkable results with AI-powered social media management.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link href="/signup">
-                <Button size="lg" className="gradient-primary text-white px-10 py-6 text-lg">
+                <Button size="lg" className="bg-gradient-to-r from-cyan-500 to-cyan-600 hover:from-cyan-400 hover:to-cyan-500 text-white px-10 py-6 text-lg shadow-lg shadow-cyan-500/25">
                   Start Free Trial
                   <ArrowRight className="ml-2" />
                 </Button>
               </Link>
               <Link href="/pricing">
-                <Button size="lg" variant="outline" className="border-white/20 text-white hover:bg-white/10 px-10 py-6 text-lg">
+                <Button size="lg" variant="outline" className="border-cyan-500/30 text-white hover:bg-cyan-500/10 px-10 py-6 text-lg">
                   View Pricing
                 </Button>
               </Link>
             </div>
-            <p className="text-gray-400 text-sm mt-6">
-              No credit card required • 14-day free trial • Cancel anytime
+            <p className="text-gray-500 text-sm mt-6">
+              No credit card required - 14-day free trial - Cancel anytime
             </p>
-          </Card>
+          </div>
         </div>
       </section>
-
-      {/* Footer */}
-      <footer className="py-12 px-6 border-t border-white/[0.08]">
-        <div className="container mx-auto">
-          <div className="flex flex-col md:flex-row justify-between items-center">
-            <div className="flex items-center space-x-2 mb-4 md:mb-0">
-              <Sparkles className="w-6 h-6 text-purple-500" />
-              <span className="text-xl font-bold gradient-text">Synthex</span>
-            </div>
-            <div className="flex items-center space-x-6 text-sm text-gray-400">
-              <Link href="/privacy" className="hover:text-white transition">Privacy</Link>
-              <Link href="/terms" className="hover:text-white transition">Terms</Link>
-              <Link href="/support" className="hover:text-white transition">Support</Link>
-            </div>
-          </div>
-          <div className="text-center text-gray-500 text-sm mt-8">
-            © 2025 Synthex. All rights reserved.
-          </div>
-        </div>
-      </footer>
-    </div>
+    </MarketingLayout>
   );
 }

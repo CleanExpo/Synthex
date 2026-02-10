@@ -3,13 +3,14 @@
 /**
  * Onboarding Entry Page
  *
- * @description Welcome page that starts the onboarding flow
+ * @description Welcome page that starts the onboarding flow with Synthex branding
  */
 
 import React from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowRight, Sparkles, Zap, Target } from 'lucide-react';
+import { ArrowRight, Zap, Target, Brain } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { SynthexLogo } from '@/components/marketing/MarketingLayout';
 
 // ============================================================================
 // FEATURES DATA
@@ -17,7 +18,7 @@ import { Button } from '@/components/ui/button';
 
 const FEATURES = [
   {
-    icon: Sparkles,
+    icon: Brain,
     title: 'AI-Powered Content',
     description: 'Generate engaging posts with your unique brand voice',
   },
@@ -48,13 +49,13 @@ export default function OnboardingPage() {
     <div className="min-h-[80vh] flex flex-col items-center justify-center text-center">
       {/* Logo/Brand */}
       <div className="mb-8">
-        <div className="w-16 h-16 rounded-2xl bg-primary flex items-center justify-center mb-4 mx-auto">
-          <span className="text-3xl font-bold text-primary-foreground">S</span>
+        <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-cyan-500/20 to-cyan-600/10 border border-cyan-500/20 flex items-center justify-center mb-6 mx-auto backdrop-blur-sm">
+          <SynthexLogo className="w-12 h-12" />
         </div>
-        <h1 className="text-4xl font-bold tracking-tight">
-          Welcome to <span className="text-primary">SYNTHEX</span>
+        <h1 className="text-4xl font-bold tracking-tight text-white">
+          Welcome to <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-cyan-500">SYNTHEX</span>
         </h1>
-        <p className="text-xl text-muted-foreground mt-2">
+        <p className="text-xl text-gray-400 mt-2">
           AI-Powered Social Media Marketing
         </p>
       </div>
@@ -64,22 +65,28 @@ export default function OnboardingPage() {
         {FEATURES.map((feature, index) => (
           <div
             key={index}
-            className="p-6 rounded-xl border bg-card text-card-foreground"
+            className="p-6 rounded-xl bg-[#0f172a]/80 border border-cyan-500/10 backdrop-blur-sm hover:border-cyan-500/30 transition-all duration-300 group"
           >
-            <feature.icon className="w-8 h-8 text-primary mb-3 mx-auto" />
-            <h3 className="font-semibold mb-1">{feature.title}</h3>
-            <p className="text-sm text-muted-foreground">{feature.description}</p>
+            <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-cyan-500/20 to-cyan-600/10 border border-cyan-500/20 flex items-center justify-center mb-4 mx-auto group-hover:scale-110 transition-transform">
+              <feature.icon className="w-6 h-6 text-cyan-400" />
+            </div>
+            <h3 className="font-semibold mb-1 text-white">{feature.title}</h3>
+            <p className="text-sm text-gray-400">{feature.description}</p>
           </div>
         ))}
       </div>
 
       {/* CTA */}
       <div className="space-y-4">
-        <Button size="lg" onClick={handleStart} className="gap-2">
+        <Button
+          size="lg"
+          onClick={handleStart}
+          className="gap-2 bg-gradient-to-r from-cyan-500 to-cyan-600 hover:from-cyan-400 hover:to-cyan-500 text-white shadow-lg shadow-cyan-500/25 hover:shadow-cyan-500/40 transition-all"
+        >
           Get Started
           <ArrowRight className="w-4 h-4" />
         </Button>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-sm text-gray-500">
           Setup takes less than 5 minutes
         </p>
       </div>
