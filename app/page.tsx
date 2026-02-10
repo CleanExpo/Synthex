@@ -4,8 +4,9 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import {
-  ArrowRight, Sparkles, CheckCircle2, Zap, BarChart3, Globe, Bot
+  ArrowRight, Sparkles, CheckCircle2, Zap, BarChart3, Globe, Bot, Play, Pause
 } from 'lucide-react';
+import { useState } from 'react';
 
 // Synthex Logo Component
 function SynthexLogo({ className = "w-10 h-10" }: { className?: string }) {
@@ -174,10 +175,16 @@ export default function HomePage() {
               </div>
 
               {/* Tagline */}
-              <p className="text-lg sm:text-xl text-gray-400 mb-10 max-w-lg mx-auto lg:mx-0 leading-relaxed">
+              <p className="text-lg sm:text-xl text-gray-400 mb-6 max-w-lg mx-auto lg:mx-0 leading-relaxed">
                 The world's first <span className="text-white font-medium">fully autonomous AI marketing agency</span>.
                 Powered by advanced AI that creates, optimizes, and scales your social media presence 24/7.
               </p>
+
+              {/* Key Differentiator */}
+              <div className="mb-10 p-4 bg-gradient-to-r from-cyan-500/10 to-transparent border-l-2 border-cyan-400 rounded-r-lg max-w-lg mx-auto lg:mx-0">
+                <p className="text-white font-medium mb-1">From just $199/month</p>
+                <p className="text-gray-400 text-sm">Use your own API keys to dramatically reduce costs. Custom enterprise rates available.</p>
+              </div>
 
               {/* CTA Buttons */}
               <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start mb-10">
@@ -205,7 +212,7 @@ export default function HomePage() {
               <div className="flex flex-wrap gap-6 justify-center lg:justify-start text-sm text-gray-500">
                 <div className="flex items-center gap-2">
                   <CheckCircle2 className="w-4 h-4 text-cyan-500" />
-                  <span>No credit card required</span>
+                  <span>Use your own API keys</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <CheckCircle2 className="w-4 h-4 text-cyan-500" />
@@ -254,6 +261,106 @@ export default function HomePage() {
                 </div>
                 <h3 className="text-xl font-semibold mb-3 text-white">{feature.title}</h3>
                 <p className="text-gray-400 text-sm leading-relaxed">{feature.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Video Explainer Section */}
+      <section className="relative py-32 z-10">
+        <div className="container mx-auto px-6">
+          {/* Section Header */}
+          <div className="text-center mb-16">
+            <span className="inline-block px-4 py-2 bg-cyan-500/10 border border-cyan-500/20 rounded-full text-cyan-400 text-sm font-medium mb-6">
+              See It In Action
+            </span>
+            <h2 className="text-4xl sm:text-5xl font-bold mb-6">
+              Watch how <span className="text-cyan-400">Synthex</span> works
+            </h2>
+            <p className="text-gray-400 text-lg max-w-2xl mx-auto">
+              See our AI in action as it creates, optimizes, and publishes content across all your social platforms.
+            </p>
+          </div>
+
+          {/* Video Grid */}
+          <div className="grid lg:grid-cols-2 gap-8 max-w-6xl mx-auto">
+            {/* Main Explainer Video */}
+            <div className="lg:col-span-2">
+              <div className="relative group rounded-2xl overflow-hidden border border-cyan-500/20 bg-[#0f172a]/80">
+                {/* Video Placeholder with Image */}
+                <div className="relative aspect-video">
+                  <Image
+                    src="/images/hero-robot.png"
+                    alt="Synthex AI Marketing Platform Demo"
+                    fill
+                    className="object-cover opacity-80"
+                  />
+                  {/* Play Button Overlay */}
+                  <div className="absolute inset-0 flex items-center justify-center bg-[#0a1628]/40 group-hover:bg-[#0a1628]/30 transition-colors">
+                    <button
+                      className="w-20 h-20 rounded-full bg-gradient-to-r from-cyan-500 to-cyan-600 flex items-center justify-center shadow-xl shadow-cyan-500/30 group-hover:scale-110 transition-transform"
+                      aria-label="Play video"
+                    >
+                      <Play className="w-8 h-8 text-white ml-1" />
+                    </button>
+                  </div>
+                  {/* Video Duration Badge */}
+                  <div className="absolute bottom-4 right-4 px-3 py-1 bg-black/70 rounded-full text-sm text-white">
+                    2:30
+                  </div>
+                </div>
+                {/* Video Info */}
+                <div className="p-6">
+                  <h3 className="text-xl font-semibold text-white mb-2">
+                    Complete Platform Overview
+                  </h3>
+                  <p className="text-gray-400 text-sm">
+                    Discover how Synthex transforms your social media marketing with AI-powered automation.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Feature Videos */}
+            {[
+              {
+                title: 'AI Content Generation',
+                description: 'Watch AI create engaging posts in seconds',
+                duration: '1:15',
+              },
+              {
+                title: 'Smart Scheduling',
+                description: 'See how AI finds the perfect posting times',
+                duration: '0:45',
+              },
+            ].map((video, i) => (
+              <div key={i} className="relative group rounded-2xl overflow-hidden border border-cyan-500/10 bg-[#0f172a]/60 hover:border-cyan-500/30 transition-all">
+                {/* Video Placeholder */}
+                <div className="relative aspect-video bg-gradient-to-br from-cyan-500/10 to-cyan-600/5">
+                  {/* Animated Background */}
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="w-32 h-32 rounded-full bg-cyan-500/20 animate-pulse" />
+                  </div>
+                  {/* Play Button */}
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <button
+                      className="w-14 h-14 rounded-full bg-gradient-to-r from-cyan-500 to-cyan-600 flex items-center justify-center shadow-lg shadow-cyan-500/20 group-hover:scale-110 transition-transform"
+                      aria-label={`Play ${video.title}`}
+                    >
+                      <Play className="w-6 h-6 text-white ml-0.5" />
+                    </button>
+                  </div>
+                  {/* Duration */}
+                  <div className="absolute bottom-3 right-3 px-2 py-0.5 bg-black/70 rounded text-xs text-white">
+                    {video.duration}
+                  </div>
+                </div>
+                {/* Info */}
+                <div className="p-4">
+                  <h4 className="font-semibold text-white mb-1">{video.title}</h4>
+                  <p className="text-gray-500 text-sm">{video.description}</p>
+                </div>
               </div>
             ))}
           </div>

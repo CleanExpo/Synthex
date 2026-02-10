@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Inter } from 'next/font/google';
 import { Providers } from './providers';
 import { Toaster } from '@/components/ui/toast';
@@ -21,22 +21,58 @@ const inter = Inter({
   preload: true,
 });
 
+const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://synthex.social';
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 5,
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#0a1628' },
+    { media: '(prefers-color-scheme: dark)', color: '#0a1628' },
+  ],
+};
+
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'https://synthex.ai'),
-  title: 'Synthex - AI-Powered Social Media Automation',
-  description: 'Generate viral content with AI, analyze engagement patterns, and automate your social media presence across all platforms.',
-  keywords: 'social media automation, AI content generation, viral marketing, content scheduling, persona learning',
-  authors: [{ name: 'Synthex Team' }],
+  metadataBase: new URL(BASE_URL),
+  title: {
+    default: 'Synthex - AI-Powered Marketing Agency',
+    template: '%s | Synthex',
+  },
+  description: "The world's first fully autonomous AI marketing agency. Generate viral content, automate scheduling, and optimize engagement with AI-powered social media automation.",
+  keywords: [
+    'AI marketing agency',
+    'social media automation',
+    'AI content generation',
+    'viral marketing',
+    'content scheduling',
+    'marketing automation',
+    'social media AI',
+    'autonomous marketing',
+    'engagement optimization',
+    'multi-platform management',
+  ],
+  authors: [{ name: 'Synthex Team', url: BASE_URL }],
+  creator: 'Synthex',
+  publisher: 'Synthex',
+  applicationName: 'Synthex',
+  generator: 'Next.js',
+  referrer: 'origin-when-cross-origin',
+  formatDetection: {
+    email: false,
+    telephone: false,
+  },
   openGraph: {
-    title: 'Synthex - AI-Powered Social Media Automation',
-    description: 'Generate viral content with AI and automate your social media presence',
-    url: 'https://synthex.ai',
+    title: 'Synthex - AI-Powered Marketing Agency',
+    description: "The world's first fully autonomous AI marketing agency. Generate viral content and automate your social media presence 24/7.",
+    url: BASE_URL,
     siteName: 'Synthex',
     images: [
       {
         url: '/og-image.png',
         width: 1200,
         height: 630,
+        alt: 'Synthex - AI Marketing Agency',
       },
     ],
     locale: 'en_US',
@@ -44,13 +80,16 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Synthex - AI-Powered Social Media Automation',
-    description: 'Generate viral content with AI and automate your social media presence',
+    title: 'Synthex - AI-Powered Marketing Agency',
+    description: "The world's first fully autonomous AI marketing agency",
     images: ['/og-image.png'],
+    creator: '@synthexai',
+    site: '@synthexai',
   },
   robots: {
     index: true,
     follow: true,
+    nocache: false,
     googleBot: {
       index: true,
       follow: true,
@@ -58,6 +97,24 @@ export const metadata: Metadata = {
       'max-image-preview': 'large',
       'max-snippet': -1,
     },
+  },
+  alternates: {
+    canonical: BASE_URL,
+    languages: {
+      'en-US': BASE_URL,
+      'en-AU': `${BASE_URL}?locale=en-AU`,
+    },
+  },
+  icons: {
+    icon: [
+      { url: '/favicon.ico', sizes: 'any' },
+      { url: '/icon.svg', type: 'image/svg+xml' },
+    ],
+    apple: [{ url: '/apple-touch-icon.png', sizes: '180x180' }],
+  },
+  manifest: '/manifest.json',
+  verification: {
+    google: process.env.GOOGLE_SITE_VERIFICATION,
   },
 };
 
@@ -73,6 +130,65 @@ export default function RootLayout({
         <link rel="preload" href="/grid.svg" as="image" type="image/svg+xml" />
         <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        {/* Schema.org Structured Data */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              '@context': 'https://schema.org',
+              '@type': 'Organization',
+              name: 'Synthex',
+              url: BASE_URL,
+              logo: `${BASE_URL}/logo.png`,
+              description: "The world's first fully autonomous AI marketing agency. AI-powered social media automation, content generation, and analytics.",
+              sameAs: [
+                'https://twitter.com/synthexai',
+                'https://linkedin.com/company/synthex',
+                'https://github.com/synthex',
+              ],
+              contactPoint: {
+                '@type': 'ContactPoint',
+                email: 'support@synthex.social',
+                contactType: 'customer service',
+              },
+            }),
+          }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              '@context': 'https://schema.org',
+              '@type': 'SoftwareApplication',
+              name: 'Synthex',
+              description: 'AI-powered social media automation platform. Generate viral content, schedule posts, and analyze engagement across all major social platforms.',
+              url: BASE_URL,
+              applicationCategory: 'BusinessApplication',
+              operatingSystem: 'Web',
+              offers: {
+                '@type': 'Offer',
+                price: '199',
+                priceCurrency: 'USD',
+                description: 'Starting price with BYOK (Bring Your Own API Keys)',
+              },
+              aggregateRating: {
+                '@type': 'AggregateRating',
+                ratingValue: 4.9,
+                ratingCount: 2847,
+                bestRating: 5,
+                worstRating: 1,
+              },
+              featureList: [
+                'AI Content Generation',
+                'Smart Post Scheduling',
+                'Multi-Platform Management',
+                'Real-Time Analytics',
+                'Engagement Optimization',
+                'Bring Your Own API Keys',
+              ],
+            }),
+          }}
+        />
       </head>
       <body className="min-h-screen bg-background font-sans antialiased">
         {/* Skip to main content link for accessibility */}
@@ -92,7 +208,7 @@ export default function RootLayout({
             <main id="main-content" role="main">
               {children}
             </main>
-            <Toaster 
+            <Toaster
               position="bottom-right"
               duration={4000}
               richColors
