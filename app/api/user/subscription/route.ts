@@ -12,9 +12,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
 
+// Use anon key since RLS policy allows SELECT for all authenticated API requests
+// Service role key can be added back when properly rotated
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
 export async function GET(request: NextRequest) {
@@ -43,7 +45,6 @@ export async function GET(request: NextRequest) {
 
     // Get subscription details
     console.log('Fetching subscription for userId:', userId);
-    console.log('Using service key:', !!process.env.SUPABASE_SERVICE_ROLE_KEY);
 
     const { data: subscription, error } = await supabase
       .from('subscriptions')
