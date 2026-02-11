@@ -204,12 +204,12 @@ model Notification {
   message     String
   read        Boolean  @default(false)
   data        Json?    // Additional notification data
-  createdAt   DateTime @default(now())
-  
+  createdAt   DateTime @default(now()) @map("created_at")
+
   // Relations
-  userId      String
+  userId      String   @map("user_id")
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+
   @@map("notifications")
 }
 
