@@ -477,9 +477,8 @@ export class EmailService {
       await prisma.user.update({
         where: { id: user.id },
         data: {
-          // Database expects DateTime for emailVerified, not boolean
-          // Set to current timestamp when email is verified
-          emailVerified: new Date(),
+          // Database expects Boolean for emailVerified
+          emailVerified: true,
           verificationCode: null,
           verificationExpires: null
         }

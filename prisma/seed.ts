@@ -15,8 +15,8 @@ async function main() {
       email: 'demo@synthex.com',
       password: demoPassword,
       name: 'Demo User',
-      // Database expects DateTime, not boolean
-      emailVerified: new Date(),
+      // Database expects Boolean
+      emailVerified: true,
       authProvider: 'local',
       preferences: {
         onboardingCompleted: true,
@@ -37,8 +37,8 @@ async function main() {
       email: 'admin@synthex.com',
       password: adminPassword,
       name: 'Admin User',
-      // Database expects DateTime, not boolean
-      emailVerified: new Date(),
+      // Database expects Boolean
+      emailVerified: true,
       authProvider: 'local',
       preferences: {
         onboardingCompleted: true,

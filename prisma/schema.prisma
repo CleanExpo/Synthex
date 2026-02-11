@@ -26,7 +26,7 @@ model User {
   googleId        String?  @unique @map("google_id")
   avatar          String?
   authProvider    String   @default("local") @map("auth_provider") // 'local', 'google'
-  emailVerified   DateTime?  @map("email_verified") // DateTime when email was verified, null if not
+  emailVerified   Boolean?   @default(false) @map("email_verified") // Boolean indicating if email is verified
   lastLogin       DateTime? @map("last_login")
 
   // API Keys (encrypted)

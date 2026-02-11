@@ -281,9 +281,8 @@ async function createNewGoogleUser(
       avatar: googleUser.picture,
       googleId: googleUser.id, // Legacy field
       authProvider: 'google', // Legacy field
-      // Database expects DateTime for emailVerified, not boolean
-      // Convert: true → current timestamp, false → null
-      emailVerified: googleUser.verified_email ? new Date() : null,
+      // Database expects Boolean for emailVerified
+      emailVerified: googleUser.verified_email ? true : false,
     },
   });
 

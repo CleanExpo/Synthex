@@ -125,9 +125,9 @@ export class AuthService {
         avatar,
         password: '', // Empty password for Google users
         authProvider: 'google',
-        // Database expects DateTime for emailVerified, not boolean
-        // Google emails are pre-verified, so set to current timestamp
-        emailVerified: new Date(),
+        // Database expects Boolean for emailVerified
+        // Google emails are pre-verified
+        emailVerified: true,
       },
       select: {
         id: true,

@@ -164,8 +164,8 @@ export class TestDataFactory {
       password: 'hashed_password_123',
       name: `Test User ${suffix}`,
       authProvider: 'local',
-      // Database expects DateTime for emailVerified
-      emailVerified: new Date(),
+      // Database expects Boolean for emailVerified
+      emailVerified: true,
       ...overrides,
     };
 
@@ -334,8 +334,8 @@ interface CreateUserInput {
   password: string;
   name: string;
   authProvider: string;
-  // Database column is timestamp, not boolean
-  emailVerified: Date | null;
+  // Database column is boolean
+  emailVerified: boolean | null;
 }
 
 interface CreateCampaignInput {
@@ -380,8 +380,8 @@ export interface TestUser {
   email: string;
   name: string;
   authProvider: string;
-  // Database column is timestamp, not boolean
-  emailVerified: Date | null;
+  // Database column is boolean
+  emailVerified: boolean | null;
   createdAt: Date;
   updatedAt: Date;
 }

@@ -77,8 +77,8 @@ export async function configureGoogleOAuth() {
                 googleId,
                 avatar: avatar || user.avatar,
                 name: name || user.name,
-                // Database expects DateTime for emailVerified, not boolean
-                emailVerified: new Date(),
+                // Database expects Boolean for emailVerified
+                emailVerified: true,
                 updatedAt: new Date()
               }
             });
@@ -109,9 +109,9 @@ export async function configureGoogleOAuth() {
               googleId,
               avatar: avatar,
               authProvider: 'google',
-              // Database expects DateTime for emailVerified, not boolean
-              // Google verifies emails, so set to current timestamp
-              emailVerified: new Date()
+              // Database expects Boolean for emailVerified
+              // Google verifies emails
+              emailVerified: true
             }
           });
 
@@ -200,8 +200,8 @@ export async function linkGoogleAccount(userId: string, googleId: string, profil
       data: {
         googleId,
         avatar: profile.photos?.[0]?.value || undefined,
-        // Database expects DateTime for emailVerified, not boolean
-        emailVerified: new Date(),
+        // Database expects Boolean for emailVerified
+        emailVerified: true,
         updatedAt: new Date()
       }
     });

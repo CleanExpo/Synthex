@@ -276,9 +276,8 @@ export class SignInFlow {
           avatar: profile.avatar,
           googleId: provider === 'google' ? profile.id : null,
           authProvider: provider,
-          // Database expects DateTime for emailVerified, not boolean
-          // Convert: truthy → current timestamp, falsy → null
-          emailVerified: (profile.emailVerified ?? true) ? new Date() : null,
+          // Database expects Boolean for emailVerified
+          emailVerified: (profile.emailVerified ?? true) ? true : false,
         },
       });
 

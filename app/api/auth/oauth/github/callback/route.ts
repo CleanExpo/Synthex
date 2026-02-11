@@ -328,9 +328,8 @@ async function createNewGitHubUser(
       name: githubUser.name || githubUser.email.split('@')[0],
       avatar: githubUser.avatar,
       authProvider: 'github',
-      // Database expects DateTime for emailVerified, not boolean
-      // Convert: truthy → current timestamp, falsy → null
-      emailVerified: githubUser.emailVerified ? new Date() : null,
+      // Database expects Boolean for emailVerified
+      emailVerified: githubUser.emailVerified ? true : false,
     },
   });
 
