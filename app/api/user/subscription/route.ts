@@ -41,11 +41,16 @@ export async function GET(request: NextRequest) {
     }
 
     // Get subscription details
+    console.log('Fetching subscription for userId:', userId);
+    console.log('Using service key:', !!process.env.SUPABASE_SERVICE_ROLE_KEY);
+
     const { data: subscription, error } = await supabase
       .from('subscriptions')
       .select('*')
       .eq('user_id', userId)
       .single();
+
+    console.log('Subscription query result:', { data: subscription, error: error?.message, code: error?.code });
 
     if (error && error.code !== 'PGRST116') { // PGRST116 = no rows found
       throw error;
@@ -114,10 +119,14 @@ export async function GET(request: NextRequest) {
       ...subscription,
       features: planFeatures[subscription.plan as keyof typeof planFeatures] || planFeatures.free,
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Subscription fetch error:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch subscription details' },
+      {
+        error: 'Failed to fetch subscription details',
+        details: process.env.NODE_ENV === 'development' ? error?.message : undefined,
+        code: error?.code
+      },
       { status: 500 }
     );
   }
