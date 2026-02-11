@@ -1,12 +1,23 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { User, Session } from '@supabase/supabase-js';
-import { getSupabaseBrowser } from '@/lib/supabase-browser';
+
+// Custom user type matching the API response
+interface AppUser {
+  id: string;
+  email: string;
+  name: string | null;
+  avatar: string | null;
+  emailVerified: boolean;
+  createdAt: string;
+  lastLogin: string;
+  preferences: Record<string, unknown>;
+  organizationId: string | null;
+  organization: unknown | null;
+}
 
 interface UseUserReturn {
-  user: User | null;
-  session: Session | null;
+  user: AppUser | null;
   isLoading: boolean;
   error: Error | null;
   refetch: () => Promise<void>;
@@ -14,11 +25,10 @@ interface UseUserReturn {
 
 /**
  * Custom hook to get the current authenticated user
- * Replaces @supabase/auth-helpers-react useUser hook
+ * Uses the custom JWT auth API instead of Supabase Auth
  */
 export function useUser(): UseUserReturn {
-  const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
+  const [user, setUser] = useState<AppUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
@@ -27,25 +37,30 @@ export function useUser(): UseUserReturn {
       setIsLoading(true);
       setError(null);
 
-      const supabase = getSupabaseBrowser();
-      if (!supabase) {
+      const response = await fetch('/api/auth/user', {
+        method: 'GET',
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          // Not authenticated - this is a valid state
+          setUser(null);
+          return;
+        }
+        throw new Error('Failed to fetch user');
+      }
+
+      const data = await response.json();
+
+      if (data.success && data.user) {
+        setUser(data.user);
+      } else {
         setUser(null);
-        setSession(null);
-        return;
       }
-
-      const { data: { session: currentSession }, error: sessionError } = await supabase.auth.getSession();
-
-      if (sessionError) {
-        throw sessionError;
-      }
-
-      setSession(currentSession);
-      setUser(currentSession?.user ?? null);
     } catch (err) {
       setError(err instanceof Error ? err : new Error('Failed to fetch user'));
       setUser(null);
-      setSession(null);
     } finally {
       setIsLoading(false);
     }
@@ -53,27 +68,10 @@ export function useUser(): UseUserReturn {
 
   useEffect(() => {
     fetchUser();
-
-    // Subscribe to auth state changes
-    const supabase = getSupabaseBrowser();
-    if (!supabase) return;
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, currentSession) => {
-        setSession(currentSession);
-        setUser(currentSession?.user ?? null);
-        setIsLoading(false);
-      }
-    );
-
-    return () => {
-      subscription.unsubscribe();
-    };
   }, [fetchUser]);
 
   return {
     user,
-    session,
     isLoading,
     error,
     refetch: fetchUser,
