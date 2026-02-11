@@ -95,8 +95,11 @@ const createPrismaClient = (): PrismaClient => {
 
   // Create the PrismaPg adapter with connectionString directly
   // This is the recommended approach per Prisma docs - avoids localhost fallback issues
+  // SSL config required for Supabase - rejectUnauthorized: false allows self-signed certs
+  // See: https://www.prisma.io/docs/orm/more/upgrade-guides/upgrading-versions/upgrading-to-prisma-7
   const adapter = new PrismaPg({
     connectionString,
+    ssl: { rejectUnauthorized: false },
   });
 
   const client = new PrismaClient({
