@@ -1,9 +1,10 @@
 /**
  * ENVIRONMENT VARIABLES REQUIRED:
- * - SUPABASE_URL: Supabase project URL (PUBLIC)
- * - SUPABASE_ANON_KEY: Supabase anonymous key (PUBLIC)
+ * - NEXT_PUBLIC_SUPABASE_URL: Supabase project URL (PUBLIC)
+ * - NEXT_PUBLIC_SUPABASE_ANON_KEY: Supabase anonymous key (PUBLIC)
+ * - SUPABASE_SERVICE_ROLE_KEY: For bypassing RLS (SECRET) - optional but recommended
  * - JWT_SECRET: For verifying user authentication (CRITICAL)
- * 
+ *
  * FAILURE MODE: Returns error response if missing
  */
 
@@ -13,7 +14,7 @@ import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-securit
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY!
+  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
 export async function GET(request: NextRequest) {
