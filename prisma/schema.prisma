@@ -14,37 +14,37 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(cuid())
+  id        String   @id @default(uuid())
   email     String   @unique
   password  String?  // Nullable for OAuth-only users
   name      String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   // Legacy Google OAuth fields (deprecated - use Account model)
   // Keep temporarily for migration
-  googleId        String?  @unique
+  googleId        String?  @unique @map("google_id")
   avatar          String?
-  authProvider    String   @default("local") // 'local', 'google'
-  emailVerified   DateTime?  // DateTime when email was verified, null if not
-  lastLogin       DateTime?
+  authProvider    String   @default("local") @map("auth_provider") // 'local', 'google'
+  emailVerified   DateTime?  @map("email_verified") // DateTime when email was verified, null if not
+  lastLogin       DateTime? @map("last_login")
 
   // API Keys (encrypted)
-  openrouterApiKey String?
-  anthropicApiKey  String?
+  openrouterApiKey String? @map("openrouter_api_key")
+  anthropicApiKey  String? @map("anthropic_api_key")
 
   // User settings
   preferences      Json?
 
   // Password reset fields
-  resetCode        String?
-  resetCodeExpires DateTime?
-  resetToken       String?
-  resetTokenExpires DateTime?
+  resetCode        String? @map("reset_code")
+  resetCodeExpires DateTime? @map("reset_code_expires")
+  resetToken       String? @map("reset_token")
+  resetTokenExpires DateTime? @map("reset_token_expires")
 
   // Email verification
-  verificationCode String?
-  verificationExpires DateTime?
+  verificationCode String? @map("verification_code")
+  verificationExpires DateTime? @map("verification_expires")
 
   // Relations
   accounts         Account[]  // Multi-provider authentication accounts
@@ -54,7 +54,7 @@ model User {
   notifications    Notification[]
   auditLogs        AuditLog[]
   platformConnections PlatformConnection[]
-  organizationId   String?
+  organizationId   String? @map("organization_id")
   organization     Organization? @relation(fields: [organizationId], references: [id])
   teamInvitations  TeamInvitation[]
   brandGenerations BrandGeneration[]
