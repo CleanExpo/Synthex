@@ -34,6 +34,65 @@ interface ExecutionResult {
   deliveries?: number;
 }
 
+/** Report filters configuration */
+interface ReportFilters {
+  platforms?: string[];
+  campaigns?: string[];
+  dateRange?: { start: string; end: string };
+  [key: string]: unknown;
+}
+
+/** Schedule time configuration */
+interface ScheduleTime {
+  hour: number;
+  minute: number;
+  dayOfWeek?: number;
+  dayOfMonth?: number;
+}
+
+/** Generated report data structure */
+interface ReportData {
+  summary: Record<string, number>;
+  byPlatform: Record<string, Record<string, number>>;
+  byDay: Array<{ date: string; metrics: Record<string, number> }>;
+  dateRange: { start: string; end: string };
+  generatedAt: string;
+}
+
+/** Scheduled report record */
+interface ScheduledReportRecord {
+  id: string;
+  userId: string;
+  organizationId: string | null;
+  name: string;
+  reportType: string;
+  frequency: string;
+  schedule: ScheduleTime;
+  dateRangeType: string;
+  metrics: string[];
+  filters: ReportFilters;
+  format: string;
+  recipients: string[];
+  webhookUrl: string | null;
+  isActive: boolean;
+  nextRunAt: Date;
+  lastRunAt: Date | null;
+  lastRunStatus: string | null;
+  failureCount: number;
+}
+
+/** Extended prisma client for scheduled reports */
+interface PrismaWithScheduledReports {
+  scheduledReport?: {
+    findMany: (args: Record<string, unknown>) => Promise<ScheduledReportRecord[]>;
+    update: (args: Record<string, unknown>) => Promise<ScheduledReportRecord>;
+    count: (args?: Record<string, unknown>) => Promise<number>;
+  };
+  reportDelivery?: {
+    create: (args: Record<string, unknown>) => Promise<unknown>;
+  };
+}
+
 // ============================================================================
 // HELPERS
 // ============================================================================
@@ -108,11 +167,11 @@ function calculateDateRange(
  */
 async function generateReportData(
   userId: string,
-  reportType: string,
+  _reportType: string,
   metrics: string[],
-  filters: any,
+  filters: ReportFilters | null,
   dateRange: { start: Date; end: Date }
-): Promise<any> {
+): Promise<ReportData> {
   // Fetch analytics events for the user
   const analyticsEvents = await prisma.analyticsEvent.findMany({
     where: {
@@ -211,7 +270,7 @@ async function generateReportData(
 async function sendReportEmail(
   recipients: string[],
   reportName: string,
-  reportData: any,
+  reportData: ReportData,
   format: string
 ): Promise<number> {
   let sentCount = 0;
@@ -281,7 +340,7 @@ async function sendReportEmail(
 /**
  * Generate email HTML
  */
-function generateEmailHtml(reportName: string, data: any): string {
+function generateEmailHtml(reportName: string, data: ReportData): string {
   const summary = data.summary || {};
   const metricsHtml = Object.entries(summary)
     .map(([key, value]) => `
@@ -337,7 +396,7 @@ function generateEmailHtml(reportName: string, data: any): string {
 async function sendWebhook(
   webhookUrl: string,
   reportName: string,
-  reportData: any,
+  reportData: ReportData,
   reportId: string
 ): Promise<boolean> {
   try {
@@ -368,7 +427,7 @@ async function sendWebhook(
  */
 function calculateNextRun(
   frequency: string,
-  schedule: any,
+  schedule: ScheduleTime,
   fromDate: Date = new Date()
 ): Date {
   const next = new Date(fromDate);
@@ -414,7 +473,7 @@ export async function POST(request: NextRequest) {
 
   try {
     // Find all due scheduled reports
-    const dueReports = await (prisma as any).scheduledReport?.findMany({
+    const dueReports = await (prisma as unknown as PrismaWithScheduledReports).scheduledReport?.findMany({
       where: {
         isActive: true,
         nextRunAt: { lte: now },
@@ -457,8 +516,8 @@ export async function POST(request: NextRequest) {
               start: dateRange.start.toISOString(),
               end: dateRange.end.toISOString(),
             },
-            filters: scheduled.filters,
-            data: reportData,
+            filters: scheduled.filters as unknown as undefined,
+            data: reportData as unknown as undefined,
             generatedAt: now,
             expiresAt: new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000), // 30 days
           },
@@ -478,7 +537,7 @@ export async function POST(request: NextRequest) {
 
           // Log deliveries
           for (const recipient of scheduled.recipients) {
-            await (prisma as any).reportDelivery?.create({
+            await (prisma as unknown as PrismaWithScheduledReports).reportDelivery?.create({
               data: {
                 reportId: report.id,
                 scheduledReportId: scheduled.id,
@@ -500,7 +559,7 @@ export async function POST(request: NextRequest) {
             report.id
           );
 
-          await (prisma as any).reportDelivery?.create({
+          await (prisma as unknown as PrismaWithScheduledReports).reportDelivery?.create({
             data: {
               reportId: report.id,
               scheduledReportId: scheduled.id,
@@ -521,7 +580,7 @@ export async function POST(request: NextRequest) {
           now
         );
 
-        await (prisma as any).scheduledReport?.update({
+        await (prisma as unknown as PrismaWithScheduledReports).scheduledReport?.update({
           where: { id: scheduled.id },
           data: {
             lastRunAt: now,
@@ -538,7 +597,7 @@ export async function POST(request: NextRequest) {
         console.error(`Failed to execute scheduled report ${scheduled.id}:`, err);
 
         // Update failure count
-        await (prisma as any).scheduledReport?.update({
+        await (prisma as unknown as PrismaWithScheduledReports).scheduledReport?.update({
           where: { id: scheduled.id },
           data: {
             lastRunAt: now,
@@ -589,17 +648,17 @@ export async function GET(request: NextRequest) {
 
     // Get counts
     const [total, active, due, recentlyRun, failed] = await Promise.all([
-      (prisma as any).scheduledReport?.count() || 0,
-      (prisma as any).scheduledReport?.count({ where: { isActive: true } }) || 0,
-      (prisma as any).scheduledReport?.count({
+      (prisma as unknown as PrismaWithScheduledReports).scheduledReport?.count() || 0,
+      (prisma as unknown as PrismaWithScheduledReports).scheduledReport?.count({ where: { isActive: true } }) || 0,
+      (prisma as unknown as PrismaWithScheduledReports).scheduledReport?.count({
         where: { isActive: true, nextRunAt: { lte: now } },
       }) || 0,
-      (prisma as any).scheduledReport?.count({
+      (prisma as unknown as PrismaWithScheduledReports).scheduledReport?.count({
         where: {
           lastRunAt: { gte: new Date(now.getTime() - 24 * 60 * 60 * 1000) },
         },
       }) || 0,
-      (prisma as any).scheduledReport?.count({
+      (prisma as unknown as PrismaWithScheduledReports).scheduledReport?.count({
         where: { lastRunStatus: 'failed', failureCount: { gte: 3 } },
       }) || 0,
     ]);

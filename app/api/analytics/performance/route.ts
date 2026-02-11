@@ -72,6 +72,35 @@ const WebVitalsSchema = z.object({
 // TYPES
 // ============================================================================
 
+/** Analytics data stored in post.analytics JSON field */
+interface PostAnalyticsData {
+  likes?: number;
+  comments?: number;
+  shares?: number;
+  impressions?: number;
+  reach?: number;
+  clicks?: number;
+}
+
+/** Post record from database query */
+interface PostWithAnalytics {
+  id: string;
+  content: string;
+  platform: string;
+  status: string;
+  publishedAt: Date | null;
+  createdAt: Date;
+  analytics: PostAnalyticsData | unknown;
+  campaign?: { name: string } | null;
+}
+
+/** Where clause for post queries */
+interface PostWhereClause {
+  campaign: { userId: string };
+  createdAt: { gte: Date; lte: Date };
+  platform?: string;
+}
+
 interface PerformanceMetrics {
   overview: {
     totalPosts: number;
@@ -174,7 +203,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Fetch posts with analytics
-    const whereClause: any = {
+    const whereClause: PostWhereClause = {
       campaign: { userId },
       createdAt: {
         gte: startDate,
@@ -262,7 +291,7 @@ export async function GET(request: NextRequest) {
     // Get top content
     const topContent = posts
       .map((post) => {
-        const analytics = (post.analytics as any) || {};
+        const analytics = (post.analytics as PostAnalyticsData) || {};
         const engagement =
           (analytics.likes || 0) +
           (analytics.comments || 0) +
@@ -393,13 +422,13 @@ export async function POST(request: NextRequest) {
 // HELPER FUNCTIONS
 // ============================================================================
 
-function aggregateMetrics(posts: any[]) {
+function aggregateMetrics(posts: Array<{ analytics: PostAnalyticsData | unknown }>) {
   let totalEngagement = 0;
   let totalReach = 0;
   let totalImpressions = 0;
 
   for (const post of posts) {
-    const analytics = (post.analytics as any) || {};
+    const analytics = (post.analytics as PostAnalyticsData) || {};
     totalEngagement +=
       (analytics.likes || 0) +
       (analytics.comments || 0) +
@@ -422,9 +451,9 @@ function aggregateMetrics(posts: any[]) {
 }
 
 function buildTimeline(
-  posts: any[],
-  startDate: Date,
-  endDate: Date,
+  posts: PostWithAnalytics[],
+  _startDate: Date,
+  _endDate: Date,
   granularity: string
 ) {
   const timeline: Array<{
@@ -463,7 +492,7 @@ function buildTimeline(
     }
 
     const bucket = buckets.get(bucketKey)!;
-    const analytics = (post.analytics as any) || {};
+    const analytics = (post.analytics as PostAnalyticsData) || {};
     bucket.engagement +=
       (analytics.likes || 0) + (analytics.comments || 0) + (analytics.shares || 0);
     bucket.reach += analytics.reach || 0;
@@ -483,7 +512,7 @@ function buildTimeline(
   return timeline;
 }
 
-function buildPlatformStats(posts: any[]) {
+function buildPlatformStats(posts: PostWithAnalytics[]) {
   const platformMap = new Map<
     string,
     {
@@ -506,7 +535,7 @@ function buildPlatformStats(posts: any[]) {
     }
 
     const stats = platformMap.get(platform)!;
-    const analytics = (post.analytics as any) || {};
+    const analytics = (post.analytics as PostAnalyticsData) || {};
     const engagement =
       (analytics.likes || 0) + (analytics.comments || 0) + (analytics.shares || 0);
 
