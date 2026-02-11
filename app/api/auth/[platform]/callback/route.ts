@@ -53,23 +53,57 @@ export async function GET(
       );
     }
 
-    // Verify state matches stored cookie
+    // Verify state matches stored cookie (defense-in-depth)
     const storedState = cookieStore.get('oauth_state')?.value;
     if (!storedState || storedState !== state) {
-      logger.warn('OAuth state mismatch', { platform, storedState: !!storedState });
+      logger.warn('OAuth state cookie mismatch - potential CSRF attempt', {
+        platform,
+        hasStoredState: !!storedState,
+        storedStateLength: storedState?.length,
+        receivedStateLength: state?.length,
+        clientIp: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown',
+        userAgent: request.headers.get('user-agent')?.substring(0, 100),
+      });
       return NextResponse.redirect(
-        new URL('/settings/connections?error=invalid_state', request.url)
+        new URL('/settings/connections?error=invalid_state&reason=cookie_mismatch', request.url)
       );
     }
 
-    // Parse state to get redirect URL
+    // Validate state cryptographically and check expiration
+    // This includes HMAC verification and 10-minute timestamp check
+    let parsedState;
     try {
-      const parsedState = OAuthStateManager.parseState(state);
+      parsedState = OAuthStateManager.parseState(state);
+
+      // Extract redirect URL from validated state
       if (parsedState.redirectTo) {
         redirectTo = parsedState.redirectTo;
       }
-    } catch {
-      // Continue with default redirect
+    } catch (stateError) {
+      // State validation failed - this is a security event
+      const errorMessage = stateError instanceof OAuthError
+        ? stateError.message
+        : 'Unknown state validation error';
+      const errorCode = stateError instanceof OAuthError
+        ? stateError.code
+        : 'INVALID_STATE';
+
+      logger.error('OAuth state validation FAILED - Security Alert', {
+        platform,
+        errorCode,
+        errorMessage,
+        clientIp: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown',
+        userAgent: request.headers.get('user-agent')?.substring(0, 100),
+        referer: request.headers.get('referer'),
+      });
+
+      // Clear the potentially compromised cookie
+      const errorResponse = NextResponse.redirect(
+        new URL(`/settings/connections?error=${errorCode}&message=${encodeURIComponent(errorMessage)}`, request.url)
+      );
+      errorResponse.cookies.delete('oauth_state');
+
+      return errorResponse;
     }
 
     // Handle the callback

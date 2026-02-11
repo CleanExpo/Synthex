@@ -49,9 +49,10 @@ async function verifyToken(token: string) {
 }
 
 // Demo user data for when database is unavailable
+// SECURITY: Uses .local TLD to indicate non-production demo data
 const DEMO_USER = {
   id: 'demo-user-001',
-  email: 'demo@synthex.com',
+  email: 'demo@synthex.local',
   name: 'Demo User',
   avatar: null,
   emailVerified: true,
@@ -95,7 +96,8 @@ export async function GET(request: NextRequest) {
     }
 
     // Handle demo user without database access
-    if (decoded.userId === 'demo-user-001' || decoded.email === 'demo@synthex.com') {
+    // SECURITY: Check for demo user ID, not email pattern
+    if (decoded.userId === 'demo-user-001') {
       return NextResponse.json({
         success: true,
         user: {

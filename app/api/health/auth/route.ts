@@ -27,20 +27,20 @@ export async function GET() {
   };
 
   try {
-    // Test 1: Demo authentication
+    // Test 1: Demo authentication (only if DEMO_MODE_ENABLED)
     try {
-      const demoResult = await signInFlow.authenticate('demo', {
-        email: 'demo@synthex.com',
-        password: 'demo123'
-      });
-      
+      const demoResult = await signInFlow.authenticate('demo', {});
+
+      // Demo auth will fail if DEMO_MODE_ENABLED is not set, which is expected in production
       checks.checks.demo_auth = demoResult.success;
-      if (!demoResult.success) {
+      if (!demoResult.success && process.env.DEMO_MODE_ENABLED === 'true') {
         checks.errors.push(`Demo auth failed: ${demoResult.error}`);
       }
     } catch (error) {
       checks.checks.demo_auth = false;
-      checks.errors.push(`Demo auth error: ${error}`);
+      if (process.env.DEMO_MODE_ENABLED === 'true') {
+        checks.errors.push(`Demo auth error: ${error}`);
+      }
     }
 
     // Test 2: Session validation

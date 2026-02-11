@@ -1,6 +1,104 @@
-import { NextResponse } from 'next/server';
+/**
+ * Features API
+ *
+ * @description Returns available features for the authenticated user based on their plan
+ *
+ * ENVIRONMENT VARIABLES REQUIRED:
+ * - JWT_SECRET: Token verification (CRITICAL)
+ *
+ * FAILURE MODE: Returns appropriate error responses
+ */
 
-export async function GET() {
-  return NextResponse.json({ features: [] });
+import { NextRequest, NextResponse } from 'next/server';
+import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
+import { prisma } from '@/lib/prisma';
+
+/**
+ * GET /api/features
+ * Get available features for the current user
+ */
+export async function GET(request: NextRequest) {
+  // Security check - requires authentication
+  const security = await APISecurityChecker.check(
+    request,
+    DEFAULT_POLICIES.AUTHENTICATED_READ
+  );
+
+  if (!security.allowed) {
+    return APISecurityChecker.createSecureResponse(
+      { error: security.error || 'Authentication required' },
+      security.error?.includes('Rate limit') ? 429 : 401,
+      security.context
+    );
+  }
+
+  try {
+    const userId = security.context.userId;
+
+    // Get user's subscription to determine features
+    const subscription = await prisma.subscription.findUnique({
+      where: { userId },
+      select: { plan: true, status: true },
+    });
+
+    const plan = subscription?.plan || 'free';
+
+    // Define features based on plan
+    const featuresByPlan: Record<string, string[]> = {
+      free: [
+        'basic-analytics',
+        'single-platform',
+        'manual-posting',
+        'basic-templates',
+      ],
+      professional: [
+        'basic-analytics',
+        'advanced-analytics',
+        'multi-platform',
+        'scheduled-posting',
+        'ai-content-generation',
+        'custom-templates',
+        'team-collaboration',
+      ],
+      business: [
+        'basic-analytics',
+        'advanced-analytics',
+        'multi-platform',
+        'scheduled-posting',
+        'ai-content-generation',
+        'custom-templates',
+        'team-collaboration',
+        'white-label',
+        'api-access',
+        'priority-support',
+        'custom-integrations',
+      ],
+      custom: [
+        'all-features',
+      ],
+    };
+
+    const features = featuresByPlan[plan] || featuresByPlan.free;
+
+    return APISecurityChecker.createSecureResponse(
+      {
+        features,
+        plan,
+        userId,
+      },
+      200,
+      security.context
+    );
+  } catch (error) {
+    console.error('Error fetching features:', error);
+    return APISecurityChecker.createSecureResponse(
+      { error: 'Failed to fetch features' },
+      500,
+      security.context
+    );
+  }
 }
+
+// Node.js runtime required for Prisma
+export const runtime = 'nodejs';
 

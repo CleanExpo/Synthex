@@ -17,7 +17,7 @@ export { instagramService, InstagramService } from './instagram-service';
 import { TwitterSyncService } from './twitter-sync-service';
 import { LinkedInService } from './linkedin-service';
 import { InstagramService } from './instagram-service';
-import { PlatformService, PlatformCredentials } from './base-platform-service';
+import { PlatformService, PlatformCredentials, TokenRefreshCallback } from './base-platform-service';
 
 /**
  * Supported platforms
@@ -26,12 +26,44 @@ export const SUPPORTED_PLATFORMS = ['twitter', 'linkedin', 'instagram', 'faceboo
 export type SupportedPlatform = typeof SUPPORTED_PLATFORMS[number];
 
 /**
+ * Options for creating a platform service
+ */
+export interface CreatePlatformServiceOptions {
+  /** Callback to persist refreshed tokens to database */
+  tokenRefreshCallback?: TokenRefreshCallback;
+  /** Token refresh threshold in milliseconds (default: 5 minutes) */
+  tokenRefreshThresholdMs?: number;
+}
+
+/**
  * Platform service factory
  * Creates and initializes a platform service for the given platform and credentials
+ *
+ * @param platform - The social media platform
+ * @param credentials - User credentials for the platform
+ * @param options - Optional configuration for token refresh handling
+ *
+ * @example
+ * ```typescript
+ * const service = createPlatformService('instagram', credentials, {
+ *   tokenRefreshCallback: async (platform, newCreds) => {
+ *     await db.platformConnections.update({
+ *       where: { platform_userId: { platform, userId } },
+ *       data: {
+ *         accessToken: newCreds.accessToken,
+ *         refreshToken: newCreds.refreshToken,
+ *         expiresAt: newCreds.expiresAt,
+ *       }
+ *     });
+ *   },
+ *   tokenRefreshThresholdMs: 10 * 60 * 1000, // 10 minutes
+ * });
+ * ```
  */
 export function createPlatformService(
   platform: SupportedPlatform,
-  credentials: PlatformCredentials
+  credentials: PlatformCredentials,
+  options?: CreatePlatformServiceOptions
 ): PlatformService | null {
   let service: PlatformService | null = null;
 
@@ -59,6 +91,16 @@ export function createPlatformService(
 
   if (service) {
     service.initialize(credentials);
+
+    // Configure token refresh if callback provided
+    if (options?.tokenRefreshCallback) {
+      service.setTokenRefreshCallback(options.tokenRefreshCallback);
+    }
+
+    // Configure custom refresh threshold if provided
+    if (options?.tokenRefreshThresholdMs !== undefined) {
+      service.setTokenRefreshThreshold(options.tokenRefreshThresholdMs);
+    }
   }
 
   return service;

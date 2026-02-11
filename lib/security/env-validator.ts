@@ -86,6 +86,18 @@ export const ENV_VAR_DEFINITIONS: EnvVarDefinition[] = [
   },
 
   {
+    key: 'OAUTH_STATE_SECRET',
+    description: 'Secret key for HMAC signing of OAuth state parameters (CSRF protection)',
+    required: true,
+    securityLevel: SecurityLevel.CRITICAL,
+    validator: z.string()
+      .min(32, 'OAUTH_STATE_SECRET must be at least 32 characters')
+      .regex(/^[A-Za-z0-9+/=_-]+$/, 'OAUTH_STATE_SECRET must contain only base64 characters'),
+    example: 'random-base64-string-at-least-32-characters-long',
+    errorMessage: 'OAuth flows will fail - generate with: openssl rand -base64 32'
+  },
+
+  {
     key: 'NEXTAUTH_SECRET',
     description: 'NextAuth.js secret for session encryption',
     required: false,

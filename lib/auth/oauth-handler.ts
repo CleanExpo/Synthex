@@ -29,7 +29,7 @@ export async function signInWithOAuth(provider: string) {
                        process.env.NEXT_PUBLIC_SUPABASE_URL === 'https://placeholder.supabase.co';
     
     if (isDemoMode) {
-      toast.error(`${provider} login is not configured in demo mode. Please use demo@synthex.com / demo123`);
+      toast.error(`${provider} login is not configured. Please contact support.`);
       return;
     }
 
@@ -38,13 +38,12 @@ export async function signInWithOAuth(provider: string) {
     const user = userStr ? JSON.parse(userStr) : null;
     
     // Call our OAuth API endpoint
+    // Authentication is handled via httpOnly cookies (credentials: 'include')
     const response = await fetch(`/api/auth/oauth/${provider.toLowerCase()}${user?.email ? `?email=${user.email}` : ''}`, {
       headers: {
         'Content-Type': 'application/json',
-        ...(localStorage.getItem('authToken') ? {
-          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-        } : {})
-      }
+      },
+      credentials: 'include', // Send httpOnly auth cookies automatically
     });
 
     if (!response.ok) {
@@ -82,6 +81,7 @@ export async function handleOAuthCallback(platform: string, code: string, state:
     const response = await fetch(`/api/auth/oauth/${platform}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
+      credentials: 'include', // Receive httpOnly auth cookies from server
       body: JSON.stringify({ code, state })
     });
 
@@ -114,12 +114,13 @@ export async function handleOAuthCallback(platform: string, code: string, state:
  */
 export async function disconnectOAuth(platform: string) {
   try {
+    // Authentication is handled via httpOnly cookies (credentials: 'include')
     const response = await fetch(`/api/integrations/${platform}/disconnect`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-      }
+      },
+      credentials: 'include', // Send httpOnly auth cookies automatically
     });
 
     if (!response.ok) {
@@ -140,10 +141,9 @@ export async function disconnectOAuth(platform: string) {
  */
 export async function isProviderConnected(platform: string): Promise<boolean> {
   try {
+    // Authentication is handled via httpOnly cookies (credentials: 'include')
     const response = await fetch(`/api/integrations/${platform}/status`, {
-      headers: {
-        'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-      }
+      credentials: 'include', // Send httpOnly auth cookies automatically
     });
 
     if (!response.ok) return false;

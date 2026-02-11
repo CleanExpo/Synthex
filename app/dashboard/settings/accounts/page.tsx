@@ -79,10 +79,9 @@ export default function AccountsSettingsPage() {
   const loadAccounts = useCallback(async () => {
     try {
       setIsLoading(true);
+      // Authentication is handled via httpOnly cookies (security fix UNI-523)
       const response = await fetch('/api/auth/accounts', {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('authToken')}`,
-        },
+        credentials: 'include', // Send httpOnly auth cookies automatically
       });
 
       if (!response.ok) {
@@ -111,10 +110,9 @@ export default function AccountsSettingsPage() {
   const handleLink = async (provider: string) => {
     setLinkingProvider(provider);
     try {
+      // Authentication is handled via httpOnly cookies (security fix UNI-523)
       const response = await fetch(`/api/auth/link/${provider}`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('authToken')}`,
-        },
+        credentials: 'include', // Send httpOnly auth cookies automatically
       });
 
       const data = await response.json();
@@ -148,11 +146,10 @@ export default function AccountsSettingsPage() {
 
     setUnlinkingProvider(provider);
     try {
+      // Authentication is handled via httpOnly cookies (security fix UNI-523)
       const response = await fetch(`/api/auth/unlink/${provider}`, {
         method: 'POST',
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('authToken')}`,
-        },
+        credentials: 'include', // Send httpOnly auth cookies automatically
       });
 
       const data = await response.json();

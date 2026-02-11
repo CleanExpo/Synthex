@@ -7,6 +7,16 @@
  * - Platform-specific credentials (see individual service files)
  */
 
+import { logger } from '@/lib/logger';
+
+/**
+ * Callback for persisting refreshed credentials to database
+ */
+export type TokenRefreshCallback = (
+  platform: string,
+  newCredentials: PlatformCredentials
+) => Promise<void>;
+
 export interface PlatformCredentials {
   accessToken: string;
   refreshToken?: string;
@@ -115,9 +125,34 @@ export interface PlatformService {
   initialize(credentials: PlatformCredentials): void;
 
   /**
+   * Set callback for persisting refreshed tokens to database
+   */
+  setTokenRefreshCallback(callback: TokenRefreshCallback): void;
+
+  /**
+   * Set custom token refresh threshold
+   */
+  setTokenRefreshThreshold(thresholdMs: number): void;
+
+  /**
    * Check if service is properly configured
    */
   isConfigured(): boolean;
+
+  /**
+   * Check if token is expired or will expire soon
+   */
+  isTokenExpired(): boolean;
+
+  /**
+   * Check if token needs refresh
+   */
+  needsTokenRefresh(): boolean;
+
+  /**
+   * Get time until token expires in milliseconds
+   */
+  getTokenExpiryMs(): number;
 
   /**
    * Validate credentials are still valid
@@ -170,20 +205,164 @@ export interface RateLimitInfo {
 }
 
 /**
+ * Default token refresh threshold in milliseconds (5 minutes)
+ */
+const DEFAULT_TOKEN_REFRESH_THRESHOLD_MS = 5 * 60 * 1000;
+
+/**
  * Abstract base class with common functionality
  */
 export abstract class BasePlatformService implements PlatformService {
   abstract readonly platform: string;
   protected credentials: PlatformCredentials | null = null;
   protected rateLimits: Record<string, RateLimitInfo> = {};
+  protected tokenRefreshCallback: TokenRefreshCallback | null = null;
+  protected tokenRefreshThresholdMs: number = DEFAULT_TOKEN_REFRESH_THRESHOLD_MS;
+  private isRefreshing: boolean = false;
+  private refreshPromise: Promise<PlatformCredentials> | null = null;
 
   initialize(credentials: PlatformCredentials): void {
     this.credentials = credentials;
   }
 
+  /**
+   * Set callback for persisting refreshed tokens
+   * This should be called to enable automatic token persistence
+   */
+  setTokenRefreshCallback(callback: TokenRefreshCallback): void {
+    this.tokenRefreshCallback = callback;
+  }
+
+  /**
+   * Set custom token refresh threshold (how early before expiry to refresh)
+   * @param thresholdMs Threshold in milliseconds (default: 5 minutes)
+   */
+  setTokenRefreshThreshold(thresholdMs: number): void {
+    this.tokenRefreshThresholdMs = thresholdMs;
+  }
+
   isConfigured(): boolean {
     return this.credentials !== null && !!this.credentials.accessToken;
   }
+
+  /**
+   * Check if token is expired or will expire within threshold
+   */
+  isTokenExpired(): boolean {
+    if (!this.credentials?.expiresAt) {
+      // If no expiry is set, assume token is valid
+      return false;
+    }
+
+    const expiresAt = new Date(this.credentials.expiresAt).getTime();
+    const now = Date.now();
+    const threshold = this.tokenRefreshThresholdMs;
+
+    return now >= expiresAt - threshold;
+  }
+
+  /**
+   * Check if token needs refresh (expired or near expiry)
+   */
+  needsTokenRefresh(): boolean {
+    if (!this.isConfigured()) {
+      return false;
+    }
+    return this.isTokenExpired();
+  }
+
+  /**
+   * Get time until token expires in milliseconds
+   * Returns -1 if no expiry is set, 0 if already expired
+   */
+  getTokenExpiryMs(): number {
+    if (!this.credentials?.expiresAt) {
+      return -1;
+    }
+
+    const expiresAt = new Date(this.credentials.expiresAt).getTime();
+    const now = Date.now();
+    return Math.max(0, expiresAt - now);
+  }
+
+  /**
+   * Ensure token is valid before making API calls
+   * This should be called at the start of every API method
+   * Handles concurrent refresh requests by reusing the same promise
+   */
+  protected async ensureValidToken(): Promise<void> {
+    if (!this.needsTokenRefresh()) {
+      return;
+    }
+
+    // Check if we can refresh (need refresh token capability)
+    if (!this.canRefreshToken()) {
+      const expiryInfo = this.credentials?.expiresAt
+        ? `Token expires at ${this.credentials.expiresAt}`
+        : 'Token expiry unknown';
+      logger.warn(`[${this.platform}] Token needs refresh but no refresh capability. ${expiryInfo}`);
+      return;
+    }
+
+    // Handle concurrent refresh requests - reuse existing promise
+    if (this.isRefreshing && this.refreshPromise) {
+      logger.debug(`[${this.platform}] Token refresh already in progress, waiting...`);
+      await this.refreshPromise;
+      return;
+    }
+
+    this.isRefreshing = true;
+    logger.info(`[${this.platform}] Token expiring soon or expired, initiating refresh...`, {
+      expiresAt: this.credentials?.expiresAt,
+      expiryMs: this.getTokenExpiryMs(),
+    });
+
+    try {
+      // Store promise so concurrent calls can wait on it
+      if (!this.refreshToken) {
+        throw new Error(`No refreshToken method implemented for ${this.platform}`);
+      }
+      this.refreshPromise = this.refreshToken();
+      const newCredentials = await this.refreshPromise;
+
+      // Persist refreshed credentials if callback is set
+      if (this.tokenRefreshCallback) {
+        try {
+          await this.tokenRefreshCallback(this.platform, newCredentials);
+          logger.info(`[${this.platform}] Refreshed credentials persisted successfully`);
+        } catch (persistError) {
+          logger.error(`[${this.platform}] Failed to persist refreshed credentials`, {
+            error: persistError,
+          });
+          // Don't throw - we still have valid credentials in memory
+        }
+      }
+
+      logger.info(`[${this.platform}] Token refreshed successfully`, {
+        newExpiresAt: newCredentials.expiresAt,
+      });
+    } catch (error) {
+      logger.error(`[${this.platform}] Token refresh failed`, { error });
+      throw error;
+    } finally {
+      this.isRefreshing = false;
+      this.refreshPromise = null;
+    }
+  }
+
+  /**
+   * Check if this service supports token refresh
+   * Override in subclass if different logic needed
+   */
+  protected canRefreshToken(): boolean {
+    // Default: can refresh if we have a refresh token or the subclass implements refreshToken
+    return !!(this.credentials?.refreshToken || this.refreshToken);
+  }
+
+  /**
+   * Refresh the access token - must be implemented by subclasses that support refresh
+   */
+  refreshToken?(): Promise<PlatformCredentials>;
 
   abstract validateCredentials(): Promise<boolean>;
   abstract syncAnalytics(days?: number): Promise<SyncAnalyticsResult>;

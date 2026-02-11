@@ -106,10 +106,13 @@ class AuthService {
       // Clear local state regardless of API response
       this.currentUser = null;
       this.notifyListeners(null);
-      
+
       if (typeof window !== 'undefined') {
+        // Only clear user profile data from localStorage
+        // Auth tokens are managed via httpOnly cookies (cleared by server on logout)
         localStorage.removeItem('synthex-user');
-        localStorage.removeItem('synthex-auth-token');
+        // Note: Auth tokens are now exclusively in httpOnly cookies (security fix UNI-523)
+        // No token data is stored in localStorage to prevent XSS attacks
       }
     }
   }
@@ -264,9 +267,42 @@ class AuthService {
 
   /**
    * Demo sign in for development/testing
+   * SECURITY: Uses the 'demo' authentication method which is controlled
+   * by the DEMO_MODE_ENABLED environment variable on the server side.
+   * No hardcoded credentials are used - the server validates demo mode availability.
    */
   async signInDemo(): Promise<AuthResponse> {
-    return this.signIn('demo@synthex.com', 'demo123');
+    try {
+      const response = await fetch(`${this.baseUrl}/unified-login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          method: 'demo',
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.success && data.user) {
+        this.currentUser = data.user;
+        this.notifyListeners(data.user);
+
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('synthex-user', JSON.stringify(data.user));
+        }
+      }
+
+      return data;
+    } catch (error) {
+      console.error('Demo sign in error:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Demo mode is not available',
+      };
+    }
   }
 }
 

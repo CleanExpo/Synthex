@@ -159,7 +159,7 @@ export class DashboardService {
         user: {
           id: userId,
           name: userStats.name || 'Demo User',
-          email: userStats.email || 'demo@synthex.com',
+          email: userStats.email || 'user@synthex.local',
           tier: userStats.tier || 'professional',
           joinedAt: userStats.joinedAt || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
         },
@@ -517,10 +517,10 @@ export class DashboardService {
 
   private static async fetchUserBasicInfo(userId: string): Promise<any> {
     // In production, fetch from user table
-    // For now, return mock data
+    // For now, return mock data with .local TLD to indicate non-production
     return {
       name: 'Demo User',
-      email: 'demo@synthex.com',
+      email: 'user@synthex.local',
       tier: 'professional',
       joinedAt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
     };

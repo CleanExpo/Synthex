@@ -42,7 +42,7 @@ export default function LoginPage() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          method: email === 'demo@synthex.com' ? 'demo' : 'email',
+          method: 'email',
           email,
           password,
         }),

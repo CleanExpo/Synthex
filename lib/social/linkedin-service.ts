@@ -35,6 +35,9 @@ export class LinkedInService extends BasePlatformService {
     options: RequestInit = {},
     useRestApi: boolean = false
   ): Promise<T> {
+    // Ensure token is valid before making request (auto-refresh if needed)
+    await this.ensureValidToken();
+
     if (!this.credentials?.accessToken) {
       throw new PlatformError('linkedin', 'No access token configured');
     }
@@ -65,6 +68,53 @@ export class LinkedInService extends BasePlatformService {
       });
       this.updateRateLimits(endpoint, rateLimitHeaders);
 
+      // Check for token expiry (401 Unauthorized)
+      if (response.status === 401) {
+        logger.warn('[linkedin] Token expired during request, attempting refresh...', {
+          endpoint,
+          status: response.status,
+        });
+
+        // Try to refresh and retry
+        if (this.credentials?.refreshToken) {
+          try {
+            await this.refreshToken();
+            // Retry request with new token
+            const retryHeaders: Record<string, string> = {
+              ...headers,
+              'Authorization': `Bearer ${this.credentials.accessToken}`,
+            };
+            const retryResponse = await fetch(url, { ...options, headers: retryHeaders });
+
+            if (!retryResponse.ok) {
+              const errorBody = await retryResponse.text();
+              throw new PlatformError(
+                'linkedin',
+                `API request failed after token refresh: ${retryResponse.status} - ${errorBody}`,
+                retryResponse.status
+              );
+            }
+
+            // Update rate limits from retry response
+            retryResponse.headers.forEach((value, key) => {
+              if (key.toLowerCase().startsWith('x-li-')) {
+                rateLimitHeaders[key] = value;
+              }
+            });
+            this.updateRateLimits(endpoint, rateLimitHeaders);
+
+            return await retryResponse.json();
+          } catch (refreshError) {
+            logger.error('[linkedin] Token refresh failed during retry', { error: refreshError });
+            throw new PlatformError(
+              'linkedin',
+              'Token expired and refresh failed. Please re-authenticate.',
+              401
+            );
+          }
+        }
+      }
+
       if (!response.ok) {
         const errorBody = await response.text();
         throw new PlatformError(
@@ -79,6 +129,13 @@ export class LinkedInService extends BasePlatformService {
       if (error instanceof PlatformError) throw error;
       throw new PlatformError('linkedin', error instanceof Error ? error.message : String(error), undefined, error instanceof Error ? error : undefined);
     }
+  }
+
+  /**
+   * Override canRefreshToken to check for refresh token availability
+   */
+  protected override canRefreshToken(): boolean {
+    return !!this.credentials?.refreshToken;
   }
 
   async validateCredentials(): Promise<boolean> {

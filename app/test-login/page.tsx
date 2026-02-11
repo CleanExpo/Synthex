@@ -10,8 +10,9 @@ import { CheckCircle, XCircle, Loader2 } from '@/components/icons';
 
 export default function TestLogin() {
   const { user, loading, signIn, signOut } = useAuth();
-  const [email, setEmail] = useState('demo@synthex.com');
-  const [password, setPassword] = useState('demo123');
+  // SECURITY: No hardcoded credentials - fields start empty
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoggingIn, setIsLoggingIn] = useState(false);
 
@@ -93,7 +94,7 @@ export default function TestLogin() {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="demo@synthex.com"
+                  placeholder="Enter email"
                   disabled={isLoggingIn}
                 />
               </div>
@@ -107,7 +108,7 @@ export default function TestLogin() {
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="demo123"
+                  placeholder="Enter password"
                   disabled={isLoggingIn}
                 />
               </div>
@@ -124,9 +125,7 @@ export default function TestLogin() {
               </Button>
               
               <div className="text-sm text-gray-600 text-center">
-                <strong>Demo Credentials:</strong>
-                <div>Email: demo@synthex.com</div>
-                <div>Password: demo123</div>
+                <strong>Note:</strong> Demo mode must be enabled via environment variable
               </div>
             </form>
           )}

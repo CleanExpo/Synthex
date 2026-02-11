@@ -55,6 +55,8 @@ export interface OAuthState {
   redirectTo?: string;
   nonce: string;
   createdAt: number;
+  /** HMAC signature for cryptographic verification */
+  signature?: string;
 }
 
 export interface OAuthCallbackParams {

@@ -108,29 +108,32 @@ function setCache<T>(key: string, data: T, cacheTime: number, staleTime: number)
 // HELPER FUNCTIONS
 // ============================================================================
 
+/**
+ * @deprecated Auth tokens are now stored in httpOnly cookies (security fix UNI-523)
+ * This function returns null as tokens are no longer stored in localStorage.
+ * Use credentials: 'include' in fetch requests instead.
+ */
 function getAuthToken(): string | null {
-  if (typeof window === 'undefined') return null;
-  return localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
+  // Security fix UNI-523: Auth tokens are now in httpOnly cookies only
+  // Return null - callers should migrate to credentials: 'include'
+  return null;
 }
 
 async function fetchWithAuth<T>(
   url: string,
   options: ApiRequestOptions = {}
 ): Promise<T> {
-  const token = getAuthToken();
-
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
     ...options.headers,
   };
 
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
-  }
-
+  // Authentication is handled via httpOnly cookies (credentials: 'include')
+  // No Authorization header needed - cookies are sent automatically
   const response = await fetch(url, {
     method: options.method || 'GET',
     headers,
+    credentials: 'include', // Send httpOnly auth cookies automatically
     body: options.body ? JSON.stringify(options.body) : undefined,
   });
 

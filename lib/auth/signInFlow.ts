@@ -27,6 +27,10 @@ const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholde
 const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-key';
 const IS_PRODUCTION = process.env.NODE_ENV === 'production';
 
+// Demo mode configuration - MUST be explicitly enabled via environment variable
+// SECURITY: Demo mode is disabled by default and should NEVER be enabled in production
+const DEMO_MODE_ENABLED = process.env.DEMO_MODE_ENABLED === 'true' && !IS_PRODUCTION;
+
 // JWT_SECRET must be set in production - no fallback allowed
 const JWT_SECRET = (() => {
   const secret = process.env.JWT_SECRET;
@@ -111,16 +115,19 @@ export class SignInFlow {
    * Handle email/password authentication
    */
   private async handleEmailAuth(email: string, password: string): Promise<AuthResult> {
-    // Always check for demo credentials first
-    if (email === 'demo@synthex.com' && password === 'demo123') {
-      return this.handleDemoAuth();
-    }
-
     // Check if Supabase is configured
     if (!this.isSupabaseConfigured()) {
+      // SECURITY: Never expose demo credentials in error messages
+      // Demo mode must be explicitly enabled via DEMO_MODE_ENABLED env var
+      if (DEMO_MODE_ENABLED) {
+        return {
+          success: false,
+          error: 'Authentication service not configured. Demo mode is available.'
+        };
+      }
       return {
         success: false,
-        error: 'Authentication service not configured. Use demo@synthex.com / demo123'
+        error: 'Authentication service not configured. Please contact support.'
       };
     }
 
@@ -337,11 +344,20 @@ export class SignInFlow {
 
   /**
    * Handle demo authentication
+   * SECURITY: Only available when DEMO_MODE_ENABLED=true AND not in production
    */
   private async handleDemoAuth(): Promise<AuthResult> {
+    // SECURITY: Block demo auth in production or when not explicitly enabled
+    if (!DEMO_MODE_ENABLED) {
+      return {
+        success: false,
+        error: 'Demo mode is not available'
+      };
+    }
+
     const demoUser: AuthUser = {
       id: 'demo-user-001',
-      email: 'demo@synthex.com',
+      email: 'demo@synthex.local', // Use .local TLD to indicate non-production
       name: 'Demo User',
       provider: 'demo',
       emailVerified: true
@@ -417,7 +433,7 @@ export class SignInFlow {
           session: {
             user: {
               id: decoded.sub,
-              email: decoded.email || 'demo@synthex.com',
+              email: decoded.email || 'unknown@synthex.local',
               provider: 'demo'
             },
             accessToken,

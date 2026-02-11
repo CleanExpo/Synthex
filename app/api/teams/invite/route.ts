@@ -1,6 +1,7 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { sendTeamInviteEmail } from '@/lib/email';
+import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
 
 type InvitePayload = {
   email?: string;
@@ -14,10 +15,30 @@ type InvitePayload = {
  * Accepts: { email, role, message?, campaignAccess? }
  * Returns: { success, data|error }
  *
+ * REQUIRES AUTHENTICATION - Only authenticated users can send invitations.
+ *
  * Persists a TeamInvitation when DATABASE_URL is configured.
  * Falls back to a non-persistent response if DB is unavailable.
+ *
+ * ENVIRONMENT VARIABLES REQUIRED:
+ * - JWT_SECRET: Token verification (CRITICAL)
+ * - DATABASE_URL: PostgreSQL connection (CRITICAL)
  */
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
+  // Security check - requires authentication with write permissions
+  const security = await APISecurityChecker.check(
+    req,
+    DEFAULT_POLICIES.AUTHENTICATED_WRITE
+  );
+
+  if (!security.allowed) {
+    return APISecurityChecker.createSecureResponse(
+      { success: false, error: security.error || 'Authentication required' },
+      security.error?.includes('Rate limit') ? 429 : 401,
+      security.context
+    );
+  }
+
   try {
     let payload: InvitePayload = {};
     try {
@@ -58,6 +79,7 @@ export async function POST(req: Request) {
             message,
             campaignAccess: campaignAccess as any,
             status: 'sent',
+            userId: security.context.userId, // Track who sent the invitation
           },
         });
       } catch (e) {

@@ -2,7 +2,7 @@
  * Organizations API
  *
  * @description API endpoints for organization management:
- * - POST: Create new organization
+ * - POST: Create new organization (authenticated users)
  * - GET: List organizations (admin only)
  *
  * ENVIRONMENT VARIABLES REQUIRED:
@@ -17,15 +17,33 @@ import { prisma } from '@/lib/prisma';
 import { logger } from '@/lib/logger';
 import { ResponseOptimizer, cacheHeaders } from '@/lib/api/response-optimizer';
 import { generateTenantSlug, createDefaultSettings, PLAN_LIMITS } from '@/lib/multi-tenant';
+import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
 
 // ============================================================================
 // POST - Create Organization
 // ============================================================================
 
 export async function POST(request: NextRequest) {
+  // Security check - requires authentication
+  const security = await APISecurityChecker.check(
+    request,
+    DEFAULT_POLICIES.AUTHENTICATED_WRITE
+  );
+
+  if (!security.allowed) {
+    return APISecurityChecker.createSecureResponse(
+      { error: security.error || 'Authentication required' },
+      security.error?.includes('Rate limit') ? 429 : 401,
+      security.context
+    );
+  }
+
   try {
     const body = await request.json();
-    const { name, slug: providedSlug, plan = 'free', userId } = body;
+    const { name, slug: providedSlug, plan = 'free' } = body;
+
+    // Use authenticated user ID from security context instead of trusting body
+    const userId = security.context.userId;
 
     // Validate required fields
     if (!name) {
@@ -116,10 +134,25 @@ export async function POST(request: NextRequest) {
 }
 
 // ============================================================================
-// GET - List Organizations
+// GET - List Organizations (Admin Only)
 // ============================================================================
 
 export async function GET(request: NextRequest) {
+  // Security check - requires admin authentication
+  const security = await APISecurityChecker.check(
+    request,
+    DEFAULT_POLICIES.ADMIN_ONLY
+  );
+
+  if (!security.allowed) {
+    return APISecurityChecker.createSecureResponse(
+      { error: security.error || 'Admin access required' },
+      security.error?.includes('Rate limit') ? 429 :
+      security.error?.includes('permission') ? 403 : 401,
+      security.context
+    );
+  }
+
   try {
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get('page') || '1', 10);

@@ -60,7 +60,7 @@ export default function LoginPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          method: formData.email === 'demo@synthex.com' ? 'demo' : 'email',
+          method: 'email',
           email: formData.email,
           password: formData.password
         }),
@@ -72,9 +72,9 @@ export default function LoginPage() {
         throw new Error(data.error || 'Invalid credentials');
       }
 
-      // Store user data in localStorage for the sidebar and other components
+      // Store user profile data in localStorage for UI components (non-sensitive)
+      // Auth tokens are now stored in httpOnly cookies (security fix UNI-523)
       if (data.user && typeof window !== 'undefined') {
-        localStorage.setItem('authToken', data.session?.accessToken || 'authenticated');
         localStorage.setItem('user', JSON.stringify({
           id: data.user.id,
           email: data.user.email,
@@ -100,9 +100,9 @@ export default function LoginPage() {
       const data = await response.json();
 
       if (!response.ok) {
-        // Handle demo mode gracefully
+        // Handle configuration issues gracefully
         if (data.error?.includes('not configured')) {
-          toast.error('Google login is not configured. Please use demo credentials: demo@synthex.com / demo123');
+          toast.error('Google login is not configured. Please contact support.');
           return;
         }
         throw new Error(data.error || 'Failed to initiate Google login');
@@ -191,11 +191,11 @@ export default function LoginPage() {
               </div>
             </div>
           )}
-          {/* Demo credentials notice */}
-          {!accountExistsError && (process.env.NODE_ENV === 'development' || !process.env.NEXT_PUBLIC_SUPABASE_URL) && (
+          {/* Demo mode notice - credentials are controlled server-side via DEMO_MODE_ENABLED env var */}
+          {!accountExistsError && process.env.NODE_ENV === 'development' && (
             <div className="mt-4 p-3 bg-cyan-500/10 border border-cyan-500/30 rounded-lg">
               <p className="text-xs text-cyan-300 text-center">
-                Demo Mode: Use <strong>demo@synthex.com</strong> / <strong>demo123</strong>
+                Development Mode: Demo authentication available via API
               </p>
             </div>
           )}

@@ -50,6 +50,7 @@ export * from './skeleton';
 export * from './skeleton-extended';
 export * from './accordion';
 export * from './spinner';
+export * from './error-boundary';
 
 // ============================================================================
 // DATA DISPLAY COMPONENTS

@@ -270,21 +270,48 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Verify signature (optional in development)
-    if (process.env.NODE_ENV === 'production') {
-      const signature =
-        request.headers.get('x-hub-signature-256') ||
-        request.headers.get('x-twitter-webhooks-signature') ||
-        request.headers.get('x-linkedin-signature') ||
-        '';
+    // Verify webhook signature - ALWAYS required in ALL environments
+    // Security: Never skip signature verification regardless of environment
+    const signature =
+      request.headers.get('x-hub-signature-256') ||
+      request.headers.get('x-twitter-webhooks-signature') ||
+      request.headers.get('x-linkedin-signature') ||
+      '';
 
-      if (!verifySignature(platform, rawBody, signature)) {
-        console.error(`Invalid webhook signature for ${platform}`);
-        return NextResponse.json(
-          { error: 'Unauthorized', message: 'Invalid signature' },
-          { status: 401 }
-        );
+    if (!verifySignature(platform, rawBody, signature)) {
+      // Log verification failure for security monitoring
+      console.error(
+        `[SECURITY] Webhook signature verification failed for platform: ${platform}, ` +
+        `IP: ${request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown'}, ` +
+        `User-Agent: ${request.headers.get('user-agent') || 'unknown'}`
+      );
+
+      // Attempt to log to audit trail for security monitoring
+      try {
+        await prisma.auditLog.create({
+          data: {
+            action: 'webhook_signature_invalid',
+            resource: 'webhook',
+            resourceId: platform,
+            details: {
+              platform,
+              ip: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown',
+              userAgent: request.headers.get('user-agent') || 'unknown',
+              timestamp: new Date().toISOString(),
+            },
+            severity: 'critical',
+            category: 'security',
+            outcome: 'failure',
+          },
+        });
+      } catch (auditError) {
+        console.error('[SECURITY] Failed to log signature verification failure:', auditError);
       }
+
+      return NextResponse.json(
+        { error: 'Unauthorized', message: 'Invalid signature' },
+        { status: 401 }
+      );
     }
 
     // Parse event type based on platform

@@ -6,10 +6,12 @@
  * ENVIRONMENT VARIABLES REQUIRED:
  * - Each provider has its own CLIENT_ID and CLIENT_SECRET
  * - NEXT_PUBLIC_APP_URL: Application URL for callbacks
+ * - OAUTH_STATE_SECRET: Secret key for HMAC state signing (CRITICAL)
  *
  * FAILURE MODE: Throws OAuthError on authentication failures
  */
 
+import { createHmac, timingSafeEqual } from 'crypto';
 import { logger } from '@/lib/logger';
 import {
   OAuthPlatform,
@@ -219,42 +221,256 @@ export abstract class BaseOAuthProvider {
 }
 
 // ============================================================================
-// STATE MANAGEMENT
+// STATE MANAGEMENT - Secure Implementation with HMAC and Timestamp Expiration
 // ============================================================================
 
+/**
+ * Secure OAuth State Manager
+ *
+ * SECURITY FEATURES:
+ * - HMAC-SHA256 signature for cryptographic verification
+ * - Timestamp-based expiration (10 minutes)
+ * - Constant-time signature comparison to prevent timing attacks
+ * - Detailed CSRF attempt logging
+ *
+ * ENVIRONMENT VARIABLES REQUIRED:
+ * - OAUTH_STATE_SECRET: 32+ character secret for HMAC signing (CRITICAL)
+ */
 export class OAuthStateManager {
-  private static readonly STATE_TTL = 10 * 60 * 1000; // 10 minutes
+  /** State expires after 10 minutes */
+  private static readonly STATE_TTL_MS = 10 * 60 * 1000;
+
+  /** HMAC algorithm */
+  private static readonly HMAC_ALGORITHM = 'sha256';
 
   /**
-   * Generate OAuth state
+   * Get the state signing secret from environment
+   * @throws Error if secret is not configured
    */
-  static generateState(platform: OAuthPlatform, userId: string, redirectTo?: string): string {
-    const state: OAuthState = {
-      platform,
-      userId,
-      redirectTo,
-      nonce: Math.random().toString(36).slice(2) + Date.now().toString(36),
-      createdAt: Date.now(),
-    };
+  private static getStateSecret(): string {
+    const secret = process.env.OAUTH_STATE_SECRET;
 
-    return Buffer.from(JSON.stringify(state)).toString('base64url');
+    if (!secret) {
+      throw new Error(
+        'OAUTH_STATE_SECRET environment variable is required for OAuth state signing. ' +
+        'Generate with: openssl rand -base64 32'
+      );
+    }
+
+    if (secret.length < 32) {
+      throw new Error(
+        'OAUTH_STATE_SECRET must be at least 32 characters for security. ' +
+        'Generate with: openssl rand -base64 32'
+      );
+    }
+
+    return secret;
   }
 
   /**
-   * Parse and validate OAuth state
+   * Generate HMAC signature for state data
    */
-  static parseState(stateString: string): OAuthState {
-    try {
-      const state = JSON.parse(Buffer.from(stateString, 'base64url').toString()) as OAuthState;
+  private static signState(payload: Omit<OAuthState, 'signature'>): string {
+    const secret = this.getStateSecret();
+    const dataToSign = JSON.stringify({
+      platform: payload.platform,
+      userId: payload.userId,
+      redirectTo: payload.redirectTo,
+      nonce: payload.nonce,
+      createdAt: payload.createdAt,
+    });
 
-      // Validate state is not expired
-      if (Date.now() - state.createdAt > this.STATE_TTL) {
-        throw new Error('State expired');
+    return createHmac(this.HMAC_ALGORITHM, secret)
+      .update(dataToSign)
+      .digest('base64url');
+  }
+
+  /**
+   * Verify HMAC signature using constant-time comparison
+   * @returns true if signature is valid, false otherwise
+   */
+  private static verifySignature(state: OAuthState, providedSignature: string): boolean {
+    try {
+      const expectedSignature = this.signState(state);
+
+      // Use timing-safe comparison to prevent timing attacks
+      const expected = Buffer.from(expectedSignature, 'utf8');
+      const provided = Buffer.from(providedSignature, 'utf8');
+
+      if (expected.length !== provided.length) {
+        return false;
       }
 
-      return state;
-    } catch (error) {
-      throw new OAuthError('twitter', 'INVALID_STATE', 'Invalid or expired OAuth state');
+      return timingSafeEqual(expected, provided);
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Generate a cryptographically signed OAuth state
+   *
+   * @param platform - The OAuth platform
+   * @param userId - The user initiating the OAuth flow
+   * @param redirectTo - Optional URL to redirect after OAuth completes
+   * @returns Base64url encoded signed state string
+   */
+  static generateState(platform: OAuthPlatform, userId: string, redirectTo?: string): string {
+    const nonce = Buffer.from(crypto.getRandomValues(new Uint8Array(16))).toString('base64url');
+
+    const statePayload: Omit<OAuthState, 'signature'> = {
+      platform,
+      userId,
+      redirectTo,
+      nonce,
+      createdAt: Date.now(),
+    };
+
+    const signature = this.signState(statePayload);
+
+    const signedState: OAuthState = {
+      ...statePayload,
+      signature,
+    };
+
+    return Buffer.from(JSON.stringify(signedState)).toString('base64url');
+  }
+
+  /**
+   * Parse and validate OAuth state with full security checks
+   *
+   * Security validations performed:
+   * 1. JSON parsing and structure validation
+   * 2. Required field presence
+   * 3. HMAC signature verification (cryptographic)
+   * 4. Timestamp expiration check (10 minutes)
+   *
+   * @param stateString - The state parameter from OAuth callback
+   * @returns Validated OAuthState object
+   * @throws OAuthError if validation fails
+   */
+  static parseState(stateString: string): OAuthState {
+    let parsedData: unknown;
+
+    // Step 1: Decode and parse JSON
+    try {
+      const decoded = Buffer.from(stateString, 'base64url').toString('utf8');
+      parsedData = JSON.parse(decoded);
+    } catch {
+      logger.warn('OAuth state decode/parse failed - potential CSRF attempt', {
+        stateLength: stateString?.length,
+        statePrefix: stateString?.substring(0, 20),
+      });
+      throw new OAuthError('twitter', 'INVALID_STATE', 'Invalid OAuth state format');
+    }
+
+    // Step 2: Validate structure and required fields
+    const state = parsedData as OAuthState;
+
+    if (!state || typeof state !== 'object') {
+      logger.warn('OAuth state not an object - potential CSRF attempt');
+      throw new OAuthError('twitter', 'INVALID_STATE', 'Invalid OAuth state structure');
+    }
+
+    if (!state.platform || !state.userId || !state.nonce || !state.createdAt) {
+      logger.warn('OAuth state missing required fields - potential CSRF attempt', {
+        hasPlataform: !!state.platform,
+        hasUserId: !!state.userId,
+        hasNonce: !!state.nonce,
+        hasCreatedAt: !!state.createdAt,
+      });
+      throw new OAuthError(
+        state.platform || 'twitter',
+        'INVALID_STATE',
+        'OAuth state missing required fields'
+      );
+    }
+
+    // Step 3: Verify HMAC signature (cryptographic verification)
+    if (!state.signature) {
+      logger.warn('OAuth state missing signature - CSRF attempt detected', {
+        platform: state.platform,
+        userId: state.userId,
+      });
+      throw new OAuthError(state.platform, 'INVALID_STATE_SIGNATURE', 'OAuth state signature missing');
+    }
+
+    const isValidSignature = this.verifySignature(state, state.signature);
+
+    if (!isValidSignature) {
+      logger.error('OAuth state signature verification FAILED - CSRF ATTACK DETECTED', {
+        platform: state.platform,
+        userId: state.userId,
+        createdAt: new Date(state.createdAt).toISOString(),
+        clientIp: 'logged-separately', // Should be added from request context
+      });
+      throw new OAuthError(state.platform, 'INVALID_STATE_SIGNATURE', 'OAuth state signature invalid');
+    }
+
+    // Step 4: Check timestamp expiration (10 minutes)
+    const stateAge = Date.now() - state.createdAt;
+
+    if (stateAge > this.STATE_TTL_MS) {
+      const ageMinutes = Math.floor(stateAge / 60000);
+      logger.warn('OAuth state expired - potential replay attack', {
+        platform: state.platform,
+        userId: state.userId,
+        createdAt: new Date(state.createdAt).toISOString(),
+        ageMinutes,
+        maxAgeMinutes: this.STATE_TTL_MS / 60000,
+      });
+      throw new OAuthError(
+        state.platform,
+        'STATE_EXPIRED',
+        `OAuth state expired (age: ${ageMinutes} minutes, max: ${this.STATE_TTL_MS / 60000} minutes)`
+      );
+    }
+
+    // Step 5: Check for future timestamps (clock skew attack)
+    if (state.createdAt > Date.now() + 60000) { // Allow 1 minute clock skew
+      logger.error('OAuth state has future timestamp - potential attack', {
+        platform: state.platform,
+        userId: state.userId,
+        createdAt: new Date(state.createdAt).toISOString(),
+        serverTime: new Date().toISOString(),
+      });
+      throw new OAuthError(state.platform, 'INVALID_STATE_TIMESTAMP', 'OAuth state has invalid timestamp');
+    }
+
+    logger.debug('OAuth state validated successfully', {
+      platform: state.platform,
+      userId: state.userId,
+      stateAgeSeconds: Math.floor(stateAge / 1000),
+    });
+
+    return state;
+  }
+
+  /**
+   * Check if a state string is valid without throwing
+   * Useful for pre-validation checks
+   */
+  static isValidState(stateString: string): boolean {
+    try {
+      this.parseState(stateString);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Get remaining validity time for a state in milliseconds
+   * Returns 0 if state is invalid or expired
+   */
+  static getRemainingValidity(stateString: string): number {
+    try {
+      const decoded = Buffer.from(stateString, 'base64url').toString('utf8');
+      const state = JSON.parse(decoded) as OAuthState;
+      const remaining = this.STATE_TTL_MS - (Date.now() - state.createdAt);
+      return Math.max(0, remaining);
+    } catch {
+      return 0;
     }
   }
 }

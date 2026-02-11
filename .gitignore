@@ -32,14 +32,24 @@ ENV/
 .env.production
 .env.staging
 .env.development
+.env.vercel
 .env*.local
 *.env
 .env.*
 !.env.example
 !.env.docker.example
 !.env.production.secure
+!.env.template
+!.env.test
 .env.txt
 *.env
+
+# Credential files (SECURITY CRITICAL)
+*.pem
+*.key
+*.cert
+*-credentials.json
+service-account*.json
 
 # IDE
 .vscode/

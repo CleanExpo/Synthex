@@ -35,6 +35,9 @@ export class InstagramService extends BasePlatformService {
     endpoint: string,
     options: RequestInit = {}
   ): Promise<T> {
+    // Ensure token is valid before making request (auto-refresh if needed)
+    await this.ensureValidToken();
+
     if (!this.credentials?.accessToken) {
       throw new PlatformError('instagram', 'No access token configured');
     }
@@ -54,6 +57,45 @@ export class InstagramService extends BasePlatformService {
 
       const data = await response.json();
 
+      // Check for token expiry error and attempt refresh
+      if (data.error?.code === 190 || data.error?.error_subcode === 463) {
+        // Token expired - try to refresh and retry
+        logger.warn('[instagram] Token expired during request, attempting refresh...', {
+          errorCode: data.error?.code,
+          errorSubcode: data.error?.error_subcode,
+        });
+
+        try {
+          await this.refreshToken();
+          // Retry the request with new token
+          const retryUrl = `${GRAPH_API_BASE}${endpoint}${separator}access_token=${this.credentials.accessToken}`;
+          const retryResponse = await fetch(retryUrl, {
+            ...options,
+            headers: {
+              'Content-Type': 'application/json',
+              ...(options.headers || {}),
+            },
+          });
+          const retryData = await retryResponse.json();
+
+          if (!retryResponse.ok || retryData.error) {
+            throw new PlatformError(
+              'instagram',
+              retryData.error?.message || `API request failed after token refresh: ${retryResponse.status}`,
+              retryResponse.status
+            );
+          }
+          return retryData;
+        } catch (refreshError) {
+          logger.error('[instagram] Token refresh failed during retry', { error: refreshError });
+          throw new PlatformError(
+            'instagram',
+            'Token expired and refresh failed. Please re-authenticate.',
+            401
+          );
+        }
+      }
+
       if (!response.ok || data.error) {
         throw new PlatformError(
           'instagram',
@@ -68,6 +110,14 @@ export class InstagramService extends BasePlatformService {
       const originalError = error instanceof Error ? error : undefined;
       throw new PlatformError('instagram', error instanceof Error ? error.message : String(error), undefined, originalError);
     }
+  }
+
+  /**
+   * Override canRefreshToken to indicate Instagram supports token refresh
+   * Instagram uses long-lived tokens that can be exchanged
+   */
+  protected override canRefreshToken(): boolean {
+    return !!this.credentials?.accessToken;
   }
 
   /**
