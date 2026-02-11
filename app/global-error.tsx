@@ -15,7 +15,7 @@ export default function GlobalError({
   return (
     <html>
       <body>
-        <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900/20 to-gray-900 flex items-center justify-center p-4">
+        <div className="min-h-screen bg-gradient-to-br from-gray-900 via-cyan-900/20 to-gray-900 flex items-center justify-center p-4">
           <motion.div
             initial="hidden"
             animate="visible"

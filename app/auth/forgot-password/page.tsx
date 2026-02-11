@@ -45,7 +45,7 @@ export default function ForgotPasswordPage() {
 
   if (success) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-gray-950 via-purple-950/20 to-gray-950 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-gradient-to-b from-gray-950 via-cyan-950/20 to-gray-950 flex items-center justify-center p-4">
         {/* Background effects */}
         <div className="fixed inset-0 overflow-hidden pointer-events-none">
           <div className="absolute top-1/4 -left-32 w-64 h-64 bg-emerald-500/20 rounded-full blur-3xl" />
@@ -90,7 +90,7 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-950 via-purple-950/20 to-gray-950 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-b from-gray-950 via-cyan-950/20 to-gray-950 flex items-center justify-center p-4">
       <Toaster position="top-right" />
 
       {/* Background effects */}

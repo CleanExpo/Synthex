@@ -249,7 +249,7 @@ export const Glass: Story = {
   },
   decorators: [
     (Story) => (
-      <div className="bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-8 rounded-lg">
+      <div className="bg-gradient-to-br from-slate-900 via-cyan-900 to-slate-900 p-8 rounded-lg">
         <Story />
       </div>
     ),
@@ -276,7 +276,7 @@ export const GlassPrimary: Story = {
   },
   decorators: [
     (Story) => (
-      <div className="bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-8 rounded-lg">
+      <div className="bg-gradient-to-br from-slate-900 via-cyan-900 to-slate-900 p-8 rounded-lg">
         <Story />
       </div>
     ),
@@ -406,7 +406,7 @@ export const PremiumSecondary: Story = {
 
 export const GlassButtonShowcase: Story = {
   render: () => (
-    <div className="bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-8 rounded-xl space-y-6">
+    <div className="bg-gradient-to-br from-slate-900 via-cyan-900 to-slate-900 p-8 rounded-xl space-y-6">
       <div className="text-white text-lg font-semibold mb-4">Premium Glass Buttons</div>
 
       <div className="flex flex-wrap gap-3">

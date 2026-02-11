@@ -588,7 +588,7 @@
 }
 
 .gradient-text-premium {
-  background: linear-gradient(to right, rgb(var(--color-violet)), rgb(var(--color-fuchsia)), rgb(var(--color-cyan)));
+  background: linear-gradient(to right, rgb(var(--color-cyan)), rgb(6 182 212), rgb(34 211 238));
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
