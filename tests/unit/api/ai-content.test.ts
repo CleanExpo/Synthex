@@ -4,12 +4,10 @@
  * Tests for hashtag generation, content optimization, and translation endpoints
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-
 // Mock dependencies
-vi.mock('@/lib/ai/openrouter-client', () => ({
+jest.mock('@/lib/ai/openrouter-client', () => ({
   openRouterClient: {
-    complete: vi.fn(),
+    complete: jest.fn(),
     models: {
       balanced: 'anthropic/claude-3-haiku',
       creative: 'anthropic/claude-3-sonnet',
@@ -17,10 +15,10 @@ vi.mock('@/lib/ai/openrouter-client', () => ({
   },
 }));
 
-vi.mock('@/lib/security/api-security-checker', () => ({
+jest.mock('@/lib/security/api-security-checker', () => ({
   APISecurityChecker: {
-    check: vi.fn().mockResolvedValue({ allowed: true }),
-    createSecureResponse: vi.fn((body, status) => new Response(JSON.stringify(body), { status })),
+    check: jest.fn().mockResolvedValue({ allowed: true }),
+    createSecureResponse: jest.fn((body, status) => new Response(JSON.stringify(body), { status })),
   },
   DEFAULT_POLICIES: {
     AUTHENTICATED_WRITE: { requireAuth: true },
@@ -28,23 +26,23 @@ vi.mock('@/lib/security/api-security-checker', () => ({
   },
 }));
 
-vi.mock('@/lib/security/audit-logger', () => ({
+jest.mock('@/lib/security/audit-logger', () => ({
   auditLogger: {
-    log: vi.fn().mockResolvedValue(undefined),
+    log: jest.fn().mockResolvedValue(undefined),
   },
 }));
 
-vi.mock('@/lib/logger', () => ({
+jest.mock('@/lib/logger', () => ({
   logger: {
-    error: vi.fn(),
-    info: vi.fn(),
-    warn: vi.fn(),
+    error: jest.fn(),
+    info: jest.fn(),
+    warn: jest.fn(),
   },
 }));
 
-vi.mock('jsonwebtoken', () => ({
+jest.mock('jsonwebtoken', () => ({
   default: {
-    verify: vi.fn().mockReturnValue({ sub: 'test-user-id' }),
+    verify: jest.fn().mockReturnValue({ sub: 'test-user-id' }),
   },
 }));
 

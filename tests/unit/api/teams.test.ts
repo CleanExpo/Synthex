@@ -10,79 +10,77 @@
  * - /api/teams/stats
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-
 // Mock dependencies before any imports
 const mockPrisma = {
   user: {
-    findUnique: vi.fn(),
-    findFirst: vi.fn(),
-    findMany: vi.fn(),
-    update: vi.fn(),
-    count: vi.fn(),
+    findUnique: jest.fn(),
+    findFirst: jest.fn(),
+    findMany: jest.fn(),
+    update: jest.fn(),
+    count: jest.fn(),
   },
   campaign: {
-    findMany: vi.fn(),
-    count: vi.fn(),
-    groupBy: vi.fn(),
+    findMany: jest.fn(),
+    count: jest.fn(),
+    groupBy: jest.fn(),
   },
   post: {
-    findMany: vi.fn(),
-    count: vi.fn(),
-    groupBy: vi.fn(),
+    findMany: jest.fn(),
+    count: jest.fn(),
+    groupBy: jest.fn(),
   },
   auditLog: {
-    findMany: vi.fn(),
-    count: vi.fn(),
+    findMany: jest.fn(),
+    count: jest.fn(),
   },
   teamInvitation: {
-    findMany: vi.fn(),
-    findFirst: vi.fn(),
-    create: vi.fn(),
-    update: vi.fn(),
-    delete: vi.fn(),
-    count: vi.fn(),
+    findMany: jest.fn(),
+    findFirst: jest.fn(),
+    create: jest.fn(),
+    update: jest.fn(),
+    delete: jest.fn(),
+    count: jest.fn(),
   },
   userRole: {
-    findMany: vi.fn(),
-    create: vi.fn(),
-    deleteMany: vi.fn(),
+    findMany: jest.fn(),
+    create: jest.fn(),
+    deleteMany: jest.fn(),
   },
   role: {
-    findMany: vi.fn(),
-    findFirst: vi.fn(),
+    findMany: jest.fn(),
+    findFirst: jest.fn(),
   },
   permissionAudit: {
-    create: vi.fn(),
+    create: jest.fn(),
   },
 };
 
 const mockSecurityChecker = {
-  check: vi.fn().mockResolvedValue({ allowed: true }),
-  createSecureResponse: vi.fn((body, status) => {
+  check: jest.fn().mockResolvedValue({ allowed: true }),
+  createSecureResponse: jest.fn((body, status) => {
     const response = new Response(JSON.stringify(body), { status });
     return response;
   }),
 };
 
 const mockAuditLogger = {
-  log: vi.fn().mockResolvedValue(undefined),
+  log: jest.fn().mockResolvedValue(undefined),
 };
 
 const mockLogger = {
-  info: vi.fn(),
-  error: vi.fn(),
-  warn: vi.fn(),
+  info: jest.fn(),
+  error: jest.fn(),
+  warn: jest.fn(),
 };
 
-const mockSendTeamInviteEmail = vi.fn().mockResolvedValue(undefined);
+const mockSendTeamInviteEmail = jest.fn().mockResolvedValue(undefined);
 
-vi.mock('@/lib/prisma', () => ({
+jest.mock('@/lib/prisma', () => ({
   __esModule: true,
   default: mockPrisma,
 }));
 
-vi.mock('@/lib/security/api-security-checker', () => ({
+jest.mock('@/lib/security/api-security-checker', () => ({
   APISecurityChecker: mockSecurityChecker,
   DEFAULT_POLICIES: {
     AUTHENTICATED_READ: {},
@@ -90,31 +88,31 @@ vi.mock('@/lib/security/api-security-checker', () => ({
   },
 }));
 
-vi.mock('@/lib/security/audit-logger', () => ({
+jest.mock('@/lib/security/audit-logger', () => ({
   auditLogger: mockAuditLogger,
 }));
 
-vi.mock('@/lib/logger', () => ({
+jest.mock('@/lib/logger', () => ({
   logger: mockLogger,
 }));
 
-vi.mock('@/lib/email', () => ({
+jest.mock('@/lib/email', () => ({
   sendTeamInviteEmail: mockSendTeamInviteEmail,
 }));
 
-vi.mock('jsonwebtoken', () => ({
-  verify: vi.fn().mockReturnValue({ sub: 'test-user-id', email: 'test@example.com' }),
+jest.mock('jsonwebtoken', () => ({
+  verify: jest.fn().mockReturnValue({ sub: 'test-user-id', email: 'test@example.com' }),
 }));
 
-vi.mock('@/lib/api/response-optimizer', () => ({
+jest.mock('@/lib/api/response-optimizer', () => ({
   ResponseOptimizer: {
-    createResponse: vi.fn((data, options) => {
+    createResponse: jest.fn((data, options) => {
       return new Response(JSON.stringify(data), {
         status: options?.status || 200,
         headers: { 'Content-Type': 'application/json' },
       });
     }),
-    createErrorResponse: vi.fn((message, status) => {
+    createErrorResponse: jest.fn((message, status) => {
       return new Response(JSON.stringify({ error: message }), {
         status,
         headers: { 'Content-Type': 'application/json' },
@@ -125,7 +123,7 @@ vi.mock('@/lib/api/response-optimizer', () => ({
 
 describe('Team Members API', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    jest.clearAllMocks();
     mockSecurityChecker.check.mockResolvedValue({ allowed: true });
   });
 
@@ -244,7 +242,7 @@ describe('Team Members API', () => {
 
 describe('Team Member Role API', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    jest.clearAllMocks();
   });
 
   describe('Role Validation', () => {
@@ -327,7 +325,7 @@ describe('Team Member Role API', () => {
 
 describe('Team Invitations API', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    jest.clearAllMocks();
   });
 
   describe('Invitation Validation', () => {
@@ -460,7 +458,7 @@ describe('Team Invitations API', () => {
 
 describe('Team Activity API', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    jest.clearAllMocks();
   });
 
   describe('Activity Feed', () => {
@@ -534,7 +532,7 @@ describe('Team Activity API', () => {
 
 describe('Team Stats API', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    jest.clearAllMocks();
   });
 
   describe('Statistics Calculation', () => {
@@ -667,7 +665,7 @@ describe('Team Stats API', () => {
 
 describe('Email Functionality', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    jest.clearAllMocks();
   });
 
   it('should send invitation email', async () => {
