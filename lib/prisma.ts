@@ -19,7 +19,8 @@
 
 import { PrismaClient, Prisma } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
-// Note: Pool import removed - using connectionString mode with PrismaPg which manages its own pool
+import { Pool } from 'pg';
+// Note: Using explicit Pool with SSL config to ensure rejectUnauthorized works correctly
 
 // Global singleton to prevent multiple instances in development
 const globalForPrisma = globalThis as unknown as {
@@ -93,14 +94,27 @@ const createPrismaClient = (): PrismaClient => {
     throw new Error('Invalid DATABASE_URL format');
   }
 
-  // Create the PrismaPg adapter with connectionString directly
-  // This is the recommended approach per Prisma docs - avoids localhost fallback issues
-  // SSL config required for Supabase - rejectUnauthorized: false allows self-signed certs
+  // Create explicit Pool with SSL config to ensure rejectUnauthorized works
+  // When using connectionString mode in PrismaPg, SSL options weren't being applied
+  // Creating Pool explicitly gives us full control over SSL settings
   // See: https://www.prisma.io/docs/orm/more/upgrade-guides/upgrading-versions/upgrading-to-prisma-7
-  const adapter = new PrismaPg({
+  const pool = new Pool({
     connectionString,
-    ssl: { rejectUnauthorized: false },
+    ssl: {
+      rejectUnauthorized: false, // Required for Supabase - allows self-signed certs
+    },
+    max: 10, // Maximum connections in pool
+    idleTimeoutMillis: 30000, // Close idle connections after 30s
+    connectionTimeoutMillis: 10000, // Connection timeout 10s
   });
+
+  // Log pool errors for debugging
+  pool.on('error', (err) => {
+    console.error('[Prisma] Pool error:', err.message);
+    globalForPrisma.prismaMetrics.errors++;
+  });
+
+  const adapter = new PrismaPg(pool);
 
   const client = new PrismaClient({
     adapter,
