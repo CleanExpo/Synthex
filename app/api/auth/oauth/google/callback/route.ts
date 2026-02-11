@@ -18,7 +18,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { randomUUID } from 'crypto';
 import { retrievePKCEState } from '@/lib/auth/pkce';
-import { accountService } from '@/lib/auth/account-service';
 import { signInFlow } from '@/lib/auth/signInFlow';
 import prisma from '@/lib/prisma';
 
@@ -102,29 +101,21 @@ export async function GET(request: NextRequest) {
 
     // Check if this is an account linking flow
     if (pkceState.linkToUserId) {
-      // Link Google to existing user
-      const linkResult = await accountService.linkAccount(
-        pkceState.linkToUserId,
-        'google',
-        {
-          id: googleUser.id,
-          email: googleUser.email,
-          name: googleUser.name,
-          avatar: googleUser.picture,
-          emailVerified: googleUser.verified_email,
-        },
-        {
-          accessToken: tokens.accessToken,
-          refreshToken: tokens.refreshToken,
-          expiresAt: tokens.expiresAt,
-          tokenType: tokens.tokenType,
-          scope: tokens.scope,
-          idToken: tokens.idToken,
-        }
-      );
-
-      if (!linkResult.success) {
-        return redirectWithError(effectiveBaseUrl, linkResult.error || 'Failed to link account');
+      // Link Google to existing user using legacy googleId field
+      try {
+        await prisma.user.update({
+          where: { id: pkceState.linkToUserId },
+          data: {
+            googleId: googleUser.id,
+            avatar: googleUser.picture || undefined,
+            authProvider: 'google',
+            // Database expects Boolean for emailVerified
+            emailVerified: googleUser.verified_email ? true : false,
+          },
+        });
+      } catch (error) {
+        console.error('[Google OAuth] Link error:', error);
+        return redirectWithError(effectiveBaseUrl, 'Failed to link Google account');
       }
 
       // Redirect to account settings with success
@@ -134,60 +125,48 @@ export async function GET(request: NextRequest) {
     }
 
     // Regular login/signup flow
-    // Check if user exists by Google ID or email
-    const existingByGoogle = await accountService.findUserByProviderAccount(
-      'google',
-      googleUser.id
-    );
+    // Check if user exists by Google ID (legacy field on User table)
+    const existingByGoogleId = await prisma.user.findUnique({
+      where: { googleId: googleUser.id },
+      select: { id: true, email: true },
+    });
 
-    if (existingByGoogle) {
+    if (existingByGoogleId) {
       // Existing Google user - login
-      const session = await createSessionForUser(existingByGoogle.userId, googleUser, tokens);
+      const session = await createSessionForUser(existingByGoogleId.id, googleUser, tokens);
       return redirectWithSession(effectiveBaseUrl, session);
     }
 
     // Check if user exists by email
-    const existingByEmail = await accountService.findUserByEmail(googleUser.email);
+    const existingByEmail = await prisma.user.findUnique({
+      where: { email: googleUser.email },
+      select: { id: true, email: true, password: true, googleId: true },
+    });
 
     if (existingByEmail) {
-      // User exists with this email - link Google account and login
-      const providers = existingByEmail.providers.filter(p => p !== 'demo');
-
-      if (providers.length > 0 && !providers.includes('google')) {
-        // User has other auth methods - offer to link accounts
+      // User exists with this email
+      if (existingByEmail.password && !existingByEmail.googleId) {
+        // User has password but no Google linked - offer to link accounts
         const params = new URLSearchParams({
           error: 'account_exists',
           email: googleUser.email,
-          existingProvider: providers[0],
+          existingProvider: 'email',
           newProvider: 'google',
         });
         return NextResponse.redirect(`${effectiveBaseUrl}/login?${params.toString()}`);
       }
 
-      // No conflicting providers or user has no auth methods - auto-link Google
-      const linkResult = await accountService.linkAccount(
-        existingByEmail.id,
-        'google',
-        {
-          id: googleUser.id,
-          email: googleUser.email,
-          name: googleUser.name,
-          avatar: googleUser.picture,
-          emailVerified: googleUser.verified_email,
+      // No password or already has Google - auto-link Google and login
+      await prisma.user.update({
+        where: { id: existingByEmail.id },
+        data: {
+          googleId: googleUser.id,
+          avatar: googleUser.picture || undefined,
+          authProvider: 'google',
+          // Database expects Boolean for emailVerified
+          emailVerified: googleUser.verified_email ? true : false,
         },
-        {
-          accessToken: tokens.accessToken,
-          refreshToken: tokens.refreshToken,
-          expiresAt: tokens.expiresAt,
-          tokenType: tokens.tokenType,
-          scope: tokens.scope,
-          idToken: tokens.idToken,
-        }
-      );
-
-      if (!linkResult.success) {
-        return redirectWithError(effectiveBaseUrl, linkResult.error || 'Failed to link Google account');
-      }
+      });
 
       // Login the existing user
       const session = await createSessionForUser(existingByEmail.id, googleUser, tokens);
@@ -314,19 +293,7 @@ async function createNewGoogleUser(
     },
   });
 
-  // Create Account record
-  await accountService.createAccount(
-    user.id,
-    'google',
-    {
-      id: googleUser.id,
-      email: googleUser.email,
-      name: googleUser.name,
-      avatar: googleUser.picture,
-      emailVerified: googleUser.verified_email,
-    },
-    tokens
-  );
+  // Note: Account table not used - using legacy googleId field on User table
 
   return { id: user.id };
 }
@@ -349,13 +316,7 @@ async function createSessionForUser(
     avatar?: string;
   };
 }> {
-  // Update tokens in account
-  await accountService.updateTokens(userId, 'google', {
-    accessToken: tokens.accessToken,
-    refreshToken: tokens.refreshToken,
-    expiresAt: tokens.expiresAt,
-  });
-
+  // Note: Account table not used for token storage - using legacy approach
   // Update last login
   await prisma.user.update({
     where: { id: userId },
