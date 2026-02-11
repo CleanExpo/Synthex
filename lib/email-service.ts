@@ -19,6 +19,21 @@ interface EmailOptions {
   variables?: Record<string, any>;
 }
 
+/**
+ * Escape HTML special characters to prevent XSS in email templates
+ */
+function escapeHtml(text: string): string {
+  if (!text) return '';
+  const htmlEscapes: Record<string, string> = {
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;',
+  };
+  return text.replace(/[&<>"']/g, (char) => htmlEscapes[char]);
+}
+
 class EmailService {
   private defaultFrom = 'SYNTHEX <noreply@synthex.ai>';
   
@@ -44,7 +59,7 @@ class EmailService {
           <body>
             <div class="container">
               <div class="header">
-                <h1>Welcome to SYNTHEX, ${variables.name || 'Friend'}! 🎉</h1>
+                <h1>Welcome to SYNTHEX, ${escapeHtml(variables.name) || 'Friend'}! 🎉</h1>
               </div>
               <div class="content">
                 <p>We're excited to have you on board!</p>
@@ -92,7 +107,7 @@ class EmailService {
                 <h1>Password Reset Request</h1>
               </div>
               <div class="content">
-                <p>Hi ${variables.name || 'there'},</p>
+                <p>Hi ${escapeHtml(variables.name) || 'there'},</p>
                 <p>We received a request to reset your SYNTHEX password. Click the button below to create a new password:</p>
                 <a href="${variables.resetUrl}" class="button">Reset Password</a>
                 <p>Or use this code:</p>

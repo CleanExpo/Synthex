@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { emailService } from '@/lib/email-service';
 import { createClient } from '@supabase/supabase-js';
+import DOMPurify from 'isomorphic-dompurify';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -58,13 +59,13 @@ export async function POST(request: NextRequest) {
         break;
       
       default:
-        // Send custom email
+        // Send custom email with sanitized HTML to prevent XSS
         success = await emailService.send({
           to,
           subject: subject || 'SYNTHEX Notification',
           template,
           variables,
-          html: variables?.html,
+          html: variables?.html ? DOMPurify.sanitize(variables.html) : undefined,
           text: variables?.text
         });
     }
