@@ -227,7 +227,9 @@ export class UserManagementService {
           organizationId: validated.organizationId,
           isActive: validated.isActive,
           permissions,
-          emailVerified: false, // Will be verified via welcome email
+          // Database expects DateTime for emailVerified, not boolean
+          // null = not yet verified, will be set to Date when verified via welcome email
+          emailVerified: null,
           lastLoginAt: null,
           createdBy
         },

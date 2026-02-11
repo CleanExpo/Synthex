@@ -146,7 +146,9 @@ class UnifiedEmailService {
     await prisma.user.update({
       where: { id: user.id },
       data: {
-        emailVerified: true,
+        // Database expects DateTime for emailVerified, not boolean
+        // Set to current timestamp when email is verified
+        emailVerified: new Date(),
         verificationCode: null,
         verificationExpires: null,
       },

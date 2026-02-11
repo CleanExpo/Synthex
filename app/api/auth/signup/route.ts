@@ -144,7 +144,9 @@ export async function POST(request: Request) {
               email: authData.user.email!,
               name: name || authData.user.user_metadata?.name || email.split('@')[0],
               authProvider: 'email',
-              emailVerified: false,
+              // Database expects DateTime for emailVerified, not boolean
+              // null = not yet verified, will be set to Date when verified
+              emailVerified: null,
               createdAt: new Date(),
               updatedAt: new Date(),
             }

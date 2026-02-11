@@ -126,7 +126,9 @@ export class UserBusinessService extends BaseService {
           googleId: data.googleId,
           avatar: data.avatar,
           preferences: data.preferences || {},
-          emailVerified: !!data.googleId, // Google users are pre-verified
+          // Database expects DateTime, not boolean
+          // Google users are pre-verified (set timestamp), local users need verification (null)
+          emailVerified: data.googleId ? new Date() : null,
           authProvider: data.googleId ? 'google' : 'local'
         });
       });

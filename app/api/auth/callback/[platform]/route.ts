@@ -345,7 +345,9 @@ export async function GET(
           [`${platform}Id`]: userInfo.id,
           avatar: userInfo.avatar || user.avatar,
           name: userInfo.name || user.name,
-          emailVerified: true,
+          // Database expects DateTime for emailVerified, not boolean
+          // OAuth providers verify emails, so set to current timestamp
+          emailVerified: new Date(),
           updatedAt: new Date(),
         },
       });
@@ -359,7 +361,9 @@ export async function GET(
           [`${platform}Id`]: userInfo.id,
           avatar: userInfo.avatar,
           authProvider: platform,
-          emailVerified: true,
+          // Database expects DateTime for emailVerified, not boolean
+          // OAuth providers verify emails, so set to current timestamp
+          emailVerified: new Date(),
         },
       });
     } else {

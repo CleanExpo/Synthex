@@ -239,7 +239,8 @@ export class SignInFlow {
             name: user.name || undefined,
             avatar: user.avatar || profile.avatar,
             provider,
-            emailVerified: user.emailVerified,
+            // Convert Date|null from database to boolean for session
+            emailVerified: !!user.emailVerified,
           },
           accessToken: this.generateJWT(user.id),
           expiresAt: Date.now() + (7 * 24 * 60 * 60 * 1000),
@@ -275,7 +276,9 @@ export class SignInFlow {
           avatar: profile.avatar,
           googleId: provider === 'google' ? profile.id : null,
           authProvider: provider,
-          emailVerified: profile.emailVerified ?? true,
+          // Database expects DateTime for emailVerified, not boolean
+          // Convert: truthy → current timestamp, falsy → null
+          emailVerified: (profile.emailVerified ?? true) ? new Date() : null,
         },
       });
 
@@ -289,7 +292,8 @@ export class SignInFlow {
           name: newUser.name || undefined,
           avatar: newUser.avatar || undefined,
           provider,
-          emailVerified: newUser.emailVerified,
+          // Convert Date|null from database to boolean for session
+          emailVerified: !!newUser.emailVerified,
         },
         accessToken: this.generateJWT(newUser.id),
         expiresAt: Date.now() + (7 * 24 * 60 * 60 * 1000),
