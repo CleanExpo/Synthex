@@ -71,21 +71,23 @@ model User {
 
 model Account {
   id                String   @id @default(uuid())
-  userId            String
+  userId            String   @map("userId")
   type              String   // "oauth" or "credentials"
   provider          String   // "google", "github", "email"
-  providerAccountId String   // Google ID, GitHub ID, or email
+  providerAccountId String   @map("providerAccountId") // Google ID, GitHub ID, or email
 
   // OAuth tokens (encrypted at rest in production)
-  accessToken       String?  @db.Text
-  refreshToken      String?  @db.Text
-  expiresAt         Int?     // Unix timestamp
-  tokenType         String?  // "Bearer", etc.
+  // Column names use snake_case in database
+  accessToken       String?  @db.Text @map("access_token")
+  refreshToken      String?  @db.Text @map("refresh_token")
+  expiresAt         Int?     @map("expires_at") // Unix timestamp
+  tokenType         String?  @map("token_type") // "Bearer", etc.
   scope             String?  // OAuth scopes granted
-  idToken           String?  @db.Text  // OIDC ID token
+  idToken           String?  @db.Text @map("id_token") // OIDC ID token
+  sessionState      String?  @map("session_state") // OIDC session state
 
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  createdAt         DateTime @default(now()) @map("createdAt")
+  updatedAt         DateTime @updatedAt @map("updatedAt")
 
   // Relations
   user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
