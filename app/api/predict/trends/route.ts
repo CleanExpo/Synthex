@@ -150,7 +150,7 @@ export async function GET(request: NextRequest) {
       { error: 'Invalid action' },
       400
     );
-  } catch (error: any) {
+  } catch (error: unknown) {
     logger.error('Trends GET error:', { error });
     return APISecurityChecker.createSecureResponse(
       { error: 'Internal server error' },
@@ -331,7 +331,7 @@ export async function POST(request: NextRequest) {
       { error: 'Invalid action' },
       400
     );
-  } catch (error: any) {
+  } catch (error: unknown) {
     if (error instanceof z.ZodError) {
       return APISecurityChecker.createSecureResponse(
         { error: 'Validation error', details: error.errors },

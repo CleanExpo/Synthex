@@ -110,7 +110,7 @@ async function generateWithStability(
 
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(error.message || `Stability API error: ${response.status}`);
+      throw new Error(error instanceof Error ? error.message : String(error) || `Stability API error: ${response.status}`);
     }
 
     const data = await response.json();
@@ -126,9 +126,9 @@ async function generateWithStability(
         model: 'stable-diffusion-3',
       },
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     logger.error('Stability AI generation failed:', { error });
-    return { success: false, provider: 'stability', error: error.message };
+    return { success: false, provider: 'stability', error: error instanceof Error ? error.message : String(error) };
   }
 }
 
@@ -187,9 +187,9 @@ async function generateWithDalle(
         model: 'dall-e-3',
       },
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     logger.error('DALL-E generation failed:', { error });
-    return { success: false, provider: 'dalle', error: error.message };
+    return { success: false, provider: 'dalle', error: error instanceof Error ? error.message : String(error) };
   }
 }
 
@@ -259,9 +259,9 @@ async function generateWithGemini(
         model: 'gemini-2.0-flash-exp',
       },
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     logger.error('Gemini generation failed:', { error });
-    return { success: false, provider: 'gemini', error: error.message };
+    return { success: false, provider: 'gemini', error: error instanceof Error ? error.message : String(error) };
   }
 }
 

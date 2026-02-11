@@ -395,7 +395,7 @@ export async function testConnection() {
       .limit(1);
     if (error) throw error;
     return { connected: true, message: 'Database connection successful' };
-  } catch (error: any) {
-    return { connected: false, message: error.message };
+  } catch (error: unknown) {
+    return { connected: false, message: error instanceof Error ? error.message : String(error) };
   }
 }

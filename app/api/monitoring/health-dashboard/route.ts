@@ -96,13 +96,13 @@ export async function GET(request: NextRequest) {
         );
       }
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Health dashboard error:', error);
 
     return NextResponse.json(
       {
         success: false,
-        error: error.message || 'Failed to get health status',
+        error: error instanceof Error ? error.message : String(error) || 'Failed to get health status',
         responseTime: Date.now() - startTime,
       },
       { status: 500 }

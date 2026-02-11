@@ -240,11 +240,12 @@ export abstract class BasePlatformService implements PlatformService {
     for (let attempt = 0; attempt < maxRetries; attempt++) {
       try {
         return await fn();
-      } catch (error: any) {
-        lastError = error;
+      } catch (error: unknown) {
+        lastError = error instanceof Error ? error : new Error(String(error));
+        const httpError = error as { status?: number };
 
         // Don't retry on auth errors
-        if (error.status === 401 || error.status === 403) {
+        if (httpError.status === 401 || httpError.status === 403) {
           throw error;
         }
 

@@ -169,7 +169,7 @@ class ContentOptimizer {
         appliedOptimizations,
         expectedEngagementBoost: Math.min(expectedBoost, 50), // Cap at 50%
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Content optimization failed:', { error, userId });
       return {
         success: false,

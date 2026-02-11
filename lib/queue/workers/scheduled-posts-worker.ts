@@ -140,7 +140,7 @@ async function processScheduledPost(job: Job<ScheduledPostJobData>): Promise<voi
 
         const data = await response.json();
         if (data.error) {
-          throw new Error(data.error.message);
+          throw new Error(data.error.message || 'Facebook API error');
         }
 
         result = {
@@ -180,7 +180,7 @@ async function processScheduledPost(job: Job<ScheduledPostJobData>): Promise<voi
 
         const data = await response.json();
         if (data.error) {
-          throw new Error(data.error.message);
+          throw new Error(data.error.message || 'TikTok API error');
         }
 
         result = {
@@ -247,7 +247,7 @@ async function processScheduledPost(job: Job<ScheduledPostJobData>): Promise<voi
       platform,
       publishedPostId: result.postId,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     logger.error(`Failed to publish scheduled post ${postId}:`, { error });
 
     // Update status to failed
@@ -255,7 +255,7 @@ async function processScheduledPost(job: Job<ScheduledPostJobData>): Promise<voi
       .from('scheduled_posts')
       .update({
         status: 'failed',
-        error_message: error.message,
+        error_message: error instanceof Error ? error.message : String(error),
       })
       .eq('id', postId);
 
@@ -263,7 +263,7 @@ async function processScheduledPost(job: Job<ScheduledPostJobData>): Promise<voi
     await supabase.from('notifications').insert({
       user_id: userId,
       title: 'Scheduled Post Failed',
-      message: `Your scheduled ${platform} post failed to publish: ${error.message}`,
+      message: `Your scheduled ${platform} post failed to publish: ${error instanceof Error ? error.message : String(error)}`,
       type: 'error',
       read: false,
       created_at: new Date().toISOString(),
@@ -297,7 +297,7 @@ export function createScheduledPostsWorker(): Worker {
   });
 
   worker.on('failed', (job, error) => {
-    logger.error(`Job ${job?.id} failed:`, { error: error.message });
+    logger.error(`Job ${job?.id} failed:`, { error: error instanceof Error ? error.message : String(error) });
   });
 
   worker.on('error', (error) => {

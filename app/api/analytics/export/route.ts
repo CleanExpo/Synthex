@@ -498,7 +498,7 @@ export async function GET(request: NextRequest) {
         'Cache-Control': 'no-store',
       },
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     logger.error('Analytics export error', { error });
     return NextResponse.json(
       { error: 'Internal Server Error', message: 'Failed to generate export' },
@@ -599,7 +599,7 @@ export async function POST(request: NextRequest) {
       format,
       generatedAt: new Date().toISOString(),
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     logger.error('Analytics export error', { error });
     return NextResponse.json(
       { error: 'Internal Server Error', message: 'Failed to process export request' },

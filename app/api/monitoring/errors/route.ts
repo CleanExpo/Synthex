@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
     // Log critical errors
     if (error.level === 'error') {
       console.error('[Error Tracking]', {
-        message: error.message,
+        message: error instanceof Error ? error.message : String(error),
         stack: error.stack,
         context: error.context,
         timestamp: error.timestamp

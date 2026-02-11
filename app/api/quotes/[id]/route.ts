@@ -91,13 +91,13 @@ export async function GET(
       success: true,
       data: quote,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('GET /api/quotes/[id] error:', error);
     return NextResponse.json(
       {
         success: false,
         error: 'Failed to fetch quote',
-        message: error.message,
+        message: error instanceof Error ? error.message : String(error),
       },
       { status: 500 }
     );
@@ -216,13 +216,13 @@ export async function PUT(
       data: updatedQuote,
       message: 'Quote updated successfully',
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('PUT /api/quotes/[id] error:', error);
     return NextResponse.json(
       {
         success: false,
         error: 'Failed to update quote',
-        message: error.message,
+        message: error instanceof Error ? error.message : String(error),
       },
       { status: 500 }
     );
@@ -285,13 +285,13 @@ export async function DELETE(
       success: true,
       message: 'Quote deleted successfully',
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('DELETE /api/quotes/[id] error:', error);
     return NextResponse.json(
       {
         success: false,
         error: 'Failed to delete quote',
-        message: error.message,
+        message: error instanceof Error ? error.message : String(error),
       },
       { status: 500 }
     );
@@ -381,13 +381,13 @@ export async function PATCH(
       },
       message: `Quote ${action} recorded`,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('PATCH /api/quotes/[id] error:', error);
     return NextResponse.json(
       {
         success: false,
         error: 'Failed to update quote engagement',
-        message: error.message,
+        message: error instanceof Error ? error.message : String(error),
       },
       { status: 500 }
     );

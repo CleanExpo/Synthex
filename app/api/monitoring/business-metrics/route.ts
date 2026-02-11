@@ -90,13 +90,13 @@ export async function GET(request: NextRequest) {
         );
       }
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Business metrics error:', error);
 
     return NextResponse.json(
       {
         success: false,
-        error: error.message || 'Failed to get business metrics',
+        error: error instanceof Error ? error.message : String(error) || 'Failed to get business metrics',
         responseTime: Date.now() - startTime,
       },
       { status: 500 }

@@ -178,7 +178,7 @@ class ApprovalWorkflowService {
       await this.notifyStepAssignees(steps[0], data.metadata.title);
 
       return this.mapDbToRequest(request);
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Failed to create approval request:', { error, userId });
       throw error;
     }
@@ -253,7 +253,7 @@ class ApprovalWorkflowService {
         requests,
         total: count || 0,
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Failed to get approval requests:', { error, userId });
       throw error;
     }
@@ -273,7 +273,7 @@ class ApprovalWorkflowService {
       if (error || !data) return null;
 
       return this.mapDbToRequest(data);
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Failed to get approval request:', { error, requestId });
       throw error;
     }
@@ -363,7 +363,7 @@ class ApprovalWorkflowService {
       }
 
       return this.mapDbToRequest(data);
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Failed to approve step:', { error, requestId });
       throw error;
     }
@@ -427,7 +427,7 @@ class ApprovalWorkflowService {
       await this.notifySubmitter(request, 'rejected', reason);
 
       return this.mapDbToRequest(data);
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Failed to reject step:', { error, requestId });
       throw error;
     }
@@ -483,7 +483,7 @@ class ApprovalWorkflowService {
       await this.notifySubmitter(request, 'revision_requested', feedback);
 
       return this.mapDbToRequest(data);
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Failed to request revision:', { error, requestId });
       throw error;
     }
@@ -540,7 +540,7 @@ class ApprovalWorkflowService {
       await this.notifyStepAssignees(step, request.metadata.title);
 
       return this.mapDbToRequest(data);
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Failed to resubmit:', { error, requestId });
       throw error;
     }
@@ -590,7 +590,7 @@ class ApprovalWorkflowService {
         .eq('id', requestId);
 
       return comment;
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Failed to add comment:', { error, requestId });
       throw error;
     }
@@ -612,7 +612,7 @@ class ApprovalWorkflowService {
       if (error) throw error;
 
       return (data || []).map(this.mapDbToTemplate);
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Failed to get workflow templates:', { error, organizationId });
       throw error;
     }
@@ -632,7 +632,7 @@ class ApprovalWorkflowService {
       if (error || !data) return null;
 
       return this.mapDbToTemplate(data);
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Failed to get workflow template:', { error, templateId });
       throw error;
     }
@@ -670,7 +670,7 @@ class ApprovalWorkflowService {
       if (error) throw error;
 
       return this.mapDbToTemplate(template);
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Failed to create workflow template:', { error, organizationId });
       throw error;
     }

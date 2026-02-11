@@ -23,7 +23,7 @@ export interface ActivityItem {
   type: 'post' | 'engagement' | 'milestone' | 'team' | 'ai';
   message: string;
   timestamp: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface TrendingTopic {
@@ -122,7 +122,7 @@ export async function trackDashboardEvent(
   userId: string,
   eventType: string,
   eventName: string,
-  properties?: Record<string, any>
+  properties?: Record<string, unknown>
 ) {
   try {
     await AnalyticsService.trackEvent({

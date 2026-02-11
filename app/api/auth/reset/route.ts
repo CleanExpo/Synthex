@@ -53,7 +53,7 @@ export async function POST(request: NextRequest) {
       success: true,
       message: result.message
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Password reset error:', error);
     return NextResponse.json(
       { error: 'Failed to reset password' },
@@ -89,7 +89,7 @@ export async function GET(request: NextRequest) {
       valid: true,
       message: 'Token is valid'
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Token validation error:', error);
     return NextResponse.json(
       { error: 'Failed to validate token' },

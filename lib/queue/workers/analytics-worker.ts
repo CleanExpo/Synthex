@@ -133,7 +133,7 @@ async function processAnalyticsCollection(job: Job<AnalyticsJobData>): Promise<v
           const data = await response.json();
 
           if (data.error) {
-            throw new Error(data.error.message);
+            throw new Error(data.error.message || 'Facebook API error');
           }
 
           const metrics: Record<string, number> = {
@@ -158,8 +158,8 @@ async function processAnalyticsCollection(job: Job<AnalyticsJobData>): Promise<v
           }
 
           analyticsResult = { success: true, metrics };
-        } catch (error: any) {
-          analyticsResult = { success: false, error: error.message };
+        } catch (error: unknown) {
+          analyticsResult = { success: false, error: error instanceof Error ? error.message : String(error) };
         }
         break;
       }
@@ -191,8 +191,8 @@ async function processAnalyticsCollection(job: Job<AnalyticsJobData>): Promise<v
               views: data.data?.video_views || 0,
             },
           };
-        } catch (error: any) {
-          analyticsResult = { success: false, error: error.message };
+        } catch (error: unknown) {
+          analyticsResult = { success: false, error: error instanceof Error ? error.message : String(error) };
         }
         break;
       }
@@ -217,7 +217,7 @@ async function processAnalyticsCollection(job: Job<AnalyticsJobData>): Promise<v
           const data = await response.json();
 
           if (data.error) {
-            throw new Error(data.error.message);
+            throw new Error(data.error.message || 'YouTube API error');
           }
 
           // Aggregate metrics from rows
@@ -236,8 +236,8 @@ async function processAnalyticsCollection(job: Job<AnalyticsJobData>): Promise<v
               followers: subscribers,
             },
           };
-        } catch (error: any) {
-          analyticsResult = { success: false, error: error.message };
+        } catch (error: unknown) {
+          analyticsResult = { success: false, error: error instanceof Error ? error.message : String(error) };
         }
         break;
       }
@@ -272,14 +272,14 @@ async function processAnalyticsCollection(job: Job<AnalyticsJobData>): Promise<v
       userId,
       metrics: analyticsResult.metrics,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     logger.error(`Failed to collect analytics for ${platform}:`, { error });
 
     // Update connection with error
     await supabase
       .from('platform_connections')
       .update({
-        last_sync_error: error.message,
+        last_sync_error: error instanceof Error ? error.message : String(error),
         last_sync_at: new Date().toISOString(),
       })
       .eq('id', connectionId);
@@ -312,7 +312,7 @@ export function createAnalyticsWorker(): Worker {
   });
 
   worker.on('failed', (job, error) => {
-    logger.error(`Analytics job ${job?.id} failed:`, { error: error.message });
+    logger.error(`Analytics job ${job?.id} failed:`, { error: error instanceof Error ? error.message : String(error) });
   });
 
   worker.on('error', (error) => {

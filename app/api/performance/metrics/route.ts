@@ -111,13 +111,13 @@ export async function GET(request: NextRequest) {
         },
       }
     );
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Metrics error:', error);
 
     return NextResponse.json(
       {
         success: false,
-        error: error.message || 'Failed to get metrics',
+        error: error instanceof Error ? error.message : String(error) || 'Failed to get metrics',
         responseTime: Date.now() - startTime,
       },
       { status: 500 }
@@ -153,11 +153,11 @@ export async function POST(request: NextRequest) {
         metricsCount: Object.keys(metrics).length,
       },
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Failed to record metrics:', error);
 
     return NextResponse.json(
-      { success: false, error: error.message || 'Failed to record metrics' },
+      { success: false, error: error instanceof Error ? error.message : String(error) || 'Failed to record metrics' },
       { status: 500 }
     );
   }

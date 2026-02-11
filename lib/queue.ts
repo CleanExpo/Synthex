@@ -276,7 +276,7 @@ export interface EmailJobData {
   html?: string;
   text?: string;
   template?: string;
-  templateData?: Record<string, any>;
+  templateData?: Record<string, unknown>;
 }
 
 /**
@@ -351,7 +351,7 @@ export interface ContentGenerateJobData {
   userId: string;
   prompt: string;
   platform: string;
-  options?: Record<string, any>;
+  options?: Record<string, unknown>;
 }
 
 export interface ContentPublishJobData {

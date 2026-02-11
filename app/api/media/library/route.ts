@@ -190,7 +190,7 @@ export async function GET(request: NextRequest) {
       offset: filterOptions.offset || 0,
       hasMore: (filterOptions.offset || 0) + result.assets.length < result.total,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     logger.error('Media library GET error:', { error });
     return APISecurityChecker.createSecureResponse(
       { error: 'Internal server error' },
@@ -261,7 +261,7 @@ export async function POST(request: NextRequest) {
     );
 
     return APISecurityChecker.createSecureResponse({ asset }, 201);
-  } catch (error: any) {
+  } catch (error: unknown) {
     if (error instanceof z.ZodError) {
       return APISecurityChecker.createSecureResponse(
         { error: 'Validation error', details: error.errors },
@@ -373,7 +373,7 @@ export async function PUT(request: NextRequest) {
     );
 
     return APISecurityChecker.createSecureResponse({ asset });
-  } catch (error: any) {
+  } catch (error: unknown) {
     if (error instanceof z.ZodError) {
       return APISecurityChecker.createSecureResponse(
         { error: 'Validation error', details: error.errors },
@@ -490,7 +490,7 @@ export async function DELETE(request: NextRequest) {
     );
 
     return APISecurityChecker.createSecureResponse({ success: true });
-  } catch (error: any) {
+  } catch (error: unknown) {
     if (error instanceof z.ZodError) {
       return APISecurityChecker.createSecureResponse(
         { error: 'Validation error', details: error.errors },

@@ -100,9 +100,9 @@ export class TwitterService {
         id: result.data.id,
         text: result.data.text,
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Twitter post error:', error);
-      throw new Error(`Failed to post tweet: ${error.message}`);
+      throw new Error(`Failed to post tweet: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
@@ -156,9 +156,9 @@ export class TwitterService {
     try {
       const mediaId = await this.client.v1.uploadMedia(filePath);
       return mediaId;
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Media upload error:', error);
-      throw new Error(`Failed to upload media: ${error.message}`);
+      throw new Error(`Failed to upload media: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
@@ -188,7 +188,7 @@ export class TwitterService {
       }
 
       return null;
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to get tweet metrics:', error);
       return null;
     }
@@ -216,9 +216,9 @@ export class TwitterService {
       });
 
       return timeline.data || [];
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to get user timeline:', error);
-      throw new Error(`Failed to get timeline: ${error.message}`);
+      throw new Error(`Failed to get timeline: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
@@ -237,9 +237,9 @@ export class TwitterService {
       });
 
       return tweets.data || [];
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Search error:', error);
-      throw new Error(`Failed to search tweets: ${error.message}`);
+      throw new Error(`Failed to search tweets: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
@@ -254,9 +254,9 @@ export class TwitterService {
     try {
       await this.v2Client.deleteTweet(tweetId);
       return true;
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Delete error:', error);
-      throw new Error(`Failed to delete tweet: ${error.message}`);
+      throw new Error(`Failed to delete tweet: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 

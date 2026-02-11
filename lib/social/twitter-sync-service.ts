@@ -150,13 +150,13 @@ export class TwitterSyncService extends BasePlatformService {
           daily: dailyBreakdown,
         },
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Twitter analytics sync failed', { error });
       return {
         success: false,
         metrics: { impressions: 0, engagements: 0, followers: 0 },
         period: { start: new Date(), end: new Date() },
-        error: error.message,
+        error: error instanceof Error ? error.message : String(error),
       };
     }
   }
@@ -232,14 +232,14 @@ export class TwitterSyncService extends BasePlatformService {
         hasMore: !!nextCursor,
         cursor: nextCursor,
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Twitter posts sync failed', { error });
       return {
         success: false,
         posts: [],
         total: 0,
         hasMore: false,
-        error: error.message,
+        error: error instanceof Error ? error.message : String(error),
       };
     }
   }
@@ -289,7 +289,7 @@ export class TwitterSyncService extends BasePlatformService {
           url: `https://twitter.com/${me.data.username}`,
         },
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Twitter profile sync failed', { error });
       return {
         success: false,
@@ -301,7 +301,7 @@ export class TwitterSyncService extends BasePlatformService {
           following: 0,
           postsCount: 0,
         },
-        error: error.message,
+        error: error instanceof Error ? error.message : String(error),
       };
     }
   }
@@ -348,11 +348,11 @@ export class TwitterSyncService extends BasePlatformService {
         postId: result.data.id,
         url: `https://twitter.com/${me.data.username}/status/${result.data.id}`,
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Twitter post creation failed', { error });
       return {
         success: false,
-        error: error.message,
+        error: error instanceof Error ? error.message : String(error),
       };
     }
   }
@@ -365,7 +365,7 @@ export class TwitterSyncService extends BasePlatformService {
 
       await this.client.v2.deleteTweet(postId);
       return true;
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Twitter post deletion failed', { error, postId });
       return false;
     }
@@ -388,7 +388,7 @@ export class TwitterSyncService extends BasePlatformService {
         quotes: tweet.data.public_metrics?.quote_count || 0,
         impressions: (tweet.data as any).organic_metrics?.impression_count || 0,
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Twitter post metrics fetch failed', { error, postId });
       return null;
     }

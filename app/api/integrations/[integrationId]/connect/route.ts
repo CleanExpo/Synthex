@@ -101,10 +101,10 @@ export async function POST(
         status: integration.status
       }
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error connecting integration:', error);
     return NextResponse.json(
-      { error: error.message || 'Failed to connect integration' },
+      { error: error instanceof Error ? error.message : String(error) || 'Failed to connect integration' },
       { status: 500 }
     );
   }
@@ -169,7 +169,7 @@ export async function GET(
       status: integration.status,
       lastUsed: integration.last_used
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error getting integration status:', error);
     return NextResponse.json(
       { error: 'Failed to get integration status' },
@@ -227,7 +227,7 @@ export async function DELETE(
       success: true,
       message: 'Integration disconnected successfully'
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error disconnecting integration:', error);
     return NextResponse.json(
       { error: 'Failed to disconnect integration' },

@@ -41,7 +41,7 @@ export interface UserIntegration {
   last_sync?: string;
   status: IntegrationStatus;
   error_message?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface IntegrationLog {
@@ -50,7 +50,7 @@ export interface IntegrationLog {
   integration_id?: string;
   platform: IntegrationPlatform;
   event_type: string;
-  event_data?: Record<string, any>;
+  event_data?: Record<string, unknown>;
   error_message?: string;
   created_at: string;
 }
@@ -63,7 +63,7 @@ export class IntegrationService {
   static async connectIntegration(
     userId: string,
     platform: IntegrationPlatform,
-    credentials: Record<string, any>,
+    credentials: Record<string, unknown>,
     accountName?: string
   ): Promise<UserIntegration> {
     const encryptionKey = process.env.ENCRYPTION_KEY!;
@@ -116,7 +116,7 @@ export class IntegrationService {
   static async getIntegrationWithCredentials(
     userId: string,
     platform: IntegrationPlatform
-  ): Promise<{ integration: UserIntegration; credentials: Record<string, any> }> {
+  ): Promise<{ integration: UserIntegration; credentials: Record<string, unknown> }> {
     const encryptionKey = process.env.ENCRYPTION_KEY!;
     
     // Get integration from database
@@ -195,7 +195,7 @@ export class IntegrationService {
     integrationId: string,
     platform: IntegrationPlatform,
     eventType: string,
-    eventData?: Record<string, any>,
+    eventData?: Record<string, unknown>,
     errorMessage?: string
   ): Promise<void> {
     const { error } = await supabaseAdmin
@@ -233,7 +233,7 @@ export class IntegrationService {
    */
   static validateCredentials(
     platform: IntegrationPlatform,
-    credentials: Record<string, any>
+    credentials: Record<string, unknown>
   ): { valid: boolean; missing: string[] } {
     const requiredFields: Record<IntegrationPlatform, string[]> = {
       twitter: ['apiKey', 'apiSecret', 'accessToken', 'accessTokenSecret'],

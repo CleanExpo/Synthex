@@ -357,7 +357,7 @@ class PerformanceMonitor {
     });
   }
 
-  private logAlert(type: string, data: Record<string, any>): void {
+  private logAlert(type: string, data: Record<string, unknown>): void {
     const alert = {
       type,
       timestamp: new Date().toISOString(),
@@ -370,7 +370,7 @@ class PerformanceMonitor {
     this.storeAlert(alert).catch(console.error);
   }
 
-  private async storeAlert(alert: Record<string, any>): Promise<void> {
+  private async storeAlert(alert: Record<string, unknown>): Promise<void> {
     try {
       const redis = getRedisClient();
       const key = 'perf:alerts:recent';

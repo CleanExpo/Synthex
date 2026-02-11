@@ -234,7 +234,7 @@ export async function POST(request: NextRequest) {
         pollInterval: 5000, // 5 seconds
       }),
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     if (error instanceof z.ZodError) {
       return APISecurityChecker.createSecureResponse(
         { error: 'Validation error', details: error.errors },
@@ -333,7 +333,7 @@ export async function GET(request: NextRequest) {
         pollInterval: 5000,
       }),
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     if (error instanceof z.ZodError) {
       return APISecurityChecker.createSecureResponse(
         { error: 'Validation error', details: error.errors },
@@ -453,7 +453,7 @@ export async function PUT(request: NextRequest) {
       totalSuccess: results.filter(r => r.success).length,
       totalFailed: results.filter(r => !r.success).length,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     if (error instanceof z.ZodError) {
       return APISecurityChecker.createSecureResponse(
         { error: 'Validation error', details: error.errors },

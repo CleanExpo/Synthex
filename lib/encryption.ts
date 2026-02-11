@@ -96,7 +96,7 @@ export function generateToken(length: number = 32): string {
  * @param encryptionKey - Encryption key from environment
  * @returns Encrypted credentials string
  */
-export function encryptCredentials(credentials: Record<string, any>, encryptionKey: string): string {
+export function encryptCredentials(credentials: Record<string, unknown>, encryptionKey: string): string {
   const jsonString = JSON.stringify(credentials);
   return encrypt(jsonString, encryptionKey);
 }
@@ -107,7 +107,7 @@ export function encryptCredentials(credentials: Record<string, any>, encryptionK
  * @param encryptionKey - Encryption key from environment
  * @returns Decrypted credentials object
  */
-export function decryptCredentials(encryptedCredentials: string, encryptionKey: string): Record<string, any> {
+export function decryptCredentials(encryptedCredentials: string, encryptionKey: string): Record<string, unknown> {
   const jsonString = decrypt(encryptedCredentials, encryptionKey);
   return JSON.parse(jsonString);
 }

@@ -72,10 +72,10 @@ export async function GET(request: NextRequest) {
               { status: 400 }
             );
         }
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error('Redis demo error:', error);
         return NextResponse.json(
-          { error: 'Internal server error', message: error.message },
+          { error: 'Internal server error', message: error instanceof Error ? error.message : String(error) },
           { status: 500 }
         );
       }
@@ -175,10 +175,10 @@ export async function POST(request: NextRequest) {
               { status: 400 }
             );
         }
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error('Redis demo write error:', error);
         return NextResponse.json(
-          { error: 'Internal server error', message: error.message },
+          { error: 'Internal server error', message: error instanceof Error ? error.message : String(error) },
           { status: 500 }
         );
       }
@@ -223,10 +223,10 @@ export async function DELETE(request: NextRequest) {
           message: 'Key deleted successfully',
           key
         });
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error('Redis demo delete error:', error);
         return NextResponse.json(
-          { error: 'Internal server error', message: error.message },
+          { error: 'Internal server error', message: error instanceof Error ? error.message : String(error) },
           { status: 500 }
         );
       }

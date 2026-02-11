@@ -119,7 +119,7 @@ export async function GET(
       if ((s as any).platform) platformSet.add((s as any).platform);
     }
     const platforms = Array.from(platformSet);
-    const trendsByPlatform: Record<string, any> = {};
+    const trendsByPlatform: Record<string, unknown> = {};
 
     for (const plat of platforms) {
       const platSnapshots = snapshots

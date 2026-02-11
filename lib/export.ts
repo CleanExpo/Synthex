@@ -15,7 +15,7 @@ interface ExportData {
     title?: string;
     description?: string;
     generatedAt?: Date;
-    filters?: Record<string, any>;
+    filters?: Record<string, unknown>;
   };
 }
 
@@ -60,7 +60,7 @@ export function exportToJSON(data: ExportData, filename = 'export.json') {
   
   // Convert rows to objects
   const jsonData = rows.map(row => {
-    const obj: Record<string, any> = {};
+    const obj: Record<string, unknown> = {};
     headers.forEach((header, index) => {
       obj[header] = row[index];
     });

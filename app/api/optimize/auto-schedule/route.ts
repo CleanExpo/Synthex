@@ -120,7 +120,7 @@ export async function GET(request: NextRequest) {
         const platforms = platformsParam.split(',') as Platform[];
         const results = await postingTimePredictor.getOptimalTimesMultiPlatform(userId, platforms, timezone);
 
-        const response: Record<string, any> = {};
+        const response: Record<string, unknown> = {};
         results.forEach((result, platform) => {
           response[platform] = {
             topSlot: result.topSlot,
@@ -198,7 +198,7 @@ export async function GET(request: NextRequest) {
           400
         );
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     logger.error('Auto-schedule GET error:', { error });
     return APISecurityChecker.createSecureResponse(
       { error: 'Internal server error' },
@@ -351,7 +351,7 @@ export async function POST(request: NextRequest) {
       totalScheduled: scheduledPosts.length,
       scheduledPosts,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     if (error instanceof z.ZodError) {
       return APISecurityChecker.createSecureResponse(
         { error: 'Validation error', details: error.errors },
@@ -421,7 +421,7 @@ export async function PUT(request: NextRequest) {
       success: true,
       settings: validated,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     if (error instanceof z.ZodError) {
       return APISecurityChecker.createSecureResponse(
         { error: 'Validation error', details: error.errors },

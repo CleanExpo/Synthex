@@ -226,12 +226,12 @@ export async function POST(request: NextRequest) {
     logger.error('Failed to schedule post', { error });
 
     // Return specific error message for conflicts
-    if (error instanceof Error && error.message.includes('conflict')) {
-      return ResponseOptimizer.createErrorResponse(error.message, 409);
+    if (error instanceof Error && error instanceof Error ? error.message : String(error).includes('conflict')) {
+      return ResponseOptimizer.createErrorResponse(error instanceof Error ? error.message : String(error), 409);
     }
 
     return ResponseOptimizer.createErrorResponse(
-      error instanceof Error ? error.message : 'Failed to schedule post',
+      error instanceof Error ? error instanceof Error ? error.message : String(error) : 'Failed to schedule post',
       500
     );
   }
@@ -296,12 +296,12 @@ export async function PATCH(request: NextRequest) {
   } catch (error) {
     logger.error('Failed to reschedule post', { error });
 
-    if (error instanceof Error && error.message.includes('conflict')) {
-      return ResponseOptimizer.createErrorResponse(error.message, 409);
+    if (error instanceof Error && error instanceof Error ? error.message : String(error).includes('conflict')) {
+      return ResponseOptimizer.createErrorResponse(error instanceof Error ? error.message : String(error), 409);
     }
 
     return ResponseOptimizer.createErrorResponse(
-      error instanceof Error ? error.message : 'Failed to reschedule post',
+      error instanceof Error ? error instanceof Error ? error.message : String(error) : 'Failed to reschedule post',
       500
     );
   }

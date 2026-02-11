@@ -113,7 +113,7 @@ export async function GET(request: NextRequest) {
     const skip = (page - 1) * limit;
 
     // Build where clause
-    const where: any = {};
+    const where: Record<string, unknown> = {};
 
     if (search) {
       where.OR = [
@@ -165,10 +165,10 @@ export async function GET(request: NextRequest) {
         hasMore: skip + users.length < total,
       },
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Admin list users error:', error);
     return NextResponse.json(
-      { error: 'Internal Server Error', message: error.message },
+      { error: 'Internal Server Error', message: error instanceof Error ? error.message : String(error) },
       { status: 500 }
     );
   }
@@ -351,10 +351,10 @@ export async function POST(request: NextRequest) {
           { status: 400 }
         );
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Admin update user error:', error);
     return NextResponse.json(
-      { error: 'Internal Server Error', message: error.message },
+      { error: 'Internal Server Error', message: error instanceof Error ? error.message : String(error) },
       { status: 500 }
     );
   }

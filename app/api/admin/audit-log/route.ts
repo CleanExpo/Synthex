@@ -121,7 +121,7 @@ export async function GET(request: NextRequest) {
     const skip = (page - 1) * limit;
 
     // Build where clause
-    const where: any = {};
+    const where: Record<string, unknown> = {};
 
     if (userId) {
       where.userId = userId;
@@ -148,13 +148,14 @@ export async function GET(request: NextRequest) {
     }
 
     if (startDate || endDate) {
-      where.createdAt = {};
+      const dateFilter: { gte?: Date; lte?: Date } = {};
       if (startDate) {
-        where.createdAt.gte = new Date(startDate);
+        dateFilter.gte = new Date(startDate);
       }
       if (endDate) {
-        where.createdAt.lte = new Date(endDate);
+        dateFilter.lte = new Date(endDate);
       }
+      where.createdAt = dateFilter;
     }
 
     // Get total count
@@ -204,10 +205,10 @@ export async function GET(request: NextRequest) {
         hasMore: skip + logs.length < total,
       },
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Admin audit log error:', error);
     return NextResponse.json(
-      { error: 'Internal Server Error', message: error.message },
+      { error: 'Internal Server Error', message: error instanceof Error ? error.message : String(error) },
       { status: 500 }
     );
   }

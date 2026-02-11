@@ -170,7 +170,7 @@ class PostingTimePredictor {
       this.cache.set(cacheKey, { result, expiry: Date.now() + this.CACHE_TTL });
 
       return result;
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Failed to get optimal posting times:', { error, userId, platform });
 
       // Return industry fallback on error

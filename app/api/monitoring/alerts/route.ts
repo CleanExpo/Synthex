@@ -91,13 +91,13 @@ export async function GET(request: NextRequest) {
         );
       }
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Alerts API error:', error);
 
     return NextResponse.json(
       {
         success: false,
-        error: error.message || 'Failed to get alerts',
+        error: error instanceof Error ? error.message : String(error) || 'Failed to get alerts',
         responseTime: Date.now() - startTime,
       },
       { status: 500 }
@@ -196,13 +196,13 @@ export async function POST(request: NextRequest) {
       },
       { status: allSuccessful ? 200 : 207 } // 207 Multi-Status for partial success
     );
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Alerts API error:', error);
 
     return NextResponse.json(
       {
         success: false,
-        error: error.message || 'Failed to send alert',
+        error: error instanceof Error ? error.message : String(error) || 'Failed to send alert',
         responseTime: Date.now() - startTime,
       },
       { status: 500 }

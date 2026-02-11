@@ -140,10 +140,10 @@ export async function GET(
       platform,
       message: `Redirecting to ${platform} for authorization...`
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('OAuth initiation error:', error);
     return NextResponse.json(
-      { error: 'Failed to initiate OAuth', details: error.message },
+      { error: 'Failed to initiate OAuth', details: error instanceof Error ? error.message : String(error) },
       { status: 500 }
     );
   }
@@ -277,10 +277,10 @@ export async function POST(
       message: `Successfully connected to ${platform}`,
       hasToken: !!tokenData.access_token,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('OAuth callback error:', error);
     return NextResponse.json(
-      { error: 'Failed to complete OAuth', details: error.message },
+      { error: 'Failed to complete OAuth', details: error instanceof Error ? error.message : String(error) },
       { status: 500 }
     );
   }

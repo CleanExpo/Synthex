@@ -297,7 +297,7 @@ export class UserManagementService {
     
     const skip = (validated.page - 1) * validated.limit;
     
-    const where: any = {};
+    const where: Record<string, unknown> = {};
     
     if (validated.role) where.role = validated.role;
     if (validated.isActive !== undefined) where.isActive = validated.isActive;
@@ -338,7 +338,7 @@ export class UserManagementService {
    * Get user statistics
    */
   static async getUserStats(organizationId?: string): Promise<any> {
-    const where: any = {};
+    const where: Record<string, unknown> = {};
     if (organizationId) where.organizationId = organizationId;
     
     const users = await (prisma as any).user.findMany({

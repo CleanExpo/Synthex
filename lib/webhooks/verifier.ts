@@ -210,10 +210,10 @@ export function verifyStripeSignature(
     }
 
     return { valid: true, platform: 'stripe', timestamp };
-  } catch (error: any) {
+  } catch (error: unknown) {
     return {
       valid: false,
-      error: `Verification error: ${error.message}`,
+      error: `Verification error: ${error instanceof Error ? error.message : String(error)}`,
       platform: 'stripe',
     };
   }
@@ -256,10 +256,10 @@ export function verifySlackSignature(
     }
 
     return { valid: true, platform: 'slack', timestamp: ts };
-  } catch (error: any) {
+  } catch (error: unknown) {
     return {
       valid: false,
-      error: `Verification error: ${error.message}`,
+      error: `Verification error: ${error instanceof Error ? error.message : String(error)}`,
       platform: 'slack',
     };
   }
@@ -313,10 +313,10 @@ export function verifyGenericSignature(
     }
 
     return { valid: true, platform };
-  } catch (error: any) {
+  } catch (error: unknown) {
     return {
       valid: false,
-      error: `Verification error: ${error.message}`,
+      error: `Verification error: ${error instanceof Error ? error.message : String(error)}`,
       platform,
     };
   }
@@ -449,11 +449,11 @@ export async function verifyWebhookRequest(
       payload,
       error: result.error,
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     return {
       valid: false,
       payload: '',
-      error: `Failed to verify webhook: ${error.message}`,
+      error: `Failed to verify webhook: ${error instanceof Error ? error.message : String(error)}`,
     };
   }
 }

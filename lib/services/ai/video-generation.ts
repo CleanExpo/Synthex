@@ -103,7 +103,7 @@ async function generateWithRunway(
 
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(error.message || `Runway API error: ${response.status}`);
+      throw new Error(error instanceof Error ? error.message : String(error) || `Runway API error: ${response.status}`);
     }
 
     const data = await response.json();
@@ -118,9 +118,9 @@ async function generateWithRunway(
         duration: options.duration || 5,
       },
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     logger.error('Runway ML generation failed:', { error });
-    return { success: false, provider: 'runway', status: 'failed', error: error.message };
+    return { success: false, provider: 'runway', status: 'failed', error: error instanceof Error ? error.message : String(error) };
   }
 }
 
@@ -165,7 +165,7 @@ async function generateWithSynthesia(
 
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(error.message || `Synthesia API error: ${response.status}`);
+      throw new Error(error instanceof Error ? error.message : String(error) || `Synthesia API error: ${response.status}`);
     }
 
     const data = await response.json();
@@ -179,9 +179,9 @@ async function generateWithSynthesia(
         model: 'synthesia-avatar',
       },
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     logger.error('Synthesia generation failed:', { error });
-    return { success: false, provider: 'synthesia', status: 'failed', error: error.message };
+    return { success: false, provider: 'synthesia', status: 'failed', error: error instanceof Error ? error.message : String(error) };
   }
 }
 
@@ -228,7 +228,7 @@ async function generateWithDID(
 
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(error.message || `D-ID API error: ${response.status}`);
+      throw new Error(error instanceof Error ? error.message : String(error) || `D-ID API error: ${response.status}`);
     }
 
     const data = await response.json();
@@ -242,9 +242,9 @@ async function generateWithDID(
         model: 'd-id-talks',
       },
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     logger.error('D-ID generation failed:', { error });
-    return { success: false, provider: 'd-id', status: 'failed', error: error.message };
+    return { success: false, provider: 'd-id', status: 'failed', error: error instanceof Error ? error.message : String(error) };
   }
 }
 
@@ -314,9 +314,9 @@ export async function checkVideoStatus(
       default:
         return { success: false, provider, videoId, status: 'failed', error: 'Unknown provider' };
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     logger.error(`Failed to check video status for ${provider}:`, { error });
-    return { success: false, provider, videoId, status: 'failed', error: error.message };
+    return { success: false, provider, videoId, status: 'failed', error: error instanceof Error ? error.message : String(error) };
   }
 }
 

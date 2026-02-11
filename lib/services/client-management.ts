@@ -154,7 +154,7 @@ class ClientManagementService {
         clients: (data || []).map(this.mapDbToClient),
         total: count || 0,
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Failed to get clients:', { error, organizationId });
       throw error;
     }
@@ -180,7 +180,7 @@ class ClientManagementService {
       if (error || !data) return null;
 
       return this.mapDbToClient(data);
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Failed to get client:', { error, clientId });
       throw error;
     }
@@ -248,7 +248,7 @@ class ClientManagementService {
       });
 
       return this.mapDbToClient(client);
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Failed to create client:', { error, organizationId });
       throw error;
     }
@@ -279,7 +279,7 @@ class ClientManagementService {
         throw new Error('Insufficient permissions');
       }
 
-      const dbUpdates: Record<string, any> = {
+      const dbUpdates: Record<string, unknown> = {
         updated_at: new Date().toISOString(),
       };
 
@@ -306,7 +306,7 @@ class ClientManagementService {
       if (error) throw error;
 
       return this.mapDbToClient(data);
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Failed to update client:', { error, clientId });
       throw error;
     }
@@ -333,7 +333,7 @@ class ClientManagementService {
       if (error) throw error;
 
       return true;
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Failed to archive client:', { error, clientId });
       throw error;
     }
@@ -370,7 +370,7 @@ class ClientManagementService {
         status: m.status,
         user: m.users,
       }));
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Failed to get members:', { error, clientId });
       throw error;
     }
@@ -426,7 +426,7 @@ class ClientManagementService {
         inviteId: invite.id,
         inviteLink,
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Failed to invite member:', { error, clientId });
       throw error;
     }
@@ -447,7 +447,7 @@ class ClientManagementService {
         throw new Error('Only owner can update member roles');
       }
 
-      const dbUpdates: Record<string, any> = {};
+      const dbUpdates: Record<string, unknown> = {};
       if (updates.role) {
         dbUpdates.role = updates.role;
         dbUpdates.permissions = updates.permissions || this.getDefaultPermissions(updates.role);
@@ -476,7 +476,7 @@ class ClientManagementService {
         acceptedAt: data.accepted_at,
         status: data.status,
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Failed to update member:', { error, clientId, memberId });
       throw error;
     }
@@ -512,7 +512,7 @@ class ClientManagementService {
       if (error) throw error;
 
       return true;
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Failed to remove member:', { error, clientId, memberId });
       throw error;
     }
@@ -602,7 +602,7 @@ class ClientManagementService {
         growthRate,
         lastActivity: lastPost?.created_at || '',
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Failed to get client analytics:', { error, clientId });
       throw error;
     }
@@ -638,7 +638,7 @@ class ClientManagementService {
       }
 
       return this.getClient(userSettings.active_client_id, userId);
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Failed to get active workspace:', { error, userId });
       return null;
     }
@@ -663,7 +663,7 @@ class ClientManagementService {
         });
 
       return true;
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Failed to switch workspace:', { error, userId, clientId });
       throw error;
     }

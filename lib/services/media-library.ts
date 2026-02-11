@@ -29,7 +29,7 @@ export interface MediaAsset {
   base64Data?: string;
   externalId?: string;
   prompt?: string;
-  metadata: Record<string, any>;
+  metadata: Record<string, unknown>;
   tags: string[];
   folderId?: string;
   isFavorite: boolean;
@@ -78,7 +78,7 @@ export interface MediaUploadOptions {
   url?: string;
   externalId?: string;
   prompt?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
   tags?: string[];
   folderId?: string;
 }
@@ -196,7 +196,7 @@ class MediaLibraryService {
         assets,
         total: count || 0,
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Failed to get media assets:', { error, userId });
       throw error;
     }
@@ -219,7 +219,7 @@ class MediaLibraryService {
       }
 
       return this.mapDbToAsset(data);
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Failed to get media asset:', { error, userId, assetId });
       throw error;
     }
@@ -258,7 +258,7 @@ class MediaLibraryService {
       }
 
       return this.mapDbToAsset(data);
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Failed to create media asset:', { error, userId });
       throw error;
     }
@@ -273,7 +273,7 @@ class MediaLibraryService {
     updates: Partial<{
       url: string;
       status: MediaStatus;
-      metadata: Record<string, any>;
+      metadata: Record<string, unknown>;
       tags: string[];
       folderId: string | null;
       isFavorite: boolean;
@@ -281,7 +281,7 @@ class MediaLibraryService {
     }>
   ): Promise<MediaAsset | null> {
     try {
-      const dbUpdates: Record<string, any> = {
+      const dbUpdates: Record<string, unknown> = {
         updated_at: new Date().toISOString(),
       };
 
@@ -306,7 +306,7 @@ class MediaLibraryService {
       }
 
       return this.mapDbToAsset(data);
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Failed to update media asset:', { error, userId, assetId });
       throw error;
     }
@@ -328,7 +328,7 @@ class MediaLibraryService {
       }
 
       return true;
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Failed to delete media asset:', { error, userId, assetId });
       throw error;
     }
@@ -345,8 +345,8 @@ class MediaLibraryService {
       try {
         await this.deleteAsset(userId, id);
         processed++;
-      } catch (error: any) {
-        errors.push({ id, error: error.message });
+      } catch (error: unknown) {
+        errors.push({ id, error: error instanceof Error ? error.message : String(error) });
       }
     }
 
@@ -399,8 +399,8 @@ class MediaLibraryService {
 
         await this.updateAsset(userId, id, finalUpdates);
         processed++;
-      } catch (error: any) {
-        errors.push({ id, error: error.message });
+      } catch (error: unknown) {
+        errors.push({ id, error: error instanceof Error ? error.message : String(error) });
       }
     }
 
@@ -421,7 +421,7 @@ class MediaLibraryService {
         asset_id: assetId,
         user_id: userId,
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       // Try direct update if RPC doesn't exist
       await this.supabase
         .from('media_assets')
@@ -452,7 +452,7 @@ class MediaLibraryService {
       }
 
       return (data || []).map(this.mapDbToFolder);
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Failed to get media folders:', { error, userId });
       throw error;
     }
@@ -486,7 +486,7 @@ class MediaLibraryService {
       }
 
       return this.mapDbToFolder(data);
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Failed to create media folder:', { error, userId });
       throw error;
     }
@@ -501,7 +501,7 @@ class MediaLibraryService {
     updates: Partial<{ name: string; parentId: string | null; color: string; icon: string }>
   ): Promise<MediaFolder | null> {
     try {
-      const dbUpdates: Record<string, any> = {
+      const dbUpdates: Record<string, unknown> = {
         updated_at: new Date().toISOString(),
       };
 
@@ -523,7 +523,7 @@ class MediaLibraryService {
       }
 
       return this.mapDbToFolder(data);
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Failed to update media folder:', { error, userId, folderId });
       throw error;
     }
@@ -553,7 +553,7 @@ class MediaLibraryService {
       }
 
       return true;
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Failed to delete media folder:', { error, userId, folderId });
       throw error;
     }
@@ -651,7 +651,7 @@ class MediaLibraryService {
         recentAssets: (recentData || []).map(this.mapDbToAsset),
         mostUsed: (mostUsedData || []).map(this.mapDbToAsset),
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Failed to get media stats:', { error, userId });
       throw error;
     }

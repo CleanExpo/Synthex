@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
     if (body.errors && body.errors.length > 0) {
       for (const error of body.errors) {
         console.error('[Error Tracked]:', {
-          message: error.message,
+          message: error instanceof Error ? error.message : String(error),
           url: error.context?.url,
           userId: body.userId,
           sessionId: body.sessionId,

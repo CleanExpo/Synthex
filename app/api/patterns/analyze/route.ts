@@ -90,10 +90,10 @@ export async function GET(request: Request) {
       insights,
       count: filteredPatterns.length,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Pattern analysis error:', error);
     return NextResponse.json(
-      { error: error.message || 'Failed to analyze patterns' },
+      { error: error instanceof Error ? error.message : String(error) || 'Failed to analyze patterns' },
       { status: 500 }
     );
   }
@@ -151,10 +151,10 @@ export async function POST(request: Request) {
         recommendations: generateRecommendations(analysis, platform),
       },
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Pattern creation error:', error);
     return NextResponse.json(
-      { error: error.message || 'Failed to create pattern' },
+      { error: error instanceof Error ? error.message : String(error) || 'Failed to create pattern' },
       { status: 500 }
     );
   }

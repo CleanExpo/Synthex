@@ -138,8 +138,8 @@ export async function deliverWebhook(
       if (response.status >= 400 && response.status < 500 && response.status !== 429) {
         break;
       }
-    } catch (error: any) {
-      lastError = error.message;
+    } catch (error: unknown) {
+      lastError = error instanceof Error ? error.message : String(error);
     }
 
     // Exponential backoff
@@ -213,10 +213,10 @@ export async function GET(request: NextRequest) {
         'subscription.cancelled',
       ],
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('List webhooks error:', error);
     return NextResponse.json(
-      { error: 'Internal Server Error', message: error.message },
+      { error: 'Internal Server Error', message: error instanceof Error ? error.message : String(error) },
       { status: 500 }
     );
   }
@@ -284,10 +284,10 @@ export async function POST(request: NextRequest) {
         createdAt: new Date().toISOString(),
       },
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Create webhook error:', error);
     return NextResponse.json(
-      { error: 'Internal Server Error', message: error.message },
+      { error: 'Internal Server Error', message: error instanceof Error ? error.message : String(error) },
       { status: 500 }
     );
   }
@@ -319,10 +319,10 @@ export async function DELETE(request: NextRequest) {
       success: true,
       message: 'Webhook subscription deleted',
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Delete webhook error:', error);
     return NextResponse.json(
-      { error: 'Internal Server Error', message: error.message },
+      { error: 'Internal Server Error', message: error instanceof Error ? error.message : String(error) },
       { status: 500 }
     );
   }

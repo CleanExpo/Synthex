@@ -92,10 +92,10 @@ export async function POST(request: NextRequest) {
       avatar_url: publicUrl,
       message: 'Avatar uploaded successfully'
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Avatar upload error:', error);
     return NextResponse.json(
-      { error: 'Failed to upload avatar', details: error.message },
+      { error: 'Failed to upload avatar', details: error instanceof Error ? error.message : String(error) },
       { status: 500 }
     );
   }
@@ -151,10 +151,10 @@ export async function DELETE(request: NextRequest) {
       success: true,
       message: 'Avatar removed successfully'
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Avatar deletion error:', error);
     return NextResponse.json(
-      { error: 'Failed to delete avatar', details: error.message },
+      { error: 'Failed to delete avatar', details: error instanceof Error ? error.message : String(error) },
       { status: 500 }
     );
   }

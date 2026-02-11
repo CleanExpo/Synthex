@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
       message: result.message,
       userId: result.userId
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Email verification error:', error);
     return NextResponse.json(
       { error: 'Failed to verify email' },
@@ -68,7 +68,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(
       new URL('/auth/verify-email?success=true', request.url)
     );
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Email verification error:', error);
     return NextResponse.redirect(
       new URL('/auth/verify-email?error=Verification failed', request.url)

@@ -144,7 +144,7 @@ export async function GET(request: NextRequest) {
     );
 
     // Convert Map to object for JSON serialization
-    const calendarObject: Record<string, any> = {};
+    const calendarObject: Record<string, unknown> = {};
     calendar.forEach((value, key) => {
       calendarObject[key] = value;
     });

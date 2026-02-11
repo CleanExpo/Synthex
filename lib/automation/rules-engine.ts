@@ -117,7 +117,7 @@ export interface RuleAction {
   id: string;
   type: ActionType;
   order: number;
-  config: Record<string, any>;
+  config: Record<string, unknown>;
   onSuccess?: string; // Next action ID
   onFailure?: string; // Fallback action ID
   retryCount?: number;
@@ -128,9 +128,9 @@ export interface RuleAction {
 export interface ExecutionContext {
   ruleId: string;
   triggerId: string;
-  triggerData: Record<string, any>;
-  variables: Record<string, any>;
-  outputs: Record<string, any>;
+  triggerData: Record<string, unknown>;
+  variables: Record<string, unknown>;
+  outputs: Record<string, unknown>;
   startedAt: Date;
 }
 
@@ -141,7 +141,7 @@ export interface ExecutionResult {
   executionId: string;
   actionsExecuted: number;
   actionsFailed: number;
-  outputs: Record<string, any>;
+  outputs: Record<string, unknown>;
   errors: Array<{ actionId: string; error: string }>;
   duration: number;
 }
@@ -298,7 +298,7 @@ class RulesEngine {
       }
 
       return this.mapDbToRule(rule);
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Failed to create rule:', { error, userId });
       throw error;
     }
@@ -358,7 +358,7 @@ class RulesEngine {
         rules: (data || []).map(this.mapDbToRule),
         total: count || 0,
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Failed to get rules:', { error, userId });
       throw error;
     }
@@ -379,7 +379,7 @@ class RulesEngine {
       if (error || !data) return null;
 
       return this.mapDbToRule(data);
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Failed to get rule:', { error, ruleId });
       throw error;
     }
@@ -405,7 +405,7 @@ class RulesEngine {
       const existingRule = await this.getRule(ruleId, userId);
       if (!existingRule) return null;
 
-      const dbUpdates: Record<string, any> = {
+      const dbUpdates: Record<string, unknown> = {
         updated_at: new Date().toISOString(),
       };
 
@@ -439,7 +439,7 @@ class RulesEngine {
       }
 
       return rule;
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Failed to update rule:', { error, ruleId });
       throw error;
     }
@@ -461,7 +461,7 @@ class RulesEngine {
       if (error) throw error;
 
       return true;
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Failed to delete rule:', { error, ruleId });
       throw error;
     }
@@ -485,7 +485,7 @@ class RulesEngine {
   async executeRule(
     ruleId: string,
     userId: string,
-    triggerData: Record<string, any> = {}
+    triggerData: Record<string, unknown> = {}
   ): Promise<ExecutionResult> {
     const startTime = Date.now();
     const executionId = `exec_${Date.now()}`;
@@ -558,7 +558,7 @@ class RulesEngine {
         errors,
         duration: Date.now() - startTime,
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       this.runningExecutions.delete(executionId);
       logger.error('Rule execution failed:', { error, ruleId });
 
@@ -569,7 +569,7 @@ class RulesEngine {
         actionsExecuted: 0,
         actionsFailed: 1,
         outputs: {},
-        errors: [{ actionId: 'rule', error: error.message }],
+        errors: [{ actionId: 'rule', error: error instanceof Error ? error.message : String(error) }],
         duration: Date.now() - startTime,
       };
     }
@@ -613,7 +613,7 @@ class RulesEngine {
         result: row.result,
         createdAt: row.created_at,
       }));
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Failed to get execution history:', { error, ruleId });
       throw error;
     }
@@ -638,7 +638,7 @@ class RulesEngine {
     options: {
       name?: string;
       clientId?: string;
-      variables?: Record<string, any>;
+      variables?: Record<string, unknown>;
     } = {}
   ): Promise<AutomationRule> {
     const template = RULE_TEMPLATES.find(t => t.id === templateId);
@@ -664,7 +664,7 @@ class RulesEngine {
           return obj.map(substituteVars);
         }
         if (typeof obj === 'object' && obj !== null) {
-          const result: Record<string, any> = {};
+          const result: Record<string, unknown> = {};
           for (const [key, value] of Object.entries(obj)) {
             result[key] = substituteVars(value);
           }
@@ -768,13 +768,13 @@ class RulesEngine {
   ): Promise<{
     executed: number;
     failed: number;
-    outputs: Record<string, any>;
+    outputs: Record<string, unknown>;
     errors: Array<{ actionId: string; error: string }>;
   }> {
     const sortedActions = [...actions].sort((a, b) => a.order - b.order);
     let executed = 0;
     let failed = 0;
-    const outputs: Record<string, any> = {};
+    const outputs: Record<string, unknown> = {};
     const errors: Array<{ actionId: string; error: string }> = [];
 
     for (const action of sortedActions) {
@@ -783,9 +783,9 @@ class RulesEngine {
         outputs[action.id] = result;
         context.outputs[action.id] = result;
         executed++;
-      } catch (error: any) {
+      } catch (error: unknown) {
         failed++;
-        errors.push({ actionId: action.id, error: error.message });
+        errors.push({ actionId: action.id, error: error instanceof Error ? error.message : String(error) });
 
         // Handle retry
         if (action.retryCount && action.retryCount > 0) {

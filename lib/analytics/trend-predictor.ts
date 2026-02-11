@@ -156,7 +156,7 @@ class TrendPredictor {
       predictions.sort((a, b) => b.predictedScore - a.predictedScore);
 
       return predictions.slice(0, 20);
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Failed to predict trends:', { error, userId });
       throw error;
     }
@@ -261,7 +261,7 @@ class TrendPredictor {
         growthRate,
         confidence: Math.min(0.95, r2 + 0.1),
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Failed to forecast engagement:', { error, userId, platform });
       throw error;
     }
@@ -405,7 +405,7 @@ class TrendPredictor {
         optimalPostingWindow: optimalWindow,
         improvements,
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Failed to calculate viral potential:', { error, userId });
       throw error;
     }
@@ -456,7 +456,7 @@ class TrendPredictor {
           actualEngagement: c.engagement,
         })),
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Failed to predict content performance:', { error, userId });
       throw error;
     }
@@ -492,7 +492,7 @@ class TrendPredictor {
         monthOfYear: monthOfYearScores,
         specialEvents,
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Failed to detect seasonal patterns:', { error, userId, platform });
       throw error;
     }

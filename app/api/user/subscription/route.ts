@@ -117,13 +117,13 @@ export async function GET(request: NextRequest) {
       ...subscription,
       features: planFeatures[subscription.plan as keyof typeof planFeatures] || planFeatures.free,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Subscription fetch error:', error);
+    const errorMessage = error instanceof Error ? error.message : String(error);
     return NextResponse.json(
       {
         error: 'Failed to fetch subscription details',
-        details: process.env.NODE_ENV === 'development' ? error?.message : undefined,
-        code: error?.code
+        details: process.env.NODE_ENV === 'development' ? errorMessage : undefined
       },
       { status: 500 }
     );

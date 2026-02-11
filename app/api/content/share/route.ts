@@ -283,7 +283,7 @@ export async function GET(request: NextRequest) {
     const offset = parseInt(searchParams.get('offset') || '0', 10);
 
     // Build query
-    const where: any = {};
+    const where: Record<string, unknown> = {};
 
     if (sharedWithMe) {
       // Get shares where I'm the recipient

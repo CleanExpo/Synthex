@@ -63,9 +63,10 @@ export class InstagramService extends BasePlatformService {
       }
 
       return data;
-    } catch (error: any) {
+    } catch (error: unknown) {
       if (error instanceof PlatformError) throw error;
-      throw new PlatformError('instagram', error.message, undefined, error);
+      const originalError = error instanceof Error ? error : undefined;
+      throw new PlatformError('instagram', error instanceof Error ? error.message : String(error), undefined, originalError);
     }
   }
 
@@ -129,7 +130,7 @@ export class InstagramService extends BasePlatformService {
       const data = await response.json();
 
       if (data.error) {
-        throw new PlatformError('instagram', data.error.message);
+        throw new PlatformError('instagram', data.error.message || 'Instagram API error');
       }
 
       const newCredentials: PlatformCredentials = {
@@ -140,8 +141,8 @@ export class InstagramService extends BasePlatformService {
 
       this.credentials = newCredentials;
       return newCredentials;
-    } catch (error: any) {
-      throw new PlatformError('instagram', `Token refresh failed: ${error.message}`);
+    } catch (error: unknown) {
+      throw new PlatformError('instagram', `Token refresh failed: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
@@ -269,13 +270,13 @@ export class InstagramService extends BasePlatformService {
           daily: dailyBreakdown,
         },
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Instagram analytics sync failed', { error });
       return {
         success: false,
         metrics: { impressions: 0, engagements: 0, followers: 0 },
         period: { start: new Date(), end: new Date() },
-        error: error.message,
+        error: error instanceof Error ? error.message : String(error),
       };
     }
   }
@@ -363,14 +364,14 @@ export class InstagramService extends BasePlatformService {
         hasMore: !!nextCursor,
         cursor: nextCursor,
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Instagram posts sync failed', { error });
       return {
         success: false,
         posts: [],
         total: 0,
         hasMore: false,
-        error: error.message,
+        error: error instanceof Error ? error.message : String(error),
       };
     }
   }
@@ -413,7 +414,7 @@ export class InstagramService extends BasePlatformService {
           url: `https://www.instagram.com/${profile.username}`,
         },
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Instagram profile sync failed', { error });
       return {
         success: false,
@@ -425,7 +426,7 @@ export class InstagramService extends BasePlatformService {
           following: 0,
           postsCount: 0,
         },
-        error: error.message,
+        error: error instanceof Error ? error.message : String(error),
       };
     }
   }
@@ -500,11 +501,11 @@ export class InstagramService extends BasePlatformService {
         postId: publishResponse.id,
         url: `https://www.instagram.com/p/${publishResponse.id}`,
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Instagram post creation failed', { error });
       return {
         success: false,
-        error: error.message,
+        error: error instanceof Error ? error.message : String(error),
       };
     }
   }
@@ -557,7 +558,7 @@ export class InstagramService extends BasePlatformService {
         engagement,
         saved,
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Instagram post metrics fetch failed', { error, postId });
       return null;
     }

@@ -106,7 +106,7 @@ async function postToSocialPlatform(
       };
     } catch (error) {
       console.error('Twitter API error:', error);
-      throw new Error(`Failed to post to Twitter: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(`Failed to post to Twitter: ${error instanceof Error ? error instanceof Error ? error.message : String(error) : 'Unknown error'}`);
     }
   }
   
@@ -151,7 +151,7 @@ async function postToSocialPlatform(
       };
     } catch (error) {
       console.error('LinkedIn API error:', error);
-      throw new Error(`Failed to post to LinkedIn: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(`Failed to post to LinkedIn: ${error instanceof Error ? error instanceof Error ? error.message : String(error) : 'Unknown error'}`);
     }
   }
 
@@ -270,12 +270,12 @@ export async function POST(request: NextRequest) {
           message: `Successfully posted to ${platform}`
         });
 
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error(`Error posting to ${platform}:`, error);
         errors.push({
           platform,
           success: false,
-          error: error.message || `Failed to post to ${platform}`
+          error: error instanceof Error ? error.message : String(error) || `Failed to post to ${platform}`
         });
       }
     }
@@ -306,12 +306,12 @@ export async function POST(request: NextRequest) {
       }
     });
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Social posting error:', error);
     return NextResponse.json(
       { 
         error: 'Failed to post to social media',
-        message: error.message 
+        message: error instanceof Error ? error.message : String(error) 
       },
       { status: 500 }
     );
@@ -336,7 +336,7 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '10');
 
     // Build query
-    const where: any = {};
+    const where: Record<string, unknown> = {};
     if (platform) where.platform = platform;
     if (status) where.status = status;
 
@@ -373,7 +373,7 @@ export async function GET(request: NextRequest) {
       total: posts.length
     });
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Get posts error:', error);
     return NextResponse.json(
       { error: 'Failed to fetch posts' },

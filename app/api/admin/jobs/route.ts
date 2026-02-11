@@ -152,10 +152,10 @@ export async function GET(request: NextRequest) {
         });
       }
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Admin jobs GET error:', error);
     return NextResponse.json(
-      { error: 'Internal Server Error', message: error.message },
+      { error: 'Internal Server Error', message: error instanceof Error ? error.message : String(error) },
       { status: 500 }
     );
   }
@@ -270,10 +270,10 @@ export async function POST(request: NextRequest) {
           { status: 400 }
         );
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Admin jobs POST error:', error);
     return NextResponse.json(
-      { error: 'Internal Server Error', message: error.message },
+      { error: 'Internal Server Error', message: error instanceof Error ? error.message : String(error) },
       { status: 500 }
     );
   }

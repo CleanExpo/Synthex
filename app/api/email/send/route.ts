@@ -1,7 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { emailService } from '@/lib/email-service';
 import { createClient } from '@supabase/supabase-js';
-import DOMPurify from 'isomorphic-dompurify';
+
+/**
+ * Simple HTML sanitization for email content
+ * Strips script tags, event handlers, and dangerous attributes
+ */
+function sanitizeHtml(html: string): string {
+  return html
+    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+    .replace(/\s*on\w+\s*=\s*("[^"]*"|'[^']*'|[^\s>]*)/gi, '')
+    .replace(/href\s*=\s*["']?\s*javascript:/gi, 'href="#"')
+    .replace(/src\s*=\s*["']?\s*data:text\/html/gi, 'src="#"')
+    .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '');
+}
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -31,12 +43,12 @@ export async function POST(request: NextRequest) {
 
     // Send email based on type
     let success = false;
-    
+
     switch (type) {
       case 'welcome':
         success = await emailService.sendWelcomeEmail(to, variables?.name);
         break;
-      
+
       case 'passwordReset':
         success = await emailService.sendPasswordResetEmail(
           to,
@@ -44,7 +56,7 @@ export async function POST(request: NextRequest) {
           variables?.code
         );
         break;
-      
+
       case 'notification':
         success = await emailService.sendNotification(to, {
           type: variables?.notificationType || 'info',
@@ -53,11 +65,11 @@ export async function POST(request: NextRequest) {
           actionUrl: variables?.actionUrl
         });
         break;
-      
+
       case 'weeklyReport':
         success = await emailService.sendWeeklyReport(to, variables);
         break;
-      
+
       default:
         // Send custom email with sanitized HTML to prevent XSS
         success = await emailService.send({
@@ -65,7 +77,7 @@ export async function POST(request: NextRequest) {
           subject: subject || 'SYNTHEX Notification',
           template,
           variables,
-          html: variables?.html ? DOMPurify.sanitize(variables.html) : undefined,
+          html: variables?.html ? sanitizeHtml(variables.html) : undefined,
           text: variables?.text
         });
     }

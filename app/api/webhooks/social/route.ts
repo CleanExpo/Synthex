@@ -173,7 +173,7 @@ async function handlePostFailed(event: WebhookEvent) {
     select: { metadata: true },
   });
 
-  const currentMetadata = (post?.metadata || {}) as Record<string, unknown>;
+  const currentMetadata = (post?.metadata || {}) as Record<string, any>;
 
   await prisma.post.update({
     where: { id: postId },
@@ -366,10 +366,10 @@ export async function POST(request: NextRequest) {
 
     // Always return 200 to acknowledge receipt
     return NextResponse.json({ success: true, received: true });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Social webhook error:', error);
     // Return 200 anyway to prevent retries on processing errors
-    return NextResponse.json({ success: false, error: error.message }, { status: 200 });
+    return NextResponse.json({ success: false, error: error instanceof Error ? error.message : String(error) }, { status: 200 });
   }
 }
 

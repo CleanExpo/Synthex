@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
     const dashboardMetrics = await analyticsTracker.getDashboardMetrics(userId);
 
     return NextResponse.json(dashboardMetrics);
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Dashboard API error:', error);
     return NextResponse.json(
       { error: 'Failed to fetch dashboard metrics' },

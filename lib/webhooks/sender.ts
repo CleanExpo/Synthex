@@ -66,7 +66,7 @@ export type WebhookEventType =
 export interface WebhookPayload {
   event: WebhookEventType;
   timestamp: string;
-  data: Record<string, any>;
+  data: Record<string, unknown>;
   webhookId?: string;
   deliveryId?: string;
 }
@@ -89,13 +89,13 @@ export interface WebhookSubscription {
   active: boolean;
   userId?: string;
   organizationId?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface SendWebhookOptions {
   url: string;
   event: WebhookEventType;
-  data: Record<string, any>;
+  data: Record<string, unknown>;
   secret?: string;
   webhookId?: string;
   maxRetries?: number;
@@ -286,7 +286,7 @@ export async function sendWebhook(options: SendWebhookOptions): Promise<Delivery
  */
 export async function broadcastWebhook(
   event: WebhookEventType,
-  data: Record<string, any>,
+  data: Record<string, unknown>,
   subscriptions: WebhookSubscription[]
 ): Promise<{ total: number; succeeded: number; failed: number; results: DeliveryResult[] }> {
   const activeSubscriptions = subscriptions.filter(
@@ -422,7 +422,7 @@ export async function pingWebhook(url: string): Promise<boolean> {
 export async function triggerUserEvent(
   userId: string,
   event: 'user.created' | 'user.updated' | 'user.deleted' | 'user.login' | 'user.logout',
-  data: Record<string, any>,
+  data: Record<string, unknown>,
   subscriptions: WebhookSubscription[]
 ): Promise<void> {
   await broadcastWebhook(event, { userId, ...data }, subscriptions);
@@ -434,7 +434,7 @@ export async function triggerUserEvent(
 export async function triggerContentEvent(
   contentId: string,
   event: 'content.created' | 'content.updated' | 'content.published' | 'content.scheduled' | 'content.failed' | 'content.deleted',
-  data: Record<string, any>,
+  data: Record<string, unknown>,
   subscriptions: WebhookSubscription[]
 ): Promise<void> {
   await broadcastWebhook(event, { contentId, ...data }, subscriptions);
@@ -446,7 +446,7 @@ export async function triggerContentEvent(
 export async function triggerCampaignEvent(
   campaignId: string,
   event: 'campaign.created' | 'campaign.started' | 'campaign.completed' | 'campaign.paused' | 'campaign.deleted',
-  data: Record<string, any>,
+  data: Record<string, unknown>,
   subscriptions: WebhookSubscription[]
 ): Promise<void> {
   await broadcastWebhook(event, { campaignId, ...data }, subscriptions);

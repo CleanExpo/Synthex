@@ -48,7 +48,7 @@ async function handler(req: NextRequest) {
     
     if (error) {
       return NextResponse.json(
-        { error: 'Failed to fetch patterns', details: error.message },
+        { error: 'Failed to fetch patterns', details: error instanceof Error ? error.message : String(error) },
         { status: 500 }
       );
     }

@@ -35,10 +35,10 @@ export async function GET(request: Request) {
       },
       timestamp: new Date().toISOString(),
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Pattern analysis cron error:', error);
     return NextResponse.json(
-      { error: error.message || 'Failed to analyze patterns' },
+      { error: error instanceof Error ? error.message : String(error) || 'Failed to analyze patterns' },
       { status: 500 }
     );
   }
@@ -77,10 +77,10 @@ export async function POST(request: Request) {
       },
       timestamp: new Date().toISOString(),
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Manual pattern analysis error:', error);
     return NextResponse.json(
-      { error: error.message || 'Failed to analyze patterns' },
+      { error: error instanceof Error ? error.message : String(error) || 'Failed to analyze patterns' },
       { status: 500 }
     );
   }

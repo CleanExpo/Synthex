@@ -75,9 +75,9 @@ export class LinkedInService extends BasePlatformService {
       }
 
       return await response.json();
-    } catch (error: any) {
+    } catch (error: unknown) {
       if (error instanceof PlatformError) throw error;
-      throw new PlatformError('linkedin', error.message, undefined, error);
+      throw new PlatformError('linkedin', error instanceof Error ? error.message : String(error), undefined, error instanceof Error ? error : undefined);
     }
   }
 
@@ -132,8 +132,8 @@ export class LinkedInService extends BasePlatformService {
 
       this.credentials = newCredentials;
       return newCredentials;
-    } catch (error: any) {
-      throw new PlatformError('linkedin', `Token refresh failed: ${error.message}`);
+    } catch (error: unknown) {
+      throw new PlatformError('linkedin', `Token refresh failed: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
@@ -217,13 +217,13 @@ export class LinkedInService extends BasePlatformService {
           daily: dailyBreakdown,
         },
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('LinkedIn analytics sync failed', { error });
       return {
         success: false,
         metrics: { impressions: 0, engagements: 0, followers: 0 },
         period: { start: new Date(), end: new Date() },
-        error: error.message,
+        error: error instanceof Error ? error.message : String(error),
       };
     }
   }
@@ -297,14 +297,14 @@ export class LinkedInService extends BasePlatformService {
         hasMore: !!nextCursor && posts.length === limit,
         cursor: nextCursor,
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('LinkedIn posts sync failed', { error });
       return {
         success: false,
         posts: [],
         total: 0,
         hasMore: false,
-        error: error.message,
+        error: error instanceof Error ? error.message : String(error),
       };
     }
   }
@@ -390,7 +390,7 @@ export class LinkedInService extends BasePlatformService {
           url: `https://www.linkedin.com/in/${profile.vanityName || profile.id}`,
         },
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('LinkedIn profile sync failed', { error });
       return {
         success: false,
@@ -402,7 +402,7 @@ export class LinkedInService extends BasePlatformService {
           following: 0,
           postsCount: 0,
         },
-        error: error.message,
+        error: error instanceof Error ? error.message : String(error),
       };
     }
   }
@@ -455,11 +455,11 @@ export class LinkedInService extends BasePlatformService {
         postId: response.id,
         url: `https://www.linkedin.com/feed/update/${response.id}`,
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('LinkedIn post creation failed', { error });
       return {
         success: false,
-        error: error.message,
+        error: error instanceof Error ? error.message : String(error),
       };
     }
   }
@@ -475,7 +475,7 @@ export class LinkedInService extends BasePlatformService {
       });
 
       return true;
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('LinkedIn post deletion failed', { error, postId });
       return false;
     }
@@ -498,7 +498,7 @@ export class LinkedInService extends BasePlatformService {
         impressions: stats.impressionCount || 0,
         clicks: stats.clickCount || 0,
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('LinkedIn post metrics fetch failed', { error, postId });
       return null;
     }

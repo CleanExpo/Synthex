@@ -16,7 +16,7 @@ interface EmailOptions {
   html?: string;
   text?: string;
   template?: string;
-  variables?: Record<string, any>;
+  variables?: Record<string, unknown>;
 }
 
 /**

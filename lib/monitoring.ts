@@ -8,14 +8,14 @@ interface ErrorReport {
   column?: number;
   userAgent: string;
   timestamp: string;
-  context?: Record<string, any>;
+  context?: Record<string, unknown>;
 }
 
 interface UserAction {
   action: string;
   element?: string;
   timestamp: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 class MonitoringService {
@@ -95,7 +95,7 @@ class MonitoringService {
     this.addError(error);
   }
 
-  captureError(error: Error | string, context?: Record<string, any>) {
+  captureError(error: Error | string, context?: Record<string, unknown>) {
     const errorReport: ErrorReport = {
       message: typeof error === 'string' ? error : error.message,
       stack: typeof error === 'object' ? error.stack : undefined,
@@ -127,7 +127,7 @@ class MonitoringService {
   }
 
   // User action tracking
-  trackAction(action: string, element?: string, metadata?: Record<string, any>) {
+  trackAction(action: string, element?: string, metadata?: Record<string, unknown>) {
     const userAction: UserAction = {
       action,
       element,
@@ -154,7 +154,7 @@ class MonitoringService {
   }
 
   // Custom event tracking
-  trackEvent(eventName: string, data?: Record<string, any>) {
+  trackEvent(eventName: string, data?: Record<string, unknown>) {
     this.trackAction('custom_event', eventName, data);
   }
 

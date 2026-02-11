@@ -42,7 +42,7 @@ async function generateContent(req: NextRequest): Promise<NextResponse> {
     }
     
     // Simulate AI generation (replace with actual AI service)
-    const generatedContent: Record<string, any>[] = [];
+    const generatedContent: Record<string, unknown>[] = [];
     for (let i = 0; i < count; i++) {
       generatedContent.push({
         id: `gen-${Date.now()}-${i}`,

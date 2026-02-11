@@ -185,7 +185,7 @@ export async function GET(request: NextRequest) {
       limit,
       offset,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     logger.error('Client GET error:', { error });
     return APISecurityChecker.createSecureResponse(
       { error: 'Internal server error' },
@@ -306,7 +306,7 @@ export async function POST(request: NextRequest) {
     );
 
     return APISecurityChecker.createSecureResponse({ client }, 201);
-  } catch (error: any) {
+  } catch (error: unknown) {
     if (error instanceof z.ZodError) {
       return APISecurityChecker.createSecureResponse(
         { error: 'Validation error', details: error.errors },
@@ -405,7 +405,7 @@ export async function PUT(request: NextRequest) {
     );
 
     return APISecurityChecker.createSecureResponse({ client });
-  } catch (error: any) {
+  } catch (error: unknown) {
     if (error instanceof z.ZodError) {
       return APISecurityChecker.createSecureResponse(
         { error: 'Validation error', details: error.errors },
@@ -481,10 +481,10 @@ export async function DELETE(request: NextRequest) {
     );
 
     return APISecurityChecker.createSecureResponse({ success: true });
-  } catch (error: any) {
+  } catch (error: unknown) {
     logger.error('Client DELETE error:', { error });
     return APISecurityChecker.createSecureResponse(
-      { error: error.message || 'Internal server error' },
+      { error: error instanceof Error ? error.message : String(error) || 'Internal server error' },
       500
     );
   }

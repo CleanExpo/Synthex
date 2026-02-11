@@ -247,7 +247,7 @@ export async function POST(request: NextRequest) {
         });
       }
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     if (error instanceof z.ZodError) {
       return APISecurityChecker.createSecureResponse(
         { error: 'Validation error', details: error.errors },
@@ -361,7 +361,7 @@ export async function GET(request: NextRequest) {
         { id: 'pcm_24000', name: 'PCM 24kHz' },
       ],
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     logger.error('Voice list error:', { error });
     return APISecurityChecker.createSecureResponse(
       { error: 'Internal server error' },
@@ -443,7 +443,7 @@ export async function DELETE(request: NextRequest) {
       success: true,
       deletedVoiceId: validated.voiceId,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     if (error instanceof z.ZodError) {
       return APISecurityChecker.createSecureResponse(
         { error: 'Validation error', details: error.errors },
@@ -572,7 +572,7 @@ export async function PUT(request: NextRequest) {
       totalFailed: results.filter(r => !r.success).length,
       totalCharacters,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     if (error instanceof z.ZodError) {
       return APISecurityChecker.createSecureResponse(
         { error: 'Validation error', details: error.errors },

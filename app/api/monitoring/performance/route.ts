@@ -106,13 +106,13 @@ export async function GET(request: NextRequest) {
           { status: 400 }
         );
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Performance monitoring error:', error);
 
     return NextResponse.json(
       {
         success: false,
-        error: error.message || 'Failed to generate performance report',
+        error: error instanceof Error ? error.message : String(error) || 'Failed to generate performance report',
         responseTime: Date.now() - startTime,
       },
       { status: 500 }
@@ -166,13 +166,13 @@ export async function POST(request: NextRequest) {
           { status: 400 }
         );
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Performance config error:', error);
 
     return NextResponse.json(
       {
         success: false,
-        error: error.message || 'Failed to update configuration',
+        error: error instanceof Error ? error.message : String(error) || 'Failed to update configuration',
       },
       { status: 500 }
     );

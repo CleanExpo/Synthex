@@ -224,7 +224,7 @@ export async function POST(request: Request) {
     }
 
     return response;
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Signup error:', error);
     
     // Log the error
@@ -236,7 +236,7 @@ export async function POST(request: Request) {
         category: 'auth',
         severity: 'high',
         details: {
-          error: error.message,
+          error: error instanceof Error ? error.message : String(error),
           timestamp: new Date().toISOString()
         }
       });

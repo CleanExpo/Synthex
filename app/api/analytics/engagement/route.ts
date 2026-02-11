@@ -39,7 +39,7 @@ export async function POST(request: NextRequest) {
         metrics
       }
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Engagement tracking error:', error);
     return NextResponse.json(
       { error: 'Failed to track engagement' },

@@ -83,14 +83,14 @@ export async function GET(request: NextRequest) {
       
       return NextResponse.json(responseData, { status: statusCode });
       
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Redis health check error:', error);
       
       return NextResponse.json(
         {
           status: 'error',
           message: 'Failed to check Redis health',
-          error: error.message,
+          error: error instanceof Error ? error.message : String(error),
           timestamp: new Date().toISOString()
         },
         { status: 500 }
@@ -238,13 +238,13 @@ export async function POST(request: NextRequest) {
       
       return NextResponse.json(results);
       
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Redis performance test error:', error);
       
       return NextResponse.json(
         {
           error: 'Failed to run performance tests',
-          message: error.message,
+          message: error instanceof Error ? error.message : String(error),
           timestamp: new Date().toISOString()
         },
         { status: 500 }
@@ -310,13 +310,13 @@ export async function DELETE(request: NextRequest) {
         timestamp: new Date().toISOString()
       });
       
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Redis cache clear error:', error);
       
       return NextResponse.json(
         {
           error: 'Failed to clear cache',
-          message: error.message,
+          message: error instanceof Error ? error.message : String(error),
           timestamp: new Date().toISOString()
         },
         { status: 500 }

@@ -214,7 +214,7 @@ class ContentSafetyService {
       await this.logModeration(userId, content, result);
 
       return result;
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Content moderation failed:', { error, userId });
 
       // Return conservative result on error

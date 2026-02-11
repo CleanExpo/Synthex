@@ -186,7 +186,7 @@ export async function POST(request: NextRequest) {
         });
       }
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     if (error instanceof z.ZodError) {
       return APISecurityChecker.createSecureResponse(
         { error: 'Validation error', details: error.errors },
@@ -240,7 +240,7 @@ export async function GET(request: NextRequest) {
       offset,
       total: history.length, // Would need count query for accurate total
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     logger.error('Moderation history error:', { error });
     return APISecurityChecker.createSecureResponse(
       { error: 'Internal server error' },
@@ -330,7 +330,7 @@ export async function PUT(request: NextRequest) {
       success: true,
       guidelines: validated,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     if (error instanceof z.ZodError) {
       return APISecurityChecker.createSecureResponse(
         { error: 'Validation error', details: error.errors },

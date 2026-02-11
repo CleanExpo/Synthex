@@ -93,10 +93,10 @@ export async function GET(
       success: true,
       data: post,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('GET content error:', error);
     return NextResponse.json(
-      { error: 'Internal Server Error', message: error.message },
+      { error: 'Internal Server Error', message: error instanceof Error ? error.message : String(error) },
       { status: 500 }
     );
   }
@@ -229,10 +229,10 @@ export async function PATCH(
       message: 'Content updated successfully',
       data: updatedPost,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('PATCH content error:', error);
     return NextResponse.json(
-      { error: 'Internal Server Error', message: error.message },
+      { error: 'Internal Server Error', message: error instanceof Error ? error.message : String(error) },
       { status: 500 }
     );
   }
@@ -310,10 +310,10 @@ export async function DELETE(
       success: true,
       message: softDelete ? 'Content archived successfully' : 'Content deleted successfully',
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('DELETE content error:', error);
     return NextResponse.json(
-      { error: 'Internal Server Error', message: error.message },
+      { error: 'Internal Server Error', message: error instanceof Error ? error.message : String(error) },
       { status: 500 }
     );
   }

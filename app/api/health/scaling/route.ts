@@ -238,7 +238,7 @@ export async function GET(request: NextRequest) {
         'X-Response-Time': `${Date.now() - startTime}ms`,
       },
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Scaling health check error:', error);
     metricsStore.errorCount++;
 
@@ -246,7 +246,7 @@ export async function GET(request: NextRequest) {
       {
         status: 'error',
         message: 'Failed to get scaling metrics',
-        error: error.message,
+        error: error instanceof Error ? error.message : String(error),
         timestamp: new Date().toISOString(),
       },
       { status: 500 }
@@ -311,9 +311,9 @@ export async function POST(request: NextRequest) {
       action,
       timestamp: new Date().toISOString(),
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     return NextResponse.json(
-      { error: error.message },
+      { error: error instanceof Error ? error.message : String(error) },
       { status: 500 }
     );
   }

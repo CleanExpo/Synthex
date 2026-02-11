@@ -120,9 +120,9 @@ export async function generateSpeech(
       voiceId,
       characterCount: options.text.length,
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     logger.error('ElevenLabs speech generation failed:', { error });
-    return { success: false, error: error.message };
+    return { success: false, error: error instanceof Error ? error.message : String(error) };
   }
 }
 
@@ -167,7 +167,7 @@ export async function generateSpeechStream(
     }
 
     return response.body;
-  } catch (error: any) {
+  } catch (error: unknown) {
     logger.error('ElevenLabs streaming failed:', { error });
     return null;
   }
@@ -228,9 +228,9 @@ export async function cloneVoice(
       success: true,
       voiceId: data.voice_id,
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     logger.error('Voice cloning failed:', { error });
-    return { success: false, error: error.message };
+    return { success: false, error: error instanceof Error ? error.message : String(error) };
   }
 }
 
@@ -263,7 +263,7 @@ export async function getVoices(): Promise<Voice[]> {
       labels: voice.labels,
       previewUrl: voice.preview_url,
     }));
-  } catch (error: any) {
+  } catch (error: unknown) {
     logger.error('Failed to get voices:', { error });
     return [];
   }
@@ -295,7 +295,7 @@ export async function deleteVoice(voiceId: string): Promise<boolean> {
     });
 
     return response.ok;
-  } catch (error: any) {
+  } catch (error: unknown) {
     logger.error('Failed to delete voice:', { error, voiceId });
     return false;
   }
@@ -333,7 +333,7 @@ export async function getVoiceSettings(voiceId: string): Promise<{
       style: data.style,
       useSpeakerBoost: data.use_speaker_boost,
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     logger.error('Failed to get voice settings:', { error, voiceId });
     return null;
   }
@@ -369,7 +369,7 @@ export async function getCharacterQuota(): Promise<{
       characterLimit: data.character_limit,
       canExtendCharacterLimit: data.can_extend_character_limit,
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     logger.error('Failed to get character quota:', { error });
     return null;
   }

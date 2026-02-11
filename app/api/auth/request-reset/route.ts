@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
       success: true,
       message: 'If an account exists with this email, you will receive a password reset link'
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Password reset request error:', error);
     return NextResponse.json(
       { error: 'Failed to process password reset request' },

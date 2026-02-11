@@ -164,12 +164,12 @@ export async function POST(request: NextRequest) {
       success: true,
       data: result,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Twitter post error:', error);
     return NextResponse.json(
       { 
         error: 'Failed to post to Twitter',
-        message: error.message,
+        message: error instanceof Error ? error.message : String(error),
       },
       { status: 500 }
     );

@@ -452,10 +452,10 @@ export async function GET(
     });
 
     return response;
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('OAuth callback error:', error);
     return NextResponse.redirect(
-      new URL(`/auth/login?error=${encodeURIComponent(error.message || 'Authentication failed')}`, request.url)
+      new URL(`/auth/login?error=${encodeURIComponent(error instanceof Error ? error.message : String(error) || 'Authentication failed')}`, request.url)
     );
   }
 }

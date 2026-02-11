@@ -73,12 +73,12 @@ async function checkDatabase(): Promise<DependencyCheck> {
       message: result.healthy ? 'Connected' : result.error,
       critical: true,
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     return {
       name: 'database',
       status: 'unhealthy',
       latency: Date.now() - startTime,
-      message: error.message || 'Connection failed',
+      message: error instanceof Error ? error.message : String(error) || 'Connection failed',
       critical: true,
     };
   }
@@ -119,12 +119,12 @@ async function checkCache(): Promise<DependencyCheck> {
       message: `Mode: ${health.mode}`,
       critical: false, // Cache has memory fallback
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     return {
       name: 'cache',
       status: 'degraded',
       latency: Date.now() - startTime,
-      message: error.message || 'Cache unavailable, using memory fallback',
+      message: error instanceof Error ? error.message : String(error) || 'Cache unavailable, using memory fallback',
       critical: false,
     };
   }
@@ -241,7 +241,7 @@ export async function GET() {
           };
           return acc;
         },
-        {} as Record<string, any>
+        {} as Record<string, unknown>
       ),
       summary: {
         healthy: checks.filter((c) => c.status === 'healthy').length,
@@ -260,7 +260,7 @@ export async function GET() {
         'X-Health-Status': overallStatus,
       },
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Readiness check error:', error);
 
     return NextResponse.json(
@@ -268,7 +268,7 @@ export async function GET() {
         status: 'not_ready',
         timestamp: new Date().toISOString(),
         responseTime: Date.now() - startTime,
-        error: error.message || 'Health check failed',
+        error: error instanceof Error ? error.message : String(error) || 'Health check failed',
       },
       {
         status: 503,

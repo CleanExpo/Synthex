@@ -99,7 +99,7 @@ async function handlePost(request: AuthenticatedRequest) {
     });
   } catch (error: unknown) {
     console.error('Content generation error:', error);
-    const message = error instanceof Error ? error.message : 'Failed to generate content';
+    const message = error instanceof Error ? error instanceof Error ? error.message : String(error) : 'Failed to generate content';
     return NextResponse.json(
       { success: false, error: message },
       { status: 500 }
@@ -147,7 +147,7 @@ async function handlePut(request: AuthenticatedRequest) {
     });
   } catch (error: unknown) {
     console.error('AI generation error:', error);
-    const message = error instanceof Error ? error.message : 'Failed to generate with AI';
+    const message = error instanceof Error ? error instanceof Error ? error.message : String(error) : 'Failed to generate with AI';
     return NextResponse.json(
       { success: false, error: message },
       { status: 500 }

@@ -156,10 +156,10 @@ export async function GET(
         updatedAt: team.updatedAt,
       },
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('GET team settings error:', error);
     return NextResponse.json(
-      { error: 'Internal Server Error', message: error.message },
+      { error: 'Internal Server Error', message: error instanceof Error ? error.message : String(error) },
       { status: 500 }
     );
   }
@@ -249,10 +249,10 @@ export async function PATCH(
       message: 'Team settings updated',
       data: team,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('PATCH team settings error:', error);
     return NextResponse.json(
-      { error: 'Internal Server Error', message: error.message },
+      { error: 'Internal Server Error', message: error instanceof Error ? error.message : String(error) },
       { status: 500 }
     );
   }
@@ -329,10 +329,10 @@ export async function DELETE(
       success: true,
       message: 'Team deleted successfully',
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('DELETE team error:', error);
     return NextResponse.json(
-      { error: 'Internal Server Error', message: error.message },
+      { error: 'Internal Server Error', message: error instanceof Error ? error.message : String(error) },
       { status: 500 }
     );
   }

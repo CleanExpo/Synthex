@@ -37,7 +37,7 @@ interface HealthCheckResult {
   status: 'healthy' | 'degraded' | 'unhealthy';
   latency?: number;
   message?: string;
-  details?: Record<string, any>;
+  details?: Record<string, unknown>;
 }
 
 /**

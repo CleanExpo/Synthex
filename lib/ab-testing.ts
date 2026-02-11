@@ -35,7 +35,7 @@ export interface TargetAudience {
   countries?: string[];
   minFollowers?: number;
   maxFollowers?: number;
-  customRules?: Record<string, any>;
+  customRules?: Record<string, unknown>;
 }
 
 export interface ExperimentMetrics {
@@ -200,7 +200,7 @@ class ABTestingService {
     variantId: string,
     eventType: 'participant' | 'conversion' | 'engagement' | 'custom',
     userId: string,
-    metadata?: Record<string, any>
+    metadata?: Record<string, unknown>
   ): Promise<void> {
     // Save event to database
     await this.supabase

@@ -286,7 +286,7 @@ export abstract class BaseRepository<T extends BaseEntity> implements IRepositor
    * Build WHERE clause from search filters
    */
   protected buildWhereClause(filters: SearchFilter[]): any {
-    const where: any = {};
+    const where: Record<string, unknown> = {};
 
     for (const filter of filters) {
       switch (filter.operator) {
