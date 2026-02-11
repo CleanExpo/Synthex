@@ -16,12 +16,66 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
 
+/** Tracked competitor record */
+interface TrackedCompetitorRecord {
+  id: string;
+  userId: string;
+  name: string;
+  twitterHandle?: string;
+  instagramHandle?: string;
+  linkedinHandle?: string;
+  facebookHandle?: string;
+  youtubeHandle?: string;
+  tiktokHandle?: string;
+  lastTrackedAt: Date | null;
+}
+
+/** Competitor snapshot record */
+interface CompetitorSnapshotRecord {
+  id: string;
+  competitorId: string;
+  platform: string;
+  followersCount?: number;
+  engagementRate?: number;
+  performanceScore?: number;
+  growthScore?: number;
+  engagementScore?: number;
+  snapshotAt: Date;
+}
+
+/** Alert data structure */
+interface CompetitorAlertData {
+  userId: string;
+  competitorId: string;
+  alertType: string;
+  severity: string;
+  title: string;
+  description: string;
+  metrics: Record<string, unknown>;
+}
+
+/** Extended prisma client for competitor operations */
+interface PrismaWithCompetitor {
+  trackedCompetitor?: {
+    findFirst: (args: Record<string, unknown>) => Promise<TrackedCompetitorRecord | null>;
+    update: (args: Record<string, unknown>) => Promise<TrackedCompetitorRecord>;
+  };
+  competitorSnapshot?: {
+    findMany: (args: Record<string, unknown>) => Promise<CompetitorSnapshotRecord[]>;
+    findFirst: (args: Record<string, unknown>) => Promise<CompetitorSnapshotRecord | null>;
+    create: (args: Record<string, unknown>) => Promise<CompetitorSnapshotRecord>;
+  };
+  competitorAlert?: {
+    createMany: (args: { data: CompetitorAlertData[] }) => Promise<{ count: number }>;
+  };
+}
+
 // ============================================================================
 // MOCK DATA GENERATOR (Simulates social media API responses)
 // In production, this would call actual social media APIs
 // ============================================================================
 
-function generateMockMetrics(competitor: any, platform: string) {
+function generateMockMetrics(_competitor: TrackedCompetitorRecord, _platform: string) {
   const baseFollowers = Math.floor(Math.random() * 50000) + 1000;
   const growthRate = (Math.random() * 0.1) - 0.02; // -2% to +8%
 
@@ -88,7 +142,7 @@ export async function GET(
     const days = parseInt(searchParams.get('days') || '30', 10);
 
     // Verify competitor belongs to user
-    const competitor = await (prisma as any).trackedCompetitor?.findFirst({
+    const competitor = await (prisma as unknown as PrismaWithCompetitor).trackedCompetitor?.findFirst({
       where: { id, userId },
       select: { id: true, name: true },
     });
@@ -104,7 +158,7 @@ export async function GET(
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - days);
 
-    const snapshots = await (prisma as any).competitorSnapshot?.findMany({
+    const snapshots = await (prisma as unknown as PrismaWithCompetitor).competitorSnapshot?.findMany({
       where: {
         competitorId: id,
         platform: platform === 'all' ? undefined : platform,
@@ -116,14 +170,14 @@ export async function GET(
     // Calculate trends
     const platformSet = new Set<string>();
     for (const s of snapshots) {
-      if ((s as any).platform) platformSet.add((s as any).platform);
+      if (s.platform) platformSet.add(s.platform);
     }
     const platforms = Array.from(platformSet);
     const trendsByPlatform: Record<string, unknown> = {};
 
     for (const plat of platforms) {
       const platSnapshots = snapshots
-        .filter((s: any) => s.platform === plat)
+        .filter((s) => s.platform === plat)
         .slice(0, 7); // Last 7 snapshots
 
       if (platSnapshots.length >= 2) {
@@ -185,7 +239,7 @@ export async function POST(
     const userId = security.context.userId!;
 
     // Verify competitor belongs to user
-    const competitor = await (prisma as any).trackedCompetitor?.findFirst({
+    const competitor = await (prisma as unknown as PrismaWithCompetitor).trackedCompetitor?.findFirst({
       where: { id, userId },
     });
 
@@ -197,7 +251,7 @@ export async function POST(
     }
 
     // Check rate limiting (max 1 snapshot per hour)
-    const lastSnapshot = await (prisma as any).competitorSnapshot?.findFirst({
+    const lastSnapshot = await (prisma as unknown as PrismaWithCompetitor).competitorSnapshot?.findFirst({
       where: {
         competitorId: id,
         snapshotAt: { gte: new Date(Date.now() - 3600000) },
@@ -225,13 +279,13 @@ export async function POST(
     if (competitor.youtubeHandle) platforms.push('youtube');
     if (competitor.tiktokHandle) platforms.push('tiktok');
 
-    const snapshots: any[] = [];
+    const snapshots: CompetitorSnapshotRecord[] = [];
 
     // Create snapshot for each platform
     for (const platform of platforms) {
       const metrics = generateMockMetrics(competitor, platform);
 
-      const snapshot = await (prisma as any).competitorSnapshot?.create({
+      const snapshot = await (prisma as unknown as PrismaWithCompetitor).competitorSnapshot?.create({
         data: {
           competitorId: id,
           platform,
@@ -240,7 +294,9 @@ export async function POST(
         },
       });
 
-      snapshots.push(snapshot);
+      if (snapshot) {
+        snapshots.push(snapshot);
+      }
     }
 
     // Create aggregated 'all' snapshot
@@ -253,7 +309,7 @@ export async function POST(
         engagementScore: snapshots.reduce((sum, s) => sum + (s.engagementScore || 0), 0) / snapshots.length,
       };
 
-      const allSnapshot = await (prisma as any).competitorSnapshot?.create({
+      const allSnapshot = await (prisma as unknown as PrismaWithCompetitor).competitorSnapshot?.create({
         data: {
           competitorId: id,
           platform: 'all',
@@ -266,11 +322,13 @@ export async function POST(
         },
       });
 
-      snapshots.push(allSnapshot);
+      if (allSnapshot) {
+        snapshots.push(allSnapshot);
+      }
     }
 
     // Update competitor's lastTrackedAt
-    await (prisma as any).trackedCompetitor?.update({
+    await (prisma as unknown as PrismaWithCompetitor).trackedCompetitor?.update({
       where: { id },
       data: { lastTrackedAt: new Date() },
     });
@@ -296,12 +354,12 @@ export async function POST(
 // ALERT DETECTION
 // ============================================================================
 
-async function checkForAlerts(userId: string, competitor: any, snapshots: any[]) {
+async function checkForAlerts(userId: string, competitor: TrackedCompetitorRecord, snapshots: CompetitorSnapshotRecord[]): Promise<CompetitorAlertData[]> {
   try {
-    const alerts: any[] = [];
+    const alerts: CompetitorAlertData[] = [];
 
     // Get previous snapshot for comparison
-    const previousSnapshot = await (prisma as any).competitorSnapshot?.findFirst({
+    const previousSnapshot = await (prisma as unknown as PrismaWithCompetitor).competitorSnapshot?.findFirst({
       where: {
         competitorId: competitor.id,
         platform: 'all',
@@ -350,6 +408,7 @@ async function checkForAlerts(userId: string, competitor: any, snapshots: any[])
         const milestones = [1000, 5000, 10000, 25000, 50000, 100000, 500000, 1000000];
         for (const milestone of milestones) {
           if (
+            previousSnapshot.followersCount &&
             previousSnapshot.followersCount < milestone &&
             currentSnapshot.followersCount >= milestone
           ) {
@@ -369,7 +428,7 @@ async function checkForAlerts(userId: string, competitor: any, snapshots: any[])
 
     // Create alerts in database
     if (alerts.length > 0) {
-      await (prisma as any).competitorAlert?.createMany({
+      await (prisma as unknown as PrismaWithCompetitor).competitorAlert?.createMany({
         data: alerts,
       });
     }

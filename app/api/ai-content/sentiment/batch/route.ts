@@ -36,14 +36,38 @@ const batchAnalyzeSchema = z.object({
 // TYPES
 // ============================================================================
 
+/** Emotion analysis result */
+interface EmotionResult {
+  emotion: string;
+  intensity: number;
+}
+
 interface BatchResult {
   id?: string;
   contentId?: string;
   sentiment: string;
   score: number;
   confidence: number;
-  emotions: { emotion: string; intensity: number }[];
+  emotions: EmotionResult[];
   error?: string;
+}
+
+/** Sentiment analysis result */
+interface SentimentResult {
+  sentiment: string;
+  score: number;
+  confidence: number;
+  emotions: EmotionResult[];
+}
+
+/** Extended prisma client for sentiment operations */
+interface PrismaWithSentiment {
+  sentimentAnalysis?: {
+    createMany: (args: Record<string, unknown>) => Promise<{ count: number }>;
+  };
+  contentComment?: {
+    update: (args: Record<string, unknown>) => Promise<unknown>;
+  };
 }
 
 // ============================================================================
@@ -52,7 +76,7 @@ interface BatchResult {
 
 async function analyzeBatch(
   texts: string[]
-): Promise<{ sentiment: string; score: number; confidence: number; emotions: any[] }[]> {
+): Promise<SentimentResult[]> {
   const apiKey = process.env.OPENROUTER_API_KEY;
 
   if (!apiKey || texts.length > 20) {
@@ -102,8 +126,13 @@ Return a JSON array with one result per input text. Return ONLY valid JSON array
     // Parse JSON array
     const jsonMatch = content.match(/\[[\s\S]*\]/);
     if (jsonMatch) {
-      const results = JSON.parse(jsonMatch[0]);
-      return results.map((r: any) => ({
+      const results = JSON.parse(jsonMatch[0]) as Array<{
+        sentiment?: string;
+        score?: number;
+        confidence?: number;
+        emotions?: EmotionResult[];
+      }>;
+      return results.map((r) => ({
         sentiment: r.sentiment || 'neutral',
         score: Math.max(-100, Math.min(100, r.score || 0)),
         confidence: Math.max(0, Math.min(1, r.confidence || 0.5)),
@@ -121,7 +150,7 @@ Return a JSON array with one result per input text. Return ONLY valid JSON array
 /**
  * Rule-based sentiment analysis
  */
-function analyzeWithRules(text: string): { sentiment: string; score: number; confidence: number; emotions: any[] } {
+function analyzeWithRules(text: string): SentimentResult {
   const lowerText = text.toLowerCase();
 
   const positiveWords = ['love', 'great', 'amazing', 'awesome', 'excellent', 'fantastic', 'wonderful', 'happy', 'excited', 'best', 'good', 'brilliant'];
@@ -205,7 +234,7 @@ export async function POST(request: NextRequest) {
 
     // Build results and store
     const results: BatchResult[] = [];
-    const commentUpdates: { id: string; sentiment: string; score: number; emotions: any }[] = [];
+    const commentUpdates: { id: string; sentiment: string; score: number; emotions: EmotionResult[] }[] = [];
 
     for (let i = 0; i < items.length; i++) {
       const item = items[i];
@@ -245,16 +274,16 @@ export async function POST(request: NextRequest) {
       model: process.env.OPENROUTER_API_KEY ? 'claude-3-haiku' : 'rule-based',
     }));
 
-    await (prisma as any).sentimentAnalysis?.createMany({
+    await (prisma as unknown as PrismaWithSentiment).sentimentAnalysis?.createMany({
       data: analysesToCreate,
-    }).catch((err: any) => {
+    }).catch((err: unknown) => {
       console.error('Failed to store batch analyses:', err);
     });
 
     // Update comments with sentiment
     if (commentUpdates.length > 0) {
       for (const update of commentUpdates) {
-        await (prisma as any).contentComment?.update({
+        await (prisma as unknown as PrismaWithSentiment).contentComment?.update({
           where: { id: update.id },
           data: {
             sentiment: update.sentiment,

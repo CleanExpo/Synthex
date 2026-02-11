@@ -25,6 +25,43 @@ const supabase = createClient(
 
 const GRAPH_API_BASE = 'https://graph.facebook.com/v19.0';
 
+/** Facebook Pages API response */
+interface FacebookPagesResponse {
+  data: Array<{
+    id: string;
+    access_token: string;
+    name: string;
+  }>;
+}
+
+/** Facebook post creation result */
+interface FacebookPostResult {
+  id?: string;
+  post_id?: string;
+}
+
+/** Facebook post payload */
+interface FacebookPostPayload {
+  message: string;
+  link?: string;
+  published?: boolean;
+  scheduled_publish_time?: number;
+  attached_media?: Array<{ media_fbid: string }>;
+}
+
+/** Facebook posts list response */
+interface FacebookPostsResponse {
+  data: Array<{
+    id: string;
+    message?: string;
+    created_time: string;
+    permalink_url?: string;
+    shares?: { count: number };
+    reactions?: { summary?: { total_count: number } };
+    comments?: { summary?: { total_count: number } };
+  }>;
+}
+
 // Request validation schema
 const PostRequestSchema = z.object({
   message: z.string().max(63206, 'Post must be 63,206 characters or less'),
@@ -145,7 +182,7 @@ export async function POST(request: NextRequest) {
 
     if (!pageId) {
       // Get user's pages and use the first one
-      const pagesResponse = await makeFacebookRequest<any>(
+      const pagesResponse = await makeFacebookRequest<FacebookPagesResponse>(
         '/me/accounts',
         connection.access_token
       );
@@ -161,11 +198,11 @@ export async function POST(request: NextRequest) {
       pageAccessToken = pagesResponse.data[0].access_token;
     } else {
       // Get access token for specific page
-      const pagesResponse = await makeFacebookRequest<any>(
+      const pagesResponse = await makeFacebookRequest<FacebookPagesResponse>(
         '/me/accounts',
         connection.access_token
       );
-      const page = pagesResponse.data?.find((p: any) => p.id === pageId);
+      const page = pagesResponse.data?.find((p) => p.id === pageId);
       if (!page) {
         return NextResponse.json(
           { error: 'You do not have access to this Facebook Page.' },
@@ -189,7 +226,7 @@ export async function POST(request: NextRequest) {
       }
 
       // Create scheduled post directly on Facebook
-      const postPayload: any = {
+      const postPayload: FacebookPostPayload = {
         message: postData.message,
         published: false,
         scheduled_publish_time: scheduledTimestamp,
@@ -199,7 +236,7 @@ export async function POST(request: NextRequest) {
         postPayload.link = postData.link;
       }
 
-      const result = await makeFacebookRequest<any>(
+      const result = await makeFacebookRequest<FacebookPostResult>(
         `/${pageId}/feed`,
         pageAccessToken,
         {
@@ -242,12 +279,12 @@ export async function POST(request: NextRequest) {
     }
 
     // Create immediate post
-    let result: any;
+    let result: FacebookPostResult;
 
     if (postData.mediaUrls && postData.mediaUrls.length > 0) {
       if (postData.mediaType === 'video' || postData.mediaUrls[0].match(/\.(mp4|mov|avi)$/i)) {
         // Video post
-        result = await makeFacebookRequest<any>(
+        result = await makeFacebookRequest<FacebookPostResult>(
           `/${pageId}/videos`,
           pageAccessToken,
           {
@@ -262,7 +299,7 @@ export async function POST(request: NextRequest) {
         // Multi-photo post - upload each photo first
         const photoIds: string[] = [];
         for (const photoUrl of postData.mediaUrls) {
-          const photoResult = await makeFacebookRequest<any>(
+          const photoResult = await makeFacebookRequest<FacebookPostResult>(
             `/${pageId}/photos`,
             pageAccessToken,
             {
@@ -273,12 +310,14 @@ export async function POST(request: NextRequest) {
               }),
             }
           );
-          photoIds.push(photoResult.id);
+          if (photoResult.id) {
+            photoIds.push(photoResult.id);
+          }
         }
 
         // Create post with attached photos
         const attachedMedia = photoIds.map(id => ({ media_fbid: id }));
-        result = await makeFacebookRequest<any>(
+        result = await makeFacebookRequest<FacebookPostResult>(
           `/${pageId}/feed`,
           pageAccessToken,
           {
@@ -291,7 +330,7 @@ export async function POST(request: NextRequest) {
         );
       } else {
         // Single photo post
-        result = await makeFacebookRequest<any>(
+        result = await makeFacebookRequest<FacebookPostResult>(
           `/${pageId}/photos`,
           pageAccessToken,
           {
@@ -305,12 +344,12 @@ export async function POST(request: NextRequest) {
       }
     } else {
       // Text/link post
-      const postPayload: any = { message: postData.message };
+      const postPayload: FacebookPostPayload = { message: postData.message };
       if (postData.link) {
         postPayload.link = postData.link;
       }
 
-      result = await makeFacebookRequest<any>(
+      result = await makeFacebookRequest<FacebookPostResult>(
         `/${pageId}/feed`,
         pageAccessToken,
         {
@@ -420,12 +459,12 @@ export async function GET(request: NextRequest) {
     if (syncFromPlatform && pageId) {
       // Fetch posts from Facebook API
       try {
-        const postsResponse = await makeFacebookRequest<any>(
+        const postsResponse = await makeFacebookRequest<FacebookPostsResponse>(
           `/${pageId}/posts?fields=id,message,created_time,permalink_url,shares,reactions.summary(true),comments.summary(true)&limit=${limit}`,
           connection.access_token
         );
 
-        const posts = (postsResponse.data || []).map((post: any) => ({
+        const posts = (postsResponse.data || []).map((post) => ({
           id: post.id,
           platformId: post.id,
           content: post.message || '',
