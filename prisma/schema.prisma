@@ -70,7 +70,7 @@ model User {
 // ==========================================
 
 model Account {
-  id                String   @id @default(cuid())
+  id                String   @id @default(uuid())
   userId            String
   type              String   // "oauth" or "credentials"
   provider          String   // "google", "github", "email"
