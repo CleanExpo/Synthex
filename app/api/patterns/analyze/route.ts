@@ -1,6 +1,54 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/supabase-client';
 
+/** Pattern record from database */
+interface PatternRecord {
+  id?: string;
+  platform: string;
+  pattern_type: string;
+  pattern_data?: {
+    content?: string;
+    metrics?: ContentMetrics;
+    analysis?: ContentAnalysis;
+    sentiment?: number;
+    hook_type?: string;
+    timestamp?: string;
+  };
+  engagement_score?: number;
+  discovered_at: string | Date;
+}
+
+/** Content metrics for analysis */
+interface ContentMetrics {
+  impressions?: number;
+  engagement?: number;
+  shares?: number;
+  saves?: number;
+  likes?: number;
+  comments?: number;
+}
+
+/** Content analysis result */
+interface ContentAnalysis {
+  length: number;
+  wordCount: number;
+  hasEmojis: boolean;
+  hasHashtags: boolean;
+  hasMentions: boolean;
+  hasUrls: boolean;
+  hasQuestions: boolean;
+  hasNumbers: boolean;
+  capitalLettersRatio: number;
+  exclamationCount: number;
+  isThread?: boolean;
+  isOptimalLength?: boolean;
+  hasProfessionalTone?: boolean;
+  hasCallToAction?: boolean;
+  hasTrend?: boolean;
+  hasHook?: boolean;
+  [key: string]: boolean | number | undefined;
+}
+
 // Platform-specific engagement benchmarks
 const PLATFORM_BENCHMARKS = {
   twitter: {
@@ -77,8 +125,8 @@ export async function GET(request: Request) {
     }
 
     // Filter patterns by time range
-    const filteredPatterns = patterns.filter(
-      (p: any) => new Date(p.discovered_at) >= startDate
+    const filteredPatterns = (patterns as PatternRecord[]).filter(
+      (p) => new Date(p.discovered_at) >= startDate
     );
 
     // Analyze patterns for insights
@@ -161,8 +209,8 @@ export async function POST(request: Request) {
 }
 
 // Analyze content characteristics
-function analyzeContent(content: string, platform: string, metrics: any) {
-  const analysis: any = {
+function analyzeContent(content: string, platform: string, _metrics: ContentMetrics): ContentAnalysis {
+  const analysis: ContentAnalysis = {
     length: content.length,
     wordCount: content.split(/\s+/).length,
     hasEmojis: /[\u{1F300}-\u{1F9FF}]/u.test(content),
@@ -195,7 +243,7 @@ function analyzeContent(content: string, platform: string, metrics: any) {
 }
 
 // Calculate virality score based on metrics
-function calculateViralityScore(metrics: any, platform: string) {
+function calculateViralityScore(metrics: ContentMetrics, platform: string): number {
   const benchmark = PLATFORM_BENCHMARKS[platform as keyof typeof PLATFORM_BENCHMARKS];
   if (!benchmark) return 0;
 
@@ -247,7 +295,7 @@ function analyzeSentiment(content: string) {
 }
 
 // Analyze patterns for insights
-function analyzePatterns(patterns: any[]) {
+function analyzePatterns(patterns: PatternRecord[]) {
   if (patterns.length === 0) {
     return {
       avgViralityScore: 0,
@@ -294,7 +342,7 @@ function analyzePatterns(patterns: any[]) {
 }
 
 // Generate recommendations based on analysis
-function generateRecommendations(analysis: any, platform: string) {
+function generateRecommendations(analysis: ContentAnalysis, platform: string): string[] {
   const recommendations: string[] = [];
 
   // Length recommendations

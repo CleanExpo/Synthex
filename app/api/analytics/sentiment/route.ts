@@ -15,6 +15,38 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
 
+/** Sentiment analysis record from database */
+interface SentimentAnalysisRecord {
+  sentiment: 'positive' | 'neutral' | 'negative' | 'mixed';
+  score: number | null;
+  confidence: number | null;
+  emotions: EmotionRecord[] | null;
+  platform: string | null;
+  analyzedAt: Date | string;
+  predictedEngagement: Record<string, unknown> | null;
+  actualEngagement: { engagementRate?: number } | null;
+}
+
+/** Emotion record within sentiment analysis */
+interface EmotionRecord {
+  emotion: string;
+  score?: number;
+}
+
+/** Where clause for sentiment analysis query */
+interface SentimentWhereClause {
+  userId: string;
+  analyzedAt: { gte: Date };
+  platform?: string;
+}
+
+/** Extended prisma client with sentimentAnalysis table */
+interface PrismaWithSentiment {
+  sentimentAnalysis?: {
+    findMany: (args: Record<string, unknown>) => Promise<SentimentAnalysisRecord[]>;
+  };
+}
+
 // ============================================================================
 // GET /api/analytics/sentiment
 // Get sentiment trends and insights
@@ -46,7 +78,7 @@ export async function GET(request: NextRequest) {
     startDate.setDate(startDate.getDate() - days);
 
     // Build query
-    const where: any = {
+    const where: SentimentWhereClause = {
       userId,
       analyzedAt: { gte: startDate },
     };
@@ -56,7 +88,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get all analyses for the period
-    const analyses = await (prisma as any).sentimentAnalysis?.findMany({
+    const analyses: SentimentAnalysisRecord[] = await (prisma as unknown as PrismaWithSentiment).sentimentAnalysis?.findMany({
       where,
       select: {
         sentiment: true,
@@ -74,15 +106,15 @@ export async function GET(request: NextRequest) {
     // Calculate overall statistics
     const overall = {
       total: analyses.length,
-      positive: analyses.filter((a: any) => a.sentiment === 'positive').length,
-      neutral: analyses.filter((a: any) => a.sentiment === 'neutral').length,
-      negative: analyses.filter((a: any) => a.sentiment === 'negative').length,
-      mixed: analyses.filter((a: any) => a.sentiment === 'mixed').length,
+      positive: analyses.filter((a) => a.sentiment === 'positive').length,
+      neutral: analyses.filter((a) => a.sentiment === 'neutral').length,
+      negative: analyses.filter((a) => a.sentiment === 'negative').length,
+      mixed: analyses.filter((a) => a.sentiment === 'mixed').length,
       avgScore: analyses.length > 0
-        ? Math.round(analyses.reduce((sum: number, a: any) => sum + (a.score || 0), 0) / analyses.length)
+        ? Math.round(analyses.reduce((sum, a) => sum + (a.score || 0), 0) / analyses.length)
         : 0,
       avgConfidence: analyses.length > 0
-        ? Math.round((analyses.reduce((sum: number, a: any) => sum + (a.confidence || 0), 0) / analyses.length) * 100) / 100
+        ? Math.round((analyses.reduce((sum, a) => sum + (a.confidence || 0), 0) / analyses.length) * 100) / 100
         : 0,
     };
 
@@ -153,7 +185,7 @@ export async function GET(request: NextRequest) {
     // Aggregate emotions
     const emotionCounts: Record<string, number> = {};
     for (const analysis of analyses) {
-      const emotions = analysis.emotions as any[] || [];
+      const emotions: EmotionRecord[] = analysis.emotions || [];
       for (const emotion of emotions) {
         if (emotion?.emotion) {
           emotionCounts[emotion.emotion] = (emotionCounts[emotion.emotion] || 0) + 1;
@@ -189,23 +221,23 @@ export async function GET(request: NextRequest) {
     }
 
     // Engagement correlation (if we have actual engagement data)
-    const withEngagement = analyses.filter((a: any) => a.actualEngagement);
+    const withEngagement = analyses.filter((a) => a.actualEngagement);
     let engagementCorrelation = null;
 
     if (withEngagement.length >= 10) {
       const positiveEng = withEngagement
-        .filter((a: any) => a.sentiment === 'positive')
-        .map((a: any) => a.actualEngagement?.engagementRate || 0);
+        .filter((a) => a.sentiment === 'positive')
+        .map((a) => a.actualEngagement?.engagementRate || 0);
       const negativeEng = withEngagement
-        .filter((a: any) => a.sentiment === 'negative')
-        .map((a: any) => a.actualEngagement?.engagementRate || 0);
+        .filter((a) => a.sentiment === 'negative')
+        .map((a) => a.actualEngagement?.engagementRate || 0);
 
       engagementCorrelation = {
         positiveAvgEngagement: positiveEng.length > 0
-          ? Math.round((positiveEng.reduce((a: number, b: number) => a + b, 0) / positiveEng.length) * 100) / 100
+          ? Math.round((positiveEng.reduce((a, b) => a + b, 0) / positiveEng.length) * 100) / 100
           : null,
         negativeAvgEngagement: negativeEng.length > 0
-          ? Math.round((negativeEng.reduce((a: number, b: number) => a + b, 0) / negativeEng.length) * 100) / 100
+          ? Math.round((negativeEng.reduce((a, b) => a + b, 0) / negativeEng.length) * 100) / 100
           : null,
         sampleSize: withEngagement.length,
       };
@@ -222,7 +254,7 @@ export async function GET(request: NextRequest) {
 
     const recentAnalyses = analyses.slice(-10);
     const recentAvgScore = recentAnalyses.length > 0
-      ? recentAnalyses.reduce((sum: number, a: any) => sum + (a.score || 0), 0) / recentAnalyses.length
+      ? recentAnalyses.reduce((sum, a) => sum + (a.score || 0), 0) / recentAnalyses.length
       : 0;
 
     if (recentAvgScore > overall.avgScore + 10) {

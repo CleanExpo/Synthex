@@ -139,10 +139,19 @@ export interface Experiment {
   id: string;
   hypothesis: string;
   variable: string;
-  control: any;
-  variant: any;
+  control: unknown;
+  variant: unknown;
   result: 'success' | 'failure' | 'inconclusive';
   learning: string;
+}
+
+/** Content metrics for learning */
+interface ContentLearnMetrics {
+  likes: number;
+  shares: number;
+  comments: number;
+  reach: number;
+  engagement: number;
 }
 
 export interface PerformanceMetrics {
@@ -213,7 +222,7 @@ export class PersonaLearningSystem {
   learnFromContent(
     personaId: string,
     content: string,
-    metrics: any,
+    metrics: ContentLearnMetrics,
     platform: string
   ) {
     const persona = this.personas.get(personaId);
@@ -373,8 +382,8 @@ export class PersonaLearningSystem {
     personaId: string,
     hypothesis: string,
     variable: string,
-    control: any,
-    variant: any
+    control: unknown,
+    variant: unknown
   ): Experiment {
     const persona = this.personas.get(personaId);
     if (!persona) throw new Error('Persona not found');

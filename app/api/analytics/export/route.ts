@@ -49,6 +49,51 @@ interface PostAnalytics {
   clicks?: number;
 }
 
+/** Post record from database query */
+interface PostRecord {
+  id: string;
+  content: string | null;
+  status: string;
+  platform: string | null;
+  scheduledAt: Date | null;
+  publishedAt: Date | null;
+  createdAt: Date;
+  analytics: PostAnalytics | unknown;
+  campaign: { name: string; platform: string } | null;
+}
+
+/** Campaign record from database query */
+interface CampaignRecord {
+  id: string;
+  name: string;
+  platform: string;
+  status: string;
+  createdAt: Date;
+  _count: { posts: number };
+}
+
+/** Analytics data structure */
+interface AnalyticsData {
+  posts: PostRecord[];
+  campaigns: CampaignRecord[];
+  summary: {
+    posts: number;
+    likes: number;
+    comments: number;
+    shares: number;
+    impressions: number;
+    reach: number;
+    clicks: number;
+    engagementRate: string;
+    period: { start: string; end: string };
+  };
+}
+
+/** jsPDF with autoTable extension */
+interface JsPDFWithAutoTable {
+  lastAutoTable?: { finalY: number };
+}
+
 async function fetchAnalyticsData(
   userId: string,
   startDate: Date,
@@ -149,7 +194,7 @@ async function fetchAnalyticsData(
 // Format Converters
 // =============================================================================
 
-function toCSV(data: any): string {
+function toCSV(data: AnalyticsData): string {
   const { posts, summary } = data;
 
   if (posts.length === 0) {
@@ -175,7 +220,7 @@ function toCSV(data: any): string {
   ];
 
   // Build CSV rows
-  const rows = posts.map((post: any) => {
+  const rows = posts.map((post) => {
     const analytics = (post.analytics as PostAnalytics) || {};
     return [
       post.id,
@@ -213,14 +258,14 @@ function toCSV(data: any): string {
     `Engagement Rate: ${summary.engagementRate}%`,
   ];
 
-  return [headers.join(','), ...rows.map((r: any[]) => r.join(',')), '', summaryRow.join(',')].join('\n');
+  return [headers.join(','), ...rows.map((r) => r.join(',')), '', summaryRow.join(',')].join('\n');
 }
 
-function toJSON(data: any): string {
+function toJSON(data: AnalyticsData): string {
   return JSON.stringify(data, null, 2);
 }
 
-function toPDF(data: any): Uint8Array {
+function toPDF(data: AnalyticsData): Uint8Array {
   const { posts, campaigns, summary } = data;
 
   // Create PDF document
@@ -265,11 +310,11 @@ function toPDF(data: any): Uint8Array {
 
   // Campaigns Section (if any)
   if (campaigns.length > 0) {
-    const finalY = (doc as any).lastAutoTable?.finalY || 100;
+    const finalY = (doc as JsPDFWithAutoTable).lastAutoTable?.finalY || 100;
     doc.setFontSize(14);
     doc.text('Campaigns', 14, finalY + 15);
 
-    const campaignData = campaigns.map((c: any) => [
+    const campaignData = campaigns.map((c) => [
       c.name,
       c.platform,
       c.status,
@@ -293,7 +338,7 @@ function toPDF(data: any): Uint8Array {
     doc.setFontSize(14);
     doc.text('Post Performance', 14, 20);
 
-    const postData = posts.slice(0, 50).map((post: any) => {
+    const postData = posts.slice(0, 50).map((post) => {
       const analytics = (post.analytics as PostAnalytics) || {};
       const engagement = (analytics.likes || 0) + (analytics.comments || 0) + (analytics.shares || 0);
       return [
@@ -320,7 +365,7 @@ function toPDF(data: any): Uint8Array {
     });
 
     if (posts.length > 50) {
-      const tableY = (doc as any).lastAutoTable?.finalY || 200;
+      const tableY = (doc as JsPDFWithAutoTable).lastAutoTable?.finalY || 200;
       doc.setFontSize(9);
       doc.setTextColor(100);
       doc.text(`Showing top 50 of ${posts.length} posts`, 14, tableY + 10);

@@ -19,6 +19,55 @@ import { prisma } from '@/lib/prisma';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
 import { z } from 'zod';
 
+/** Comment record from database */
+interface CommentRecord {
+  id: string;
+  contentType: string;
+  contentId: string;
+  content: string;
+  parentId: string | null;
+  authorId: string;
+  mentions: string[];
+  isResolved: boolean;
+  resolvedAt: Date | null;
+  resolvedBy: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+  replies?: CommentRecord[];
+}
+
+/** Comment update data */
+interface CommentUpdateData {
+  updatedAt: Date;
+  content?: string;
+  isResolved?: boolean;
+  resolvedAt?: Date | null;
+  resolvedBy?: string | null;
+}
+
+/** Where clause for comment queries */
+interface CommentWhereClause {
+  contentType: string;
+  contentId: string;
+  parentId?: string | null;
+}
+
+/** Extended prisma client for comments */
+interface PrismaWithComments {
+  contentComment?: {
+    create: (args: Record<string, unknown>) => Promise<CommentRecord>;
+    findMany: (args: Record<string, unknown>) => Promise<CommentRecord[]>;
+    findUnique: (args: Record<string, unknown>) => Promise<CommentRecord | null>;
+    update: (args: Record<string, unknown>) => Promise<CommentRecord>;
+    delete: (args: Record<string, unknown>) => Promise<CommentRecord>;
+    count: (args: Record<string, unknown>) => Promise<number>;
+  };
+  teamNotification?: {
+    create: (args: Record<string, unknown>) => Promise<unknown>;
+    createMany: (args: Record<string, unknown>) => Promise<{ count: number }>;
+  };
+}
+
 // ============================================================================
 // VALIDATION SCHEMAS
 // ============================================================================
@@ -68,7 +117,7 @@ async function sendMentionNotifications(
       relatedContentId: contentId,
     }));
 
-    await (prisma as any).teamNotification?.createMany({
+    await (prisma as unknown as PrismaWithComments).teamNotification?.createMany({
       data: notifications,
     });
   } catch (error) {
@@ -105,7 +154,7 @@ async function notifyContentOwner(
     // Don't notify if commenter is the owner
     if (!ownerId || ownerId === authorId) return;
 
-    await (prisma as any).teamNotification?.create({
+    await (prisma as unknown as PrismaWithComments).teamNotification?.create({
       data: {
         userId: ownerId,
         organizationId,
@@ -174,7 +223,7 @@ export async function POST(request: NextRequest) {
     const mentions = data.mentions || extractedMentions;
 
     // Create the comment
-    const comment = await (prisma as any).contentComment?.create({
+    const comment = await (prisma as unknown as PrismaWithComments).contentComment?.create({
       data: {
         contentType: data.contentType,
         contentId: data.contentId,
@@ -284,7 +333,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Build query
-    const where: any = {
+    const where: CommentWhereClause = {
       contentType,
       contentId,
     };
@@ -294,7 +343,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get comments
-    const comments = await (prisma as any).contentComment?.findMany({
+    const comments = await (prisma as unknown as PrismaWithComments).contentComment?.findMany({
       where,
       orderBy: { createdAt: 'asc' },
       take: limit,
@@ -311,9 +360,9 @@ export async function GET(request: NextRequest) {
 
     // Get authors
     const authorIds = new Set<string>();
-    (comments || []).forEach((c: any) => {
+    (comments || []).forEach((c) => {
       authorIds.add(c.authorId);
-      (c.replies || []).forEach((r: any) => authorIds.add(r.authorId));
+      (c.replies || []).forEach((r) => authorIds.add(r.authorId));
     });
 
     const authors = await prisma.user.findMany({
@@ -324,16 +373,16 @@ export async function GET(request: NextRequest) {
     const authorMap = new Map(authors.map((a) => [a.id, a]));
 
     // Enrich comments with author info
-    const enrichedComments = (comments || []).map((c: any) => ({
+    const enrichedComments = (comments || []).map((c) => ({
       ...c,
       author: authorMap.get(c.authorId) || { id: c.authorId },
-      replies: (c.replies || []).map((r: any) => ({
+      replies: (c.replies || []).map((r) => ({
         ...r,
         author: authorMap.get(r.authorId) || { id: r.authorId },
       })),
     }));
 
-    const total = await (prisma as any).contentComment?.count({ where }) || 0;
+    const total = await (prisma as unknown as PrismaWithComments).contentComment?.count({ where }) || 0;
 
     return NextResponse.json({
       comments: enrichedComments,
@@ -392,7 +441,7 @@ export async function PATCH(request: NextRequest) {
     const data = validation.data;
 
     // Find the comment
-    const comment = await (prisma as any).contentComment?.findUnique({
+    const comment = await (prisma as unknown as PrismaWithComments).contentComment?.findUnique({
       where: { id: commentId },
     });
 
@@ -412,7 +461,7 @@ export async function PATCH(request: NextRequest) {
     }
 
     // Update
-    const updateData: any = {
+    const updateData: CommentUpdateData = {
       updatedAt: new Date(),
     };
 
@@ -431,7 +480,7 @@ export async function PATCH(request: NextRequest) {
       }
     }
 
-    const updated = await (prisma as any).contentComment?.update({
+    const updated = await (prisma as unknown as PrismaWithComments).contentComment?.update({
       where: { id: commentId },
       data: updateData,
     });
@@ -481,7 +530,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Find and verify ownership
-    const comment = await (prisma as any).contentComment?.findUnique({
+    const comment = await (prisma as unknown as PrismaWithComments).contentComment?.findUnique({
       where: { id: commentId },
     });
 
@@ -500,7 +549,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Delete (cascades to replies)
-    await (prisma as any).contentComment?.delete({
+    await (prisma as unknown as PrismaWithComments).contentComment?.delete({
       where: { id: commentId },
     });
 

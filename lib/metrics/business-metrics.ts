@@ -120,6 +120,15 @@ export interface BusinessHighlight {
   description: string;
 }
 
+/** Post analytics data structure */
+interface PostAnalytics {
+  likes?: number;
+  shares?: number;
+  comments?: number;
+  impressions?: number;
+  reach?: number;
+}
+
 // ============================================================================
 // HELPER FUNCTIONS
 // ============================================================================
@@ -454,7 +463,7 @@ async function getEngagementMetrics(
     let engagementRateSum = 0;
 
     for (const post of posts) {
-      const analytics = post.analytics as any;
+      const analytics = post.analytics as PostAnalytics | null;
       if (analytics) {
         totalLikes += analytics.likes || 0;
         totalShares += analytics.shares || 0;
@@ -541,7 +550,7 @@ async function getPlatformDistribution(
       let engagementRateSum = 0;
 
       for (const post of platformPosts) {
-        const analytics = post.analytics as any;
+        const analytics = post.analytics as PostAnalytics | null;
         if (analytics) {
           const interactions = (analytics.likes || 0) + (analytics.shares || 0) + (analytics.comments || 0);
           totalEngagement += interactions;
@@ -688,7 +697,7 @@ async function getGrowthTrends(
 
       let totalEngagement = 0;
       for (const post of postsWithEngagement) {
-        const analytics = post.analytics as any;
+        const analytics = post.analytics as PostAnalytics | null;
         if (analytics) {
           totalEngagement += (analytics.likes || 0) + (analytics.shares || 0) + (analytics.comments || 0);
         }
@@ -874,7 +883,7 @@ export async function getQuickMetrics(): Promise<{
 
     let engagementSum = 0;
     for (const post of recentPosts) {
-      const analytics = post.analytics as any;
+      const analytics = post.analytics as PostAnalytics | null;
       if (analytics) {
         const interactions = (analytics.likes || 0) + (analytics.shares || 0) + (analytics.comments || 0);
         const reach = analytics.reach || analytics.impressions || 1;

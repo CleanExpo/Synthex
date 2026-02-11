@@ -24,7 +24,7 @@ export interface Variant {
   name: string;
   description?: string;
   weight: number; // Traffic allocation percentage
-  content?: any; // Variant-specific content
+  content?: Record<string, unknown>; // Variant-specific content
   isControl: boolean;
   metrics?: VariantMetrics;
 }
@@ -56,8 +56,29 @@ export interface VariantMetrics {
   bounceRate?: number;
 }
 
+/** Experiment results summary */
+export interface ExperimentResults {
+  experiment: {
+    id: string;
+    name: string;
+    status: Experiment['status'];
+    duration: number;
+  };
+  metrics: ExperimentMetrics;
+  variants: Array<{
+    id: string;
+    name: string;
+    isControl: boolean;
+    weight: number;
+    metrics?: VariantMetrics;
+  }>;
+  recommendation: string;
+}
+
+import { SupabaseClient } from '@supabase/supabase-js';
+
 class ABTestingService {
-  private supabase: any;
+  private supabase: SupabaseClient | null = null;
   private experiments: Map<string, Experiment> = new Map();
   private userAssignments: Map<string, Map<string, string>> = new Map(); // userId -> experimentId -> variantId
 
@@ -95,6 +116,7 @@ class ABTestingService {
     }
 
     // Save to database
+    if (!this.supabase) throw new Error('Supabase client not initialized');
     const { error } = await this.supabase
       .from('experiments')
       .insert(newExperiment);
@@ -182,6 +204,7 @@ class ABTestingService {
     this.userAssignments.get(userId)!.set(experimentId, variantId);
 
     // Save to database
+    if (!this.supabase) return;
     await this.supabase
       .from('experiment_assignments')
       .insert({
@@ -203,6 +226,7 @@ class ABTestingService {
     metadata?: Record<string, unknown>
   ): Promise<void> {
     // Save event to database
+    if (!this.supabase) return;
     await this.supabase
       .from('experiment_events')
       .insert({
@@ -274,6 +298,7 @@ class ABTestingService {
     }
 
     // Save updated metrics
+    if (!this.supabase) return;
     await this.supabase
       .from('experiments')
       .update({ metrics: experiment.metrics, updated_at: new Date().toISOString() })
@@ -339,6 +364,8 @@ class ABTestingService {
    */
   private async isUserEligible(userId: string, targetAudience: TargetAudience): Promise<boolean> {
     // Get user profile
+    if (!this.supabase) return false;
+
     const { data: profile } = await this.supabase
       .from('profiles')
       .select('*')
@@ -367,6 +394,8 @@ class ABTestingService {
       return this.experiments.get(experimentId)!;
     }
 
+    if (!this.supabase) return null;
+
     const { data, error } = await this.supabase
       .from('experiments')
       .select('*')
@@ -383,6 +412,8 @@ class ABTestingService {
    * Get all experiments
    */
   async getExperiments(status?: string): Promise<Experiment[]> {
+    if (!this.supabase) return [];
+
     const query = this.supabase.from('experiments').select('*');
     
     if (status) {
@@ -403,6 +434,8 @@ class ABTestingService {
    * Update experiment status
    */
   async updateExperimentStatus(experimentId: string, status: Experiment['status']): Promise<boolean> {
+    if (!this.supabase) return false;
+
     const { error } = await this.supabase
       .from('experiments')
       .update({ status, updated_at: new Date().toISOString() })
@@ -422,7 +455,7 @@ class ABTestingService {
   /**
    * Get experiment results
    */
-  async getResults(experimentId: string): Promise<any> {
+  async getResults(experimentId: string): Promise<ExperimentResults | null> {
     const experiment = await this.getExperiment(experimentId);
     if (!experiment) return null;
 
