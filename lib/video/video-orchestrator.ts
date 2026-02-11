@@ -13,6 +13,7 @@ import { YouTubeUploader, SYNTHEX_VIDEO_METADATA, UploadResult, VideoMetadata } 
 import * as path from 'path';
 import * as fs from 'fs';
 import * as ffmpegInstaller from '@ffmpeg-installer/ffmpeg';
+import { logger } from '@/lib/logger';
 
 export interface VideoScript {
   workflow: CaptureWorkflow;
@@ -104,9 +105,7 @@ export class VideoOrchestrator {
       throw new Error(`Unknown workflow: ${workflowName}`);
     }
 
-    console.log('='.repeat(60));
-    console.log(`[Orchestrator] Starting production: ${workflow.name}`);
-    console.log('='.repeat(60));
+    logger.info('Orchestrator starting production', { workflowName: workflow.name });
 
     const result: ProductionResult = {
       workflowName: workflow.name,
@@ -117,7 +116,7 @@ export class VideoOrchestrator {
 
     try {
       // Phase 1: Capture
-      console.log('\n[Orchestrator] Phase 1: Capture');
+      logger.info('Orchestrator Phase 1: Capture');
       await this.captureService.init();
 
       if (options.login) {
@@ -131,10 +130,10 @@ export class VideoOrchestrator {
         throw new Error('Capture failed - no output file');
       }
 
-      console.log(`[Orchestrator] Raw capture saved: ${result.rawVideoPath}`);
+      logger.info('Orchestrator raw capture saved', { path: result.rawVideoPath });
 
       // Phase 2: Process
-      console.log('\n[Orchestrator] Phase 2: Process');
+      logger.info('Orchestrator Phase 2: Process');
       const finalFilename = `synthex_${workflowName.toLowerCase()}.mp4`;
 
       result.processedVideoPath = await this.videoProcessor.processVideo(
@@ -155,11 +154,11 @@ export class VideoOrchestrator {
         5 // 5 seconds into video
       );
 
-      console.log(`[Orchestrator] Processed video: ${result.processedVideoPath}`);
+      logger.info('Orchestrator processed video', { path: result.processedVideoPath });
 
       // Phase 3: Upload to YouTube
       if (!options.skipUpload && this.youtubeUploader.isConfigured()) {
-        console.log('\n[Orchestrator] Phase 3: Upload to YouTube');
+        logger.info('Orchestrator Phase 3: Upload to YouTube');
 
         const metadata = SYNTHEX_VIDEO_METADATA[workflowName] as VideoMetadata;
         if (metadata) {
@@ -168,16 +167,16 @@ export class VideoOrchestrator {
             result.processedVideoPath,
             metadata
           );
-          console.log(`[Orchestrator] YouTube URL: ${result.youtubeResult.videoUrl}`);
+          logger.info('Orchestrator YouTube upload complete', { url: result.youtubeResult.videoUrl });
         }
       } else if (options.skipUpload) {
-        console.log('\n[Orchestrator] Phase 3: Upload skipped (skipUpload=true)');
+        logger.info('Orchestrator Phase 3: Upload skipped', { reason: 'skipUpload=true' });
       } else {
-        console.log('\n[Orchestrator] Phase 3: Upload skipped (YouTube not configured)');
+        logger.info('Orchestrator Phase 3: Upload skipped', { reason: 'YouTube not configured' });
       }
 
       result.success = true;
-      console.log('\n[Orchestrator] Production complete!');
+      logger.info('Orchestrator production complete', { workflowName: workflow.name });
 
     } catch (error) {
       result.error = error instanceof Error ? error.message : String(error);
@@ -216,28 +215,30 @@ export class VideoOrchestrator {
     }
 
     // Summary
-    console.log('\n' + '='.repeat(60));
-    console.log('PRODUCTION SUMMARY');
-    console.log('='.repeat(60));
-
     const successful = results.filter((r) => r.success);
     const failed = results.filter((r) => !r.success);
 
-    console.log(`Total: ${results.length}`);
-    console.log(`Successful: ${successful.length}`);
-    console.log(`Failed: ${failed.length}`);
+    logger.info('Production summary', {
+      total: results.length,
+      successful: successful.length,
+      failed: failed.length,
+    });
 
     if (successful.length > 0) {
-      console.log('\nSuccessful videos:');
-      successful.forEach((r) => {
-        console.log(`  - ${r.workflowName}: ${r.youtubeResult?.videoUrl || r.processedVideoPath}`);
+      logger.info('Successful videos', {
+        videos: successful.map((r) => ({
+          name: r.workflowName,
+          url: r.youtubeResult?.videoUrl || r.processedVideoPath,
+        })),
       });
     }
 
     if (failed.length > 0) {
-      console.log('\nFailed videos:');
-      failed.forEach((r) => {
-        console.log(`  - ${r.workflowName}: ${r.error}`);
+      logger.warn('Failed videos', {
+        videos: failed.map((r) => ({
+          name: r.workflowName,
+          error: r.error,
+        })),
       });
     }
 
@@ -282,7 +283,7 @@ export class VideoOrchestrator {
     }));
 
     fs.writeFileSync(exportPath, JSON.stringify(exportData, null, 2));
-    console.log(`[Orchestrator] Results exported to: ${exportPath}`);
+    logger.info('Orchestrator results exported', { path: exportPath });
   }
 }
 

@@ -20,6 +20,7 @@
 import { PrismaClient, Prisma } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { Pool } from 'pg';
+import { logger } from '@/lib/logger';
 // Note: Using explicit Pool with SSL config to ensure rejectUnauthorized works correctly
 
 // Global singleton to prevent multiple instances in development
@@ -105,7 +106,7 @@ const createPrismaClient = (): PrismaClient => {
   const user = url.username;
   const password = decodeURIComponent(url.password); // Decode URL-encoded password
 
-  console.log(`[Prisma] Connecting to ${host}:${port}/${database} (explicit config mode)`);
+  logger.info('Prisma connecting to database', { host, port, database, mode: 'explicit config' });
 
   // Create Pool with EXPLICIT config (NOT connectionString)
   // This ensures our SSL settings are used without URL-based overrides
@@ -138,7 +139,7 @@ const createPrismaClient = (): PrismaClient => {
     log: getLogConfig(),
   });
 
-  console.log('[Prisma] Client created with PrismaPg adapter (explicit config mode)');
+  logger.info('Prisma client created with PrismaPg adapter', { mode: 'explicit config' });
 
   // Set up event listeners for connection monitoring (dev only)
   if (process.env.NODE_ENV !== 'production') {
@@ -170,7 +171,7 @@ const getPrismaClient = (): PrismaClient | null => {
   if (!globalForPrisma.prisma) {
     try {
       globalForPrisma.prisma = createPrismaClient();
-      console.log('[Prisma] Client initialized with PrismaPg adapter');
+      logger.info('Prisma client initialized with PrismaPg adapter');
     } catch (error) {
       console.error('[Prisma] Failed to create client:', error);
       return null;

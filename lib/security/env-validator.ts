@@ -1,18 +1,19 @@
 /**
  * CRITICAL SECURITY MODULE - Environment Variable Validator
- * 
+ *
  * ⚠️ SECURITY CONSTRAINTS:
  * 1. NEVER log sensitive values (only show first/last 3 chars)
  * 2. NEVER expose env vars to client unless prefixed with NEXT_PUBLIC_
  * 3. ALWAYS validate format and type of env variables
  * 4. ALWAYS fail fast if required variables are missing
  * 5. NEVER commit .env files to version control
- * 
+ *
  * This module MUST be imported and validated before any other code runs
  */
 
 import { z } from 'zod';
 import crypto from 'crypto';
+import { logger } from '@/lib/logger';
 
 // ============================================
 // SECURITY CLASSIFICATION LEVELS
@@ -714,56 +715,57 @@ export class EnvValidator {
    * Prints a formatted validation report
    */
   public printValidationReport(result: ValidationResult): void {
-    console.log('\n' + '='.repeat(60));
-    console.log('🔒 ENVIRONMENT VARIABLE SECURITY REPORT');
-    console.log('='.repeat(60));
-
-    // Status
-    console.log(`\n📊 Status: ${result.isValid ? '✅ VALID' : '❌ INVALID'}`);
-    console.log(`   Required: ${result.summary.configured.length}/${result.summary.totalRequired}`);
-    console.log(`   Optional: ${result.summary.totalOptional - result.summary.missingOptional.length}/${result.summary.totalOptional}`);
+    logger.info('Environment Variable Security Report', {
+      status: result.isValid ? 'VALID' : 'INVALID',
+      requiredConfigured: result.summary.configured.length,
+      requiredTotal: result.summary.totalRequired,
+      optionalConfigured: result.summary.totalOptional - result.summary.missingOptional.length,
+      optionalTotal: result.summary.totalOptional,
+    });
 
     // Errors
     if (result.errors.length > 0) {
-      console.log('\n❌ CRITICAL ERRORS:');
       for (const error of result.errors) {
-        console.log(`   ${error.key}: ${error instanceof Error ? error.message : String(error)}`);
-        if (error.suggestion) {
-          console.log(`      💡 ${error.suggestion}`);
-        }
+        logger.error('Environment validation error', {
+          key: error.key,
+          message: error instanceof Error ? error.message : String(error),
+          suggestion: error.suggestion,
+        });
       }
     }
 
     // Warnings
     if (result.warnings.length > 0) {
-      console.log('\n⚠️  WARNINGS:');
       for (const warning of result.warnings) {
-        console.log(`   ${warning.key}: ${warning.message}`);
-        if (warning.impact) {
-          console.log(`      Impact: ${warning.impact}`);
-        }
+        logger.warn('Environment validation warning', {
+          key: warning.key,
+          message: warning.message,
+          impact: warning.impact,
+        });
       }
     }
 
     // Security Report
-    console.log('\n🔐 SECURITY ANALYSIS:');
     if (result.securityReport.exposedSecrets.length > 0) {
-      console.log('   🚨 EXPOSED SECRETS:', result.securityReport.exposedSecrets.join(', '));
+      logger.error('Exposed secrets detected', {
+        secrets: result.securityReport.exposedSecrets,
+      });
     }
     if (result.securityReport.weakSecrets.length > 0) {
-      console.log('   ⚠️  WEAK SECRETS:', result.securityReport.weakSecrets.join(', '));
+      logger.warn('Weak secrets detected', {
+        secrets: result.securityReport.weakSecrets,
+      });
     }
-    console.log('   📢 PUBLIC VARS:', result.securityReport.publicExposure.join(', '));
+    logger.info('Public environment variables', {
+      vars: result.securityReport.publicExposure,
+    });
 
     // Recommendations
     if (result.securityReport.recommendations.length > 0) {
-      console.log('\n💡 RECOMMENDATIONS:');
-      for (const rec of result.securityReport.recommendations) {
-        console.log(`   • ${rec}`);
-      }
+      logger.info('Security recommendations', {
+        recommendations: result.securityReport.recommendations,
+      });
     }
-
-    console.log('\n' + '='.repeat(60) + '\n');
   }
 
   /**

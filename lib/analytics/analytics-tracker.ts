@@ -4,13 +4,48 @@
  */
 
 import prisma from '@/lib/prisma';
+import type { Post, Prisma } from '@prisma/client';
+
+/** JSON field types for Prisma models */
+export interface PostAnalyticsJson {
+  views?: number;
+  likes?: number;
+  shares?: number;
+  comments?: number;
+  clicks?: number;
+  impressions?: number;
+  reach?: number;
+  viralScore?: number;
+  lastUpdated?: Date | string;
+}
+
+export interface PostMetadataJson {
+  hashtags?: string[];
+  [key: string]: unknown;
+}
+
+/** Event metadata structure */
+export interface EventMetadata {
+  page?: string;
+  referrer?: string;
+  userAgent?: string;
+  timestamp?: string;
+  contentType?: string;
+  aiModel?: string;
+  platforms?: string[];
+  platformCount?: number;
+  feature?: string;
+  metrics?: Partial<EngagementMetrics>;
+  engagementRate?: number;
+  [key: string]: unknown;
+}
 
 export interface AnalyticsEvent {
   type: EventType;
   userId?: string;
   sessionId: string;
   timestamp: Date;
-  metadata: Record<string, any>;
+  metadata: EventMetadata;
   platform?: string;
   contentId?: string;
   campaignId?: string;
@@ -76,6 +111,61 @@ export interface ContentPerformance {
   hashtags: string[];
   viralScore: number;
 }
+
+/** Internal content type with sorting metric */
+interface ContentWithEngagement extends ContentPerformance {
+  totalEngagement: number;
+}
+
+/** Platform statistics aggregation */
+interface PlatformStats {
+  posts: number;
+  engagement: number;
+  avgEngagement: number;
+}
+
+/** Dashboard metrics return type */
+export interface DashboardMetrics {
+  overview: {
+    totalPosts: number;
+    totalEngagement: number;
+    averageEngagementRate: number;
+    contentGenerated: number;
+  };
+  recentActivity: RecentPost[];
+  platformBreakdown: PlatformCount[];
+  trends: TrendData;
+  lastUpdated: Date;
+}
+
+/** Recent post summary */
+interface RecentPost {
+  id: string;
+  content: string;
+  platform: string;
+  campaignName: string;
+  status: string;
+  createdAt: Date;
+}
+
+/** Platform count aggregation */
+interface PlatformCount {
+  platform: string;
+  posts: number;
+}
+
+/** Trend calculation result */
+interface TrendData {
+  postsThisWeek: number;
+  postsLastWeek: number;
+  growthRate: number;
+  trending: 'up' | 'down' | 'stable';
+}
+
+/** Post with campaign for type safety */
+type PostWithCampaign = Post & {
+  campaign: { name: string; userId?: string };
+};
 
 export class AnalyticsTracker {
   private sessionId: string;
@@ -232,7 +322,7 @@ export class AnalyticsTracker {
 
       // Calculate metrics
       const totalEngagement = posts.reduce((sum, post) => {
-        const analytics = post.analytics as any;
+        const analytics = post.analytics as PostAnalyticsJson | null;
         return sum + (analytics?.likes || 0) + (analytics?.shares || 0) + (analytics?.comments || 0);
       }, 0);
 
@@ -272,7 +362,7 @@ export class AnalyticsTracker {
     dateRange?: { start: Date; end: Date }
   ): Promise<PlatformAnalytics> {
     try {
-      const where: any = {
+      const where: Prisma.PostWhereInput = {
         campaign: { userId },
         platform
       };
@@ -326,8 +416,8 @@ export class AnalyticsTracker {
 
       if (!post) return null;
 
-      const analytics = post.analytics as any;
-      const metadata = post.metadata as any;
+      const analytics = post.analytics as PostAnalyticsJson | null;
+      const metadata = post.metadata as PostMetadataJson | null;
 
       return {
         contentId: post.id,
@@ -357,7 +447,7 @@ export class AnalyticsTracker {
   /**
    * Get dashboard metrics
    */
-  async getDashboardMetrics(userId: string): Promise<any> {
+  async getDashboardMetrics(userId: string): Promise<DashboardMetrics> {
     try {
       const [userAnalytics, recentPosts, topPlatforms] = await Promise.all([
         this.getUserAnalytics(userId),
@@ -389,21 +479,21 @@ export class AnalyticsTracker {
   /**
    * Calculate engagement rate
    */
-  private calculateEngagementRate(metrics: any): number {
+  private calculateEngagementRate(metrics: Partial<EngagementMetrics> | PostAnalyticsJson | null | undefined): number {
     if (!metrics) return 0;
-    
+
     const interactions = (metrics.likes || 0) + (metrics.shares || 0) + (metrics.comments || 0);
     const reach = metrics.reach || metrics.impressions || 1;
-    
+
     return Math.round((interactions / reach) * 10000) / 100; // Percentage with 2 decimals
   }
 
   /**
    * Aggregate platform statistics
    */
-  private aggregatePlatformStats(posts: any[]): Map<string, any> {
-    const stats = new Map();
-    
+  private aggregatePlatformStats(posts: Post[]): Map<string, PlatformStats> {
+    const stats = new Map<string, PlatformStats>();
+
     for (const post of posts) {
       const platform = post.platform;
       if (!stats.has(platform)) {
@@ -413,50 +503,50 @@ export class AnalyticsTracker {
           avgEngagement: 0
         });
       }
-      
-      const platformStats = stats.get(platform);
+
+      const platformStats = stats.get(platform)!;
       platformStats.posts++;
-      
-      const analytics = post.analytics as any;
+
+      const analytics = post.analytics as PostAnalyticsJson | null;
       if (analytics) {
         platformStats.engagement += (analytics.likes || 0) + (analytics.shares || 0) + (analytics.comments || 0);
       }
     }
-    
+
     // Calculate averages
-    for (const [platform, data] of stats) {
+    for (const [, data] of stats) {
       data.avgEngagement = data.posts > 0 ? data.engagement / data.posts : 0;
     }
-    
+
     return stats;
   }
 
   /**
    * Find best performing platform
    */
-  private findBestPlatform(stats: Map<string, any>): string {
+  private findBestPlatform(stats: Map<string, PlatformStats>): string {
     let bestPlatform = '';
     let bestEngagement = 0;
-    
+
     for (const [platform, data] of stats) {
       if (data.avgEngagement > bestEngagement) {
         bestEngagement = data.avgEngagement;
         bestPlatform = platform;
       }
     }
-    
+
     return bestPlatform || 'twitter';
   }
 
   /**
    * Find best posting time
    */
-  private findBestPostingTime(posts: any[]): string {
+  private findBestPostingTime(posts: Post[]): string {
     const hourlyEngagement = new Map<number, { total: number; count: number }>();
-    
+
     for (const post of posts) {
       const hour = new Date(post.publishedAt || post.createdAt).getHours();
-      const analytics = post.analytics as any;
+      const analytics = post.analytics as PostAnalyticsJson | null;
       const engagement = (analytics?.likes || 0) + (analytics?.shares || 0) + (analytics?.comments || 0);
       
       if (!hourlyEngagement.has(hour)) {
@@ -485,8 +575,8 @@ export class AnalyticsTracker {
   /**
    * Aggregate engagement metrics
    */
-  private aggregateEngagement(posts: any[]): EngagementMetrics {
-    const totals = {
+  private aggregateEngagement(posts: Post[]): EngagementMetrics {
+    const totals: EngagementMetrics = {
       views: 0,
       likes: 0,
       shares: 0,
@@ -497,9 +587,9 @@ export class AnalyticsTracker {
       engagementRate: 0,
       viralScore: 0
     };
-    
+
     for (const post of posts) {
-      const analytics = post.analytics as any;
+      const analytics = post.analytics as PostAnalyticsJson | null;
       if (analytics) {
         totals.views += analytics.views || 0;
         totals.likes += analytics.likes || 0;
@@ -521,49 +611,50 @@ export class AnalyticsTracker {
   /**
    * Get top performing content
    */
-  private getTopContent(posts: any[], limit: number): ContentPerformance[] {
-    return posts
-      .map(post => {
-        const analytics = post.analytics as any;
-        const metadata = post.metadata as any;
-        const engagement = (analytics?.likes || 0) + (analytics?.shares || 0) + (analytics?.comments || 0);
-        
-        return {
-          contentId: post.id,
-          content: post.content.substring(0, 100) + '...',
-          platform: post.platform,
-          postedAt: post.publishedAt || post.createdAt,
-          engagement: {
-            views: analytics?.views || 0,
-            likes: analytics?.likes || 0,
-            shares: analytics?.shares || 0,
-            comments: analytics?.comments || 0,
-            clicks: analytics?.clicks || 0,
-            impressions: analytics?.impressions || 0,
-            reach: analytics?.reach || 0,
-            engagementRate: this.calculateEngagementRate(analytics),
-            viralScore: analytics?.viralScore || 0
-          },
-          hashtags: metadata?.hashtags || [],
-          viralScore: analytics?.viralScore || 0,
-          totalEngagement: engagement
-        };
-      })
-      .sort((a: any, b: any) => b.totalEngagement - a.totalEngagement)
+  private getTopContent(posts: Post[], limit: number): ContentPerformance[] {
+    const postsWithEngagement: ContentWithEngagement[] = posts.map(post => {
+      const analytics = post.analytics as PostAnalyticsJson | null;
+      const metadata = post.metadata as PostMetadataJson | null;
+      const engagement = (analytics?.likes || 0) + (analytics?.shares || 0) + (analytics?.comments || 0);
+
+      return {
+        contentId: post.id,
+        content: post.content.substring(0, 100) + '...',
+        platform: post.platform,
+        postedAt: post.publishedAt || post.createdAt,
+        engagement: {
+          views: analytics?.views || 0,
+          likes: analytics?.likes || 0,
+          shares: analytics?.shares || 0,
+          comments: analytics?.comments || 0,
+          clicks: analytics?.clicks || 0,
+          impressions: analytics?.impressions || 0,
+          reach: analytics?.reach || 0,
+          engagementRate: this.calculateEngagementRate(analytics),
+          viralScore: analytics?.viralScore || 0
+        },
+        hashtags: metadata?.hashtags || [],
+        viralScore: analytics?.viralScore || 0,
+        totalEngagement: engagement
+      };
+    });
+
+    return postsWithEngagement
+      .sort((a, b) => b.totalEngagement - a.totalEngagement)
       .slice(0, limit)
-      .map(({ totalEngagement, ...rest }) => rest);
+      .map(({ totalEngagement: _, ...rest }) => rest);
   }
 
   /**
    * Analyze best posting times
    */
-  private analyzeBestTimes(posts: any[]): string[] {
+  private analyzeBestTimes(posts: Post[]): string[] {
     const timeEngagement = new Map<string, { total: number; count: number }>();
-    
+
     for (const post of posts) {
       const date = new Date(post.publishedAt || post.createdAt);
       const timeSlot = `${date.getHours()}:00`;
-      const analytics = post.analytics as any;
+      const analytics = post.analytics as PostAnalyticsJson | null;
       const engagement = (analytics?.likes || 0) + (analytics?.shares || 0) + (analytics?.comments || 0);
       
       if (!timeEngagement.has(timeSlot)) {
@@ -631,7 +722,7 @@ export class AnalyticsTracker {
   /**
    * Get recent posts
    */
-  private async getRecentPosts(userId: string, limit: number): Promise<any[]> {
+  private async getRecentPosts(userId: string, limit: number): Promise<RecentPost[]> {
     try {
       const posts = await prisma.post.findMany({
         where: {
@@ -665,7 +756,7 @@ export class AnalyticsTracker {
   /**
    * Get top platforms
    */
-  private async getTopPlatforms(userId: string): Promise<any[]> {
+  private async getTopPlatforms(userId: string): Promise<PlatformCount[]> {
     try {
       const platforms = await prisma.post.groupBy({
         by: ['platform'],
@@ -692,7 +783,7 @@ export class AnalyticsTracker {
   /**
    * Calculate trends
    */
-  private async calculateTrends(userId: string): Promise<any> {
+  private async calculateTrends(userId: string): Promise<TrendData> {
     try {
       const sevenDaysAgo = new Date();
       sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
@@ -756,7 +847,7 @@ export class AnalyticsTracker {
           userId: event.userId,
           sessionId: event.sessionId,
           timestamp: event.timestamp,
-          metadata: event.metadata,
+          metadata: event.metadata as Prisma.InputJsonValue,
           platform: event.platform,
           contentId: event.contentId,
           campaignId: event.campaignId
@@ -839,7 +930,7 @@ export class AnalyticsTracker {
   /**
    * Get default dashboard metrics
    */
-  private getDefaultDashboardMetrics(): any {
+  private getDefaultDashboardMetrics(): DashboardMetrics {
     return {
       overview: {
         totalPosts: 0,

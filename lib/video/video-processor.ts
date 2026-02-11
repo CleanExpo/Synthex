@@ -13,6 +13,7 @@ import * as ffmpegInstaller from '@ffmpeg-installer/ffmpeg';
 import * as ffprobeInstaller from '@ffprobe-installer/ffprobe';
 import * as path from 'path';
 import * as fs from 'fs';
+import { logger } from '@/lib/logger';
 
 // Set FFmpeg and FFprobe paths
 ffmpeg.setFfmpegPath(ffmpegInstaller.path);
@@ -98,14 +99,14 @@ export class VideoProcessor {
         .videoBitrate(this.config.bitrate)
         .size(`${this.config.width}x${this.config.height}`)
         .output(outputPath)
-        .on('start', (cmd) => console.log(`[VideoProcessor] Starting trim: ${cmd}`))
+        .on('start', (cmd) => logger.debug('VideoProcessor starting trim', { cmd }))
         .on('progress', (progress) => {
           if (progress.percent) {
-            console.log(`[VideoProcessor] Trim progress: ${progress.percent.toFixed(1)}%`);
+            logger.debug('VideoProcessor trim progress', { percent: progress.percent.toFixed(1) });
           }
         })
         .on('end', () => {
-          console.log(`[VideoProcessor] Trim complete: ${outputPath}`);
+          logger.info('VideoProcessor trim complete', { outputPath });
           resolve(outputPath);
         })
         .on('error', (err) => {
@@ -152,14 +153,14 @@ export class VideoProcessor {
 
       command
         .output(outputPath)
-        .on('start', (cmd) => console.log(`[VideoProcessor] Adding audio: ${cmd}`))
+        .on('start', (cmd) => logger.debug('VideoProcessor adding audio', { cmd }))
         .on('progress', (progress) => {
           if (progress.percent) {
-            console.log(`[VideoProcessor] Audio progress: ${progress.percent.toFixed(1)}%`);
+            logger.debug('VideoProcessor audio progress', { percent: progress.percent.toFixed(1) });
           }
         })
         .on('end', () => {
-          console.log(`[VideoProcessor] Audio added: ${outputPath}`);
+          logger.info('VideoProcessor audio added', { outputPath });
           resolve(outputPath);
         })
         .on('error', (err) => {
@@ -198,9 +199,9 @@ export class VideoProcessor {
         .videoCodec(this.config.codec)
         .videoBitrate(this.config.bitrate)
         .output(outputPath)
-        .on('start', (cmd) => console.log(`[VideoProcessor] Adding overlays: ${cmd}`))
+        .on('start', (cmd) => logger.debug('VideoProcessor adding overlays', { cmd }))
         .on('end', () => {
-          console.log(`[VideoProcessor] Overlays added: ${outputPath}`);
+          logger.info('VideoProcessor overlays added', { outputPath });
           resolve(outputPath);
         })
         .on('error', (err) => {
@@ -237,9 +238,9 @@ export class VideoProcessor {
         .videoCodec(this.config.codec)
         .videoBitrate(this.config.bitrate)
         .output(outputPath)
-        .on('start', (cmd) => console.log(`[VideoProcessor] Adding fades: ${cmd}`))
+        .on('start', (cmd) => logger.debug('VideoProcessor adding fades', { cmd }))
         .on('end', () => {
-          console.log(`[VideoProcessor] Fades added: ${outputPath}`);
+          logger.info('VideoProcessor fades added', { outputPath });
           resolve(outputPath);
         })
         .on('error', (err) => {
@@ -268,11 +269,11 @@ export class VideoProcessor {
         .videoCodec('copy')
         .audioCodec('copy')
         .output(outputPath)
-        .on('start', (cmd) => console.log(`[VideoProcessor] Concatenating: ${cmd}`))
+        .on('start', (cmd) => logger.debug('VideoProcessor concatenating', { cmd }))
         .on('end', () => {
           // Clean up list file
           fs.unlinkSync(listPath);
-          console.log(`[VideoProcessor] Concatenation complete: ${outputPath}`);
+          logger.info('VideoProcessor concatenation complete', { outputPath });
           resolve(outputPath);
         })
         .on('error', (err) => {
@@ -302,7 +303,7 @@ export class VideoProcessor {
           size: `${this.config.width}x${this.config.height}`,
         })
         .on('end', () => {
-          console.log(`[VideoProcessor] Thumbnail generated: ${outputPath}`);
+          logger.info('VideoProcessor thumbnail generated', { outputPath });
           resolve(outputPath);
         })
         .on('error', (err) => {
@@ -320,7 +321,7 @@ export class VideoProcessor {
     outputFilename: string,
     options: ProcessingOptions = {}
   ): Promise<string> {
-    console.log(`[VideoProcessor] Starting full processing pipeline for: ${inputPath}`);
+    logger.info('VideoProcessor starting full processing pipeline', { inputPath });
 
     let currentPath = inputPath;
 
@@ -366,7 +367,7 @@ export class VideoProcessor {
       currentPath = finalPath;
     }
 
-    console.log(`[VideoProcessor] Processing complete: ${currentPath}`);
+    logger.info('VideoProcessor processing complete', { outputPath: currentPath });
     return currentPath;
   }
 }

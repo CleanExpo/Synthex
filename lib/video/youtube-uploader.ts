@@ -12,6 +12,7 @@
 import { google } from 'googleapis';
 import * as fs from 'fs';
 import * as path from 'path';
+import { logger } from '@/lib/logger';
 
 export interface VideoMetadata {
   title: string;
@@ -101,11 +102,13 @@ export class YouTubeUploader {
       throw new Error(`Video file not found: ${videoPath}`);
     }
 
-    console.log(`[YouTubeUploader] Uploading: ${videoPath}`);
-    console.log(`[YouTubeUploader] Title: ${metadata.title}`);
+    logger.info('YouTubeUploader starting upload', {
+      videoPath,
+      title: metadata.title,
+    });
 
     const fileSize = fs.statSync(videoPath).size;
-    console.log(`[YouTubeUploader] File size: ${(fileSize / 1024 / 1024).toFixed(2)} MB`);
+    logger.info('YouTubeUploader file info', { fileSizeMB: (fileSize / 1024 / 1024).toFixed(2) });
 
     const response = await this.youtube.videos.insert({
       part: ['snippet', 'status'],
@@ -131,7 +134,7 @@ export class YouTubeUploader {
       throw new Error('Upload failed - no video ID returned');
     }
 
-    console.log(`[YouTubeUploader] Upload complete! Video ID: ${videoId}`);
+    logger.info('YouTubeUploader upload complete', { videoId });
 
     // Upload thumbnail if provided
     if (metadata.thumbnailPath && fs.existsSync(metadata.thumbnailPath)) {
@@ -155,7 +158,7 @@ export class YouTubeUploader {
    * Upload custom thumbnail
    */
   async uploadThumbnail(videoId: string, thumbnailPath: string): Promise<void> {
-    console.log(`[YouTubeUploader] Uploading thumbnail for video: ${videoId}`);
+    logger.info('YouTubeUploader uploading thumbnail', { videoId });
 
     await this.youtube.thumbnails.set({
       videoId,
@@ -164,14 +167,14 @@ export class YouTubeUploader {
       },
     });
 
-    console.log('[YouTubeUploader] Thumbnail uploaded');
+    logger.info('YouTubeUploader thumbnail uploaded');
   }
 
   /**
    * Add video to playlist
    */
   async addToPlaylist(videoId: string, playlistId: string): Promise<void> {
-    console.log(`[YouTubeUploader] Adding video ${videoId} to playlist ${playlistId}`);
+    logger.info('YouTubeUploader adding to playlist', { videoId, playlistId });
 
     await this.youtube.playlistItems.insert({
       part: ['snippet'],
@@ -186,7 +189,7 @@ export class YouTubeUploader {
       },
     });
 
-    console.log('[YouTubeUploader] Added to playlist');
+    logger.info('YouTubeUploader added to playlist');
   }
 
   /**
@@ -197,7 +200,7 @@ export class YouTubeUploader {
     description: string,
     privacyStatus: 'public' | 'private' | 'unlisted' = 'public'
   ): Promise<string> {
-    console.log(`[YouTubeUploader] Creating playlist: ${title}`);
+    logger.info('YouTubeUploader creating playlist', { title });
 
     const response = await this.youtube.playlists.insert({
       part: ['snippet', 'status'],
@@ -217,7 +220,7 @@ export class YouTubeUploader {
       throw new Error('Failed to create playlist');
     }
 
-    console.log(`[YouTubeUploader] Playlist created: ${playlistId}`);
+    logger.info('YouTubeUploader playlist created', { playlistId });
     return playlistId;
   }
 
@@ -225,7 +228,7 @@ export class YouTubeUploader {
    * Update video metadata
    */
   async updateVideo(videoId: string, metadata: Partial<VideoMetadata>): Promise<void> {
-    console.log(`[YouTubeUploader] Updating video: ${videoId}`);
+    logger.info('YouTubeUploader updating video', { videoId });
 
     await this.youtube.videos.update({
       part: ['snippet', 'status'],
@@ -245,7 +248,7 @@ export class YouTubeUploader {
       },
     });
 
-    console.log('[YouTubeUploader] Video updated');
+    logger.info('YouTubeUploader video updated');
   }
 
   /**

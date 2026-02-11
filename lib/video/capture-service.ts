@@ -12,6 +12,7 @@ import puppeteer, { Browser, Page } from 'puppeteer';
 import { PuppeteerScreenRecorder } from 'puppeteer-screen-recorder';
 import * as path from 'path';
 import * as fs from 'fs';
+import { logger } from '@/lib/logger';
 
 export interface CaptureConfig {
   outputDir: string;
@@ -65,7 +66,7 @@ export class CaptureService {
    * Initialize browser and page
    */
   async init(): Promise<void> {
-    console.log('[CaptureService] Initializing browser...');
+    logger.info('CaptureService initializing browser');
 
     this.browser = await puppeteer.launch({
       headless: false, // Show browser for verification
@@ -89,7 +90,7 @@ export class CaptureService {
       height: this.config.height,
     });
 
-    console.log('[CaptureService] Browser initialized');
+    logger.info('CaptureService browser initialized');
   }
 
   /**
@@ -118,7 +119,7 @@ export class CaptureService {
 
     this.currentOutputPath = outputPath;
     await this.recorder.start(outputPath);
-    console.log(`[CaptureService] Recording started: ${outputPath}`);
+    logger.info('CaptureService recording started', { outputPath });
   }
 
   /**
@@ -132,7 +133,7 @@ export class CaptureService {
 
     const outputPath = this.currentOutputPath;
     await this.recorder.stop();
-    console.log(`[CaptureService] Recording saved: ${outputPath}`);
+    logger.info('CaptureService recording saved', { outputPath });
     this.recorder = null;
     this.currentOutputPath = null;
     return outputPath;
@@ -146,7 +147,7 @@ export class CaptureService {
       throw new Error('Browser not initialized');
     }
 
-    console.log(`[CaptureService] Executing: ${step.description}`);
+    logger.debug('CaptureService executing step', { description: step.description });
 
     switch (step.action) {
       case 'navigate':
@@ -196,9 +197,11 @@ export class CaptureService {
    * Execute a complete workflow with recording
    */
   async captureWorkflow(workflow: CaptureWorkflow): Promise<string | null> {
-    console.log(`[CaptureService] Starting workflow: ${workflow.name}`);
-    console.log(`[CaptureService] Description: ${workflow.description}`);
-    console.log(`[CaptureService] Expected duration: ${workflow.duration}s`);
+    logger.info('CaptureService starting workflow', {
+      name: workflow.name,
+      description: workflow.description,
+      expectedDuration: workflow.duration,
+    });
 
     await this.startRecording(workflow.name.toLowerCase().replace(/\s+/g, '_'));
 
@@ -226,7 +229,7 @@ export class CaptureService {
       throw new Error('Browser not initialized');
     }
 
-    console.log('[CaptureService] Logging in...');
+    logger.info('CaptureService logging in');
 
     await this.page.goto(`${this.appUrl}/login`, {
       waitUntil: 'networkidle2',
@@ -242,7 +245,7 @@ export class CaptureService {
     // Wait for redirect to dashboard
     await this.page.waitForNavigation({ waitUntil: 'networkidle2' });
 
-    console.log('[CaptureService] Login successful');
+    logger.info('CaptureService login successful');
   }
 
   /**
@@ -257,7 +260,7 @@ export class CaptureService {
       this.browser = null;
       this.page = null;
     }
-    console.log('[CaptureService] Browser closed');
+    logger.info('CaptureService browser closed');
   }
 }
 
