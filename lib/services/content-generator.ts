@@ -6,7 +6,43 @@
 import { db } from '@/lib/supabase-client';
 
 // Platform-specific content requirements
-const PLATFORM_REQUIREMENTS = {
+/** Platform content requirements */
+interface PlatformRequirements {
+  maxLength: number;
+  supportedFormats: string[];
+  hashtagLimit: number;
+  mentionLimit: number;
+  threadSupport?: boolean;
+  articleSupport?: boolean;
+  soundRequired?: boolean;
+  reelsSupport?: boolean;
+  storySupport?: boolean;
+}
+
+/** Persona for content voice */
+interface ContentPersona {
+  name?: string;
+  attributes?: {
+    tone?: 'Professional' | 'Casual' | 'Authoritative' | string;
+    style?: 'Formal' | 'Conversational' | 'Thought-provoking' | string;
+    emotion?: string;
+  };
+}
+
+/** Content enhancement options */
+interface ContentEnhanceOptions {
+  includeEmojis: boolean;
+  includeHashtags: boolean;
+  platform: string;
+}
+
+/** Placeholder replacement data */
+interface PlaceholderData {
+  topic: string;
+  [key: string]: string;
+}
+
+const PLATFORM_REQUIREMENTS: Record<string, PlatformRequirements> = {
   twitter: {
     maxLength: 280,
     supportedFormats: ['text', 'image', 'video', 'gif'],
@@ -144,7 +180,7 @@ export class ContentGeneratorService {
    */
   async generateContent(params: {
     platform: string;
-    persona?: any;
+    persona?: ContentPersona;
     topic: string;
     hookType?: string;
     tone?: string;
@@ -231,7 +267,7 @@ export class ContentGeneratorService {
   /**
    * Apply persona voice to content
    */
-  private async applyPersonaVoice(content: string, persona: any): Promise<string> {
+  private async applyPersonaVoice(content: string, persona: ContentPersona): Promise<string> {
     // Use AI to rewrite in persona's voice if available
     if (this.apiKey && persona?.attributes) {
       const prompt = `Rewrite the following content in a ${persona.attributes.tone} tone with a ${persona.attributes.style} style:
@@ -284,7 +320,7 @@ Maintain the core message but adapt the voice to be ${persona.attributes.emotion
   /**
    * Optimize content for specific platform
    */
-  private optimizeForPlatform(content: string, platform: string, requirements: any): string {
+  private optimizeForPlatform(content: string, platform: string, requirements: PlatformRequirements): string {
     let optimized = content;
     
     // Enforce length limits
@@ -325,7 +361,7 @@ Maintain the core message but adapt the voice to be ${persona.attributes.emotion
   /**
    * Enhance content with hashtags and emojis
    */
-  private enhanceContent(content: string, options: any): string {
+  private enhanceContent(content: string, options: ContentEnhanceOptions): string {
     let enhanced = content;
     
     if (options.includeEmojis && !this.hasEmojis(enhanced)) {
@@ -507,7 +543,7 @@ Maintain the core message but adapt the voice to be ${persona.attributes.emotion
     return array[Math.floor(Math.random() * array.length)];
   }
 
-  private replacePlaceholders(content: string, data: any): string {
+  private replacePlaceholders(content: string, data: PlaceholderData): string {
     let result = content;
     
     // Replace topic

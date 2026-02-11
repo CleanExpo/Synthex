@@ -7,16 +7,50 @@ import { jsPDF } from 'jspdf';
 import 'jspdf-autotable';
 import { format } from 'date-fns';
 
+/** Cell value in export row */
+type CellValue = string | number | boolean | Date | null | undefined;
+
 // Types
 interface ExportData {
   headers: string[];
-  rows: any[][];
+  rows: CellValue[][];
   metadata?: {
     title?: string;
     description?: string;
     generatedAt?: Date;
     filters?: Record<string, unknown>;
   };
+}
+
+/** Campaign export data */
+interface CampaignExportItem {
+  id: string;
+  name: string;
+  status: string;
+  platform: string;
+  createdAt: Date | string;
+  performance: number | string;
+}
+
+/** Analytics export data */
+interface AnalyticsExportItem {
+  date: Date | string;
+  impressions: number;
+  clicks: number;
+  ctr: number;
+  conversions: number;
+  revenue: number;
+}
+
+/** Content export data */
+interface ContentExportItem {
+  id: string;
+  title: string;
+  type: string;
+  status: string;
+  author: string;
+  createdAt: Date | string;
+  views: number;
 }
 
 interface ExportOptions {
@@ -111,8 +145,8 @@ export function exportToPDF(data: ExportData, filename = 'export.pdf') {
     yPosition += 8;
   }
   
-  // Add table
-  (doc as any).autoTable({
+  // Add table - using type assertion for jspdf-autotable plugin
+  (doc as jsPDF & { autoTable: (options: Record<string, unknown>) => void }).autoTable({
     head: [headers],
     body: rows.map(row => 
       row.map(cell => {
@@ -261,7 +295,7 @@ function downloadBlob(blob: Blob, filename: string) {
  */
 export const exportHelpers = {
   // Format data for campaigns
-  formatCampaignData: (campaigns: any[]): ExportData => ({
+  formatCampaignData: (campaigns: CampaignExportItem[]): ExportData => ({
     headers: ['ID', 'Name', 'Status', 'Platform', 'Created', 'Performance'],
     rows: campaigns.map(c => [
       c.id,
@@ -272,9 +306,9 @@ export const exportHelpers = {
       c.performance
     ])
   }),
-  
+
   // Format data for analytics
-  formatAnalyticsData: (analytics: any[]): ExportData => ({
+  formatAnalyticsData: (analytics: AnalyticsExportItem[]): ExportData => ({
     headers: ['Date', 'Impressions', 'Clicks', 'CTR', 'Conversions', 'Revenue'],
     rows: analytics.map(a => [
       a.date,
@@ -285,9 +319,9 @@ export const exportHelpers = {
       `$${a.revenue}`
     ])
   }),
-  
+
   // Format data for content
-  formatContentData: (content: any[]): ExportData => ({
+  formatContentData: (content: ContentExportItem[]): ExportData => ({
     headers: ['ID', 'Title', 'Type', 'Status', 'Author', 'Created', 'Views'],
     rows: content.map(c => [
       c.id,

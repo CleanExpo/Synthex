@@ -124,15 +124,16 @@ export function withOptionalAuth(
       });
 
       if (authResult.allowed && authResult.context.userId) {
-        (request as any).userId = authResult.context.userId;
-        (request as any).userRole = authResult.context.userRole || 'user';
-        (request as any).securityContext = authResult.context;
+        const authRequest = request as NextRequest & { userId?: string; userRole?: string; securityContext?: SecurityContext };
+        authRequest.userId = authResult.context.userId;
+        authRequest.userRole = authResult.context.userRole || 'user';
+        authRequest.securityContext = authResult.context;
       }
     }
 
     // Execute handler
     try {
-      return await handler(request as any, context);
+      return await handler(request, context);
     } catch (error) {
       console.error('Handler error:', error);
       return APISecurityChecker.createSecureResponse(
@@ -182,5 +183,6 @@ export async function extractUserId(request: NextRequest): Promise<string | null
 export function isAuthenticated(
   request: NextRequest
 ): request is AuthenticatedRequest {
-  return 'userId' in request && typeof (request as any).userId === 'string';
+  const authRequest = request as AuthenticatedRequest;
+  return 'userId' in request && typeof authRequest.userId === 'string';
 }

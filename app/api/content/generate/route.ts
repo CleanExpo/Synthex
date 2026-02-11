@@ -68,7 +68,7 @@ async function handlePost(request: AuthenticatedRequest) {
     // Generate content
     const result = await contentGenerator.generateContent({
       platform,
-      persona,
+      persona: persona || undefined,
       topic,
       hookType,
       tone,
