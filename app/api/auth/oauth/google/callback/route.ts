@@ -16,6 +16,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { randomUUID } from 'crypto';
 import { retrievePKCEState } from '@/lib/auth/pkce';
 import { accountService } from '@/lib/auth/account-service';
 import { signInFlow } from '@/lib/auth/signInFlow';
@@ -269,8 +270,11 @@ async function createNewGoogleUser(
   }
 ): Promise<{ id: string }> {
   // Create user (password is null for OAuth-only users)
+  // Explicitly provide UUID to match database column type
+  const userId = randomUUID();
   const user = await prisma.user.create({
     data: {
+      id: userId, // Explicitly provide UUID (database expects UUID, not CUID)
       email: googleUser.email,
       password: null, // OAuth-only user - no password
       name: googleUser.name || googleUser.email.split('@')[0],
