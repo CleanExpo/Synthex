@@ -72,7 +72,7 @@
   --border-default: rgba(255, 255, 255, 0.10);
   --border-prominent: rgba(255, 255, 255, 0.20);
   --border-interactive: rgba(255, 255, 255, 0.30);
-  --border-focus: rgba(139, 92, 246, 0.60);
+  --border-focus: rgba(6, 182, 212, 0.60);
 
   /* =========================================================================
      TYPOGRAPHY SYSTEM (Professional Hierarchy)
@@ -173,9 +173,9 @@
   --shadow-2xl: 0 24px 48px rgba(0, 0, 0, 0.5), 0 12px 24px rgba(0, 0, 0, 0.3);
 
   /* Glow Shadows (Brand colors) */
-  --glow-primary-sm: 0 0 10px rgba(139, 92, 246, 0.3);
-  --glow-primary-md: 0 0 20px rgba(139, 92, 246, 0.4), 0 0 40px rgba(139, 92, 246, 0.2);
-  --glow-primary-lg: 0 0 30px rgba(139, 92, 246, 0.5), 0 0 60px rgba(139, 92, 246, 0.3);
+  --glow-primary-sm: 0 0 10px rgba(6, 182, 212, 0.3);
+  --glow-primary-md: 0 0 20px rgba(6, 182, 212, 0.4), 0 0 40px rgba(6, 182, 212, 0.2);
+  --glow-primary-lg: 0 0 30px rgba(6, 182, 212, 0.5), 0 0 60px rgba(6, 182, 212, 0.3);
   --glow-secondary-md: 0 0 20px rgba(6, 182, 212, 0.4), 0 0 40px rgba(6, 182, 212, 0.2);
   --glow-accent-md: 0 0 20px rgba(220, 38, 38, 0.4), 0 0 40px rgba(220, 38, 38, 0.2);
 
@@ -242,8 +242,8 @@
 }
 
 .pill-badge-primary {
-  background: rgba(139, 92, 246, 0.15);
-  border-color: rgba(139, 92, 246, 0.30);
+  background: rgba(6, 182, 212, 0.15);
+  border-color: rgba(6, 182, 212, 0.30);
   color: rgb(var(--synthex-primary-light));
 }
 
@@ -418,7 +418,7 @@
 .btn-primary {
   background: linear-gradient(135deg, rgb(var(--synthex-primary)), rgb(var(--synthex-primary-dark)));
   color: rgb(var(--synthex-white));
-  border: 1px solid rgba(139, 92, 246, 0.5);
+  border: 1px solid rgba(6, 182, 212, 0.5);
   box-shadow: var(--shadow-md), var(--glow-primary-sm);
 }
 
@@ -551,7 +551,7 @@
 }
 
 .card-premium:hover {
-  border-color: rgba(139, 92, 246, 0.4);
+  border-color: rgba(6, 182, 212, 0.4);
   box-shadow: var(--inner-glow-strong), var(--shadow-xl), var(--glow-primary-md);
   transform: translateY(-4px);
 }
@@ -571,7 +571,7 @@
   position: absolute;
   inset: -1px;
   border-radius: inherit;
-  background: linear-gradient(135deg, rgba(139, 92, 246, 0.3), rgba(6, 182, 212, 0.3));
+  background: linear-gradient(135deg, rgba(6, 182, 212, 0.3), rgba(6, 182, 212, 0.3));
   z-index: -1;
   opacity: 0;
   transition: opacity var(--duration-slow) var(--ease-out);
@@ -715,18 +715,18 @@
 .bg-gradient-spotlight {
   background: radial-gradient(
     ellipse 80% 50% at 50% -20%,
-    rgba(139, 92, 246, 0.15),
+    rgba(6, 182, 212, 0.15),
     transparent 70%
   );
 }
 
 .bg-gradient-mesh {
   background:
-    radial-gradient(at 40% 20%, rgba(139, 92, 246, 0.1) 0px, transparent 50%),
+    radial-gradient(at 40% 20%, rgba(6, 182, 212, 0.1) 0px, transparent 50%),
     radial-gradient(at 80% 0%, rgba(6, 182, 212, 0.1) 0px, transparent 50%),
-    radial-gradient(at 0% 50%, rgba(139, 92, 246, 0.05) 0px, transparent 50%),
+    radial-gradient(at 0% 50%, rgba(6, 182, 212, 0.05) 0px, transparent 50%),
     radial-gradient(at 80% 50%, rgba(6, 182, 212, 0.05) 0px, transparent 50%),
-    radial-gradient(at 0% 100%, rgba(139, 92, 246, 0.1) 0px, transparent 50%);
+    radial-gradient(at 0% 100%, rgba(6, 182, 212, 0.1) 0px, transparent 50%);
 }
 
 /* =============================================================================
@@ -756,7 +756,7 @@
 .input:focus {
   outline: none;
   border-color: rgb(var(--synthex-primary));
-  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.2);
+  box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.2);
 }
 
 .input-lg {

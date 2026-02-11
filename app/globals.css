@@ -45,14 +45,14 @@
     /* =========================================================================
        BRAND COLORS (Design Token System)
        ========================================================================= */
-    /* Primary (Violet) */
-    --color-primary: 139 92 246;
-    --color-primary-light: 167 139 250;
-    --color-primary-dark: 124 58 237;
+    /* Primary (Cyan) */
+    --color-primary: 6 182 212;
+    --color-primary-light: 34 211 238;
+    --color-primary-dark: 8 145 178;
 
     /* Accent Colors */
-    --color-violet: 139 92 246;
-    --color-fuchsia: 217 70 239;
+    --color-violet: 6 182 212;
+    --color-fuchsia: 6 182 212;
     --color-cyan: 6 182 212;
     --color-amber: 245 158 11;
     --color-emerald: 16 185 129;
@@ -93,8 +93,8 @@
     /* =========================================================================
        GLOW EFFECTS (Using design tokens)
        ========================================================================= */
-    --glow-primary: 0 0 20px rgba(139, 92, 246, 0.3), 0 0 40px rgba(139, 92, 246, 0.1);
-    --glow-primary-lg: 0 0 30px rgba(139, 92, 246, 0.5), 0 0 60px rgba(139, 92, 246, 0.2);
+    --glow-primary: 0 0 20px rgba(6, 182, 212, 0.3), 0 0 40px rgba(6, 182, 212, 0.1);
+    --glow-primary-lg: 0 0 30px rgba(6, 182, 212, 0.5), 0 0 60px rgba(6, 182, 212, 0.2);
     --glow-cyan: 0 0 20px rgba(6, 182, 212, 0.3), 0 0 40px rgba(6, 182, 212, 0.1);
     --glow-amber: 0 0 20px rgba(245, 158, 11, 0.3), 0 0 40px rgba(245, 158, 11, 0.1);
 
@@ -526,15 +526,15 @@
 }
 
 .glass-btn-primary {
-  background: linear-gradient(to right, rgba(139, 92, 246, 0.2), rgba(217, 70, 239, 0.2));
+  background: linear-gradient(to right, rgba(6, 182, 212, 0.2), rgba(8, 145, 178, 0.2));
   backdrop-filter: blur(var(--glass-blur-md));
   -webkit-backdrop-filter: blur(var(--glass-blur-md));
-  border: 1px solid rgba(139, 92, 246, 0.3);
+  border: 1px solid rgba(6, 182, 212, 0.3);
 }
 
 .glass-btn-primary:hover {
-  background: linear-gradient(to right, rgba(139, 92, 246, 0.3), rgba(217, 70, 239, 0.3));
-  border-color: rgba(139, 92, 246, 0.5);
+  background: linear-gradient(to right, rgba(6, 182, 212, 0.3), rgba(8, 145, 178, 0.3));
+  border-color: rgba(6, 182, 212, 0.5);
   box-shadow: var(--glow-primary);
 }
 
@@ -581,7 +581,7 @@
 
 /* Gradient Text - Using design tokens */
 .gradient-text {
-  background: linear-gradient(to right, #a78bfa, #f472b6, #60a5fa);
+  background: linear-gradient(to right, #22d3ee, #06b6d4, #0891b2);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -624,11 +624,11 @@
 
 /* Gradient Backgrounds */
 .gradient-primary {
-  background: linear-gradient(to right, #9333ea, #2563eb);
+  background: linear-gradient(to right, #06b6d4, #0891b2);
 }
 
 .gradient-primary:hover {
-  background: linear-gradient(to right, #7e22ce, #1d4ed8);
+  background: linear-gradient(to right, #22d3ee, #06b6d4);
 }
 
 /* =============================================================================
@@ -1213,7 +1213,7 @@ textarea:focus-visible,
   transform: translateX(-50%);
   width: 150%;
   height: 100%;
-  background: radial-gradient(ellipse 80% 50% at 50% 0%, rgba(120, 119, 198, 0.25), transparent 70%);
+  background: radial-gradient(ellipse 80% 50% at 50% 0%, rgba(6, 182, 212, 0.25), transparent 70%);
   pointer-events: none;
   z-index: 0;
 }
@@ -1228,7 +1228,7 @@ textarea:focus-visible,
   box-shadow:
     var(--glass-inset),
     var(--glass-shadow),
-    0 0 40px rgba(139, 92, 246, 0.1);
+    0 0 40px rgba(6, 182, 212, 0.1);
   transition: all var(--duration-slow) var(--ease-smooth);
 }
 
@@ -1238,8 +1238,8 @@ textarea:focus-visible,
   box-shadow:
     var(--glass-inset),
     var(--glass-shadow-lg),
-    0 0 60px rgba(139, 92, 246, 0.2),
-    0 0 100px rgba(139, 92, 246, 0.1);
+    0 0 60px rgba(6, 182, 212, 0.2),
+    0 0 100px rgba(6, 182, 212, 0.1);
 }
 
 /* Animated Gradient Background */
@@ -1313,7 +1313,7 @@ textarea:focus-visible,
   content: '';
   position: absolute;
   inset: -2px;
-  background: linear-gradient(135deg, rgba(139, 92, 246, 0.4), rgba(59, 130, 246, 0.4));
+  background: linear-gradient(135deg, rgba(6, 182, 212, 0.4), rgba(8, 145, 178, 0.4));
   border-radius: inherit;
   filter: blur(20px);
   opacity: 0.6;
@@ -1347,10 +1347,10 @@ textarea:focus-visible,
   width: 120px;
   height: 120px;
   border-radius: 50%;
-  background: radial-gradient(circle at 30% 30%, rgba(139, 92, 246, 0.4), rgba(59, 130, 246, 0.2) 50%, transparent 70%);
+  background: radial-gradient(circle at 30% 30%, rgba(6, 182, 212, 0.4), rgba(8, 145, 178, 0.2) 50%, transparent 70%);
   box-shadow:
-    0 0 40px rgba(139, 92, 246, 0.3),
-    0 0 80px rgba(139, 92, 246, 0.2),
-    inset 0 0 30px rgba(139, 92, 246, 0.1);
+    0 0 40px rgba(6, 182, 212, 0.3),
+    0 0 80px rgba(6, 182, 212, 0.2),
+    inset 0 0 30px rgba(6, 182, 212, 0.1);
   animation: pulse-glow 3s ease-in-out infinite;
 }

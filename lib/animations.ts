@@ -170,7 +170,7 @@ export const hoverScale = {
 };
 
 export const hoverGlow = {
-  boxShadow: '0 0 20px rgba(139, 92, 246, 0.4)',
+  boxShadow: '0 0 20px rgba(6, 182, 212, 0.4)',
   transition: {
     duration: 0.3
   }
@@ -287,7 +287,7 @@ export const modalContent: Variants = {
 // Card animations
 export const cardHover = {
   y: -5,
-  boxShadow: '0 10px 30px rgba(139, 92, 246, 0.2)',
+  boxShadow: '0 10px 30px rgba(6, 182, 212, 0.2)',
   transition: {
     duration: 0.3,
     ease: "easeOut" as const

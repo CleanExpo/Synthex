@@ -38,9 +38,9 @@ export default function SocialNetworkSVG() {
     <div className="w-full h-[500px] relative rounded-2xl overflow-hidden bg-[#030014]">
       {/* Animated background gradient */}
       <div className="absolute inset-0">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_80%_at_50%_50%,rgba(139,92,246,0.15),transparent)]" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_60%_60%_at_30%_20%,rgba(217,70,239,0.1),transparent)]" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_60%_60%_at_70%_80%,rgba(59,130,246,0.1),transparent)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_80%_at_50%_50%,rgba(6,182,212,0.15),transparent)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_60%_60%_at_30%_20%,rgba(8,145,178,0.1),transparent)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_60%_60%_at_70%_80%,rgba(34,211,238,0.1),transparent)]" />
       </div>
 
       {/* Starfield effect */}

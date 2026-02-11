@@ -113,7 +113,7 @@ const engagementData = [
 ];
 
 const hookTypes = [
-  { name: 'Question', value: 30, color: '#8b5cf6' },
+  { name: 'Question', value: 30, color: '#06b6d4' },
   { name: 'Story', value: 25, color: '#ec4899' },
   { name: 'Controversy', value: 20, color: '#f59e0b' },
   { name: 'Data', value: 15, color: '#10b981' },
@@ -432,7 +432,7 @@ export default function ViralPatternsPage() {
                 <Tooltip
                   contentStyle={{
                     backgroundColor: 'rgba(0,0,0,0.8)',
-                    border: '1px solid rgba(139, 92, 246, 0.3)',
+                    border: '1px solid rgba(6, 182, 212, 0.3)',
                     borderRadius: '8px',
                   }}
                 />
@@ -493,7 +493,7 @@ export default function ViralPatternsPage() {
                 <Tooltip
                   contentStyle={{
                     backgroundColor: 'rgba(0,0,0,0.8)',
-                    border: '1px solid rgba(139, 92, 246, 0.3)',
+                    border: '1px solid rgba(6, 182, 212, 0.3)',
                     borderRadius: '8px',
                   }}
                 />
