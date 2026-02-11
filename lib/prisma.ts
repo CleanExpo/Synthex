@@ -19,7 +19,7 @@
 
 import { PrismaClient, Prisma } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
-import { Pool } from 'pg';
+// Note: Pool import removed - using connectionString mode with PrismaPg which manages its own pool
 
 // Global singleton to prevent multiple instances in development
 const globalForPrisma = globalThis as unknown as {
@@ -70,12 +70,11 @@ const getLogConfig = (): Prisma.LogLevel[] => {
  * The adapter uses the standard PostgreSQL wire protocol which works with
  * Supabase's Supavisor (PgBouncer) connection pooler.
  *
- * SSL Configuration:
- * - For Supabase, we need to set rejectUnauthorized: false to accept their
- *   self-signed certificates in the certificate chain
+ * UPDATED: Using PrismaPg with connectionString directly (recommended approach)
+ * This avoids the localhost fallback issue that occurs with separate Pool creation.
  *
- * UPDATED: Using PrismaPg with connection string directly to fix
- * "External error with reported id was not registered" bug
+ * The connectionString must include SSL parameters for Supabase:
+ * - sslmode=require (or the connection will fail)
  */
 const createPrismaClient = (): PrismaClient => {
   const connectionString = process.env.DATABASE_URL;
@@ -94,32 +93,18 @@ const createPrismaClient = (): PrismaClient => {
     throw new Error('Invalid DATABASE_URL format');
   }
 
-  // Create a pg Pool with connection string and SSL config
-  // Using explicit Pool to ensure proper SSL handling for Supabase
-  const pool = new Pool({
+  // Create the PrismaPg adapter with connectionString directly
+  // This is the recommended approach per Prisma docs - avoids localhost fallback issues
+  const adapter = new PrismaPg({
     connectionString,
-    ssl: {
-      rejectUnauthorized: false, // Required for Supabase pooler's self-signed certs
-    },
-    max: 10, // Maximum connections in pool
-    idleTimeoutMillis: 30000, // Close idle connections after 30s
-    connectionTimeoutMillis: 10000, // Timeout for new connections
   });
-
-  // Handle pool errors to prevent unhandled rejections
-  pool.on('error', (err) => {
-    console.error('[Prisma] Pool error:', err.message);
-    globalForPrisma.prismaMetrics.errors++;
-    globalForPrisma.prismaMetrics.isHealthy = false;
-  });
-
-  // Create the PrismaPg adapter
-  const adapter = new PrismaPg({ pool });
 
   const client = new PrismaClient({
     adapter,
     log: getLogConfig(),
   });
+
+  console.log('[Prisma] Client created with PrismaPg adapter (connectionString mode)');
 
   // Set up event listeners for connection monitoring (dev only)
   if (process.env.NODE_ENV !== 'production') {
