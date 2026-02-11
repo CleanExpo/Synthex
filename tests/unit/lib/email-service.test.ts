@@ -6,17 +6,20 @@
 
 // Mock Prisma - shared mock instance
 const mockUserUpdate = jest.fn().mockResolvedValue({});
-const mockEmailLogCreate = jest.fn().mockResolvedValue({ id: 'mock-email-id' });
+const mockUserFindFirst = jest.fn().mockResolvedValue(null);
+const mockNotificationCreate = jest.fn().mockResolvedValue({ id: 'mock-notif-id' });
 
-jest.mock('@prisma/client', () => ({
-  PrismaClient: jest.fn().mockImplementation(() => ({
+jest.mock('@/lib/prisma', () => ({
+  __esModule: true,
+  default: {
     user: {
-      update: mockUserUpdate,
+      update: (...args: unknown[]) => mockUserUpdate(...args),
+      findFirst: (...args: unknown[]) => mockUserFindFirst(...args),
     },
-    emailLog: {
-      create: mockEmailLogCreate,
+    notification: {
+      create: (...args: unknown[]) => mockNotificationCreate(...args),
     },
-  })),
+  },
 }));
 
 // Mock fetch for Resend API
@@ -32,7 +35,8 @@ describe('EmailService', () => {
     jest.clearAllMocks();
     // Reset mocks
     mockUserUpdate.mockResolvedValue({});
-    mockEmailLogCreate.mockResolvedValue({ id: 'mock-email-id' });
+    mockUserFindFirst.mockResolvedValue(null);
+    mockNotificationCreate.mockResolvedValue({ id: 'mock-notif-id' });
     // Reset environment variables
     delete process.env.EMAIL_PROVIDER;
     delete process.env.SENDGRID_API_KEY;

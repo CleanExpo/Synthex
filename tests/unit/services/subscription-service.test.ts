@@ -69,6 +69,8 @@ describe('SubscriptionService', () => {
         maxSocialAccounts: 2,
         maxAiPosts: 10,
         maxPersonas: 1,
+        maxSeoAudits: 0,
+        maxSeoPages: 0,
       });
     });
 
@@ -77,6 +79,8 @@ describe('SubscriptionService', () => {
         maxSocialAccounts: 5,
         maxAiPosts: 100,
         maxPersonas: 3,
+        maxSeoAudits: 10,
+        maxSeoPages: 50,
       });
     });
 
@@ -89,6 +93,8 @@ describe('SubscriptionService', () => {
         maxSocialAccounts: -1,
         maxAiPosts: -1,
         maxPersonas: -1,
+        maxSeoAudits: -1,
+        maxSeoPages: -1,
       });
     });
   });
@@ -109,6 +115,8 @@ describe('SubscriptionService', () => {
       maxSocialAccounts: 2,
       maxAiPosts: 10,
       maxPersonas: 1,
+        maxSeoAudits: 0,
+        maxSeoPages: 0,
       currentAiPosts: 0,
       lastResetAt: new Date(),
     };
@@ -422,6 +430,8 @@ describe('SubscriptionService', () => {
         maxSocialAccounts: 2,
         maxAiPosts: 10,
         maxPersonas: 1,
+        maxSeoAudits: 0,
+        maxSeoPages: 0,
         currentAiPosts: 0,
         lastResetAt: new Date(),
       };
