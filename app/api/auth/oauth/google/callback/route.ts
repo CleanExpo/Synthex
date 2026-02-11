@@ -17,9 +17,12 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { randomUUID } from 'crypto';
+import jwt from 'jsonwebtoken';
 import { retrievePKCEState } from '@/lib/auth/pkce';
-import { signInFlow } from '@/lib/auth/signInFlow';
 import prisma from '@/lib/prisma';
+
+// JWT configuration - must match signInFlow
+const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-change-in-production';
 
 // Google OAuth configuration
 const GOOGLE_CONFIG = {
@@ -316,31 +319,27 @@ async function createSessionForUser(
     avatar?: string;
   };
 }> {
-  // Note: Account table not used for token storage - using legacy approach
   // Update last login
   await prisma.user.update({
     where: { id: userId },
     data: { lastLogin: new Date() },
   });
 
-  // Create session through SignInFlow
-  const result = await signInFlow.authenticate('oauth', {
-    provider: 'google',
-    oauthUser: {
-      id: userId,
+  // Generate JWT token directly (bypass signInFlow to avoid Account table)
+  const expiresAt = Date.now() + (7 * 24 * 60 * 60 * 1000); // 7 days
+  const accessToken = jwt.sign(
+    {
+      sub: userId,
       email: googleUser.email,
-      name: googleUser.name,
-      image: googleUser.picture,
+      iat: Math.floor(Date.now() / 1000),
+      exp: Math.floor(expiresAt / 1000),
     },
-  });
-
-  if (!result.success || !result.session) {
-    throw new Error('Failed to create session');
-  }
+    JWT_SECRET
+  );
 
   return {
-    accessToken: result.session.accessToken,
-    expiresAt: result.session.expiresAt,
+    accessToken,
+    expiresAt,
     user: {
       id: userId,
       email: googleUser.email,
