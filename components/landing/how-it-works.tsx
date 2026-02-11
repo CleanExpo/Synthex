@@ -25,8 +25,8 @@ const steps = [
     title: 'AI Analyzes Your Brand',
     description: 'Our AI studies your voice, audience, and top performers to create your personalized growth strategy.',
     icon: Brain,
-    color: 'from-purple-500 to-violet-500',
-    glowColor: 'rgba(139, 92, 246, 0.3)',
+    color: 'from-cyan-500 to-cyan-500',
+    glowColor: 'rgba(6, 182, 212, 0.3)',
     features: ['Brand voice learning', 'Audience insights', 'Competitor analysis'],
   },
   {
@@ -157,12 +157,12 @@ export function HowItWorks() {
   return (
     <section ref={sectionRef} className="py-20 lg:py-32 px-6 relative overflow-hidden">
       {/* Background effects */}
-      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-purple-900/5 to-transparent" />
+      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-cyan-900/5 to-transparent" />
 
       <div className="container mx-auto relative">
         {/* Header */}
         <div className="text-center mb-16">
-          <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/[0.05] border border-white/[0.08] text-sm font-medium text-purple-300 mb-6">
+          <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/[0.05] border border-white/[0.08] text-sm font-medium text-cyan-300 mb-6">
             <Zap className="w-4 h-4" />
             Simple 4-Step Process
           </span>
@@ -207,7 +207,7 @@ export function HowItWorks() {
           <p className="text-slate-400 mb-6">Ready to start your growth journey?</p>
           <a
             href="/signup"
-            className="inline-flex items-center gap-2 px-8 py-4 rounded-xl bg-gradient-to-r from-purple-600 to-fuchsia-600 text-white font-semibold hover:from-purple-500 hover:to-fuchsia-500 transition-all duration-300 shadow-lg shadow-purple-500/25 hover:shadow-purple-500/40 hover:scale-105"
+            className="inline-flex items-center gap-2 px-8 py-4 rounded-xl bg-gradient-to-r from-cyan-600 to-cyan-600 text-white font-semibold hover:from-cyan-500 hover:to-cyan-500 transition-all duration-300 shadow-lg shadow-cyan-500/25 hover:shadow-cyan-500/40 hover:scale-105"
           >
             Get Started Free
             <ChevronRight className="w-5 h-5" />

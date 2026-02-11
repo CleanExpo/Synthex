@@ -267,7 +267,7 @@ export function CommandPalette() {
                         w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left
                         transition-colors duration-150
                         ${isSelected 
-                          ? 'bg-purple-500/20 text-white' 
+                          ? 'bg-cyan-500/20 text-white' 
                           : 'text-gray-300 hover:bg-white/5 hover:text-white'
                         }
                       `}

@@ -51,7 +51,7 @@ export function FeatureCard({ feature, className, variant = 'default', onClick }
     >
       {/* Badge */}
       {feature.badge && (
-        <div className="absolute top-3 right-3 px-2 py-0.5 rounded-full bg-violet-500/20 border border-violet-500/30 text-violet-300 text-xs font-medium">
+        <div className="absolute top-3 right-3 px-2 py-0.5 rounded-full bg-cyan-500/20 border border-cyan-500/30 text-cyan-300 text-xs font-medium">
           {feature.badge}
         </div>
       )}
@@ -60,7 +60,7 @@ export function FeatureCard({ feature, className, variant = 'default', onClick }
       <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none">
         <div className={cn(
           'absolute top-0 left-1/2 -translate-x-1/2 w-32 h-32 rounded-full blur-3xl',
-          feature.iconColor || 'bg-violet-500/20'
+          feature.iconColor || 'bg-cyan-500/20'
         )} />
       </div>
 
@@ -75,7 +75,7 @@ export function FeatureCard({ feature, className, variant = 'default', onClick }
             isCompact ? 'w-10 h-10 mb-2' : 'w-12 h-12 mb-4',
             feature.iconColor
               ? `bg-gradient-to-br ${feature.iconColor}`
-              : 'bg-gradient-to-br from-violet-500/20 to-fuchsia-500/20 border border-violet-500/20'
+              : 'bg-gradient-to-br from-cyan-500/20 to-cyan-500/20 border border-cyan-500/20'
           )}>
             <Icon className={cn(
               'text-white',
@@ -107,7 +107,7 @@ export function FeatureCard({ feature, className, variant = 'default', onClick }
         {feature.stats && isDetailed && (
           <div className="mt-4 pt-4 border-t border-white/10">
             <div className="flex items-baseline gap-2">
-              <span className="text-2xl font-bold bg-gradient-to-r from-violet-400 to-fuchsia-400 bg-clip-text text-transparent">
+              <span className="text-2xl font-bold bg-gradient-to-r from-cyan-400 to-cyan-400 bg-clip-text text-transparent">
                 {feature.stats.value}
               </span>
               <span className="text-sm text-slate-500">{feature.stats.label}</span>
@@ -117,7 +117,7 @@ export function FeatureCard({ feature, className, variant = 'default', onClick }
 
         {/* Arrow link indicator */}
         {feature.href && (
-          <div className="mt-4 flex items-center gap-2 text-violet-400 text-sm font-medium group-hover:gap-3 transition-all">
+          <div className="mt-4 flex items-center gap-2 text-cyan-400 text-sm font-medium group-hover:gap-3 transition-all">
             Learn more
             <ArrowRight className="w-4 h-4" />
           </div>
@@ -191,7 +191,7 @@ export function FeatureSection({
     <section className={cn('py-20', className)}>
       <div className="text-center mb-16">
         {subtitle && (
-          <span className="inline-block px-4 py-1.5 mb-4 text-sm font-medium text-violet-300 bg-violet-500/10 border border-violet-500/20 rounded-full">
+          <span className="inline-block px-4 py-1.5 mb-4 text-sm font-medium text-cyan-300 bg-cyan-500/10 border border-cyan-500/20 rounded-full">
             {subtitle}
           </span>
         )}

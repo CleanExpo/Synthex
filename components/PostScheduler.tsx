@@ -52,7 +52,7 @@ const platformIcons = {
 
 const platformColors = {
   twitter: 'bg-blue-500',
-  instagram: 'bg-gradient-to-br from-purple-600 to-pink-500',
+  instagram: 'bg-gradient-to-br from-cyan-600 to-pink-500',
   linkedin: 'bg-blue-700',
   youtube: 'bg-red-600',
   facebook: 'bg-blue-600',
@@ -213,7 +213,7 @@ export default function PostScheduler() {
               onClick={() => setSelectedDate(day)}
               className={`
                 min-h-[100px] p-2 rounded-lg border cursor-pointer transition-all
-                ${isSelected ? 'border-purple-500 bg-purple-500/10' : 'border-white/10'}
+                ${isSelected ? 'border-cyan-500 bg-cyan-500/10' : 'border-white/10'}
                 ${isToday(day) ? 'bg-blue-500/10' : ''}
                 ${isPastDay ? 'opacity-50' : ''}
                 hover:bg-white/5
@@ -263,7 +263,7 @@ export default function PostScheduler() {
           const posts = getPostsForDate(day);
           
           return (
-            <div key={day.toISOString()} className="border-l-2 border-purple-500/30 pl-4">
+            <div key={day.toISOString()} className="border-l-2 border-cyan-500/30 pl-4">
               <h3 className="font-medium text-lg mb-3">
                 {format(day, 'EEEE, MMM d')}
                 {isToday(day) && (

@@ -80,7 +80,7 @@ const platformColors = {
   facebook: '#1877F2'
 };
 
-const COLORS = ['#8b5cf6', '#ec4899', '#3b82f6', '#10b981', '#f59e0b'];
+const COLORS = ['#06b6d4', '#ec4899', '#3b82f6', '#10b981', '#f59e0b'];
 
 export default function RealTimeAnalytics() {
   const [timeRange, setTimeRange] = useState('7d');
@@ -275,7 +275,7 @@ export default function RealTimeAnalytics() {
           <CardContent>
             <div className="flex items-center justify-between">
               <p className="text-2xl font-bold">{formatNumber(analyticsData.overview.totalReach)}</p>
-              <Eye className="w-5 h-5 text-purple-500" />
+              <Eye className="w-5 h-5 text-cyan-500" />
             </div>
             <div className="flex items-center gap-1 mt-2">
               {getChangeIcon(12.5)}
@@ -383,8 +383,8 @@ export default function RealTimeAnalytics() {
                 <Area 
                   type="monotone" 
                   dataKey="engagement" 
-                  stroke="#8b5cf6" 
-                  fill="#8b5cf6" 
+                  stroke="#06b6d4" 
+                  fill="#06b6d4" 
                   fillOpacity={0.3}
                   name="Engagement"
                 />
@@ -541,7 +541,7 @@ export default function RealTimeAnalytics() {
               {analyticsData.trends.map((trend) => (
                 <div key={trend.hashtag} className="flex items-center justify-between p-3 bg-white/5 rounded-lg">
                   <div className="flex items-center gap-3">
-                    <Target className="w-4 h-4 text-purple-500" />
+                    <Target className="w-4 h-4 text-cyan-500" />
                     <div>
                       <p className="font-medium">{trend.hashtag}</p>
                       <p className="text-sm text-gray-400">{formatNumber(trend.mentions)} mentions</p>
@@ -591,7 +591,7 @@ export default function RealTimeAnalytics() {
                   <Tooltip 
                     contentStyle={{ backgroundColor: '#1a1a1a', border: '1px solid #333' }}
                   />
-                  <Bar dataKey="percentage" fill="#8b5cf6" />
+                  <Bar dataKey="percentage" fill="#06b6d4" />
                 </BarChart>
               </ResponsiveContainer>
             </div>

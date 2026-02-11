@@ -135,3 +135,4 @@ setup-*-env.sh
 # BFG/git-filter-repo secrets files (contain patterns for secret removal)
 bfg-secrets.txt
 *-secrets.txt
+tools/claude-seo/

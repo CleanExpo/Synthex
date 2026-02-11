@@ -63,7 +63,7 @@ export function CompetitorCard({
       <Card
         variant="glass"
         className={`cursor-pointer ${
-          isSelected ? 'ring-2 ring-purple-500' : ''
+          isSelected ? 'ring-2 ring-cyan-500' : ''
         } ${
           isSelectedForComparison ? 'ring-2 ring-blue-500' : ''
         }`}

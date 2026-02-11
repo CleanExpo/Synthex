@@ -357,7 +357,7 @@ export default function ViralPatternsPage() {
         <Card variant="glass">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-gray-400">Avg Virality Score</CardTitle>
-            <TrendingUp className="h-4 w-4 text-purple-500" />
+            <TrendingUp className="h-4 w-4 text-cyan-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-white">91.7</div>
@@ -367,7 +367,7 @@ export default function ViralPatternsPage() {
         <Card variant="glass">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-gray-400">Best Time to Post</CardTitle>
-            <Clock className="h-4 w-4 text-purple-500" />
+            <Clock className="h-4 w-4 text-cyan-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-white">2-3 PM</div>
@@ -377,7 +377,7 @@ export default function ViralPatternsPage() {
         <Card variant="glass">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-gray-400">Top Hook Type</CardTitle>
-            <Zap className="h-4 w-4 text-purple-500" />
+            <Zap className="h-4 w-4 text-cyan-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-white">Questions</div>
@@ -387,7 +387,7 @@ export default function ViralPatternsPage() {
         <Card variant="glass">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-gray-400">Avg Growth Rate</CardTitle>
-            <Activity className="h-4 w-4 text-purple-500" />
+            <Activity className="h-4 w-4 text-cyan-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-white">+327%</div>
@@ -403,7 +403,7 @@ export default function ViralPatternsPage() {
           <CardHeader>
             <CardTitle className="flex items-center justify-between">
               <span>Engagement Timeline</span>
-              <BarChart3 className="h-4 w-4 text-purple-500" />
+              <BarChart3 className="h-4 w-4 text-cyan-500" />
             </CardTitle>
             <CardDescription className="text-gray-400">
               Peak engagement times by platform
@@ -467,7 +467,7 @@ export default function ViralPatternsPage() {
           <CardHeader>
             <CardTitle className="flex items-center justify-between">
               <span>Viral Hook Types</span>
-              <Sparkles className="h-4 w-4 text-purple-500" />
+              <Sparkles className="h-4 w-4 text-cyan-500" />
             </CardTitle>
             <CardDescription className="text-gray-400">
               Most effective content hooks
@@ -508,7 +508,7 @@ export default function ViralPatternsPage() {
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
             <span>Top Viral Patterns</span>
-            <TrendingUp className="h-4 w-4 text-purple-500" />
+            <TrendingUp className="h-4 w-4 text-cyan-500" />
           </CardTitle>
           <CardDescription className="text-gray-400">
             Highest performing content patterns this week
@@ -524,7 +524,7 @@ export default function ViralPatternsPage() {
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
-                      <span className="px-2 py-1 rounded-full bg-purple-500/20 text-purple-400 text-xs font-medium">
+                      <span className="px-2 py-1 rounded-full bg-cyan-500/20 text-cyan-400 text-xs font-medium">
                         {pattern.platform}
                       </span>
                       <span className="px-2 py-1 rounded-full bg-blue-500/20 text-blue-400 text-xs font-medium">
@@ -565,7 +565,7 @@ export default function ViralPatternsPage() {
                     <span className="text-xs text-gray-500">Sentiment:</span>
                     <div className="w-24 h-2 bg-gray-700 rounded-full overflow-hidden">
                       <div
-                        className="h-full bg-gradient-to-r from-purple-500 to-pink-500"
+                        className="h-full bg-gradient-to-r from-cyan-500 to-pink-500"
                         style={{ width: `${pattern.sentiment * 100}%` }}
                       />
                     </div>
@@ -574,7 +574,7 @@ export default function ViralPatternsPage() {
                   <Button
                     size="sm"
                     variant="ghost"
-                    className="text-purple-400 hover:text-purple-300"
+                    className="text-cyan-400 hover:text-cyan-300"
                     onClick={() => handleAnalyzePattern(pattern)}
                   >
                     Analyze Pattern
@@ -592,7 +592,7 @@ export default function ViralPatternsPage() {
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
             <span>Platform Performance Matrix</span>
-            <Activity className="h-4 w-4 text-purple-500" />
+            <Activity className="h-4 w-4 text-cyan-500" />
           </CardTitle>
           <CardDescription className="text-gray-400">
             Comparative analysis across platforms

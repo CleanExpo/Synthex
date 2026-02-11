@@ -408,18 +408,18 @@ export function CollaborationTools({
                 <div
                   key={notification.id}
                   className={`p-3 border-b border-white/5 hover:bg-white/5 cursor-pointer transition-colors ${
-                    !notification.read ? 'bg-purple-500/10' : ''
+                    !notification.read ? 'bg-cyan-500/10' : ''
                   }`}
                   onClick={() => markNotificationRead(notification.id)}
                 >
                   <div className="flex items-start gap-3">
                     <div className={`p-1.5 rounded-full ${
-                      notification.type === 'mention' ? 'bg-purple-500/20' :
+                      notification.type === 'mention' ? 'bg-cyan-500/20' :
                       notification.type === 'comment' ? 'bg-blue-500/20' :
                       notification.type === 'reply' ? 'bg-green-500/20' :
                       'bg-gray-500/20'
                     }`}>
-                      {notification.type === 'mention' && <AtSign className="h-3 w-3 text-purple-400" />}
+                      {notification.type === 'mention' && <AtSign className="h-3 w-3 text-cyan-400" />}
                       {notification.type === 'comment' && <MessageSquare className="h-3 w-3 text-blue-400" />}
                       {notification.type === 'reply' && <Reply className="h-3 w-3 text-green-400" />}
                     </div>
@@ -430,7 +430,7 @@ export function CollaborationTools({
                       </p>
                     </div>
                     {!notification.read && (
-                      <div className="w-2 h-2 bg-purple-500 rounded-full" />
+                      <div className="w-2 h-2 bg-cyan-500 rounded-full" />
                     )}
                   </div>
                 </div>

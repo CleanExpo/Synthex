@@ -52,7 +52,7 @@ const providerConfig = {
   demo: {
     name: 'Demo Mode',
     icon: Key,
-    color: 'text-purple-400',
+    color: 'text-cyan-400',
     description: 'Demo authentication',
   },
 };
@@ -200,7 +200,7 @@ export default function AccountsSettingsPage() {
       <Card variant="glass">
         <CardHeader>
           <CardTitle className="flex items-center">
-            <Shield className="h-5 w-5 mr-2 text-purple-400" />
+            <Shield className="h-5 w-5 mr-2 text-cyan-400" />
             Your Authentication Methods
           </CardTitle>
           <CardDescription className="text-gray-400">
@@ -210,7 +210,7 @@ export default function AccountsSettingsPage() {
         <CardContent className="space-y-4">
           {isLoading ? (
             <div className="flex items-center justify-center py-8">
-              <Loader2 className="h-6 w-6 animate-spin text-purple-400" />
+              <Loader2 className="h-6 w-6 animate-spin text-cyan-400" />
               <span className="ml-2 text-gray-400">Loading accounts...</span>
             </div>
           ) : accounts.length === 0 ? (
@@ -235,7 +235,7 @@ export default function AccountsSettingsPage() {
                       <p className="text-white font-medium flex items-center">
                         {config?.name || account.provider}
                         {account.isPrimary && (
-                          <span className="ml-2 text-xs bg-purple-500/20 text-purple-400 px-2 py-0.5 rounded">
+                          <span className="ml-2 text-xs bg-cyan-500/20 text-cyan-400 px-2 py-0.5 rounded">
                             Primary
                           </span>
                         )}
@@ -292,7 +292,7 @@ export default function AccountsSettingsPage() {
         <Card variant="glass">
           <CardHeader>
             <CardTitle className="flex items-center">
-              <Link2 className="h-5 w-5 mr-2 text-purple-400" />
+              <Link2 className="h-5 w-5 mr-2 text-cyan-400" />
               Link Additional Accounts
             </CardTitle>
             <CardDescription className="text-gray-400">

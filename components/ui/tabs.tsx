@@ -17,7 +17,7 @@ const tabsListVariants = cva(
         'glass-solid':
           'bg-slate-900/80 backdrop-blur-md border border-white/[0.08] text-white/70',
         'glass-primary':
-          'bg-violet-500/10 backdrop-blur-md border border-violet-500/20 text-violet-200/70',
+          'bg-cyan-500/10 backdrop-blur-md border border-cyan-500/20 text-cyan-200/70',
         'glass-secondary':
           'bg-cyan-500/10 backdrop-blur-md border border-cyan-500/20 text-cyan-200/70',
         // Pill variants (no background on list)
@@ -51,7 +51,7 @@ const tabsTriggerVariants = cva(
         'glass-solid':
           'rounded-sm data-[state=active]:bg-white/[0.15] data-[state=active]:text-white data-[state=active]:shadow-sm text-white/70 hover:text-white/90',
         'glass-primary':
-          'rounded-sm data-[state=active]:bg-violet-500/30 data-[state=active]:text-white data-[state=active]:shadow-sm text-violet-200/70 hover:text-violet-200',
+          'rounded-sm data-[state=active]:bg-cyan-500/30 data-[state=active]:text-white data-[state=active]:shadow-sm text-cyan-200/70 hover:text-cyan-200',
         'glass-secondary':
           'rounded-sm data-[state=active]:bg-cyan-500/30 data-[state=active]:text-white data-[state=active]:shadow-sm text-cyan-200/70 hover:text-cyan-200',
         pill:
@@ -59,7 +59,7 @@ const tabsTriggerVariants = cva(
         'pill-glass':
           'rounded-full bg-transparent data-[state=active]:bg-white/[0.1] data-[state=active]:text-white text-white/70 hover:bg-white/[0.05] hover:text-white/90',
         underline:
-          'rounded-none border-b-2 border-transparent data-[state=active]:border-violet-500 data-[state=active]:text-white pb-3 text-white/70 hover:text-white/90',
+          'rounded-none border-b-2 border-transparent data-[state=active]:border-cyan-500 data-[state=active]:text-white pb-3 text-white/70 hover:text-white/90',
       },
     },
     defaultVariants: {

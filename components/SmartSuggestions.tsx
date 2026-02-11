@@ -92,7 +92,7 @@ export function SmartSuggestions({
       performance: 'text-blue-400',
       gap: 'text-yellow-400',
       viral: 'text-pink-400',
-      evergreen: 'text-purple-400'
+      evergreen: 'text-cyan-400'
     };
     return colors[type] || 'text-gray-400';
   };
@@ -130,7 +130,7 @@ export function SmartSuggestions({
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <Brain className="h-6 w-6 text-purple-400" />
+          <Brain className="h-6 w-6 text-cyan-400" />
           <div>
             <h2 className="text-xl font-semibold text-white">Smart Suggestions</h2>
             <p className="text-sm text-gray-400">AI-powered content recommendations</p>
@@ -242,7 +242,7 @@ export function SmartSuggestions({
                 <div className="space-y-1">
                   {suggestion.reasoning.slice(0, 2).map((reason, i) => (
                     <div key={i} className="flex items-start gap-2">
-                      <span className="text-purple-400 text-xs">•</span>
+                      <span className="text-cyan-400 text-xs">•</span>
                       <span className="text-xs text-gray-400">{reason}</span>
                     </div>
                   ))}
@@ -252,7 +252,7 @@ export function SmartSuggestions({
                 {suggestion.hashtags.length > 0 && (
                   <div className="flex flex-wrap gap-1">
                     {suggestion.hashtags.slice(0, 3).map(tag => (
-                      <span key={tag} className="text-xs text-purple-400">
+                      <span key={tag} className="text-xs text-cyan-400">
                         {tag}
                       </span>
                     ))}
@@ -305,7 +305,7 @@ function CompactSuggestions({
             className="w-full p-3 bg-white/[0.02] backdrop-blur-xl border border-white/[0.08] hover:bg-white/5 rounded-lg transition-colors text-left"
           >
             <div className="flex items-center gap-3">
-              <Icon className="h-4 w-4 text-purple-400 flex-shrink-0" />
+              <Icon className="h-4 w-4 text-cyan-400 flex-shrink-0" />
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-white truncate">
                   {suggestion.title}
@@ -331,10 +331,10 @@ export function SuggestionCards() {
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
       {/* Time-based suggestion */}
-      <Card variant="glass" className="border-purple-500/30">
+      <Card variant="glass" className="border-cyan-500/30">
         <CardHeader>
           <div className="flex items-center gap-2">
-            <Clock className="h-5 w-5 text-purple-400" />
+            <Clock className="h-5 w-5 text-cyan-400" />
             <CardTitle className="text-base">Perfect Timing</CardTitle>
           </div>
         </CardHeader>

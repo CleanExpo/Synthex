@@ -79,12 +79,12 @@ interface LiveActivityFeedProps {
 const activityIcons: Record<ActivityType, React.ReactNode> = {
   post_created: <Edit className="h-4 w-4 text-blue-400" />,
   post_published: <Send className="h-4 w-4 text-green-400" />,
-  post_scheduled: <Calendar className="h-4 w-4 text-purple-400" />,
+  post_scheduled: <Calendar className="h-4 w-4 text-cyan-400" />,
   post_edited: <Edit className="h-4 w-4 text-yellow-400" />,
   post_deleted: <Trash2 className="h-4 w-4 text-red-400" />,
   engagement_spike: <TrendingUp className="h-4 w-4 text-green-400" />,
   new_follower: <User className="h-4 w-4 text-blue-400" />,
-  comment_received: <MessageSquare className="h-4 w-4 text-purple-400" />,
+  comment_received: <MessageSquare className="h-4 w-4 text-cyan-400" />,
   mention: <Bell className="h-4 w-4 text-yellow-400" />,
   team_member_joined: <Users className="h-4 w-4 text-green-400" />,
   team_member_action: <Activity className="h-4 w-4 text-blue-400" />,
@@ -97,12 +97,12 @@ const activityIcons: Record<ActivityType, React.ReactNode> = {
 const activityColors: Record<ActivityType, string> = {
   post_created: 'border-blue-500/30 bg-blue-500/10',
   post_published: 'border-green-500/30 bg-green-500/10',
-  post_scheduled: 'border-purple-500/30 bg-purple-500/10',
+  post_scheduled: 'border-cyan-500/30 bg-cyan-500/10',
   post_edited: 'border-yellow-500/30 bg-yellow-500/10',
   post_deleted: 'border-red-500/30 bg-red-500/10',
   engagement_spike: 'border-green-500/30 bg-green-500/10',
   new_follower: 'border-blue-500/30 bg-blue-500/10',
-  comment_received: 'border-purple-500/30 bg-purple-500/10',
+  comment_received: 'border-cyan-500/30 bg-cyan-500/10',
   mention: 'border-yellow-500/30 bg-yellow-500/10',
   team_member_joined: 'border-green-500/30 bg-green-500/10',
   team_member_action: 'border-blue-500/30 bg-blue-500/10',
@@ -292,7 +292,7 @@ export function LiveActivityFeed({
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
         <div className="flex items-center gap-2">
-          <Activity className="h-5 w-5 text-purple-400" />
+          <Activity className="h-5 w-5 text-cyan-400" />
           <h3 className="font-semibold text-white">Live Activity</h3>
         </div>
         <div className="flex items-center gap-2">
@@ -383,7 +383,7 @@ export function LiveActivityFeed({
 
       {/* Footer */}
       <div className="px-4 py-2 border-t border-white/10 text-center">
-        <button className="text-xs text-purple-400 hover:text-purple-300 transition-colors">
+        <button className="text-xs text-cyan-400 hover:text-cyan-300 transition-colors">
           View all activity
         </button>
       </div>

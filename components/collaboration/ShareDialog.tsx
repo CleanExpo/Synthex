@@ -310,7 +310,7 @@ export function ShareDialog({
                         onClick={() => handleShareWithUser(member)}
                         className="w-full flex items-center gap-3 p-3 hover:bg-white/5 transition-colors"
                       >
-                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-cyan-500 to-purple-500 flex items-center justify-center text-white text-sm font-medium">
+                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-cyan-500 to-cyan-500 flex items-center justify-center text-white text-sm font-medium">
                           {member.name?.charAt(0) || member.email.charAt(0)}
                         </div>
                         <div className="flex-1 text-left">
@@ -349,7 +349,7 @@ export function ShareDialog({
                         key={share.id}
                         className="flex items-center gap-3 p-3 bg-white/5 border border-white/10 rounded-lg"
                       >
-                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-cyan-500 to-purple-500 flex items-center justify-center text-white text-sm">
+                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-cyan-500 to-cyan-500 flex items-center justify-center text-white text-sm">
                           {share.sharedWithEmail?.charAt(0) || share.sharedWithUserId?.charAt(0) || 'L'}
                         </div>
                         <div className="flex-1 min-w-0">
@@ -453,7 +453,7 @@ export function ShareDialog({
                 <button
                   onClick={handleGenerateLink}
                   disabled={isLoading}
-                  className="w-full py-3 bg-gradient-to-r from-cyan-500 to-purple-500 text-white font-medium rounded-lg hover:opacity-90 disabled:opacity-50 transition-opacity"
+                  className="w-full py-3 bg-gradient-to-r from-cyan-500 to-cyan-500 text-white font-medium rounded-lg hover:opacity-90 disabled:opacity-50 transition-opacity"
                 >
                   {isLoading ? (
                     <Loader2 className="w-5 h-5 mx-auto animate-spin" />

@@ -158,7 +158,7 @@ export default function MonitoringDashboard() {
         <Card variant="glass">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium flex items-center">
-              <Server className="w-4 h-4 mr-2 text-purple-400" />
+              <Server className="w-4 h-4 mr-2 text-cyan-400" />
               System Status
             </CardTitle>
           </CardHeader>
@@ -395,7 +395,7 @@ export default function MonitoringDashboard() {
       <Card variant="glass">
         <CardHeader>
           <CardTitle className="flex items-center">
-            <Users className="w-5 h-5 mr-2 text-purple-400" />
+            <Users className="w-5 h-5 mr-2 text-cyan-400" />
             Active Users
           </CardTitle>
           <CardDescription>Currently active user sessions</CardDescription>

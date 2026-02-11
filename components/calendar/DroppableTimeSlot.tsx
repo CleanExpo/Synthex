@@ -69,9 +69,9 @@ export function DroppableTimeSlot({
       className={`
         group relative min-h-[80px] p-2 border-b border-white/5
         transition-all duration-200
-        ${isOver ? 'bg-purple-500/20 ring-2 ring-purple-500 ring-inset' : ''}
+        ${isOver ? 'bg-cyan-500/20 ring-2 ring-cyan-500 ring-inset' : ''}
         ${isOptimalForDrag && active ? 'bg-green-500/10' : ''}
-        ${isCurrentHour() ? 'bg-purple-500/5' : ''}
+        ${isCurrentHour() ? 'bg-cyan-500/5' : ''}
         ${compact ? 'min-h-[60px] p-1' : ''}
       `}
     >
@@ -80,7 +80,7 @@ export function DroppableTimeSlot({
         <div className={`
           absolute left-0 top-0 w-16 h-full flex items-start justify-end pr-2 pt-2
           text-xs text-gray-500 border-r border-white/5
-          ${isCurrentHour() ? 'text-purple-400 font-medium' : ''}
+          ${isCurrentHour() ? 'text-cyan-400 font-medium' : ''}
         `}>
           {formatHour(hour)}
         </div>
@@ -102,7 +102,7 @@ export function DroppableTimeSlot({
         {/* Drop Zone Feedback */}
         {isOver && (
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <div className="bg-purple-500/30 backdrop-blur-sm rounded-lg px-4 py-2 text-sm text-purple-200">
+            <div className="bg-cyan-500/30 backdrop-blur-sm rounded-lg px-4 py-2 text-sm text-cyan-200">
               Drop to reschedule to {formatHour(hour)}
             </div>
           </div>
@@ -148,12 +148,12 @@ export function DroppableTimeSlot({
 
       {/* Current Time Indicator */}
       {isCurrentHour() && (
-        <div className="absolute left-0 right-0 h-0.5 bg-purple-500 pointer-events-none"
+        <div className="absolute left-0 right-0 h-0.5 bg-cyan-500 pointer-events-none"
           style={{
             top: `${(new Date().getMinutes() / 60) * 100}%`,
           }}
         >
-          <div className="absolute -left-1 -top-1 w-2 h-2 rounded-full bg-purple-500" />
+          <div className="absolute -left-1 -top-1 w-2 h-2 rounded-full bg-cyan-500" />
         </div>
       )}
     </div>

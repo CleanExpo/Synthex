@@ -205,7 +205,7 @@ export default function PsychologyPage() {
           <Card variant="glass">
             <CardHeader>
               <CardTitle className="flex items-center">
-                <MessageSquare className="w-5 h-5 mr-2 text-purple-400" />
+                <MessageSquare className="w-5 h-5 mr-2 text-cyan-400" />
                 Content to Analyze
               </CardTitle>
               <CardDescription>
@@ -218,7 +218,7 @@ export default function PsychologyPage() {
                   value={content}
                   onChange={(e) => setContent(e.target.value)}
                   placeholder="Enter your content here... (e.g., social media post, email subject line, ad copy)"
-                  className="w-full h-48 px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 resize-none"
+                  className="w-full h-48 px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500 resize-none"
                   maxLength={selectedPlatform?.maxLength || 5000}
                 />
                 <div className="flex justify-between mt-2 text-sm text-gray-400">
@@ -235,7 +235,7 @@ export default function PsychologyPage() {
                   <select
                     value={platform}
                     onChange={(e) => setPlatform(e.target.value)}
-                    className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-cyan-500"
                   >
                     {PLATFORMS.map((p) => (
                       <option key={p.id} value={p.id} className="bg-gray-800">
@@ -252,7 +252,7 @@ export default function PsychologyPage() {
                   <select
                     value={contentType}
                     onChange={(e) => setContentType(e.target.value)}
-                    className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-cyan-500"
                   >
                     {CONTENT_TYPES.map((ct) => (
                       <option key={ct.id} value={ct.id} className="bg-gray-800">
@@ -272,7 +272,7 @@ export default function PsychologyPage() {
                   value={targetAudience}
                   onChange={(e) => setTargetAudience(e.target.value)}
                   placeholder="e.g., Tech professionals aged 25-45"
-                  className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500"
                 />
               </div>
 
@@ -306,7 +306,7 @@ export default function PsychologyPage() {
                 <CardHeader>
                   <CardTitle className="flex items-center justify-between">
                     <span className="flex items-center">
-                      <BarChart3 className="w-5 h-5 mr-2 text-purple-400" />
+                      <BarChart3 className="w-5 h-5 mr-2 text-cyan-400" />
                       Overall Score
                     </span>
                     <span className={`text-4xl font-bold ${getScoreColor(result.overallScore)}`}>
@@ -330,7 +330,7 @@ export default function PsychologyPage() {
               <Card variant="glass">
                 <CardHeader>
                   <CardTitle className="flex items-center">
-                    <Brain className="w-5 h-5 mr-2 text-purple-400" />
+                    <Brain className="w-5 h-5 mr-2 text-cyan-400" />
                     Psychology Principles
                   </CardTitle>
                 </CardHeader>
@@ -341,7 +341,7 @@ export default function PsychologyPage() {
                       <div key={index} className="p-3 bg-white/5 rounded-lg">
                         <div className="flex items-center justify-between mb-2">
                           <div className="flex items-center gap-2">
-                            <Icon className="w-4 h-4 text-purple-400" />
+                            <Icon className="w-4 h-4 text-cyan-400" />
                             <span className="font-medium text-white">{principle.name}</span>
                           </div>
                           <span className={`font-bold ${getScoreColor(principle.score)}`}>
@@ -350,7 +350,7 @@ export default function PsychologyPage() {
                         </div>
                         <Progress value={principle.score} className="h-2 mb-2" />
                         <p className="text-xs text-gray-400">{principle.description}</p>
-                        <p className="text-xs text-purple-300 mt-1">
+                        <p className="text-xs text-cyan-300 mt-1">
                           <Lightbulb className="w-3 h-3 inline mr-1" />
                           {principle.recommendation}
                         </p>
@@ -364,7 +364,7 @@ export default function PsychologyPage() {
               <Card variant="glass">
                 <CardHeader>
                   <CardTitle className="flex items-center">
-                    <TrendingUp className="w-5 h-5 mr-2 text-purple-400" />
+                    <TrendingUp className="w-5 h-5 mr-2 text-cyan-400" />
                     Persuasion Metrics
                   </CardTitle>
                 </CardHeader>

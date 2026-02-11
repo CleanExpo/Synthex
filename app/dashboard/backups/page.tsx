@@ -222,7 +222,7 @@ export default function BackupsPage() {
         <Card variant="glass">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium flex items-center">
-              <Calendar className="w-4 h-4 mr-2 text-purple-400" />
+              <Calendar className="w-4 h-4 mr-2 text-cyan-400" />
               Next Backup
             </CardTitle>
           </CardHeader>
@@ -320,7 +320,7 @@ export default function BackupsPage() {
         <CardContent>
           {isLoading ? (
             <div className="flex items-center justify-center py-8">
-              <Loader2 className="w-8 h-8 animate-spin text-purple-400" />
+              <Loader2 className="w-8 h-8 animate-spin text-cyan-400" />
             </div>
           ) : backups.length === 0 ? (
             <div className="text-center py-8">
@@ -333,8 +333,8 @@ export default function BackupsPage() {
               {backups.map((backup) => (
                 <div key={backup.id} className="flex items-center justify-between p-4 bg-white/5 rounded-lg hover:bg-white/10 transition-colors">
                   <div className="flex items-center space-x-4">
-                    <div className="w-10 h-10 rounded-full bg-purple-500/20 flex items-center justify-center">
-                      <Database className="w-5 h-5 text-purple-400" />
+                    <div className="w-10 h-10 rounded-full bg-cyan-500/20 flex items-center justify-center">
+                      <Database className="w-5 h-5 text-cyan-400" />
                     </div>
                     <div>
                       <div className="flex items-center gap-2">

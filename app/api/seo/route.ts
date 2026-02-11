@@ -1,0 +1,158 @@
+/**
+ * SEO API - Base Route
+ *
+ * Provides SEO tools and analysis endpoints for the dashboard.
+ * All endpoints are protected behind authentication and subscription checks.
+ *
+ * ENVIRONMENT VARIABLES REQUIRED:
+ * - JWT_SECRET: Token signing key (CRITICAL)
+ * - DATABASE_URL: PostgreSQL connection (CRITICAL)
+ */
+
+import { NextRequest } from 'next/server';
+import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
+import { subscriptionService, PLAN_LIMITS } from '@/lib/stripe/subscription-service';
+
+/**
+ * GET /api/seo
+ * Returns SEO tools status and usage for the authenticated user
+ */
+export async function GET(request: NextRequest) {
+  // Security check
+  const security = await APISecurityChecker.check(
+    request,
+    DEFAULT_POLICIES.AUTHENTICATED_READ
+  );
+
+  if (!security.allowed) {
+    return APISecurityChecker.createSecureResponse(
+      { error: security.error },
+      security.error === 'Authentication required' ? 401 : 403
+    );
+  }
+
+  try {
+    const userId = security.context.userId;
+    if (!userId) {
+      return APISecurityChecker.createSecureResponse(
+        { error: 'User ID not found' },
+        401
+      );
+    }
+
+    // Get subscription info
+    const subscription = await subscriptionService.getOrCreateSubscription(userId);
+
+    // Calculate SEO limits based on plan
+    const planLimits = PLAN_LIMITS[subscription.plan] || PLAN_LIMITS.free;
+
+    // Check if user has SEO access
+    const hasSeoAccess = subscription.plan !== 'free';
+
+    return APISecurityChecker.createSecureResponse({
+      success: true,
+      seo: {
+        hasAccess: hasSeoAccess,
+        plan: subscription.plan,
+        limits: {
+          audits: planLimits.maxSeoAudits,
+          pages: planLimits.maxSeoPages,
+        },
+        usage: {
+          audits: 0, // TODO: Track actual usage
+          pages: 0,
+        },
+        features: {
+          siteAudit: hasSeoAccess,
+          pageAnalysis: hasSeoAccess,
+          schemaGenerator: hasSeoAccess,
+          geoOptimization: subscription.plan === 'business' || subscription.plan === 'custom',
+          sitemapAnalyzer: hasSeoAccess,
+          competitorPages: hasSeoAccess,
+          hreflangChecker: subscription.plan === 'business' || subscription.plan === 'custom',
+          contentOptimizer: subscription.plan === 'business' || subscription.plan === 'custom',
+        },
+      },
+    });
+  } catch (error) {
+    console.error('SEO API error:', error);
+    return APISecurityChecker.createSecureResponse(
+      { error: 'Failed to fetch SEO status' },
+      500
+    );
+  }
+}
+
+/**
+ * POST /api/seo
+ * Validates SEO access and returns feature availability
+ */
+export async function POST(request: NextRequest) {
+  // Security check
+  const security = await APISecurityChecker.check(
+    request,
+    DEFAULT_POLICIES.AUTHENTICATED_WRITE
+  );
+
+  if (!security.allowed) {
+    return APISecurityChecker.createSecureResponse(
+      { error: security.error },
+      security.error === 'Authentication required' ? 401 : 403
+    );
+  }
+
+  try {
+    const userId = security.context.userId;
+    if (!userId) {
+      return APISecurityChecker.createSecureResponse(
+        { error: 'User ID not found' },
+        401
+      );
+    }
+
+    const body = await request.json();
+    const { action, feature } = body;
+
+    // Get subscription
+    const subscription = await subscriptionService.getOrCreateSubscription(userId);
+
+    // Check if user can use the requested feature
+    if (subscription.plan === 'free') {
+      return APISecurityChecker.createSecureResponse(
+        {
+          success: false,
+          error: 'SEO tools require a paid subscription',
+          upgradeRequired: true,
+          requiredPlan: 'professional',
+        },
+        402
+      );
+    }
+
+    // Check limits based on action
+    const planLimits = PLAN_LIMITS[subscription.plan] || PLAN_LIMITS.free;
+
+    if (action === 'audit' && planLimits.maxSeoAudits !== -1) {
+      // TODO: Check actual usage against limit
+      // const usage = await getUsage(userId, 'seoAudits');
+      // if (usage >= planLimits.maxSeoAudits) { ... }
+    }
+
+    if (action === 'page-analysis' && planLimits.maxSeoPages !== -1) {
+      // TODO: Check actual usage against limit
+    }
+
+    return APISecurityChecker.createSecureResponse({
+      success: true,
+      allowed: true,
+      plan: subscription.plan,
+      feature,
+    });
+  } catch (error) {
+    console.error('SEO API error:', error);
+    return APISecurityChecker.createSecureResponse(
+      { error: 'Failed to validate SEO access' },
+      500
+    );
+  }
+}

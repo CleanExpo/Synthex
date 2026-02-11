@@ -412,8 +412,8 @@ export function CustomReportBuilder() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-gradient-to-br from-purple-500/20 to-pink-500/20">
-            <FileText className="h-6 w-6 text-purple-400" />
+          <div className="p-2 rounded-lg bg-gradient-to-br from-cyan-500/20 to-cyan-500/20">
+            <FileText className="h-6 w-6 text-cyan-400" />
           </div>
           <div>
             <h2 className="text-2xl font-bold text-white">Custom Report Builder</h2>

@@ -255,7 +255,7 @@ export function StreakCounter({ compact = false }: { compact?: boolean }) {
         </div>
         
         <div className="text-center p-3 bg-white/5 rounded-lg">
-          <Star className="h-5 w-5 text-purple-400 mx-auto mb-1" />
+          <Star className="h-5 w-5 text-cyan-400 mx-auto mb-1" />
           <p className="text-xl font-bold text-white">Lv.{streakData.level}</p>
           <p className="text-xs text-gray-400">Level</p>
         </div>
@@ -269,13 +269,13 @@ export function StreakCounter({ compact = false }: { compact?: boolean }) {
       
       {/* Daily Challenge */}
       {!streakData.todayCompleted && (
-        <div className="p-4 bg-purple-500/10 border border-purple-500/30 rounded-lg">
+        <div className="p-4 bg-cyan-500/10 border border-cyan-500/30 rounded-lg">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
-              <Target className="h-5 w-5 text-purple-400" />
+              <Target className="h-5 w-5 text-cyan-400" />
               <span className="font-medium text-white">Today's Challenge</span>
             </div>
-            <span className="text-xs text-purple-400">+10 points</span>
+            <span className="text-xs text-cyan-400">+10 points</span>
           </div>
           <p className="text-sm text-gray-300 mb-3">
             Create and publish at least one piece of content

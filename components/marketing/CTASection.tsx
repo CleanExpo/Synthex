@@ -50,7 +50,7 @@ export function CTASection({
       className={cn(
         'relative overflow-hidden rounded-3xl',
         isGradient
-          ? 'bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600'
+          ? 'bg-gradient-to-r from-cyan-600 via-cyan-600 to-cyan-600'
           : 'glass-primary',
         isCentered ? 'text-center' : '',
         className
@@ -62,12 +62,12 @@ export function CTASection({
         <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10" />
 
         {/* Glow effects */}
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-violet-500/30 rounded-full blur-3xl" />
-        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-fuchsia-500/30 rounded-full blur-3xl" />
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-cyan-500/30 rounded-full blur-3xl" />
+        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-cyan-500/30 rounded-full blur-3xl" />
 
         {/* Gradient overlay for non-gradient variant */}
         {!isGradient && (
-          <div className="absolute inset-0 bg-gradient-to-r from-violet-500/10 via-transparent to-fuchsia-500/10" />
+          <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/10 via-transparent to-cyan-500/10" />
         )}
       </div>
 
@@ -87,7 +87,7 @@ export function CTASection({
               'inline-flex items-center gap-2 px-4 py-1.5 rounded-full mb-6',
               isGradient
                 ? 'bg-white/20 text-white'
-                : 'bg-violet-500/20 text-violet-200 border border-violet-500/30'
+                : 'bg-cyan-500/20 text-cyan-200 border border-cyan-500/30'
             )}>
               <Sparkles className="w-4 h-4" />
               <span className="text-sm font-medium">{badge}</span>
@@ -129,8 +129,8 @@ export function CTASection({
                 className={cn(
                   'font-semibold px-8 transition-all duration-300',
                   isGradient
-                    ? 'bg-white text-violet-600 hover:bg-white/90 shadow-lg hover:shadow-xl'
-                    : 'bg-white text-violet-600 hover:bg-white/90 shadow-[0_0_20px_rgba(255,255,255,0.3)]'
+                    ? 'bg-white text-cyan-600 hover:bg-white/90 shadow-lg hover:shadow-xl'
+                    : 'bg-white text-cyan-600 hover:bg-white/90 shadow-[0_0_20px_rgba(255,255,255,0.3)]'
                 )}
               >
                 {primaryCTA.text}
@@ -144,8 +144,8 @@ export function CTASection({
               className={cn(
                 'font-semibold px-8 transition-all duration-300',
                 isGradient
-                  ? 'bg-white text-violet-600 hover:bg-white/90 shadow-lg hover:shadow-xl'
-                  : 'bg-white text-violet-600 hover:bg-white/90 shadow-[0_0_20px_rgba(255,255,255,0.3)]'
+                  ? 'bg-white text-cyan-600 hover:bg-white/90 shadow-lg hover:shadow-xl'
+                  : 'bg-white text-cyan-600 hover:bg-white/90 shadow-[0_0_20px_rgba(255,255,255,0.3)]'
               )}
             >
               {primaryCTA.text}
@@ -195,7 +195,7 @@ export interface MiniCTAProps {
 
 export function MiniCTA({ text, linkText, href, onClick, className }: MiniCTAProps) {
   const LinkContent = (
-    <span className="inline-flex items-center gap-1 text-violet-400 hover:text-violet-300 font-medium transition-colors group">
+    <span className="inline-flex items-center gap-1 text-cyan-400 hover:text-cyan-300 font-medium transition-colors group">
       {linkText}
       <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
     </span>

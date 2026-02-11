@@ -15,7 +15,7 @@ const typeConfig = {
   like: { color: '#ef4444', icon: '❤️' },
   comment: { color: '#3b82f6', icon: '💬' },
   share: { color: '#10b981', icon: '🔄' },
-  follow: { color: '#8b5cf6', icon: '➕' },
+  follow: { color: '#06b6d4', icon: '➕' },
   post: { color: '#f59e0b', icon: '📝' },
 };
 
@@ -23,7 +23,7 @@ const initialActivities: Activity[] = [
   { id: 1, type: 'like', user: '@sarah', action: 'liked', icon: '❤️', color: '#ef4444' },
   { id: 2, type: 'comment', user: '@john', action: 'commented', icon: '💬', color: '#3b82f6' },
   { id: 3, type: 'share', user: '@emma', action: 'shared', icon: '🔄', color: '#10b981' },
-  { id: 4, type: 'follow', user: '@alex', action: 'followed', icon: '➕', color: '#8b5cf6' },
+  { id: 4, type: 'follow', user: '@alex', action: 'followed', icon: '➕', color: '#06b6d4' },
   { id: 5, type: 'post', user: '@mike', action: 'posted', icon: '📝', color: '#f59e0b' },
   { id: 6, type: 'like', user: '@lisa', action: 'liked', icon: '❤️', color: '#ef4444' },
 ];
@@ -107,7 +107,7 @@ export default function ActivityStreamSVG() {
     <div className="w-full h-[500px] relative rounded-2xl overflow-hidden bg-[#030014]">
       {/* Background effects */}
       <div className="absolute inset-0">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_60%_60%_at_50%_50%,rgba(139,92,246,0.2),transparent)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_60%_60%_at_50%_50%,rgba(6,182,212,0.2),transparent)]" />
       </div>
 
       {/* Starfield */}
@@ -138,9 +138,9 @@ export default function ActivityStreamSVG() {
         <svg viewBox="0 0 400 400" className="w-80 h-80">
           <defs>
             <radialGradient id="hubGradient" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor="#a78bfa" />
-              <stop offset="50%" stopColor="#8b5cf6" />
-              <stop offset="100%" stopColor="#6d28d9" />
+              <stop offset="0%" stopColor="#67e8f9" />
+              <stop offset="50%" stopColor="#06b6d4" />
+              <stop offset="100%" stopColor="#0891b2" />
             </radialGradient>
             <filter id="hubGlow" x="-100%" y="-100%" width="300%" height="300%">
               <feGaussianBlur stdDeviation="15" result="blur" />
@@ -157,7 +157,7 @@ export default function ActivityStreamSVG() {
             cy="200"
             r="120"
             fill="none"
-            stroke="#a78bfa"
+            stroke="#67e8f9"
             strokeWidth="1"
             opacity="0.5"
             style={{ transform: `scale(${ringScale.r1})`, transformOrigin: 'center' }}
@@ -252,12 +252,12 @@ export default function ActivityStreamSVG() {
 
       {/* Stats display */}
       <div className="absolute top-8 left-1/2 -translate-x-1/2 text-center">
-        <p className="text-purple-400 font-bold text-lg">LIVE ACTIVITY</p>
-        <p className="text-purple-300/70 text-sm">{activityCount.toLocaleString()} actions/min</p>
+        <p className="text-cyan-400 font-bold text-lg">LIVE ACTIVITY</p>
+        <p className="text-cyan-300/70 text-sm">{activityCount.toLocaleString()} actions/min</p>
       </div>
 
       {/* Activity feed overlay */}
-      <div className="absolute top-4 right-4 w-64 bg-black/70 backdrop-blur-xl rounded-xl p-4 border border-purple-500/30 shadow-[0_0_30px_rgba(139,92,246,0.2)]">
+      <div className="absolute top-4 right-4 w-64 bg-black/70 backdrop-blur-xl rounded-xl p-4 border border-cyan-500/30 shadow-[0_0_30px_rgba(6,182,212,0.2)]">
         <h3 className="text-white font-bold mb-3 text-sm flex items-center gap-2">
           <span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
           Real-Time Activity

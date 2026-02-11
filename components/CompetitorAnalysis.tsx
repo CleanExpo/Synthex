@@ -393,8 +393,8 @@ export function CompetitorAnalysis() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-gradient-to-br from-purple-500/20 to-pink-500/20">
-            <Target className="h-6 w-6 text-purple-400" />
+          <div className="p-2 rounded-lg bg-gradient-to-br from-cyan-500/20 to-cyan-500/20">
+            <Target className="h-6 w-6 text-cyan-400" />
           </div>
           <div>
             <h2 className="text-2xl font-bold text-white">Competitor Analysis</h2>
@@ -406,7 +406,7 @@ export function CompetitorAnalysis() {
           <Button
             variant="outline"
             onClick={() => setComparisonMode(!comparisonMode)}
-            className={comparisonMode ? 'bg-purple-500/20 border-purple-500' : 'bg-white/5 border-white/10'}
+            className={comparisonMode ? 'bg-cyan-500/20 border-cyan-500' : 'bg-white/5 border-white/10'}
           >
             <BarChart3 className="h-4 w-4 mr-2" />
             Compare
@@ -458,7 +458,7 @@ export function CompetitorAnalysis() {
             <Card
               variant="glass"
               className={`cursor-pointer ${
-                selectedCompetitor?.id === competitor.id ? 'ring-2 ring-purple-500' : ''
+                selectedCompetitor?.id === competitor.id ? 'ring-2 ring-cyan-500' : ''
               } ${
                 selectedForComparison.includes(competitor.id) ? 'ring-2 ring-blue-500' : ''
               }`}
@@ -573,11 +573,11 @@ export function CompetitorAnalysis() {
                     <Tooltip
                       contentStyle={{
                         backgroundColor: 'rgba(0,0,0,0.8)',
-                        border: '1px solid rgba(139, 92, 246, 0.3)',
+                        border: '1px solid rgba(6, 182, 212, 0.3)',
                         borderRadius: '8px'
                       }}
                     />
-                    <Bar dataKey="value" fill="#8b5cf6" radius={[8, 8, 0, 0]} />
+                    <Bar dataKey="value" fill="#06b6d4" radius={[8, 8, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
@@ -593,7 +593,7 @@ export function CompetitorAnalysis() {
                     <Tooltip
                       contentStyle={{
                         backgroundColor: 'rgba(0,0,0,0.8)',
-                        border: '1px solid rgba(139, 92, 246, 0.3)',
+                        border: '1px solid rgba(6, 182, 212, 0.3)',
                         borderRadius: '8px'
                       }}
                     />
@@ -622,8 +622,8 @@ export function CompetitorAnalysis() {
                         key={index}
                         name={competitors.find(c => selectedForComparison[index] === c.id)?.name || ''}
                         dataKey="followers"
-                        stroke={['#8b5cf6', '#ec4899', '#3b82f6'][index]}
-                        fill={['#8b5cf6', '#ec4899', '#3b82f6'][index]}
+                        stroke={['#06b6d4', '#ec4899', '#3b82f6'][index]}
+                        fill={['#06b6d4', '#ec4899', '#3b82f6'][index]}
                         fillOpacity={0.3}
                       />
                     ))}
@@ -713,7 +713,7 @@ export function CompetitorAnalysis() {
                       <p className="text-xs text-gray-400">Avg Shares</p>
                     </div>
                     <div className="p-3 bg-white/5 rounded-lg text-center">
-                      <TrendingUp className="h-5 w-5 text-purple-400 mx-auto mb-2" />
+                      <TrendingUp className="h-5 w-5 text-cyan-400 mx-auto mb-2" />
                       <p className="text-lg font-bold text-white">
                         {selectedCompetitor.metrics.contentPerformance.viralPosts}
                       </p>
@@ -742,7 +742,7 @@ export function CompetitorAnalysis() {
                           {selectedCompetitor.contentStrategy.contentTypes.map((_, index) => (
                             <Cell 
                               key={index} 
-                              fill={['#8b5cf6', '#ec4899', '#3b82f6', '#10b981'][index]}
+                              fill={['#06b6d4', '#ec4899', '#3b82f6', '#10b981'][index]}
                             />
                           ))}
                         </Pie>
@@ -771,7 +771,7 @@ export function CompetitorAnalysis() {
                   <h4 className="font-medium text-white mb-3">Top Hashtags</h4>
                   <div className="flex flex-wrap gap-2">
                     {selectedCompetitor.contentStrategy.hashtagStrategy.map(tag => (
-                      <Badge key={tag} className="bg-purple-500/20 text-purple-400">
+                      <Badge key={tag} className="bg-cyan-500/20 text-cyan-400">
                         {tag}
                       </Badge>
                     ))}
@@ -823,9 +823,9 @@ export function CompetitorAnalysis() {
               </TabsContent>
               
               <TabsContent value="insights" className="space-y-6">
-                <div className="p-4 bg-purple-500/10 border border-purple-500/30 rounded-lg">
+                <div className="p-4 bg-cyan-500/10 border border-cyan-500/30 rounded-lg">
                   <div className="flex items-center gap-2 mb-3">
-                    <Zap className="h-5 w-5 text-purple-400" />
+                    <Zap className="h-5 w-5 text-cyan-400" />
                     <h4 className="font-medium text-white">AI Insights</h4>
                   </div>
                   <div className="space-y-3">

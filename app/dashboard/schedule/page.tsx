@@ -458,7 +458,7 @@ export default function SchedulePage() {
         <Card variant="glass">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-gray-400">Scheduled</CardTitle>
-            <Clock className="h-4 w-4 text-purple-500" />
+            <Clock className="h-4 w-4 text-cyan-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-white">{stats.scheduled}</div>
@@ -478,7 +478,7 @@ export default function SchedulePage() {
         <Card variant="glass">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-gray-400">Avg Engagement</CardTitle>
-            <TrendingUp className="h-4 w-4 text-purple-500" />
+            <TrendingUp className="h-4 w-4 text-cyan-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-white">{stats.avgEngagement.toFixed(1)}%</div>
@@ -530,7 +530,7 @@ export default function SchedulePage() {
             onClick={() => setViewMode('week')}
             className={`px-3 py-1.5 rounded text-sm transition-all flex items-center gap-2 ${
               viewMode === 'week'
-                ? 'bg-purple-500/20 text-purple-400'
+                ? 'bg-cyan-500/20 text-cyan-400'
                 : 'text-gray-400 hover:text-white'
             }`}
           >
@@ -541,7 +541,7 @@ export default function SchedulePage() {
             onClick={() => setViewMode('month')}
             className={`px-3 py-1.5 rounded text-sm transition-all flex items-center gap-2 ${
               viewMode === 'month'
-                ? 'bg-purple-500/20 text-purple-400'
+                ? 'bg-cyan-500/20 text-cyan-400'
                 : 'text-gray-400 hover:text-white'
             }`}
           >
@@ -552,7 +552,7 @@ export default function SchedulePage() {
             onClick={() => setViewMode('list')}
             className={`px-3 py-1.5 rounded text-sm transition-all flex items-center gap-2 ${
               viewMode === 'list'
-                ? 'bg-purple-500/20 text-purple-400'
+                ? 'bg-cyan-500/20 text-cyan-400'
                 : 'text-gray-400 hover:text-white'
             }`}
           >
@@ -627,12 +627,12 @@ export default function SchedulePage() {
                     key={index}
                     className={`bg-gray-900 min-h-[100px] p-2 ${
                       date ? 'hover:bg-white/5 cursor-pointer' : ''
-                    } ${isToday ? 'ring-1 ring-purple-500' : ''}`}
+                    } ${isToday ? 'ring-1 ring-cyan-500' : ''}`}
                     onClick={() => date && handlePostCreate(date, 12)}
                   >
                     {date && (
                       <>
-                        <div className={`text-sm mb-1 ${isToday ? 'text-purple-400 font-bold' : 'text-gray-400'}`}>
+                        <div className={`text-sm mb-1 ${isToday ? 'text-cyan-400 font-bold' : 'text-gray-400'}`}>
                           {date.getDate()}
                         </div>
                         <div className="space-y-1">
@@ -646,7 +646,7 @@ export default function SchedulePage() {
                               className={`text-xs p-1 rounded flex items-center space-x-1 cursor-pointer hover:scale-[1.02] transition-transform ${
                                 post.status === 'published'
                                   ? 'bg-green-500/20 text-green-300'
-                                  : 'bg-purple-500/20 text-purple-300'
+                                  : 'bg-cyan-500/20 text-cyan-300'
                               }`}
                             >
                               {PlatformIcon(post.platforms[0])}
@@ -692,7 +692,7 @@ export default function SchedulePage() {
             filteredPosts
               .sort((a, b) => new Date(a.scheduledFor).getTime() - new Date(b.scheduledFor).getTime())
               .map(post => (
-                <Card key={post.id} variant="glass" className="cursor-pointer hover:border-purple-500/50 transition-colors" onClick={() => handlePostClick(post)}>
+                <Card key={post.id} variant="glass" className="cursor-pointer hover:border-cyan-500/50 transition-colors" onClick={() => handlePostClick(post)}>
                   <CardContent className="pt-6">
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
@@ -723,7 +723,7 @@ export default function SchedulePage() {
                             post.status === 'published'
                               ? 'bg-green-500/20 text-green-300'
                               : post.status === 'scheduled'
-                              ? 'bg-purple-500/20 text-purple-300'
+                              ? 'bg-cyan-500/20 text-cyan-300'
                               : 'bg-gray-500/20 text-gray-300'
                           }`}>
                             {post.status}
@@ -748,7 +748,7 @@ export default function SchedulePage() {
                               </span>
                             </>
                           ) : post.engagement?.estimated ? (
-                            <span className="text-purple-400">
+                            <span className="text-cyan-400">
                               Est. {post.engagement.estimated}% engagement
                             </span>
                           ) : null}

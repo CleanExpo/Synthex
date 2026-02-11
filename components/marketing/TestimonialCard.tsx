@@ -53,7 +53,7 @@ export function TestimonialCard({ testimonial, className, variant = 'default' }:
       {/* Quote icon */}
       <div className={cn(
         'absolute opacity-10',
-        isFeatured ? 'text-violet-400' : 'text-white',
+        isFeatured ? 'text-cyan-400' : 'text-white',
         isCompact ? 'top-2 right-2' : 'top-4 right-4'
       )}>
         <Quote className={isCompact ? 'w-8 h-8' : 'w-12 h-12'} />
@@ -110,7 +110,7 @@ export function TestimonialCard({ testimonial, className, variant = 'default' }:
             <div className={cn(
               'w-10 h-10 rounded-full flex items-center justify-center font-semibold text-sm',
               isFeatured
-                ? 'bg-gradient-to-br from-violet-500 to-fuchsia-500 text-white'
+                ? 'bg-gradient-to-br from-cyan-500 to-cyan-500 text-white'
                 : 'bg-white/10 text-white'
             )}>
               {testimonial.author.name.split(' ').map(n => n[0]).join('')}

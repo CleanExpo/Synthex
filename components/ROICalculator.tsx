@@ -277,7 +277,7 @@ export function ROICalculator() {
   }));
   
   const costBreakdown = [
-    { name: 'Advertising', value: 45, fill: '#8b5cf6' },
+    { name: 'Advertising', value: 45, fill: '#06b6d4' },
     { name: 'Content Creation', value: 20, fill: '#ec4899' },
     { name: 'Tools & Software', value: 15, fill: '#3b82f6' },
     { name: 'Influencers', value: 12, fill: '#10b981' },
@@ -329,7 +329,7 @@ export function ROICalculator() {
         <Card variant="glass">
           <CardContent className="p-4">
             <div className="flex items-center justify-between mb-2">
-              <TrendingUp className="h-4 w-4 text-purple-400" />
+              <TrendingUp className="h-4 w-4 text-cyan-400" />
               <Badge className={`text-xs ${getROIColor(metrics.roi)}`}>ROI</Badge>
             </div>
             <p className="text-2xl font-bold text-white">{metrics.roi.toFixed(1)}%</p>
@@ -530,9 +530,9 @@ export function ROICalculator() {
                 </div>
                 
                 {/* AI Recommendations */}
-                <div className="p-3 bg-purple-500/10 border border-purple-500/30 rounded-lg">
+                <div className="p-3 bg-cyan-500/10 border border-cyan-500/30 rounded-lg">
                   <div className="flex items-center gap-2 mb-2">
-                    <Sparkles className="h-4 w-4 text-purple-400" />
+                    <Sparkles className="h-4 w-4 text-cyan-400" />
                     <p className="text-sm font-medium text-white">AI Recommendations</p>
                   </div>
                   <div className="space-y-1">
@@ -572,7 +572,7 @@ export function ROICalculator() {
                   <Tooltip
                     contentStyle={{
                       backgroundColor: 'rgba(0,0,0,0.8)',
-                      border: '1px solid rgba(139, 92, 246, 0.3)',
+                      border: '1px solid rgba(6, 182, 212, 0.3)',
                       borderRadius: '8px'
                     }}
                   />
@@ -654,12 +654,12 @@ export function ROICalculator() {
                   <Tooltip
                     contentStyle={{
                       backgroundColor: 'rgba(0,0,0,0.8)',
-                      border: '1px solid rgba(139, 92, 246, 0.3)',
+                      border: '1px solid rgba(6, 182, 212, 0.3)',
                       borderRadius: '8px'
                     }}
                   />
                   <Legend />
-                  <Bar dataKey="roi" fill="#8b5cf6" name="ROI %" radius={[8, 8, 0, 0]} />
+                  <Bar dataKey="roi" fill="#06b6d4" name="ROI %" radius={[8, 8, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </CardContent>
@@ -716,8 +716,8 @@ export function ROICalculator() {
                   <div key={stage.name} className="relative">
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-full bg-purple-500/20 flex items-center justify-center">
-                          <span className="text-xs font-bold text-purple-400">{index + 1}</span>
+                        <div className="w-8 h-8 rounded-full bg-cyan-500/20 flex items-center justify-center">
+                          <span className="text-xs font-bold text-cyan-400">{index + 1}</span>
                         </div>
                         <span className="font-medium text-white">{stage.name}</span>
                       </div>

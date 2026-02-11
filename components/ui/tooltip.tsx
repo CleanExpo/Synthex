@@ -21,7 +21,7 @@ const tooltipContentVariants = cva(
         'glass-solid':
           'bg-slate-900/95 backdrop-blur-xl border border-white/[0.1] text-white shadow-[0_8px_32px_rgba(0,0,0,0.4)]',
         'glass-primary':
-          'bg-violet-500/20 backdrop-blur-xl border border-violet-500/30 text-white shadow-[0_8px_32px_rgba(139,92,246,0.2)]',
+          'bg-cyan-500/20 backdrop-blur-xl border border-cyan-500/30 text-white shadow-[0_8px_32px_rgba(6,182,212,0.2)]',
         'glass-secondary':
           'bg-cyan-500/20 backdrop-blur-xl border border-cyan-500/30 text-white shadow-[0_8px_32px_rgba(6,182,212,0.2)]',
         'glass-success':

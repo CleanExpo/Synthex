@@ -71,7 +71,7 @@ const defaultStats: Stat[] = [
     change: 5,
     changeType: 'increase',
     icon: Target,
-    color: 'text-purple-400',
+    color: 'text-cyan-400',
     sparkline: [70, 72, 75, 78, 80, 82, 85, 88, 90, 92]
   }
 ];
@@ -83,7 +83,7 @@ const tickerStats = [
   { label: 'Viral Score', value: '92/100', icon: Zap },
 ];
 
-function Sparkline({ data, color = 'text-purple-400' }: { data: number[]; color?: string }) {
+function Sparkline({ data, color = 'text-cyan-400' }: { data: number[]; color?: string }) {
   const max = Math.max(...data);
   const min = Math.min(...data);
   const range = max - min;
@@ -220,7 +220,7 @@ export function StatsTickker() {
   
   return (
     <div className="flex items-center gap-2 px-4 py-2 bg-white/[0.02] backdrop-blur-xl border border-white/[0.08] rounded-full">
-      <Icon className="h-4 w-4 text-purple-400" />
+      <Icon className="h-4 w-4 text-cyan-400" />
       <span className="text-sm text-gray-400">{stat.label}:</span>
       <span className="text-sm font-semibold text-white">{stat.value}</span>
     </div>

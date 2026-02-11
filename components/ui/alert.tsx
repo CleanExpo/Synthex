@@ -16,7 +16,7 @@ const alertVariants = cva(
         'glass-solid':
           'bg-slate-900/80 backdrop-blur-md border-white/[0.08] text-white [&>svg]:text-white/70',
         'glass-primary':
-          'bg-violet-500/10 backdrop-blur-md border-violet-500/20 text-violet-100 [&>svg]:text-violet-300',
+          'bg-cyan-500/10 backdrop-blur-md border-cyan-500/20 text-cyan-100 [&>svg]:text-cyan-300',
         'glass-secondary':
           'bg-cyan-500/10 backdrop-blur-md border-cyan-500/20 text-cyan-100 [&>svg]:text-cyan-300',
         'glass-success':
@@ -60,7 +60,7 @@ const alertTitleVariants = cva('mb-1 font-medium leading-none tracking-tight', {
     variant: {
       default: '',
       glass: 'text-white',
-      'glass-primary': 'text-violet-100',
+      'glass-primary': 'text-cyan-100',
       'glass-secondary': 'text-cyan-100',
       'glass-success': 'text-emerald-100',
       'glass-warning': 'text-amber-100',

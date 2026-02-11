@@ -75,7 +75,7 @@ export function FloatingActionButton() {
       id: 'analytics',
       label: 'Analytics',
       icon: TrendingUp,
-      color: 'bg-purple-500',
+      color: 'bg-cyan-500',
       onClick: () => {
         router.push('/analytics');
         setIsOpen(false);
@@ -191,7 +191,7 @@ export function FloatingActionButton() {
           transform transition-all duration-200
           ${isOpen 
             ? 'bg-red-500 rotate-45' 
-            : 'bg-gradient-to-r from-purple-500 to-pink-500'
+            : 'bg-gradient-to-r from-cyan-500 to-cyan-500'
           }
         `}
         onClick={() => setIsOpen(!isOpen)}
@@ -251,7 +251,7 @@ export function MiniFAB({
       className={`
         fixed bottom-6 right-6 z-40
         w-12 h-12 rounded-full
-        bg-purple-500 shadow-lg
+        bg-cyan-500 shadow-lg
         flex items-center justify-center
         md:hidden
         ${className}
@@ -300,7 +300,7 @@ export function SmartFAB({ context }: { context?: string }) {
         animate={{ opacity: 1, x: 0 }}
         className="bg-white/[0.02] backdrop-blur-xl border border-white/[0.08] px-4 py-2 rounded-full flex items-center gap-2 mb-2"
       >
-        <Sparkles className="h-4 w-4 text-purple-400" />
+        <Sparkles className="h-4 w-4 text-cyan-400" />
         <span className="text-sm text-white">{suggestion}</span>
       </motion.div>
       <FloatingActionButton />
@@ -334,7 +334,7 @@ export function DraggableFAB() {
     >
       <div className={`
         w-14 h-14 rounded-full
-        bg-gradient-to-r from-purple-500 to-pink-500
+        bg-gradient-to-r from-cyan-500 to-cyan-500
         shadow-2xl flex items-center justify-center
         ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}
       `}>

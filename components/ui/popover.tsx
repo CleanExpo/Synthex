@@ -21,7 +21,7 @@ const popoverContentVariants = cva(
         'glass-solid':
           'bg-slate-900/95 backdrop-blur-xl border border-white/[0.08] text-white shadow-[0_8px_32px_rgba(0,0,0,0.4)]',
         'glass-primary':
-          'bg-violet-500/10 backdrop-blur-xl border border-violet-500/20 text-white shadow-[0_8px_32px_rgba(139,92,246,0.15)]',
+          'bg-cyan-500/10 backdrop-blur-xl border border-cyan-500/20 text-white shadow-[0_8px_32px_rgba(6,182,212,0.15)]',
         'glass-secondary':
           'bg-cyan-500/10 backdrop-blur-xl border border-cyan-500/20 text-white shadow-[0_8px_32px_rgba(6,182,212,0.15)]',
       },

@@ -27,7 +27,7 @@ const emptyStateConfigs = {
     title: "No content yet",
     description: "Start creating engaging content for your social media channels",
     actionLabel: "Generate First Content",
-    gradient: "from-purple-500 to-pink-500"
+    gradient: "from-cyan-500 to-cyan-500"
   },
   analytics: {
     icon: BarChart3,
@@ -62,7 +62,7 @@ const emptyStateConfigs = {
     title: "Nothing here yet",
     description: "Get started by adding your first item",
     actionLabel: "Get Started",
-    gradient: "from-indigo-500 to-purple-500"
+    gradient: "from-cyan-500 to-cyan-500"
   }
 };
 
@@ -114,11 +114,11 @@ export function EmptyState({
       {type === 'content' && (
         <div className="mt-8 grid grid-cols-2 gap-4 text-sm">
           <button className="p-4 bg-white/5 rounded-lg border border-white/10 hover:bg-white/10 transition-colors">
-            <Upload className="w-5 h-5 text-purple-400 mb-2 mx-auto" />
+            <Upload className="w-5 h-5 text-cyan-400 mb-2 mx-auto" />
             <span className="text-gray-400">Import Content</span>
           </button>
           <button className="p-4 bg-white/5 rounded-lg border border-white/10 hover:bg-white/10 transition-colors">
-            <Sparkles className="w-5 h-5 text-purple-400 mb-2 mx-auto" />
+            <Sparkles className="w-5 h-5 text-cyan-400 mb-2 mx-auto" />
             <span className="text-gray-400">Use AI Assistant</span>
           </button>
         </div>

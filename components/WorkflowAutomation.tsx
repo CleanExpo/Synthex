@@ -409,8 +409,8 @@ export function WorkflowAutomation() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-gradient-to-br from-purple-500/20 to-pink-500/20">
-            <GitBranch className="h-6 w-6 text-purple-400" />
+          <div className="p-2 rounded-lg bg-gradient-to-br from-cyan-500/20 to-cyan-500/20">
+            <GitBranch className="h-6 w-6 text-cyan-400" />
           </div>
           <div>
             <h2 className="text-2xl font-bold text-white">Workflow Automation</h2>
@@ -760,7 +760,7 @@ export function WorkflowAutomation() {
                                 y1={node.position.y + 30}
                                 x2={target.position.x}
                                 y2={target.position.y + 30}
-                                stroke="rgba(139, 92, 246, 0.5)"
+                                stroke="rgba(6, 182, 212, 0.5)"
                                 strokeWidth="2"
                               />
                             );

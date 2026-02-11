@@ -293,7 +293,7 @@ export function UserCount({ count, label = 'users trust us', avatars, className 
             />
           ))}
           {avatars.length > 5 && (
-            <div className="w-10 h-10 rounded-full border-2 border-slate-900 bg-violet-500/20 flex items-center justify-center text-xs font-medium text-violet-300">
+            <div className="w-10 h-10 rounded-full border-2 border-slate-900 bg-cyan-500/20 flex items-center justify-center text-xs font-medium text-cyan-300">
               +{avatars.length - 5}
             </div>
           )}

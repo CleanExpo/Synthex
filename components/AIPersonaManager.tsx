@@ -140,8 +140,8 @@ export function AIPersonaManager() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-gradient-to-br from-purple-500/20 to-pink-500/20">
-            <Brain className="h-6 w-6 text-purple-400" />
+          <div className="p-2 rounded-lg bg-gradient-to-br from-cyan-500/20 to-cyan-500/20">
+            <Brain className="h-6 w-6 text-cyan-400" />
           </div>
           <div>
             <h2 className="text-2xl font-bold text-white">AI Persona Learning</h2>
@@ -211,7 +211,7 @@ export function AIPersonaManager() {
                 variant="glass"
                 className={`cursor-pointer transition-all ${
                   selectedPersona?.id === persona.id
-                    ? 'ring-2 ring-purple-500'
+                    ? 'ring-2 ring-cyan-500'
                     : ''
                 }`}
                 onClick={() => setSelectedPersona(persona)}
@@ -297,7 +297,7 @@ export function AIPersonaManager() {
                     label="Overall Score"
                     value={`${selectedPersona.performance.overallScore}%`}
                     icon={Target}
-                    color="text-purple-400"
+                    color="text-cyan-400"
                   />
                   <MetricCard
                     label="Engagement Rate"
@@ -320,12 +320,12 @@ export function AIPersonaManager() {
                 </div>
                 
                 {/* Recommendations */}
-                <div className="p-4 bg-purple-500/10 border border-purple-500/30 rounded-lg">
+                <div className="p-4 bg-cyan-500/10 border border-cyan-500/30 rounded-lg">
                   <h4 className="font-medium text-white mb-3">AI Recommendations</h4>
                   <div className="space-y-2">
                     {personaLearning.generateSuggestions(selectedPersona.id).slice(0, 5).map((suggestion, i) => (
                       <div key={i} className="flex items-start gap-2">
-                        <ChevronRight className="h-4 w-4 text-purple-400 mt-0.5" />
+                        <ChevronRight className="h-4 w-4 text-cyan-400 mt-0.5" />
                         <span className="text-sm text-gray-300">{suggestion}</span>
                       </div>
                     ))}

@@ -420,7 +420,7 @@ export default function PersonasPage() {
         <Card variant="glass">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-gray-400">Active Personas</CardTitle>
-            <User className="h-4 w-4 text-purple-500" />
+            <User className="h-4 w-4 text-cyan-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-white">{personas.filter(p => p.status === 'active').length}</div>
@@ -430,7 +430,7 @@ export default function PersonasPage() {
         <Card variant="glass">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-gray-400">Training Data</CardTitle>
-            <Brain className="h-4 w-4 text-purple-500" />
+            <Brain className="h-4 w-4 text-cyan-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-white">135K</div>
@@ -440,7 +440,7 @@ export default function PersonasPage() {
         <Card variant="glass">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-gray-400">Avg Accuracy</CardTitle>
-            <BarChart3 className="h-4 w-4 text-purple-500" />
+            <BarChart3 className="h-4 w-4 text-cyan-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-white">90.7%</div>
@@ -450,7 +450,7 @@ export default function PersonasPage() {
         <Card variant="glass">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-gray-400">Content Sources</CardTitle>
-            <FileText className="h-4 w-4 text-purple-500" />
+            <FileText className="h-4 w-4 text-cyan-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-white">448</div>
@@ -477,7 +477,7 @@ export default function PersonasPage() {
                   onClick={() => setSelectedPersona(persona)}
                   className={`p-4 rounded-lg border cursor-pointer transition-all ${
                     selectedPersona?.id === persona.id
-                      ? 'bg-purple-500/20 border-purple-500'
+                      ? 'bg-cyan-500/20 border-cyan-500'
                       : 'bg-white/5 border-white/10 hover:bg-white/10'
                   }`}
                 >
@@ -503,7 +503,7 @@ export default function PersonasPage() {
                   <div className="mt-2">
                     <div className="w-full h-2 bg-gray-700 rounded-full overflow-hidden">
                       <div
-                        className="h-full bg-gradient-to-r from-purple-500 to-pink-500"
+                        className="h-full bg-gradient-to-r from-cyan-500 to-teal-500"
                         style={{ width: `${persona.accuracy}%` }}
                       />
                     </div>
@@ -613,7 +613,7 @@ export default function PersonasPage() {
                         onClick={() => setSelectedContentType(type.type)}
                         className={`p-3 rounded-lg border transition-all ${
                           selectedContentType === type.type
-                            ? 'bg-purple-500/20 border-purple-500'
+                            ? 'bg-cyan-500/20 border-cyan-500'
                             : 'bg-white/5 border-white/10 hover:bg-white/10'
                         }`}
                       >
@@ -627,7 +627,7 @@ export default function PersonasPage() {
                   <div
                     className={`border-2 border-dashed rounded-lg p-8 text-center transition-all ${
                       dragActive
-                        ? 'border-purple-500 bg-purple-500/10'
+                        ? 'border-cyan-500 bg-cyan-500/10'
                         : 'border-white/20 bg-white/5'
                     }`}
                     onDragEnter={handleDrag}

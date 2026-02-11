@@ -286,7 +286,7 @@ export default function AnalyticsDashboard() {
                     </div>
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <MousePointer className="h-4 w-4 text-purple-500" />
+                        <MousePointer className="h-4 w-4 text-cyan-500" />
                         <span>Clicks</span>
                       </div>
                       <span className="font-bold">12,456</span>
@@ -431,7 +431,7 @@ export default function AnalyticsDashboard() {
                         <strong>Best Platform:</strong> Twitter is generating the highest engagement
                       </p>
                     </div>
-                    <div className="p-3 bg-purple-900/20 border border-purple-500/20 rounded">
+                    <div className="p-3 bg-cyan-900/20 border border-cyan-500/20 rounded">
                       <p className="text-sm">
                         <strong>Optimal Time:</strong> Posts at 9 AM get 45% more engagement
                       </p>

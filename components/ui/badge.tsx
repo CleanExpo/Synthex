@@ -8,7 +8,7 @@ const badgeVariants = cva(
     variants: {
       variant: {
         default:
-          'border-transparent bg-primary text-primary-foreground hover:bg-primary/80 dark:bg-violet-600 dark:text-white dark:hover:bg-violet-700',
+          'border-transparent bg-primary text-primary-foreground hover:bg-primary/80 dark:bg-cyan-600 dark:text-white dark:hover:bg-cyan-700',
         secondary:
           'border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80 dark:bg-slate-700 dark:text-slate-100 dark:hover:bg-slate-600',
         destructive:
@@ -21,7 +21,7 @@ const badgeVariants = cva(
         'glass-solid':
           'bg-slate-800/80 backdrop-blur-md border-white/[0.1] text-white hover:bg-slate-800/90',
         'glass-primary':
-          'bg-violet-500/20 backdrop-blur-md border-violet-500/30 text-violet-200 hover:bg-violet-500/30',
+          'bg-cyan-500/20 backdrop-blur-md border-cyan-500/30 text-cyan-200 hover:bg-cyan-500/30',
         'glass-secondary':
           'bg-cyan-500/20 backdrop-blur-md border-cyan-500/30 text-cyan-200 hover:bg-cyan-500/30',
         'glass-success':
@@ -41,7 +41,7 @@ const badgeVariants = cva(
           'bg-red-500/20 border-red-500/30 text-red-300 before:content-[""] before:w-1.5 before:h-1.5 before:rounded-full before:bg-red-400 before:mr-1.5',
         // Premium gradient badges
         'gradient-primary':
-          'bg-gradient-to-r from-violet-500/30 to-fuchsia-500/30 border-violet-500/30 text-white',
+          'bg-gradient-to-r from-cyan-500/30 to-cyan-500/30 border-cyan-500/30 text-white',
         'gradient-secondary':
           'bg-gradient-to-r from-cyan-500/30 to-blue-500/30 border-cyan-500/30 text-white',
       },

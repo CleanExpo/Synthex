@@ -339,7 +339,7 @@ export default function AdminPanel() {
         <Card variant="glass">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium flex items-center">
-              <Users className="w-4 h-4 mr-2 text-purple-400" />
+              <Users className="w-4 h-4 mr-2 text-cyan-400" />
               Total Users
             </CardTitle>
           </CardHeader>
@@ -419,9 +419,9 @@ export default function AdminPanel() {
 
           {/* Bulk Actions Bar */}
           {selectedUserIds.size > 0 && (
-            <div className="flex items-center justify-between p-3 bg-purple-500/10 border border-purple-500/20 rounded-lg mb-4">
+            <div className="flex items-center justify-between p-3 bg-cyan-500/10 border border-cyan-500/20 rounded-lg mb-4">
               <div className="flex items-center gap-2">
-                <span className="text-sm text-purple-300">
+                <span className="text-sm text-cyan-300">
                   {selectedUserIds.size} user(s) selected
                 </span>
                 <Button
@@ -488,7 +488,7 @@ export default function AdminPanel() {
                       type="checkbox"
                       checked={selectedUserIds.size === filteredUsers.length && filteredUsers.length > 0}
                       onChange={toggleSelectAll}
-                      className="rounded border-white/20 bg-white/5 text-purple-500 focus:ring-purple-500"
+                      className="rounded border-white/20 bg-white/5 text-cyan-500 focus:ring-cyan-500"
                     />
                   </th>
                   <th className="text-left py-3 px-4 text-sm font-medium text-gray-400">User</th>
@@ -517,7 +517,7 @@ export default function AdminPanel() {
                     <tr
                       key={user.id}
                       className={`border-b border-white/5 hover:bg-white/5 transition-colors ${
-                        selectedUserIds.has(user.id) ? 'bg-purple-500/10' : ''
+                        selectedUserIds.has(user.id) ? 'bg-cyan-500/10' : ''
                       }`}
                     >
                       <td className="py-3 px-4">
@@ -525,12 +525,12 @@ export default function AdminPanel() {
                           type="checkbox"
                           checked={selectedUserIds.has(user.id)}
                           onChange={() => toggleUserSelection(user.id)}
-                          className="rounded border-white/20 bg-white/5 text-purple-500 focus:ring-purple-500"
+                          className="rounded border-white/20 bg-white/5 text-cyan-500 focus:ring-cyan-500"
                         />
                       </td>
                       <td className="py-3 px-4">
                         <div className="flex items-center">
-                          <div className="w-8 h-8 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center text-white text-sm font-bold mr-3">
+                          <div className="w-8 h-8 rounded-full bg-gradient-to-r from-cyan-500 to-pink-500 flex items-center justify-center text-white text-sm font-bold mr-3">
                             {user.email?.[0]?.toUpperCase()}
                           </div>
                           <div>
@@ -552,7 +552,7 @@ export default function AdminPanel() {
                         </Badge>
                       </td>
                       <td className="py-3 px-4">
-                        <Badge className="bg-purple-500/20 text-purple-400">
+                        <Badge className="bg-cyan-500/20 text-cyan-400">
                           {user.role === 'admin' ? (
                             <Shield className="w-3 h-3 mr-1" />
                           ) : null}

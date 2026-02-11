@@ -26,7 +26,7 @@ export default function EnhancedHomePage() {
         <div className="fixed inset-0 opacity-30">
           <div className="absolute top-0 -left-4 w-96 h-96 bg-cyan-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob"></div>
           <div className="absolute top-0 -right-4 w-96 h-96 bg-amber-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-2000"></div>
-          <div className="absolute -bottom-8 left-20 w-96 h-96 bg-purple-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-4000"></div>
+          <div className="absolute -bottom-8 left-20 w-96 h-96 bg-teal-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-4000"></div>
         </div>
       </div>
 
@@ -98,7 +98,7 @@ export default function EnhancedHomePage() {
               <span>3x Engagement</span>
             </div>
             <div className="flex items-center space-x-2 card-frame px-4 py-2">
-              <Zap className="w-5 h-5 text-purple-400" />
+              <Zap className="w-5 h-5 text-cyan-400" />
               <span>AI-Powered</span>
             </div>
           </div>
@@ -150,7 +150,7 @@ export default function EnhancedHomePage() {
             </Card>
 
             <Card className="bento-item liquid-glass p-6 scroll-reveal shadow-beautiful-lg shadow-hover-lift stagger-child">
-              <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center mb-4">
+              <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-cyan-400 to-cyan-600 flex items-center justify-center mb-4">
                 <Palette className="w-6 h-6 text-white" />
               </div>
               <h3 className="text-xl font-semibold text-white mb-2 heading-sans">Content Generation</h3>
@@ -172,7 +172,7 @@ export default function EnhancedHomePage() {
                   <div className="flex flex-wrap gap-2">
                     <span className="px-3 py-1 rounded-full text-xs bg-cyan-500/20 text-cyan-400 border border-cyan-500/30">Twitter/X</span>
                     <span className="px-3 py-1 rounded-full text-xs bg-amber-500/20 text-amber-400 border border-amber-500/30">Instagram</span>
-                    <span className="px-3 py-1 rounded-full text-xs bg-purple-500/20 text-purple-400 border border-purple-500/30">TikTok</span>
+                    <span className="px-3 py-1 rounded-full text-xs bg-teal-500/20 text-cyan-400 border border-teal-500/30">TikTok</span>
                     <span className="px-3 py-1 rounded-full text-xs bg-cyan-500/20 text-cyan-400 border border-cyan-500/30">LinkedIn</span>
                   </div>
                 </div>
@@ -214,7 +214,7 @@ export default function EnhancedHomePage() {
             </p>
             <div className="flex justify-center space-x-4">
               <Link href="/signup">
-                <Button size="lg" className="bg-gradient-to-r from-cyan-500 via-purple-500 to-amber-500 text-white px-12 py-7 text-lg shadow-beautiful-xl shadow-hover-lift" data-magnetic>
+                <Button size="lg" className="bg-gradient-to-r from-cyan-500 via-teal-500 to-amber-500 text-white px-12 py-7 text-lg shadow-beautiful-xl shadow-hover-lift" data-magnetic>
                   Start Your Free Trial
                   <ArrowRight className="ml-2" />
                 </Button>

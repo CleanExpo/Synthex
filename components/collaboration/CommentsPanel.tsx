@@ -396,7 +396,7 @@ export function CommentsPanel({
               {/* Main Comment */}
               <div className="bg-white/5 border border-white/10 rounded-lg p-3">
                 <div className="flex items-start gap-3">
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-cyan-500 to-purple-500 flex items-center justify-center text-white text-sm font-medium flex-shrink-0">
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-cyan-500 to-cyan-500 flex items-center justify-center text-white text-sm font-medium flex-shrink-0">
                     {comment.author?.name?.charAt(0) || 'U'}
                   </div>
                   <div className="flex-1 min-w-0">
@@ -522,7 +522,7 @@ export function CommentsPanel({
                       className="bg-white/5 border border-white/10 rounded-lg p-3"
                     >
                       <div className="flex items-start gap-3">
-                        <div className="w-6 h-6 rounded-full bg-gradient-to-br from-cyan-500 to-purple-500 flex items-center justify-center text-white text-xs font-medium flex-shrink-0">
+                        <div className="w-6 h-6 rounded-full bg-gradient-to-br from-cyan-500 to-cyan-500 flex items-center justify-center text-white text-xs font-medium flex-shrink-0">
                           {reply.author?.name?.charAt(0) || 'U'}
                         </div>
                         <div className="flex-1 min-w-0">
@@ -586,7 +586,7 @@ export function CommentsPanel({
                   onClick={() => insertMention(member)}
                   className="w-full flex items-center gap-3 p-3 hover:bg-white/10 transition-colors"
                 >
-                  <div className="w-6 h-6 rounded-full bg-gradient-to-br from-cyan-500 to-purple-500 flex items-center justify-center text-white text-xs font-medium">
+                  <div className="w-6 h-6 rounded-full bg-gradient-to-br from-cyan-500 to-cyan-500 flex items-center justify-center text-white text-xs font-medium">
                     {member.name?.charAt(0) || member.email.charAt(0)}
                   </div>
                   <div className="flex-1 text-left">

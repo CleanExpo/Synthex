@@ -169,7 +169,7 @@ export default function DashboardPage() {
                 aria-label="Toggle notifications"
               >
                 <Bell className="h-4 w-4" />
-                <span className="absolute -top-1 -right-1 h-2.5 w-2.5 sm:h-3 sm:w-3 rounded-full bg-violet-500 animate-pulse" />
+                <span className="absolute -top-1 -right-1 h-2.5 w-2.5 sm:h-3 sm:w-3 rounded-full bg-cyan-500 animate-pulse" />
               </Button>
               <Button
                 className={cn(glassStyles.buttonPrimary, "gap-1 sm:gap-2 text-sm sm:text-base px-3 sm:px-4")}
@@ -240,7 +240,7 @@ export default function DashboardPage() {
                 <Card className={cn(glassStyles.base, glassStyles.hover)}>
                   <CardHeader className="pb-2 sm:pb-4">
                     <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
-                      <BarChart3 className="h-4 w-4 sm:h-5 sm:w-5 text-violet-500" />
+                      <BarChart3 className="h-4 w-4 sm:h-5 sm:w-5 text-cyan-500" />
                       Performance Overview
                     </CardTitle>
                     <CardDescription className="text-xs sm:text-sm">
@@ -333,7 +333,7 @@ export default function DashboardPage() {
                         <div className="flex items-start sm:items-center gap-2 sm:gap-3 min-w-0 flex-1">
                           <div className={cn(
                             "h-2 w-2 rounded-full mt-1.5 sm:mt-0 flex-shrink-0",
-                            activity.type === 'post' && "bg-violet-500",
+                            activity.type === 'post' && "bg-cyan-500",
                             activity.type === 'engagement' && "bg-cyan-500",
                             activity.type === 'milestone' && "bg-amber-500"
                           )} />
@@ -357,7 +357,7 @@ export default function DashboardPage() {
                 <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 sm:pb-4">
                   <div>
                     <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
-                      <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 text-violet-500" />
+                      <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 text-cyan-500" />
                       Real-Time Analytics
                     </CardTitle>
                     <CardDescription className="text-xs sm:text-sm">
@@ -380,7 +380,7 @@ export default function DashboardPage() {
                     <div className="md:col-span-2 space-y-4 order-2 md:order-1">
                       <div className="h-48 sm:h-64 rounded-lg bg-white/5 flex items-center justify-center">
                         <div className="text-center px-4">
-                          <BarChart3 className="h-8 w-8 sm:h-12 sm:w-12 mx-auto mb-2 sm:mb-4 text-violet-500/50" />
+                          <BarChart3 className="h-8 w-8 sm:h-12 sm:w-12 mx-auto mb-2 sm:mb-4 text-cyan-500/50" />
                           <p className="text-sm sm:text-base text-muted-foreground">Engagement Over Time</p>
                           <p className="text-xs sm:text-sm text-muted-foreground/60">Chart visualization connected to backend</p>
                         </div>
@@ -396,7 +396,7 @@ export default function DashboardPage() {
                           <div className="flex items-center gap-2">
                             <div className="h-1.5 sm:h-2 w-16 sm:w-24 rounded-full bg-white/10 overflow-hidden">
                               <div
-                                className="h-full bg-violet-500"
+                                className="h-full bg-cyan-500"
                                 style={{ width: `${[65, 45, 30, 25][i]}%` }}
                               />
                             </div>
@@ -495,7 +495,7 @@ export default function DashboardPage() {
                       ].map((member, i) => (
                         <div key={i} className="flex items-center justify-between p-2 sm:p-3 rounded-lg bg-white/5 touch-manipulation">
                           <div className="flex items-center gap-2 sm:gap-3">
-                            <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-full bg-violet-500/20 flex items-center justify-center flex-shrink-0">
+                            <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-full bg-cyan-500/20 flex items-center justify-center flex-shrink-0">
                               <span className="text-xs sm:text-sm font-medium">{member.name.charAt(0)}</span>
                             </div>
                             <div className="min-w-0">
@@ -541,7 +541,7 @@ export default function DashboardPage() {
               <Card className={cn(glassStyles.base, glassStyles.hover)}>
                 <CardHeader className="pb-2 sm:pb-4">
                   <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
-                    <Calendar className="h-4 w-4 sm:h-5 sm:w-5 text-violet-500" />
+                    <Calendar className="h-4 w-4 sm:h-5 sm:w-5 text-cyan-500" />
                     Post Scheduler
                   </CardTitle>
                   <CardDescription className="text-xs sm:text-sm">

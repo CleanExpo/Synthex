@@ -235,7 +235,7 @@ export default function BlogPostPage() {
           {/* Article Header */}
           <div className="mb-8">
             <div className="flex items-center gap-4 mb-4">
-              <Badge variant="secondary" className="bg-purple-500/10 text-purple-400 border-purple-500/20">
+              <Badge variant="secondary" className="bg-cyan-500/10 text-cyan-400 border-cyan-500/20">
                 {post.category}
               </Badge>
               <div className="flex items-center gap-2 text-gray-400 text-sm">
@@ -263,7 +263,7 @@ export default function BlogPostPage() {
             {/* Author Info */}
             <div className="flex items-center justify-between mb-8">
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center">
+                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-cyan-500 to-blue-500 flex items-center justify-center">
                   <User className="h-6 w-6 text-white" />
                 </div>
                 <div>
@@ -311,10 +311,10 @@ export default function BlogPostPage() {
           </div>
           
           {/* Featured Image Placeholder */}
-          <div className="w-full h-96 bg-gradient-to-br from-purple-600/20 to-blue-600/20 rounded-xl mb-12 flex items-center justify-center border border-gray-800">
+          <div className="w-full h-96 bg-gradient-to-br from-cyan-600/20 to-blue-600/20 rounded-xl mb-12 flex items-center justify-center border border-gray-800">
             <div className="text-center">
-              <div className="w-24 h-24 mx-auto mb-4 rounded-full bg-gradient-to-br from-purple-500/20 to-blue-500/20 flex items-center justify-center">
-                <Share2 className="h-12 w-12 text-purple-400" />
+              <div className="w-24 h-24 mx-auto mb-4 rounded-full bg-gradient-to-br from-cyan-500/20 to-blue-500/20 flex items-center justify-center">
+                <Share2 className="h-12 w-12 text-cyan-400" />
               </div>
               <p className="text-gray-500">Featured Image</p>
             </div>
@@ -358,7 +358,7 @@ export default function BlogPostPage() {
               <div className="flex gap-4 justify-center">
                 <Button 
                   onClick={() => router.push('/signup')}
-                  className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
+                  className="bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700"
                 >
                   Start Free Trial
                 </Button>

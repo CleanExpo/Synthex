@@ -53,7 +53,7 @@ const platformIcons = {
 
 const platformColors = {
   twitter: 'bg-blue-500',
-  instagram: 'bg-gradient-to-br from-purple-600 to-pink-500',
+  instagram: 'bg-gradient-to-br from-cyan-600 to-pink-500',
   linkedin: 'bg-blue-700',
   youtube: 'bg-red-600',
   facebook: 'bg-blue-600',
@@ -169,7 +169,7 @@ export default function AIContentStudio() {
           <p className="text-gray-400 mt-2">Generate viral content with AI-powered creativity</p>
         </div>
         <div className="flex items-center gap-2">
-          <Badge variant="outline" className="border-purple-500 text-purple-400">
+          <Badge variant="outline" className="border-cyan-500 text-cyan-400">
             <Zap className="w-3 h-3 mr-1" />
             AI Powered
           </Badge>
@@ -185,7 +185,7 @@ export default function AIContentStudio() {
         <Card variant="glass">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Wand2 className="w-5 h-5 text-purple-500" />
+              <Wand2 className="w-5 h-5 text-cyan-500" />
               Content Configuration
             </CardTitle>
             <CardDescription>Customize your AI-generated content</CardDescription>
@@ -365,7 +365,7 @@ export default function AIContentStudio() {
           <CardHeader>
             <CardTitle className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <PlatformIcon className="w-5 h-5 text-purple-500" />
+                <PlatformIcon className="w-5 h-5 text-cyan-500" />
                 Generated Content
               </div>
               {generatedContent && (
@@ -507,7 +507,7 @@ export default function AIContentStudio() {
 
                 {/* CTA */}
                 {generatedContent.cta && (
-                  <div className="p-3 bg-purple-500/10 border border-purple-500/30 rounded-lg">
+                  <div className="p-3 bg-cyan-500/10 border border-cyan-500/30 rounded-lg">
                     <Label className="flex items-center gap-2 mb-2">
                       <Target className="w-4 h-4" />
                       Call to Action
@@ -532,7 +532,7 @@ export default function AIContentStudio() {
         <Card variant="glass">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Calendar className="w-5 h-5 text-purple-500" />
+              <Calendar className="w-5 h-5 text-cyan-500" />
               Recent Generations
             </CardTitle>
             <CardDescription>Your content generation history</CardDescription>

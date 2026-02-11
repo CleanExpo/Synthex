@@ -49,7 +49,7 @@ export function PricingCard({ tier, onSelect, className, variant = 'default' }: 
       className={cn(
         'relative overflow-hidden transition-all duration-500',
         isPopular
-          ? 'glass-primary scale-105 z-10 shadow-[0_0_60px_rgba(139,92,246,0.2)]'
+          ? 'glass-primary scale-105 z-10 shadow-[0_0_60px_rgba(6,182,212,0.2)]'
           : isEnterprise
             ? 'glass-gradient border-emerald-500/30'
             : 'glass hover:glass-interactive',
@@ -58,12 +58,12 @@ export function PricingCard({ tier, onSelect, className, variant = 'default' }: 
     >
       {/* Popular badge */}
       {isPopular && (
-        <div className="absolute -top-px left-0 right-0 h-1 bg-gradient-to-r from-violet-500 via-fuchsia-500 to-violet-500" />
+        <div className="absolute -top-px left-0 right-0 h-1 bg-gradient-to-r from-cyan-500 via-cyan-500 to-cyan-500" />
       )}
 
       {/* Badge */}
       {tier.badge && (
-        <div className="absolute -right-8 top-6 rotate-45 bg-gradient-to-r from-violet-500 to-fuchsia-500 px-10 py-1 text-xs font-semibold text-white shadow-lg">
+        <div className="absolute -right-8 top-6 rotate-45 bg-gradient-to-r from-cyan-500 to-cyan-500 px-10 py-1 text-xs font-semibold text-white shadow-lg">
           {tier.badge}
         </div>
       )}
@@ -71,7 +71,7 @@ export function PricingCard({ tier, onSelect, className, variant = 'default' }: 
       <CardHeader className="pb-4">
         <div className="flex items-center gap-3 mb-2">
           {tier.icon || (
-            isPopular ? <Sparkles className="w-5 h-5 text-violet-400" /> :
+            isPopular ? <Sparkles className="w-5 h-5 text-cyan-400" /> :
             isEnterprise ? <Zap className="w-5 h-5 text-emerald-400" /> : null
           )}
           <h3 className={cn(
@@ -96,7 +96,7 @@ export function PricingCard({ tier, onSelect, className, variant = 'default' }: 
             <span className={cn(
               'text-4xl font-bold tracking-tight',
               isPopular
-                ? 'bg-gradient-to-r from-violet-200 to-fuchsia-200 bg-clip-text text-transparent'
+                ? 'bg-gradient-to-r from-cyan-200 to-cyan-200 bg-clip-text text-transparent'
                 : 'text-white'
             )}>
               {tier.price}
@@ -122,7 +122,7 @@ export function PricingCard({ tier, onSelect, className, variant = 'default' }: 
                   'w-4 h-4 mt-0.5 flex-shrink-0',
                   feature.included
                     ? feature.highlight
-                      ? 'text-violet-400'
+                      ? 'text-cyan-400'
                       : 'text-emerald-400'
                     : 'text-slate-600'
                 )}
@@ -141,7 +141,7 @@ export function PricingCard({ tier, onSelect, className, variant = 'default' }: 
           className={cn(
             'w-full font-semibold transition-all duration-300',
             isPopular
-              ? 'bg-gradient-to-r from-violet-500 to-fuchsia-500 hover:from-violet-400 hover:to-fuchsia-400 text-white shadow-[0_0_20px_rgba(139,92,246,0.4)] hover:shadow-[0_0_30px_rgba(139,92,246,0.5)]'
+              ? 'bg-gradient-to-r from-cyan-500 to-cyan-500 hover:from-cyan-400 hover:to-cyan-400 text-white shadow-[0_0_20px_rgba(6,182,212,0.4)] hover:shadow-[0_0_30px_rgba(6,182,212,0.5)]'
               : isEnterprise
                 ? 'bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-white'
                 : 'bg-white/10 hover:bg-white/15 text-white border border-white/10'

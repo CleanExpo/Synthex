@@ -274,11 +274,11 @@ const priorityConfig = {
 };
 
 const typeConfig = {
-  content: { label: 'Content', color: 'bg-purple-500/20 text-purple-300', icon: FileText },
+  content: { label: 'Content', color: 'bg-cyan-500/20 text-cyan-300', icon: FileText },
   campaign: { label: 'Campaign', color: 'bg-pink-500/20 text-pink-300', icon: Target },
   analytics: { label: 'Analytics', color: 'bg-cyan-500/20 text-cyan-300', icon: TrendingUp },
-  social: { label: 'Social', color: 'bg-violet-500/20 text-violet-300', icon: MessageSquare },
-  design: { label: 'Design', color: 'bg-fuchsia-500/20 text-fuchsia-300', icon: Sparkles },
+  social: { label: 'Social', color: 'bg-cyan-500/20 text-cyan-300', icon: MessageSquare },
+  design: { label: 'Design', color: 'bg-cyan-500/20 text-cyan-300', icon: Sparkles },
   other: { label: 'Other', color: 'bg-slate-500/20 text-slate-300', icon: ListTodo },
 };
 
@@ -324,7 +324,7 @@ function AssigneeAvatars({ assignees, max = 3 }: { assignees: Task['assignees'];
       {visible.map((assignee) => (
         <Avatar key={assignee.id} className="w-7 h-7 border-2 border-slate-900">
           <AvatarImage src={assignee.avatar} alt={assignee.name} />
-          <AvatarFallback className="text-xs bg-violet-500/20 text-violet-300">
+          <AvatarFallback className="text-xs bg-cyan-500/20 text-cyan-300">
             {assignee.name.split(' ').map((n) => n[0]).join('')}
           </AvatarFallback>
         </Avatar>
@@ -525,7 +525,7 @@ function TaskListRow({ task, onEdit, onDelete, onStatusChange }: {
       <Checkbox
         checked={task.status === 'done'}
         onCheckedChange={(checked) => onStatusChange(task.id, checked ? 'done' : 'todo')}
-        className="data-[state=checked]:bg-violet-500 data-[state=checked]:border-violet-500"
+        className="data-[state=checked]:bg-cyan-500 data-[state=checked]:border-cyan-500"
       />
 
       <div className="flex-1 min-w-0">
@@ -727,7 +727,7 @@ function CreateTaskDialog({ open, onOpenChange, onSubmit }: {
                   }}
                   className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border transition-all ${
                     assignees.includes(member.id)
-                      ? 'bg-violet-500/20 border-violet-500/50 text-violet-300'
+                      ? 'bg-cyan-500/20 border-cyan-500/50 text-cyan-300'
                       : 'bg-white/5 border-white/10 text-slate-400 hover:bg-white/10'
                   }`}
                 >
@@ -1078,7 +1078,7 @@ export default function TasksPage() {
         <Card variant="glass">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-slate-400">Total Tasks</CardTitle>
-            <ListTodo className="h-4 w-4 text-violet-500" />
+            <ListTodo className="h-4 w-4 text-cyan-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-white">{stats.total}</div>

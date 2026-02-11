@@ -47,13 +47,15 @@ export interface PlanLimits {
   maxSocialAccounts: number;
   maxAiPosts: number;
   maxPersonas: number;
+  maxSeoAudits: number;
+  maxSeoPages: number;
 }
 
 export const PLAN_LIMITS: Record<string, PlanLimits> = {
-  free: { maxSocialAccounts: 2, maxAiPosts: 10, maxPersonas: 1 },
-  professional: { maxSocialAccounts: 5, maxAiPosts: 100, maxPersonas: 3 },
-  business: { maxSocialAccounts: 10, maxAiPosts: -1, maxPersonas: 10 }, // -1 = unlimited
-  custom: { maxSocialAccounts: -1, maxAiPosts: -1, maxPersonas: -1 },
+  free: { maxSocialAccounts: 2, maxAiPosts: 10, maxPersonas: 1, maxSeoAudits: 0, maxSeoPages: 0 },
+  professional: { maxSocialAccounts: 5, maxAiPosts: 100, maxPersonas: 3, maxSeoAudits: 10, maxSeoPages: 50 },
+  business: { maxSocialAccounts: 10, maxAiPosts: -1, maxPersonas: 10, maxSeoAudits: -1, maxSeoPages: -1 }, // -1 = unlimited
+  custom: { maxSocialAccounts: -1, maxAiPosts: -1, maxPersonas: -1, maxSeoAudits: -1, maxSeoPages: -1 },
 };
 
 // ============================================================================

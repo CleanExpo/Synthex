@@ -81,7 +81,7 @@ export function StatCard({ stat, className, variant = 'default', animated = true
       {Icon && (
         <div className={cn(
           'absolute top-0 right-0 w-24 h-24 rounded-full blur-3xl opacity-20',
-          stat.iconColor || 'bg-violet-500'
+          stat.iconColor || 'bg-cyan-500'
         )} />
       )}
 
@@ -121,7 +121,7 @@ export function StatCard({ stat, className, variant = 'default', animated = true
               isCompact ? 'w-10 h-10' : 'w-12 h-12',
               stat.iconColor
                 ? `bg-gradient-to-br ${stat.iconColor}`
-                : 'bg-gradient-to-br from-violet-500/20 to-fuchsia-500/20 border border-violet-500/20'
+                : 'bg-gradient-to-br from-cyan-500/20 to-cyan-500/20 border border-cyan-500/20'
             )}>
               <Icon className={cn(
                 'text-white',
@@ -135,7 +135,7 @@ export function StatCard({ stat, className, variant = 'default', animated = true
               'w-16 h-16 flex items-center justify-center rounded-2xl mb-4',
               stat.iconColor
                 ? `bg-gradient-to-br ${stat.iconColor}`
-                : 'bg-gradient-to-br from-violet-500/20 to-fuchsia-500/20 border border-violet-500/20'
+                : 'bg-gradient-to-br from-cyan-500/20 to-cyan-500/20 border border-cyan-500/20'
             )}>
               <Icon className="w-8 h-8 text-white" />
             </div>

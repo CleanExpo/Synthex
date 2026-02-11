@@ -132,7 +132,7 @@ export function NotificationBell() {
       case 'error':
         return 'border-red-500/20 bg-red-500/5';
       default:
-        return 'border-purple-500/20 bg-purple-500/5';
+        return 'border-cyan-500/20 bg-cyan-500/5';
     }
   };
 
@@ -152,7 +152,7 @@ export function NotificationBell() {
           isAnimating && "animate-bounce"
         )} />
         {unreadCount > 0 && (
-          <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-purple-500 text-[10px] font-medium text-white flex items-center justify-center animate-in zoom-in duration-300">
+          <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-cyan-500 text-[10px] font-medium text-white flex items-center justify-center animate-in zoom-in duration-300">
             {unreadCount}
           </span>
         )}
@@ -179,7 +179,7 @@ export function NotificationBell() {
                   key={notification.id}
                   className={cn(
                     "p-4 border-b border-white/5 hover:bg-white/5 transition-all duration-200 cursor-pointer",
-                    !notification.read && "bg-purple-500/5",
+                    !notification.read && "bg-cyan-500/5",
                     getTypeStyles(notification.type)
                   )}
                   onClick={() => !notification.read && markAsRead(notification.id)}
@@ -201,14 +201,14 @@ export function NotificationBell() {
                       {notification.action && (
                         <a
                           href={notification.action.url}
-                          className="text-xs text-purple-400 hover:text-purple-300 mt-2 inline-block"
+                          className="text-xs text-cyan-400 hover:text-cyan-300 mt-2 inline-block"
                         >
                           {notification.action.label} →
                         </a>
                       )}
                     </div>
                     {!notification.read && (
-                      <div className="w-2 h-2 rounded-full bg-purple-500 animate-pulse" />
+                      <div className="w-2 h-2 rounded-full bg-cyan-500 animate-pulse" />
                     )}
                   </div>
                 </div>

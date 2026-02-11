@@ -152,7 +152,7 @@ export default function ExperimentsPage() {
         <Card variant="glass">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium flex items-center">
-              <Beaker className="w-4 h-4 mr-2 text-purple-400" />
+              <Beaker className="w-4 h-4 mr-2 text-cyan-400" />
               Total Experiments
             </CardTitle>
           </CardHeader>
@@ -324,7 +324,7 @@ export default function ExperimentsPage() {
       <Card variant="glass">
         <CardHeader>
           <CardTitle className="flex items-center">
-            <Target className="w-5 h-5 mr-2 text-purple-400" />
+            <Target className="w-5 h-5 mr-2 text-cyan-400" />
             A/B Testing Best Practices
           </CardTitle>
         </CardHeader>
@@ -338,7 +338,7 @@ export default function ExperimentsPage() {
               <h4 className="font-medium text-white mb-1">📊 Test one variable at a time</h4>
               <p className="text-xs text-gray-400">Isolate variables to understand what drives results</p>
             </div>
-            <div className="p-3 bg-purple-500/10 border border-purple-500/20 rounded-lg">
+            <div className="p-3 bg-cyan-500/10 border border-cyan-500/20 rounded-lg">
               <h4 className="font-medium text-white mb-1">🎯 Define clear success metrics</h4>
               <p className="text-xs text-gray-400">Know what you're optimizing for before starting</p>
             </div>

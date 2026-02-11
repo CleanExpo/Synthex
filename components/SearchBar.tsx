@@ -175,7 +175,7 @@ export function SearchBar({
     const colors = {
       content: 'bg-blue-500/20 text-blue-400',
       user: 'bg-green-500/20 text-green-400',
-      campaign: 'bg-purple-500/20 text-purple-400',
+      campaign: 'bg-cyan-500/20 text-cyan-400',
       template: 'bg-yellow-500/20 text-yellow-400',
       analytics: 'bg-pink-500/20 text-pink-400'
     };
@@ -216,7 +216,7 @@ export function SearchBar({
             <button
               onClick={() => setShowFilterPanel(!showFilterPanel)}
               className={`p-1 hover:bg-white/10 rounded transition-colors ${
-                Object.keys(filters).length > 0 ? 'text-purple-400' : 'text-gray-400'
+                Object.keys(filters).length > 0 ? 'text-cyan-400' : 'text-gray-400'
               }`}
             >
               <Filter className="h-4 w-4" />

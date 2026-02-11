@@ -86,7 +86,7 @@ export function TemplateSelector({ onSelectTemplate, platform }: TemplateSelecto
               <TabsTrigger
                 key={category.id}
                 value={category.id}
-                className="flex items-center gap-2 data-[state=active]:bg-purple-500/20"
+                className="flex items-center gap-2 data-[state=active]:bg-cyan-500/20"
               >
                 <Icon className="h-4 w-4" />
                 <span className="hidden lg:inline">{category.label}</span>
@@ -104,8 +104,8 @@ export function TemplateSelector({ onSelectTemplate, platform }: TemplateSelecto
             variant="glass"
             className={`
               cursor-pointer transition-all duration-200
-              hover:scale-[1.02] hover:border-purple-500/50
-              ${hoveredTemplate === template.id ? 'ring-2 ring-purple-500' : ''}
+              hover:scale-[1.02] hover:border-cyan-500/50
+              ${hoveredTemplate === template.id ? 'ring-2 ring-cyan-500' : ''}
             `}
             onMouseEnter={() => setHoveredTemplate(template.id)}
             onMouseLeave={() => setHoveredTemplate(null)}
@@ -123,7 +123,7 @@ export function TemplateSelector({ onSelectTemplate, platform }: TemplateSelecto
                   </div>
                 </div>
                 {hoveredTemplate === template.id && (
-                  <ArrowRight className="h-5 w-5 text-purple-400 animate-pulse" />
+                  <ArrowRight className="h-5 w-5 text-cyan-400 animate-pulse" />
                 )}
               </div>
             </CardHeader>
@@ -245,7 +245,7 @@ export function TemplatePreview({ template }: { template: ContentTemplate }) {
             <p className="text-sm text-gray-400 mb-1">Hashtags:</p>
             <div className="flex flex-wrap gap-2">
               {template.structure.hashtags.map((tag) => (
-                <Badge key={tag} variant="secondary" className="bg-purple-500/20">
+                <Badge key={tag} variant="secondary" className="bg-cyan-500/20">
                   {tag}
                 </Badge>
               ))}
@@ -259,7 +259,7 @@ export function TemplatePreview({ template }: { template: ContentTemplate }) {
           <p className="text-sm font-semibold text-gray-300">Pro Tips:</p>
           {template.tips.map((tip, index) => (
             <div key={index} className="flex items-start gap-2">
-              <span className="text-purple-400">•</span>
+              <span className="text-cyan-400">•</span>
               <p className="text-sm text-gray-400">{tip}</p>
             </div>
           ))}

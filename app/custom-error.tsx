@@ -81,7 +81,7 @@ const errorConfigs = {
     icon: Database,
     title: 'Service Unavailable',
     message: 'Our service is temporarily unavailable. Please check back soon.',
-    color: 'text-purple-400'
+    color: 'text-cyan-400'
   }
 };
 
@@ -243,7 +243,7 @@ export function MaintenancePage() {
             variants={popIn}
             className="mb-6 flex justify-center"
           >
-            <div className="p-4 rounded-full bg-white/5 text-purple-400">
+            <div className="p-4 rounded-full bg-white/5 text-cyan-400">
               <Database className="h-16 w-16" />
             </div>
           </motion.div>

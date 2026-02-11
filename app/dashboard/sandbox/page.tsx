@@ -81,7 +81,7 @@ const platformConfigs = {
     name: 'Instagram',
     maxChars: 2200,
     features: ['hashtags', 'mentions', 'reels', 'stories', 'carousel'],
-    mockupBg: 'bg-gradient-to-br from-purple-600 to-pink-500',
+    mockupBg: 'bg-gradient-to-br from-cyan-600 to-teal-500',
     textColor: 'text-white',
   },
   facebook: {
@@ -241,7 +241,7 @@ export default function SandboxPage() {
         return (
           <div className="bg-black rounded-lg p-4">
             <div className="flex items-start space-x-3">
-              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-500 to-pink-500"></div>
+              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-cyan-500 to-teal-500"></div>
               <div className="flex-1">
                 <div className="flex items-center space-x-1">
                   <span className="font-bold text-white">Your Name</span>
@@ -288,7 +288,7 @@ export default function SandboxPage() {
           <div className="bg-white rounded-lg overflow-hidden">
             <div className="flex items-center justify-between p-3 border-b">
               <div className="flex items-center space-x-2">
-                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-pink-500"></div>
+                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-cyan-500 to-teal-500"></div>
                 <span className="font-semibold text-sm">username</span>
               </div>
               <MoreHorizontal className="h-5 w-5 text-gray-700" />
@@ -299,7 +299,7 @@ export default function SandboxPage() {
                 {mediaType === 'video' && <Video className="h-16 w-16 text-gray-400" />}
               </div>
             ) : (
-              <div className="bg-gradient-to-br from-purple-500 to-pink-500 h-96 flex items-center justify-center">
+              <div className="bg-gradient-to-br from-cyan-500 to-teal-500 h-96 flex items-center justify-center">
                 <p className="text-white text-center px-4">{content || 'Your content preview'}</p>
               </div>
             )}
@@ -436,7 +436,7 @@ export default function SandboxPage() {
                       onClick={() => setPlatform(key)}
                       className={`p-3 rounded-lg border transition-all ${
                         platform === key
-                          ? 'bg-purple-500/20 border-purple-500'
+                          ? 'bg-cyan-500/20 border-cyan-500'
                           : 'bg-white/5 border-white/10 hover:bg-white/10'
                       }`}
                     >
@@ -505,7 +505,7 @@ export default function SandboxPage() {
                     <p className="text-xs text-gray-400 mb-2">Mentions ({mentions.length})</p>
                     <div className="flex flex-wrap gap-2">
                       {mentions.map((mention, i) => (
-                        <span key={i} className="text-xs bg-purple-500/20 text-purple-300 px-2 py-1 rounded">
+                        <span key={i} className="text-xs bg-cyan-500/20 text-cyan-300 px-2 py-1 rounded">
                           {mention}
                         </span>
                       ))}
@@ -568,7 +568,7 @@ export default function SandboxPage() {
                         onClick={() => setDevice(key)}
                         className={`p-2 rounded transition-all ${
                           device === key
-                            ? 'bg-purple-500/20 text-purple-400'
+                            ? 'bg-cyan-500/20 text-cyan-400'
                             : 'text-gray-400 hover:text-white'
                         }`}
                         title={preset.label}

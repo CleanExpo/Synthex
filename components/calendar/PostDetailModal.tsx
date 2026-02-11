@@ -180,7 +180,7 @@ export function PostDetailModal({
                 : editedPost.status === 'failed'
                 ? 'bg-red-500/20 text-red-300'
                 : editedPost.status === 'scheduled'
-                ? 'bg-purple-500/20 text-purple-300'
+                ? 'bg-cyan-500/20 text-cyan-300'
                 : 'bg-gray-500/20 text-gray-300'
             }
           `}

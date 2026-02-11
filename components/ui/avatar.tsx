@@ -14,12 +14,12 @@ const avatarVariants = cva(
         // Premium Glassmorphism variants with ring effects
         glass: 'ring-2 ring-white/20',
         'glass-solid': 'ring-2 ring-white/30 shadow-lg',
-        'glass-primary': 'ring-2 ring-violet-500/50 shadow-[0_0_15px_rgba(139,92,246,0.3)]',
+        'glass-primary': 'ring-2 ring-cyan-500/50 shadow-[0_0_15px_rgba(6,182,212,0.3)]',
         'glass-secondary': 'ring-2 ring-cyan-500/50 shadow-[0_0_15px_rgba(6,182,212,0.3)]',
         'glass-success': 'ring-2 ring-emerald-500/50 shadow-[0_0_15px_rgba(16,185,129,0.3)]',
         // Gradient ring variants
         'gradient-primary':
-          'ring-2 ring-violet-500 shadow-[0_0_20px_rgba(139,92,246,0.4)]',
+          'ring-2 ring-cyan-500 shadow-[0_0_20px_rgba(6,182,212,0.4)]',
         'gradient-secondary':
           'ring-2 ring-cyan-500 shadow-[0_0_20px_rgba(6,182,212,0.4)]',
       },
@@ -47,11 +47,11 @@ const avatarFallbackVariants = cva(
         default: 'bg-muted dark:bg-slate-800 dark:text-slate-200',
         glass: 'bg-white/[0.08] backdrop-blur-md text-white',
         'glass-solid': 'bg-slate-800/80 backdrop-blur-md text-white',
-        'glass-primary': 'bg-violet-500/20 backdrop-blur-md text-violet-200',
+        'glass-primary': 'bg-cyan-500/20 backdrop-blur-md text-cyan-200',
         'glass-secondary': 'bg-cyan-500/20 backdrop-blur-md text-cyan-200',
         'glass-success': 'bg-emerald-500/20 backdrop-blur-md text-emerald-200',
         'gradient-primary':
-          'bg-gradient-to-br from-violet-500 to-fuchsia-500 text-white',
+          'bg-gradient-to-br from-cyan-500 to-cyan-500 text-white',
         'gradient-secondary':
           'bg-gradient-to-br from-cyan-500 to-blue-500 text-white',
       },

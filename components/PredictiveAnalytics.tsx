@@ -363,8 +363,8 @@ export function PredictiveAnalytics() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-gradient-to-br from-purple-500/20 to-pink-500/20">
-            <BarChart3 className="h-6 w-6 text-purple-400" />
+          <div className="p-2 rounded-lg bg-gradient-to-br from-cyan-500/20 to-cyan-500/20">
+            <BarChart3 className="h-6 w-6 text-cyan-400" />
           </div>
           <div>
             <h2 className="text-2xl font-bold text-white">Predictive Analytics</h2>
@@ -467,7 +467,7 @@ export function PredictiveAnalytics() {
                 type="monotone"
                 dataKey="upperBound"
                 stroke="transparent"
-                fill="#8b5cf6"
+                fill="#06b6d4"
                 fillOpacity={0.1}
                 name="Upper Bound"
               />
@@ -475,7 +475,7 @@ export function PredictiveAnalytics() {
                 type="monotone"
                 dataKey="lowerBound"
                 stroke="transparent"
-                fill="#8b5cf6"
+                fill="#06b6d4"
                 fillOpacity={0.1}
                 name="Lower Bound"
               />
@@ -490,7 +490,7 @@ export function PredictiveAnalytics() {
               <Line
                 type="monotone"
                 dataKey="predicted"
-                stroke="#8b5cf6"
+                stroke="#06b6d4"
                 strokeWidth={2}
                 strokeDasharray="5 5"
                 dot={false}
@@ -555,7 +555,7 @@ export function PredictiveAnalytics() {
                       {anomaly.type === 'spike' && <TrendingUp className="h-4 w-4 text-green-400" />}
                       {anomaly.type === 'drop' && <TrendingDown className="h-4 w-4 text-red-400" />}
                       {anomaly.type === 'pattern' && <Activity className="h-4 w-4 text-yellow-400" />}
-                      {anomaly.type === 'outlier' && <AlertCircle className="h-4 w-4 text-purple-400" />}
+                      {anomaly.type === 'outlier' && <AlertCircle className="h-4 w-4 text-cyan-400" />}
                       <span className="font-medium text-white text-sm">{anomaly.metric}</span>
                     </div>
                     <Badge 
@@ -582,8 +582,8 @@ export function PredictiveAnalytics() {
                     </span>
                   </div>
                   
-                  <div className="mt-2 p-2 bg-purple-500/10 rounded flex items-start gap-2">
-                    <Info className="h-3 w-3 text-purple-400 mt-0.5" />
+                  <div className="mt-2 p-2 bg-cyan-500/10 rounded flex items-start gap-2">
+                    <Info className="h-3 w-3 text-cyan-400 mt-0.5" />
                     <p className="text-xs text-gray-300">{anomaly.action}</p>
                   </div>
                 </div>
@@ -597,7 +597,7 @@ export function PredictiveAnalytics() {
       <Card variant="glass">
         <CardHeader>
           <div className="flex items-center gap-2">
-            <Sparkles className="h-5 w-5 text-purple-400" />
+            <Sparkles className="h-5 w-5 text-cyan-400" />
             <CardTitle>AI-Powered Insights</CardTitle>
           </div>
         </CardHeader>
@@ -629,7 +629,7 @@ export function PredictiveAnalytics() {
                     <p className="text-xs text-gray-400 mb-2">Recommendations</p>
                     {prediction.recommendations.map((rec, i) => (
                       <div key={i} className="flex items-start gap-1 mb-1">
-                        <ChevronRight className="h-3 w-3 text-purple-400 mt-0.5" />
+                        <ChevronRight className="h-3 w-3 text-cyan-400 mt-0.5" />
                         <span className="text-xs text-gray-300">{rec}</span>
                       </div>
                     ))}

@@ -48,6 +48,7 @@ const sidebarItems = [
   { icon: Calendar, label: 'Schedule', href: '/dashboard/schedule' },
   { icon: ListTodo, label: 'Tasks', href: '/dashboard/tasks' },
   { icon: BarChart3, label: 'Analytics', href: '/dashboard/analytics' },
+  { icon: Search, label: 'SEO Tools', href: '/dashboard/seo' },
   { icon: Users, label: 'Team', href: '/dashboard/team' },
   { icon: Zap, label: 'Integrations', href: '/dashboard/integrations' },
   { icon: Settings, label: 'Settings', href: '/dashboard/settings' },
@@ -78,7 +79,7 @@ export default function DashboardLayout({
           {/* Logo */}
           <div className="flex h-16 items-center justify-between px-4 border-b border-white/10">
             <Link href="/dashboard" className="flex items-center space-x-2">
-              <Sparkles className="w-8 h-8 text-purple-500" />
+              <Sparkles className="w-8 h-8 text-cyan-500" />
               {!sidebarCollapsed && (
                 <span className="text-xl font-bold gradient-text">Synthex</span>
               )}
@@ -109,7 +110,7 @@ export default function DashboardLayout({
                   className={cn(
                     'flex items-center space-x-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
                     isActive
-                      ? 'bg-purple-500/20 text-purple-400'
+                      ? 'bg-cyan-500/20 text-cyan-400'
                       : 'text-gray-400 hover:bg-white/5 hover:text-white'
                   )}
                 >

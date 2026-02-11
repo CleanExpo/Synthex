@@ -37,7 +37,7 @@ const sizeMap = {
 
 const colorMap = {
   default: 'text-slate-400',
-  primary: 'text-violet-500',
+  primary: 'text-cyan-500',
   secondary: 'text-cyan-500',
   white: 'text-white',
 };
@@ -70,7 +70,7 @@ function DotsSpinner({ size, color, className }: SpinnerProps) {
 
   const colorClass = {
     default: 'bg-slate-400',
-    primary: 'bg-violet-500',
+    primary: 'bg-cyan-500',
     secondary: 'bg-cyan-500',
     white: 'bg-white',
   };
@@ -103,7 +103,7 @@ function BarsSpinner({ size, color, className }: SpinnerProps) {
 
   const colorClass = {
     default: 'bg-slate-400',
-    primary: 'bg-violet-500',
+    primary: 'bg-cyan-500',
     secondary: 'bg-cyan-500',
     white: 'bg-white',
   };
@@ -131,7 +131,7 @@ function BarsSpinner({ size, color, className }: SpinnerProps) {
 function PulseSpinner({ size, color, className }: SpinnerProps) {
   const colorClass = {
     default: 'border-slate-400',
-    primary: 'border-violet-500',
+    primary: 'border-cyan-500',
     secondary: 'border-cyan-500',
     white: 'border-white',
   };
@@ -154,7 +154,7 @@ function GradientSpinner({ size, className }: SpinnerProps) {
       className={cn(
         'rounded-full animate-spin',
         sizeMap[size || 'md'],
-        'bg-gradient-to-r from-violet-500 via-fuchsia-500 to-violet-500',
+        'bg-gradient-to-r from-cyan-500 via-cyan-500 to-cyan-500',
         className
       )}
       style={{

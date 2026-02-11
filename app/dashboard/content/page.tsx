@@ -252,7 +252,7 @@ export default function ContentPage() {
         <Card variant="glass">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-gray-400">Generated Today</CardTitle>
-            <Sparkles className="h-4 w-4 text-purple-500" />
+            <Sparkles className="h-4 w-4 text-cyan-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-white">24</div>
@@ -262,7 +262,7 @@ export default function ContentPage() {
         <Card variant="glass">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-gray-400">Avg Engagement</CardTitle>
-            <BarChart3 className="h-4 w-4 text-purple-500" />
+            <BarChart3 className="h-4 w-4 text-cyan-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-white">8.7%</div>
@@ -272,7 +272,7 @@ export default function ContentPage() {
         <Card variant="glass">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-gray-400">Scheduled</CardTitle>
-            <Clock className="h-4 w-4 text-purple-500" />
+            <Clock className="h-4 w-4 text-cyan-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-white">15</div>
@@ -282,7 +282,7 @@ export default function ContentPage() {
         <Card variant="glass">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-gray-400">Success Rate</CardTitle>
-            <Target className="h-4 w-4 text-purple-500" />
+            <Target className="h-4 w-4 text-cyan-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-white">92%</div>
@@ -312,7 +312,7 @@ export default function ContentPage() {
                     onClick={() => setPlatform(key)}
                     className={`p-3 rounded-lg border transition-all ${
                       platform === key
-                        ? 'bg-purple-500/20 border-purple-500'
+                        ? 'bg-cyan-500/20 border-cyan-500'
                         : 'bg-white/5 border-white/10 hover:bg-white/10'
                     }`}
                   >
@@ -400,7 +400,7 @@ export default function ContentPage() {
                     onClick={() => setTargetLength(length)}
                     className={`py-2 px-4 rounded-lg border capitalize transition-all ${
                       targetLength === length
-                        ? 'bg-purple-500/20 border-purple-500'
+                        ? 'bg-cyan-500/20 border-cyan-500'
                         : 'bg-white/5 border-white/10 hover:bg-white/10'
                     }`}
                   >
@@ -417,7 +417,7 @@ export default function ContentPage() {
                   type="checkbox"
                   checked={includeHashtags}
                   onChange={(e) => setIncludeHashtags(e.target.checked)}
-                  className="rounded border-gray-600 text-purple-500 focus:ring-purple-500"
+                  className="rounded border-gray-600 text-cyan-500 focus:ring-cyan-500"
                 />
                 <Hash className="h-4 w-4 text-gray-400" />
                 <span className="text-sm text-white">Include Hashtags</span>
@@ -427,7 +427,7 @@ export default function ContentPage() {
                   type="checkbox"
                   checked={includeEmojis}
                   onChange={(e) => setIncludeEmojis(e.target.checked)}
-                  className="rounded border-gray-600 text-purple-500 focus:ring-purple-500"
+                  className="rounded border-gray-600 text-cyan-500 focus:ring-cyan-500"
                 />
                 <Smile className="h-4 w-4 text-gray-400" />
                 <span className="text-sm text-white">Include Emojis</span>
@@ -539,7 +539,7 @@ export default function ContentPage() {
                         <p className="text-xs text-gray-400 mb-1">Hashtags</p>
                         <div className="flex flex-wrap gap-1">
                           {generatedContent.metadata.hashtags.map((tag: string, i: number) => (
-                            <span key={i} className="text-xs bg-purple-500/20 text-purple-300 px-2 py-1 rounded">
+                            <span key={i} className="text-xs bg-cyan-500/20 text-cyan-300 px-2 py-1 rounded">
                               {tag}
                             </span>
                           ))}

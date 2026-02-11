@@ -31,8 +31,8 @@ export default function NotFound() {
           </motion.div>
           
           {/* Icon */}
-          <div className="w-20 h-20 mx-auto mb-6 bg-purple-500/20 rounded-full flex items-center justify-center">
-            <Search className="h-10 w-10 text-purple-400" />
+          <div className="w-20 h-20 mx-auto mb-6 bg-cyan-500/20 rounded-full flex items-center justify-center">
+            <Search className="h-10 w-10 text-cyan-400" />
           </div>
           
           <h1 className="text-2xl font-bold text-white mb-2">
@@ -69,19 +69,19 @@ export default function NotFound() {
               Here are some helpful links:
             </p>
             <div className="flex flex-wrap gap-2 justify-center">
-              <Link href="/create" className="text-purple-400 hover:text-purple-300 text-sm">
+              <Link href="/create" className="text-cyan-400 hover:text-cyan-300 text-sm">
                 Create Content
               </Link>
               <span className="text-gray-600">•</span>
-              <Link href="/analytics" className="text-purple-400 hover:text-purple-300 text-sm">
+              <Link href="/analytics" className="text-cyan-400 hover:text-cyan-300 text-sm">
                 Analytics
               </Link>
               <span className="text-gray-600">•</span>
-              <Link href="/schedule" className="text-purple-400 hover:text-purple-300 text-sm">
+              <Link href="/schedule" className="text-cyan-400 hover:text-cyan-300 text-sm">
                 Schedule
               </Link>
               <span className="text-gray-600">•</span>
-              <Link href="/settings" className="text-purple-400 hover:text-purple-300 text-sm">
+              <Link href="/settings" className="text-cyan-400 hover:text-cyan-300 text-sm">
                 Settings
               </Link>
             </div>

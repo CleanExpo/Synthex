@@ -634,7 +634,7 @@ export default function TeamPage() {
                 <p className="text-sm font-medium text-gray-400">Total Members</p>
                 <p className="text-2xl font-bold text-white">{teamMembers.length}</p>
               </div>
-              <Users className="h-8 w-8 text-purple-400" />
+              <Users className="h-8 w-8 text-cyan-400" />
             </div>
           </CardContent>
         </Card>
@@ -740,7 +740,7 @@ export default function TeamPage() {
                   <div className="flex items-center space-x-4">
                     <Avatar className="h-10 w-10">
                       <AvatarImage src={member.avatar} alt={member.name} />
-                      <AvatarFallback className="bg-gradient-to-r from-purple-500 to-pink-500 text-white">
+                      <AvatarFallback className="bg-gradient-to-r from-cyan-500 to-pink-500 text-white">
                         {member.name.charAt(0)}
                       </AvatarFallback>
                     </Avatar>
@@ -844,7 +844,7 @@ export default function TeamPage() {
               {activityLog.slice(0, 10).map((activity) => (
                 <div key={activity.id} className="flex space-x-3">
                   <div className="flex-shrink-0">
-                    <div className="h-2 w-2 rounded-full bg-purple-400 mt-2"></div>
+                    <div className="h-2 w-2 rounded-full bg-cyan-400 mt-2"></div>
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm text-white">

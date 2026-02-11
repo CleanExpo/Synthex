@@ -138,19 +138,19 @@ export function WeekView({
   const formatDayHeader = (date: Date) => {
     const isToday = date.toDateString() === new Date().toDateString();
     return (
-      <div className={`text-center py-3 ${isToday ? 'bg-purple-500/10' : ''}`}>
+      <div className={`text-center py-3 ${isToday ? 'bg-cyan-500/10' : ''}`}>
         <div className="text-xs text-gray-500 uppercase">
           {date.toLocaleDateString('en-US', { weekday: 'short' })}
         </div>
         <div
           className={`text-lg font-semibold ${
-            isToday ? 'text-purple-400' : 'text-white'
+            isToday ? 'text-cyan-400' : 'text-white'
           }`}
         >
           {date.getDate()}
         </div>
         {isToday && (
-          <div className="text-[10px] text-purple-400 font-medium">Today</div>
+          <div className="text-[10px] text-cyan-400 font-medium">Today</div>
         )}
       </div>
     );

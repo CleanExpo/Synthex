@@ -74,8 +74,8 @@ const ERROR_CONFIGS: Record<ErrorType, ErrorConfig> = {
     icon: AlertCircle,
     title: 'Validation Error',
     description: 'The data provided is invalid. Please check and try again.',
-    color: 'text-purple-600 dark:text-purple-400',
-    bgColor: 'bg-purple-50 dark:bg-purple-900/20',
+    color: 'text-cyan-600 dark:text-cyan-400',
+    bgColor: 'bg-cyan-50 dark:bg-cyan-900/20',
   },
   unknown: {
     icon: AlertCircle,

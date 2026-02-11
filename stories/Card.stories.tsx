@@ -188,7 +188,7 @@ export const MetricsCard: Story = {
 
 export const GlassmorphicCard: Story = {
   render: () => (
-    <div className="bg-gradient-to-br from-purple-400 to-blue-500 p-8 rounded-lg">
+    <div className="bg-gradient-to-br from-cyan-400 to-blue-500 p-8 rounded-lg">
       <Card className="w-[350px] bg-white/10 backdrop-blur-xl border-white/20">
         <CardHeader>
           <CardTitle className="text-white">Glassmorphic Card</CardTitle>
@@ -304,7 +304,7 @@ export const GlassCard: Story = {
   },
   decorators: [
     (Story) => (
-      <div className="bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-8 rounded-xl">
+      <div className="bg-gradient-to-br from-slate-900 via-cyan-900 to-slate-900 p-8 rounded-xl">
         <Story />
       </div>
     ),
@@ -316,12 +316,12 @@ export const GlassPrimaryCard: Story = {
     <Card variant="glass-primary" className="w-[350px]">
       <CardHeader>
         <div className="flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-violet-500/20">
-            <Sparkles className="h-5 w-5 text-violet-400" />
+          <div className="p-2 rounded-lg bg-cyan-500/20">
+            <Sparkles className="h-5 w-5 text-cyan-400" />
           </div>
           <div>
             <CardTitle className="text-white text-lg">AI Strategy</CardTitle>
-            <CardDescription className="text-violet-200/70">
+            <CardDescription className="text-cyan-200/70">
               Powered by machine learning
             </CardDescription>
           </div>
@@ -332,8 +332,8 @@ export const GlassPrimaryCard: Story = {
           Advanced AI algorithms analyze millions of data points to optimize your marketing strategy.
         </p>
         <div className="flex items-center gap-4 text-sm">
-          <span className="text-violet-300">✓ Viral detection</span>
-          <span className="text-violet-300">✓ Trend analysis</span>
+          <span className="text-cyan-300">✓ Viral detection</span>
+          <span className="text-cyan-300">✓ Trend analysis</span>
         </div>
       </CardContent>
       <CardFooter>
@@ -348,13 +348,13 @@ export const GlassPrimaryCard: Story = {
     layout: 'padded',
     docs: {
       description: {
-        story: 'Primary glass card with violet/fuchsia gradient accent.',
+        story: 'Primary glass card with cyan gradient accent.',
       },
     },
   },
   decorators: [
     (Story) => (
-      <div className="bg-gradient-to-br from-slate-900 via-purple-900/50 to-slate-900 p-8 rounded-xl">
+      <div className="bg-gradient-to-br from-slate-900 via-cyan-900/50 to-slate-900 p-8 rounded-xl">
         <Story />
       </div>
     ),
@@ -459,7 +459,7 @@ export const GlassInteractiveCard: Story = {
 
 export const GlassCardShowcase: Story = {
   render: () => (
-    <div className="bg-gradient-to-br from-slate-900 via-purple-900/30 to-slate-900 p-8 rounded-xl">
+    <div className="bg-gradient-to-br from-slate-900 via-cyan-900/30 to-slate-900 p-8 rounded-xl">
       <h2 className="text-white text-xl font-semibold mb-6">Glass Card Variants</h2>
 
       <div className="grid grid-cols-3 gap-6">
@@ -493,12 +493,12 @@ export const GlassCardShowcase: Story = {
         <Card variant="glass-primary" className="w-full">
           <CardHeader className="pb-3">
             <div className="flex items-center gap-2">
-              <Sparkles className="h-4 w-4 text-violet-400" />
+              <Sparkles className="h-4 w-4 text-cyan-400" />
               <CardTitle className="text-white text-base">Glass Primary</CardTitle>
             </div>
           </CardHeader>
           <CardContent>
-            <p className="text-violet-200/70 text-sm">Violet accent</p>
+            <p className="text-cyan-200/70 text-sm">Violet accent</p>
           </CardContent>
         </Card>
 
@@ -537,7 +537,7 @@ export const GlassCardShowcase: Story = {
 
 export const GlassFeatureGrid: Story = {
   render: () => (
-    <div className="bg-gradient-to-br from-slate-900 via-purple-900/20 to-slate-900 p-8 rounded-xl">
+    <div className="bg-gradient-to-br from-slate-900 via-cyan-900/20 to-slate-900 p-8 rounded-xl">
       <div className="text-center mb-8">
         <h2 className="text-2xl font-bold text-white mb-2">AI-Powered Features</h2>
         <p className="text-white/60">Everything you need to dominate social media</p>
@@ -546,8 +546,8 @@ export const GlassFeatureGrid: Story = {
       <div className="grid grid-cols-3 gap-4 w-[900px]">
         <Card variant="glass-interactive">
           <CardHeader className="pb-3">
-            <div className="p-2 rounded-lg bg-violet-500/20 w-fit mb-2">
-              <Brain className="h-5 w-5 text-violet-400" />
+            <div className="p-2 rounded-lg bg-cyan-500/20 w-fit mb-2">
+              <Brain className="h-5 w-5 text-cyan-400" />
             </div>
             <CardTitle className="text-white text-base">AI Strategy</CardTitle>
           </CardHeader>
@@ -560,8 +560,8 @@ export const GlassFeatureGrid: Story = {
 
         <Card variant="glass-interactive">
           <CardHeader className="pb-3">
-            <div className="p-2 rounded-lg bg-fuchsia-500/20 w-fit mb-2">
-              <Sparkles className="h-5 w-5 text-fuchsia-400" />
+            <div className="p-2 rounded-lg bg-cyan-500/20 w-fit mb-2">
+              <Sparkles className="h-5 w-5 text-cyan-400" />
             </div>
             <CardTitle className="text-white text-base">Content Creator</CardTitle>
           </CardHeader>

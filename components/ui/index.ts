@@ -98,7 +98,7 @@ export const glassStyles = {
   solid: 'bg-slate-900/80 backdrop-blur-xl border border-white/[0.08]',
   gradient: 'bg-gradient-to-br from-white/[0.04] to-white/[0.01] backdrop-blur-xl border border-white/[0.08]',
   button: 'bg-white/[0.05] backdrop-blur-md border border-white/[0.1] hover:bg-white/[0.1]',
-  buttonPrimary: 'bg-gradient-to-r from-violet-500/20 to-fuchsia-500/20 backdrop-blur-md border border-violet-500/30'
+  buttonPrimary: 'bg-gradient-to-r from-cyan-500/20 to-cyan-600/20 backdrop-blur-md border border-cyan-500/30'
 } as const;
 
 // Spacing scale
@@ -129,6 +129,6 @@ export const shadows = {
   md: '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)',
   lg: '0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)',
   xl: '0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)',
-  glow: '0 0 20px rgba(139, 92, 246, 0.3), 0 0 40px rgba(139, 92, 246, 0.1)',
-  'glow-lg': '0 0 30px rgba(139, 92, 246, 0.5), 0 0 60px rgba(139, 92, 246, 0.2)'
+  glow: '0 0 20px rgba(6, 182, 212, 0.3), 0 0 40px rgba(6, 182, 212, 0.1)',
+  'glow-lg': '0 0 30px rgba(6, 182, 212, 0.5), 0 0 60px rgba(6, 182, 212, 0.2)'
 } as const;

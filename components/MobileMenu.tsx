@@ -90,7 +90,7 @@ export default function MobileMenu() {
                   href={item.href}
                   className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${
                     isActive
-                      ? 'bg-purple-500/20 text-purple-400 border-l-2 border-purple-400'
+                      ? 'bg-cyan-500/20 text-cyan-400 border-l-2 border-cyan-400'
                       : 'text-gray-400 hover:text-white hover:bg-white/5'
                   }`}
                   aria-current={isActive ? 'page' : undefined}
@@ -105,8 +105,8 @@ export default function MobileMenu() {
           {/* User Section */}
           <div className="p-4 border-t border-white/10">
             <div className="flex items-center gap-3 p-3 rounded-lg bg-white/5">
-              <div className="w-10 h-10 rounded-full bg-purple-500/20 flex items-center justify-center">
-                <User className="w-5 h-5 text-purple-400" />
+              <div className="w-10 h-10 rounded-full bg-cyan-500/20 flex items-center justify-center">
+                <User className="w-5 h-5 text-cyan-400" />
               </div>
               <div className="flex-1">
                 <p className="text-sm font-medium text-white">User</p>

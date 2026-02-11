@@ -65,7 +65,7 @@ export function DraggablePostCard({
 
   const statusColors = {
     draft: 'bg-gray-500/20 text-gray-300 border-gray-500/30',
-    scheduled: 'bg-purple-500/20 text-purple-300 border-purple-500/30',
+    scheduled: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/30',
     published: 'bg-green-500/20 text-green-300 border-green-500/30',
     failed: 'bg-red-500/20 text-red-300 border-red-500/30',
   };
@@ -94,7 +94,7 @@ export function DraggablePostCard({
           group relative flex items-center gap-1.5 p-1.5 rounded-md text-xs
           transition-all duration-200 border
           ${statusColors[post.status]}
-          ${isDragging ? 'ring-2 ring-purple-500 shadow-lg z-50' : ''}
+          ${isDragging ? 'ring-2 ring-cyan-500 shadow-lg z-50' : ''}
           ${post.conflict ? 'ring-1 ring-yellow-500/50' : ''}
           ${!disabled ? 'hover:scale-[1.02] hover:shadow-md' : ''}
         `}
@@ -148,7 +148,7 @@ export function DraggablePostCard({
       className={`
         group relative p-3 rounded-lg border transition-all duration-200
         ${statusColors[post.status]}
-        ${isDragging ? 'ring-2 ring-purple-500 shadow-xl z-50' : ''}
+        ${isDragging ? 'ring-2 ring-cyan-500 shadow-xl z-50' : ''}
         ${post.conflict ? 'ring-1 ring-yellow-500/50' : ''}
         ${!disabled ? 'hover:scale-[1.01] hover:shadow-lg cursor-pointer' : ''}
       `}
@@ -211,7 +211,7 @@ export function DraggablePostCard({
         </span>
 
         {post.engagement && (
-          <span className="text-purple-400">
+          <span className="text-cyan-400">
             Est. {post.engagement.estimated || 0}% engagement
           </span>
         )}

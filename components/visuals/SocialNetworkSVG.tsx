@@ -69,9 +69,9 @@ export default function SocialNetworkSVG() {
         <defs>
           {/* Central orb gradient */}
           <radialGradient id="centralOrb" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor="#a78bfa" />
-            <stop offset="50%" stopColor="#8b5cf6" />
-            <stop offset="100%" stopColor="#6d28d9" />
+            <stop offset="0%" stopColor="#67e8f9" />
+            <stop offset="50%" stopColor="#06b6d4" />
+            <stop offset="100%" stopColor="#0891b2" />
           </radialGradient>
 
           {/* Glow filter */}
@@ -103,9 +103,9 @@ export default function SocialNetworkSVG() {
 
         {/* Orbital rings */}
         <g opacity="0.3">
-          <circle cx={centerX} cy={centerY} r={radius} fill="none" stroke="#8b5cf6" strokeWidth="1" strokeDasharray="5,5" />
-          <circle cx={centerX} cy={centerY} r={radius * 0.7} fill="none" stroke="#a78bfa" strokeWidth="0.5" strokeDasharray="3,3" />
-          <circle cx={centerX} cy={centerY} r={radius * 1.3} fill="none" stroke="#6d28d9" strokeWidth="0.5" strokeDasharray="8,8" />
+          <circle cx={centerX} cy={centerY} r={radius} fill="none" stroke="#06b6d4" strokeWidth="1" strokeDasharray="5,5" />
+          <circle cx={centerX} cy={centerY} r={radius * 0.7} fill="none" stroke="#67e8f9" strokeWidth="0.5" strokeDasharray="3,3" />
+          <circle cx={centerX} cy={centerY} r={radius * 1.3} fill="none" stroke="#0891b2" strokeWidth="0.5" strokeDasharray="8,8" />
         </g>
 
         {/* Connection lines to platforms */}

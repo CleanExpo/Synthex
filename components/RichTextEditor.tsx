@@ -67,7 +67,7 @@ export function RichTextEditor({
           'prose-headings:text-white prose-p:text-gray-300',
           'prose-strong:text-white prose-em:text-gray-300',
           'prose-ul:text-gray-300 prose-ol:text-gray-300',
-          'prose-blockquote:text-gray-400 prose-code:text-purple-400',
+          'prose-blockquote:text-gray-400 prose-code:text-cyan-400',
           'min-h-[200px] p-4',
           className
         )
@@ -104,7 +104,7 @@ export function RichTextEditor({
       size="sm"
       className={cn(
         'h-8 w-8 p-0',
-        active && 'bg-white/10 text-purple-400'
+        active && 'bg-white/10 text-cyan-400'
       )}
       title={tooltip}
     >
@@ -389,7 +389,7 @@ export function SimpleEditor({
           size="sm"
           className={cn(
             'h-6 w-6 p-0',
-            editor.isActive('bold') && 'text-purple-400'
+            editor.isActive('bold') && 'text-cyan-400'
           )}
         >
           <Bold className="h-3 w-3" />
@@ -401,7 +401,7 @@ export function SimpleEditor({
           size="sm"
           className={cn(
             'h-6 w-6 p-0',
-            editor.isActive('italic') && 'text-purple-400'
+            editor.isActive('italic') && 'text-cyan-400'
           )}
         >
           <Italic className="h-3 w-3" />

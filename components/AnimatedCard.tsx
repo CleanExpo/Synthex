@@ -68,7 +68,7 @@ export function AnimatedCard({
           className="absolute inset-0 rounded-lg opacity-0"
           whileHover={{
             opacity: 1,
-            background: 'radial-gradient(circle at center, rgba(139, 92, 246, 0.15), transparent)',
+            background: 'radial-gradient(circle at center, rgba(6, 182, 212, 0.15), transparent)',
           }}
           transition={{ duration: 0.3 }}
         />
@@ -114,7 +114,7 @@ export function AnimatedProgress({ value }: { value: number }) {
   return (
     <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden">
       <motion.div
-        className="h-full bg-gradient-to-r from-purple-500 to-pink-500"
+        className="h-full bg-gradient-to-r from-cyan-500 to-cyan-500"
         initial={{ width: '0%' }}
         animate={{ width: `${value}%` }}
         transition={{ duration: 0.5, ease: 'easeOut' }}

@@ -143,7 +143,7 @@ export function LiveCounter({
 
       {/* Pulse animation on update */}
       {isAnimating && (
-        <span className="absolute inset-0 bg-purple-500/20 rounded-lg animate-ping pointer-events-none" />
+        <span className="absolute inset-0 bg-cyan-500/20 rounded-lg animate-ping pointer-events-none" />
       )}
     </div>
   );

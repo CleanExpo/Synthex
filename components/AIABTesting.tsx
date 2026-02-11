@@ -367,8 +367,8 @@ export function AIABTesting() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-gradient-to-br from-purple-500/20 to-pink-500/20">
-            <FlaskConical className="h-6 w-6 text-purple-400" />
+          <div className="p-2 rounded-lg bg-gradient-to-br from-cyan-500/20 to-cyan-500/20">
+            <FlaskConical className="h-6 w-6 text-cyan-400" />
           </div>
           <div>
             <h2 className="text-2xl font-bold text-white">A/B Testing</h2>
@@ -593,11 +593,11 @@ export function AIABTesting() {
                       <Tooltip
                         contentStyle={{
                           backgroundColor: 'rgba(0,0,0,0.8)',
-                          border: '1px solid rgba(139, 92, 246, 0.3)',
+                          border: '1px solid rgba(6, 182, 212, 0.3)',
                           borderRadius: '8px'
                         }}
                       />
-                      <Line type="monotone" dataKey="variantA" stroke="#8b5cf6" name="Variant A" />
+                      <Line type="monotone" dataKey="variantA" stroke="#06b6d4" name="Variant A" />
                       <Line type="monotone" dataKey="variantB" stroke="#ec4899" name="Variant B" />
                     </LineChart>
                   </ResponsiveContainer>
@@ -656,15 +656,15 @@ export function AIABTesting() {
             
             {/* AI Recommendations */}
             {selectedTest.recommendations.length > 0 && (
-              <div className="p-4 bg-purple-500/10 border border-purple-500/30 rounded-lg">
+              <div className="p-4 bg-cyan-500/10 border border-cyan-500/30 rounded-lg">
                 <div className="flex items-center gap-2 mb-3">
-                  <Sparkles className="h-5 w-5 text-purple-400" />
+                  <Sparkles className="h-5 w-5 text-cyan-400" />
                   <h4 className="font-medium text-white">AI Recommendations</h4>
                 </div>
                 <div className="space-y-2">
                   {selectedTest.recommendations.map((rec, i) => (
                     <div key={i} className="flex items-start gap-2">
-                      <ChevronRight className="h-4 w-4 text-purple-400 mt-0.5" />
+                      <ChevronRight className="h-4 w-4 text-cyan-400 mt-0.5" />
                       <span className="text-sm text-gray-300">{rec}</span>
                     </div>
                   ))}

@@ -9,14 +9,14 @@ const skeletonVariants = cva('animate-pulse rounded-md', {
       // Premium Glassmorphism variants
       glass: 'bg-white/10 backdrop-blur-sm',
       'glass-solid': 'bg-slate-700/50 backdrop-blur-sm',
-      'glass-primary': 'bg-violet-500/20 backdrop-blur-sm',
+      'glass-primary': 'bg-cyan-500/20 backdrop-blur-sm',
       'glass-secondary': 'bg-cyan-500/20 backdrop-blur-sm',
       'glass-success': 'bg-emerald-500/20 backdrop-blur-sm',
       // Shimmer variants with gradient animation
       shimmer:
         'bg-gradient-to-r from-white/5 via-white/15 to-white/5 bg-[length:200%_100%] animate-shimmer',
       'shimmer-primary':
-        'bg-gradient-to-r from-violet-500/10 via-violet-500/25 to-violet-500/10 bg-[length:200%_100%] animate-shimmer',
+        'bg-gradient-to-r from-cyan-500/10 via-cyan-500/25 to-cyan-500/10 bg-[length:200%_100%] animate-shimmer',
       'shimmer-secondary':
         'bg-gradient-to-r from-cyan-500/10 via-cyan-500/25 to-cyan-500/10 bg-[length:200%_100%] animate-shimmer',
     },

@@ -394,8 +394,8 @@ export function SentimentAnalysis() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-gradient-to-br from-purple-500/20 to-pink-500/20">
-            <Brain className="h-6 w-6 text-purple-400" />
+          <div className="p-2 rounded-lg bg-gradient-to-br from-cyan-500/20 to-cyan-500/20">
+            <Brain className="h-6 w-6 text-cyan-400" />
           </div>
           <div>
             <h2 className="text-2xl font-bold text-white">Sentiment Analysis</h2>
@@ -544,7 +544,7 @@ export function SentimentAnalysis() {
                   <Tooltip
                     contentStyle={{
                       backgroundColor: 'rgba(0,0,0,0.8)',
-                      border: '1px solid rgba(139, 92, 246, 0.3)',
+                      border: '1px solid rgba(6, 182, 212, 0.3)',
                       borderRadius: '8px'
                     }}
                   />
@@ -572,11 +572,11 @@ export function SentimentAnalysis() {
                   <Tooltip
                     contentStyle={{
                       backgroundColor: 'rgba(0,0,0,0.8)',
-                      border: '1px solid rgba(139, 92, 246, 0.3)',
+                      border: '1px solid rgba(6, 182, 212, 0.3)',
                       borderRadius: '8px'
                     }}
                   />
-                  <Bar dataKey="score" fill="#8b5cf6" radius={[8, 8, 0, 0]} />
+                  <Bar dataKey="score" fill="#06b6d4" radius={[8, 8, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </CardContent>
@@ -671,7 +671,7 @@ export function SentimentAnalysis() {
                   {item.topics.length > 0 && (
                     <div className="flex gap-2 mt-3">
                       {item.topics.map(topic => (
-                        <Badge key={topic} className="bg-purple-500/20 text-purple-400 text-xs">
+                        <Badge key={topic} className="bg-cyan-500/20 text-cyan-400 text-xs">
                           {topic}
                         </Badge>
                       ))}
@@ -747,7 +747,7 @@ export function SentimentAnalysis() {
                       <p className="text-sm text-gray-400 mb-2">Key Phrases</p>
                       <div className="flex flex-wrap gap-2">
                         {testResult.keyPhrases.map((phrase: string, i: number) => (
-                          <Badge key={i} className="bg-purple-500/20 text-purple-400 text-xs">
+                          <Badge key={i} className="bg-cyan-500/20 text-cyan-400 text-xs">
                             {phrase}
                           </Badge>
                         ))}

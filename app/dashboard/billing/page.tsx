@@ -142,7 +142,7 @@ export default function BillingPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 p-8">
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-cyan-900 to-gray-900 p-8">
         <div className="max-w-4xl mx-auto">
           <div className="animate-pulse">
             <div className="h-8 bg-white/10 rounded w-1/4 mb-8"></div>
@@ -157,7 +157,7 @@ export default function BillingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 p-8">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-cyan-900 to-gray-900 p-8">
       <div className="max-w-4xl mx-auto">
         <h1 className="text-3xl font-bold text-white mb-8">Billing & Subscription</h1>
 
@@ -165,7 +165,7 @@ export default function BillingPage() {
         <Card variant="glass" className="p-6 mb-6">
           <div className="flex items-start justify-between mb-4">
             <div className="flex items-center space-x-3">
-              <Package className="w-6 h-6 text-purple-400" />
+              <Package className="w-6 h-6 text-cyan-400" />
               <h2 className="text-xl font-semibold text-white">Current Plan</h2>
             </div>
             <Badge className={`${getStatusColor(subscription?.status || 'inactive')} text-white`}>
@@ -208,7 +208,7 @@ export default function BillingPage() {
         {/* Billing Management */}
         <Card variant="glass" className="p-6 mb-6">
           <div className="flex items-center space-x-3 mb-4">
-            <CreditCard className="w-6 h-6 text-purple-400" />
+            <CreditCard className="w-6 h-6 text-cyan-400" />
             <h2 className="text-xl font-semibold text-white">Billing Management</h2>
           </div>
 
@@ -257,7 +257,7 @@ export default function BillingPage() {
         {/* Usage & Limits */}
         <Card variant="glass" className="p-6">
           <div className="flex items-center space-x-3 mb-4">
-            <Calendar className="w-6 h-6 text-purple-400" />
+            <Calendar className="w-6 h-6 text-cyan-400" />
             <h2 className="text-xl font-semibold text-white">Usage & Limits</h2>
           </div>
 
@@ -271,7 +271,7 @@ export default function BillingPage() {
               </div>
               <div className="w-full bg-white/10 rounded-full h-2">
                 <div
-                  className="bg-gradient-to-r from-purple-500 to-pink-500 h-2 rounded-full transition-all duration-300"
+                  className="bg-gradient-to-r from-cyan-500 to-teal-500 h-2 rounded-full transition-all duration-300"
                   style={{ width: `${usageData?.limits.aiPosts === -1 ? 0 : (usageData?.percentages.aiPosts ?? 0)}%` }}
                 ></div>
               </div>
@@ -286,7 +286,7 @@ export default function BillingPage() {
               </div>
               <div className="w-full bg-white/10 rounded-full h-2">
                 <div
-                  className="bg-gradient-to-r from-purple-500 to-pink-500 h-2 rounded-full transition-all duration-300"
+                  className="bg-gradient-to-r from-cyan-500 to-teal-500 h-2 rounded-full transition-all duration-300"
                   style={{ width: `${usageData?.limits.socialAccounts === -1 ? 0 : (usageData?.percentages.socialAccounts ?? 0)}%` }}
                 ></div>
               </div>
@@ -301,16 +301,16 @@ export default function BillingPage() {
               </div>
               <div className="w-full bg-white/10 rounded-full h-2">
                 <div
-                  className="bg-gradient-to-r from-purple-500 to-pink-500 h-2 rounded-full transition-all duration-300"
+                  className="bg-gradient-to-r from-cyan-500 to-teal-500 h-2 rounded-full transition-all duration-300"
                   style={{ width: `${usageData?.limits.personas === -1 ? 0 : (usageData?.percentages.personas ?? 0)}%` }}
                 ></div>
               </div>
             </div>
           </div>
 
-          <div className="mt-6 p-4 bg-purple-500/10 border border-purple-500/30 rounded-lg">
-            <p className="text-purple-200 text-sm">
-              Need more? <a href="/pricing" className="underline hover:text-purple-100">Upgrade your plan</a> to unlock higher limits and advanced features.
+          <div className="mt-6 p-4 bg-cyan-500/10 border border-cyan-500/30 rounded-lg">
+            <p className="text-cyan-200 text-sm">
+              Need more? <a href="/pricing" className="underline hover:text-cyan-100">Upgrade your plan</a> to unlock higher limits and advanced features.
             </p>
           </div>
         </Card>

@@ -26,7 +26,7 @@ const posts: Post[] = [
     comments: '342',
     shares: '1.2K',
     verified: true,
-    gradient: 'from-violet-500 to-purple-600',
+    gradient: 'from-cyan-500 to-cyan-600',
     offset: 0,
   },
   {
@@ -115,7 +115,7 @@ function PostCard({ post, index }: { post: Post; index: number }) {
             <Share2 className="w-5 h-5" />
             <span className="text-sm">{post.shares}</span>
           </button>
-          <button className="text-slate-400 hover:text-purple-400 transition-colors">
+          <button className="text-slate-400 hover:text-cyan-400 transition-colors">
             <Bookmark className="w-5 h-5" />
           </button>
         </div>
@@ -144,7 +144,7 @@ export default function FloatingPostsSVG() {
           return (
             <div
               key={i}
-              className="absolute w-1 h-1 bg-purple-400 rounded-full animate-pulse"
+              className="absolute w-1 h-1 bg-cyan-400 rounded-full animate-pulse"
               style={{
                 left: `${x}%`,
                 top: `${y}%`,

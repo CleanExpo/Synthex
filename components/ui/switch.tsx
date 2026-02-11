@@ -11,21 +11,21 @@ const switchVariants = cva(
     variants: {
       variant: {
         default:
-          'data-[state=checked]:bg-primary data-[state=unchecked]:bg-input dark:data-[state=checked]:bg-violet-600 dark:data-[state=unchecked]:bg-slate-700',
+          'data-[state=checked]:bg-primary data-[state=unchecked]:bg-input dark:data-[state=checked]:bg-cyan-600 dark:data-[state=unchecked]:bg-slate-700',
         // Premium Glassmorphism variants
         glass:
           'data-[state=checked]:bg-white/30 data-[state=unchecked]:bg-white/[0.08] backdrop-blur-md border-white/[0.1]',
         'glass-solid':
           'data-[state=checked]:bg-slate-600 data-[state=unchecked]:bg-slate-800/80 backdrop-blur-md border-white/[0.08]',
         'glass-primary':
-          'data-[state=checked]:bg-violet-500/60 data-[state=unchecked]:bg-violet-500/20 backdrop-blur-md border-violet-500/30',
+          'data-[state=checked]:bg-cyan-500/60 data-[state=unchecked]:bg-cyan-500/20 backdrop-blur-md border-cyan-500/30',
         'glass-secondary':
           'data-[state=checked]:bg-cyan-500/60 data-[state=unchecked]:bg-cyan-500/20 backdrop-blur-md border-cyan-500/30',
         'glass-success':
           'data-[state=checked]:bg-emerald-500/60 data-[state=unchecked]:bg-emerald-500/20 backdrop-blur-md border-emerald-500/30',
         // Gradient variants
         'gradient-primary':
-          'data-[state=checked]:bg-gradient-to-r data-[state=checked]:from-violet-500 data-[state=checked]:to-fuchsia-500 data-[state=unchecked]:bg-white/[0.08] backdrop-blur-md',
+          'data-[state=checked]:bg-gradient-to-r data-[state=checked]:from-cyan-500 data-[state=checked]:to-cyan-500 data-[state=unchecked]:bg-white/[0.08] backdrop-blur-md',
         'gradient-secondary':
           'data-[state=checked]:bg-gradient-to-r data-[state=checked]:from-cyan-500 data-[state=checked]:to-blue-500 data-[state=unchecked]:bg-white/[0.08] backdrop-blur-md',
       },
@@ -50,10 +50,10 @@ const switchThumbVariants = cva(
         default: '',
         glass: 'bg-white shadow-[0_0_10px_rgba(255,255,255,0.3)]',
         'glass-solid': 'bg-white',
-        'glass-primary': 'bg-white shadow-[0_0_10px_rgba(139,92,246,0.3)]',
+        'glass-primary': 'bg-white shadow-[0_0_10px_rgba(6,182,212,0.3)]',
         'glass-secondary': 'bg-white shadow-[0_0_10px_rgba(6,182,212,0.3)]',
         'glass-success': 'bg-white shadow-[0_0_10px_rgba(16,185,129,0.3)]',
-        'gradient-primary': 'bg-white shadow-[0_0_10px_rgba(139,92,246,0.3)]',
+        'gradient-primary': 'bg-white shadow-[0_0_10px_rgba(6,182,212,0.3)]',
         'gradient-secondary': 'bg-white shadow-[0_0_10px_rgba(6,182,212,0.3)]',
       },
       size: {

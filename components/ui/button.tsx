@@ -18,12 +18,12 @@ const buttonVariants = cva(
           'bg-secondary text-secondary-foreground hover:bg-secondary/80 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700',
         ghost:
           'hover:bg-accent hover:text-accent-foreground dark:hover:bg-slate-800 dark:hover:text-slate-100',
-        link: 'text-primary underline-offset-4 hover:underline dark:text-violet-400',
+        link: 'text-primary underline-offset-4 hover:underline dark:text-cyan-400',
         // Premium Glassmorphism variants (2026 Design System)
         glass:
           'bg-white/[0.05] backdrop-blur-md border border-white/10 text-white hover:bg-white/[0.1] hover:border-white/20 hover:-translate-y-0.5 active:translate-y-0 dark:bg-white/[0.03] dark:border-white/[0.08] dark:hover:bg-white/[0.08] dark:hover:border-white/[0.15]',
         'glass-primary':
-          'bg-gradient-to-r from-violet-500/20 to-fuchsia-500/20 backdrop-blur-md border border-violet-500/30 text-white hover:from-violet-500/30 hover:to-fuchsia-500/30 hover:border-violet-500/50 hover:shadow-[0_0_20px_rgba(139,92,246,0.2)] hover:-translate-y-0.5 active:translate-y-0',
+          'bg-gradient-to-r from-cyan-500/20 to-cyan-600/20 backdrop-blur-md border border-cyan-500/30 text-white hover:from-cyan-500/30 hover:to-cyan-600/30 hover:border-cyan-500/50 hover:shadow-[0_0_20px_rgba(6,182,212,0.2)] hover:-translate-y-0.5 active:translate-y-0',
         'glass-secondary':
           'bg-gradient-to-r from-cyan-500/20 to-blue-500/20 backdrop-blur-md border border-cyan-500/30 text-white hover:from-cyan-500/30 hover:to-blue-500/30 hover:border-cyan-500/50 hover:shadow-[0_0_20px_rgba(6,182,212,0.2)] hover:-translate-y-0.5 active:translate-y-0',
         'glass-destructive':
@@ -32,9 +32,9 @@ const buttonVariants = cva(
           'bg-emerald-500/20 backdrop-blur-md border border-emerald-500/30 text-emerald-100 hover:bg-emerald-500/30 hover:border-emerald-500/50 hover:-translate-y-0.5 active:translate-y-0',
         // Premium solid variants
         'premium-primary':
-          'bg-gradient-to-r from-violet-600 to-blue-600 text-white shadow-lg hover:from-violet-700 hover:to-blue-700 hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0',
+          'bg-gradient-to-r from-cyan-500 to-cyan-600 text-white shadow-lg hover:from-cyan-400 hover:to-cyan-500 hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0',
         'premium-secondary':
-          'bg-gradient-to-r from-fuchsia-600 to-violet-600 text-white shadow-lg hover:from-fuchsia-700 hover:to-violet-700 hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0',
+          'bg-gradient-to-r from-cyan-600 to-teal-600 text-white shadow-lg hover:from-cyan-500 hover:to-teal-500 hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0',
       },
       size: {
         default: 'h-10 px-4 py-2',

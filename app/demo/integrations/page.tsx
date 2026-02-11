@@ -149,7 +149,7 @@ export default function DemoIntegrationsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-950 via-purple-950/20 to-gray-950">
+    <div className="min-h-screen bg-gradient-to-b from-gray-950 via-cyan-950/20 to-gray-950">
       <Toaster position="top-right" />
       
       {/* Demo Mode Banner */}
@@ -174,26 +174,26 @@ export default function DemoIntegrationsPage() {
         <Card variant="glass" className="mb-8">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Shield className="w-5 h-5 text-purple-400" />
+              <Shield className="w-5 h-5 text-cyan-400" />
               How Synthex Integrations Work
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-3 text-sm text-gray-300">
               <p className="flex items-start gap-2">
-                <span className="text-purple-400 font-bold">1.</span>
+                <span className="text-cyan-400 font-bold">1.</span>
                 Each user connects their own social media accounts using their own API credentials
               </p>
               <p className="flex items-start gap-2">
-                <span className="text-purple-400 font-bold">2.</span>
+                <span className="text-cyan-400 font-bold">2.</span>
                 Click "Connect" on any platform below to enter your API keys
               </p>
               <p className="flex items-start gap-2">
-                <span className="text-purple-400 font-bold">3.</span>
+                <span className="text-cyan-400 font-bold">3.</span>
                 Your credentials are encrypted and stored securely in your account
               </p>
               <p className="flex items-start gap-2">
-                <span className="text-purple-400 font-bold">4.</span>
+                <span className="text-cyan-400 font-bold">4.</span>
                 Posts go directly from Synthex to your social media accounts
               </p>
             </div>

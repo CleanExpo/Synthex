@@ -16,14 +16,14 @@ const selectTriggerVariants = cva(
     variants: {
       variant: {
         default:
-          'border border-input bg-background focus:ring-2 focus:ring-ring focus:ring-offset-2 dark:bg-slate-900/50 dark:border-slate-700 dark:text-slate-100 dark:focus:ring-violet-500/50',
+          'border border-input bg-background focus:ring-2 focus:ring-ring focus:ring-offset-2 dark:bg-slate-900/50 dark:border-slate-700 dark:text-slate-100 dark:focus:ring-cyan-500/50',
         // Premium Glassmorphism variants
         glass:
           'bg-white/[0.03] backdrop-blur-md border border-white/[0.08] text-white focus:bg-white/[0.06] focus:border-white/[0.15] focus:ring-2 focus:ring-white/[0.1]',
         'glass-solid':
           'bg-slate-900/80 backdrop-blur-md border border-white/[0.08] text-white focus:bg-slate-900/90 focus:border-white/[0.15] focus:ring-2 focus:ring-white/[0.1]',
         'glass-primary':
-          'bg-violet-500/10 backdrop-blur-md border border-violet-500/20 text-white focus:bg-violet-500/15 focus:border-violet-500/40 focus:ring-2 focus:ring-violet-500/20',
+          'bg-cyan-500/10 backdrop-blur-md border border-cyan-500/20 text-white focus:bg-cyan-500/15 focus:border-cyan-500/40 focus:ring-2 focus:ring-cyan-500/20',
         'glass-secondary':
           'bg-cyan-500/10 backdrop-blur-md border border-cyan-500/20 text-white focus:bg-cyan-500/15 focus:border-cyan-500/40 focus:ring-2 focus:ring-cyan-500/20',
       },
@@ -46,7 +46,7 @@ const selectContentVariants = cva(
         'glass-solid':
           'bg-slate-900/95 backdrop-blur-xl border border-white/[0.08] text-white shadow-[0_8px_32px_rgba(0,0,0,0.4)]',
         'glass-primary':
-          'bg-violet-500/10 backdrop-blur-xl border border-violet-500/20 text-white shadow-[0_8px_32px_rgba(139,92,246,0.15)]',
+          'bg-cyan-500/10 backdrop-blur-xl border border-cyan-500/20 text-white shadow-[0_8px_32px_rgba(6,182,212,0.15)]',
         'glass-secondary':
           'bg-cyan-500/10 backdrop-blur-xl border border-cyan-500/20 text-white shadow-[0_8px_32px_rgba(6,182,212,0.15)]',
       },
@@ -65,7 +65,7 @@ const selectItemVariants = cva(
         default:
           'focus:bg-accent focus:text-accent-foreground dark:focus:bg-slate-800 dark:text-slate-200 dark:focus:text-white',
         glass: 'focus:bg-white/[0.08] text-white/90 focus:text-white',
-        'glass-primary': 'focus:bg-violet-500/20 text-white/90 focus:text-white',
+        'glass-primary': 'focus:bg-cyan-500/20 text-white/90 focus:text-white',
         'glass-secondary': 'focus:bg-cyan-500/20 text-white/90 focus:text-white',
       },
     },

@@ -101,7 +101,7 @@ export default function HelpPage() {
       description: 'Master AI-powered content generation',
       icon: Sparkles,
       articles: 18,
-      color: 'text-purple-400',
+      color: 'text-cyan-400',
       links: [
         { title: 'Using AI for content', href: '/dashboard/content' },
         { title: 'Content templates', href: '/dashboard/content' },
@@ -244,7 +244,7 @@ export default function HelpPage() {
         >
           <CardContent className="p-6">
             <div className="flex items-center gap-4">
-              <div className="p-3 rounded-lg bg-gradient-to-br from-cyan-500/20 to-purple-500/20">
+              <div className="p-3 rounded-lg bg-gradient-to-br from-cyan-500/20 to-teal-500/20">
                 <Video className="w-6 h-6 text-cyan-400" />
               </div>
               <div>
@@ -270,8 +270,8 @@ export default function HelpPage() {
         >
           <CardContent className="p-6">
             <div className="flex items-center gap-4">
-              <div className="p-3 rounded-lg bg-gradient-to-br from-purple-500/20 to-pink-500/20">
-                <MessageCircle className="w-6 h-6 text-purple-400" />
+              <div className="p-3 rounded-lg bg-gradient-to-br from-cyan-500/20 to-teal-500/20">
+                <MessageCircle className="w-6 h-6 text-cyan-400" />
               </div>
               <div>
                 <h3 className="font-semibold text-white">Live Chat</h3>
@@ -310,7 +310,7 @@ export default function HelpPage() {
               <Card 
                 key={category.id} 
                 variant="glass" className={` hover:scale-105 transition-transform cursor-pointer ${
-                  selectedCategory === category.id ? 'ring-2 ring-purple-500' : ''
+                  selectedCategory === category.id ? 'ring-2 ring-cyan-500' : ''
                 }`}
                 onClick={() => setSelectedCategory(
                   selectedCategory === category.id ? null : category.id
@@ -368,7 +368,7 @@ export default function HelpPage() {
             {filteredFAQs.map((faq, index) => (
               <div key={index} className="border-b border-white/10 pb-4 last:border-0">
                 <h4 className="font-medium text-white mb-2 flex items-start gap-2">
-                  <HelpCircle className="w-4 h-4 text-purple-400 mt-0.5 flex-shrink-0" />
+                  <HelpCircle className="w-4 h-4 text-cyan-400 mt-0.5 flex-shrink-0" />
                   {faq.question}
                 </h4>
                 <p className="text-sm text-gray-400 ml-6">{faq.answer}</p>

@@ -330,7 +330,7 @@ export default function SettingsPage() {
                     className="h-20 w-20 rounded-full object-cover"
                   />
                 ) : (
-                  <div className="h-20 w-20 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center text-2xl font-bold text-white">
+                  <div className="h-20 w-20 rounded-full bg-gradient-to-r from-cyan-500 to-teal-500 flex items-center justify-center text-2xl font-bold text-white">
                     {profile.name ? profile.name.charAt(0).toUpperCase() : 'U'}
                   </div>
                 )}
@@ -732,13 +732,13 @@ export default function SettingsPage() {
             </CardHeader>
             <CardContent className="space-y-6">
               {/* Current Plan */}
-              <div className="p-6 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-lg border border-purple-500/30">
+              <div className="p-6 bg-gradient-to-r from-cyan-500/20 to-teal-500/20 rounded-lg border border-cyan-500/30">
                 <div className="flex items-center justify-between mb-4">
                   <div>
                     <h3 className="text-xl font-semibold text-white">Pro Plan</h3>
                     <p className="text-gray-400">$49/month</p>
                   </div>
-                  <Zap className="h-8 w-8 text-purple-400" />
+                  <Zap className="h-8 w-8 text-cyan-400" />
                 </div>
                 <div className="space-y-2 mb-4">
                   <p className="text-sm text-gray-300 flex items-center">

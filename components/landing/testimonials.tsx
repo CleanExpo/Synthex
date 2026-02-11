@@ -34,7 +34,7 @@ const testimonials: Testimonial[] = [
     quote: 'Replaced our $8k/month agency. Better results, fraction of the cost. The AI understands our brand voice perfectly.',
     rating: 5,
     avatar: {
-      gradient: 'from-purple-500 via-fuchsia-500 to-pink-500',
+      gradient: 'from-cyan-500 via-cyan-500 to-cyan-500',
       initials: 'SC',
     },
     metrics: {
@@ -53,7 +53,7 @@ const testimonials: Testimonial[] = [
     quote: '3x our engagement in 30 days. The viral pattern analysis is game-changing. It\'s like having a team of experts 24/7.',
     rating: 5,
     avatar: {
-      gradient: 'from-cyan-500 via-blue-500 to-purple-500',
+      gradient: 'from-cyan-500 via-blue-500 to-cyan-500',
       initials: 'MJ',
     },
     metrics: {
@@ -99,13 +99,13 @@ function TestimonialCard({ testimonial, index }: { testimonial: Testimonial; ind
     >
       {/* Glow effect for featured */}
       {testimonial.featured && (
-        <div className="absolute -inset-4 bg-gradient-to-r from-purple-500/20 via-fuchsia-500/20 to-purple-500/20 rounded-3xl blur-2xl opacity-60" />
+        <div className="absolute -inset-4 bg-gradient-to-r from-cyan-500/20 via-cyan-500/20 to-cyan-500/20 rounded-3xl blur-2xl opacity-60" />
       )}
 
       <Card
         className={`relative overflow-hidden backdrop-blur-sm transition-all duration-500 ${
           testimonial.featured
-            ? 'bg-gradient-to-br from-white/[0.12] to-white/[0.06] border-purple-500/30 hover:border-purple-400/50'
+            ? 'bg-gradient-to-br from-white/[0.12] to-white/[0.06] border-cyan-500/30 hover:border-cyan-400/50'
             : 'bg-white/[0.06] border-white/[0.1] hover:border-white/[0.2] hover:bg-white/[0.08]'
         } p-6 lg:p-8`}
       >
@@ -237,7 +237,7 @@ export function Testimonials() {
             <span>1,000+ Active Users</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-2 h-2 rounded-full bg-purple-400" />
+            <div className="w-2 h-2 rounded-full bg-cyan-400" />
             <span>4.9/5 Average Rating</span>
           </div>
           <div className="flex items-center gap-2">

@@ -175,10 +175,10 @@ export function Pagination({
   };
 
   const activeClasses = {
-    default: 'bg-violet-500/20 text-violet-400 border border-violet-500/30',
-    outline: 'border-violet-500/50 bg-violet-500/10 text-violet-400',
-    ghost: 'bg-violet-500/20 text-violet-400',
-    glass: 'bg-violet-500/20 text-violet-400 border-violet-500/30',
+    default: 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30',
+    outline: 'border-cyan-500/50 bg-cyan-500/10 text-cyan-400',
+    ghost: 'bg-cyan-500/20 text-cyan-400',
+    glass: 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30',
   };
 
   const buttonClass = cn(

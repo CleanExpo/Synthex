@@ -19,7 +19,7 @@ const sheetOverlayVariants = cva(
         default: 'bg-background/80 backdrop-blur-sm',
         glass: 'bg-black/40 backdrop-blur-md',
         'glass-solid': 'bg-slate-950/60 backdrop-blur-lg',
-        'glass-primary': 'bg-violet-950/40 backdrop-blur-md',
+        'glass-primary': 'bg-cyan-950/40 backdrop-blur-md',
         'glass-secondary': 'bg-cyan-950/40 backdrop-blur-md',
       },
     },
@@ -57,7 +57,7 @@ const sheetContentVariants = cva(
         'glass-solid':
           'bg-slate-900/95 backdrop-blur-xl border border-white/[0.08] text-white',
         'glass-primary':
-          'bg-violet-500/10 backdrop-blur-xl border border-violet-500/20 text-white',
+          'bg-cyan-500/10 backdrop-blur-xl border border-cyan-500/20 text-white',
         'glass-secondary':
           'bg-cyan-500/10 backdrop-blur-xl border border-cyan-500/20 text-white',
       },
@@ -85,7 +85,7 @@ const sheetCloseVariants = cva(
         default: 'data-[state=open]:bg-secondary',
         glass: 'text-white hover:bg-white/10',
         'glass-solid': 'text-white hover:bg-white/10',
-        'glass-primary': 'text-violet-200 hover:bg-violet-500/20',
+        'glass-primary': 'text-cyan-200 hover:bg-cyan-500/20',
         'glass-secondary': 'text-cyan-200 hover:bg-cyan-500/20',
       },
     },
