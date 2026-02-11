@@ -3,10 +3,8 @@
  * Handles email verification and password reset emails
  */
 
-import { PrismaClient } from '@prisma/client';
+import prisma from '@/lib/prisma';
 import crypto from 'crypto';
-
-const prisma = new PrismaClient();
 
 export interface EmailTemplate {
   to: string;

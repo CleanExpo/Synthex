@@ -2,34 +2,23 @@
  * Prisma Client with Connection Pooling Configuration
  *
  * @task UNI-436 - Implement Database Connection Pooling
+ * @task UNI-449 - Fix Supabase Pooler Compatibility
  *
  * IMPORTANT: This is the ONLY place PrismaClient should be instantiated.
  * All other files should import { prisma } from '@/lib/prisma'
  *
- * Connection pooling is handled at multiple levels:
- * 1. Supabase PgBouncer (port 6543) - External pooling
- * 2. Prisma connection pool - Application-level pooling
+ * Connection pooling is handled via:
+ * 1. Supabase Supavisor (PgBouncer) on port 6543 (transaction mode)
+ * 2. @prisma/adapter-pg for PostgreSQL wire protocol compatibility
  *
  * ENVIRONMENT VARIABLES:
- * - DATABASE_URL: Pooled connection via PgBouncer (port 6543)
- * - DIRECT_URL: Direct PostgreSQL connection (port 5432)
- * - DATABASE_POOL_SIZE: Max connections (default: 10)
- * - DATABASE_POOL_TIMEOUT: Connection timeout in seconds (default: 10)
+ * - DATABASE_URL: Pooled connection via Supavisor (port 6543)
+ *   Must include ?pgbouncer=true parameter
+ * - DIRECT_URL: Direct PostgreSQL connection (port 5432) - CLI only
  */
 
 import { PrismaClient, Prisma } from '@prisma/client';
-
-// Pool configuration from environment
-const POOL_CONFIG = {
-  // Maximum number of connections in the pool
-  connectionLimit: parseInt(process.env.DATABASE_POOL_SIZE || '10', 10),
-  // Connection timeout in seconds
-  poolTimeout: parseInt(process.env.DATABASE_POOL_TIMEOUT || '10', 10),
-  // Connection acquisition timeout in milliseconds
-  connectTimeout: parseInt(process.env.DATABASE_CONNECT_TIMEOUT || '5000', 10),
-  // Idle connection timeout in milliseconds
-  idleTimeout: parseInt(process.env.DATABASE_IDLE_TIMEOUT || '60000', 10),
-};
+import { PrismaPg } from '@prisma/adapter-pg';
 
 // Global singleton to prevent multiple instances in development
 const globalForPrisma = globalThis as unknown as {
@@ -75,17 +64,29 @@ const getLogConfig = (): Prisma.LogLevel[] => {
 };
 
 /**
- * Create PrismaClient with optimized connection pooling
+ * Create PrismaClient with PrismaPg adapter for Supabase pooler compatibility
+ *
+ * The adapter uses the standard PostgreSQL wire protocol which works with
+ * Supabase's Supavisor (PgBouncer) connection pooler.
  */
 const createPrismaClient = (): PrismaClient => {
+  const connectionString = process.env.DATABASE_URL;
+
+  if (!connectionString) {
+    console.error('[Prisma] DATABASE_URL is not set');
+    throw new Error('DATABASE_URL environment variable is required');
+  }
+
+  // Create the PrismaPg adapter with the connection string
+  // Since Prisma v6.6.0, we can pass the connection string directly
+  const adapter = new PrismaPg({ connectionString });
+
   const client = new PrismaClient({
+    adapter,
     log: getLogConfig(),
-    // Datasource configuration is handled via environment variables
-    // DATABASE_URL should include connection pool parameters:
-    // ?connection_limit=10&pool_timeout=10
   });
 
-  // Set up event listeners for connection monitoring
+  // Set up event listeners for connection monitoring (dev only)
   if (process.env.NODE_ENV !== 'production') {
     client.$on('query' as never, (e: any) => {
       if (e.duration > 1000) {
@@ -101,19 +102,25 @@ const createPrismaClient = (): PrismaClient => {
  * Get or create the singleton PrismaClient instance
  */
 const getPrismaClient = (): PrismaClient | null => {
-  // Skip during build time if no database configured
+  // Skip during browser/client-side rendering
   if (typeof window !== 'undefined') {
     return null;
   }
 
-  if (process.env.NODE_ENV === 'production' && !process.env.DATABASE_URL) {
+  // Skip if DATABASE_URL is not configured (build time)
+  if (!process.env.DATABASE_URL) {
     console.warn('[Prisma] DATABASE_URL not configured, skipping client creation');
     return null;
   }
 
   if (!globalForPrisma.prisma) {
-    globalForPrisma.prisma = createPrismaClient();
-    // Prisma client initialized
+    try {
+      globalForPrisma.prisma = createPrismaClient();
+      console.log('[Prisma] Client initialized with PrismaPg adapter');
+    } catch (error) {
+      console.error('[Prisma] Failed to create client:', error);
+      return null;
+    }
   }
 
   return globalForPrisma.prisma;
@@ -162,7 +169,7 @@ export async function checkDatabaseHealth(): Promise<{
     return { healthy: true, latency };
   } catch (error) {
     const latency = Date.now() - startTime;
-    const errorMessage = error instanceof Error ? error instanceof Error ? error.message : String(error) : 'Unknown error';
+    const errorMessage = error instanceof Error ? error.message : String(error);
 
     // Update metrics
     globalForPrisma.prismaMetrics.errors++;
