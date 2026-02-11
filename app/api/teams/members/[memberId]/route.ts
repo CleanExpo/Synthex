@@ -53,8 +53,38 @@ async function getUserIdFromRequest(request: NextRequest): Promise<string | null
 const UpdateMemberSchema = z.object({
   name: z.string().min(1).max(100).optional(),
   avatar: z.string().url().optional().nullable(),
-  preferences: z.record(z.any()).optional(),
+  preferences: z.record(z.unknown()).optional(),
 });
+
+// ============================================================================
+// TYPES
+// ============================================================================
+
+/** Role record */
+interface RoleRecord {
+  id: string;
+  name: string;
+  permissions: string[];
+}
+
+/** User role record */
+interface UserRoleRecord {
+  userId: string;
+  roleId: string;
+  grantedAt?: Date;
+  role?: RoleRecord;
+}
+
+/** Extended prisma client for role operations */
+interface PrismaWithRoles {
+  userRole?: {
+    findMany: (args: Record<string, unknown>) => Promise<UserRoleRecord[]>;
+    deleteMany: (args: Record<string, unknown>) => Promise<{ count: number }>;
+  };
+  role?: {
+    findMany: (args: Record<string, unknown>) => Promise<RoleRecord[]>;
+  };
+}
 
 // ============================================================================
 // GET - Fetch Member Details
@@ -135,7 +165,8 @@ export async function GET(
     }
 
     // Get member's roles
-    const userRoles = await (prisma as any).userRole.findMany({
+    const extendedPrisma = prisma as unknown as PrismaWithRoles;
+    const userRoles = await extendedPrisma.userRole?.findMany({
       where: { userId: memberId },
       include: {
         role: {
@@ -146,12 +177,12 @@ export async function GET(
           },
         },
       },
-    });
+    }) || [];
 
-    const roles = userRoles.map((ur: any) => ({
-      id: ur.role.id,
-      name: ur.role.name,
-      permissions: ur.role.permissions,
+    const roles = userRoles.map((ur: UserRoleRecord) => ({
+      id: ur.role?.id,
+      name: ur.role?.name,
+      permissions: ur.role?.permissions,
       grantedAt: ur.grantedAt,
     }));
 
@@ -279,13 +310,15 @@ export async function PATCH(
 
     const { name, avatar, preferences } = parseResult.data;
 
-    // Build update data
+    // Build update data - using Prisma.JsonValue for JSON fields
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const updateData: any = {};
     if (name !== undefined) updateData.name = name;
     if (avatar !== undefined) updateData.avatar = avatar;
     if (preferences !== undefined) {
+      const currentPrefs = (member.preferences || {}) as Record<string, unknown>;
       updateData.preferences = {
-        ...(member.preferences as any || {}),
+        ...currentPrefs,
         ...preferences,
       };
     }
@@ -426,16 +459,17 @@ export async function DELETE(
     });
 
     // Remove all user roles for this organization
-    const orgRoles = await (prisma as any).role.findMany({
+    const extendedPrisma = prisma as unknown as PrismaWithRoles;
+    const orgRoles = await extendedPrisma.role?.findMany({
       where: { organizationId: requestingUser.organizationId },
       select: { id: true },
-    });
+    }) || [];
 
     if (orgRoles.length > 0) {
-      await (prisma as any).userRole.deleteMany({
+      await extendedPrisma.userRole?.deleteMany({
         where: {
           userId: memberId,
-          roleId: { in: orgRoles.map((r: any) => r.id) },
+          roleId: { in: orgRoles.map((r: RoleRecord) => r.id) },
         },
       });
     }
@@ -478,7 +512,8 @@ export async function DELETE(
 async function checkUserIsAdmin(userId: string, organizationId: string): Promise<boolean> {
   try {
     // Get user's roles in this organization
-    const userRoles = await (prisma as any).userRole.findMany({
+    const extendedPrisma = prisma as unknown as PrismaWithRoles;
+    const userRoles = await extendedPrisma.userRole?.findMany({
       where: { userId },
       include: {
         role: {
@@ -489,7 +524,7 @@ async function checkUserIsAdmin(userId: string, organizationId: string): Promise
           },
         },
       },
-    });
+    }) || [];
 
     // Check if any role has admin permissions
     for (const ur of userRoles) {

@@ -3,15 +3,28 @@
  * Tracks all auth events and sends alerts on failures
  */
 
+/** Sentry mock interface for when Sentry is not installed */
+interface SentryLike {
+  init: (options: Record<string, unknown>) => void;
+  captureException: (error: Error, context?: Record<string, unknown>) => void;
+  captureMessage: (message: string, context?: Record<string, unknown>) => void;
+  addBreadcrumb: () => void;
+  setUser: () => void;
+  setTag: () => void;
+  setContext: () => void;
+}
+
 // Optional Sentry import - only import if package is available
-let Sentry: any;
+let Sentry: SentryLike;
 try {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   Sentry = require('@sentry/nextjs');
-} catch (e) {
+} catch {
   // Sentry not installed, use mock
   Sentry = {
     init: () => {},
     captureException: () => {},
+    captureMessage: () => {},
     addBreadcrumb: () => {},
     setUser: () => {},
     setTag: () => {},
@@ -30,6 +43,24 @@ export interface AuthEvent {
   sessionId?: string;
   ipAddress?: string;
   userAgent?: string;
+}
+
+/** Event input for tracking - accepts any string for flexibility with various use cases */
+interface TrackEventInput {
+  type?: string;
+  method?: string;
+  timestamp?: Date | number;
+  metadata?: Record<string, unknown>;
+}
+
+/** Alert data structure */
+interface AlertData {
+  type: string;
+  email?: string;
+  failures?: number;
+  timestamp?: Date;
+  provider?: string;
+  error?: string;
 }
 
 export class AuthMonitor {
@@ -59,16 +90,17 @@ export class AuthMonitor {
   /**
    * Track authentication event (simplified version of logEvent)
    */
-  trackEvent(event: any): void {
+  trackEvent(event: TrackEventInput): void {
+    const metadata = event.metadata || {};
     this.logEvent({
-      type: event.type || 'attempt',
-      method: event.method || 'email',
-      provider: event.metadata?.provider,
-      email: event.metadata?.email,
-      error: event.metadata?.error,
-      sessionId: event.metadata?.sessionId,
-      ipAddress: event.metadata?.ipAddress,
-      userAgent: event.metadata?.userAgent
+      type: (event.type as AuthEvent['type']) || 'attempt',
+      method: (event.method as AuthEvent['method']) || 'email',
+      provider: metadata.provider as AuthEvent['provider'],
+      email: metadata.email as string | undefined,
+      error: metadata.error as string | undefined,
+      sessionId: metadata.sessionId as string | undefined,
+      ipAddress: metadata.ipAddress as string | undefined,
+      userAgent: metadata.userAgent as string | undefined
     });
   }
 
@@ -186,7 +218,7 @@ export class AuthMonitor {
   /**
    * Send alert notification
    */
-  private async sendAlert(alert: any): Promise<void> {
+  private async sendAlert(alert: AlertData): Promise<void> {
     console.error('[AUTH_ALERT]', alert);
 
     // Send to Sentry as critical

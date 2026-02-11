@@ -60,6 +60,50 @@ interface PredictionResult {
   recommendations: string[];
 }
 
+/** Engagement prediction record */
+interface EngagementPredictionRecord {
+  id: string;
+  userId: string;
+  contentType: string;
+  contentId?: string;
+  platform: string;
+  predictedLikes: number;
+  predictedComments: number;
+  predictedShares: number;
+  predictedReach: number;
+  predictedEngRate: number;
+  actualLikes?: number;
+  actualComments?: number;
+  actualShares?: number;
+  actualReach?: number;
+  actualEngRate?: number;
+  accuracy?: number;
+  confidenceLevel: number;
+  predictedAt: Date;
+  resultsAt?: Date;
+}
+
+/** Prediction where clause */
+interface PredictionWhereClause {
+  userId: string;
+  platform?: string;
+  actualLikes?: { not: null };
+}
+
+/** Extended prisma client for prediction operations */
+interface PrismaWithPrediction {
+  engagementPrediction?: {
+    findUnique: (args: Record<string, unknown>) => Promise<EngagementPredictionRecord | null>;
+    findMany: (args: Record<string, unknown>) => Promise<EngagementPredictionRecord[]>;
+    count: (args: Record<string, unknown>) => Promise<number>;
+    create: (args: Record<string, unknown>) => Promise<EngagementPredictionRecord>;
+    update: (args: Record<string, unknown>) => Promise<EngagementPredictionRecord>;
+  };
+  sentimentAnalysis?: {
+    updateMany: (args: Record<string, unknown>) => Promise<{ count: number }>;
+  };
+}
+
 // ============================================================================
 // PREDICTION ENGINE
 // ============================================================================
@@ -322,7 +366,8 @@ export async function POST(request: NextRequest) {
       const { predictionId, actualLikes, actualComments, actualShares, actualReach } = updateValidation.data;
 
       // Find and update prediction
-      const prediction = await (prisma as any).engagementPrediction?.findUnique({
+      const extendedPrisma = prisma as unknown as PrismaWithPrediction;
+      const prediction = await extendedPrisma.engagementPrediction?.findUnique({
         where: { id: predictionId },
       });
 
@@ -344,7 +389,7 @@ export async function POST(request: NextRequest) {
         ? Math.round(((actualLikes + actualComments + actualShares) / actualReach) * 10000) / 100
         : null;
 
-      const updated = await (prisma as any).engagementPrediction?.update({
+      const updated = await extendedPrisma.engagementPrediction?.update({
         where: { id: predictionId },
         data: {
           actualLikes,
@@ -359,7 +404,7 @@ export async function POST(request: NextRequest) {
 
       // Also update sentiment analysis if linked
       if (prediction.contentId) {
-        await (prisma as any).sentimentAnalysis?.updateMany({
+        await extendedPrisma.sentimentAnalysis?.updateMany({
           where: {
             contentId: prediction.contentId,
             userId,
@@ -409,7 +454,8 @@ export async function POST(request: NextRequest) {
     const sentiment = posCount > negCount ? 'positive' : negCount > posCount ? 'negative' : 'neutral';
 
     // Store prediction
-    const storedPrediction = await (prisma as any).engagementPrediction?.create({
+    const extendedPrisma = prisma as unknown as PrismaWithPrediction;
+    const storedPrediction = await extendedPrisma.engagementPrediction?.create({
       data: {
         userId,
         contentType,
@@ -484,25 +530,26 @@ export async function GET(request: NextRequest) {
     const offset = parseInt(searchParams.get('offset') || '0', 10);
 
     // Build query
-    const where: any = { userId };
+    const where: PredictionWhereClause = { userId };
 
     if (platform) where.platform = platform;
     if (withActuals) where.actualLikes = { not: null };
 
+    const extendedPrisma = prisma as unknown as PrismaWithPrediction;
     const [predictions, total] = await Promise.all([
-      (prisma as any).engagementPrediction?.findMany({
+      extendedPrisma.engagementPrediction?.findMany({
         where,
         orderBy: { predictedAt: 'desc' },
         take: limit,
         skip: offset,
       }) || [],
-      (prisma as any).engagementPrediction?.count({ where }) || 0,
+      extendedPrisma.engagementPrediction?.count({ where }) || 0,
     ]);
 
     // Calculate accuracy stats
-    const withResults = predictions.filter((p: any) => p.accuracy !== null);
+    const withResults = predictions.filter((p: EngagementPredictionRecord) => p.accuracy !== null && p.accuracy !== undefined);
     const avgAccuracy = withResults.length > 0
-      ? Math.round((withResults.reduce((sum: number, p: any) => sum + p.accuracy, 0) / withResults.length) * 100)
+      ? Math.round((withResults.reduce((sum: number, p: EngagementPredictionRecord) => sum + (p.accuracy || 0), 0) / withResults.length) * 100)
       : null;
 
     return NextResponse.json({

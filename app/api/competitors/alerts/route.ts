@@ -28,6 +28,43 @@ const updateAlertsSchema = z.object({
 });
 
 // ============================================================================
+// TYPES
+// ============================================================================
+
+/** Competitor alert record */
+interface CompetitorAlertRecord {
+  id: string;
+  userId: string;
+  competitorId: string;
+  alertType: string;
+  severity: string;
+  isRead: boolean;
+  isDismissed?: boolean;
+  readAt?: Date;
+  actionTaken?: string;
+  createdAt: Date;
+  competitor?: { id: string; name: string; logoUrl?: string };
+}
+
+/** Alert where clause */
+interface AlertWhereClause {
+  userId: string;
+  competitorId?: string;
+  alertType?: string;
+  isRead?: boolean;
+  severity?: string;
+}
+
+/** Extended prisma client for alert operations */
+interface PrismaWithAlerts {
+  competitorAlert?: {
+    findMany: (args: Record<string, unknown>) => Promise<CompetitorAlertRecord[]>;
+    count: (args: Record<string, unknown>) => Promise<number>;
+    updateMany: (args: Record<string, unknown>) => Promise<{ count: number }>;
+  };
+}
+
+// ============================================================================
 // GET /api/competitors/alerts
 // List alerts
 // ============================================================================
@@ -58,14 +95,15 @@ export async function GET(request: NextRequest) {
     const offset = parseInt(searchParams.get('offset') || '0', 10);
 
     // Build query
-    const where: any = { userId };
+    const where: AlertWhereClause = { userId };
     if (competitorId) where.competitorId = competitorId;
     if (alertType) where.alertType = alertType;
     if (isRead !== null) where.isRead = isRead === 'true';
     if (severity) where.severity = severity;
 
+    const extendedPrisma = prisma as unknown as PrismaWithAlerts;
     const [alerts, total, unreadCount] = await Promise.all([
-      (prisma as any).competitorAlert?.findMany({
+      extendedPrisma.competitorAlert?.findMany({
         where,
         orderBy: { createdAt: 'desc' },
         take: limit,
@@ -76,17 +114,17 @@ export async function GET(request: NextRequest) {
           },
         },
       }) || [],
-      (prisma as any).competitorAlert?.count({ where }) || 0,
-      (prisma as any).competitorAlert?.count({
+      extendedPrisma.competitorAlert?.count({ where }) || 0,
+      extendedPrisma.competitorAlert?.count({
         where: { userId, isRead: false },
       }) || 0,
     ]);
 
     // Group alerts by type for summary
-    const alertsByType = (alerts || []).reduce((acc: any, alert: any) => {
+    const alertsByType = (alerts || []).reduce((acc: Record<string, number>, alert: CompetitorAlertRecord) => {
       acc[alert.alertType] = (acc[alert.alertType] || 0) + 1;
       return acc;
-    }, {});
+    }, {} as Record<string, number>);
 
     return NextResponse.json({
       alerts,
@@ -139,7 +177,12 @@ export async function PATCH(request: NextRequest) {
     const { alertIds, action, actionTaken } = validation.data;
 
     // Build update data based on action
-    const updateData: any = {};
+    const updateData: {
+      isRead?: boolean;
+      isDismissed?: boolean;
+      readAt?: Date | null;
+      actionTaken?: string;
+    } = {};
     switch (action) {
       case 'read':
         updateData.isRead = true;
@@ -158,7 +201,8 @@ export async function PATCH(request: NextRequest) {
     }
 
     // Update alerts (only for this user)
-    const result = await (prisma as any).competitorAlert?.updateMany({
+    const extendedPrisma = prisma as unknown as PrismaWithAlerts;
+    const result = await extendedPrisma.competitorAlert?.updateMany({
       where: {
         id: { in: alertIds },
         userId,
