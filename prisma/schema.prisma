@@ -26,7 +26,7 @@ model User {
   googleId        String?  @unique
   avatar          String?
   authProvider    String   @default("local") // 'local', 'google'
-  emailVerified   Boolean  @default(false)
+  emailVerified   DateTime?  // DateTime when email was verified, null if not
   lastLogin       DateTime?
 
   // API Keys (encrypted)
