@@ -32,11 +32,11 @@ try {
 // Step 2: Run tests
 console.log('\n🧪 Running tests...');
 try {
-  execSync('npm test -- --passWithNoTests', { stdio: 'inherit' });
+  execSync('npm test', { stdio: 'inherit' });
   console.log('✅ All tests passed');
 } catch (error) {
-  console.warn('⚠️  Warning: Test suite encountered issues');
-  // Continue build even if tests fail for now
+  console.error('❌ Tests failed - build aborted');
+  process.exit(1);
 }
 
 // Step 3: Type checking

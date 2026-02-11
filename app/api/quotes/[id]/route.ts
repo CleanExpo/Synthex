@@ -7,6 +7,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic';
@@ -27,6 +28,7 @@ interface UpdateQuoteRequest {
 /**
  * GET /api/quotes/[id]
  * Get a specific quote by ID
+ * Public quotes are accessible to all, private quotes require ownership
  */
 export async function GET(
   request: NextRequest,
@@ -51,6 +53,24 @@ export async function GET(
         { success: false, error: 'Quote not found' },
         { status: 404 }
       );
+    }
+
+    // Check if quote is private - require ownership
+    if (!quote.isPublic) {
+      const security = await APISecurityChecker.check(request, DEFAULT_POLICIES.AUTHENTICATED_READ);
+      if (!security.allowed) {
+        return NextResponse.json(
+          { success: false, error: 'Authentication required for private quotes' },
+          { status: 401 }
+        );
+      }
+      // Verify ownership for private quotes
+      if (quote.userId && quote.userId !== security.context?.userId) {
+        return NextResponse.json(
+          { success: false, error: 'Not authorized to view this quote' },
+          { status: 403 }
+        );
+      }
     }
 
     // Check if quote has expired
@@ -86,7 +106,7 @@ export async function GET(
 
 /**
  * PUT /api/quotes/[id]
- * Update a specific quote
+ * Update a specific quote - requires ownership
  */
 export async function PUT(
   request: NextRequest,
@@ -95,13 +115,11 @@ export async function PUT(
   try {
     const { id } = await params;
 
-    // Check authentication
-    const authToken = request.cookies.get('auth-token')?.value;
-    const authHeader = request.headers.get('authorization');
-
-    if (!authToken && !authHeader) {
+    // Check authentication using security checker
+    const security = await APISecurityChecker.check(request, DEFAULT_POLICIES.AUTHENTICATED_WRITE);
+    if (!security.allowed) {
       return NextResponse.json(
-        { success: false, error: 'Authentication required' },
+        { success: false, error: security.error || 'Authentication required' },
         { status: 401 }
       );
     }
@@ -122,6 +140,14 @@ export async function PUT(
       return NextResponse.json(
         { success: false, error: 'Quote not found' },
         { status: 404 }
+      );
+    }
+
+    // IDOR Fix: Verify ownership - user can only update their own quotes
+    if (existingQuote.userId && existingQuote.userId !== security.context?.userId) {
+      return NextResponse.json(
+        { success: false, error: 'Not authorized to update this quote' },
+        { status: 403 }
       );
     }
 
@@ -205,7 +231,7 @@ export async function PUT(
 
 /**
  * DELETE /api/quotes/[id]
- * Delete a specific quote
+ * Delete a specific quote - requires ownership
  */
 export async function DELETE(
   request: NextRequest,
@@ -214,13 +240,11 @@ export async function DELETE(
   try {
     const { id } = await params;
 
-    // Check authentication
-    const authToken = request.cookies.get('auth-token')?.value;
-    const authHeader = request.headers.get('authorization');
-
-    if (!authToken && !authHeader) {
+    // Check authentication using security checker
+    const security = await APISecurityChecker.check(request, DEFAULT_POLICIES.AUTHENTICATED_WRITE);
+    if (!security.allowed) {
       return NextResponse.json(
-        { success: false, error: 'Authentication required' },
+        { success: false, error: security.error || 'Authentication required' },
         { status: 401 }
       );
     }
@@ -241,6 +265,14 @@ export async function DELETE(
       return NextResponse.json(
         { success: false, error: 'Quote not found' },
         { status: 404 }
+      );
+    }
+
+    // IDOR Fix: Verify ownership - user can only delete their own quotes
+    if (existingQuote.userId && existingQuote.userId !== security.context?.userId) {
+      return NextResponse.json(
+        { success: false, error: 'Not authorized to delete this quote' },
+        { status: 403 }
       );
     }
 
@@ -269,6 +301,7 @@ export async function DELETE(
 /**
  * PATCH /api/quotes/[id]
  * Partial update for engagement metrics (like, share)
+ * Requires authentication to prevent anonymous metric manipulation
  */
 export async function PATCH(
   request: NextRequest,
@@ -276,6 +309,15 @@ export async function PATCH(
 ) {
   try {
     const { id } = await params;
+
+    // Check authentication to prevent anonymous metric manipulation
+    const security = await APISecurityChecker.check(request, DEFAULT_POLICIES.AUTHENTICATED_WRITE);
+    if (!security.allowed) {
+      return NextResponse.json(
+        { success: false, error: security.error || 'Authentication required' },
+        { status: 401 }
+      );
+    }
 
     if (!id) {
       return NextResponse.json(
