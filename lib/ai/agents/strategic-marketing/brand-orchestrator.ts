@@ -77,6 +77,20 @@ interface ImplementationStep {
   metrics: string[];
 }
 
+/** Psychology analysis result from AI */
+interface PsychologyAnalysisResult {
+  primaryTriggers: PsychologyTrigger[];
+  secondaryTriggers: PsychologyTrigger[];
+  rationale: string;
+}
+
+/** Psychology principle from config */
+interface PsychologyPrinciple {
+  name: string;
+  triggerWords?: string[];
+  [key: string]: unknown;
+}
+
 export class BrandPsychologyOrchestrator {
   private config = AGENT_CONFIG;
   private principles = PSYCHOLOGY_PRINCIPLES;
@@ -129,9 +143,9 @@ export class BrandPsychologyOrchestrator {
     }
   }
 
-  private async analyzePsychology(input: BrandGenerationInput): Promise<any> {
+  private async analyzePsychology(input: BrandGenerationInput): Promise<PsychologyAnalysisResult> {
     const prompt = this.buildPsychologyAnalysisPrompt(input);
-    
+
     const response = await this.callAI({
       model: this.config.psychologyAnalyzer.model,
       messages: [
@@ -146,11 +160,11 @@ export class BrandPsychologyOrchestrator {
   }
 
   private async generateBrandNames(
-    input: BrandGenerationInput, 
-    psychologyAnalysis: any
+    input: BrandGenerationInput,
+    psychologyAnalysis: PsychologyAnalysisResult
   ): Promise<BrandNameOption[]> {
     const prompt = this.buildBrandNamePrompt(input, psychologyAnalysis);
-    
+
     const response = await this.callAI({
       model: this.config.brandNameGenerator.model,
       messages: [
@@ -166,11 +180,11 @@ export class BrandPsychologyOrchestrator {
 
   private async generateTaglines(
     input: BrandGenerationInput,
-    psychologyAnalysis: any,
+    psychologyAnalysis: PsychologyAnalysisResult,
     primaryBrandName: BrandNameOption
   ): Promise<TaglineVariation[]> {
     const prompt = this.buildTaglinePrompt(input, psychologyAnalysis, primaryBrandName);
-    
+
     const response = await this.callAI({
       model: this.config.taglineSpecialist.model,
       messages: [
@@ -186,7 +200,7 @@ export class BrandPsychologyOrchestrator {
 
   private async optimizeMetadata(
     input: BrandGenerationInput,
-    psychologyAnalysis: any,
+    psychologyAnalysis: PsychologyAnalysisResult,
     brandName: BrandNameOption,
     tagline: TaglineVariation
   ): Promise<PlatformMetadata[]> {
@@ -223,7 +237,7 @@ export class BrandPsychologyOrchestrator {
     });
   }
 
-  private buildBrandNamePrompt(input: BrandGenerationInput, psychologyAnalysis: any): string {
+  private buildBrandNamePrompt(input: BrandGenerationInput, psychologyAnalysis: PsychologyAnalysisResult): string {
     return JSON.stringify({
       psychology_analysis: psychologyAnalysis,
       business_type: input.businessType,
@@ -235,7 +249,7 @@ export class BrandPsychologyOrchestrator {
 
   private buildTaglinePrompt(
     input: BrandGenerationInput,
-    psychologyAnalysis: any,
+    psychologyAnalysis: PsychologyAnalysisResult,
     brandName: BrandNameOption
   ): string {
     return JSON.stringify({
@@ -249,7 +263,7 @@ export class BrandPsychologyOrchestrator {
 
   private buildMetadataPrompt(
     input: BrandGenerationInput,
-    psychologyAnalysis: any,
+    psychologyAnalysis: PsychologyAnalysisResult,
     brandName: BrandNameOption,
     tagline: TaglineVariation,
     platform: string
@@ -264,7 +278,7 @@ export class BrandPsychologyOrchestrator {
     });
   }
 
-  private parsePsychologyAnalysis(response: string): any {
+  private parsePsychologyAnalysis(response: string): PsychologyAnalysisResult {
     try {
       const parsed = JSON.parse(response);
       return {
@@ -325,9 +339,9 @@ export class BrandPsychologyOrchestrator {
     }
   }
 
-  private getRelevantTriggerWords(psychologyAnalysis: any): string[] {
+  private getRelevantTriggerWords(psychologyAnalysis: PsychologyAnalysisResult): string[] {
     const triggerWords: string[] = [];
-    
+
     psychologyAnalysis.primaryTriggers.forEach((trigger: PsychologyTrigger) => {
       const principle = this.findPrinciple(trigger.principle);
       if (principle?.triggerWords) {
@@ -338,19 +352,19 @@ export class BrandPsychologyOrchestrator {
     return [...new Set(triggerWords)]; // Remove duplicates
   }
 
-  private findPrinciple(principleName: string): any {
-    const allPrinciples = [
+  private findPrinciple(principleName: string): PsychologyPrinciple | undefined {
+    const allPrinciples: PsychologyPrinciple[] = [
       ...this.principles.cognitiveBlases,
       ...this.principles.socialPsychology,
       ...this.principles.behavioralEconomics,
       ...this.principles.memoryLearning
     ];
-    
+
     return allPrinciples.find(p => p.name === principleName);
   }
 
   private createImplementationGuide(
-    psychologyAnalysis: any,
+    psychologyAnalysis: PsychologyAnalysisResult,
     brandName: BrandNameOption,
     tagline: TaglineVariation
   ): ImplementationStep[] {
@@ -394,7 +408,7 @@ export class BrandPsychologyOrchestrator {
   }
 
   private calculateEffectivenessScore(
-    psychologyAnalysis: any,
+    psychologyAnalysis: PsychologyAnalysisResult,
     brandNames: BrandNameOption[],
     taglines: TaglineVariation[]
   ): number {

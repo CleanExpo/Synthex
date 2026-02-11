@@ -25,6 +25,112 @@ import {
 } from './base-platform-service';
 import { logger } from '@/lib/logger';
 
+// ============================================================================
+// INSTAGRAM/FACEBOOK GRAPH API RESPONSE TYPES
+// ============================================================================
+
+/** Facebook Pages response */
+interface PagesResponse {
+  data?: PageElement[];
+}
+
+/** Facebook Page element */
+interface PageElement {
+  id: string;
+  name?: string;
+  instagram_business_account?: {
+    id: string;
+  };
+}
+
+/** Instagram insights response */
+interface InsightsResponse {
+  data?: InsightElement[];
+}
+
+/** Instagram insight element */
+interface InsightElement {
+  name: string;
+  values?: Array<{
+    value?: number;
+    end_time?: string;
+  }>;
+}
+
+/** Instagram profile response */
+interface IGProfileResponse {
+  id: string;
+  username?: string;
+  name?: string;
+  biography?: string;
+  profile_picture_url?: string;
+  followers_count?: number;
+  follows_count?: number;
+  media_count?: number;
+  website?: string;
+}
+
+/** Instagram media list response */
+interface MediaListResponse {
+  data?: MediaElement[];
+  paging?: {
+    cursors?: {
+      after?: string;
+      before?: string;
+    };
+  };
+}
+
+/** Instagram media element */
+interface MediaElement {
+  id: string;
+  caption?: string;
+  media_type?: string;
+  media_url?: string;
+  thumbnail_url?: string;
+  permalink?: string;
+  timestamp?: string;
+  like_count?: number;
+  comments_count?: number;
+  insights?: {
+    data?: InsightElement[];
+  };
+}
+
+/** Media container creation response */
+interface MediaContainerResponse {
+  id?: string;
+}
+
+/** Media status response */
+interface MediaStatusResponse {
+  status_code?: string;
+}
+
+/** Media publish response */
+interface MediaPublishResponse {
+  id?: string;
+}
+
+/** Instagram post metrics */
+interface InstagramPostMetrics {
+  likes: number;
+  comments: number;
+  impressions: number;
+  reach: number;
+  engagement: number;
+  saved: number;
+}
+
+/** Media with insights response */
+interface MediaWithInsightsResponse {
+  like_count?: number;
+  comments_count?: number;
+  insights?: {
+    data?: InsightElement[];
+  };
+}
+
 const GRAPH_API_BASE = 'https://graph.facebook.com/v19.0';
 
 export class InstagramService extends BasePlatformService {
@@ -127,11 +233,11 @@ export class InstagramService extends BasePlatformService {
     if (this.igUserId) return this.igUserId;
 
     // First, get the Facebook pages the user has access to
-    const pagesResponse = await this.makeRequest<any>('/me/accounts?fields=id,name,instagram_business_account');
+    const pagesResponse = await this.makeRequest<PagesResponse>('/me/accounts?fields=id,name,instagram_business_account');
 
     // Find a page with an Instagram business account connected
     const pageWithInstagram = pagesResponse.data?.find(
-      (page: any) => page.instagram_business_account?.id
+      (page: PageElement) => page.instagram_business_account?.id
     );
 
     if (!pageWithInstagram) {
@@ -141,7 +247,7 @@ export class InstagramService extends BasePlatformService {
       );
     }
 
-    this.igUserId = pageWithInstagram.instagram_business_account.id;
+    this.igUserId = pageWithInstagram.instagram_business_account!.id;
     return this.igUserId!;
   }
 
@@ -227,7 +333,7 @@ export class InstagramService extends BasePlatformService {
       let profileViews = 0;
 
       try {
-        const insightsResponse = await this.makeRequest<any>(
+        const insightsResponse = await this.makeRequest<InsightsResponse>(
           `/${igAccountId}/insights?metric=${metricsToFetch}&period=${period}`
         );
 
@@ -255,7 +361,7 @@ export class InstagramService extends BasePlatformService {
       // Fallback: Get follower count from profile if insights failed
       if (followers === 0) {
         try {
-          const profile = await this.makeRequest<any>(
+          const profile = await this.makeRequest<IGProfileResponse>(
             `/${igAccountId}?fields=followers_count`
           );
           followers = profile.followers_count || 0;
@@ -271,11 +377,11 @@ export class InstagramService extends BasePlatformService {
         const since = Math.floor(startDate.getTime() / 1000);
         const until = Math.floor(endDate.getTime() / 1000);
 
-        const dailyInsights = await this.makeRequest<any>(
+        const dailyInsights = await this.makeRequest<InsightsResponse>(
           `/${igAccountId}/insights?metric=impressions,reach&period=day&since=${since}&until=${until}`
         );
 
-        const impressionsData = dailyInsights.data?.find((d: any) => d.name === 'impressions');
+        const impressionsData = dailyInsights.data?.find((d: InsightElement) => d.name === 'impressions');
         if (impressionsData?.values) {
           for (const value of impressionsData.values) {
             dailyBreakdown.push({
@@ -292,7 +398,7 @@ export class InstagramService extends BasePlatformService {
       // Calculate engagements from recent posts
       let engagements = 0;
       try {
-        const mediaResponse = await this.makeRequest<any>(
+        const mediaResponse = await this.makeRequest<MediaListResponse>(
           `/${igAccountId}/media?fields=like_count,comments_count&limit=50`
         );
 
@@ -364,9 +470,9 @@ export class InstagramService extends BasePlatformService {
         endpoint += `&after=${cursor}`;
       }
 
-      const response = await this.makeRequest<any>(endpoint);
+      const response = await this.makeRequest<MediaListResponse>(endpoint);
 
-      const posts = (response.data || []).map((media: any) => {
+      const posts = (response.data || []).map((media: MediaElement) => {
         // Extract insights
         let impressions = 0;
         let reach = 0;
@@ -393,7 +499,7 @@ export class InstagramService extends BasePlatformService {
           platformId: media.id,
           content: media.caption || '',
           mediaUrls: media.media_url ? [media.media_url] : [],
-          publishedAt: new Date(media.timestamp),
+          publishedAt: new Date(media.timestamp || Date.now()),
           metrics: {
             likes: media.like_count || 0,
             comments: media.comments_count || 0,
@@ -445,7 +551,7 @@ export class InstagramService extends BasePlatformService {
 
       const igAccountId = await this.getInstagramAccountId();
 
-      const profile = await this.makeRequest<any>(
+      const profile = await this.makeRequest<IGProfileResponse>(
         `/${igAccountId}?fields=id,username,name,biography,profile_picture_url,followers_count,follows_count,media_count,website`
       );
 
@@ -453,8 +559,8 @@ export class InstagramService extends BasePlatformService {
         success: true,
         profile: {
           id: profile.id,
-          username: profile.username,
-          displayName: profile.name || profile.username,
+          username: profile.username || '',
+          displayName: profile.name || profile.username || '',
           bio: profile.biography || '',
           avatarUrl: profile.profile_picture_url || '',
           followers: profile.followers_count || 0,
@@ -501,7 +607,7 @@ export class InstagramService extends BasePlatformService {
       const mediaUrl = content.mediaUrls[0];
       const isVideo = mediaUrl.match(/\.(mp4|mov|avi)$/i);
 
-      const containerResponse = await this.makeRequest<any>(
+      const containerResponse = await this.makeRequest<MediaContainerResponse>(
         `/${igAccountId}/media`,
         {
           method: 'POST',
@@ -523,7 +629,7 @@ export class InstagramService extends BasePlatformService {
         let attempts = 0;
         while (!ready && attempts < 30) {
           await this.sleep(2000);
-          const status = await this.makeRequest<any>(
+          const status = await this.makeRequest<MediaStatusResponse>(
             `/${containerResponse.id}?fields=status_code`
           );
           if (status.status_code === 'FINISHED') {
@@ -536,7 +642,7 @@ export class InstagramService extends BasePlatformService {
       }
 
       // Publish the container
-      const publishResponse = await this.makeRequest<any>(
+      const publishResponse = await this.makeRequest<MediaPublishResponse>(
         `/${igAccountId}/media_publish`,
         {
           method: 'POST',
@@ -566,13 +672,13 @@ export class InstagramService extends BasePlatformService {
     return false;
   }
 
-  async getPostMetrics(postId: string): Promise<any> {
+  async getPostMetrics(postId: string): Promise<InstagramPostMetrics | null> {
     try {
       if (!this.isConfigured()) {
         return null;
       }
 
-      const response = await this.makeRequest<any>(
+      const response = await this.makeRequest<MediaWithInsightsResponse>(
         `/${postId}?fields=like_count,comments_count,insights.metric(impressions,reach,engagement,saved)`
       );
 

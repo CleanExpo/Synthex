@@ -24,6 +24,128 @@ import {
 } from './base-platform-service';
 import { logger } from '@/lib/logger';
 
+// ============================================================================
+// LINKEDIN API RESPONSE TYPES
+// ============================================================================
+
+/** LinkedIn profile response from /me endpoint */
+interface LinkedInProfileResponse {
+  id: string;
+  firstName?: {
+    localized?: Record<string, string>;
+  };
+  lastName?: {
+    localized?: Record<string, string>;
+  };
+  vanityName?: string;
+  profilePicture?: {
+    'displayImage~'?: {
+      elements?: LinkedInImageElement[];
+    };
+  };
+}
+
+/** LinkedIn image element in profile picture */
+interface LinkedInImageElement {
+  identifiers?: Array<{ identifier?: string }>;
+  data?: {
+    'com.linkedin.digitalmedia.mediaartifact.StillImage'?: {
+      storageSize?: { width?: number };
+    };
+  };
+}
+
+/** LinkedIn network size response */
+interface NetworkSizeResponse {
+  firstDegreeSize?: number;
+}
+
+/** LinkedIn connections response */
+interface ConnectionsResponse {
+  _total?: number;
+}
+
+/** LinkedIn shares response */
+interface SharesResponse {
+  elements?: ShareElement[];
+  paging?: {
+    start?: number;
+    count?: number;
+    total?: number;
+  };
+}
+
+/** LinkedIn share/post element */
+interface ShareElement {
+  id: string;
+  activity: string;
+  text?: { text?: string };
+  commentary?: string;
+  content?: {
+    contentEntities?: ContentEntity[];
+  };
+  created?: { time?: number };
+  lastModified?: { time?: number };
+}
+
+/** LinkedIn content entity (media) */
+interface ContentEntity {
+  entityLocation?: string;
+}
+
+/** LinkedIn social actions statistics response */
+interface SocialActionsStatsResponse {
+  likeCount?: number;
+  commentCount?: number;
+  shareCount?: number;
+  impressionCount?: number;
+  clickCount?: number;
+}
+
+/** LinkedIn email response */
+interface EmailResponse {
+  elements?: Array<{
+    'handle~'?: {
+      emailAddress?: string;
+    };
+  }>;
+}
+
+/** LinkedIn UGC post creation payload */
+interface UgcPostPayload {
+  author: string;
+  lifecycleState: string;
+  specificContent: {
+    'com.linkedin.ugc.ShareContent': {
+      shareCommentary: {
+        text: string;
+      };
+      shareMediaCategory: string;
+      media?: Array<{
+        status: string;
+        originalUrl: string;
+      }>;
+    };
+  };
+  visibility: {
+    'com.linkedin.ugc.MemberNetworkVisibility': string;
+  };
+}
+
+/** LinkedIn UGC post creation response */
+interface UgcPostResponse {
+  id: string;
+}
+
+/** Post metrics structure */
+interface LinkedInPostMetrics {
+  likes: number;
+  comments: number;
+  shares: number;
+  impressions: number;
+  clicks: number;
+}
+
 const LINKEDIN_API_BASE = 'https://api.linkedin.com/v2';
 const LINKEDIN_API_REST = 'https://api.linkedin.com/rest';
 
@@ -209,19 +331,19 @@ export class LinkedInService extends BasePlatformService {
       const startDate = new Date(endDate.getTime() - days * 24 * 60 * 60 * 1000);
 
       // Get profile for person URN
-      const profile = await this.makeRequest<any>('/me');
+      const profile = await this.makeRequest<LinkedInProfileResponse>('/me');
       const personUrn = `urn:li:person:${profile.id}`;
 
       // Get follower statistics
       let followers = 0;
       try {
-        const networkInfo = await this.makeRequest<any>(
+        const networkInfo = await this.makeRequest<NetworkSizeResponse>(
           `/networkSizes/${encodeURIComponent(personUrn)}?edgeType=CompanyFollowedByMember`
         );
         followers = networkInfo.firstDegreeSize || 0;
       } catch {
         // Fallback - connections count
-        const connections = await this.makeRequest<any>('/connections?q=viewer&count=0');
+        const connections = await this.makeRequest<ConnectionsResponse>('/connections?q=viewer&count=0');
         followers = connections._total || 0;
       }
 
@@ -232,7 +354,7 @@ export class LinkedInService extends BasePlatformService {
 
       try {
         // Get recent shares/posts
-        const shares = await this.makeRequest<any>(
+        const shares = await this.makeRequest<SharesResponse>(
           `/shares?q=owners&owners=${encodeURIComponent(personUrn)}&count=50`
         );
 
@@ -240,7 +362,7 @@ export class LinkedInService extends BasePlatformService {
         if (shares.elements) {
           for (const share of shares.elements) {
             try {
-              const stats = await this.makeRequest<any>(
+              const stats = await this.makeRequest<SocialActionsStatsResponse>(
                 `/socialActions/${encodeURIComponent(share.activity)}/statistics`
               );
               impressions += stats.impressionCount || 0;
@@ -298,7 +420,7 @@ export class LinkedInService extends BasePlatformService {
       }
 
       // Get profile for person URN
-      const profile = await this.makeRequest<any>('/me');
+      const profile = await this.makeRequest<LinkedInProfileResponse>('/me');
       const personUrn = `urn:li:person:${profile.id}`;
 
       // Build query with pagination
@@ -307,15 +429,15 @@ export class LinkedInService extends BasePlatformService {
         endpoint += `&start=${cursor}`;
       }
 
-      const response = await this.makeRequest<any>(endpoint);
+      const response = await this.makeRequest<SharesResponse>(endpoint);
 
       const posts = await Promise.all(
-        (response.elements || []).map(async (share: any) => {
+        (response.elements || []).map(async (share: ShareElement) => {
           // Get engagement stats for each post
           let likes = 0, comments = 0, shares = 0, impressions = 0;
 
           try {
-            const stats = await this.makeRequest<any>(
+            const stats = await this.makeRequest<SocialActionsStatsResponse>(
               `/socialActions/${encodeURIComponent(share.activity)}/statistics`
             );
             likes = stats.likeCount || 0;
@@ -330,8 +452,10 @@ export class LinkedInService extends BasePlatformService {
             id: share.id,
             platformId: share.activity,
             content: share.text?.text || share.commentary || '',
-            mediaUrls: share.content?.contentEntities?.map((e: any) => e.entityLocation) || [],
-            publishedAt: new Date(share.created?.time || share.lastModified?.time),
+            mediaUrls: share.content?.contentEntities
+              ?.map((e: ContentEntity) => e.entityLocation)
+              .filter((url): url is string => url !== undefined) || [],
+            publishedAt: new Date(share.created?.time || share.lastModified?.time || Date.now()),
             metrics: {
               likes,
               comments,
@@ -343,7 +467,7 @@ export class LinkedInService extends BasePlatformService {
         })
       );
 
-      const nextCursor = response.paging?.start !== undefined
+      const nextCursor = response.paging?.start !== undefined && response.paging?.count !== undefined
         ? String(response.paging.start + response.paging.count)
         : undefined;
 
@@ -384,14 +508,14 @@ export class LinkedInService extends BasePlatformService {
       }
 
       // Get basic profile
-      const profile = await this.makeRequest<any>(
+      const profile = await this.makeRequest<LinkedInProfileResponse>(
         '/me?projection=(id,firstName,lastName,profilePicture(displayImage~:playableStreams),vanityName)'
       );
 
       // Get email if available
       let email = '';
       try {
-        const emailResponse = await this.makeRequest<any>(
+        const emailResponse = await this.makeRequest<EmailResponse>(
           '/emailAddress?q=members&projection=(elements*(handle~))'
         );
         email = emailResponse.elements?.[0]?.['handle~']?.emailAddress || '';
@@ -403,14 +527,14 @@ export class LinkedInService extends BasePlatformService {
       let followers = 0;
       try {
         const personUrn = `urn:li:person:${profile.id}`;
-        const networkInfo = await this.makeRequest<any>(
+        const networkInfo = await this.makeRequest<NetworkSizeResponse>(
           `/networkSizes/${encodeURIComponent(personUrn)}?edgeType=CompanyFollowedByMember`
         );
         followers = networkInfo.firstDegreeSize || 0;
       } catch {
         // Fallback to connections
         try {
-          const connections = await this.makeRequest<any>('/connections?q=viewer&count=0');
+          const connections = await this.makeRequest<ConnectionsResponse>('/connections?q=viewer&count=0');
           followers = connections._total || 0;
         } catch {
           // No connection count available
@@ -421,7 +545,7 @@ export class LinkedInService extends BasePlatformService {
       let avatarUrl = '';
       if (profile.profilePicture?.['displayImage~']?.elements) {
         const images = profile.profilePicture['displayImage~'].elements;
-        const largestImage = images.sort((a: any, b: any) =>
+        const largestImage = images.sort((a: LinkedInImageElement, b: LinkedInImageElement) =>
           (b.data?.['com.linkedin.digitalmedia.mediaartifact.StillImage']?.storageSize?.width || 0) -
           (a.data?.['com.linkedin.digitalmedia.mediaartifact.StillImage']?.storageSize?.width || 0)
         )[0];
@@ -471,11 +595,11 @@ export class LinkedInService extends BasePlatformService {
       }
 
       // Get author URN
-      const profile = await this.makeRequest<any>('/me');
+      const profile = await this.makeRequest<LinkedInProfileResponse>('/me');
       const authorUrn = `urn:li:person:${profile.id}`;
 
       // Build post payload
-      const postPayload: any = {
+      const postPayload: UgcPostPayload = {
         author: authorUrn,
         lifecycleState: 'PUBLISHED',
         specificContent: {
@@ -502,7 +626,7 @@ export class LinkedInService extends BasePlatformService {
       }
 
       // Create the post
-      const response = await this.makeRequest<any>('/ugcPosts', {
+      const response = await this.makeRequest<UgcPostResponse>('/ugcPosts', {
         method: 'POST',
         body: JSON.stringify(postPayload),
       });
@@ -538,13 +662,13 @@ export class LinkedInService extends BasePlatformService {
     }
   }
 
-  async getPostMetrics(postId: string): Promise<any> {
+  async getPostMetrics(postId: string): Promise<LinkedInPostMetrics | null> {
     try {
       if (!this.isConfigured()) {
         return null;
       }
 
-      const stats = await this.makeRequest<any>(
+      const stats = await this.makeRequest<SocialActionsStatsResponse>(
         `/socialActions/${encodeURIComponent(postId)}/statistics`
       );
 
