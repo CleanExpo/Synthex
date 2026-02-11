@@ -5,6 +5,7 @@
  * Enables users to link multiple auth methods to a single account.
  *
  * @module lib/auth/account-service
+ * @version 2.1.0 - Added FIELD_ENCRYPTION_KEY support for production
  *
  * ENVIRONMENT VARIABLES REQUIRED:
  * - DATABASE_URL: PostgreSQL connection (CRITICAL)
