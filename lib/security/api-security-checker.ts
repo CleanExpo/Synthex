@@ -19,6 +19,39 @@ import crypto from 'crypto';
 import { envValidator } from './env-validator';
 
 // ============================================
+// INTERNAL TYPES
+// ============================================
+
+/** Audit log entry structure */
+interface AuditLogEntry {
+  requestId: string;
+  timestamp: string;
+  ip: string;
+  userAgent: string;
+  method: string;
+  path: string;
+  userId?: string;
+  userRole?: string;
+  isAuthenticated: boolean;
+  result: string;
+  error: string | null;
+}
+
+/** JWT payload structure */
+interface JwtPayload {
+  userId?: string;
+  sub?: string;
+  role?: string;
+  exp?: number;
+  iat?: number;
+}
+
+/** Extended request with security context */
+export interface SecuredRequest extends NextRequest {
+  securityContext?: SecurityContext;
+}
+
+// ============================================
 // SECURITY POLICIES
 // ============================================
 export interface SecurityPolicy {
@@ -155,7 +188,7 @@ class RateLimiter {
 // MAIN SECURITY CHECKER CLASS
 // ============================================
 export class APISecurityChecker {
-  private static auditLog: any[] = [];
+  private static auditLog: AuditLogEntry[] = [];
 
   /**
    * Main security check function - MUST be called for every API endpoint
@@ -268,8 +301,8 @@ export class APISecurityChecker {
   /**
    * Creates secure API response with proper headers
    */
-  static createSecureResponse(
-    data: any,
+  static createSecureResponse<T>(
+    data: T,
     status: number = 200,
     context?: SecurityContext
   ): NextResponse {
@@ -363,7 +396,7 @@ export class APISecurityChecker {
       const jwtSecret = envValidator.get('JWT_SECRET');
 
       // Verify JWT
-      const decoded = jwt.verify(token, jwtSecret) as any;
+      const decoded = jwt.verify(token, jwtSecret) as JwtPayload;
 
       // Check expiration
       if (decoded.exp && decoded.exp < Date.now() / 1000) {
@@ -417,7 +450,7 @@ export class APISecurityChecker {
     }
   }
 
-  private static removeSensitiveFields(data: any): any {
+  private static removeSensitiveFields<T>(data: T): T {
     if (!data || typeof data !== 'object') {
       return data;
     }
@@ -435,21 +468,21 @@ export class APISecurityChecker {
         if (Array.isArray(cleaned)) {
           // Don't modify arrays directly
         } else {
-          cleaned[key] = '[REDACTED]';
+          (cleaned as Record<string, unknown>)[key] = '[REDACTED]';
         }
-      } else if (typeof cleaned[key] === 'object') {
-        cleaned[key] = this.removeSensitiveFields(cleaned[key]);
+      } else if (typeof (cleaned as Record<string, unknown>)[key] === 'object') {
+        (cleaned as Record<string, unknown>)[key] = this.removeSensitiveFields((cleaned as Record<string, unknown>)[key]);
       }
     }
 
-    return cleaned;
+    return cleaned as T;
   }
 
-  private static logAudit(context: SecurityContext, result: string, error: any) {
-    const entry = {
+  private static logAudit(context: SecurityContext, result: string, error: unknown) {
+    const entry: AuditLogEntry = {
       ...context,
       result,
-      error: error?.message || null,
+      error: error instanceof Error ? error.message : error ? String(error) : null,
       timestamp: new Date().toISOString()
     };
 
@@ -469,7 +502,7 @@ export class APISecurityChecker {
   /**
    * Get audit log entries
    */
-  static getAuditLog(filter?: { userId?: string; result?: string }): any[] {
+  static getAuditLog(filter?: { userId?: string; result?: string }): AuditLogEntry[] {
     if (!filter) {
       return [...this.auditLog];
     }
@@ -496,9 +529,9 @@ class SecurityError extends Error {
 }
 
 class ValidationError extends Error {
-  errors: any[];
-  
-  constructor(message: string, errors: any[]) {
+  errors: z.ZodIssue[];
+
+  constructor(message: string, errors: z.ZodIssue[]) {
     super(message);
     this.name = 'ValidationError';
     this.errors = errors;
@@ -571,9 +604,9 @@ export class WebhookValidator {
 // EXPORT SECURITY MIDDLEWARE
 // ============================================
 export function createSecurityMiddleware(policy: SecurityPolicy) {
-  return async (request: NextRequest) => {
+  return async (request: NextRequest): Promise<NextResponse | null> => {
     const result = await APISecurityChecker.check(request, policy);
-    
+
     if (!result.allowed) {
       return APISecurityChecker.createSecureResponse(
         { error: result.error },
@@ -583,8 +616,8 @@ export function createSecurityMiddleware(policy: SecurityPolicy) {
     }
 
     // Attach context to request for use in handler
-    (request as any).securityContext = result.context;
-    
+    (request as SecuredRequest).securityContext = result.context;
+
     return null; // Continue to handler
   };
 }

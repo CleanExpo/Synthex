@@ -30,6 +30,36 @@ export interface ABTestResult {
   recommendations: string[];
 }
 
+/** Target audience configuration */
+interface TargetAudience {
+  demographics?: string[];
+  psychographics?: string[];
+  painPoints?: string[];
+}
+
+/** Validation context */
+interface ValidationContext {
+  businessType?: string;
+  industry?: string;
+  [key: string]: unknown;
+}
+
+/** Validation criterion */
+interface ValidationCriterion {
+  check: string;
+  weight: number;
+}
+
+/** AB test storage data */
+interface ABTestData {
+  variants: ABTestVariant[];
+  winner: ABTestVariant;
+  metrics: { A: PsychologyTestMetrics; B: PsychologyTestMetrics };
+  sampleSize: number;
+  testDurationHours: number;
+  significance: { confidence: number; isSignificant: boolean };
+}
+
 export class PsychologyEffectivenessTester {
   /**
    * Evaluate psychological impact of brand elements
@@ -37,7 +67,7 @@ export class PsychologyEffectivenessTester {
   async evaluatePsychologicalImpact(
     brandElement: string,
     elementType: 'name' | 'tagline' | 'metadata',
-    targetAudience: any,
+    targetAudience: TargetAudience,
     psychologicalPrinciple: string
   ): Promise<PsychologyTestMetrics> {
     // Simulate metrics calculation based on psychological principles
@@ -120,7 +150,7 @@ export class PsychologyEffectivenessTester {
   async validatePsychologyApplication(
     brandElement: string,
     intendedPrinciple: string,
-    context: any
+    context: ValidationContext
   ): Promise<{
     isValid: boolean;
     score: number;
@@ -227,7 +257,7 @@ export class PsychologyEffectivenessTester {
 
   private adjustForAudience(
     metrics: PsychologyTestMetrics,
-    audience: any,
+    audience: TargetAudience,
     principle: string
   ): PsychologyTestMetrics {
     // Get audience relevance for principle
@@ -356,7 +386,7 @@ export class PsychologyEffectivenessTester {
     return recommendations;
   }
 
-  private async storeTestResults(testData: any): Promise<void> {
+  private async storeTestResults(testData: ABTestData): Promise<void> {
     // Store in database for future analysis
     try {
       // Implementation would store in psychology_metrics table
@@ -454,7 +484,7 @@ export class PsychologyEffectivenessTester {
     return Math.min(100, score);
   }
 
-  private getAudienceRelevance(audience: any, principle: string): number {
+  private getAudienceRelevance(audience: TargetAudience, principle: string): number {
     // Simplified audience-principle matching
     const audienceType = audience.demographics?.[0] || 'general';
     
@@ -535,9 +565,9 @@ export class PsychologyEffectivenessTester {
     };
   }
 
-  private getPrincipleValidationCriteria(principle: string): any[] {
+  private getPrincipleValidationCriteria(principle: string): ValidationCriterion[] {
     // Return validation criteria for each principle
-    const criteria: Record<string, any[]> = {
+    const criteria: Record<string, ValidationCriterion[]> = {
       'Anchoring Bias': [
         { check: 'starts_with_premium', weight: 0.3 },
         { check: 'contains_superlative', weight: 0.2 },
@@ -554,20 +584,20 @@ export class PsychologyEffectivenessTester {
         { check: 'creates_urgency', weight: 0.2 }
       ]
     };
-    
+
     return criteria[principle] || [{ check: 'general_quality', weight: 1.0 }];
   }
 
   private evaluateCriterion(
     element: string,
-    criterion: any,
-    context: any
+    criterion: ValidationCriterion,
+    context: ValidationContext
   ): { passed: boolean; score: number; issue: string; suggestion: string } {
     // Simplified criterion evaluation
     const passed = Math.random() > 0.3; // Mock evaluation
     const weight = typeof criterion.weight === 'number' ? criterion.weight : 1;
     const score = passed ? weight * 100 : weight * 40;
-    
+
     return {
       passed,
       score,

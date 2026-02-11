@@ -25,6 +25,26 @@ export interface WebVitalsMetric {
   navigationType: string;
 }
 
+/** Chrome-specific memory info interface */
+interface PerformanceMemory {
+  usedJSHeapSize: number;
+  totalJSHeapSize: number;
+  jsHeapSizeLimit: number;
+}
+
+/** Extended performance interface with memory */
+interface ExtendedPerformance extends Performance {
+  memory?: PerformanceMemory;
+}
+
+/** Slow resource info */
+interface SlowResourceInfo {
+  name: string;
+  duration: number;
+  size: number;
+  type: string;
+}
+
 // Web Vitals Thresholds (based on Google's standards)
 const VITALS_THRESHOLDS = {
   CLS: { good: 0.1, poor: 0.25 },
@@ -49,7 +69,7 @@ export function getMetricRating(
 }
 
 // Web Vitals collection
-export function collectWebVitals(metric: any) {
+export function collectWebVitals(metric: WebVitalsMetric) {
   const metrics: PerformanceMetrics = {
     fcp: 0,
     lcp: 0,
@@ -108,15 +128,15 @@ async function sendMetricsToAnalytics(metrics: PerformanceMetrics) {
 }
 
 // Resource timing analysis
-export function analyzeResourceTiming() {
+export function analyzeResourceTiming(): SlowResourceInfo[] | undefined {
   if (!window.performance || !window.performance.getEntriesByType) {
     return;
   }
 
-  const resources = window.performance.getEntriesByType('resource');
-  const slowResources = resources
-    .filter((resource: any) => resource.duration > 1000)
-    .map((resource: any) => ({
+  const resources = window.performance.getEntriesByType('resource') as PerformanceResourceTiming[];
+  const slowResources: SlowResourceInfo[] = resources
+    .filter((resource) => resource.duration > 1000)
+    .map((resource) => ({
       name: resource.name,
       duration: resource.duration,
       size: resource.transferSize,
@@ -131,22 +151,23 @@ export function analyzeResourceTiming() {
 }
 
 // Memory usage monitoring
-export function monitorMemoryUsage() {
-  if ('memory' in performance) {
-    const memory = (performance as any).memory;
+export function monitorMemoryUsage(): { usedJSHeapSize: string; totalJSHeapSize: string; jsHeapSizeLimit: string } | null {
+  const extendedPerf = performance as ExtendedPerformance;
+  if (extendedPerf.memory) {
+    const memory = extendedPerf.memory;
     const memoryInfo = {
       usedJSHeapSize: (memory.usedJSHeapSize / 1048576).toFixed(2) + ' MB',
       totalJSHeapSize: (memory.totalJSHeapSize / 1048576).toFixed(2) + ' MB',
       jsHeapSizeLimit: (memory.jsHeapSizeLimit / 1048576).toFixed(2) + ' MB',
     };
-    
-    
+
+
     // Warn if memory usage is high
     const usagePercent = (memory.usedJSHeapSize / memory.jsHeapSizeLimit) * 100;
     if (usagePercent > 90) {
       console.warn('High memory usage detected:', usagePercent.toFixed(2) + '%');
     }
-    
+
     return memoryInfo;
   }
   return null;
@@ -157,7 +178,7 @@ export function monitorMemoryUsage() {
 // Use React.lazy() or next/dynamic for component lazy loading instead
 export async function lazyLoad(
   componentPath: string
-): Promise<any> {
+): Promise<null> {
   // This is a placeholder - in practice, use next/dynamic or React.lazy
   // Dynamic imports with variables are not supported in webpack
   console.warn('Use next/dynamic or React.lazy for component lazy loading');
@@ -178,7 +199,7 @@ export function getOptimizedImageUrl(
 }
 
 // Debounce helper for performance
-export function debounce<T extends (...args: any[]) => any>(
+export function debounce<T extends (...args: unknown[]) => unknown>(
   func: T,
   wait: number
 ): (...args: Parameters<T>) => void {
@@ -194,12 +215,12 @@ export function debounce<T extends (...args: any[]) => any>(
 }
 
 // Throttle helper for performance
-export function throttle<T extends (...args: any[]) => any>(
+export function throttle<T extends (...args: unknown[]) => unknown>(
   func: T,
   limit: number
 ): (...args: Parameters<T>) => void {
   let inThrottle: boolean;
-  return function executedFunction(this: any, ...args: Parameters<T>) {
+  return function executedFunction(this: unknown, ...args: Parameters<T>) {
     if (!inThrottle) {
       func.apply(this, args);
       inThrottle = true;
@@ -211,7 +232,7 @@ export function throttle<T extends (...args: any[]) => any>(
 // Request idle callback wrapper
 export function whenIdle(callback: () => void) {
   if ('requestIdleCallback' in window) {
-    (window as any).requestIdleCallback(callback);
+    window.requestIdleCallback(callback);
   } else {
     setTimeout(callback, 1);
   }
