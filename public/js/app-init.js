@@ -135,7 +135,10 @@
                     vitals.lcp = lastEntry.renderTime || lastEntry.loadTime;
                 });
                 lcpObserver.observe({ entryTypes: ['largest-contentful-paint'] });
-            } catch (e) {}
+            } catch (e) {
+                // LCP API not supported in this browser
+                console.debug('[Web Vitals] LCP observer not supported:', e.message);
+            }
 
             // First Input Delay
             try {
@@ -146,7 +149,10 @@
                     });
                 });
                 fidObserver.observe({ entryTypes: ['first-input'] });
-            } catch (e) {}
+            } catch (e) {
+                // FID API not supported in this browser
+                console.debug('[Web Vitals] FID observer not supported:', e.message);
+            }
 
             // Cumulative Layout Shift
             try {
@@ -160,7 +166,10 @@
                     }
                 });
                 clsObserver.observe({ entryTypes: ['layout-shift'] });
-            } catch (e) {}
+            } catch (e) {
+                // CLS API not supported in this browser
+                console.debug('[Web Vitals] CLS observer not supported:', e.message);
+            }
 
             // Report metrics after page load
             window.addEventListener('load', () => {

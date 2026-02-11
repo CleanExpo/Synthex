@@ -32,7 +32,7 @@ services:
       - redis_staging_data:/data
     networks:
       - synthex-staging
-    command: redis-server --appendonly yes
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:?REDIS_PASSWORD is required}
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s

@@ -186,7 +186,9 @@ export class VideoOrchestrator {
       // Clean up on error
       try {
         await this.captureService.close();
-      } catch {}
+      } catch (cleanupError) {
+        console.warn('[VideoOrchestrator] Failed to close capture service:', cleanupError);
+      }
     }
 
     return result;
