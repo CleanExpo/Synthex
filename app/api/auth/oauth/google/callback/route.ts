@@ -150,12 +150,11 @@ export async function GET(request: NextRequest) {
     const existingByEmail = await accountService.findUserByEmail(googleUser.email);
 
     if (existingByEmail) {
-      // User exists with this email but different auth method
-      // Offer to link accounts
+      // User exists with this email - link Google account and login
       const providers = existingByEmail.providers.filter(p => p !== 'demo');
 
-      if (providers.length > 0) {
-        // Redirect to login with linking prompt
+      if (providers.length > 0 && !providers.includes('google')) {
+        // User has other auth methods - offer to link accounts
         const params = new URLSearchParams({
           error: 'account_exists',
           email: googleUser.email,
@@ -164,6 +163,35 @@ export async function GET(request: NextRequest) {
         });
         return NextResponse.redirect(`${effectiveBaseUrl}/login?${params.toString()}`);
       }
+
+      // No conflicting providers or user has no auth methods - auto-link Google
+      const linkResult = await accountService.linkAccount(
+        existingByEmail.id,
+        'google',
+        {
+          id: googleUser.id,
+          email: googleUser.email,
+          name: googleUser.name,
+          avatar: googleUser.picture,
+          emailVerified: googleUser.verified_email,
+        },
+        {
+          accessToken: tokens.accessToken,
+          refreshToken: tokens.refreshToken,
+          expiresAt: tokens.expiresAt,
+          tokenType: tokens.tokenType,
+          scope: tokens.scope,
+          idToken: tokens.idToken,
+        }
+      );
+
+      if (!linkResult.success) {
+        return redirectWithError(effectiveBaseUrl, linkResult.error || 'Failed to link Google account');
+      }
+
+      // Login the existing user
+      const session = await createSessionForUser(existingByEmail.id, googleUser, tokens);
+      return redirectWithSession(effectiveBaseUrl, session);
     }
 
     // New user - create account
