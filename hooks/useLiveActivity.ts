@@ -263,7 +263,7 @@ export function useLiveActivity(
             // Handle database changes for posts
             if (payload.table === 'content_posts' || payload.table === 'posts') {
               const eventType = payload.eventType;
-              const post = payload.new || payload.old;
+              const rawPost = (payload.new && Object.keys(payload.new).length > 0 ? payload.new : payload.old) as Record<string, unknown> | null;
 
               let activityType: ActivityType = 'post_edited';
               let title = 'Post updated';
@@ -274,36 +274,36 @@ export function useLiveActivity(
               } else if (eventType === 'DELETE') {
                 activityType = 'post_deleted';
                 title = 'Post deleted';
-              } else if (post?.status === 'published') {
+              } else if (rawPost?.status === 'published') {
                 activityType = 'post_published';
                 title = 'Post published';
-              } else if (post?.status === 'scheduled') {
+              } else if (rawPost?.status === 'scheduled') {
                 activityType = 'post_scheduled';
                 title = 'Post scheduled';
               }
 
               addActivity({
-                id: `post-${post?.id || Date.now()}-${Date.now()}`,
+                id: `post-${rawPost?.id || Date.now()}-${Date.now()}`,
                 type: activityType,
                 title,
-                description: post?.content?.slice(0, 100) || 'Content update',
+                description: String(rawPost?.content || '').slice(0, 100) || 'Content update',
                 timestamp: new Date(),
-                platform: post?.platform,
-                metadata: { postId: post?.id },
+                platform: rawPost?.platform as string | undefined,
+                metadata: { postId: String(rawPost?.id || '') },
               });
             }
 
             // Handle engagement changes
             if (payload.table === 'platform_metrics') {
-              const metrics = payload.new;
-              if (metrics?.likes > 100 || metrics?.comments > 50) {
+              const metrics = (payload.new && Object.keys(payload.new).length > 0 ? payload.new : null) as Record<string, unknown> | null;
+              if (metrics && (Number(metrics.likes) > 100 || Number(metrics.comments) > 50)) {
                 addActivity({
                   id: `engagement-${Date.now()}`,
                   type: 'engagement_spike',
                   title: 'Engagement Spike!',
                   description: `Your post is getting ${metrics.likes} likes and ${metrics.comments} comments`,
                   timestamp: new Date(),
-                  platform: metrics?.platform,
+                  platform: metrics.platform as string | undefined,
                 });
               }
             }

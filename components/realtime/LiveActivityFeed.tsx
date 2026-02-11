@@ -197,15 +197,16 @@ export function LiveActivityFeed({
           // Handle database changes
           if (payload.table === 'content_posts') {
             const eventType = payload.eventType;
-            const post = payload.new || payload.old;
+            const rawPost = (payload.new && Object.keys(payload.new).length > 0 ? payload.new : payload.old) as Record<string, unknown> | null;
+            if (!rawPost || !rawPost.id) return;
 
             const activity: ActivityItem = {
-              id: `post-${post.id}-${Date.now()}`,
+              id: `post-${rawPost.id}-${Date.now()}`,
               type:
                 eventType === 'INSERT'
                   ? 'post_created'
                   : eventType === 'UPDATE'
-                  ? post.status === 'published'
+                  ? rawPost.status === 'published'
                     ? 'post_published'
                     : 'post_edited'
                   : 'post_deleted',
@@ -215,10 +216,10 @@ export function LiveActivityFeed({
                   : eventType === 'UPDATE'
                   ? 'Post updated'
                   : 'Post deleted',
-              description: post.content?.slice(0, 100) || 'Content update',
+              description: String(rawPost.content || '').slice(0, 100) || 'Content update',
               timestamp: new Date(),
-              platform: post.platform,
-              metadata: { postId: post.id },
+              platform: rawPost.platform as string | undefined,
+              metadata: { postId: String(rawPost.id) },
             };
 
             addActivity(activity);

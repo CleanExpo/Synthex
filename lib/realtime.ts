@@ -3,7 +3,55 @@
  * Handles live updates and notifications
  */
 
-import { createClient, RealtimeChannel } from '@supabase/supabase-js';
+import { createClient, RealtimeChannel, SupabaseClient, RealtimePostgresChangesPayload } from '@supabase/supabase-js';
+
+/** Generic database record type - exported for consumers */
+export interface DbRecord {
+  id?: string;
+  status?: string;
+  content?: string;
+  platform?: string;
+  likes?: number;
+  comments?: number;
+  read?: boolean;
+  title?: string;
+  message?: string;
+  type?: string;
+  action_url?: string;
+  created_at?: string;
+  [key: string]: unknown;
+}
+
+/** Postgres changes payload type - exported for consumers */
+export type DbChangePayload = RealtimePostgresChangesPayload<DbRecord>;
+
+/** Presence join/leave event type */
+interface PresenceEvent {
+  key: string;
+  newPresences?: RealtimePresence[];
+  currentPresences?: RealtimePresence[];
+  leftPresences?: RealtimePresence[];
+}
+
+/** Notification record from database */
+export interface NotificationRecord {
+  id: string;
+  user_id: string;
+  title: string;
+  message: string;
+  type: 'info' | 'success' | 'warning' | 'error';
+  action_url?: string;
+  read: boolean;
+  created_at: string;
+  read_at?: string;
+}
+
+/** Post update event */
+export interface PostUpdateEvent {
+  type: string;
+  post: Record<string, unknown>;
+  timestamp: Date;
+}
 
 export interface RealtimeMessage {
   id: string;
@@ -12,18 +60,18 @@ export interface RealtimeMessage {
   content: string;
   timestamp: Date;
   userId?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface RealtimePresence {
   userId: string;
   status: 'online' | 'away' | 'offline';
   lastSeen: Date;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 class RealtimeService {
-  private supabase: any;
+  private supabase: SupabaseClient | null = null;
   private channels: Map<string, RealtimeChannel> = new Map();
   private listeners: Map<string, Set<Function>> = new Map();
   private presenceData: Map<string, RealtimePresence> = new Map();
@@ -43,7 +91,7 @@ class RealtimeService {
   async subscribeToChannel(channelName: string, options?: {
     onMessage?: (message: RealtimeMessage) => void;
     onPresence?: (presence: RealtimePresence[]) => void;
-    onUpdate?: (payload: any) => void;
+    onUpdate?: (payload: DbChangePayload) => void;
   }): Promise<RealtimeChannel | null> {
     if (!this.supabase) return null;
 
@@ -56,8 +104,8 @@ class RealtimeService {
 
     // Handle broadcast messages
     if (options?.onMessage) {
-      channel.on('broadcast', { event: 'message' }, (payload: any) => {
-        options.onMessage?.(payload.payload as RealtimeMessage);
+      channel.on('broadcast', { event: 'message' }, (payload: { payload: RealtimeMessage }) => {
+        options.onMessage?.(payload.payload);
       });
     }
 
@@ -65,7 +113,7 @@ class RealtimeService {
     if (options?.onPresence) {
       channel.on('presence', { event: 'sync' }, () => {
         const state = channel.presenceState();
-        const presenceList = Object.values(state).flat() as RealtimePresence[];
+        const presenceList = Object.values(state).flat() as unknown as RealtimePresence[];
         options.onPresence?.(presenceList);
         
         // Update local presence data
@@ -74,10 +122,12 @@ class RealtimeService {
         });
       });
 
-      channel.on('presence', { event: 'join' }, ({ key, newPresences }: any) => {
+      channel.on('presence', { event: 'join' }, (_event: PresenceEvent) => {
+        // Handle presence join event
       });
 
-      channel.on('presence', { event: 'leave' }, ({ key, leftPresences }: any) => {
+      channel.on('presence', { event: 'leave' }, (_event: PresenceEvent) => {
+        // Handle presence leave event
       });
     }
 
@@ -86,7 +136,7 @@ class RealtimeService {
       channel.on(
         'postgres_changes',
         { event: '*', schema: 'public' },
-        (payload: any) => {
+        (payload: DbChangePayload) => {
           options.onUpdate?.(payload);
         }
       );
@@ -137,7 +187,7 @@ class RealtimeService {
    */
   subscribeToTable(
     table: string,
-    callback: (payload: any) => void,
+    callback: (payload: DbChangePayload) => void,
     filter?: string
   ): RealtimeChannel | null {
     if (!this.supabase) return null;
@@ -153,7 +203,7 @@ class RealtimeService {
           table: table,
           filter: filter
         },
-        (payload: any) => {
+        (payload: DbChangePayload) => {
           callback(payload);
         }
       )
@@ -166,7 +216,7 @@ class RealtimeService {
   /**
    * Subscribe to user notifications
    */
-  subscribeToNotifications(userId: string, callback: (notification: any) => void) {
+  subscribeToNotifications(userId: string, callback: (notification: DbChangePayload) => void) {
     return this.subscribeToTable(
       'notifications',
       callback,
@@ -177,11 +227,11 @@ class RealtimeService {
   /**
    * Subscribe to post updates
    */
-  subscribeToPostUpdates(callback: (update: any) => void) {
-    return this.subscribeToTable('content_posts', (payload) => {
+  subscribeToPostUpdates(callback: (update: PostUpdateEvent) => void) {
+    return this.subscribeToTable('content_posts', (payload: DbChangePayload) => {
       callback({
         type: payload.eventType,
-        post: payload.new || payload.old,
+        post: (payload.new || payload.old || {}) as Record<string, unknown>,
         timestamp: new Date()
       });
     });
@@ -190,7 +240,7 @@ class RealtimeService {
   /**
    * Subscribe to analytics events
    */
-  subscribeToAnalytics(callback: (event: any) => void) {
+  subscribeToAnalytics(callback: (event: DbChangePayload) => void) {
     return this.subscribeToTable('analytics_events', callback);
   }
 
@@ -235,6 +285,8 @@ class RealtimeService {
     type: 'info' | 'success' | 'warning' | 'error';
     actionUrl?: string;
   }): Promise<boolean> {
+    if (!this.supabase) return false;
+
     try {
       const { error } = await this.supabase
         .from('notifications')
@@ -261,6 +313,8 @@ class RealtimeService {
    * Mark notifications as read
    */
   async markNotificationsRead(notificationIds: string[]): Promise<boolean> {
+    if (!this.supabase) return false;
+
     try {
       const { error } = await this.supabase
         .from('notifications')
@@ -278,6 +332,8 @@ class RealtimeService {
    * Get user notification count
    */
   async getUnreadCount(userId: string): Promise<number> {
+    if (!this.supabase) return 0;
+
     try {
       const { count, error } = await this.supabase
         .from('notifications')

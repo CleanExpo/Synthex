@@ -5,6 +5,91 @@
 
 import { db } from '@/lib/supabase-client';
 
+/** Content engagement metrics */
+export interface ContentMetrics {
+  impressions: number;
+  engagement: number;
+  shares: number;
+  likes: number;
+}
+
+/** Mock content structure */
+export interface MockContent {
+  content: string;
+  metrics: ContentMetrics;
+  author: string;
+  timestamp: string;
+}
+
+/** Pattern analysis result */
+export interface PatternAnalysis {
+  platform: string;
+  content: string;
+  metrics: ContentMetrics;
+  author: string;
+  timestamp: string;
+  contentLength: number;
+  wordCount: number;
+  hasEmojis: boolean;
+  hasHashtags: string[];
+  hasMentions: string[];
+  hasUrls: boolean;
+  engagementRate: number;
+  viralityScore: number;
+  shareRatio: number;
+  hookType: string;
+  sentiment: number;
+  contentType: string;
+  postHour: number;
+  postDay: number;
+  isViral: boolean;
+  performanceLevel: string;
+}
+
+/** Database pattern record */
+export interface DatabasePattern {
+  id?: string;
+  platform: string;
+  pattern_type: string;
+  pattern_data: PatternAnalysis;
+  engagement_score: number;
+  discovered_at?: string;
+}
+
+/** Hook type with count */
+interface HookTypeCount {
+  type: string;
+  count: number;
+  percentage: number;
+}
+
+/** Best posting time data */
+interface PostingTimeData {
+  hour: number;
+  count: number;
+  avgScore: number;
+}
+
+/** Hashtag count */
+interface HashtagCount {
+  tag: string;
+  count: number;
+}
+
+/** Content type distribution */
+interface ContentTypeDistribution {
+  type: string;
+  count: number;
+  percentage: number;
+}
+
+/** Platform performance stats */
+interface PlatformPerformance {
+  platform: string;
+  count: number;
+  avgScore: number;
+}
+
 // Mock viral content data (in production, this would use real APIs or scraping)
 const MOCK_VIRAL_CONTENT = {
   twitter: [
@@ -77,8 +162,8 @@ export class PatternScraperService {
   /**
    * Scrape and analyze viral patterns from all platforms
    */
-  async scrapeAllPlatforms() {
-    const results: any[] = [];
+  async scrapeAllPlatforms(): Promise<PatternAnalysis[]> {
+    const results: PatternAnalysis[] = [];
 
     for (const platform of this.platforms) {
       try {
@@ -99,8 +184,8 @@ export class PatternScraperService {
     // In production, this would use real APIs or web scraping
     // For now, we'll use mock data
     const mockContent = MOCK_VIRAL_CONTENT[platform as keyof typeof MOCK_VIRAL_CONTENT] || [];
-    
-    const patterns: any[] = [];
+
+    const patterns: PatternAnalysis[] = [];
 
     for (const content of mockContent) {
       const pattern = await this.analyzeContent(content, platform);
@@ -113,7 +198,7 @@ export class PatternScraperService {
   /**
    * Analyze content to extract patterns
    */
-  private async analyzeContent(content: any, platform: string) {
+  private async analyzeContent(content: MockContent, platform: string): Promise<PatternAnalysis> {
     const analysis = {
       platform,
       content: content.content,
@@ -191,7 +276,7 @@ export class PatternScraperService {
   /**
    * Calculate engagement rate
    */
-  private calculateEngagementRate(metrics: any): number {
+  private calculateEngagementRate(metrics: ContentMetrics): number {
     if (metrics.impressions === 0) return 0;
     return (metrics.engagement / metrics.impressions) * 100;
   }
@@ -199,7 +284,7 @@ export class PatternScraperService {
   /**
    * Calculate virality score
    */
-  private calculateViralityScore(metrics: any, platform: string): number {
+  private calculateViralityScore(metrics: ContentMetrics, platform: string): number {
     // Platform-specific virality thresholds
     const thresholds = {
       twitter: { viral: 10000, superViral: 50000 },
@@ -284,7 +369,7 @@ export class PatternScraperService {
   /**
    * Check if content is viral
    */
-  private isViral(metrics: any, platform: string): boolean {
+  private isViral(metrics: ContentMetrics, platform: string): boolean {
     const viralThresholds = {
       twitter: 10000,
       linkedin: 5000,
@@ -300,7 +385,7 @@ export class PatternScraperService {
   /**
    * Get performance level
    */
-  private getPerformanceLevel(metrics: any, platform: string): string {
+  private getPerformanceLevel(metrics: ContentMetrics, platform: string): string {
     const score = this.calculateViralityScore(metrics, platform);
     
     if (score >= 90) return 'exceptional';
@@ -313,12 +398,12 @@ export class PatternScraperService {
   /**
    * Save pattern to database
    */
-  private async savePattern(analysis: any) {
+  private async savePattern(analysis: PatternAnalysis): Promise<void> {
     try {
       await db.patterns.create({
         platform: analysis.platform,
         pattern_type: analysis.hookType,
-        pattern_data: analysis,
+        pattern_data: analysis as unknown as Record<string, unknown>,
         engagement_score: analysis.viralityScore,
       });
     } catch (error) {
@@ -333,11 +418,11 @@ export class PatternScraperService {
     const patterns = await db.patterns.list(platform);
     
     // Sort by virality score and recency
-    const sorted = patterns.sort((a: any, b: any) => {
+    const sorted = patterns.sort((a: DatabasePattern, b: DatabasePattern) => {
       const scoreA = a.engagement_score || 0;
       const scoreB = b.engagement_score || 0;
-      const dateA = new Date(a.discovered_at).getTime();
-      const dateB = new Date(b.discovered_at).getTime();
+      const dateA = new Date(a.discovered_at || Date.now()).getTime();
+      const dateB = new Date(b.discovered_at || Date.now()).getTime();
       
       // Weight: 70% virality, 30% recency
       const weightedA = scoreA * 0.7 + (dateA / Date.now()) * 30;
@@ -368,7 +453,7 @@ export class PatternScraperService {
     // Calculate insights
     const insights = {
       totalPatterns: patterns.length,
-      avgViralityScore: patterns.reduce((sum: number, p: any) => sum + (p.engagement_score || 0), 0) / patterns.length,
+      avgViralityScore: patterns.reduce((sum: number, p: DatabasePattern) => sum + (p.engagement_score || 0), 0) / patterns.length,
       topHookTypes: this.getTopHookTypes(patterns),
       bestTimes: this.getBestPostingTimes(patterns),
       topHashtags: this.getTopHashtags(patterns),
@@ -379,7 +464,7 @@ export class PatternScraperService {
     return insights;
   }
 
-  private getTopHookTypes(patterns: any[]) {
+  private getTopHookTypes(patterns: DatabasePattern[]): HookTypeCount[] {
     const hookCounts: Record<string, number> = {};
     
     patterns.forEach(p => {
@@ -393,7 +478,7 @@ export class PatternScraperService {
       .map(([type, count]) => ({ type, count, percentage: (count / patterns.length) * 100 }));
   }
 
-  private getBestPostingTimes(patterns: any[]) {
+  private getBestPostingTimes(patterns: DatabasePattern[]): PostingTimeData[] {
     const hourCounts: Record<number, { count: number; avgScore: number }> = {};
     
     patterns.forEach(p => {
@@ -414,7 +499,7 @@ export class PatternScraperService {
       .map(([hour, data]) => ({ hour: parseInt(hour), ...data }));
   }
 
-  private getTopHashtags(patterns: any[]) {
+  private getTopHashtags(patterns: DatabasePattern[]): HashtagCount[] {
     const hashtagCounts: Record<string, number> = {};
     
     patterns.forEach(p => {
@@ -430,7 +515,7 @@ export class PatternScraperService {
       .map(([tag, count]) => ({ tag, count }));
   }
 
-  private getContentTypeDistribution(patterns: any[]) {
+  private getContentTypeDistribution(patterns: DatabasePattern[]): ContentTypeDistribution[] {
     const typeCounts: Record<string, number> = {};
     
     patterns.forEach(p => {
@@ -442,7 +527,7 @@ export class PatternScraperService {
       .map(([type, count]) => ({ type, count, percentage: (count / patterns.length) * 100 }));
   }
 
-  private getPlatformPerformance(patterns: any[]) {
+  private getPlatformPerformance(patterns: DatabasePattern[]): PlatformPerformance[] {
     const platformStats: Record<string, { count: number; avgScore: number }> = {};
     
     patterns.forEach(p => {

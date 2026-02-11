@@ -3,7 +3,57 @@
  * Using the existing Supabase configuration
  */
 
-import { createClient } from '@supabase/supabase-js';
+import { createClient, RealtimeChannel, RealtimePostgresChangesPayload } from '@supabase/supabase-js';
+import type { AuthChangeEvent, Session } from '@supabase/supabase-js';
+
+/** Persona data for creation/update */
+export interface PersonaInput {
+  name: string;
+  description?: string;
+  voice_tone?: string;
+  target_audience?: string;
+  platforms?: string[];
+  brand_guidelines?: string;
+  [key: string]: unknown;
+}
+
+/** Content data for creation/update */
+export interface ContentInput {
+  title?: string;
+  body: string;
+  platform?: string;
+  persona_id?: string;
+  status?: 'draft' | 'scheduled' | 'published';
+  scheduled_at?: string;
+  metadata?: Record<string, unknown>;
+  [key: string]: unknown;
+}
+
+/** Campaign data for creation/update */
+export interface CampaignInput {
+  name: string;
+  description?: string;
+  platform?: string;
+  start_date?: string;
+  end_date?: string;
+  status?: 'draft' | 'active' | 'paused' | 'completed';
+  goals?: Record<string, unknown>;
+  [key: string]: unknown;
+}
+
+/** Viral pattern data for creation */
+export interface PatternInput {
+  platform: string;
+  pattern_type: string;
+  pattern_data: Record<string, unknown>;
+  engagement_score: number;
+}
+
+/** Auth state change callback type */
+type AuthChangeCallback = (event: AuthChangeEvent, session: Session | null) => void;
+
+/** Realtime change callback type */
+type RealtimeChangeCallback = (payload: RealtimePostgresChangesPayload<{ [key: string]: unknown }>) => void;
 
 // Get environment variables with fallback for SSG
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
@@ -136,7 +186,7 @@ export const auth = {
     if (error) throw error;
   },
 
-  onAuthStateChange(callback: any) {
+  onAuthStateChange(callback: AuthChangeCallback) {
     return supabase.auth.onAuthStateChange(callback);
   },
 };
@@ -145,7 +195,7 @@ export const auth = {
 export const db = {
   // Personas
   personas: {
-    async create(userId: string, persona: any) {
+    async create(userId: string, persona: PersonaInput) {
       const { data, error } = await supabase
         .from('personas')
         .insert({
@@ -171,7 +221,7 @@ export const db = {
       return data;
     },
 
-    async update(id: string, updates: any) {
+    async update(id: string, updates: Partial<PersonaInput>) {
       const { data, error } = await supabase
         .from('personas')
         .update(updates)
@@ -193,7 +243,7 @@ export const db = {
 
   // Content
   content: {
-    async create(userId: string, content: any) {
+    async create(userId: string, content: ContentInput) {
       const { data, error } = await supabase
         .from('content')
         .insert({
@@ -220,7 +270,7 @@ export const db = {
       return data;
     },
 
-    async update(id: string, updates: any) {
+    async update(id: string, updates: Partial<ContentInput>) {
       const { data, error } = await supabase
         .from('content')
         .update(updates)
@@ -258,7 +308,7 @@ export const db = {
       return data;
     },
 
-    async create(pattern: any) {
+    async create(pattern: PatternInput) {
       const { data, error } = await supabase
         .from('viral_patterns')
         .insert({
@@ -275,7 +325,7 @@ export const db = {
 
   // Campaigns
   campaigns: {
-    async create(userId: string, campaign: any) {
+    async create(userId: string, campaign: CampaignInput) {
       const { data, error } = await supabase
         .from('campaigns')
         .insert({
@@ -301,7 +351,7 @@ export const db = {
       return data;
     },
 
-    async update(id: string, updates: any) {
+    async update(id: string, updates: Partial<CampaignInput>) {
       const { data, error } = await supabase
         .from('campaigns')
         .update(updates)
@@ -324,7 +374,7 @@ export const db = {
 
 // Real-time subscriptions
 export const realtime = {
-  subscribeToContent(userId: string, callback: any) {
+  subscribeToContent(userId: string, callback: RealtimeChangeCallback) {
     return supabase
       .channel(`content_${userId}`)
       .on(
@@ -340,7 +390,7 @@ export const realtime = {
       .subscribe();
   },
 
-  subscribeToCampaigns(userId: string, callback: any) {
+  subscribeToCampaigns(userId: string, callback: RealtimeChangeCallback) {
     return supabase
       .channel(`campaigns_${userId}`)
       .on(
@@ -356,7 +406,7 @@ export const realtime = {
       .subscribe();
   },
 
-  unsubscribe(subscription: any) {
+  unsubscribe(subscription: RealtimeChannel) {
     return supabase.removeChannel(subscription);
   },
 };

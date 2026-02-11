@@ -13,6 +13,80 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { logger } from '@/lib/logger';
 
+/** Action configuration types */
+interface NotificationConfig {
+  type: string;
+  includeMetrics?: boolean;
+  [key: string]: unknown;
+}
+
+interface EmailConfig {
+  to?: string;
+  subject?: string;
+  template?: string;
+  [key: string]: unknown;
+}
+
+interface SchedulePostConfig {
+  postId?: string;
+  useOptimalTime?: boolean;
+  scheduledTime?: string;
+  [key: string]: unknown;
+}
+
+interface ArchivePostConfig {
+  postId?: string;
+  [key: string]: unknown;
+}
+
+interface OptimizeContentConfig {
+  createVariation?: boolean;
+  [key: string]: unknown;
+}
+
+interface WebhookConfig {
+  url: string;
+  method?: string;
+  headers?: Record<string, string>;
+  body?: Record<string, unknown>;
+  [key: string]: unknown;
+}
+
+/** Database record for automation rules */
+interface AutomationRuleDbRecord {
+  id: string;
+  user_id: string;
+  client_id?: string;
+  name: string;
+  description?: string;
+  trigger: RuleTrigger;
+  conditions: RuleCondition[];
+  actions: RuleAction[];
+  is_active: boolean;
+  run_count: number;
+  last_run_at?: string;
+  last_run_status?: 'success' | 'partial' | 'failed';
+  error_count: number;
+  tags: string[];
+  created_at: string;
+  updated_at: string;
+}
+
+/** Action result type */
+interface ActionResult {
+  sent?: boolean;
+  type?: string;
+  to?: string;
+  scheduled?: boolean;
+  archived?: boolean;
+  optimized?: boolean;
+  postId?: string;
+  skipped?: boolean;
+  reason?: string;
+  status?: number;
+  success?: boolean;
+}
+
 // Trigger types
 export type TriggerType =
   | 'schedule' // Time-based (cron, interval)
@@ -103,12 +177,15 @@ export interface RuleTrigger {
   };
 }
 
+// Condition value can be various types
+export type ConditionValue = string | number | boolean | null | string[] | number[];
+
 // Rule condition
 export interface RuleCondition {
   id: string;
   field: string;
   operator: ConditionOperator;
-  value: any;
+  value: ConditionValue;
   logicalOperator?: 'AND' | 'OR';
 }
 
@@ -653,12 +730,13 @@ class RulesEngine {
 
     if (options.variables) {
       const vars = options.variables;
-      const substituteVars = (obj: any): any => {
+      const substituteVars = (obj: unknown): unknown => {
         if (typeof obj === 'string') {
+          let result = obj;
           for (const [key, value] of Object.entries(vars)) {
-            obj = obj.replace(`{{${key}}}`, String(value));
+            result = result.replace(`{{${key}}}`, String(value));
           }
-          return obj;
+          return result;
         }
         if (Array.isArray(obj)) {
           return obj.map(substituteVars);
@@ -738,9 +816,9 @@ class RulesEngine {
       case 'less_than_or_equals':
         return Number(fieldValue) <= Number(targetValue);
       case 'in':
-        return Array.isArray(targetValue) && targetValue.includes(fieldValue);
+        return Array.isArray(targetValue) && (targetValue as unknown[]).includes(fieldValue);
       case 'not_in':
-        return Array.isArray(targetValue) && !targetValue.includes(fieldValue);
+        return Array.isArray(targetValue) && !(targetValue as unknown[]).includes(fieldValue);
       case 'exists':
         return fieldValue !== null && fieldValue !== undefined;
       case 'not_exists':
@@ -750,13 +828,17 @@ class RulesEngine {
     }
   }
 
-  private getFieldValue(field: string, context: ExecutionContext): any {
+  private getFieldValue(field: string, context: ExecutionContext): unknown {
     const parts = field.split('.');
-    let value: any = { ...context.triggerData, ...context.variables };
+    let value: unknown = { ...context.triggerData, ...context.variables };
 
     for (const part of parts) {
       if (value === null || value === undefined) return undefined;
-      value = value[part];
+      if (typeof value === 'object' && value !== null) {
+        value = (value as Record<string, unknown>)[part];
+      } else {
+        return undefined;
+      }
     }
 
     return value;
@@ -824,25 +906,25 @@ class RulesEngine {
     return { executed, failed, outputs, errors };
   }
 
-  private async executeAction(action: RuleAction, context: ExecutionContext): Promise<any> {
+  private async executeAction(action: RuleAction, context: ExecutionContext): Promise<ActionResult> {
     switch (action.type) {
       case 'send_notification':
-        return this.actionSendNotification(action.config, context);
+        return this.actionSendNotification(action.config as NotificationConfig, context);
 
       case 'send_email':
-        return this.actionSendEmail(action.config, context);
+        return this.actionSendEmail(action.config as EmailConfig, context);
 
       case 'schedule_post':
-        return this.actionSchedulePost(action.config, context);
+        return this.actionSchedulePost(action.config as SchedulePostConfig, context);
 
       case 'archive_post':
-        return this.actionArchivePost(action.config, context);
+        return this.actionArchivePost(action.config as ArchivePostConfig, context);
 
       case 'optimize_content':
-        return this.actionOptimizeContent(action.config, context);
+        return this.actionOptimizeContent(action.config as OptimizeContentConfig, context);
 
       case 'webhook':
-        return this.actionWebhook(action.config, context);
+        return this.actionWebhook(action.config as WebhookConfig, context);
 
       default:
         logger.warn(`Unknown action type: ${action.type}`);
@@ -851,18 +933,18 @@ class RulesEngine {
   }
 
   // Action implementations (simplified)
-  private async actionSendNotification(config: any, context: ExecutionContext): Promise<any> {
+  private async actionSendNotification(config: NotificationConfig, context: ExecutionContext): Promise<ActionResult> {
     logger.info('Sending notification', { config, ruleId: context.ruleId });
     return { sent: true, type: config.type };
   }
 
-  private async actionSendEmail(config: any, context: ExecutionContext): Promise<any> {
+  private async actionSendEmail(config: EmailConfig, context: ExecutionContext): Promise<ActionResult> {
     logger.info('Sending email', { config, ruleId: context.ruleId });
     return { sent: true, to: config.to };
   }
 
-  private async actionSchedulePost(config: any, context: ExecutionContext): Promise<any> {
-    const postId = context.triggerData.postId || config.postId;
+  private async actionSchedulePost(config: SchedulePostConfig, context: ExecutionContext): Promise<ActionResult> {
+    const postId = (context.triggerData.postId as string) || config.postId;
     if (!postId) return { skipped: true };
 
     await this.supabase
@@ -876,8 +958,8 @@ class RulesEngine {
     return { scheduled: true, postId };
   }
 
-  private async actionArchivePost(config: any, context: ExecutionContext): Promise<any> {
-    const postId = context.triggerData.postId || config.postId;
+  private async actionArchivePost(config: ArchivePostConfig, context: ExecutionContext): Promise<ActionResult> {
+    const postId = (context.triggerData.postId as string) || config.postId;
     if (!postId) return { skipped: true };
 
     await this.supabase
@@ -888,12 +970,12 @@ class RulesEngine {
     return { archived: true, postId };
   }
 
-  private async actionOptimizeContent(config: any, context: ExecutionContext): Promise<any> {
+  private async actionOptimizeContent(config: OptimizeContentConfig, context: ExecutionContext): Promise<ActionResult> {
     logger.info('Optimizing content', { config, ruleId: context.ruleId });
     return { optimized: true };
   }
 
-  private async actionWebhook(config: any, context: ExecutionContext): Promise<any> {
+  private async actionWebhook(config: WebhookConfig, context: ExecutionContext): Promise<ActionResult> {
     const response = await fetch(config.url, {
       method: config.method || 'POST',
       headers: {
@@ -934,7 +1016,7 @@ class RulesEngine {
     });
   }
 
-  private mapDbToRule(data: any): AutomationRule {
+  private mapDbToRule(data: AutomationRuleDbRecord): AutomationRule {
     return {
       id: data.id,
       userId: data.user_id,

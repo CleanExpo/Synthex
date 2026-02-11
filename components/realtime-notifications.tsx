@@ -46,10 +46,10 @@ export default function RealtimeNotifications() {
       id: message.id,
       title: message.title || 'New Notification',
       message: message.content,
-      type: (message.metadata?.type as any) || 'info',
+      type: (message.metadata?.type as Notification['type']) || 'info',
       timestamp: message.timestamp,
-      read: message.metadata?.read || false,
-      actionUrl: message.metadata?.actionUrl
+      read: Boolean(message.metadata?.read),
+      actionUrl: message.metadata?.actionUrl as string | undefined
     };
 
     setNotifications(prev => [notification, ...prev].slice(0, 50)); // Keep last 50
@@ -94,17 +94,18 @@ export default function RealtimeNotifications() {
         
         // Subscribe to notification table changes
         realtimeService.subscribeToNotifications(user.id, (payload) => {
-          if (payload.eventType === 'INSERT') {
+          if (payload.eventType === 'INSERT' && payload.new && 'id' in payload.new) {
+            const newRecord = payload.new;
             handleNewNotification({
-              id: payload.new.id,
+              id: String(newRecord.id || Date.now()),
               type: 'notification',
-              title: payload.new.title,
-              content: payload.new.message,
-              timestamp: new Date(payload.new.created_at),
+              title: String(newRecord.title || 'New Notification'),
+              content: String(newRecord.message || ''),
+              timestamp: new Date(newRecord.created_at || Date.now()),
               metadata: {
-                type: payload.new.type,
-                actionUrl: payload.new.action_url,
-                read: payload.new.read
+                type: newRecord.type,
+                actionUrl: newRecord.action_url,
+                read: newRecord.read
               }
             });
           }
