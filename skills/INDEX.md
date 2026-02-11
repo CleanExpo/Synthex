@@ -1,7 +1,7 @@
 # Skills Index
 
-**Total Skills**: 36+
-**Last Updated**: Ralph Wiggum Technique Added
+**Total Skills**: 37+
+**Last Updated**: Authority Curator Skill Added
 
 ---
 
@@ -49,13 +49,14 @@ Verification-first development, truth verification, error handling.
 
 ---
 
-### Search Dominance (3 skills)
-SEO Intelligence, GEO optimization, Blue Ocean discovery for Australian market.
+### Search Dominance (4 skills)
+SEO Intelligence, GEO optimization, Blue Ocean discovery, Authority content for Australian market.
 
 | Skill | Priority | Auto-load | Description |
 |-------|----------|-----------|-------------|
 | **search-dominance.skill.md** | 2 | ❌ | SEO takeover strategy (Brisbane → Queensland → Australia → NZ → Global), SERP feature optimization |
 | **blue-ocean.skill.md** | 2 | ❌ | Heat signature scanning, opportunity scoring formula: (Volume × Growth × Gap) / Competition |
+| **authority-curator.skill.md** | 2 | ❌ | Research Report Linkable Assets with E-E-A-T, Shocking Hook H1s, Anti-AI voice, Synthex Authority Score |
 | **rank-monitoring.skill.md** | 3 | ❌ | Real-time ranking checks (daily/3x week/weekly), DataForSEO/SEMrush/GSC integration, alert system |
 
 ---
@@ -128,11 +129,12 @@ Critical skills loaded when relevant tasks are detected.
 | **foundation-first.skill.md** | Design | 7-layer foundation, 8 missing states |
 | **search-dominance.skill.md** | Search Dominance | SEO takeover strategy |
 | **blue-ocean.skill.md** | Search Dominance | Opportunity discovery |
+| **authority-curator.skill.md** | Search Dominance | Research Report Linkable Assets, E-E-A-T optimization |
 | **geo-australian.skill.md** | Australian | Australian GEO optimization |
 | **project-context.skill.md** | Context | Project-specific knowledge |
 | **ralph-wiggum.skill.md** | Workflow | Autonomous task completion loop |
 
-**Total**: 8 skills
+**Total**: 9 skills
 
 ---
 
@@ -185,8 +187,8 @@ These 4 skills are **ALWAYS** loaded on every response:
 | **Frontend** | nextjs.skill.md, components.skill.md, design-system.skill.md, tailwind.skill.md |
 | **Backend** | fastapi.skill.md, langgraph.skill.md, advanced-tool-use.skill.md |
 | **Database** | supabase.skill.md, migrations.skill.md |
-| **SEO** | search-dominance.skill.md, blue-ocean.skill.md, geo-australian.skill.md, rank-monitoring.skill.md |
-| **Content** | truth-finder.skill.md |
+| **SEO** | search-dominance.skill.md, blue-ocean.skill.md, geo-australian.skill.md, rank-monitoring.skill.md, authority-curator.skill.md |
+| **Content** | truth-finder.skill.md, authority-curator.skill.md |
 | **New Feature** | feature-development.skill.md, foundation-first.skill.md |
 | **Bug Fix** | bug-fixing.skill.md, error-handling.skill.md |
 | **Autonomous Loop** | ralph-wiggum.skill.md, verification-first.skill.md |
