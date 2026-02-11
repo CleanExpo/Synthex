@@ -81,8 +81,8 @@ async function handlePost(request: AuthenticatedRequest) {
     try {
       await db.content.create(userId, {
         platform,
-        content: result.primary,
-        persona_id: personaId || null,
+        body: result.primary,
+        persona_id: personaId || undefined,
         metadata: result.metadata,
         status: 'draft',
       });

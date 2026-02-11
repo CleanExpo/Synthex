@@ -6,6 +6,82 @@
 import { createClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
 
+/** Campaign creation/update data */
+export interface CampaignData {
+  name?: string;
+  description?: string;
+  platform?: string;
+  status?: 'draft' | 'active' | 'paused' | 'completed';
+  start_date?: string;
+  end_date?: string;
+  settings?: Record<string, unknown>;
+}
+
+/** Post creation/update data */
+export interface PostData {
+  content?: string;
+  media_urls?: string[];
+  hashtags?: string[];
+  status?: 'draft' | 'scheduled' | 'published' | 'failed';
+  scheduled_at?: string;
+  platform?: string;
+}
+
+/** Post update data */
+export interface PostUpdateData {
+  content?: string;
+  status?: 'draft' | 'scheduled' | 'published' | 'failed';
+  published_at?: string;
+  analytics?: Record<string, number>;
+}
+
+/** API usage tracking data */
+export interface ApiUsageData {
+  endpoint: string;
+  method: string;
+  tokens?: number;
+  cost?: number;
+  response_time_ms?: number;
+  status_code?: number;
+}
+
+/** Platform connection data */
+export interface PlatformConnectionData {
+  platform: string;
+  access_token?: string;
+  refresh_token?: string;
+  expires_at?: string;
+  account_id?: string;
+  account_name?: string;
+  is_active?: boolean;
+  last_metrics?: Record<string, number>;
+}
+
+/** Platform connection update data */
+export interface PlatformConnectionUpdateData {
+  access_token?: string;
+  refresh_token?: string;
+  expires_at?: string;
+  is_active?: boolean;
+  last_metrics?: Record<string, number>;
+  last_sync_at?: string;
+}
+
+/** Audit log entry */
+export interface AuditLogEntry {
+  user_id?: string;
+  action: string;
+  resource_type?: string;
+  resource?: string;
+  resource_id?: string;
+  outcome?: 'success' | 'failure';
+  category?: string;
+  severity?: 'low' | 'medium' | 'high' | 'critical';
+  details?: Record<string, unknown>;
+  ip_address?: string;
+  user_agent?: string;
+}
+
 // Server-side Supabase client with service role key
 export function createServerClient() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -66,7 +142,7 @@ export async function getAuthUser() {
 export const serverDb = {
   // Campaigns
   campaigns: {
-    async create(userId: string, campaign: any) {
+    async create(userId: string, campaign: CampaignData) {
       const supabase = createServerClient();
       const { data, error } = await supabase
         .from('campaigns')
@@ -129,7 +205,7 @@ export const serverDb = {
 
   // Posts
   posts: {
-    async create(campaignId: string, post: any) {
+    async create(campaignId: string, post: PostData) {
       const supabase = createServerClient();
       const { data, error } = await supabase
         .from('posts')
@@ -156,7 +232,7 @@ export const serverDb = {
       return data || [];
     },
 
-    async update(id: string, updates: any) {
+    async update(id: string, updates: PostUpdateData) {
       const supabase = createServerClient();
       const { data, error } = await supabase
         .from('posts')
@@ -172,7 +248,7 @@ export const serverDb = {
 
   // API Usage tracking
   apiUsage: {
-    async track(userId: string, usage: any) {
+    async track(userId: string, usage: ApiUsageData) {
       const supabase = createServerClient();
       const { data, error } = await supabase
         .from('api_usage')
@@ -217,7 +293,7 @@ export const serverDb = {
 
   // Platform connections
   platformConnections: {
-    async create(userId: string, connection: any) {
+    async create(userId: string, connection: PlatformConnectionData) {
       const supabase = createServerClient();
       const { data, error } = await supabase
         .from('platform_connections')
@@ -245,7 +321,7 @@ export const serverDb = {
       return data || [];
     },
 
-    async update(id: string, updates: any) {
+    async update(id: string, updates: PlatformConnectionUpdateData) {
       const supabase = createServerClient();
       const { data, error } = await supabase
         .from('platform_connections')
@@ -261,7 +337,7 @@ export const serverDb = {
 
   // Audit logging
   audit: {
-    async log(entry: any) {
+    async log(entry: AuditLogEntry) {
       const supabase = createServerClient();
       const { error } = await supabase
         .from('audit_logs')

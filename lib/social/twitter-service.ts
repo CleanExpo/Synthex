@@ -35,9 +35,39 @@ export interface TwitterMetrics {
   profile_visits: number;
 }
 
+/** Tweet post result */
+export interface TweetPostResult {
+  success: boolean;
+  data: { id: string; text: string };
+  id: string;
+  text: string;
+}
+
+/** Tweet data for posting */
+interface TweetData {
+  text: string;
+  media?: { media_ids: string[] };
+  reply?: { in_reply_to_tweet_id: string };
+}
+
+/** Twitter API v2 client interface */
+interface TwitterV2Client {
+  tweet: (data: TweetData) => Promise<{ data: { id: string; text: string } }>;
+  singleTweet: (id: string, options: Record<string, unknown>) => Promise<{
+    data: {
+      public_metrics?: { like_count: number; retweet_count: number; reply_count: number };
+      organic_metrics?: { impression_count?: number; user_profile_clicks?: number; url_link_clicks?: number };
+    };
+  }>;
+  userByUsername: (username: string) => Promise<{ data?: { id: string } }>;
+  userTimeline: (userId: string, options: Record<string, unknown>) => Promise<{ data?: unknown[] }>;
+  search: (query: string, options: Record<string, unknown>) => Promise<{ data?: unknown[] }>;
+  deleteTweet: (id: string) => Promise<void>;
+}
+
 export class TwitterService {
   private client: TwitterApi | null = null;
-  private v2Client: any = null;
+  private v2Client: TwitterV2Client | null = null;
 
   constructor() {
     this.initializeClient();
@@ -61,11 +91,11 @@ export class TwitterService {
         accessToken: accessToken,
         accessSecret: accessSecret,
       });
-      this.v2Client = this.client.v2;
+      this.v2Client = this.client.v2 as unknown as TwitterV2Client;
     } else if (bearerToken) {
       // App-only authentication (for reading)
       this.client = new TwitterApi(bearerToken);
-      this.v2Client = this.client.v2;
+      this.v2Client = this.client.v2 as unknown as TwitterV2Client;
     } else {
       console.warn('Twitter API credentials not configured. Social posting features will be limited.');
     }
@@ -74,13 +104,13 @@ export class TwitterService {
   /**
    * Post a single tweet
    */
-  async postTweet(post: TwitterPost): Promise<any> {
+  async postTweet(post: TwitterPost): Promise<TweetPostResult> {
     if (!this.v2Client) {
       throw new Error('Twitter API not configured. Please set Twitter credentials.');
     }
 
     try {
-      const tweetData: any = {
+      const tweetData: TweetData = {
         text: post.text,
       };
 
@@ -93,7 +123,7 @@ export class TwitterService {
       }
 
       const result = await this.v2Client.tweet(tweetData);
-      
+
       return {
         success: true,
         data: result.data,
@@ -109,12 +139,12 @@ export class TwitterService {
   /**
    * Post a thread of tweets
    */
-  async postThread(thread: TwitterThread): Promise<any[]> {
+  async postThread(thread: TwitterThread): Promise<TweetPostResult[]> {
     if (!this.v2Client) {
       throw new Error('Twitter API not configured');
     }
 
-    const results: any[] = [];
+    const results: TweetPostResult[] = [];
     let previousTweetId: string | undefined;
 
     for (let i = 0; i < thread.tweets.length; i++) {
@@ -197,7 +227,7 @@ export class TwitterService {
   /**
    * Get user timeline
    */
-  async getUserTimeline(username: string, maxResults: number = 10): Promise<any[]> {
+  async getUserTimeline(username: string, maxResults: number = 10): Promise<unknown[]> {
     if (!this.v2Client) {
       throw new Error('Twitter API not configured');
     }
@@ -225,7 +255,7 @@ export class TwitterService {
   /**
    * Search tweets
    */
-  async searchTweets(query: string, maxResults: number = 10): Promise<any[]> {
+  async searchTweets(query: string, maxResults: number = 10): Promise<unknown[]> {
     if (!this.v2Client) {
       throw new Error('Twitter API not configured');
     }

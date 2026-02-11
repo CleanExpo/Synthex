@@ -173,6 +173,7 @@ export function createLoader<K, V>(
  * Use this to ensure loaders are reused within a single request
  */
 export class LoaderContext {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private loaders: Map<string, DataLoader<any, any>> = new Map();
 
   /**
@@ -186,7 +187,7 @@ export class LoaderContext {
     if (!this.loaders.has(name)) {
       this.loaders.set(name, createLoader(batchFn, options));
     }
-    return this.loaders.get(name)!;
+    return this.loaders.get(name) as DataLoader<K, V>;
   }
 
   /**
@@ -198,6 +199,25 @@ export class LoaderContext {
   }
 }
 
+/** Common entity with id field */
+interface EntityWithId {
+  id: string;
+  [key: string]: unknown;
+}
+
+/** Prisma-like client interface for loader factories */
+interface PrismaLikeClient {
+  user: {
+    findMany: (args: { where: { id: { in: string[] } } }) => Promise<EntityWithId[]>;
+  };
+  campaign: {
+    findMany: (args: { where: { id: { in: string[] } } }) => Promise<EntityWithId[]>;
+  };
+  project: {
+    findMany: (args: { where: { id: { in: string[] } } }) => Promise<EntityWithId[]>;
+  };
+}
+
 /**
  * Pre-built loader factories for common SYNTHEX entities
  */
@@ -205,36 +225,36 @@ export const loaderFactories = {
   /**
    * Create a user loader
    */
-  users: (prisma: any) =>
+  users: (prisma: PrismaLikeClient) =>
     createLoader(async (ids: string[]) => {
       const users = await prisma.user.findMany({
         where: { id: { in: ids } },
       });
-      const userMap = new Map(users.map((u: any) => [u.id, u]));
+      const userMap = new Map(users.map((u) => [u.id, u]));
       return ids.map((id) => userMap.get(id) || null);
     }),
 
   /**
    * Create a campaign loader
    */
-  campaigns: (prisma: any) =>
+  campaigns: (prisma: PrismaLikeClient) =>
     createLoader(async (ids: string[]) => {
       const campaigns = await prisma.campaign.findMany({
         where: { id: { in: ids } },
       });
-      const map = new Map(campaigns.map((c: any) => [c.id, c]));
+      const map = new Map(campaigns.map((c) => [c.id, c]));
       return ids.map((id) => map.get(id) || null);
     }),
 
   /**
    * Create a project loader
    */
-  projects: (prisma: any) =>
+  projects: (prisma: PrismaLikeClient) =>
     createLoader(async (ids: string[]) => {
       const projects = await prisma.project.findMany({
         where: { id: { in: ids } },
       });
-      const map = new Map(projects.map((p: any) => [p.id, p]));
+      const map = new Map(projects.map((p) => [p.id, p]));
       return ids.map((id) => map.get(id) || null);
     }),
 };

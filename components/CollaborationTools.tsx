@@ -112,7 +112,8 @@ export function CollaborationTools({
       setOnlineUsers(collabManager.getOnlineUsers());
     });
     
-    collabManager.on('comment', (comment: Comment) => {
+    collabManager.on('comment', (data: unknown) => {
+      const comment = data as Comment;
       setComments(prev => [...prev, comment]);
       if (comment.userId !== currentUser.id) {
         notify.info(`${comment.userName} added a comment`);
@@ -133,7 +134,8 @@ export function CollaborationTools({
       }
     });
     
-    collabManager.on('notification', (notification: Notification) => {
+    collabManager.on('notification', (data: unknown) => {
+      const notification = data as Notification;
       if (notification.to === currentUser.id) {
         setNotifications(prev => [notification, ...prev]);
         notify.info(notification.message);

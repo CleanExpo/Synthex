@@ -14,7 +14,7 @@
  * FAILURE MODE: Service will return error results, never throws for sync operations
  */
 
-import { TwitterApi } from 'twitter-api-v2';
+import { TwitterApi, TweetV2, TweetV2PaginableTimelineResult } from 'twitter-api-v2';
 import {
   BasePlatformService,
   PlatformCredentials,
@@ -26,6 +26,36 @@ import {
   PlatformError,
 } from './base-platform-service';
 import { logger } from '@/lib/logger';
+
+/** Extended tweet interface with organic metrics (requires elevated access) */
+interface TweetWithOrganicMetrics {
+  organic_metrics?: {
+    impression_count?: number;
+    user_profile_clicks?: number;
+    retweet_count?: number;
+    reply_count?: number;
+    like_count?: number;
+    url_link_clicks?: number;
+  };
+}
+
+/** Twitter post metrics result */
+interface TwitterPostMetrics {
+  likes: number;
+  retweets: number;
+  replies: number;
+  quotes: number;
+  impressions: number;
+}
+
+/** Media IDs tuple types for Twitter API */
+type MediaIdsTuple = [string] | [string, string] | [string, string, string] | [string, string, string, string];
+
+/** Tweet data for creation */
+interface TweetCreateData {
+  text: string;
+  media?: { media_ids: MediaIdsTuple };
+}
 
 export class TwitterSyncService extends BasePlatformService {
   readonly platform = 'twitter';
@@ -114,8 +144,9 @@ export class TwitterSyncService extends BasePlatformService {
           }
 
           // Organic metrics require elevated access
-          if ((tweet as any).organic_metrics) {
-            impressions += (tweet as any).organic_metrics.impression_count || 0;
+          const tweetWithMetrics = tweet as TweetWithOrganicMetrics;
+          if (tweetWithMetrics.organic_metrics) {
+            impressions += tweetWithMetrics.organic_metrics.impression_count || 0;
           }
 
           engagements += (tweet.public_metrics?.like_count || 0) +
@@ -175,18 +206,13 @@ export class TwitterSyncService extends BasePlatformService {
 
       const me = await this.client.v2.me();
 
-      const options: any = {
+      const tweets = await this.client.v2.userTimeline(me.data.id, {
         max_results: Math.min(limit, 100),
         'tweet.fields': ['created_at', 'public_metrics', 'entities', 'attachments'],
         'media.fields': ['url', 'preview_image_url'],
         expansions: ['attachments.media_keys'],
-      };
-
-      if (cursor) {
-        options.pagination_token = cursor;
-      }
-
-      const tweets = await this.client.v2.userTimeline(me.data.id, options);
+        ...(cursor ? { pagination_token: cursor } : {}),
+      });
 
       // Build media lookup
       const mediaLookup: Record<string, string> = {};
@@ -314,7 +340,7 @@ export class TwitterSyncService extends BasePlatformService {
 
       const me = await this.client.v2.me();
 
-      const tweetData: any = {
+      const tweetData: TweetCreateData = {
         text: content.text,
       };
 
@@ -336,8 +362,9 @@ export class TwitterSyncService extends BasePlatformService {
           }
         }
 
-        if (mediaIds.length > 0) {
-          tweetData.media = { media_ids: mediaIds };
+        if (mediaIds.length > 0 && mediaIds.length <= 4) {
+          // Cast to tuple type as Twitter API requires 1-4 media IDs
+          tweetData.media = { media_ids: mediaIds as MediaIdsTuple };
         }
       }
 
@@ -371,7 +398,7 @@ export class TwitterSyncService extends BasePlatformService {
     }
   }
 
-  async getPostMetrics(postId: string): Promise<any> {
+  async getPostMetrics(postId: string): Promise<TwitterPostMetrics | null> {
     try {
       if (!this.isConfigured() || !this.client) {
         return null;
@@ -381,12 +408,14 @@ export class TwitterSyncService extends BasePlatformService {
         'tweet.fields': ['public_metrics', 'organic_metrics'],
       });
 
+      const tweetWithMetrics = tweet.data as TweetWithOrganicMetrics;
+
       return {
         likes: tweet.data.public_metrics?.like_count || 0,
         retweets: tweet.data.public_metrics?.retweet_count || 0,
         replies: tweet.data.public_metrics?.reply_count || 0,
         quotes: tweet.data.public_metrics?.quote_count || 0,
-        impressions: (tweet.data as any).organic_metrics?.impression_count || 0,
+        impressions: tweetWithMetrics.organic_metrics?.impression_count || 0,
       };
     } catch (error: unknown) {
       logger.error('Twitter post metrics fetch failed', { error, postId });

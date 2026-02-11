@@ -19,6 +19,38 @@ interface EmailOptions {
   variables?: Record<string, unknown>;
 }
 
+/** Welcome email template variables */
+interface WelcomeTemplateVariables {
+  name?: string;
+  dashboardUrl?: string;
+}
+
+/** Password reset template variables */
+interface PasswordResetTemplateVariables {
+  name?: string;
+  resetUrl: string;
+  code?: string;
+}
+
+/** Notification template variables */
+interface NotificationTemplateVariables {
+  type?: 'info' | 'success' | 'warning' | 'error';
+  title?: string;
+  subject?: string;
+  message: string;
+  actionUrl?: string;
+}
+
+/** Weekly report template variables */
+interface WeeklyReportTemplateVariables {
+  weekOf: string;
+  postsPublished?: number;
+  totalReach?: number;
+  engagement?: number;
+  topPosts?: Array<{ title: string; engagement: number }>;
+  dashboardUrl?: string;
+}
+
 /**
  * Escape HTML special characters to prevent XSS in email templates
  */
@@ -41,7 +73,7 @@ class EmailService {
    * Email templates
    */
   private templates = {
-    welcome: (variables: any): EmailTemplate => ({
+    welcome: (variables: WelcomeTemplateVariables): EmailTemplate => ({
       subject: 'Welcome to SYNTHEX! 🚀',
       html: `
         <!DOCTYPE html>
@@ -59,7 +91,7 @@ class EmailService {
           <body>
             <div class="container">
               <div class="header">
-                <h1>Welcome to SYNTHEX, ${escapeHtml(variables.name) || 'Friend'}! 🎉</h1>
+                <h1>Welcome to SYNTHEX, ${escapeHtml(variables.name || 'Friend')}! 🎉</h1>
               </div>
               <div class="content">
                 <p>We're excited to have you on board!</p>
@@ -86,7 +118,7 @@ class EmailService {
       text: `Welcome to SYNTHEX, ${variables.name || 'Friend'}! We're excited to have you on board.`
     }),
 
-    passwordReset: (variables: any): EmailTemplate => ({
+    passwordReset: (variables: PasswordResetTemplateVariables): EmailTemplate => ({
       subject: 'Reset Your SYNTHEX Password',
       html: `
         <!DOCTYPE html>
@@ -107,7 +139,7 @@ class EmailService {
                 <h1>Password Reset Request</h1>
               </div>
               <div class="content">
-                <p>Hi ${escapeHtml(variables.name) || 'there'},</p>
+                <p>Hi ${escapeHtml(variables.name || 'there')},</p>
                 <p>We received a request to reset your SYNTHEX password. Click the button below to create a new password:</p>
                 <a href="${variables.resetUrl}" class="button">Reset Password</a>
                 <p>Or use this code:</p>
@@ -123,7 +155,7 @@ class EmailService {
       text: `Reset your SYNTHEX password using this link: ${variables.resetUrl}`
     }),
 
-    notification: (variables: any): EmailTemplate => ({
+    notification: (variables: NotificationTemplateVariables): EmailTemplate => ({
       subject: variables.subject || 'SYNTHEX Notification',
       html: `
         <!DOCTYPE html>
@@ -153,7 +185,7 @@ class EmailService {
       text: `${variables.title || 'Notification'}: ${variables.message}`
     }),
 
-    weeklyReport: (variables: any): EmailTemplate => ({
+    weeklyReport: (variables: WeeklyReportTemplateVariables): EmailTemplate => ({
       subject: `Your SYNTHEX Weekly Report - ${variables.weekOf}`,
       html: `
         <!DOCTYPE html>
@@ -191,7 +223,7 @@ class EmailService {
               </div>
               <h3>Top Performing Posts:</h3>
               <ul>
-                ${(variables.topPosts || []).map((post: any) => `<li>${post.title} - ${post.engagement} engagements</li>`).join('')}
+                ${(variables.topPosts || []).map((post) => `<li>${post.title} - ${post.engagement} engagements</li>`).join('')}
               </ul>
               <p><a href="${variables.dashboardUrl || 'https://synthex.ai/dashboard'}" style="display: inline-block; padding: 12px 24px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; text-decoration: none; border-radius: 5px;">View Full Report</a></p>
             </div>
@@ -213,7 +245,8 @@ class EmailService {
       if (options.template && options.variables) {
         const templateFn = this.templates[options.template as keyof typeof this.templates];
         if (templateFn) {
-          emailContent = templateFn(options.variables);
+          // Type assertion needed as variables come from user input
+          emailContent = (templateFn as (vars: Record<string, unknown>) => EmailTemplate)(options.variables);
         } else {
           emailContent = {
             subject: options.subject,
@@ -302,12 +335,12 @@ class EmailService {
   /**
    * Send weekly report
    */
-  async sendWeeklyReport(email: string, reportData: any): Promise<boolean> {
+  async sendWeeklyReport(email: string, reportData: WeeklyReportTemplateVariables): Promise<boolean> {
     return this.send({
       to: email,
       template: 'weeklyReport',
       subject: `Your SYNTHEX Weekly Report`,
-      variables: reportData
+      variables: reportData as unknown as Record<string, unknown>
     });
   }
 

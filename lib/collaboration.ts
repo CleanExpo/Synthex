@@ -45,6 +45,14 @@ export interface Selection {
   text: string;
 }
 
+/** Metadata for change events */
+export interface ChangeMetadata {
+  format?: string;
+  style?: Record<string, string>;
+  commentId?: string;
+  [key: string]: unknown;
+}
+
 export interface Change {
   id: string;
   userId: string;
@@ -52,7 +60,7 @@ export interface Change {
   content: string;
   position: number;
   timestamp: Date;
-  metadata?: any;
+  metadata?: ChangeMetadata;
 }
 
 export interface Comment {
@@ -99,14 +107,25 @@ export interface Notification {
   timestamp: Date;
 }
 
+/** Event listener callback type - uses unknown for type safety but callers should cast */
+export type CollaborationEventListener = (data: unknown) => void;
+
+/** Broadcast channel message structure */
+interface BroadcastMessage {
+  type: string;
+  data: unknown;
+  timestamp: number;
+}
+
 // Collaboration Manager
 export class CollaborationManager {
   private sessions: Map<string, CollaborationSession> = new Map();
   private socket: WebSocket | null = null;
   private currentSession: CollaborationSession | null = null;
   private userId: string;
-  private listeners: Map<string, Function[]> = new Map();
-  
+  private listeners: Map<string, CollaborationEventListener[]> = new Map();
+  private channel: BroadcastChannel | null = null;
+
   constructor(userId: string) {
     this.userId = userId;
     this.initializeWebSocket();
@@ -118,14 +137,11 @@ export class CollaborationManager {
     // For now, simulate with local events
     if (typeof window !== 'undefined') {
       // Simulate WebSocket with broadcast channel
-      const channel = new BroadcastChannel('collaboration');
-      
-      channel.onmessage = (event) => {
-        this.handleMessage(event.data);
+      this.channel = new BroadcastChannel('collaboration');
+
+      this.channel.onmessage = (event) => {
+        this.handleMessage(event.data as BroadcastMessage);
       };
-      
-      // Store channel as socket substitute
-      (this as any).channel = channel;
     }
   }
   
@@ -382,35 +398,35 @@ export class CollaborationManager {
   }
   
   // Broadcast message
-  private broadcast(type: string, data: any) {
-    const message = { type, data, timestamp: Date.now() };
-    
+  private broadcast(type: string, data: unknown) {
+    const message: BroadcastMessage = { type, data, timestamp: Date.now() };
+
     // Use broadcast channel
-    if ((this as any).channel) {
-      (this as any).channel.postMessage(message);
+    if (this.channel) {
+      this.channel.postMessage(message);
     }
-    
+
     // Trigger local listeners
     const listeners = this.listeners.get(type) || [];
     listeners.forEach(listener => listener(data));
   }
-  
+
   // Handle incoming message
-  private handleMessage(message: any) {
+  private handleMessage(message: BroadcastMessage) {
     const listeners = this.listeners.get(message.type) || [];
     listeners.forEach(listener => listener(message.data));
   }
-  
+
   // Subscribe to events
-  on(event: string, callback: Function) {
+  on(event: string, callback: CollaborationEventListener) {
     if (!this.listeners.has(event)) {
       this.listeners.set(event, []);
     }
     this.listeners.get(event)!.push(callback);
   }
-  
+
   // Unsubscribe from events
-  off(event: string, callback: Function) {
+  off(event: string, callback: CollaborationEventListener) {
     const listeners = this.listeners.get(event) || [];
     const index = listeners.indexOf(callback);
     if (index !== -1) {

@@ -34,16 +34,25 @@
 import { NextResponse } from 'next/server';
 import { Redis } from '@upstash/redis';
 
+/** Serialized NextResponse for cache storage */
+interface SerializedResponse {
+  __isNextResponse: true;
+  body: string;
+  status: number;
+  statusText: string;
+  headers: Record<string, string>;
+}
+
 // Cache storage interface
-interface CacheEntry {
-  data: any;
+interface CacheEntry<T = unknown> {
+  data: T | SerializedResponse;
   timestamp: number;
   ttl: number;
   tags: string[];
 }
 
 // In-memory fallback cache
-const memoryCache = new Map<string, CacheEntry>();
+const memoryCache = new Map<string, CacheEntry<unknown>>();
 const tagIndex = new Map<string, Set<string>>(); // tag -> cache keys
 
 // Redis client (optional - for distributed caching)
@@ -102,7 +111,7 @@ export async function withCache<T>(
         cached.data.headers.set('X-Cache', 'HIT');
         cached.data.headers.set('X-Cache-Age', Math.floor(age).toString());
       }
-      return cached.data;
+      return cached.data as T;
     }
 
     // If within stale-while-revalidate window, return stale and refresh in background
@@ -116,7 +125,7 @@ export async function withCache<T>(
         cached.data.headers.set('X-Cache', 'STALE');
         cached.data.headers.set('X-Cache-Age', Math.floor(age).toString());
       }
-      return cached.data;
+      return cached.data as T;
     }
   }
 
@@ -164,9 +173,9 @@ async function getFromCache(key: string): Promise<CacheEntry | null> {
 /**
  * Set value in cache
  */
-async function setInCache(key: string, data: any, ttl: number, tags: string[]): Promise<void> {
+async function setInCache<T>(key: string, data: T, ttl: number, tags: string[]): Promise<void> {
   try {
-    const entry: CacheEntry = {
+    const entry: CacheEntry<T> = {
       data: data instanceof NextResponse ? await serializeResponse(data) : data,
       timestamp: Date.now(),
       ttl,
@@ -335,7 +344,7 @@ function cleanupMemoryCache(): void {
 /**
  * Serialize NextResponse for caching
  */
-async function serializeResponse(response: NextResponse): Promise<any> {
+async function serializeResponse(response: NextResponse): Promise<SerializedResponse> {
   const body = await response.clone().text();
   return {
     __isNextResponse: true,
@@ -350,13 +359,19 @@ async function serializeResponse(response: NextResponse): Promise<any> {
  * Cache decorator for class methods
  */
 export function Cached(keyPrefix: string, options: CacheOptions = {}) {
-  return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
+  return function <T>(
+    _target: object,
+    propertyKey: string,
+    descriptor: TypedPropertyDescriptor<(...args: unknown[]) => Promise<T>>
+  ) {
     const originalMethod = descriptor.value;
 
-    descriptor.value = async function (...args: any[]) {
-      const cacheKey = `${keyPrefix}:${propertyKey}:${JSON.stringify(args)}`;
-      return withCache(cacheKey, options, () => originalMethod.apply(this, args));
-    };
+    if (originalMethod) {
+      descriptor.value = async function (...args: unknown[]) {
+        const cacheKey = `${keyPrefix}:${propertyKey}:${JSON.stringify(args)}`;
+        return withCache(cacheKey, options, () => originalMethod.apply(this, args));
+      };
+    }
 
     return descriptor;
   };

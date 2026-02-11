@@ -39,6 +39,28 @@ export type RecommendationType =
   | 'recovery'
   | 'trending';
 
+/** Action data for scheduling recommendations */
+export interface ScheduleActionData {
+  scheduledTime: Date;
+}
+
+/** Action data for content creation recommendations */
+export interface CreateActionData {
+  format?: string;
+  topic?: string;
+}
+
+/** Union type for all action data types */
+export type RecommendationActionData = ScheduleActionData | CreateActionData | Record<string, unknown>;
+
+/** Supporting data for recommendations */
+export interface RecommendationSupportingData {
+  historicalPerformance?: Array<{ date: string; value: number }>;
+  competitorData?: Array<{ name: string; score: number }>;
+  trendData?: Array<{ topic: string; score: number }>;
+  [key: string]: unknown;
+}
+
 export interface Recommendation {
   id: string;
   type: RecommendationType;
@@ -56,10 +78,10 @@ export interface Recommendation {
   action?: {
     type: 'apply' | 'schedule' | 'create' | 'modify';
     label: string;
-    data?: any;
+    data?: RecommendationActionData;
   };
   reasoning: string[];
-  supportingData?: any;
+  supportingData?: RecommendationSupportingData;
   expiresAt?: Date;
   dismissed: boolean;
   appliedAt?: Date;
@@ -700,8 +722,8 @@ class ContentRecommendationEngine {
   async applyRecommendation(
     userId: string,
     recommendationId: string,
-    action: any
-  ): Promise<{ success: boolean; result?: any }> {
+    action: RecommendationActionData
+  ): Promise<{ success: boolean; result?: Record<string, unknown> }> {
     try {
       // Log application
       await supabase.from('applied_recommendations').insert({
@@ -726,7 +748,7 @@ class ContentRecommendationEngine {
   private async getUserPerformanceData(
     userId: string,
     platforms: Platform[]
-  ): Promise<any> {
+  ): Promise<Array<{ platform: string; date: string; [key: string]: unknown }>> {
     try {
       const { data } = await supabase
         .from('analytics_summary')
@@ -923,7 +945,7 @@ class ContentRecommendationEngine {
   private async generateTimingRecommendations(
     userId: string,
     platform: Platform,
-    performanceData: any
+    _performanceData: Array<{ platform: string; date: string; [key: string]: unknown }>
   ): Promise<Recommendation[]> {
     const timingData = await this.getOptimalPostingTimes(userId, platform);
     const recommendations: Recommendation[] = [];
@@ -963,7 +985,7 @@ class ContentRecommendationEngine {
   private async generateFormatRecommendations(
     userId: string,
     platform: Platform,
-    performanceData: any
+    _performanceData: Array<{ platform: string; date: string; [key: string]: unknown }>
   ): Promise<Recommendation[]> {
     const formatData = await this.getFormatRecommendations(userId, platform);
     const recommendations: Recommendation[] = [];
@@ -1070,7 +1092,7 @@ class ContentRecommendationEngine {
   private async generateEngagementRecommendations(
     userId: string,
     platform: Platform,
-    performanceData: any
+    _performanceData: Array<{ platform: string; date: string; [key: string]: unknown }>
   ): Promise<Recommendation[]> {
     const recommendations: Recommendation[] = [];
     const tips = PLATFORM_BEST_PRACTICES[platform].contentTips;

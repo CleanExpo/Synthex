@@ -98,9 +98,60 @@ interface SeasonalPattern {
   specialEvents: Array<{ name: string; date: string; impact: number }>;
 }
 
+/** Cache entry structure */
+interface CacheEntry<T> {
+  data: T;
+  expiry: number;
+}
+
+/** Trending topic result */
+interface TrendingTopicResult {
+  topic: string;
+  volume: number;
+  change: number;
+  sentiment: 'positive' | 'neutral' | 'negative';
+  relatedHashtags: string[];
+}
+
+/** Historical post data for analysis */
+interface HistoricalPost {
+  id: string;
+  content: string;
+  hashtags: string[];
+  mediaType?: string;
+  engagement: number;
+  similarity?: number;
+}
+
+/** Content for similarity comparison */
+interface ContentForComparison {
+  text?: string;
+  content?: string;
+  hashtags?: string[];
+  mediaType?: string;
+}
+
+/** Engagement prediction structure */
+interface EngagementPredictionRange {
+  min: number;
+  expected: number;
+  max: number;
+}
+
+/** Predictions result structure */
+interface PredictionsResult {
+  engagement: {
+    likes: EngagementPredictionRange;
+    comments: EngagementPredictionRange;
+    shares: EngagementPredictionRange;
+  };
+  reach: EngagementPredictionRange;
+  engagementRate: EngagementPredictionRange;
+}
+
 class TrendPredictor {
   private supabase: SupabaseClient;
-  private cache: Map<string, { data: any; expiry: number }> = new Map();
+  private cache: Map<string, CacheEntry<TrendingTopicResult[]>> = new Map();
   private readonly CACHE_TTL = 1800000; // 30 minutes
 
   constructor() {
@@ -699,7 +750,10 @@ class TrendPredictor {
     return 'stable';
   }
 
-  private async fetchPlatformTrends(platform: Platform, options: any): Promise<any[]> {
+  private async fetchPlatformTrends(
+    _platform: Platform,
+    _options: { category?: string; region?: string; limit?: number }
+  ): Promise<TrendingTopicResult[]> {
     // Would integrate with platform APIs
     return [];
   }
@@ -853,7 +907,7 @@ class TrendPredictor {
     return { start, end };
   }
 
-  private async getHistoricalPosts(userId: string, platform: Platform, limit: number): Promise<any[]> {
+  private async getHistoricalPosts(userId: string, platform: Platform, limit: number): Promise<HistoricalPost[]> {
     const { data } = await this.supabase
       .from('scheduled_posts')
       .select('id, content, hashtags, media_type, analytics')
@@ -872,7 +926,10 @@ class TrendPredictor {
     }));
   }
 
-  private findSimilarContent(content: any, historicalPosts: any[]): any[] {
+  private findSimilarContent(
+    content: ContentForComparison,
+    historicalPosts: HistoricalPost[]
+  ): Array<HistoricalPost & { similarity: number }> {
     return historicalPosts
       .map(post => ({
         ...post,
@@ -883,7 +940,7 @@ class TrendPredictor {
       .slice(0, 10);
   }
 
-  private calculateSimilarity(content1: any, content2: any): number {
+  private calculateSimilarity(content1: ContentForComparison, content2: ContentForComparison): number {
     let score = 0;
 
     // Media type match
@@ -905,7 +962,7 @@ class TrendPredictor {
     return score;
   }
 
-  private calculatePredictions(similarContent: any[]): any {
+  private calculatePredictions(similarContent: Array<HistoricalPost & { similarity: number }>): PredictionsResult {
     if (similarContent.length === 0) {
       return {
         engagement: { likes: { min: 0, expected: 0, max: 0 }, comments: { min: 0, expected: 0, max: 0 }, shares: { min: 0, expected: 0, max: 0 } },
@@ -916,7 +973,6 @@ class TrendPredictor {
 
     const engagements = similarContent.map(c => c.engagement);
     const avg = engagements.reduce((a, b) => a + b, 0) / engagements.length;
-    const stdDev = this.calculateStdDev(engagements);
 
     return {
       engagement: {
@@ -929,7 +985,10 @@ class TrendPredictor {
     };
   }
 
-  private applyContentAdjustments(predictions: any, content: any): any {
+  private applyContentAdjustments(
+    predictions: PredictionsResult,
+    _content: ContentForComparison
+  ): PredictionsResult {
     // Apply adjustments based on content features
     return predictions;
   }
@@ -965,7 +1024,9 @@ class TrendPredictor {
     return monthScores.map((score, i) => monthCounts[i] > 0 ? Math.round(score / monthCounts[i]) : 0);
   }
 
-  private async detectSpecialEventImpact(history: any[]): Promise<Array<{ name: string; date: string; impact: number }>> {
+  private async detectSpecialEventImpact(
+    _history: Array<{ date: string; value: number }>
+  ): Promise<Array<{ name: string; date: string; impact: number }>> {
     // Would detect holidays, events, etc.
     return [];
   }
