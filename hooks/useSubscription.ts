@@ -53,11 +53,12 @@ export function useSubscription(): UseSubscriptionReturn {
       setIsLoading(true);
       setError(null);
 
-      const response = await fetch('/api/subscription', {
+      const response = await fetch('/api/user/subscription', {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include',
       });
 
       if (!response.ok) {
