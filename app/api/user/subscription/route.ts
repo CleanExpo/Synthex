@@ -10,7 +10,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
-import jwt from 'jsonwebtoken';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -32,22 +31,11 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Get user from token
-    const token = request.headers.get('authorization')?.replace('Bearer ', '');
-    if (!token || !process.env.JWT_SECRET) {
+    // Get user ID from security context (already verified by APISecurityChecker)
+    const userId = security.context.userId;
+    if (!userId) {
       return NextResponse.json(
         { error: 'Authentication required' },
-        { status: 401 }
-      );
-    }
-
-    let userId: string;
-    try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET) as any;
-      userId = decoded.userId || decoded.id;
-    } catch (error) {
-      return NextResponse.json(
-        { error: 'Invalid authentication token' },
         { status: 401 }
       );
     }
