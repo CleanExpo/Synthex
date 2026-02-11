@@ -22,7 +22,6 @@ export async function POST(
     
     // For demo mode (when no Supabase is configured)
     if (!supabaseUrl || !supabaseAnonKey) {
-      console.log('Running in demo mode - credentials not saved');
       return NextResponse.json({
         success: true,
         demo: true,

@@ -176,7 +176,7 @@ export async function triggerWebhooks(
   // For now, we'll create a simple in-memory approach
 
   // In production, this should be queued to a job processor
-  console.log(`Webhook triggered: ${event}`, { userId, payload: JSON.stringify(payload).substring(0, 200) });
+  // Webhook processing is handled silently for security
 }
 
 // =============================================================================

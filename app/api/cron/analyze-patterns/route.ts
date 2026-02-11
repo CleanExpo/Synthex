@@ -19,15 +19,11 @@ export async function GET(request: Request) {
       }
     }
 
-    console.log('Starting pattern analysis cron job...');
-
     // Scrape and analyze patterns from all platforms
     const patterns = await patternScraper.scrapeAllPlatforms();
-    
+
     // Get insights
     const insights = await patternScraper.getInsights();
-
-    console.log(`Analyzed ${patterns.length} patterns`);
 
     return NextResponse.json({
       success: true,
@@ -61,8 +57,6 @@ export async function POST(request: Request) {
         );
       }
     }
-
-    console.log('Manual pattern analysis triggered');
 
     // Scrape and analyze patterns
     const patterns = await patternScraper.scrapeAllPlatforms();

@@ -238,7 +238,6 @@ export async function GET(request: NextRequest) {
   const challenge = searchParams.get('hub.challenge');
 
   if (mode === 'subscribe' && token === process.env.FACEBOOK_WEBHOOK_VERIFY_TOKEN) {
-    console.log('Webhook verified for Facebook/Instagram');
     return new NextResponse(challenge, { status: 200 });
   }
 
@@ -287,9 +286,6 @@ export async function POST(request: NextRequest) {
         );
       }
     }
-
-    // Log incoming webhook
-    console.log(`Received ${platform} webhook:`, JSON.stringify(body).substring(0, 500));
 
     // Parse event type based on platform
     let eventType: string;
@@ -364,8 +360,8 @@ export async function POST(request: NextRequest) {
         break;
 
       default:
-        // Store unknown events for debugging
-        console.log(`Unknown webhook event type: ${eventData.type}`, eventData);
+        // Unknown event types are silently ignored
+        break;
     }
 
     // Always return 200 to acknowledge receipt

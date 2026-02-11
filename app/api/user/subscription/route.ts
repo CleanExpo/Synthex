@@ -44,15 +44,11 @@ export async function GET(request: NextRequest) {
     }
 
     // Get subscription details
-    console.log('Fetching subscription for userId:', userId);
-
     const { data: subscription, error } = await supabase
       .from('subscriptions')
       .select('*')
       .eq('user_id', userId)
       .single();
-
-    console.log('Subscription query result:', { data: subscription, error: error?.message, code: error?.code });
 
     if (error && error.code !== 'PGRST116') { // PGRST116 = no rows found
       throw error;

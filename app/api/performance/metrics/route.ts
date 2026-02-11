@@ -142,17 +142,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Log client metrics (in production, store these)
-    console.log('[CLIENT_METRICS]', {
-      url,
-      timestamp,
-      fcp: metrics.fcp,
-      lcp: metrics.lcp,
-      cls: metrics.cls,
-      fid: metrics.fid,
-      ttfb: metrics.ttfb,
-    });
-
     // Store metrics (you could extend this to store in database)
     // For now, we'll just acknowledge receipt
 

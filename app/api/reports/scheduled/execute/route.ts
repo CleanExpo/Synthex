@@ -422,8 +422,6 @@ export async function POST(request: NextRequest) {
       take: 50, // Process in batches
     }) || [];
 
-    console.log(`Found ${dueReports.length} due reports to execute`);
-
     for (const scheduled of dueReports) {
       const result: ExecutionResult = {
         scheduleId: scheduled.id,

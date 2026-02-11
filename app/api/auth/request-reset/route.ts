@@ -27,7 +27,6 @@ export async function POST(request: NextRequest) {
 
     // Always return success to prevent email enumeration
     if (!user) {
-      console.log('[AUTH] Password reset requested for non-existent email:', email);
       return NextResponse.json({
         success: true,
         message: 'If an account exists with this email, you will receive a password reset link'

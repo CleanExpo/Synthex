@@ -38,14 +38,6 @@ export async function POST(request: NextRequest) {
     // Process user actions
     if (body.actions && body.actions.length > 0) {
       for (const action of body.actions) {
-        console.log('[Action Tracked]:', {
-          action: action.action,
-          element: action.element,
-          userId: body.userId,
-          sessionId: body.sessionId,
-          timestamp: action.timestamp,
-        });
-
         // In production, send to analytics service
         if (process.env.NODE_ENV === 'production') {
           // Example: Send to Google Analytics, Mixpanel, etc.

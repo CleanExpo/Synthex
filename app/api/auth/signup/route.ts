@@ -151,7 +151,6 @@ export async function POST(request: Request) {
               updatedAt: new Date(),
             }
           });
-          console.log('[SIGNUP] Created Prisma user:', authData.user.id);
         }
       }
 

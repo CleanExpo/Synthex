@@ -110,11 +110,12 @@ export class OpenRouterClient {
       );
 
       return response.data;
-    } catch (error: any) {
-      if (error.response) {
-        logger.error('OpenRouter API error', { status: error.response.status, data: error.response.data });
-        throw new Error(error.response.data.error?.message || 'OpenRouter API request failed');
-      } else if (error.request) {
+    } catch (error: unknown) {
+      const axiosError = error as { response?: { status: number; data: { error?: { message?: string } } }; request?: unknown };
+      if (axiosError.response) {
+        logger.error('OpenRouter API error', { status: axiosError.response.status, data: axiosError.response.data });
+        throw new Error(axiosError.response.data.error?.message || 'OpenRouter API request failed');
+      } else if (axiosError.request) {
         logger.error('OpenRouter network error', { error });
         throw new Error('Network error connecting to OpenRouter');
       } else {
