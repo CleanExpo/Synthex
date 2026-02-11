@@ -71,11 +71,14 @@ const getLogConfig = (): Prisma.LogLevel[] => {
  * The adapter uses the standard PostgreSQL wire protocol which works with
  * Supabase's Supavisor (PgBouncer) connection pooler.
  *
- * UPDATED: Using PrismaPg with connectionString directly (recommended approach)
- * This avoids the localhost fallback issue that occurs with separate Pool creation.
+ * CRITICAL FIX: Parse DATABASE_URL and use explicit Pool config (NOT connectionString)
  *
- * The connectionString must include SSL parameters for Supabase:
- * - sslmode=require (or the connection will fail)
+ * Why? When using connectionString, the pg library's pg-connection-string parser
+ * treats sslmode=require as verify-full, overriding our rejectUnauthorized:false.
+ * By parsing the URL ourselves and using explicit host/port/user/password/database,
+ * we ensure our SSL config is respected without any URL-based overrides.
+ *
+ * See: https://www.postgresql.org/docs/current/libpq-ssl.html
  */
 const createPrismaClient = (): PrismaClient => {
   const connectionString = process.env.DATABASE_URL;
@@ -85,21 +88,35 @@ const createPrismaClient = (): PrismaClient => {
     throw new Error('DATABASE_URL environment variable is required');
   }
 
-  // Parse URL for logging only
+  // Parse DATABASE_URL to extract components
+  // This avoids pg-connection-string's SSL mode handling which overrides our config
+  let url: URL;
   try {
-    const url = new URL(connectionString);
-    console.log(`[Prisma] Connecting to ${url.hostname}:${url.port || 5432}`);
+    url = new URL(connectionString);
   } catch (parseError) {
     console.error('[Prisma] Failed to parse DATABASE_URL:', parseError);
     throw new Error('Invalid DATABASE_URL format');
   }
 
-  // Create explicit Pool with SSL config to ensure rejectUnauthorized works
-  // When using connectionString mode in PrismaPg, SSL options weren't being applied
-  // Creating Pool explicitly gives us full control over SSL settings
-  // See: https://www.prisma.io/docs/orm/more/upgrade-guides/upgrading-versions/upgrading-to-prisma-7
+  // Extract connection components from URL
+  const host = url.hostname;
+  const port = parseInt(url.port || '5432', 10);
+  const database = url.pathname.replace(/^\//, ''); // Remove leading slash
+  const user = url.username;
+  const password = decodeURIComponent(url.password); // Decode URL-encoded password
+
+  console.log(`[Prisma] Connecting to ${host}:${port}/${database} (explicit config mode)`);
+
+  // Create Pool with EXPLICIT config (NOT connectionString)
+  // This ensures our SSL settings are used without URL-based overrides
+  // The pg-connection-string library treats sslmode=require as verify-full,
+  // which causes "self-signed certificate in certificate chain" errors
   const pool = new Pool({
-    connectionString,
+    host,
+    port,
+    database,
+    user,
+    password,
     ssl: {
       rejectUnauthorized: false, // Required for Supabase - allows self-signed certs
     },
@@ -121,7 +138,7 @@ const createPrismaClient = (): PrismaClient => {
     log: getLogConfig(),
   });
 
-  console.log('[Prisma] Client created with PrismaPg adapter (connectionString mode)');
+  console.log('[Prisma] Client created with PrismaPg adapter (explicit config mode)');
 
   // Set up event listeners for connection monitoring (dev only)
   if (process.env.NODE_ENV !== 'production') {
