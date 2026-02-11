@@ -30,6 +30,45 @@ type NotificationType =
   | 'access_request'
   | 'team_update';
 
+/** Team notification record */
+interface TeamNotificationRecord {
+  id: string;
+  userId: string;
+  organizationId?: string;
+  type: NotificationType;
+  title: string;
+  message: string;
+  read: boolean;
+  readAt?: Date;
+  actionUrl?: string;
+  relatedUserId?: string;
+  relatedContentType?: string;
+  relatedContentId?: string;
+  expiresAt?: Date;
+  createdAt: Date;
+}
+
+/** Extended prisma client for team notifications */
+interface PrismaWithTeamNotification {
+  teamNotification?: {
+    findMany: (args: Record<string, unknown>) => Promise<TeamNotificationRecord[]>;
+    findUnique: (args: Record<string, unknown>) => Promise<TeamNotificationRecord | null>;
+    count: (args: Record<string, unknown>) => Promise<number>;
+    updateMany: (args: Record<string, unknown>) => Promise<{ count: number }>;
+    deleteMany: (args: Record<string, unknown>) => Promise<{ count: number }>;
+    delete: (args: Record<string, unknown>) => Promise<void>;
+    createMany: (args: Record<string, unknown>) => Promise<{ count: number }>;
+  };
+}
+
+/** Notification where clause */
+interface NotificationWhereClause {
+  userId: string;
+  type?: NotificationType;
+  read?: boolean;
+  OR?: Array<{ expiresAt: null } | { expiresAt: { gt: Date } }>;
+}
+
 // ============================================================================
 // GET /api/teams/notifications
 // List notifications for user
@@ -59,7 +98,7 @@ export async function GET(request: NextRequest) {
     const offset = parseInt(searchParams.get('offset') || '0', 10);
 
     // Build query
-    const where: any = {
+    const where: NotificationWhereClause = {
       userId,
     };
 
@@ -78,22 +117,23 @@ export async function GET(request: NextRequest) {
     ];
 
     // Get notifications
+    const extendedPrisma = prisma as unknown as PrismaWithTeamNotification;
     const [notifications, total, unreadCount] = await Promise.all([
-      (prisma as any).teamNotification?.findMany({
+      extendedPrisma.teamNotification?.findMany({
         where,
         orderBy: { createdAt: 'desc' },
         take: limit,
         skip: offset,
       }) || [],
-      (prisma as any).teamNotification?.count({ where }) || 0,
-      (prisma as any).teamNotification?.count({
+      extendedPrisma.teamNotification?.count({ where }) || 0,
+      extendedPrisma.teamNotification?.count({
         where: { userId, read: false },
       }) || 0,
     ]);
 
     // Get related user info for notifications
     const relatedUserIds = new Set<string>();
-    (notifications || []).forEach((n: any) => {
+    (notifications || []).forEach((n: TeamNotificationRecord) => {
       if (n.relatedUserId) relatedUserIds.add(n.relatedUserId);
     });
 
@@ -107,7 +147,7 @@ export async function GET(request: NextRequest) {
     const userMap = new Map(relatedUsers.map((u) => [u.id, u]));
 
     // Enrich notifications
-    const enrichedNotifications = (notifications || []).map((n: any) => ({
+    const enrichedNotifications = (notifications || []).map((n: TeamNotificationRecord) => ({
       ...n,
       relatedUser: n.relatedUserId ? userMap.get(n.relatedUserId) : null,
     }));
@@ -163,9 +203,11 @@ export async function PATCH(request: NextRequest) {
       readAt: new Date(),
     };
 
+    const extendedPrisma = prisma as unknown as PrismaWithTeamNotification;
+
     if (markAllRead) {
       // Mark all as read
-      const result = await (prisma as any).teamNotification?.updateMany({
+      const result = await extendedPrisma.teamNotification?.updateMany({
         where: {
           userId,
           read: false,
@@ -179,7 +221,7 @@ export async function PATCH(request: NextRequest) {
       });
     } else {
       // Mark specific notifications
-      const result = await (prisma as any).teamNotification?.updateMany({
+      const result = await extendedPrisma.teamNotification?.updateMany({
         where: {
           id: { in: notificationIds },
           userId, // Security: only update own notifications
@@ -228,9 +270,11 @@ export async function DELETE(request: NextRequest) {
     const deleteAll = searchParams.get('deleteAll') === 'true';
     const deleteRead = searchParams.get('deleteRead') === 'true';
 
+    const extendedPrisma = prisma as unknown as PrismaWithTeamNotification;
+
     if (deleteAll) {
       // Delete all notifications for user
-      const result = await (prisma as any).teamNotification?.deleteMany({
+      const result = await extendedPrisma.teamNotification?.deleteMany({
         where: { userId },
       });
 
@@ -242,7 +286,7 @@ export async function DELETE(request: NextRequest) {
 
     if (deleteRead) {
       // Delete read notifications
-      const result = await (prisma as any).teamNotification?.deleteMany({
+      const result = await extendedPrisma.teamNotification?.deleteMany({
         where: {
           userId,
           read: true,
@@ -257,7 +301,7 @@ export async function DELETE(request: NextRequest) {
 
     if (notificationId) {
       // Delete specific notification
-      const notification = await (prisma as any).teamNotification?.findUnique({
+      const notification = await extendedPrisma.teamNotification?.findUnique({
         where: { id: notificationId },
       });
 
@@ -275,7 +319,7 @@ export async function DELETE(request: NextRequest) {
         );
       }
 
-      await (prisma as any).teamNotification?.delete({
+      await extendedPrisma.teamNotification?.delete({
         where: { id: notificationId },
       });
 
@@ -361,7 +405,8 @@ export async function POST(request: NextRequest) {
       relatedContentId,
     }));
 
-    const result = await (prisma as any).teamNotification?.createMany({
+    const extendedPrisma = prisma as unknown as PrismaWithTeamNotification;
+    const result = await extendedPrisma.teamNotification?.createMany({
       data: notifications,
     });
 

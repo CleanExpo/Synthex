@@ -164,6 +164,82 @@ export async function POST(request: NextRequest) {
 }
 
 // ============================================================================
+// TYPES
+// ============================================================================
+
+/** Performance report from monitor */
+interface PerformanceReport {
+  api: {
+    totalRequests: number;
+    averageResponseTime: number;
+    p50: number;
+    p90: number;
+    p95: number;
+    p99: number;
+    errorRate: number;
+    statusCodeDistribution: Record<string, number>;
+    slowestEndpoints: Array<{ endpoint: string; avgTime: number; count: number }>;
+  };
+  database: {
+    totalQueries: number;
+    avgQueryTime: number;
+    slowQueries: number;
+    cacheHitRate: number;
+  };
+  system?: {
+    avgMemoryUsage: number;
+  };
+}
+
+/** Metrics response structure */
+interface MetricsData {
+  timestamp: string;
+  period: string;
+  system: {
+    uptime: number;
+    uptimeFormatted: string;
+    memory: {
+      heapUsedMB: number;
+      heapTotalMB: number;
+      rssMB: number;
+      externalMB: number;
+      heapUsedPercent: number;
+    };
+    nodeVersion: string;
+    platform: NodeJS.Platform;
+  };
+  api: {
+    totalRequests: number;
+    averageResponseTime: number;
+    percentiles: {
+      p50: number;
+      p90: number;
+      p95: number;
+      p99: number;
+    };
+    errorRate: string;
+    statusCodes: Record<string, number>;
+    slowestEndpoints: Array<{
+      endpoint: string;
+      avgTime: number;
+      requests: number;
+    }>;
+  };
+  database: {
+    totalQueries: number;
+    averageQueryTime: number;
+    slowQueries: number;
+    cacheHitRate: string;
+  };
+  health: {
+    status: 'healthy' | 'degraded' | 'unhealthy';
+    memoryStatus: 'healthy' | 'warning' | 'critical';
+    apiStatus: 'healthy' | 'degraded' | 'unhealthy';
+  };
+  responseTime: number;
+}
+
+// ============================================================================
 // HELPER FUNCTIONS
 // ============================================================================
 
@@ -181,11 +257,12 @@ function formatUptime(seconds: number): string {
   return `${minutes}m`;
 }
 
-function getHealthStatus(report: any): 'healthy' | 'degraded' | 'unhealthy' {
-  if (report.api.errorRate > 10 || report.system?.avgMemoryUsage > 90) {
+function getHealthStatus(report: PerformanceReport): 'healthy' | 'degraded' | 'unhealthy' {
+  const avgMemory = report.system?.avgMemoryUsage ?? 0;
+  if (report.api.errorRate > 10 || avgMemory > 90) {
     return 'unhealthy';
   }
-  if (report.api.errorRate > 5 || report.system?.avgMemoryUsage > 80 || report.api.p95 > 2000) {
+  if (report.api.errorRate > 5 || avgMemory > 80 || report.api.p95 > 2000) {
     return 'degraded';
   }
   return 'healthy';
@@ -198,13 +275,13 @@ function getMemoryStatus(memory: NodeJS.MemoryUsage): 'healthy' | 'warning' | 'c
   return 'healthy';
 }
 
-function getAPIStatus(report: any): 'healthy' | 'degraded' | 'unhealthy' {
+function getAPIStatus(report: PerformanceReport): 'healthy' | 'degraded' | 'unhealthy' {
   if (report.api.errorRate > 10) return 'unhealthy';
   if (report.api.errorRate > 5 || report.api.p90 > 1000) return 'degraded';
   return 'healthy';
 }
 
-function formatPrometheus(metrics: any): string {
+function formatPrometheus(metrics: MetricsData): string {
   const lines: string[] = [];
 
   // Memory metrics

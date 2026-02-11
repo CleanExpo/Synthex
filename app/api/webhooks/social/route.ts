@@ -86,12 +86,29 @@ function verifySignature(
 // Event Handlers
 // =============================================================================
 
+/** Post update data from webhook */
+interface PostUpdateData {
+  url?: string;
+  error?: string;
+  message?: string;
+  likes?: number;
+  comments?: number;
+  shares?: number;
+  impressions?: number;
+  reach?: number;
+  clicks?: number;
+  saves?: number;
+  userId?: string;
+  active?: boolean;
+  [key: string]: unknown;
+}
+
 interface WebhookEvent {
   platform: string;
   type: string;
   postId?: string;
   externalId?: string;
-  data: Record<string, any>;
+  data: PostUpdateData;
   timestamp: Date;
 }
 
@@ -101,7 +118,13 @@ async function handlePostPublished(event: WebhookEvent) {
   if (!postId && !externalId) return;
 
   // Update post status
-  const updateData: any = {
+  const updateData: {
+    status: string;
+    publishedAt: Date;
+    updatedAt: Date;
+    externalId?: string;
+    publishedUrl?: string;
+  } = {
     status: 'published',
     publishedAt: new Date(),
     updatedAt: new Date(),
@@ -144,7 +167,16 @@ async function handlePostEngagement(event: WebhookEvent) {
   const where = postId ? { id: postId } : { externalId };
 
   // Update engagement metrics
-  const updateData: any = {
+  const updateData: {
+    updatedAt: Date;
+    likes?: number;
+    comments?: number;
+    shares?: number;
+    impressions?: number;
+    reach?: number;
+    clicks?: number;
+    saves?: number;
+  } = {
     updatedAt: new Date(),
   };
 
@@ -173,7 +205,7 @@ async function handlePostFailed(event: WebhookEvent) {
     select: { metadata: true },
   });
 
-  const currentMetadata = (post?.metadata || {}) as Record<string, any>;
+  const currentMetadata = (post?.metadata || {}) as Record<string, unknown>;
 
   await prisma.post.update({
     where: { id: postId },
@@ -194,7 +226,7 @@ async function handlePostFailed(event: WebhookEvent) {
       action: 'post_failed',
       resource: 'post',
       resourceId: postId,
-      details: { platform: event.platform, error: data },
+      details: { platform: event.platform, error: JSON.stringify(data) },
       severity: 'high',
       category: 'content',
       outcome: 'failure',
@@ -259,6 +291,7 @@ export async function POST(request: NextRequest) {
 
     // Get raw body for signature verification
     const rawBody = await request.text();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let body: any;
 
     try {

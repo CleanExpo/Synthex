@@ -54,6 +54,47 @@ const ChangeRoleSchema = z.object({
 });
 
 // ============================================================================
+// TYPES
+// ============================================================================
+
+/** Role record */
+interface RoleRecord {
+  id: string;
+  name: string;
+  description?: string;
+  permissions: string[];
+  isDefault?: boolean;
+  isSystem?: boolean;
+  organizationId: string;
+}
+
+/** User role record */
+interface UserRoleRecord {
+  userId: string;
+  roleId: string;
+  grantedAt?: Date;
+  grantedBy?: string;
+  expiresAt?: Date;
+  role?: RoleRecord;
+}
+
+/** Extended prisma client for role operations */
+interface PrismaWithRoles {
+  userRole?: {
+    findMany: (args: Record<string, unknown>) => Promise<UserRoleRecord[]>;
+    create: (args: Record<string, unknown>) => Promise<UserRoleRecord>;
+    deleteMany: (args: Record<string, unknown>) => Promise<{ count: number }>;
+  };
+  role?: {
+    findMany: (args: Record<string, unknown>) => Promise<RoleRecord[]>;
+    findFirst: (args: Record<string, unknown>) => Promise<RoleRecord | null>;
+  };
+  permissionAudit?: {
+    create: (args: Record<string, unknown>) => Promise<void>;
+  };
+}
+
+// ============================================================================
 // GET - Get Member's Current Roles
 // ============================================================================
 
@@ -127,7 +168,8 @@ export async function GET(
     }
 
     // Get member's roles in this organization
-    const userRoles = await (prisma as any).userRole.findMany({
+    const extendedPrisma = prisma as unknown as PrismaWithRoles;
+    const userRoles = await extendedPrisma.userRole?.findMany({
       where: { userId: memberId },
       include: {
         role: {
@@ -142,11 +184,11 @@ export async function GET(
           },
         },
       },
-    });
+    }) || [];
 
     const roles = userRoles
-      .filter((ur: any) => ur.role)
-      .map((ur: any) => ({
+      .filter((ur: UserRoleRecord) => ur.role)
+      .map((ur: UserRoleRecord) => ({
         ...ur.role,
         grantedAt: ur.grantedAt,
         grantedBy: ur.grantedBy,
@@ -154,7 +196,7 @@ export async function GET(
       }));
 
     // Get available roles for the organization
-    const availableRoles = await (prisma as any).role.findMany({
+    const availableRoles = await extendedPrisma.role?.findMany({
       where: { organizationId: requestingUser.organizationId },
       select: {
         id: true,
@@ -165,7 +207,7 @@ export async function GET(
         isSystem: true,
       },
       orderBy: { name: 'asc' },
-    });
+    }) || [];
 
     return ResponseOptimizer.createResponse(
       {
@@ -290,7 +332,8 @@ export async function PATCH(
     }
 
     // Verify role exists and belongs to same organization
-    const role = await (prisma as any).role.findFirst({
+    const extendedPrisma = prisma as unknown as PrismaWithRoles;
+    const role = await extendedPrisma.role?.findFirst({
       where: {
         id: roleId,
         organizationId: requestingUser.organizationId,
@@ -305,7 +348,7 @@ export async function PATCH(
     }
 
     // Get current roles for comparison
-    const currentUserRoles = await (prisma as any).userRole.findMany({
+    const currentUserRoles = await extendedPrisma.userRole?.findMany({
       where: {
         userId: memberId,
         role: { organizationId: requestingUser.organizationId },
@@ -313,22 +356,22 @@ export async function PATCH(
       include: {
         role: { select: { id: true, name: true } },
       },
-    });
+    }) || [];
 
-    const previousRoleNames = currentUserRoles.map((ur: any) => ur.role?.name).filter(Boolean);
+    const previousRoleNames = currentUserRoles.map((ur: UserRoleRecord) => ur.role?.name).filter(Boolean);
 
     // Remove all existing roles in this organization
     if (currentUserRoles.length > 0) {
-      await (prisma as any).userRole.deleteMany({
+      await extendedPrisma.userRole?.deleteMany({
         where: {
           userId: memberId,
-          roleId: { in: currentUserRoles.map((ur: any) => ur.roleId) },
+          roleId: { in: currentUserRoles.map((ur: UserRoleRecord) => ur.roleId) },
         },
       });
     }
 
     // Assign new role
-    await (prisma as any).userRole.create({
+    await extendedPrisma.userRole?.create({
       data: {
         userId: memberId,
         roleId,
@@ -337,7 +380,7 @@ export async function PATCH(
     });
 
     // Log permission audit
-    await (prisma as any).permissionAudit.create({
+    await extendedPrisma.permissionAudit?.create({
       data: {
         action: 'grant',
         targetUserId: memberId,
@@ -404,7 +447,8 @@ export async function PATCH(
 async function checkUserIsAdmin(userId: string, organizationId: string): Promise<boolean> {
   try {
     // Get user's roles in this organization
-    const userRoles = await (prisma as any).userRole.findMany({
+    const extendedPrisma = prisma as unknown as PrismaWithRoles;
+    const userRoles = await extendedPrisma.userRole?.findMany({
       where: { userId },
       include: {
         role: {
@@ -415,7 +459,7 @@ async function checkUserIsAdmin(userId: string, organizationId: string): Promise
           },
         },
       },
-    });
+    }) || [];
 
     // Check if any role has admin permissions
     for (const ur of userRoles) {
