@@ -455,8 +455,8 @@ function animateValue(element, start, end, duration = 2000) {
 
 // Chart color palette
 const chartColors = {
-    primary: '#6366f1',
-    secondary: '#8b5cf6',
+    primary: '#06b6d4',
+    secondary: '#0891b2',
     success: '#10b981',
     warning: '#f59e0b',
     danger: '#ef4444',

@@ -263,7 +263,7 @@ class NotificationSystem {
             warning: 'var(--accent-orange)',
             error: 'var(--error)',
             info: 'var(--accent-blue)',
-            campaign: 'var(--accent-purple)',
+            campaign: 'var(--accent-cyan)',
             content: 'var(--accent-pink)',
             analytics: 'var(--accent-green)'
         };

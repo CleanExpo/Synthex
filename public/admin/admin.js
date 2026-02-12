@@ -282,9 +282,9 @@ class AdminDashboard {
                     </div>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap">
-                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                        ${user.plan === 'enterprise' ? 'bg-purple-100 text-purple-800' : 
-                          user.plan === 'pro' ? 'bg-blue-100 text-blue-800' : 
+                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full
+                        ${user.plan === 'enterprise' ? 'bg-cyan-100 text-cyan-800' :
+                          user.plan === 'pro' ? 'bg-blue-100 text-blue-800' :
                           'bg-gray-100 text-gray-800'}">
                         ${user.plan}
                     </span>

@@ -270,7 +270,7 @@ export const GlassPrimary: Story = {
     backgrounds: { default: 'dark' },
     docs: {
       description: {
-        story: 'Primary glass button with violet/fuchsia gradient and glow effect on hover.',
+        story: 'Primary glass button with cyan gradient and glow effect on hover.',
       },
     },
   },

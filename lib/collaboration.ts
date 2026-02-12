@@ -442,9 +442,9 @@ export class CollaborationManager {
   
   // Get user color
   getUserColor(userId: string): string {
-    if (!this.currentSession) return '#8b5cf6';
+    if (!this.currentSession) return '#06b6d4';
     const participant = this.currentSession.participants.find(p => p.id === userId);
-    return participant?.color || '#8b5cf6';
+    return participant?.color || '#06b6d4';
   }
   
   // Generate unique color for user

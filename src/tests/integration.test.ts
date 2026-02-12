@@ -350,8 +350,8 @@ describeIntegration('SYNTHEX 2.0 Integration Tests', () => {
         .set('Authorization', `Bearer ${authToken}`)
         .send({
           logoUrl: 'https://example.com/logo.png',
-          primaryColor: '#3b82f6',
-          secondaryColor: '#8b5cf6',
+          primaryColor: '#06b6d4',
+          secondaryColor: '#0891b2',
           fontHeading: 'Inter',
           fontBody: 'Inter'
         })
