@@ -182,7 +182,7 @@ export default function HomePage() {
 
               {/* Key Differentiator */}
               <div className="mb-10 p-4 bg-gradient-to-r from-cyan-500/10 to-transparent border-l-2 border-cyan-400 rounded-r-lg max-w-lg mx-auto lg:mx-0">
-                <p className="text-white font-medium mb-1">From just $199/month</p>
+                <p className="text-white font-medium mb-1">From just $249/month</p>
                 <p className="text-gray-400 text-sm">Use your own API keys to dramatically reduce costs. Custom enterprise rates available.</p>
               </div>
 

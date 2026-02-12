@@ -681,7 +681,7 @@ export default function DemoSettingsPage() {
                         <p className="text-sm text-gray-400">Perfect for growing businesses</p>
                       </div>
                       <div className="text-right">
-                        <p className="text-2xl font-bold text-white">$49</p>
+                        <p className="text-2xl font-bold text-white">$249</p>
                         <p className="text-sm text-gray-400">/month</p>
                       </div>
                     </div>

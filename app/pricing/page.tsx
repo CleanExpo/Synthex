@@ -8,7 +8,7 @@ import MarketingLayout from '@/components/marketing/MarketingLayout';
 const plans = [
   {
     name: 'Professional',
-    price: '$49',
+    price: '$249',
     description: 'Perfect for professionals and content creators',
     features: [
       '5 social media accounts',
@@ -29,7 +29,7 @@ const plans = [
   },
   {
     name: 'Business',
-    price: '$99',
+    price: '$399',
     popular: true,
     description: 'For businesses and marketing teams',
     features: [
