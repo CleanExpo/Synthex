@@ -1,186 +1,35 @@
 'use client';
 
+/**
+ * SEO Audit Page
+ * Comprehensive SEO health check with issue analysis
+ */
+
 import { useState } from 'react';
 import Link from 'next/link';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { SEOFeatureGate } from '@/components/seo';
 import { useToast } from '@/hooks/use-toast';
 import {
-  Search,
   FileSearch,
-  AlertTriangle,
-  CheckCircle,
-  XCircle,
-  Info,
   ArrowLeft,
   Loader2,
   Globe,
   Zap,
-  TrendingUp,
   Clock,
   RefreshCw,
   Download,
-  ChevronDown,
-  ChevronRight,
-  ExternalLink,
 } from '@/components/icons';
 
-interface AuditResult {
-  url: string;
-  domain: string;
-  timestamp: string;
-  score: number;
-  crawledPages: number;
-  issues: {
-    critical: number;
-    major: number;
-    minor: number;
-    info: number;
-  };
-  categories: {
-    technical: {
-      score: number;
-      issues: Array<{
-        severity: string;
-        title: string;
-        description: string;
-        recommendation: string;
-        affectedPages: string[];
-      }>;
-    };
-    onPage: {
-      score: number;
-      issues: Array<{
-        severity: string;
-        title: string;
-        description: string;
-        recommendation: string;
-        affectedPages: string[];
-      }>;
-    };
-    content: {
-      score: number;
-      issues: Array<{
-        severity: string;
-        title: string;
-        description: string;
-        recommendation: string;
-        affectedPages: string[];
-      }>;
-    };
-    coreWebVitals?: {
-      lcp: { value: number; rating: string };
-      fid: { value: number; rating: string };
-      cls: { value: number; rating: string };
-      inp: { value: number; rating: string };
-    };
-    schema?: {
-      detected: string[];
-      valid: boolean;
-      recommendations: string[];
-    };
-  };
-}
-
-function ScoreGauge({ score }: { score: number }) {
-  const getColor = (s: number) => {
-    if (s >= 90) return 'text-green-400';
-    if (s >= 70) return 'text-yellow-400';
-    if (s >= 50) return 'text-orange-400';
-    return 'text-red-400';
-  };
-
-  const getBgColor = (s: number) => {
-    if (s >= 90) return 'from-green-500/20 to-green-600/20';
-    if (s >= 70) return 'from-yellow-500/20 to-yellow-600/20';
-    if (s >= 50) return 'from-orange-500/20 to-orange-600/20';
-    return 'from-red-500/20 to-red-600/20';
-  };
-
-  return (
-    <div className={`relative w-32 h-32 rounded-full bg-gradient-to-br ${getBgColor(score)} flex items-center justify-center`}>
-      <div className="absolute inset-2 rounded-full bg-[#0f172a]" />
-      <span className={`relative text-4xl font-bold ${getColor(score)}`}>
-        {score}
-      </span>
-    </div>
-  );
-}
-
-function IssueCard({
-  issue,
-  isExpanded,
-  onToggle,
-}: {
-  issue: {
-    severity: string;
-    title: string;
-    description: string;
-    recommendation: string;
-    affectedPages: string[];
-  };
-  isExpanded: boolean;
-  onToggle: () => void;
-}) {
-  const severityConfig = {
-    critical: { icon: XCircle, color: 'text-red-400', bg: 'bg-red-500/10', border: 'border-red-500/30' },
-    major: { icon: AlertTriangle, color: 'text-orange-400', bg: 'bg-orange-500/10', border: 'border-orange-500/30' },
-    minor: { icon: Info, color: 'text-yellow-400', bg: 'bg-yellow-500/10', border: 'border-yellow-500/30' },
-    info: { icon: Info, color: 'text-blue-400', bg: 'bg-blue-500/10', border: 'border-blue-500/30' },
-  };
-
-  const config = severityConfig[issue.severity as keyof typeof severityConfig] || severityConfig.info;
-  const Icon = config.icon;
-
-  return (
-    <div className={`border rounded-lg overflow-hidden ${config.border} ${config.bg}`}>
-      <button
-        onClick={onToggle}
-        className="w-full flex items-center justify-between p-4 text-left hover:bg-white/5 transition-colors"
-      >
-        <div className="flex items-center gap-3">
-          <Icon className={`w-5 h-5 ${config.color}`} />
-          <span className="font-medium text-white">{issue.title}</span>
-        </div>
-        {isExpanded ? (
-          <ChevronDown className="w-5 h-5 text-gray-400" />
-        ) : (
-          <ChevronRight className="w-5 h-5 text-gray-400" />
-        )}
-      </button>
-      {isExpanded && (
-        <div className="px-4 pb-4 space-y-3">
-          <p className="text-gray-400 text-sm">{issue.description}</p>
-          <div className="bg-[#0f172a]/50 p-3 rounded-lg">
-            <p className="text-cyan-400 text-sm font-medium mb-1">Recommendation</p>
-            <p className="text-gray-300 text-sm">{issue.recommendation}</p>
-          </div>
-          {issue.affectedPages.length > 0 && (
-            <div>
-              <p className="text-gray-500 text-xs mb-2">Affected pages:</p>
-              <div className="flex flex-wrap gap-2">
-                {issue.affectedPages.map((page, i) => (
-                  <a
-                    key={i}
-                    href={page}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-xs text-cyan-400 hover:text-cyan-300 flex items-center gap-1"
-                  >
-                    {page}
-                    <ExternalLink className="w-3 h-3" />
-                  </a>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-    </div>
-  );
-}
+import {
+  AuditResult,
+  ScoreGauge,
+  CoreWebVitalsCard,
+  IssueCategory,
+  IssueSummary,
+} from '@/components/seo/audit';
 
 export default function SEOAuditPage() {
   const { toast } = useToast();
@@ -199,7 +48,6 @@ export default function SEOAuditPage() {
       return;
     }
 
-    // Validate URL
     try {
       new URL(url.startsWith('http') ? url : `https://${url}`);
     } catch {
@@ -340,76 +188,12 @@ export default function SEOAuditPage() {
               </Card>
 
               {/* Issue Summary */}
-              <Card className="bg-[#0f172a]/80 backdrop-blur-xl border border-cyan-500/10 lg:col-span-2">
-                <CardHeader>
-                  <CardTitle className="text-white">Issues Found</CardTitle>
-                  <CardDescription>Across {auditResult.crawledPages} pages analyzed</CardDescription>
-                </CardHeader>
-                <CardContent className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4 text-center">
-                    <XCircle className="w-6 h-6 text-red-400 mx-auto mb-2" />
-                    <p className="text-2xl font-bold text-red-400">{auditResult.issues.critical}</p>
-                    <p className="text-sm text-gray-400">Critical</p>
-                  </div>
-                  <div className="bg-orange-500/10 border border-orange-500/30 rounded-lg p-4 text-center">
-                    <AlertTriangle className="w-6 h-6 text-orange-400 mx-auto mb-2" />
-                    <p className="text-2xl font-bold text-orange-400">{auditResult.issues.major}</p>
-                    <p className="text-sm text-gray-400">Major</p>
-                  </div>
-                  <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4 text-center">
-                    <Info className="w-6 h-6 text-yellow-400 mx-auto mb-2" />
-                    <p className="text-2xl font-bold text-yellow-400">{auditResult.issues.minor}</p>
-                    <p className="text-sm text-gray-400">Minor</p>
-                  </div>
-                  <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4 text-center">
-                    <CheckCircle className="w-6 h-6 text-blue-400 mx-auto mb-2" />
-                    <p className="text-2xl font-bold text-blue-400">{auditResult.issues.info}</p>
-                    <p className="text-sm text-gray-400">Info</p>
-                  </div>
-                </CardContent>
-              </Card>
+              <IssueSummary issues={auditResult.issues} crawledPages={auditResult.crawledPages} />
             </div>
 
             {/* Core Web Vitals */}
             {auditResult.categories.coreWebVitals && (
-              <Card className="bg-[#0f172a]/80 backdrop-blur-xl border border-cyan-500/10">
-                <CardHeader>
-                  <CardTitle className="text-white flex items-center gap-2">
-                    <TrendingUp className="w-5 h-5 text-cyan-400" />
-                    Core Web Vitals
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    {Object.entries(auditResult.categories.coreWebVitals).map(([key, vital]) => (
-                      <div
-                        key={key}
-                        className={`p-4 rounded-lg border ${
-                          vital.rating === 'good'
-                            ? 'bg-green-500/10 border-green-500/30'
-                            : vital.rating === 'needs-improvement'
-                            ? 'bg-yellow-500/10 border-yellow-500/30'
-                            : 'bg-red-500/10 border-red-500/30'
-                        }`}
-                      >
-                        <p className="text-gray-400 text-sm uppercase">{key.toUpperCase()}</p>
-                        <p
-                          className={`text-2xl font-bold ${
-                            vital.rating === 'good'
-                              ? 'text-green-400'
-                              : vital.rating === 'needs-improvement'
-                              ? 'text-yellow-400'
-                              : 'text-red-400'
-                          }`}
-                        >
-                          {key === 'cls' ? vital.value.toFixed(3) : `${vital.value.toFixed(0)}${key === 'lcp' ? 's' : 'ms'}`}
-                        </p>
-                        <p className="text-xs text-gray-500 capitalize">{vital.rating.replace('-', ' ')}</p>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
+              <CoreWebVitalsCard vitals={auditResult.categories.coreWebVitals} />
             )}
 
             {/* Detailed Issues */}
@@ -422,83 +206,29 @@ export default function SEOAuditPage() {
                 </Button>
               </CardHeader>
               <CardContent className="space-y-4">
-                {/* Technical Issues */}
-                <div>
-                  <h4 className="text-lg font-medium text-white mb-3 flex items-center gap-2">
-                    Technical SEO
-                    <span className={`text-sm px-2 py-0.5 rounded ${
-                      auditResult.categories.technical.score >= 80
-                        ? 'bg-green-500/20 text-green-400'
-                        : auditResult.categories.technical.score >= 60
-                        ? 'bg-yellow-500/20 text-yellow-400'
-                        : 'bg-red-500/20 text-red-400'
-                    }`}>
-                      {auditResult.categories.technical.score}%
-                    </span>
-                  </h4>
-                  <div className="space-y-2">
-                    {auditResult.categories.technical.issues.map((issue, i) => (
-                      <IssueCard
-                        key={`tech-${i}`}
-                        issue={issue}
-                        isExpanded={expandedIssues.has(`tech-${i}`)}
-                        onToggle={() => toggleIssue(`tech-${i}`)}
-                      />
-                    ))}
-                  </div>
-                </div>
+                <IssueCategory
+                  title="Technical SEO"
+                  category={auditResult.categories.technical}
+                  categoryKey="tech"
+                  expandedIssues={expandedIssues}
+                  onToggleIssue={toggleIssue}
+                />
 
-                {/* On-Page Issues */}
-                <div>
-                  <h4 className="text-lg font-medium text-white mb-3 flex items-center gap-2">
-                    On-Page SEO
-                    <span className={`text-sm px-2 py-0.5 rounded ${
-                      auditResult.categories.onPage.score >= 80
-                        ? 'bg-green-500/20 text-green-400'
-                        : auditResult.categories.onPage.score >= 60
-                        ? 'bg-yellow-500/20 text-yellow-400'
-                        : 'bg-red-500/20 text-red-400'
-                    }`}>
-                      {auditResult.categories.onPage.score}%
-                    </span>
-                  </h4>
-                  <div className="space-y-2">
-                    {auditResult.categories.onPage.issues.map((issue, i) => (
-                      <IssueCard
-                        key={`onpage-${i}`}
-                        issue={issue}
-                        isExpanded={expandedIssues.has(`onpage-${i}`)}
-                        onToggle={() => toggleIssue(`onpage-${i}`)}
-                      />
-                    ))}
-                  </div>
-                </div>
+                <IssueCategory
+                  title="On-Page SEO"
+                  category={auditResult.categories.onPage}
+                  categoryKey="onpage"
+                  expandedIssues={expandedIssues}
+                  onToggleIssue={toggleIssue}
+                />
 
-                {/* Content Issues */}
-                <div>
-                  <h4 className="text-lg font-medium text-white mb-3 flex items-center gap-2">
-                    Content Quality
-                    <span className={`text-sm px-2 py-0.5 rounded ${
-                      auditResult.categories.content.score >= 80
-                        ? 'bg-green-500/20 text-green-400'
-                        : auditResult.categories.content.score >= 60
-                        ? 'bg-yellow-500/20 text-yellow-400'
-                        : 'bg-red-500/20 text-red-400'
-                    }`}>
-                      {auditResult.categories.content.score}%
-                    </span>
-                  </h4>
-                  <div className="space-y-2">
-                    {auditResult.categories.content.issues.map((issue, i) => (
-                      <IssueCard
-                        key={`content-${i}`}
-                        issue={issue}
-                        isExpanded={expandedIssues.has(`content-${i}`)}
-                        onToggle={() => toggleIssue(`content-${i}`)}
-                      />
-                    ))}
-                  </div>
-                </div>
+                <IssueCategory
+                  title="Content Quality"
+                  category={auditResult.categories.content}
+                  categoryKey="content"
+                  expandedIssues={expandedIssues}
+                  onToggleIssue={toggleIssue}
+                />
               </CardContent>
             </Card>
 
