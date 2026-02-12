@@ -252,6 +252,7 @@ const sensitiveFields = [
 | SEC-003 | **HIGH** | dangerouslySetInnerHTML without sanitization | blog/[slug]/page.tsx:325 | Use DOMPurify |
 | SEC-004 | **MEDIUM** | Error messages expose internal details | Multiple API routes | Sanitize error messages |
 | SEC-005 | **MEDIUM** | 113 routes without explicit auth pattern | Various API routes | Audit and add auth (IN PROGRESS - UNI-557) |
+| SEC-006 | **HIGH** | IDOR vulnerabilities in stub routes | Various API routes | ~~Add auth + ownership verification~~ ✅ RESOLVED (UNI-558) |
 
 ### 4.2 XSS Risk Analysis
 
@@ -266,7 +267,33 @@ const sensitiveFields = [
 **Risk:** If `post.content` comes from user input or external source, XSS is possible.
 **Mitigation:** Use DOMPurify before rendering.
 
-### 4.3 Command Injection Analysis
+### 4.3 IDOR Vulnerability Analysis
+
+**~~IDOR Vulnerabilities Found:~~** ✅ RESOLVED (UNI-558, 2026-02-12)
+
+| Route | Issue | Resolution |
+|-------|-------|------------|
+| `api/library/content/[contentId]` | Stub with no auth | Added APISecurityChecker + ownership verification |
+| `api/competitors/[competitorId]/analyze` | Stub with no auth | Added APISecurityChecker + ownership verification |
+
+**Routes Verified Secure:**
+- `api/content/[id]` - Has `campaign.userId` ownership check
+- `api/scheduler/posts/[postId]` - Has `campaign.userId` ownership check
+- `api/organizations/[orgId]` - Has `isOrgMember()` / `isOrgAdmin()` checks
+- `api/ab-testing/tests/[testId]` - Uses `findFirst({ where: { id, userId } })`
+- `api/teams/members/[memberId]` - Has organization membership verification
+- `api/teams/invitations/[id]` - Has organization scoping
+- `api/competitors/track/[id]` - Uses `findFirst({ where: { id, userId } })`
+- `api/quotes/[id]` - Has explicit ownership check
+- `api/notifications/[notificationId]/read` - Has `userId` ownership check
+- `api/personas/[id]/optimize` - Uses `findFirst({ where: { id, userId } })`
+- `api/personas/[id]/train` - Uses `findFirst({ where: { id, userId } })`
+- `api/competitors/track/[id]/snapshot` - Uses `findFirst({ where: { id, userId } })`
+- `api/teams/[id]/settings` - Has `canManageTeam()` permission check
+- `api/reporting/reports/[reportId]` - Passes userId to reportGenerator
+- `api/reporting/reports/[reportId]/download` - Passes userId to reportGenerator
+
+### 4.4 Command Injection Analysis
 
 **spawn() usage found in:**
 - `scripts/real-deploy-check.ts` - Deploy scripts (acceptable)
