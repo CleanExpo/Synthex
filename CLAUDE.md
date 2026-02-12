@@ -7,6 +7,41 @@
 **Latest Deployment:** https://synthex-hi203jfw4-unite-group.vercel.app
 **Session Initialized:** 2025-08-11
 
+## 💰 Pricing (HARDCODED - DO NOT CHANGE WITHOUT APPROVAL)
+| Plan | Price | Target |
+|------|-------|--------|
+| **Professional** | **$249/month** | Professionals & content creators |
+| **Business** | **$399/month** | Businesses & marketing teams |
+| **Custom** | Contact Sales | Enterprise solutions |
+
+### Professional ($249/month) Features:
+- 5 social media accounts
+- 100 AI-generated posts/month
+- Professional analytics
+- 3 persona profiles
+- Smart scheduling
+- Content library access
+- Basic automation
+
+### Business ($399/month) Features:
+- 10 social media accounts
+- Unlimited AI-generated posts
+- Advanced analytics & insights
+- 10 persona profiles
+- Smart scheduling with AI optimization
+- Viral pattern analysis
+- Custom AI training
+- Competitor analysis
+- A/B testing tools
+- Team collaboration tools
+- Brand voice customization
+
+### Demo Credentials:
+| Account | Email | Password |
+|---------|-------|----------|
+| Demo User | `demo@synthex.com` | `demo123!` |
+| Admin User | `admin@synthex.com` | `Admin123!@#` |
+
 ## 🎭 Agent Orchestra System
 
 ### Orchestra Agent (Primary Coordinator)
