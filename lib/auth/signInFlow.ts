@@ -44,6 +44,22 @@ const JWT_SECRET = (() => {
 // Initialize Supabase client once
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+/** OAuth user data from provider */
+interface OAuthUserData {
+  id: string;
+  email: string;
+  name?: string | null;
+  image?: string | null;
+}
+
+/** Decoded JWT payload */
+interface JWTPayload {
+  sub: string;
+  email?: string;
+  iat: number;
+  exp: number;
+}
+
 /**
  * Central authentication flow - ALL auth methods MUST use this
  */
@@ -69,7 +85,7 @@ export class SignInFlow {
       password?: string;
       provider?: 'google' | 'github';
       oauthToken?: string;
-      oauthUser?: any;
+      oauthUser?: OAuthUserData;
     }
   ): Promise<AuthResult> {
     try {
@@ -183,7 +199,7 @@ export class SignInFlow {
    * Handle OAuth authentication (Google/GitHub)
    * Now uses AccountService for proper multi-provider support
    */
-  private async handleOAuthAuth(provider: 'google' | 'github', oauthUser: any): Promise<AuthResult> {
+  private async handleOAuthAuth(provider: 'google' | 'github', oauthUser: OAuthUserData | undefined): Promise<AuthResult> {
     try {
       if (!oauthUser || !oauthUser.email) {
         return {
@@ -196,8 +212,8 @@ export class SignInFlow {
       return this.handleOAuthLogin(provider, {
         id: oauthUser.id,
         email: oauthUser.email,
-        name: oauthUser.name,
-        avatar: oauthUser.image,
+        name: oauthUser.name ?? undefined,
+        avatar: oauthUser.image ?? undefined,
         emailVerified: true,
       });
     } catch (error) {
@@ -403,7 +419,7 @@ export class SignInFlow {
   async validateSession(accessToken: string): Promise<AuthResult> {
     try {
       // Verify JWT
-      const decoded = jwt.verify(accessToken, JWT_SECRET) as any;
+      const decoded = jwt.verify(accessToken, JWT_SECRET) as JWTPayload;
       
       // Check if session exists in database
       if (this.isSupabaseConfigured()) {

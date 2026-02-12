@@ -487,13 +487,18 @@ export const rateLimiters = {
  * );
  * ```
  */
+/** Route handler context */
+interface RouteContext {
+  params?: Record<string, string | string[]>;
+}
+
 export function withRateLimit(
   config: RateLimitConfig,
-  handler: (req: NextRequest, context?: any) => Promise<NextResponse>
+  handler: (req: NextRequest, context?: RouteContext) => Promise<NextResponse>
 ) {
   const limiter = createRateLimiter(config);
 
-  return async (req: NextRequest, context?: any): Promise<NextResponse> => {
+  return async (req: NextRequest, context?: RouteContext): Promise<NextResponse> => {
     const { allowed, response, headers } = await limiter(req);
 
     if (!allowed && response) {

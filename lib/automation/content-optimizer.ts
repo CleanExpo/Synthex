@@ -86,9 +86,18 @@ interface HashtagPerformance {
   trendingScore: number;
 }
 
+/** A/B Test analysis result */
+interface ABTestAnalysis {
+  totalImpressions: number;
+  avgEngagementRate: number;
+  lift: number;
+  isSignificant: boolean;
+  recommendation: string;
+}
+
 class ContentOptimizer {
   private supabase: SupabaseClient;
-  private cache: Map<string, { data: any; expiry: number }> = new Map();
+  private cache: Map<string, { data: unknown; expiry: number }> = new Map();
   private readonly CACHE_TTL = 1800000; // 30 minutes
 
   constructor() {
@@ -250,7 +259,7 @@ class ContentOptimizer {
   async getABTestResults(
     userId: string,
     testId: string
-  ): Promise<ABTestConfig & { analysis: any } | null> {
+  ): Promise<(ABTestConfig & { analysis: ABTestAnalysis }) | null> {
     const { data: test, error } = await this.supabase
       .from('ab_tests')
       .select('*')
@@ -407,7 +416,7 @@ class ContentOptimizer {
     const cacheKey = `trending-${platform}-${category || 'all'}`;
     const cached = this.cache.get(cacheKey);
     if (cached && cached.expiry > Date.now()) {
-      return cached.data;
+      return cached.data as HashtagPerformance[];
     }
 
     // Get hashtag performance from historical data
