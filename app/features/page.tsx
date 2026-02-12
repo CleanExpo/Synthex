@@ -3,9 +3,13 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import {
   Sparkles, TrendingUp, Users, Calendar, BarChart3, Zap,
-  Brain, Target, Palette, Shield, Globe, Smartphone,
+  Brain, Target, Palette, Shield, Globe,
   ArrowRight, CheckCircle2
 } from '@/components/icons';
+import {
+  TwitterXIcon, LinkedInIcon, InstagramIcon, TikTokIcon,
+  FacebookIcon, YouTubeIcon, PinterestIcon, ThreadsIcon, RedditIcon
+} from '@/components/icons/platform-icons';
 import MarketingLayout from '@/components/marketing/MarketingLayout';
 
 export default function FeaturesPage() {
@@ -182,7 +186,7 @@ export default function FeaturesPage() {
               <ul className="space-y-2">
                 <li className="flex items-center text-sm text-gray-300">
                   <CheckCircle2 className="w-4 h-4 text-cyan-400 mr-2" />
-                  8+ platforms
+                  9+ platforms
                 </li>
                 <li className="flex items-center text-sm text-gray-300">
                   <CheckCircle2 className="w-4 h-4 text-cyan-400 mr-2" />
@@ -202,21 +206,22 @@ export default function FeaturesPage() {
       <section className="py-20 px-6 bg-white/[0.02] backdrop-blur-xl border-y border-white/[0.08]">
         <div className="container mx-auto">
           <h2 className="text-3xl font-bold text-center text-white mb-12">Platform-Specific Optimization</h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-4xl mx-auto">
+          <div className="grid grid-cols-3 md:grid-cols-3 lg:grid-cols-5 gap-6 max-w-5xl mx-auto">
             {[
-              { name: 'Twitter/X', features: '280 chars, threads, hashtags' },
-              { name: 'LinkedIn', features: 'Professional tone, articles' },
-              { name: 'Instagram', features: 'Captions, hashtags, stories' },
-              { name: 'TikTok', features: 'Trends, sounds, hooks' },
-              { name: 'Facebook', features: 'Long-form, groups, pages' },
-              { name: 'YouTube', features: 'Titles, descriptions, tags' },
-              { name: 'Pinterest', features: 'SEO, boards, rich pins' },
-              { name: 'Threads', features: 'Text posts, conversations' },
+              { name: 'Twitter/X', features: '280 chars, threads, hashtags', Icon: TwitterXIcon, color: '#1DA1F2' },
+              { name: 'LinkedIn', features: 'Professional tone, articles', Icon: LinkedInIcon, color: '#0A66C2' },
+              { name: 'Instagram', features: 'Captions, hashtags, stories', Icon: InstagramIcon, color: '#E4405F' },
+              { name: 'TikTok', features: 'Trends, sounds, hooks', Icon: TikTokIcon, color: '#FF0050' },
+              { name: 'Facebook', features: 'Long-form, groups, pages', Icon: FacebookIcon, color: '#1877F2' },
+              { name: 'YouTube', features: 'Titles, descriptions, tags', Icon: YouTubeIcon, color: '#FF0000' },
+              { name: 'Pinterest', features: 'SEO, boards, rich pins', Icon: PinterestIcon, color: '#E60023' },
+              { name: 'Reddit', features: 'Subreddits, discussions', Icon: RedditIcon, color: '#FF4500' },
+              { name: 'Threads', features: 'Text posts, conversations', Icon: ThreadsIcon, color: '#FFFFFF' },
             ].map((platform) => (
-              <div key={platform.name} className="text-center">
-                <div className="bg-[#0d1f35]/80 backdrop-blur-xl border border-cyan-500/10 rounded-lg p-4 mb-2">
-                  <Smartphone className="w-8 h-8 text-cyan-500 mx-auto mb-2" />
-                  <h4 className="text-white font-semibold">{platform.name}</h4>
+              <div key={platform.name} className="text-center group">
+                <div className="bg-[#0d1f35]/80 backdrop-blur-xl border border-cyan-500/10 rounded-lg p-4 mb-2 hover:border-cyan-500/30 transition-all hover:scale-105">
+                  <platform.Icon size={32} color={platform.color} className="mx-auto mb-2" />
+                  <h4 className="text-white font-semibold text-sm">{platform.name}</h4>
                 </div>
                 <p className="text-xs text-gray-400">{platform.features}</p>
               </div>
