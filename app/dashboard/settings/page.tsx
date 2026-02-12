@@ -20,7 +20,7 @@ import {
   Settings2,
   Shield,
   User,
-} from 'lucide-react';
+} from '@/components/icons';
 import toast from 'react-hot-toast';
 import {
   ProfileTab,
@@ -32,6 +32,10 @@ import {
   mockApiKeys,
   mockInvoices,
   defaultBillingInfo,
+  defaultNotifications,
+  defaultPrivacy,
+  defaultAdvanced,
+  initialPlatforms,
   type UserProfile,
   type NotificationSettings,
   type PrivacySettings,
@@ -40,37 +44,6 @@ import {
   type PlatformConnection,
   type ApiKey,
 } from '@/components/settings';
-
-const defaultNotifications: NotificationSettings = {
-  email: true,
-  push: false,
-  sms: false,
-  weeklyReport: true,
-  viralAlert: true,
-  systemUpdates: false,
-};
-
-const defaultPrivacy: PrivacySettings = {
-  publicProfile: false,
-  showAnalytics: true,
-  dataCollection: true,
-};
-
-const defaultAdvanced: AdvancedSettings = {
-  theme: 'dark',
-  language: 'en',
-  timezone: 'America/New_York',
-  debugMode: false,
-  betaFeatures: false,
-};
-
-const initialPlatforms: PlatformConnection[] = [
-  { id: 'twitter', name: 'Twitter/X', icon: '𝕏', connected: false },
-  { id: 'linkedin', name: 'LinkedIn', icon: 'in', connected: false },
-  { id: 'instagram', name: 'Instagram', icon: '📷', connected: false },
-  { id: 'facebook', name: 'Facebook', icon: 'f', connected: false },
-  { id: 'tiktok', name: 'TikTok', icon: '♪', connected: false },
-];
 
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState<SettingsTab>('profile');

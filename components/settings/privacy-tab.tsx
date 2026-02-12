@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { AlertTriangle, Download, Loader2, Save, Trash2 } from 'lucide-react';
+import { AlertTriangle, Download, Loader2, Save, Trash2 } from '@/components/icons';
 import type { PrivacySettings } from './types';
 
 interface PrivacyTabProps {

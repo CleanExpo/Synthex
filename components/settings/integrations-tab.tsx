@@ -8,7 +8,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Check, Key, Plus, Trash2 } from 'lucide-react';
+import { Check, Key, Plus, Trash2 } from '@/components/icons';
 import type { PlatformConnection, ApiKey } from './types';
 
 interface IntegrationsTabProps {

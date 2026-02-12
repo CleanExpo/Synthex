@@ -6,7 +6,7 @@
  */
 
 import { Card, CardContent } from '@/components/ui/card';
-import { Users, CheckCircle, AlertTriangle, Crown } from 'lucide-react';
+import { Users, CheckCircle, AlertTriangle, Crown } from '@/components/icons';
 import type { TeamStats } from './types';
 
 interface TeamStatsGridProps {

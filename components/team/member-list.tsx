@@ -6,7 +6,7 @@
  */
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Users } from 'lucide-react';
+import { Users } from '@/components/icons';
 import { MemberCard } from './member-card';
 import type { TeamMember, TeamRole } from './types';
 

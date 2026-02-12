@@ -6,7 +6,7 @@
  */
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Shield, Crown, Edit, Eye } from 'lucide-react';
+import { Shield, Crown, Edit, Eye } from '@/components/icons';
 
 export function RolePermissionsCard() {
   return (

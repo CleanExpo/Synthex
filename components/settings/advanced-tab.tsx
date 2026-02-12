@@ -16,7 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Bug, Beaker, Globe, Loader2, Moon, Save } from 'lucide-react';
+import { Bug, Beaker, Globe, Loader2, Moon, Save } from '@/components/icons';
 import { languages, timezones, themes } from './settings-config';
 import type { AdvancedSettings } from './types';
 

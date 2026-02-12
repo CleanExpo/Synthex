@@ -277,6 +277,7 @@ export {
   Linkedin,
   Youtube,
   Github,
+  Reddit,
 } from './social';
 
 // ============================================

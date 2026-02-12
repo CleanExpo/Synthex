@@ -6,7 +6,7 @@
  */
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Activity, Clock } from 'lucide-react';
+import { Activity, Clock } from '@/components/icons';
 import type { ActivityLog } from './types';
 
 interface ActivityLogCardProps {

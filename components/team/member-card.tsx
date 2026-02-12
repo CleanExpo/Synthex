@@ -26,7 +26,7 @@ import {
   CheckCircle,
   XCircle,
   AlertTriangle,
-} from 'lucide-react';
+} from '@/components/icons';
 import { getRoleBadgeColor, getStatusBadgeColor } from './team-config';
 import type { TeamMember, TeamRole } from './types';
 

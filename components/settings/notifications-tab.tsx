@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { Bell, Mail, MessageSquare, Smartphone, Loader2, Save } from 'lucide-react';
+import { Bell, Mail, MessageSquare, Smartphone, Loader2, Save } from '@/components/icons';
 import type { NotificationSettings } from './types';
 
 interface NotificationsTabProps {

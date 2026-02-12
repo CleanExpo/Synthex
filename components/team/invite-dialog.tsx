@@ -24,7 +24,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { UserPlus, Mail, Loader2, Crown, Edit, Eye } from 'lucide-react';
+import { UserPlus, Mail, Loader2, Crown, Edit, Eye } from '@/components/icons';
 import type { InviteFormData, TeamRole } from './types';
 
 interface InviteDialogProps {

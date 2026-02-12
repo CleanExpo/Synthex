@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Camera, Loader2, Save } from 'lucide-react';
+import { Camera, Loader2, Save } from '@/components/icons';
 import type { UserProfile } from './types';
 
 interface ProfileTabProps {

@@ -16,6 +16,7 @@ import {
   FacebookIcon,
   YouTubeIcon,
   GithubIcon,
+  RedditIcon,
 } from './platform-icons';
 
 // Re-export with consistent naming (matching old react-icons API)
@@ -27,7 +28,8 @@ export const Linkedin = LinkedInIcon;
 export const Youtube = YouTubeIcon;
 export const TikTok = TikTokIcon;
 export const Github = GithubIcon;
-// Note: Pinterest, Reddit, Threads icons not yet implemented in platform-icons
+export const Reddit = RedditIcon;
+// Note: Pinterest, Threads icons not yet implemented in platform-icons
 // Add custom SVGs if needed
 
 // Platform colors for reference
@@ -53,6 +55,7 @@ export const SocialIcons = {
   linkedin: Linkedin,
   youtube: Youtube,
   tiktok: TikTok,
+  reddit: Reddit,
 } as const;
 
 // Type for social platform names

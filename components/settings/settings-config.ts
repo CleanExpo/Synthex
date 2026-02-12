@@ -3,7 +3,47 @@
  * Constants and configuration for settings components
  */
 
-import type { PlatformConnection, ApiKey, Invoice, BillingInfo } from './types';
+import type {
+  PlatformConnection,
+  ApiKey,
+  Invoice,
+  BillingInfo,
+  NotificationSettings,
+  PrivacySettings,
+  AdvancedSettings,
+} from './types';
+
+// Default settings values
+export const defaultNotifications: NotificationSettings = {
+  email: true,
+  push: false,
+  sms: false,
+  weeklyReport: true,
+  viralAlert: true,
+  systemUpdates: false,
+};
+
+export const defaultPrivacy: PrivacySettings = {
+  publicProfile: false,
+  showAnalytics: true,
+  dataCollection: true,
+};
+
+export const defaultAdvanced: AdvancedSettings = {
+  theme: 'dark',
+  language: 'en',
+  timezone: 'America/New_York',
+  debugMode: false,
+  betaFeatures: false,
+};
+
+export const initialPlatforms: PlatformConnection[] = [
+  { id: 'twitter', name: 'Twitter/X', icon: '𝕏', connected: false },
+  { id: 'linkedin', name: 'LinkedIn', icon: 'in', connected: false },
+  { id: 'instagram', name: 'Instagram', icon: '📷', connected: false },
+  { id: 'facebook', name: 'Facebook', icon: 'f', connected: false },
+  { id: 'tiktok', name: 'TikTok', icon: '♪', connected: false },
+];
 
 export const platformConnections: PlatformConnection[] = [
   { id: 'twitter', name: 'Twitter/X', icon: '𝕏', connected: true, username: '@synthexai' },

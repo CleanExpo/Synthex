@@ -14,7 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Search } from 'lucide-react';
+import { Search } from '@/components/icons';
 import type { TeamRole, MemberStatus } from './types';
 
 interface TeamFiltersProps {
