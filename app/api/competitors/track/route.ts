@@ -18,6 +18,49 @@ import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-securit
 import { z } from 'zod';
 
 // ============================================================================
+// TYPE DEFINITIONS
+// ============================================================================
+
+/** Tracked competitor where clause */
+interface CompetitorWhereClause {
+  userId: string;
+  isActive?: boolean;
+  industry?: string;
+  domain?: string;
+}
+
+/** Tracked competitor record */
+interface TrackedCompetitorRecord {
+  id: string;
+  userId: string;
+  name: string;
+  domain?: string | null;
+  _count?: {
+    snapshots?: number;
+    posts?: number;
+    alerts?: number;
+  };
+  createdAt: Date;
+}
+
+/** Extended Prisma client with competitor models */
+interface ExtendedPrismaClient {
+  trackedCompetitor?: {
+    findFirst: (args: { where: Record<string, unknown> }) => Promise<TrackedCompetitorRecord | null>;
+    findMany: (args: { where: Record<string, unknown>; orderBy?: Record<string, string>; take?: number; skip?: number; include?: Record<string, unknown> }) => Promise<TrackedCompetitorRecord[]>;
+    create: (args: { data: Record<string, unknown> }) => Promise<TrackedCompetitorRecord>;
+    count: (args: { where: Record<string, unknown> }) => Promise<number>;
+  };
+  competitorSnapshot?: {
+    findFirst: (args: { where: Record<string, unknown>; orderBy?: Record<string, string> }) => Promise<unknown>;
+    create: (args: { data: Record<string, unknown> }) => Promise<unknown>;
+  };
+}
+
+/** Get prisma with extended models */
+const extendedPrisma = prisma as unknown as typeof prisma & ExtendedPrismaClient;
+
+// ============================================================================
 // VALIDATION SCHEMAS
 // ============================================================================
 
@@ -66,7 +109,7 @@ export async function GET(request: NextRequest) {
     const offset = parseInt(searchParams.get('offset') || '0', 10);
 
     // Build query
-    const where: any = { userId };
+    const where: CompetitorWhereClause = { userId };
     if (isActive !== null) {
       where.isActive = isActive === 'true';
     }
@@ -75,7 +118,7 @@ export async function GET(request: NextRequest) {
     }
 
     const [competitors, total] = await Promise.all([
-      (prisma as any).trackedCompetitor?.findMany({
+      extendedPrisma.trackedCompetitor?.findMany({
         where,
         orderBy: { createdAt: 'desc' },
         take: limit,
@@ -90,13 +133,13 @@ export async function GET(request: NextRequest) {
           },
         },
       }) || [],
-      (prisma as any).trackedCompetitor?.count({ where }) || 0,
+      extendedPrisma.trackedCompetitor?.count({ where }) || 0,
     ]);
 
     // Get latest snapshot for each competitor
     const competitorsWithLatestSnapshot = await Promise.all(
-      (competitors || []).map(async (comp: any) => {
-        const latestSnapshot = await (prisma as any).competitorSnapshot?.findFirst({
+      (competitors || []).map(async (comp: TrackedCompetitorRecord) => {
+        const latestSnapshot = await extendedPrisma.competitorSnapshot?.findFirst({
           where: { competitorId: comp.id, platform: 'all' },
           orderBy: { snapshotAt: 'desc' },
         });
@@ -170,7 +213,7 @@ export async function POST(request: NextRequest) {
 
     // Check for existing competitor with same domain
     if (normalizedDomain) {
-      const existing = await (prisma as any).trackedCompetitor?.findFirst({
+      const existing = await extendedPrisma.trackedCompetitor?.findFirst({
         where: { userId, domain: normalizedDomain },
       });
 
@@ -183,7 +226,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Create competitor
-    const competitor = await (prisma as any).trackedCompetitor?.create({
+    const competitor = await extendedPrisma.trackedCompetitor?.create({
       data: {
         userId,
         name: data.name,
@@ -203,7 +246,7 @@ export async function POST(request: NextRequest) {
     });
 
     // Create initial snapshot (placeholder - would be populated by tracking job)
-    await (prisma as any).competitorSnapshot?.create({
+    await extendedPrisma.competitorSnapshot?.create({
       data: {
         competitorId: competitor.id,
         platform: 'all',
