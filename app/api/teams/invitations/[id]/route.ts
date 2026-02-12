@@ -23,6 +23,60 @@ import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-securit
 import { auditLogger } from '@/lib/security/audit-logger';
 import { sendTeamInviteEmail } from '@/lib/email';
 
+// ============================================================================
+// TYPE DEFINITIONS
+// ============================================================================
+
+/** Invitation update data */
+interface InvitationUpdateData {
+  role?: string;
+  message?: string;
+  campaignAccess?: string[];
+}
+
+/** Extended Prisma client with team models */
+interface ExtendedPrismaClient {
+  teamInvitation: {
+    findFirst: (args: { where: Record<string, unknown>; include?: Record<string, unknown> }) => Promise<InvitationDetailRecord | null>;
+    update: (args: { where: { id: string }; data: InvitationUpdateData }) => Promise<InvitationDetailRecord>;
+    delete: (args: { where: { id: string } }) => Promise<void>;
+  };
+  userRole: {
+    findMany: (args: { where: { userId: string }; include?: Record<string, unknown> }) => Promise<UserRoleRecord[]>;
+  };
+}
+
+/** User role record */
+interface UserRoleRecord {
+  role?: {
+    name: string;
+    permissions?: string[];
+  } | null;
+}
+
+/** Invitation detail record */
+interface InvitationDetailRecord {
+  id: string;
+  email: string;
+  role: string;
+  message?: string | null;
+  campaignAccess?: unknown;
+  status: string;
+  sentAt: Date;
+  user?: {
+    id: string;
+    name: string | null;
+    email: string;
+  } | null;
+  organization?: {
+    id: string;
+    name: string;
+  } | null;
+}
+
+/** Get prisma with extended models */
+const extendedPrisma = prisma as unknown as typeof prisma & ExtendedPrismaClient;
+
 // Lazy getter to avoid module load crash
 function getJWTSecret(): string {
   const secret = process.env.JWT_SECRET;
@@ -112,7 +166,7 @@ export async function GET(
     }
 
     // Get invitation
-    const invitation = await (prisma as any).teamInvitation.findFirst({
+    const invitation = await extendedPrisma.teamInvitation.findFirst({
       where: {
         id,
         organizationId: requestingUser.organizationId,
@@ -268,7 +322,7 @@ export async function PATCH(
     }
 
     // Get invitation
-    const invitation = await (prisma as any).teamInvitation.findFirst({
+    const invitation = await extendedPrisma.teamInvitation.findFirst({
       where: {
         id,
         organizationId: requestingUser.organizationId,
@@ -291,13 +345,13 @@ export async function PATCH(
     }
 
     // Build update data
-    const updateData: any = {};
+    const updateData: InvitationUpdateData = {};
     if (role !== undefined) updateData.role = role;
     if (message !== undefined) updateData.message = message;
     if (campaignAccess !== undefined) updateData.campaignAccess = campaignAccess;
 
     // Update invitation
-    const updatedInvitation = await (prisma as any).teamInvitation.update({
+    const updatedInvitation = await extendedPrisma.teamInvitation.update({
       where: { id },
       data: updateData,
     });
@@ -426,7 +480,7 @@ export async function DELETE(
     }
 
     // Get invitation
-    const invitation = await (prisma as any).teamInvitation.findFirst({
+    const invitation = await extendedPrisma.teamInvitation.findFirst({
       where: {
         id,
         organizationId: requestingUser.organizationId,
@@ -441,7 +495,7 @@ export async function DELETE(
     }
 
     // Delete invitation
-    await (prisma as any).teamInvitation.delete({
+    await extendedPrisma.teamInvitation.delete({
       where: { id },
     });
 
@@ -480,7 +534,7 @@ export async function DELETE(
 
 async function checkUserIsAdmin(userId: string, organizationId: string): Promise<boolean> {
   try {
-    const userRoles = await (prisma as any).userRole.findMany({
+    const userRoles = await extendedPrisma.userRole.findMany({
       where: { userId },
       include: {
         role: {

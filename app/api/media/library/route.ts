@@ -48,7 +48,7 @@ const CreateAssetSchema = z.object({
   url: z.string().url().optional(),
   externalId: z.string().optional(),
   prompt: z.string().optional(),
-  metadata: z.record(z.any()).optional(),
+  metadata: z.record(z.unknown()).optional(),
   tags: z.array(z.string()).optional(),
   folderId: z.string().optional(),
 });
@@ -57,12 +57,19 @@ const UpdateAssetSchema = z.object({
   id: z.string(),
   url: z.string().url().optional(),
   status: z.enum(['pending', 'processing', 'completed', 'failed']).optional(),
-  metadata: z.record(z.any()).optional(),
+  metadata: z.record(z.unknown()).optional(),
   tags: z.array(z.string()).optional(),
   folderId: z.string().nullable().optional(),
   isFavorite: z.boolean().optional(),
   isArchived: z.boolean().optional(),
 });
+
+// Type helpers for filter options
+type MediaType = 'image' | 'video' | 'audio';
+type MediaProvider = 'stability' | 'dalle' | 'gemini' | 'runway' | 'synthesia' | 'd-id' | 'elevenlabs';
+type MediaStatus = 'pending' | 'processing' | 'completed' | 'failed';
+type SortField = 'createdAt' | 'updatedAt' | 'usageCount' | 'name';
+type SortOrder = 'asc' | 'desc';
 
 const BatchUpdateSchema = z.object({
   assetIds: z.array(z.string()).min(1).max(100),
@@ -133,19 +140,19 @@ export async function GET(request: NextRequest) {
     const type = searchParams.get('type');
     if (type) {
       filterOptions.type = type.includes(',')
-        ? type.split(',') as any
-        : type as any;
+        ? (type.split(',') as MediaType[])
+        : (type as MediaType);
     }
 
     const provider = searchParams.get('provider');
     if (provider) {
       filterOptions.provider = provider.includes(',')
-        ? provider.split(',') as any
-        : provider as any;
+        ? (provider.split(',') as MediaProvider[])
+        : (provider as MediaProvider);
     }
 
     const status = searchParams.get('status');
-    if (status) filterOptions.status = status as any;
+    if (status) filterOptions.status = status as MediaStatus;
 
     const tags = searchParams.get('tags');
     if (tags) filterOptions.tags = tags.split(',');
@@ -170,10 +177,10 @@ export async function GET(request: NextRequest) {
     if (endDate) filterOptions.endDate = endDate;
 
     const sortBy = searchParams.get('sortBy');
-    if (sortBy) filterOptions.sortBy = sortBy as any;
+    if (sortBy) filterOptions.sortBy = sortBy as SortField;
 
     const sortOrder = searchParams.get('sortOrder');
-    if (sortOrder) filterOptions.sortOrder = sortOrder as any;
+    if (sortOrder) filterOptions.sortOrder = sortOrder as SortOrder;
 
     const limit = searchParams.get('limit');
     if (limit) filterOptions.limit = parseInt(limit, 10);
