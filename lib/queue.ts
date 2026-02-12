@@ -17,7 +17,7 @@
 
 export type JobStatus = 'pending' | 'processing' | 'completed' | 'failed' | 'dead';
 
-export interface Job<T = any> {
+export interface Job<T = unknown> {
   id: string;
   type: string;
   data: T;
@@ -30,7 +30,7 @@ export interface Job<T = any> {
   scheduledFor?: Date;
   completedAt?: Date;
   error?: string;
-  result?: any;
+  result?: unknown;
 }
 
 export interface JobOptions {
@@ -40,7 +40,7 @@ export interface JobOptions {
   scheduledFor?: Date;
 }
 
-export type JobHandler<T = any> = (job: Job<T>) => Promise<any>;
+export type JobHandler<T = unknown> = (job: Job<T>) => Promise<unknown>;
 
 // =============================================================================
 // In-Memory Queue (Development/Fallback)
@@ -96,8 +96,8 @@ export async function enqueue<T>(
 /**
  * Register a job handler
  */
-export function registerHandler(type: string, handler: JobHandler): void {
-  handlers.set(type, handler);
+export function registerHandler<T = unknown>(type: string, handler: JobHandler<T>): void {
+  handlers.set(type, handler as JobHandler);
 }
 
 /**
@@ -329,7 +329,7 @@ export async function queueAnalyticsAggregation(
 export interface WebhookDeliveryJobData {
   url: string;
   event: string;
-  payload: any;
+  payload: unknown;
   secret?: string;
 }
 

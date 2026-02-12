@@ -35,19 +35,73 @@ const SCHEMA_TYPES = [
 // Request validation schema
 const SchemaRequestSchema = z.object({
   type: z.enum(SCHEMA_TYPES),
-  data: z.record(z.any()),
+  data: z.record(z.unknown()),
   url: z.string().url().optional(),
 });
 
+/** FAQ question item */
+interface FAQQuestion {
+  question: string;
+  answer: string;
+}
+
+/** HowTo step item */
+interface HowToStep {
+  name: string;
+  text: string;
+  image?: string;
+}
+
+/** Breadcrumb item */
+interface BreadcrumbItem {
+  name: string;
+  url: string;
+}
+
+/** Contact point data */
+interface ContactPointData {
+  phone?: string;
+  email?: string;
+  type?: string;
+}
+
+/** Address data */
+interface AddressData {
+  street?: string;
+  city?: string;
+  state?: string;
+  zip?: string;
+  country?: string;
+}
+
+/** Coordinates data */
+interface CoordinatesData {
+  lat?: number;
+  lng?: number;
+}
+
+/** Rating data */
+interface RatingData {
+  value?: number;
+  count?: number;
+}
+
+/** Location data */
+interface LocationData {
+  name?: string;
+  address?: string;
+}
+
 // Generate schema based on type
-function generateSchema(type: string, data: Record<string, any>, url?: string): object {
+function generateSchema(type: string, data: Record<string, unknown>, url?: string): object {
   const baseSchema = {
     '@context': 'https://schema.org',
     '@type': type,
   };
 
   switch (type) {
-    case 'Organization':
+    case 'Organization': {
+      const contactPoint = data.contactPoint as ContactPointData | undefined;
       return {
         ...baseSchema,
         name: data.name || 'Company Name',
@@ -55,15 +109,18 @@ function generateSchema(type: string, data: Record<string, any>, url?: string): 
         logo: data.logo || `${url}/logo.png`,
         description: data.description || '',
         sameAs: data.socialProfiles || [],
-        contactPoint: data.contactPoint ? {
+        contactPoint: contactPoint ? {
           '@type': 'ContactPoint',
-          telephone: data.contactPoint.phone,
-          email: data.contactPoint.email,
-          contactType: data.contactPoint.type || 'customer service',
+          telephone: contactPoint.phone,
+          email: contactPoint.email,
+          contactType: contactPoint.type || 'customer service',
         } : undefined,
       };
+    }
 
-    case 'LocalBusiness':
+    case 'LocalBusiness': {
+      const address = data.address as AddressData | undefined;
+      const coordinates = data.coordinates as CoordinatesData | undefined;
       return {
         ...baseSchema,
         name: data.name || 'Business Name',
@@ -71,24 +128,26 @@ function generateSchema(type: string, data: Record<string, any>, url?: string): 
         image: data.image,
         telephone: data.phone,
         email: data.email,
-        address: data.address ? {
+        address: address ? {
           '@type': 'PostalAddress',
-          streetAddress: data.address.street,
-          addressLocality: data.address.city,
-          addressRegion: data.address.state,
-          postalCode: data.address.zip,
-          addressCountry: data.address.country,
+          streetAddress: address.street,
+          addressLocality: address.city,
+          addressRegion: address.state,
+          postalCode: address.zip,
+          addressCountry: address.country,
         } : undefined,
-        geo: data.coordinates ? {
+        geo: coordinates ? {
           '@type': 'GeoCoordinates',
-          latitude: data.coordinates.lat,
-          longitude: data.coordinates.lng,
+          latitude: coordinates.lat,
+          longitude: coordinates.lng,
         } : undefined,
         openingHoursSpecification: data.hours,
         priceRange: data.priceRange,
       };
+    }
 
-    case 'Product':
+    case 'Product': {
+      const rating = data.rating as RatingData | undefined;
       return {
         ...baseSchema,
         name: data.name || 'Product Name',
@@ -106,12 +165,13 @@ function generateSchema(type: string, data: Record<string, any>, url?: string): 
           availability: data.availability || 'https://schema.org/InStock',
           url: data.url || url,
         },
-        aggregateRating: data.rating ? {
+        aggregateRating: rating ? {
           '@type': 'AggregateRating',
-          ratingValue: data.rating.value,
-          reviewCount: data.rating.count,
+          ratingValue: rating.value,
+          reviewCount: rating.count,
         } : undefined,
       };
+    }
 
     case 'Article':
     case 'BlogPosting':
@@ -144,7 +204,7 @@ function generateSchema(type: string, data: Record<string, any>, url?: string): 
     case 'FAQ':
       return {
         ...baseSchema,
-        mainEntity: (data.questions || []).map((q: any) => ({
+        mainEntity: ((data.questions || []) as FAQQuestion[]).map((q: FAQQuestion) => ({
           '@type': 'Question',
           name: q.question,
           acceptedAnswer: {
@@ -154,27 +214,28 @@ function generateSchema(type: string, data: Record<string, any>, url?: string): 
         })),
       };
 
-    case 'HowTo':
+    case 'HowTo': {
+      const costData = data.cost as { currency?: string; value?: number } | undefined;
       return {
         ...baseSchema,
         name: data.title || 'How To Guide',
         description: data.description,
         image: data.image,
         totalTime: data.totalTime,
-        estimatedCost: data.cost ? {
+        estimatedCost: costData ? {
           '@type': 'MonetaryAmount',
-          currency: data.cost.currency || 'USD',
-          value: data.cost.value,
+          currency: costData.currency || 'USD',
+          value: costData.value,
         } : undefined,
-        supply: (data.supplies || []).map((s: string) => ({
+        supply: ((data.supplies || []) as string[]).map((s: string) => ({
           '@type': 'HowToSupply',
           name: s,
         })),
-        tool: (data.tools || []).map((t: string) => ({
+        tool: ((data.tools || []) as string[]).map((t: string) => ({
           '@type': 'HowToTool',
           name: t,
         })),
-        step: (data.steps || []).map((step: any, index: number) => ({
+        step: ((data.steps || []) as HowToStep[]).map((step: HowToStep, index: number) => ({
           '@type': 'HowToStep',
           position: index + 1,
           name: step.name,
@@ -182,18 +243,20 @@ function generateSchema(type: string, data: Record<string, any>, url?: string): 
           image: step.image,
         })),
       };
+    }
 
-    case 'Event':
+    case 'Event': {
+      const location = data.location as LocationData | undefined;
       return {
         ...baseSchema,
         name: data.name || 'Event Name',
         description: data.description,
         startDate: data.startDate,
         endDate: data.endDate,
-        location: data.location ? {
+        location: location ? {
           '@type': data.locationType || 'Place',
-          name: data.location.name,
-          address: data.location.address,
+          name: location.name,
+          address: location.address,
         } : undefined,
         organizer: data.organizer ? {
           '@type': 'Organization',
@@ -210,11 +273,12 @@ function generateSchema(type: string, data: Record<string, any>, url?: string): 
         image: data.image,
         performer: data.performer,
       };
+    }
 
     case 'BreadcrumbList':
       return {
         ...baseSchema,
-        itemListElement: (data.items || []).map((item: any, index: number) => ({
+        itemListElement: ((data.items || []) as BreadcrumbItem[]).map((item: BreadcrumbItem, index: number) => ({
           '@type': 'ListItem',
           position: index + 1,
           name: item.name,

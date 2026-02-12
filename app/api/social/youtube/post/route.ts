@@ -424,8 +424,40 @@ export async function GET(request: NextRequest) {
 
     if (syncFromPlatform) {
       try {
+        // YouTube API response types
+        interface YouTubeChannelResponse {
+          items?: Array<{
+            contentDetails?: {
+              relatedPlaylists?: { uploads?: string };
+            };
+          }>;
+        }
+        interface YouTubePlaylistItem {
+          contentDetails: { videoId: string };
+          snippet: {
+            title: string;
+            description: string;
+            publishedAt: string;
+            thumbnails?: { high?: { url: string } };
+          };
+        }
+        interface YouTubePlaylistResponse {
+          items?: YouTubePlaylistItem[];
+        }
+        interface YouTubeVideoStats {
+          id: string;
+          statistics: {
+            viewCount?: string;
+            likeCount?: string;
+            commentCount?: string;
+          };
+        }
+        interface YouTubeStatsResponse {
+          items?: YouTubeVideoStats[];
+        }
+
         // Get channel's uploads playlist
-        const channelResponse = await makeYouTubeRequest<any>(
+        const channelResponse = await makeYouTubeRequest<YouTubeChannelResponse>(
           '/channels?part=contentDetails&mine=true',
           connection.access_token
         );
@@ -434,23 +466,23 @@ export async function GET(request: NextRequest) {
 
         if (uploadsPlaylistId) {
           // Get videos from uploads playlist
-          const videosResponse = await makeYouTubeRequest<any>(
+          const videosResponse = await makeYouTubeRequest<YouTubePlaylistResponse>(
             `/playlistItems?part=snippet,contentDetails&playlistId=${uploadsPlaylistId}&maxResults=${limit}`,
             connection.access_token
           );
 
           // Get video statistics
-          const videoIds = videosResponse.items?.map((item: any) => item.contentDetails.videoId).join(',');
-          const statsResponse = await makeYouTubeRequest<any>(
+          const videoIds = videosResponse.items?.map((item: YouTubePlaylistItem) => item.contentDetails.videoId).join(',');
+          const statsResponse = await makeYouTubeRequest<YouTubeStatsResponse>(
             `/videos?part=statistics&id=${videoIds}`,
             connection.access_token
           );
 
           const statsMap = new Map(
-            statsResponse.items?.map((item: any) => [item.id, item.statistics]) || []
+            statsResponse.items?.map((item: YouTubeVideoStats) => [item.id, item.statistics]) || []
           );
 
-          const videos = (videosResponse.items || []).map((item: any) => {
+          const videos = (videosResponse.items || []).map((item: YouTubePlaylistItem) => {
             const stats = (statsMap.get(item.contentDetails.videoId) || {}) as {
               viewCount?: string;
               likeCount?: string;
