@@ -10,10 +10,10 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Sparkles, Edit, RefreshCw, Copy, Save, Clock } from '@/components/icons';
-import type { GeneratedContent as GeneratedContentType } from './types';
+import type { GeneratedContentData } from './types';
 
 interface GeneratedContentProps {
-  content: GeneratedContentType | null;
+  content: GeneratedContentData | null;
   selectedVariation: number;
   onVariationChange: (variation: number) => void;
   editMode: boolean;

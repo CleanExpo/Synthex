@@ -26,7 +26,7 @@ export interface ContentMetadata {
   hashtags: string[];
 }
 
-export interface GeneratedContent {
+export interface GeneratedContentData {
   primary: string;
   variations: string[];
   metadata: ContentMetadata;

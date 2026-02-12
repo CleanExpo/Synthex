@@ -7,10 +7,10 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Users, Activity, UserPlus, Ban } from '@/components/icons';
-import type { AdminStats as AdminStatsType } from './types';
+import type { AdminStatsData } from './types';
 
 interface AdminStatsProps {
-  stats: AdminStatsType;
+  stats: AdminStatsData;
 }
 
 const statsConfig = [

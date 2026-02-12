@@ -2,10 +2,13 @@
  * Sandbox Types
  */
 
-import type { LucideIcon } from 'lucide-react';
+import type { ComponentType, SVGProps } from 'react';
+
+// Generic icon type compatible with Heroicons, react-icons, and custom icons
+type IconComponent = ComponentType<SVGProps<SVGSVGElement> & { className?: string }>;
 
 export interface PlatformConfig {
-  icon: LucideIcon;
+  icon: IconComponent;
   name: string;
   maxChars: number;
   features: string[];
@@ -17,7 +20,7 @@ export interface DevicePreset {
   width: number;
   height: number;
   label: string;
-  icon: LucideIcon;
+  icon: IconComponent;
 }
 
 export type Platform = 'twitter' | 'linkedin' | 'instagram' | 'facebook' | 'tiktok';

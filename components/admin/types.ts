@@ -13,7 +13,7 @@ export interface User {
   status?: string;
 }
 
-export interface AdminStats {
+export interface AdminStatsData {
   totalUsers: number;
   activeToday: number;
   newThisWeek: number;

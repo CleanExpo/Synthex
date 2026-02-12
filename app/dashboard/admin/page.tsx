@@ -7,7 +7,7 @@ import toast, { Toaster } from 'react-hot-toast';
 
 import {
   type User,
-  type AdminStats as AdminStatsType,
+  type AdminStatsData,
   type UserAction,
   type BulkAction,
   mockUsers,
@@ -31,7 +31,7 @@ export default function AdminPanel() {
   const [isSaving, setIsSaving] = useState(false);
   const [selectedUserIds, setSelectedUserIds] = useState<Set<string>>(new Set());
   const [isBulkProcessing, setIsBulkProcessing] = useState(false);
-  const [stats, setStats] = useState<AdminStatsType>({
+  const [stats, setStats] = useState<AdminStatsData>({
     totalUsers: 0,
     activeToday: 0,
     newThisWeek: 0,

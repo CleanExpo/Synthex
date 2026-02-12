@@ -3,7 +3,7 @@
  * Mock data and constants
  */
 
-import type { User } from './types';
+import type { User, AdminStatsData } from './types';
 
 export const mockUsers: User[] = [
   {
@@ -34,7 +34,7 @@ export const statusOptions = [
   { value: 'suspended', label: 'Suspended' },
 ];
 
-export function calculateStats(users: User[]) {
+export function calculateStats(users: User[]): AdminStatsData {
   const now = new Date();
   const today = new Date(now.setHours(0, 0, 0, 0));
   const weekAgo = new Date(now.setDate(now.getDate() - 7));

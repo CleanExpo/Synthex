@@ -6,7 +6,7 @@ import { APIErrorCard } from '@/components/error-states';
 import toast from 'react-hot-toast';
 
 import {
-  type GeneratedContent as GeneratedContentType,
+  type GeneratedContentData,
   ContentHeader,
   ContentStats,
   GenerationSettings,
@@ -23,7 +23,7 @@ export default function ContentPage() {
   const [includeEmojis, setIncludeEmojis] = useState(true);
   const [targetLength, setTargetLength] = useState('medium');
   const [isGenerating, setIsGenerating] = useState(false);
-  const [generatedContent, setGeneratedContent] = useState<GeneratedContentType | null>(null);
+  const [generatedContent, setGeneratedContent] = useState<GeneratedContentData | null>(null);
   const [selectedVariation, setSelectedVariation] = useState(0);
   const [editMode, setEditMode] = useState(false);
   const [editedContent, setEditedContent] = useState('');
@@ -71,7 +71,7 @@ export default function ContentPage() {
       const data = await response.json();
       if (data.success && data.data) {
         const aiData = data.data;
-        const transformedContent: GeneratedContentType = {
+        const transformedContent: GeneratedContentData = {
           primary: aiData.content,
           variations: aiData.variations?.map((v: { content: string }) => v.content) || [],
           metadata: {
