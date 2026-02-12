@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { emailService } from '@/lib/email-service';
 import { createClient } from '@supabase/supabase-js';
+import { sanitizeErrorForResponse } from '@/lib/utils/error-utils';
 
 /**
  * Simple HTML sanitization for email content
@@ -107,7 +108,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Email send error:', error);
     return NextResponse.json(
-      { error: 'Failed to send email', details: error },
+      { error: 'Failed to send email', message: sanitizeErrorForResponse(error, 'Email delivery failed') },
       { status: 500 }
     );
   }

@@ -13,6 +13,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { z } from 'zod';
+import { sanitizeErrorForResponse } from '@/lib/utils/error-utils';
 
 // =============================================================================
 // Schemas
@@ -159,7 +160,7 @@ export async function GET(
   } catch (error: unknown) {
     console.error('GET team settings error:', error);
     return NextResponse.json(
-      { error: 'Internal Server Error', message: error instanceof Error ? error.message : String(error) },
+      { error: 'Internal Server Error', message: sanitizeErrorForResponse(error, 'Failed to process team settings request') },
       { status: 500 }
     );
   }
@@ -252,7 +253,7 @@ export async function PATCH(
   } catch (error: unknown) {
     console.error('PATCH team settings error:', error);
     return NextResponse.json(
-      { error: 'Internal Server Error', message: error instanceof Error ? error.message : String(error) },
+      { error: 'Internal Server Error', message: sanitizeErrorForResponse(error, 'Failed to process team settings request') },
       { status: 500 }
     );
   }
@@ -332,7 +333,7 @@ export async function DELETE(
   } catch (error: unknown) {
     console.error('DELETE team error:', error);
     return NextResponse.json(
-      { error: 'Internal Server Error', message: error instanceof Error ? error.message : String(error) },
+      { error: 'Internal Server Error', message: sanitizeErrorForResponse(error, 'Failed to process team settings request') },
       { status: 500 }
     );
   }

@@ -14,6 +14,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { z } from 'zod';
+import { sanitizeErrorForResponse } from '@/lib/utils/error-utils';
 
 // =============================================================================
 // Schemas
@@ -208,7 +209,7 @@ export async function GET(request: NextRequest) {
   } catch (error: unknown) {
     console.error('Admin audit log error:', error);
     return NextResponse.json(
-      { error: 'Internal Server Error', message: error instanceof Error ? error.message : String(error) },
+      { error: 'Internal Server Error', message: sanitizeErrorForResponse(error, 'Failed to process audit log request') },
       { status: 500 }
     );
   }

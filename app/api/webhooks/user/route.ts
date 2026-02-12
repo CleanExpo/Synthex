@@ -16,6 +16,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import crypto from 'crypto';
 import { z } from 'zod';
+import { sanitizeErrorForResponse } from '@/lib/utils/error-utils';
 
 // =============================================================================
 // Schemas
@@ -216,7 +217,7 @@ export async function GET(request: NextRequest) {
   } catch (error: unknown) {
     console.error('List webhooks error:', error);
     return NextResponse.json(
-      { error: 'Internal Server Error', message: error instanceof Error ? error.message : String(error) },
+      { error: 'Internal Server Error', message: sanitizeErrorForResponse(error, 'Failed to process webhook request') },
       { status: 500 }
     );
   }
@@ -287,7 +288,7 @@ export async function POST(request: NextRequest) {
   } catch (error: unknown) {
     console.error('Create webhook error:', error);
     return NextResponse.json(
-      { error: 'Internal Server Error', message: error instanceof Error ? error.message : String(error) },
+      { error: 'Internal Server Error', message: sanitizeErrorForResponse(error, 'Failed to process webhook request') },
       { status: 500 }
     );
   }
@@ -322,7 +323,7 @@ export async function DELETE(request: NextRequest) {
   } catch (error: unknown) {
     console.error('Delete webhook error:', error);
     return NextResponse.json(
-      { error: 'Internal Server Error', message: error instanceof Error ? error.message : String(error) },
+      { error: 'Internal Server Error', message: sanitizeErrorForResponse(error, 'Failed to process webhook request') },
       { status: 500 }
     );
   }

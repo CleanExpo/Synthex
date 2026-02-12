@@ -13,6 +13,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { z } from 'zod';
+import { sanitizeErrorForResponse } from '@/lib/utils/error-utils';
 
 // =============================================================================
 // Auth Helper - Uses centralized JWT utilities (no fallback secrets)
@@ -96,7 +97,7 @@ export async function GET(
   } catch (error: unknown) {
     console.error('GET content error:', error);
     return NextResponse.json(
-      { error: 'Internal Server Error', message: error instanceof Error ? error.message : String(error) },
+      { error: 'Internal Server Error', message: sanitizeErrorForResponse(error, 'Failed to process content request') },
       { status: 500 }
     );
   }
@@ -232,7 +233,7 @@ export async function PATCH(
   } catch (error: unknown) {
     console.error('PATCH content error:', error);
     return NextResponse.json(
-      { error: 'Internal Server Error', message: error instanceof Error ? error.message : String(error) },
+      { error: 'Internal Server Error', message: sanitizeErrorForResponse(error, 'Failed to process content request') },
       { status: 500 }
     );
   }
@@ -313,7 +314,7 @@ export async function DELETE(
   } catch (error: unknown) {
     console.error('DELETE content error:', error);
     return NextResponse.json(
-      { error: 'Internal Server Error', message: error instanceof Error ? error.message : String(error) },
+      { error: 'Internal Server Error', message: sanitizeErrorForResponse(error, 'Failed to process content request') },
       { status: 500 }
     );
   }

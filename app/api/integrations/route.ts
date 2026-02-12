@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase-client';
+import { sanitizeErrorForResponse } from '@/lib/utils/error-utils';
 
 // GET user integrations
 export async function GET(request: NextRequest) {
@@ -48,7 +49,7 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error('Integrations fetch error:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch integrations', details: error instanceof Error ? error.message : String(error) },
+      { error: 'Failed to fetch integrations', message: sanitizeErrorForResponse(error, 'Integration operation failed') },
       { status: 500 }
     );
   }
@@ -131,7 +132,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Integration connection error:', error);
     return NextResponse.json(
-      { error: 'Failed to connect integration', details: error instanceof Error ? error.message : String(error) },
+      { error: 'Failed to connect integration', message: sanitizeErrorForResponse(error, 'Integration operation failed') },
       { status: 500 }
     );
   }
@@ -180,7 +181,7 @@ export async function DELETE(request: NextRequest) {
   } catch (error) {
     console.error('Integration disconnection error:', error);
     return NextResponse.json(
-      { error: 'Failed to disconnect integration', details: error instanceof Error ? error.message : String(error) },
+      { error: 'Failed to disconnect integration', message: sanitizeErrorForResponse(error, 'Integration operation failed') },
       { status: 500 }
     );
   }

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { sanitizeErrorForResponse } from '@/lib/utils/error-utils';
 
 // Lazy-initialize Supabase admin client (avoids build-time errors)
 let supabaseAdmin: SupabaseClient | null = null;
@@ -121,7 +122,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Backup failed:', error);
     return NextResponse.json(
-      { error: 'Backup failed', details: error },
+      { error: 'Backup failed', message: sanitizeErrorForResponse(error, 'Backup operation failed') },
       { status: 500 }
     );
   }

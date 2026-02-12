@@ -11,6 +11,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { sanitizeErrorForResponse } from '@/lib/utils/error-utils';
 import {
   getQueueStats,
   getJobsByStatus,
@@ -155,7 +156,7 @@ export async function GET(request: NextRequest) {
   } catch (error: unknown) {
     console.error('Admin jobs GET error:', error);
     return NextResponse.json(
-      { error: 'Internal Server Error', message: error instanceof Error ? error.message : String(error) },
+      { error: 'Internal Server Error', message: sanitizeErrorForResponse(error, 'Failed to process job request') },
       { status: 500 }
     );
   }
@@ -273,7 +274,7 @@ export async function POST(request: NextRequest) {
   } catch (error: unknown) {
     console.error('Admin jobs POST error:', error);
     return NextResponse.json(
-      { error: 'Internal Server Error', message: error instanceof Error ? error.message : String(error) },
+      { error: 'Internal Server Error', message: sanitizeErrorForResponse(error, 'Failed to process job request') },
       { status: 500 }
     );
   }

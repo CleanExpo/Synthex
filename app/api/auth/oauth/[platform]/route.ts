@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase-client';
 import prisma from '@/lib/prisma';
+import { sanitizeErrorForResponse } from '@/lib/utils/error-utils';
 
 // OAuth configuration for different platforms
 const oauthConfig = {
@@ -143,7 +144,7 @@ export async function GET(
   } catch (error: unknown) {
     console.error('OAuth initiation error:', error);
     return NextResponse.json(
-      { error: 'Failed to initiate OAuth', details: error instanceof Error ? error.message : String(error) },
+      { error: 'Failed to initiate OAuth', message: sanitizeErrorForResponse(error, 'OAuth operation failed') },
       { status: 500 }
     );
   }
@@ -280,7 +281,7 @@ export async function POST(
   } catch (error: unknown) {
     console.error('OAuth callback error:', error);
     return NextResponse.json(
-      { error: 'Failed to complete OAuth', details: error instanceof Error ? error.message : String(error) },
+      { error: 'Failed to complete OAuth', message: sanitizeErrorForResponse(error, 'OAuth operation failed') },
       { status: 500 }
     );
   }

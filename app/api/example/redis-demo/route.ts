@@ -7,6 +7,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { withSession } from '@/src/middleware/session';
 import { withRateLimit, RATE_LIMIT_PRESETS } from '@/src/middleware/rate-limit';
 import { set, get, del, exists } from '@/lib/redis-unified';
+import { sanitizeErrorForResponse } from '@/lib/utils/error-utils';
 
 /**
  * GET /api/example/redis-demo
@@ -75,7 +76,7 @@ export async function GET(request: NextRequest) {
       } catch (error: unknown) {
         console.error('Redis demo error:', error);
         return NextResponse.json(
-          { error: 'Internal server error', message: error instanceof Error ? error.message : String(error) },
+          { error: 'Internal server error', message: sanitizeErrorForResponse(error, 'Redis operation failed') },
           { status: 500 }
         );
       }
@@ -178,7 +179,7 @@ export async function POST(request: NextRequest) {
       } catch (error: unknown) {
         console.error('Redis demo write error:', error);
         return NextResponse.json(
-          { error: 'Internal server error', message: error instanceof Error ? error.message : String(error) },
+          { error: 'Internal server error', message: sanitizeErrorForResponse(error, 'Redis operation failed') },
           { status: 500 }
         );
       }
@@ -226,7 +227,7 @@ export async function DELETE(request: NextRequest) {
       } catch (error: unknown) {
         console.error('Redis demo delete error:', error);
         return NextResponse.json(
-          { error: 'Internal server error', message: error instanceof Error ? error.message : String(error) },
+          { error: 'Internal server error', message: sanitizeErrorForResponse(error, 'Redis operation failed') },
           { status: 500 }
         );
       }
