@@ -6,14 +6,17 @@
  *
  * ENVIRONMENT VARIABLES REQUIRED:
  * - DATABASE_URL: PostgreSQL connection (CRITICAL)
+ * - JWT_SECRET: Token signing key (CRITICAL)
  *
+ * SECURITY: GET requires authentication
  * FAILURE MODE: Returns default optimal times on failure
  */
 
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { ResponseOptimizer } from '@/lib/api/response-optimizer';
 import { logger } from '@/lib/logger';
 import { CalendarService } from '@/src/services/content/calendar-service';
+import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
 
 // ============================================================================
 // GET - Get Optimal Times
@@ -21,6 +24,18 @@ import { CalendarService } from '@/src/services/content/calendar-service';
 
 export async function GET(request: NextRequest) {
   try {
+    // Authentication required for calendar data
+    const security = await APISecurityChecker.check(
+      request,
+      DEFAULT_POLICIES.AUTHENTICATED_READ
+    );
+    if (!security.allowed) {
+      return ResponseOptimizer.createErrorResponse(
+        security.error || 'Authentication required',
+        security.error?.includes('Rate limit') ? 429 : 401
+      );
+    }
+
     const { searchParams } = new URL(request.url);
     const organizationId = searchParams.get('organizationId');
     const platform = searchParams.get('platform');

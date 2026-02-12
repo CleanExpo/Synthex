@@ -8,13 +8,16 @@
  * ENVIRONMENT VARIABLES REQUIRED:
  * - OPENROUTER_API_KEY: AI service key (SECRET)
  * - DATABASE_URL: PostgreSQL connection (CRITICAL)
+ * - JWT_SECRET: Token signing key (CRITICAL)
  *
+ * SECURITY: POST requires authentication, GET is public (strategy list)
  * FAILURE MODE: Returns fallback variations if AI fails
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { ResponseOptimizer } from '@/lib/api/response-optimizer';
 import { logger } from '@/lib/logger';
+import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
 import {
   ContentVariationsService,
   type VariationConfig,
@@ -28,6 +31,18 @@ import {
 
 export async function POST(request: NextRequest) {
   try {
+    // Authentication required for content generation
+    const security = await APISecurityChecker.check(
+      request,
+      DEFAULT_POLICIES.AUTHENTICATED_WRITE
+    );
+    if (!security.allowed) {
+      return ResponseOptimizer.createErrorResponse(
+        security.error || 'Authentication required',
+        security.error?.includes('Rate limit') ? 429 : 401
+      );
+    }
+
     const body = await request.json();
     const {
       content,

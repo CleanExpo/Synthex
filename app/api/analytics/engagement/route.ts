@@ -1,19 +1,30 @@
 /**
  * Engagement Analytics API
  * Track and update engagement metrics for posts
+ *
+ * ENVIRONMENT VARIABLES REQUIRED:
+ * - DATABASE_URL: PostgreSQL connection (CRITICAL)
+ * - JWT_SECRET: Token signing key (CRITICAL)
+ *
+ * SECURITY: POST requires authentication
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { analyticsTracker } from '@/lib/analytics/analytics-tracker';
+import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
 
 export async function POST(request: NextRequest) {
   try {
-    // Check authentication
-    const authToken = request.cookies.get('auth-token')?.value;
-    if (!authToken) {
-      return NextResponse.json(
-        { error: 'Authentication required' },
-        { status: 401 }
+    // Proper authentication check
+    const security = await APISecurityChecker.check(
+      request,
+      DEFAULT_POLICIES.AUTHENTICATED_WRITE
+    );
+    if (!security.allowed) {
+      return APISecurityChecker.createSecureResponse(
+        { error: security.error || 'Authentication required' },
+        security.error?.includes('Rate limit') ? 429 : 401,
+        security.context
       );
     }
 
