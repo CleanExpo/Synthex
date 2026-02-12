@@ -6,7 +6,7 @@
  */
 
 import { Button } from '@/components/ui/button';
-import { Plus, Download, Loader2 } from 'lucide-react';
+import { Plus, Download, Loader2 } from '@/components/icons';
 import toast from 'react-hot-toast';
 import type { Persona } from './types';
 

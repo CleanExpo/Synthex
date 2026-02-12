@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
-import { Upload, Link } from 'lucide-react';
+import { Upload, Link } from '@/components/icons';
 import { contentTypes } from './personas-config';
 import type { Persona } from './types';
 

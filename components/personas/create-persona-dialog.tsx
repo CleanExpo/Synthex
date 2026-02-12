@@ -24,7 +24,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Plus, Loader2 } from 'lucide-react';
+import { Plus, Loader2 } from '@/components/icons';
 import { toneOptions, styleOptions, vocabularyOptions, emotionOptions } from './personas-config';
 import type { NewPersonaForm } from './types';
 

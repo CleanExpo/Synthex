@@ -6,7 +6,7 @@
  */
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { CheckCircle, Loader2, AlertCircle } from 'lucide-react';
+import { CheckCircle, Loader2, AlertCircle } from '@/components/icons';
 import type { Persona } from './types';
 
 interface PersonaListProps {

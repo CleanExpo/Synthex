@@ -6,7 +6,7 @@
  */
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { User, Brain, BarChart3, FileText } from 'lucide-react';
+import { User, Brain, BarChart3, FileText } from '@/components/icons';
 import type { PersonaStats } from './types';
 
 interface PersonaStatsGridProps {

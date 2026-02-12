@@ -8,7 +8,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { Edit, Trash2, Brain, Copy, Settings, Loader2 } from 'lucide-react';
+import { Edit, Trash2, Brain, Copy, Settings, Loader2 } from '@/components/icons';
 import type { Persona } from './types';
 
 interface PersonaDetailsProps {

@@ -7,7 +7,7 @@
 
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Brain, Plus } from 'lucide-react';
+import { Brain, Plus } from '@/components/icons';
 
 interface PersonaEmptyStateProps {
   onCreateClick: () => void;

@@ -3,7 +3,7 @@
  * Constants and mock data
  */
 
-import { FileText, Mic, Video, Image, Link } from 'lucide-react';
+import { FileText, Mic, Video, Image, Link } from '@/components/icons';
 import type { Persona, ContentType } from './types';
 
 export const mockPersonas: Persona[] = [
