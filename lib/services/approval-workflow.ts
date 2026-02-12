@@ -100,6 +100,44 @@ export interface WorkflowStepTemplate {
   autoApproveAfter?: number;
 }
 
+/** Database row for approval request */
+interface ApprovalRequestRow {
+  id: string;
+  content_id: string;
+  content_type: 'post' | 'campaign' | 'media' | 'template';
+  client_id?: string;
+  workflow_id?: string;
+  submitted_by: string;
+  status: ApprovalStatus;
+  current_step: number;
+  total_steps: number;
+  priority: 'low' | 'normal' | 'high' | 'urgent';
+  due_date?: string;
+  steps?: ApprovalStep[];
+  metadata?: {
+    title: string;
+    description?: string;
+    platforms?: string[];
+    scheduledTime?: string;
+    tags?: string[];
+  };
+  created_at: string;
+  updated_at: string;
+}
+
+/** Database row for workflow template */
+interface WorkflowTemplateRow {
+  id: string;
+  organization_id: string;
+  name: string;
+  description: string;
+  steps?: WorkflowStepTemplate[];
+  is_default: boolean;
+  content_types?: string[];
+  created_at: string;
+  updated_at: string;
+}
+
 class ApprovalWorkflowService {
   private supabase: SupabaseClient;
 
@@ -806,7 +844,7 @@ class ApprovalWorkflowService {
     }
   }
 
-  private mapDbToRequest(data: any): ApprovalRequest {
+  private mapDbToRequest(data: ApprovalRequestRow): ApprovalRequest {
     return {
       id: data.id,
       contentId: data.content_id,
@@ -820,13 +858,13 @@ class ApprovalWorkflowService {
       priority: data.priority,
       dueDate: data.due_date,
       steps: data.steps || [],
-      metadata: data.metadata || {},
+      metadata: data.metadata || { title: '' },
       createdAt: data.created_at,
       updatedAt: data.updated_at,
     };
   }
 
-  private mapDbToTemplate(data: any): WorkflowTemplate {
+  private mapDbToTemplate(data: WorkflowTemplateRow): WorkflowTemplate {
     return {
       id: data.id,
       organizationId: data.organization_id,

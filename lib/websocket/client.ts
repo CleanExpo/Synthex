@@ -6,7 +6,7 @@ import { toast } from 'sonner';
 
 export interface WebSocketMessage {
   type: 'notification' | 'update' | 'error' | 'ping' | 'pong' | 'subscribe' | 'unsubscribe';
-  data?: any;
+  data?: unknown;
   channel?: string;
   id?: string;
   timestamp?: string;
@@ -119,7 +119,7 @@ class WebSocketClient {
   /**
    * Emit event to listeners
    */
-  private emit(event: string, data?: any): void {
+  private emit(event: string, data?: unknown): void {
     const listeners = this.eventListeners.get(event);
     if (listeners) {
       listeners.forEach(callback => {
@@ -162,7 +162,7 @@ class WebSocketClient {
       
       switch (message.type) {
         case 'notification':
-          this.handleNotification(message.data);
+          this.handleNotification(message.data as NotificationData);
           break;
           
         case 'update':

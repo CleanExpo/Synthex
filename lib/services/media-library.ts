@@ -91,6 +91,41 @@ export interface BatchOperationResult {
   errors: Array<{ id: string; error: string }>;
 }
 
+/** Database row for media asset */
+interface MediaAssetRow {
+  id: string;
+  user_id: string;
+  type: MediaType;
+  provider: MediaProvider;
+  status?: MediaStatus;
+  url?: string;
+  video_url?: string;
+  base64_data?: string;
+  external_id?: string;
+  prompt?: string;
+  metadata?: Record<string, unknown>;
+  tags?: string[];
+  folder_id?: string;
+  is_favorite?: boolean;
+  is_archived?: boolean;
+  usage_count?: number;
+  created_at: string;
+  updated_at?: string;
+}
+
+/** Database row for media folder */
+interface MediaFolderRow {
+  id: string;
+  user_id: string;
+  name: string;
+  parent_id?: string;
+  color?: string;
+  icon?: string;
+  asset_count?: number;
+  created_at: string;
+  updated_at?: string;
+}
+
 class MediaLibraryService {
   private supabase: SupabaseClient;
 
@@ -379,9 +414,16 @@ class MediaLibraryService {
     for (const id of assetIds) {
       try {
         // Handle tag operations
-        let finalUpdates: any = { ...updates };
-        delete finalUpdates.addTags;
-        delete finalUpdates.removeTags;
+        const finalUpdates: Partial<{
+          folderId: string | null;
+          tags: string[];
+          isFavorite: boolean;
+          isArchived: boolean;
+        }> = {};
+        if (updates.folderId !== undefined) finalUpdates.folderId = updates.folderId;
+        if (updates.isFavorite !== undefined) finalUpdates.isFavorite = updates.isFavorite;
+        if (updates.isArchived !== undefined) finalUpdates.isArchived = updates.isArchived;
+        if (updates.tags !== undefined) finalUpdates.tags = updates.tags;
 
         if (updates.addTags || updates.removeTags) {
           const asset = await this.getAsset(userId, id);
@@ -659,7 +701,7 @@ class MediaLibraryService {
 
   // ==================== Helpers ====================
 
-  private mapDbToAsset(data: any): MediaAsset {
+  private mapDbToAsset(data: MediaAssetRow): MediaAsset {
     return {
       id: data.id,
       userId: data.user_id,
@@ -681,7 +723,7 @@ class MediaLibraryService {
     };
   }
 
-  private mapDbToFolder(data: any): MediaFolder {
+  private mapDbToFolder(data: MediaFolderRow): MediaFolder {
     return {
       id: data.id,
       userId: data.user_id,
