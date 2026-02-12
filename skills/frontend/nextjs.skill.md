@@ -11,9 +11,18 @@ triggers:
   - react
   - page
   - app router
+requires:
+  - design/design-system.skill.md
 ---
 
 # Next.js 15 Patterns
+
+## When NOT to Use This Skill
+
+- When building a Vite or plain React application (not Next.js)
+- When working on Python/FastAPI backend code (use fastapi.skill.md)
+- When the task is database-only with no frontend component
+- Instead use: `fastapi.skill.md` for Python backend, generic React patterns for non-Next.js
 
 ## App Router Structure
 

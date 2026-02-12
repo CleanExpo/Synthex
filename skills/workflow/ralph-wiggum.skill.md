@@ -19,6 +19,15 @@ requires:
 
 # Ralph Wiggum Technique
 
+## When NOT to Use This Skill
+
+- When building a single feature that needs quick iteration and user feedback
+- When the task requires creative decisions best made interactively
+- When debugging a specific bug (use bug-fixing)
+- Instead use: `feature-development.skill.md` for single features with quick iteration
+
+> **Overlap note**: Batch automation with persistent memory. For single features needing quick iteration, use `feature-development.skill.md`
+
 ## Overview
 
 The Ralph Wiggum technique is a simple but powerful pattern for autonomous AI-driven development:

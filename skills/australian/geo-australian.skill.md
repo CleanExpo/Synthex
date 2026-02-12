@@ -4,11 +4,26 @@ category: australian
 version: 1.0.0
 description: GEO optimization for Australian market
 priority: 2
+triggers:
+  - seo australia
+  - geo australian
+  - brisbane seo
+requires:
+  - australian/australian-context.skill.md
 ---
 
 # GEO Australian Skill
 
 Generative Engine Optimization for Australian search market.
+
+## When NOT to Use This Skill
+
+- When applying general Australian locale defaults (use australian-context)
+- When the task is not SEO-related (use australian-context for base locale)
+- When optimising for non-Australian search markets
+- Instead use: `australian-context.skill.md` for base Australian defaults
+
+> **Overlap note**: SEO-specific only. For base Australian locale defaults, use `australian-context.skill.md`
 
 ## Goal
 

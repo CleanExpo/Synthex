@@ -14,6 +14,13 @@ triggers:
 
 # FastAPI Patterns
 
+## When NOT to Use This Skill
+
+- When Flask, Django, or Express is the better-suited framework for the task
+- When building Next.js API routes (use Next.js patterns directly)
+- When the backend doesn't use Python
+- Instead use: `nextjs.skill.md` for Next.js API routes
+
 ## App Setup
 
 ```python

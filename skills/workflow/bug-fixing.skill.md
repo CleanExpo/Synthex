@@ -18,6 +18,13 @@ requires:
 
 # Bug Fixing Workflow
 
+## When NOT to Use This Skill
+
+- When the issue needs immediate escalation to a human developer
+- When the bug is in infrastructure/deployment (not code)
+- When the task is new feature development (use feature-development)
+- Instead use: `feature-development.skill.md` for new features
+
 ## Purpose
 
 Guide agents through systematic bug fixing: reproduction, root cause analysis, fix, and regression prevention.

@@ -10,6 +10,12 @@ metadata:
   version: "1.0"
   engine: synthex-ai-agency
   type: platform-skill
+  triggers:
+    - showcase video
+    - platform demo
+    - marketing video
+    - homepage content
+    - capability demonstration
 ---
 
 # Platform Showcase
@@ -29,6 +35,14 @@ Activate this skill when:
 - Marketing campaign requires video content
 - Sales team needs demo material
 - A capability showcase is needed for a specific industry
+
+## When NOT to Use This Skill
+
+- When generating client-specific videos (use video-engine in Client Mode)
+- When creating non-Synthex marketing content (use content agents)
+- When managing client accounts or billing (use client-manager)
+- When generating standalone images (use imagen-designer)
+- Instead use: `video-engine` for client videos, `client-manager` for client ops
 
 ## Instructions
 

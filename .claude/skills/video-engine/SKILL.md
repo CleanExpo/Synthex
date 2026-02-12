@@ -10,6 +10,12 @@ metadata:
   version: "1.0"
   engine: synthex-ai-agency
   type: core-skill
+  triggers:
+    - video generation
+    - explainer video
+    - video production
+    - video walkthrough
+    - promotional video
 ---
 
 # Synthex Video Engine
@@ -44,6 +50,14 @@ Activate this skill when:
 - Synthex homepage needs showcase videos
 - Video production pipeline needs orchestration
 - Content verification is required
+
+## When NOT to Use This Skill
+
+- When generating static images only (use imagen-designer)
+- When managing client onboarding or billing (use client-manager)
+- When creating non-video marketing content (use content agents)
+- When verifying factual claims without video context (use truth-finder)
+- Instead use: `imagen-designer` for images, `client-manager` for client ops
 
 ## Pipeline Architecture
 

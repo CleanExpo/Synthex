@@ -5,11 +5,26 @@ version: 1.0.0
 description: Search market takeover strategy
 priority: 2
 market_focus: Australian
+triggers:
+  - search strategy
+  - keyword strategy
+  - search dominance
+  - market takeover
+  - serp strategy
 ---
 
 # Search Dominance Skill
 
 Strategic planning for complete search market domination.
+
+## When NOT to Use This Skill
+
+- When executing content (writing articles, creating pages) — strategy only
+- When doing technical SEO audits (use seo-audit tools)
+- When optimising a single page (use seo-page tools)
+- Instead use: `authority-curator.skill.md` for content execution
+
+> **Overlap note**: Strategy & planning only. For content execution, use `authority-curator.skill.md`
 
 ## Success Metric
 

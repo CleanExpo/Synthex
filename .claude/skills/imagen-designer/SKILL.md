@@ -9,6 +9,12 @@ metadata:
   version: "2.0"
   engine: synthex-ai-agency
   type: generation-skill
+  triggers:
+    - image generation
+    - ai image
+    - imagen
+    - visual asset
+    - gemini image
 ---
 
 # Imagen Designer
@@ -40,6 +46,14 @@ Activate this skill when:
 - Marketing materials require generated images
 - Showcase content needs illustrative visuals
 - Product mockups or UI previews are needed
+
+## When NOT to Use This Skill
+
+- When generating video content or animations (use video-engine)
+- When real-time image rendering is needed (not supported)
+- When text-heavy images are required (AI text rendering is unreliable)
+- When managing client assets or billing (use client-manager)
+- Instead use: `video-engine` for video, `client-manager` for client operations
 
 ## Environment Discovery
 

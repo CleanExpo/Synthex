@@ -6,9 +6,24 @@ description: Verification-first development approach - Australian-enhanced
 author: Unite Group
 priority: 1
 auto_load: true
+triggers:
+  - verification
+  - verify first
+  - test before ship
+  - verification gate
+  - quality assurance
 ---
 
 # Verification-First Development
+
+## When NOT to Use This Skill
+
+- When doing exploratory prototyping where verification gates slow progress
+- When the task is creative content with no factual claims (use truth-finder for facts)
+- When implementing error handling patterns in code (use error-handling)
+- Instead use: `error-handling.skill.md` for code error patterns
+
+> **Overlap note**: Process & reporting. For code error patterns, use `error-handling.skill.md`
 
 ## The Problem with AI Coding Assistants
 

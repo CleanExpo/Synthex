@@ -6,11 +6,23 @@ description: Locked design tokens, 2025-2026 aesthetic enforcement
 auto_load: true
 priority: 1
 data_source: .claude/data/design-tokens.json
+triggers:
+  - design
+  - ui component
+  - icon
+  - glassmorphism
 ---
 
 # Design System Skill
 
 Enforces consistent, modern visual design across all UI.
+
+## When NOT to Use This Skill
+
+- When building backend architecture or API logic
+- When the task is database schema design
+- When writing non-visual utility code
+- Instead use: `api-testing` for API work, `database-prisma` for database design
 
 ## Locked Values (Cannot Deviate)
 

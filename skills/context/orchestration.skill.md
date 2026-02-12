@@ -18,6 +18,13 @@ requires:
 ## Purpose
 Route all incoming tasks to the appropriate agent/skill and enforce verification-first development with Australian context.
 
+## When NOT to Use This Skill
+
+- When executing a single-skill task that doesn't need routing
+- When the task is already delegated to a specific agent
+- When running in ralph-wiggum autonomous mode (ralph handles its own orchestration)
+- Instead use: The specific skill for the task at hand
+
 ## Core Principles
 
 ### 1. Verification Before Progress

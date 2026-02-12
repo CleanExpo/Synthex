@@ -20,6 +20,13 @@ triggers:
 
 Build on psychology, personas, journeys, emotions, scenarios, quality, and metrics—BEFORE code.
 
+## When NOT to Use This Skill
+
+- When doing quick prototypes or proof-of-concept work
+- When fixing a small bug that doesn't affect UX foundations
+- When the feature is already fully specified with personas and journeys
+- Instead use: `bug-fixing.skill.md` for bug fixes, direct implementation for specified features
+
 ## The 7-Layer Foundation
 
 | Layer | Focus | Key Files |

@@ -5,9 +5,25 @@ version: 2.0.0
 description: Error handling patterns with Australian user-friendly messages
 author: Unite Group
 priority: 2
+triggers:
+  - error
+  - exception
+  - failure
+  - crash
 ---
 
 # Error Handling Patterns
+
+## When NOT to Use This Skill
+
+- When the task is verification process/reporting (use verification-first)
+- When doing code review without error-handling focus (use code-review)
+- When the error is in database schema (use database-prisma)
+- Instead use: `verification-first.skill.md` for process verification
+
+> **Overlap note**: Implementation patterns (code). For process & reporting, use `verification-first.skill.md`
+
+See also: `verification/verification-first.skill.md`
 
 ## Principles
 

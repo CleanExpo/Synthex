@@ -10,6 +10,12 @@ metadata:
   version: "1.0"
   engine: synthex-ai-agency
   type: platform-skill
+  triggers:
+    - client onboarding
+    - tenant management
+    - client config
+    - data isolation
+    - client billing
 ---
 
 # Client Manager
@@ -28,6 +34,14 @@ Activate this skill when:
 - Client config needs updating (new repo, rebrand, etc.)
 - Usage/billing needs checking before generation
 - Client data access needs verification (isolation checks)
+
+## When NOT to Use This Skill
+
+- When generating video content (use video-engine)
+- When verifying factual claims in content (use truth-finder)
+- When creating platform showcase videos (use platform-showcase)
+- When generating AI images (use imagen-designer)
+- Instead use: `video-engine` for video production, `platform-showcase` for marketing
 
 ## Instructions
 

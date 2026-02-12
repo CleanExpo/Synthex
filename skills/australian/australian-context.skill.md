@@ -5,11 +5,26 @@ version: 1.0.0
 description: Australian English defaults, regulations, locale settings
 auto_load: true
 priority: 1
+triggers:
+  - australian
+  - en-au
+  - brisbane
+  - privacy act
+  - abn
 ---
 
 # Australian Context Skill
 
 Ensures all output uses Australian English and references Australian context.
+
+## When NOT to Use This Skill
+
+- When creating content for US, UK, or non-Australian markets
+- When the user explicitly requests a different locale or language variant
+- When working on backend code with no user-facing strings
+- Instead use: The appropriate locale skill for the target market
+
+> **Overlap note**: Base locale defaults only. For SEO-specific Australian content, use `geo-australian.skill.md`
 
 ## Auto-Applied Settings
 

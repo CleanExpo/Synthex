@@ -4,11 +4,26 @@ category: context
 version: 1.0.0
 description: NodeJS-Starter-V1 specific knowledge
 priority: 2
+triggers:
+  - project context
+  - synthex context
+  - tech stack
+  - project knowledge
+  - codebase context
+requires:
+  - australian/australian-context.skill.md
 ---
 
 # Project Context Skill
 
 Project-specific knowledge for NodeJS-Starter-V1.
+
+## When NOT to Use This Skill
+
+- When working on a non-Synthex project (this context is Synthex-specific)
+- When the task doesn't require project-specific knowledge
+- When generic development practices apply without project context
+- Instead use: General development skills for non-project-specific work
 
 ## Technology Stack
 

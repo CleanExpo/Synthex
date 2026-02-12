@@ -19,6 +19,15 @@ requires:
 
 # Feature Development Workflow
 
+## When NOT to Use This Skill
+
+- When running batch autonomous tasks (use ralph-wiggum for autonomous loops)
+- When fixing a bug in existing code (use bug-fixing)
+- When the feature is purely a design task with no code (use design)
+- Instead use: `ralph-wiggum.skill.md` for batch autonomous work
+
+> **Overlap note**: Single features with interactive feedback. For batch autonomous work, use `ralph-wiggum.skill.md`
+
 ## Purpose
 
 Guide agents through the complete feature development lifecycle: from specification to production-ready code with Australian context.

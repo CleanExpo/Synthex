@@ -14,6 +14,13 @@ triggers:
 
 # Database Migration Patterns
 
+## When NOT to Use This Skill
+
+- When editing raw SQL outside the migration framework
+- When the change is a Prisma-only schema update (use database-prisma)
+- When configuring Supabase auth, storage, or edge functions (use supabase.skill.md)
+- Instead use: `database-prisma` for Prisma schema work, `supabase.skill.md` for Supabase config
+
 ## Migration Structure
 
 ```

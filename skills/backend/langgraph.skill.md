@@ -14,6 +14,13 @@ triggers:
 
 # LangGraph Patterns
 
+## When NOT to Use This Skill
+
+- When a simple sequential script will do (no graph orchestration needed)
+- When the task doesn't involve multi-agent or multi-step workflows
+- When using a different orchestration framework (e.g., CrewAI, AutoGen)
+- Instead use: Simple async functions for sequential tasks
+
 ## Graph Structure
 
 ```python

@@ -24,6 +24,15 @@ requires:
 
 Generate **Research Report Linkable Assets** - high-quality, data-driven content pages optimized for E-E-A-T signals and designed to attract backlinks from authoritative sources (.edu, .gov, industry publications).
 
+## When NOT to Use This Skill
+
+- When planning search strategy, not executing content (use search-dominance)
+- When writing quick blog posts without authority-building intent
+- When the task is rank monitoring or tracking (use rank-monitoring)
+- Instead use: `search-dominance.skill.md` for strategy, `rank-monitoring.skill.md` for tracking
+
+> **Overlap note**: Content execution only. For strategy & planning, use `search-dominance.skill.md`
+
 ## Purpose
 
 The Authority Curator creates content that:

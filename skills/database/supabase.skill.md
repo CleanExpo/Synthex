@@ -10,9 +10,18 @@ triggers:
   - database
   - auth
   - postgres
+requires:
+  - database/migrations.skill.md
 ---
 
 # Supabase Patterns
+
+## When NOT to Use This Skill
+
+- When using a direct PostgreSQL client without Supabase
+- When the task is Prisma schema management (use database-prisma)
+- When writing raw migration SQL (use migrations.skill.md)
+- Instead use: `database-prisma` for Prisma work, `migrations.skill.md` for migration SQL
 
 ## Client Setup
 

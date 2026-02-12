@@ -17,6 +17,13 @@ triggers:
 
 Context-efficient tool management via search, deferred loading, and programmatic calling.
 
+## When NOT to Use This Skill
+
+- When a single tool call is sufficient (no context optimisation needed)
+- When the task doesn't involve AI tool calling or MCP integration
+- When building simple CRUD endpoints without tool orchestration
+- Instead use: Direct tool calls for simple single-tool tasks
+
 ## Features
 
 | Feature | Benefit | API Type |
