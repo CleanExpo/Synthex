@@ -1,11 +1,20 @@
 /**
  * AI Content Generation API with Enhanced Rate Limiting
- * Example of using per-user rate limiting with plan-based limits
+ * POST /api/generate - Generate AI content
+ * GET /api/generate - Get endpoint info and rate limits
+ *
+ * ENVIRONMENT VARIABLES REQUIRED:
+ * - NEXT_PUBLIC_SUPABASE_URL: Supabase URL (PUBLIC)
+ * - SUPABASE_SERVICE_ROLE_KEY: Supabase service role key (SECRET)
+ * - JWT_SECRET: JWT signing key (CRITICAL)
+ *
+ * SECURITY: Requires authentication via JWT token
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { enhancedRateLimiters } from '@/src/middleware/enhanced-rate-limit';
 import { createClient } from '@supabase/supabase-js';
+import { verifyTokenSafe } from '@/lib/auth/jwt-utils';
 
 // Initialize Supabase
 const supabase = createClient(
@@ -16,8 +25,36 @@ const supabase = createClient(
 // Handler function
 async function generateContent(req: NextRequest): Promise<NextResponse> {
   try {
+    // Auth check - require JWT token
+    const authHeader = req.headers.get('authorization');
+    const cookieToken = req.cookies.get('auth-token')?.value;
+
+    let token: string | null = null;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      token = authHeader.substring(7);
+    } else if (cookieToken) {
+      token = cookieToken;
+    }
+
+    if (!token) {
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      );
+    }
+
+    const payload = verifyTokenSafe(token);
+    if (!payload?.userId) {
+      return NextResponse.json(
+        { error: 'Invalid authentication token' },
+        { status: 401 }
+      );
+    }
+
+    const userId = payload.userId;
+
     const { prompt, platform, style, count = 1 } = await req.json();
-    
+
     // Validate input
     if (!prompt || !platform) {
       return NextResponse.json(
@@ -25,20 +62,12 @@ async function generateContent(req: NextRequest): Promise<NextResponse> {
         { status: 400 }
       );
     }
-    
+
     if (count < 1 || count > 10) {
       return NextResponse.json(
         { error: 'Count must be between 1 and 10' },
         { status: 400 }
       );
-    }
-    
-    // Get user from auth header (optional - works for anonymous too)
-    let userId: string | null = null;
-    const authHeader = req.headers.get('authorization');
-    if (authHeader && authHeader.startsWith('Bearer ')) {
-      // Extract user ID from token (simplified - use proper JWT validation)
-      userId = 'user-id-from-token';
     }
     
     // Simulate AI generation (replace with actual AI service)
@@ -57,20 +86,18 @@ async function generateContent(req: NextRequest): Promise<NextResponse> {
       });
     }
     
-    // Log generation for analytics
-    if (userId) {
-      await supabase
-        .from('generation_logs')
-        .insert({
-          user_id: userId,
-          prompt,
-          platform,
-          style,
-          count,
-          tokens_used: prompt.length * count * 10, // Simplified token calculation
-          created_at: new Date().toISOString()
-        });
-    }
+    // Log generation for analytics (userId is always defined after auth check)
+    await supabase
+      .from('generation_logs')
+      .insert({
+        user_id: userId,
+        prompt,
+        platform,
+        style,
+        count,
+        tokens_used: prompt.length * count * 10, // Simplified token calculation
+        created_at: new Date().toISOString()
+      });
     
     return NextResponse.json({
       success: true,

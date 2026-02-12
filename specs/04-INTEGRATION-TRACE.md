@@ -88,18 +88,19 @@ Database Save → Prisma Content.create()
 Client Update → React Query invalidation
 ```
 
-**⚠️ CRITICAL FINDING: Hardcoded User ID**
+**✅ RESOLVED: Usage Tracking User ID**
 
-In `lib/usage/usage-tracker.ts`:
+The file `lib/usage/usage-tracker.ts` mentioned in the original audit does not exist.
+Actual implementation: `lib/middleware/rate-limiter.ts` - UsageTracker class.
+
 ```typescript
-await this.trackUsage({
-  userId: 'user_id_here', // HARDCODED - Never works
-  feature: 'ai_generation',
-  tokens: response.usage?.total_tokens || 0
-});
+// Correct implementation - accepts userId as parameter
+static async track(userId: string, feature: string, count: number = 1) {
+  // Properly uses userId from auth context
+}
 ```
 
-This usage tracking never associates with actual users.
+Call site in `app/api/ai/generate-content/route.ts` properly extracts userId from JWT token.
 
 ### 2.2 Post Scheduling Flow
 
@@ -297,9 +298,11 @@ await prisma.auditLog.create({ ... });
 
 ### 9.1 Critical
 
-1. **Fix Hardcoded User ID**
-   - Replace `'user_id_here'` with actual user context
-   - File: `lib/usage/usage-tracker.ts`
+1. ~~**Fix Hardcoded User ID**~~ ✅ RESOLVED
+   - The described issue in `lib/usage/usage-tracker.ts` does not exist
+   - Actual implementation: `lib/middleware/rate-limiter.ts` UsageTracker.track()
+   - Properly accepts userId parameter, extracted from JWT in API routes
+   - Verified 2026-02-12
 
 2. **Unify Password Validation**
    - Choose single auth method or document clearly

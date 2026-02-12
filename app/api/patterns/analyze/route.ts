@@ -1,5 +1,17 @@
-import { NextResponse } from 'next/server';
-import { db } from '@/lib/supabase-client';
+/**
+ * Pattern Analysis API
+ * GET /api/patterns/analyze - Get pattern analysis
+ * POST /api/patterns/analyze - Analyze content patterns
+ *
+ * ENVIRONMENT VARIABLES REQUIRED:
+ * - NEXT_PUBLIC_SUPABASE_URL: Supabase URL (PUBLIC)
+ * - NEXT_PUBLIC_SUPABASE_ANON_KEY: Supabase anon key (PUBLIC)
+ *
+ * SECURITY: Requires authentication via Supabase token
+ */
+
+import { NextRequest, NextResponse } from 'next/server';
+import { db, supabase } from '@/lib/supabase-client';
 
 /** Pattern record from database */
 interface PatternRecord {
@@ -97,8 +109,27 @@ const SENTIMENT_KEYWORDS = {
   neutral: ['okay', 'fine', 'average', 'normal', 'regular', 'standard', 'typical', 'usual', 'common'],
 };
 
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
   try {
+    // Auth check - require authorization header with Supabase token
+    const authHeader = request.headers.get('authorization');
+    if (!authHeader) {
+      return NextResponse.json(
+        { error: 'No authorization header' },
+        { status: 401 }
+      );
+    }
+
+    const token = authHeader.replace('Bearer ', '');
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+
+    if (authError || !user) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
     const { searchParams } = new URL(request.url);
     const platform = searchParams.get('platform');
     const timeRange = searchParams.get('timeRange') || '7d';
@@ -147,8 +178,27 @@ export async function GET(request: Request) {
   }
 }
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
+    // Auth check - require authorization header with Supabase token
+    const authHeader = request.headers.get('authorization');
+    if (!authHeader) {
+      return NextResponse.json(
+        { error: 'No authorization header' },
+        { status: 401 }
+      );
+    }
+
+    const token = authHeader.replace('Bearer ', '');
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+
+    if (authError || !user) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
     const body = await request.json();
     const { platform, content, metrics } = body;
 

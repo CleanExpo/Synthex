@@ -1,10 +1,19 @@
 /**
  * Supabase Server Client for Next.js App Router
  * Unified database client for server-side operations
+ *
+ * SECURITY: OAuth tokens (access_token, refresh_token) are encrypted at rest
+ * using AES-256-GCM via lib/security/field-encryption.ts
+ *
+ * ENVIRONMENT VARIABLES REQUIRED:
+ * - NEXT_PUBLIC_SUPABASE_URL: Supabase project URL
+ * - SUPABASE_SERVICE_ROLE_KEY: Supabase service role key (SECRET)
+ * - FIELD_ENCRYPTION_KEY: 32-byte hex key for token encryption (CRITICAL)
  */
 
 import { createClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
+import { encryptField, decryptFieldSafe } from '@/lib/security/field-encryption';
 
 /** Campaign creation/update data */
 export interface CampaignData {
@@ -291,15 +300,27 @@ export const serverDb = {
     }
   },
 
-  // Platform connections
+  // Platform connections (tokens encrypted at rest)
   platformConnections: {
     async create(userId: string, connection: PlatformConnectionData) {
       const supabase = createServerClient();
+
+      // Encrypt OAuth tokens before storing
+      const encryptedConnection = {
+        ...connection,
+        access_token: connection.access_token
+          ? encryptField(connection.access_token)
+          : undefined,
+        refresh_token: connection.refresh_token
+          ? encryptField(connection.refresh_token)
+          : undefined,
+      };
+
       const { data, error } = await supabase
         .from('platform_connections')
         .insert({
           user_id: userId,
-          ...connection
+          ...encryptedConnection
         })
         .select()
         .single();
@@ -318,14 +339,32 @@ export const serverDb = {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return data || [];
+
+      // Decrypt OAuth tokens before returning
+      return (data || []).map((conn) => ({
+        ...conn,
+        access_token: decryptFieldSafe(conn.access_token),
+        refresh_token: decryptFieldSafe(conn.refresh_token),
+      }));
     },
 
     async update(id: string, updates: PlatformConnectionUpdateData) {
       const supabase = createServerClient();
+
+      // Encrypt OAuth tokens if being updated
+      const encryptedUpdates = {
+        ...updates,
+        access_token: updates.access_token
+          ? encryptField(updates.access_token)
+          : updates.access_token,
+        refresh_token: updates.refresh_token
+          ? encryptField(updates.refresh_token)
+          : updates.refresh_token,
+      };
+
       const { data, error } = await supabase
         .from('platform_connections')
-        .update(updates)
+        .update(encryptedUpdates)
         .eq('id', id)
         .select()
         .single();

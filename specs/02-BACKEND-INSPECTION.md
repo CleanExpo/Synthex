@@ -251,7 +251,7 @@ const sensitiveFields = [
 | SEC-002 | **CRITICAL** | User API keys stored plain text | User model | Implement encryption |
 | SEC-003 | **HIGH** | dangerouslySetInnerHTML without sanitization | blog/[slug]/page.tsx:325 | Use DOMPurify |
 | SEC-004 | **MEDIUM** | Error messages expose internal details | Multiple API routes | Sanitize error messages |
-| SEC-005 | **MEDIUM** | 113 routes without explicit auth pattern | Various API routes | Audit and add auth |
+| SEC-005 | **MEDIUM** | 113 routes without explicit auth pattern | Various API routes | Audit and add auth (IN PROGRESS - UNI-557) |
 
 ### 4.2 XSS Risk Analysis
 
@@ -386,17 +386,18 @@ withAdminAPI()       // Enhanced logging
 
 ### 8.1 Immediate Actions (Critical)
 
-1. **Encrypt OAuth Tokens**
-   - Implement field-level encryption for PlatformConnection tokens
-   - Use AES-256-GCM with secure key management
+1. ~~**Encrypt OAuth Tokens**~~ ✅ RESOLVED (2026-02-12)
+   - Account model: lib/auth/account-service.ts uses encryptField/decryptField
+   - PlatformConnection: lib/supabase-server.ts now encrypts tokens via field-encryption.ts
+   - Uses AES-256-GCM with FIELD_ENCRYPTION_KEY environment variable
 
-2. **Encrypt User API Keys**
-   - Encrypt openrouterApiKey and anthropicApiKey fields
-   - Consider using envelope encryption
+2. ~~**Encrypt User API Keys**~~ ✅ RESOLVED
+   - app/api/auth/api-keys/route.ts encrypts with encryptField() before storing
+   - src/services/auth.ts also encrypts via encryptApiKey()
+   - Migration script: scripts/migrate-encrypt-tokens.ts
 
-3. **Sanitize HTML Content**
-   - Add DOMPurify to blog content rendering
-   - Audit all dangerouslySetInnerHTML usage
+3. ~~**Sanitize HTML Content**~~ ✅ RESOLVED (UNI-555)
+   - app/blog/[slug]/page.tsx uses DOMPurify.sanitize() for content
 
 ### 8.2 High Priority
 
