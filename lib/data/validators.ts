@@ -325,11 +325,18 @@ export const integrityChecks: IntegrityCheck[] = [
   { table: 'sessions', field: 'userId', referencedTable: 'users', referencedField: 'id' },
 ];
 
+/** Prisma client interface for reference validation */
+interface PrismaLikeClient {
+  [tableName: string]: {
+    findUnique: (args: { where: { id: string }; select: { id: boolean } }) => Promise<{ id: string } | null>;
+  };
+}
+
 /**
  * Validate that a reference exists
  */
 export async function validateReference(
-  prisma: any,
+  prisma: PrismaLikeClient,
   table: string,
   id: string
 ): Promise<boolean> {

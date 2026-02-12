@@ -7,8 +7,14 @@ import { translations, type NestedTranslationKeys, type TranslationLocale } from
 import { i18nConfig, type Locale } from '../config';
 
 // Get nested value from object using dot notation
-function getNestedValue(obj: any, path: string): string {
-  return path.split('.').reduce((current, key) => current?.[key], obj) || path;
+function getNestedValue(obj: Record<string, unknown>, path: string): string {
+  const result = path.split('.').reduce<unknown>((current, key) => {
+    if (current && typeof current === 'object' && key in current) {
+      return (current as Record<string, unknown>)[key];
+    }
+    return undefined;
+  }, obj);
+  return typeof result === 'string' ? result : path;
 }
 
 // Simple interpolation function

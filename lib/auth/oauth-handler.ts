@@ -7,7 +7,7 @@ import toast from 'react-hot-toast';
 
 interface OAuthProvider {
   name: string;
-  icon?: any;
+  icon?: (props: { className?: string }) => JSX.Element;
   platform: string;
 }
 

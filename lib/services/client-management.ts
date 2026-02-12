@@ -716,7 +716,32 @@ class ClientManagementService {
     }
   }
 
-  private mapDbToClient(data: any): Client {
+  private mapDbToClient(data: {
+    id: string;
+    organization_id: string;
+    name: string;
+    slug: string;
+    domain?: string;
+    logo?: string;
+    industry?: string;
+    timezone?: string;
+    brand_guidelines?: BrandGuidelines;
+    white_label?: WhiteLabelConfig;
+    settings?: ClientSettings;
+    status: 'active' | 'paused' | 'archived';
+    created_at: string;
+    updated_at: string;
+  }): Client {
+    const defaultSettings: ClientSettings = {
+      approvalRequired: false,
+      autoPublish: false,
+      defaultPlatforms: [],
+      postingFrequency: { min: 1, max: 5, unit: 'day' },
+      notifications: { email: true },
+      contentGuidelines: '',
+      restrictedTopics: [],
+    };
+
     return {
       id: data.id,
       organizationId: data.organization_id,
@@ -728,7 +753,7 @@ class ClientManagementService {
       timezone: data.timezone || 'UTC',
       brandGuidelines: data.brand_guidelines,
       whiteLabel: data.white_label,
-      settings: data.settings || {},
+      settings: data.settings || defaultSettings,
       status: data.status,
       createdAt: data.created_at,
       updatedAt: data.updated_at,

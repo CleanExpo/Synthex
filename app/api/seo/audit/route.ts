@@ -24,7 +24,7 @@ const AuditRequestSchema = z.object({
 });
 
 // Mock SEO audit data - In production, this would use actual crawling/analysis
-function performSEOAudit(url: string, options: any) {
+function performSEOAudit(url: string, options: Omit<z.infer<typeof AuditRequestSchema>, 'url'>) {
   const domain = new URL(url).hostname;
 
   return {

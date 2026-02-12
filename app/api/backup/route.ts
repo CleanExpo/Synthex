@@ -32,7 +32,11 @@ export async function POST(request: NextRequest) {
 
   try {
     const timestamp = new Date().toISOString();
-    const backupData: any = {
+    const backupData: {
+      timestamp: string;
+      tables: Record<string, unknown[]>;
+      statistics: Record<string, number>;
+    } = {
       timestamp,
       tables: {},
       statistics: {}

@@ -10,7 +10,7 @@ import jwt from 'jsonwebtoken';
 
 export interface WebSocketMessage {
   type: 'notification' | 'update' | 'error' | 'ping' | 'pong' | 'subscribe' | 'unsubscribe';
-  data?: any;
+  data?: Record<string, unknown>;
   id?: string;
   timestamp?: string;
   userId?: string;

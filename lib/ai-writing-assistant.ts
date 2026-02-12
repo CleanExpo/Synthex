@@ -43,8 +43,17 @@ export interface AIWritingResponse {
   sentiment?: 'positive' | 'negative' | 'neutral';
 }
 
+/** Configuration for a specific writing tone */
+interface ToneConfig {
+  description: string;
+  vocabulary: string[];
+  structure: string;
+  punctuation: string;
+  emojis: boolean;
+}
+
 // Tone descriptions and characteristics
-const toneCharacteristics: Record<WritingTone, any> = {
+const toneCharacteristics: Record<WritingTone, ToneConfig> = {
   professional: {
     description: 'Business-appropriate, clear, and authoritative',
     vocabulary: ['strategic', 'innovative', 'comprehensive', 'efficient'],
@@ -304,7 +313,7 @@ export function checkToneConsistency(
 }
 
 // Helper functions
-function generateMockContent(request: AIWritingRequest, toneConfig: any): string {
+function generateMockContent(request: AIWritingRequest, toneConfig: ToneConfig): string {
   const templates: Record<WritingTone, string> = {
     professional: `In today's competitive landscape, ${request.prompt}. Our strategic approach ensures comprehensive results that drive innovation and efficiency.`,
     casual: `Hey there! So ${request.prompt} - pretty awesome, right? Let's dive in and check out what makes this so cool!`,

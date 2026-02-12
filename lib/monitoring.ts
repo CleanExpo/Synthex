@@ -226,7 +226,7 @@ export function getMonitoring(): MonitoringService {
 
 
 // Utility functions for monitoring
-export function withMonitoring<T extends (...args: any[]) => any>(
+export function withMonitoring<T extends (...args: unknown[]) => unknown>(
   fn: T,
   actionName: string
 ): T {

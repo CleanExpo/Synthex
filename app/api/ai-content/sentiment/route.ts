@@ -460,7 +460,12 @@ export async function GET(request: NextRequest) {
     const offset = parseInt(searchParams.get('offset') || '0', 10);
 
     // Build query
-    const where: any = { userId };
+    const where: {
+      userId: string;
+      contentType?: string;
+      contentId?: string;
+      sentiment?: string;
+    } = { userId };
 
     if (contentType) where.contentType = contentType;
     if (contentId) where.contentId = contentId;

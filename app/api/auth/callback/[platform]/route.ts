@@ -181,7 +181,7 @@ async function fetchUserInfo(
             headers: { Authorization: `Bearer ${accessToken}` },
           });
           const emails = await emailResponse.json();
-          email = emails.find((e: any) => e.primary)?.email;
+          email = emails.find((e: { primary?: boolean; email: string }) => e.primary)?.email;
         } catch {
           // Email fetch failed, continue without it
         }

@@ -178,7 +178,7 @@ export async function POST(request: NextRequest) {
     let optimizedContent: string;
     let suggestions: string[] = [];
     let source: 'ai' | 'rules' = 'rules';
-    let aiMetadata: any = null;
+    let aiMetadata: { model?: string; tokensUsed?: number; responseTime?: number; usage?: Record<string, unknown>; changes?: string[] } | null = null;
 
     // Try AI optimization first
     try {

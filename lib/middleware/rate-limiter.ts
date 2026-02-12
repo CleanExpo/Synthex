@@ -386,7 +386,7 @@ export function createExpressRateLimiter(
     maxRequests: options?.maxRequests || 100,
   };
 
-  return async (req: any, res: any, next: any) => {
+  return async (req: { url: string; headers: Headers }, res: { set: (key: string, value: string) => void; status: (code: number) => { json: (body: unknown) => void } }, next: () => void) => {
     const limiter = new RateLimiter(config);
     const nextReq = new NextRequest(req.url, {
       headers: req.headers,

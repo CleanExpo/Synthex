@@ -1,8 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+/** Monitoring event structure */
+interface MonitoringEvent {
+  sessionId: string;
+  userId?: string;
+  timestamp: string;
+  type: string;
+  data?: Record<string, unknown>;
+}
+
 // In-memory storage for development
 // In production, this should write to a database or external service
-const events: any[] = [];
+const events: MonitoringEvent[] = [];
 
 export async function POST(request: NextRequest) {
   try {

@@ -17,6 +17,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import jwt from 'jsonwebtoken';
 import { z } from 'zod';
 import prisma from '@/lib/prisma';
+import { Prisma } from '@prisma/client';
 import { ResponseOptimizer } from '@/lib/api/response-optimizer';
 import { logger } from '@/lib/logger';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
@@ -311,8 +312,11 @@ export async function PATCH(
     const { name, avatar, preferences } = parseResult.data;
 
     // Build update data - using Prisma.JsonValue for JSON fields
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const updateData: any = {};
+    const updateData: {
+      name?: string;
+      avatar?: string | null;
+      preferences?: Prisma.InputJsonValue;
+    } = {};
     if (name !== undefined) updateData.name = name;
     if (avatar !== undefined) updateData.avatar = avatar;
     if (preferences !== undefined) {
@@ -320,7 +324,7 @@ export async function PATCH(
       updateData.preferences = {
         ...currentPrefs,
         ...preferences,
-      };
+      } as Prisma.InputJsonValue;
     }
 
     // Update member

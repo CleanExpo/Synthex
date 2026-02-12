@@ -70,7 +70,15 @@ async function generateWithRunway(
 
   try {
     let endpoint = '/generations';
-    let payload: any = {
+    let payload: {
+      model: string;
+      duration: number;
+      aspect_ratio: string;
+      prompt?: string;
+      mode?: string;
+      init_image?: string;
+      motion_amount?: number;
+    } = {
       model: 'gen3',
       duration: options.duration || 5,
       aspect_ratio: options.aspectRatio || '16:9',
@@ -201,7 +209,21 @@ async function generateWithDID(
   }
 
   try {
-    const payload: any = {
+    const payload: {
+      source_url: string;
+      script: {
+        type: string;
+        input: string;
+        provider: {
+          type: string;
+          voice_id: string;
+        };
+      };
+      config: {
+        stitch: boolean;
+        pad_audio: number;
+      };
+    } = {
       source_url: options.imageUrl || 'https://d-id-public-bucket.s3.us-west-2.amazonaws.com/alice.jpg',
       script: {
         type: 'text',

@@ -230,7 +230,10 @@ export async function GET(request: NextRequest) {
     const offset = (page - 1) * limit;
 
     // Build where clause
-    const whereClause: any = {
+    const whereClause: {
+      userId: string;
+      type: string;
+    } = {
       userId,
       type: 'scheduled',
     };

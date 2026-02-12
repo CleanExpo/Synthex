@@ -889,7 +889,7 @@ export function validateEnvMiddleware() {
   const validator = EnvValidator.getInstance();
   const result = validator.validate(false);
 
-  return (req: any, res: any, next: any) => {
+  return (req: { envValidation?: typeof result }, res: { status: (code: number) => { json: (body: Record<string, string>) => void } }, next: () => void) => {
     // Attach validation result to request
     req.envValidation = result;
 

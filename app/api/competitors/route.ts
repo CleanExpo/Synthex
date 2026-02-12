@@ -62,9 +62,12 @@ export async function GET(request: NextRequest) {
     const offset = query.offset ? parseInt(query.offset) : 0;
 
     // Build where clause - filter by user's brand generations
-    const whereClause: any = {
+    const whereClause: {
+      generation: { userId: string };
+      generationId?: string;
+    } = {
       generation: {
-        userId: security.context.userId
+        userId: security.context.userId!  // Validated by security check above
       }
     };
 

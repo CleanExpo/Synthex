@@ -238,7 +238,7 @@ async function generateWithGemini(
 
     // Extract image from response
     const imagePart = data.candidates?.[0]?.content?.parts?.find(
-      (part: any) => part.inlineData?.mimeType?.startsWith('image/')
+      (part: { inlineData?: { mimeType?: string; data?: string } }) => part.inlineData?.mimeType?.startsWith('image/')
     );
 
     if (!imagePart) {

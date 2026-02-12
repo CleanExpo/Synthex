@@ -143,7 +143,7 @@ const createPrismaClient = (): PrismaClient => {
 
   // Set up event listeners for connection monitoring (dev only)
   if (process.env.NODE_ENV !== 'production') {
-    client.$on('query' as never, (e: any) => {
+    client.$on('query' as never, (e: { duration: number; query: string }) => {
       if (e.duration > 1000) {
         console.warn(`[Prisma] Slow query (${e.duration}ms):`, e.query);
       }

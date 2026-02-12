@@ -76,7 +76,7 @@ export async function POST(request: NextRequest) {
 /**
  * Handle user login
  */
-async function handleLogin(body: any) {
+async function handleLogin(body: z.infer<typeof loginSchema>) {
   try {
     const { email, password } = loginSchema.parse(body);
 
@@ -140,7 +140,7 @@ async function handleLogin(body: any) {
 /**
  * Handle user signup
  */
-async function handleSignup(body: any) {
+async function handleSignup(body: z.infer<typeof signupSchema>) {
   try {
     const { email, password, name, company } = signupSchema.parse(body);
 

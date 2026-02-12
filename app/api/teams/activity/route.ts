@@ -126,7 +126,10 @@ export async function GET(request: NextRequest) {
     const memberIds = orgMembers.map((m) => m.id);
 
     // Build where clause for audit logs
-    const whereClause: any = {
+    const whereClause: {
+      userId: { in: string[] };
+      category?: string;
+    } = {
       userId: { in: memberIds },
     };
 

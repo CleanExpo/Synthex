@@ -43,7 +43,7 @@ declare const expect: {
 
 export interface TestRequestOptions {
   method?: string;
-  body?: any;
+  body?: unknown;
   headers?: Record<string, string>;
   searchParams?: Record<string, string>;
   cookies?: Record<string, string>;
@@ -126,14 +126,14 @@ export function createAuthenticatedRequest(
 /**
  * Extract JSON body from NextResponse
  */
-export async function getResponseJson<T = any>(response: Response): Promise<T> {
+export async function getResponseJson<T = unknown>(response: Response): Promise<T> {
   return response.json();
 }
 
 /**
  * Assert response status and return body
  */
-export async function expectStatus<T = any>(
+export async function expectStatus<T = unknown>(
   response: Response,
   expectedStatus: number
 ): Promise<T> {
@@ -144,7 +144,7 @@ export async function expectStatus<T = any>(
 /**
  * Assert successful response (2xx status)
  */
-export async function expectSuccess<T = any>(response: Response): Promise<T> {
+export async function expectSuccess<T = unknown>(response: Response): Promise<T> {
   expect(response.status).toBeGreaterThanOrEqual(200);
   expect(response.status).toBeLessThan(300);
   return getResponseJson<T>(response);

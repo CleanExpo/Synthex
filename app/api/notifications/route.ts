@@ -102,8 +102,11 @@ export async function GET(request: NextRequest) {
     const offset = query.offset ? parseInt(query.offset) : 0;
 
     // Build where clause
-    const whereClause: any = {
-      userId: security.context.userId
+    const whereClause: {
+      userId: string;
+      read?: boolean;
+    } = {
+      userId: security.context.userId!  // Validated by security check above
     };
 
     if (query.unreadOnly === 'true') {

@@ -28,11 +28,20 @@ export interface ContentSuggestion {
   competitors?: string[];
 }
 
+/** Performance data from past posts */
+interface PerformanceData {
+  postId: string;
+  engagement: number;
+  reach: number;
+  platform: string;
+  date: string;
+}
+
 interface UserContext {
   industry?: string;
   audience?: string[];
   timezone?: string;
-  pastPerformance?: any[];
+  pastPerformance?: PerformanceData[];
   goals?: string[];
   brand?: string;
 }

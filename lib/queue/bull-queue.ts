@@ -193,7 +193,7 @@ export async function addJob<T extends QueueJobData>(
 ): Promise<Job<T>> {
   const queue = getQueue(queueName);
 
-  const jobOptions: any = {
+  const jobOptions: Record<string, unknown> = {
     ...defaultJobOptions,
     ...options,
   };

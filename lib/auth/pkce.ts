@@ -160,7 +160,15 @@ export async function getCodeVerifier(state: string): Promise<string | null> {
 // Redis Integration (Optional)
 // ==========================================
 
-let redisClient: any = null;
+/** Redis client interface for PKCE state storage */
+interface RedisClientLike {
+  connect: () => Promise<unknown>;
+  setEx: (key: string, ttl: number, value: string) => Promise<unknown>;
+  get: (key: string) => Promise<string | null>;
+  del: (key: string) => Promise<unknown>;
+}
+
+let redisClient: RedisClientLike | null = null;
 let redisAvailable: boolean | null = null;
 
 async function isRedisAvailable(): Promise<boolean> {

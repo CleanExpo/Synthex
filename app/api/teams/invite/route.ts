@@ -68,20 +68,38 @@ export async function POST(req: NextRequest) {
     }
 
     // Try to persist via Prisma if DATABASE_URL is set
-    let persisted: any = null;
+    interface TeamInvitation {
+      id: string;
+      email: string;
+      role: string;
+      message?: string;
+      campaignAccess: string[];
+      status: string;
+      userId: string;
+      createdAt: Date;
+    }
+    interface PrismaWithTeamInvitation {
+      teamInvitation?: {
+        create: (args: { data: Record<string, unknown> }) => Promise<TeamInvitation>;
+      };
+    }
+    let persisted: TeamInvitation | null = null;
     const canUseDb = !!process.env.DATABASE_URL;
     if (canUseDb) {
       try {
-        persisted = await (prisma as any).teamInvitation.create({
-          data: {
-            email,
-            role,
-            message,
-            campaignAccess: campaignAccess as any,
-            status: 'sent',
-            userId: security.context.userId, // Track who sent the invitation
-          },
-        });
+        const teamInvitationModel = (prisma as unknown as PrismaWithTeamInvitation).teamInvitation;
+        if (teamInvitationModel) {
+          persisted = await teamInvitationModel.create({
+            data: {
+              email,
+              role,
+              message,
+              campaignAccess: campaignAccess,
+              status: 'sent',
+              userId: security.context.userId, // Track who sent the invitation
+            },
+          });
+        }
       } catch (e) {
         console.error('Prisma invitation create failed, falling back to non-persistent response:', e);
       }

@@ -660,7 +660,7 @@ class ContentSafetyService {
     }
   }
 
-  private generateCacheKey(content: string, options: any): string {
+  private generateCacheKey(content: string, options: Record<string, unknown>): string {
     const contentHash = content.substring(0, 50) + content.length;
     return `mod-${contentHash}-${JSON.stringify(options)}`;
   }

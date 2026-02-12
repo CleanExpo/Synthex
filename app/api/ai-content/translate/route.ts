@@ -195,7 +195,7 @@ export async function POST(request: NextRequest) {
     let translatedContent: string;
     let detectedSourceLanguage: string | null = null;
     let translationNotes: string[] = [];
-    let aiMetadata: any = null;
+    let aiMetadata: { model?: string; tokensUsed?: number; responseTime?: number; usage?: Record<string, unknown> } | null = null;
 
     try {
       const response = await openRouterClient.complete({

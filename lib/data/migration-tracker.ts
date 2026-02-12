@@ -377,18 +377,25 @@ export async function createDataSnapshot(): Promise<DataSnapshot> {
     'auditLog',
   ];
 
+  // Type for dynamic prisma table access
+  type DynamicPrismaTable = {
+    count: () => Promise<number>;
+    findMany: (args: { take: number; orderBy: Record<string, string>; select: Record<string, boolean> }) => Promise<Array<{ id: string }>>;
+  };
+  const dynamicPrisma = prisma as unknown as Record<string, DynamicPrismaTable>;
+
   for (const table of tables) {
     try {
-      const count = await (prisma as any)[table].count();
+      const count = await dynamicPrisma[table].count();
       snapshot.tables[table] = count;
 
       // Simple checksum based on recent IDs
-      const recent = await (prisma as any)[table].findMany({
+      const recent = await dynamicPrisma[table].findMany({
         take: 100,
         orderBy: { createdAt: 'desc' },
         select: { id: true },
       });
-      snapshot.checksums[table] = recent.map((r: any) => r.id).join(',').slice(0, 100);
+      snapshot.checksums[table] = recent.map((r) => r.id).join(',').slice(0, 100);
     } catch {
       snapshot.tables[table] = -1;
     }

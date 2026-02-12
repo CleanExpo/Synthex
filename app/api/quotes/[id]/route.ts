@@ -193,7 +193,17 @@ export async function PUT(
     }
 
     // Build update data
-    const updateData: any = {};
+    const updateData: {
+      text?: string;
+      author?: string | null;
+      source?: string | null;
+      category?: string;
+      tags?: string[];
+      isPublic?: boolean;
+      sentiment?: string;
+      readingLevel?: string;
+      expiresAt?: Date | null;
+    } = {};
 
     if (body.text !== undefined) updateData.text = body.text.trim();
     if (body.author !== undefined) updateData.author = body.author?.trim() || null;
@@ -343,7 +353,11 @@ export async function PATCH(
     const { action } = body;
 
     // Handle engagement actions
-    let updateData: any = {};
+    let updateData: {
+      likeCount?: { increment: number } | { decrement: number };
+      shareCount?: { increment: number };
+      usageCount?: { increment: number };
+    } = {};
 
     switch (action) {
       case 'like':

@@ -45,9 +45,25 @@ type PrismaAccount = {
   updatedAt: Date;
 };
 
+/** Dynamic Prisma account model interface for safe access */
+interface PrismaAccountModel {
+  create: (args: { data: Record<string, unknown> }) => Promise<PrismaAccount>;
+  findUnique: (args: { where: Record<string, unknown>; include?: Record<string, unknown> }) => Promise<(PrismaAccount & { user: { id: string; email: string } }) | null>;
+  findFirst: (args: { where: Record<string, unknown>; select?: Record<string, boolean> }) => Promise<PrismaAccount | null>;
+  findMany: (args: { where: Record<string, unknown>; orderBy?: Record<string, string>; select?: Record<string, boolean> }) => Promise<PrismaAccount[]>;
+  update: (args: { where: { id: string }; data: Record<string, unknown> }) => Promise<PrismaAccount>;
+  updateMany: (args: { where: Record<string, unknown>; data: Record<string, unknown> }) => Promise<{ count: number }>;
+  deleteMany: (args: { where: Record<string, unknown> }) => Promise<{ count: number }>;
+}
+
+/** Prisma client with optional account model */
+interface PrismaWithAccount {
+  account?: PrismaAccountModel;
+}
+
 // Helper to safely access account model (may not exist during migration)
-function getAccountModel(): any {
-  return (prisma as any).account;
+function getAccountModel(): PrismaAccountModel | undefined {
+  return (prisma as unknown as PrismaWithAccount).account;
 }
 
 // ==========================================

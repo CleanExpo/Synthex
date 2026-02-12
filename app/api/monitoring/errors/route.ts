@@ -7,8 +7,21 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
+/** Error log entry structure */
+interface ErrorLogEntry {
+  message: string;
+  stack?: string;
+  url?: string;
+  userId?: string;
+  userEmail?: string;
+  serverTimestamp: string;
+  timestamp: string;
+  level?: string;
+  context?: Record<string, unknown>;
+}
+
 // In-memory error storage (use database in production)
-const errorLog: any[] = [];
+const errorLog: ErrorLogEntry[] = [];
 const MAX_ERRORS = 1000;
 
 export async function POST(request: NextRequest) {

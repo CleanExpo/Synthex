@@ -45,9 +45,23 @@ interface PDFOptions {
 // Extend jsPDF types for autoTable
 declare module 'jspdf' {
   interface jsPDF {
-    autoTable: (options: any) => jsPDF;
+    autoTable: (options: AutoTableOptions) => jsPDF;
     lastAutoTable: { finalY: number };
   }
+}
+
+/** AutoTable options for PDF table generation */
+interface AutoTableOptions {
+  startY?: number;
+  head?: string[][];
+  body?: (string | number)[][];
+  theme?: 'striped' | 'grid' | 'plain';
+  headStyles?: Record<string, unknown>;
+  bodyStyles?: Record<string, unknown>;
+  alternateRowStyles?: Record<string, unknown>;
+  columnStyles?: Record<string, Record<string, unknown>>;
+  margin?: { left?: number; right?: number; top?: number; bottom?: number };
+  styles?: Record<string, unknown>;
 }
 
 // ============================================================================

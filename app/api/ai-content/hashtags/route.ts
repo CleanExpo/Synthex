@@ -140,7 +140,7 @@ export async function POST(request: NextRequest) {
 
     let hashtags: string[] = [];
     let source: 'ai' | 'fallback' = 'fallback';
-    let aiMetadata: any = null;
+    let aiMetadata: { model?: string; tokensUsed?: number; responseTime?: number; usage?: Record<string, unknown> } | null = null;
 
     // Try AI generation first
     try {
@@ -275,7 +275,7 @@ function parseHashtagsFromAI(content: string): string[] {
       const parsed = JSON.parse(jsonMatch[0]);
       if (Array.isArray(parsed)) {
         return parsed
-          .filter((tag: any) => typeof tag === 'string')
+          .filter((tag: unknown) => typeof tag === 'string')
           .map((tag: string) => tag.startsWith('#') ? tag : `#${tag}`)
           .map((tag: string) => tag.toLowerCase().replace(/[^#\w]/g, ''));
       }

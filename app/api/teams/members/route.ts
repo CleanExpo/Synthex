@@ -76,7 +76,9 @@ export async function GET(request: NextRequest) {
     const offset = query.offset ? parseInt(query.offset) : 0;
 
     // Build where clause
-    const whereClause: any = {
+    const whereClause: {
+      organizationId: string;
+    } = {
       organizationId: currentUser.organizationId
     };
 

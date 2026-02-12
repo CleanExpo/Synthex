@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
       const implementation = await getImplementationType();
       
       // Prepare response data
-      const responseData: any = {
+      const responseData: Record<string, unknown> = {
         status: health.status,
         implementation,
         connection: health.connection,

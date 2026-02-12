@@ -98,7 +98,11 @@ export async function GET(request: NextRequest) {
     }
 
     // Build where clause for posts
-    const postWhereClause: any = {
+    const postWhereClause: {
+      campaignId: string | { in: string[] };
+      createdAt: { gte: Date };
+      platform?: string;
+    } = {
       campaignId: query.campaignId ? query.campaignId : { in: campaignIds },
       createdAt: { gte: startDate }
     };

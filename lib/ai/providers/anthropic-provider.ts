@@ -84,8 +84,8 @@ export class AnthropicProvider implements AIProvider {
       // Map Anthropic response to our unified format
       const content =
         data.content
-          ?.filter((c: any) => c.type === 'text')
-          .map((c: any) => c.text)
+          ?.filter((c: { type: string }) => c.type === 'text')
+          .map((c: { type: string; text?: string }) => c.text)
           .join('') || '';
 
       return {
