@@ -142,7 +142,7 @@
 
 .notification-progress-bar {
   height: 100%;
-  background: linear-gradient(90deg, #6366f1 0%, #8b5cf6 100%);
+  background: linear-gradient(90deg, #6366f1 0%, #06b6d4 100%);
   transition: width linear;
   transform-origin: left;
 }
@@ -395,7 +395,7 @@
 }
 
 .notification-panel-clear:hover {
-  color: #8b5cf6;
+  color: #06b6d4;
 }
 
 /* Panel Body */
@@ -510,7 +510,7 @@
 }
 
 .notification-action.primary {
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  background: linear-gradient(135deg, #6366f1 0%, #06b6d4 100%);
   border-color: transparent;
 }
 

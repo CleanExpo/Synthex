@@ -258,7 +258,7 @@ export class TierManager {
     const colors: Record<string, string> = {
       starter: '#94a3b8',
       professional: '#3b82f6',
-      business: '#8b5cf6',
+      business: '#06b6d4',
       enterprise: '#f59e0b'
     };
     return colors[tier] || '#94a3b8';

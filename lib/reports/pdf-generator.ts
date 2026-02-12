@@ -70,7 +70,7 @@ interface AutoTableOptions {
 
 const DEFAULT_BRANDING: BrandingConfig = {
   primaryColor: '#00d4ff',
-  accentColor: '#a855f7',
+  accentColor: '#06b6d4',
   fontFamily: 'helvetica',
   companyName: 'Synthex',
 };

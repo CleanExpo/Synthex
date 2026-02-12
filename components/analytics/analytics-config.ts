@@ -107,7 +107,7 @@ export function transformPlatformData(
   return Object.entries(breakdown).map(([platform, data]) => ({
     name: platform.charAt(0).toUpperCase() + platform.slice(1),
     value: total > 0 ? Math.round((data.posts / total) * 100) : 0,
-    color: platformColors[platform] || '#8b5cf6',
+    color: platformColors[platform] || '#06b6d4',
   }));
 }
 

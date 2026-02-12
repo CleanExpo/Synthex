@@ -372,10 +372,10 @@ function generateEmailHtml(reportName: string, data: ReportData): string {
           </table>
         </div>
 
-        <div style="background: linear-gradient(135deg, #00d4ff20, #a855f720); border-radius: 12px; padding: 24px; text-align: center;">
+        <div style="background: linear-gradient(135deg, #00d4ff20, #06b6d420); border-radius: 12px; padding: 24px; text-align: center;">
           <p style="margin: 0 0 15px; color: #ccc;">View detailed analytics in your dashboard</p>
           <a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://synthex.social'}/dashboard/reports"
-             style="display: inline-block; background: linear-gradient(135deg, #00d4ff, #a855f7); color: #fff; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-weight: bold;">
+             style="display: inline-block; background: linear-gradient(135deg, #00d4ff, #06b6d4); color: #fff; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-weight: bold;">
             Open Dashboard
           </a>
         </div>

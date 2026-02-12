@@ -48,7 +48,7 @@
   width: 64px;
   height: 64px;
   margin: 0 auto 24px;
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  background: linear-gradient(135deg, #6366f1 0%, #06b6d4 100%);
   border-radius: 16px;
   display: flex;
   align-items: center;
@@ -92,7 +92,7 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  background: linear-gradient(135deg, #6366f1 0%, #06b6d4 100%);
   color: #fff;
   padding: 12px 24px;
   border-radius: 10px;
@@ -252,7 +252,7 @@
 
 .upload-progress-fill {
   height: 100%;
-  background: linear-gradient(90deg, #6366f1 0%, #8b5cf6 100%);
+  background: linear-gradient(90deg, #6366f1 0%, #06b6d4 100%);
   border-radius: 4px;
   transition: width 0.3s ease;
   position: relative;
@@ -485,9 +485,9 @@
 /* =================================
    File Type Colors
    ================================= */
-.upload-type-image { background: linear-gradient(135deg, #6366f1, #8b5cf6); }
+.upload-type-image { background: linear-gradient(135deg, #6366f1, #06b6d4); }
 .upload-type-video { background: linear-gradient(135deg, #ef4444, #f59e0b); }
 .upload-type-audio { background: linear-gradient(135deg, #10b981, #06b6d4); }
-.upload-type-document { background: linear-gradient(135deg, #8b5cf6, #ec4899); }
+.upload-type-document { background: linear-gradient(135deg, #06b6d4, #ec4899); }
 .upload-type-archive { background: linear-gradient(135deg, #64748b, #94a3b8); }
 .upload-type-code { background: linear-gradient(135deg, #14b8a6, #22d3ee); }

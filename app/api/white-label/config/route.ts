@@ -75,7 +75,7 @@ export async function GET(request: NextRequest) {
     const settings = (organization?.settings as Record<string, unknown>) || {};
     const whiteLabelConfig = {
       primaryColor: settings.primaryColor || '#6366f1',
-      secondaryColor: settings.secondaryColor || '#8b5cf6',
+      secondaryColor: settings.secondaryColor || '#06b6d4',
       logoUrl: settings.logoUrl || null,
       faviconUrl: settings.faviconUrl || null,
       companyName: settings.companyName || null,

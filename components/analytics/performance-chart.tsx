@@ -40,8 +40,8 @@ export function PerformanceChart({ data }: PerformanceChartProps) {
             <Radar
               name="Engagement"
               dataKey="engagement"
-              stroke="#8b5cf6"
-              fill="#8b5cf6"
+              stroke="#06b6d4"
+              fill="#06b6d4"
               fillOpacity={0.3}
             />
             <Radar

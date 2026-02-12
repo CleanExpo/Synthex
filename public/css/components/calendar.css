@@ -28,7 +28,7 @@
   font-size: 1.5rem;
   font-weight: 600;
   color: #fff;
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  background: linear-gradient(135deg, #6366f1 0%, #06b6d4 100%);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -123,7 +123,7 @@
 }
 
 .calendar-day.selected {
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  background: linear-gradient(135deg, #6366f1 0%, #06b6d4 100%);
   border-color: transparent;
   box-shadow: 0 8px 24px rgba(99, 102, 241, 0.4);
 }
@@ -190,7 +190,7 @@
 /* Event Categories */
 .calendar-event.event-meeting {
   background: rgba(139, 92, 246, 0.2);
-  border-left-color: #8b5cf6;
+  border-left-color: #06b6d4;
 }
 
 .calendar-event.event-deadline {
@@ -349,7 +349,7 @@
 }
 
 .calendar-mini-day.selected {
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  background: linear-gradient(135deg, #6366f1 0%, #06b6d4 100%);
   color: #fff;
 }
 
@@ -429,7 +429,7 @@
 }
 
 .calendar-view-btn.active {
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  background: linear-gradient(135deg, #6366f1 0%, #06b6d4 100%);
   color: #fff;
 }
 

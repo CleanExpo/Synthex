@@ -50,7 +50,7 @@ export function GrowthChart({ data }: GrowthChartProps) {
               yAxisId="left"
               type="monotone"
               dataKey="followers"
-              stroke="#8b5cf6"
+              stroke="#06b6d4"
               strokeWidth={2}
               name="Followers"
             />
