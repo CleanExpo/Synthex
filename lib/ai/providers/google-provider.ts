@@ -15,6 +15,36 @@ import type {
   ModelPresets,
 } from './base-provider';
 
+/** Google AI API response types */
+interface GoogleAIErrorResponse {
+  error?: {
+    message?: string;
+    code?: number;
+  };
+}
+
+interface GoogleAIContentPart {
+  text?: string;
+}
+
+interface GoogleAICandidate {
+  content?: {
+    parts?: GoogleAIContentPart[];
+  };
+  finishReason?: string;
+}
+
+interface GoogleAIUsageMetadata {
+  promptTokenCount?: number;
+  candidatesTokenCount?: number;
+  totalTokenCount?: number;
+}
+
+interface GoogleAIResponse {
+  candidates?: GoogleAICandidate[];
+  usageMetadata?: GoogleAIUsageMetadata;
+}
+
 export class GoogleProvider implements AIProvider {
   readonly name = 'Google';
 
@@ -73,17 +103,17 @@ export class GoogleProvider implements AIProvider {
       });
 
       if (!res.ok) {
-        const errBody = await res.json().catch(() => ({}));
+        const errBody: GoogleAIErrorResponse = await res.json().catch(() => ({}));
         logger.error('Google AI API error', { status: res.status, body: errBody });
         throw new Error(
-          (errBody as any)?.error?.message || `Google AI error ${res.status}`
+          errBody.error?.message || `Google AI error ${res.status}`
         );
       }
 
-      const data = await res.json();
+      const data: GoogleAIResponse = await res.json();
       const text =
         data.candidates?.[0]?.content?.parts
-          ?.map((p: any) => p.text)
+          ?.map((p: GoogleAIContentPart) => p.text ?? '')
           .join('') || '';
 
       return {
@@ -164,9 +194,9 @@ export class GoogleProvider implements AIProvider {
       for (const line of lines) {
         if (line.startsWith('data: ')) {
           try {
-            const event = JSON.parse(line.slice(6));
+            const event: GoogleAIResponse = JSON.parse(line.slice(6));
             const text = event.candidates?.[0]?.content?.parts
-              ?.map((p: any) => p.text)
+              ?.map((p: GoogleAIContentPart) => p.text ?? '')
               .join('');
             if (text) yield text;
           } catch {

@@ -1,5 +1,19 @@
 import { supabase } from '@/lib/supabase-client';
 
+/** Profile update data */
+interface ProfileUpdateData {
+  name?: string;
+  avatar?: string;
+  bio?: string;
+  location?: string;
+  website?: string;
+  company?: string;
+  [key: string]: string | undefined;
+}
+
+/** Settings update data - can be an object or a primitive value */
+type SettingsData = Record<string, unknown> | string | boolean | number;
+
 // Profile API functions
 export const profileAPI = {
   async getProfile() {
@@ -19,7 +33,7 @@ export const profileAPI = {
     return response.json();
   },
 
-  async updateProfile(data: any) {
+  async updateProfile(data: ProfileUpdateData) {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) throw new Error('No session');
 
@@ -100,7 +114,7 @@ export const settingsAPI = {
     return response.json();
   },
 
-  async updateSettings(type: string, settings: any) {
+  async updateSettings(type: string, settings: SettingsData) {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) throw new Error('No session');
 

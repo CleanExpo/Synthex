@@ -30,6 +30,51 @@ import { logger } from '@/lib/logger';
 // TYPES
 // ============================================================================
 
+/** Slack webhook payload structure */
+interface SlackAttachmentField {
+  title: string;
+  value: string;
+  short: boolean;
+}
+
+interface SlackAttachment {
+  color: string;
+  fields: SlackAttachmentField[];
+  footer: string;
+  ts: number;
+}
+
+interface SlackPayload {
+  text: string;
+  attachments: SlackAttachment[];
+  channel?: string;
+  username?: string;
+  icon_emoji?: string;
+}
+
+/** Discord webhook payload structure */
+interface DiscordEmbedField {
+  name: string;
+  value: string;
+  inline: boolean;
+}
+
+interface DiscordEmbed {
+  title: string;
+  description: string;
+  color: number;
+  fields: DiscordEmbedField[];
+  footer: { text: string };
+  timestamp: string;
+}
+
+interface DiscordPayload {
+  content: string;
+  embeds: DiscordEmbed[];
+  username?: string;
+  avatar_url?: string;
+}
+
 export enum AlertSeverity {
   INFO = 'info',
   WARNING = 'warning',
@@ -230,7 +275,7 @@ async function sendSlackAlert(
   try {
     const { webhookUrl, channel, username, iconEmoji } = config;
 
-    const payload: any = {
+    const payload: SlackPayload = {
       text: `${getSeverityEmoji(alert.severity)} *${alert.title}*`,
       attachments: [
         {
@@ -305,7 +350,7 @@ async function sendDiscordAlert(
   try {
     const { webhookUrl, username, avatarUrl } = config;
 
-    const payload: any = {
+    const payload: DiscordPayload = {
       content: `${getSeverityEmoji(alert.severity)} **${alert.title}**`,
       embeds: [
         {
