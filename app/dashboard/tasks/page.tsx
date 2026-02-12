@@ -11,7 +11,7 @@ import { useState, useMemo, useCallback, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { TasksSkeleton } from '@/components/skeletons';
 import { APIErrorCard } from '@/components/error-states';
-import { Plus, Filter, ListTodo } from 'lucide-react';
+import { Plus, Filter, ListTodo } from '@/components/icons';
 import toast from 'react-hot-toast';
 import {
   Task,

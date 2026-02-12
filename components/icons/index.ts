@@ -76,6 +76,8 @@ export {
 
   // F
   DocumentIcon as File,
+  CodeBracketSquareIcon as FileCode,
+  DocumentMagnifyingGlassIcon as FileSearch,
   DocumentTextIcon as FileText,
   FunnelIcon as Filter,
   BeakerIcon as FlaskConical,
@@ -99,6 +101,7 @@ export {
   CommandLineIcon as Keyboard,
 
   // L
+  LanguageIcon as Languages,
   FaceSmileIcon as Laugh,
   RectangleGroupIcon as Layout,
   LightBulbIcon as Lightbulb,
@@ -116,6 +119,7 @@ export {
 
   // M
   EnvelopeIcon as Mail,
+  MapIcon as Map,
   FaceSmileIcon as Meh,
   Bars3Icon as Menu,
   ChatBubbleLeftIcon as MessageCircle,

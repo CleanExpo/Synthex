@@ -23,7 +23,7 @@ import {
   Map,
   Languages,
   Eye,
-} from 'lucide-react';
+} from '@/components/icons';
 
 // SEO Tool Card Component
 function SEOToolCard({

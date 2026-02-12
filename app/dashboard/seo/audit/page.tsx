@@ -25,7 +25,7 @@ import {
   ChevronDown,
   ChevronRight,
   ExternalLink,
-} from 'lucide-react';
+} from '@/components/icons';
 
 interface AuditResult {
   url: string;

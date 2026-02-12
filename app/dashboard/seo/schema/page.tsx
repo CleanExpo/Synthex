@@ -33,7 +33,7 @@ import {
   Sparkles,
   CheckCircle,
   AlertTriangle,
-} from 'lucide-react';
+} from '@/components/icons';
 
 const SCHEMA_TYPES = [
   { value: 'Organization', label: 'Organization', icon: Building, description: 'Company or brand info' },
