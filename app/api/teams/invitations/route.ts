@@ -22,6 +22,57 @@ import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-securit
 import { auditLogger } from '@/lib/security/audit-logger';
 import { sendTeamInviteEmail } from '@/lib/email';
 
+// ============================================================================
+// TYPE DEFINITIONS
+// ============================================================================
+
+/** Team invitation record from database */
+interface InvitationRecord {
+  id: string;
+  email: string;
+  role: string;
+  message?: string | null;
+  campaignAccess?: unknown; // JsonValue from Prisma
+  status: string;
+  sentAt: Date;
+  user?: {
+    id: string;
+    name: string | null;
+    email: string;
+  } | null;
+}
+
+/** Invitation query where clause */
+interface InvitationWhereClause {
+  organizationId: string;
+  status?: string;
+  email?: string;
+}
+
+/** Extended Prisma client with optional team models */
+interface ExtendedPrismaClient {
+  teamInvitation: {
+    findFirst: (args: { where: Record<string, unknown> }) => Promise<InvitationRecord | null>;
+    findMany: (args: { where: Record<string, unknown>; select?: Record<string, unknown>; orderBy?: Record<string, string>; skip?: number; take?: number }) => Promise<InvitationRecord[]>;
+    create: (args: { data: Record<string, unknown> }) => Promise<InvitationRecord>;
+    count: (args: { where: Record<string, unknown> }) => Promise<number>;
+  };
+  userRole: {
+    findMany: (args: { where: { userId: string }; include?: Record<string, unknown> }) => Promise<UserRoleRecord[]>;
+  };
+}
+
+/** User role record */
+interface UserRoleRecord {
+  role?: {
+    name: string;
+    permissions?: string[];
+  } | null;
+}
+
+/** Get prisma with extended models */
+const extendedPrisma = prisma as unknown as typeof prisma & ExtendedPrismaClient;
+
 // Lazy getter to avoid module load crash
 function getJWTSecret(): string {
   const secret = process.env.JWT_SECRET;
@@ -106,7 +157,7 @@ export async function GET(request: NextRequest) {
     const offset = (page - 1) * limit;
 
     // Build where clause
-    const whereClause: any = {
+    const whereClause: InvitationWhereClause = {
       organizationId: requestingUser.organizationId,
     };
 
@@ -115,10 +166,10 @@ export async function GET(request: NextRequest) {
     }
 
     // Get total count
-    const total = await (prisma as any).teamInvitation.count({ where: whereClause });
+    const total = await extendedPrisma.teamInvitation.count({ where: whereClause });
 
     // List invitations
-    const invitations = await (prisma as any).teamInvitation.findMany({
+    const invitations = await extendedPrisma.teamInvitation.findMany({
       where: whereClause,
       select: {
         id: true,
@@ -142,12 +193,12 @@ export async function GET(request: NextRequest) {
     });
 
     // Transform invitations
-    const transformedInvitations = invitations.map((inv: any) => ({
+    const transformedInvitations = invitations.map((inv: InvitationRecord) => ({
       id: inv.id,
       email: inv.email,
       role: inv.role,
       message: inv.message,
-      campaignAccess: inv.campaignAccess || [],
+      campaignAccess: Array.isArray(inv.campaignAccess) ? inv.campaignAccess : [],
       status: inv.status,
       sentAt: inv.sentAt,
       invitedBy: inv.user
@@ -286,7 +337,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if there's already a pending invitation
-    const existingInvitation = await (prisma as any).teamInvitation.findFirst({
+    const existingInvitation = await extendedPrisma.teamInvitation.findFirst({
       where: {
         email,
         organizationId: requestingUser.organizationId,
@@ -306,7 +357,7 @@ export async function POST(request: NextRequest) {
       where: { organizationId: requestingUser.organizationId },
     });
 
-    const pendingInvitationCount = await (prisma as any).teamInvitation.count({
+    const pendingInvitationCount = await extendedPrisma.teamInvitation.count({
       where: {
         organizationId: requestingUser.organizationId,
         status: 'sent',
@@ -322,7 +373,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Create invitation
-    const invitation = await (prisma as any).teamInvitation.create({
+    const invitation = await extendedPrisma.teamInvitation.create({
       data: {
         email,
         role,
@@ -400,7 +451,7 @@ export async function POST(request: NextRequest) {
 
 async function checkUserIsAdmin(userId: string, organizationId: string): Promise<boolean> {
   try {
-    const userRoles = await (prisma as any).userRole.findMany({
+    const userRoles = await extendedPrisma.userRole.findMany({
       where: { userId },
       include: {
         role: {

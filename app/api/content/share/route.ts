@@ -20,6 +20,63 @@ import { randomBytes } from 'crypto';
 import { z } from 'zod';
 
 // ============================================================================
+// TYPE DEFINITIONS
+// ============================================================================
+
+/** Content share data for creation */
+interface ContentShareCreateData {
+  contentType: string;
+  contentId: string;
+  sharedById: string;
+  organizationId?: string | null;
+  permission: string;
+  canDownload: boolean;
+  canReshare: boolean;
+  message?: string;
+  sharedWithUserId?: string;
+  sharedWithTeamId?: string;
+  sharedWithEmail?: string;
+  accessLink?: string;
+  expiresAt?: Date;
+  maxViews?: number;
+  password?: string;
+}
+
+/** Extended Prisma client with optional models */
+interface ExtendedPrismaClient {
+  contentShare?: {
+    findFirst: (args: { where: Record<string, unknown> }) => Promise<ContentShareRecord | null>;
+    findUnique: (args: { where: { id: string } }) => Promise<ContentShareRecord | null>;
+    findMany: (args: { where: Record<string, unknown>; orderBy?: Record<string, string>; take?: number; skip?: number }) => Promise<ContentShareRecord[]>;
+    create: (args: { data: ContentShareCreateData }) => Promise<ContentShareRecord>;
+    update: (args: { where: { id: string }; data: Record<string, unknown> }) => Promise<ContentShareRecord>;
+    delete: (args: { where: { id: string } }) => Promise<void>;
+    count: (args: { where: Record<string, unknown> }) => Promise<number>;
+  };
+  teamNotification?: {
+    create: (args: { data: Record<string, unknown> }) => Promise<unknown>;
+  };
+}
+
+/** Content share database record */
+interface ContentShareRecord {
+  id: string;
+  contentType: string;
+  contentId: string;
+  sharedById: string;
+  sharedWithUserId?: string | null;
+  sharedWithTeamId?: string | null;
+  sharedWithEmail?: string | null;
+  permission: string;
+  accessLink?: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+/** Get prisma with extended models */
+const extendedPrisma = prisma as unknown as typeof prisma & ExtendedPrismaClient;
+
+// ============================================================================
 // VALIDATION SCHEMAS
 // ============================================================================
 
@@ -67,7 +124,7 @@ async function sendShareNotification(
       select: { name: true, email: true },
     });
 
-    await (prisma as any).teamNotification?.create({
+    await extendedPrisma.teamNotification?.create({
       data: {
         userId: recipientId,
         organizationId,
@@ -135,7 +192,7 @@ export async function POST(request: NextRequest) {
     });
 
     // Check if share already exists
-    const existingShare = await (prisma as any).contentShare?.findFirst({
+    const existingShare = await extendedPrisma.contentShare?.findFirst({
       where: {
         contentType: data.contentType,
         contentId: data.contentId,
@@ -148,7 +205,7 @@ export async function POST(request: NextRequest) {
 
     if (existingShare) {
       // Update existing share
-      const updated = await (prisma as any).contentShare?.update({
+      const updated = await extendedPrisma.contentShare?.update({
         where: { id: existingShare.id },
         data: {
           permission: data.permission,
@@ -168,7 +225,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Prepare share data
-    const shareData: any = {
+    const shareData: ContentShareCreateData = {
       contentType: data.contentType,
       contentId: data.contentId,
       sharedById: userId,
@@ -204,7 +261,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Create the share
-    const share = await (prisma as any).contentShare?.create({
+    const share = await extendedPrisma.contentShare?.create({
       data: shareData,
     });
 
@@ -305,13 +362,13 @@ export async function GET(request: NextRequest) {
     ];
 
     const [shares, total] = await Promise.all([
-      (prisma as any).contentShare?.findMany({
+      extendedPrisma.contentShare?.findMany({
         where,
         orderBy: { createdAt: 'desc' },
         take: limit,
         skip: offset,
       }) || [],
-      (prisma as any).contentShare?.count({ where }) || 0,
+      extendedPrisma.contentShare?.count({ where }) || 0,
     ]);
 
     return NextResponse.json({
@@ -360,7 +417,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Find and verify ownership
-    const share = await (prisma as any).contentShare?.findUnique({
+    const share = await extendedPrisma.contentShare?.findUnique({
       where: { id: shareId },
     });
 
@@ -379,7 +436,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Delete the share
-    await (prisma as any).contentShare?.delete({
+    await extendedPrisma.contentShare?.delete({
       where: { id: shareId },
     });
 

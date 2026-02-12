@@ -20,6 +20,54 @@ import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-securit
 import { z } from 'zod';
 
 // ============================================================================
+// TYPE DEFINITIONS
+// ============================================================================
+
+/** Report template database record */
+interface ReportTemplateRecord {
+  id: string;
+  userId: string | null;
+  organizationId?: string | null;
+  name: string;
+  description?: string | null;
+  category: string;
+  reportType: string;
+  metrics: string[];
+  dimensions?: string[] | null;
+  filters?: unknown; // JsonValue from Prisma
+  visualizations?: unknown; // JsonValue from Prisma
+  layout?: unknown; // JsonValue from Prisma
+  branding?: unknown; // JsonValue from Prisma
+  isPublic: boolean;
+  isSystem: boolean;
+  usageCount: number;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+/** Template query where clause */
+interface TemplateWhereClause {
+  OR?: Array<{ userId?: string; organizationId?: string | null; isPublic?: boolean }>;
+  category?: string;
+}
+
+/** Extended Prisma client with report template model */
+interface ExtendedPrismaClient {
+  reportTemplate?: {
+    findFirst: (args: { where: Record<string, unknown> }) => Promise<ReportTemplateRecord | null>;
+    findUnique: (args: { where: { id: string } }) => Promise<ReportTemplateRecord | null>;
+    findMany: (args: { where: Record<string, unknown>; orderBy?: Record<string, string>; take?: number; skip?: number }) => Promise<ReportTemplateRecord[]>;
+    create: (args: { data: Record<string, unknown> }) => Promise<ReportTemplateRecord>;
+    update: (args: { where: { id: string }; data: Record<string, unknown> }) => Promise<ReportTemplateRecord>;
+    delete: (args: { where: { id: string } }) => Promise<void>;
+    count: (args: { where: Record<string, unknown> }) => Promise<number>;
+  };
+}
+
+/** Get prisma with extended models */
+const extendedPrisma = prisma as unknown as typeof prisma & ExtendedPrismaClient;
+
+// ============================================================================
 // VALIDATION SCHEMAS
 // ============================================================================
 
@@ -30,7 +78,7 @@ const createTemplateSchema = z.object({
   reportType: z.enum(['overview', 'engagement', 'content', 'audience', 'campaigns', 'growth', 'custom']),
   metrics: z.array(z.string()).min(1),
   dimensions: z.array(z.string()).optional(),
-  filters: z.record(z.any()).optional(),
+  filters: z.record(z.unknown()).optional(),
   visualizations: z.array(z.object({
     type: z.enum(['line', 'bar', 'pie', 'area', 'table', 'metric', 'heatmap']),
     title: z.string(),
@@ -175,7 +223,7 @@ export async function GET(request: NextRequest) {
     });
 
     // Build query for user/org templates
-    const where: any = {
+    const where: TemplateWhereClause = {
       OR: [
         { userId },
         { organizationId: user?.organizationId, isPublic: true },
@@ -188,17 +236,17 @@ export async function GET(request: NextRequest) {
 
     // Fetch custom templates
     const [customTemplates, total] = await Promise.all([
-      (prisma as any).reportTemplate?.findMany({
+      extendedPrisma.reportTemplate?.findMany({
         where,
         orderBy: { usageCount: 'desc' },
         take: limit,
         skip: offset,
       }) || [],
-      (prisma as any).reportTemplate?.count({ where }) || 0,
+      extendedPrisma.reportTemplate?.count({ where }) || 0,
     ]);
 
     // Combine with system templates if requested
-    let templates = customTemplates || [];
+    let templates: Array<ReportTemplateRecord | typeof SYSTEM_TEMPLATES[number]> = customTemplates || [];
     if (includeSystem && offset === 0) {
       const filteredSystem = category
         ? SYSTEM_TEMPLATES.filter(t => t.category === category)
@@ -261,7 +309,7 @@ export async function POST(request: NextRequest) {
     });
 
     // Create template
-    const template = await (prisma as any).reportTemplate?.create({
+    const template = await extendedPrisma.reportTemplate?.create({
       data: {
         userId,
         organizationId: user?.organizationId,
@@ -355,7 +403,7 @@ export async function PATCH(request: NextRequest) {
     }
 
     // Verify ownership
-    const existing = await (prisma as any).reportTemplate?.findUnique({
+    const existing = await extendedPrisma.reportTemplate?.findUnique({
       where: { id: templateId },
     });
 
@@ -374,7 +422,7 @@ export async function PATCH(request: NextRequest) {
     }
 
     // Update
-    const template = await (prisma as any).reportTemplate?.update({
+    const template = await extendedPrisma.reportTemplate?.update({
       where: { id: templateId },
       data: {
         ...validation.data,
@@ -435,7 +483,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Verify ownership
-    const existing = await (prisma as any).reportTemplate?.findUnique({
+    const existing = await extendedPrisma.reportTemplate?.findUnique({
       where: { id: templateId },
     });
 
@@ -454,7 +502,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Delete
-    await (prisma as any).reportTemplate?.delete({
+    await extendedPrisma.reportTemplate?.delete({
       where: { id: templateId },
     });
 
