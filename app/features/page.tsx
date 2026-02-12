@@ -32,10 +32,10 @@ export default function FeaturesPage() {
           </p>
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto">
             {[
-              { title: 'Content Generator', description: 'AI-powered post creation', videoId: 'RUrRF-2sEEA' },
-              { title: 'Analytics Dashboard', description: 'Real-time metrics', videoId: '8_v9wYkONcM' },
-              { title: 'Smart Scheduler', description: 'Optimal posting times', videoId: '30Q1nkjPklY' },
-              { title: 'Viral Patterns', description: 'Discover what works', videoId: 'DlkzDD7YQho' },
+              { title: 'Content Generator', description: 'AI-powered post creation', videoId: 'HbBBX0zYug4' },
+              { title: 'Analytics Dashboard', description: 'Real-time metrics', videoId: 'zS2cnmYxpf8' },
+              { title: 'Smart Scheduler', description: 'Optimal posting times', videoId: 'r6ybAyj50qs' },
+              { title: 'Viral Pattern Analytics', description: 'Discover what works', videoId: 'vCf79xJPbdI' },
             ].map((video, i) => (
               <div key={i} className="rounded-2xl overflow-hidden border border-cyan-500/10 bg-[#0d1f35]/60 hover:border-cyan-500/30 transition-all">
                 <div className="aspect-video">

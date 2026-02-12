@@ -309,22 +309,22 @@ export default function HomePage() {
               {
                 title: 'AI Content Generator',
                 description: 'Create engaging posts with AI',
-                videoId: 'RUrRF-2sEEA',
+                videoId: 'HbBBX0zYug4',
               },
               {
                 title: 'Analytics Dashboard',
                 description: 'Real-time engagement metrics',
-                videoId: '8_v9wYkONcM',
+                videoId: 'zS2cnmYxpf8',
               },
               {
                 title: 'Smart Scheduler',
                 description: 'Optimal posting times',
-                videoId: '30Q1nkjPklY',
+                videoId: 'r6ybAyj50qs',
               },
               {
-                title: 'Viral Patterns',
+                title: 'Viral Pattern Analytics',
                 description: 'Discover what works',
-                videoId: 'DlkzDD7YQho',
+                videoId: 'vCf79xJPbdI',
               },
             ].map((video, i) => (
               <div
