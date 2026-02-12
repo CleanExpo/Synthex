@@ -39,8 +39,8 @@
 ### Demo Credentials:
 | Account | Email | Password |
 |---------|-------|----------|
-| Demo User | `demo@synthex.com` | `demo123!` |
-| Admin User | `admin@synthex.com` | `Admin123!@#` |
+| Demo User | `demo@synthex.com` | `Rrw6qRd1IIIY5Br9!` |
+| Admin User | `admin@synthex.com` | `IBkxhZpGPQW3a5B2!` |
 
 ## 🎭 Agent Orchestra System
 

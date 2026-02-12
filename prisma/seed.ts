@@ -7,7 +7,7 @@ async function main() {
   console.log('🌱 Starting seed...');
 
   // Create demo user
-  const demoPassword = await bcrypt.hash('demo123!', 12);
+  const demoPassword = await bcrypt.hash('Rrw6qRd1IIIY5Br9!', 12);
   const demoUser = await prisma.user.upsert({
     where: { email: 'demo@synthex.com' },
     update: {},
@@ -29,7 +29,7 @@ async function main() {
   console.log('✅ Created demo user:', demoUser.email);
 
   // Create admin user
-  const adminPassword = await bcrypt.hash('Admin123!@#', 12);
+  const adminPassword = await bcrypt.hash('IBkxhZpGPQW3a5B2!', 12);
   const adminUser = await prisma.user.upsert({
     where: { email: 'admin@synthex.com' },
     update: {},
