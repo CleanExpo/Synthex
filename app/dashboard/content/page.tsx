@@ -150,7 +150,7 @@ export default function ContentPage() {
         const aiData = data.data;
         const transformedContent = {
           primary: aiData.content,
-          variations: aiData.variations?.map((v: any) => v.content) || [],
+          variations: aiData.variations?.map((v: { content: string }) => v.content) || [],
           metadata: {
             platform: aiData.platform,
             hookType: hookType,

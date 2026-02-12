@@ -7,6 +7,16 @@ import { NextRequest, NextResponse } from 'next/server';
 import { cachedRoute } from '@/src/middleware/cache-middleware';
 import { createClient } from '@supabase/supabase-js';
 
+/** Pattern record from viral patterns table */
+interface PatternRecord {
+  id: string;
+  platform: string;
+  engagement_rate: number;
+  shares?: number;
+  created_at: string;
+  [key: string]: unknown;
+}
+
 // Initialize Supabase client
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -79,7 +89,7 @@ async function handler(req: NextRequest) {
   }
 }
 
-function calculateTrendingScore(pattern: any): number {
+function calculateTrendingScore(pattern: PatternRecord): number {
   const engagementWeight = 0.4;
   const recencyWeight = 0.3;
   const virialityWeight = 0.3;

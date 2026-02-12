@@ -96,12 +96,13 @@ export default function TestSocial() {
       } else {
         toast.warning('Some platforms failed. Check results for details.');
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Posting error:', error);
-      toast.error(error.message || 'Failed to post to social media');
+      const errorMessage = error instanceof Error ? error.message : 'Failed to post to social media';
+      toast.error(errorMessage);
       setResults({
         success: false,
-        error: error.message
+        error: errorMessage
       });
     } finally {
       setLoading(false);
@@ -247,7 +248,7 @@ export default function TestSocial() {
 
                   {results.results && results.results.length > 0 && (
                     <div className="mt-4 space-y-2">
-                      {results.results.map((result: any, i: number) => (
+                      {results.results.map((result: { platform: string; success: boolean }, i: number) => (
                         <div key={i} className="flex items-center justify-between p-3 bg-gray-800 rounded">
                           <div className="flex items-center space-x-2">
                             {PLATFORMS.find(p => p.id === result.platform)?.icon && (
@@ -277,7 +278,7 @@ export default function TestSocial() {
                   {results.errors && results.errors.length > 0 && (
                     <div className="mt-4 space-y-2">
                       <h4 className="text-sm font-medium text-red-500">Errors:</h4>
-                      {results.errors.map((error: any, i: number) => (
+                      {results.errors.map((error: { platform: string; error: string }, i: number) => (
                         <div key={i} className="text-sm text-red-400">
                           {error.platform}: {error.error}
                         </div>

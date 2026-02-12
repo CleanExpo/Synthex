@@ -63,7 +63,7 @@ export default function LoginPage() {
         setError(data.error || 'Failed to sign in. Please check your credentials.');
         toast.error(data.error || 'Login failed. Please try again.');
       }
-    } catch (err: any) {
+    } catch {
       setError('Network error. Please try again.');
       toast.error('Connection failed. Please try again.');
     } finally {
@@ -82,8 +82,9 @@ export default function LoginPage() {
         await auth.signInWithGithub();
       }
       // OAuth providers handle their own redirects
-    } catch (err: any) {
-      setError(err.message || `Failed to sign in with ${provider}`);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : `Failed to sign in with ${provider}`;
+      setError(message);
       toast.error(`${provider} login failed. Please try again.`);
       setIsLoading(false);
     }

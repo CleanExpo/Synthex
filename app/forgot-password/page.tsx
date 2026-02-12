@@ -46,12 +46,13 @@ export default function ForgotPasswordPage() {
       }
 
       setIsSubmitted(true);
-    } catch (err: any) {
+    } catch (err: unknown) {
       // For now, simulate success in development
       if (process.env.NODE_ENV === 'development') {
         setIsSubmitted(true);
       } else {
-        setError(err.message || 'An error occurred. Please try again.');
+        const message = err instanceof Error ? err.message : 'An error occurred. Please try again.';
+        setError(message);
       }
     } finally {
       setIsLoading(false);

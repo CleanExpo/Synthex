@@ -25,6 +25,19 @@ const supabase = createClient(
 
 const TIKTOK_API_BASE = 'https://open.tiktokapis.com/v2';
 
+/** TikTok video data from API response */
+interface TikTokVideo {
+  id: string;
+  title?: string;
+  video_description?: string;
+  create_time: number;
+  share_url: string;
+  like_count?: number;
+  comment_count?: number;
+  share_count?: number;
+  view_count?: number;
+}
+
 // Request validation schema
 const PostRequestSchema = z.object({
   videoUrl: z.string().url('Valid video URL required'),
@@ -326,7 +339,7 @@ export async function GET(request: NextRequest) {
           { method: 'POST', body: JSON.stringify({ max_count: limit }) }
         );
 
-        const videos = (videosResponse.data?.videos || []).map((video: any) => ({
+        const videos = ((videosResponse.data?.videos || []) as TikTokVideo[]).map((video) => ({
           id: video.id,
           platformId: video.id,
           content: video.video_description || video.title,

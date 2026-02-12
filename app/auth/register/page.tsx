@@ -89,7 +89,7 @@ export default function RegisterPage() {
         setError(data.error || 'Failed to create account. Please try again.');
         toast.error(data.error || 'Registration failed. Please try again.');
       }
-    } catch (err: any) {
+    } catch {
       setError('Network error. Please try again.');
       toast.error('Connection failed. Please try again.');
     } finally {
@@ -108,8 +108,9 @@ export default function RegisterPage() {
         await auth.signInWithGithub();
       }
       // OAuth providers handle their own redirects
-    } catch (err: any) {
-      setError(err.message || `Failed to sign up with ${provider}`);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : `Failed to sign up with ${provider}`;
+      setError(message);
       toast.error(`${provider} signup failed. Please try again.`);
       setIsLoading(false);
     }

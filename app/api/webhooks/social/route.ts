@@ -292,7 +292,7 @@ export async function POST(request: NextRequest) {
     // Get raw body for signature verification
     const rawBody = await request.text();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let body: any;
+    let body: Record<string, any>;
 
     try {
       body = JSON.parse(rawBody);

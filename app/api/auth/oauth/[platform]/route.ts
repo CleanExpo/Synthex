@@ -90,7 +90,7 @@ export async function GET(
     // Get the current user
     // Try header-based auth first; fallback to email param for static pages
     const authHeader = request.headers.get('authorization');
-    let user: any = null;
+    let user: { id: string | null; email: string | null | undefined } | null = null;
     if (authHeader) {
       const token = authHeader.replace('Bearer ', '');
       const { data, error: authError } = await supabase.auth.getUser(token);
@@ -251,9 +251,9 @@ export async function POST(
           },
         },
       });
-    } catch (e: any) {
+    } catch (e: unknown) {
       // On conflict (unique constraint), update existing record
-      console.warn('PlatformConnection create failed, attempting updateMany:', e?.message || e);
+      console.warn('PlatformConnection create failed, attempting updateMany:', e instanceof Error ? e.message : e);
       await prisma.platformConnection.updateMany({
         where: { userId: stateData.userId, platform },
         data: {

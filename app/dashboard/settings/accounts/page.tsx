@@ -124,9 +124,9 @@ export default function AccountsSettingsPage() {
       if (data.authorizationUrl) {
         window.location.href = data.authorizationUrl;
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Link error:', error);
-      toast.error(error.message || `Failed to link ${provider}`);
+      toast.error(error instanceof Error ? error.message : `Failed to link ${provider}`);
       setLinkingProvider(null);
     }
   };
@@ -160,9 +160,9 @@ export default function AccountsSettingsPage() {
 
       toast.success(`${providerConfig[provider as keyof typeof providerConfig]?.name} unlinked successfully`);
       await loadAccounts();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Unlink error:', error);
-      toast.error(error.message || `Failed to unlink ${provider}`);
+      toast.error(error instanceof Error ? error.message : `Failed to unlink ${provider}`);
     } finally {
       setUnlinkingProvider(null);
     }

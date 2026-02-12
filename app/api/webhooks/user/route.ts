@@ -81,7 +81,7 @@ export async function deliverWebhook(
   webhookId: string,
   url: string,
   event: string,
-  payload: any,
+  payload: Record<string, unknown>,
   secret?: string
 ): Promise<{ success: boolean; statusCode?: number; error?: string }> {
   const body = JSON.stringify({
@@ -170,7 +170,7 @@ export async function deliverWebhook(
 export async function triggerWebhooks(
   userId: string,
   event: string,
-  payload: any
+  payload: Record<string, unknown>
 ): Promise<void> {
   // This would look up subscriptions from a webhooks table
   // For now, we'll create a simple in-memory approach

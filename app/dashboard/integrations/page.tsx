@@ -28,7 +28,7 @@ interface Integration {
   id: string;
   name: string;
   description: string;
-  icon: any;
+  icon: React.ComponentType<{ className?: string }>;
   connected: boolean;
   color: string;
   accountName?: string;
@@ -97,7 +97,7 @@ export default function IntegrationsPage() {
     }
   };
 
-  const handleModalConnect = async (credentials?: any) => {
+  const handleModalConnect = async (credentials?: Record<string, string>) => {
     if (!selectedIntegration) return;
     
     setConnectingId(selectedIntegration.id);

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, ComponentType } from 'react';
 import Link from 'next/link';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { DashboardSkeleton } from '@/components/skeletons';
@@ -41,7 +41,7 @@ interface HelpCategory {
   id: string;
   title: string;
   description: string;
-  icon: any;
+  icon: ComponentType<{ className?: string }>;
   articles: number;
   color: string;
   links: { title: string; href: string }[];

@@ -23,8 +23,8 @@ export default function TestLogin() {
     
     try {
       await signIn(email, password);
-    } catch (err: any) {
-      setError(err.message || 'Login failed');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Login failed');
     } finally {
       setIsLoggingIn(false);
     }
@@ -33,8 +33,8 @@ export default function TestLogin() {
   const handleLogout = async () => {
     try {
       await signOut();
-    } catch (err: any) {
-      setError(err.message || 'Logout failed');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Logout failed');
     }
   };
 

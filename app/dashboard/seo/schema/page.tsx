@@ -96,7 +96,7 @@ export default function SchemaGeneratorPage() {
   const [generatedSchema, setGeneratedSchema] = useState<object | null>(null);
   const [copied, setCopied] = useState(false);
 
-  const handleFieldChange = (name: string, value: any) => {
+  const handleFieldChange = (name: string, value: string | string[] | number) => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 

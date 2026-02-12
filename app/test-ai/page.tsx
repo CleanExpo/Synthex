@@ -56,12 +56,13 @@ export default function TestAI() {
 
       setGeneratedContent(data.data);
       toast.success('Content generated successfully!');
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Generation error:', err);
-      setError(err.message || 'Failed to generate content');
-      
+      const errorMessage = err instanceof Error ? err.message : 'Failed to generate content';
+      setError(errorMessage);
+
       // If API key is not configured, show demo content
-      if (err.message.includes('API') || err.message.includes('key')) {
+      if (errorMessage.includes('API') || errorMessage.includes('key')) {
         setGeneratedContent({
           content: `🚀 ${topic} is revolutionizing the way we work! 
 

@@ -43,9 +43,68 @@ const PLATFORM_COLORS = {
   tiktok: '#000000'
 };
 
+/** Platform breakdown item */
+interface PlatformBreakdown {
+  platform: string;
+  posts: number;
+  engagement?: number;
+  impressions?: number;
+  clicks?: number;
+}
+
+/** Top content item */
+interface TopContent {
+  platform: string;
+  content: string;
+  engagement: number;
+  viralScore?: number;
+  impressions?: number;
+  publishedAt?: string;
+}
+
+/** Engagement data point */
+interface EngagementDataPoint {
+  date: string;
+  likes: number;
+  shares: number;
+  comments: number;
+}
+
+/** Dashboard data from API */
+interface DashboardData {
+  overview: {
+    totalPosts?: number;
+    totalEngagement: number;
+    averageEngagementRate?: number;
+    avgEngagementRate?: number;
+    contentGenerated?: number;
+    postCount?: number;
+    totalImpressions?: number;
+    trend?: number;
+  };
+  platformBreakdown: PlatformBreakdown[];
+  topContent: TopContent[];
+  engagementData?: EngagementDataPoint[];
+  engagementTrends?: Array<{ date: string; value: number }>;
+  platformDistribution?: Array<{ name: string; value: number }>;
+  trends?: {
+    postsThisWeek: number;
+    postsLastWeek: number;
+    growthRate: number;
+    trending: string;
+  };
+  recentActivity?: Array<{
+    id: string;
+    content: string;
+    platform: string;
+    status: string;
+    createdAt: Date;
+  }>;
+}
+
 export default function AnalyticsDashboard() {
   const [loading, setLoading] = useState(true);
-  const [dashboardData, setDashboardData] = useState<any>(null);
+  const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
   const [selectedPlatform, setSelectedPlatform] = useState('all');
   const [dateRange, setDateRange] = useState('7d');
   const [refreshing, setRefreshing] = useState(false);
@@ -138,7 +197,7 @@ export default function AnalyticsDashboard() {
     );
   }
 
-  const { overview, trends, platformBreakdown, engagementData, topContent } = dashboardData;
+  const { overview, trends, platformBreakdown, engagementData, topContent } = dashboardData || {};
 
   return (
     <div className="min-h-screen p-8 bg-gradient-to-br from-gray-900 to-gray-800">
@@ -341,7 +400,7 @@ export default function AnalyticsDashboard() {
             </Card>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {platformBreakdown?.map((platform: any) => {
+              {platformBreakdown?.map((platform) => {
                 const Icon = PLATFORM_ICONS[platform.platform as keyof typeof PLATFORM_ICONS] || Activity;
                 const color = PLATFORM_COLORS[platform.platform as keyof typeof PLATFORM_COLORS] || '#666';
                 
@@ -382,7 +441,7 @@ export default function AnalyticsDashboard() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {topContent?.map((content: any, index: number) => {
+                  {topContent?.map((content, index) => {
                     const Icon = PLATFORM_ICONS[content.platform as keyof typeof PLATFORM_ICONS] || Activity;
                     
                     return (

@@ -49,8 +49,8 @@ interface User {
   email: string;
   created_at: string;
   last_sign_in_at?: string;
-  app_metadata?: any;
-  user_metadata?: any;
+  app_metadata?: Record<string, unknown>;
+  user_metadata?: Record<string, unknown>;
   role?: string;
   status?: string;
 }

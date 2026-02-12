@@ -26,7 +26,7 @@ interface Integration {
   id: string;
   name: string;
   description: string;
-  icon: any;
+  icon: React.ComponentType<{ className?: string }>;
   connected: boolean;
   color: string;
   accountName?: string;
@@ -94,7 +94,7 @@ export default function DemoIntegrationsPage() {
     }
   };
 
-  const handleModalConnect = async (credentials?: any) => {
+  const handleModalConnect = async (credentials?: Record<string, string>) => {
     if (!selectedIntegration) return;
     
     setConnectingId(selectedIntegration.id);
@@ -120,8 +120,8 @@ export default function DemoIntegrationsPage() {
       } else {
         throw new Error('Please provide all required credentials');
       }
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to connect. Please try again.');
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : 'Failed to connect. Please try again.');
       throw error;
     } finally {
       setConnectingId(null);
