@@ -1,50 +1,57 @@
 # SYNTHEX Agent Orchestra System
 
-## 🎭 Orchestra Agent (Primary Coordinator)
-**Status:** ACTIVE
-**Role:** Coordinates all sub-agents and maintains overall project coherence
+> Governed by **agents-protocol v1.0** (`.claude/skills/agents-protocol/SKILL.md`)
 
-## 📐 Architecture & Planning Agent
-**Status:** STANDBY
-**Responsibilities:**
-- System design decisions
-- Component architecture
-- Performance optimization strategies
-- Database schema planning
+## Agent Registry
 
-## 💻 Implementation & Testing Agent
-**Status:** STANDBY
-**Responsibilities:**
-- Code implementation
-- Unit/integration testing
-- Code quality assurance
-- Performance testing
+All agents are registered with Agent Cards in their respective primers.
 
-## 🔀 Git Operations Agent
-**Status:** ACTIVE - PENDING TASKS
-**Immediate Tasks:**
-- Commit 6 new JavaScript utilities
-- Update vercel.json and index.html
-- Create meaningful commit messages
-- Prepare for next deployment
+| Agent ID | Type | Primer | Model Tier | Status |
+|----------|------|--------|------------|--------|
+| `orchestrator` | orchestrator | `ORCHESTRATOR_PRIMER.md` | opus | ACTIVE |
+| `backend-agent` | worker | `BACKEND_AGENT_PRIMER.md` | sonnet | STANDBY |
+| `frontend-agent` | worker | `FRONTEND_AGENT_PRIMER.md` | sonnet | STANDBY |
+| `database-agent` | worker | `DATABASE_AGENT_PRIMER.md` | sonnet | STANDBY |
+| `verifier` | evaluator | `VERIFIER_PRIMER.md` | sonnet | STANDBY |
 
-## 🚀 Deployment & Production Agent
-**Status:** MONITORING
-**Current State:**
-- Last deployment: 9 minutes ago (SUCCESS)
-- URL: https://synthex-2dnvxbd1l-unite-group.vercel.app
-- Next action: Commit and deploy pending changes
+**Base template**: All workers inherit from `BASE_PRIMER.md` (Agent Card: `base-agent`)
 
-## 🐛 Debug & Error Resolution Agent  
-**Status:** STANDBY
-**Known Issues:**
-- None critical at this time
-- Monitoring for deployment issues
+## Delegation Map
 
----
+```
+human
+  └→ orchestrator
+       ├→ backend-agent   (apps/backend/**)
+       ├→ frontend-agent  (apps/web/**)
+       ├→ database-agent  (supabase/**)
+       └→ verifier        (read-only verification)
+```
 
-## Current Task Queue:
-1. ✅ System initialization complete
-2. 🔄 Commit pending changes
-3. ⏸️ Deploy updated version
-4. ⏸️ Verify production status
+## Escalation Chain
+
+```
+Worker Agent (any)
+    ↓ escalates to
+Orchestrator
+    ↓ escalates to
+Human Operator
+
+Exception: ethical/safety boundary → direct to Human
+```
+
+## Coordination Rules
+
+1. **Max 2 concurrent agents** (system stability — CLAUDE.md requirement)
+2. **No self-attestation** — all verification routes through `verifier`
+3. **Hub-and-spoke** — all communication through `orchestrator`, no peer-to-peer
+4. **Minimum viable context** — agents receive scoped context, not full project
+5. **5 delegation requirements** — every task must include objective, output format, tools guidance, boundaries, effort level
+
+## Protocol Compliance
+
+- All 6 primers include Agent Cards per protocol Section 1.1
+- Pre-agent-dispatch hook enforces delegation requirements per Section 3.1
+- Escalation format standardised per Section 4.2
+- Handoff format standardised per Section 5.3
+- Permission tiers assigned per Section 6.2
+- Error handling aligned with Section 7.1 classification
