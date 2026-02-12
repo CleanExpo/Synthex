@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { Prisma } from '@prisma/client';
 import BrandPsychologyOrchestrator, { BrandGenerationInput } from '@/lib/ai/agents/strategic-marketing/brand-orchestrator';
 import { getUserIdFromCookies, getUserIdFromRequest, unauthorizedResponse } from '@/lib/auth/jwt-utils';
 
@@ -43,7 +44,7 @@ export async function POST(request: NextRequest) {
       competitorContext
     });
 
-    // Save to database
+    // Save to database (JSON fields need double type assertion for Prisma InputJsonValue)
     const generation = await prisma.brandGeneration.create({
       data: {
         userId: userId,
@@ -51,11 +52,11 @@ export async function POST(request: NextRequest) {
         targetAudience: targetAudience,
         brandGoals: brandGoals,
         tonePreference: tonePreference,
-        psychologyStrategy: result.psychologicalStrategy as any,
-        brandNames: result.brandNames as any,
-        taglines: result.taglines as any,
-        metadataPackages: result.metadataPackages as any,
-        implementationGuide: result.implementationGuide as any,
+        psychologyStrategy: result.psychologicalStrategy as unknown as Prisma.InputJsonValue,
+        brandNames: result.brandNames as unknown as Prisma.InputJsonValue,
+        taglines: result.taglines as unknown as Prisma.InputJsonValue,
+        metadataPackages: result.metadataPackages as unknown as Prisma.InputJsonValue,
+        implementationGuide: result.implementationGuide as unknown as Prisma.InputJsonValue,
         effectivenessScore: result.effectivenessScore,
         status: 'draft'
       }

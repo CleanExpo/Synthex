@@ -19,6 +19,44 @@ import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-securit
 import { z } from 'zod';
 
 // ============================================================================
+// TYPE DEFINITIONS
+// ============================================================================
+
+/** Competitor snapshot record */
+interface CompetitorSnapshot {
+  platform: string;
+  snapshotAt: Date;
+  followersCount?: number | null;
+  engagementRate?: number | null;
+  performanceScore?: number | null;
+}
+
+/** Extended Prisma client with competitor models */
+interface ExtendedPrismaClient {
+  trackedCompetitor?: {
+    findFirst: (args: { where: Record<string, unknown>; include?: Record<string, unknown> }) => Promise<CompetitorDetailRecord | null>;
+    update: (args: { where: { id: string }; data: Record<string, unknown> }) => Promise<CompetitorDetailRecord>;
+    delete: (args: { where: { id: string } }) => Promise<void>;
+  };
+  competitorPost?: {
+    findMany: (args: { where: Record<string, unknown>; orderBy?: Record<string, string>; take?: number }) => Promise<unknown[]>;
+  };
+}
+
+/** Competitor detail record */
+interface CompetitorDetailRecord {
+  id: string;
+  userId: string;
+  name: string;
+  snapshots: CompetitorSnapshot[];
+  posts: unknown[];
+  alerts: unknown[];
+}
+
+/** Get prisma with extended models */
+const extendedPrisma = prisma as unknown as typeof prisma & ExtendedPrismaClient;
+
+// ============================================================================
 // VALIDATION SCHEMAS
 // ============================================================================
 
@@ -69,7 +107,7 @@ export async function GET(
     const userId = security.context.userId!;
 
     // Fetch competitor with related data
-    const competitor = await (prisma as any).trackedCompetitor?.findFirst({
+    const competitor = await extendedPrisma.trackedCompetitor?.findFirst({
       where: { id, userId },
       include: {
         snapshots: {
@@ -97,7 +135,7 @@ export async function GET(
 
     // Calculate trends from snapshots
     const recentSnapshots = competitor.snapshots.filter(
-      (s: any) => s.platform === 'all'
+      (s: CompetitorSnapshot) => s.platform === 'all'
     );
 
     let trends = null;
@@ -119,7 +157,7 @@ export async function GET(
     }
 
     // Get top performing posts
-    const topPosts = await (prisma as any).competitorPost?.findMany({
+    const topPosts = await extendedPrisma.competitorPost?.findMany({
       where: { competitorId: id, isTopPerforming: true },
       orderBy: { engagementRate: 'desc' },
       take: 5,
@@ -179,7 +217,7 @@ export async function PATCH(
     }
 
     // Check competitor exists and belongs to user
-    const existing = await (prisma as any).trackedCompetitor?.findFirst({
+    const existing = await extendedPrisma.trackedCompetitor?.findFirst({
       where: { id, userId },
     });
 
@@ -191,7 +229,7 @@ export async function PATCH(
     }
 
     // Update competitor
-    const competitor = await (prisma as any).trackedCompetitor?.update({
+    const competitor = await extendedPrisma.trackedCompetitor?.update({
       where: { id },
       data: {
         ...validation.data,
@@ -240,7 +278,7 @@ export async function DELETE(
     const userId = security.context.userId!;
 
     // Check competitor exists and belongs to user
-    const existing = await (prisma as any).trackedCompetitor?.findFirst({
+    const existing = await extendedPrisma.trackedCompetitor?.findFirst({
       where: { id, userId },
     });
 
@@ -252,7 +290,7 @@ export async function DELETE(
     }
 
     // Delete competitor (cascades to snapshots, posts, alerts)
-    await (prisma as any).trackedCompetitor?.delete({
+    await extendedPrisma.trackedCompetitor?.delete({
       where: { id },
     });
 
