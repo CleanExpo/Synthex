@@ -3,7 +3,7 @@
  * Constants and mock data for schedule page
  */
 
-import { Twitter, Linkedin, Instagram, Facebook, Video } from 'lucide-react';
+import { Twitter, Linkedin, Instagram, Facebook, Video } from '@/components/icons';
 import type { ScheduledPost } from '@/components/calendar';
 
 // Platform icons mapping

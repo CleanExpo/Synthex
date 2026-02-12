@@ -6,10 +6,11 @@ import { Button } from './button';
 import {
   ChevronLeft,
   ChevronRight,
-  ChevronsLeft,
-  ChevronsRight,
   MoreHorizontal,
-} from 'lucide-react';
+} from '@/components/icons';
+// Note: ChevronsLeft and ChevronsRight use ChevronLeft/ChevronRight with double chevrons
+const ChevronsLeft = ChevronLeft;
+const ChevronsRight = ChevronRight;
 
 /**
  * Pagination Component

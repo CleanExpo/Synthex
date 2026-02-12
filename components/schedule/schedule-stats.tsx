@@ -6,7 +6,7 @@
  */
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Clock, CheckCircle, TrendingUp, Zap } from 'lucide-react';
+import { Clock, CheckCircle, TrendingUp, Zap } from '@/components/icons';
 import type { ScheduleStats } from './types';
 
 interface ScheduleStatsGridProps {

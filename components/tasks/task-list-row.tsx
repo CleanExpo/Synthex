@@ -19,7 +19,7 @@ import {
   Calendar,
   Edit,
   Trash2,
-} from 'lucide-react';
+} from '@/components/icons';
 import { TaskTypeBadge, TaskStatusBadge, TaskPriorityBadge, AssigneeAvatars } from './task-badges';
 import type { Task, TaskStatus } from './types';
 

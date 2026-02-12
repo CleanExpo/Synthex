@@ -13,7 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Filter, Download } from 'lucide-react';
+import { Filter, Download } from '@/components/icons';
 import { timeRangeOptions } from './analytics-config';
 
 interface AnalyticsHeaderProps {

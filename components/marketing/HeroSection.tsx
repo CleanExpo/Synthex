@@ -3,7 +3,7 @@
 import * as React from 'react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, Play, Sparkles, Star } from 'lucide-react';
+import { ArrowRight, Play, Sparkles, Star } from '@/components/icons';
 
 /**
  * Hero Section Component

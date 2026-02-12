@@ -7,7 +7,7 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Eye, Heart, BarChart3, Twitter, Linkedin, Instagram, Facebook, Video } from 'lucide-react';
+import { Eye, Heart, BarChart3, Twitter, Linkedin, Instagram, Facebook, Video } from '@/components/icons';
 import type { TopPost } from './types';
 
 interface TopPostsProps {

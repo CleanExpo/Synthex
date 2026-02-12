@@ -27,7 +27,7 @@ import {
   Eye,
   MessageSquare,
   Link2,
-} from 'lucide-react';
+} from '@/components/icons';
 import { TaskTypeBadge, TaskPriorityBadge, AssigneeAvatars } from './task-badges';
 import type { Task, TaskStatus } from './types';
 

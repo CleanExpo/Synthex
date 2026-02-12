@@ -3,7 +3,7 @@
 import * as React from 'react';
 import * as AccordionPrimitive from '@radix-ui/react-accordion';
 import { cn } from '@/lib/utils';
-import { ChevronDown, Plus, Minus } from 'lucide-react';
+import { ChevronDown, Plus, Minus } from '@/components/icons';
 
 /**
  * Accordion Component

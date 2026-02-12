@@ -12,7 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { CalendarDays, Calendar, List } from 'lucide-react';
+import { CalendarDays, Calendar, List } from '@/components/icons';
 import { platformOptions, statusOptions } from './schedule-config';
 import type { ViewMode } from './types';
 

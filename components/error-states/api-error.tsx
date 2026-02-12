@@ -11,7 +11,9 @@
 'use client';
 
 import React, { Component, ReactNode } from 'react';
-import { AlertCircle, RefreshCw, WifiOff, ServerCrash, Lock, Clock } from 'lucide-react';
+import { AlertCircle, RefreshCw, WifiOff, Server, Lock, Clock } from '@/components/icons';
+// Alias for ServerCrash
+const ServerCrash = Server;
 
 // ============================================================================
 // TYPES

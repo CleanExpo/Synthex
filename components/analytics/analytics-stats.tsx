@@ -6,7 +6,7 @@
  */
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Eye, Heart, Activity, Users, TrendingUp, TrendingDown } from 'lucide-react';
+import { Eye, Heart, Activity, Users, TrendingUp, TrendingDown } from '@/components/icons';
 import type { DisplayData } from './types';
 
 interface AnalyticsStatsProps {

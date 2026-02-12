@@ -3,7 +3,7 @@
 import { useSubscription } from '@/hooks/useSubscription';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Lock, Sparkles, TrendingUp } from 'lucide-react';
+import { Lock, Sparkles, TrendingUp } from '@/components/icons';
 import Link from 'next/link';
 
 interface SEOFeatureGateProps {

@@ -8,7 +8,7 @@ import {
   Rocket,
   ChevronRight,
   Zap
-} from 'lucide-react';
+} from '@/components/icons';
 
 const steps = [
   {

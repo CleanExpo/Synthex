@@ -7,7 +7,7 @@
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Plus } from 'lucide-react';
+import { Plus } from '@/components/icons';
 import { TaskCard } from './task-card';
 import { statusConfig } from './task-config';
 import type { Task, TaskStatus } from './types';

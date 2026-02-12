@@ -6,7 +6,7 @@
  */
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ListTodo, Play, CheckCircle, AlertCircle } from 'lucide-react';
+import { ListTodo, Play, CheckCircle, AlertCircle } from '@/components/icons';
 
 interface TaskStats {
   total: number;

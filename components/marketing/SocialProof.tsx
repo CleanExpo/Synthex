@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { cn } from '@/lib/utils';
-import { Star, Shield, Award, Check } from 'lucide-react';
+import { Star, Shield, Award, Check } from '@/components/icons';
 
 /**
  * Social Proof Components

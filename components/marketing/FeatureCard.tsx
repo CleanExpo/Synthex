@@ -3,7 +3,10 @@
 import * as React from 'react';
 import { cn } from '@/lib/utils';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import { LucideIcon, ArrowRight } from 'lucide-react';
+import { ArrowRight } from '@/components/icons';
+import type { ComponentType, SVGProps } from 'react';
+
+type LucideIcon = ComponentType<SVGProps<SVGSVGElement> & { className?: string }>;
 
 /**
  * Feature Card Component

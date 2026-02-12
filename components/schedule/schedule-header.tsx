@@ -6,7 +6,7 @@
  */
 
 import { Button } from '@/components/ui/button';
-import { Upload, Download, Plus, Loader2 } from 'lucide-react';
+import { Upload, Download, Plus, Loader2 } from '@/components/icons';
 
 interface ScheduleHeaderProps {
   isCreating: boolean;

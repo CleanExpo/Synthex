@@ -21,7 +21,9 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { X, Send, MessageSquare, Check, MoreVertical, Trash2, Edit2, Reply, Loader2 } from 'lucide-react';
+import { X, Send, MessageSquare, Check, MoreVertical, Trash2, Edit, Reply, Loader2 } from '@/components/icons';
+// Alias for Edit2 compatibility
+const Edit2 = Edit;
 import { toast } from 'sonner';
 import type { ContentType } from '@/hooks/useContentShare';
 

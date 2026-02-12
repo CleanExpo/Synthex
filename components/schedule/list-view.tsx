@@ -7,7 +7,7 @@
 
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Calendar, Plus, Send, Trash2, AlertTriangle } from 'lucide-react';
+import { Calendar, Plus, Send, Trash2, AlertTriangle } from '@/components/icons';
 import { getPlatformIconComponent } from './schedule-config';
 import { PLATFORM_COLORS } from '@/components/calendar';
 import type { ScheduledPost } from './types';

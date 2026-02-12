@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { AlertTriangle, RefreshCw, MessageCircle, Home } from 'lucide-react';
+import { AlertTriangle, RefreshCw, MessageCircle, Home } from '@/components/icons';
 import { Button } from './button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from './card';
 import { cn } from '@/lib/utils';

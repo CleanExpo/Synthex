@@ -2,7 +2,9 @@
  * Reports Page Types
  */
 
-import type { LucideIcon } from 'lucide-react';
+import type { ComponentType, SVGProps } from 'react';
+
+type LucideIcon = ComponentType<SVGProps<SVGSVGElement> & { className?: string }>;
 
 export interface Report {
   id: string;

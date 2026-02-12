@@ -14,7 +14,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Search, KanbanSquare, LayoutList } from 'lucide-react';
+import { Search, Grid, List } from '@/components/icons';
+// Aliases for Lucide icon names
+const KanbanSquare = Grid;
+const LayoutList = List;
 import { typeConfig, priorityConfig } from './task-config';
 import type { TaskType, TaskPriority } from './types';
 

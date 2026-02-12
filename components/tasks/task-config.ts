@@ -18,8 +18,10 @@ import {
   MessageSquare,
   Sparkles,
   ListTodo,
-  type LucideIcon,
-} from 'lucide-react';
+} from '@/components/icons';
+import type { ComponentType, SVGProps } from 'react';
+
+type LucideIcon = ComponentType<SVGProps<SVGSVGElement> & { className?: string }>;
 import type { TaskStatus, TaskPriority, TaskType, TeamMember } from './types';
 
 export interface StatusConfig {

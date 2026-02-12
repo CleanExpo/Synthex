@@ -5,15 +5,16 @@ import { cn } from '@/lib/utils';
 import {
   ChevronDown,
   ChevronUp,
-  ChevronsUpDown,
   ChevronLeft,
   ChevronRight,
-  ChevronsLeft,
-  ChevronsRight,
   Search,
   Filter,
   MoreHorizontal,
-} from 'lucide-react';
+} from '@/components/icons';
+// Aliases for double chevrons
+const ChevronsUpDown = ChevronDown;
+const ChevronsLeft = ChevronLeft;
+const ChevronsRight = ChevronRight;
 import { Button } from './button';
 import { Input } from './input';
 import { Checkbox } from './checkbox';

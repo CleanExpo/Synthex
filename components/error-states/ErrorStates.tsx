@@ -10,13 +10,18 @@ import { Button } from '@/components/ui/button';
 import {
   AlertCircle,
   RefreshCw,
-  FileX,
+  File,
   WifiOff,
-  ServerOff,
-  SearchX,
-  FolderOpen,
+  Server,
+  Search,
+  Inbox,
   Plus,
-} from 'lucide-react';
+} from '@/components/icons';
+// Aliases for missing icons
+const FileX = File;
+const ServerOff = Server;
+const SearchX = Search;
+const FolderOpen = Inbox;
 
 interface ErrorCardProps {
   title?: string;

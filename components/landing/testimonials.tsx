@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
-import { Star, Quote, BadgeCheck, TrendingUp } from 'lucide-react';
+import { Star, Quote, BadgeCheck, TrendingUp } from '@/components/icons';
 import { Card } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 

@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { cn } from '@/lib/utils';
-import { ChevronRight, Home, MoreHorizontal } from 'lucide-react';
+import { ChevronRight, Home, MoreHorizontal } from '@/components/icons';
 
 /**
  * Breadcrumb Component

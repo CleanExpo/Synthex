@@ -23,7 +23,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { X, Copy, Check, Link2, Mail, Users, Shield, Clock, Eye, Trash2, Loader2 } from 'lucide-react';
+import { X, Copy, Check, Link2, Mail, Users, Shield, Clock, Eye, Trash2, Loader2 } from '@/components/icons';
 import { toast } from 'sonner';
 import { useContentShare, type ContentShare, type Permission, type ContentType } from '@/hooks/useContentShare';
 

@@ -7,7 +7,7 @@
  */
 
 import React, { useState } from 'react';
-import { Check, Loader2, ExternalLink, X } from 'lucide-react';
+import { Check, Loader2, ExternalLink, X } from '@/components/icons';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { useOnboarding } from './OnboardingContext';
