@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import {
   ArrowRight, Sparkles, CheckCircle2, Zap, BarChart3, Globe, Bot, Play, Pause
-} from 'lucide-react';
+} from '@/components/icons';
 import { useState } from 'react';
 
 // Synthex Logo Component

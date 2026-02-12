@@ -8,7 +8,7 @@
 
 import React from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowRight, ArrowLeft, Brain } from 'lucide-react';
+import { ArrowRight, ArrowLeft, Brain } from '@/components/icons';
 import { Button } from '@/components/ui/button';
 import { useOnboarding, ProgressIndicator, PersonaSetup } from '@/components/onboarding';
 

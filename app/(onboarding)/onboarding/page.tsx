@@ -8,7 +8,7 @@
 
 import React from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowRight, Zap, Target, Brain } from 'lucide-react';
+import { ArrowRight, Zap, Target, Brain } from '@/components/icons';
 import { Button } from '@/components/ui/button';
 import { SynthexLogo } from '@/components/marketing/MarketingLayout';
 

@@ -8,7 +8,9 @@
 
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Check, ArrowRight, Loader2, PartyPopper } from 'lucide-react';
+import { Check, ArrowRight, Loader2, Sparkles } from '@/components/icons';
+// Alias for PartyPopper (using Sparkles as visual alternative)
+const PartyPopper = Sparkles;
 import { Button } from '@/components/ui/button';
 import { useOnboarding, ProgressIndicator } from '@/components/onboarding';
 

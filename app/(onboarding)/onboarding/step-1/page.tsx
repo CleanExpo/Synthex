@@ -8,7 +8,9 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowRight, ArrowLeft, Building2 } from 'lucide-react';
+import { ArrowRight, ArrowLeft, Building } from '@/components/icons';
+// Alias for Building2
+const Building2 = Building;
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
