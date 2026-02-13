@@ -27,7 +27,7 @@ const GOOGLE_CONFIG = {
   scope: 'openid email profile',
   responseType: 'code',
   accessType: 'offline',
-  prompt: 'consent', // Force consent to get refresh token
+  prompt: 'select_account', // Let returning users pick account without re-consenting
 };
 
 export async function GET(request: NextRequest) {
@@ -67,6 +67,12 @@ export async function GET(request: NextRequest) {
       linkToUserId || undefined
     );
 
+    // Encode returnTo into the state value (callback handles state.split('|')[0])
+    // CRITICAL: Only set state ONCE — .append() would create duplicate keys
+    const stateValue = returnTo && returnTo !== '/dashboard'
+      ? `${state}|${encodeURIComponent(returnTo)}`
+      : state;
+
     // Build Google authorization URL with PKCE
     const authParams = new URLSearchParams({
       client_id: GOOGLE_CONFIG.clientId,
@@ -75,16 +81,10 @@ export async function GET(request: NextRequest) {
       scope: GOOGLE_CONFIG.scope,
       access_type: GOOGLE_CONFIG.accessType,
       prompt: GOOGLE_CONFIG.prompt,
-      state,
+      state: stateValue,
       code_challenge: pkce.codeChallenge,
       code_challenge_method: pkce.codeChallengeMethod,
     });
-
-    // Add return URL to state (encoded in the state parameter)
-    // The actual returnTo is stored in PKCE state, but we can also include it in URL
-    if (returnTo && returnTo !== '/dashboard') {
-      authParams.append('state', `${state}|${encodeURIComponent(returnTo)}`);
-    }
 
     const authorizationUrl = `${GOOGLE_CONFIG.authUrl}?${authParams.toString()}`;
 

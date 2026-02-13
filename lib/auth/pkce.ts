@@ -8,9 +8,9 @@
  *
  * ENVIRONMENT VARIABLES REQUIRED:
  * - REDIS_URL: Optional Redis connection for distributed storage (recommended for production)
- *   Falls back to in-memory storage in development
+ *   Falls back to DATABASE storage (OAuthPKCEState table) which survives serverless cold starts
  *
- * FAILURE MODE: Falls back to in-memory storage if Redis unavailable
+ * FAILURE MODE: Redis → Database → In-memory (last resort, development only)
  */
 
 import crypto from 'crypto';
@@ -78,10 +78,11 @@ function base64UrlEncode(buffer: Buffer): string {
 
 // ==========================================
 // PKCE State Storage
-// Uses Redis in production, in-memory Map for development
+// Priority: Redis → Database (Prisma) → In-memory (dev only)
+// Database fallback ensures state survives Vercel serverless cold starts
 // ==========================================
 
-// In-memory storage for development (not suitable for production multi-instance)
+// In-memory storage as LAST RESORT (development only, fails across workers)
 const memoryStorage = new Map<string, PKCEState>();
 
 // Storage TTL: 10 minutes (OAuth flows should complete quickly)
@@ -113,10 +114,16 @@ export async function storePKCEState(
     return;
   }
 
-  // Fallback to in-memory storage
-  memoryStorage.set(state, pkceState);
+  // Fallback to database (survives serverless cold starts)
+  try {
+    await storeInDatabase(state, pkceState);
+    return;
+  } catch (dbError) {
+    console.warn('[PKCE] Database storage failed, falling back to in-memory:', dbError);
+  }
 
-  // Clean up expired entries periodically
+  // Last resort: in-memory (development only — will fail across Vercel workers)
+  memoryStorage.set(state, pkceState);
   cleanupExpiredEntries();
 }
 
@@ -129,7 +136,15 @@ export async function retrievePKCEState(state: string): Promise<PKCEState | null
     return retrieveFromRedis(state);
   }
 
-  // Fallback to in-memory
+  // Try database
+  try {
+    const dbResult = await retrieveFromDatabase(state);
+    if (dbResult) return dbResult;
+  } catch (dbError) {
+    console.warn('[PKCE] Database retrieval failed, trying in-memory:', dbError);
+  }
+
+  // Last resort: in-memory
   const pkceState = memoryStorage.get(state);
 
   if (!pkceState) {
@@ -221,6 +236,60 @@ async function retrieveFromRedis(state: string): Promise<PKCEState | null> {
   } catch {
     return null;
   }
+}
+
+// ==========================================
+// Database Integration (Prisma — reliable fallback)
+// Survives serverless cold starts and multi-worker deployments
+// ==========================================
+
+async function storeInDatabase(state: string, pkceState: PKCEState): Promise<void> {
+  const prisma = (await import('@/lib/prisma')).default;
+
+  await prisma.oAuthPKCEState.create({
+    data: {
+      state,
+      codeVerifier: pkceState.codeVerifier,
+      provider: pkceState.provider,
+      redirectUri: pkceState.redirectUri,
+      linkToUserId: pkceState.linkToUserId || null,
+      expiresAt: new Date(pkceState.expiresAt),
+    },
+  });
+
+  // Cleanup expired entries (best-effort, non-blocking)
+  prisma.oAuthPKCEState.deleteMany({
+    where: { expiresAt: { lt: new Date() } },
+  }).catch(() => { /* ignore cleanup errors */ });
+}
+
+async function retrieveFromDatabase(state: string): Promise<PKCEState | null> {
+  const prisma = (await import('@/lib/prisma')).default;
+
+  const record = await prisma.oAuthPKCEState.findUnique({
+    where: { state },
+  });
+
+  if (!record) return null;
+
+  // Check expiration
+  if (new Date() > record.expiresAt) {
+    await prisma.oAuthPKCEState.delete({ where: { state } }).catch(() => {});
+    return null;
+  }
+
+  // Delete after retrieval (one-time use)
+  await prisma.oAuthPKCEState.delete({ where: { state } }).catch(() => {});
+
+  return {
+    state: record.state,
+    codeVerifier: record.codeVerifier,
+    provider: record.provider as AuthProvider,
+    redirectUri: record.redirectUri,
+    linkToUserId: record.linkToUserId || undefined,
+    createdAt: record.createdAt.getTime(),
+    expiresAt: record.expiresAt.getTime(),
+  };
 }
 
 // ==========================================

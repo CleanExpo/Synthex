@@ -100,7 +100,14 @@ export async function middleware(request: NextRequest) {
     return response;
   }
 
+  // Skip auth checks for OAuth callback flows — the cookie is being SET during this redirect,
+  // so it won't exist yet. Without this, users loop back to login after Google sign-in.
+  if (pathname.startsWith('/auth/callback')) {
+    return response;
+  }
+
   // Redirect to login if accessing protected route without session OR custom auth token
+  // Trust auth-token cookie immediately — it's set by our own OAuth callback
   if (isProtectedPath && !session && !hasCustomAuth) {
     if (!pathname.startsWith('/api/')) {
       // Redirect to login for web pages

@@ -197,6 +197,22 @@ model Session {
   @@map("sessions")
 }
 
+// OAuth PKCE state storage — survives serverless cold starts
+// Replaces in-memory Map that fails across Vercel workers
+model OAuthPKCEState {
+  id            String   @id @default(cuid())
+  state         String   @unique
+  codeVerifier  String   @map("code_verifier")
+  provider      String   // 'google', 'github', etc.
+  redirectUri   String   @map("redirect_uri")
+  linkToUserId  String?  @map("link_to_user_id")
+  expiresAt     DateTime @map("expires_at")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  @@index([expiresAt])
+  @@map("oauth_pkce_states")
+}
+
 model Notification {
   id          String   @id @default(cuid())
   type        String   // 'info', 'warning', 'error', 'success'
