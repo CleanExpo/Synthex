@@ -11,6 +11,9 @@ if (process.env.ANALYZE === 'true') {
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Use alternate build dir when NEXT_ALT_BUILD is set (avoids .next/trace lock conflicts)
+  distDir: process.env.NEXT_ALT_BUILD || '.next',
+
   // Note: 'standalone' output is only needed for Docker deployments
   // Vercel handles deployment differently and doesn't need standalone mode
   output: process.env.DOCKER_BUILD === 'true' ? 'standalone' : undefined,
