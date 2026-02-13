@@ -26,7 +26,7 @@ export const PRODUCTS = {
   professional: {
     name: 'Professional',
     priceId: process.env.STRIPE_PROFESSIONAL_PRICE_ID || 'price_professional_placeholder',
-    price: 49,
+    price: 249,
     features: {
       socialAccounts: 5,
       aiPosts: 100,
@@ -40,7 +40,7 @@ export const PRODUCTS = {
   business: {
     name: 'Business',
     priceId: process.env.STRIPE_BUSINESS_PRICE_ID || 'price_business_placeholder',
-    price: 99,
+    price: 399,
     features: {
       socialAccounts: 10,
       aiPosts: -1, // unlimited

@@ -64,7 +64,7 @@ export class TwoFactorService {
     const codes: string[] = [];
     for (let i = 0; i < this.BACKUP_CODES_COUNT; i++) {
       // Generate 8-digit backup code
-      const code = Math.floor(10000000 + Math.random() * 90000000).toString();
+      const code = crypto.randomInt(10000000, 99999999).toString();
       codes.push(code);
     }
     return codes;

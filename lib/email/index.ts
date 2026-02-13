@@ -173,7 +173,7 @@ class UnifiedEmailService {
   ): Promise<string> {
     // Generate reset token and OTP
     const resetToken = crypto.randomBytes(32).toString('hex');
-    const resetCode = Math.floor(100000 + Math.random() * 900000).toString();
+    const resetCode = crypto.randomInt(100000, 999999).toString();
     const resetExpires = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
 
     // Save to database

@@ -4,6 +4,8 @@ import { useState, useEffect, useCallback } from 'react';
 import { DashboardSkeleton } from '@/components/skeletons';
 import { APIErrorCard } from '@/components/error-states';
 import toast from 'react-hot-toast';
+import Link from 'next/link';
+import { Brain } from '@/components/icons';
 
 import {
   type GeneratedContentData,
@@ -29,6 +31,7 @@ export default function ContentPage() {
   const [editedContent, setEditedContent] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [psychologyScore, setPsychologyScore] = useState<{overallScore: number, topPrinciples: {name: string, strength: number}[], predictedEngagement: {level: string}} | null>(null);
 
   useEffect(() => {
     const init = async () => {
@@ -50,6 +53,7 @@ export default function ContentPage() {
     }
 
     setIsGenerating(true);
+    setPsychologyScore(null);
     try {
       const response = await fetch('/api/ai/generate-content', {
         method: 'POST',
@@ -85,6 +89,32 @@ export default function ContentPage() {
         setGeneratedContent(transformedContent);
         setEditedContent(transformedContent.primary);
         toast.success('Content generated successfully!');
+
+        // Auto-analyze with psychology analyzer
+        try {
+          const psychRes = await fetch('/api/psychology/analyze', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({
+              content: transformedContent.primary,
+              platform,
+              contentType: 'post',
+            }),
+          });
+          const psychData = await psychRes.json();
+          if (psychData.success && psychData.data?.analysis) {
+            setPsychologyScore({
+              overallScore: psychData.data.analysis.overallScore,
+              topPrinciples: psychData.data.analysis.principlesDetected
+                ?.slice(0, 3)
+                .map((p: any) => ({ name: p.name, strength: p.strength })) || [],
+              predictedEngagement: psychData.data.analysis.predictedEngagement,
+            });
+          }
+        } catch {
+          // Psychology analysis is optional, don't block
+        }
       } else {
         toast.error(data.error || data.message || 'Failed to generate content');
       }
@@ -181,6 +211,46 @@ export default function ContentPage() {
           onSchedule={handleSchedule}
         />
       </div>
+
+      {psychologyScore && generatedContent && (
+        <div className="glass-card p-4 rounded-xl border border-white/10">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-sm font-semibold text-white flex items-center gap-2">
+              <Brain className="h-4 w-4 text-purple-400" />
+              Psychology Analysis
+            </h3>
+            <Link href="/dashboard/psychology" className="text-xs text-cyan-400 hover:text-cyan-300">
+              Full Analysis →
+            </Link>
+          </div>
+          <div className="flex items-center gap-6">
+            <div className="text-center">
+              <div className={`text-2xl font-bold ${
+                psychologyScore.overallScore >= 70 ? 'text-green-400' :
+                psychologyScore.overallScore >= 40 ? 'text-yellow-400' : 'text-red-400'
+              }`}>
+                {psychologyScore.overallScore}
+              </div>
+              <div className="text-xs text-slate-400">Score</div>
+            </div>
+            <div className="flex-1 flex flex-wrap gap-2">
+              {psychologyScore.topPrinciples.map((p) => (
+                <span key={p.name} className="text-xs bg-purple-500/10 text-purple-300 px-2 py-1 rounded-full border border-purple-500/20">
+                  {p.name} ({p.strength}%)
+                </span>
+              ))}
+            </div>
+            <div className={`text-xs px-2 py-1 rounded-full ${
+              psychologyScore.predictedEngagement.level === 'viral' ? 'bg-green-500/20 text-green-400' :
+              psychologyScore.predictedEngagement.level === 'high' ? 'bg-cyan-500/20 text-cyan-400' :
+              psychologyScore.predictedEngagement.level === 'medium' ? 'bg-yellow-500/20 text-yellow-400' :
+              'bg-red-500/20 text-red-400'
+            }`}>
+              {psychologyScore.predictedEngagement.level} engagement
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

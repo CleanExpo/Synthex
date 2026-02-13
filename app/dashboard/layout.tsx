@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useTokenRefresh } from '@/hooks/useTokenRefresh';
 import MobileMenu from '@/components/MobileMenu';
 import { NotificationBell } from '@/components/NotificationBell';
 import {
@@ -24,7 +25,9 @@ import {
   Brain,
   Palette,
   Menu,
-  ListTodo
+  ListTodo,
+  Target,
+  Video
 } from '@/components/icons';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -38,6 +41,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
+import { WebSocketProvider } from '@/components/WebSocketProvider';
 
 const sidebarItems = [
   { icon: Home, label: 'Dashboard', href: '/dashboard' },
@@ -48,6 +52,9 @@ const sidebarItems = [
   { icon: Calendar, label: 'Schedule', href: '/dashboard/schedule' },
   { icon: ListTodo, label: 'Tasks', href: '/dashboard/tasks' },
   { icon: BarChart3, label: 'Analytics', href: '/dashboard/analytics' },
+  { icon: Brain, label: 'Psychology', href: '/dashboard/psychology' },
+  { icon: Target, label: 'Competitors', href: '/dashboard/competitors' },
+  { icon: Video, label: 'Video', href: '/dashboard/video' },
   { icon: Search, label: 'SEO Tools', href: '/dashboard/seo' },
   { icon: Users, label: 'Team', href: '/dashboard/team' },
   { icon: Zap, label: 'Integrations', href: '/dashboard/integrations' },
@@ -62,8 +69,10 @@ export default function DashboardLayout({
   const pathname = usePathname();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  useTokenRefresh();
 
   return (
+    <WebSocketProvider autoConnect showConnectionStatus={false}>
     <div className="min-h-screen bg-gray-950">
       {/* Mobile Menu Component */}
       <MobileMenu />
@@ -218,5 +227,6 @@ export default function DashboardLayout({
         />
       )}
     </div>
+    </WebSocketProvider>
   );
 }

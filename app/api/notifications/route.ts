@@ -13,6 +13,7 @@ import { z } from 'zod';
 import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
+import { NotificationChannel } from '@/lib/websocket/notification-channel';
 
 // Validation schemas
 const createNotificationSchema = z.object({
@@ -245,6 +246,19 @@ export async function POST(request: NextRequest) {
         createdAt: true
       }
     });
+
+    // Broadcast via WebSocket/SSE for real-time delivery
+    try {
+      await NotificationChannel.notify(targetUserId!, {
+        type: data.type as any,
+        title: data.title,
+        message: data.message,
+        data: data.data,
+        priority: 'normal',
+      });
+    } catch {
+      // Real-time delivery is best-effort, don't fail the request
+    }
 
     return APISecurityChecker.createSecureResponse(
       {

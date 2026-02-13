@@ -267,7 +267,29 @@ export async function withRateLimit(
   handler: () => Promise<NextResponse>
 ): Promise<NextResponse> {
   const pathname = new URL(req.url).pathname;
-  const tier = 'free';
+
+  // Resolve user tier from auth token instead of hardcoding 'free'
+  let tier = 'free';
+  try {
+    const authHeader = req.headers.get('authorization');
+    const cookieToken = req.cookies.get('auth-token')?.value;
+    const token = authHeader?.startsWith('Bearer ')
+      ? authHeader.substring(7)
+      : cookieToken;
+
+    if (token) {
+      const parts = token.split('.');
+      if (parts.length === 3) {
+        const payload = JSON.parse(Buffer.from(parts[1], 'base64url').toString());
+        if (payload?.userId) {
+          const tempLimiter = new RateLimiter({ windowMs: 60_000, maxRequests: 100 });
+          tier = await tempLimiter.getUserTier(payload.userId);
+        }
+      }
+    }
+  } catch {
+    // Fall back to 'free' tier on any error
+  }
 
   const limiter = createRateLimiter(pathname, tier);
   const result = await limiter.check(req);

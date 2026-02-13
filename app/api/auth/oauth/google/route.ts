@@ -54,13 +54,8 @@ export async function GET(request: NextRequest) {
     // Generate state parameter (CSRF protection)
     const state = generateState();
 
-    // Build redirect URI - use request origin for accurate URL detection
-    const origin = request.headers.get('origin') || request.headers.get('host');
-    const protocol = request.headers.get('x-forwarded-proto') ||
-                     (origin?.includes('localhost') ? 'http' : 'https');
-    const baseUrl = origin?.includes('://')
-      ? origin
-      : `${protocol}://${origin || 'localhost:3000'}`;
+    // Build redirect URI using NEXT_PUBLIC_APP_URL (reliable on Vercel)
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
     const redirectUri = `${baseUrl}/api/auth/oauth/google/callback`;
 
     // Store PKCE state for callback verification

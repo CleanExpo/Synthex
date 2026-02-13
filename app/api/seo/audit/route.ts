@@ -23,77 +23,258 @@ const AuditRequestSchema = z.object({
   includeContentAnalysis: z.boolean().optional().default(true),
 });
 
-// Mock SEO audit data - In production, this would use actual crawling/analysis
-function performSEOAudit(url: string, options: Omit<z.infer<typeof AuditRequestSchema>, 'url'>) {
+/**
+ * Perform a real SEO audit using Google PageSpeed Insights API.
+ * Falls back to basic HTML analysis if PageSpeed API fails.
+ *
+ * ENVIRONMENT VARIABLES (OPTIONAL):
+ * - GOOGLE_PAGESPEED_API_KEY: For higher rate limits (PUBLIC, optional)
+ */
+async function performSEOAudit(url: string, options: Omit<z.infer<typeof AuditRequestSchema>, 'url'>) {
   const domain = new URL(url).hostname;
+  const issues: { severity: string; title: string; description: string; recommendation: string; affectedPages: string[] }[] = [];
+
+  // -- Core Web Vitals via Google PageSpeed Insights API --
+  let cwv = null;
+  let performanceScore = 0;
+  let accessibilityScore = 0;
+  let seoScore = 0;
+  let bestPracticesScore = 0;
+
+  if (options.includeCoreWebVitals) {
+    try {
+      const apiKey = process.env.GOOGLE_PAGESPEED_API_KEY;
+      const psiUrl = new URL('https://www.googleapis.com/pagespeedonline/v5/runPagespeed');
+      psiUrl.searchParams.set('url', url);
+      psiUrl.searchParams.set('strategy', 'mobile');
+      psiUrl.searchParams.set('category', 'PERFORMANCE');
+      psiUrl.searchParams.set('category', 'ACCESSIBILITY');
+      psiUrl.searchParams.set('category', 'SEO');
+      psiUrl.searchParams.set('category', 'BEST_PRACTICES');
+      if (apiKey) psiUrl.searchParams.set('key', apiKey);
+
+      const psiRes = await fetch(psiUrl.toString(), { signal: AbortSignal.timeout(30000) });
+
+      if (psiRes.ok) {
+        const psi = await psiRes.json();
+
+        // Extract Lighthouse scores
+        const categories = psi.lighthouseResult?.categories;
+        performanceScore = Math.round((categories?.performance?.score || 0) * 100);
+        accessibilityScore = Math.round((categories?.accessibility?.score || 0) * 100);
+        seoScore = Math.round((categories?.seo?.score || 0) * 100);
+        bestPracticesScore = Math.round((categories?.['best-practices']?.score || 0) * 100);
+
+        // Extract Core Web Vitals from field data or lab data
+        const fieldMetrics = psi.loadingExperience?.metrics;
+        const labAudits = psi.lighthouseResult?.audits;
+
+        const lcpValue = fieldMetrics?.LARGEST_CONTENTFUL_PAINT_MS?.percentile
+          ? fieldMetrics.LARGEST_CONTENTFUL_PAINT_MS.percentile / 1000
+          : labAudits?.['largest-contentful-paint']?.numericValue
+            ? labAudits['largest-contentful-paint'].numericValue / 1000
+            : null;
+
+        const clsValue = fieldMetrics?.CUMULATIVE_LAYOUT_SHIFT_SCORE?.percentile
+          ? fieldMetrics.CUMULATIVE_LAYOUT_SHIFT_SCORE.percentile / 100
+          : labAudits?.['cumulative-layout-shift']?.numericValue ?? null;
+
+        const inpValue = fieldMetrics?.INTERACTION_TO_NEXT_PAINT?.percentile ?? null;
+
+        const fidValue = fieldMetrics?.FIRST_INPUT_DELAY_MS?.percentile ?? null;
+
+        function rateMetric(value: number | null, good: number, poor: number): string {
+          if (value === null) return 'no-data';
+          return value <= good ? 'good' : value <= poor ? 'needs-improvement' : 'poor';
+        }
+
+        cwv = {
+          lcp: { value: lcpValue, rating: rateMetric(lcpValue, 2.5, 4.0) },
+          fid: { value: fidValue, rating: rateMetric(fidValue, 100, 300) },
+          cls: { value: clsValue, rating: rateMetric(clsValue, 0.1, 0.25) },
+          inp: { value: inpValue, rating: rateMetric(inpValue, 200, 500) },
+        };
+
+        // Extract failed Lighthouse audits as issues
+        const audits = psi.lighthouseResult?.audits || {};
+        for (const [key, audit] of Object.entries(audits) as [string, any][]) {
+          if (audit.score !== null && audit.score < 0.5 && audit.title) {
+            const severity = audit.score === 0 ? 'critical' : 'major';
+            issues.push({
+              severity,
+              title: audit.title,
+              description: audit.description?.replace(/<[^>]*>/g, '').slice(0, 200) || '',
+              recommendation: audit.details?.items?.[0]?.node?.explanation || `Improve ${audit.title}`,
+              affectedPages: [url],
+            });
+          }
+        }
+      }
+    } catch (error) {
+      console.warn('PageSpeed Insights API failed, using partial data:', error);
+    }
+  }
+
+  // -- Basic HTML analysis via fetch --
+  let schemaData = null;
+  try {
+    const pageRes = await fetch(url, {
+      headers: { 'User-Agent': 'SynthexBot/1.0 (+https://synthex.social)' },
+      signal: AbortSignal.timeout(15000),
+    });
+
+    if (pageRes.ok) {
+      const html = await pageRes.text();
+
+      // Check meta description
+      if (!html.match(/<meta[^>]+name=["']description["'][^>]*>/i)) {
+        issues.push({
+          severity: 'critical',
+          title: 'Missing meta description',
+          description: 'The page is missing a meta description tag',
+          recommendation: 'Add a unique meta description between 150-160 characters',
+          affectedPages: [url],
+        });
+      }
+
+      // Check title tag
+      const titleMatch = html.match(/<title[^>]*>([^<]*)<\/title>/i);
+      if (!titleMatch || !titleMatch[1].trim()) {
+        issues.push({
+          severity: 'critical',
+          title: 'Missing or empty title tag',
+          description: 'The page is missing a title tag',
+          recommendation: 'Add a unique title tag between 50-60 characters',
+          affectedPages: [url],
+        });
+      } else if (titleMatch[1].length > 70) {
+        issues.push({
+          severity: 'minor',
+          title: 'Title tag too long',
+          description: `Title tag is ${titleMatch[1].length} characters (recommended max: 60)`,
+          recommendation: 'Shorten the title to 50-60 characters',
+          affectedPages: [url],
+        });
+      }
+
+      // Check images without alt text
+      const imgMatches = html.match(/<img[^>]*>/gi) || [];
+      const missingAlt = imgMatches.filter(img => !img.match(/alt=["'][^"']+["']/i));
+      if (missingAlt.length > 0) {
+        issues.push({
+          severity: 'minor',
+          title: 'Images missing alt text',
+          description: `${missingAlt.length} image(s) are missing alt text`,
+          recommendation: 'Add descriptive alt text to all images for accessibility and SEO',
+          affectedPages: [url],
+        });
+      }
+
+      // Check viewport meta
+      if (!html.match(/<meta[^>]+name=["']viewport["'][^>]*>/i)) {
+        issues.push({
+          severity: 'major',
+          title: 'Missing viewport meta tag',
+          description: 'Page may not be mobile-friendly without viewport meta',
+          recommendation: 'Add <meta name="viewport" content="width=device-width, initial-scale=1">',
+          affectedPages: [url],
+        });
+      }
+
+      // Check for canonical tag
+      if (!html.match(/<link[^>]+rel=["']canonical["'][^>]*>/i)) {
+        issues.push({
+          severity: 'minor',
+          title: 'Missing canonical tag',
+          description: 'No canonical URL specified — may cause duplicate content issues',
+          recommendation: 'Add a <link rel="canonical"> tag pointing to the preferred URL',
+          affectedPages: [url],
+        });
+      }
+
+      // Schema detection
+      if (options.includeSchemaCheck) {
+        const schemaTypes: string[] = [];
+        const ldJsonMatches = html.match(/<script[^>]+type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi) || [];
+        for (const block of ldJsonMatches) {
+          const content = block.replace(/<\/?script[^>]*>/gi, '');
+          try {
+            const parsed = JSON.parse(content);
+            if (parsed['@type']) schemaTypes.push(parsed['@type']);
+            if (parsed['@graph']) {
+              for (const item of parsed['@graph']) {
+                if (item['@type']) schemaTypes.push(item['@type']);
+              }
+            }
+          } catch { /* malformed JSON-LD */ }
+        }
+
+        const recommendations: string[] = [];
+        if (!schemaTypes.includes('Organization') && !schemaTypes.includes('LocalBusiness')) {
+          recommendations.push('Add Organization or LocalBusiness schema');
+        }
+        if (!schemaTypes.includes('BreadcrumbList')) {
+          recommendations.push('Add BreadcrumbList schema for navigation');
+        }
+        if (!schemaTypes.includes('WebSite')) {
+          recommendations.push('Add WebSite schema with search action');
+        }
+
+        schemaData = {
+          detected: schemaTypes.length > 0 ? schemaTypes : ['None detected'],
+          valid: schemaTypes.length > 0,
+          recommendations,
+        };
+      }
+    }
+  } catch (error) {
+    console.warn('HTML fetch failed for SEO analysis:', error);
+  }
+
+  // Categorize issues
+  const critical = issues.filter(i => i.severity === 'critical');
+  const major = issues.filter(i => i.severity === 'major');
+  const minor = issues.filter(i => i.severity === 'minor');
+  const info = issues.filter(i => i.severity === 'info');
+
+  // Calculate composite score
+  const overallScore = seoScore > 0
+    ? Math.round((performanceScore * 0.3 + seoScore * 0.4 + accessibilityScore * 0.15 + bestPracticesScore * 0.15))
+    : Math.max(0, 100 - (critical.length * 15) - (major.length * 8) - (minor.length * 2));
 
   return {
     url,
     domain,
     timestamp: new Date().toISOString(),
-    score: Math.floor(70 + Math.random() * 25),
-    crawledPages: Math.floor(5 + Math.random() * 20),
+    score: overallScore,
+    crawledPages: 1,
+    lighthouse: {
+      performance: performanceScore,
+      seo: seoScore,
+      accessibility: accessibilityScore,
+      bestPractices: bestPracticesScore,
+    },
     issues: {
-      critical: Math.floor(Math.random() * 3),
-      major: Math.floor(Math.random() * 8),
-      minor: Math.floor(5 + Math.random() * 15),
-      info: Math.floor(10 + Math.random() * 20),
+      critical: critical.length,
+      major: major.length,
+      minor: minor.length,
+      info: info.length,
     },
     categories: {
       technical: {
-        score: Math.floor(70 + Math.random() * 30),
-        issues: [
-          {
-            severity: 'critical',
-            title: 'Missing meta description',
-            description: 'Home page is missing a meta description tag',
-            recommendation: 'Add a unique meta description between 150-160 characters',
-            affectedPages: [url],
-          },
-          {
-            severity: 'major',
-            title: 'Slow page load time',
-            description: 'Page load time exceeds 3 seconds',
-            recommendation: 'Optimize images and enable compression',
-            affectedPages: [`${url}/features`],
-          },
-        ],
+        score: performanceScore || Math.max(0, 100 - critical.length * 20 - major.length * 10),
+        issues: issues.filter(i => ['Missing viewport', 'Slow', 'Missing canonical'].some(t => i.title.includes(t)) || i.severity === 'critical'),
       },
       onPage: {
-        score: Math.floor(75 + Math.random() * 25),
-        issues: [
-          {
-            severity: 'minor',
-            title: 'Missing alt text',
-            description: '5 images are missing alt text',
-            recommendation: 'Add descriptive alt text to all images',
-            affectedPages: [`${url}/about`, `${url}/team`],
-          },
-        ],
+        score: seoScore || Math.max(0, 100 - minor.length * 5),
+        issues: issues.filter(i => i.title.includes('alt text') || i.title.includes('title') || i.title.includes('meta')),
       },
       content: {
-        score: Math.floor(80 + Math.random() * 20),
-        issues: [
-          {
-            severity: 'info',
-            title: 'Short content',
-            description: 'Some pages have less than 300 words',
-            recommendation: 'Expand content to provide more value',
-            affectedPages: [`${url}/contact`],
-          },
-        ],
+        score: bestPracticesScore || 85,
+        issues: info,
       },
-      coreWebVitals: options.includeCoreWebVitals ? {
-        lcp: { value: 2.1 + Math.random() * 1.5, rating: 'good' },
-        fid: { value: 50 + Math.random() * 100, rating: 'good' },
-        cls: { value: 0.05 + Math.random() * 0.15, rating: 'good' },
-        inp: { value: 150 + Math.random() * 100, rating: 'needs-improvement' },
-      } : null,
-      schema: options.includeSchemaCheck ? {
-        detected: ['Organization', 'WebSite'],
-        valid: true,
-        recommendations: ['Add LocalBusiness schema', 'Add BreadcrumbList schema'],
-      } : null,
+      coreWebVitals: cwv,
+      schema: schemaData,
     },
   };
 }

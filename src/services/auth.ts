@@ -350,7 +350,7 @@ export class AuthService {
   }
 
   async generateResetCode(email: string): Promise<{ code: string; expiresAt: Date }> {
-    const code = Math.floor(100000 + Math.random() * 900000).toString();
+    const code = crypto.randomInt(100000, 999999).toString();
     const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
     
     await (prisma as any).user.update({

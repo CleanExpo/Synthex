@@ -39,11 +39,27 @@ export default function CompletePage() {
     // Mark step 4 as complete
     completeStep(4);
 
-    // Simulate saving to backend
+    // Save onboarding data to backend
     const saveOnboarding = async () => {
       try {
-        // In production, this would be an API call
-        await new Promise((resolve) => setTimeout(resolve, 1500));
+        const res = await fetch('/api/onboarding', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({
+            organizationName: data.organizationName,
+            industry: data.industry,
+            teamSize: data.teamSize,
+            connectedPlatforms: data.connectedPlatforms,
+            personaName: data.personaName,
+            personaTone: data.personaTone,
+            personaTopics: data.personaTopics,
+            skipPersona: data.skipPersona,
+          }),
+        });
+        if (!res.ok) {
+          console.warn('Onboarding save returned non-OK status:', res.status);
+        }
 
         setSaving(false);
         setSaved(true);

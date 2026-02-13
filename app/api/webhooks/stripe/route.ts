@@ -13,6 +13,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { webhookHandler } from '@/lib/webhooks';
 import { logger } from '@/lib/logger';
 
+// Ensure Stripe webhook handlers are registered (auto-registers on import)
+import '@/lib/stripe/webhook-handlers';
+
 // ============================================================================
 // ROUTE HANDLER
 // ============================================================================

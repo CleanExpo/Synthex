@@ -27,8 +27,8 @@ const nextConfig = {
 
   // TypeScript configuration
   typescript: {
-    // Temporarily allowing build to pass while fixing TypeScript issues
-    ignoreBuildErrors: true,
+    // Build will fail on type errors - enforces type safety
+    ignoreBuildErrors: false,
   },
 
   // ESLint configuration
