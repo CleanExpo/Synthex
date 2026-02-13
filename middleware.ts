@@ -91,18 +91,23 @@ export async function middleware(request: NextRequest) {
 
   // Authentication check for protected routes
   const protectedPaths = ['/dashboard', '/api/protected', '/api/user', '/api/integrations'];
-  const authPaths = ['/auth/login', '/auth/register'];
+  // CRITICAL: Both /login and /auth/login exist — /login is the active PKCE flow page,
+  // /auth/login is the legacy Supabase page. Treat BOTH as auth paths to prevent loops.
+  const authPaths = ['/login', '/auth/login', '/auth/register', '/signup'];
   const isProtectedPath = protectedPaths.some(path => pathname.startsWith(path));
-  const isAuthPath = authPaths.some(path => pathname.startsWith(path));
+  const isAuthPath = authPaths.some(path => pathname === path || pathname.startsWith(path + '/'));
 
   // Allow demo routes without authentication
   if (pathname.startsWith('/demo')) {
     return response;
   }
 
-  // Skip auth checks for OAuth callback flows — the cookie is being SET during this redirect,
-  // so it won't exist yet. Without this, users loop back to login after Google sign-in.
-  if (pathname.startsWith('/auth/callback')) {
+  // Skip auth checks for ALL OAuth-related paths — cookies are being SET during these redirects,
+  // so they won't exist yet. Without this, users loop back to login after Google sign-in.
+  if (
+    pathname.startsWith('/auth/callback') ||
+    pathname.startsWith('/api/auth/oauth')
+  ) {
     return response;
   }
 
@@ -110,8 +115,9 @@ export async function middleware(request: NextRequest) {
   // Trust auth-token cookie immediately — it's set by our own OAuth callback
   if (isProtectedPath && !session && !hasCustomAuth) {
     if (!pathname.startsWith('/api/')) {
-      // Redirect to login for web pages
-      const redirectUrl = new URL('/auth/login', request.url);
+      // Redirect to /login — the active login page with PKCE Google flow
+      // (NOT /auth/login which is the legacy Supabase page)
+      const redirectUrl = new URL('/login', request.url);
       redirectUrl.searchParams.set('redirectTo', pathname);
       return NextResponse.redirect(redirectUrl);
     } else {

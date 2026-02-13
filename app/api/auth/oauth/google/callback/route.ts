@@ -19,7 +19,19 @@ import { NextRequest, NextResponse } from 'next/server';
 import { randomUUID } from 'crypto';
 import jwt from 'jsonwebtoken';
 import { retrievePKCEState } from '@/lib/auth/pkce';
-import prisma from '@/lib/prisma';
+import { createClient } from '@supabase/supabase-js';
+
+// Create Supabase admin client (bypasses RLS, uses REST API instead of connection pooler)
+function getSupabaseAdmin() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !serviceKey) {
+    throw new Error('NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY must be configured');
+  }
+  return createClient(url, serviceKey, {
+    auth: { autoRefreshToken: false, persistSession: false },
+  });
+}
 
 // JWT configuration - must match signInFlow
 const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-change-in-production';
@@ -102,20 +114,24 @@ export async function GET(request: NextRequest) {
       return redirectWithError(effectiveBaseUrl, 'Failed to get user information from Google');
     }
 
+    // Create Supabase admin client for database operations (uses REST API, not connection pooler)
+    const supabaseAdmin = getSupabaseAdmin();
+
     // Check if this is an account linking flow
     if (pkceState.linkToUserId) {
-      // Link Google to existing user using legacy googleId field
+      // Link Google to existing user using legacy google_id field
       try {
-        await prisma.user.update({
-          where: { id: pkceState.linkToUserId },
-          data: {
-            googleId: googleUser.id,
-            avatar: googleUser.picture || undefined,
-            authProvider: 'google',
-            // Database expects Boolean for emailVerified
-            emailVerified: googleUser.verified_email ? true : false,
-          },
-        });
+        const { error: linkError } = await supabaseAdmin
+          .from('users')
+          .update({
+            google_id: googleUser.id,
+            avatar: googleUser.picture || null,
+            auth_provider: 'google',
+            email_verified: googleUser.verified_email ? true : false,
+          })
+          .eq('id', pkceState.linkToUserId);
+
+        if (linkError) throw linkError;
       } catch (error) {
         console.error('[Google OAuth] Link error:', error);
         return redirectWithError(effectiveBaseUrl, 'Failed to link Google account');
@@ -129,26 +145,28 @@ export async function GET(request: NextRequest) {
 
     // Regular login/signup flow
     // Check if user exists by Google ID (legacy field on User table)
-    const existingByGoogleId = await prisma.user.findUnique({
-      where: { googleId: googleUser.id },
-      select: { id: true, email: true },
-    });
+    const { data: existingByGoogleId } = await supabaseAdmin
+      .from('users')
+      .select('id, email')
+      .eq('google_id', googleUser.id)
+      .maybeSingle();
 
     if (existingByGoogleId) {
       // Existing Google user - login
-      const session = await createSessionForUser(existingByGoogleId.id, googleUser, tokens);
+      const session = await createSessionForUser(supabaseAdmin, existingByGoogleId.id, googleUser, tokens);
       return redirectWithSession(effectiveBaseUrl, session);
     }
 
     // Check if user exists by email
-    const existingByEmail = await prisma.user.findUnique({
-      where: { email: googleUser.email },
-      select: { id: true, email: true, password: true, googleId: true },
-    });
+    const { data: existingByEmail } = await supabaseAdmin
+      .from('users')
+      .select('id, email, password, google_id')
+      .eq('email', googleUser.email)
+      .maybeSingle();
 
     if (existingByEmail) {
       // User exists with this email
-      if (existingByEmail.password && !existingByEmail.googleId) {
+      if (existingByEmail.password && !existingByEmail.google_id) {
         // User has password but no Google linked - offer to link accounts
         const params = new URLSearchParams({
           error: 'account_exists',
@@ -160,25 +178,24 @@ export async function GET(request: NextRequest) {
       }
 
       // No password or already has Google - auto-link Google and login
-      await prisma.user.update({
-        where: { id: existingByEmail.id },
-        data: {
-          googleId: googleUser.id,
-          avatar: googleUser.picture || undefined,
-          authProvider: 'google',
-          // Database expects Boolean for emailVerified
-          emailVerified: googleUser.verified_email ? true : false,
-        },
-      });
+      await supabaseAdmin
+        .from('users')
+        .update({
+          google_id: googleUser.id,
+          avatar: googleUser.picture || null,
+          auth_provider: 'google',
+          email_verified: googleUser.verified_email ? true : false,
+        })
+        .eq('id', existingByEmail.id);
 
       // Login the existing user
-      const session = await createSessionForUser(existingByEmail.id, googleUser, tokens);
+      const session = await createSessionForUser(supabaseAdmin, existingByEmail.id, googleUser, tokens);
       return redirectWithSession(effectiveBaseUrl, session);
     }
 
     // New user - create account
-    const newUser = await createNewGoogleUser(googleUser, tokens);
-    const session = await createSessionForUser(newUser.id, googleUser, tokens);
+    const newUser = await createNewGoogleUser(supabaseAdmin, googleUser);
+    const session = await createSessionForUser(supabaseAdmin, newUser.id, googleUser, tokens);
 
     return redirectWithSession(effectiveBaseUrl, session);
   } catch (error) {
@@ -269,39 +286,36 @@ async function getGoogleUserInfo(accessToken: string): Promise<GoogleUserInfo | 
 }
 
 async function createNewGoogleUser(
+  supabaseAdmin: ReturnType<typeof createClient>,
   googleUser: GoogleUserInfo,
-  tokens: {
-    accessToken: string;
-    refreshToken?: string;
-    expiresAt?: number;
-    tokenType?: string;
-    scope?: string;
-    idToken?: string;
-  }
 ): Promise<{ id: string }> {
   // Create user (password is null for OAuth-only users)
-  // Explicitly provide UUID to match database column type
   const userId = randomUUID();
-  const user = await prisma.user.create({
-    data: {
-      id: userId, // Explicitly provide UUID (database expects UUID, not CUID)
+  const { data, error } = await supabaseAdmin
+    .from('users')
+    .insert({
+      id: userId,
       email: googleUser.email,
-      password: null, // OAuth-only user - no password
+      password: null,
       name: googleUser.name || googleUser.email.split('@')[0],
       avatar: googleUser.picture,
-      googleId: googleUser.id, // Legacy field
-      authProvider: 'google', // Legacy field
-      // Database expects Boolean for emailVerified
-      emailVerified: googleUser.verified_email ? true : false,
-    },
-  });
+      google_id: googleUser.id,
+      auth_provider: 'google',
+      email_verified: googleUser.verified_email ? true : false,
+    })
+    .select('id')
+    .single();
 
-  // Note: Account table not used - using legacy googleId field on User table
+  if (error) {
+    console.error('[Google OAuth] Create user error:', error);
+    throw new Error('Failed to create user account');
+  }
 
-  return { id: user.id };
+  return { id: data.id };
 }
 
 async function createSessionForUser(
+  supabaseAdmin: ReturnType<typeof createClient>,
   userId: string,
   googleUser: GoogleUserInfo,
   tokens: {
@@ -320,10 +334,10 @@ async function createSessionForUser(
   };
 }> {
   // Update last login
-  await prisma.user.update({
-    where: { id: userId },
-    data: { lastLogin: new Date() },
-  });
+  await supabaseAdmin
+    .from('users')
+    .update({ last_login: new Date().toISOString() })
+    .eq('id', userId);
 
   // Generate JWT token directly (bypass signInFlow to avoid Account table)
   const expiresAt = Date.now() + (7 * 24 * 60 * 60 * 1000); // 7 days
@@ -396,8 +410,10 @@ function redirectWithSession(
 }
 
 function redirectWithError(effectiveBaseUrl: string, error: string): NextResponse {
+  // Use /login — the active login page with our custom PKCE Google flow
+  // lives at app/(auth)/login/page.tsx which resolves to /login
   const redirectUrl = new URL('/login', effectiveBaseUrl);
-  redirectUrl.searchParams.set('error', error);
+  redirectUrl.searchParams.set('error', encodeURIComponent(error));
   return NextResponse.redirect(redirectUrl);
 }
 

@@ -119,6 +119,7 @@ class AuthService {
 
   /**
    * Get current user from API
+   * Checks: in-memory cache → localStorage → user-info cookie → /api/auth/user
    */
   async getCurrentUser(): Promise<AuthUser | null> {
     try {
@@ -138,9 +139,21 @@ class AuthService {
             localStorage.removeItem('synthex-user');
           }
         }
+
+        // Check user-info cookie (set by OAuth callback, non-httpOnly so JS can read it)
+        // This bridges the gap between OAuth login (which sets cookies) and
+        // the auth service (which reads localStorage). Without this, Google OAuth
+        // users appear logged out until the /api/auth/user fetch completes.
+        const userInfoCookie = this.getUserInfoFromCookie();
+        if (userInfoCookie) {
+          this.currentUser = userInfoCookie;
+          // Persist to localStorage for future loads
+          localStorage.setItem('synthex-user', JSON.stringify(userInfoCookie));
+          return this.currentUser;
+        }
       }
 
-      // Fetch from API
+      // Fetch from API (sends httpOnly auth-token cookie automatically)
       const response = await fetch(`${this.baseUrl}/user`, {
         method: 'GET',
         credentials: 'include',
@@ -161,12 +174,12 @@ class AuthService {
 
       if (data.authenticated && data.user) {
         this.currentUser = data.user;
-        
+
         // Store in localStorage
         if (typeof window !== 'undefined') {
           localStorage.setItem('synthex-user', JSON.stringify(data.user));
         }
-        
+
         return data.user;
       }
 
@@ -178,11 +191,58 @@ class AuthService {
   }
 
   /**
-   * Sign in with OAuth provider
+   * Read user info from the non-httpOnly cookie set by OAuth callback
+   */
+  private getUserInfoFromCookie(): AuthUser | null {
+    if (typeof document === 'undefined') return null;
+
+    try {
+      const cookies = document.cookie.split(';');
+      for (const cookie of cookies) {
+        const [name, ...valueParts] = cookie.trim().split('=');
+        if (name === 'user-info') {
+          const value = decodeURIComponent(valueParts.join('='));
+          const parsed = JSON.parse(value);
+          if (parsed && parsed.id && parsed.email) {
+            return {
+              id: parsed.id,
+              email: parsed.email,
+              name: parsed.name || parsed.email.split('@')[0],
+              avatar: parsed.avatar,
+            };
+          }
+        }
+      }
+    } catch {
+      // Cookie parsing failed — not critical
+    }
+
+    return null;
+  }
+
+  /**
+   * Sign in with OAuth provider using PKCE flow
    */
   async signInWithOAuth(provider: 'google' | 'github'): Promise<void> {
-    // OAuth flow typically requires a redirect
-    window.location.href = `${this.baseUrl}/oauth/${provider}`;
+    // Fetch the authorization URL from our API (which generates PKCE challenge)
+    // The API returns JSON with { authorizationUrl } — we must NOT navigate directly
+    // to the API route (it returns JSON, not a redirect).
+    const response = await fetch(`${this.baseUrl}/oauth/${provider}`, {
+      credentials: 'include',
+    });
+
+    if (!response.ok) {
+      const data = await response.json();
+      throw new Error(data.error || `Failed to initiate ${provider} login`);
+    }
+
+    const data = await response.json();
+
+    if (data.authorizationUrl) {
+      window.location.href = data.authorizationUrl;
+    } else {
+      throw new Error('No authorization URL received from server');
+    }
   }
 
   /**

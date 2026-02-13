@@ -76,12 +76,23 @@ export default function LoginPage() {
     setError('');
 
     try {
-      if (provider === 'google') {
-        await auth.signInWithGoogle();
-      } else {
-        await auth.signInWithGithub();
+      // Use our custom PKCE OAuth flow (not Supabase's built-in OAuth)
+      // This ensures consistent auth cookie handling across both login pages
+      const response = await fetch(`/api/auth/oauth/${provider}`);
+      const data = await response.json();
+
+      if (!response.ok) {
+        if (data.error?.includes('not configured')) {
+          throw new Error(`${provider} login is not configured. Please contact support.`);
+        }
+        throw new Error(data.error || `Failed to initiate ${provider} login`);
       }
-      // OAuth providers handle their own redirects
+
+      if (data.authorizationUrl) {
+        window.location.href = data.authorizationUrl;
+      } else {
+        throw new Error('No authorization URL received');
+      }
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : `Failed to sign in with ${provider}`;
       setError(message);

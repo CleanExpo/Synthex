@@ -1,54 +1,76 @@
 'use client';
 
+/**
+ * OAuth Callback Page
+ *
+ * This page is a pass-through for OAuth flows. The actual OAuth callback
+ * is handled server-side by /api/auth/oauth/google/callback which:
+ * 1. Exchanges the authorization code for tokens
+ * 2. Creates/updates the user
+ * 3. Sets auth cookies
+ * 4. Redirects to /dashboard
+ *
+ * This client-side page exists as a fallback for:
+ * - Supabase OAuth redirects (legacy flow)
+ * - Any direct navigations to /auth/callback
+ *
+ * It checks for auth-token cookie presence and redirects accordingly.
+ */
+
 import { useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Card } from '@/components/ui/card';
 import { Loader2 } from '@/components/icons';
-import { handleOAuthCallback } from '@/lib/auth/oauth-handler';
 
 function OAuthCallbackContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
 
   useEffect(() => {
-    const processCallback = async () => {
-      // Get OAuth parameters
-      const code = searchParams.get('code');
-      const state = searchParams.get('state');
+    const handleCallback = () => {
+      // Check for errors from OAuth provider
       const error = searchParams.get('error');
-      const platform = searchParams.get('platform') || detectPlatformFromState(state);
-
       if (error) {
-        console.error('OAuth error:', error);
         const errorDescription = searchParams.get('error_description');
-        
-        // Store error in session storage for the login page to display
-        if (typeof window !== 'undefined') {
-          sessionStorage.setItem('oauth_error', errorDescription || error);
+        console.error('[OAuth Callback] Error:', error, errorDescription);
+        router.replace(`/login?error=${encodeURIComponent(errorDescription || error)}`);
+        return;
+      }
+
+      // The real OAuth callback is handled by the API route at
+      // /api/auth/oauth/google/callback which sets httpOnly cookies and
+      // redirects to /dashboard. This page is only hit by:
+      // 1. Legacy Supabase OAuth redirects
+      // 2. Direct navigations
+      //
+      // NOTE: auth-token is httpOnly so document.cookie can't see it.
+      // Use user-info cookie (non-httpOnly) as the client-visible indicator.
+      const hasUserInfo = document.cookie.includes('user-info');
+
+      if (hasUserInfo) {
+        // Cookies already set by API callback — redirect to dashboard
+        router.replace('/dashboard');
+      } else {
+        // Check for success indicator in URL (API callback adds ?auth=success)
+        const authSuccess = searchParams.get('auth');
+        if (authSuccess === 'success') {
+          router.replace('/dashboard');
+        } else {
+          // No auth and no error — this was likely a stale navigation
+          // Wait a moment in case cookies are still being set, then redirect
+          setTimeout(() => {
+            const hasUserInfoNow = document.cookie.includes('user-info');
+            if (hasUserInfoNow) {
+              router.replace('/dashboard');
+            } else {
+              router.replace('/login');
+            }
+          }, 2000);
         }
-        
-        // Redirect to login with error
-        router.push('/login?error=oauth_failed');
-        return;
       }
-
-      if (!code || !state) {
-        console.error('Missing OAuth parameters');
-        router.push('/login?error=invalid_callback');
-        return;
-      }
-
-      if (!platform) {
-        console.error('Could not determine OAuth platform');
-        router.push('/login?error=unknown_platform');
-        return;
-      }
-
-      // Process the OAuth callback
-      await handleOAuthCallback(platform, code, state);
     };
 
-    processCallback();
+    handleCallback();
   }, [searchParams, router]);
 
   return (
@@ -64,27 +86,6 @@ function OAuthCallbackContent() {
       </Card>
     </div>
   );
-}
-
-function detectPlatformFromState(state: string | null): string | null {
-  if (!state) return null;
-  
-  try {
-    // Try to decode the state parameter
-    const decoded = JSON.parse(atob(state));
-    return decoded.platform || null;
-  } catch {
-    // If state isn't base64 JSON, try to extract platform from URL or referrer
-    if (typeof window !== 'undefined') {
-      const referrer = document.referrer;
-      if (referrer.includes('google')) return 'google';
-      if (referrer.includes('github')) return 'github';
-      if (referrer.includes('twitter')) return 'twitter';
-      if (referrer.includes('linkedin')) return 'linkedin';
-      if (referrer.includes('facebook')) return 'facebook';
-    }
-    return null;
-  }
 }
 
 export default function OAuthCallbackPage() {
