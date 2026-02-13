@@ -256,7 +256,7 @@ SET
 -- ============================================
 
 INSERT INTO automation_rules (user_id, name, trigger_type, trigger_config, action_type, action_config, is_active)
-SELECT 
+SELECT
   p.id,
   'Morning Post Schedule',
   'time_based',
@@ -266,10 +266,14 @@ SELECT
   true
 FROM profiles p
 WHERE p.email = 'demo@synthex.app'
+  AND NOT EXISTS (
+    SELECT 1 FROM automation_rules ar
+    WHERE ar.user_id = p.id AND ar.name = 'Morning Post Schedule'
+  )
 LIMIT 1;
 
 INSERT INTO automation_rules (user_id, name, trigger_type, trigger_config, action_type, action_config, is_active)
-SELECT 
+SELECT
   p.id,
   'High Engagement Alert',
   'engagement_based',
@@ -279,6 +283,10 @@ SELECT
   true
 FROM profiles p
 WHERE p.email = 'demo@synthex.app'
+  AND NOT EXISTS (
+    SELECT 1 FROM automation_rules ar
+    WHERE ar.user_id = p.id AND ar.name = 'High Engagement Alert'
+  )
 LIMIT 1;
 
 -- ============================================
@@ -286,7 +294,7 @@ LIMIT 1;
 -- ============================================
 
 INSERT INTO user_achievements (user_id, achievement_type, achievement_name, description, completed, completed_at, progress)
-SELECT 
+SELECT
   p.id,
   'first_post',
   'First Steps',
@@ -297,7 +305,7 @@ SELECT
 FROM profiles p
 WHERE p.email = 'demo@synthex.app'
 UNION ALL
-SELECT 
+SELECT
   p.id,
   'viral_post',
   'Going Viral',
@@ -306,14 +314,15 @@ SELECT
   NULL,
   75
 FROM profiles p
-WHERE p.email = 'demo@synthex.app';
+WHERE p.email = 'demo@synthex.app'
+ON CONFLICT (user_id, achievement_type) DO NOTHING;
 
 -- ============================================
 -- SAMPLE CONTENT TEMPLATES
 -- ============================================
 
 INSERT INTO content_templates (user_id, name, platform, template_structure, variables, is_public, usage_count)
-SELECT 
+SELECT
   p.id,
   'Product Launch Tweet',
   'twitter',
@@ -323,6 +332,10 @@ SELECT
   42
 FROM profiles p
 WHERE p.email = 'demo@synthex.app'
+  AND NOT EXISTS (
+    SELECT 1 FROM content_templates ct
+    WHERE ct.user_id = p.id AND ct.name = 'Product Launch Tweet'
+  )
 LIMIT 1;
 
 -- ============================================

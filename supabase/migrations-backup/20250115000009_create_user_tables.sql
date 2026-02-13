@@ -53,48 +53,60 @@ ALTER TABLE user_settings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE social_integrations ENABLE ROW LEVEL SECURITY;
 
 -- Profiles policies
+DROP POLICY IF EXISTS "Users can view own profile" ON profiles;
 CREATE POLICY "Users can view own profile" ON profiles
   FOR SELECT USING (auth.uid() = id);
 
+DROP POLICY IF EXISTS "Users can update own profile" ON profiles;
 CREATE POLICY "Users can update own profile" ON profiles
   FOR UPDATE USING (auth.uid() = id);
 
+DROP POLICY IF EXISTS "Users can insert own profile" ON profiles;
 CREATE POLICY "Users can insert own profile" ON profiles
   FOR INSERT WITH CHECK (auth.uid() = id);
 
 -- User settings policies
+DROP POLICY IF EXISTS "Users can view own settings" ON user_settings;
 CREATE POLICY "Users can view own settings" ON user_settings
   FOR SELECT USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can update own settings" ON user_settings;
 CREATE POLICY "Users can update own settings" ON user_settings
   FOR UPDATE USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can insert own settings" ON user_settings;
 CREATE POLICY "Users can insert own settings" ON user_settings
   FOR INSERT WITH CHECK (auth.uid() = user_id);
 
 -- Social integrations policies
+DROP POLICY IF EXISTS "Users can view own integrations" ON social_integrations;
 CREATE POLICY "Users can view own integrations" ON social_integrations
   FOR SELECT USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can manage own integrations" ON social_integrations;
 CREATE POLICY "Users can manage own integrations" ON social_integrations
   FOR ALL USING (auth.uid() = user_id);
 
 -- Storage policies for avatars
+DROP POLICY IF EXISTS "Anyone can view avatars" ON storage.objects;
 CREATE POLICY "Anyone can view avatars" ON storage.objects
   FOR SELECT USING (bucket_id = 'avatars');
 
+DROP POLICY IF EXISTS "Users can upload own avatar" ON storage.objects;
 CREATE POLICY "Users can upload own avatar" ON storage.objects
   FOR INSERT WITH CHECK (
     bucket_id = 'avatars' AND
     auth.uid()::text = (storage.foldername(name))[1]
   );
 
+DROP POLICY IF EXISTS "Users can update own avatar" ON storage.objects;
 CREATE POLICY "Users can update own avatar" ON storage.objects
   FOR UPDATE USING (
     bucket_id = 'avatars' AND
     auth.uid()::text = (storage.foldername(name))[1]
   );
 
+DROP POLICY IF EXISTS "Users can delete own avatar" ON storage.objects;
 CREATE POLICY "Users can delete own avatar" ON storage.objects
   FOR DELETE USING (
     bucket_id = 'avatars' AND

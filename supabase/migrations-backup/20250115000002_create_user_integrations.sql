@@ -3,24 +3,30 @@
 -- Date: 2025-01-14
 
 -- Create enum for integration platforms
-CREATE TYPE integration_platform AS ENUM (
-  'twitter',
-  'linkedin',
-  'instagram',
-  'facebook',
-  'tiktok',
-  'youtube',
-  'pinterest',
-  'threads'
-);
+DO $$ BEGIN
+  CREATE TYPE integration_platform AS ENUM (
+    'twitter',
+    'linkedin',
+    'instagram',
+    'facebook',
+    'tiktok',
+    'youtube',
+    'pinterest',
+    'threads'
+  );
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
 -- Create enum for integration status
-CREATE TYPE integration_status AS ENUM (
-  'active',
-  'expired',
-  'error',
-  'disconnected'
-);
+DO $$ BEGIN
+  CREATE TYPE integration_status AS ENUM (
+    'active',
+    'expired',
+    'error',
+    'disconnected'
+  );
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
 -- Create user_integrations table
 CREATE TABLE IF NOT EXISTS user_integrations (
@@ -56,7 +62,7 @@ BEGIN
   NEW.updated_at = NOW();
   RETURN NEW;
 END;
-$$ language 'plpgsql';
+$$ LANGUAGE plpgsql;
 
 -- Create trigger to auto-update updated_at
 CREATE TRIGGER update_user_integrations_updated_at 

@@ -28,90 +28,129 @@ ALTER TABLE notifications ENABLE ROW LEVEL SECURITY;
 ALTER TABLE team_members ENABLE ROW LEVEL SECURITY;
 
 -- RLS Policies for profiles
+DROP POLICY IF EXISTS "Users can view own profile" ON profiles;
 CREATE POLICY "Users can view own profile" ON profiles
   FOR SELECT USING (auth.uid() = id);
+DROP POLICY IF EXISTS "Users can update own profile" ON profiles;
 CREATE POLICY "Users can update own profile" ON profiles
   FOR UPDATE USING (auth.uid() = id);
+DROP POLICY IF EXISTS "Users can insert own profile" ON profiles;
 CREATE POLICY "Users can insert own profile" ON profiles
   FOR INSERT WITH CHECK (auth.uid() = id);
 
 -- RLS Policies for personas
+DROP POLICY IF EXISTS "Users can view own personas" ON personas;
 CREATE POLICY "Users can view own personas" ON personas
   FOR SELECT USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can insert own personas" ON personas;
 CREATE POLICY "Users can insert own personas" ON personas
   FOR INSERT WITH CHECK (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can update own personas" ON personas;
 CREATE POLICY "Users can update own personas" ON personas
   FOR UPDATE USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can delete own personas" ON personas;
 CREATE POLICY "Users can delete own personas" ON personas
   FOR DELETE USING (auth.uid() = user_id);
 
 -- RLS Policies for content
+DROP POLICY IF EXISTS "Users can view own content" ON content;
 CREATE POLICY "Users can view own content" ON content
   FOR SELECT USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can insert own content" ON content;
 CREATE POLICY "Users can insert own content" ON content
   FOR INSERT WITH CHECK (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can update own content" ON content;
 CREATE POLICY "Users can update own content" ON content
   FOR UPDATE USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can delete own content" ON content;
 CREATE POLICY "Users can delete own content" ON content
   FOR DELETE USING (auth.uid() = user_id);
 
 -- RLS Policies for campaigns
+DROP POLICY IF EXISTS "Users can view own campaigns" ON campaigns;
 CREATE POLICY "Users can view own campaigns" ON campaigns
   FOR SELECT USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can insert own campaigns" ON campaigns;
 CREATE POLICY "Users can insert own campaigns" ON campaigns
   FOR INSERT WITH CHECK (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can update own campaigns" ON campaigns;
 CREATE POLICY "Users can update own campaigns" ON campaigns
   FOR UPDATE USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can delete own campaigns" ON campaigns;
 CREATE POLICY "Users can delete own campaigns" ON campaigns
   FOR DELETE USING (auth.uid() = user_id);
 
 -- RLS Policies for scheduled_posts
+DROP POLICY IF EXISTS "Users can view own scheduled posts" ON scheduled_posts;
 CREATE POLICY "Users can view own scheduled posts" ON scheduled_posts
   FOR SELECT USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can insert own scheduled posts" ON scheduled_posts;
 CREATE POLICY "Users can insert own scheduled posts" ON scheduled_posts
   FOR INSERT WITH CHECK (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can update own scheduled posts" ON scheduled_posts;
 CREATE POLICY "Users can update own scheduled posts" ON scheduled_posts
   FOR UPDATE USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can delete own scheduled posts" ON scheduled_posts;
 CREATE POLICY "Users can delete own scheduled posts" ON scheduled_posts
   FOR DELETE USING (auth.uid() = user_id);
 
 -- RLS Policies for analytics
+DROP POLICY IF EXISTS "Users can view own analytics" ON analytics;
 CREATE POLICY "Users can view own analytics" ON analytics
   FOR SELECT USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can insert own analytics" ON analytics;
 CREATE POLICY "Users can insert own analytics" ON analytics
   FOR INSERT WITH CHECK (auth.uid() = user_id);
 
 -- RLS Policies for platform_connections
+DROP POLICY IF EXISTS "Users can view own connections" ON platform_connections;
 CREATE POLICY "Users can view own connections" ON platform_connections
   FOR SELECT USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can insert own connections" ON platform_connections;
 CREATE POLICY "Users can insert own connections" ON platform_connections
   FOR INSERT WITH CHECK (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can update own connections" ON platform_connections;
 CREATE POLICY "Users can update own connections" ON platform_connections
   FOR UPDATE USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can delete own connections" ON platform_connections;
 CREATE POLICY "Users can delete own connections" ON platform_connections
   FOR DELETE USING (auth.uid() = user_id);
 
 -- RLS Policies for api_usage
+DROP POLICY IF EXISTS "Users can view own API usage" ON api_usage;
 CREATE POLICY "Users can view own API usage" ON api_usage
   FOR SELECT USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "System can insert API usage" ON api_usage;
 CREATE POLICY "System can insert API usage" ON api_usage
   FOR INSERT WITH CHECK (true);
 
 -- RLS Policies for notifications
+DROP POLICY IF EXISTS "Users can view own notifications" ON notifications;
 CREATE POLICY "Users can view own notifications" ON notifications
   FOR SELECT USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can update own notifications" ON notifications;
 CREATE POLICY "Users can update own notifications" ON notifications
   FOR UPDATE USING (auth.uid() = user_id);
 
 -- RLS Policies for team_members
+DROP POLICY IF EXISTS "Users can view teams they belong to" ON team_members;
 CREATE POLICY "Users can view teams they belong to" ON team_members
   FOR SELECT USING (auth.uid() = user_id);
 
--- Viral patterns are public read (no RLS needed for read)
+-- Viral patterns are public read, authenticated users can write
+DROP POLICY IF EXISTS "Anyone can view viral patterns" ON viral_patterns;
 CREATE POLICY "Anyone can view viral patterns" ON viral_patterns
   FOR SELECT USING (true);
-CREATE POLICY "System can manage viral patterns" ON viral_patterns
-  FOR ALL USING (auth.uid() IS NOT NULL);
+DROP POLICY IF EXISTS "System can manage viral patterns" ON viral_patterns;
+DROP POLICY IF EXISTS "Authenticated users can insert viral patterns" ON viral_patterns;
+CREATE POLICY "Authenticated users can insert viral patterns" ON viral_patterns
+  FOR INSERT WITH CHECK (auth.uid() IS NOT NULL);
+DROP POLICY IF EXISTS "Authenticated users can update viral patterns" ON viral_patterns;
+CREATE POLICY "Authenticated users can update viral patterns" ON viral_patterns
+  FOR UPDATE USING (auth.uid() IS NOT NULL);
+DROP POLICY IF EXISTS "Authenticated users can delete viral patterns" ON viral_patterns;
+CREATE POLICY "Authenticated users can delete viral patterns" ON viral_patterns
+  FOR DELETE USING (auth.uid() IS NOT NULL);
 
 -- Create trigger function for updated_at
 CREATE OR REPLACE FUNCTION update_updated_at_column()
@@ -123,12 +162,16 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Create triggers for updated_at columns
+DROP TRIGGER IF EXISTS update_profiles_updated_at ON profiles;
 CREATE TRIGGER update_profiles_updated_at BEFORE UPDATE ON profiles
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+DROP TRIGGER IF EXISTS update_personas_updated_at ON personas;
 CREATE TRIGGER update_personas_updated_at BEFORE UPDATE ON personas
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+DROP TRIGGER IF EXISTS update_content_updated_at ON content;
 CREATE TRIGGER update_content_updated_at BEFORE UPDATE ON content
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+DROP TRIGGER IF EXISTS update_campaigns_updated_at ON campaigns;
 CREATE TRIGGER update_campaigns_updated_at BEFORE UPDATE ON campaigns
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
@@ -141,7 +184,7 @@ VALUES
   ('tiktok', 'video', '{"duration": 30, "structure": "hook-demo-cta", "trending_sounds": true}', 92, ARRAY['tutorial', 'quick-tips']),
   ('facebook', 'post', '{"structure": "story-emotion-cta", "optimal_length": 300, "use_video": true}', 75, ARRAY['engagement', 'community']),
   ('youtube', 'short', '{"duration": 60, "structure": "problem-solution", "use_captions": true}', 89, ARRAY['educational', 'entertainment'])
-ON CONFLICT DO NOTHING;
+ON CONFLICT (platform, pattern_type) DO NOTHING;
 
 -- Create helper function to get user statistics
 CREATE OR REPLACE FUNCTION get_user_stats(user_uuid UUID)

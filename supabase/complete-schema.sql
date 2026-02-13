@@ -61,7 +61,8 @@ CREATE TABLE IF NOT EXISTS viral_patterns (
   sample_content TEXT[],
   tags TEXT[],
   discovered_at TIMESTAMPTZ DEFAULT NOW(),
-  last_updated TIMESTAMPTZ DEFAULT NOW()
+  last_updated TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(platform, pattern_type)
 );
 
 -- Create campaigns table
@@ -198,26 +199,35 @@ DROP POLICY IF EXISTS "Users can update own personas" ON personas;
 DROP POLICY IF EXISTS "Users can delete own personas" ON personas;
 
 -- Content policies
+DROP POLICY IF EXISTS "Users can view own content" ON content;
 CREATE POLICY "Users can view own content" ON content
   FOR SELECT USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can insert own content" ON content;
 CREATE POLICY "Users can insert own content" ON content
   FOR INSERT WITH CHECK (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can update own content" ON content;
 CREATE POLICY "Users can update own content" ON content
   FOR UPDATE USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can delete own content" ON content;
 CREATE POLICY "Users can delete own content" ON content
   FOR DELETE USING (auth.uid() = user_id);
 
 -- Campaigns policies
+DROP POLICY IF EXISTS "Users can view own campaigns" ON campaigns;
 CREATE POLICY "Users can view own campaigns" ON campaigns
   FOR SELECT USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can insert own campaigns" ON campaigns;
 CREATE POLICY "Users can insert own campaigns" ON campaigns
   FOR INSERT WITH CHECK (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can update own campaigns" ON campaigns;
 CREATE POLICY "Users can update own campaigns" ON campaigns
   FOR UPDATE USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can delete own campaigns" ON campaigns;
 CREATE POLICY "Users can delete own campaigns" ON campaigns
   FOR DELETE USING (auth.uid() = user_id);
 
 -- Viral patterns are public read
+DROP POLICY IF EXISTS "Anyone can view viral patterns" ON viral_patterns;
 CREATE POLICY "Anyone can view viral patterns" ON viral_patterns
   FOR SELECT USING (true);
 
@@ -231,12 +241,16 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Create triggers for updated_at
+DROP TRIGGER IF EXISTS update_profiles_updated_at ON profiles;
 CREATE TRIGGER update_profiles_updated_at BEFORE UPDATE ON profiles
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+DROP TRIGGER IF EXISTS update_personas_updated_at ON personas;
 CREATE TRIGGER update_personas_updated_at BEFORE UPDATE ON personas
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+DROP TRIGGER IF EXISTS update_content_updated_at ON content;
 CREATE TRIGGER update_content_updated_at BEFORE UPDATE ON content
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+DROP TRIGGER IF EXISTS update_campaigns_updated_at ON campaigns;
 CREATE TRIGGER update_campaigns_updated_at BEFORE UPDATE ON campaigns
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
@@ -260,12 +274,12 @@ RETURNS TABLE (
 ) AS $$
 BEGIN
   RETURN QUERY
-  SELECT 
-    (SELECT COUNT(*)::INTEGER FROM content WHERE user_id = user_uuid),
-    (SELECT COUNT(*)::INTEGER FROM campaigns WHERE user_id = user_uuid),
-    (SELECT COUNT(*)::INTEGER FROM personas WHERE user_id = user_uuid),
-    (SELECT COUNT(*)::INTEGER FROM scheduled_posts WHERE user_id = user_uuid AND status = 'pending'),
-    (SELECT COALESCE(SUM(engagements), 0)::INTEGER FROM analytics WHERE user_id = user_uuid);
+  SELECT
+    COALESCE((SELECT COUNT(*)::INTEGER FROM content WHERE user_id = user_uuid), 0),
+    COALESCE((SELECT COUNT(*)::INTEGER FROM campaigns WHERE user_id = user_uuid), 0),
+    COALESCE((SELECT COUNT(*)::INTEGER FROM personas WHERE user_id = user_uuid), 0),
+    COALESCE((SELECT COUNT(*)::INTEGER FROM scheduled_posts WHERE user_id = user_uuid AND status = 'pending'), 0),
+    COALESCE((SELECT SUM(engagements)::INTEGER FROM analytics WHERE user_id = user_uuid), 0);
 END;
 $$ LANGUAGE plpgsql;
 

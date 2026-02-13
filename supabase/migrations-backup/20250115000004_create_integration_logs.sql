@@ -3,19 +3,22 @@
 -- Date: 2025-01-14
 
 -- Create enum for log event types
-CREATE TYPE integration_event_type AS ENUM (
-  'connect',
-  'disconnect',
-  'refresh',
-  'post_created',
-  'post_scheduled',
-  'post_published',
-  'post_failed',
-  'auth_expired',
-  'auth_refreshed',
-  'rate_limit',
-  'error'
-);
+DO $$ BEGIN
+  CREATE TYPE integration_event_type AS ENUM (
+    'connect',
+    'disconnect',
+    'refresh',
+    'post_created',
+    'post_scheduled',
+    'post_published',
+    'post_failed',
+    'auth_expired',
+    'auth_refreshed',
+    'rate_limit',
+    'error'
+  );
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
 -- Create integration_logs table
 CREATE TABLE IF NOT EXISTS integration_logs (

@@ -21,23 +21,30 @@ CREATE INDEX IF NOT EXISTS notifications_created_at_idx ON public.notifications(
 ALTER TABLE public.notifications ENABLE ROW LEVEL SECURITY;
 
 -- Users can view their own notifications
+DROP POLICY IF EXISTS "Users can view own notifications" ON public.notifications;
 CREATE POLICY "Users can view own notifications" ON public.notifications
   FOR SELECT USING (auth.uid() = user_id);
 
 -- Users can update their own notifications (mark as read)
+DROP POLICY IF EXISTS "Users can update own notifications" ON public.notifications;
 CREATE POLICY "Users can update own notifications" ON public.notifications
   FOR UPDATE USING (auth.uid() = user_id);
 
 -- Users can delete their own notifications
+DROP POLICY IF EXISTS "Users can delete own notifications" ON public.notifications;
 CREATE POLICY "Users can delete own notifications" ON public.notifications
   FOR DELETE USING (auth.uid() = user_id);
 
 -- Only system can create notifications (via service role)
+DROP POLICY IF EXISTS "System can create notifications" ON public.notifications;
 CREATE POLICY "System can create notifications" ON public.notifications
   FOR INSERT WITH CHECK (false);
 
 -- Enable realtime for notifications
-ALTER PUBLICATION supabase_realtime ADD TABLE public.notifications;
+DO $$ BEGIN
+  ALTER PUBLICATION supabase_realtime ADD TABLE public.notifications;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
 -- Function to auto-delete old notifications (older than 30 days)
 CREATE OR REPLACE FUNCTION public.clean_old_notifications()

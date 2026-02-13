@@ -6,22 +6,8 @@
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
--- Drop existing tables if they exist (for clean migration)
-DROP TABLE IF EXISTS platform_metrics CASCADE;
-DROP TABLE IF EXISTS platform_posts CASCADE;
-DROP TABLE IF EXISTS platform_connections CASCADE;
-DROP TABLE IF EXISTS audit_logs CASCADE;
-DROP TABLE IF EXISTS notifications CASCADE;
-DROP TABLE IF EXISTS sessions CASCADE;
-DROP TABLE IF EXISTS api_usage CASCADE;
-DROP TABLE IF EXISTS posts CASCADE;
-DROP TABLE IF EXISTS campaigns CASCADE;
-DROP TABLE IF EXISTS projects CASCADE;
-DROP TABLE IF EXISTS users CASCADE;
-DROP TABLE IF EXISTS organizations CASCADE;
-
 -- Organizations table
-CREATE TABLE organizations (
+CREATE TABLE IF NOT EXISTS organizations (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name VARCHAR(255) NOT NULL,
   slug VARCHAR(255) UNIQUE NOT NULL,
@@ -36,7 +22,7 @@ CREATE TABLE organizations (
 );
 
 -- Users table (main auth table)
-CREATE TABLE users (
+CREATE TABLE IF NOT EXISTS users (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   email VARCHAR(255) UNIQUE NOT NULL,
   password VARCHAR(255),
@@ -61,7 +47,7 @@ CREATE TABLE users (
 );
 
 -- Campaigns table
-CREATE TABLE campaigns (
+CREATE TABLE IF NOT EXISTS campaigns (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   name VARCHAR(255) NOT NULL,
@@ -76,7 +62,7 @@ CREATE TABLE campaigns (
 );
 
 -- Posts table
-CREATE TABLE posts (
+CREATE TABLE IF NOT EXISTS posts (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   campaign_id UUID NOT NULL REFERENCES campaigns(id) ON DELETE CASCADE,
   content TEXT NOT NULL,
@@ -91,7 +77,7 @@ CREATE TABLE posts (
 );
 
 -- Projects table
-CREATE TABLE projects (
+CREATE TABLE IF NOT EXISTS projects (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   name VARCHAR(255) NOT NULL,
@@ -103,7 +89,7 @@ CREATE TABLE projects (
 );
 
 -- API Usage tracking
-CREATE TABLE api_usage (
+CREATE TABLE IF NOT EXISTS api_usage (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   endpoint VARCHAR(255) NOT NULL,
@@ -118,7 +104,7 @@ CREATE TABLE api_usage (
 );
 
 -- Sessions table
-CREATE TABLE sessions (
+CREATE TABLE IF NOT EXISTS sessions (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   token VARCHAR(255) UNIQUE NOT NULL,
   user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -127,7 +113,7 @@ CREATE TABLE sessions (
 );
 
 -- Notifications table
-CREATE TABLE notifications (
+CREATE TABLE IF NOT EXISTS notifications (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   type VARCHAR(50) NOT NULL,
@@ -139,7 +125,7 @@ CREATE TABLE notifications (
 );
 
 -- Audit logs table
-CREATE TABLE audit_logs (
+CREATE TABLE IF NOT EXISTS audit_logs (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID REFERENCES users(id) ON DELETE CASCADE,
   action VARCHAR(100) NOT NULL,
@@ -155,7 +141,7 @@ CREATE TABLE audit_logs (
 );
 
 -- Platform connections table
-CREATE TABLE platform_connections (
+CREATE TABLE IF NOT EXISTS platform_connections (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   platform VARCHAR(50) NOT NULL,
@@ -174,7 +160,7 @@ CREATE TABLE platform_connections (
 );
 
 -- Platform posts table
-CREATE TABLE platform_posts (
+CREATE TABLE IF NOT EXISTS platform_posts (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   connection_id UUID NOT NULL REFERENCES platform_connections(id) ON DELETE CASCADE,
   platform_id VARCHAR(255) NOT NULL,
@@ -193,7 +179,7 @@ CREATE TABLE platform_posts (
 );
 
 -- Platform metrics table
-CREATE TABLE platform_metrics (
+CREATE TABLE IF NOT EXISTS platform_metrics (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   post_id UUID NOT NULL REFERENCES platform_posts(id) ON DELETE CASCADE,
   likes INTEGER DEFAULT 0,
@@ -211,7 +197,13 @@ CREATE TABLE platform_metrics (
 
 -- Create indexes for better performance
 CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
-CREATE INDEX IF NOT EXISTS idx_users_organization ON users(organization_id);
+-- Only create organization index if column exists
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'users' AND column_name = 'organization_id') THEN
+    CREATE INDEX IF NOT EXISTS idx_users_organization ON users(organization_id);
+  END IF;
+END $$;
 CREATE INDEX IF NOT EXISTS idx_campaigns_user ON campaigns(user_id);
 CREATE INDEX IF NOT EXISTS idx_campaigns_status ON campaigns(status);
 CREATE INDEX IF NOT EXISTS idx_posts_campaign ON posts(campaign_id);
@@ -238,27 +230,34 @@ BEGIN
   NEW.updated_at = NOW();
   RETURN NEW;
 END;
-$$ language 'plpgsql';
+$$ LANGUAGE plpgsql;
 
 -- Apply updated_at triggers
+DROP TRIGGER IF EXISTS update_organizations_updated_at ON organizations;
 CREATE TRIGGER update_organizations_updated_at BEFORE UPDATE ON organizations
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_users_updated_at ON users;
 CREATE TRIGGER update_users_updated_at BEFORE UPDATE ON users
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_campaigns_updated_at ON campaigns;
 CREATE TRIGGER update_campaigns_updated_at BEFORE UPDATE ON campaigns
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_posts_updated_at ON posts;
 CREATE TRIGGER update_posts_updated_at BEFORE UPDATE ON posts
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_projects_updated_at ON projects;
 CREATE TRIGGER update_projects_updated_at BEFORE UPDATE ON projects
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_platform_connections_updated_at ON platform_connections;
 CREATE TRIGGER update_platform_connections_updated_at BEFORE UPDATE ON platform_connections
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_platform_posts_updated_at ON platform_posts;
 CREATE TRIGGER update_platform_posts_updated_at BEFORE UPDATE ON platform_posts
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
@@ -276,75 +275,90 @@ ALTER TABLE platform_posts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE platform_metrics ENABLE ROW LEVEL SECURITY;
 
 -- RLS Policies for users table
+DROP POLICY IF EXISTS "Users can view own profile" ON users;
 CREATE POLICY "Users can view own profile" ON users
   FOR SELECT USING (auth.uid() = id);
 
+DROP POLICY IF EXISTS "Users can update own profile" ON users;
 CREATE POLICY "Users can update own profile" ON users
   FOR UPDATE USING (auth.uid() = id);
 
 -- RLS Policies for campaigns table
+DROP POLICY IF EXISTS "Users can view own campaigns" ON campaigns;
 CREATE POLICY "Users can view own campaigns" ON campaigns
   FOR SELECT USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can create own campaigns" ON campaigns;
 CREATE POLICY "Users can create own campaigns" ON campaigns
   FOR INSERT WITH CHECK (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can update own campaigns" ON campaigns;
 CREATE POLICY "Users can update own campaigns" ON campaigns
   FOR UPDATE USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can delete own campaigns" ON campaigns;
 CREATE POLICY "Users can delete own campaigns" ON campaigns
   FOR DELETE USING (auth.uid() = user_id);
 
 -- RLS Policies for posts table
+DROP POLICY IF EXISTS "Users can view posts from own campaigns" ON posts;
 CREATE POLICY "Users can view posts from own campaigns" ON posts
   FOR SELECT USING (
     EXISTS (
-      SELECT 1 FROM campaigns 
-      WHERE campaigns.id = posts.campaign_id 
+      SELECT 1 FROM campaigns
+      WHERE campaigns.id = posts.campaign_id
       AND campaigns.user_id = auth.uid()
     )
   );
 
+DROP POLICY IF EXISTS "Users can create posts in own campaigns" ON posts;
 CREATE POLICY "Users can create posts in own campaigns" ON posts
   FOR INSERT WITH CHECK (
     EXISTS (
-      SELECT 1 FROM campaigns 
-      WHERE campaigns.id = posts.campaign_id 
+      SELECT 1 FROM campaigns
+      WHERE campaigns.id = posts.campaign_id
       AND campaigns.user_id = auth.uid()
     )
   );
 
+DROP POLICY IF EXISTS "Users can update posts in own campaigns" ON posts;
 CREATE POLICY "Users can update posts in own campaigns" ON posts
   FOR UPDATE USING (
     EXISTS (
-      SELECT 1 FROM campaigns 
-      WHERE campaigns.id = posts.campaign_id 
+      SELECT 1 FROM campaigns
+      WHERE campaigns.id = posts.campaign_id
       AND campaigns.user_id = auth.uid()
     )
   );
 
+DROP POLICY IF EXISTS "Users can delete posts from own campaigns" ON posts;
 CREATE POLICY "Users can delete posts from own campaigns" ON posts
   FOR DELETE USING (
     EXISTS (
-      SELECT 1 FROM campaigns 
-      WHERE campaigns.id = posts.campaign_id 
+      SELECT 1 FROM campaigns
+      WHERE campaigns.id = posts.campaign_id
       AND campaigns.user_id = auth.uid()
     )
   );
 
 -- Similar RLS policies for other tables
+DROP POLICY IF EXISTS "Users can manage own projects" ON projects;
 CREATE POLICY "Users can manage own projects" ON projects
   FOR ALL USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can view own API usage" ON api_usage;
 CREATE POLICY "Users can view own API usage" ON api_usage
   FOR SELECT USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can view own notifications" ON notifications;
 CREATE POLICY "Users can view own notifications" ON notifications
   FOR ALL USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can view own audit logs" ON audit_logs;
 CREATE POLICY "Users can view own audit logs" ON audit_logs
   FOR SELECT USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can manage own platform connections" ON platform_connections;
 CREATE POLICY "Users can manage own platform connections" ON platform_connections
   FOR ALL USING (auth.uid() = user_id);
 

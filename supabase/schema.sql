@@ -194,27 +194,35 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Apply updated_at trigger to tables
+DROP TRIGGER IF EXISTS update_users_updated_at ON public.users;
 CREATE TRIGGER update_users_updated_at BEFORE UPDATE ON public.users
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_campaigns_updated_at ON public.campaigns;
 CREATE TRIGGER update_campaigns_updated_at BEFORE UPDATE ON public.campaigns
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_posts_updated_at ON public.posts;
 CREATE TRIGGER update_posts_updated_at BEFORE UPDATE ON public.posts
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_content_templates_updated_at ON public.content_templates;
 CREATE TRIGGER update_content_templates_updated_at BEFORE UPDATE ON public.content_templates
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_audience_segments_updated_at ON public.audience_segments;
 CREATE TRIGGER update_audience_segments_updated_at BEFORE UPDATE ON public.audience_segments
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_competitive_intelligence_updated_at ON public.competitive_intelligence;
 CREATE TRIGGER update_competitive_intelligence_updated_at BEFORE UPDATE ON public.competitive_intelligence
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_platform_credentials_updated_at ON public.platform_credentials;
 CREATE TRIGGER update_platform_credentials_updated_at BEFORE UPDATE ON public.platform_credentials
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_webhooks_updated_at ON public.webhooks;
 CREATE TRIGGER update_webhooks_updated_at BEFORE UPDATE ON public.webhooks
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
@@ -231,26 +239,33 @@ ALTER TABLE public.webhooks ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.notifications ENABLE ROW LEVEL SECURITY;
 
 -- Users can only see their own data
+DROP POLICY IF EXISTS "Users can view own profile" ON public.users;
 CREATE POLICY "Users can view own profile" ON public.users
     FOR SELECT USING (auth.uid() = id);
 
+DROP POLICY IF EXISTS "Users can update own profile" ON public.users;
 CREATE POLICY "Users can update own profile" ON public.users
     FOR UPDATE USING (auth.uid() = id);
 
 -- Campaign policies
+DROP POLICY IF EXISTS "Users can view own campaigns" ON public.campaigns;
 CREATE POLICY "Users can view own campaigns" ON public.campaigns
     FOR SELECT USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can create campaigns" ON public.campaigns;
 CREATE POLICY "Users can create campaigns" ON public.campaigns
     FOR INSERT WITH CHECK (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can update own campaigns" ON public.campaigns;
 CREATE POLICY "Users can update own campaigns" ON public.campaigns
     FOR UPDATE USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can delete own campaigns" ON public.campaigns;
 CREATE POLICY "Users can delete own campaigns" ON public.campaigns
     FOR DELETE USING (auth.uid() = user_id);
 
 -- Post policies
+DROP POLICY IF EXISTS "Users can view posts from own campaigns" ON public.posts;
 CREATE POLICY "Users can view posts from own campaigns" ON public.posts
     FOR SELECT USING (
         EXISTS (
@@ -260,6 +275,7 @@ CREATE POLICY "Users can view posts from own campaigns" ON public.posts
         )
     );
 
+DROP POLICY IF EXISTS "Users can create posts for own campaigns" ON public.posts;
 CREATE POLICY "Users can create posts for own campaigns" ON public.posts
     FOR INSERT WITH CHECK (
         EXISTS (
@@ -269,6 +285,7 @@ CREATE POLICY "Users can create posts for own campaigns" ON public.posts
         )
     );
 
+DROP POLICY IF EXISTS "Users can update posts from own campaigns" ON public.posts;
 CREATE POLICY "Users can update posts from own campaigns" ON public.posts
     FOR UPDATE USING (
         EXISTS (
@@ -278,6 +295,7 @@ CREATE POLICY "Users can update posts from own campaigns" ON public.posts
         )
     );
 
+DROP POLICY IF EXISTS "Users can delete posts from own campaigns" ON public.posts;
 CREATE POLICY "Users can delete posts from own campaigns" ON public.posts
     FOR DELETE USING (
         EXISTS (
@@ -288,6 +306,7 @@ CREATE POLICY "Users can delete posts from own campaigns" ON public.posts
     );
 
 -- Analytics policies (read-only for users)
+DROP POLICY IF EXISTS "Users can view analytics for own campaigns" ON public.analytics;
 CREATE POLICY "Users can view analytics for own campaigns" ON public.analytics
     FOR SELECT USING (
         campaign_id IS NULL OR
@@ -299,34 +318,42 @@ CREATE POLICY "Users can view analytics for own campaigns" ON public.analytics
     );
 
 -- Platform credentials policies
+DROP POLICY IF EXISTS "Users can view own credentials" ON public.platform_credentials;
 CREATE POLICY "Users can view own credentials" ON public.platform_credentials
     FOR SELECT USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can create own credentials" ON public.platform_credentials;
 CREATE POLICY "Users can create own credentials" ON public.platform_credentials
     FOR INSERT WITH CHECK (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can update own credentials" ON public.platform_credentials;
 CREATE POLICY "Users can update own credentials" ON public.platform_credentials
     FOR UPDATE USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can delete own credentials" ON public.platform_credentials;
 CREATE POLICY "Users can delete own credentials" ON public.platform_credentials
     FOR DELETE USING (auth.uid() = user_id);
 
 -- AI generations policies
+DROP POLICY IF EXISTS "Users can view own AI generations" ON public.ai_generations;
 CREATE POLICY "Users can view own AI generations" ON public.ai_generations
     FOR SELECT USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can create AI generations" ON public.ai_generations;
 CREATE POLICY "Users can create AI generations" ON public.ai_generations
     FOR INSERT WITH CHECK (auth.uid() = user_id);
 
 -- Notifications policies
+DROP POLICY IF EXISTS "Users can view own notifications" ON public.notifications;
 CREATE POLICY "Users can view own notifications" ON public.notifications
     FOR SELECT USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can update own notifications" ON public.notifications;
 CREATE POLICY "Users can update own notifications" ON public.notifications
     FOR UPDATE USING (auth.uid() = user_id);
 
 -- Functions for aggregated analytics
-CREATE OR REPLACE FUNCTION get_campaign_analytics(campaign_id UUID)
+CREATE OR REPLACE FUNCTION get_campaign_analytics(p_campaign_id UUID)
 RETURNS TABLE (
     total_impressions BIGINT,
     total_reach BIGINT,
@@ -347,12 +374,12 @@ BEGIN
         COALESCE(AVG(CASE WHEN metric_type = 'engagement_rate' THEN value END), 0) AS average_engagement_rate,
         COALESCE(MAX(CASE WHEN metric_type = 'roi' THEN value END), 0) AS roi
     FROM public.analytics
-    WHERE analytics.campaign_id = get_campaign_analytics.campaign_id;
+    WHERE analytics.campaign_id = p_campaign_id;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- Function to get platform performance
-CREATE OR REPLACE FUNCTION get_platform_performance(user_id UUID, days INTEGER DEFAULT 30)
+CREATE OR REPLACE FUNCTION get_platform_performance(p_user_id UUID, p_days INTEGER DEFAULT 30)
 RETURNS TABLE (
     platform TEXT,
     total_posts BIGINT,
@@ -370,8 +397,8 @@ BEGIN
         EXTRACT(HOUR FROM p.published_at)::INTEGER AS best_performing_hour
     FROM public.posts p
     JOIN public.campaigns c ON p.campaign_id = c.id
-    WHERE c.user_id = get_platform_performance.user_id
-        AND p.published_at >= NOW() - INTERVAL '1 day' * days
+    WHERE c.user_id = p_user_id
+        AND p.published_at >= NOW() - INTERVAL '1 day' * p_days
     GROUP BY p.platform, EXTRACT(HOUR FROM p.published_at)
     ORDER BY avg_engagement DESC;
 END;

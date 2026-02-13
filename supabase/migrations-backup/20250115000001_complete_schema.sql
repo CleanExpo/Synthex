@@ -8,9 +8,20 @@ CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 CREATE EXTENSION IF NOT EXISTS "pg_stat_statements";
 
 -- Create enum types
-CREATE TYPE IF NOT EXISTS subscription_plan AS ENUM ('free', 'starter', 'pro', 'enterprise');
-CREATE TYPE IF NOT EXISTS content_status AS ENUM ('draft', 'scheduled', 'published', 'failed', 'archived');
-CREATE TYPE IF NOT EXISTS platform_type AS ENUM ('twitter', 'instagram', 'linkedin', 'tiktok', 'facebook', 'youtube', 'threads');
+DO $$ BEGIN
+  CREATE TYPE subscription_plan AS ENUM ('free', 'starter', 'pro', 'enterprise');
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+
+DO $$ BEGIN
+  CREATE TYPE content_status AS ENUM ('draft', 'scheduled', 'published', 'failed', 'archived');
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+
+DO $$ BEGIN
+  CREATE TYPE platform_type AS ENUM ('twitter', 'instagram', 'linkedin', 'tiktok', 'facebook', 'youtube', 'threads');
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
 -- ==========================================
 -- 1. USERS TABLE
@@ -85,6 +96,7 @@ CREATE TABLE IF NOT EXISTS viral_patterns (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     platform platform_type NOT NULL,
     pattern_name TEXT NOT NULL,
+    UNIQUE(platform, pattern_name),
     pattern_description TEXT,
     engagement_rate DECIMAL(5,2),
     virality_score DECIMAL(5,2),
@@ -463,7 +475,7 @@ BEGIN
     NEW.updated_at = NOW();
     RETURN NEW;
 END;
-$$ language 'plpgsql';
+$$ LANGUAGE plpgsql;
 
 -- Apply update trigger to all tables with updated_at
 DROP TRIGGER IF EXISTS update_users_updated_at ON users;

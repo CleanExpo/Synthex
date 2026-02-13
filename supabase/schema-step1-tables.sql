@@ -5,21 +5,8 @@
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
--- Drop tables if they exist (careful in production!)
-DROP TABLE IF EXISTS api_usage CASCADE;
-DROP TABLE IF EXISTS notifications CASCADE;
-DROP TABLE IF EXISTS team_members CASCADE;
-DROP TABLE IF EXISTS platform_connections CASCADE;
-DROP TABLE IF EXISTS analytics CASCADE;
-DROP TABLE IF EXISTS scheduled_posts CASCADE;
-DROP TABLE IF EXISTS campaigns CASCADE;
-DROP TABLE IF EXISTS viral_patterns CASCADE;
-DROP TABLE IF EXISTS content CASCADE;
-DROP TABLE IF EXISTS personas CASCADE;
-DROP TABLE IF EXISTS profiles CASCADE;
-
 -- Create profiles table (extends Supabase auth.users)
-CREATE TABLE profiles (
+CREATE TABLE IF NOT EXISTS profiles (
   id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
   email TEXT UNIQUE NOT NULL,
   name TEXT,
@@ -35,7 +22,7 @@ CREATE TABLE profiles (
 );
 
 -- Create personas table
-CREATE TABLE personas (
+CREATE TABLE IF NOT EXISTS personas (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
   name TEXT NOT NULL,
@@ -48,7 +35,7 @@ CREATE TABLE personas (
 );
 
 -- Create content table
-CREATE TABLE content (
+CREATE TABLE IF NOT EXISTS content (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
   persona_id UUID REFERENCES personas(id) ON DELETE SET NULL,
@@ -65,7 +52,7 @@ CREATE TABLE content (
 );
 
 -- Create viral_patterns table
-CREATE TABLE viral_patterns (
+CREATE TABLE IF NOT EXISTS viral_patterns (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   platform TEXT NOT NULL,
   pattern_type TEXT NOT NULL,
@@ -74,11 +61,12 @@ CREATE TABLE viral_patterns (
   sample_content TEXT[],
   tags TEXT[],
   discovered_at TIMESTAMPTZ DEFAULT NOW(),
-  last_updated TIMESTAMPTZ DEFAULT NOW()
+  last_updated TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(platform, pattern_type)
 );
 
 -- Create campaigns table
-CREATE TABLE campaigns (
+CREATE TABLE IF NOT EXISTS campaigns (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
   name TEXT NOT NULL,
@@ -96,7 +84,7 @@ CREATE TABLE campaigns (
 );
 
 -- Create scheduled_posts table
-CREATE TABLE scheduled_posts (
+CREATE TABLE IF NOT EXISTS scheduled_posts (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
   content_id UUID REFERENCES content(id) ON DELETE CASCADE,
@@ -110,7 +98,7 @@ CREATE TABLE scheduled_posts (
 );
 
 -- Create analytics table
-CREATE TABLE analytics (
+CREATE TABLE IF NOT EXISTS analytics (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
   content_id UUID REFERENCES content(id) ON DELETE CASCADE,
@@ -126,7 +114,7 @@ CREATE TABLE analytics (
 );
 
 -- Create platform_connections table
-CREATE TABLE platform_connections (
+CREATE TABLE IF NOT EXISTS platform_connections (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
   platform TEXT NOT NULL,
@@ -141,7 +129,7 @@ CREATE TABLE platform_connections (
 );
 
 -- Create api_usage table
-CREATE TABLE api_usage (
+CREATE TABLE IF NOT EXISTS api_usage (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
   endpoint TEXT NOT NULL,
@@ -155,7 +143,7 @@ CREATE TABLE api_usage (
 );
 
 -- Create team_members table
-CREATE TABLE team_members (
+CREATE TABLE IF NOT EXISTS team_members (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   team_id UUID NOT NULL,
   user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
@@ -166,7 +154,7 @@ CREATE TABLE team_members (
 );
 
 -- Create notifications table
-CREATE TABLE notifications (
+CREATE TABLE IF NOT EXISTS notifications (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
   type TEXT NOT NULL,

@@ -318,12 +318,35 @@ $$ LANGUAGE plpgsql;
 -- ============================================
 
 -- Enable real-time for collaboration tables
-ALTER PUBLICATION supabase_realtime ADD TABLE workspaces;
-ALTER PUBLICATION supabase_realtime ADD TABLE workspace_members;
-ALTER PUBLICATION supabase_realtime ADD TABLE live_sessions;
-ALTER PUBLICATION supabase_realtime ADD TABLE content_queue;
-ALTER PUBLICATION supabase_realtime ADD TABLE trending_topics;
-ALTER PUBLICATION supabase_realtime ADD TABLE notifications;
+DO $$ BEGIN
+  ALTER PUBLICATION supabase_realtime ADD TABLE workspaces;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+
+DO $$ BEGIN
+  ALTER PUBLICATION supabase_realtime ADD TABLE workspace_members;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+
+DO $$ BEGIN
+  ALTER PUBLICATION supabase_realtime ADD TABLE live_sessions;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+
+DO $$ BEGIN
+  ALTER PUBLICATION supabase_realtime ADD TABLE content_queue;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+
+DO $$ BEGIN
+  ALTER PUBLICATION supabase_realtime ADD TABLE trending_topics;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+
+DO $$ BEGIN
+  ALTER PUBLICATION supabase_realtime ADD TABLE notifications;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
 -- ============================================
 -- WEBHOOK TRIGGERS
@@ -348,6 +371,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS trigger_content_published ON content;
 CREATE TRIGGER trigger_content_published
 AFTER UPDATE ON content
 FOR EACH ROW EXECUTE FUNCTION notify_content_published();
@@ -371,6 +395,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS trigger_high_engagement ON analytics;
 CREATE TRIGGER trigger_high_engagement
 AFTER INSERT OR UPDATE ON analytics
 FOR EACH ROW EXECUTE FUNCTION notify_high_engagement();
@@ -398,28 +423,33 @@ ALTER TABLE automation_rules ENABLE ROW LEVEL SECURITY;
 ALTER TABLE user_achievements ENABLE ROW LEVEL SECURITY;
 
 -- Workspace policies
+DROP POLICY IF EXISTS "Users can view workspaces they belong to" ON workspaces;
 CREATE POLICY "Users can view workspaces they belong to" ON workspaces
   FOR SELECT USING (
-    owner_id = auth.uid() OR 
+    owner_id = auth.uid() OR
     EXISTS (
-      SELECT 1 FROM workspace_members 
-      WHERE workspace_id = workspaces.id 
+      SELECT 1 FROM workspace_members
+      WHERE workspace_id = workspaces.id
       AND user_id = auth.uid()
     )
   );
 
+DROP POLICY IF EXISTS "Owners can manage workspaces" ON workspaces;
 CREATE POLICY "Owners can manage workspaces" ON workspaces
   FOR ALL USING (owner_id = auth.uid());
 
 -- Queue policies
+DROP POLICY IF EXISTS "Users manage own queue" ON content_queue;
 CREATE POLICY "Users manage own queue" ON content_queue
   FOR ALL USING (user_id = auth.uid());
 
 -- Automation policies
+DROP POLICY IF EXISTS "Users manage own automation" ON automation_rules;
 CREATE POLICY "Users manage own automation" ON automation_rules
   FOR ALL USING (user_id = auth.uid());
 
 -- Achievement policies
+DROP POLICY IF EXISTS "Users view own achievements" ON user_achievements;
 CREATE POLICY "Users view own achievements" ON user_achievements
   FOR SELECT USING (user_id = auth.uid());
 

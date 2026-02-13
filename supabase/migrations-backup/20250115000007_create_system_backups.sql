@@ -22,6 +22,7 @@ CREATE INDEX IF NOT EXISTS system_backups_type_idx ON public.system_backups(type
 ALTER TABLE public.system_backups ENABLE ROW LEVEL SECURITY;
 
 -- Only admins can view backups
+DROP POLICY IF EXISTS "Admins can view backups" ON public.system_backups;
 CREATE POLICY "Admins can view backups" ON public.system_backups
   FOR SELECT USING (
     EXISTS (
@@ -32,10 +33,12 @@ CREATE POLICY "Admins can view backups" ON public.system_backups
   );
 
 -- Only system can create backups (via service role)
+DROP POLICY IF EXISTS "System can create backups" ON public.system_backups;
 CREATE POLICY "System can create backups" ON public.system_backups
   FOR INSERT WITH CHECK (false);
 
 -- Only admins can update backup metadata
+DROP POLICY IF EXISTS "Admins can update backups" ON public.system_backups;
 CREATE POLICY "Admins can update backups" ON public.system_backups
   FOR UPDATE USING (
     EXISTS (

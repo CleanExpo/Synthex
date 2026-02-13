@@ -23,14 +23,17 @@ ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 
 -- Create policies
 -- Users can view their own profile
+DROP POLICY IF EXISTS "Users can view own profile" ON public.profiles;
 CREATE POLICY "Users can view own profile" ON public.profiles
   FOR SELECT USING (auth.uid() = id);
 
 -- Users can update their own profile
+DROP POLICY IF EXISTS "Users can update own profile" ON public.profiles;
 CREATE POLICY "Users can update own profile" ON public.profiles
   FOR UPDATE USING (auth.uid() = id);
 
 -- Public profiles can be viewed by anyone (optional)
+DROP POLICY IF EXISTS "Public profiles are viewable by everyone" ON public.profiles;
 CREATE POLICY "Public profiles are viewable by everyone" ON public.profiles
   FOR SELECT USING (true);
 

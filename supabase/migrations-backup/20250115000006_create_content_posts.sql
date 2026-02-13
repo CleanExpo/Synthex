@@ -29,18 +29,22 @@ ALTER TABLE public.content_posts ENABLE ROW LEVEL SECURITY;
 
 -- Create policies
 -- Users can view their own posts
+DROP POLICY IF EXISTS "Users can view own posts" ON public.content_posts;
 CREATE POLICY "Users can view own posts" ON public.content_posts
   FOR SELECT USING (auth.uid() = user_id);
 
 -- Users can create their own posts
+DROP POLICY IF EXISTS "Users can create own posts" ON public.content_posts;
 CREATE POLICY "Users can create own posts" ON public.content_posts
   FOR INSERT WITH CHECK (auth.uid() = user_id);
 
 -- Users can update their own posts
+DROP POLICY IF EXISTS "Users can update own posts" ON public.content_posts;
 CREATE POLICY "Users can update own posts" ON public.content_posts
   FOR UPDATE USING (auth.uid() = user_id);
 
 -- Users can delete their own posts
+DROP POLICY IF EXISTS "Users can delete own posts" ON public.content_posts;
 CREATE POLICY "Users can delete own posts" ON public.content_posts
   FOR DELETE USING (auth.uid() = user_id);
 
@@ -69,15 +73,19 @@ CREATE INDEX IF NOT EXISTS campaigns_status_idx ON public.campaigns(status);
 ALTER TABLE public.campaigns ENABLE ROW LEVEL SECURITY;
 
 -- Create policies for campaigns
+DROP POLICY IF EXISTS "Users can view own campaigns" ON public.campaigns;
 CREATE POLICY "Users can view own campaigns" ON public.campaigns
   FOR SELECT USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can create own campaigns" ON public.campaigns;
 CREATE POLICY "Users can create own campaigns" ON public.campaigns
   FOR INSERT WITH CHECK (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can update own campaigns" ON public.campaigns;
 CREATE POLICY "Users can update own campaigns" ON public.campaigns
   FOR UPDATE USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can delete own campaigns" ON public.campaigns;
 CREATE POLICY "Users can delete own campaigns" ON public.campaigns
   FOR DELETE USING (auth.uid() = user_id);
 
@@ -102,9 +110,11 @@ CREATE INDEX IF NOT EXISTS analytics_events_created_at_idx ON public.analytics_e
 ALTER TABLE public.analytics_events ENABLE ROW LEVEL SECURITY;
 
 -- Create policies for analytics
+DROP POLICY IF EXISTS "Users can view own analytics" ON public.analytics_events;
 CREATE POLICY "Users can view own analytics" ON public.analytics_events
   FOR SELECT USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can create own analytics" ON public.analytics_events;
 CREATE POLICY "Users can create own analytics" ON public.analytics_events
   FOR INSERT WITH CHECK (auth.uid() = user_id);
 

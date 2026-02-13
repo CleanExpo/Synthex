@@ -266,28 +266,24 @@ END $$;
 -- Hashtag Performance (safe insert)
 DO $$
 BEGIN
-  -- Only insert if table is empty or update existing
-  IF NOT EXISTS (SELECT 1 FROM hashtag_performance WHERE hashtag = '#AIMarketing') THEN
-    INSERT INTO hashtag_performance (hashtag, platform, usage_count, avg_engagement, trending_score)
-    VALUES 
-      ('#AIMarketing', 'twitter', 15234, 856.5, 92.3),
-      ('#ContentStrategy', 'twitter', 12456, 723.2, 88.7),
-      ('#ThoughtLeadership', 'linkedin', 8934, 1243.8, 94.5),
-      ('#B2BMarketing', 'linkedin', 7823, 987.3, 86.2),
-      ('#Entrepreneurship', 'linkedin', 18234, 1456.7, 95.8),
-      ('#InstaMarketing', 'instagram', 24567, 2341.5, 89.4),
-      ('#ContentCreator', 'instagram', 34521, 3456.2, 93.7),
-      ('#Reels', 'instagram', 56789, 4567.8, 95.2),
-      ('#FYP', 'tiktok', 892341, 5634.2, 98.9),
-      ('#ForYou', 'tiktok', 765432, 4987.6, 97.5),
-      ('#LearnOnTikTok', 'tiktok', 234567, 4321.8, 91.2),
-      ('#MarketingTips', 'all', 45678, 2345.6, 90.5),
-      ('#SocialMediaMarketing', 'all', 67890, 3456.7, 92.8),
-      ('#DigitalMarketing', 'all', 89012, 4567.8, 94.1);
-    RAISE NOTICE 'Hashtag performance data added';
-  ELSE
-    RAISE NOTICE 'Hashtag performance data already exists';
-  END IF;
+  INSERT INTO hashtag_performance (hashtag, platform, usage_count, avg_engagement, trending_score)
+  VALUES
+    ('#AIMarketing', 'twitter', 15234, 856.5, 92.3),
+    ('#ContentStrategy', 'twitter', 12456, 723.2, 88.7),
+    ('#ThoughtLeadership', 'linkedin', 8934, 1243.8, 94.5),
+    ('#B2BMarketing', 'linkedin', 7823, 987.3, 86.2),
+    ('#Entrepreneurship', 'linkedin', 18234, 1456.7, 95.8),
+    ('#InstaMarketing', 'instagram', 24567, 2341.5, 89.4),
+    ('#ContentCreator', 'instagram', 34521, 3456.2, 93.7),
+    ('#Reels', 'instagram', 56789, 4567.8, 95.2),
+    ('#FYP', 'tiktok', 892341, 5634.2, 98.9),
+    ('#ForYou', 'tiktok', 765432, 4987.6, 97.5),
+    ('#LearnOnTikTok', 'tiktok', 234567, 4321.8, 91.2),
+    ('#MarketingTips', 'all', 45678, 2345.6, 90.5),
+    ('#SocialMediaMarketing', 'all', 67890, 3456.7, 92.8),
+    ('#DigitalMarketing', 'all', 89012, 4567.8, 94.1)
+  ON CONFLICT (hashtag, platform) DO NOTHING;
+  RAISE NOTICE 'Hashtag performance data added';
 END $$;
 
 -- Trending Topics (safe insert)

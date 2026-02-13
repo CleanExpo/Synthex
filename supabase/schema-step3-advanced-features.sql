@@ -153,22 +153,32 @@ CREATE TABLE IF NOT EXISTS billing_history (
 -- MATERIALIZED VIEWS FOR PERFORMANCE
 -- ============================================
 
--- Create materialized view for trending content
-CREATE MATERIALIZED VIEW IF NOT EXISTS trending_content AS
-SELECT 
-  c.id,
-  c.platform,
-  c.content,
-  c.user_id,
-  COUNT(DISTINCT a.id) as total_engagements,
-  AVG(a.engagements) as avg_engagement,
-  MAX(a.recorded_at) as last_updated
-FROM content c
-LEFT JOIN analytics a ON c.id = a.content_id
-WHERE c.created_at > NOW() - INTERVAL '7 days'
-GROUP BY c.id, c.platform, c.content, c.user_id
-ORDER BY avg_engagement DESC
-LIMIT 100;
+-- Create materialized view for trending content (wrapped in DO block for idempotency)
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_matviews WHERE matviewname = 'trending_content'
+  ) THEN
+    EXECUTE '
+      CREATE MATERIALIZED VIEW trending_content AS
+      SELECT
+        c.id,
+        c.platform,
+        c.content,
+        c.user_id,
+        COUNT(DISTINCT a.id) as total_engagements,
+        AVG(a.engagements) as avg_engagement,
+        MAX(a.recorded_at) as last_updated
+      FROM content c
+      LEFT JOIN analytics a ON c.id = a.content_id
+      WHERE c.created_at > NOW() - INTERVAL ''7 days''
+      GROUP BY c.id, c.platform, c.content, c.user_id
+      ORDER BY avg_engagement DESC
+      LIMIT 100
+    ';
+  END IF;
+END;
+$$;
 
 -- Create index on materialized view
 CREATE INDEX IF NOT EXISTS idx_trending_content_platform ON trending_content(platform);
@@ -183,10 +193,10 @@ CREATE OR REPLACE FUNCTION calculate_engagement_rate(
   p_engagements INTEGER
 ) RETURNS NUMERIC AS $$
 BEGIN
-  IF p_impressions = 0 THEN
+  IF COALESCE(p_impressions, 0) = 0 THEN
     RETURN 0;
   END IF;
-  RETURN ROUND((p_engagements::NUMERIC / p_impressions::NUMERIC) * 100, 2);
+  RETURN ROUND((COALESCE(p_engagements, 0)::NUMERIC / p_impressions::NUMERIC) * 100, 2);
 END;
 $$ LANGUAGE plpgsql;
 
@@ -340,32 +350,36 @@ $$ LANGUAGE plpgsql;
 CREATE OR REPLACE FUNCTION update_daily_metrics() RETURNS TRIGGER AS $$
 BEGIN
   INSERT INTO performance_metrics (
-    user_id, date, platform, total_posts, total_impressions, 
+    user_id, date, platform, total_posts, total_impressions,
     total_engagements, engagement_rate
   )
-  SELECT 
+  SELECT
     NEW.user_id,
     CURRENT_DATE,
     NEW.platform,
     COUNT(*),
-    SUM(impressions),
-    SUM(engagements),
-    calculate_engagement_rate(SUM(impressions), SUM(engagements))
+    COALESCE(SUM(impressions), 0),
+    COALESCE(SUM(engagements), 0),
+    CASE
+      WHEN COALESCE(SUM(impressions), 0) = 0 THEN 0
+      ELSE ROUND((COALESCE(SUM(engagements), 0)::NUMERIC / SUM(impressions)::NUMERIC) * 100, 2)
+    END
   FROM analytics
-  WHERE user_id = NEW.user_id 
+  WHERE user_id = NEW.user_id
     AND platform = NEW.platform
     AND DATE(recorded_at) = CURRENT_DATE
   GROUP BY user_id, platform
-  ON CONFLICT (user_id, date, platform) 
+  ON CONFLICT (user_id, date, platform)
   DO UPDATE SET
     total_impressions = EXCLUDED.total_impressions,
     total_engagements = EXCLUDED.total_engagements,
     engagement_rate = EXCLUDED.engagement_rate;
-    
+
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS trigger_update_metrics ON analytics;
 CREATE TRIGGER trigger_update_metrics
 AFTER INSERT ON analytics
 FOR EACH ROW EXECUTE FUNCTION update_daily_metrics();
@@ -393,18 +407,22 @@ ALTER TABLE content_templates ENABLE ROW LEVEL SECURITY;
 ALTER TABLE ab_tests ENABLE ROW LEVEL SECURITY;
 
 -- Performance metrics policies
+DROP POLICY IF EXISTS "Users view own metrics" ON performance_metrics;
 CREATE POLICY "Users view own metrics" ON performance_metrics
   FOR SELECT USING (auth.uid() = user_id);
 
 -- User preferences policies
+DROP POLICY IF EXISTS "Users manage own preferences" ON user_preferences;
 CREATE POLICY "Users manage own preferences" ON user_preferences
   FOR ALL USING (auth.uid() = user_id);
 
 -- Content templates policies
+DROP POLICY IF EXISTS "Users manage own templates" ON content_templates;
 CREATE POLICY "Users manage own templates" ON content_templates
   FOR ALL USING (auth.uid() = user_id OR is_public = true);
 
 -- AB tests policies
+DROP POLICY IF EXISTS "Users manage own tests" ON ab_tests;
 CREATE POLICY "Users manage own tests" ON ab_tests
   FOR ALL USING (auth.uid() = user_id);
 
