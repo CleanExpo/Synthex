@@ -2,7 +2,21 @@
   "permissions": {
     "allow": [
       "Bash(curl:*)",
-      "Bash(tasklist)"
+      "Bash(tasklist)",
+      "Bash(git commit:*)",
+      "Bash(find:*)",
+      "Bash(cd:*)",
+      "Bash(xargs:*)",
+      "Bash(dir:*)",
+      "WebFetch(domain:paperbanana.org)",
+      "WebFetch(domain:github.com)",
+      "Bash(findstr:*)",
+      "WebFetch(domain:arxiv.org)",
+      "mcp__exa__get_code_context_exa",
+      "Bash(python -c:*)",
+      "Bash(done)",
+      "Bash(DIRECT_URL=\"postgresql://postgres:postgres@127.0.0.1:54322/postgres\" DATABASE_URL=\"postgresql://postgres:postgres@127.0.0.1:54322/postgres\" npx prisma db push:*)",
+      "Bash(PGPASSWORD=postgres psql:*)"
     ],
     "deny": [],
     "ask": []

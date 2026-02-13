@@ -146,3 +146,17 @@ setup-*-env.sh
 bfg-secrets.txt
 *-secrets.txt
 tools/claude-seo/
+
+# External packages (separate repos)
+paperbanana/
+
+# Dev build cache
+.next-dev/
+
+# Local Supabase state
+supabase/.branches/
+
+# Test screenshots
+*-test.png
+*-current.png
+*-updated.png
