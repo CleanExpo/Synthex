@@ -5,7 +5,7 @@
 'use client';
 
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { getWebSocketClient, type WebSocketMessage, type NotificationData } from '@/lib/websocket/client';
+import { getWebSocketClient, isWebSocketAvailable, type WebSocketMessage, type NotificationData } from '@/lib/websocket/client';
 
 export interface UseWebSocketOptions {
   autoConnect?: boolean;
@@ -49,11 +49,13 @@ export function useWebSocket(options: UseWebSocketOptions = {}): UseWebSocketRet
   const [connectionState, setConnectionState] = useState('CLOSED');
   const [reconnectCount, setReconnectCount] = useState(0);
   
-  const wsClient = useRef(getWebSocketClient());
+  const wsAvailable = isWebSocketAvailable();
+  const wsClient = useRef(wsAvailable ? getWebSocketClient() : null);
   const subscriptions = useRef(new Set<string>());
 
   // Update connection state
   const updateConnectionState = useCallback(() => {
+    if (!wsClient.current) return;
     const state = wsClient.current.getState();
     setConnectionState(state);
     setIsConnected(state === 'OPEN');
@@ -61,6 +63,7 @@ export function useWebSocket(options: UseWebSocketOptions = {}): UseWebSocketRet
 
   // Connect to WebSocket
   const connect = useCallback((authToken?: string) => {
+    if (!wsClient.current) return;
     try {
       wsClient.current.connect(authToken || token);
     } catch (error) {
@@ -71,6 +74,7 @@ export function useWebSocket(options: UseWebSocketOptions = {}): UseWebSocketRet
 
   // Disconnect from WebSocket
   const disconnect = useCallback(() => {
+    if (!wsClient.current) return;
     try {
       subscriptions.current.clear();
       wsClient.current.disconnect();
@@ -83,6 +87,7 @@ export function useWebSocket(options: UseWebSocketOptions = {}): UseWebSocketRet
 
   // Send message
   const send = useCallback((message: Omit<WebSocketMessage, 'timestamp'>) => {
+    if (!wsClient.current) return;
     try {
       wsClient.current.send(message as WebSocketMessage);
     } catch (error) {
@@ -123,6 +128,7 @@ export function useWebSocket(options: UseWebSocketOptions = {}): UseWebSocketRet
   // Set up event listeners
   useEffect(() => {
     const client = wsClient.current;
+    if (!client) return; // WS not available in this environment
 
     // Connection events
     const handleConnect = () => {

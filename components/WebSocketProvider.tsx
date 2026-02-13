@@ -6,6 +6,7 @@
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useWebSocket, type UseWebSocketReturn } from '@/hooks/useWebSocket';
+import { isWebSocketAvailable } from '@/lib/websocket/client';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Wifi, WifiOff, RefreshCw } from '@/components/icons';
@@ -99,9 +100,10 @@ export function WebSocketProvider({
   showConnectionStatus = false,
 }: WebSocketProviderProps) {
   const [connectionLost, setConnectionLost] = useState(false);
+  const wsAvailable = typeof window !== 'undefined' && isWebSocketAvailable();
 
   const webSocketReturn = useWebSocket({
-    autoConnect,
+    autoConnect: autoConnect && wsAvailable,
     token,
     onConnect: () => {
       if (connectionLost) {

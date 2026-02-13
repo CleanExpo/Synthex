@@ -328,6 +328,19 @@ class WebSocketClient {
 let wsClient: WebSocketClient | null = null;
 
 /**
+ * Check if WebSocket is available in the current environment.
+ * Returns false in production when no NEXT_PUBLIC_WS_URL is configured
+ * (Vercel is serverless — no persistent WS server).
+ */
+export function isWebSocketAvailable(): boolean {
+  if (typeof window === 'undefined') return false;
+  const wsUrl = process.env.NEXT_PUBLIC_WS_URL;
+  // In production, only connect if an explicit WS URL is set
+  if (process.env.NODE_ENV === 'production' && !wsUrl) return false;
+  return true;
+}
+
+/**
  * Get WebSocket client instance
  */
 export function getWebSocketClient(): WebSocketClient {

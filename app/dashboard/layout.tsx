@@ -207,17 +207,17 @@ export default function DashboardLayout({
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative h-10 w-10 rounded-full">
                   <Avatar className="h-10 w-10">
-                    <AvatarImage src="/avatar.png" alt="User" />
-                    <AvatarFallback>U</AvatarFallback>
+                    {user?.avatar && <AvatarImage src={user.avatar} alt={user.name || 'User'} />}
+                    <AvatarFallback>{user?.name?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || 'U'}</AvatarFallback>
                   </Avatar>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent className="w-56 bg-white/[0.02] backdrop-blur-xl border-white/[0.08]" align="end">
                 <DropdownMenuLabel className="font-normal">
                   <div className="flex flex-col space-y-1">
-                    <p className="text-sm font-medium leading-none">John Doe</p>
+                    <p className="text-sm font-medium leading-none">{user?.name || 'User'}</p>
                     <p className="text-xs leading-none text-muted-foreground">
-                      user@synthex.social
+                      {user?.email || ''}
                     </p>
                   </div>
                 </DropdownMenuLabel>

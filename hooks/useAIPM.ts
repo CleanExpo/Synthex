@@ -87,6 +87,11 @@ export function useAIPM(): UseAIPMReturn {
     setError(null);
     try {
       const res = await fetch('/api/ai/pm/conversations');
+      // Silently handle auth failures
+      if (res.status === 401 || res.status === 403) {
+        setIsLoading(false);
+        return;
+      }
       const data = await res.json();
 
       if (data.success) {
@@ -325,6 +330,8 @@ export function useAIPM(): UseAIPMReturn {
   const loadDashboardSuggestions = useCallback(async () => {
     try {
       const res = await fetch('/api/ai/pm/suggestions');
+      // Silently skip auth/permission errors — don't parse the body
+      if (!res.ok) return;
       const data = await res.json();
 
       if (data.success) {

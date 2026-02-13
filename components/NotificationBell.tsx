@@ -33,58 +33,30 @@ export function NotificationBell() {
   const loadNotifications = useCallback(async () => {
     try {
       const response = await fetch('/api/notifications');
+      // Silently skip if not authenticated — no console noise
+      if (response.status === 401 || response.status === 403) return;
       if (response.ok) {
         const data = await response.json();
         setNotifications(data.notifications || []);
         updateUnreadCount(data.notifications || []);
       }
-    } catch (error) {
-      console.error('Failed to load notifications:', error);
-      // Use mock data for now
-      const mockNotifications: Notification[] = [
-        {
-          id: '1',
-          message: 'Your content reached 10K views!',
-          type: 'success',
-          timestamp: new Date(),
-          read: false,
-          icon: '🎉'
-        },
-        {
-          id: '2',
-          message: 'New team member joined',
-          type: 'info',
-          timestamp: new Date(Date.now() - 3600000),
-          read: false,
-          icon: '👤'
-        },
-        {
-          id: '3',
-          message: 'Schedule optimized for peak engagement',
-          type: 'success',
-          timestamp: new Date(Date.now() - 7200000),
-          read: true,
-          icon: '📈'
-        }
-      ];
-      setNotifications(mockNotifications);
-      updateUnreadCount(mockNotifications);
+    } catch {
+      // Network error — silently degrade
     }
   }, [updateUnreadCount]);
 
   const checkForNewNotifications = useCallback(async () => {
     try {
       const response = await fetch('/api/notifications?unread=true');
-      if (response.ok) {
-        const data = await response.json();
-        if (data.hasNew) {
-          setIsAnimating(true);
-          setTimeout(() => setIsAnimating(false), 1000);
-          await loadNotifications();
-        }
+      if (!response.ok) return; // Silently skip auth errors
+      const data = await response.json();
+      if (data.hasNew) {
+        setIsAnimating(true);
+        setTimeout(() => setIsAnimating(false), 1000);
+        await loadNotifications();
       }
-    } catch (error) {
-      console.error('Failed to check notifications:', error);
+    } catch {
+      // Network error — silently degrade
     }
   }, [loadNotifications]);
 

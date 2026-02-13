@@ -13,7 +13,7 @@ const securityHeaders = {
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "font-src 'self' https://fonts.gstatic.com",
     "img-src 'self' data: blob: https:",
-    "connect-src 'self' https://api.openrouter.ai https://*.supabase.co wss://*.supabase.co https://res.cloudinary.com https://accounts.google.com https://oauth2.googleapis.com https://www.googleapis.com https://github.com https://api.github.com",
+    `connect-src 'self' https://api.openrouter.ai https://*.supabase.co wss://*.supabase.co https://res.cloudinary.com https://accounts.google.com https://oauth2.googleapis.com https://www.googleapis.com https://github.com https://api.github.com${process.env.NEXT_PUBLIC_WS_URL ? ` ${process.env.NEXT_PUBLIC_WS_URL}` : ''}`,
     "frame-src 'self' https://www.youtube.com https://youtube.com https://www.youtube-nocookie.com",
     "frame-ancestors 'none'",
     "base-uri 'self'",
