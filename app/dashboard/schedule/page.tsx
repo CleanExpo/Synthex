@@ -125,19 +125,18 @@ export default function SchedulePage() {
 
     try {
       const token = getAuthToken();
-      if (token) {
-        await fetch('/api/content/calendar', {
-          method: 'PATCH',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            postId,
-            newTime: newTime.toISOString(),
-          }),
-        });
-      }
+      await fetch('/api/content/calendar', {
+        method: 'PATCH',
+        credentials: 'include',
+        headers: {
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          postId,
+          newTime: newTime.toISOString(),
+        }),
+      });
     } catch {
       setPosts(prev => prev.map(p =>
         p.id === postId ? post : p

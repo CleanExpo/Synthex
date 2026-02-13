@@ -49,18 +49,16 @@ export default function BillingPage() {
 
   const fetchSubscription = useCallback(async () => {
     try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        router.push('/login');
-        return;
-      }
+      const token = localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token') || localStorage.getItem('token');
 
       const [subResponse, usageResponse] = await Promise.all([
         fetch('/api/user/subscription', {
-          headers: { 'Authorization': `Bearer ${token}` },
+          credentials: 'include',
+          headers: token ? { 'Authorization': `Bearer ${token}` } : {},
         }),
         fetch('/api/user/usage', {
-          headers: { 'Authorization': `Bearer ${token}` },
+          credentials: 'include',
+          headers: token ? { 'Authorization': `Bearer ${token}` } : {},
         }),
       ]);
 
@@ -88,12 +86,11 @@ export default function BillingPage() {
   const openBillingPortal = async () => {
     setPortalLoading(true);
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token') || localStorage.getItem('token');
       const response = await fetch('/api/stripe/billing-portal', {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
+        credentials: 'include',
+        headers: token ? { 'Authorization': `Bearer ${token}` } : {},
       });
 
       const data = await response.json();

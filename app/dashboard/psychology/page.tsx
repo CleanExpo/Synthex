@@ -35,6 +35,7 @@ export default function PsychologyPage() {
     try {
       const response = await fetch('/api/psychology/analyze', {
         method: 'POST',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           content,

@@ -55,6 +55,7 @@ export default function SchemaGeneratorPage() {
 
       const response = await fetch('/api/seo/schema', {
         method: 'POST',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           type: schemaType,

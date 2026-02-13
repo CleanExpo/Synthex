@@ -106,6 +106,7 @@ export default function IntegrationsPage() {
       // Call API to save credentials
       const response = await fetch(`/api/integrations/${selectedIntegration.id}/connect`, {
         method: 'POST',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(credentials || {})
       });

@@ -181,8 +181,9 @@ export default function TasksPage() {
       try {
         const response = await fetch('/api/tasks', {
           method: 'POST',
+          credentials: 'include',
           headers: {
-            'Authorization': `Bearer ${token}`,
+            ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
@@ -224,7 +225,8 @@ export default function TasksPage() {
       try {
         const response = await fetch(`/api/tasks?id=${taskId}`, {
           method: 'DELETE',
-          headers: { 'Authorization': `Bearer ${token}` },
+          credentials: 'include',
+          headers: token ? { 'Authorization': `Bearer ${token}` } : {},
         });
 
         if (response.ok) {
@@ -253,8 +255,9 @@ export default function TasksPage() {
         const apiStatus = status.replace('_', '-');
         const response = await fetch('/api/tasks', {
           method: 'PATCH',
+          credentials: 'include',
           headers: {
-            'Authorization': `Bearer ${token}`,
+            ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({ id: taskId, status: apiStatus }),

@@ -80,9 +80,10 @@ export default function AnalyticsPage() {
         params.append('platform', platform);
       }
 
-      if (token) {
+      {
         const response = await fetch(`/api/analytics?${params.toString()}`, {
-          headers: { 'Authorization': `Bearer ${token}` },
+          credentials: 'include',
+          headers: token ? { 'Authorization': `Bearer ${token}` } : {},
         });
 
         if (response.ok) {

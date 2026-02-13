@@ -64,6 +64,7 @@ export default function SEOAuditPage() {
     try {
       const response = await fetch('/api/seo/audit', {
         method: 'POST',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           url: url.startsWith('http') ? url : `https://${url}`,

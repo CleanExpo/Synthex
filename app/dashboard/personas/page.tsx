@@ -44,10 +44,11 @@ export default function PersonasPage() {
       setIsLoading(true);
       setError(null);
       try {
-        const token = localStorage.getItem('token');
-        if (token) {
+        const token = localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token') || localStorage.getItem('token');
+        {
           const response = await fetch('/api/personas', {
-            headers: { 'Authorization': `Bearer ${token}` },
+            credentials: 'include',
+            headers: token ? { 'Authorization': `Bearer ${token}` } : {},
           });
 
           if (response.ok) {
@@ -94,10 +95,11 @@ export default function PersonasPage() {
     setError(null);
     setIsLoading(true);
     try {
-      const token = localStorage.getItem('token');
-      if (token) {
+      const token = localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token') || localStorage.getItem('token');
+      {
         const response = await fetch('/api/personas', {
-          headers: { 'Authorization': `Bearer ${token}` },
+          credentials: 'include',
+          headers: token ? { 'Authorization': `Bearer ${token}` } : {},
         });
         if (response.ok) {
           const { data } = await response.json();
