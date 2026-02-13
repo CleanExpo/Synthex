@@ -58,7 +58,7 @@ export default function MonitoringDashboard() {
   const refreshMetrics = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch('/api/monitoring/metrics');
+      const response = await fetch('/api/monitoring/metrics', { credentials: 'include' });
       if (response.ok) {
         const data = await response.json();
         setMetrics(data);

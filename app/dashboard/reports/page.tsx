@@ -28,7 +28,7 @@ export default function ReportsPage() {
       const params = new URLSearchParams();
       if (filterType) params.append('type', filterType);
 
-      const response = await fetch(`/api/reporting/reports?${params.toString()}`);
+      const response = await fetch(`/api/reporting/reports?${params.toString()}`, { credentials: 'include' });
       if (!response.ok) {
         throw new Error('Failed to fetch reports');
       }
@@ -58,7 +58,7 @@ export default function ReportsPage() {
       }
 
       try {
-        const response = await fetch(`/api/reporting/reports/${reportId}`);
+        const response = await fetch(`/api/reporting/reports/${reportId}`, { credentials: 'include' });
         const data = await response.json();
 
         if (data.data?.status === 'completed') {
@@ -91,6 +91,7 @@ export default function ReportsPage() {
     try {
       const response = await fetch('/api/reporting/generate', {
         method: 'POST',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: newReportName,

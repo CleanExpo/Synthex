@@ -44,9 +44,11 @@ export default function AnalyticsPage() {
           params.append('platform', platform);
         }
 
-        if (token) {
+        // Always attempt fetch with credentials: 'include' for httpOnly cookie auth
+        {
           const response = await fetch(`/api/analytics?${params.toString()}`, {
-            headers: { 'Authorization': `Bearer ${token}` },
+            credentials: 'include',
+            headers: token ? { 'Authorization': `Bearer ${token}` } : {},
           });
 
           if (response.ok) {

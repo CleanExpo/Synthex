@@ -53,7 +53,7 @@ export default function BackupsPage() {
   const fetchBackups = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch('/api/backup');
+      const response = await fetch('/api/backup', { credentials: 'include' });
       if (response.ok) {
         const data = await response.json();
         setBackups(data.backups || []);
@@ -85,6 +85,7 @@ export default function BackupsPage() {
     try {
       const response = await fetch('/api/backup', {
         method: 'POST',
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${process.env.NEXT_PUBLIC_CRON_SECRET || 'manual-backup'}`

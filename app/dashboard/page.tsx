@@ -42,10 +42,16 @@ export default function DashboardPage() {
       setError(null);
       setLoading(true);
 
-      const token = localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token');
+      // Auth token is stored as httpOnly cookie 'auth-token' (set by OAuth callback
+      // and unified-login). We MUST use credentials: 'include' so the browser sends it.
+      // Legacy: also check localStorage for backward compatibility with older sessions.
+      const legacyToken = typeof window !== 'undefined'
+        ? localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token') || localStorage.getItem('token')
+        : null;
 
       const response = await fetch('/api/dashboard/stats', {
-        headers: token ? { 'Authorization': `Bearer ${token}` } : {},
+        credentials: 'include', // CRITICAL: sends httpOnly auth-token cookie
+        headers: legacyToken ? { 'Authorization': `Bearer ${legacyToken}` } : {},
       });
 
       if (!response.ok) {

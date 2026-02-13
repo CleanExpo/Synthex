@@ -65,9 +65,10 @@ export default function TeamPage() {
     setError(null);
     try {
       const token = getAuthToken();
-      if (token) {
+      {
         const response = await fetch('/api/teams/members', {
-          headers: { Authorization: `Bearer ${token}` },
+          credentials: 'include',
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
         });
 
         if (response.ok) {

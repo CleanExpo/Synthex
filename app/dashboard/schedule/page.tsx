@@ -49,9 +49,10 @@ export default function SchedulePage() {
       setError(null);
       try {
         const token = getAuthToken();
-        if (token) {
+        {
           const response = await fetch('/api/scheduler/posts', {
-            headers: { 'Authorization': `Bearer ${token}` },
+            credentials: 'include',
+            headers: token ? { 'Authorization': `Bearer ${token}` } : {},
           });
 
           if (response.ok) {

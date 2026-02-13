@@ -70,9 +70,10 @@ export default function TasksPage() {
       setError(null);
       try {
         const token = getAuthToken();
-        if (token) {
+        {
           const response = await fetch('/api/tasks', {
-            headers: { 'Authorization': `Bearer ${token}` },
+            credentials: 'include',
+            headers: token ? { 'Authorization': `Bearer ${token}` } : {},
           });
 
           if (response.ok) {
@@ -103,9 +104,10 @@ export default function TasksPage() {
     setIsLoading(true);
     try {
       const token = getAuthToken();
-      if (token) {
+      {
         const response = await fetch('/api/tasks', {
-          headers: { 'Authorization': `Bearer ${token}` },
+          credentials: 'include',
+          headers: token ? { 'Authorization': `Bearer ${token}` } : {},
         });
         if (response.ok) {
           const { data } = await response.json();
