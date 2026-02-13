@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { getEffectiveOrganizationId } from '@/lib/multi-business';
 
 // =============================================================================
 // Auth Helper
@@ -84,9 +85,24 @@ export async function GET(request: NextRequest) {
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - days);
 
-    // Build where clause based on authentication
-    const userFilter = userId ? { userId } : {};
-    const campaignFilter = userId ? { campaign: { userId } } : {};
+    // Build where clause based on authentication and business context
+    // For multi-business owners: scope to their active organization
+    // For regular users: scope by userId (existing behavior)
+    let userFilter: Record<string, string> = userId ? { userId } : {};
+    let campaignFilter: Record<string, unknown> = userId ? { campaign: { userId } } : {};
+
+    if (userId) {
+      try {
+        const effectiveOrgId = await getEffectiveOrganizationId(userId);
+        if (effectiveOrgId) {
+          // Multi-business owner with active business: scope by organization
+          campaignFilter = { campaign: { userId, organizationId: effectiveOrgId } };
+          userFilter = { userId };
+        }
+      } catch {
+        // Fallback to user-only scoping if business scope fails
+      }
+    }
 
     // Fetch real metrics from database
     const [

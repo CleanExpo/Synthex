@@ -72,6 +72,19 @@ model User {
   loyaltyTier      UserLoyaltyTier?
   feedbackSurveys  FeedbackSurvey[]
 
+  // GEO / E-E-A-T / Paper Banana relations
+  authorProfiles   AuthorProfile[]
+  seoAudits        SEOAudit[]
+  geoAnalyses      GEOAnalysis[]
+  researchReports  GEOResearchReport[]
+  visualAssets     VisualAsset[]
+  localCaseStudies LocalCaseStudy[]
+
+  // Multi-business owner system
+  isMultiBusinessOwner  Boolean   @default(false) @map("is_multi_business_owner")
+  activeOrganizationId  String?   @map("active_organization_id")
+  ownedBusinesses       BusinessOwnership[] @relation("OwnedBusinesses")
+
   @@map("users")
 }
 
@@ -297,6 +310,7 @@ model Organization {
   teamInvitations   TeamInvitation[]
   roles             Role[]
   campaigns         Campaign[]       @relation("OrganizationCampaigns")
+  businessOwners    BusinessOwnership[] @relation("BusinessOwners")
 
   // Indices for multi-tenant queries
   @@index([slug])
@@ -1836,4 +1850,259 @@ model FeedbackSurvey {
   @@index([score])
   @@index([createdAt])
   @@map("feedback_surveys")
+}
+
+// ==========================================
+// GEO / E-E-A-T / Paper Banana Integration
+// Author profiles, SEO audits, GEO analysis,
+// research reports, visual assets, local case studies
+// ==========================================
+
+model AuthorProfile {
+  id              Int       @id @default(autoincrement())
+  userId          String
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Identity
+  name            String
+  slug            String    @unique
+  bio             String    @db.Text
+  credentials     Json?     // [{type, title, institution, year}]
+  socialLinks     Json?     // {linkedin, twitter, youtube, wikipedia, scholar}
+  avatarUrl       String?
+
+  // Entity linking (Schema.org sameAs)
+  sameAsUrls      String[]
+  expertiseAreas  String[]
+
+  // Verification
+  verifiedAt      DateTime?
+  eeatScore       Float?    // Cached E-E-A-T score for this author
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  // Relations
+  articles        ArticleAuthor[]
+  geoAnalyses     GEOAnalysis[]
+
+  @@index([userId])
+  @@map("author_profiles")
+}
+
+model SEOAudit {
+  id              Int       @id @default(autoincrement())
+  userId          String
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Audit target
+  url             String
+  auditType       String    // 'full', 'page', 'geo', 'eeat'
+
+  // Scores
+  overallScore    Float
+  eeatScore       Json?     // {experience, expertise, authority, trust, overall}
+  geoScore        Json?     // {citability, structure, multiModal, authority, technical, overall}
+  technicalScore  Json?     // {performance, accessibility, seo, bestPractices}
+
+  // Results
+  recommendations Json      // [{priority, category, description, impact}]
+  rawData         Json?     @db.JsonB
+
+  createdAt       DateTime  @default(now())
+
+  @@index([userId])
+  @@index([auditType])
+  @@map("seo_audits")
+}
+
+model GEOAnalysis {
+  id              Int       @id @default(autoincrement())
+  userId          String
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Content reference
+  contentId       String?   // Reference to Post or custom content
+  authorId        Int?
+  author          AuthorProfile? @relation(fields: [authorId], references: [id])
+  contentUrl      String?
+  contentText     String    @db.Text
+  platform        String    // 'google_aio', 'chatgpt', 'perplexity', 'all'
+
+  // Scores (0-100)
+  overallScore    Float
+  citabilityScore Float     // Passage-level citability (25% weight)
+  structureScore  Float     // Heading hierarchy, lists, tables (20% weight)
+  multiModalScore Float     // Images, video, interactive (15% weight)
+  authorityScore  Float     // E-E-A-T + brand signals (20% weight)
+  technicalScore  Float     // SSR, AI crawlers, llms.txt (20% weight)
+
+  // Detailed findings
+  citablePassages Json      // [{text, wordCount, score, startIndex}]
+  recommendations Json      // [{priority, action, impact, effort}]
+  schemaIssues    Json?     // Missing/invalid structured data
+
+  createdAt       DateTime  @default(now())
+
+  @@index([userId])
+  @@index([platform])
+  @@index([overallScore])
+  @@map("geo_analyses")
+}
+
+model GEOResearchReport {
+  id              Int       @id @default(autoincrement())
+  userId          String
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Report identity
+  title           String
+  slug            String    @unique
+  status          String    @default("draft") // 'draft', 'review', 'published'
+  sasScore        Float?    // Synthex Authority Score (0-10)
+
+  // Content sections
+  executiveSummary String?  @db.Text
+  methodology     String?   @db.Text
+  findings        Json?     // [{finding, statistic, source, citationUrl}]
+  recommendations Json?     // [{step, description, priority}]
+  fullContent     String?   @db.Text
+
+  // Data & citations
+  dataSources     Json?     // [{name, url, type, trustLevel}]
+  citations       Json?     // [{text, source, url, accessedAt}]
+  datasetUrl      String?   // CSV/JSON download link
+
+  // SEO metadata
+  schemaMarkup    Json?     // Full JSON-LD
+  metaTitle       String?
+  metaDescription String?
+
+  // Timestamps
+  publishedAt     DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  // Relations
+  visuals         VisualAsset[]
+
+  @@index([userId])
+  @@index([status])
+  @@map("geo_research_reports")
+}
+
+model VisualAsset {
+  id              Int       @id @default(autoincrement())
+  userId          String
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Report link (optional)
+  reportId        Int?
+  report          GEOResearchReport? @relation(fields: [reportId], references: [id])
+
+  // Paper Banana metadata
+  type            String    // 'diagram', 'plot', 'infographic', 'before_after'
+  prompt          String    @db.Text
+  imageUrl        String
+  thumbnailUrl    String?
+  metadata        Json?     // Paper Banana response metadata
+
+  // Quality
+  qualityScore    Float?    // Paper Banana Critic evaluation (0-100)
+  altText         String?   // SEO alt text
+  caption         String?
+
+  // Status
+  status          String    @default("generated") // 'generated', 'approved', 'published'
+
+  createdAt       DateTime  @default(now())
+
+  @@index([userId])
+  @@index([reportId])
+  @@index([type])
+  @@map("visual_assets")
+}
+
+model LocalCaseStudy {
+  id              Int       @id @default(autoincrement())
+  userId          String
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Identity
+  title           String
+  slug            String    @unique
+
+  // Location
+  suburb          String
+  city            String
+  state           String
+  postcode        String
+  coordinates     Json?     // {lat, lng}
+
+  // Content sections
+  summary         String    @db.Text
+  challenge       String?   @db.Text
+  solution        String?   @db.Text
+  results         String?   @db.Text
+  testimonial     String?   @db.Text
+
+  // Visuals
+  beforeImages    String[]
+  afterImages     String[]
+  diagrams        String[]  // Paper Banana generated URLs
+
+  // Schema & SEO
+  schemaMarkup    Json?     // LocalBusiness + Service schema
+  napData         Json?     // {name, address, phone} for consistency checking
+
+  // Timestamps
+  publishedAt     DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([userId])
+  @@index([city, state])
+  @@map("local_case_studies")
+}
+
+model ArticleAuthor {
+  id              Int       @id @default(autoincrement())
+  postId          String    // References Post.id (cuid)
+  authorId        Int
+  author          AuthorProfile @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  role            String    @default("author") // 'author', 'reviewer', 'contributor'
+
+  createdAt       DateTime  @default(now())
+
+  @@unique([postId, authorId])
+  @@index([postId])
+  @@index([authorId])
+  @@map("article_authors")
+}
+
+// ==========================================
+// Multi-Business Owner System
+// Allows custom-plan users to own and manage multiple
+// organizations (businesses) from a single login.
+// Each child business = $249/month additional.
+// ==========================================
+
+model BusinessOwnership {
+  id               String       @id @default(cuid())
+  ownerId          String       @map("owner_id")
+  organizationId   String       @map("organization_id")
+  displayName      String?      @map("display_name")     // Owner's custom label
+  isActive         Boolean      @default(true)
+  billingStatus    String       @default("active")        // 'active', 'past_due', 'cancelled'
+  monthlyRate      Float        @default(249.0)           // $249/month per business
+  createdAt        DateTime     @default(now()) @map("created_at")
+  updatedAt        DateTime     @updatedAt @map("updated_at")
+
+  owner            User         @relation("OwnedBusinesses", fields: [ownerId], references: [id], onDelete: Cascade)
+  organization     Organization @relation("BusinessOwners", fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([ownerId, organizationId])
+  @@index([ownerId])
+  @@index([organizationId])
+  @@map("business_ownerships")
 }

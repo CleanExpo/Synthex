@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 
 // Custom user type matching the API response
-interface AppUser {
+export interface AppUser {
   id: string;
   email: string;
   name: string | null;
@@ -14,6 +14,10 @@ interface AppUser {
   preferences: Record<string, unknown>;
   organizationId: string | null;
   organization: unknown | null;
+  // Multi-business owner fields
+  isMultiBusinessOwner: boolean;
+  activeOrganizationId: string | null;
+  ownedBusinessCount?: number;
 }
 
 interface UseUserReturn {

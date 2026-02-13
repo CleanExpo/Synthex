@@ -21,3 +21,6 @@ export type {
   DataTableRow,
   SourceReference,
 } from './ResearchReportLayout';
+
+export { SASScoreBadge } from './SASScoreBadge';
+export type { SASScoreBadgeProps } from './SASScoreBadge';

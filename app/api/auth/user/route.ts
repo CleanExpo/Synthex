@@ -136,6 +136,8 @@ export async function GET(request: NextRequest) {
           lastLogin: true,
           preferences: true,
           organizationId: true,
+          isMultiBusinessOwner: true,
+          activeOrganizationId: true,
           organization: {
             select: {
               id: true,
@@ -149,6 +151,7 @@ export async function GET(request: NextRequest) {
             select: {
               campaigns: true,
               projects: true,
+              ownedBusinesses: true,
               notifications: {
                 where: { read: false }
               }
@@ -171,7 +174,8 @@ export async function GET(request: NextRequest) {
           ...user,
           unreadNotifications: user._count.notifications,
           totalCampaigns: user._count.campaigns,
-          totalProjects: user._count.projects
+          totalProjects: user._count.projects,
+          ownedBusinessCount: user._count.ownedBusinesses
         }
       });
     } catch (dbError) {
@@ -190,6 +194,9 @@ export async function GET(request: NextRequest) {
           preferences: { theme: 'dark' },
           organizationId: null,
           organization: null,
+          isMultiBusinessOwner: false,
+          activeOrganizationId: null,
+          ownedBusinessCount: 0,
           unreadNotifications: 0,
           totalCampaigns: 0,
           totalProjects: 0

@@ -27,7 +27,13 @@ import {
   Menu,
   ListTodo,
   Target,
-  Video
+  Video,
+  Globe,
+  Shield,
+  Image,
+  Database,
+  Map,
+  Building,
 } from '@/components/icons';
 import { Button } from '@/components/ui/button';
 import { AIPMFloatingButton } from '@/components/ai-pm';
@@ -43,6 +49,8 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 import { WebSocketProvider } from '@/components/WebSocketProvider';
+import { BusinessSwitcher } from '@/components/business';
+import { useUser } from '@/hooks/use-user';
 
 const sidebarItems = [
   { icon: Home, label: 'Dashboard', href: '/dashboard' },
@@ -57,6 +65,11 @@ const sidebarItems = [
   { icon: Target, label: 'Competitors', href: '/dashboard/competitors' },
   { icon: Video, label: 'Video', href: '/dashboard/video' },
   { icon: Search, label: 'SEO Tools', href: '/dashboard/seo' },
+  { icon: Globe, label: 'GEO Analysis', href: '/dashboard/geo' },
+  { icon: Users, label: 'Authors', href: '/dashboard/authors' },
+  { icon: Database, label: 'Research', href: '/dashboard/research' },
+  { icon: Image, label: 'Visuals', href: '/dashboard/visuals' },
+  { icon: Map, label: 'Local SEO', href: '/dashboard/local' },
   { icon: Users, label: 'Team', href: '/dashboard/team' },
   { icon: Zap, label: 'Integrations', href: '/dashboard/integrations' },
   { icon: Settings, label: 'Settings', href: '/dashboard/settings' },
@@ -70,7 +83,17 @@ export default function DashboardLayout({
   const pathname = usePathname();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { user } = useUser();
   useTokenRefresh();
+
+  // Conditionally add Businesses item for multi-business owners
+  const dynamicSidebarItems = user?.isMultiBusinessOwner
+    ? [
+        ...sidebarItems.slice(0, 1), // Dashboard
+        { icon: Building, label: 'Businesses', href: '/dashboard/businesses' },
+        ...sidebarItems.slice(1),
+      ]
+    : sidebarItems;
 
   return (
     <WebSocketProvider autoConnect showConnectionStatus={false}>
@@ -111,7 +134,7 @@ export default function DashboardLayout({
 
           {/* Navigation */}
           <nav className="flex-1 space-y-1 px-2 py-4">
-            {sidebarItems.map((item) => {
+            {dynamicSidebarItems.map((item) => {
               const isActive = pathname === item.href;
               return (
                 <Link
@@ -173,6 +196,9 @@ export default function DashboardLayout({
           </div>
 
           <div className="flex items-center space-x-4">
+            {/* Business Switcher (multi-business owners only) */}
+            {user?.isMultiBusinessOwner && <BusinessSwitcher />}
+
             {/* Notifications */}
             <NotificationBell />
 
