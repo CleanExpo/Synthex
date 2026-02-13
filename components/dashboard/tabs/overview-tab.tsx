@@ -5,6 +5,7 @@
  * Main dashboard overview with stats, trending topics, and activity
  */
 
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { BarChart3, Share2, Calendar, TrendingUp, Users, Zap, MessageSquare } from '@/components/icons';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -13,6 +14,8 @@ import { glassStyles } from '@/components/ui/index';
 import { cn } from '@/lib/utils';
 import { AnimatedCard } from '../animated-card';
 import { StatCard } from '../stat-card';
+import { AIPMWidget } from '@/components/ai-pm';
+import { AIPMPanel } from '@/components/ai-pm';
 import type { DashboardStats } from '../types';
 
 interface OverviewTabProps {
@@ -20,6 +23,8 @@ interface OverviewTabProps {
 }
 
 export function OverviewTab({ stats }: OverviewTabProps) {
+  const [pmPanelOpen, setPmPanelOpen] = useState(false);
+
   return (
     <div className="space-y-4 sm:space-y-6">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
@@ -98,6 +103,12 @@ export function OverviewTab({ stats }: OverviewTabProps) {
           </Card>
         </AnimatedCard>
       </div>
+
+      {/* AI Project Manager Widget */}
+      <AnimatedCard delay={0.25}>
+        <AIPMWidget onOpenChat={() => setPmPanelOpen(true)} />
+        <AIPMPanel open={pmPanelOpen} onOpenChange={setPmPanelOpen} />
+      </AnimatedCard>
 
       {/* Recent Activity */}
       <AnimatedCard delay={0.3}>

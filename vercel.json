@@ -79,6 +79,18 @@
     {
       "path": "/api/competitors/track/execute",
       "schedule": "30 * * * *"
+    },
+    {
+      "path": "/api/cron/health-score",
+      "schedule": "0 2 * * *"
+    },
+    {
+      "path": "/api/cron/weekly-digest",
+      "schedule": "0 8 * * 1"
+    },
+    {
+      "path": "/api/cron/proactive-insights",
+      "schedule": "0 */6 * * *"
     }
   ]
 }

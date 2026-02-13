@@ -74,7 +74,8 @@ export {
   EyeIcon as Eye,
   EyeSlashIcon as EyeOff,
 
-  // F
+  // F-G
+  GiftIcon as Gift,
   DocumentIcon as File,
   CodeBracketSquareIcon as FileCode,
   DocumentMagnifyingGlassIcon as FileSearch,

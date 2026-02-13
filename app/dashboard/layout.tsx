@@ -30,6 +30,7 @@ import {
   Video
 } from '@/components/icons';
 import { Button } from '@/components/ui/button';
+import { AIPMFloatingButton } from '@/components/ai-pm';
 import { Input } from '@/components/ui/input';
 import {
   DropdownMenu,
@@ -226,6 +227,9 @@ export default function DashboardLayout({
           onClick={() => setMobileMenuOpen(false)}
         />
       )}
+
+      {/* AI Project Manager — Floating Action Button */}
+      <AIPMFloatingButton />
     </div>
     </WebSocketProvider>
   );
