@@ -31,8 +31,11 @@ const nextConfig = {
   },
 
   // ESLint configuration
+  // Note: ignoreDuringBuilds is true because Next.js 15's internal ESLint runner
+  // passes deprecated options (useEslintrc, extensions) incompatible with flat config.
+  // Run ESLint separately via `npx eslint .` or in CI.
   eslint: {
-    ignoreDuringBuilds: false,
+    ignoreDuringBuilds: true,
   },
 
   // HTTP headers for performance and security

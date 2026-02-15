@@ -73,7 +73,7 @@ export class VideoProcessor {
    */
   async getMetadata(inputPath: string): Promise<ffmpeg.FfprobeData> {
     return new Promise((resolve, reject) => {
-      ffmpeg.ffprobe(inputPath, (err, metadata) => {
+      ffmpeg.ffprobe(inputPath, (err: Error | null, metadata: ffmpeg.FfprobeData) => {
         if (err) reject(err);
         else resolve(metadata);
       });
@@ -99,8 +99,8 @@ export class VideoProcessor {
         .videoBitrate(this.config.bitrate)
         .size(`${this.config.width}x${this.config.height}`)
         .output(outputPath)
-        .on('start', (cmd) => logger.debug('VideoProcessor starting trim', { cmd }))
-        .on('progress', (progress) => {
+        .on('start', (cmd: string) => logger.debug('VideoProcessor starting trim', { cmd }))
+        .on('progress', (progress: { percent?: number }) => {
           if (progress.percent) {
             logger.debug('VideoProcessor trim progress', { percent: progress.percent.toFixed(1) });
           }
@@ -109,7 +109,7 @@ export class VideoProcessor {
           logger.info('VideoProcessor trim complete', { outputPath });
           resolve(outputPath);
         })
-        .on('error', (err) => {
+        .on('error', (err: Error) => {
           console.error(`[VideoProcessor] Trim error: ${err.message}`);
           reject(err);
         })
@@ -153,8 +153,8 @@ export class VideoProcessor {
 
       command
         .output(outputPath)
-        .on('start', (cmd) => logger.debug('VideoProcessor adding audio', { cmd }))
-        .on('progress', (progress) => {
+        .on('start', (cmd: string) => logger.debug('VideoProcessor adding audio', { cmd }))
+        .on('progress', (progress: { percent?: number }) => {
           if (progress.percent) {
             logger.debug('VideoProcessor audio progress', { percent: progress.percent.toFixed(1) });
           }
@@ -163,7 +163,7 @@ export class VideoProcessor {
           logger.info('VideoProcessor audio added', { outputPath });
           resolve(outputPath);
         })
-        .on('error', (err) => {
+        .on('error', (err: Error) => {
           console.error(`[VideoProcessor] Audio error: ${err.message}`);
           reject(err);
         })
@@ -199,12 +199,12 @@ export class VideoProcessor {
         .videoCodec(this.config.codec)
         .videoBitrate(this.config.bitrate)
         .output(outputPath)
-        .on('start', (cmd) => logger.debug('VideoProcessor adding overlays', { cmd }))
+        .on('start', (cmd: string) => logger.debug('VideoProcessor adding overlays', { cmd }))
         .on('end', () => {
           logger.info('VideoProcessor overlays added', { outputPath });
           resolve(outputPath);
         })
-        .on('error', (err) => {
+        .on('error', (err: Error) => {
           console.error(`[VideoProcessor] Overlay error: ${err.message}`);
           reject(err);
         })
@@ -238,12 +238,12 @@ export class VideoProcessor {
         .videoCodec(this.config.codec)
         .videoBitrate(this.config.bitrate)
         .output(outputPath)
-        .on('start', (cmd) => logger.debug('VideoProcessor adding fades', { cmd }))
+        .on('start', (cmd: string) => logger.debug('VideoProcessor adding fades', { cmd }))
         .on('end', () => {
           logger.info('VideoProcessor fades added', { outputPath });
           resolve(outputPath);
         })
-        .on('error', (err) => {
+        .on('error', (err: Error) => {
           console.error(`[VideoProcessor] Fade error: ${err.message}`);
           reject(err);
         })
@@ -269,14 +269,14 @@ export class VideoProcessor {
         .videoCodec('copy')
         .audioCodec('copy')
         .output(outputPath)
-        .on('start', (cmd) => logger.debug('VideoProcessor concatenating', { cmd }))
+        .on('start', (cmd: string) => logger.debug('VideoProcessor concatenating', { cmd }))
         .on('end', () => {
           // Clean up list file
           fs.unlinkSync(listPath);
           logger.info('VideoProcessor concatenation complete', { outputPath });
           resolve(outputPath);
         })
-        .on('error', (err) => {
+        .on('error', (err: Error) => {
           console.error(`[VideoProcessor] Concat error: ${err.message}`);
           reject(err);
         })
@@ -306,7 +306,7 @@ export class VideoProcessor {
           logger.info('VideoProcessor thumbnail generated', { outputPath });
           resolve(outputPath);
         })
-        .on('error', (err) => {
+        .on('error', (err: Error) => {
           console.error(`[VideoProcessor] Thumbnail error: ${err.message}`);
           reject(err);
         });
