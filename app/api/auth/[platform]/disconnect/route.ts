@@ -10,8 +10,8 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
 import { isSupportedPlatform, revokePlatformTokens } from '@/lib/oauth';
+import { getUserIdFromRequestOrCookies, unauthorizedResponse } from '@/lib/auth/jwt-utils';
 import { logger } from '@/lib/logger';
 import { prisma } from '@/lib/prisma';
 
@@ -34,17 +34,9 @@ export async function POST(
       );
     }
 
-    // Get user ID from session (simplified)
-    const cookieStore = await cookies();
-    const sessionCookie = cookieStore.get('session');
-    const userId = sessionCookie?.value;
-
-    if (!userId) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
+    // Get user ID from JWT token (auth-token cookie or Authorization header)
+    const userId = await getUserIdFromRequestOrCookies(request);
+    if (!userId) return unauthorizedResponse();
 
     // Find the connection
     const connection = await prisma.platformConnection.findFirst({

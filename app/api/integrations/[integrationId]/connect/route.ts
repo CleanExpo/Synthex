@@ -31,18 +31,11 @@ export async function POST(
     const cookieStore = await cookies();
     const token = cookieStore.get('auth-token')?.value;
     
-    // For demo mode (when no Supabase is configured)
     if (!supabaseUrl || !supabaseAnonKey) {
-      return NextResponse.json({
-        success: true,
-        demo: true,
-        integration: {
-          id: integrationId,
-          connected: true,
-          accountName: `@demo_${integrationId}_user`,
-          connectedAt: new Date().toISOString()
-        }
-      });
+      return NextResponse.json(
+        { error: 'Integration service not configured' },
+        { status: 503 }
+      );
     }
     
     // Initialize Supabase client with user's token
@@ -132,13 +125,11 @@ export async function GET(
     const cookieStore = await cookies();
     const token = cookieStore.get('auth-token')?.value;
     
-    // For demo mode
     if (!supabaseUrl || !supabaseAnonKey) {
-      return NextResponse.json({
-        id: integrationId,
-        connected: false,
-        demo: true
-      });
+      return NextResponse.json(
+        { error: 'Integration service not configured' },
+        { status: 503 }
+      );
     }
     
     // Initialize Supabase client
@@ -200,13 +191,11 @@ export async function DELETE(
     const cookieStore = await cookies();
     const token = cookieStore.get('auth-token')?.value;
     
-    // For demo mode
     if (!supabaseUrl || !supabaseAnonKey) {
-      return NextResponse.json({
-        success: true,
-        demo: true,
-        message: 'Integration disconnected (demo mode)'
-      });
+      return NextResponse.json(
+        { error: 'Integration service not configured' },
+        { status: 503 }
+      );
     }
     
     // Initialize Supabase client

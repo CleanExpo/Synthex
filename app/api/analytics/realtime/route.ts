@@ -225,8 +225,6 @@ export async function GET(request: NextRequest) {
       500,
       security.context
     );
-  } finally {
-    await prisma.$disconnect();
   }
 }
 

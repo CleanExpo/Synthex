@@ -36,6 +36,8 @@ export async function GET(request: NextRequest) {
       ? authHeader.substring(7)
       : request.cookies.get('auth-token')?.value;
 
+    if (!token) return unauthorizedResponse();
+
     try {
       // Check if session exists and is valid
       const session = await prisma.session.findUnique({
@@ -118,8 +120,6 @@ export async function GET(request: NextRequest) {
       { error: 'Failed to fetch user data' },
       { status: 500 }
     );
-  } finally {
-    await prisma.$disconnect();
   }
 }
 
@@ -193,8 +193,6 @@ export async function PUT(request: NextRequest) {
       { error: 'Failed to update user data' },
       { status: 500 }
     );
-  } finally {
-    await prisma.$disconnect();
   }
 }
 

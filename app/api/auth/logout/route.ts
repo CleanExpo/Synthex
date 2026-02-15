@@ -56,8 +56,6 @@ export async function POST(request: NextRequest) {
       { error: 'Logout failed. Please try again.' },
       { status: 500 }
     );
-  } finally {
-    await prisma.$disconnect();
   }
 }
 
@@ -112,8 +110,6 @@ export async function DELETE(request: NextRequest) {
       { error: 'Failed to logout from all devices' },
       { status: 500 }
     );
-  } finally {
-    await prisma.$disconnect();
   }
 }
 

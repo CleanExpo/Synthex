@@ -117,8 +117,6 @@ export async function GET(
       500,
       security.context
     );
-  } finally {
-    await prisma.$disconnect();
   }
 }
 
@@ -233,8 +231,6 @@ export async function PATCH(
       500,
       security.context
     );
-  } finally {
-    await prisma.$disconnect();
   }
 }
 
@@ -319,8 +315,6 @@ export async function DELETE(
       500,
       security.context
     );
-  } finally {
-    await prisma.$disconnect();
   }
 }
 

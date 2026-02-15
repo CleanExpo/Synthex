@@ -118,8 +118,6 @@ export async function PATCH(
       500,
       security.context
     );
-  } finally {
-    await prisma.$disconnect();
   }
 }
 

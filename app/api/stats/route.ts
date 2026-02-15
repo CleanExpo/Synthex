@@ -162,8 +162,6 @@ export async function GET(request: NextRequest) {
       },
       lastUpdated: new Date().toISOString()
     });
-  } finally {
-    await prisma.$disconnect();
   }
 }
 
