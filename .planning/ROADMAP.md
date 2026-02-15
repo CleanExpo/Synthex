@@ -30,7 +30,7 @@ None (internal platform hardening)
 **Plans**: 2 plans (consolidated from original 4 — cleanup work is bulk git rm, env consolidation pairs with CLAUDE.md rewrite)
 
 Plans:
-- [ ] 01-01: Archive legacy Express app and remove root debris (Python, .md, scripts)
+- [x] 01-01: Archive legacy Express app and remove root debris (Python, .md, scripts)
 - [ ] 01-02: Rewrite CLAUDE.md for Next.js 15 and consolidate environment files
 
 ### Phase 2: Mock Data — API Routes
@@ -139,7 +139,7 @@ Plans:
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation Cleanup | 0/2 | Planning | - |
+| 1. Foundation Cleanup | 1/2 | In progress | - |
 | 2. Mock Data — API Routes | 0/5 | Not started | - |
 | 3. Mock Data — Dashboard | 0/2 | Not started | - |
 | 4. Security Hardening | 0/3 | Not started | - |
