@@ -1,147 +1,139 @@
 ---
 name: client-manager
-description: >-
-  Manages the full client lifecycle within Synthex AI Agency.
-  Handles onboarding (config generation from client input),
-  data isolation between tenants, usage tracking, and billing.
-  Ensures no client data bleeds into another client's workspace.
-metadata:
-  author: synthex
-  version: "1.0"
-  engine: synthex-ai-agency
-  type: platform-skill
-  triggers:
-    - client onboarding
-    - tenant management
-    - client config
-    - data isolation
-    - client billing
+description: >
+  Campaign and client data management via Prisma ORM. Handles CRUD operations
+  on campaigns, posts, projects, and user preferences. Tracks analytics and
+  API usage. Use when user says "create campaign", "list campaigns", "update
+  post", "delete project", "client data", or "manage analytics".
 ---
 
-# Client Manager
+# Client & Campaign Data Manager
 
-## Purpose
+## Process
 
-Handles everything related to client tenancy within Synthex.
-When a business signs in, this skill generates their workspace,
-builds their project config dynamically, and enforces data
-isolation throughout the production pipeline.
+1. **Identify operation** -- determine the CRUD action and target model from user intent
+2. **Validate inputs** -- check required fields, enum values, and foreign key references
+3. **Execute via Prisma** -- run the appropriate Prisma Client query against PostgreSQL
+4. **Return structured result** -- format the response with relevant fields and relations
+5. **Log API usage** -- record the operation in ApiUsage for audit trail
 
-## When to Use
+## Prisma Models
 
-Activate this skill when:
-- A new client signs up and needs onboarding
-- Client config needs updating (new repo, rebrand, etc.)
-- Usage/billing needs checking before generation
-- Client data access needs verification (isolation checks)
+### User
+- `id` (cuid), `email` (unique), `name`, `password`
+- OAuth: `googleId`, `avatar`, `authProvider` (local | google)
+- API keys: `openrouterApiKey`, `anthropicApiKey` (encrypted)
+- Settings: `preferences` (JSON)
+- Relations: `campaigns[]`, `projects[]`, `apiUsage[]`
+- Table: `users`
 
-## When NOT to Use This Skill
+### Campaign
+- `id` (cuid), `name`, `description`, `platform`, `status`
+- Platform values: youtube, instagram, tiktok, twitter, facebook, linkedin, pinterest, reddit
+- Status values: draft, active, paused, completed
+- Data fields: `content` (JSON), `analytics` (JSON), `settings` (JSON)
+- Relations: belongs to `User`, has many `Post[]`
+- Table: `campaigns`
 
-- When generating video content (use video-engine)
-- When verifying factual claims in content (use truth-finder)
-- When creating platform showcase videos (use platform-showcase)
-- When generating AI images (use imagen-designer)
-- Instead use: `video-engine` for video production, `platform-showcase` for marketing
+### Post
+- `id` (cuid), `content`, `platform`, `status`
+- Status values: draft, scheduled, published, failed
+- Scheduling: `scheduledAt`, `publishedAt`
+- Data fields: `metadata` (JSON -- images, hashtags, mentions), `analytics` (JSON)
+- Relations: belongs to `Campaign`
+- Table: `posts`
 
-## Instructions
+### Project
+- `id` (cuid), `name`, `description`, `type`, `data` (JSON)
+- Type values: marketing, content, analytics
+- Relations: belongs to `User`
+- Table: `projects`
 
-1. **Onboard**: Collect client details → generate config + workspace
-2. **Validate**: Verify client repo access and scan readiness
-3. **Isolate**: Ensure workspace is sandboxed from other clients
-4. **Track**: Log all API usage per client for billing
-5. **Report**: Provide usage summaries on request
+### ApiUsage
+- `id` (cuid), `endpoint`, `model`, `tokens`, `cost`, `status`
+- Status values: success, error, rate_limited
+- Data fields: `requestData` (JSON), `responseData` (JSON), `errorMessage`
+- Relations: belongs to `User`
+- Table: `api_usage`
 
-## Client Config Schema
+### Session
+- `id` (cuid), `token` (unique), `userId`, `expiresAt`
+- Table: `sessions`
 
-```yaml
-# Generated at: output/clients/{slug}/client.yaml
-client:
-  id: "cli_abc123"           # Unique client ID
-  name: "Brisbane Plumbing Co"
-  slug: "brisbane-plumbing-co"
-  onboarded_at: "2026-03-15T09:00:00Z"
-  plan: "starter"            # starter | professional | enterprise
-  status: "active"
+## Operations
 
-business:
-  industry: "plumbing"
-  location: "Brisbane, QLD"
-  description: "Residential and commercial plumbing services"
-  website: "https://brisbaneplumbing.com.au"
+### Campaign CRUD
 
-source:
-  type: "repo"               # repo | url-scan | upload
-  repo: "https://github.com/client/their-project"
-  # OR
-  type: "url-scan"
-  urls:
-    - "https://brisbaneplumbing.com.au"
-    - "https://brisbaneplumbing.com.au/services"
-  # OR
-  type: "upload"
-  files_dir: "output/clients/brisbane-plumbing-co/uploads/"
+| Operation | Prisma Method | Required Fields |
+|-----------|---------------|-----------------|
+| CREATE | `prisma.campaign.create()` | name, platform, userId |
+| READ | `prisma.campaign.findUnique()` / `findMany()` | id or filter |
+| UPDATE | `prisma.campaign.update()` | id, fields to update |
+| DELETE | `prisma.campaign.delete()` | id |
+| LIST | `prisma.campaign.findMany()` | userId, optional status/platform filter |
 
-brand:
-  voice_id: "professional-au"  # Voice selection
-  tone: "professional-trades"
-  audience_primary: "homeowners"
-  audience_secondary: "property-managers"
-  colours:
-    primary: "#2563eb"
-    accent: "#d4841c"
-  logo_path: null
+### Post Management
 
-video_defaults:
-  resolution: "1080p"
-  aspect_ratio: "16:9"
-  format: "mp4"
+| Operation | Prisma Method | Required Fields |
+|-----------|---------------|-----------------|
+| CREATE | `prisma.post.create()` | content, platform, campaignId |
+| SCHEDULE | `prisma.post.update()` | id, scheduledAt, status = "scheduled" |
+| PUBLISH | `prisma.post.update()` | id, publishedAt, status = "published" |
+| BULK CREATE | `prisma.post.createMany()` | array of post data |
 
-billing:
-  plan: "starter"
-  monthly_video_limit: 5
-  videos_generated_this_month: 0
-  total_videos_generated: 0
-  api_spend_this_month: 0.00
+### Analytics Tracking
+
+- Store per-post engagement in `Post.analytics` JSON field
+- Store campaign-level rollups in `Campaign.analytics` JSON field
+- Track API costs via `ApiUsage` model per request
+- Aggregate by: platform, date range, campaign, user
+
+### User Preferences
+
+- Stored in `User.preferences` JSON field
+- Includes: default platform, timezone, notification settings, brand voice
+- Update via `prisma.user.update({ data: { preferences: {...} } })`
+
+## Query Patterns
+
+### Filtering campaigns by status and platform
+```
+prisma.campaign.findMany({
+  where: { userId, status, platform },
+  include: { posts: true },
+  orderBy: { updatedAt: 'desc' }
+})
 ```
 
-## Source Types
+### Aggregating post analytics across a campaign
+```
+prisma.post.findMany({
+  where: { campaignId },
+  select: { analytics: true, platform: true, status: true }
+})
+```
 
-### Repo scan (developer clients)
-- Standard project-scanner flow
-- Full skill/agent/UI/API discovery
-- Richest video content
+### Tracking API costs for a user over a date range
+```
+prisma.apiUsage.aggregate({
+  where: { userId, createdAt: { gte: startDate, lte: endDate } },
+  _sum: { cost: true, tokens: true }
+})
+```
 
-### URL scan (non-technical clients)
-- Scrape their website for content, services, about page
-- Extract service descriptions, team info, testimonials
-- Generate videos from verified web content
+## Output
 
-### File upload (any client)
-- Client uploads docs, images, brand assets
-- Parse uploaded content for video material
-- Most manual but works for any business
+- **Single record**: full model object with included relations
+- **List**: array of records with pagination metadata (total, page, pageSize)
+- **Mutation**: updated record confirming the change
+- **Analytics**: aggregated metrics with breakdowns by platform and date range
+- **Errors**: structured error with code, message, and affected field
 
-## Billing Tiers
+## Validation Rules
 
-| Plan | Videos/month | API Budget | Voice Options | Support |
-|------|-------------|------------|---------------|---------|
-| Starter | 5 | $40 | 1 standard | Self-serve |
-| Professional | 15 | $120 | 3 custom | Email |
-| Enterprise | Unlimited | Custom | Custom cloned | Dedicated |
-
-## Data Isolation Rules
-
-1. Each client gets: `output/clients/{slug}/`
-2. NEVER read files from another client's directory
-3. NEVER reference another client's data in scripts
-4. NEVER include client data in platform showcase without explicit permission
-5. Platform mode uses `output/platform/` — completely separate tree
-
-## Guidelines
-
-- Always check billing limits BEFORE starting generation
-- Generate client config dynamically — never copy from another client
-- Verify client repo/URL access before first scan
-- Report "content gaps" to client during onboarding
-- Australian English for all AU clients (default)
-- Data retention: Client data kept for 12 months after last activity
+- Campaign `name` must be non-empty and under 255 characters
+- Campaign `platform` must be one of the 8 supported platforms
+- Post `content` must be non-empty
+- Post `scheduledAt` must be in the future for scheduling operations
+- User `email` must be unique and valid format
+- All delete operations cascade to child records (posts under campaigns, etc.)
