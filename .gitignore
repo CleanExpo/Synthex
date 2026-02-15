@@ -176,3 +176,9 @@ synthex.*.json
 # One-off reports
 *-report.json
 *-status.json
+
+# Legacy session/audit artifacts
+.claude-session/
+.hive-mind/
+ship-audit/
+reports/
