@@ -15,6 +15,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { ResponseOptimizer } from '@/lib/api/response-optimizer';
 import { logger } from '@/lib/logger';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
@@ -28,6 +29,17 @@ import {
 // ============================================================================
 // POST - Generate Variations
 // ============================================================================
+
+const variationsSchema = z.object({
+  content: z.string().min(1),
+  platform: z.enum(['twitter', 'instagram', 'linkedin', 'facebook', 'tiktok', 'threads']),
+  count: z.number().min(1).max(10).optional().default(3),
+  strategies: z.array(z.enum(['tone', 'length', 'hook', 'cta', 'emoji', 'hashtag', 'question', 'statistic', 'story'])).optional(),
+  personaId: z.string().optional(),
+  context: z.string().optional(),
+  audience: z.string().optional(),
+  goal: z.enum(['engagement', 'conversion', 'awareness', 'education']).optional().default('engagement'),
+});
 
 export async function POST(request: NextRequest) {
   try {
@@ -44,65 +56,25 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
+    const validation = variationsSchema.safeParse(body);
+    if (!validation.success) {
+      return ResponseOptimizer.createErrorResponse(
+        `Invalid request data: ${validation.error.issues.map(i => i.message).join(', ')}`,
+        400
+      );
+    }
     const {
       content,
       platform,
-      count = 3,
+      count,
       strategies,
       personaId,
       context,
       audience,
-      goal = 'engagement',
-    } = body;
+      goal,
+    } = validation.data;
 
-    // Validate required fields
-    if (!content) {
-      return ResponseOptimizer.createErrorResponse('Content is required', 400);
-    }
-
-    if (!platform) {
-      return ResponseOptimizer.createErrorResponse('Platform is required', 400);
-    }
-
-    // Validate platform
-    const validPlatforms: PlatformStyle[] = [
-      'twitter',
-      'instagram',
-      'linkedin',
-      'facebook',
-      'tiktok',
-      'threads',
-    ];
-    if (!validPlatforms.includes(platform)) {
-      return ResponseOptimizer.createErrorResponse(
-        `Invalid platform. Must be one of: ${validPlatforms.join(', ')}`,
-        400
-      );
-    }
-
-    // Validate count
-    if (count < 1 || count > 10) {
-      return ResponseOptimizer.createErrorResponse('Count must be between 1 and 10', 400);
-    }
-
-    // Validate strategies if provided
-    const validStrategies: VariationStrategy[] = [
-      'tone',
-      'length',
-      'hook',
-      'cta',
-      'emoji',
-      'hashtag',
-      'question',
-      'statistic',
-      'story',
-    ];
-    if (strategies && strategies.some((s: string) => !validStrategies.includes(s as VariationStrategy))) {
-      return ResponseOptimizer.createErrorResponse(
-        `Invalid strategy. Must be one of: ${validStrategies.join(', ')}`,
-        400
-      );
-    }
+    // Platform and strategy validation handled by Zod schema above
 
     const service = new ContentVariationsService();
 

@@ -12,39 +12,12 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import jwt from 'jsonwebtoken';
+import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import crypto from 'crypto';
 import { openRouterClient } from '@/lib/ai/openrouter-client';
 import { logger } from '@/lib/logger';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
 import { auditLogger } from '@/lib/security/audit-logger';
-
-// Lazy getter to avoid module load crash
-function getJWTSecret(): string {
-  const secret = process.env.JWT_SECRET;
-  if (!secret) throw new Error('JWT_SECRET required');
-  return secret;
-}
-
-// Helper to extract user ID from request
-async function getUserIdFromRequest(request: NextRequest): Promise<string | null> {
-  const token =
-    request.cookies.get('auth-token')?.value ||
-    request.headers.get('Authorization')?.replace('Bearer ', '');
-
-  if (!token) return null;
-
-  try {
-    const decoded = jwt.verify(token, getJWTSecret()) as {
-      sub?: string;
-      userId?: string;
-      id?: string;
-    };
-    return decoded.sub || decoded.userId || decoded.id || null;
-  } catch {
-    return null;
-  }
-}
 
 // Supported languages with their codes and names
 const SUPPORTED_LANGUAGES: Record<string, { name: string; nativeName: string; rtl?: boolean }> = {
@@ -108,7 +81,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Get requesting user ID
-    const userId = await getUserIdFromRequest(request);
+    const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
       return NextResponse.json(
         { error: 'Authentication required' },

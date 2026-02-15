@@ -32,7 +32,9 @@ export function NotificationBell() {
 
   const loadNotifications = useCallback(async () => {
     try {
-      const response = await fetch('/api/notifications');
+      const response = await fetch('/api/notifications', {
+        credentials: 'include',
+      });
       // Silently skip if not authenticated — no console noise
       if (response.status === 401 || response.status === 403) return;
       if (response.ok) {
@@ -47,7 +49,9 @@ export function NotificationBell() {
 
   const checkForNewNotifications = useCallback(async () => {
     try {
-      const response = await fetch('/api/notifications?unread=true');
+      const response = await fetch('/api/notifications?unread=true', {
+        credentials: 'include',
+      });
       if (!response.ok) return; // Silently skip auth errors
       const data = await response.json();
       if (data.hasNew) {
@@ -84,7 +88,7 @@ export function NotificationBell() {
 
   const markAsRead = async (id: string) => {
     try {
-      await fetch(`/api/notifications/${id}/read`, { method: 'POST' });
+      await fetch(`/api/notifications/${id}/read`, { method: 'POST', credentials: 'include' });
       setNotifications(prev => {
         const updated = prev.map(n => n.id === id ? { ...n, read: true } : n);
         updateUnreadCount(updated);

@@ -20,7 +20,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import jwt from 'jsonwebtoken';
+import { generateToken } from '@/lib/auth/jwt-utils';
 import { encryptField } from '@/lib/security/field-encryption';
 
 // =============================================================================
@@ -224,29 +224,6 @@ async function fetchUserInfo(
   }
 }
 
-/**
- * Generate JWT token for authenticated user
- * Uses centralized JWT utilities - no fallback secrets allowed
- */
-function generateToken(user: { id: string; email: string; name?: string | null }): string {
-  const secret = process.env.JWT_SECRET;
-
-  if (!secret) {
-    throw new Error('JWT_SECRET environment variable is required but not set');
-  }
-
-  return jwt.sign(
-    {
-      userId: user.id,
-      email: user.email,
-      name: user.name,
-      iat: Math.floor(Date.now() / 1000),
-    },
-    secret,
-    { expiresIn: '7d' }
-  );
-}
-
 // =============================================================================
 // Route Handler
 // =============================================================================
@@ -424,7 +401,7 @@ export async function GET(
     }
 
     // Generate JWT token
-    const token = generateToken(user);
+    const token = generateToken({ userId: user.id, email: user.email, name: user.name ?? undefined });
 
     // Create response with redirect to dashboard
     const response = NextResponse.redirect(new URL('/dashboard', request.url));

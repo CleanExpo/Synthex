@@ -8,9 +8,16 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
+import Stripe from 'stripe';
 import { stripe, PRODUCTS } from '@/lib/stripe/config';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
-import jwt from 'jsonwebtoken';
+import { getUserIdFromRequestOrCookies, unauthorizedResponse } from '@/lib/auth/jwt-utils';
+
+const checkoutSchema = z.object({
+  priceId: z.string().optional(),
+  planName: z.string().optional(),
+});
 
 export async function POST(request: NextRequest) {
   try {
@@ -40,26 +47,18 @@ export async function POST(request: NextRequest) {
     }
 
     // Get user from token
-    const token = request.headers.get('authorization')?.replace('Bearer ', '');
-    if (!token || !process.env.JWT_SECRET) {
+    const userId = await getUserIdFromRequestOrCookies(request);
+    if (!userId) return unauthorizedResponse();
+
+    const rawBody = await request.json();
+    const validation = checkoutSchema.safeParse(rawBody);
+    if (!validation.success) {
       return NextResponse.json(
-        { error: 'Authentication required' },
-        { status: 401 }
+        { error: 'Invalid request data', details: validation.error.issues },
+        { status: 400 }
       );
     }
-
-    let userId: string;
-    try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET) as any;
-      userId = decoded.userId || decoded.id;
-    } catch (error) {
-      return NextResponse.json(
-        { error: 'Invalid authentication token' },
-        { status: 401 }
-      );
-    }
-
-    const { priceId, planName } = await request.json();
+    const { priceId, planName } = validation.data;
 
     // Validate the plan
     const product = planName ? PRODUCTS[planName.toLowerCase() as keyof typeof PRODUCTS] : null;
@@ -74,7 +73,6 @@ export async function POST(request: NextRequest) {
 
     // Create Stripe checkout session
     const session = await stripe.checkout.sessions.create({
-      payment_method_types: ['card'],
       line_items: [
         {
           price: finalPriceId,
@@ -91,7 +89,6 @@ export async function POST(request: NextRequest) {
       },
       allow_promotion_codes: true,
       billing_address_collection: 'required',
-      customer_email: undefined, // Will be collected in checkout
       subscription_data: {
         trial_period_days: 14, // 14-day free trial
         metadata: {
@@ -99,7 +96,7 @@ export async function POST(request: NextRequest) {
           planName: product?.name || planName,
         },
       },
-    });
+    } as Stripe.Checkout.SessionCreateParams);
 
     return NextResponse.json({ 
       sessionId: session.id,

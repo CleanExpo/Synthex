@@ -10,10 +10,18 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { twitterService } from '@/lib/social/twitter-service';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
 import { createClient } from '@supabase/supabase-js';
-import jwt from 'jsonwebtoken';
+import { getUserIdFromRequestOrCookies, unauthorizedResponse } from '@/lib/auth/jwt-utils';
+
+const twitterPostSchema = z.object({
+  text: z.string().optional(),
+  thread: z.array(z.string()).optional(),
+  mediaUrls: z.array(z.string()).optional(),
+  scheduledTime: z.string().optional(),
+});
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -36,24 +44,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Get user from token
-    const token = request.headers.get('authorization')?.replace('Bearer ', '');
-    if (!token || !process.env.JWT_SECRET) {
-      return NextResponse.json(
-        { error: 'Authentication required' },
-        { status: 401 }
-      );
-    }
-
-    let userId: string;
-    try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET) as any;
-      userId = decoded.userId || decoded.id;
-    } catch (error) {
-      return NextResponse.json(
-        { error: 'Invalid authentication token' },
-        { status: 401 }
-      );
-    }
+    const userId = await getUserIdFromRequestOrCookies(request);
+    if (!userId) return unauthorizedResponse();
 
     // Check user's subscription limits
     const { data: subscription } = await supabase
@@ -62,9 +54,16 @@ export async function POST(request: NextRequest) {
       .eq('user_id', userId)
       .single();
 
-    // Get request body
-    const body = await request.json();
-    const { text, thread, mediaUrls, scheduledTime } = body;
+    // Get and validate request body
+    const rawBody = await request.json();
+    const validation = twitterPostSchema.safeParse(rawBody);
+    if (!validation.success) {
+      return NextResponse.json(
+        { error: 'Invalid request data', details: validation.error.issues },
+        { status: 400 }
+      );
+    }
+    const { text, thread, mediaUrls, scheduledTime } = validation.data;
 
     if (!text && !thread) {
       return NextResponse.json(
@@ -92,7 +91,7 @@ export async function POST(request: NextRequest) {
     if (scheduledTime) {
       const scheduleDate = new Date(scheduledTime);
       result = await twitterService.scheduleTweet(
-        { text, mediaIds },
+        { text: text!, mediaIds },
         scheduleDate
       );
 
@@ -127,16 +126,16 @@ export async function POST(request: NextRequest) {
     // Handle single tweet
     else {
       // Validate tweet
-      const validation = twitterService.validateTweet(text);
-      if (!validation.valid) {
+      const tweetValidation = twitterService.validateTweet(text!);
+      if (!tweetValidation.valid) {
         return NextResponse.json(
-          { error: validation.error },
+          { error: tweetValidation.error },
           { status: 400 }
         );
       }
 
       result = await twitterService.postTweet({
-        text,
+        text: text!,
         mediaIds,
       });
     }
@@ -193,24 +192,8 @@ export async function GET(request: NextRequest) {
     }
 
     // Get user from token
-    const token = request.headers.get('authorization')?.replace('Bearer ', '');
-    if (!token || !process.env.JWT_SECRET) {
-      return NextResponse.json(
-        { error: 'Authentication required' },
-        { status: 401 }
-      );
-    }
-
-    let userId: string;
-    try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET) as any;
-      userId = decoded.userId || decoded.id;
-    } catch (error) {
-      return NextResponse.json(
-        { error: 'Invalid authentication token' },
-        { status: 401 }
-      );
-    }
+    const userId = await getUserIdFromRequestOrCookies(request);
+    if (!userId) return unauthorizedResponse();
 
     // Get posts from database
     const { data: posts, error } = await supabase

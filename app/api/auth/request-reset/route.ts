@@ -4,21 +4,26 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
 import { emailService } from '@/lib/email/email-service';
+
+const requestResetSchema = z.object({
+  email: z.string().email(),
+});
 
 // Request password reset
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { email } = body;
-
-    if (!email) {
+    const validation = requestResetSchema.safeParse(body);
+    if (!validation.success) {
       return NextResponse.json(
-        { error: 'Email is required' },
+        { error: 'Invalid request data', details: validation.error.issues },
         { status: 400 }
       );
     }
+    const { email } = validation.data;
 
     // Find user by email
     const user = await prisma.user.findUnique({
@@ -50,3 +55,5 @@ export async function POST(request: NextRequest) {
     await prisma.$disconnect();
   }
 }
+
+export const runtime = 'nodejs';

@@ -1,7 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { supabase } from '@/lib/supabase-client';
 import prisma from '@/lib/prisma';
 import { sanitizeErrorForResponse } from '@/lib/utils/error-utils';
+
+const oauthCallbackSchema = z.object({
+  code: z.string().min(1),
+  state: z.string().min(1),
+});
 
 // OAuth configuration for different platforms
 const oauthConfig = {
@@ -91,7 +97,7 @@ export async function GET(
     // Get the current user
     // Try header-based auth first; fallback to email param for static pages
     const authHeader = request.headers.get('authorization');
-    let user: { id: string | null; email: string | null | undefined } | null = null;
+    let user: { id: string | null; email?: string | null | undefined } | null = null;
     if (authHeader) {
       const token = authHeader.replace('Bearer ', '');
       const { data, error: authError } = await supabase.auth.getUser(token);
@@ -165,11 +171,14 @@ export async function POST(
     const config = oauthConfig[platform];
 
     const body = await request.json();
-    const { code, state } = body;
-
-    if (!code) {
-      return NextResponse.json({ error: 'Authorization code missing' }, { status: 400 });
+    const validation = oauthCallbackSchema.safeParse(body);
+    if (!validation.success) {
+      return NextResponse.json(
+        { error: 'Invalid request data', details: validation.error.issues },
+        { status: 400 }
+      );
     }
+    const { code, state } = validation.data;
 
     // Decode and verify state
     let stateData;

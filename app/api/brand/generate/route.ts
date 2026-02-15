@@ -1,8 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
 import { Prisma } from '@prisma/client';
 import BrandPsychologyOrchestrator, { BrandGenerationInput } from '@/lib/ai/agents/strategic-marketing/brand-orchestrator';
 import { getUserIdFromCookies, getUserIdFromRequest, unauthorizedResponse } from '@/lib/auth/jwt-utils';
+
+const brandGenerateSchema = z.object({
+  businessType: z.string().min(1),
+  targetAudience: z.object({
+    demographics: z.array(z.string()),
+    psychographics: z.array(z.string()),
+    painPoints: z.array(z.string()),
+  }),
+  brandGoals: z.array(z.string()).min(1),
+  tonePreference: z.string().min(1),
+  psychologyPreference: z.array(z.string()).optional(),
+  competitorContext: z.string().optional(),
+});
 
 export async function POST(request: NextRequest) {
   try {
@@ -14,6 +28,13 @@ export async function POST(request: NextRequest) {
 
     // Parse request body
     const body = await request.json();
+    const validation = brandGenerateSchema.safeParse(body);
+    if (!validation.success) {
+      return NextResponse.json(
+        { error: 'Invalid request data', details: validation.error.issues },
+        { status: 400 }
+      );
+    }
     const {
       businessType,
       targetAudience,
@@ -21,15 +42,7 @@ export async function POST(request: NextRequest) {
       tonePreference,
       psychologyPreference,
       competitorContext
-    } = body as BrandGenerationInput;
-
-    // Validate required fields
-    if (!businessType || !targetAudience || !brandGoals) {
-      return NextResponse.json(
-        { error: 'Missing required fields' },
-        { status: 400 }
-      );
-    }
+    } = validation.data;
 
     // Initialize the orchestrator
     const orchestrator = new BrandPsychologyOrchestrator();

@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
 import { z } from 'zod';
 import { rateLimiters } from '@/lib/rate-limit';
+import { generateToken, getUserIdFromRequestOrCookies, unauthorizedResponse } from '@/lib/auth/jwt-utils';
 
 // Validation schemas
 const loginSchema = z.object({
@@ -17,20 +17,6 @@ const signupSchema = z.object({
   name: z.string().min(2),
   company: z.string().optional(),
 });
-
-// Helper function to generate JWT
-function generateToken(userId: string): string {
-  const secret = process.env.JWT_SECRET;
-  if (!secret) {
-    throw new Error('JWT_SECRET not configured');
-  }
-  
-  return jwt.sign(
-    { userId, iat: Date.now() },
-    secret,
-    { expiresIn: '7d' }
-  );
-}
 
 /**
  * Unified Authentication Handler
@@ -116,7 +102,7 @@ async function handleLogin(body: z.infer<typeof loginSchema>) {
     }
 
     // Generate token
-    const token = generateToken(user.id);
+    const token = generateToken({ userId: user.id, email: user.email });
 
     // Return user data (without password)
     const { password: _, ...userData } = user;
@@ -177,7 +163,7 @@ async function handleSignup(body: z.infer<typeof signupSchema>) {
     });
 
     // Generate token
-    const token = generateToken(user.id);
+    const token = generateToken({ userId: user.id, email: user.email });
 
     return NextResponse.json({
       user,
@@ -211,26 +197,15 @@ async function handleLogout() {
  */
 async function handleVerify(request: NextRequest) {
   try {
-    const authHeader = request.headers.get('authorization');
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json(
-        { error: 'No token provided' },
-        { status: 401 }
-      );
+    const userId = await getUserIdFromRequestOrCookies(request);
+
+    if (!userId) {
+      return unauthorizedResponse('No valid token provided');
     }
 
-    const token = authHeader.substring(7);
-    const secret = process.env.JWT_SECRET;
-    
-    if (!secret) {
-      throw new Error('JWT_SECRET not configured');
-    }
-
-    const decoded = jwt.verify(token, secret) as any;
-    
     // Get user data
     const user = await prisma.user.findUnique({
-      where: { id: decoded.userId },
+      where: { id: userId },
       select: {
         id: true,
         email: true,

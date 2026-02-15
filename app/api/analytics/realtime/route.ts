@@ -255,3 +255,5 @@ function formatEventDescription(type: string, platform: string | null): string {
       return `${type} event on ${platformName}`;
   }
 }
+
+export const runtime = 'nodejs';

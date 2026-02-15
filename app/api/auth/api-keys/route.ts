@@ -11,19 +11,12 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import jwt from 'jsonwebtoken';
+import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import prisma from '@/lib/prisma';
 import { encryptField } from '@/lib/security/field-encryption';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
 import { auditLogger } from '@/lib/security/audit-logger';
 import { logger } from '@/lib/logger';
-
-// Lazy getter to avoid module load crash
-function getJWTSecret(): string {
-  const secret = process.env.JWT_SECRET;
-  if (!secret) throw new Error('JWT_SECRET required');
-  return secret;
-}
 
 // Zod schemas for validation
 const GetApiKeysSchema = z.object({
@@ -36,26 +29,6 @@ const PostApiKeysSchema = z.object({
 }).refine(data => data.openrouterApiKey || data.anthropicApiKey, {
   message: 'At least one API key must be provided',
 });
-
-// Helper to extract user ID from request
-async function getUserIdFromRequest(request: NextRequest): Promise<string | null> {
-  const token =
-    request.cookies.get('auth-token')?.value ||
-    request.headers.get('Authorization')?.replace('Bearer ', '');
-
-  if (!token) return null;
-
-  try {
-    const decoded = jwt.verify(token, getJWTSecret()) as {
-      sub?: string;
-      userId?: string;
-      id?: string;
-    };
-    return decoded.sub || decoded.userId || decoded.id || null;
-  } catch {
-    return null;
-  }
-}
 
 /**
  * GET /api/auth/api-keys
@@ -77,7 +50,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get authenticated user
-    const userId = await getUserIdFromRequest(request);
+    const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
       return NextResponse.json(
         { error: 'Authentication required' },
@@ -147,7 +120,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Get authenticated user
-    const userId = await getUserIdFromRequest(request);
+    const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
       return NextResponse.json(
         { error: 'Authentication required' },
@@ -265,7 +238,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Get authenticated user
-    const userId = await getUserIdFromRequest(request);
+    const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
       return NextResponse.json(
         { error: 'Authentication required' },

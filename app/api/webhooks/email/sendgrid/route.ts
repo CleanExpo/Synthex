@@ -357,3 +357,5 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
 // Note: In App Router, body parsing is handled automatically
 // Use request.text() for raw body access as shown above
+
+export const runtime = 'nodejs';

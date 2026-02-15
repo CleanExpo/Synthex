@@ -10,10 +10,21 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
 import { TwitterApi } from 'twitter-api-v2';
 import { getUserIdFromCookies, unauthorizedResponse } from '@/lib/auth/jwt-utils';
 import { decryptField } from '@/lib/security/field-encryption';
+
+const socialPostSchema = z.object({
+  content: z.string().min(1),
+  platforms: z.array(z.string()).min(1),
+  mediaUrls: z.array(z.string()).optional(),
+  scheduledAt: z.string().optional(),
+  hashtags: z.array(z.string()).optional().default([]),
+  mentions: z.array(z.string()).optional().default([]),
+  campaignId: z.string().optional(),
+});
 
 // Platform posting configurations
 const PLATFORM_CONFIGS = {
@@ -167,25 +178,24 @@ export async function POST(request: NextRequest) {
       return unauthorizedResponse();
     }
 
-    // Parse request body
-    const body: PostRequest = await request.json();
+    // Parse and validate request body
+    const rawBody = await request.json();
+    const validation = socialPostSchema.safeParse(rawBody);
+    if (!validation.success) {
+      return NextResponse.json(
+        { error: 'Invalid request data', details: validation.error.issues },
+        { status: 400 }
+      );
+    }
     const {
       content,
       platforms,
       mediaUrls,
       scheduledAt,
-      hashtags = [],
-      mentions = [],
+      hashtags,
+      mentions,
       campaignId
-    } = body;
-
-    // Validate required fields
-    if (!content || !platforms || platforms.length === 0) {
-      return NextResponse.json(
-        { error: 'Content and at least one platform are required' },
-        { status: 400 }
-      );
-    }
+    } = validation.data;
 
     // Process hashtags
     const processedHashtags = hashtags.map(tag => 
@@ -383,3 +393,5 @@ export async function GET(request: NextRequest) {
     await prisma.$disconnect();
   }
 }
+
+export const runtime = 'nodejs';

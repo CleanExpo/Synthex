@@ -8,19 +8,9 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import jwt from 'jsonwebtoken';
+import { getUserIdFromRequestOrCookies, unauthorizedResponse } from '@/lib/auth/jwt-utils';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
-
-// JWT Secret - CRITICAL: Never use fallback
-function getJWTSecret(): string {
-  const secret = process.env.JWT_SECRET;
-  if (!secret) {
-    throw new Error('JWT_SECRET environment variable is required');
-  }
-  return secret;
-}
-
 
 // Validation schema for user update
 const userUpdateSchema = z.object({
@@ -33,20 +23,6 @@ const userUpdateSchema = z.object({
     timezone: z.string().max(50).optional(),
   }).passthrough().optional(),
 }).strict();
-
-// Helper function to verify JWT token
-async function verifyToken(token: string) {
-  try {
-    const decoded = jwt.verify(token, getJWTSecret()) as { userId?: string; sub?: string; email?: string };
-    // Handle both formats: { userId, email } from login route and { sub } from signInFlow
-    return {
-      userId: decoded.userId || decoded.sub,
-      email: decoded.email
-    };
-  } catch (error) {
-    return null;
-  }
-}
 
 // Demo user data for when database is unavailable
 // SECURITY: Uses .local TLD to indicate non-production demo data
@@ -66,38 +42,19 @@ const DEMO_USER = {
 
 export async function GET(request: NextRequest) {
   try {
-    // Get token from Authorization header OR auth-token cookie
+    // Authenticate via centralised auth
+    const userId = await getUserIdFromRequestOrCookies(request);
+    if (!userId) return unauthorizedResponse();
+
+    // Extract raw token for session lookup
     const authHeader = request.headers.get('authorization');
-    const cookieToken = request.cookies.get('auth-token')?.value;
-
-    let token: string | null = null;
-
-    if (authHeader?.startsWith('Bearer ')) {
-      token = authHeader.substring(7); // Remove 'Bearer ' prefix
-    } else if (cookieToken) {
-      token = cookieToken;
-    }
-
-    if (!token) {
-      return NextResponse.json(
-        { error: 'No authorization token provided' },
-        { status: 401 }
-      );
-    }
-
-    // Verify token
-    const decoded = await verifyToken(token);
-
-    if (!decoded) {
-      return NextResponse.json(
-        { error: 'Invalid or expired token' },
-        { status: 401 }
-      );
-    }
+    const token = authHeader?.startsWith('Bearer ')
+      ? authHeader.substring(7)
+      : request.cookies.get('auth-token')?.value;
 
     // Handle demo user without database access
     // SECURITY: Check for demo user ID, not email pattern
-    if (decoded.userId === 'demo-user-001') {
+    if (userId === 'demo-user-001') {
       return NextResponse.json({
         success: true,
         user: {
@@ -125,7 +82,7 @@ export async function GET(request: NextRequest) {
 
       // Get user data
       const user = await prisma.user.findUnique({
-        where: { id: decoded.userId },
+        where: { id: userId },
         select: {
           id: true,
           email: true,
@@ -184,9 +141,9 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({
         success: true,
         user: {
-          id: decoded.userId,
-          email: decoded.email || 'unknown',
-          name: decoded.email?.split('@')[0] || 'User',
+          id: userId,
+          email: 'unknown',
+          name: 'User',
           avatar: null,
           emailVerified: true,
           createdAt: new Date(),
@@ -221,27 +178,9 @@ export async function GET(request: NextRequest) {
  */
 export async function PUT(request: NextRequest) {
   try {
-    // Get token from Authorization header
-    const authHeader = request.headers.get('authorization');
-    
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json(
-        { error: 'No authorization token provided' },
-        { status: 401 }
-      );
-    }
-
-    const token = authHeader.substring(7);
-
-    // Verify token
-    const decoded = await verifyToken(token);
-    
-    if (!decoded) {
-      return NextResponse.json(
-        { error: 'Invalid or expired token' },
-        { status: 401 }
-      );
-    }
+    // Authenticate via centralised auth
+    const userId = await getUserIdFromRequestOrCookies(request);
+    if (!userId) return unauthorizedResponse();
 
     // Parse and validate request body
     const body = await request.json();
@@ -261,7 +200,7 @@ export async function PUT(request: NextRequest) {
 
     // Update user with validated data
     const updatedUser = await prisma.user.update({
-      where: { id: decoded.userId },
+      where: { id: userId },
       data: {
         ...(name !== undefined && { name }),
         ...(preferences !== undefined && { preferences: preferences as object })
@@ -279,10 +218,10 @@ export async function PUT(request: NextRequest) {
     // Log audit event
     await prisma.auditLog.create({
       data: {
-        userId: decoded.userId,
+        userId: userId,
         action: 'user_profile_update',
         resource: 'user',
-        resourceId: decoded.userId,
+        resourceId: userId,
         category: 'data',
         outcome: 'success',
         details: {
@@ -307,3 +246,5 @@ export async function PUT(request: NextRequest) {
     await prisma.$disconnect();
   }
 }
+
+export const runtime = 'nodejs';

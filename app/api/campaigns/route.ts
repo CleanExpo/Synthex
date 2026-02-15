@@ -7,22 +7,10 @@
  * - DATABASE_URL: PostgreSQL connection (CRITICAL)
  */
 
-import { NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
+import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import jwt from 'jsonwebtoken';
+import { getUserIdFromRequestOrCookies, unauthorizedResponse } from '@/lib/auth/jwt-utils';
 import { z } from 'zod';
-
-// JWT Secret - CRITICAL: Never use fallback
-function getJWTSecret(): string {
-  const secret = process.env.JWT_SECRET;
-  if (!secret) {
-    throw new Error('JWT_SECRET environment variable is required');
-  }
-  return secret;
-}
-
-const JWT_SECRET = getJWTSecret();
 
 // Validation schemas
 const campaignCreateSchema = z.object({
@@ -53,38 +41,14 @@ const campaignUpdateSchema = z.object({
   status: z.enum(['draft', 'scheduled', 'active', 'paused', 'completed', 'archived']).optional(),
 }).strict();
 
-// Helper to get user from token
-async function getUserFromRequest(request: Request) {
-  const cookieStore = await cookies();
-  const token = request.headers.get('authorization')?.replace('Bearer ', '') ||
-                cookieStore.get('session')?.value;
-
-  if (!token) return null;
-
-  try {
-    const decoded = jwt.verify(token, JWT_SECRET) as any;
-    return await prisma.user.findUnique({
-      where: { id: decoded.userId }
-    });
-  } catch {
-    return null;
-  }
-}
-
 // GET /api/campaigns - Get all campaigns for user
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
   try {
-    const user = await getUserFromRequest(request);
-    
-    if (!user) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
+    const userId = await getUserIdFromRequestOrCookies(request);
+    if (!userId) return unauthorizedResponse();
 
     const campaigns = await prisma.campaign.findMany({
-      where: { userId: user.id },
+      where: { userId },
       include: {
         posts: {
           select: {
@@ -110,16 +74,10 @@ export async function GET(request: Request) {
 }
 
 // POST /api/campaigns - Create new campaign
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
-    const user = await getUserFromRequest(request);
-
-    if (!user) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
+    const userId = await getUserIdFromRequestOrCookies(request);
+    if (!userId) return unauthorizedResponse();
 
     const body = await request.json();
 
@@ -144,7 +102,7 @@ export async function POST(request: Request) {
         platform,
         content,
         settings: settings as object | undefined,
-        userId: user.id,
+        userId,
         status: 'draft',
       }
     });
@@ -157,7 +115,7 @@ export async function POST(request: Request) {
         resourceId: campaign.id,
         category: 'data',
         outcome: 'success',
-        userId: user.id,
+        userId,
         details: { campaignName: name, platform }
       }
     });
@@ -176,16 +134,10 @@ export async function POST(request: Request) {
 }
 
 // PUT /api/campaigns - Update campaign
-export async function PUT(request: Request) {
+export async function PUT(request: NextRequest) {
   try {
-    const user = await getUserFromRequest(request);
-
-    if (!user) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
+    const userId = await getUserIdFromRequestOrCookies(request);
+    if (!userId) return unauthorizedResponse();
 
     const body = await request.json();
 
@@ -205,7 +157,7 @@ export async function PUT(request: Request) {
 
     // Verify ownership
     const existingCampaign = await prisma.campaign.findFirst({
-      where: { id, userId: user.id }
+      where: { id, userId }
     });
 
     if (!existingCampaign) {
@@ -237,16 +189,10 @@ export async function PUT(request: Request) {
 }
 
 // DELETE /api/campaigns - Delete campaign
-export async function DELETE(request: Request) {
+export async function DELETE(request: NextRequest) {
   try {
-    const user = await getUserFromRequest(request);
-    
-    if (!user) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
+    const userId = await getUserIdFromRequestOrCookies(request);
+    if (!userId) return unauthorizedResponse();
 
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
@@ -260,7 +206,7 @@ export async function DELETE(request: Request) {
 
     // Verify ownership
     const campaign = await prisma.campaign.findFirst({
-      where: { id, userId: user.id }
+      where: { id, userId }
     });
 
     if (!campaign) {
@@ -282,7 +228,7 @@ export async function DELETE(request: Request) {
         resourceId: id,
         category: 'data',
         outcome: 'success',
-        userId: user.id,
+        userId,
         details: { campaignName: campaign.name }
       }
     });

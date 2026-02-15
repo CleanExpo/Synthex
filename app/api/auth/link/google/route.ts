@@ -14,14 +14,12 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import jwt from 'jsonwebtoken';
+import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import {
   generatePKCEChallenge,
   generateState,
   storePKCEState,
 } from '@/lib/auth/pkce';
-
-function getJWTSecret(): string { const s = process.env.JWT_SECRET; if (!s) throw new Error('JWT_SECRET required'); return s; }
 
 const GOOGLE_CONFIG = {
   authUrl: 'https://accounts.google.com/o/oauth2/v2/auth',
@@ -35,25 +33,10 @@ const GOOGLE_CONFIG = {
 export async function GET(request: NextRequest) {
   try {
     // Get and validate auth token
-    const token =
-      request.cookies.get('auth-token')?.value ||
-      request.headers.get('Authorization')?.replace('Bearer ', '');
-
-    if (!token) {
+    const userId = await getUserIdFromRequestOrCookies(request);
+    if (!userId) {
       return NextResponse.json(
         { error: 'Authentication required' },
-        { status: 401 }
-      );
-    }
-
-    // Verify token and get user ID
-    let userId: string;
-    try {
-      const decoded = jwt.verify(token, getJWTSecret()) as { sub: string };
-      userId = decoded.sub;
-    } catch {
-      return NextResponse.json(
-        { error: 'Invalid authentication token' },
         { status: 401 }
       );
     }

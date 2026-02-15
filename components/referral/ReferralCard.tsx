@@ -28,7 +28,7 @@ export default function ReferralCard() {
 
   const loadReferralData = async () => {
     try {
-      const res = await fetch('/api/referrals');
+      const res = await fetch('/api/referrals', { credentials: 'include' });
       const data = await res.json();
       if (data.success) {
         setReferralCode(data.referralCode);
@@ -59,6 +59,7 @@ export default function ReferralCard() {
       const res = await fetch('/api/referrals', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ email: inviteEmail }),
       });
       const data = await res.json();

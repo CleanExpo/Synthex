@@ -14,8 +14,8 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import jwt from 'jsonwebtoken';
 import { z } from 'zod';
+import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import {
   NotificationChannel,
   sendNotification,
@@ -25,13 +25,6 @@ import {
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
 import { auditLogger } from '@/lib/security/audit-logger';
 import { logger } from '@/lib/logger';
-
-// Lazy getter to avoid module load crash
-function getJWTSecret(): string {
-  const secret = process.env.JWT_SECRET;
-  if (!secret) throw new Error('JWT_SECRET required');
-  return secret;
-}
 
 // Zod schemas for validation
 const NotificationSchema = z.object({
@@ -141,24 +134,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get sender user ID from JWT
-    const token =
-      request.cookies.get('auth-token')?.value ||
-      request.headers.get('Authorization')?.replace('Bearer ', '');
-
-    let senderId: string | undefined;
-    if (token) {
-      try {
-        const decoded = jwt.verify(token, getJWTSecret()) as {
-          sub?: string;
-          userId?: string;
-          id?: string;
-        };
-        senderId = decoded.sub || decoded.userId || decoded.id;
-      } catch {
-        // Continue without sender ID for system notifications
-      }
-    }
+    // Get sender user ID from centralised auth
+    const senderId = await getUserIdFromRequestOrCookies(request) || undefined;
 
     // Parse and validate body
     let body: unknown;

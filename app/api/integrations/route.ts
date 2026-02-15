@@ -1,6 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { supabase } from '@/lib/supabase-client';
 import { sanitizeErrorForResponse } from '@/lib/utils/error-utils';
+
+const connectIntegrationSchema = z.object({
+  platform: z.string().min(1),
+  accessToken: z.string().optional(),
+  refreshToken: z.string().optional(),
+  profile: z.record(z.unknown()).optional(),
+});
 
 // GET user integrations
 export async function GET(request: NextRequest) {
@@ -71,11 +79,14 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { platform, accessToken, refreshToken, profile } = body;
-
-    if (!platform) {
-      return NextResponse.json({ error: 'Platform is required' }, { status: 400 });
+    const validation = connectIntegrationSchema.safeParse(body);
+    if (!validation.success) {
+      return NextResponse.json(
+        { error: 'Invalid request data', details: validation.error.issues },
+        { status: 400 }
+      );
     }
+    const { platform, accessToken, refreshToken, profile } = validation.data;
 
     // Check if integration already exists
     const { data: existing } = await supabase

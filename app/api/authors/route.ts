@@ -109,3 +109,5 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Internal Server Error', message: 'Failed to create author' }, { status: 500 });
   }
 }
+
+export const runtime = 'nodejs';

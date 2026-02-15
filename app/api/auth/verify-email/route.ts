@@ -4,19 +4,24 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { emailService } from '@/lib/email/email-service';
+
+const verifyEmailSchema = z.object({
+  code: z.string().min(1),
+});
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { code } = body;
-
-    if (!code) {
+    const validation = verifyEmailSchema.safeParse(body);
+    if (!validation.success) {
       return NextResponse.json(
-        { error: 'Verification code is required' },
+        { error: 'Invalid request data', details: validation.error.issues },
         { status: 400 }
       );
     }
+    const { code } = validation.data;
 
     // Verify the email
     const result = await emailService.verifyEmail(code);

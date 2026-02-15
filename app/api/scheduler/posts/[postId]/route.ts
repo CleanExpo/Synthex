@@ -323,3 +323,5 @@ export async function DELETE(
     await prisma.$disconnect();
   }
 }
+
+export const runtime = 'nodejs';

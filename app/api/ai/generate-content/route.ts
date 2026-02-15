@@ -4,12 +4,27 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { aiContentGenerator } from '@/lib/ai/content-generator';
 import { authMonitor } from '@/lib/auth/monitoring';
 import { logger } from '@/lib/logger';
 import { verifyTokenSafe } from '@/lib/auth/jwt-utils';
 
 import { withRateLimit, UsageTracker } from '@/lib/middleware/rate-limiter';
+
+const generateContentSchema = z.object({
+  type: z.enum(['post', 'caption', 'thread', 'story', 'reel', 'article']).optional().default('post'),
+  platform: z.enum(['twitter', 'instagram', 'linkedin', 'tiktok', 'facebook', 'youtube']),
+  topic: z.string().optional(),
+  tone: z.enum(['professional', 'casual', 'humorous', 'inspirational', 'educational']).optional(),
+  keywords: z.array(z.string()).optional(),
+  targetAudience: z.string().optional(),
+  length: z.enum(['short', 'medium', 'long']).optional(),
+  includeEmojis: z.boolean().optional().default(true),
+  includeHashtags: z.boolean().optional().default(true),
+  includeCTA: z.boolean().optional().default(false),
+  batchRequests: z.array(z.any()).optional(),
+});
 
 export async function POST(request: NextRequest) {
   // Apply rate limiting
@@ -35,27 +50,26 @@ export async function POST(request: NextRequest) {
 
     // Parse request body
     const body = await request.json();
+    const validation = generateContentSchema.safeParse(body);
+    if (!validation.success) {
+      return NextResponse.json(
+        { error: 'Invalid request data', details: validation.error.issues },
+        { status: 400 }
+      );
+    }
     const {
-      type = 'post',
+      type,
       platform,
       topic,
       tone,
       keywords,
       targetAudience,
       length,
-      includeEmojis = true,
-      includeHashtags = true,
-      includeCTA = false,
+      includeEmojis,
+      includeHashtags,
+      includeCTA,
       batchRequests
-    } = body;
-
-    // Validate required fields
-    if (!platform) {
-      return NextResponse.json(
-        { error: 'Platform is required' },
-        { status: 400 }
-      );
-    }
+    } = validation.data;
 
     // Track content generation event
     authMonitor.trackEvent({

@@ -16,6 +16,7 @@
  */
 
 import { NextRequest } from 'next/server';
+import { z } from 'zod';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
 import { subscriptionService } from '@/lib/stripe/subscription-service';
 import prisma from '@/lib/prisma';
@@ -27,6 +28,10 @@ import {
 // Required for SSE streaming on Vercel
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
+
+const sendMessageSchema = z.object({
+  message: z.string().min(1, 'Message cannot be empty').max(5000, 'Message too long (max 5000 characters)'),
+});
 
 /**
  * POST /api/ai/pm/conversations/[conversationId]/messages
@@ -87,18 +92,18 @@ export async function POST(
 
     // Parse request body
     const body = await request.json();
-    const userMessage = typeof body.message === 'string' ? body.message.trim() : '';
-
-    if (!userMessage || userMessage.length === 0) {
+    const validation = sendMessageSchema.safeParse(body);
+    if (!validation.success) {
       return APISecurityChecker.createSecureResponse(
-        { error: 'Message cannot be empty' },
+        { error: 'Invalid request data', details: validation.error.issues },
         400
       );
     }
+    const userMessage = validation.data.message.trim();
 
-    if (userMessage.length > 5000) {
+    if (!userMessage) {
       return APISecurityChecker.createSecureResponse(
-        { error: 'Message too long (max 5000 characters)' },
+        { error: 'Message cannot be empty' },
         400
       );
     }

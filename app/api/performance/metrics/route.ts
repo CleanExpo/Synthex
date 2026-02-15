@@ -6,6 +6,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import performanceMonitor from '@/lib/monitoring/performance-monitor';
 
 export const dynamic = 'force-dynamic';
@@ -125,6 +126,13 @@ export async function GET(request: NextRequest) {
   }
 }
 
+const clientMetricsSchema = z.object({
+  metrics: z.record(z.unknown()),
+  url: z.string().optional(),
+  timestamp: z.string().optional(),
+  userAgent: z.string().optional(),
+});
+
 /**
  * POST /api/performance/metrics
  * Record client-side performance metrics (Web Vitals)
@@ -132,15 +140,14 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { metrics, url, timestamp, userAgent } = body;
-
-    // Validate required fields
-    if (!metrics) {
+    const validation = clientMetricsSchema.safeParse(body);
+    if (!validation.success) {
       return NextResponse.json(
-        { success: false, error: 'Metrics data required' },
+        { success: false, error: 'Invalid request data', details: validation.error.issues },
         { status: 400 }
       );
     }
+    const { metrics, timestamp } = validation.data;
 
     // Store metrics (you could extend this to store in database)
     // For now, we'll just acknowledge receipt

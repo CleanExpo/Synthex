@@ -1,8 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { cookies } from 'next/headers';
-import jwt from 'jsonwebtoken';
 import { IntegrationService, IntegrationPlatform } from '@/lib/supabase';
 import { createClient } from '@supabase/supabase-js';
+
+const connectCredentialsSchema = z.object({
+  accountName: z.string().optional(),
+}).passthrough();
 
 // Initialize Supabase client for auth
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
@@ -15,7 +19,14 @@ export async function POST(
   try {
     const { integrationId } = params;
     const body = await request.json();
-    
+    const bodyValidation = connectCredentialsSchema.safeParse(body);
+    if (!bodyValidation.success) {
+      return NextResponse.json(
+        { error: 'Invalid request data', details: bodyValidation.error.issues },
+        { status: 400 }
+      );
+    }
+
     // Get user from session
     const cookieStore = await cookies();
     const token = cookieStore.get('auth-token')?.value;

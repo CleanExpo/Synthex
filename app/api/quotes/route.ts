@@ -9,6 +9,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
 import { extractUserId } from '@/lib/middleware/withAuth';
 
@@ -31,6 +32,26 @@ const VALID_CATEGORIES = [
 ] as const;
 
 type QuoteCategory = (typeof VALID_CATEGORIES)[number];
+
+const createQuoteSchema = z.object({
+  text: z.string().min(1, 'Quote text is required').max(1000, 'Quote text exceeds maximum length of 1000 characters'),
+  author: z.string().optional(),
+  source: z.string().optional(),
+  category: z.enum(VALID_CATEGORIES),
+  tags: z.array(z.string()).optional(),
+  isCustom: z.boolean().optional(),
+  isPublic: z.boolean().optional(),
+  language: z.string().optional(),
+  aiGenerated: z.boolean().optional(),
+  sentiment: z.string().optional(),
+  readingLevel: z.string().optional(),
+  expiresAt: z.string().optional(),
+  campaignId: z.string().optional(),
+});
+
+const deleteQuotesSchema = z.object({
+  ids: z.array(z.string()).min(1, 'Quote IDs array is required').max(100, 'Cannot delete more than 100 quotes at once'),
+});
 
 interface CreateQuoteRequest {
   text: string;
@@ -174,41 +195,15 @@ export async function POST(request: NextRequest) {
     }
 
     // Parse request body
-    const body: CreateQuoteRequest = await request.json();
-
-    // Validate required fields
-    if (!body.text || body.text.trim().length === 0) {
+    const rawBody = await request.json();
+    const validation = createQuoteSchema.safeParse(rawBody);
+    if (!validation.success) {
       return NextResponse.json(
-        { success: false, error: 'Quote text is required' },
+        { success: false, error: 'Invalid request data', details: validation.error.issues },
         { status: 400 }
       );
     }
-
-    if (!body.category) {
-      return NextResponse.json(
-        { success: false, error: 'Category is required' },
-        { status: 400 }
-      );
-    }
-
-    // Validate category
-    if (!VALID_CATEGORIES.includes(body.category as QuoteCategory)) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: `Invalid category. Must be one of: ${VALID_CATEGORIES.join(', ')}`,
-        },
-        { status: 400 }
-      );
-    }
-
-    // Validate text length (reasonable limits for social media)
-    if (body.text.length > 1000) {
-      return NextResponse.json(
-        { success: false, error: 'Quote text exceeds maximum length of 1000 characters' },
-        { status: 400 }
-      );
-    }
+    const body = validation.data;
 
     // Validate expiration date if provided
     let expiresAt: Date | null = null;
@@ -286,23 +281,15 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Parse request body
-    const body = await request.json();
-    const { ids } = body;
-
-    if (!ids || !Array.isArray(ids) || ids.length === 0) {
+    const rawDeleteBody = await request.json();
+    const deleteValidation = deleteQuotesSchema.safeParse(rawDeleteBody);
+    if (!deleteValidation.success) {
       return NextResponse.json(
-        { success: false, error: 'Quote IDs array is required' },
+        { success: false, error: 'Invalid request data', details: deleteValidation.error.issues },
         { status: 400 }
       );
     }
-
-    // Limit bulk delete to 100 items
-    if (ids.length > 100) {
-      return NextResponse.json(
-        { success: false, error: 'Cannot delete more than 100 quotes at once' },
-        { status: 400 }
-      );
-    }
+    const { ids } = deleteValidation.data;
 
     // Delete only quotes owned by the user (security: prevent unauthorized deletion)
     const result = await prisma.quote.deleteMany({

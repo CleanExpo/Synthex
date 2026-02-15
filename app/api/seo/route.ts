@@ -10,6 +10,7 @@
  */
 
 import { NextRequest } from 'next/server';
+import { z } from 'zod';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
 import { subscriptionService, PLAN_LIMITS } from '@/lib/stripe/subscription-service';
 
@@ -83,6 +84,11 @@ export async function GET(request: NextRequest) {
   }
 }
 
+const seoActionSchema = z.object({
+  action: z.string().optional(),
+  feature: z.string().optional(),
+});
+
 /**
  * POST /api/seo
  * Validates SEO access and returns feature availability
@@ -111,7 +117,14 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { action, feature } = body;
+    const seoValidation = seoActionSchema.safeParse(body);
+    if (!seoValidation.success) {
+      return APISecurityChecker.createSecureResponse(
+        { error: 'Invalid request data', details: seoValidation.error.issues },
+        400
+      );
+    }
+    const { action, feature } = seoValidation.data;
 
     // Get subscription
     const subscription = await subscriptionService.getOrCreateSubscription(userId);

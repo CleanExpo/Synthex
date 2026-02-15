@@ -1,7 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { emailService } from '@/lib/email-service';
 import { createClient } from '@supabase/supabase-js';
 import { sanitizeErrorForResponse } from '@/lib/utils/error-utils';
+
+const sendEmailSchema = z.object({
+  to: z.string().email(),
+  subject: z.string().optional(),
+  template: z.string().optional(),
+  variables: z.record(z.any()).optional(),
+  type: z.string().optional(),
+});
 
 /**
  * Simple HTML sanitization for email content
@@ -23,24 +32,15 @@ const supabase = createClient(
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
-    const { to, subject, template, variables, type } = body;
-
-    // Validate request
-    if (!to) {
+    const rawBody = await request.json();
+    const validation = sendEmailSchema.safeParse(rawBody);
+    if (!validation.success) {
       return NextResponse.json(
-        { error: 'Recipient email is required' },
+        { error: 'Invalid request data', details: validation.error.issues },
         { status: 400 }
       );
     }
-
-    // Validate email format
-    if (!emailService.validateEmail(to)) {
-      return NextResponse.json(
-        { error: 'Invalid email address' },
-        { status: 400 }
-      );
-    }
+    const { to, subject, template, variables, type } = validation.data;
 
     // Send email based on type
     let success = false;
@@ -68,7 +68,7 @@ export async function POST(request: NextRequest) {
         break;
 
       case 'weeklyReport':
-        success = await emailService.sendWeeklyReport(to, variables);
+        success = await emailService.sendWeeklyReport(to, variables as any);
         break;
 
       default:

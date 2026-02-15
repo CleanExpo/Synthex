@@ -13,11 +13,18 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
 import { logger } from '@/lib/logger';
 import { ResponseOptimizer, cacheHeaders } from '@/lib/api/response-optimizer';
-import { generateTenantSlug, createDefaultSettings, PLAN_LIMITS } from '@/lib/multi-tenant';
+import { generateTenantSlug, createDefaultSettings, PLAN_LIMITS, TenantPlan } from '@/lib/multi-tenant';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
+
+const createOrganizationSchema = z.object({
+  name: z.string().min(1),
+  slug: z.string().optional(),
+  plan: z.string().optional().default('free'),
+});
 
 // ============================================================================
 // POST - Create Organization
@@ -39,16 +46,18 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const body = await request.json();
-    const { name, slug: providedSlug, plan = 'free' } = body;
+    const rawBody = await request.json();
+    const validation = createOrganizationSchema.safeParse(rawBody);
+    if (!validation.success) {
+      return ResponseOptimizer.createErrorResponse(
+        'Invalid request data',
+        400
+      );
+    }
+    const { name, slug: providedSlug, plan } = validation.data;
 
     // Use authenticated user ID from security context instead of trusting body
     const userId = security.context.userId;
-
-    // Validate required fields
-    if (!name) {
-      return ResponseOptimizer.createErrorResponse('Organization name is required', 400);
-    }
 
     if (!userId) {
       return ResponseOptimizer.createErrorResponse('User ID is required', 400);
@@ -81,7 +90,7 @@ export async function POST(request: NextRequest) {
         plan,
         status: 'active',
         domain: `${slug}.synthex.app`,
-        settings: JSON.parse(JSON.stringify(createDefaultSettings(plan))),
+        settings: JSON.parse(JSON.stringify(createDefaultSettings(plan as TenantPlan))),
         maxUsers: (planLimits?.maxUsers ?? 5) === -1 ? 999999 : (planLimits?.maxUsers ?? 5),
         maxPosts: (planLimits?.maxPosts ?? 500) === -1 ? 999999 : (planLimits?.maxPosts ?? 500),
         maxCampaigns: (planLimits?.maxCampaigns ?? 10) === -1 ? 999999 : (planLimits?.maxCampaigns ?? 10),
@@ -287,3 +296,5 @@ async function createDefaultRoles(organizationId: string): Promise<void> {
     skipDuplicates: true,
   });
 }
+
+export const runtime = 'nodejs';

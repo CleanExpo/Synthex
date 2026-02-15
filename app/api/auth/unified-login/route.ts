@@ -4,20 +4,33 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { signInFlow } from '@/lib/auth/signInFlow';
+
+const unifiedLoginSchema = z.object({
+  method: z.enum(['email', 'oauth', 'demo']),
+  email: z.string().email().optional(),
+  password: z.string().optional(),
+  provider: z.enum(['google', 'github']).optional(),
+  oauthUser: z.object({
+    id: z.string(),
+    email: z.string().email(),
+    name: z.string().nullish(),
+    image: z.string().nullish(),
+  }).optional(),
+});
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { method, email, password, provider, oauthUser } = body;
-
-    // Validate request
-    if (!method) {
+    const validation = unifiedLoginSchema.safeParse(body);
+    if (!validation.success) {
       return NextResponse.json(
-        { error: 'Authentication method required' },
+        { error: 'Invalid request data', details: validation.error.issues },
         { status: 400 }
       );
     }
+    const { method, email, password, provider, oauthUser } = validation.data;
 
     // Process through centralized auth flow
     const result = await signInFlow.authenticate(method, {

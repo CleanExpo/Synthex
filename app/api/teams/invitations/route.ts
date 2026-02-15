@@ -13,14 +13,15 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import jwt from 'jsonwebtoken';
 import { z } from 'zod';
 import prisma from '@/lib/prisma';
+import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { ResponseOptimizer } from '@/lib/api/response-optimizer';
 import { logger } from '@/lib/logger';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
 import { auditLogger } from '@/lib/security/audit-logger';
 import { sendTeamInviteEmail } from '@/lib/email';
+
 
 // ============================================================================
 // TYPE DEFINITIONS
@@ -73,33 +74,6 @@ interface UserRoleRecord {
 /** Get prisma with extended models */
 const extendedPrisma = prisma as unknown as typeof prisma & ExtendedPrismaClient;
 
-// Lazy getter to avoid module load crash
-function getJWTSecret(): string {
-  const secret = process.env.JWT_SECRET;
-  if (!secret) throw new Error('JWT_SECRET required');
-  return secret;
-}
-
-// Helper to extract user ID from request
-async function getUserIdFromRequest(request: NextRequest): Promise<string | null> {
-  const token =
-    request.cookies.get('auth-token')?.value ||
-    request.headers.get('Authorization')?.replace('Bearer ', '');
-
-  if (!token) return null;
-
-  try {
-    const decoded = jwt.verify(token, getJWTSecret()) as {
-      sub?: string;
-      userId?: string;
-      id?: string;
-    };
-    return decoded.sub || decoded.userId || decoded.id || null;
-  } catch {
-    return null;
-  }
-}
-
 // Validation schema for creating invitations
 const CreateInvitationSchema = z.object({
   email: z.string().email('Valid email is required'),
@@ -128,7 +102,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get requesting user ID
-    const userId = await getUserIdFromRequest(request);
+    const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
       return NextResponse.json(
         { error: 'Authentication required' },
@@ -260,7 +234,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Get requesting user ID
-    const userId = await getUserIdFromRequest(request);
+    const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
       return NextResponse.json(
         { error: 'Authentication required' },

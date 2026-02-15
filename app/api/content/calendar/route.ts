@@ -16,6 +16,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { ResponseOptimizer } from '@/lib/api/response-optimizer';
 import { logger } from '@/lib/logger';
 import { CalendarService, type ScheduleOptions } from '@/src/services/content/calendar-service';
@@ -140,6 +141,21 @@ export async function GET(request: NextRequest) {
 // POST - Schedule Post
 // ============================================================================
 
+const schedulePostSchema = z.object({
+  organizationId: z.string().min(1),
+  title: z.string().optional(),
+  content: z.string().min(1),
+  platforms: z.array(z.string()).min(1),
+  scheduledFor: z.string().min(1),
+  mediaUrls: z.array(z.string()).optional(),
+  tags: z.array(z.string()).optional(),
+  campaignId: z.string().optional(),
+  recurrence: z.any().optional(),
+  autoOptimize: z.boolean().optional().default(false),
+  checkConflicts: z.boolean().optional().default(true),
+  createRecurrences: z.boolean().optional().default(true),
+});
+
 export async function POST(request: NextRequest) {
   try {
     // Authenticate user
@@ -149,6 +165,13 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
+    const validation = schedulePostSchema.safeParse(body);
+    if (!validation.success) {
+      return ResponseOptimizer.createErrorResponse(
+        `Invalid request data: ${validation.error.issues.map(i => i.message).join(', ')}`,
+        400
+      );
+    }
     const {
       organizationId,
       title,
@@ -159,32 +182,15 @@ export async function POST(request: NextRequest) {
       tags,
       campaignId,
       recurrence,
-      autoOptimize = false,
-      checkConflicts = true,
-      createRecurrences = true,
-    } = body;
-
-    // Validate required fields
-    if (!organizationId) {
-      return ResponseOptimizer.createErrorResponse('Organization ID is required', 400);
-    }
+      autoOptimize,
+      checkConflicts,
+      createRecurrences,
+    } = validation.data;
 
     // Verify user is a member of the organization
     const isMember = await isOrgMember(user.id, organizationId);
     if (!isMember) {
       return ResponseOptimizer.createErrorResponse('Organization not found or access denied', 404);
-    }
-
-    if (!content) {
-      return ResponseOptimizer.createErrorResponse('Content is required', 400);
-    }
-
-    if (!platforms || platforms.length === 0) {
-      return ResponseOptimizer.createErrorResponse('At least one platform is required', 400);
-    }
-
-    if (!scheduledFor) {
-      return ResponseOptimizer.createErrorResponse('Scheduled time is required', 400);
     }
 
     const calendar = new CalendarService(organizationId);
@@ -225,21 +231,25 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     logger.error('Failed to schedule post', { error });
 
-    // Return specific error message for conflicts
-    if (error instanceof Error && error instanceof Error ? error.message : String(error).includes('conflict')) {
-      return ResponseOptimizer.createErrorResponse(error instanceof Error ? error.message : String(error), 409);
+    // Return generic error message for conflicts
+    if (error instanceof Error && error.message.includes('conflict')) {
+      return ResponseOptimizer.createErrorResponse('Scheduling conflict detected', 409);
     }
 
-    return ResponseOptimizer.createErrorResponse(
-      error instanceof Error ? error instanceof Error ? error.message : String(error) : 'Failed to schedule post',
-      500
-    );
+    return ResponseOptimizer.createErrorResponse('Failed to schedule post', 500);
   }
 }
 
 // ============================================================================
 // PATCH - Reschedule Post
 // ============================================================================
+
+const reschedulePostSchema = z.object({
+  organizationId: z.string().min(1),
+  postId: z.string().min(1),
+  newTime: z.string().min(1),
+  updateRecurrences: z.boolean().optional().default(false),
+});
 
 export async function PATCH(request: NextRequest) {
   try {
@@ -250,25 +260,19 @@ export async function PATCH(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { organizationId, postId, newTime, updateRecurrences = false } = body;
-
-    // Validate required fields
-    if (!organizationId) {
-      return ResponseOptimizer.createErrorResponse('Organization ID is required', 400);
+    const patchValidation = reschedulePostSchema.safeParse(body);
+    if (!patchValidation.success) {
+      return ResponseOptimizer.createErrorResponse(
+        `Invalid request data: ${patchValidation.error.issues.map(i => i.message).join(', ')}`,
+        400
+      );
     }
+    const { organizationId, postId, newTime, updateRecurrences } = patchValidation.data;
 
     // Verify user is a member of the organization
     const isMember = await isOrgMember(user.id, organizationId);
     if (!isMember) {
       return ResponseOptimizer.createErrorResponse('Organization not found or access denied', 404);
-    }
-
-    if (!postId) {
-      return ResponseOptimizer.createErrorResponse('Post ID is required', 400);
-    }
-
-    if (!newTime) {
-      return ResponseOptimizer.createErrorResponse('New time is required', 400);
     }
 
     const calendar = new CalendarService(organizationId);
@@ -296,13 +300,12 @@ export async function PATCH(request: NextRequest) {
   } catch (error) {
     logger.error('Failed to reschedule post', { error });
 
-    if (error instanceof Error && error instanceof Error ? error.message : String(error).includes('conflict')) {
-      return ResponseOptimizer.createErrorResponse(error instanceof Error ? error.message : String(error), 409);
+    if (error instanceof Error && error.message.includes('conflict')) {
+      return ResponseOptimizer.createErrorResponse('Scheduling conflict detected', 409);
     }
 
-    return ResponseOptimizer.createErrorResponse(
-      error instanceof Error ? error instanceof Error ? error.message : String(error) : 'Failed to reschedule post',
-      500
-    );
+    return ResponseOptimizer.createErrorResponse('Failed to reschedule post', 500);
   }
 }
+
+export const runtime = 'nodejs';

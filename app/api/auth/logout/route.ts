@@ -4,65 +4,41 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import jwt from 'jsonwebtoken';
+import { getUserIdFromRequestOrCookies, verifyTokenSafe, unauthorizedResponse } from '@/lib/auth/jwt-utils';
 import { prisma } from '@/lib/prisma';
-
-// JWT Secret
-function getJWTSecret(): string { const s = process.env.JWT_SECRET; if (!s) throw new Error('JWT_SECRET required'); return s; }
-
-// Helper function to verify JWT token
-async function verifyToken(token: string) {
-  try {
-    const decoded = jwt.verify(token, getJWTSecret()) as { userId: string; email: string };
-    return decoded;
-  } catch (error) {
-    return null;
-  }
-}
 
 export async function POST(request: NextRequest) {
   try {
-    // Get token from Authorization header
+    // Authenticate the request
+    const userId = await getUserIdFromRequestOrCookies(request);
+    if (!userId) return unauthorizedResponse();
+
+    // Extract raw token for session deletion
     const authHeader = request.headers.get('authorization');
-    
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json(
-        { error: 'No authorization token provided' },
-        { status: 401 }
-      );
-    }
-
-    const token = authHeader.substring(7); // Remove 'Bearer ' prefix
-
-    // Verify token
-    const decoded = await verifyToken(token);
-    
-    if (!decoded) {
-      return NextResponse.json(
-        { error: 'Invalid or expired token' },
-        { status: 401 }
-      );
-    }
+    const token = authHeader?.startsWith('Bearer ')
+      ? authHeader.substring(7)
+      : request.cookies.get('auth-token')?.value;
+    const tokenPayload = token ? verifyTokenSafe(token) : null;
 
     // Delete session from database
-    const deletedSession = await prisma.session.deleteMany({
-      where: { 
+    const deletedSession = token ? await prisma.session.deleteMany({
+      where: {
         token,
-        userId: decoded.userId 
+        userId
       }
-    });
+    }) : { count: 0 };
 
     // Log audit event
     await prisma.auditLog.create({
       data: {
-        userId: decoded.userId,
+        userId,
         action: 'user_logout',
         resource: 'authentication',
-        resourceId: decoded.userId,
+        resourceId: userId,
         category: 'auth',
         outcome: 'success',
         details: {
-          email: decoded.email
+          email: tokenPayload?.email || ''
         }
       }
     });
@@ -91,45 +67,33 @@ export async function POST(request: NextRequest) {
  */
 export async function DELETE(request: NextRequest) {
   try {
-    // Get token from Authorization header
+    // Authenticate the request
+    const userId = await getUserIdFromRequestOrCookies(request);
+    if (!userId) return unauthorizedResponse();
+
     const authHeader = request.headers.get('authorization');
-    
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json(
-        { error: 'No authorization token provided' },
-        { status: 401 }
-      );
-    }
-
-    const token = authHeader.substring(7);
-
-    // Verify token
-    const decoded = await verifyToken(token);
-    
-    if (!decoded) {
-      return NextResponse.json(
-        { error: 'Invalid or expired token' },
-        { status: 401 }
-      );
-    }
+    const token = authHeader?.startsWith('Bearer ')
+      ? authHeader.substring(7)
+      : request.cookies.get('auth-token')?.value;
+    const tokenPayload = token ? verifyTokenSafe(token) : null;
 
     // Delete all sessions for this user
     const deletedSessions = await prisma.session.deleteMany({
-      where: { userId: decoded.userId }
+      where: { userId }
     });
 
     // Log audit event
     await prisma.auditLog.create({
       data: {
-        userId: decoded.userId,
+        userId,
         action: 'user_logout_all_devices',
         resource: 'authentication',
-        resourceId: decoded.userId,
+        resourceId: userId,
         category: 'auth',
         severity: 'high',
         outcome: 'success',
         details: {
-          email: decoded.email,
+          email: tokenPayload?.email || '',
           sessionsDeleted: deletedSessions.count
         }
       }
@@ -152,3 +116,5 @@ export async function DELETE(request: NextRequest) {
     await prisma.$disconnect();
   }
 }
+
+export const runtime = 'nodejs';

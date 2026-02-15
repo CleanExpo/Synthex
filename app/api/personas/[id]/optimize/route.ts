@@ -11,6 +11,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
 
@@ -139,6 +140,13 @@ export async function GET(
 // POST /api/personas/[id]/optimize (Apply optimizations)
 // ============================================================================
 
+const applyOptimizationsSchema = z.object({
+  optimizations: z.array(z.object({
+    category: z.string().min(1),
+    value: z.string().min(1),
+  })).min(1, 'No optimizations provided'),
+});
+
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -172,14 +180,14 @@ export async function POST(
 
     // Parse request body
     const body = await request.json();
-    const { optimizations } = body;
-
-    if (!Array.isArray(optimizations) || optimizations.length === 0) {
+    const validation = applyOptimizationsSchema.safeParse(body);
+    if (!validation.success) {
       return NextResponse.json(
-        { error: 'No optimizations provided' },
+        { error: 'Invalid request data', details: validation.error.issues },
         { status: 400 }
       );
     }
+    const { optimizations } = validation.data;
 
     // Apply optimizations
     const updates: Record<string, string> = {};

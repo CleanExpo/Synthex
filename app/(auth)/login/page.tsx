@@ -59,6 +59,7 @@ export default function LoginPage() {
       const response = await fetch('/api/auth/unified-login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({
           method: 'email',
           email: formData.email,
@@ -96,7 +97,9 @@ export default function LoginPage() {
     setOauthLoading(true);
     try {
       // Use our new OAuth route with PKCE
-      const response = await fetch('/api/auth/oauth/google');
+      const response = await fetch('/api/auth/oauth/google', {
+        credentials: 'include',
+      });
       const data = await response.json();
 
       if (!response.ok) {

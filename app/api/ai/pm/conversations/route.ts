@@ -12,6 +12,7 @@
  */
 
 import { NextRequest } from 'next/server';
+import { z } from 'zod';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
 import { subscriptionService } from '@/lib/stripe/subscription-service';
 import prisma from '@/lib/prisma';
@@ -102,6 +103,10 @@ export async function GET(request: NextRequest) {
   }
 }
 
+const createConversationSchema = z.object({
+  title: z.string().max(200).optional(),
+});
+
 /**
  * POST /api/ai/pm/conversations
  * Create a new conversation
@@ -143,7 +148,10 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json().catch(() => ({}));
-    const title = typeof body.title === 'string' ? body.title.substring(0, 200) : 'New Conversation';
+    const validation = createConversationSchema.safeParse(body);
+    const title = validation.success && validation.data.title
+      ? validation.data.title
+      : 'New Conversation';
 
     const conversation = await prisma.aIConversation.create({
       data: {
@@ -171,3 +179,5 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
+export const runtime = 'nodejs';

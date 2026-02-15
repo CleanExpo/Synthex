@@ -46,7 +46,7 @@ export function RealStats() {
 
   async function fetchStats() {
     try {
-      const response = await fetch('/api/stats');
+      const response = await fetch('/api/stats', { credentials: 'include' });
       const data = await response.json();
       setStats(data);
     } catch (error) {
@@ -135,7 +135,7 @@ export function UserCount() {
   const [count, setCount] = useState('Loading...');
 
   useEffect(() => {
-    fetch('/api/stats')
+    fetch('/api/stats', { credentials: 'include' })
       .then(res => res.json())
       .then(data => setCount(data.users.formatted + '+ ' + data.users.label))
       .catch(() => setCount('Join Us'));
@@ -148,7 +148,7 @@ export function EngagementBoost() {
   const [boost, setBoost] = useState('Loading...');
 
   useEffect(() => {
-    fetch('/api/stats')
+    fetch('/api/stats', { credentials: 'include' })
       .then(res => res.json())
       .then(data => setBoost(data.engagement.formatted + ' ' + data.engagement.label))
       .catch(() => setBoost('AI Powered'));
@@ -161,7 +161,7 @@ export function CampaignCount() {
   const [count, setCount] = useState('0');
 
   useEffect(() => {
-    fetch('/api/stats')
+    fetch('/api/stats', { credentials: 'include' })
       .then(res => res.json())
       .then(data => setCount(data.campaigns.formatted))
       .catch(() => setCount('0'));
@@ -174,7 +174,7 @@ export function PostCount() {
   const [count, setCount] = useState('0');
 
   useEffect(() => {
-    fetch('/api/stats')
+    fetch('/api/stats', { credentials: 'include' })
       .then(res => res.json())
       .then(data => setCount(data.posts.formatted))
       .catch(() => setCount('0'));

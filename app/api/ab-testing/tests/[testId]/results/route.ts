@@ -362,3 +362,5 @@ function generateRecommendations(
 
   return recommendations;
 }
+
+export const runtime = 'nodejs';

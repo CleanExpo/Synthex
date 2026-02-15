@@ -8,37 +8,32 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import jwt from 'jsonwebtoken';
+import { z } from 'zod';
+import { generateToken } from '@/lib/auth/jwt-utils';
 import { prisma } from '@/lib/prisma';
 import { supabase } from '@/lib/supabase-client';
+
+const loginSchema = z.object({
+  email: z.string().email(),
+  password: z.string().min(1),
+});
 
 // Force dynamic rendering for this API route
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
-// JWT Secret - CRITICAL: Never use fallback in production
-function getJWTSecret(): string {
-  const secret = process.env.JWT_SECRET;
-  if (!secret) {
-    throw new Error('JWT_SECRET environment variable is required');
-  }
-  return secret;
-}
-
-
 export async function POST(request: NextRequest) {
   try {
-    // Parse request body
+    // Parse and validate request body
     const body = await request.json();
-    const { email, password } = body;
-
-    // Validate input
-    if (!email || !password) {
+    const validation = loginSchema.safeParse(body);
+    if (!validation.success) {
       return NextResponse.json(
-        { error: 'Email and password are required' },
+        { error: 'Invalid request data', details: validation.error.issues },
         { status: 400 }
       );
     }
+    const { email, password } = validation.data;
 
     // Find user in Prisma to get user ID and check OAuth
     const user = await prisma.user.findUnique({
@@ -96,16 +91,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Create JWT token
-    const token = jwt.sign(
-      { 
-        userId: user.id, 
-        email: user.email 
-      },
-      getJWTSecret(),
-      { 
-        expiresIn: '7d' 
-      }
-    );
+    const token = generateToken({ userId: user.id, email: user.email });
 
     // Create or update session
     const expiresAt = new Date();

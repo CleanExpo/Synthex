@@ -16,7 +16,11 @@
       "Bash(python -c:*)",
       "Bash(done)",
       "Bash(DIRECT_URL=\"postgresql://postgres:postgres@127.0.0.1:54322/postgres\" DATABASE_URL=\"postgresql://postgres:postgres@127.0.0.1:54322/postgres\" npx prisma db push:*)",
-      "Bash(PGPASSWORD=postgres psql:*)"
+      "Bash(PGPASSWORD=postgres psql:*)",
+      "Bash(test:*)",
+      "Bash(ls:*)",
+      "Bash(powershell -Command:*)",
+      "Bash(grep:*)"
     ],
     "deny": [],
     "ask": []

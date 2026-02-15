@@ -232,3 +232,5 @@ async function storeConnection(result: {
     logger.error('Failed to store OAuth connection', { platform, error });
   }
 }
+
+export const runtime = 'nodejs';

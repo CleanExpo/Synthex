@@ -17,12 +17,15 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { randomUUID } from 'crypto';
-import jwt from 'jsonwebtoken';
+import { generateToken } from '@/lib/auth/jwt-utils';
 import { retrievePKCEState } from '@/lib/auth/pkce';
 import { createClient } from '@supabase/supabase-js';
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type SupabaseAdmin = ReturnType<typeof createClient<any>>;
+
 // Create Supabase admin client (bypasses RLS, uses REST API instead of connection pooler)
-function getSupabaseAdmin() {
+function getSupabaseAdmin(): SupabaseAdmin {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!url || !serviceKey) {
@@ -32,9 +35,6 @@ function getSupabaseAdmin() {
     auth: { autoRefreshToken: false, persistSession: false },
   });
 }
-
-// JWT configuration - must match signInFlow
-const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-change-in-production';
 
 // Google OAuth configuration
 const GOOGLE_CONFIG = {
@@ -286,7 +286,7 @@ async function getGoogleUserInfo(accessToken: string): Promise<GoogleUserInfo | 
 }
 
 async function createNewGoogleUser(
-  supabaseAdmin: ReturnType<typeof createClient>,
+  supabaseAdmin: SupabaseAdmin,
   googleUser: GoogleUserInfo,
 ): Promise<{ id: string }> {
   // Create user (password is null for OAuth-only users)
@@ -315,7 +315,7 @@ async function createNewGoogleUser(
 }
 
 async function createSessionForUser(
-  supabaseAdmin: ReturnType<typeof createClient>,
+  supabaseAdmin: SupabaseAdmin,
   userId: string,
   googleUser: GoogleUserInfo,
   tokens: {
@@ -341,15 +341,7 @@ async function createSessionForUser(
 
   // Generate JWT token directly (bypass signInFlow to avoid Account table)
   const expiresAt = Date.now() + (7 * 24 * 60 * 60 * 1000); // 7 days
-  const accessToken = jwt.sign(
-    {
-      sub: userId,
-      email: googleUser.email,
-      iat: Math.floor(Date.now() / 1000),
-      exp: Math.floor(expiresAt / 1000),
-    },
-    JWT_SECRET
-  );
+  const accessToken = generateToken({ userId, email: googleUser.email });
 
   return {
     accessToken,

@@ -47,6 +47,7 @@ export function CheckoutButton({
           'Content-Type': 'application/json',
           ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
         },
+        credentials: 'include',
         body: JSON.stringify({ planName, priceId }),
       });
 

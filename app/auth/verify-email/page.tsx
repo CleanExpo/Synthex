@@ -33,6 +33,7 @@ export default function VerifyEmailPage() {
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include',
         body: JSON.stringify({ code: codeToVerify }),
       });
 

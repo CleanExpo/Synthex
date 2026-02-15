@@ -6,7 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getRateLimitStatus, resetRateLimits } from '@/src/middleware/enhanced-rate-limit';
 import { createClient } from '@supabase/supabase-js';
-import jwt from 'jsonwebtoken';
+import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 
 // Initialize Supabase
 const supabase = createClient(
@@ -14,28 +14,10 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-/**
- * Get user ID from request
- */
-async function getUserId(req: NextRequest): Promise<string | null> {
-  const authHeader = req.headers.get('authorization');
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return null;
-  }
-  
-  try {
-    const token = authHeader.substring(7);
-    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as any;
-    return decoded.sub || null;
-  } catch {
-    return null;
-  }
-}
-
 // GET: Get rate limit status
 export async function GET(req: NextRequest) {
   try {
-    const userId = await getUserId(req);
+    const userId = await getUserIdFromRequestOrCookies(req);
     
     if (!userId) {
       return NextResponse.json(

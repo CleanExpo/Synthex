@@ -174,3 +174,5 @@ export async function getPrincipleById(principleId: string) {
   const principles = await psychologyAnalyzer.getPrinciples();
   return principles.find(p => p.id === principleId) || null;
 }
+
+export const runtime = 'nodejs';

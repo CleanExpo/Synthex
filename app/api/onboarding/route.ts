@@ -5,8 +5,20 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { createServerClient, getAuthUser } from '@/lib/supabase-server';
 import { webhookHandler } from '@/lib/webhooks';
+
+const onboardingSchema = z.object({
+  organizationName: z.string().min(1),
+  industry: z.string().min(1),
+  teamSize: z.string().min(1),
+  connectedPlatforms: z.array(z.string()).optional().default([]),
+  personaName: z.string().optional().default(''),
+  personaTone: z.string().optional().default(''),
+  personaTopics: z.array(z.string()).optional().default([]),
+  skipPersona: z.boolean().optional().default(false),
+});
 
 // ============================================================================
 // TYPES
@@ -38,15 +50,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const data: OnboardingData = await request.json();
-
-    // Validate required fields
-    if (!data.organizationName || !data.industry || !data.teamSize) {
+    const rawBody = await request.json();
+    const validation = onboardingSchema.safeParse(rawBody);
+    if (!validation.success) {
       return NextResponse.json(
-        { error: 'Missing required organization fields' },
+        { error: 'Invalid request data', details: validation.error.issues },
         { status: 400 }
       );
     }
+    const data: OnboardingData = validation.data;
 
     // Create or update organization
     const { data: organization, error: orgError } = await supabase

@@ -4,28 +4,28 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { emailService } from '@/lib/email/email-service';
+
+const resetSchema = z.object({
+  token: z.string().min(1).optional(),
+  code: z.string().min(1).optional(),
+  email: z.string().email().optional(),
+  newPassword: z.string().min(8),
+});
 
 // Reset password with token or code
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { token, code, email, newPassword } = body;
-
-    if (!newPassword) {
+    const validation = resetSchema.safeParse(body);
+    if (!validation.success) {
       return NextResponse.json(
-        { error: 'New password is required' },
+        { error: 'Invalid request data', details: validation.error.issues },
         { status: 400 }
       );
     }
-
-    // Validate password strength
-    if (newPassword.length < 8) {
-      return NextResponse.json(
-        { error: 'Password must be at least 8 characters long' },
-        { status: 400 }
-      );
-    }
+    const { token, code, email, newPassword } = validation.data;
 
     let result;
 

@@ -11,7 +11,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { stripe } from '@/lib/stripe/config';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
 import { createClient } from '@supabase/supabase-js';
-import jwt from 'jsonwebtoken';
+import { getUserIdFromRequestOrCookies, verifyTokenSafe, unauthorizedResponse } from '@/lib/auth/jwt-utils';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -46,26 +46,13 @@ export async function POST(request: NextRequest) {
     }
 
     // Get user from token
-    const token = request.headers.get('authorization')?.replace('Bearer ', '');
-    if (!token || !process.env.JWT_SECRET) {
-      return NextResponse.json(
-        { error: 'Authentication required' },
-        { status: 401 }
-      );
-    }
+    const userId = await getUserIdFromRequestOrCookies(request);
+    if (!userId) return unauthorizedResponse();
 
-    let userId: string;
-    let userEmail: string;
-    try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET) as any;
-      userId = decoded.userId || decoded.id;
-      userEmail = decoded.email;
-    } catch (error) {
-      return NextResponse.json(
-        { error: 'Invalid authentication token' },
-        { status: 401 }
-      );
-    }
+    // Extract email from token for Stripe customer creation
+    const authToken = request.headers.get('authorization')?.replace('Bearer ', '');
+    const tokenPayload = authToken ? verifyTokenSafe(authToken) : null;
+    const userEmail = tokenPayload?.email || '';
 
     // Get user's Stripe customer ID from database
     const { data: subscription } = await supabase

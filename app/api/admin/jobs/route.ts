@@ -11,6 +11,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { sanitizeErrorForResponse } from '@/lib/utils/error-utils';
 import {
   getQueueStats,
@@ -166,6 +167,12 @@ export async function GET(request: NextRequest) {
 // POST - Job Actions
 // =============================================================================
 
+const jobActionSchema = z.object({
+  action: z.string().min(1),
+  jobId: z.string().optional(),
+  jobIds: z.array(z.string()).optional(),
+});
+
 export async function POST(request: NextRequest) {
   try {
     const auth = await verifyAdmin(request);
@@ -177,7 +184,14 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { action, jobId, jobIds } = body;
+    const validation = jobActionSchema.safeParse(body);
+    if (!validation.success) {
+      return NextResponse.json(
+        { error: 'Invalid request data', details: validation.error.issues },
+        { status: 400 }
+      );
+    }
+    const { action, jobId, jobIds } = validation.data;
 
     switch (action) {
       case 'retry': {
@@ -244,7 +258,7 @@ export async function POST(request: NextRequest) {
       }
 
       case 'cancel-bulk': {
-        if (!jobIds || !Array.isArray(jobIds)) {
+        if (!jobIds || jobIds.length === 0) {
           return NextResponse.json(
             { error: 'Bad Request', message: 'Job IDs array required' },
             { status: 400 }

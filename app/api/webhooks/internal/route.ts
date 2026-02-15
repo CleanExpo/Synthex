@@ -10,9 +10,19 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { webhookHandler, emit } from '@/lib/webhooks';
 import { logger } from '@/lib/logger';
 import type { WebhookEventType } from '@/lib/webhooks/types';
+
+const emitEventSchema = z.object({
+  type: z.string().min(1),
+  data: z.record(z.unknown()),
+  userId: z.string().optional(),
+  organizationId: z.string().optional(),
+  priority: z.number().optional(),
+  delay: z.number().optional(),
+});
 
 // ============================================================================
 // ROUTE HANDLERS
@@ -78,15 +88,15 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const body = await request.json();
-
-    // Validate required fields
-    if (!body.type || !body.data) {
+    const rawBody = await request.json();
+    const validation = emitEventSchema.safeParse(rawBody);
+    if (!validation.success) {
       return NextResponse.json(
-        { error: 'Missing type or data' },
+        { error: 'Invalid request data', details: validation.error.issues },
         { status: 400 }
       );
     }
+    const body = validation.data;
 
     // Emit the event
     const eventId = await emit(

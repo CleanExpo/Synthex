@@ -235,15 +235,15 @@ export default function AnalyticsDashboard() {
               </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{overview.totalPosts}</div>
+              <div className="text-2xl font-bold">{overview?.totalPosts ?? 0}</div>
               <div className="flex items-center mt-2">
-                {trends.trending === 'up' ? (
+                {trends?.trending === 'up' ? (
                   <TrendingUp className="h-4 w-4 text-green-500 mr-1" />
                 ) : (
                   <TrendingDown className="h-4 w-4 text-red-500 mr-1" />
                 )}
-                <span className={`text-sm ${trends.trending === 'up' ? 'text-green-500' : 'text-red-500'}`}>
-                  {trends.growthRate}%
+                <span className={`text-sm ${trends?.trending === 'up' ? 'text-green-500' : 'text-red-500'}`}>
+                  {trends?.growthRate ?? 0}%
                 </span>
                 <span className="text-sm text-gray-500 ml-1">vs last week</span>
               </div>
@@ -258,7 +258,7 @@ export default function AnalyticsDashboard() {
               </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{overview.totalEngagement.toLocaleString()}</div>
+              <div className="text-2xl font-bold">{overview?.totalEngagement?.toLocaleString() ?? 0}</div>
               <p className="text-sm text-gray-500 mt-2">
                 Likes, shares & comments
               </p>
@@ -273,8 +273,8 @@ export default function AnalyticsDashboard() {
               </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{overview.averageEngagementRate}%</div>
-              <Progress value={overview.averageEngagementRate * 10} className="mt-2" />
+              <div className="text-2xl font-bold">{overview?.averageEngagementRate ?? 0}%</div>
+              <Progress value={(overview?.averageEngagementRate ?? 0) * 10} className="mt-2" />
             </CardContent>
           </Card>
 
@@ -286,7 +286,7 @@ export default function AnalyticsDashboard() {
               </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{overview.contentGenerated}</div>
+              <div className="text-2xl font-bold">{overview?.contentGenerated ?? 0}</div>
               <p className="text-sm text-gray-500 mt-2">
                 Generated this month
               </p>
@@ -419,11 +419,11 @@ export default function AnalyticsDashboard() {
                     </CardHeader>
                     <CardContent>
                       <Progress 
-                        value={(platform.posts / overview.totalPosts) * 100} 
+                        value={overview?.totalPosts ? (platform.posts / overview.totalPosts) * 100 : 0}
                         className="h-2"
                       />
                       <p className="text-xs text-gray-500 mt-2">
-                        {((platform.posts / overview.totalPosts) * 100).toFixed(1)}% of total
+                        {overview?.totalPosts ? ((platform.posts / overview.totalPosts) * 100).toFixed(1) : 0}% of total
                       </p>
                     </CardContent>
                   </Card>
@@ -482,7 +482,7 @@ export default function AnalyticsDashboard() {
                   <div className="space-y-3">
                     <div className="p-3 bg-green-900/20 border border-green-500/20 rounded">
                       <p className="text-sm">
-                        <strong>Growth Trend:</strong> Your engagement has increased by {trends.growthRate}% this week
+                        <strong>Growth Trend:</strong> Your engagement has increased by {trends?.growthRate ?? 0}% this week
                       </p>
                     </div>
                     <div className="p-3 bg-blue-900/20 border border-blue-500/20 rounded">

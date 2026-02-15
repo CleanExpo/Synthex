@@ -14,15 +14,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { stripe } from '@/lib/stripe/config';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
 import { prisma } from '@/lib/prisma';
-import jwt from 'jsonwebtoken';
-
-function getJWTSecret(): string {
-  const secret = process.env.JWT_SECRET;
-  if (!secret) {
-    throw new Error('JWT_SECRET is required');
-  }
-  return secret;
-}
+import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 
 export async function GET(request: NextRequest) {
   try {
@@ -51,22 +43,11 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Get user from token
-    const token = request.headers.get('authorization')?.replace('Bearer ', '');
-    if (!token) {
+    // Get user from centralised auth
+    const userId = await getUserIdFromRequestOrCookies(request);
+    if (!userId) {
       return NextResponse.json(
         { error: 'Authentication required' },
-        { status: 401 }
-      );
-    }
-
-    let userId: string;
-    try {
-      const decoded = jwt.verify(token, getJWTSecret()) as { userId?: string; id?: string };
-      userId = decoded.userId || decoded.id || '';
-    } catch {
-      return NextResponse.json(
-        { error: 'Invalid authentication token' },
         { status: 401 }
       );
     }
@@ -128,3 +109,5 @@ export async function GET(request: NextRequest) {
     );
   }
 }
+
+export const runtime = 'nodejs';

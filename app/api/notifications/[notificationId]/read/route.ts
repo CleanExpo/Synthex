@@ -122,3 +122,5 @@ export async function PATCH(
     await prisma.$disconnect();
   }
 }
+
+export const runtime = 'nodejs';

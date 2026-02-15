@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { createClient } from '@supabase/supabase-js';
 
 // Initialize Supabase client
@@ -24,10 +25,28 @@ interface ErrorLogEntry {
 const errorLog: ErrorLogEntry[] = [];
 const MAX_ERRORS = 1000;
 
+const errorLogSchema = z.object({
+  message: z.string().optional(),
+  stack: z.string().optional(),
+  url: z.string().optional(),
+  timestamp: z.string().optional(),
+  level: z.string().optional(),
+  context: z.record(z.unknown()).optional(),
+  id: z.string().optional(),
+}).passthrough();
+
 export async function POST(request: NextRequest) {
   try {
-    const error = await request.json();
-    
+    const rawBody = await request.json();
+    const validation = errorLogSchema.safeParse(rawBody);
+    if (!validation.success) {
+      return NextResponse.json(
+        { error: 'Invalid request data', details: validation.error.issues },
+        { status: 400 }
+      );
+    }
+    const error: Record<string, unknown> = { ...validation.data };
+
     // Add server timestamp
     error.serverTimestamp = new Date().toISOString();
     
@@ -47,7 +66,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Store error (in production, save to database)
-    errorLog.unshift(error);
+    errorLog.unshift(error as unknown as ErrorLogEntry);
     if (errorLog.length > MAX_ERRORS) {
       errorLog.length = MAX_ERRORS;
     }

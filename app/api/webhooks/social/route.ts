@@ -429,7 +429,7 @@ export async function POST(request: NextRequest) {
   } catch (error: unknown) {
     console.error('Social webhook error:', error);
     // Return 200 anyway to prevent retries on processing errors
-    return NextResponse.json({ success: false, error: error instanceof Error ? error.message : String(error) }, { status: 200 });
+    return NextResponse.json({ success: false, error: 'Webhook processing failed' }, { status: 200 });
   }
 }
 

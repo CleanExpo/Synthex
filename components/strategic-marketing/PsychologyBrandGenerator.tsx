@@ -99,6 +99,7 @@ export default function PsychologyBrandGenerator() {
       const response = await fetch('/api/brand/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({
           ...formData,
           psychologyPreference: formData.selectedPrinciples

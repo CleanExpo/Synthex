@@ -11,26 +11,19 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { stripe, PRODUCTS } from '@/lib/stripe/config';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
 import { prisma } from '@/lib/prisma';
 import { auditLogger } from '@/lib/security/audit-logger';
 import { logger } from '@/lib/logger';
-import jwt from 'jsonwebtoken';
+import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import Stripe from 'stripe';
 
-function getJWTSecret(): string {
-  const secret = process.env.JWT_SECRET;
-  if (!secret) {
-    throw new Error('JWT_SECRET is required');
-  }
-  return secret;
-}
-
-interface PlanChangeRequest {
-  newPlan: 'professional' | 'business' | 'custom';
-  prorationBehavior?: 'create_prorations' | 'none' | 'always_invoice';
-}
+const changePlanSchema = z.object({
+  newPlan: z.enum(['professional', 'business', 'custom']),
+  prorationBehavior: z.enum(['create_prorations', 'none', 'always_invoice']).optional(),
+});
 
 export async function POST(request: NextRequest) {
   try {
@@ -58,28 +51,24 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get user from token
-    const token = request.headers.get('authorization')?.replace('Bearer ', '');
-    if (!token) {
+    // Get user from centralised auth
+    const userId = await getUserIdFromRequestOrCookies(request);
+    if (!userId) {
       return NextResponse.json(
         { error: 'Authentication required' },
         { status: 401 }
       );
     }
 
-    let userId: string;
-    try {
-      const decoded = jwt.verify(token, getJWTSecret()) as { userId?: string; id?: string };
-      userId = decoded.userId || decoded.id || '';
-    } catch {
+    const rawBody = await request.json();
+    const validation = changePlanSchema.safeParse(rawBody);
+    if (!validation.success) {
       return NextResponse.json(
-        { error: 'Invalid authentication token' },
-        { status: 401 }
+        { error: 'Invalid request data', details: validation.error.issues },
+        { status: 400 }
       );
     }
-
-    const body: PlanChangeRequest = await request.json();
-    const { newPlan, prorationBehavior = 'create_prorations' } = body;
+    const { newPlan, prorationBehavior = 'create_prorations' } = validation.data;
 
     // Validate new plan
     const newProduct = PRODUCTS[newPlan as keyof typeof PRODUCTS];
@@ -256,22 +245,11 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Get user from token
-    const token = request.headers.get('authorization')?.replace('Bearer ', '');
-    if (!token) {
+    // Get user from centralised auth
+    const userId = await getUserIdFromRequestOrCookies(request);
+    if (!userId) {
       return NextResponse.json(
         { error: 'Authentication required' },
-        { status: 401 }
-      );
-    }
-
-    let userId: string;
-    try {
-      const decoded = jwt.verify(token, getJWTSecret()) as { userId?: string; id?: string };
-      userId = decoded.userId || decoded.id || '';
-    } catch {
-      return NextResponse.json(
-        { error: 'Invalid authentication token' },
         { status: 401 }
       );
     }
@@ -357,3 +335,5 @@ export async function GET(request: NextRequest) {
     );
   }
 }
+
+export const runtime = 'nodejs';

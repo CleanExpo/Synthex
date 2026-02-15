@@ -41,6 +41,7 @@ export default function LoginPage() {
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include',
         body: JSON.stringify({
           method: 'email',
           email,
@@ -78,7 +79,9 @@ export default function LoginPage() {
     try {
       // Use our custom PKCE OAuth flow (not Supabase's built-in OAuth)
       // This ensures consistent auth cookie handling across both login pages
-      const response = await fetch(`/api/auth/oauth/${provider}`);
+      const response = await fetch(`/api/auth/oauth/${provider}`, {
+        credentials: 'include',
+      });
       const data = await response.json();
 
       if (!response.ok) {

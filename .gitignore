@@ -34,11 +34,10 @@ ENV/
 .env.development
 .env.vercel
 .env*.local
-*.env
 .env.*
 !.env.example
 !.env.docker.example
-!.env.production.secure
+# .env.production.secure is a template — do not track
 !.env.template
 !.env.test
 .env.txt
@@ -69,6 +68,7 @@ logs/
 tmp/
 temp/
 *.tmp
+*tmp_errors*
 
 # External repositories
 synth-magic-studio/
@@ -79,16 +79,23 @@ external/
 .cache/
 .pytest_cache/
 
-# Test Results
-test-results/
-playwright-report/
-EOF < /dev/null
+# Node
 node_modules/
 
+# Next.js
+.next/
+.next-dev/
+
+# Vercel
 .vercel
 
-.vercel
-
+# Test Results & Coverage
+test-results/
+playwright-report/
+playwright/.cache/
+coverage/
+*.coverage
+.nyc_output/
 
 # Cleanup and backup
 backup-before-cleanup/
@@ -97,23 +104,9 @@ test-*.js
 *-demo.html
 *-test.html
 
-# Development files
-
-.vercel
-
-
-# Playwright Test Results
-test-results/
-playwright-report/
-playwright/.cache/
-.next/
-
-
 # Google Cloud Credentials (SECURITY: Never commit credentials!)
 credentials/
 *.json.bak
-*-credentials.json
-service-account*.json
 _framework
 
 # Build artifacts
@@ -126,7 +119,7 @@ tsconfig.tsbuildinfo
 nul
 output/
 
-# Deployment docs with potential secrets (SECURITY: Never commit credentials!)
+# Deployment docs with potential secrets
 deploy-to-vercel.md
 deploy-fix.ps1
 VERCEL_ENV_CHECKLIST.md
@@ -142,16 +135,13 @@ setup-*-env.sh
 *-credentials-*.md
 *_READY_STATUS.md
 
-# BFG/git-filter-repo secrets files (contain patterns for secret removal)
+# BFG/git-filter-repo secrets files
 bfg-secrets.txt
 *-secrets.txt
 tools/claude-seo/
 
 # External packages (separate repos)
 paperbanana/
-
-# Dev build cache
-.next-dev/
 
 # Local Supabase state
 supabase/.branches/

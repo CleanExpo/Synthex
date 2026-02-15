@@ -12,6 +12,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import performanceMonitor from '@/lib/monitoring/performance-monitor';
 
 export const dynamic = 'force-dynamic';
@@ -120,6 +121,11 @@ export async function GET(request: NextRequest) {
   }
 }
 
+const perfConfigSchema = z.object({
+  action: z.string().min(1),
+  thresholds: z.record(z.unknown()).optional(),
+});
+
 /**
  * POST /api/monitoring/performance
  * Update performance monitoring configuration
@@ -127,7 +133,18 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { action, thresholds } = body;
+    const validation = perfConfigSchema.safeParse(body);
+    if (!validation.success) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Invalid request data',
+          details: validation.error.issues,
+        },
+        { status: 400 }
+      );
+    }
+    const { action, thresholds } = validation.data;
 
     switch (action) {
       case 'update-thresholds': {

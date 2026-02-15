@@ -141,6 +141,7 @@ export default function TeamPage() {
       if (token) {
         const response = await fetch('/api/teams/members', {
           method: 'POST',
+          credentials: 'include',
           headers: {
             Authorization: `Bearer ${token}`,
             'Content-Type': 'application/json',

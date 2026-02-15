@@ -14,7 +14,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import jwt from 'jsonwebtoken';
+import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { z } from 'zod';
 import { getSupportedPlatforms, getOAuthProvider, isSupportedPlatform } from '@/lib/oauth';
 import type { OAuthPlatform } from '@/lib/oauth/types';
@@ -23,13 +23,6 @@ import { prisma } from '@/lib/prisma';
 import { decryptField, encryptField } from '@/lib/security/field-encryption';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
 import { auditLogger } from '@/lib/security/audit-logger';
-
-// Lazy getter to avoid module load crash
-function getJWTSecret(): string {
-  const secret = process.env.JWT_SECRET;
-  if (!secret) throw new Error('JWT_SECRET required');
-  return secret;
-}
 
 // Zod schema for POST body
 const RefreshRequestSchema = z.object({
@@ -75,25 +68,10 @@ export async function GET(request: NextRequest) {
     }
 
     // Get user ID from JWT token
-    const token =
-      request.cookies.get('auth-token')?.value ||
-      request.headers.get('Authorization')?.replace('Bearer ', '');
-
-    if (!token) {
+    const userId = await getUserIdFromRequestOrCookies(request);
+    if (!userId) {
       return NextResponse.json(
         { error: 'Authentication required' },
-        { status: 401 }
-      );
-    }
-
-    let userId: string;
-    try {
-      const decoded = jwt.verify(token, getJWTSecret()) as { sub?: string; userId?: string; id?: string };
-      userId = decoded.sub || decoded.userId || decoded.id || '';
-      if (!userId) throw new Error('No user ID in token');
-    } catch {
-      return NextResponse.json(
-        { error: 'Invalid authentication token' },
         { status: 401 }
       );
     }
@@ -217,25 +195,10 @@ export async function POST(request: NextRequest) {
     const validPlatform: OAuthPlatform = platform;
 
     // Get user ID from JWT token
-    const token =
-      request.cookies.get('auth-token')?.value ||
-      request.headers.get('Authorization')?.replace('Bearer ', '');
-
-    if (!token) {
+    const userId = await getUserIdFromRequestOrCookies(request);
+    if (!userId) {
       return NextResponse.json(
         { error: 'Authentication required' },
-        { status: 401 }
-      );
-    }
-
-    let userId: string;
-    try {
-      const decoded = jwt.verify(token, getJWTSecret()) as { sub?: string; userId?: string; id?: string };
-      userId = decoded.sub || decoded.userId || decoded.id || '';
-      if (!userId) throw new Error('No user ID in token');
-    } catch {
-      return NextResponse.json(
-        { error: 'Invalid authentication token' },
         { status: 401 }
       );
     }

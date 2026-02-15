@@ -219,3 +219,5 @@ export async function POST(request: NextRequest) {
     await prisma.$disconnect();
   }
 }
+
+export const runtime = 'nodejs';

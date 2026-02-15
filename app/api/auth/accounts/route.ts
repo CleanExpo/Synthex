@@ -12,17 +12,10 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import jwt from 'jsonwebtoken';
+import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { accountService } from '@/lib/auth/account-service';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
 import { auditLogger } from '@/lib/security/audit-logger';
-
-// Lazy getter to avoid module load crash
-function getJWTSecret(): string {
-  const secret = process.env.JWT_SECRET;
-  if (!secret) throw new Error('JWT_SECRET required');
-  return secret;
-}
 
 export async function GET(request: NextRequest) {
   try {
@@ -40,25 +33,10 @@ export async function GET(request: NextRequest) {
     }
 
     // Get and validate auth token
-    const token =
-      request.cookies.get('auth-token')?.value ||
-      request.headers.get('Authorization')?.replace('Bearer ', '');
-
-    if (!token) {
+    const userId = await getUserIdFromRequestOrCookies(request);
+    if (!userId) {
       return NextResponse.json(
         { error: 'Authentication required' },
-        { status: 401 }
-      );
-    }
-
-    // Verify token and get user ID
-    let userId: string;
-    try {
-      const decoded = jwt.verify(token, getJWTSecret()) as { sub: string };
-      userId = decoded.sub;
-    } catch {
-      return NextResponse.json(
-        { error: 'Invalid authentication token' },
         { status: 401 }
       );
     }

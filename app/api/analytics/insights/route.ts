@@ -9,6 +9,7 @@
 
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
+import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
 
@@ -145,7 +146,7 @@ export async function GET(request: NextRequest) {
       where: {
         ...postWhereClause,
         status: 'published',
-        analytics: { not: null }
+        analytics: { not: Prisma.DbNull }
       },
       orderBy: { publishedAt: 'desc' },
       take: 10,
@@ -155,11 +156,20 @@ export async function GET(request: NextRequest) {
         platform: true,
         publishedAt: true,
         analytics: true,
+        campaignId: true,
         campaign: {
           select: { id: true, name: true }
         }
       }
-    });
+    }) as Array<{
+      id: string;
+      content: string;
+      platform: string;
+      publishedAt: Date | null;
+      analytics: Prisma.JsonValue;
+      campaignId: string;
+      campaign: { id: string; name: string };
+    }>;
 
     // Calculate platform breakdown
     const platformCounts = await prisma.post.groupBy({
@@ -254,3 +264,5 @@ export async function GET(request: NextRequest) {
     await prisma.$disconnect();
   }
 }
+
+export const runtime = 'nodejs';

@@ -11,6 +11,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { db, supabase } from '@/lib/supabase-client';
 
 /** Pattern record from database */
@@ -178,6 +179,12 @@ export async function GET(request: NextRequest) {
   }
 }
 
+const analyzePatternSchema = z.object({
+  platform: z.string().min(1),
+  content: z.string().min(1),
+  metrics: z.record(z.unknown()).optional().default({}),
+});
+
 export async function POST(request: NextRequest) {
   try {
     // Auth check - require authorization header with Supabase token
@@ -200,14 +207,14 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { platform, content, metrics } = body;
-
-    if (!platform || !content) {
+    const validation = analyzePatternSchema.safeParse(body);
+    if (!validation.success) {
       return NextResponse.json(
-        { error: 'Platform and content are required' },
+        { error: 'Invalid request data', details: validation.error.issues },
         { status: 400 }
       );
     }
+    const { platform, content, metrics } = validation.data;
 
     // Analyze the content
     const analysis = analyzeContent(content, platform, metrics);

@@ -68,6 +68,7 @@ export function SearchBar({
       const response = await fetch(`/api/search?q=${encodeURIComponent(searchQuery)}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify(searchFilters)
       });
       

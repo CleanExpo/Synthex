@@ -14,8 +14,26 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
+
+const markNotificationsReadSchema = z.object({
+  notificationIds: z.array(z.string()).optional(),
+  markAllRead: z.boolean().optional(),
+});
+
+const createNotificationSchema = z.object({
+  recipientId: z.string().optional(),
+  recipientIds: z.array(z.string()).optional(),
+  type: z.string().min(1),
+  title: z.string().min(1),
+  message: z.string().min(1),
+  actionUrl: z.string().optional(),
+  relatedContentType: z.string().optional(),
+  relatedContentId: z.string().optional(),
+  organizationId: z.string().optional(),
+});
 
 // ============================================================================
 // TYPES
@@ -188,10 +206,17 @@ export async function PATCH(request: NextRequest) {
     }
 
     const userId = security.context.userId!;
-    const body = await request.json();
-    const { notificationIds, markAllRead } = body;
+    const rawBody = await request.json();
+    const validation = markNotificationsReadSchema.safeParse(rawBody);
+    if (!validation.success) {
+      return NextResponse.json(
+        { error: 'Invalid request data', details: validation.error.issues },
+        { status: 400 }
+      );
+    }
+    const { notificationIds, markAllRead } = validation.data;
 
-    if (!markAllRead && (!notificationIds || !Array.isArray(notificationIds))) {
+    if (!markAllRead && (!notificationIds || notificationIds.length === 0)) {
       return NextResponse.json(
         { error: 'notificationIds array or markAllRead flag required' },
         { status: 400 }
@@ -363,7 +388,14 @@ export async function POST(request: NextRequest) {
     }
 
     const senderId = security.context.userId!;
-    const body = await request.json();
+    const rawBody = await request.json();
+    const validation = createNotificationSchema.safeParse(rawBody);
+    if (!validation.success) {
+      return NextResponse.json(
+        { error: 'Invalid request data', details: validation.error.issues },
+        { status: 400 }
+      );
+    }
     const {
       recipientId,
       recipientIds,
@@ -374,7 +406,7 @@ export async function POST(request: NextRequest) {
       relatedContentType,
       relatedContentId,
       organizationId,
-    } = body;
+    } = validation.data;
 
     if (!recipientId && (!recipientIds || !recipientIds.length)) {
       return NextResponse.json(
@@ -383,14 +415,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!type || !title || !message) {
-      return NextResponse.json(
-        { error: 'type, title, and message required' },
-        { status: 400 }
-      );
-    }
-
-    const recipients = recipientIds || [recipientId];
+    const recipients: string[] = recipientIds || [recipientId!];
 
     // Create notifications for all recipients
     const notifications = recipients.map((userId: string) => ({

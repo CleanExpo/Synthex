@@ -85,6 +85,7 @@ model User {
   activeOrganizationId  String?   @map("active_organization_id")
   ownedBusinesses       BusinessOwnership[] @relation("OwnedBusinesses")
 
+  @@index([organizationId])
   @@map("users")
 }
 
@@ -272,6 +273,9 @@ model AuditLog {
   userId      String?
   user        User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
   
+  @@index([userId])
+  @@index([createdAt])
+  @@index([category])
   @@map("audit_logs")
 }
 
@@ -411,6 +415,7 @@ model TeamInvitation {
   organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
 
   @@index([email])
+  @@index([organizationId, status])
   @@map("team_invitations")
 }
 

@@ -6,12 +6,29 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
+
+const updateQuoteSchema = z.object({
+  text: z.string().min(1).max(1000).optional(),
+  author: z.string().optional(),
+  source: z.string().optional(),
+  category: z.string().optional(),
+  tags: z.array(z.string()).optional(),
+  isPublic: z.boolean().optional(),
+  sentiment: z.string().optional(),
+  readingLevel: z.string().optional(),
+  expiresAt: z.string().nullable().optional(),
+});
+
+const quoteActionSchema = z.object({
+  action: z.enum(['like', 'unlike', 'share', 'use']),
+});
 
 interface UpdateQuoteRequest {
   text?: string;
@@ -152,23 +169,15 @@ export async function PUT(
     }
 
     // Parse request body
-    const body: UpdateQuoteRequest = await request.json();
-
-    // Validate text if provided
-    if (body.text !== undefined) {
-      if (body.text.trim().length === 0) {
-        return NextResponse.json(
-          { success: false, error: 'Quote text cannot be empty' },
-          { status: 400 }
-        );
-      }
-      if (body.text.length > 1000) {
-        return NextResponse.json(
-          { success: false, error: 'Quote text exceeds maximum length of 1000 characters' },
-          { status: 400 }
-        );
-      }
+    const rawBody = await request.json();
+    const putValidation = updateQuoteSchema.safeParse(rawBody);
+    if (!putValidation.success) {
+      return NextResponse.json(
+        { success: false, error: 'Invalid request data', details: putValidation.error.issues },
+        { status: 400 }
+      );
     }
+    const body: UpdateQuoteRequest = putValidation.data;
 
     // Validate expiration date if provided
     let expiresAt: Date | null | undefined = undefined;
@@ -349,8 +358,15 @@ export async function PATCH(
     }
 
     // Parse request body
-    const body = await request.json();
-    const { action } = body;
+    const patchBody = await request.json();
+    const patchValidation = quoteActionSchema.safeParse(patchBody);
+    if (!patchValidation.success) {
+      return NextResponse.json(
+        { success: false, error: 'Invalid request data', details: patchValidation.error.issues },
+        { status: 400 }
+      );
+    }
+    const { action } = patchValidation.data;
 
     // Handle engagement actions
     let updateData: {
@@ -372,11 +388,6 @@ export async function PATCH(
       case 'use':
         updateData = { usageCount: { increment: 1 } };
         break;
-      default:
-        return NextResponse.json(
-          { success: false, error: 'Invalid action. Must be: like, unlike, share, or use' },
-          { status: 400 }
-        );
     }
 
     // Update quote

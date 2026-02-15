@@ -11,6 +11,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import {
   alertManager,
   AlertSeverity,
@@ -105,6 +106,19 @@ export async function GET(request: NextRequest) {
   }
 }
 
+const testChannelSchema = z.object({
+  channel: z.string().min(1),
+});
+
+const sendAlertSchema = z.object({
+  title: z.string().min(1),
+  message: z.string().min(1),
+  severity: z.enum(['info', 'warning', 'error', 'critical']),
+  source: z.string().min(1),
+  metadata: z.record(z.unknown()).optional(),
+  tags: z.array(z.string()).optional(),
+});
+
 /**
  * POST /api/monitoring/alerts
  * Send a new alert or test a channel
@@ -120,9 +134,8 @@ export async function POST(request: NextRequest) {
 
     // Test a specific channel
     if (action === 'test') {
-      const { channel } = body;
-
-      if (!channel || !VALID_CHANNELS.includes(channel)) {
+      const testValidation = testChannelSchema.safeParse(body);
+      if (!testValidation.success || !VALID_CHANNELS.includes(testValidation.data.channel)) {
         return NextResponse.json(
           {
             success: false,
@@ -132,7 +145,7 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      const result = await alertManager.testChannel(channel as NotificationChannel);
+      const result = await alertManager.testChannel(testValidation.data.channel as NotificationChannel);
 
       return NextResponse.json(
         {
@@ -145,29 +158,18 @@ export async function POST(request: NextRequest) {
     }
 
     // Send a new alert
-    const { title, message, severity, source, metadata, tags } = body;
-
-    // Validate required fields
-    if (!title || !message || !severity || !source) {
+    const alertValidation = sendAlertSchema.safeParse(body);
+    if (!alertValidation.success) {
       return NextResponse.json(
         {
           success: false,
-          error: 'Missing required fields: title, message, severity, source',
+          error: 'Invalid request data',
+          details: alertValidation.error.issues,
         },
         { status: 400 }
       );
     }
-
-    // Validate severity
-    if (!VALID_SEVERITIES.includes(severity)) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: `Invalid severity. Valid values: ${VALID_SEVERITIES.join(', ')}`,
-        },
-        { status: 400 }
-      );
-    }
+    const { title, message, severity, source, metadata, tags } = alertValidation.data;
 
     const alert: Alert = {
       title,

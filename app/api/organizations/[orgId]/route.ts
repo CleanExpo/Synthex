@@ -16,12 +16,26 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
 import { logger } from '@/lib/logger';
 import { ResponseOptimizer } from '@/lib/api/response-optimizer';
 import { getCache } from '@/lib/cache/cache-manager';
 import { PLAN_LIMITS, TenantPlan } from '@/lib/multi-tenant';
 import { verifyToken } from '@/lib/auth/jwt-utils';
+
+const updateOrganizationSchema = z.object({
+  name: z.string().min(1).optional(),
+  description: z.string().optional(),
+  logo: z.string().optional(),
+  primaryColor: z.string().optional(),
+  favicon: z.string().optional(),
+  customDomain: z.string().optional(),
+  settings: z.record(z.unknown()).optional(),
+  billingEmail: z.string().email().optional(),
+  slug: z.string().optional(),
+  plan: z.string().optional(),
+});
 
 // =============================================================================
 // Auth Helper - Verify user and organization membership
@@ -236,7 +250,12 @@ export async function PATCH(
       return ResponseOptimizer.createErrorResponse('Admin privileges required to update organization', 403);
     }
 
-    const body = await request.json();
+    const rawBody = await request.json();
+    const validation = updateOrganizationSchema.safeParse(rawBody);
+    if (!validation.success) {
+      return ResponseOptimizer.createErrorResponse('Invalid request data', 400);
+    }
+    const body = validation.data;
 
     // Check organization exists
     const existing = await prisma.organization.findUnique({
@@ -260,9 +279,10 @@ export async function PATCH(
       'billingEmail',
     ];
 
+    const bodyRecord = body as Record<string, unknown>;
     for (const field of allowedFields) {
-      if (body[field] !== undefined) {
-        updateData[field] = body[field];
+      if (bodyRecord[field] !== undefined) {
+        updateData[field] = bodyRecord[field];
       }
     }
 
@@ -464,3 +484,5 @@ export async function DELETE(
     return ResponseOptimizer.createErrorResponse('Failed to delete organization', 500);
   }
 }
+
+export const runtime = 'nodejs';

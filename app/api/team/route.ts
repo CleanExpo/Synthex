@@ -9,6 +9,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
 
@@ -141,6 +142,11 @@ export async function GET(request: NextRequest) {
 // POST /api/team (Invite member)
 // ============================================================================
 
+const inviteTeamMemberSchema = z.object({
+  email: z.string().email(),
+  role: z.enum(['admin', 'editor', 'viewer']).optional().default('viewer'),
+});
+
 export async function POST(request: NextRequest) {
   try {
     // Security check - require admin
@@ -156,14 +162,14 @@ export async function POST(request: NextRequest) {
     const adminUserId = security.context.userId;
 
     const body = await request.json();
-    const { email, role = 'viewer' } = body;
-
-    if (!email) {
+    const validation = inviteTeamMemberSchema.safeParse(body);
+    if (!validation.success) {
       return NextResponse.json(
-        { error: 'Email is required' },
+        { error: 'Invalid request data', details: validation.error.issues },
         { status: 400 }
       );
     }
+    const { email, role } = validation.data;
 
     // Get user's organization
     const adminUser = await prisma.user.findUnique({

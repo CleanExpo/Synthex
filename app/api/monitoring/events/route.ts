@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 
 /** Monitoring event structure */
 interface MonitoringEvent {
@@ -13,17 +14,27 @@ interface MonitoringEvent {
 // In production, this should write to a database or external service
 const events: MonitoringEvent[] = [];
 
+const monitoringEventSchema = z.object({
+  sessionId: z.string().min(1, 'Session ID is required'),
+  userId: z.string().optional(),
+  timestamp: z.string().optional(),
+  type: z.string().optional(),
+  data: z.record(z.unknown()).optional(),
+  errors: z.array(z.any()).optional(),
+  actions: z.array(z.any()).optional(),
+}).passthrough();
+
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
-    
-    // Validate the request
-    if (!body.sessionId) {
+    const rawBody = await request.json();
+    const validation = monitoringEventSchema.safeParse(rawBody);
+    if (!validation.success) {
       return NextResponse.json(
-        { error: 'Session ID is required' },
+        { error: 'Invalid request data', details: validation.error.issues },
         { status: 400 }
       );
     }
+    const body = validation.data;
 
     // Process errors
     if (body.errors && body.errors.length > 0) {
@@ -59,7 +70,7 @@ export async function POST(request: NextRequest) {
     events.push({
       ...body,
       receivedAt: new Date().toISOString(),
-    });
+    } as MonitoringEvent);
 
     // Keep only last 1000 events in memory
     if (events.length > 1000) {

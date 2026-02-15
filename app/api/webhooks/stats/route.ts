@@ -7,8 +7,15 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { getStats, retryManager } from '@/lib/webhooks';
 import { logger } from '@/lib/logger';
+
+const deadLetterActionSchema = z.object({
+  action: z.string().min(1),
+  eventId: z.string().optional(),
+  limit: z.number().optional(),
+});
 
 // ============================================================================
 // ROUTE HANDLERS
@@ -60,7 +67,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const body = await request.json();
+    const rawBody = await request.json();
+    const validation = deadLetterActionSchema.safeParse(rawBody);
+    if (!validation.success) {
+      return NextResponse.json(
+        { error: 'Invalid request data', details: validation.error.issues },
+        { status: 400 }
+      );
+    }
+    const body = validation.data;
 
     if (body.action === 'get_dead_letters') {
       const items = await retryManager.getDeadLetterItems(body.limit || 100);

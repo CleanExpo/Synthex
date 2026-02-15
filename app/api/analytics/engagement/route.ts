@@ -10,8 +10,15 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { analyticsTracker } from '@/lib/analytics/analytics-tracker';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
+
+const engagementSchema = z.object({
+  contentId: z.string().min(1),
+  platform: z.string().min(1),
+  metrics: z.record(z.unknown()),
+});
 
 export async function POST(request: NextRequest) {
   try {
@@ -29,14 +36,14 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { contentId, platform, metrics } = body;
-
-    if (!contentId || !platform || !metrics) {
+    const validation = engagementSchema.safeParse(body);
+    if (!validation.success) {
       return NextResponse.json(
-        { error: 'contentId, platform, and metrics are required' },
+        { error: 'Invalid request data', details: validation.error.issues },
         { status: 400 }
       );
     }
+    const { contentId, platform, metrics } = validation.data;
 
     // Track engagement metrics
     await analyticsTracker.trackEngagement(contentId, platform, metrics);

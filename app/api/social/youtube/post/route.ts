@@ -15,7 +15,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
 import { createClient } from '@supabase/supabase-js';
-import jwt from 'jsonwebtoken';
+import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { auditLogger } from '@/lib/security/audit-logger';
 
 const supabase = createClient(
@@ -93,22 +93,10 @@ export async function POST(request: NextRequest) {
     }
 
     // Get user from token
-    const token = request.headers.get('authorization')?.replace('Bearer ', '');
-    if (!token || !process.env.JWT_SECRET) {
+    const userId = await getUserIdFromRequestOrCookies(request);
+    if (!userId) {
       return NextResponse.json(
         { error: 'Authentication required' },
-        { status: 401 }
-      );
-    }
-
-    let userId: string;
-    try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET) as { userId?: string; id?: string };
-      userId = decoded.userId || decoded.id || '';
-      if (!userId) throw new Error('No user ID in token');
-    } catch {
-      return NextResponse.json(
-        { error: 'Invalid authentication token' },
         { status: 401 }
       );
     }
@@ -392,18 +380,9 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const token = request.headers.get('authorization')?.replace('Bearer ', '');
-    if (!token || !process.env.JWT_SECRET) {
+    const userId = await getUserIdFromRequestOrCookies(request);
+    if (!userId) {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
-    }
-
-    let userId: string;
-    try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET) as { userId?: string; id?: string };
-      userId = decoded.userId || decoded.id || '';
-      if (!userId) throw new Error('No user ID in token');
-    } catch {
-      return NextResponse.json({ error: 'Invalid authentication token' }, { status: 401 });
     }
 
     const { searchParams } = new URL(request.url);

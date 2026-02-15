@@ -14,6 +14,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
 
@@ -217,6 +218,15 @@ function formatAuditAction(action: string): string {
 // Create a new activity entry
 // ============================================================================
 
+const createActivitySchema = z.object({
+  type: z.string().min(1),
+  title: z.string().min(1),
+  description: z.string().min(1),
+  platform: z.string().optional(),
+  metadata: z.record(z.unknown()).optional(),
+  teamId: z.string().optional(),
+});
+
 export async function POST(request: NextRequest) {
   try {
     // Security check - requires authenticated write
@@ -233,10 +243,17 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { type, title, description, platform, metadata, teamId } = body;
+    const validation = createActivitySchema.safeParse(body);
+    if (!validation.success) {
+      return NextResponse.json(
+        { error: 'Invalid request data', details: validation.error.issues },
+        { status: 400 }
+      );
+    }
+    const { type, title, description, platform, metadata, teamId } = validation.data;
 
     // Validate type
-    if (!VALID_ACTIVITY_TYPES.includes(type)) {
+    if (!VALID_ACTIVITY_TYPES.includes(type as typeof VALID_ACTIVITY_TYPES[number])) {
       return NextResponse.json(
         { error: 'Invalid activity type' },
         { status: 400 }

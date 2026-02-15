@@ -86,7 +86,9 @@ export function useAIPM(): UseAIPMReturn {
     setIsLoading(true);
     setError(null);
     try {
-      const res = await fetch('/api/ai/pm/conversations');
+      const res = await fetch('/api/ai/pm/conversations', {
+        credentials: 'include',
+      });
       // Silently handle auth failures
       if (res.status === 401 || res.status === 403) {
         setIsLoading(false);
@@ -116,6 +118,7 @@ export function useAIPM(): UseAIPMReturn {
       const res = await fetch('/api/ai/pm/conversations', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ title: title || 'New Conversation' }),
       });
       const data = await res.json();
@@ -195,6 +198,7 @@ export function useAIPM(): UseAIPMReturn {
       const res = await fetch(`/api/ai/pm/conversations/${conversationId}/messages`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ message }),
         signal: controller.signal,
       });
@@ -312,6 +316,7 @@ export function useAIPM(): UseAIPMReturn {
       await fetch('/api/ai/pm/feedback', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ messageId, rating }),
       });
 
@@ -329,7 +334,9 @@ export function useAIPM(): UseAIPMReturn {
    */
   const loadDashboardSuggestions = useCallback(async () => {
     try {
-      const res = await fetch('/api/ai/pm/suggestions');
+      const res = await fetch('/api/ai/pm/suggestions', {
+        credentials: 'include',
+      });
       // Silently skip auth/permission errors — don't parse the body
       if (!res.ok) return;
       const data = await res.json();

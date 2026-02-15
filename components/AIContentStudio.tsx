@@ -92,6 +92,7 @@ export default function AIContentStudio() {
       const response = await fetch('/api/ai/generate-content', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({
           ...formData,
           keywords: formData.keywords ? formData.keywords.split(',').map(k => k.trim()) : []

@@ -1,3 +1,5 @@
+'use client';
+
 /**
  * Animation hooks for easy integration
  * Provides simple API for common animations
