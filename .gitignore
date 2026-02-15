@@ -156,3 +156,23 @@ Synthex/
 *.py
 !scripts/**/*.py
 !.claude/**/*.py
+
+# Root-level script debris
+*.bat
+!scripts/**/*.bat
+*.ps1
+!scripts/**/*.ps1
+!.claude/**/*.ps1
+
+# Legacy configs
+mcp.*.json
+mcp_config.json
+vercel.*.json
+!vercel.json
+
+# Legacy manifests
+synthex.*.json
+
+# One-off reports
+*-report.json
+*-status.json
