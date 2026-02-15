@@ -146,39 +146,56 @@ export interface SecurityContext {
 // ============================================
 // RATE LIMITER
 // ============================================
+// NOTE: This is a per-instance in-memory rate limiter. On Vercel serverless,
+// each function invocation may run in a different instance, so rate limiting
+// is best-effort per warm instance. For production-grade distributed rate
+// limiting, upgrade to Redis (Vercel KV) or an edge-level WAF.
 class RateLimiter {
   private static attempts = new Map<string, number[]>();
+  // Cap map size to prevent memory leaks in long-lived warm instances
+  private static readonly MAX_ENTRIES = 10000;
 
-  static check(identifier: string, maxRequests: number, windowMs: number): boolean {
+  static check(
+    identifier: string,
+    maxRequests: number,
+    windowMs: number
+  ): { allowed: boolean; remaining: number; resetAt: number } {
     const now = Date.now();
     const attempts = this.attempts.get(identifier) || [];
-    
-    // Clean old attempts
+
+    // Clean old attempts outside the window
     const validAttempts = attempts.filter(time => now - time < windowMs);
-    
+    const resetAt = validAttempts.length > 0
+      ? validAttempts[0] + windowMs
+      : now + windowMs;
+
     if (validAttempts.length >= maxRequests) {
-      return false; // Rate limit exceeded
+      return { allowed: false, remaining: 0, resetAt };
     }
-    
+
     validAttempts.push(now);
     this.attempts.set(identifier, validAttempts);
-    
-    // Cleanup old entries periodically
-    if (Math.random() < 0.01) {
-      this.cleanup();
+
+    // Evict oldest entries if map is too large (prevents memory bloat)
+    if (this.attempts.size > this.MAX_ENTRIES) {
+      this.evictOldest();
     }
-    
-    return true;
+
+    return {
+      allowed: true,
+      remaining: maxRequests - validAttempts.length,
+      resetAt,
+    };
   }
 
-  private static cleanup() {
+  private static evictOldest() {
     const now = Date.now();
+    // Delete entries with no recent attempts first
     for (const [key, attempts] of this.attempts.entries()) {
-      const validAttempts = attempts.filter(time => now - time < 3600000); // Keep 1 hour
-      if (validAttempts.length === 0) {
+      if (this.attempts.size <= this.MAX_ENTRIES * 0.8) break;
+      const recent = attempts.filter(time => now - time < 300000); // 5 min
+      if (recent.length === 0) {
         this.attempts.delete(key);
-      } else {
-        this.attempts.set(key, validAttempts);
       }
     }
   }
@@ -200,8 +217,8 @@ export class APISecurityChecker {
     const context = this.buildSecurityContext(request);
 
     try {
-      // 1. HTTPS Check
-      if (policy.requireHTTPS && !this.isHTTPS(request)) {
+      // 1. HTTPS Check (skip in development — localhost doesn't use HTTPS)
+      if (policy.requireHTTPS && process.env.NODE_ENV === 'production' && !this.isHTTPS(request)) {
         throw new SecurityError('HTTPS required', 'HTTPS_REQUIRED');
       }
 
@@ -211,8 +228,17 @@ export class APISecurityChecker {
       }
 
       // 3. Rate Limiting
-      if (policy.rateLimit && !this.checkRateLimit(context, policy.rateLimit)) {
-        throw new SecurityError('Rate limit exceeded', 'RATE_LIMIT');
+      if (policy.rateLimit) {
+        const rateLimitResult = this.checkRateLimit(context, policy.rateLimit);
+        // Attach rate limit info to context for response headers
+        (context as SecurityContext & { rateLimit?: { remaining: number; resetAt: number; limit: number } }).rateLimit = {
+          remaining: rateLimitResult.remaining,
+          resetAt: rateLimitResult.resetAt,
+          limit: policy.rateLimit.maxRequests,
+        };
+        if (!rateLimitResult.allowed) {
+          throw new SecurityError('Rate limit exceeded', 'RATE_LIMIT');
+        }
       }
 
       // 4. Authentication
@@ -317,6 +343,14 @@ export class APISecurityChecker {
     
     if (context) {
       response.headers.set('X-Request-ID', context.requestId);
+
+      // Rate limit headers (standard draft RFC 6585 / RateLimit fields)
+      const rl = (context as SecurityContext & { rateLimit?: { remaining: number; resetAt: number; limit: number } }).rateLimit;
+      if (rl) {
+        response.headers.set('X-RateLimit-Limit', String(rl.limit));
+        response.headers.set('X-RateLimit-Remaining', String(rl.remaining));
+        response.headers.set('X-RateLimit-Reset', String(Math.ceil(rl.resetAt / 1000)));
+      }
     }
 
     // Cache control for sensitive data
@@ -367,7 +401,7 @@ export class APISecurityChecker {
   private static checkRateLimit(
     context: SecurityContext,
     rateLimit: { maxRequests: number; windowMs: number }
-  ): boolean {
+  ): { allowed: boolean; remaining: number; resetAt: number } {
     const identifier = context.userId || context.ip;
     return RateLimiter.check(identifier, rateLimit.maxRequests, rateLimit.windowMs);
   }
@@ -425,14 +459,34 @@ export class APISecurityChecker {
   }
 
   private static checkCSRF(request: NextRequest): boolean {
+    // CSRF protection is only needed for cookie-based browser sessions.
+    // API clients using Authorization: Bearer tokens are inherently safe from
+    // CSRF because browsers don't auto-send Bearer headers on cross-origin requests.
+    const authHeader = request.headers.get('authorization');
+    if (authHeader?.startsWith('Bearer ')) {
+      return true; // Bearer token auth — CSRF not applicable
+    }
+
+    // For cookie-based auth, validate the double-submit CSRF token
     const csrfToken = request.headers.get('x-csrf-token');
     const cookieToken = request.cookies.get('csrf-token')?.value;
-    
+
     if (!csrfToken || !cookieToken) {
       return false;
     }
-    
-    return csrfToken === cookieToken;
+
+    // Use timing-safe comparison to prevent timing attacks
+    if (csrfToken.length !== cookieToken.length) {
+      return false;
+    }
+    try {
+      return crypto.timingSafeEqual(
+        Buffer.from(csrfToken),
+        Buffer.from(cookieToken)
+      );
+    } catch {
+      return false;
+    }
   }
 
   private static async getBodySize(request: NextRequest): Promise<number> {

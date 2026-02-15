@@ -174,12 +174,13 @@ export async function GET(request: NextRequest) {
       .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
       .slice(0, limit);
 
-    // Filter by types if specified
+    // Filter by types if specified (exact match only)
     const typesParam = searchParams.get('types');
     const filteredActivities = typesParam
-      ? allActivities.filter((a) =>
-          typesParam.split(',').some((t) => a.type.includes(t) || t.includes(a.type))
-        )
+      ? allActivities.filter((a) => {
+          const requestedTypes = typesParam.split(',').map(t => t.trim());
+          return requestedTypes.includes(a.type);
+        })
       : allActivities;
 
     return NextResponse.json({
