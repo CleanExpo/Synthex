@@ -101,6 +101,7 @@
     "src/services/performance.ts",
     "src/utils/apiResponse.ts",
     "src/index-legacy.ts.disabled",
-    "src/presentation/**/*"
+    "src/presentation/**/*",
+    "packages/**/*"
   ]
 }
