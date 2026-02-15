@@ -27,13 +27,11 @@ None (internal platform hardening)
 **Goal**: Remove dead code and confusion so all subsequent work targets the real codebase
 **Depends on**: Nothing (first phase)
 **Research**: Unlikely (internal cleanup)
-**Plans**: 4 plans
+**Plans**: 2 plans (consolidated from original 4 — cleanup work is bulk git rm, env consolidation pairs with CLAUDE.md rewrite)
 
 Plans:
-- [ ] 01-01: Archive legacy Synthex/ Express app
-- [ ] 01-02: Clean root debris and update .gitignore
-- [ ] 01-03: Rewrite CLAUDE.md to reflect actual architecture
-- [ ] 01-04: Consolidate environment files and wire startup validation
+- [ ] 01-01: Archive legacy Express app and remove root debris (Python, .md, scripts)
+- [ ] 01-02: Rewrite CLAUDE.md for Next.js 15 and consolidate environment files
 
 ### Phase 2: Mock Data — API Routes
 **Goal**: Every API route returns real data or proper error — zero Math.random() or hardcoded arrays
@@ -141,7 +139,7 @@ Plans:
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation Cleanup | 0/4 | Not started | - |
+| 1. Foundation Cleanup | 0/2 | Planning | - |
 | 2. Mock Data — API Routes | 0/5 | Not started | - |
 | 3. Mock Data — Dashboard | 0/2 | Not started | - |
 | 4. Security Hardening | 0/3 | Not started | - |
