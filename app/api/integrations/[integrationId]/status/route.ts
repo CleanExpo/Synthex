@@ -6,10 +6,10 @@ const integrationConnections = new Map();
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { integrationId: string } }
+  { params }: { params: Promise<{ integrationId: string }> }
 ) {
   try {
-    const { integrationId } = params;
+    const { integrationId } = await params;
 
     // Get authenticated user ID from JWT in cookie
     const userId = await getUserIdFromCookies();

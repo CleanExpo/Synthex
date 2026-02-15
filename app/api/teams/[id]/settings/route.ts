@@ -82,7 +82,7 @@ async function canManageTeam(userId: string, teamId: string): Promise<boolean> {
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const user = await getUserFromRequest(request);
@@ -93,7 +93,7 @@ export async function GET(
       );
     }
 
-    const { id: teamId } = params;
+    const { id: teamId } = await params;
 
     // Check if user is a member of the team
     const membership = await prisma.user.findFirst({
@@ -172,7 +172,7 @@ export async function GET(
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const user = await getUserFromRequest(request);
@@ -183,7 +183,7 @@ export async function PATCH(
       );
     }
 
-    const { id: teamId } = params;
+    const { id: teamId } = await params;
 
     // Check permission
     const canManage = await canManageTeam(user.id, teamId);
@@ -265,7 +265,7 @@ export async function PATCH(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const user = await getUserFromRequest(request);
@@ -276,7 +276,7 @@ export async function DELETE(
       );
     }
 
-    const { id: teamId } = params;
+    const { id: teamId } = await params;
 
     // Only admins can delete team
     const canManage = await canManageTeam(user.id, teamId);

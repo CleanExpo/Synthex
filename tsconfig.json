@@ -102,6 +102,7 @@
     "src/utils/apiResponse.ts",
     "src/index-legacy.ts.disabled",
     "src/presentation/**/*",
-    "packages/**/*"
+    "packages/**/*",
+    "Synthex/**/*"
   ]
 }

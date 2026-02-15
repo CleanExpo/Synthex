@@ -64,7 +64,7 @@ const SyncRequestSchema = z.object({
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { integrationId: string } }
+  { params }: { params: Promise<{ integrationId: string }> }
 ) {
   try {
     const user = await getUserFromRequest(request);
@@ -75,7 +75,7 @@ export async function POST(
       );
     }
 
-    const { integrationId } = params;
+    const { integrationId } = await params;
 
     // Validate ID
     if (!z.string().cuid().or(z.string().uuid()).safeParse(integrationId).success) {
@@ -466,7 +466,7 @@ async function storeSyncResults(
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { integrationId: string } }
+  { params }: { params: Promise<{ integrationId: string }> }
 ) {
   try {
     const user = await getUserFromRequest(request);
@@ -477,7 +477,7 @@ export async function GET(
       );
     }
 
-    const { integrationId } = params;
+    const { integrationId } = await params;
 
     const integration = await prisma.platformConnection.findFirst({
       where: {

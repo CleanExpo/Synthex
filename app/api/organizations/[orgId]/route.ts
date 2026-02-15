@@ -110,16 +110,15 @@ async function isOrgAdmin(userId: string, orgId: string): Promise<boolean> {
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { orgId: string } }
+  { params }: { params: Promise<{ orgId: string }> }
 ) {
+  const { orgId } = await params;
   try {
     // Authenticate user
     const user = await getUserFromRequest(request);
     if (!user) {
       return ResponseOptimizer.createErrorResponse('Authentication required', 401);
     }
-
-    const { orgId } = params;
 
     // Verify user is a member of the organization
     const isMember = await isOrgMember(user.id, orgId);
@@ -217,7 +216,7 @@ export async function GET(
       cacheDuration: 300,
     });
   } catch (error) {
-    logger.error('Failed to get organization', { error, orgId: params.orgId });
+    logger.error('Failed to get organization', { error, orgId });
     return ResponseOptimizer.createErrorResponse('Failed to get organization', 500);
   }
 }
@@ -228,16 +227,15 @@ export async function GET(
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { orgId: string } }
+  { params }: { params: Promise<{ orgId: string }> }
 ) {
+  const { orgId } = await params;
   try {
     // Authenticate user
     const user = await getUserFromRequest(request);
     if (!user) {
       return ResponseOptimizer.createErrorResponse('Authentication required', 401);
     }
-
-    const { orgId } = params;
 
     // Verify user is an admin of the organization
     const isAdmin = await isOrgAdmin(user.id, orgId);
@@ -384,7 +382,7 @@ export async function PATCH(
       { cacheType: 'none' }
     );
   } catch (error) {
-    logger.error('Failed to update organization', { error, orgId: params.orgId });
+    logger.error('Failed to update organization', { error, orgId: orgId });
     return ResponseOptimizer.createErrorResponse('Failed to update organization', 500);
   }
 }
@@ -395,16 +393,15 @@ export async function PATCH(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { orgId: string } }
+  { params }: { params: Promise<{ orgId: string }> }
 ) {
+  const { orgId } = await params;
   try {
     // Authenticate user
     const user = await getUserFromRequest(request);
     if (!user) {
       return ResponseOptimizer.createErrorResponse('Authentication required', 401);
     }
-
-    const { orgId } = params;
 
     // Verify user is an admin of the organization
     const isAdmin = await isOrgAdmin(user.id, orgId);
@@ -480,7 +477,7 @@ export async function DELETE(
       { cacheType: 'none' }
     );
   } catch (error) {
-    logger.error('Failed to delete organization', { error, orgId: params.orgId });
+    logger.error('Failed to delete organization', { error, orgId: orgId });
     return ResponseOptimizer.createErrorResponse('Failed to delete organization', 500);
   }
 }

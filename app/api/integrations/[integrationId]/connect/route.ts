@@ -14,10 +14,10 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { integrationId: string } }
+  { params }: { params: Promise<{ integrationId: string }> }
 ) {
   try {
-    const { integrationId } = params;
+    const { integrationId } = await params;
     const body = await request.json();
     const bodyValidation = connectCredentialsSchema.safeParse(body);
     if (!bodyValidation.success) {
@@ -116,10 +116,10 @@ export async function POST(
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { integrationId: string } }
+  { params }: { params: Promise<{ integrationId: string }> }
 ) {
   try {
-    const { integrationId } = params;
+    const { integrationId } = await params;
     
     // Get user from session
     const cookieStore = await cookies();
@@ -182,10 +182,10 @@ export async function GET(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { integrationId: string } }
+  { params }: { params: Promise<{ integrationId: string }> }
 ) {
   try {
-    const { integrationId } = params;
+    const { integrationId } = await params;
     
     // Get user from session
     const cookieStore = await cookies();

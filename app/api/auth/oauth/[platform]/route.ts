@@ -76,10 +76,11 @@ const oauthConfig = {
 // GET - Initiate OAuth flow
 export async function GET(
   request: NextRequest,
-  { params }: { params: { platform: string } }
+  { params }: { params: Promise<{ platform: string }> }
 ) {
   try {
-    const platform = params.platform.toLowerCase() as keyof typeof oauthConfig;
+    const { platform: platformParam } = await params;
+    const platform = platformParam.toLowerCase() as keyof typeof oauthConfig;
     
     if (!(platform in oauthConfig)) {
       return NextResponse.json({ error: 'Invalid platform' }, { status: 400 });
@@ -159,10 +160,11 @@ export async function GET(
 // POST - Handle OAuth callback
 export async function POST(
   request: NextRequest,
-  { params }: { params: { platform: string } }
+  { params }: { params: Promise<{ platform: string }> }
 ) {
   try {
-    const platform = params.platform.toLowerCase() as keyof typeof oauthConfig;
+    const { platform: platformParam } = await params;
+    const platform = platformParam.toLowerCase() as keyof typeof oauthConfig;
     
     if (!(platform in oauthConfig)) {
       return NextResponse.json({ error: 'Invalid platform' }, { status: 400 });

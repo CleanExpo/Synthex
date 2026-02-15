@@ -230,10 +230,11 @@ async function fetchUserInfo(
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { platform: string } }
+  { params }: { params: Promise<{ platform: string }> }
 ) {
   try {
-    const platform = params.platform.toLowerCase();
+    const { platform: rawPlatform } = await params;
+    const platform = rawPlatform.toLowerCase();
     const { searchParams } = new URL(request.url);
 
     // Check for OAuth error
