@@ -8,7 +8,7 @@ import { z } from 'zod';
 import { signInFlow } from '@/lib/auth/signInFlow';
 
 const unifiedLoginSchema = z.object({
-  method: z.enum(['email', 'oauth', 'demo']),
+  method: z.enum(['email', 'oauth']),
   email: z.string().email().optional(),
   password: z.string().optional(),
   provider: z.enum(['google', 'github']).optional(),

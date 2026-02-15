@@ -30,8 +30,6 @@ import {
   BillingTab,
   AdvancedTab,
   mockApiKeys,
-  mockInvoices,
-  defaultBillingInfo,
   defaultNotifications,
   defaultPrivacy,
   defaultAdvanced,
@@ -43,6 +41,8 @@ import {
   type SettingsTab,
   type PlatformConnection,
   type ApiKey,
+  type BillingInfo,
+  type Invoice,
 } from '@/components/settings';
 
 export default function SettingsPage() {
@@ -74,6 +74,17 @@ export default function SettingsPage() {
 
   // API keys state
   const [apiKeys, setApiKeys] = useState<ApiKey[]>(mockApiKeys);
+
+  // Billing state
+  const [billing, setBilling] = useState<BillingInfo>({
+    plan: 'Free',
+    price: '$0',
+    billingCycle: 'monthly',
+    nextBilling: '-',
+    paymentMethod: '-',
+    cardLast4: '----',
+  });
+  const [invoices, setInvoices] = useState<Invoice[]>([]);
 
   // Load initial data
   const loadUserData = useCallback(async () => {
@@ -116,6 +127,51 @@ export default function SettingsPage() {
             username: integrationsData.integrations[p.id] ? `@${p.id}_user` : undefined,
           }))
         );
+      }
+
+      // Fetch real billing/subscription data
+      try {
+        const subRes = await fetch('/api/user/subscription', { credentials: 'include' });
+        if (subRes.ok) {
+          const subData = await subRes.json();
+          if (subData.plan) {
+            const planName = subData.plan.charAt(0).toUpperCase() + subData.plan.slice(1);
+            setBilling(prev => ({
+              ...prev,
+              plan: planName,
+              price: subData.price ? `$${subData.price / 100}` : prev.price,
+              billingCycle: subData.interval || prev.billingCycle,
+              nextBilling: subData.current_period_end
+                ? new Date(subData.current_period_end * 1000).toLocaleDateString()
+                : prev.nextBilling,
+              paymentMethod: subData.payment_method?.brand
+                ? subData.payment_method.brand.charAt(0).toUpperCase() + subData.payment_method.brand.slice(1)
+                : prev.paymentMethod,
+              cardLast4: subData.payment_method?.last4 || prev.cardLast4,
+            }));
+          }
+        }
+      } catch {
+        // Billing fetch failed silently — defaults remain
+      }
+
+      try {
+        const invRes = await fetch('/api/invoices', { credentials: 'include' });
+        if (invRes.ok) {
+          const invData = await invRes.json();
+          if (invData.invoices?.length) {
+            setInvoices(
+              invData.invoices.map((inv: { id: string; number?: string; amount: number; currency: string; status: string; created: number }) => ({
+                id: inv.number || inv.id,
+                date: new Date(inv.created * 1000).toLocaleDateString(),
+                amount: `$${(inv.amount / 100).toFixed(2)}`,
+                status: inv.status === 'paid' ? 'paid' as const : 'pending' as const,
+              }))
+            );
+          }
+        }
+      } catch {
+        // Invoice fetch failed silently — defaults remain
       }
     } catch (error) {
       console.error('Error loading user data:', error);
@@ -376,8 +432,8 @@ export default function SettingsPage() {
 
         <TabsContent value="billing" className="mt-6">
           <BillingTab
-            billing={defaultBillingInfo}
-            invoices={mockInvoices}
+            billing={billing}
+            invoices={invoices}
             onUpgrade={handleUpgrade}
             onManagePayment={handleManagePayment}
             onDownloadInvoice={handleDownloadInvoice}

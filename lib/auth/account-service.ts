@@ -454,7 +454,7 @@ export class AccountService {
     const remainingAccounts = accounts.filter((a) => a.provider !== provider);
     const hasPassword = !!user?.password;
     const hasRemainingOAuth = remainingAccounts.some(
-      (a) => a.provider !== 'email' && a.provider !== 'demo'
+      (a) => a.provider !== 'email'
     );
 
     // User must have at least one auth method remaining

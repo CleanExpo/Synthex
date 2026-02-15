@@ -181,7 +181,7 @@ export async function GET(request: NextRequest) {
     if (existingByEmail) {
       // User exists with this email but different auth method
       // Offer to link accounts
-      const providers = existingByEmail.providers.filter((p) => p !== 'demo');
+      const providers = existingByEmail.providers;
 
       if (providers.length > 0) {
         // Redirect to login with linking prompt

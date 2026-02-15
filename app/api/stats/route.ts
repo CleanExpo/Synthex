@@ -1,19 +1,16 @@
 /**
  * Statistics API Endpoint
- * Returns real metrics from the database with mock user count for launch
+ * Returns real metrics from the database
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { stripe } from '@/lib/stripe/config';
 
 // Cache stats for 5 minutes to reduce database load
 let statsCache: Record<string, unknown> | null = null;
 let cacheTimestamp = 0;
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
-
-// Configuration flags
-const USE_MOCK_PAID_USERS = true; // Set to false when ready to use real Stripe data
-const MOCK_PAID_USER_COUNT = 1000; // Mock number for launch
 
 export async function GET(request: NextRequest) {
   try {
@@ -38,24 +35,19 @@ export async function GET(request: NextRequest) {
       })
     ]);
 
-    // Determine paid user count
-    let paidUserCount = MOCK_PAID_USER_COUNT;
-    let paidUserLabel = 'Paid Users';
-    
-    if (!USE_MOCK_PAID_USERS) {
-      // TODO: When ready, integrate with Stripe to get real customer count
-      // const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
-      // const customers = await stripe.customers.list({ limit: 1 });
-      // paidUserCount = customers.data.length;
-      
-      // For now, just use total user count until subscription model is ready
-      // Future: Filter by subscription status when that field is added to the schema
-      // paidUserCount = await prisma.user.count({
-      //   where: {
-      //     subscriptionStatus: 'active'
-      //   }
-      // });
-      paidUserCount = await prisma.user.count(); // Temporary: use all users
+    // Determine paid user count from Stripe or fall back to database
+    let paidUserCount = 0;
+    if (stripe) {
+      try {
+        // Get active subscription count from Stripe
+        const subscriptions = await stripe.subscriptions.list({ status: 'active', limit: 100 });
+        paidUserCount = subscriptions.data.length;
+      } catch {
+        // Stripe query failed, fall back to database user count
+        paidUserCount = userCount;
+      }
+    } else {
+      paidUserCount = userCount;
     }
 
     // Calculate engagement multiplier (mock for now, will be real when we have analytics)
@@ -86,12 +78,10 @@ export async function GET(request: NextRequest) {
 
     const stats = {
       users: {
-        total: USE_MOCK_PAID_USERS ? paidUserCount : userCount,
-        formatted: USE_MOCK_PAID_USERS ? `${formatNumber(paidUserCount)}+` : formatNumber(userCount),
-        label: USE_MOCK_PAID_USERS ? paidUserLabel : (userCount === 1 ? 'User' : 'Users'),
+        total: paidUserCount,
+        formatted: formatNumber(paidUserCount),
+        label: paidUserCount === 1 ? 'User' : 'Users',
         growth: growthRate,
-        isPaid: USE_MOCK_PAID_USERS,
-        mockData: USE_MOCK_PAID_USERS
       },
       engagement: {
         multiplier: engagementMultiplier.toFixed(1),
@@ -124,9 +114,8 @@ export async function GET(request: NextRequest) {
         ]
       },
       lastUpdated: new Date().toISOString(),
-      // Additional metadata for tracking
       dataSource: {
-        users: USE_MOCK_PAID_USERS ? 'mock' : 'database',
+        users: stripe ? 'stripe' : 'database',
         campaigns: 'database',
         posts: 'database'
       }
@@ -171,8 +160,7 @@ export async function GET(request: NextRequest) {
         enabled: false,
         features: []
       },
-      lastUpdated: new Date().toISOString(),
-      demo: true
+      lastUpdated: new Date().toISOString()
     });
   } finally {
     await prisma.$disconnect();

@@ -17,7 +17,6 @@ export async function GET() {
     environment: process.env.NODE_ENV || 'development',
     status: 'healthy',
     checks: {
-      demo_auth: false,
       session_validation: false,
       monitoring: false,
       database: false
@@ -27,37 +26,12 @@ export async function GET() {
   };
 
   try {
-    // Test 1: Demo authentication (only if DEMO_MODE_ENABLED)
+    // Test 1: Session validation (verify JWT infrastructure works)
     try {
-      const demoResult = await signInFlow.authenticate('demo', {});
-
-      // Demo auth will fail if DEMO_MODE_ENABLED is not set, which is expected in production
-      checks.checks.demo_auth = demoResult.success;
-      if (!demoResult.success && process.env.DEMO_MODE_ENABLED === 'true') {
-        checks.errors.push(`Demo auth failed: ${demoResult.error}`);
-      }
-    } catch (error) {
-      checks.checks.demo_auth = false;
-      if (process.env.DEMO_MODE_ENABLED === 'true') {
-        checks.errors.push(`Demo auth error: ${error}`);
-      }
-    }
-
-    // Test 2: Session validation
-    try {
-      // Create a test token
-      const testResult = await signInFlow.authenticate('demo', {
-        email: 'health-check@synthex.com',
-        password: 'health-check'
-      });
-      
-      if (testResult.success && testResult.session) {
-        const validateResult = await signInFlow.validateSession(testResult.session.accessToken);
-        checks.checks.session_validation = validateResult.success;
-        
-        // Clean up test session
-        await signInFlow.signOut(testResult.session.accessToken);
-      }
+      // Validate that the auth system can verify tokens
+      const invalidResult = await signInFlow.validateSession('invalid-token');
+      // We expect this to fail — it means the auth system is running
+      checks.checks.session_validation = !invalidResult.success;
     } catch (error) {
       checks.checks.session_validation = false;
       checks.errors.push(`Session validation error: ${error}`);

@@ -113,7 +113,7 @@ export default function AnalyticsDashboard() {
     setLoading(true);
     try {
       const response = await fetch(
-        `/api/analytics?type=dashboard&userId=demo-user-001&platform=${selectedPlatform}&range=${dateRange}`,
+        `/api/analytics?type=dashboard&platform=${selectedPlatform}&range=${dateRange}`,
         {
           credentials: 'include'
         }

@@ -97,11 +97,6 @@ export async function middleware(request: NextRequest) {
   const isProtectedPath = protectedPaths.some(path => pathname.startsWith(path));
   const isAuthPath = authPaths.some(path => pathname === path || pathname.startsWith(path + '/'));
 
-  // Allow demo routes without authentication
-  if (pathname.startsWith('/demo')) {
-    return response;
-  }
-
   // Skip auth checks for ALL OAuth-related paths — cookies are being SET during these redirects,
   // so they won't exist yet. Without this, users loop back to login after Google sign-in.
   if (

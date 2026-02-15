@@ -24,22 +24,6 @@ const userUpdateSchema = z.object({
   }).passthrough().optional(),
 }).strict();
 
-// Demo user data for when database is unavailable
-// SECURITY: Uses .local TLD to indicate non-production demo data
-const DEMO_USER = {
-  id: 'demo-user-001',
-  email: 'demo@synthex.local',
-  name: 'Demo User',
-  avatar: null,
-  emailVerified: true,
-  createdAt: new Date('2024-01-01'),
-  lastLogin: new Date(),
-  preferences: { theme: 'dark' },
-  organizationId: null,
-  organization: null,
-  _count: { campaigns: 5, projects: 3, notifications: 2 }
-};
-
 export async function GET(request: NextRequest) {
   try {
     // Authenticate via centralised auth
@@ -52,21 +36,6 @@ export async function GET(request: NextRequest) {
       ? authHeader.substring(7)
       : request.cookies.get('auth-token')?.value;
 
-    // Handle demo user without database access
-    // SECURITY: Check for demo user ID, not email pattern
-    if (userId === 'demo-user-001') {
-      return NextResponse.json({
-        success: true,
-        user: {
-          ...DEMO_USER,
-          unreadNotifications: DEMO_USER._count.notifications,
-          totalCampaigns: DEMO_USER._count.campaigns,
-          totalProjects: DEMO_USER._count.projects
-        }
-      });
-    }
-
-    // For real users, try database lookup with graceful fallback
     try {
       // Check if session exists and is valid
       const session = await prisma.session.findUnique({
@@ -136,29 +105,11 @@ export async function GET(request: NextRequest) {
         }
       });
     } catch (dbError) {
-      // Database unavailable - return basic user info from token
       console.error('Database unavailable:', dbError);
-      return NextResponse.json({
-        success: true,
-        user: {
-          id: userId,
-          email: 'unknown',
-          name: 'User',
-          avatar: null,
-          emailVerified: true,
-          createdAt: new Date(),
-          lastLogin: new Date(),
-          preferences: { theme: 'dark' },
-          organizationId: null,
-          organization: null,
-          isMultiBusinessOwner: false,
-          activeOrganizationId: null,
-          ownedBusinessCount: 0,
-          unreadNotifications: 0,
-          totalCampaigns: 0,
-          totalProjects: 0
-        }
-      });
+      return NextResponse.json(
+        { error: 'Database temporarily unavailable' },
+        { status: 503 }
+      );
     }
 
   } catch (error: unknown) {

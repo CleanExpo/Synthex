@@ -10,7 +10,7 @@
  * - NEXT_PUBLIC_SUPABASE_URL: Supabase project URL (optional)
  * - NEXT_PUBLIC_SUPABASE_ANON_KEY: Supabase anonymous key (optional)
  *
- * FAILURE MODE: Falls back to demo mode if Supabase not configured
+ * FAILURE MODE: Returns error if Supabase not configured
  */
 
 import { createClient } from '@supabase/supabase-js';
@@ -26,10 +26,6 @@ export type { AuthUser, AuthSession, AuthResult } from '@/types/auth';
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
 const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-key';
 const IS_PRODUCTION = process.env.NODE_ENV === 'production';
-
-// Demo mode configuration - MUST be explicitly enabled via environment variable
-// SECURITY: Demo mode is disabled by default and should NEVER be enabled in production
-const DEMO_MODE_ENABLED = process.env.DEMO_MODE_ENABLED === 'true' && !IS_PRODUCTION;
 
 // JWT_SECRET must be set in production - no fallback allowed
 const JWT_SECRET = (() => {
@@ -79,7 +75,7 @@ export class SignInFlow {
    * Main authentication entry point
    */
   async authenticate(
-    method: 'email' | 'oauth' | 'demo',
+    method: 'email' | 'oauth',
     credentials: {
       email?: string;
       password?: string;
@@ -100,9 +96,6 @@ export class SignInFlow {
           break;
         case 'oauth':
           authResult = await this.handleOAuthAuth(credentials.provider!, credentials.oauthUser);
-          break;
-        case 'demo':
-          authResult = await this.handleDemoAuth();
           break;
         default:
           throw new Error('Invalid authentication method');
@@ -133,14 +126,6 @@ export class SignInFlow {
   private async handleEmailAuth(email: string, password: string): Promise<AuthResult> {
     // Check if Supabase is configured
     if (!this.isSupabaseConfigured()) {
-      // SECURITY: Never expose demo credentials in error messages
-      // Demo mode must be explicitly enabled via DEMO_MODE_ENABLED env var
-      if (DEMO_MODE_ENABLED) {
-        return {
-          success: false,
-          error: 'Authentication service not configured. Demo mode is available.'
-        };
-      }
       return {
         success: false,
         error: 'Authentication service not configured. Please contact support.'
@@ -277,7 +262,7 @@ export class SignInFlow {
 
       if (existingByEmail) {
         // User exists with this email - check providers
-        const existingProviders = existingByEmail.providers.filter(p => p !== 'demo');
+        const existingProviders = existingByEmail.providers;
 
         if (existingProviders.length > 0) {
           // User has other auth methods - return info for linking prompt
@@ -359,39 +344,6 @@ export class SignInFlow {
   }
 
   /**
-   * Handle demo authentication
-   * SECURITY: Only available when DEMO_MODE_ENABLED=true AND not in production
-   */
-  private async handleDemoAuth(): Promise<AuthResult> {
-    // SECURITY: Block demo auth in production or when not explicitly enabled
-    if (!DEMO_MODE_ENABLED) {
-      return {
-        success: false,
-        error: 'Demo mode is not available'
-      };
-    }
-
-    const demoUser: AuthUser = {
-      id: 'demo-user-001',
-      email: 'demo@synthex.local', // Use .local TLD to indicate non-production
-      name: 'Demo User',
-      provider: 'demo',
-      emailVerified: true
-    };
-
-    const session: AuthSession = {
-      user: demoUser,
-      accessToken: this.generateJWT(demoUser.id),
-      expiresAt: Date.now() + (24 * 60 * 60 * 1000) // 1 day for demo
-    };
-
-    return {
-      success: true,
-      session
-    };
-  }
-
-  /**
    * Create and persist session
    */
   private async createSession(session: AuthSession): Promise<void> {
@@ -442,15 +394,15 @@ export class SignInFlow {
         }
       }
 
-      // For demo tokens, just validate JWT
+      // JWT is valid but no Supabase session — use decoded token data
       if (decoded && decoded.exp * 1000 > Date.now()) {
         return {
           success: true,
           session: {
             user: {
               id: decoded.sub,
-              email: decoded.email || 'unknown@synthex.local',
-              provider: 'demo'
+              email: decoded.email || 'unknown',
+              provider: 'email'
             },
             accessToken,
             expiresAt: decoded.exp * 1000

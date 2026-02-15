@@ -11,7 +11,7 @@
 // Core Auth Types
 // ==========================================
 
-export type AuthProvider = 'email' | 'google' | 'github' | 'demo';
+export type AuthProvider = 'email' | 'google' | 'github';
 
 export interface AuthUser {
   id: string;
@@ -48,7 +48,6 @@ export interface AuthResponse {
     expiresAt: number;
   };
   error?: string;
-  demoMode?: boolean;
   requiresVerification?: boolean;
   existingProvider?: AuthProvider;
 }

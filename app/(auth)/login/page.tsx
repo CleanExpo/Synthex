@@ -194,14 +194,6 @@ export default function LoginPage() {
               </div>
             </div>
           )}
-          {/* Demo mode notice - credentials are controlled server-side via DEMO_MODE_ENABLED env var */}
-          {!accountExistsError && process.env.NODE_ENV === 'development' && (
-            <div className="mt-4 p-3 bg-cyan-500/10 border border-cyan-500/30 rounded-lg">
-              <p className="text-xs text-cyan-300 text-center">
-                Development Mode: Demo authentication available via API
-              </p>
-            </div>
-          )}
         </CardHeader>
         <CardContent className="space-y-4">
           <form onSubmit={handleSubmit} className="space-y-4">
