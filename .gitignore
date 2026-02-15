@@ -150,3 +150,9 @@ supabase/.branches/
 *-test.png
 *-current.png
 *-updated.png
+
+# Legacy (archived)
+Synthex/
+*.py
+!scripts/**/*.py
+!.claude/**/*.py
