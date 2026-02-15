@@ -1,90 +1,126 @@
 ---
 name: project-scanner
-description: >-
-  Website content scanner for non-repo clients. Scrapes client website pages
-  to extract services, content, brand elements, and video-worthy material.
-  Use when onboarding clients who don't have a codebase to scan, when
-  extracting brand data from a live website, or when building a client
-  manifest from URL-based sources.
-metadata:
-  author: synthex
-  version: "1.0"
-  engine: synthex-ai-agency
-  type: platform-skill
-  triggers:
-    - scan website
-    - client website
-    - extract brand
-    - url scan
-    - website content
+description: >
+  Codebase analysis, dependency auditing, and architecture mapping for the
+  Synthex platform. Scans file structure, dependency health, TypeScript
+  errors, unused exports, security vulnerabilities, and documentation gaps.
+  Use when user says "scan project", "audit dependencies", "check codebase",
+  "architecture map", "security scan", or "code health".
 ---
 
-# Project Scanner
+# Project Scanner & Codebase Auditor
 
-## Purpose
+## Process
 
-Scans client websites to extract services, content, brand colours, and
-video-worthy material when no codebase or repo is available. Produces a
-structured manifest that feeds into the video-engine and client-manager
-workflows.
+1. **Map file structure** -- traverse the Synthex codebase and catalog directories, files, and module boundaries
+2. **Audit dependencies** -- analyze package.json for outdated, deprecated, or vulnerable packages
+3. **Check TypeScript** -- run the TypeScript compiler in check mode to surface type errors
+4. **Detect unused exports** -- identify exported symbols that have no internal consumers
+5. **Scan for vulnerabilities** -- check for known CVEs in dependencies and insecure code patterns
+6. **Assess architecture** -- verify module boundaries, circular dependencies, and layer violations
+7. **Identify documentation gaps** -- flag undocumented APIs, missing JSDoc, and incomplete README sections
+8. **Generate report** -- compile findings into a prioritized action plan
 
-## When to Use
+## Stack Reference
 
-Activate this skill when:
-- A new client has no repo/codebase — only a website URL
-- Client onboarding requires brand extraction from a live site
-- Video production needs verified content from client's web presence
-- Service/feature discovery is needed for a client without structured data
+| Layer | Technology |
+|-------|------------|
+| Runtime | Node.js with Express |
+| Language | TypeScript |
+| ORM | Prisma (PostgreSQL) |
+| Deployment | Vercel |
+| Auth | JWT sessions + Google OAuth |
+| AI Integration | Anthropic Claude, OpenRouter |
 
-## When NOT to Use This Skill
+## Prisma Models
+- User, Campaign, Post, Project, ApiUsage, Session
+- Schema location: `Synthex/prisma/schema.prisma`
 
-- When the client has provided a repo or codebase (scan the repo directly)
-- When doing SEO analysis of a website (use seo skills)
-- When generating video content (use video-engine after scanning)
-- When managing client accounts or billing (use client-manager)
-- Instead use: `client-manager` for onboarding workflow, `video-engine` for production
+## Scan Categories
 
-## Instructions
+### 1. File Structure Analysis
+- Total file/directory count by type (.ts, .tsx, .json, .md, .prisma)
+- Module boundary identification (routes, controllers, services, models, utils)
+- Configuration file inventory (.env variants, tsconfig, package.json)
+- Untracked or orphaned files (files not imported anywhere)
 
-1. **Collect target URLs** from the client — homepage + key pages (services, about, features)
-2. **Run the scanner** using `scripts/scan-website.py <url1> [url2] ... --output manifest.json`
-3. **Review the manifest** — check verification status for each page
-4. **Flag placeholders** — if placeholder content is detected, alert the client
-5. **Extract services** — verify discovered services match client's actual offerings
-6. **Extract brand colours** — confirm colours align with client's brand guidelines
-7. **Identify video candidates** — note service explainers and feature demos available
-8. **Save the manifest** to the client's workspace: `output/clients/{client-slug}/manifest.json`
-9. **Hand off to video-engine** — pass the verified manifest for content production
-10. **Log the scan** — record URLs scanned, services found, and verification status
+### 2. Dependency Audit
+```bash
+npm audit                    # Known vulnerabilities
+npm outdated                 # Version drift
+npx depcheck                 # Unused dependencies
+```
+- Flag: critical/high CVEs requiring immediate action
+- Flag: major version drift (>2 major versions behind)
+- Flag: unused dependencies inflating bundle size
+- Flag: missing peer dependencies
 
-## Input Specification
+### 3. TypeScript Health
+```bash
+npx tsc --noEmit             # Type checking without output
+```
+- Count and categorize errors: type mismatches, missing types, implicit any
+- Identify strictness gaps (files with `@ts-ignore` or `@ts-expect-error`)
+- Check tsconfig.json for recommended strict settings
+- Surface any `any` type usage that should be narrowed
 
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| urls | string[] | Yes | List of client website URLs to scan |
-| output_path | string | No | Path for JSON manifest output |
-| client_slug | string | Yes | Client identifier for workspace isolation |
+### 4. Unused Export Detection
+- Scan all `export` statements across the codebase
+- Cross-reference with `import` statements to find unused exports
+- Exclude entry points (route handlers, Prisma schema, config exports)
+- Flag dead code candidates for removal
 
-## Output Specification
+### 5. Security Scan
+- **Dependencies**: `npm audit` for known CVEs
+- **Secrets**: scan for hardcoded API keys, tokens, or credentials in source files
+- **Environment**: verify `.env` files are in `.gitignore`
+- **Auth patterns**: check JWT expiration, password hashing, session management
+- **Input validation**: identify unvalidated user inputs in route handlers
+- **SQL injection**: verify Prisma parameterized queries (no raw SQL with interpolation)
 
-| Field | Type | Description |
-|-------|------|-------------|
-| manifest.json | JSON | Complete scan results with services, features, brand colours |
-| verification | string | VERIFIED / PARTIAL / ERROR per page |
-| video_candidates | object | Counts of service explainers and feature demos available |
+### 6. Architecture Assessment
+- **Circular dependencies**: detect import cycles between modules
+- **Layer violations**: ensure routes do not directly access Prisma (should go through services)
+- **Separation of concerns**: verify controller/service/model boundaries
+- **API consistency**: check route naming conventions and HTTP method usage
+- **Error handling**: verify consistent error response format across endpoints
 
-## Error Handling
+### 7. Documentation Gaps
+- Missing or incomplete JSDoc on exported functions
+- API endpoints without OpenAPI/Swagger documentation
+- Prisma models without field-level comments
+- Missing SKILL.md files for skill directories
+- Outdated architecture documentation
 
-| Error | Action |
-|-------|--------|
-| URL timeout (15s) | Report timeout, skip URL, continue with remaining |
-| HTTP error (4xx/5xx) | Log error, skip URL, note in manifest |
-| No `requests` library | Exit with install instructions |
-| Placeholder content detected | Mark page as PARTIAL verification |
-| No services found | Flag for manual review — client may need different pages |
+## Output
 
-## Integration Points
+### Health Score: XX/100
 
-- **client-manager** — Receives scan manifest during onboarding
-- **video-engine** — Consumes verified manifest for content production
-- **truth-finder** — Verification status aligns with confidence scoring
+| Category | Score | Weight |
+|----------|-------|--------|
+| Dependency Health | XX/100 | 20% |
+| TypeScript Strictness | XX/100 | 20% |
+| Security Posture | XX/100 | 25% |
+| Architecture Quality | XX/100 | 20% |
+| Documentation Coverage | XX/100 | 15% |
+
+### Issues Found
+
+Categorized by severity:
+- **Critical**: security vulnerabilities, exposed secrets, broken builds
+- **High**: type errors, outdated critical dependencies, circular dependencies
+- **Medium**: unused exports, missing documentation, inconsistent patterns
+- **Low**: style inconsistencies, minor version drift, optional improvements
+
+### Action Plan
+- Prioritized list of fixes ordered by severity and effort
+- Estimated effort per fix (quick fix, moderate, significant refactor)
+- Grouped by category for batch resolution
+
+## References
+
+- Prisma schema: `Synthex/prisma/schema.prisma`
+- Package manifest: `Synthex/package.json`
+- TypeScript config: `Synthex/tsconfig.json`
+- Environment config: `.env*` files (never commit, verify in .gitignore)
+- Skill directories: `.claude/skills/`

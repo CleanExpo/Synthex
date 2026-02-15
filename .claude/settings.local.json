@@ -1,28 +1,72 @@
 {
   "permissions": {
     "allow": [
-      "Bash(curl:*)",
-      "Bash(tasklist)",
-      "Bash(git commit:*)",
-      "Bash(find:*)",
-      "Bash(cd:*)",
-      "Bash(xargs:*)",
-      "Bash(dir:*)",
-      "WebFetch(domain:paperbanana.org)",
-      "WebFetch(domain:github.com)",
-      "Bash(findstr:*)",
-      "WebFetch(domain:arxiv.org)",
-      "mcp__exa__get_code_context_exa",
-      "Bash(python -c:*)",
-      "Bash(done)",
-      "Bash(DIRECT_URL=\"postgresql://postgres:postgres@127.0.0.1:54322/postgres\" DATABASE_URL=\"postgresql://postgres:postgres@127.0.0.1:54322/postgres\" npx prisma db push:*)",
-      "Bash(PGPASSWORD=postgres psql:*)",
-      "Bash(test:*)",
-      "Bash(ls:*)",
-      "Bash(powershell -Command:*)",
-      "Bash(grep:*)"
+      "Bash(git *)",
+      "Bash(npm run *)",
+      "Bash(npm test*)",
+      "Bash(npm install*)",
+      "Bash(npx prisma generate)",
+      "Bash(npx prisma db push)",
+      "Bash(npx prisma migrate dev*)",
+      "Bash(npx prisma studio)",
+      "Bash(npx tsc*)",
+      "Bash(node *)",
+      "Bash(powershell *)"
     ],
-    "deny": [],
-    "ask": []
+    "deny": [
+      "Bash(git push --force*)",
+      "Bash(git push -f *)",
+      "Bash(git reset --hard*)",
+      "Bash(git clean -f*)",
+      "Bash(git branch -D *)",
+      "Bash(rm -rf /*)",
+      "Bash(rm -rf .*)",
+      "Bash(rmdir /s /q *)",
+      "Bash(prisma migrate reset*)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell -ExecutionPolicy Bypass -File \"D:\\Synthex\\.claude\\hooks\\guard-destructive.ps1\" -ToolInput \"$TOOL_INPUT\"",
+            "exitCodes": { "2": "block" }
+          },
+          {
+            "type": "command",
+            "command": "powershell -ExecutionPolicy Bypass -File \"D:\\Synthex\\.claude\\hooks\\pre-build-validate.ps1\" -ToolInput \"$TOOL_INPUT\"",
+            "exitCodes": { "2": "block" }
+          }
+        ]
+      },
+      {
+        "matcher": "Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell -ExecutionPolicy Bypass -File \"D:\\Synthex\\.claude\\hooks\\pre-write-validate.ps1\" -ToolInput \"$TOOL_INPUT\"",
+            "exitCodes": { "2": "block" }
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell -ExecutionPolicy Bypass -File \"D:\\Synthex\\.claude\\hooks\\post-write-quality.ps1\" -ToolInput \"$TOOL_INPUT\""
+          },
+          {
+            "type": "command",
+            "command": "powershell -ExecutionPolicy Bypass -File \"D:\\Synthex\\.claude\\hooks\\post-research-capture.ps1\" -ToolInput \"$TOOL_INPUT\""
+          }
+        ]
+      }
+    ]
   }
 }

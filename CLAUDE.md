@@ -1,89 +1,95 @@
-# SYNTHEX — Claude Code Configuration
+# Synthex
 
-## Project
-- **What:** AI-powered social media marketing platform
-- **Stack:** Next.js 15, React 18, TypeScript 5.7, Prisma ORM, Supabase (PostgreSQL), Tailwind CSS
-- **Deploy:** Vercel (serverless) — `vercel --prod --yes`
-- **Auth:** JWT in httpOnly `auth-token` cookie. Helper: `getUserIdFromRequestOrCookies()`
-- **AI:** OpenRouter API via `@/lib/ai/`
+AI-powered marketing automation platform. Express + TypeScript backend deployed on Vercel.
 
-## Pricing (HARDCODED — DO NOT CHANGE)
-| Plan | Price | Notes |
-|------|-------|-------|
-| Professional | $249/mo | 5 accounts, 100 posts/mo, 3 personas |
-| Business | $399/mo | 10 accounts, unlimited posts, 10 personas, team collab |
-| Custom | Contact Sales | Multi-business owners, enterprise |
+## Project Identity
 
-### Custom Plan — Multi-Business Owners
-- `isMultiBusinessOwner` flag on User model (admin-set only)
-- Each child business = separate Organization, $249/mo via `BusinessOwnership` table
-- `activeOrganizationId` on User tracks current business context
-- `getEffectiveOrganizationId(userId)` scopes all dashboard queries
-- BusinessSwitcher component in dashboard header
+- **Name**: Synthex (formerly "Auto Marketing")
+- **Stack**: Express 4, TypeScript 5, Prisma ORM, PostgreSQL
+- **Deployment**: Vercel (serverless), `rootDirectory: "Synthex"`
+- **Node**: 20.x
+- **OS**: Windows 11 (PowerShell)
 
-## Demo Credentials
-| Account | Email | Password |
-|---------|-------|----------|
-| Demo | `demo@synthex.com` | `Rrw6qRd1IIIY5Br9!` |
-| Admin | `admin@synthex.com` | `IBkxhZpGPQW3a5B2!` |
+## Directory Structure
 
-## Architecture
-
-### Key Patterns
-- **UI:** Dark theme (bg-gray-950, bg-[#0f172a]/80), cyan accents, glassmorphic cards
-- **Icons:** All from `@/components/icons` barrel (lucide-react re-exports)
-- **Components:** `'use client'` directive, `credentials: 'include'` on all fetches
-- **API Routes:** Next.js App Router at `app/api/`. Auth via JWT from header or cookie
-- **Database:** Prisma ORM. Post→Campaign→Organization chain (Post has no direct `organizationId`). Analytics stored as JSON on Post. `platformConnection` (not `socialMediaAccount`)
-
-### Feature Gating
-- GEO/E-E-A-T tools: Professional plan via `GEOFeatureGate` component
-- Multi-business dashboard: `custom` plan + `isMultiBusinessOwner === true`
-- SEO tools: Available on all paid plans
-
-### Key Directories
 ```
-app/              → Next.js pages + API routes
-components/       → React components (business/, ui/, icons.tsx)
-hooks/            → Custom React hooks (use-user, useActiveBusiness, etc.)
-lib/              → Server utilities (prisma, multi-business/, ai/, security/)
-prisma/           → Schema + migrations
+D:\Synthex\                      # Repository root
+├── Synthex/                     # Application code (Vercel rootDirectory)
+│   ├── src/                     # TypeScript source
+│   │   ├── index.ts             # Express app entry point
+│   │   ├── services/            # Business logic (analytics, social-media, seo, etc.)
+│   │   ├── routes/              # API route handlers
+│   │   └── middleware/          # Auth, rate limiting, validation
+│   ├── prisma/                  # Database schema & migrations
+│   ├── public/                  # Static assets (landing page, dashboard)
+│   ├── api/vercel.js            # Vercel serverless adapter
+│   └── platform_master_config.json  # 8-platform marketing config
+├── .claude/                     # Claude Code integration layer
+│   ├── skills/                  # 12 skill definitions (SKILL.md)
+│   ├── agents/                  # 6 agent definitions (AGENT.md)
+│   ├── hooks/                   # 7 PowerShell hook scripts
+│   ├── knowledge/               # NotebookLM-style knowledge base
+│   ├── checkpoints/             # Session state checkpoints
+│   └── settings.local.json      # Permissions, hooks config
+├── tools/claude-seo/            # SEO tooling (13 skills, 6 agents, hooks)
+├── agents/build/                # Build orchestration agents
+└── vercel.json                  # Vercel deployment config
 ```
-
-## Environment Variables
-Configured in Vercel dashboard — NEVER commit `.env` files.
-```
-DATABASE_URL          — PostgreSQL connection (CRITICAL)
-SUPABASE_URL          — Supabase project URL
-SUPABASE_ANON_KEY     — Supabase anonymous key
-JWT_SECRET            — Token signing key (CRITICAL)
-OPENROUTER_API_KEY    — AI service key (SECRET)
-NEXT_PUBLIC_APP_URL   — Production URL
-```
-
-## Security Rules
-1. Never expose SECRET/CRITICAL env vars to client components
-2. Use `NEXT_PUBLIC_` prefix only for client-safe values
-3. All API endpoints must authenticate via JWT
-4. Never log sensitive values or include in API error responses
-5. Use Prisma parameterized queries (never raw SQL with user input)
-6. Validate all user input server-side
 
 ## Commands
+
 ```bash
-npm run dev          # Start dev server
-npm run build        # Production build
-npx tsc --noEmit     # Type check
-npx prisma generate  # Regenerate Prisma client
-npx prisma db push   # Push schema to database
-vercel --prod --yes  # Deploy to production
+# Development
+npm run dev                      # Start dev server (ts-node)
+npm run dev:watch                # Dev with nodemon
+
+# Build
+npm run build                    # TypeScript compile
+npm run build:prod               # Production build (no sourcemaps)
+
+# Database
+npx prisma generate              # Generate Prisma client
+npx prisma db push               # Push schema changes
+npx prisma migrate dev           # Create migration
+npx prisma studio                # Database GUI
+
+# Testing
+npm test                         # Run Jest tests
+npm run test:coverage            # Tests with coverage
+
+# Type checking
+npm run typecheck                # tsc --noEmit
 ```
 
-## Rules
-- **DO** what was asked — nothing more, nothing less
-- **NEVER** create files unless absolutely necessary
-- **ALWAYS** prefer editing existing files over creating new ones
-- **NEVER** create documentation files unless explicitly requested
-- **ALWAYS** run typecheck after code changes
-- **NEVER** commit unless explicitly asked
-- **ALWAYS** use TodoWrite for complex multi-step tasks
+## Data Models (Prisma)
+
+- **User** -- auth (local + Google OAuth), API keys, preferences
+- **Campaign** -- multi-platform marketing campaigns
+- **Post** -- scheduled/published content per platform
+- **Project** -- marketing/content/analytics projects
+- **ApiUsage** -- token/cost tracking per API call
+- **Session** -- auth session tokens
+
+## Platforms (8)
+
+YouTube, Instagram, TikTok, X (Twitter), Facebook, LinkedIn, Pinterest, Reddit.
+Config in `Synthex/platform_master_config.json`.
+
+## Architecture Notes
+
+- All API routes go through `api/vercel.js` serverless adapter
+- Rate limiting via `express-rate-limit`
+- Auth: JWT + Google OAuth (Passport.js)
+- Payments: Stripe integration
+- AI: OpenAI + Anthropic APIs via OpenRouter
+
+## Claude Code Integration
+
+Skills, agents, hooks, and knowledge base live in `.claude/` -- outside the Vercel root directory, so they have zero deployment impact.
+
+- **Skills** define structured workflows (SKILL.md with YAML frontmatter)
+- **Agents** define specialist roles with tools and delegation protocols
+- **Hooks** are PowerShell scripts that validate actions pre/post tool use
+- **Knowledge base** is a structured "second brain" for persistent research
+
+See `tools/claude-seo/` for the canonical pattern (13 skills, 6 agents).

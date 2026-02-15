@@ -1,135 +1,174 @@
 ---
 name: video-engine
-description: >-
-  Synthex AI Video Production Engine. Multi-tenant platform that generates
-  explainer videos, feature walkthroughs, and promotional content from
-  verified project data. Operates in Client Mode (for signed-in businesses)
-  and Platform Mode (for Synthex's own marketing content).
-metadata:
-  author: synthex
-  version: "1.0"
-  engine: synthex-ai-agency
-  type: core-skill
-  triggers:
-    - video generation
-    - explainer video
-    - video production
-    - video walkthrough
-    - promotional video
+description: >
+  Video content generation using Veo3 integration. Handles storyboard
+  creation, character consistency, brand integration, and platform-specific
+  optimization for YouTube long-form, YouTube Shorts, TikTok, Instagram
+  Reels, and other formats. Use when user says "generate video", "storyboard",
+  "video content", "Veo3", "shorts", "reels", or "video strategy".
 ---
 
-# Synthex Video Engine
+# Video Content Engine (Veo3)
 
-## Purpose
+## Process
 
-Multi-tenant AI video production platform. Generates professional explainer
-videos, feature walkthroughs, and promotional content for signed-in client
-businesses from their real, verified project data. Also generates Synthex's
-own marketing and showcase content for the landing page.
+1. **Define video brief** -- collect campaign goal, target platform(s), brand guidelines, and key message
+2. **Select format** -- determine video type (long-form, shorts, reels) and platform specs
+3. **Generate storyboard** -- create scene-by-scene breakdown with visuals, dialogue, and timing
+4. **Ensure character consistency** -- maintain visual identity of characters/presenters across scenes
+5. **Integrate brand elements** -- apply logo, colors, typography, and brand voice throughout
+6. **Optimize per platform** -- adjust duration, aspect ratio, pacing, and metadata for each target
+7. **Generate via Veo3** -- execute video generation with scene transitions and music integration
+8. **Review and iterate** -- quality check against brief and brand standards
 
-## Two Operating Modes
+## Veo3 Integration Settings
 
-### Client Mode
-A signed-in business requests videos about THEIR product/service.
-- Engine scans their provided repo/data/website
-- Generates videos from verified client data only
-- Output: `output/clients/{client-slug}/`
-- Billing: tracked per client against their plan
+From `platform_master_config.json`:
 
-### Platform Mode
-Synthex generates videos about ITSELF for marketing/homepage.
-- Engine scans Synthex's own codebase and capabilities
-- Generates showcase videos demonstrating what Synthex can do
-- Uses real capabilities as proof (the engine demonstrates itself)
-- Output: `output/platform/showcase/`
+| Feature | Setting |
+|---------|---------|
+| Storyboard generation | Enabled |
+| Character consistency | Enabled |
+| Brand integration | Enabled |
+| Platform optimization | Enabled |
+| Scene transitions | Smooth |
+| Style consistency | Brand-aligned |
+| Music integration | Royalty-free library |
 
-## When to Use
+## Platform Video Specifications
 
-Activate this skill when:
-- A client needs video content generated
-- Synthex homepage needs showcase videos
-- Video production pipeline needs orchestration
-- Content verification is required
+### YouTube Long-Form
+- Duration: 8-15 minutes
+- Aspect ratio: 16:9
+- Resolution: 1920x1080
+- File format: MP4
+- Bitrate: 8-12 Mbps
+- FPS: 24-60
+- Structure: Hook (0-15s) > Problem (15-60s) > Solution (60-80%) > CTA (final 20s)
+- Requires: custom thumbnail, timestamps, end screen, cards
 
-## When NOT to Use This Skill
+### YouTube Shorts
+- Duration: 15-60 seconds
+- Aspect ratio: 9:16
+- Resolution: 1080x1920
+- File format: MP4
+- Bitrate: 5-10 Mbps
+- FPS: 30-60
+- Structure: Immediate hook > compressed value > loop-friendly ending
 
-- When generating static images only (use imagen-designer)
-- When managing client onboarding or billing (use client-manager)
-- When creating non-video marketing content (use content agents)
-- When verifying factual claims without video context (use truth-finder)
-- Instead use: `imagen-designer` for images, `client-manager` for client ops
+### Instagram Reels
+- Duration: 15-30 seconds
+- Aspect ratio: 9:16
+- Resolution: 1080x1920
+- Cover frame: custom selection
+- Music: trending audio essential
+- Structure: Hook > Build suspense > Reveal > Value/Lesson
 
-## Pipeline Architecture
+### TikTok
+- Duration: 15-60 seconds (up to 10 minutes for extended)
+- Aspect ratio: 9:16
+- Resolution: 1080x1920
+- Text overlay: essential for silent viewing
+- Transitions: quick cuts every 2-3 seconds
+- Structure: Trending audio + Brand message + Visual hook
 
+### Facebook Video
+- Duration: 1-3 minutes
+- Aspect ratio: 1:1 or 4:5
+- Captions: required for silent viewing
+- Thumbnail: custom selection
+- Structure: Personal story > Context > Value/Lesson
+
+### LinkedIn Video
+- Duration: 30 seconds to 10 minutes
+- Aspect ratio: 16:9 or 1:1
+- Captions: professional tone
+- Structure: Industry insight or professional story format
+
+### Pinterest Video Pins
+- Duration: 4 seconds to 15 minutes
+- Aspect ratio: 2:3, 1:1, or 9:16
+- Cover image: custom selection
+- Structure: How-to guide or inspiration board format
+
+## Storyboard Generation
+
+### Scene Structure
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                    VIDEO PRODUCTION PIPELINE                     │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                  │
-│  ┌──────────┐    ┌──────────┐    ┌──────────┐    ┌──────────┐  │
-│  │  SCAN    │───▶│  SCRIPT  │───▶│  VERIFY  │───▶│ GENERATE │  │
-│  │          │    │          │    │          │    │          │  │
-│  │ • Repo   │    │ • AI     │    │ • Fact   │    │ • Imagen │  │
-│  │ • URL    │    │   writes │    │   check  │    │ • Voice  │  │
-│  │ • Upload │    │   script │    │ • Source │    │ • Assemble│ │
-│  └──────────┘    └──────────┘    └──────────┘    └──────────┘  │
-│                                                                  │
-│  Source Types:                                                   │
-│  • repo   → Full codebase scan (developers, SaaS)               │
-│  • url    → Website scraping (any business)                     │
-│  • upload → File parsing (any business)                         │
-│  • self   → Synthex scans itself (platform mode)                │
-│                                                                  │
-└─────────────────────────────────────────────────────────────────┘
+Scene [N]:
+  Duration: [seconds]
+  Visual: [description of what appears on screen]
+  Dialogue/VO: [spoken text or voiceover script]
+  Text overlay: [on-screen text for silent viewing]
+  Music/SFX: [audio cues]
+  Transition: [cut, fade, swipe, zoom]
+  Brand elements: [logo placement, color usage, typography]
 ```
 
-## Data Isolation
+### Pacing Guidelines
 
-```
-output/
-├── platform/           ← Synthex's own marketing videos (ISOLATED)
-│   ├── showcase/       ← Homepage videos
-│   ├── scripts/        ← Video scripts
-│   ├── clips/          ← Generated video clips
-│   ├── voiceovers/     ← AI voice audio
-│   ├── final/          ← Assembled final videos
-│   └── usage/          ← Platform analytics
-│
-└── clients/            ← Multi-tenant client workspaces (ISOLATED)
-    ├── {client-a}/     ← Client A's workspace
-    │   ├── client.yaml ← Client config
-    │   ├── manifest.json
-    │   ├── scripts/
-    │   ├── clips/
-    │   ├── voiceovers/
-    │   ├── final/
-    │   └── usage/
-    │
-    └── {client-b}/     ← Client B's workspace (NO CROSS-ACCESS)
-```
+| Platform | Avg. Scene Length | Cuts Per Minute | Hook Window |
+|----------|-------------------|-----------------|-------------|
+| YouTube Long-form | 10-30s | 4-8 | First 15s |
+| YouTube Shorts | 3-5s | 12-20 | First 2s |
+| Instagram Reels | 2-4s | 15-20 | First 3s |
+| TikTok | 2-3s | 20-30 | First 1-2s |
+| Facebook | 5-15s | 4-12 | First 3s |
+| LinkedIn | 10-30s | 2-6 | First 5s |
 
-## Instructions
+## Character Consistency
 
-1. **Detect Mode**: Client request vs Platform request
-2. **Scan Source**: Based on source type (repo/url/upload/self)
-3. **Generate Script**: AI writes video script from verified data
-4. **Verify Claims**: Fact-checker validates every claim against source
-5. **Generate Media**: Imagen for visuals, ElevenLabs for voice
-6. **Assemble**: Combine clips, voice, music into final video
-7. **Deliver**: Output to appropriate workspace
+### Visual Identity Tracking
+- Define character appearance attributes: face, build, clothing, accessories
+- Lock style reference across all scenes in a storyboard
+- Maintain consistent lighting and color grading on characters
+- Document character sheet for multi-video campaign continuity
 
-## Rules
+### Brand Presenter Guidelines
+- Consistent framing and positioning across scenes
+- Wardrobe aligned with brand palette
+- Background environment matches brand aesthetic
+- Expression and energy level appropriate to platform tone
 
-- ALL tasks route through video-director agent
-- NEVER generate content from unverified data
-- Client data is ISOLATED - never cross-reference between clients
-- Platform mode can only reference Synthex's own capabilities
-- Same verification gate applies to platform videos (no shortcuts)
-- Budget tracked per client AND platform-wide
+## Brand Integration
 
-## Environment Requirements
+### Visual Elements
+- Logo: consistent placement per platform (watermark or intro/outro)
+- Color palette: applied to backgrounds, text overlays, graphics
+- Typography: brand fonts for all on-screen text
+- Lower thirds: branded template for speaker identification
 
-- GEMINI_API_KEY (for Imagen image generation)
-- ELEVENLABS_API_KEY (for voice generation)
-- Python 3.10+ with requests library
-- ffmpeg for video assembly
+### Audio Elements
+- Brand audio signature (intro/outro jingle if applicable)
+- Music from royalty-free library matching brand mood
+- Consistent audio levels and mixing standards
+
+### Messaging Elements
+- Brand voice applied to all scripts and dialogue
+- Key messaging points embedded naturally in content
+- CTA aligned with campaign objective
+
+## Output
+
+### Per Video
+- Complete storyboard document (scene-by-scene)
+- Veo3 generation prompts per scene
+- Platform-specific export settings (resolution, bitrate, format)
+- Thumbnail/cover frame recommendation
+- Caption/subtitle file
+- Metadata package (title, description, tags, hashtags)
+
+### Multi-Platform Package
+- Primary video (usually YouTube long-form)
+- Short-form derivatives (Shorts, Reels, TikTok) extracted from primary
+- Platform-specific edits with adjusted pacing and aspect ratios
+- Publishing schedule aligned with waterfall strategy
+
+## References
+
+- Platform video specs sourced from `Synthex/platform_master_config.json`
+- Veo3 settings in `automation_settings.veo3_integration` config section
+- Cross-posting order and timing in `publishing_automation.cross_posting` config section
+- See `platform-showcase` skill for full adaptation strategy
+- See `imagen-designer` skill for thumbnail and cover frame design
+- Video asset references stored in `video-engine/references/`

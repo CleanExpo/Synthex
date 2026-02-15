@@ -1,194 +1,109 @@
 ---
 name: imagen-designer
-description: >-
-  AI image generation skill using Google's Gemini/Imagen models.
-  Generates visuals for video production, marketing materials,
-  and showcase content. Supports FREE and PREMIUM tiers.
-metadata:
-  author: synthex
-  version: "2.0"
-  engine: synthex-ai-agency
-  type: generation-skill
-  triggers:
-    - image generation
-    - ai image
-    - imagen
-    - visual asset
-    - gemini image
+description: >
+  Image generation prompt engineering and visual design standards for
+  AI marketing content. Generates optimized prompts for AI image tools,
+  enforces brand consistency, and handles platform-specific sizing and
+  aspect ratios. Use when user says "generate image", "design visual",
+  "brand assets", "social media graphics", or "image prompt".
 ---
 
-# Imagen Designer
+# Image Generation & Visual Design
 
-## Purpose
+## Process
 
-Generates AI images for video production and marketing materials using
-Google's Gemini/Imagen APIs. Supports both free and premium tiers with
-different model options.
+1. **Gather brief** -- collect brand context, campaign goal, target platform(s), and visual direction
+2. **Select format** -- determine aspect ratio and resolution from platform specs
+3. **Compose prompt** -- build a structured AI image prompt with style, subject, composition, and brand elements
+4. **Apply brand rules** -- enforce color palette, typography guidelines, logo placement, and tone
+5. **Generate variants** -- produce 2-4 prompt variations for A/B testing
+6. **Review & refine** -- iterate based on output quality and brand alignment
 
-## Tier System
+## Platform Image Specifications
 
-### FREE TIER
-- **Model**: Nano Banana (`gemini-2.5-flash-image`)
-- **Scripts**: `generate_image.py`, `generate_nano_banana.py --model flash`
-- **Requirements**: `GEMINI_API_KEY` or `OPENROUTER_API_KEY`
-- **Features**: Fast generation, high-volume, 1K resolution
+| Platform | Format | Aspect Ratio | Resolution | Notes |
+|----------|--------|--------------|------------|-------|
+| YouTube | Thumbnail | 16:9 | 1280x720 | High contrast, readable at small size |
+| YouTube | Shorts cover | 9:16 | 1080x1920 | Bold text, vertical framing |
+| Instagram | Feed post | 1:1 | 1080x1080 | Clean composition, text overlay minimal |
+| Instagram | Feed post (tall) | 4:5 | 1080x1350 | Maximum feed real estate |
+| Instagram | Reels cover | 9:16 | 1080x1920 | Eye-catching, movement implied |
+| Instagram | Story | 9:16 | 1080x1920 | Interactive-ready layout |
+| TikTok | Video cover | 9:16 | 1080x1920 | Bold text, high energy |
+| X (Twitter) | In-stream image | 16:9 | 1600x900 | Contrast for dark/light mode |
+| Facebook | Feed image | 1:1 or 4:5 | 1080x1080 / 1080x1350 | Minimal text overlay (<20%) |
+| Facebook | Cover photo | 2.7:1 | 1640x624 | Brand identity focused |
+| LinkedIn | Post image | 1:1 or 16:9 | 1080x1080 / 1920x1080 | Professional, data-driven visuals |
+| LinkedIn | Article header | 16:9 | 1920x1080 | Clean, editorial style |
+| Pinterest | Standard pin | 2:3 | 1000x1500 | Tall format, text overlay readable |
+| Pinterest | Idea pin | 9:16 | 1080x1920 | Multi-page visual story |
+| Reddit | Post image | 16:9 or 4:3 | 1200x628 or 1200x900 | Informative, not overly branded |
 
-### PREMIUM TIER (After Paywall)
-- **Models**: Nano Banana 2 Pro (`gemini-3-pro-image-preview`)
-- **Script**: `generate_imagen.py`, `generate_nano_banana.py --model pro`
-- **Requirements**: Client's saved API keys from database
-- **Features**: 4K resolution, advanced text rendering, thinking mode, search grounding
+## Prompt Engineering Structure
 
-## When to Use
-
-Activate this skill when:
-- Video production needs visual assets
-- Marketing materials require generated images
-- Showcase content needs illustrative visuals
-- Product mockups or UI previews are needed
-
-## When NOT to Use This Skill
-
-- When generating video content or animations (use video-engine)
-- When real-time image rendering is needed (not supported)
-- When text-heavy images are required (AI text rendering is unreliable)
-- When managing client assets or billing (use client-manager)
-- Instead use: `video-engine` for video, `client-manager` for client operations
-
-## Environment Discovery
-
-First, run the discovery script to check available API keys:
-
-```bash
-source .claude/skills/imagen-designer/scripts/discover-keys.sh
+### Prompt Template
+```
+[Style/Medium] of [Subject] in [Setting/Environment],
+[Composition/Framing], [Lighting],
+[Color palette/Brand colors], [Mood/Atmosphere],
+[Technical details: resolution, quality descriptors]
 ```
 
-This will:
-- Check for GEMINI_API_KEY (free tier)
-- Check for VERTEX_AI_PROJECT (premium tier)
-- Set IMAGEN_PROVIDER and IMAGEN_KEYS_AVAILABLE
+### Style Modifiers
+- **Photography**: editorial, product, lifestyle, documentary, portrait
+- **Illustration**: flat design, isometric, watercolor, line art, 3D render
+- **Graphic design**: minimalist, typographic, data visualization, infographic
+- **Brand-specific**: match existing brand visual language
 
-## Generation Scripts
+### Composition Rules
+- Rule of thirds for subject placement
+- Negative space for text overlay areas
+- Visual hierarchy: primary subject > secondary elements > background
+- Platform-aware safe zones (avoid edges that get cropped)
 
-### 1. Basic Generation (Free Tier)
+### Quality Descriptors
+- Resolution: "high resolution", "4K", "detailed"
+- Lighting: "studio lighting", "natural light", "golden hour", "dramatic"
+- Render quality: "photorealistic", "sharp focus", "professional"
 
-```bash
-python .claude/skills/imagen-designer/scripts/generate_image.py \
-  --prompt "Your detailed prompt here" \
-  --aspect "16:9" \
-  --output "output/path/image.png" \
-  --style "realistic"
-```
+## Brand Consistency Framework
 
-### 2. Nano Banana Pro/Flash (Free Tier)
+### Color System
+- Define primary, secondary, and accent colors with hex values
+- Specify text-on-dark and text-on-light variants
+- Ensure contrast ratios meet WCAG AA (4.5:1 for text)
 
-```bash
-python scripts/generate_nano_banana.py "Your prompt" \
-  --model pro \
-  --aspect 16:9 \
-  --output output/image.png
-```
+### Typography Integration
+- Headline: bold, high contrast, readable at thumbnail size
+- Body text: clean, legible at mobile viewing distance
+- Platform constraints: some platforms strip custom fonts
 
-| Model | Description | Tier |
-|-------|-------------|------|
-| flash | Nano Banana (gemini-2.5-flash-image) | FREE |
-| pro | Nano Banana 2 Pro (gemini-3-pro-image-preview) | PREMIUM |
+### Logo Placement
+- Consistent positioning per platform (bottom-right default)
+- Minimum clear space around logo
+- Monochrome variant for busy backgrounds
+- Never stretch, rotate, or obscure the logo
 
-### 3. Premium Generation (After Paywall)
+### Visual Tone
+- Map brand voice to visual style (e.g., "authoritative" = clean lines, dark palette)
+- Maintain consistent filter/color grading across campaign assets
+- Document "do" and "do not" examples for reference
 
-```bash
-python scripts/generate_imagen.py "Your prompt" \
-  --model nano-banana-2-pro \
-  --size 4K \
-  --aspect 16:9 \
-  --count 1 \
-  --output output/image.png
-```
+## Output
 
-| Model | Description | Max Resolution |
-|-------|-------------|----------------|
-| nano-banana-2-pro | 4K, advanced text, thinking mode | 4K |
-| nano-banana-pro | High quality, 2K output | 2K |
-| nano-banana | Fast generation (free) | 1K |
-| imagen-3 | Vertex AI Imagen 3 | 1K |
+### Per Image Request
+- 2-4 prompt variations with rationale for each
+- Recommended aspect ratio and resolution for target platform
+- Brand compliance checklist (colors, logo, tone)
+- Alt text suggestion for accessibility
 
-## Parameters
+### Deliverable Formats
+- AI prompt text ready for image generation tools
+- Platform-specific sizing guide
+- Brand compliance notes and adjustment recommendations
 
-| Parameter | Options | Default | Description |
-|-----------|---------|---------|-------------|
-| --prompt | Text | Required | Image description |
-| --aspect | 16:9, 9:16, 1:1, 4:3, 3:4, 21:9 | 16:9 | Aspect ratio |
-| --output | Path | Required | Output file path |
-| --style | realistic, artistic, minimal, corporate | realistic | Visual style |
-| --model | See tables above | varies | Model selection |
-| --size | 1K, 2K | 1K | Resolution (Imagen only) |
-| --count | 1-4 | 1 | Image count (Imagen only) |
+## References
 
-## Prompt Engineering Guidelines
-
-### For Marketing/Corporate Images
-
-```
-A professional marketing image showing [subject].
-Style: Clean, modern, corporate.
-Colours: [brand colours]
-Background: [simple/gradient/contextual]
-Mood: [professional/friendly/innovative]
-No text or logos.
-```
-
-### For UI Mockups
-
-```
-A clean UI mockup showing [feature].
-Style: Modern dashboard design.
-Colours: Dark mode with [accent colour] highlights.
-Elements: [specific UI elements]
-Realistic software interface aesthetic.
-```
-
-### For Abstract/Conceptual
-
-```
-An abstract visualization representing [concept].
-Style: [geometric/organic/data-driven]
-Colours: [brand colours]
-Feeling: [innovative/trustworthy/dynamic]
-Professional corporate aesthetic.
-```
-
-## Brand Colour Integration
-
-For Synthex platform videos, use:
-- Primary: #C41E3A (Ruby red)
-- Background: #EBEBEF (Light gray)
-- Accent: #10B981 (Emerald for success states)
-- Dark: #1F2937 (For contrast)
-
-## Output Verification
-
-After generation, the scripts verify:
-1. File exists at specified path
-2. File size > 1KB (not empty)
-3. Valid image format (PNG/JPEG)
-4. Metadata JSON saved alongside image
-
-## Error Handling
-
-| Error | Action |
-|-------|--------|
-| API key missing | Fail immediately with clear message |
-| API rate limit | Wait 60s, retry once |
-| Generation failed | Retry with simplified prompt |
-| Invalid output | Retry, then fail with details |
-| Premium model on free tier | Fall back to free tier model |
-
-## Guidelines
-
-- Run `discover-keys.sh` before attempting generation
-- Use descriptive prompts for consistent results
-- Avoid text in images (AI text is often garbled)
-- Keep prompts under 500 characters for best results
-- Use corporate/professional style for business content
-- Output to assigned workspace only
-- Check user tier before selecting model
+- Platform specs sourced from `Synthex/platform_master_config.json`
+- Brand assets stored in `imagen-designer/references/`
+- See `platform-showcase` skill for content adaptation context
