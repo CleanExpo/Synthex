@@ -53,7 +53,7 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 03-01: Fix admin and personas mock fallbacks
+- [x] 03-01: Fix admin and personas mock fallbacks
 - [ ] 03-02: Fix experiments and full dashboard audit
 
 ### Phase 4: Security Hardening
@@ -141,7 +141,7 @@ Plans:
 |-------|----------------|--------|-----------|
 | 1. Foundation Cleanup | 2/2 | Complete | 2026-02-16 |
 | 2. Mock Data — API Routes | 5/5 | Complete | 2026-02-16 |
-| 3. Mock Data — Dashboard | 0/2 | Not started | - |
+| 3. Mock Data — Dashboard | 1/2 | In progress | - |
 | 4. Security Hardening | 0/3 | Not started | - |
 | 5. Social Platforms | 0/5 | Not started | - |
 | 6. Cron Jobs | 0/2 | Not started | - |
