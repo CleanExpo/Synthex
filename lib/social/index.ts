@@ -12,11 +12,13 @@ export { twitterService, TwitterService } from './twitter-service';
 export { twitterSyncService, TwitterSyncService } from './twitter-sync-service';
 export { linkedInService, LinkedInService } from './linkedin-service';
 export { instagramService, InstagramService } from './instagram-service';
+export { tiktokService, TikTokService } from './tiktok-service';
 
 // Import for factory
 import { TwitterSyncService } from './twitter-sync-service';
 import { LinkedInService } from './linkedin-service';
 import { InstagramService } from './instagram-service';
+import { TikTokService } from './tiktok-service';
 import { PlatformService, PlatformCredentials, TokenRefreshCallback } from './base-platform-service';
 
 /**
@@ -82,6 +84,8 @@ export function createPlatformService(
       service = new InstagramService();
       break;
     case 'tiktok':
+      service = new TikTokService();
+      break;
     case 'youtube':
       // Not yet implemented
       return null;
@@ -150,7 +154,7 @@ export const PLATFORM_INFO: Record<SupportedPlatform, {
     name: 'TikTok',
     icon: 'tiktok',
     color: '#000000',
-    syncSupported: false,
+    syncSupported: true,
   },
   youtube: {
     name: 'YouTube',
