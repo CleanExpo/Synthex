@@ -75,7 +75,7 @@ Plans:
 **Plans**: 5 plans
 
 Plans:
-- [ ] 05-01: TikTok service implementation
+- [x] 05-01: TikTok service implementation
 - [ ] 05-02: YouTube service implementation
 - [ ] 05-03: Pinterest service implementation
 - [ ] 05-04: Reddit service implementation
@@ -143,7 +143,7 @@ Plans:
 | 2. Mock Data — API Routes | 5/5 | Complete | 2026-02-16 |
 | 3. Mock Data — Dashboard | 2/2 | Complete | 2026-02-16 |
 | 4. Security Hardening | 3/3 | Complete | 2026-02-16 |
-| 5. Social Platforms | 0/5 | Not started | - |
+| 5. Social Platforms | 1/5 | In progress | - |
 | 6. Cron Jobs | 0/2 | Not started | - |
 | 7. Testing — Auth | 0/3 | Not started | - |
 | 8. Testing — API | 0/4 | Not started | - |
