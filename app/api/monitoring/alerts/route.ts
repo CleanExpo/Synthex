@@ -18,6 +18,7 @@ import {
   NotificationChannel,
   type Alert,
 } from '@/lib/alerts';
+import { getUserIdFromCookies } from '@/lib/auth/jwt-utils';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -30,6 +31,10 @@ const VALID_CHANNELS = ['console', 'email', 'slack', 'discord', 'webhook'];
  * Get configured channels and alert history
  */
 export async function GET(request: NextRequest) {
+  const userId = await getUserIdFromCookies();
+  if (!userId) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
   const startTime = Date.now();
 
   try {
@@ -124,6 +129,11 @@ const sendAlertSchema = z.object({
  * Send a new alert or test a channel
  */
 export async function POST(request: NextRequest) {
+  const userId = await getUserIdFromCookies();
+  if (!userId) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   const startTime = Date.now();
 
   try {

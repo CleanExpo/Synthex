@@ -1,44 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getEffectiveOrganizationId } from '@/lib/multi-business';
-
-// =============================================================================
-// Auth Helper
-// =============================================================================
-
-async function getUserId(request: NextRequest): Promise<string | null> {
-  // Check Authorization header OR auth-token cookie
-  const authHeader = request.headers.get('authorization');
-  const cookieToken = request.cookies.get('auth-token')?.value;
-
-  let token: string | null = null;
-
-  if (authHeader) {
-    token = authHeader.replace('Bearer ', '');
-  } else if (cookieToken) {
-    token = cookieToken;
-  }
-
-  if (!token) return null;
-
-  try {
-    const jwt = await import('jsonwebtoken');
-    const secret = process.env.JWT_SECRET;
-    if (!secret) {
-      console.error('JWT_SECRET environment variable is not set');
-      return null;
-    }
-    const decoded = jwt.default.verify(token, secret) as { userId?: string; sub?: string };
-    return decoded.userId || decoded.sub || null;
-  } catch {
-    return null;
-  }
-}
+import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 
 export async function GET(request: NextRequest) {
   try {
-    // Try to get user-specific data if authenticated
-    const userId = await getUserId(request);
+    const userId = await getUserIdFromRequestOrCookies(request);
+    if (!userId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
 
     // Use default 7 days for data range
     const days = 7;
