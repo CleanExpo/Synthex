@@ -111,7 +111,7 @@ Plans:
 Plans:
 - [x] 08-01: Content and analytics API tests
 - [x] 08-02: Auth and user API tests
-- [ ] 08-03: Payment and webhook tests
+- [x] 08-03: Payment and webhook tests
 - [ ] 08-04: E2E critical path tests
 
 ### Phase 9: Performance & Build
@@ -146,6 +146,6 @@ Plans:
 | 5. Social Platforms | 5/5 | Complete | 2026-02-16 |
 | 6. Cron Jobs | 2/2 | Complete | 2026-02-17 |
 | 7. Testing — Auth | 3/3 | Complete | 2026-02-17 |
-| 8. Testing — API | 2/4 | In progress | 2026-02-17 |
+| 8. Testing — API | 3/4 | In progress | 2026-02-17 |
 | 9. Performance | 0/3 | Not started | - |
 | 10. Final Audit | 0/2 | Not started | - |
