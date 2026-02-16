@@ -12,7 +12,7 @@ None (internal platform hardening)
 
 - [x] **Phase 1: Foundation Cleanup** - Remove legacy code, rewrite CLAUDE.md, consolidate env files
 - [x] **Phase 2: Mock Data — API Routes** - Replace 9 mock/stub API endpoints with real database queries
-- [ ] **Phase 3: Mock Data — Dashboard** - Remove 3 silent mock fallbacks, implement error/empty states
+- [x] **Phase 3: Mock Data — Dashboard** - Remove 3 silent mock fallbacks, implement error/empty states
 - [ ] **Phase 4: Security Hardening** - Env validation at startup, rate limiting audit, auth middleware audit
 - [ ] **Phase 5: Social Platform Completeness** - Implement TikTok, YouTube, Pinterest, Reddit, Threads services
 - [ ] **Phase 6: Cron Jobs & Background Tasks** - Fix competitor cron, implement weekly digest email
@@ -54,7 +54,7 @@ Plans:
 
 Plans:
 - [x] 03-01: Fix admin and personas mock fallbacks
-- [ ] 03-02: Fix experiments and full dashboard audit
+- [x] 03-02: Fix experiments and full dashboard audit
 
 ### Phase 4: Security Hardening
 **Goal**: Env validation at startup, rate limits on all sensitive routes, auth on all protected routes
@@ -141,7 +141,7 @@ Plans:
 |-------|----------------|--------|-----------|
 | 1. Foundation Cleanup | 2/2 | Complete | 2026-02-16 |
 | 2. Mock Data — API Routes | 5/5 | Complete | 2026-02-16 |
-| 3. Mock Data — Dashboard | 1/2 | In progress | - |
+| 3. Mock Data — Dashboard | 2/2 | Complete | 2026-02-16 |
 | 4. Security Hardening | 0/3 | Not started | - |
 | 5. Social Platforms | 0/5 | Not started | - |
 | 6. Cron Jobs | 0/2 | Not started | - |
