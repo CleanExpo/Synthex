@@ -15,6 +15,7 @@ export { instagramService, InstagramService } from './instagram-service';
 export { tiktokService, TikTokService } from './tiktok-service';
 export { youtubeService, YouTubeService } from './youtube-service';
 export { pinterestService, PinterestService } from './pinterest-service';
+export { redditService, RedditService } from './reddit-service';
 
 // Import for factory
 import { TwitterSyncService } from './twitter-sync-service';
@@ -23,12 +24,13 @@ import { InstagramService } from './instagram-service';
 import { TikTokService } from './tiktok-service';
 import { YouTubeService } from './youtube-service';
 import { PinterestService } from './pinterest-service';
+import { RedditService } from './reddit-service';
 import { PlatformService, PlatformCredentials, TokenRefreshCallback } from './base-platform-service';
 
 /**
  * Supported platforms
  */
-export const SUPPORTED_PLATFORMS = ['twitter', 'linkedin', 'instagram', 'facebook', 'tiktok', 'youtube', 'pinterest'] as const;
+export const SUPPORTED_PLATFORMS = ['twitter', 'linkedin', 'instagram', 'facebook', 'tiktok', 'youtube', 'pinterest', 'reddit'] as const;
 export type SupportedPlatform = typeof SUPPORTED_PLATFORMS[number];
 
 /**
@@ -95,6 +97,9 @@ export function createPlatformService(
       break;
     case 'pinterest':
       service = new PinterestService();
+      break;
+    case 'reddit':
+      service = new RedditService();
       break;
     default:
       return null;
@@ -173,6 +178,12 @@ export const PLATFORM_INFO: Record<SupportedPlatform, {
     name: 'Pinterest',
     icon: 'pinterest',
     color: '#E60023',
+    syncSupported: true,
+  },
+  reddit: {
+    name: 'Reddit',
+    icon: 'reddit',
+    color: '#FF4500',
     syncSupported: true,
   },
 };
