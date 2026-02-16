@@ -8,21 +8,13 @@
  * - DATABASE_URL: PostgreSQL connection (CRITICAL)
  *
  * FAILURE MODE: Returns appropriate error responses
+ *
+ * NOTE: No ContentLibrary model exists in the Prisma schema yet.
+ * GET returns a proper empty state; POST returns 501 (not implemented).
  */
 
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
-import { prisma } from '@/lib/prisma';
-import { z } from 'zod';
-
-// Validation schema for content creation
-const createContentSchema = z.object({
-  title: z.string().min(1).max(200),
-  content: z.string().max(50000),
-  type: z.enum(['post', 'template', 'draft', 'asset']).optional().default('draft'),
-  tags: z.array(z.string()).optional().default([]),
-  metadata: z.record(z.unknown()).optional(),
-});
 
 /**
  * GET /api/library/content
@@ -44,27 +36,16 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const userId = security.context.userId;
-
-    // Parse query parameters
+    // Parse query parameters (retained for future use when model is added)
     const url = new URL(request.url);
-    const type = url.searchParams.get('type');
     const limit = Math.min(parseInt(url.searchParams.get('limit') || '50'), 100);
     const offset = parseInt(url.searchParams.get('offset') || '0');
 
-    // Build where clause
-    const where: Record<string, unknown> = { userId };
-    if (type) {
-      where.type = type;
-    }
-
-    // Fetch content items (using a generic content model - adjust as needed)
-    // Note: This is a placeholder - adjust to your actual schema
-    const data: unknown[] = [];
-
+    // No ContentLibrary model exists yet — return proper empty state
     return APISecurityChecker.createSecureResponse(
       {
-        data,
+        data: [],
+        message: 'Content library is not yet configured. Save content from the editor to see it here.',
         pagination: {
           limit,
           offset,
@@ -104,49 +85,16 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  try {
-    const userId = security.context.userId;
-    const body = await request.json();
-
-    // Validate input
-    const validation = createContentSchema.safeParse(body);
-    if (!validation.success) {
-      return APISecurityChecker.createSecureResponse(
-        { error: 'Validation failed', details: validation.error.errors },
-        400,
-        security.context
-      );
-    }
-
-    const contentData = validation.data;
-
-    // Create content item (placeholder - adjust to your actual schema)
-    const contentId = `content_${Date.now()}_${(userId || 'unknown').substring(0, 8)}`;
-
-    return APISecurityChecker.createSecureResponse(
-      {
-        success: true,
-        id: contentId,
-        data: {
-          id: contentId,
-          ...contentData,
-          userId,
-          createdAt: new Date().toISOString(),
-        },
-      },
-      201,
-      security.context
-    );
-  } catch (error) {
-    console.error('Error creating content:', error);
-    return APISecurityChecker.createSecureResponse(
-      { error: 'Failed to create content' },
-      500,
-      security.context
-    );
-  }
+  // No ContentLibrary model exists yet — return 501
+  return APISecurityChecker.createSecureResponse(
+    {
+      error: 'Content library not available',
+      message: 'Content library storage is not yet configured. This feature is coming soon.',
+    },
+    501,
+    security.context
+  );
 }
 
 // Node.js runtime required for Prisma
 export const runtime = 'nodejs';
-
