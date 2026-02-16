@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-02-16)
 
 **Core value:** Every endpoint returns real data, every platform works, every dashboard page connects to live APIs
-**Current focus:** Phase 5 complete — all 9 social platforms implemented.
+**Current focus:** Phase 6 in progress — wiring cron jobs to real platform APIs.
 
 ## Current Position
 
-Phase: 5 of 10 (Social Platform Completeness)
-Plan: 5 of 5 in current phase
-Status: Phase complete
-Last activity: 2026-02-16 — Completed 05-05-PLAN.md — Phase 5 complete
+Phase: 6 of 10 (Cron Jobs & Background Tasks)
+Plan: 1 of 2 in current phase
+Status: In progress
+Last activity: 2026-02-17 — Completed 06-01-PLAN.md — Competitor tracking cron wired to real APIs
 
-Progress: ██████████ 100% (Phase 5)
+Progress: █████░░░░░ 50% (Phase 6)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 16
+- Total plans completed: 17
 - Average duration: ~9 min
-- Total execution time: ~142 min
+- Total execution time: ~152 min
 
 **By Phase:**
 
@@ -32,10 +32,11 @@ Progress: ██████████ 100% (Phase 5)
 | 3 | 2/2 | ~21 min | ~11 min |
 | 4 | 3/3 | ~30 min | ~10 min |
 | 5 | 5/5 | ~42 min | ~8 min |
+| 6 | 1/2 | ~10 min | ~10 min |
 
 **Recent Trend:**
-- Last 5 plans: 05-01 (~8 min), 05-02 (~10 min), 05-03 (~8 min), 05-04 (~8 min), 05-05 (~8 min)
-- Trend: Consistent ~8-10 min for platform service plans
+- Last 5 plans: 05-03 (~8 min), 05-04 (~8 min), 05-05 (~8 min), 06-01 (~10 min)
+- Trend: Consistent ~8-10 min
 
 ## Accumulated Context
 
@@ -107,6 +108,11 @@ Recent decisions affecting current work:
 - Threads token refresh uses th_refresh_token grant type (05-05)
 - Threads deletePost attempts DELETE but gracefully returns false if unsupported (05-05)
 - All 9 platforms verified in factory -- every platform returns non-null service instance (05-05)
+- competitor-fetcher.ts is standalone module — does not import full platform services (06-01)
+- Failed competitor fetches create snapshots with dataSource 'error' or 'unsupported', never zeros (06-01)
+- Alert detection is per-platform with real deltas: follower >10% = warning, engagement >50% = info (06-01)
+- Reddit competitor lookup needs no auth — public about.json endpoint (06-01)
+- YouTube competitor lookup supports API key fallback (YOUTUBE_API_KEY or GOOGLE_API_KEY) (06-01)
 
 ### Deferred Issues
 
@@ -121,7 +127,7 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-02-16
-Stopped at: Completed 05-05-PLAN.md (5 of 5 in Phase 5) — Phase 5 complete, all 9 platforms verified
+Last session: 2026-02-17
+Stopped at: Completed 06-01-PLAN.md (1 of 2 in Phase 6) — Competitor tracking cron wired to real platform APIs
 Resume file: None
-Next action: Execute 06-01-PLAN.md (Phase 6: Cron Jobs & Background Tasks)
+Next action: Execute 06-02-PLAN.md (Weekly digest email and verify all crons)

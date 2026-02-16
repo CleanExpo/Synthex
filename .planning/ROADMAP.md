@@ -88,7 +88,7 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 06-01: Verify competitor cron uses real API calls
+- [x] 06-01: Verify competitor cron uses real API calls
 - [ ] 06-02: Implement weekly digest email and verify all crons
 
 ### Phase 7: Testing — Auth & Core
@@ -144,7 +144,7 @@ Plans:
 | 3. Mock Data — Dashboard | 2/2 | Complete | 2026-02-16 |
 | 4. Security Hardening | 3/3 | Complete | 2026-02-16 |
 | 5. Social Platforms | 5/5 | Complete | 2026-02-16 |
-| 6. Cron Jobs | 0/2 | Not started | - |
+| 6. Cron Jobs | 1/2 | In progress | - |
 | 7. Testing — Auth | 0/3 | Not started | - |
 | 8. Testing — API | 0/4 | Not started | - |
 | 9. Performance | 0/3 | Not started | - |
