@@ -21,6 +21,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { testConnection } from '@/lib/supabase-client';
 import { checkDatabaseHealth, getPoolMetrics } from '@/lib/prisma';
+import { EnvValidator } from '@/lib/security/env-validator';
 
 // Force dynamic rendering - prevent static generation
 export const dynamic = 'force-dynamic';
@@ -103,32 +104,59 @@ async function checkCache(): Promise<HealthCheckResult> {
 }
 
 /**
- * Check environment configuration
+ * Check environment configuration using canonical EnvValidator.
+ * Reports counts only -- never exposes env var names or values.
  */
 function checkEnvironment(): HealthCheckResult {
-  const critical = ['DATABASE_URL', 'JWT_SECRET'];
-  const important = ['OPENROUTER_API_KEY', 'NEXT_PUBLIC_SUPABASE_URL'];
+  const validator = EnvValidator.getInstance();
+  const result = validator.validate(false);
 
-  const missingCritical = critical.filter((v) => !process.env[v]);
-  const missingImportant = important.filter((v) => !process.env[v]);
+  const { totalRequired, totalOptional, missingRequired, configured } = result.summary;
+  const missingRequiredCount = missingRequired.length;
+  const configuredCount = configured.length;
+  const totalDefined = totalRequired + totalOptional;
 
-  if (missingCritical.length > 0) {
+  if (missingRequiredCount > 0) {
     return {
       status: 'unhealthy',
-      message: `Missing critical vars: ${missingCritical.join(', ')}`,
+      message: `${missingRequiredCount} required var(s) missing`,
+      details: {
+        totalDefined,
+        totalRequired,
+        configured: configuredCount,
+        missingRequired: missingRequiredCount,
+        errors: result.errors.length,
+        warnings: result.warnings.length,
+      },
     };
   }
 
-  if (missingImportant.length > 0) {
+  if (result.warnings.length > 0) {
     return {
       status: 'degraded',
-      message: `Missing vars: ${missingImportant.join(', ')}`,
+      message: `${result.warnings.length} optional var(s) not configured`,
+      details: {
+        totalDefined,
+        totalRequired,
+        configured: configuredCount,
+        missingRequired: 0,
+        errors: 0,
+        warnings: result.warnings.length,
+      },
     };
   }
 
   return {
     status: 'healthy',
     message: 'All configured',
+    details: {
+      totalDefined,
+      totalRequired,
+      configured: configuredCount,
+      missingRequired: 0,
+      errors: 0,
+      warnings: 0,
+    },
   };
 }
 
