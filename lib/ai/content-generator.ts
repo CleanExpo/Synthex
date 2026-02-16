@@ -265,47 +265,9 @@ Generate content that will maximize engagement and shares.
 
       return content;
     } catch (error) {
-      logger.error('AI content generation failed, falling back to templates', { error });
-      return this.generateFromTemplate(prompt);
+      logger.error('AI content generation failed', { error });
+      throw new Error('Content generation failed. AI service is temporarily unavailable. Please try again.');
     }
-  }
-
-  /**
-   * Generate content from templates (fallback)
-   */
-  private generateFromTemplate(prompt: string): string {
-    const templates = {
-      twitter: [
-        "🚀 {topic} is changing the game! Here's what you need to know:\n\n✅ Key insight 1\n✅ Key insight 2\n✅ Key insight 3\n\nWhat's your take? 👇",
-        "Unpopular opinion: {topic} is actually the future.\n\nHere's why (thread) 🧵👇",
-        "Just discovered this about {topic} and I'm mind-blown 🤯\n\n{insight}\n\nRT if you agree!"
-      ],
-      instagram: [
-        "✨ {topic} vibes only ✨\n\n{content}\n\n💫 Double tap if you relate\n💬 Share your thoughts below\n👥 Tag someone who needs to see this\n\n#motivation #inspiration #growth",
-        "POV: You finally understood {topic} 🎯\n\n{content}\n\nSave this for later! 📌",
-        "Stop scrolling! This {topic} tip will change your life 👆\n\n{content}\n\nFollow for more daily wisdom 🌟"
-      ],
-      linkedin: [
-        "🎯 Key Insights on {topic}\n\nAfter years in the industry, here's what I've learned:\n\n1. {point1}\n2. {point2}\n3. {point3}\n\nWhat has been your experience?\n\n#leadership #innovation #growth",
-        "The future of {topic} is here, and it's transformative.\n\n{content}\n\nLet's connect to discuss more insights.",
-        "3 lessons from implementing {topic}:\n\n📈 {lesson1}\n💡 {lesson2}\n🚀 {lesson3}\n\nWhat would you add?"
-      ]
-    };
-
-    const platform = prompt.includes('twitter') ? 'twitter' : 
-                    prompt.includes('instagram') ? 'instagram' : 'linkedin';
-    const template = templates[platform][Math.floor(Math.random() * templates[platform].length)];
-    
-    return template
-      .replace(/{topic}/g, 'innovative strategies')
-      .replace(/{content}/g, 'This revolutionary approach is transforming how we think about digital marketing.')
-      .replace(/{insight}/g, 'Small consistent actions compound into extraordinary results')
-      .replace(/{point1}/g, 'Strategy beats tactics every time')
-      .replace(/{point2}/g, 'Data-driven decisions outperform intuition')
-      .replace(/{point3}/g, 'Community engagement drives growth')
-      .replace(/{lesson1}/g, 'Start small, iterate fast')
-      .replace(/{lesson2}/g, 'Listen to your audience')
-      .replace(/{lesson3}/g, 'Measure what matters');
   }
 
   /**
