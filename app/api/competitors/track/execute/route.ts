@@ -46,50 +46,13 @@ interface CompetitorSnapshot {
   snapshotAt: Date;
 }
 
-/** Competitor metrics result */
-interface CompetitorMetrics {
-  followersCount: number;
-  followingCount: number;
-  followerGrowth: number;
-  totalPosts: number;
-  avgLikes: number;
-  avgComments: number;
-  avgShares: number;
-  engagementRate: number;
-  postFrequency: number;
-  topHashtags: string[];
-  contentTypes: Record<string, number>;
-  postingTimes: Record<string, number>;
-  performanceScore: number;
-  growthScore: number;
-  engagementScore: number;
-}
-
-/** Competitor post data */
-interface CompetitorPostData {
-  platform: string;
-  externalId: string;
-  postUrl: string;
-  content: string;
-  mediaUrls: string[];
-  mediaType: string;
-  likes: number;
-  comments: number;
-  shares: number;
-  views: number;
-  sentiment: string;
-  hashtags: string[];
-  mentions: string[];
-  topics: string[];
-  postedAt: Date;
-}
-
 /** Tracking result summary */
 interface TrackingResult {
   competitorId: string;
   competitorName: string;
   platforms: string[];
-  snapshotsCreated: number;
+  snapshotsFound: number;
+  postsFound: number;
 }
 
 /** Tracking error */
@@ -117,84 +80,15 @@ interface PrismaWithCompetitors {
   };
   competitorSnapshot?: {
     findMany: (args: Record<string, unknown>) => Promise<CompetitorSnapshot[]>;
+    findFirst: (args: Record<string, unknown>) => Promise<CompetitorSnapshot | null>;
     create: (args: Record<string, unknown>) => Promise<CompetitorSnapshot | undefined>;
   };
   competitorPost?: {
+    findMany: (args: Record<string, unknown>) => Promise<Record<string, unknown>[]>;
     findFirst: (args: Record<string, unknown>) => Promise<Record<string, unknown> | null>;
-    create: (args: Record<string, unknown>) => Promise<Record<string, unknown>>;
   };
   competitorAlert?: {
     createMany: (args: { data: AlertData[] }) => Promise<{ count: number }>;
-  };
-}
-
-// ============================================================================
-// MOCK DATA GENERATOR (Same as snapshot route)
-// ============================================================================
-
-function generateMockMetrics(_competitor: TrackedCompetitor, _platform: string): CompetitorMetrics {
-  const baseFollowers = Math.floor(Math.random() * 50000) + 1000;
-  const growthRate = (Math.random() * 0.1) - 0.02;
-
-  return {
-    followersCount: baseFollowers,
-    followingCount: Math.floor(baseFollowers * 0.3),
-    followerGrowth: Math.floor(baseFollowers * growthRate),
-    totalPosts: Math.floor(Math.random() * 500) + 50,
-    avgLikes: Math.floor(Math.random() * 200) + 10,
-    avgComments: Math.floor(Math.random() * 30) + 2,
-    avgShares: Math.floor(Math.random() * 20) + 1,
-    engagementRate: Math.round((Math.random() * 5 + 0.5) * 100) / 100,
-    postFrequency: Math.round((Math.random() * 3 + 0.5) * 10) / 10,
-    topHashtags: ['marketing', 'business', 'growth', 'success', 'startup'].slice(
-      0,
-      Math.floor(Math.random() * 5) + 1
-    ),
-    contentTypes: {
-      image: Math.floor(Math.random() * 50) + 20,
-      video: Math.floor(Math.random() * 30) + 5,
-      text: Math.floor(Math.random() * 20) + 5,
-      carousel: Math.floor(Math.random() * 15),
-    },
-    postingTimes: {
-      morning: Math.floor(Math.random() * 30) + 10,
-      afternoon: Math.floor(Math.random() * 30) + 15,
-      evening: Math.floor(Math.random() * 30) + 20,
-    },
-    performanceScore: Math.round((Math.random() * 40 + 50) * 10) / 10,
-    growthScore: Math.round((Math.random() * 40 + 40) * 10) / 10,
-    engagementScore: Math.round((Math.random() * 40 + 45) * 10) / 10,
-  };
-}
-
-function generateMockPost(competitor: TrackedCompetitor, platform: string): CompetitorPostData {
-  const contentTemplates = [
-    'Excited to announce our new product launch! 🚀',
-    'Behind the scenes of our latest campaign...',
-    'Tips for growing your business in 2026',
-    'Customer spotlight: How @user achieved 3x growth',
-    'Join us for our upcoming webinar on digital marketing',
-    'New blog post: 10 strategies that actually work',
-    'Thank you to our amazing community! 💙',
-    'Product update: New features coming soon',
-  ];
-
-  return {
-    platform,
-    externalId: `${platform}_${Date.now()}_${Math.random().toString(36).substring(7)}`,
-    postUrl: `https://${platform}.com/${competitor[`${platform}Handle`]}/post/${Date.now()}`,
-    content: contentTemplates[Math.floor(Math.random() * contentTemplates.length)],
-    mediaUrls: Math.random() > 0.3 ? ['https://example.com/image.jpg'] : [],
-    mediaType: Math.random() > 0.5 ? 'image' : 'text',
-    likes: Math.floor(Math.random() * 500) + 10,
-    comments: Math.floor(Math.random() * 50) + 1,
-    shares: Math.floor(Math.random() * 30),
-    views: Math.floor(Math.random() * 5000) + 100,
-    sentiment: ['positive', 'neutral', 'negative'][Math.floor(Math.random() * 3)],
-    hashtags: ['marketing', 'business', 'growth'].slice(0, Math.floor(Math.random() * 3) + 1),
-    mentions: Math.random() > 0.7 ? ['@user1', '@user2'] : [],
-    topics: ['marketing', 'product', 'announcement'].slice(0, Math.floor(Math.random() * 2) + 1),
-    postedAt: new Date(Date.now() - Math.random() * 86400000 * 7), // Last 7 days
   };
 }
 
@@ -291,82 +185,68 @@ export async function POST(request: NextRequest) {
           continue;
         }
 
-        const snapshots: CompetitorSnapshot[] = [];
+        let totalSnapshotsFound = 0;
+        let totalPostsFound = 0;
 
-        // Create snapshots for each platform
+        // Fetch the latest snapshot for each platform from real data
         for (const platform of platforms) {
-          const metrics = generateMockMetrics(competitor, platform);
+          try {
+            const latestSnapshot = await (prisma as unknown as PrismaWithCompetitors).competitorSnapshot?.findFirst({
+              where: {
+                competitorId: competitor.id,
+                platform,
+              },
+              orderBy: { snapshotAt: 'desc' },
+            });
 
-          const snapshot = await (prisma as unknown as PrismaWithCompetitors).competitorSnapshot?.create({
-            data: {
-              competitorId: competitor.id,
-              platform,
-              ...metrics,
-              dataSource: 'cron',
-            },
-          });
-
-          if (snapshot) {
-            snapshots.push(snapshot);
+            if (latestSnapshot) {
+              totalSnapshotsFound++;
+            } else {
+              // No snapshot exists yet -- create a pending placeholder with zero metrics
+              await (prisma as unknown as PrismaWithCompetitors).competitorSnapshot?.create({
+                data: {
+                  competitorId: competitor.id,
+                  platform,
+                  followersCount: 0,
+                  followingCount: 0,
+                  followerGrowth: 0,
+                  totalPosts: 0,
+                  avgLikes: 0,
+                  avgComments: 0,
+                  avgShares: 0,
+                  engagementRate: 0,
+                  postFrequency: 0,
+                  topHashtags: [],
+                  contentTypes: {},
+                  postingTimes: {},
+                  performanceScore: 0,
+                  growthScore: 0,
+                  engagementScore: 0,
+                  dataSource: 'pending',
+                },
+              });
+            }
+          } catch (snapshotError) {
+            console.error(`Error fetching/creating snapshot for competitor ${competitor.id} on ${platform}:`, snapshotError);
           }
         }
 
-        // Create aggregated snapshot
-        if (snapshots.length > 0) {
-          const aggregated = {
-            followersCount: snapshots.reduce((sum, s) => sum + (s.followersCount || 0), 0),
-            engagementRate: snapshots.reduce((sum, s) => sum + (s.engagementRate || 0), 0) / snapshots.length,
-            performanceScore: snapshots.reduce((sum, s) => sum + (s.performanceScore || 0), 0) / snapshots.length,
-            growthScore: snapshots.reduce((sum, s) => sum + (s.growthScore || 0), 0) / snapshots.length,
-            engagementScore: snapshots.reduce((sum, s) => sum + (s.engagementScore || 0), 0) / snapshots.length,
-          };
-
-          await (prisma as unknown as PrismaWithCompetitors).competitorSnapshot?.create({
-            data: {
-              competitorId: competitor.id,
-              platform: 'all',
-              followersCount: aggregated.followersCount,
-              engagementRate: Math.round(aggregated.engagementRate * 100) / 100,
-              performanceScore: Math.round(aggregated.performanceScore * 10) / 10,
-              growthScore: Math.round(aggregated.growthScore * 10) / 10,
-              engagementScore: Math.round(aggregated.engagementScore * 10) / 10,
-              dataSource: 'cron_aggregated',
-            },
-          });
-        }
-
-        // Track posts if enabled
+        // Fetch existing posts if post tracking is enabled
         if (competitor.trackPosts) {
           for (const platform of platforms.slice(0, 2)) { // Limit to 2 platforms
-            // Generate 2-5 mock posts
-            const numPosts = Math.floor(Math.random() * 4) + 2;
-            for (let i = 0; i < numPosts; i++) {
-              const postData = generateMockPost(competitor, platform);
-
-              // Check if post already exists
-              const existing = await (prisma as unknown as PrismaWithCompetitors).competitorPost?.findFirst({
+            try {
+              const existingPosts = await (prisma as unknown as PrismaWithCompetitors).competitorPost?.findMany({
                 where: {
                   competitorId: competitor.id,
                   platform,
-                  externalId: postData.externalId,
                 },
-              });
+                orderBy: { postedAt: 'desc' },
+                take: 10,
+              }) || [];
 
-              if (!existing) {
-                const engagementRate = postData.views
-                  ? ((postData.likes + postData.comments + postData.shares) / postData.views) * 100
-                  : 0;
-
-                await (prisma as unknown as PrismaWithCompetitors).competitorPost?.create({
-                  data: {
-                    competitorId: competitor.id,
-                    ...postData,
-                    engagementRate: Math.round(engagementRate * 100) / 100,
-                    isTopPerforming: engagementRate > 5,
-                    performancePercentile: Math.random() * 100,
-                  },
-                });
-              }
+              totalPostsFound += existingPosts.length;
+            } catch (postError) {
+              console.error(`Error fetching posts for competitor ${competitor.id} on ${platform}:`, postError);
             }
           }
         }
@@ -377,14 +257,15 @@ export async function POST(request: NextRequest) {
           data: { lastTrackedAt: now },
         });
 
-        // Check for alerts
+        // Check for alerts based on real snapshot data
         await checkForAlerts(competitor.userId, competitor);
 
         results.push({
           competitorId: competitor.id,
           competitorName: competitor.name,
           platforms,
-          snapshotsCreated: snapshots.length + 1,
+          snapshotsFound: totalSnapshotsFound,
+          postsFound: totalPostsFound,
         });
       } catch (error) {
         console.error(`Error tracking competitor ${competitor.id}:`, error);
