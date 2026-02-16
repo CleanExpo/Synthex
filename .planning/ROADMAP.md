@@ -42,7 +42,7 @@ Plans:
 Plans:
 - [x] 02-01: Fix competitor tracking mock data (critical — cron active every 30 min)
 - [x] 02-02: Fix content generation mock persona
-- [ ] 02-03: Fix content library and research endpoints
+- [x] 02-03: Fix content library and research endpoints
 - [ ] 02-04: Fix monitoring, SEO, and integration stubs
 - [ ] 02-05: Full endpoint audit (grep for remaining mock patterns)
 
@@ -140,7 +140,7 @@ Plans:
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation Cleanup | 2/2 | Complete | 2026-02-16 |
-| 2. Mock Data — API Routes | 2/5 | In progress | - |
+| 2. Mock Data — API Routes | 3/5 | In progress | - |
 | 3. Mock Data — Dashboard | 0/2 | Not started | - |
 | 4. Security Hardening | 0/3 | Not started | - |
 | 5. Social Platforms | 0/5 | Not started | - |
