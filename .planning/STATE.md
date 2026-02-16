@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-02-16)
 
 **Core value:** Every endpoint returns real data, every platform works, every dashboard page connects to live APIs
-**Current focus:** Phase 4 in progress — security hardening (env validation wired to startup)
+**Current focus:** Phase 4 in progress — security hardening (rate limiting coverage audit complete)
 
 ## Current Position
 
 Phase: 4 of 10 (Security Hardening)
-Plan: 1 of 3 in current phase
+Plan: 2 of 3 in current phase
 Status: In progress
-Last activity: 2026-02-16 — Completed 04-01-PLAN.md (startup validation & credential safety)
+Last activity: 2026-02-16 — Completed 04-02-PLAN.md (rate limiting coverage audit)
 
-Progress: ████░░░░░░ 33%
+Progress: ██████░░░░ 67%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 10
+- Total plans completed: 11
 - Average duration: ~9 min
-- Total execution time: ~86 min
+- Total execution time: ~96 min
 
 **By Phase:**
 
@@ -30,11 +30,11 @@ Progress: ████░░░░░░ 33%
 | 1 | 2/2 | ~16 min | ~8 min |
 | 2 | 5/5 | ~41 min | ~8 min |
 | 3 | 2/2 | ~21 min | ~11 min |
-| 4 | 1/3 | ~8 min | ~8 min |
+| 4 | 2/3 | ~18 min | ~9 min |
 
 **Recent Trend:**
-- Last 5 plans: 02-05 (~15 min), 03-01 (~14 min), 03-02 (~7 min), 04-01 (~8 min)
-- Trend: 04-01 fast — lightweight wiring, 2 file deletions
+- Last 5 plans: 03-01 (~14 min), 03-02 (~7 min), 04-01 (~8 min), 04-02 (~10 min)
+- Trend: Consistent ~8-10 min for security hardening plans
 
 ## Accumulated Context
 
@@ -71,6 +71,10 @@ Recent decisions affecting current work:
 - CRITICAL env vars throw at startup; SECRET/INTERNAL vars warn with graceful degradation (04-01)
 - Health check exposes env validation counts only — never var names or values (04-01)
 - config/env.server.ts and src/env.ts deleted — single canonical EnvValidator (04-01)
+- lib/middleware/rate-limiter.ts designated as canonical rate limiter (04-02)
+- Category-based rate limit wrappers in api-rate-limit.ts: authStrict 5/min, authGeneral 15/min, admin 30/min, billing 20/min, aiGeneration 20/min, mutation 60/min, readDefault 120/min (04-02)
+- In-memory Map in signup route removed — replaced with distributed Upstash Redis limiter (04-02)
+- 3 other rate limiter files left untouched — future consolidation task (04-02)
 
 ### Deferred Issues
 
@@ -86,6 +90,6 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-16
-Stopped at: Completed 04-01-PLAN.md (1 of 3 in Phase 4) — startup validation wired
+Stopped at: Completed 04-02-PLAN.md (2 of 3 in Phase 4) — rate limiting coverage audit
 Resume file: None
-Next action: Execute 04-02-PLAN.md (rate limiting coverage audit)
+Next action: Execute 04-03-PLAN.md (auth middleware audit)

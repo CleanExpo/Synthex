@@ -64,7 +64,7 @@ Plans:
 
 Plans:
 - [x] 04-01: Startup validation and credential safety
-- [ ] 04-02: Rate limiting coverage audit
+- [x] 04-02: Rate limiting coverage audit
 - [ ] 04-03: Auth middleware audit
 
 ### Phase 5: Social Platform Completeness
@@ -142,7 +142,7 @@ Plans:
 | 1. Foundation Cleanup | 2/2 | Complete | 2026-02-16 |
 | 2. Mock Data — API Routes | 5/5 | Complete | 2026-02-16 |
 | 3. Mock Data — Dashboard | 2/2 | Complete | 2026-02-16 |
-| 4. Security Hardening | 1/3 | In progress | - |
+| 4. Security Hardening | 2/3 | In progress | - |
 | 5. Social Platforms | 0/5 | Not started | - |
 | 6. Cron Jobs | 0/2 | Not started | - |
 | 7. Testing — Auth | 0/3 | Not started | - |
