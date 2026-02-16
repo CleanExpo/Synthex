@@ -1,7 +1,8 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { createAuthClient, serverDb } from '@/lib/supabase-server';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
+import { authStrict } from '@/lib/middleware/api-rate-limit';
 
 // Input validation schema
 const signupSchema = z.object({
@@ -13,60 +14,10 @@ const signupSchema = z.object({
     .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, 'Password must contain at least one lowercase letter, one uppercase letter, and one number')
 });
 
-// Rate limiting for signup attempts
-const signupAttemptStore = new Map<string, { count: number; lastAttempt: number }>();
-const MAX_SIGNUP_ATTEMPTS = 3;
-const SIGNUP_LOCKOUT_DURATION = 60 * 60 * 1000; // 1 hour
-
-function checkSignupRateLimit(identifier: string): { allowed: boolean; retryAfter?: number } {
-  const now = Date.now();
-  const record = signupAttemptStore.get(identifier);
-  
-  if (!record) {
-    signupAttemptStore.set(identifier, { count: 1, lastAttempt: now });
-    return { allowed: true };
-  }
-  
-  // Reset if lockout period has passed
-  if (now - record.lastAttempt > SIGNUP_LOCKOUT_DURATION) {
-    signupAttemptStore.set(identifier, { count: 1, lastAttempt: now });
-    return { allowed: true };
-  }
-  
-  if (record.count >= MAX_SIGNUP_ATTEMPTS) {
-    const retryAfter = Math.ceil((SIGNUP_LOCKOUT_DURATION - (now - record.lastAttempt)) / 1000);
-    return { allowed: false, retryAfter };
-  }
-  
-  record.count++;
-  record.lastAttempt = now;
-  return { allowed: true };
-}
-
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
+  // Distributed rate limiting via Upstash Redis (replaces in-memory Map)
+  return authStrict(request, async () => {
   try {
-    // Get client IP for rate limiting
-    const clientIp = request.headers.get('x-forwarded-for') || 
-                     request.headers.get('x-real-ip') || 
-                     'unknown';
-    
-    // Check rate limiting
-    const rateLimit = checkSignupRateLimit(clientIp);
-    if (!rateLimit.allowed) {
-      return NextResponse.json(
-        { 
-          error: 'Too many signup attempts. Please try again later.',
-          retryAfter: rateLimit.retryAfter 
-        },
-        { 
-          status: 429,
-          headers: {
-            'Retry-After': rateLimit.retryAfter?.toString() || '3600'
-          }
-        }
-      );
-    }
-
     // Parse and validate request body
     const body = await request.json();
     const validationResult = signupSchema.safeParse(body);
@@ -249,6 +200,7 @@ export async function POST(request: Request) {
       { status: 500 }
     );
   }
+  });
 }
 
 export const runtime = 'nodejs';

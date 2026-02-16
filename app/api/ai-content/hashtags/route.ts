@@ -17,6 +17,7 @@ import { openRouterClient } from '@/lib/ai/openrouter-client';
 import { logger } from '@/lib/logger';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
 import { auditLogger } from '@/lib/security/audit-logger';
+import { aiGeneration } from '@/lib/middleware/api-rate-limit';
 
 // Validation schema
 const HashtagRequestSchema = z.object({
@@ -63,6 +64,8 @@ const PLATFORM_TRENDING: Record<string, string[]> = {
 };
 
 export async function POST(request: NextRequest) {
+  // Distributed rate limiting via Upstash Redis
+  return aiGeneration(request, async () => {
   try {
     // Security check
     const security = await APISecurityChecker.check(
@@ -208,6 +211,7 @@ Example: ["#marketing", "#growth", "#success"]`
       { status: 500 }
     );
   }
+  });
 }
 
 // Build AI prompt for hashtag generation

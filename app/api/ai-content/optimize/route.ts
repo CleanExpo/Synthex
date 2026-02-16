@@ -18,6 +18,7 @@ import { openRouterClient } from '@/lib/ai/openrouter-client';
 import { logger } from '@/lib/logger';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
 import { auditLogger } from '@/lib/security/audit-logger';
+import { aiGeneration } from '@/lib/middleware/api-rate-limit';
 
 // Validation schema
 const OptimizeRequestSchema = z.object({
@@ -106,6 +107,8 @@ const HOOK_STARTERS: string[] = [
 ];
 
 export async function POST(request: NextRequest) {
+  // Distributed rate limiting via Upstash Redis
+  return aiGeneration(request, async () => {
   try {
     // Security check
     const security = await APISecurityChecker.check(
@@ -288,6 +291,7 @@ Keep the core message but enhance engagement. Follow platform best practices.`
       { status: 500 }
     );
   }
+  });
 }
 
 // Build optimization prompt
