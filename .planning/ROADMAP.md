@@ -15,7 +15,7 @@ None (internal platform hardening)
 - [x] **Phase 3: Mock Data — Dashboard** - Remove 3 silent mock fallbacks, implement error/empty states
 - [x] **Phase 4: Security Hardening** - Env validation at startup, rate limiting audit, auth middleware audit
 - [x] **Phase 5: Social Platform Completeness** - Implement TikTok, YouTube, Pinterest, Reddit, Threads services
-- [ ] **Phase 6: Cron Jobs & Background Tasks** - Fix competitor cron, implement weekly digest email
+- [x] **Phase 6: Cron Jobs & Background Tasks** - Fix competitor cron, implement weekly digest email
 - [ ] **Phase 7: Testing — Auth & Core** - 80%+ coverage on auth, social, and core services
 - [ ] **Phase 8: Testing — API Contracts** - Contract tests for highest-value API routes + E2E
 - [ ] **Phase 9: Performance & Build** - Clean build config, reduce bundle, optimize queries
@@ -89,7 +89,7 @@ Plans:
 
 Plans:
 - [x] 06-01: Verify competitor cron uses real API calls
-- [ ] 06-02: Implement weekly digest email and verify all crons
+- [x] 06-02: Implement weekly digest email and verify all crons
 
 ### Phase 7: Testing — Auth & Core
 **Goal**: 80%+ coverage on lib/auth/ and lib/social/
@@ -144,7 +144,7 @@ Plans:
 | 3. Mock Data — Dashboard | 2/2 | Complete | 2026-02-16 |
 | 4. Security Hardening | 3/3 | Complete | 2026-02-16 |
 | 5. Social Platforms | 5/5 | Complete | 2026-02-16 |
-| 6. Cron Jobs | 1/2 | In progress | - |
+| 6. Cron Jobs | 2/2 | Complete | 2026-02-17 |
 | 7. Testing — Auth | 0/3 | Not started | - |
 | 8. Testing — API | 0/4 | Not started | - |
 | 9. Performance | 0/3 | Not started | - |

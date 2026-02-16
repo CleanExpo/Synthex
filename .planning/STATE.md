@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-02-16)
 
 **Core value:** Every endpoint returns real data, every platform works, every dashboard page connects to live APIs
-**Current focus:** Phase 6 in progress — wiring cron jobs to real platform APIs.
+**Current focus:** Phase 6 complete — all 5 Vercel crons verified working with real data. Ready for Phase 7.
 
 ## Current Position
 
 Phase: 6 of 10 (Cron Jobs & Background Tasks)
-Plan: 1 of 2 in current phase
-Status: In progress
-Last activity: 2026-02-17 — Completed 06-01-PLAN.md — Competitor tracking cron wired to real APIs
+Plan: 2 of 2 in current phase
+Status: Phase complete
+Last activity: 2026-02-17 — Completed 06-02-PLAN.md — Weekly digest email + all crons verified
 
-Progress: █████░░░░░ 50% (Phase 6)
+Progress: ██████████ 100% (Phase 6)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 17
+- Total plans completed: 18
 - Average duration: ~9 min
-- Total execution time: ~152 min
+- Total execution time: ~160 min
 
 **By Phase:**
 
@@ -32,10 +32,10 @@ Progress: █████░░░░░ 50% (Phase 6)
 | 3 | 2/2 | ~21 min | ~11 min |
 | 4 | 3/3 | ~30 min | ~10 min |
 | 5 | 5/5 | ~42 min | ~8 min |
-| 6 | 1/2 | ~10 min | ~10 min |
+| 6 | 2/2 | ~18 min | ~9 min |
 
 **Recent Trend:**
-- Last 5 plans: 05-03 (~8 min), 05-04 (~8 min), 05-05 (~8 min), 06-01 (~10 min)
+- Last 5 plans: 05-04 (~8 min), 05-05 (~8 min), 06-01 (~10 min), 06-02 (~8 min)
 - Trend: Consistent ~8-10 min
 
 ## Accumulated Context
@@ -113,6 +113,9 @@ Recent decisions affecting current work:
 - Alert detection is per-platform with real deltas: follower >10% = warning, engagement >50% = info (06-01)
 - Reddit competitor lookup needs no auth — public about.json endpoint (06-01)
 - YouTube competitor lookup supports API key fallback (YOUTUBE_API_KEY or GOOGLE_API_KEY) (06-01)
+- Weekly digest email template is inline in route file — no separate template file (06-02)
+- Email failures in weekly digest don't crash the batch — inner try-catch preserves DB write (06-02)
+- Proactive insights correctly uses in-app notifications, not email (06-02 verification)
 
 ### Deferred Issues
 
@@ -128,6 +131,6 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-17
-Stopped at: Completed 06-01-PLAN.md (1 of 2 in Phase 6) — Competitor tracking cron wired to real platform APIs
+Stopped at: Completed 06-02-PLAN.md (2 of 2 in Phase 6) — Weekly digest email + all 5 crons verified. Phase 6 complete.
 Resume file: None
-Next action: Execute 06-02-PLAN.md (Weekly digest email and verify all crons)
+Next action: Plan Phase 7 (Testing — Auth & Core)
