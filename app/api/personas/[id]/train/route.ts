@@ -36,18 +36,6 @@ const trainRequestSchema = z.object({
 });
 
 // ============================================================================
-// Training state storage (in-memory for now, could use Redis)
-// ============================================================================
-
-const trainingJobs = new Map<string, {
-  pipeline: PersonaTrainingPipeline;
-  startedAt: Date;
-  status: 'running' | 'completed' | 'failed';
-  result?: unknown;
-  error?: string;
-}>();
-
-// ============================================================================
 // POST /api/personas/[id]/train
 // ============================================================================
 
@@ -109,37 +97,35 @@ export async function POST(
       ...s,
     }));
 
+    // Update persona status to training in the database
+    await prisma.persona.update({
+      where: { id: personaId },
+      data: { status: 'training' },
+    });
+
     // Create training pipeline
-    const pipeline = new PersonaTrainingPipeline((progress) => {
-      // Update job state on progress
-      const job = trainingJobs.get(personaId);
-      if (job) {
-        job.pipeline = pipeline;
-      }
-    });
+    const pipeline = new PersonaTrainingPipeline();
 
-    // Store job
-    trainingJobs.set(personaId, {
-      pipeline,
-      startedAt: new Date(),
-      status: 'running',
-    });
-
-    // Start training asynchronously
+    // Start training asynchronously — fire-and-forget with database status updates.
+    // In serverless, in-memory progress tracking via Map resets between invocations,
+    // so the database-backed persona.status is the reliable source of truth.
     pipeline.train(personaId, trainingSources)
-      .then((result) => {
-        const job = trainingJobs.get(personaId);
-        if (job) {
-          job.status = 'completed';
-          job.result = result;
-        }
+      .then(async () => {
+        await prisma.persona.update({
+          where: { id: personaId },
+          data: {
+            status: 'active',
+            lastTrained: new Date(),
+            trainingSourcesCount: trainingSources.length,
+          },
+        });
       })
-      .catch((error) => {
-        const job = trainingJobs.get(personaId);
-        if (job) {
-          job.status = 'failed';
-          job.error = error.message;
-        }
+      .catch(async (error) => {
+        console.error('Training failed:', error);
+        await prisma.persona.update({
+          where: { id: personaId },
+          data: { status: 'draft' },
+        });
       });
 
     return NextResponse.json({
@@ -192,44 +178,34 @@ export async function GET(
       );
     }
 
-    // Check for active training job
-    const job = trainingJobs.get(personaId);
-
-    if (!job) {
-      // No active job - return persona training stats
+    // Check persona status from database (the source of truth)
+    if (persona.status === 'training') {
       return NextResponse.json({
-        status: 'idle',
+        status: 'training',
+        message: 'Training is in progress. Check back shortly.',
         persona: {
           id: persona.id,
           name: persona.name,
           status: persona.status,
-          lastTrained: persona.lastTrained,
-          trainingStats: {
-            sourcesCount: persona.trainingSourcesCount,
-            wordsCount: persona.trainingWordsCount,
-            samplesCount: persona.trainingSamplesCount,
-            accuracy: persona.accuracy,
-          },
         },
       });
     }
 
-    // Return active job progress
-    const progress = job.pipeline.getProgress();
-
+    // Not training — return persona training stats
     return NextResponse.json({
-      status: job.status,
-      progress: {
-        phase: progress.phase,
-        percent: progress.progress,
-        sourcesProcessed: progress.sourcesProcessed,
-        totalSources: progress.totalSources,
-        currentStep: progress.currentStep,
-        errors: progress.errors,
-        startedAt: job.startedAt,
+      status: 'idle',
+      persona: {
+        id: persona.id,
+        name: persona.name,
+        status: persona.status,
+        lastTrained: persona.lastTrained,
+        trainingStats: {
+          sourcesCount: persona.trainingSourcesCount,
+          wordsCount: persona.trainingWordsCount,
+          samplesCount: persona.trainingSamplesCount,
+          accuracy: persona.accuracy,
+        },
       },
-      result: job.status === 'completed' ? job.result : undefined,
-      error: job.status === 'failed' ? job.error : undefined,
     });
   } catch (error) {
     console.error('Training status error:', error);
@@ -239,16 +215,6 @@ export async function GET(
     );
   }
 }
-
-// Cleanup completed jobs periodically (after 1 hour)
-setInterval(() => {
-  const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
-  for (const [personaId, job] of trainingJobs.entries()) {
-    if (job.status !== 'running' && job.startedAt < oneHourAgo) {
-      trainingJobs.delete(personaId);
-    }
-  }
-}, 15 * 60 * 1000); // Run every 15 minutes
 
 // Node.js runtime required for Prisma
 export const runtime = 'nodejs';
