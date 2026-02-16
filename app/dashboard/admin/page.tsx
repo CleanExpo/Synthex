@@ -10,7 +10,6 @@ import {
   type AdminStatsData,
   type UserAction,
   type BulkAction,
-  mockUsers,
   calculateStats,
   exportUsersToCSV,
   AdminHeader,
@@ -48,8 +47,8 @@ export default function AdminPanel() {
     } catch (error) {
       console.error('Error fetching users:', error);
       toast.error('Failed to fetch users');
-      setUsers(mockUsers);
-      setFilteredUsers(mockUsers);
+      setUsers([]);
+      setFilteredUsers([]);
     } finally {
       setIsLoading(false);
     }

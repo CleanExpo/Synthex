@@ -1,26 +1,9 @@
 /**
  * Admin Panel Configuration
- * Mock data and constants
+ * Constants and helper functions
  */
 
 import type { User, AdminStatsData } from './types';
-
-export const mockUsers: User[] = [
-  {
-    id: '1',
-    email: 'admin@synthex.ai',
-    created_at: new Date().toISOString(),
-    role: 'admin',
-    status: 'active'
-  },
-  {
-    id: '2',
-    email: 'user@example.com',
-    created_at: new Date().toISOString(),
-    role: 'user',
-    status: 'active'
-  }
-];
 
 export const roleOptions = [
   { value: 'user', label: 'User' },
