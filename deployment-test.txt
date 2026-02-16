@@ -1,3 +1,0 @@
-﻿# Deployment Test
-Last tested: 2025-08-04 15:49:47
-This file triggers GitHub Actions workflow

@@ -1,95 +1,181 @@
 # Synthex
 
-AI-powered marketing automation platform. Express + TypeScript backend deployed on Vercel.
+AI-powered marketing automation platform. Next.js 15 full-stack app deployed on Vercel.
 
 ## Project Identity
 
-- **Name**: Synthex (formerly "Auto Marketing")
-- **Stack**: Express 4, TypeScript 5, Prisma ORM, PostgreSQL
-- **Deployment**: Vercel (serverless), `rootDirectory: "Synthex"`
-- **Node**: 20.x
+- **Name**: Synthex
+- **Stack**: Next.js 15 (App Router), TypeScript 5, Prisma 6, PostgreSQL (Supabase)
+- **Deployment**: Vercel (serverless), deploys from repo root
+- **Node**: 22.x
 - **OS**: Windows 11 (PowerShell)
 
 ## Directory Structure
 
 ```
-D:\Synthex\                      # Repository root
-├── Synthex/                     # Application code (Vercel rootDirectory)
-│   ├── src/                     # TypeScript source
-│   │   ├── index.ts             # Express app entry point
-│   │   ├── services/            # Business logic (analytics, social-media, seo, etc.)
-│   │   ├── routes/              # API route handlers
-│   │   └── middleware/          # Auth, rate limiting, validation
-│   ├── prisma/                  # Database schema & migrations
-│   ├── public/                  # Static assets (landing page, dashboard)
-│   ├── api/vercel.js            # Vercel serverless adapter
-│   └── platform_master_config.json  # 8-platform marketing config
-├── .claude/                     # Claude Code integration layer
-│   ├── skills/                  # 12 skill definitions (SKILL.md)
-│   ├── agents/                  # 6 agent definitions (AGENT.md)
-│   ├── hooks/                   # 7 PowerShell hook scripts
-│   ├── knowledge/               # NotebookLM-style knowledge base
-│   ├── checkpoints/             # Session state checkpoints
-│   └── settings.local.json      # Permissions, hooks config
-├── tools/claude-seo/            # SEO tooling (13 skills, 6 agents, hooks)
-├── agents/build/                # Build orchestration agents
-└── vercel.json                  # Vercel deployment config
+D:\Synthex\                      # Repository root = app root
+├── app/                         # Next.js App Router
+│   ├── (auth)/                  #   Auth routes (login, signup)
+│   ├── (onboarding)/            #   Onboarding flow
+│   ├── dashboard/               #   Main app (30+ sub-pages)
+│   ├── api/                     #   API routes (65+ categories)
+│   └── layout.tsx               #   Root layout
+├── components/                  # React components (35+ modules)
+│   ├── ui/                      #   Radix UI primitives
+│   ├── dashboard/               #   Dashboard widgets
+│   └── ...                      #   Feature-specific components
+├── lib/                         # Shared utilities & services
+│   ├── auth/                    #   NextAuth.js + JWT
+│   ├── ai/                      #   OpenRouter, Anthropic, Google AI
+│   ├── social/                  #   Platform integrations
+│   ├── stripe/                  #   Billing & subscriptions
+│   ├── email/                   #   SendGrid, Resend, Nodemailer
+│   ├── cache/                   #   Redis (Upstash)
+│   ├── prisma.ts                #   Prisma client instance
+│   └── supabase.ts              #   Supabase client
+├── prisma/                      # Schema (67 models) & migrations
+├── middleware.ts                # Auth, CSP, security headers
+├── config/                      # App config, feature flags, rate limits
+├── hooks/                       # React hooks
+├── styles/                      # Tailwind CSS
+├── types/                       # TypeScript type definitions
+├── scripts/                     # Utility scripts (db, deploy, validate)
+├── public/                      # Static assets
+├── .claude/                     # Claude Code integration
+│   ├── skills/                  #   Skill definitions (SKILL.md)
+│   ├── agents/                  #   Agent definitions (AGENT.md)
+│   ├── hooks/                   #   PowerShell hook scripts
+│   ├── knowledge/               #   Persistent knowledge base
+│   └── rules/                   #   Context rules by domain
+├── .planning/                   # GSD planning system
+│   ├── ROADMAP.md               #   10-phase hardening roadmap
+│   ├── PROJECT.md               #   Project charter
+│   ├── STATE.md                 #   Current progress
+│   └── phases/                  #   Phase plans & summaries
+├── next.config.mjs              # Next.js configuration
+├── vercel.json                  # Vercel config (crons, headers, regions)
+├── tsconfig.json                # TypeScript config
+└── package.json                 # Dependencies & 90+ scripts
 ```
 
 ## Commands
 
 ```bash
 # Development
-npm run dev                      # Start dev server (ts-node)
-npm run dev:watch                # Dev with nodemon
+npm run dev                      # Start dev server (Turbo)
+npm run dev:next                 # Next.js dev server directly
+npm run dev:full                 # Dev server + WebSocket server
 
 # Build
-npm run build                    # TypeScript compile
-npm run build:prod               # Production build (no sourcemaps)
+npm run build                    # next build
+npm run build:vercel             # prisma generate + next build (Vercel)
+npm run build:fresh              # Clean cache + build
 
 # Database
 npx prisma generate              # Generate Prisma client
-npx prisma db push               # Push schema changes
-npx prisma migrate dev           # Create migration
-npx prisma studio                # Database GUI
+npx prisma db push               # Push schema to database
+npm run db:migrate:dev           # Create development migration
+npm run db:migrate:deploy        # Deploy migrations to production
+npm run db:studio                # Prisma Studio GUI
+npm run db:validate              # Validate + generate schema
 
 # Testing
-npm test                         # Run Jest tests
+npm test                         # Jest unit tests
+npm run test:watch               # Jest watch mode
 npm run test:coverage            # Tests with coverage
+npm run e2e                      # Playwright E2E tests
+npm run e2e:ui                   # Playwright UI mode
 
-# Type checking
-npm run typecheck                # tsc --noEmit
+# Quality
+npm run type-check               # tsc --noEmit
+npm run lint                     # next lint
+npm run format                   # Prettier
+
+# Storybook
+npm run storybook                # Dev on port 6006
+npm run build-storybook          # Build static
+
+# Deploy
+npm run deploy:prod              # vercel --prod --yes
+npm run release:check            # Full pre-release validation
 ```
 
-## Data Models (Prisma)
+## Data Models (Prisma — 67 models)
 
-- **User** -- auth (local + Google OAuth), API keys, preferences
-- **Campaign** -- multi-platform marketing campaigns
-- **Post** -- scheduled/published content per platform
-- **Project** -- marketing/content/analytics projects
-- **ApiUsage** -- token/cost tracking per API call
-- **Session** -- auth session tokens
+**Auth & Users**: User, Account, Session, OAuthPKCEState, Role, UserRole
+**Organizations**: Organization, TeamInvitation, BusinessOwnership
+**Campaigns**: Campaign, Post, CalendarPost, Project, Task
+**Content**: Quote, QuoteCollection, Persona, BrandGeneration
+**Platforms**: PlatformConnection, PlatformPost, PlatformMetrics
+**Analytics**: AnalyticsEvent, SentimentAnalysis, SentimentTrend, EngagementPrediction
+**A/B Testing**: ABTest, ABTestVariant, ABTestResult
+**Reports**: Report, ScheduledReport, ReportTemplate, ReportDelivery
+**Competitors**: TrackedCompetitor, CompetitorSnapshot, CompetitorPost, CompetitorAlert, CompetitorComparison
+**Billing**: Subscription
+**Collaboration**: ContentShare, ContentComment, ContentAccessLog, TeamNotification
+**AI**: AIConversation, AIMessage
+**Retention**: AIWeeklyDigest, UserHealthScore, UserStreak, UserAchievement, Referral, UserLoyaltyTier, FeedbackSurvey
+**SEO/Authority**: AuthorProfile, SEOAudit, GEOAnalysis, GEOResearchReport, VisualAsset, LocalCaseStudy, ArticleAuthor
+**Psychology**: PsychologyPrinciple, PsychologyMetric, UserPsychologyPreference
+**System**: ApiUsage, AuditLog, PermissionAudit, Notification
 
-## Platforms (8)
+## Platforms (9)
 
-YouTube, Instagram, TikTok, X (Twitter), Facebook, LinkedIn, Pinterest, Reddit.
-Config in `Synthex/platform_master_config.json`.
+YouTube, Instagram, TikTok, X (Twitter), Facebook, LinkedIn, Pinterest, Reddit, Threads.
 
 ## Architecture Notes
 
-- All API routes go through `api/vercel.js` serverless adapter
-- Rate limiting via `express-rate-limit`
-- Auth: JWT + Google OAuth (Passport.js)
-- Payments: Stripe integration
-- AI: OpenAI + Anthropic APIs via OpenRouter
+- **Routing**: Next.js App Router — all pages in `app/`, API routes in `app/api/`
+- **Auth**: NextAuth.js v4 with Prisma adapter, JWT + Google/GitHub OAuth
+- **Database**: Prisma ORM with PostgreSQL via Supabase (driver adapters for pooler)
+- **Payments**: Stripe with webhooks, subscription tiers, billing portal
+- **AI**: OpenRouter (primary), Anthropic SDK, Google AI SDK, OpenAI SDK, Vercel AI SDK
+- **Caching**: Upstash Redis (serverless) + ioredis
+- **Jobs**: BullMQ for background task queues
+- **Email**: SendGrid + Resend + Nodemailer
+- **Monitoring**: Sentry (errors), PostHog (analytics)
+- **State**: Zustand (client), TanStack Query + SWR (async)
+- **UI**: Radix UI primitives, Tailwind CSS, Framer Motion, Recharts, Lucide icons
+- **Forms**: React Hook Form + Zod validation
+- **Rich text**: TipTap editor
+- **Testing**: Jest (unit), Playwright (E2E), Storybook (visual)
+- **Build**: Turbo for task orchestration
+
+## Vercel Crons
+
+| Schedule | Route | Purpose |
+|----------|-------|---------|
+| Hourly | `/api/reports/scheduled/execute` | Execute scheduled reports |
+| Every 30 min | `/api/competitors/track/execute` | Track competitor changes |
+| Daily 2am | `/api/cron/health-score` | Calculate user health scores |
+| Weekly Mon 8am | `/api/cron/weekly-digest` | Send weekly digest emails |
+| Every 6 hours | `/api/cron/proactive-insights` | Generate proactive insights |
+
+## Environment Files
+
+```
+.env.example     # Template (committed) — single source of truth for required vars
+.env.test        # Test defaults (committed)
+.env             # Local development (gitignored)
+.env.local       # Next.js local overrides (gitignored)
+```
+
+Production secrets are managed in Vercel dashboard, not in files.
 
 ## Claude Code Integration
 
-Skills, agents, hooks, and knowledge base live in `.claude/` -- outside the Vercel root directory, so they have zero deployment impact.
+Skills, agents, hooks, and knowledge base live in `.claude/` — outside the build pipeline, zero deployment impact.
 
 - **Skills** define structured workflows (SKILL.md with YAML frontmatter)
 - **Agents** define specialist roles with tools and delegation protocols
 - **Hooks** are PowerShell scripts that validate actions pre/post tool use
 - **Knowledge base** is a structured "second brain" for persistent research
+- **Rules** provide domain-specific context (frontend, backend, database, etc.)
 
-See `tools/claude-seo/` for the canonical pattern (13 skills, 6 agents).
+## Planning System
+
+GSD (Get Shit Done) planning lives in `.planning/`:
+- `ROADMAP.md` — 10-phase hardening roadmap (30 plans total)
+- `PROJECT.md` — Project charter, requirements, constraints
+- `STATE.md` — Current progress, velocity metrics, decisions
+- Phase plans in `phases/<phase-number>-<name>/`
