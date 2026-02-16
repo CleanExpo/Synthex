@@ -17,7 +17,7 @@ None (internal platform hardening)
 - [x] **Phase 5: Social Platform Completeness** - Implement TikTok, YouTube, Pinterest, Reddit, Threads services
 - [x] **Phase 6: Cron Jobs & Background Tasks** - Fix competitor cron, implement weekly digest email
 - [x] **Phase 7: Testing — Auth & Core** - 80%+ coverage on auth, social, and core services
-- [ ] **Phase 8: Testing — API Contracts** - Contract tests for highest-value API routes + E2E
+- [x] **Phase 8: Testing — API Contracts** - Contract tests for highest-value API routes + E2E
 - [ ] **Phase 9: Performance & Build** - Clean build config, reduce bundle, optimize queries
 - [ ] **Phase 10: Final Audit** - Full endpoint audit, documentation, deployment readiness
 
@@ -112,7 +112,7 @@ Plans:
 - [x] 08-01: Content and analytics API tests
 - [x] 08-02: Auth and user API tests
 - [x] 08-03: Payment and webhook tests
-- [ ] 08-04: E2E critical path tests
+- [x] 08-04: Social posting + critical path integration tests
 
 ### Phase 9: Performance & Build
 **Goal**: Clean build (no || true, no --legacy-peer-deps), smaller bundle, optimized queries
@@ -146,6 +146,6 @@ Plans:
 | 5. Social Platforms | 5/5 | Complete | 2026-02-16 |
 | 6. Cron Jobs | 2/2 | Complete | 2026-02-17 |
 | 7. Testing — Auth | 3/3 | Complete | 2026-02-17 |
-| 8. Testing — API | 3/4 | In progress | 2026-02-17 |
+| 8. Testing — API | 4/4 | Complete | 2026-02-17 |
 | 9. Performance | 0/3 | Not started | - |
 | 10. Final Audit | 0/2 | Not started | - |
