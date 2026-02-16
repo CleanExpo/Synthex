@@ -10,6 +10,7 @@
  * FAILURE MODE: Returns empty results with error logged
  */
 
+import { randomUUID } from 'crypto';
 import { createClient } from '@supabase/supabase-js';
 import { logger } from '@/lib/logger';
 
@@ -398,7 +399,7 @@ class AnomalyDetector {
     );
 
     const anomaly: Anomaly = {
-      id: `anomaly_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      id: `anomaly_${randomUUID()}`,
       userId: context.userId,
       accountId: context.accountId,
       platform: context.platform,
@@ -800,7 +801,7 @@ class AnomalyDetector {
   ): Promise<void> {
     for (const channel of channels) {
       try {
-        const alertId = `alert_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        const alertId = `alert_${randomUUID()}`;
 
         // Save alert record
         await supabase.from('anomaly_alerts').insert({
