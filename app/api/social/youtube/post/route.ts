@@ -2,6 +2,7 @@
  * YouTube Posting API
  *
  * @description Upload videos and manage content via YouTube Data API v3
+ * Uses YouTubeService from lib/social for core platform operations.
  *
  * ENVIRONMENT VARIABLES REQUIRED:
  * - GOOGLE_CLIENT_ID: Google OAuth client ID (SECRET)
@@ -17,6 +18,7 @@ import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-securit
 import { createClient } from '@supabase/supabase-js';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { auditLogger } from '@/lib/security/audit-logger';
+import { createPlatformService } from '@/lib/social';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -46,32 +48,6 @@ const CommunityPostSchema = z.object({
 });
 
 type VideoUpload = z.infer<typeof VideoUploadSchema>;
-type CommunityPost = z.infer<typeof CommunityPostSchema>;
-
-async function makeYouTubeRequest<T>(
-  endpoint: string,
-  accessToken: string,
-  options: RequestInit = {}
-): Promise<T> {
-  const url = endpoint.startsWith('http') ? endpoint : `${YOUTUBE_API_BASE}${endpoint}`;
-
-  const response = await fetch(url, {
-    ...options,
-    headers: {
-      'Authorization': `Bearer ${accessToken}`,
-      'Content-Type': 'application/json',
-      ...(options.headers || {}),
-    },
-  });
-
-  const data = await response.json();
-
-  if (!response.ok || data.error) {
-    throw new Error(data.error?.message || `YouTube API error: ${response.status}`);
-  }
-
-  return data;
-}
 
 /**
  * POST /api/social/youtube/post
@@ -152,8 +128,6 @@ export async function POST(request: NextRequest) {
 
     // Handle scheduled uploads
     if (videoData.scheduledTime) {
-      const scheduledDate = new Date(videoData.scheduledTime);
-
       // Save to database for processing
       const { data: scheduledPost, error: scheduleError } = await supabase
         .from('scheduled_posts')
@@ -200,81 +174,48 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Initiate resumable upload
-    // Step 1: Start resumable upload session
-    const uploadUrl = `${YOUTUBE_UPLOAD_BASE}/videos?uploadType=resumable&part=snippet,status`;
+    // Use YouTubeService for video upload
+    const service = createPlatformService('youtube', {
+      accessToken: connection.access_token,
+      refreshToken: connection.refresh_token,
+      expiresAt: connection.expires_at ? new Date(connection.expires_at) : undefined,
+      platformUserId: connection.platform_user_id,
+    });
 
-    const videoMetadata = {
-      snippet: {
-        title: videoData.title,
-        description: videoData.description || '',
-        tags: videoData.tags || [],
-        categoryId: videoData.categoryId,
-      },
-      status: {
-        privacyStatus: videoData.privacy,
-        selfDeclaredMadeForKids: videoData.madeForKids,
-      },
+    if (!service) {
+      throw new Error('Failed to initialize YouTube service');
+    }
+
+    // Map privacy for visibility
+    const visibilityMap: Record<string, 'public' | 'private' | 'connections'> = {
+      public: 'public',
+      private: 'private',
+      unlisted: 'connections',
     };
 
-    // Initialize upload session
-    const initResponse = await fetch(uploadUrl, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${connection.access_token}`,
-        'Content-Type': 'application/json',
-        'X-Upload-Content-Type': 'video/*',
-      },
-      body: JSON.stringify(videoMetadata),
+    const result = await service.createPost({
+      text: videoData.title + (videoData.description ? `\n\n${videoData.description}` : ''),
+      mediaUrls: [videoData.videoUrl],
+      visibility: visibilityMap[videoData.privacy] || 'public',
     });
 
-    if (!initResponse.ok) {
-      const error = await initResponse.json();
-      throw new Error(error.error?.message || 'Failed to initialize upload');
+    if (!result.success || !result.postId) {
+      throw new Error(result.error || 'Failed to upload video');
     }
 
-    const resumableUri = initResponse.headers.get('location');
+    const videoId = result.postId;
 
-    if (!resumableUri) {
-      throw new Error('Failed to get upload URI from YouTube');
-    }
-
-    // For URL-based uploads, we need to fetch the video and upload it
-    // This is a simplified version - production would use chunked uploads
-    const videoResponse = await fetch(videoData.videoUrl);
-    if (!videoResponse.ok) {
-      throw new Error('Failed to fetch video from provided URL');
-    }
-
-    const videoBuffer = await videoResponse.arrayBuffer();
-
-    // Upload the video
-    const uploadResponse = await fetch(resumableUri, {
-      method: 'PUT',
-      headers: {
-        'Authorization': `Bearer ${connection.access_token}`,
-        'Content-Type': 'video/*',
-        'Content-Length': videoBuffer.byteLength.toString(),
-      },
-      body: videoBuffer,
-    });
-
-    if (!uploadResponse.ok) {
-      const error = await uploadResponse.json();
-      throw new Error(error.error?.message || 'Failed to upload video');
-    }
-
-    const uploadResult = await uploadResponse.json();
-    const videoId = uploadResult.id;
-
-    // Add to playlist if specified
+    // Add to playlist if specified (YouTube-specific, not in base service)
     if (videoData.playlistId && videoId) {
       try {
-        await makeYouTubeRequest(
-          '/playlistItems?part=snippet',
-          connection.access_token,
+        const playlistResponse = await fetch(
+          `${YOUTUBE_API_BASE}/playlistItems?part=snippet`,
           {
             method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${connection.access_token}`,
+              'Content-Type': 'application/json',
+            },
             body: JSON.stringify({
               snippet: {
                 playlistId: videoData.playlistId,
@@ -286,12 +227,16 @@ export async function POST(request: NextRequest) {
             }),
           }
         );
+
+        if (!playlistResponse.ok) {
+          console.error('Failed to add video to playlist:', await playlistResponse.text());
+        }
       } catch (playlistError) {
         console.error('Failed to add video to playlist:', playlistError);
       }
     }
 
-    // Set custom thumbnail if provided
+    // Set custom thumbnail if provided (YouTube-specific, not in base service)
     if (videoData.thumbnailUrl && videoId) {
       try {
         const thumbnailResponse = await fetch(videoData.thumbnailUrl);
@@ -347,9 +292,9 @@ export async function POST(request: NextRequest) {
       success: true,
       data: {
         id: videoId,
-        url: `https://www.youtube.com/watch?v=${videoId}`,
+        url: result.url || `https://www.youtube.com/watch?v=${videoId}`,
         title: videoData.title,
-        status: uploadResult.status?.uploadStatus || 'uploaded',
+        status: 'uploaded',
       },
     });
   } catch (error: unknown) {
@@ -403,91 +348,40 @@ export async function GET(request: NextRequest) {
 
     if (syncFromPlatform) {
       try {
-        // YouTube API response types
-        interface YouTubeChannelResponse {
-          items?: Array<{
-            contentDetails?: {
-              relatedPlaylists?: { uploads?: string };
-            };
-          }>;
-        }
-        interface YouTubePlaylistItem {
-          contentDetails: { videoId: string };
-          snippet: {
-            title: string;
-            description: string;
-            publishedAt: string;
-            thumbnails?: { high?: { url: string } };
-          };
-        }
-        interface YouTubePlaylistResponse {
-          items?: YouTubePlaylistItem[];
-        }
-        interface YouTubeVideoStats {
-          id: string;
-          statistics: {
-            viewCount?: string;
-            likeCount?: string;
-            commentCount?: string;
-          };
-        }
-        interface YouTubeStatsResponse {
-          items?: YouTubeVideoStats[];
-        }
+        // Use YouTubeService for syncing posts from platform
+        const service = createPlatformService('youtube', {
+          accessToken: connection.access_token,
+          refreshToken: connection.refresh_token,
+          expiresAt: connection.expires_at ? new Date(connection.expires_at) : undefined,
+          platformUserId: connection.platform_user_id,
+        });
 
-        // Get channel's uploads playlist
-        const channelResponse = await makeYouTubeRequest<YouTubeChannelResponse>(
-          '/channels?part=contentDetails&mine=true',
-          connection.access_token
-        );
+        if (service) {
+          const syncResult = await service.syncPosts(limit);
 
-        const uploadsPlaylistId = channelResponse.items?.[0]?.contentDetails?.relatedPlaylists?.uploads;
-
-        if (uploadsPlaylistId) {
-          // Get videos from uploads playlist
-          const videosResponse = await makeYouTubeRequest<YouTubePlaylistResponse>(
-            `/playlistItems?part=snippet,contentDetails&playlistId=${uploadsPlaylistId}&maxResults=${limit}`,
-            connection.access_token
-          );
-
-          // Get video statistics
-          const videoIds = videosResponse.items?.map((item: YouTubePlaylistItem) => item.contentDetails.videoId).join(',');
-          const statsResponse = await makeYouTubeRequest<YouTubeStatsResponse>(
-            `/videos?part=statistics&id=${videoIds}`,
-            connection.access_token
-          );
-
-          const statsMap = new Map(
-            statsResponse.items?.map((item: YouTubeVideoStats) => [item.id, item.statistics]) || []
-          );
-
-          const videos = (videosResponse.items || []).map((item: YouTubePlaylistItem) => {
-            const stats = (statsMap.get(item.contentDetails.videoId) || {}) as {
-              viewCount?: string;
-              likeCount?: string;
-              commentCount?: string;
-            };
-            return {
-              id: item.contentDetails.videoId,
-              platformId: item.contentDetails.videoId,
-              content: item.snippet.title,
-              description: item.snippet.description,
-              publishedAt: new Date(item.snippet.publishedAt),
-              url: `https://www.youtube.com/watch?v=${item.contentDetails.videoId}`,
-              thumbnail: item.snippet.thumbnails?.high?.url,
+          if (syncResult.success) {
+            // Map to the existing response format for backward compatibility
+            const videos = syncResult.posts.map((post) => ({
+              id: post.id,
+              platformId: post.platformId,
+              content: post.content,
+              description: post.content,
+              publishedAt: post.publishedAt,
+              url: post.url,
+              thumbnail: post.mediaUrls?.[0],
               metrics: {
-                views: parseInt(stats.viewCount || '0', 10),
-                likes: parseInt(stats.likeCount || '0', 10),
-                comments: parseInt(stats.commentCount || '0', 10),
+                views: post.metrics.impressions || 0,
+                likes: post.metrics.likes,
+                comments: post.metrics.comments,
               },
-            };
-          });
+            }));
 
-          return NextResponse.json({
-            success: true,
-            data: videos,
-            synced: true,
-          });
+            return NextResponse.json({
+              success: true,
+              data: videos,
+              synced: true,
+            });
+          }
         }
       } catch (syncError) {
         console.error('YouTube sync error:', syncError);
