@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-02-16)
 ## Current Position
 
 Phase: 5 of 10 (Social Platform Completeness)
-Plan: 3 of 5 in current phase
+Plan: 4 of 5 in current phase
 Status: In progress
-Last activity: 2026-02-16 — Completed 05-03-PLAN.md (Pinterest service implementation)
+Last activity: 2026-02-16 — Completed 05-04-PLAN.md (Reddit service implementation)
 
-Progress: ███░░░░░░░ 60% (Phase 5)
+Progress: ████░░░░░░ 80% (Phase 5)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 14
+- Total plans completed: 15
 - Average duration: ~9 min
-- Total execution time: ~126 min
+- Total execution time: ~134 min
 
 **By Phase:**
 
@@ -31,10 +31,10 @@ Progress: ███░░░░░░░ 60% (Phase 5)
 | 2 | 5/5 | ~41 min | ~8 min |
 | 3 | 2/2 | ~21 min | ~11 min |
 | 4 | 3/3 | ~30 min | ~10 min |
-| 5 | 3/5 | ~26 min | ~9 min |
+| 5 | 4/5 | ~34 min | ~9 min |
 
 **Recent Trend:**
-- Last 5 plans: 04-02 (~10 min), 04-03 (~12 min), 05-01 (~8 min), 05-02 (~10 min), 05-03 (~8 min)
+- Last 5 plans: 04-03 (~12 min), 05-01 (~8 min), 05-02 (~10 min), 05-03 (~8 min), 05-04 (~8 min)
 - Trend: Consistent ~8-12 min for platform service plans
 
 ## Accumulated Context
@@ -95,6 +95,13 @@ Recent decisions affecting current work:
 - Pinterest boardId is REQUIRED for createPost — pins must belong to a board (05-03)
 - Pinterest GET route includes boards in metadata for UI board selection (05-03)
 - Pinterest video pins not supported via URL — require pre-upload (05-03)
+- Reddit uses fetch() directly — consistent with all other platform services (05-04)
+- Reddit POST requests use form-encoded bodies (URLSearchParams), not JSON (05-04)
+- All Reddit API requests include User-Agent header (Synthex/1.0) to avoid 429s (05-04)
+- Reddit posts require both title and subreddit — validated with Zod in route (05-04)
+- Reddit delete uses t3_ prefix for post fullnames (05-04)
+- Reddit syncAnalytics returns karma as engagement proxy — no impressions API (05-04)
+- Reddit GET route supports ?subreddits=true for listing subscribed subreddits (05-04)
 
 ### Deferred Issues
 
@@ -110,6 +117,6 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-16
-Stopped at: Completed 05-03-PLAN.md (3 of 5 in Phase 5) — Pinterest service done
+Stopped at: Completed 05-04-PLAN.md (4 of 5 in Phase 5) — Reddit service done
 Resume file: None
-Next action: Execute 05-04-PLAN.md (Reddit service implementation)
+Next action: Execute 05-05-PLAN.md (Threads service and factory verification)
