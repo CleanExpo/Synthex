@@ -684,7 +684,7 @@ export class RedditService extends BasePlatformService {
       }
 
       // Extract Reddit-specific metadata
-      const metadata = (content as PostContent & { metadata?: Record<string, unknown> }).metadata;
+      const metadata = content.metadata;
       const subreddit = metadata?.subreddit as string | undefined;
       const title = metadata?.title as string | undefined;
       const kind = (metadata?.kind as string) || 'self';

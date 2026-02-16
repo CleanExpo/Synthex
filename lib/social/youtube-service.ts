@@ -219,6 +219,11 @@ export class YouTubeService extends BasePlatformService {
         this.updateRateLimits(fullUrl, rateLimitHeaders);
       }
 
+      // Handle 204 No Content (e.g., delete)
+      if (response.status === 204) {
+        return {} as T;
+      }
+
       const data: T & YouTubeApiError = await response.json();
 
       // Handle token expired errors — attempt refresh and retry
@@ -820,29 +825,12 @@ export class YouTubeService extends BasePlatformService {
         return false;
       }
 
-      await this.ensureValidToken();
-
-      const response = await fetch(
-        `${YOUTUBE_API_BASE}/videos?id=${postId}`,
-        {
-          method: 'DELETE',
-          headers: {
-            Authorization: `Bearer ${this.credentials!.accessToken}`,
-          },
-        }
+      await this.makeRequest<Record<string, unknown>>(
+        `/videos?id=${postId}`,
+        { method: 'DELETE' }
       );
 
-      if (response.status === 204 || response.ok) {
-        return true;
-      }
-
-      const data = await response.json();
-      logger.error('YouTube video deletion failed', {
-        postId,
-        error: data.error?.message,
-        status: response.status,
-      });
-      return false;
+      return true;
     } catch (error: unknown) {
       logger.error('YouTube video deletion failed', { error, postId });
       return false;

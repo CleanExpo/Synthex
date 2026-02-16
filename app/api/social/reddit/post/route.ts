@@ -15,7 +15,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { RedditService } from '@/lib/social/reddit-service';
+import { createPlatformService, RedditService } from '@/lib/social';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
 import { createClient } from '@supabase/supabase-js';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
@@ -102,23 +102,21 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if token is expired
-    if (connection.expires_at && new Date(connection.expires_at) < new Date()) {
-      return NextResponse.json(
-        { error: 'Reddit connection expired. Please reconnect your account.' },
-        { status: 401 }
-      );
-    }
-
-    // Initialize Reddit service with user credentials
-    const redditService = new RedditService();
-    redditService.initialize({
+    // Create Reddit service via factory (handles initialization + token refresh)
+    const redditService = createPlatformService('reddit', {
       accessToken: connection.access_token,
       refreshToken: connection.refresh_token,
       expiresAt: connection.expires_at ? new Date(connection.expires_at) : undefined,
       platformUserId: connection.platform_user_id,
       platformUsername: connection.platform_username,
     });
+
+    if (!redditService) {
+      return NextResponse.json(
+        { error: 'Reddit service unavailable' },
+        { status: 500 }
+      );
+    }
 
     // Handle scheduled posts
     if (postData.scheduledAt) {
@@ -186,7 +184,7 @@ export async function POST(request: NextRequest) {
         nsfw: postData.nsfw,
         spoiler: postData.spoiler,
       },
-    } as Parameters<typeof redditService.createPost>[0] & { metadata: Record<string, unknown> });
+    });
 
     if (!result.success) {
       return NextResponse.json(
@@ -313,15 +311,23 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Initialize service
-    const redditService = new RedditService();
-    redditService.initialize({
+    // Create service via factory
+    const service = createPlatformService('reddit', {
       accessToken: connection.access_token,
       refreshToken: connection.refresh_token,
       expiresAt: connection.expires_at ? new Date(connection.expires_at) : undefined,
       platformUserId: connection.platform_user_id,
       platformUsername: connection.platform_username,
     });
+
+    if (!service) {
+      return NextResponse.json(
+        { error: 'Reddit service unavailable' },
+        { status: 500 }
+      );
+    }
+
+    const redditService = service as InstanceType<typeof RedditService>;
 
     // If subreddits listing requested, return subreddits
     if (listSubreddits) {

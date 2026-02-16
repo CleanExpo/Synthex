@@ -132,13 +132,11 @@ export class ThreadsService extends BasePlatformService {
       throw new PlatformError('threads', 'No access token configured');
     }
 
-    // Add access token as Bearer header
+    // Use Bearer header for authentication (no token in URL)
     const url = `${THREADS_API_BASE}${endpoint}`;
-    const separator = url.includes('?') ? '&' : '?';
-    const fullUrl = `${url}${separator}access_token=${this.credentials.accessToken}`;
 
     try {
-      const response = await fetch(fullUrl, {
+      const response = await fetch(url, {
         ...options,
         headers: {
           'Content-Type': 'application/json',
@@ -159,11 +157,7 @@ export class ThreadsService extends BasePlatformService {
         try {
           await this.refreshToken();
           // Retry the request with new token
-          const retryUrl = `${THREADS_API_BASE}${endpoint}`;
-          const retrySeparator = retryUrl.includes('?') ? '&' : '?';
-          const retryFullUrl = `${retryUrl}${retrySeparator}access_token=${this.credentials.accessToken}`;
-
-          const retryResponse = await fetch(retryFullUrl, {
+          const retryResponse = await fetch(url, {
             ...options,
             headers: {
               'Content-Type': 'application/json',
@@ -217,6 +211,8 @@ export class ThreadsService extends BasePlatformService {
 
   async validateCredentials(): Promise<boolean> {
     try {
+      if (!this.isConfigured()) return false;
+
       await this.makeRequest<ThreadsProfileResponse>(
         '/me?fields=id,username'
       );
@@ -542,9 +538,8 @@ export class ThreadsService extends BasePlatformService {
       }
 
       // Add reply_control from metadata if present
-      const metadata = content as PostContent & { metadata?: { replyControl?: string } };
-      if (metadata.metadata?.replyControl) {
-        containerBody.reply_control = metadata.metadata.replyControl;
+      if (content.metadata?.replyControl) {
+        containerBody.reply_control = content.metadata.replyControl as string;
       }
 
       const containerResponse = await this.makeRequest<ThreadContainerResponse>(

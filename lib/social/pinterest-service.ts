@@ -390,8 +390,7 @@ export class PinterestService extends BasePlatformService {
         }
       } catch (error: unknown) {
         // 403 typically means personal account (not business) — handle gracefully
-        const httpError = error as { statusCode?: number };
-        if (httpError.statusCode === 403) {
+        if (error instanceof PlatformError && error.statusCode === 403) {
           logger.warn('[pinterest] Analytics unavailable — likely personal account (403). Returning null metrics.', { error });
         } else {
           logger.warn('[pinterest] Analytics fetch failed, continuing with profile data', { error });
@@ -589,7 +588,7 @@ export class PinterestService extends BasePlatformService {
       }
 
       // Extract boardId from metadata — required for Pinterest
-      const metadata = (content as PostContent & { metadata?: Record<string, unknown> }).metadata;
+      const metadata = content.metadata;
       const boardId = metadata?.boardId as string | undefined;
 
       if (!boardId) {

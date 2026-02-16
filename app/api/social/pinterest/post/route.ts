@@ -15,7 +15,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { PinterestService } from '@/lib/social/pinterest-service';
+import { createPlatformService, PinterestService } from '@/lib/social';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
 import { createClient } from '@supabase/supabase-js';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
@@ -99,23 +99,24 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if token is expired
-    if (connection.expires_at && new Date(connection.expires_at) < new Date()) {
-      return NextResponse.json(
-        { error: 'Pinterest connection expired. Please reconnect your account.' },
-        { status: 401 }
-      );
-    }
-
-    // Initialize Pinterest service with user credentials
-    const pinterestService = new PinterestService();
-    pinterestService.initialize({
+    // Create Pinterest service via factory (handles initialization + token refresh)
+    const service = createPlatformService('pinterest', {
       accessToken: connection.access_token,
       refreshToken: connection.refresh_token,
       expiresAt: connection.expires_at ? new Date(connection.expires_at) : undefined,
       platformUserId: connection.platform_user_id,
       platformUsername: connection.platform_username,
     });
+
+    if (!service) {
+      return NextResponse.json(
+        { error: 'Pinterest service unavailable' },
+        { status: 500 }
+      );
+    }
+
+    // Cast to PinterestService for access to getBoards() method
+    const pinterestService = service as InstanceType<typeof PinterestService>;
 
     // Handle scheduled posts
     if (postData.scheduledAt) {
@@ -177,7 +178,7 @@ export async function POST(request: NextRequest) {
         link: postData.link,
         altText: postData.altText,
       },
-    } as Parameters<typeof pinterestService.createPost>[0] & { metadata: Record<string, unknown> });
+    });
 
     if (!result.success) {
       return NextResponse.json(
@@ -302,15 +303,23 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Initialize service for sync and boards
-    const pinterestService = new PinterestService();
-    pinterestService.initialize({
+    // Create service via factory for sync and boards
+    const service = createPlatformService('pinterest', {
       accessToken: connection.access_token,
       refreshToken: connection.refresh_token,
       expiresAt: connection.expires_at ? new Date(connection.expires_at) : undefined,
       platformUserId: connection.platform_user_id,
       platformUsername: connection.platform_username,
     });
+
+    if (!service) {
+      return NextResponse.json(
+        { error: 'Pinterest service unavailable' },
+        { status: 500 }
+      );
+    }
+
+    const pinterestService = service as InstanceType<typeof PinterestService>;
 
     // If sync requested, fetch from Pinterest API
     if (syncFromPlatform) {

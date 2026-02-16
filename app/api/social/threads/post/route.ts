@@ -15,7 +15,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { ThreadsService } from '@/lib/social/threads-service';
+import { createPlatformService } from '@/lib/social';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
 import { createClient } from '@supabase/supabase-js';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
@@ -97,17 +97,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if token is expired
-    if (connection.expires_at && new Date(connection.expires_at) < new Date()) {
-      return NextResponse.json(
-        { error: 'Threads connection expired. Please reconnect your account.' },
-        { status: 401 }
-      );
-    }
-
-    // Initialize Threads service with user credentials
-    const threadsService = new ThreadsService();
-    threadsService.initialize({
+    // Create Threads service via factory (handles initialization + token refresh)
+    const threadsService = createPlatformService('threads', {
       accessToken: connection.access_token,
       refreshToken: connection.refresh_token,
       expiresAt: connection.expires_at ? new Date(connection.expires_at) : undefined,
@@ -115,12 +106,10 @@ export async function POST(request: NextRequest) {
       platformUsername: connection.platform_username,
     });
 
-    // Validate credentials
-    const isValid = await threadsService.validateCredentials();
-    if (!isValid) {
+    if (!threadsService) {
       return NextResponse.json(
-        { error: 'Threads credentials are invalid. Please reconnect your account.' },
-        { status: 401 }
+        { error: 'Threads service unavailable' },
+        { status: 500 }
       );
     }
 
@@ -177,6 +166,7 @@ export async function POST(request: NextRequest) {
     const result = await threadsService.createPost({
       text: postData.content,
       mediaUrls: postData.mediaUrls,
+      metadata: { replyControl: postData.replyControl },
     });
 
     if (!result.success) {
@@ -299,8 +289,7 @@ export async function GET(request: NextRequest) {
 
     // If sync requested, fetch from Threads API
     if (syncFromPlatform) {
-      const threadsService = new ThreadsService();
-      threadsService.initialize({
+      const threadsService = createPlatformService('threads', {
         accessToken: connection.access_token,
         refreshToken: connection.refresh_token,
         expiresAt: connection.expires_at ? new Date(connection.expires_at) : undefined,
@@ -308,7 +297,9 @@ export async function GET(request: NextRequest) {
         platformUsername: connection.platform_username,
       });
 
-      const syncResult = await threadsService.syncPosts(limit, cursor);
+      const syncResult = threadsService
+        ? await threadsService.syncPosts(limit, cursor)
+        : { success: false, posts: [], total: 0, hasMore: false, error: 'Service unavailable' };
 
       if (syncResult.success) {
         // Update database with synced posts
