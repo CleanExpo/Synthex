@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-02-16)
 
 **Core value:** Every endpoint returns real data, every platform works, every dashboard page connects to live APIs
-**Current focus:** Phase 7 in progress — Prisma and competitor-fetcher test suites created. Plan 2 of 3 complete.
+**Current focus:** Phase 7 complete — auth, social, and core service test suites created.
 
 ## Current Position
 
 Phase: 7 of 10 (Testing — Auth & Core)
-Plan: 2 of 3 in current phase
-Status: In progress
-Last activity: 2026-02-17 — Completed 07-02-PLAN.md — Prisma client + competitor-fetcher test suites (66 tests)
+Plan: 3 of 3 in current phase
+Status: Phase complete
+Last activity: 2026-02-17 — Completed 07-03-PLAN.md — Platform service factory + representative service tests (66 tests)
 
-Progress: ██████░░░░ 67% (Phase 7)
+Progress: ██████████ 100% (Phase 7)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 19
+- Total plans completed: 20
 - Average duration: ~9 min
-- Total execution time: ~172 min
+- Total execution time: ~180 min
 
 **By Phase:**
 
@@ -33,11 +33,11 @@ Progress: ██████░░░░ 67% (Phase 7)
 | 4 | 3/3 | ~30 min | ~10 min |
 | 5 | 5/5 | ~42 min | ~8 min |
 | 6 | 2/2 | ~18 min | ~9 min |
-| 7 | 2/3 | ~22 min | ~11 min |
+| 7 | 3/3 | ~30 min | ~10 min |
 
 **Recent Trend:**
-- Last 5 plans: 05-05 (~8 min), 06-01 (~10 min), 06-02 (~8 min), 07-01 (~12 min)
-- Trend: Slightly longer for test suites (more code generation)
+- Last 5 plans: 06-02 (~8 min), 07-01 (~12 min), 07-02 (~10 min), 07-03 (~8 min)
+- Trend: Test suite plans averaging ~10 min
 
 ## Accumulated Context
 
@@ -122,6 +122,9 @@ Recent decisions affecting current work:
 - access-control.ts middleware tests deferred to Phase 8 integration tests (07-01)
 - jsdom environment means prisma singleton is null -- tested createPrismaClient via window deletion (07-02)
 - executeWithRetry max-retry tests use real timers to avoid fake timer + mockRejectedValue race (07-02)
+- TwitterSyncService uses twitter-api-v2 SDK not raw fetch -- mock with persistent client object to survive resetMocks (07-03)
+- Instagram createPost calls getInstagramAccountId before media check -- must mock fetch for IG account ID even in media-validation tests (07-03)
+- Cross-service contract tests verify interface existence on 3 representative services rather than testing all 9 (07-03)
 
 ### Deferred Issues
 
@@ -137,6 +140,6 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-17
-Stopped at: Completed 07-02-PLAN.md (2 of 3 in Phase 7) — Prisma client (24 tests) + competitor-fetcher (42 tests) = 66 new tests
+Stopped at: Completed 07-03-PLAN.md (3 of 3 in Phase 7) — Phase 7 complete. Factory (28 tests) + platform services (38 tests) = 66 new tests. Phase 7 total: 230 new tests.
 Resume file: None
-Next action: Execute 07-03-PLAN.md (Platform service tests)
+Next action: Plan Phase 8 (Testing — API Contracts)
