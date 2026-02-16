@@ -186,7 +186,7 @@ class EmailQueueService {
   async enqueue(email: Omit<EmailJob, 'id'>): Promise<string> {
     await this.initialize();
 
-    const id = `email_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
+    const id = `email_${crypto.randomUUID()}`;
     const job: EmailJob = { id, ...email };
 
     // Track in database
@@ -213,7 +213,7 @@ class EmailQueueService {
    * Send email immediately (bypasses queue)
    */
   async sendImmediate(email: Omit<EmailJob, 'id'>): Promise<string> {
-    const id = `email_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
+    const id = `email_${crypto.randomUUID()}`;
     const job: EmailJob = { id, ...email };
 
     await this.trackDelivery(id, 'queued', email.metadata);

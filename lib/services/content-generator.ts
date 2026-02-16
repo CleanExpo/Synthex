@@ -248,10 +248,11 @@ export class ContentGeneratorService {
   private generateContentStructure(hookType: string, topic: string): string {
     const templates = CONTENT_TEMPLATES[hookType as keyof typeof CONTENT_TEMPLATES] || CONTENT_TEMPLATES.question;
     
-    // Select random templates
-    const starter = this.selectRandom(templates.starters);
-    const middle = this.selectRandom(templates.middles);
-    const ending = this.selectRandom(templates.endings);
+    // Select templates deterministically based on topic + hookType
+    const seed = `${hookType}:${topic}`;
+    const starter = this.selectDeterministic(templates.starters, seed + ':start');
+    const middle = this.selectDeterministic(templates.middles, seed + ':mid');
+    const ending = this.selectDeterministic(templates.endings, seed + ':end');
     
     // Build content
     let content = starter.replace('{topic}', topic);
@@ -517,21 +518,34 @@ Maintain the core message but adapt the voice to be ${persona.attributes.emotion
   }
 
   // Helper methods
-  private selectRandom<T>(array: T[]): T {
-    return array[Math.floor(Math.random() * array.length)];
+
+  /** djb2 hash for deterministic selection from arrays */
+  private djb2(str: string): number {
+    let hash = 5381;
+    for (let i = 0; i < str.length; i++) {
+      hash = ((hash << 5) + hash) + str.charCodeAt(i);
+      hash = hash & hash;
+    }
+    return Math.abs(hash);
+  }
+
+  /** Select from array deterministically based on a seed string */
+  private selectDeterministic<T>(array: T[], seed: string): T {
+    return array[this.djb2(seed) % array.length];
   }
 
   private replacePlaceholders(content: string, data: PlaceholderData): string {
     let result = content;
-    
+
     // Replace topic
     result = result.replace(/{topic}/g, data.topic);
-    
-    // Replace other common placeholders
-    result = result.replace(/{number}/g, String(Math.floor(Math.random() * 5) + 3));
-    result = result.replace(/{adjective}/g, this.selectRandom(['amazing', 'incredible', 'unexpected', 'surprising']));
-    result = result.replace(/{timeframe}/g, this.selectRandom(['3 months', '6 months', '1 year', '2 years']));
-    
+
+    // Replace other common placeholders deterministically based on topic
+    const topicSeed = data.topic;
+    result = result.replace(/{number}/g, String((this.djb2(topicSeed) % 5) + 3));
+    result = result.replace(/{adjective}/g, this.selectDeterministic(['amazing', 'incredible', 'unexpected', 'surprising'], topicSeed + 'adj'));
+    result = result.replace(/{timeframe}/g, this.selectDeterministic(['3 months', '6 months', '1 year', '2 years'], topicSeed + 'time'));
+
     return result;
   }
 
@@ -563,7 +577,7 @@ Maintain the core message but adapt the voice to be ${persona.attributes.emotion
 
   private addEmojis(content: string): string {
     const emojis = ['🚀', '💡', '✨', '🔥', '💪', '🎯', '📈', '💼', '🌟', '⚡'];
-    const emoji = this.selectRandom(emojis);
+    const emoji = this.selectDeterministic(emojis, content.slice(0, 50));
     return emoji + ' ' + content;
   }
 

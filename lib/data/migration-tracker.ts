@@ -264,7 +264,7 @@ export class MigrationTracker {
    * Generate unique ID
    */
   private generateId(): string {
-    return `mig_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+    return `mig_${crypto.randomUUID()}`;
   }
 }
 

@@ -127,23 +127,63 @@ const toneCharacteristics: Record<WritingTone, ToneConfig> = {
 };
 
 /**
- * Generate AI-powered content with specific tone
+ * Generate AI-powered content with specific tone.
+ * Requires OPENROUTER_API_KEY to be configured.
  */
 export async function generateContent(request: AIWritingRequest): Promise<AIWritingResponse> {
-  // Mock AI response - in production, this would call OpenRouter API
+  const apiKey = process.env.OPENROUTER_API_KEY;
+  if (!apiKey) {
+    throw new Error(
+      'AI writing assistant not configured. Content generation requires an AI API key (OPENROUTER_API_KEY).'
+    );
+  }
+
   const toneConfig = toneCharacteristics[request.style.tone];
-  
-  // Simulate AI processing
-  await new Promise(resolve => setTimeout(resolve, 1000));
-  
-  // Generate mock content based on tone
-  const content = generateMockContent(request, toneConfig);
-  const alternatives = generateAlternatives(content, request.style.tone);
+
+  const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${apiKey}`,
+      'HTTP-Referer': 'https://synthex.app',
+    },
+    body: JSON.stringify({
+      model: 'anthropic/claude-3-haiku',
+      messages: [
+        {
+          role: 'user',
+          content: `Write content about: "${request.prompt}"
+
+Tone: ${request.style.tone} (${toneConfig.description})
+Length: ${request.style.length}
+${request.style.emojis ? 'Include emojis.' : 'No emojis.'}
+${request.style.hashtags ? 'Include relevant hashtags.' : 'No hashtags.'}
+${request.platform ? `Platform: ${request.platform}` : ''}
+
+Respond with ONLY the generated content text. No preamble.`,
+        },
+      ],
+      max_tokens: 500,
+      temperature: 0.8,
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`AI service error: ${response.status}. Content generation failed.`);
+  }
+
+  const data = await response.json();
+  const content = data.choices?.[0]?.message?.content?.trim() || '';
+
+  if (!content) {
+    throw new Error('AI returned empty content. Please try again.');
+  }
+
   const suggestions = generateSuggestions(content, request.style);
-  
+
   return {
     content,
-    alternatives,
+    alternatives: [], // Alternatives require separate AI calls; not populated in single generation
     suggestions,
     score: calculateContentScore(content, request.style),
     readability: calculateReadability(content),
@@ -313,30 +353,6 @@ export function checkToneConsistency(
 }
 
 // Helper functions
-function generateMockContent(request: AIWritingRequest, toneConfig: ToneConfig): string {
-  const templates: Record<WritingTone, string> = {
-    professional: `In today's competitive landscape, ${request.prompt}. Our strategic approach ensures comprehensive results that drive innovation and efficiency.`,
-    casual: `Hey there! So ${request.prompt} - pretty awesome, right? Let's dive in and check out what makes this so cool!`,
-    friendly: `We're so excited to share that ${request.prompt}! It's wonderful to see how this brings value to our amazing community.`,
-    formal: `It is hereby noted that ${request.prompt}. This matter requires careful consideration and appropriate action pursuant to established protocols.`,
-    humorous: `Plot twist: ${request.prompt}. I know, I know - mind = blown! But wait, there's more (said in my best infomercial voice).`,
-    inspirational: `Believe in your dreams because ${request.prompt}. You have the power to transform your vision into reality. The time is now!`,
-    educational: `Let's explore how ${request.prompt}. Understanding this concept will help you master the fundamentals and apply them effectively.`,
-    persuasive: `Here's why ${request.prompt} is exactly what you need. Don't miss this opportunity to transform your results with proven strategies.`,
-    empathetic: `We understand that ${request.prompt} can feel overwhelming. You're not alone in this journey, and we're here to support you every step of the way.`,
-    confident: `${request.prompt} - and here's exactly how we're going to make it happen. With our proven approach, success is not just possible, it's inevitable.`
-  };
-  
-  return templates[request.style.tone];
-}
-
-function generateAlternatives(content: string, tone: WritingTone): string[] {
-  return [
-    content.replace(/\./g, '!'),
-    content.replace(/great/gi, 'amazing'),
-    content + ' #Trending'
-  ];
-}
 
 function generateSuggestions(content: string, style: WritingStyle): string[] {
   const suggestions: string[] = [];

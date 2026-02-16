@@ -293,18 +293,18 @@ Keep the same message but change the style and tone.
       try {
         const variation = await this.callAI(variationPrompt, this.models.fast);
         variations.push({
-          id: `var-${Date.now()}-${Math.random()}`,
+          id: `var-${crypto.randomUUID()}`,
           content: variation,
           style,
-          score: Math.random() * 100
+          score: 0 // Score should be calculated from actual engagement data, not randomized
         });
       } catch (error) {
         // Use simple transformation as fallback
         variations.push({
-          id: `var-${Date.now()}-${Math.random()}`,
+          id: `var-${crypto.randomUUID()}`,
           content: this.transformStyle(originalContent, style),
           style,
-          score: Math.random() * 100
+          score: 0
         });
       }
     }

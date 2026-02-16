@@ -94,7 +94,7 @@ function generateFingerprint(error: Error, context: ErrorContext): string {
  * Generate unique error ID
  */
 function generateErrorId(): string {
-  return `err_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+  return `err_${crypto.randomUUID()}`;
 }
 
 /**

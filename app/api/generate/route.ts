@@ -70,23 +70,81 @@ async function generateContent(req: NextRequest): Promise<NextResponse> {
       );
     }
     
-    // Simulate AI generation (replace with actual AI service)
-    const generatedContent: Record<string, unknown>[] = [];
-    for (let i = 0; i < count; i++) {
-      generatedContent.push({
-        id: `gen-${Date.now()}-${i}`,
-        content: `Generated content for: ${prompt} (Variation ${i + 1})`,
-        platform,
-        style: style || 'default',
-        engagementScore: Math.random() * 100,
-        viralProbability: Math.random(),
-        hashtags: generateHashtags(prompt),
-        bestPostTime: suggestPostTime(platform),
-        createdAt: new Date().toISOString()
-      });
+    // AI content generation requires OPENROUTER_API_KEY
+    if (!process.env.OPENROUTER_API_KEY) {
+      return NextResponse.json(
+        {
+          error: 'AI content generation not configured',
+          message: 'Content generation requires an AI API key. Contact support to enable this feature.',
+        },
+        { status: 501 }
+      );
     }
-    
-    // Log generation for analytics (userId is always defined after auth check)
+
+    // Call AI service for real content generation
+    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
+        'HTTP-Referer': 'https://synthex.app',
+      },
+      body: JSON.stringify({
+        model: 'anthropic/claude-3-haiku',
+        messages: [
+          {
+            role: 'user',
+            content: `Generate ${count} content variation(s) for ${platform}${style ? ` in ${style} style` : ''}.
+
+Prompt: "${prompt}"
+
+For each variation, respond with a JSON array of objects, each with:
+- "content": the generated text
+- "hashtags": relevant hashtags (array of strings)
+
+Respond ONLY with valid JSON.`,
+          },
+        ],
+        max_tokens: 1000,
+        temperature: 0.8,
+      }),
+    });
+
+    if (!response.ok) {
+      return NextResponse.json(
+        { error: 'AI service unavailable', message: 'Content generation failed. Please try again later.' },
+        { status: 502 }
+      );
+    }
+
+    const aiData = await response.json();
+    const aiText = aiData.choices?.[0]?.message?.content || '';
+    const promptTokens = aiData.usage?.prompt_tokens || 0;
+    const completionTokens = aiData.usage?.completion_tokens || 0;
+
+    // Parse AI response
+    let parsedVariations: Array<{ content: string; hashtags?: string[] }> = [];
+    try {
+      parsedVariations = JSON.parse(aiText);
+      if (!Array.isArray(parsedVariations)) {
+        parsedVariations = [{ content: aiText }];
+      }
+    } catch {
+      // If AI didn't return valid JSON, wrap the raw text as a single variation
+      parsedVariations = [{ content: aiText }];
+    }
+
+    const generatedContent = parsedVariations.slice(0, count).map((v, i) => ({
+      id: `gen-${Date.now()}-${i}`,
+      content: v.content,
+      platform,
+      style: style || 'default',
+      hashtags: v.hashtags || generateHashtags(prompt),
+      bestPostTime: suggestPostTime(platform),
+      createdAt: new Date().toISOString(),
+    }));
+
+    // Log generation for analytics
     await supabase
       .from('generation_logs')
       .insert({
@@ -95,17 +153,17 @@ async function generateContent(req: NextRequest): Promise<NextResponse> {
         platform,
         style,
         count,
-        tokens_used: prompt.length * count * 10, // Simplified token calculation
+        tokens_used: promptTokens + completionTokens,
         created_at: new Date().toISOString()
       });
-    
+
     return NextResponse.json({
       success: true,
       count: generatedContent.length,
       usage: {
-        promptTokens: prompt.length,
-        completionTokens: generatedContent.join('').length,
-        totalTokens: prompt.length + generatedContent.join('').length
+        promptTokens,
+        completionTokens,
+        totalTokens: promptTokens + completionTokens,
       },
       results: generatedContent,
       timestamp: new Date().toISOString()
@@ -134,6 +192,16 @@ function generateHashtags(prompt: string): string[] {
   return hashtags;
 }
 
+/** djb2 hash for deterministic selection */
+function djb2(str: string): number {
+  let hash = 5381;
+  for (let i = 0; i < str.length; i++) {
+    hash = ((hash << 5) + hash) + str.charCodeAt(i);
+    hash = hash & hash; // Convert to 32-bit integer
+  }
+  return Math.abs(hash);
+}
+
 function suggestPostTime(platform: string): string {
   const bestTimes: Record<string, string[]> = {
     twitter: ['9:00 AM', '12:00 PM', '5:00 PM', '7:00 PM'],
@@ -142,9 +210,10 @@ function suggestPostTime(platform: string): string {
     tiktok: ['6:00 AM', '3:00 PM', '7:00 PM', '10:00 PM'],
     facebook: ['9:00 AM', '3:00 PM', '7:00 PM']
   };
-  
+
   const times = bestTimes[platform] || bestTimes.twitter;
-  return times[Math.floor(Math.random() * times.length)];
+  // Deterministic selection based on platform name — same platform always gets same suggestion
+  return times[djb2(platform) % times.length];
 }
 
 // Export with enhanced rate limiting

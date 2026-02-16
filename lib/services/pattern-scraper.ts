@@ -90,71 +90,8 @@ interface PlatformPerformance {
   avgScore: number;
 }
 
-// Mock viral content data (in production, this would use real APIs or scraping)
-const MOCK_VIRAL_CONTENT = {
-  twitter: [
-    {
-      content: "Just discovered that 90% of 'overnight successes' took 10 years to build. Stop comparing your chapter 1 to someone's chapter 20. 🚀",
-      metrics: { impressions: 450000, engagement: 45000, shares: 3200, likes: 41000 },
-      author: '@startup_wisdom',
-      timestamp: '2024-01-15T14:00:00Z',
-    },
-    {
-      content: "Unpopular opinion: The best productivity hack is actually getting 8 hours of sleep. Thread 🧵",
-      metrics: { impressions: 380000, engagement: 52000, shares: 4100, likes: 47000 },
-      author: '@productivity_guru',
-      timestamp: '2024-01-15T09:00:00Z',
-    },
-    {
-      content: "POV: You finally understand that success is 1% inspiration and 99% showing up every single day, even when you don't feel like it.",
-      metrics: { impressions: 290000, engagement: 38000, shares: 2800, likes: 35000 },
-      author: '@mindset_daily',
-      timestamp: '2024-01-14T19:00:00Z',
-    },
-  ],
-  linkedin: [
-    {
-      content: "After 15 years in tech, here are 5 lessons I wish I knew when starting:\n\n1. Your network is your net worth\n2. Skills > Degrees\n3. Failure is data, not defeat\n4. Consistency beats talent\n5. Help others without expecting returns\n\nWhat would you add?",
-      metrics: { impressions: 180000, engagement: 24000, shares: 1800, likes: 22000 },
-      author: 'Tech Leader',
-      timestamp: '2024-01-15T08:00:00Z',
-    },
-    {
-      content: "We just hit $10M ARR! 🎉\n\nBut 3 years ago, I was sleeping on my friend's couch with $200 in my bank account.\n\nHere's the raw truth about building a startup:",
-      metrics: { impressions: 220000, engagement: 31000, shares: 2400, likes: 28000 },
-      author: 'Startup Founder',
-      timestamp: '2024-01-14T12:00:00Z',
-    },
-  ],
-  tiktok: [
-    {
-      content: "Wait until the end... this AI trick will blow your mind! 🤯 #AI #TechTok #ProductivityHack",
-      metrics: { impressions: 1200000, engagement: 180000, shares: 15000, likes: 165000 },
-      author: '@techexplained',
-      timestamp: '2024-01-15T20:00:00Z',
-    },
-    {
-      content: "Day 1 of building my startup vs Day 365... the glow up is real 📈 #StartupLife #Entrepreneur",
-      metrics: { impressions: 890000, engagement: 134000, shares: 11000, likes: 123000 },
-      author: '@startup_journey',
-      timestamp: '2024-01-14T18:00:00Z',
-    },
-  ],
-  instagram: [
-    {
-      content: "Your daily reminder: You're exactly where you need to be. Trust the process. 🌟\n\n#Motivation #DailyReminder #MindsetMatters",
-      metrics: { impressions: 340000, engagement: 48000, shares: 3600, likes: 44000 },
-      author: '@daily.motivation',
-      timestamp: '2024-01-15T11:00:00Z',
-    },
-    {
-      content: "Swipe to see the exact morning routine that 10x'd my productivity ➡️",
-      metrics: { impressions: 420000, engagement: 58000, shares: 4200, likes: 53000 },
-      author: '@productivity.tips',
-      timestamp: '2024-01-15T07:00:00Z',
-    },
-  ],
-};
+// Platform API integrations not yet configured — pattern scraping requires
+// real social media API connections to fetch trending/viral content.
 
 export class PatternScraperService {
   private platforms = ['twitter', 'linkedin', 'tiktok', 'instagram', 'facebook'];
@@ -178,21 +115,13 @@ export class PatternScraperService {
   }
 
   /**
-   * Scrape viral patterns from a specific platform
+   * Scrape viral patterns from a specific platform.
+   * Returns empty array until platform API integrations are configured.
    */
-  async scrapePlatform(platform: string) {
-    // In production, this would use real APIs or web scraping
-    // For now, we'll use mock data
-    const mockContent = MOCK_VIRAL_CONTENT[platform as keyof typeof MOCK_VIRAL_CONTENT] || [];
-
-    const patterns: PatternAnalysis[] = [];
-
-    for (const content of mockContent) {
-      const pattern = await this.analyzeContent(content, platform);
-      patterns.push(pattern);
-    }
-
-    return patterns;
+  async scrapePlatform(_platform: string): Promise<PatternAnalysis[]> {
+    // Pattern scraping requires real social media API connections.
+    // Returns empty results until platform integrations are configured.
+    return [];
   }
 
   /**

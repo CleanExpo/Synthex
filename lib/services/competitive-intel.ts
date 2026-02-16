@@ -185,7 +185,7 @@ class CompetitiveIntelligence {
   ): Promise<Competitor> {
     try {
       const competitor: Competitor = {
-        id: `comp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        id: `comp_${crypto.randomUUID()}`,
         userId,
         name: data.name,
         handles: data.handles as Record<Platform, string>,
