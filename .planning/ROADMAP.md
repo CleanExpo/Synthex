@@ -14,7 +14,7 @@ None (internal platform hardening)
 - [x] **Phase 2: Mock Data — API Routes** - Replace 9 mock/stub API endpoints with real database queries
 - [x] **Phase 3: Mock Data — Dashboard** - Remove 3 silent mock fallbacks, implement error/empty states
 - [x] **Phase 4: Security Hardening** - Env validation at startup, rate limiting audit, auth middleware audit
-- [ ] **Phase 5: Social Platform Completeness** - Implement TikTok, YouTube, Pinterest, Reddit, Threads services
+- [x] **Phase 5: Social Platform Completeness** - Implement TikTok, YouTube, Pinterest, Reddit, Threads services
 - [ ] **Phase 6: Cron Jobs & Background Tasks** - Fix competitor cron, implement weekly digest email
 - [ ] **Phase 7: Testing — Auth & Core** - 80%+ coverage on auth, social, and core services
 - [ ] **Phase 8: Testing — API Contracts** - Contract tests for highest-value API routes + E2E
@@ -79,7 +79,7 @@ Plans:
 - [x] 05-02: YouTube service implementation
 - [x] 05-03: Pinterest service implementation
 - [x] 05-04: Reddit service implementation
-- [ ] 05-05: Threads service and factory verification
+- [x] 05-05: Threads service and factory verification
 
 ### Phase 6: Cron Jobs & Background Tasks
 **Goal**: All 5 Vercel crons work with real data, weekly digest sends actual email
@@ -143,7 +143,7 @@ Plans:
 | 2. Mock Data — API Routes | 5/5 | Complete | 2026-02-16 |
 | 3. Mock Data — Dashboard | 2/2 | Complete | 2026-02-16 |
 | 4. Security Hardening | 3/3 | Complete | 2026-02-16 |
-| 5. Social Platforms | 4/5 | In progress | - |
+| 5. Social Platforms | 5/5 | Complete | 2026-02-16 |
 | 6. Cron Jobs | 0/2 | Not started | - |
 | 7. Testing — Auth | 0/3 | Not started | - |
 | 8. Testing — API | 0/4 | Not started | - |
