@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-02-16)
 
 **Core value:** Every endpoint returns real data, every platform works, every dashboard page connects to live APIs
-**Current focus:** Phase 3 complete — all dashboard pages show real data or proper error/empty states
+**Current focus:** Phase 4 in progress — security hardening (env validation wired to startup)
 
 ## Current Position
 
-Phase: 3 of 10 (Mock Data — Dashboard)
-Plan: 2 of 2 in current phase
-Status: Phase complete
-Last activity: 2026-02-16 — Completed 03-02-PLAN.md (experiments, tasks, MetricsTable + full audit)
+Phase: 4 of 10 (Security Hardening)
+Plan: 1 of 3 in current phase
+Status: In progress
+Last activity: 2026-02-16 — Completed 04-01-PLAN.md (startup validation & credential safety)
 
-Progress: ███░░░░░░░ 30%
+Progress: ████░░░░░░ 33%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 9
+- Total plans completed: 10
 - Average duration: ~9 min
-- Total execution time: ~78 min
+- Total execution time: ~86 min
 
 **By Phase:**
 
@@ -30,10 +30,11 @@ Progress: ███░░░░░░░ 30%
 | 1 | 2/2 | ~16 min | ~8 min |
 | 2 | 5/5 | ~41 min | ~8 min |
 | 3 | 2/2 | ~21 min | ~11 min |
+| 4 | 1/3 | ~8 min | ~8 min |
 
 **Recent Trend:**
-- Last 5 plans: 02-03 (~6 min), 02-04 (~8 min), 02-05 (~15 min), 03-01 (~14 min), 03-02 (~7 min)
-- Trend: 03-02 fast — fewer files, audit was clean
+- Last 5 plans: 02-05 (~15 min), 03-01 (~14 min), 03-02 (~7 min), 04-01 (~8 min)
+- Trend: 04-01 fast — lightweight wiring, 2 file deletions
 
 ## Accumulated Context
 
@@ -66,12 +67,17 @@ Recent decisions affecting current work:
 - Billing page has explicit error state UI with retry button (03-01)
 - MetricsTable accepts MetricsTableRow[] data prop, shows em dashes when empty (03-02)
 - 8 standalone feature components with mock data deferred to Phase 5+ (03-02)
+- instrumentation.ts uses dynamic import for lightweight startup — no Prisma at init (04-01)
+- CRITICAL env vars throw at startup; SECRET/INTERNAL vars warn with graceful degradation (04-01)
+- Health check exposes env validation counts only — never var names or values (04-01)
+- config/env.server.ts and src/env.ts deleted — single canonical EnvValidator (04-01)
 
 ### Deferred Issues
 
 - Legacy src/ services (analytics.service.js, dashboard-service.ts, competitor-analysis.js, white-label.js) have extensive mock data — deferred until Next.js migration
 - src/agents/ specialist coordinators have mock metrics — deferred until agent system connected to real APIs
 - 8 standalone feature components (SentimentAnalysis, AIHashtagGenerator, AIPersonaManager, AIABTesting, PredictiveAnalytics, RealTimeAnalytics, ROICalculator, WorkflowAutomation) have mock data — not imported by dashboard pages, deferred to Phase 5+
+- scripts/emergency-deploy.js and scripts/fix-production-site.js reference deleted config/env.server.ts as write target — update when scripts are next maintained
 
 ### Blockers/Concerns
 
@@ -80,6 +86,6 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-16
-Stopped at: Completed 03-02-PLAN.md (2 of 2 in Phase 3) — Phase 3 complete
+Stopped at: Completed 04-01-PLAN.md (1 of 3 in Phase 4) — startup validation wired
 Resume file: None
-Next action: /gsd:plan-phase 4
+Next action: Execute 04-02-PLAN.md (rate limiting coverage audit)
