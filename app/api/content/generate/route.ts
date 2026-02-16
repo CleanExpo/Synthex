@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { contentGenerator } from '@/lib/services/content-generator';
 import { db } from '@/lib/supabase-client';
+import { prisma } from '@/lib/prisma';
 import { withAuth, AuthenticatedRequest } from '@/lib/middleware/withAuth';
 import { z } from 'zod';
 
@@ -48,19 +49,40 @@ async function handlePost(request: AuthenticatedRequest) {
     // Get authenticated user ID
     const userId = request.userId;
 
-    // Fetch persona if provided
+    // Fetch persona from database if provided
     let persona: { id: string; name: string; attributes: Record<string, string> } | null = null;
     if (personaId) {
-      // In production, fetch from database
-      // For now, use mock persona
+      const dbPersona = await prisma.persona.findUnique({
+        where: { id: personaId },
+        select: {
+          id: true,
+          name: true,
+          tone: true,
+          style: true,
+          vocabulary: true,
+          emotion: true,
+        },
+      });
+
+      if (!dbPersona) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: 'Persona not found',
+            message: 'The specified persona does not exist. Create one first or omit personaId to use default settings.',
+          },
+          { status: 404 }
+        );
+      }
+
       persona = {
-        id: personaId,
-        name: 'Professional Voice',
+        id: dbPersona.id,
+        name: dbPersona.name,
         attributes: {
-          tone: 'Professional',
-          style: 'Formal',
-          vocabulary: 'Technical',
-          emotion: 'Confident',
+          tone: dbPersona.tone,
+          style: dbPersona.style,
+          vocabulary: dbPersona.vocabulary,
+          emotion: dbPersona.emotion,
         },
       };
     }

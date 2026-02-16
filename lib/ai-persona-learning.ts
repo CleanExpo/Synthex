@@ -1,6 +1,12 @@
 /**
  * AI Persona Learning System
  * Learns and adapts to brand voice and audience preferences
+ *
+ * TODO(02-02): This file uses in-memory Map and localStorage for persona storage.
+ * It is currently used client-side (imported by components/AIPersonaManager.tsx).
+ * It needs to be migrated to use API calls backed by Prisma database queries
+ * (the Persona model in prisma/schema.prisma) instead of localStorage.
+ * See plan 02-05 for the full migration scope.
  */
 
 export interface PersonaProfile {
