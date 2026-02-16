@@ -4,23 +4,22 @@
 
 ```bash
 # Development
-pnpm dev                          # All services
-pnpm dev --filter=web             # Frontend only
-cd apps/backend && uv run uvicorn src.api.main:app --reload  # Backend only
+npm run dev                       # Start dev server (Turbo)
+npm run dev:next                  # Next.js dev directly
+npm run dev:full                  # Dev + WebSocket server
 
 # Database
-supabase start                    # Start local Supabase
-supabase db push                  # Apply migrations
-supabase db reset                 # Reset database (destructive)
+npx prisma db push                # Push schema to database
+npm run db:migrate:dev            # Create development migration
+npm run db:studio                 # Prisma Studio GUI
 
 # Testing
-pnpm turbo run test               # All tests
-pnpm test --filter=web            # Frontend unit tests
-cd apps/backend && uv run pytest  # Backend unit tests
+npm test                          # Jest unit tests
+npm run e2e                       # Playwright E2E tests
 
 # Quality Checks
-pnpm turbo run type-check lint    # All checks
-.\scripts\health-check.ps1        # Comprehensive system health check
+npm run type-check && npm run lint  # All checks
+npm run release:check               # Full pre-release validation
 ```
 
 ## Conventions
@@ -28,15 +27,14 @@ pnpm turbo run type-check lint    # All checks
 ### Naming
 - React: `PascalCase.tsx`
 - Utils: `kebab-case.ts`
-- Python: `snake_case.py`
 - Skills: `SCREAMING-KEBAB.md`
 
 ### Commits
 ```bash
 # Format: <type>(<scope>): <description>
-feat(web): add dark mode toggle
-fix(backend): resolve agent timeout
-docs(skills): update orchestrator guide
+feat(dashboard): add dark mode toggle
+fix(api): resolve auth timeout
+docs(planning): update roadmap
 ```
 
 ### Branching
@@ -48,15 +46,15 @@ docs(skills): update orchestrator guide
 
 ```bash
 # Single command - all checks
-pnpm turbo run type-check lint test && echo "✅ Ready for PR"
+npm run type-check && npm run lint && npm test && echo "Ready for PR"
 ```
 
 ## Architecture Layers
 
 ```
-Frontend: Components → Hooks → API Routes → Services
-Backend:  API → Agents → Tools → Graphs → State
-Database: Tables → RLS → Functions → Triggers
+Pages:    app/ → Components → Hooks → lib/ services
+API:      app/api/ → lib/ services → Prisma → Database
+Database: Prisma schema → Migrations → Supabase PostgreSQL
 ```
 
 **Rule**: No cross-layer imports. Each layer only imports from the layer directly below.

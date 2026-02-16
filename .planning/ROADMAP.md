@@ -10,7 +10,7 @@ None (internal platform hardening)
 
 ## Phases
 
-- [ ] **Phase 1: Foundation Cleanup** - Remove legacy code, rewrite CLAUDE.md, consolidate env files
+- [x] **Phase 1: Foundation Cleanup** - Remove legacy code, rewrite CLAUDE.md, consolidate env files
 - [ ] **Phase 2: Mock Data — API Routes** - Replace 9 mock/stub API endpoints with real database queries
 - [ ] **Phase 3: Mock Data — Dashboard** - Remove 3 silent mock fallbacks, implement error/empty states
 - [ ] **Phase 4: Security Hardening** - Env validation at startup, rate limiting audit, auth middleware audit
@@ -31,7 +31,7 @@ None (internal platform hardening)
 
 Plans:
 - [x] 01-01: Archive legacy Express app and remove root debris (Python, .md, scripts)
-- [ ] 01-02: Rewrite CLAUDE.md for Next.js 15 and consolidate environment files
+- [x] 01-02: Rewrite CLAUDE.md for Next.js 15 and consolidate environment files
 
 ### Phase 2: Mock Data — API Routes
 **Goal**: Every API route returns real data or proper error — zero Math.random() or hardcoded arrays
@@ -139,7 +139,7 @@ Plans:
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation Cleanup | 1/2 | In progress | - |
+| 1. Foundation Cleanup | 2/2 | Complete | 2026-02-16 |
 | 2. Mock Data — API Routes | 0/5 | Not started | - |
 | 3. Mock Data — Dashboard | 0/2 | Not started | - |
 | 4. Security Hardening | 0/3 | Not started | - |

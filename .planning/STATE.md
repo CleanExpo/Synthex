@@ -5,33 +5,33 @@
 See: .planning/PROJECT.md (updated 2026-02-16)
 
 **Core value:** Every endpoint returns real data, every platform works, every dashboard page connects to live APIs
-**Current focus:** Phase 1 — Foundation Cleanup
+**Current focus:** Phase 1 — Foundation Cleanup (complete)
 
 ## Current Position
 
 Phase: 1 of 10 (Foundation Cleanup)
-Plan: 1 of 2 in current phase
-Status: In progress
-Last activity: 2026-02-16 — Completed 01-01-PLAN.md
+Plan: 2 of 2 in current phase (complete)
+Status: Phase 1 complete — ready for Phase 2
+Last activity: 2026-02-16 — Completed 01-02-PLAN.md
 
-Progress: █░░░░░░░░░ 5%
+Progress: █░░░░░░░░░ 7%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 1
-- Average duration: ~6 min
-- Total execution time: ~6 min
+- Total plans completed: 2
+- Average duration: ~8 min
+- Total execution time: ~16 min
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| 1 | 1/2 | ~6 min | ~6 min |
+| 1 | 2/2 | ~16 min | ~8 min |
 
 **Recent Trend:**
-- Last 5 plans: 01-01 (~6 min)
-- Trend: First plan, baseline established
+- Last 5 plans: 01-01 (~6 min), 01-02 (~10 min)
+- Trend: Consistent, fast execution
 
 ## Accumulated Context
 
@@ -44,6 +44,10 @@ Recent decisions affecting current work:
 - Comprehensive depth (10 phases, 30 plans)
 - Archive by git rm, not _archive/ directory (files remain in git history)
 - Gitignore organized by category with explicit allow-lists
+- CLAUDE.md now reflects Next.js 15 architecture (not Express 4)
+- Env files consolidated: 2 tracked (.env.example, .env.test), 2 gitignored (.env, .env.local)
+- Production secrets managed in Vercel dashboard, not committed files
+- Workflow rules updated to match npm/Next.js commands (removed pnpm/monorepo refs)
 
 ### Deferred Issues
 
@@ -56,5 +60,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-16
-Stopped at: Completed 01-01-PLAN.md (archive legacy & remove debris)
+Stopped at: Completed 01-02-PLAN.md (rewrite CLAUDE.md & consolidate env files)
 Resume file: None
