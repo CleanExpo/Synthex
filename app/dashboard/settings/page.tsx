@@ -29,7 +29,6 @@ import {
   PrivacyTab,
   BillingTab,
   AdvancedTab,
-  mockApiKeys,
   defaultNotifications,
   defaultPrivacy,
   defaultAdvanced,
@@ -73,7 +72,7 @@ export default function SettingsPage() {
   const [platforms, setPlatforms] = useState<PlatformConnection[]>(initialPlatforms);
 
   // API keys state
-  const [apiKeys, setApiKeys] = useState<ApiKey[]>(mockApiKeys);
+  const [apiKeys, setApiKeys] = useState<ApiKey[]>([]);
 
   // Billing state
   const [billing, setBilling] = useState<BillingInfo>({
@@ -151,8 +150,9 @@ export default function SettingsPage() {
             }));
           }
         }
-      } catch {
-        // Billing fetch failed silently — defaults remain
+      } catch (billingError) {
+        console.error('Error fetching billing data:', billingError);
+        toast.error('Failed to load billing details');
       }
 
       try {
@@ -170,8 +170,9 @@ export default function SettingsPage() {
             );
           }
         }
-      } catch {
-        // Invoice fetch failed silently — defaults remain
+      } catch (invoiceError) {
+        console.error('Error fetching invoices:', invoiceError);
+        toast.error('Failed to load invoices');
       }
     } catch (error) {
       console.error('Error loading user data:', error);
@@ -279,16 +280,37 @@ export default function SettingsPage() {
     }
   }, []);
 
-  const handleCreateApiKey = useCallback(() => {
-    const newKey: ApiKey = {
-      id: `key-${Date.now()}`,
-      name: 'New API Key',
-      key: `sk-new-****-****-****-${Math.random().toString(36).slice(2, 6)}`,
-      created: new Date().toISOString().split('T')[0],
-      lastUsed: 'Never',
-    };
-    setApiKeys(prev => [...prev, newKey]);
-    toast.success('API key created!');
+  const handleCreateApiKey = useCallback(async () => {
+    try {
+      const token = localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token') || localStorage.getItem('token');
+      const response = await fetch('/api/user/api-keys', {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ name: 'New API Key' }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const newKey: ApiKey = {
+          id: data.id || `key-${Date.now()}`,
+          name: data.name || 'New API Key',
+          key: data.key || 'sk-****-****-****',
+          created: data.created || new Date().toISOString().split('T')[0],
+          lastUsed: 'Never',
+        };
+        setApiKeys(prev => [...prev, newKey]);
+        toast.success('API key created!');
+      } else {
+        const errorData = await response.json().catch(() => ({}));
+        toast.error(errorData.error || 'API key management not yet available.');
+      }
+    } catch {
+      toast.error('API key management not yet available.');
+    }
   }, []);
 
   const handleDeleteApiKey = useCallback((keyId: string) => {

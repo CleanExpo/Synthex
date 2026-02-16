@@ -5,8 +5,6 @@
 
 import type {
   PlatformConnection,
-  ApiKey,
-  Invoice,
   BillingInfo,
   NotificationSettings,
   PrivacySettings,
@@ -51,17 +49,6 @@ export const platformConnections: PlatformConnection[] = [
   { id: 'instagram', name: 'Instagram', icon: '📷', connected: false },
   { id: 'facebook', name: 'Facebook', icon: 'f', connected: false },
   { id: 'tiktok', name: 'TikTok', icon: '♪', connected: false },
-];
-
-export const mockApiKeys: ApiKey[] = [
-  { id: '1', name: 'Production API', key: 'sk-prod-****-****-****-1234', created: '2026-01-15', lastUsed: '2026-02-10' },
-  { id: '2', name: 'Development API', key: 'sk-dev-****-****-****-5678', created: '2026-01-20', lastUsed: '2026-02-09' },
-];
-
-export const mockInvoices: Invoice[] = [
-  { id: 'INV-001', date: '2026-02-01', amount: '$99.00', status: 'paid' },
-  { id: 'INV-002', date: '2026-01-01', amount: '$99.00', status: 'paid' },
-  { id: 'INV-003', date: '2025-12-01', amount: '$99.00', status: 'paid' },
 ];
 
 export const defaultBillingInfo: BillingInfo = {

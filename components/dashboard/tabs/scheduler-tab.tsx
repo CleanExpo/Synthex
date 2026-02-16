@@ -8,11 +8,9 @@
 import { Calendar, Plus } from '@/components/icons';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { glassStyles } from '@/components/ui/index';
 import { cn } from '@/lib/utils';
 import { AnimatedCard } from '../animated-card';
-import { mockScheduledPosts } from '../dashboard-config';
 
 export function SchedulerTab() {
   return (
@@ -31,27 +29,8 @@ export function SchedulerTab() {
           {/* Upcoming Posts */}
           <div>
             <h4 className="font-medium mb-3 sm:mb-4 text-sm sm:text-base">Upcoming Posts</h4>
-            <div className="space-y-2 sm:space-y-3">
-              {mockScheduledPosts.map((post, i) => (
-                <div key={i} className="flex flex-col sm:flex-row sm:items-center justify-between p-2 sm:p-3 rounded-lg bg-white/5 gap-2 sm:gap-3 touch-manipulation">
-                  <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-                    <Badge variant="outline" className="text-[10px] sm:text-xs flex-shrink-0">{post.platform}</Badge>
-                    <span className="text-xs sm:text-sm truncate">{post.content}</span>
-                  </div>
-                  <div className="flex items-center justify-between sm:justify-end gap-2 sm:gap-3 flex-shrink-0">
-                    <span className="text-[10px] sm:text-xs text-muted-foreground">{post.time}</span>
-                    <Badge
-                      variant="secondary"
-                      className={cn(
-                        "text-[10px] sm:text-xs",
-                        post.status === 'scheduled' ? "bg-emerald-500/20 text-emerald-400" : "bg-amber-500/20 text-amber-400"
-                      )}
-                    >
-                      {post.status}
-                    </Badge>
-                  </div>
-                </div>
-              ))}
+            <div className="flex items-center justify-center p-4 sm:p-6 rounded-lg bg-white/5">
+              <p className="text-xs sm:text-sm text-muted-foreground">No scheduled posts yet. Create your first post to get started.</p>
             </div>
           </div>
 

@@ -11,7 +11,6 @@ import { Button } from '@/components/ui/button';
 import { glassStyles } from '@/components/ui/index';
 import { cn } from '@/lib/utils';
 import { AnimatedCard } from '../animated-card';
-import { platformBreakdown } from '../dashboard-config';
 
 export function AnalyticsTab() {
   return (
@@ -53,20 +52,9 @@ export function AnalyticsTab() {
             {/* Platform Breakdown */}
             <div className="space-y-3 sm:space-y-4 order-1 md:order-2">
               <h4 className="font-medium text-sm sm:text-base">Platform Breakdown</h4>
-              {platformBreakdown.map((platform) => (
-                <div key={platform.name} className="flex items-center justify-between p-2 sm:p-3 rounded-lg bg-white/5 touch-manipulation">
-                  <span className="text-xs sm:text-sm">{platform.name}</span>
-                  <div className="flex items-center gap-2">
-                    <div className="h-1.5 sm:h-2 w-16 sm:w-24 rounded-full bg-white/10 overflow-hidden">
-                      <div
-                        className="h-full bg-cyan-500"
-                        style={{ width: `${platform.percentage}%` }}
-                      />
-                    </div>
-                    <span className="text-[10px] sm:text-xs text-muted-foreground w-6 text-right">{platform.percentage}%</span>
-                  </div>
-                </div>
-              ))}
+              <div className="flex items-center justify-center p-4 sm:p-6 rounded-lg bg-white/5">
+                <p className="text-xs sm:text-sm text-muted-foreground">No platform data yet. Connect your accounts to see analytics.</p>
+              </div>
             </div>
           </div>
         </CardContent>
