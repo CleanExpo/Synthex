@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-02-16)
 ## Current Position
 
 Phase: 8 of 10 (Testing — API Contracts)
-Plan: 1 of 4 in current phase
-Status: Plan 1 complete
-Last activity: 2026-02-17 — Completed 08-01-PLAN.md — Content and analytics API contract tests (46 tests)
+Plan: 2 of 4 in current phase
+Status: Plan 2 complete
+Last activity: 2026-02-17 — Completed 08-02 — Auth and user API contract tests (81 tests)
 
-Progress: ██▓░░░░░░░ 25% (Phase 8)
+Progress: █████░░░░░ 50% (Phase 8)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 21
-- Average duration: ~9 min
-- Total execution time: ~189 min
+- Total plans completed: 22
+- Average duration: ~11 min
+- Total execution time: ~234 min
 
 **By Phase:**
 
@@ -34,11 +34,11 @@ Progress: ██▓░░░░░░░ 25% (Phase 8)
 | 5 | 5/5 | ~42 min | ~8 min |
 | 6 | 2/2 | ~18 min | ~9 min |
 | 7 | 3/3 | ~30 min | ~10 min |
-| 8 | 1/4 | ~9 min | ~9 min |
+| 8 | 2/4 | ~54 min | ~27 min |
 
 **Recent Trend:**
-- Last 5 plans: 07-01 (~12 min), 07-02 (~10 min), 07-03 (~8 min), 08-01 (~9 min)
-- Trend: Test suite plans averaging ~10 min
+- Last 5 plans: 07-02 (~10 min), 07-03 (~8 min), 08-01 (~9 min), 08-02 (~45 min)
+- Trend: Schema-based contract testing took longer due to approach pivot
 
 ## Accumulated Context
 
@@ -128,6 +128,8 @@ Recent decisions affecting current work:
 - Cross-service contract tests verify interface existence on 3 representative services rather than testing all 9 (07-03)
 - Content API tests use business logic pattern consistent with auth-login.test.ts (08-01)
 - Analytics route tests mock at library boundaries (@/lib/*) rather than route handlers (08-01)
+- Schema-based contract testing for auth/user routes -- validation schemas + response shapes, no E2E NextRequest mocking (08-02)
+- Contract tests extracted Zod schemas from route files to verify input validation and response contracts (08-02)
 
 ### Deferred Issues
 
@@ -143,6 +145,6 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-17
-Stopped at: Completed 08-01-PLAN.md (1 of 4 in Phase 8) — Content API (22 tests) + analytics routes (24 tests) = 46 new tests. Test suite now at 852 passing.
+Stopped at: Completed 08-02 (2 of 4 in Phase 8) — Auth API (35 tests) + user routes (46 tests) = 81 new tests. Test suite now at 933 passing (up from 852).
 Resume file: None
-Next action: Continue Phase 8 (Testing — API Contracts)
+Next action: Continue Phase 8 (Testing — API Contracts) — Next up: 08-03 Stripe payment routes + webhook handlers
