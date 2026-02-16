@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-02-16)
 
 **Core value:** Every endpoint returns real data, every platform works, every dashboard page connects to live APIs
-**Current focus:** Phase 7 complete — auth, social, and core service test suites created.
+**Current focus:** Phase 8 in progress — API contract tests for content and analytics routes.
 
 ## Current Position
 
-Phase: 7 of 10 (Testing — Auth & Core)
-Plan: 3 of 3 in current phase
-Status: Phase complete
-Last activity: 2026-02-17 — Completed 07-03-PLAN.md — Platform service factory + representative service tests (66 tests)
+Phase: 8 of 10 (Testing — API Contracts)
+Plan: 1 of 4 in current phase
+Status: Plan 1 complete
+Last activity: 2026-02-17 — Completed 08-01-PLAN.md — Content and analytics API contract tests (46 tests)
 
-Progress: ██████████ 100% (Phase 7)
+Progress: ██▓░░░░░░░ 25% (Phase 8)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 20
+- Total plans completed: 21
 - Average duration: ~9 min
-- Total execution time: ~180 min
+- Total execution time: ~189 min
 
 **By Phase:**
 
@@ -34,9 +34,10 @@ Progress: ██████████ 100% (Phase 7)
 | 5 | 5/5 | ~42 min | ~8 min |
 | 6 | 2/2 | ~18 min | ~9 min |
 | 7 | 3/3 | ~30 min | ~10 min |
+| 8 | 1/4 | ~9 min | ~9 min |
 
 **Recent Trend:**
-- Last 5 plans: 06-02 (~8 min), 07-01 (~12 min), 07-02 (~10 min), 07-03 (~8 min)
+- Last 5 plans: 07-01 (~12 min), 07-02 (~10 min), 07-03 (~8 min), 08-01 (~9 min)
 - Trend: Test suite plans averaging ~10 min
 
 ## Accumulated Context
@@ -125,6 +126,8 @@ Recent decisions affecting current work:
 - TwitterSyncService uses twitter-api-v2 SDK not raw fetch -- mock with persistent client object to survive resetMocks (07-03)
 - Instagram createPost calls getInstagramAccountId before media check -- must mock fetch for IG account ID even in media-validation tests (07-03)
 - Cross-service contract tests verify interface existence on 3 representative services rather than testing all 9 (07-03)
+- Content API tests use business logic pattern consistent with auth-login.test.ts (08-01)
+- Analytics route tests mock at library boundaries (@/lib/*) rather than route handlers (08-01)
 
 ### Deferred Issues
 
@@ -140,6 +143,6 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-17
-Stopped at: Completed 07-03-PLAN.md (3 of 3 in Phase 7) — Phase 7 complete. Factory (28 tests) + platform services (38 tests) = 66 new tests. Phase 7 total: 230 new tests.
+Stopped at: Completed 08-01-PLAN.md (1 of 4 in Phase 8) — Content API (22 tests) + analytics routes (24 tests) = 46 new tests. Test suite now at 852 passing.
 Resume file: None
-Next action: Plan Phase 8 (Testing — API Contracts)
+Next action: Continue Phase 8 (Testing — API Contracts)
