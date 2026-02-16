@@ -3,6 +3,7 @@
  * GPT integration for intelligent content creation and optimization
  */
 
+import { randomUUID } from 'crypto';
 import { db } from '../lib/supabase.js';
 import { logger } from '../lib/logger.js';
 import { redisService } from '../lib/redis.js';
@@ -112,7 +113,7 @@ class AIContentGenerator {
   // Generate AI content
   async generateContent(request) {
     const generation = {
-      id: `gen_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      id: `gen_${randomUUID()}`,
       requestedAt: new Date().toISOString(),
       userId: request.userId,
       
@@ -684,13 +685,8 @@ class AIContentGenerator {
       });
     }
     
-    // Fallback mock provider for testing
-    this.providers.set('mock', {
-      name: 'mock',
-      generate: async (prompt, generation) => {
-        return await this.generateMockContent(prompt, generation);
-      }
-    });
+    // No mock provider — AI content generation requires a real API provider.
+    // Configure OPENROUTER_API_KEY, OPENAI_API_KEY, or ANTHROPIC_API_KEY.
   }
 
   // OpenAI generation
@@ -930,15 +926,14 @@ class AIContentGenerator {
   async recommendPostingTime(generation) { return '10:00 AM'; }
   async generateHooks(text, generation) { return []; }
   async suggestContentSeries(text, generation) { return []; }
-  async scoreRelevance(text, generation) { return Math.random(); }
-  async predictEngagement(text, generation) { return Math.random(); }
-  async assessQuality(text) { return Math.random(); }
-  async checkOriginality(text) { return Math.random(); }
-  async scorePlatformFit(content, platform) { return Math.random(); }
-  async applyCustomizations(text, customizations) { return text; }
-  async generateWithAnthropic(prompt, generation) { return { text: 'Anthropic generated content' }; }
-  async generateWithCustom(prompt, generation) { return { text: 'Custom AI generated content' }; }
-  async generateMockContent(prompt, generation) { return { text: 'Mock generated content for testing' }; }
+  async scoreRelevance(_text, _generation) { throw new Error('Relevance scoring requires AI API key configuration.'); }
+  async predictEngagement(_text, _generation) { throw new Error('Engagement prediction requires AI API key configuration.'); }
+  async assessQuality(_text) { throw new Error('Quality assessment requires AI API key configuration.'); }
+  async checkOriginality(_text) { throw new Error('Originality check requires AI API key configuration.'); }
+  async scorePlatformFit(_content, _platform) { throw new Error('Platform fit scoring requires AI API key configuration.'); }
+  async applyCustomizations(text, _customizations) { return text; }
+  async generateWithAnthropic(_prompt, _generation) { throw new Error('Anthropic generation requires ANTHROPIC_API_KEY.'); }
+  async generateWithCustom(_prompt, _generation) { throw new Error('Custom AI generation requires API key configuration.'); }
   delay(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
 }
 
