@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-16)
 
 **Core value:** Every endpoint returns real data, every platform works, every dashboard page connects to live APIs
-**Current focus:** Phase 7 in progress — auth test suites created. Plan 1 of 3 complete.
+**Current focus:** Phase 7 in progress — Prisma and competitor-fetcher test suites created. Plan 2 of 3 complete.
 
 ## Current Position
 
 Phase: 7 of 10 (Testing — Auth & Core)
-Plan: 1 of 3 in current phase
+Plan: 2 of 3 in current phase
 Status: In progress
-Last activity: 2026-02-17 — Completed 07-01-PLAN.md — Account-service + RBAC test suites (98 tests)
+Last activity: 2026-02-17 — Completed 07-02-PLAN.md — Prisma client + competitor-fetcher test suites (66 tests)
 
-Progress: ███░░░░░░░ 33% (Phase 7)
+Progress: ██████░░░░ 67% (Phase 7)
 
 ## Performance Metrics
 
@@ -33,7 +33,7 @@ Progress: ███░░░░░░░ 33% (Phase 7)
 | 4 | 3/3 | ~30 min | ~10 min |
 | 5 | 5/5 | ~42 min | ~8 min |
 | 6 | 2/2 | ~18 min | ~9 min |
-| 7 | 1/3 | ~12 min | ~12 min |
+| 7 | 2/3 | ~22 min | ~11 min |
 
 **Recent Trend:**
 - Last 5 plans: 05-05 (~8 min), 06-01 (~10 min), 06-02 (~8 min), 07-01 (~12 min)
@@ -120,6 +120,8 @@ Recent decisions affecting current work:
 - jest.mock() factory implementations cleared by resetMocks — restore in beforeEach (07-01)
 - RBAC tests combined into single file for shared mock setup (07-01)
 - access-control.ts middleware tests deferred to Phase 8 integration tests (07-01)
+- jsdom environment means prisma singleton is null -- tested createPrismaClient via window deletion (07-02)
+- executeWithRetry max-retry tests use real timers to avoid fake timer + mockRejectedValue race (07-02)
 
 ### Deferred Issues
 
@@ -135,6 +137,6 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-17
-Stopped at: Completed 07-01-PLAN.md (1 of 3 in Phase 7) — Account-service (30 tests) + RBAC (68 tests) = 98 new auth tests
+Stopped at: Completed 07-02-PLAN.md (2 of 3 in Phase 7) — Prisma client (24 tests) + competitor-fetcher (42 tests) = 66 new tests
 Resume file: None
-Next action: Execute 07-02-PLAN.md (Prisma service tests)
+Next action: Execute 07-03-PLAN.md (Platform service tests)
