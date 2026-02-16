@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-02-16)
 
 **Core value:** Every endpoint returns real data, every platform works, every dashboard page connects to live APIs
-**Current focus:** Phase 6 complete — all 5 Vercel crons verified working with real data. Ready for Phase 7.
+**Current focus:** Phase 7 in progress — auth test suites created. Plan 1 of 3 complete.
 
 ## Current Position
 
-Phase: 6 of 10 (Cron Jobs & Background Tasks)
-Plan: 2 of 2 in current phase
-Status: Phase complete
-Last activity: 2026-02-17 — Completed 06-02-PLAN.md — Weekly digest email + all crons verified
+Phase: 7 of 10 (Testing — Auth & Core)
+Plan: 1 of 3 in current phase
+Status: In progress
+Last activity: 2026-02-17 — Completed 07-01-PLAN.md — Account-service + RBAC test suites (98 tests)
 
-Progress: ██████████ 100% (Phase 6)
+Progress: ███░░░░░░░ 33% (Phase 7)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 18
+- Total plans completed: 19
 - Average duration: ~9 min
-- Total execution time: ~160 min
+- Total execution time: ~172 min
 
 **By Phase:**
 
@@ -33,10 +33,11 @@ Progress: ██████████ 100% (Phase 6)
 | 4 | 3/3 | ~30 min | ~10 min |
 | 5 | 5/5 | ~42 min | ~8 min |
 | 6 | 2/2 | ~18 min | ~9 min |
+| 7 | 1/3 | ~12 min | ~12 min |
 
 **Recent Trend:**
-- Last 5 plans: 05-04 (~8 min), 05-05 (~8 min), 06-01 (~10 min), 06-02 (~8 min)
-- Trend: Consistent ~8-10 min
+- Last 5 plans: 05-05 (~8 min), 06-01 (~10 min), 06-02 (~8 min), 07-01 (~12 min)
+- Trend: Slightly longer for test suites (more code generation)
 
 ## Accumulated Context
 
@@ -116,6 +117,9 @@ Recent decisions affecting current work:
 - Weekly digest email template is inline in route file — no separate template file (06-02)
 - Email failures in weekly digest don't crash the batch — inner try-catch preserves DB write (06-02)
 - Proactive insights correctly uses in-app notifications, not email (06-02 verification)
+- jest.mock() factory implementations cleared by resetMocks — restore in beforeEach (07-01)
+- RBAC tests combined into single file for shared mock setup (07-01)
+- access-control.ts middleware tests deferred to Phase 8 integration tests (07-01)
 
 ### Deferred Issues
 
@@ -131,6 +135,6 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-17
-Stopped at: Completed 06-02-PLAN.md (2 of 2 in Phase 6) — Weekly digest email + all 5 crons verified. Phase 6 complete.
+Stopped at: Completed 07-01-PLAN.md (1 of 3 in Phase 7) — Account-service (30 tests) + RBAC (68 tests) = 98 new auth tests
 Resume file: None
-Next action: Plan Phase 7 (Testing — Auth & Core)
+Next action: Execute 07-02-PLAN.md (Prisma service tests)
