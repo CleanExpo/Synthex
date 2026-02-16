@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-02-16)
 ## Current Position
 
 Phase: 5 of 10 (Social Platform Completeness)
-Plan: 2 of 5 in current phase
+Plan: 3 of 5 in current phase
 Status: In progress
-Last activity: 2026-02-16 — Completed 05-02-PLAN.md (YouTube service implementation)
+Last activity: 2026-02-16 — Completed 05-03-PLAN.md (Pinterest service implementation)
 
-Progress: ██░░░░░░░░ 40% (Phase 5)
+Progress: ███░░░░░░░ 60% (Phase 5)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 13
+- Total plans completed: 14
 - Average duration: ~9 min
-- Total execution time: ~118 min
+- Total execution time: ~126 min
 
 **By Phase:**
 
@@ -31,10 +31,10 @@ Progress: ██░░░░░░░░ 40% (Phase 5)
 | 2 | 5/5 | ~41 min | ~8 min |
 | 3 | 2/2 | ~21 min | ~11 min |
 | 4 | 3/3 | ~30 min | ~10 min |
-| 5 | 2/5 | ~18 min | ~9 min |
+| 5 | 3/5 | ~26 min | ~9 min |
 
 **Recent Trend:**
-- Last 5 plans: 04-01 (~8 min), 04-02 (~10 min), 04-03 (~12 min), 05-01 (~8 min), 05-02 (~10 min)
+- Last 5 plans: 04-02 (~10 min), 04-03 (~12 min), 05-01 (~8 min), 05-02 (~10 min), 05-03 (~8 min)
 - Trend: Consistent ~8-12 min for platform service plans
 
 ## Accumulated Context
@@ -89,6 +89,12 @@ Recent decisions affecting current work:
 - YouTube syncAnalytics tries Analytics API first, falls back to channel+video stats (05-02)
 - YouTube token refresh preserves original refresh token (Google doesn't issue new one) (05-02)
 - YouTube-specific features (playlist add, thumbnail upload) stay in route, not in service (05-02)
+- Pinterest uses fetch() directly — consistent with all other platform services (05-03)
+- Pinterest deletePost fully implemented via DELETE /v5/pins/{id} returning 204 (05-03)
+- Pinterest syncAnalytics handles 403 for personal accounts — business-only endpoint (05-03)
+- Pinterest boardId is REQUIRED for createPost — pins must belong to a board (05-03)
+- Pinterest GET route includes boards in metadata for UI board selection (05-03)
+- Pinterest video pins not supported via URL — require pre-upload (05-03)
 
 ### Deferred Issues
 
@@ -104,6 +110,6 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-16
-Stopped at: Completed 05-02-PLAN.md (2 of 5 in Phase 5) — YouTube service done
+Stopped at: Completed 05-03-PLAN.md (3 of 5 in Phase 5) — Pinterest service done
 Resume file: None
-Next action: Execute 05-03-PLAN.md (Pinterest service implementation)
+Next action: Execute 05-04-PLAN.md (Reddit service implementation)
