@@ -40,6 +40,7 @@ import {
 } from '@/components/icons';
 import { Button } from '@/components/ui/button';
 import { AIPMFloatingButton } from '@/components/ai-pm';
+import { KeyboardHints } from '@/components/dashboard/keyboard-hints';
 import { Input } from '@/components/ui/input';
 import {
   DropdownMenu,
@@ -267,6 +268,9 @@ export default function DashboardLayout({
 
       {/* AI Project Manager — Floating Action Button */}
       <AIPMFloatingButton />
+
+      {/* Keyboard Hints — Shows on first visit */}
+      <KeyboardHints />
     </div>
     </WebSocketProvider>
   );
