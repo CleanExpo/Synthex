@@ -24,6 +24,7 @@ import {
   Brain,
   HelpCircle,
   Layers,
+  Lightbulb,
 } from '@/components/icons';
 import { notify } from '@/lib/notifications';
 
@@ -88,6 +89,15 @@ export function CommandPalette() {
       action: () => router.push('/dashboard/analytics'),
       category: 'navigation',
       keywords: ['analytics', 'stats', 'metrics', 'data']
+    },
+    {
+      id: 'predictions',
+      title: 'Predictive Analytics',
+      description: 'ML-powered engagement predictions and optimal posting times',
+      icon: Lightbulb,
+      action: () => router.push('/dashboard/predictions'),
+      category: 'navigation',
+      keywords: ['predict', 'forecast', 'engagement', 'optimal', 'best time', 'ml', 'ai', 'prediction']
     },
     {
       id: 'schedule',

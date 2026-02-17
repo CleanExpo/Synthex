@@ -38,6 +38,7 @@ import {
   Beaker,
   CreditCard,
   Layers,
+  Lightbulb,
 } from '@/components/icons';
 import { Button } from '@/components/ui/button';
 import { AIPMFloatingButton } from '@/components/ai-pm';
@@ -68,6 +69,7 @@ const sidebarItems = [
   { icon: Calendar, label: 'Schedule', href: '/dashboard/schedule' },
   { icon: ListTodo, label: 'Tasks', href: '/dashboard/tasks' },
   { icon: BarChart3, label: 'Analytics', href: '/dashboard/analytics' },
+  { icon: Lightbulb, label: 'Predictions', href: '/dashboard/predictions' },
   { icon: File, label: 'Reports', href: '/dashboard/reports' },
   { icon: Beaker, label: 'Experiments', href: '/dashboard/experiments' },
   { icon: Brain, label: 'Psychology', href: '/dashboard/psychology' },
