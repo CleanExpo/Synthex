@@ -4,6 +4,8 @@
  */
 
 import { EventEmitter } from 'events';
+import { prisma } from '@/lib/prisma';
+import { createPlatformService, SupportedPlatform, isPlatformSupported, PlatformCredentials } from '@/lib/social';
 
 export interface ScheduledPost {
   id: string;
@@ -20,6 +22,12 @@ export interface ScheduledPost {
     autoScheduled?: boolean;
     rescheduled?: boolean;
     reason?: string;
+    // Publishing metadata
+    platformPostId?: string;
+    platformPostUrl?: string;
+    publishedAt?: string;
+    error?: string;
+    failedAt?: string;
   };
 }
 
@@ -791,15 +799,251 @@ export class SocialSchedulerCoordinator extends EventEmitter {
   private async publishPost(post: ScheduledPost): Promise<void> {
     post.status = 'publishing';
     this.postQueue.set(post.id, post);
-    
+
     this.emit('post-publishing', post);
-    
-    // Simulate publishing
-    setTimeout(() => {
-      post.status = 'published';
-      this.postQueue.set(post.id, post);
-      this.emit('post-published', post);
-    }, 5000);
+
+    try {
+      // Get platform credentials from database
+      const credentials = await this.getPlatformCredentials(post.platform, post.content?.userId);
+
+      if (!credentials) {
+        throw new Error(`No credentials found for platform ${post.platform}`);
+      }
+
+      if (!isPlatformSupported(post.platform)) {
+        throw new Error(`Platform ${post.platform} is not supported`);
+      }
+
+      // Create platform service
+      const service = createPlatformService(
+        post.platform as SupportedPlatform,
+        credentials,
+        {
+          tokenRefreshCallback: async (platform, newCreds) => {
+            // Persist refreshed tokens
+            await prisma.platformConnection.updateMany({
+              where: {
+                platform,
+                userId: post.content?.userId,
+              },
+              data: {
+                accessToken: newCreds.accessToken,
+                refreshToken: newCreds.refreshToken,
+                expiresAt: newCreds.expiresAt,
+              },
+            });
+          },
+        }
+      );
+
+      if (!service) {
+        throw new Error(`Failed to create service for platform ${post.platform}`);
+      }
+
+      // Publish to platform
+      const result = await service.createPost({
+        text: post.content?.text || post.content?.content || '',
+        mediaUrls: post.content?.mediaUrls || [],
+        visibility: post.content?.visibility || 'public',
+        metadata: post.content?.metadata,
+      });
+
+      if (result.success) {
+        post.status = 'published';
+        post.metadata = {
+          ...post.metadata,
+          platformPostId: result.postId,
+          platformPostUrl: result.url,
+          publishedAt: new Date().toISOString(),
+        };
+
+        // Update CalendarPost in database if linked
+        if (post.content?.calendarPostId) {
+          await prisma.calendarPost.update({
+            where: { id: post.content.calendarPostId },
+            data: {
+              status: 'published',
+              publishedAt: new Date(),
+              metadata: {
+                ...(post.metadata || {}),
+                platformPostId: result.postId,
+                platformPostUrl: result.url,
+              },
+            },
+          });
+        }
+
+        console.log(`✅ Published post ${post.id} to ${post.platform}: ${result.postId}`);
+        this.emit('post-published', post);
+      } else {
+        throw new Error(result.error || 'Unknown publishing error');
+      }
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      console.error(`❌ Failed to publish post ${post.id}:`, errorMessage);
+
+      post.status = 'failed';
+      post.metadata = {
+        ...post.metadata,
+        error: errorMessage,
+        failedAt: new Date().toISOString(),
+      };
+
+      // Determine if we should retry
+      const isRetryable = this.isRetryableError(error);
+
+      if (isRetryable) {
+        await this.handleFailure(post.id, error);
+      } else {
+        // Update CalendarPost as failed if linked
+        if (post.content?.calendarPostId) {
+          await prisma.calendarPost.update({
+            where: { id: post.content.calendarPostId },
+            data: {
+              status: 'failed',
+              metadata: {
+                error: errorMessage,
+                failedAt: new Date().toISOString(),
+              },
+            },
+          });
+        }
+
+        this.emit('post-failed', { post, error: errorMessage });
+      }
+    }
+
+    this.postQueue.set(post.id, post);
+  }
+
+  /**
+   * Get platform credentials for a user
+   */
+  private async getPlatformCredentials(platform: string, userId?: string): Promise<PlatformCredentials | null> {
+    if (!userId) {
+      console.warn('No userId provided for publishing');
+      return null;
+    }
+
+    try {
+      const connection = await prisma.platformConnection.findFirst({
+        where: {
+          platform,
+          userId,
+          isActive: true,
+        },
+      });
+
+      if (!connection) {
+        return null;
+      }
+
+      return {
+        accessToken: connection.accessToken,
+        refreshToken: connection.refreshToken || undefined,
+        expiresAt: connection.expiresAt || undefined,
+        platformUserId: connection.profileId || undefined,
+        platformUsername: connection.profileName || undefined,
+      };
+    } catch (error) {
+      console.error('Error fetching platform credentials:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Check if an error is retryable
+   */
+  private isRetryableError(error: unknown): boolean {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+
+    // Rate limit errors are retryable
+    if (errorMessage.toLowerCase().includes('rate limit')) return true;
+    if (errorMessage.includes('429')) return true;
+
+    // Temporary network errors are retryable
+    if (errorMessage.toLowerCase().includes('timeout')) return true;
+    if (errorMessage.toLowerCase().includes('network')) return true;
+    if (errorMessage.includes('ECONNRESET')) return true;
+    if (errorMessage.includes('503')) return true;
+
+    // Auth errors are NOT retryable
+    if (errorMessage.includes('401') || errorMessage.includes('403')) return false;
+    if (errorMessage.toLowerCase().includes('unauthorized')) return false;
+
+    // Content policy errors are NOT retryable
+    if (errorMessage.toLowerCase().includes('policy')) return false;
+    if (errorMessage.toLowerCase().includes('content not allowed')) return false;
+
+    return false;
+  }
+
+  /**
+   * Get real queue metrics from database
+   */
+  public async getRealQueueMetrics(): Promise<QueueMetrics> {
+    try {
+      // Get counts from CalendarPost table
+      const [scheduled, published, failed] = await Promise.all([
+        prisma.calendarPost.count({
+          where: { status: 'scheduled' },
+        }),
+        prisma.calendarPost.count({
+          where: { status: 'published' },
+        }),
+        prisma.calendarPost.count({
+          where: { status: 'failed' },
+        }),
+      ]);
+
+      // Get platform breakdown
+      const platformBreakdown = await prisma.calendarPost.groupBy({
+        by: ['platforms'],
+        where: { status: 'scheduled' },
+        _count: true,
+      });
+
+      const byPlatform: Record<string, number> = {};
+      for (const group of platformBreakdown) {
+        // platforms is an array, count each platform
+        for (const p of group.platforms) {
+          byPlatform[p] = (byPlatform[p] || 0) + group._count;
+        }
+      }
+
+      // Calculate success rate
+      const totalCompleted = published + failed;
+      const successRate = totalCompleted > 0 ? (published / totalCompleted) * 100 : 100;
+
+      // Find next available slot
+      const nextScheduled = await prisma.calendarPost.findFirst({
+        where: {
+          status: 'scheduled',
+          scheduledFor: { gte: new Date() },
+        },
+        orderBy: { scheduledFor: 'asc' },
+        select: { scheduledFor: true },
+      });
+
+      return {
+        totalQueued: scheduled + this.postQueue.size,
+        byPlatform,
+        byStatus: {
+          scheduled,
+          published,
+          failed,
+          queued: this.postQueue.size,
+        },
+        avgWaitTime: this.calculateAvgWaitTime(Array.from(this.postQueue.values())),
+        successRate: Math.round(successRate * 10) / 10,
+        failureRate: Math.round((100 - successRate) * 10) / 10,
+        nextAvailableSlot: nextScheduled?.scheduledFor || new Date(Date.now() + 30 * 60000),
+      };
+    } catch (error) {
+      console.error('Error fetching real queue metrics:', error);
+      // Fall back to in-memory metrics
+      return this.queueMetrics;
+    }
   }
 }
 
