@@ -107,10 +107,12 @@ Plans:
 **Goal**: Improve dashboard layouts, loading states, error handling, and empty states across all pages
 **Depends on**: Phase 15
 **Research**: Unlikely (UI patterns)
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 16-01: TBD
+- [ ] 16-01: Create loading states for high-priority dashboard routes
+- [ ] 16-02: Add error boundaries and improve error handling
+- [ ] 16-03: Create reusable PageHeader and EmptyState components
 
 #### Phase 17: UI/UX — New Features
 **Goal**: Add missing dashboard pages, improve feature discoverability, enhance onboarding flow
