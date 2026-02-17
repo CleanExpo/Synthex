@@ -119,10 +119,10 @@ Plans:
 **Goal**: Enhanced visualizations with drill-downs, custom date ranges, comparisons
 **Depends on**: Phase 21
 **Research**: Unlikely (Recharts patterns exist)
-**Plans**: 2 | Planned | 2026-02-18
+**Plans**: 1/2 | In progress | 2026-02-18
 
 Plans:
-- [ ] 22-01: Analytics Data Refactor & Date Ranges (hook, date picker, wire charts)
+- [x] 22-01: Analytics Data Refactor & Date Ranges (hook, date picker, wire charts)
 - [ ] 22-02: Post Drill-Down & Enhanced Tables (detail sheet, metric table tabs)
 
 #### Phase 23: Predictive Analytics
