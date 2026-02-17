@@ -144,7 +144,7 @@ Plans:
 **Plans**: 2 | Planned | 2026-02-18
 
 Plans:
-- [ ] 24-01: Hook + API Wiring (useReportTemplates, useReportExport hooks, refactor CustomReportBuilder to real APIs)
+- [x] 24-01: Hook + API Wiring (useReportTemplates, useReportExport hooks, refactor CustomReportBuilder to real APIs)
 - [ ] 24-02: Page Route + Navigation (builder page, sidebar, command palette, reports page CTA, human verify)
 
 #### Phase 25: Third-party Integrations
@@ -226,7 +226,7 @@ Plans:
 | 21. Multi-format Generation | v1.2 | 2/2 | Complete | 2026-02-18 |
 | 22. Analytics Dashboard v2 | v1.2 | 2/2 | Complete | 2026-02-18 |
 | 23. Predictive Analytics | v1.2 | 2/2 | Complete | 2026-02-18 |
-| 24. Custom Reports Builder | v1.2 | 0/? | Not started | - |
+| 24. Custom Reports Builder | v1.2 | 1/2 | In progress | - |
 | 25. Third-party Integrations | v1.2 | 0/? | Not started | - |
 | 26. Webhook System | v1.2 | 0/? | Not started | - |
 | 27. Approval Workflows | v1.2 | 0/? | Not started | - |
