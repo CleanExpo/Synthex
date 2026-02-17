@@ -10,12 +10,12 @@ See: .planning/PROJECT.md (updated 2026-02-17)
 ## Current Position
 
 Milestone: v1.1 Platform Enhancement
-Phase: 12 of 18 (Deferred Cleanup — Components)
-Plan: 03 of 4 complete
-Status: Wiring analytics components
-Last activity: 2026-02-17 — Plan 12-03 executed
+Phase: 12 of 18 (Deferred Cleanup — Components) — COMPLETE
+Plan: 04 of 4 complete
+Status: Phase 12 complete
+Last activity: 2026-02-17 — Plan 12-04 executed
 
-Progress: █░░░░░░░░░ 12.5% (1/8 phases)
+Progress: ██░░░░░░░░ 25% (2/8 phases)
 
 ## Performance Metrics
 
@@ -39,6 +39,13 @@ Progress: █░░░░░░░░░ 12.5% (1/8 phases)
 | 9 | 3/3 | ~17 min | ~6 min |
 | 10 | 2/2 | ~24 min | ~12 min |
 
+**By Phase (v1.1):**
+
+| Phase | Plans | Total | Avg/Plan |
+|-------|-------|-------|----------|
+| 11 | 1/1 | ~15 min | ~15 min |
+| 12 | 4/4 | ~45 min | ~11 min |
+
 ## Accumulated Context
 
 ### Decisions
@@ -52,6 +59,11 @@ Decisions from v1.0 that affect v1.1 work:
 - Dashboard empty state pattern: inline EmptyState with icon, message, CTA button
 - Standalone feature components not imported by dashboard pages — safe to modify
 
+Decisions from v1.1:
+
+- Rate limiters consolidated into lib/rate-limit/ with re-exports for backward compat
+- lib/middleware/api-rate-limit.ts and lib/middleware/rate-limiter.ts kept as thin re-export wrappers
+
 ### Deferred Items (from v1.0)
 
 These are the primary targets for v1.1:
@@ -59,7 +71,7 @@ These are the primary targets for v1.1:
 - ~~Legacy src/ services with mock data — Phase 11~~ DONE (18 files removed)
 - src/agents/ specialist coordinators with mock metrics — Phase 14
 - ~~8 standalone feature components with mock data — Phase 12~~ DONE (8 components wired)
-- 3 rate limiter files await consolidation — Phase 12-04
+- ~~Rate limiter files consolidation — Phase 12-04~~ DONE (9 files removed, unified into lib/rate-limit/)
 - ContentLibrary model not in schema — Phase 13
 
 ### Blockers/Concerns
@@ -74,6 +86,6 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-17
-Stopped at: Plan 12-03 complete
+Stopped at: Phase 12 complete
 Resume file: None
-Next action: /gsd:execute-plan 12-04
+Next action: /gsd:plan-phase 13

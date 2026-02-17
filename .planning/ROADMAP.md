@@ -26,7 +26,7 @@ None (internal platform work)
 - [x] **Phase 9: Performance & Build** - Clean build config, reduce bundle, optimize queries
 - [x] **Phase 10: Final Audit** - Full endpoint audit, documentation, deployment readiness
 - [x] **Phase 11: Deferred Cleanup — Legacy Services** - Migrate/remove legacy src/ services
-- [ ] **Phase 12: Deferred Cleanup — Components** - Wire standalone components, consolidate rate limiters
+- [x] **Phase 12: Deferred Cleanup — Components** - Wire standalone components, consolidate rate limiters
 - [ ] **Phase 13: Feature Completion — Models** - Add ContentLibrary model, implement stub routes
 - [ ] **Phase 14: Feature Completion — Agents** - Connect agent coordinators to real APIs
 - [ ] **Phase 15: Google Developer Console** - OAuth verification, production API credentials
@@ -73,7 +73,7 @@ Plans:
 - [x] 12-01: Wire AI content components (AIHashtagGenerator, SentimentAnalysis, AIWritingAssistant)
 - [x] 12-02: Wire AI feature components (AIPersonaManager, AIABTesting)
 - [x] 12-03: Wire analytics components (PredictiveAnalytics, CompetitorAnalysis, ROICalculator)
-- [ ] 12-04: Consolidate rate limiters into lib/rate-limit/
+- [x] 12-04: Consolidate rate limiters into lib/rate-limit/
 
 #### Phase 13: Feature Completion — Models
 **Goal**: Add ContentLibrary Prisma model to schema, implement the 2 stub routes (api/library/content) that currently return 501
@@ -145,7 +145,7 @@ Plans:
 | 9. Performance | v1.0 | 3/3 | Complete | 2026-02-17 |
 | 10. Final Audit | v1.0 | 2/2 | Complete | 2026-02-17 |
 | 11. Deferred — Legacy | v1.1 | 1/1 | Complete | 2026-02-17 |
-| 12. Deferred — Components | v1.1 | 3/4 | In progress | - |
+| 12. Deferred — Components | v1.1 | 4/4 | Complete | 2026-02-17 |
 | 13. Feature — Models | v1.1 | 0/? | Not started | - |
 | 14. Feature — Agents | v1.1 | 0/? | Not started | - |
 | 15. Google Console | v1.1 | 0/? | Not started | - |
