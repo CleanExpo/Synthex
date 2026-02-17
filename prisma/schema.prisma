@@ -80,6 +80,9 @@ model User {
   visualAssets     VisualAsset[]
   localCaseStudies LocalCaseStudy[]
 
+  // Content library
+  contentLibrary   ContentLibrary[]
+
   // Multi-business owner system
   isMultiBusinessOwner  Boolean   @default(false) @map("is_multi_business_owner")
   activeOrganizationId  String?   @map("active_organization_id")
@@ -837,6 +840,37 @@ model QuoteCollection {
 
   @@index([userId])
   @@map("quote_collections")
+}
+
+// ==========================================
+// Content Library Module
+// Save, organize, and reuse content (posts, captions, templates)
+// ==========================================
+
+model ContentLibrary {
+  id           String   @id @default(cuid())
+  userId       String
+  title        String
+  content      String   @db.Text
+  contentType  String   // 'post', 'caption', 'story', 'thread', 'template', 'snippet'
+  platform     String?  // Target platform: 'instagram', 'twitter', 'linkedin', etc.
+  category     String?  // User-defined category
+  tags         String[] // Array of tags for organization
+  status       String   @default("active") // 'active', 'archived', 'deleted'
+  metadata     Json?    // Flexible storage for hashtags, mentions, media refs, etc.
+  usageCount   Int      @default(0) // Track how often content is used
+  lastUsedAt   DateTime?
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Relations
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([userId, contentType])
+  @@index([userId, status])
+  @@map("content_library")
 }
 
 // ==========================================
