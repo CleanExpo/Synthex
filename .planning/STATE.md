@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-02-16)
 
 **Core value:** Every endpoint returns real data, every platform works, every dashboard page connects to live APIs
-**Current focus:** Phase 8 complete — 256 new API contract tests added across 4 plans. Ready for Phase 9 (Performance & Build).
+**Current focus:** Phase 9 in progress — Build config cleanup complete (09-01). Dependency optimization next (09-02).
 
 ## Current Position
 
-Phase: 8 of 10 (Testing — API Contracts)
-Plan: 4 of 4 in current phase
-Status: Phase complete
-Last activity: 2026-02-17 — Completed 08-04 — Social posting + critical path integration tests (53 tests)
+Phase: 9 of 10 (Performance & Build)
+Plan: 1 of 3 in current phase
+Status: Plan 09-01 complete
+Last activity: 2026-02-17 — Completed 09-01 — Build configuration cleanup (19 scripts removed, metadata cleaned)
 
-Progress: ██████████ 100% (Phase 8)
+Progress: ███░░░░░░░ 33% (Phase 9)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 24
+- Total plans completed: 25
 - Average duration: ~13 min
-- Total execution time: ~319 min
+- Total execution time: ~322 min
 
 **By Phase:**
 
@@ -35,10 +35,11 @@ Progress: ██████████ 100% (Phase 8)
 | 6 | 2/2 | ~18 min | ~9 min |
 | 7 | 3/3 | ~30 min | ~10 min |
 | 8 | 4/4 | ~139 min | ~35 min |
+| 9 | 1/3 | ~3 min | ~3 min |
 
 **Recent Trend:**
-- Last 5 plans: 08-01 (~9 min), 08-02 (~45 min), 08-03 (~45 min), 08-04 (~40 min)
-- Trend: Contract testing plans consistently take 35-45 min (comprehensive test creation)
+- Last 5 plans: 08-02 (~45 min), 08-03 (~45 min), 08-04 (~40 min), 09-01 (~3 min)
+- Trend: Config cleanup plans are fast; testing plans take 35-45 min
 
 ## Accumulated Context
 
@@ -152,6 +153,6 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-17
-Stopped at: Completed 08-04 (4 of 4 in Phase 8) — Social posting contracts (34 tests) + critical path integration (19 tests) = 53 new tests. Phase 8 complete with 256 total tests added. Test suite now at 1062 passing (up from 806 at Phase 8 start).
+Stopped at: Completed 09-01 (1 of 3 in Phase 9) — Build config cleanup: 19 dangerous/duplicate/obsolete scripts removed, library metadata fields removed, prisma deduplicated.
 Resume file: None
-Next action: Plan Phase 9 (Performance & Build) — Focus on bundle optimization, build performance, and production readiness
+Next action: Execute 09-02 (Dependency optimization) — Move 15+ packages to devDeps, remove 8+ unused packages, attempt --legacy-peer-deps removal
