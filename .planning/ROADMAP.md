@@ -108,10 +108,10 @@ Plans:
 **Goal**: Generate platform-specific content variations from single input
 **Depends on**: Phase 20
 **Research**: Unlikely (platform patterns established in v1.0)
-**Plans**: 2 | Planned | 2026-02-18
+**Plans**: 1/2 | In progress | 2026-02-18
 
 Plans:
-- [ ] 21-01: Multi-format Adapter Service & API (service, endpoint)
+- [x] 21-01: Multi-format Adapter Service & API (service, endpoint)
 - [ ] 21-02: Multi-format Generation UI (dashboard page, navigation, command palette)
 
 #### Phase 22: Analytics Dashboard v2
@@ -221,7 +221,7 @@ Plans:
 | 18. Final Verification | v1.1 | 1/1 | Complete | 2026-02-17 |
 | 19. AI Template Library | v1.2 | 1/1 | Complete | 2026-02-17 |
 | 20. Content Optimization | v1.2 | 0/? | Not started | - |
-| 21. Multi-format Generation | v1.2 | 0/? | Not started | - |
+| 21. Multi-format Generation | v1.2 | 1/2 | In progress | - |
 | 22. Analytics Dashboard v2 | v1.2 | 0/? | Not started | - |
 | 23. Predictive Analytics | v1.2 | 0/? | Not started | - |
 | 24. Custom Reports Builder | v1.2 | 0/? | Not started | - |
