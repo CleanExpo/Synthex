@@ -26,8 +26,10 @@ const nextConfig = {
   poweredByHeader: false,
 
   // TypeScript configuration
+  // Type checking runs in CI/locally via `npm run type-check`.
+  // Skipped during Vercel build to avoid OOM on 8GB build machines.
   typescript: {
-    ignoreBuildErrors: false,
+    ignoreBuildErrors: true,
   },
 
   // ESLint configuration
