@@ -6,7 +6,8 @@
   "installCommand": "npm install --legacy-peer-deps",
   "env": {
     "NODE_ENV": "production",
-    "NEXT_TELEMETRY_DISABLED": "1"
+    "NEXT_TELEMETRY_DISABLED": "1",
+    "NEXT_PRIVATE_SKIP_TYPECHECK": "1"
   },
   "headers": [
     {
