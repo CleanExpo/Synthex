@@ -235,6 +235,12 @@ export default function DashboardLayout({
                   <Settings className="mr-2 h-4 w-4" />
                   <span>Settings</span>
                 </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/dashboard/billing" className="flex items-center cursor-pointer">
+                    <CreditCard className="mr-2 h-4 w-4" />
+                    <span>Billing</span>
+                  </Link>
+                </DropdownMenuItem>
                 <DropdownMenuSeparator className="bg-white/10" />
                 <DropdownMenuItem className="text-red-400">
                   <LogOut className="mr-2 h-4 w-4" />
