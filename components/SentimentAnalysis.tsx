@@ -109,153 +109,52 @@ interface TopicSentiment {
   trend: 'rising' | 'falling' | 'stable';
 }
 
-const generateSampleContent = (sentiment: string): string => {
-  const positive = [
-    "Love this product! Best purchase ever!",
-    "Amazing customer service, highly recommend!",
-    "This completely exceeded my expectations!",
-    "Fantastic experience from start to finish!"
-  ];
-  
-  const negative = [
-    "Very disappointed with the quality.",
-    "Customer service was unhelpful and rude.",
-    "Product broke after just one week.",
-    "Would not recommend to anyone."
-  ];
-  
-  const neutral = [
-    "The product is okay, nothing special.",
-    "Average experience overall.",
-    "It works as described.",
-    "Neither good nor bad, just standard."
-  ];
-  
-  const options = sentiment === 'positive' ? positive :
-                  sentiment === 'negative' ? negative : neutral;
-  
-  return options[Math.floor(Math.random() * options.length)];
-};
+// API response types
+interface AnalyticsResponse {
+  overall: {
+    total: number;
+    positive: number;
+    neutral: number;
+    negative: number;
+    avgScore: number;
+    avgConfidence: number;
+  };
+  trends: Array<{
+    date: string;
+    positive: number;
+    neutral: number;
+    negative: number;
+    count: number;
+  }>;
+  topEmotions: Array<{
+    emotion: string;
+    count: number;
+    percentage: number;
+  }>;
+}
 
-const generateEmotions = (sentiment: string): EmotionScore[] => {
-  const emotions: EmotionScore[] = [
-    { emotion: 'joy', score: sentiment === 'positive' ? 0.7 + Math.random() * 0.3 : Math.random() * 0.3 },
-    { emotion: 'anger', score: sentiment === 'negative' ? 0.5 + Math.random() * 0.5 : Math.random() * 0.2 },
-    { emotion: 'sadness', score: sentiment === 'negative' ? 0.3 + Math.random() * 0.4 : Math.random() * 0.2 },
-    { emotion: 'fear', score: Math.random() * 0.3 },
-    { emotion: 'surprise', score: Math.random() * 0.4 },
-    { emotion: 'disgust', score: sentiment === 'negative' ? Math.random() * 0.5 : Math.random() * 0.1 }
-  ];
-  
-  return emotions.sort((a, b) => b.score - a.score).slice(0, 3);
-};
+interface AnalysisResponse {
+  analyses: Array<{
+    id: string;
+    sentiment: 'positive' | 'neutral' | 'negative' | 'mixed';
+    score: number;
+    confidence: number;
+    emotions: Array<{ emotion: string; intensity: number }>;
+    platform: string;
+    analyzedAt: string;
+  }>;
+}
 
-const generateTopics = (): string[] => {
-  const allTopics = [
-    'product quality', 'customer service', 'pricing', 'shipping',
-    'user experience', 'features', 'performance', 'design'
-  ];
-  
-  const numTopics = 1 + Math.floor(Math.random() * 3);
-  const topics: string[] = [];
-  
-  for (let i = 0; i < numTopics; i++) {
-    const topic = allTopics[Math.floor(Math.random() * allTopics.length)];
-    if (!topics.includes(topic)) {
-      topics.push(topic);
-    }
-  }
-  
-  return topics;
-};
-
-const generateEntities = (): Entity[] => {
-  return [
-    {
-      text: 'Your Brand',
-      type: 'brand',
-      sentiment: -0.5 + Math.random()
-    },
-    {
-      text: 'Product X',
-      type: 'product',
-      sentiment: -0.5 + Math.random()
-    }
-  ];
-};
-
-const generateMockData = (): SentimentData[] => {
-  const platforms = ['Twitter', 'Instagram', 'LinkedIn', 'Facebook'];
-  const sentiments: ('positive' | 'negative' | 'neutral')[] = ['positive', 'negative', 'neutral'];
-  
-  return Array.from({ length: 50 }, (_, i) => {
-    const sentiment = sentiments[Math.floor(Math.random() * 3)];
-    const score = sentiment === 'positive' ? 
-      0.3 + Math.random() * 0.7 :
-      sentiment === 'negative' ?
-      -0.3 - Math.random() * 0.7 :
-      -0.2 + Math.random() * 0.4;
-    
-    return {
-      id: `sent-${i}`,
-      content: generateSampleContent(sentiment),
-      platform: platforms[Math.floor(Math.random() * platforms.length)],
-      author: `User${Math.floor(Math.random() * 100)}`,
-      timestamp: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000),
-      sentiment,
-      score,
-      confidence: 70 + Math.random() * 30,
-      emotions: generateEmotions(sentiment),
-      topics: generateTopics(),
-      entities: generateEntities(),
-      engagement: {
-        likes: Math.floor(Math.random() * 1000),
-        comments: Math.floor(Math.random() * 100),
-        shares: Math.floor(Math.random() * 50),
-        reach: Math.floor(Math.random() * 10000)
-      },
-      actionable: Math.random() > 0.7,
-      priority: ['low', 'medium', 'high', 'urgent'][Math.floor(Math.random() * 4)] as any
-    };
-  });
-};
-
-const generateTrends = (): SentimentTrend[] => {
-  return Array.from({ length: 7 }, (_, i) => ({
-    date: new Date(Date.now() - (6 - i) * 24 * 60 * 60 * 1000),
-    positive: 30 + Math.random() * 40,
-    negative: 10 + Math.random() * 30,
-    neutral: 20 + Math.random() * 30,
-    volume: 100 + Math.floor(Math.random() * 200)
-  }));
-};
-
-const generateTopicSentiments = (): TopicSentiment[] => {
-  const topics = [
-    'product quality', 'customer service', 'pricing', 'shipping',
-    'user experience', 'features', 'performance', 'design'
-  ];
-  
-  return topics.map(topic => ({
-    topic,
-    mentions: Math.floor(Math.random() * 100) + 20,
-    sentiment: -0.5 + Math.random(),
-    trend: ['rising', 'falling', 'stable'][Math.floor(Math.random() * 3)] as any
-  }));
-};
-
-const extractKeyPhrases = (text: string): string[] => {
-  const words = text.split(' ');
-  const phrases: string[] = [];
-  
-  for (let i = 0; i < words.length - 1; i++) {
-    if (Math.random() > 0.7) {
-      phrases.push(`${words[i]} ${words[i + 1]}`);
-    }
-  }
-  
-  return phrases.slice(0, 3);
-};
+interface SingleAnalysisResponse {
+  analysis: {
+    sentiment: 'positive' | 'neutral' | 'negative' | 'mixed';
+    score: number;
+    confidence: number;
+    emotions: Array<{ emotion: string; intensity: number }>;
+    toneIndicators: string[];
+    keyPhrases: string[];
+  };
+}
 
 export function SentimentAnalysis() {
   const [sentimentData, setSentimentData] = useState<SentimentData[]>([]);
@@ -278,72 +177,152 @@ export function SentimentAnalysis() {
   });
 
   const calculateOverallSentiment = useCallback((data: SentimentData[]) => {
+    if (data.length === 0) return;
+
     const positive = data.filter(d => d.sentiment === 'positive').length;
     const negative = data.filter(d => d.sentiment === 'negative').length;
     const neutral = data.filter(d => d.sentiment === 'neutral').length;
     const total = data.length;
-    
+
     const avgScore = data.reduce((sum, d) => sum + d.score, 0) / total;
-    
+
     setOverallSentiment({
       score: avgScore,
       positive: (positive / total) * 100,
       negative: (negative / total) * 100,
       neutral: (neutral / total) * 100,
-      trend: Math.random() * 20 - 10 // -10 to +10
+      trend: 0 // Trend is calculated from API data
     });
   }, []);
   
-  const loadSentimentData = useCallback(() => {
+  const loadSentimentData = useCallback(async () => {
     setLoading(true);
-    
-    // Simulate API call
-    setTimeout(() => {
-      const mockData = generateMockData();
-      setSentimentData(mockData);
-      setTrends(generateTrends());
-      setTopicSentiments(generateTopicSentiments());
-      calculateOverallSentiment(mockData);
+
+    try {
+      // Fetch analytics trends and past analyses in parallel
+      const [analyticsRes, analysesRes] = await Promise.all([
+        fetch(`/api/analytics/sentiment?days=${selectedTimeRange === '7d' ? 7 : selectedTimeRange === '30d' ? 30 : 90}${selectedPlatform !== 'all' ? `&platform=${selectedPlatform}` : ''}`),
+        fetch(`/api/ai-content/sentiment?limit=50${selectedPlatform !== 'all' ? `&platform=${selectedPlatform}` : ''}`)
+      ]);
+
+      if (!analyticsRes.ok || !analysesRes.ok) {
+        throw new Error('Failed to fetch sentiment data');
+      }
+
+      const analyticsData: AnalyticsResponse = await analyticsRes.json();
+      const analysesData: AnalysisResponse = await analysesRes.json();
+
+      // Transform API analyses to component's SentimentData format
+      const transformedData: SentimentData[] = analysesData.analyses.map((analysis, i) => ({
+        id: analysis.id || `sent-${i}`,
+        content: '', // API doesn't return content for privacy
+        platform: analysis.platform || 'Unknown',
+        author: 'User',
+        timestamp: new Date(analysis.analyzedAt),
+        sentiment: analysis.sentiment === 'mixed' ? 'neutral' : analysis.sentiment,
+        score: analysis.score / 100, // API returns -100 to 100, component uses -1 to 1
+        confidence: analysis.confidence * 100, // API returns 0-1, component uses 0-100
+        emotions: analysis.emotions.map(e => ({
+          emotion: e.emotion as EmotionScore['emotion'],
+          score: e.intensity
+        })),
+        topics: [],
+        entities: [],
+        engagement: { likes: 0, comments: 0, shares: 0, reach: 0 },
+        actionable: false,
+        priority: 'low'
+      }));
+
+      setSentimentData(transformedData);
+
+      // Transform trends
+      const transformedTrends: SentimentTrend[] = analyticsData.trends.map(t => ({
+        date: new Date(t.date),
+        positive: t.positive,
+        negative: t.negative,
+        neutral: t.neutral,
+        volume: t.count
+      }));
+      setTrends(transformedTrends);
+
+      // Build topic sentiments from top emotions
+      const topicSentimentData: TopicSentiment[] = analyticsData.topEmotions.map(e => ({
+        topic: e.emotion,
+        mentions: e.count,
+        sentiment: e.percentage / 100 - 0.5, // Convert to -0.5 to 0.5 range
+        trend: 'stable' as const
+      }));
+      setTopicSentiments(topicSentimentData);
+
+      // Set overall sentiment
+      if (analyticsData.overall.total > 0) {
+        setOverallSentiment({
+          score: analyticsData.overall.avgScore / 100,
+          positive: (analyticsData.overall.positive / analyticsData.overall.total) * 100,
+          negative: (analyticsData.overall.negative / analyticsData.overall.total) * 100,
+          neutral: (analyticsData.overall.neutral / analyticsData.overall.total) * 100,
+          trend: 0
+        });
+      }
+    } catch (error) {
+      notify.error('Failed to load sentiment data');
+      // Set empty states
+      setSentimentData([]);
+      setTrends([]);
+      setTopicSentiments([]);
+    } finally {
       setLoading(false);
-    }, 1000);
-  }, [calculateOverallSentiment]);
+    }
+  }, [selectedPlatform, selectedTimeRange]);
 
   useEffect(() => {
     loadSentimentData();
   }, [loadSentimentData, selectedPlatform, selectedTimeRange]);
 
-  const analyzeSentiment = () => {
+  const analyzeSentiment = async () => {
     if (!testText.trim()) {
       notify.error('Please enter text to analyze');
       return;
     }
-    
+
     setLoading(true);
-    
-    // Simulate AI analysis
-    setTimeout(() => {
-      const sentiment = testText.toLowerCase().includes('good') || 
-                       testText.toLowerCase().includes('great') ||
-                       testText.toLowerCase().includes('love') ? 'positive' :
-                       testText.toLowerCase().includes('bad') ||
-                       testText.toLowerCase().includes('terrible') ||
-                       testText.toLowerCase().includes('hate') ? 'negative' : 'neutral';
-      
-      const score = sentiment === 'positive' ? 0.7 :
-                   sentiment === 'negative' ? -0.7 : 0;
-      
-      setTestResult({
-        sentiment,
-        score,
-        confidence: 85 + Math.random() * 15,
-        emotions: generateEmotions(sentiment),
-        topics: generateTopics(),
-        keyPhrases: extractKeyPhrases(testText)
+
+    try {
+      const response = await fetch('/api/ai-content/sentiment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          text: testText,
+          contentType: 'text',
+          predictEngagement: false
+        })
       });
-      
-      setLoading(false);
+
+      if (!response.ok) {
+        throw new Error('Failed to analyze sentiment');
+      }
+
+      const data: SingleAnalysisResponse = await response.json();
+      const analysis = data.analysis;
+
+      setTestResult({
+        sentiment: analysis.sentiment === 'mixed' ? 'neutral' : analysis.sentiment,
+        score: analysis.score / 100, // API returns -100 to 100
+        confidence: analysis.confidence * 100, // API returns 0-1
+        emotions: analysis.emotions.map(e => ({
+          emotion: e.emotion,
+          score: e.intensity
+        })),
+        topics: analysis.toneIndicators || [],
+        keyPhrases: analysis.keyPhrases || []
+      });
+
       notify.success('Sentiment analysis complete!');
-    }, 1000);
+    } catch (error) {
+      notify.error('Failed to analyze sentiment. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const getSentimentIcon = (sentiment: string) => {
