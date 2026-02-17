@@ -4,6 +4,8 @@
  */
 
 import { EventEmitter } from 'events';
+import { prisma } from '@/lib/prisma';
+import { createPlatformService, SupportedPlatform, isPlatformSupported } from '@/lib/social';
 
 export interface PlatformOptimizationRequest {
   platform: string;
@@ -142,10 +144,186 @@ export class PlatformSpecialistCoordinator extends EventEmitter {
   private loadAlgorithmKnowledge(): void {
     // Load knowledge about each platform's algorithm
     const platforms = ['instagram', 'tiktok', 'youtube', 'linkedin', 'twitter', 'facebook', 'pinterest', 'reddit'];
-    
+
     platforms.forEach(platform => {
       this.algorithmKnowledge.set(platform, this.getAlgorithmKnowledge(platform));
     });
+  }
+
+  /**
+   * Get historical metrics for a user on a specific platform
+   * Used to base predictions on real performance data
+   */
+  private async getHistoricalMetrics(userId: string, platform: string): Promise<{
+    avgReach: number;
+    avgEngagement: number;
+    avgConversions: number;
+    avgROI: number;
+    totalPosts: number;
+    topHashtags: string[];
+  }> {
+    try {
+      // Query recent platform metrics via PlatformPost -> PlatformMetrics
+      const recentMetrics = await prisma.platformMetrics.findMany({
+        where: {
+          post: {
+            connection: {
+              platform,
+              userId,
+            },
+          },
+        },
+        orderBy: { recordedAt: 'desc' },
+        take: 30,
+        include: {
+          post: {
+            select: {
+              content: true,
+              metadata: true,
+            },
+          },
+        },
+      });
+
+      if (recentMetrics.length === 0) {
+        // No historical data - return defaults
+        return {
+          avgReach: 1000,
+          avgEngagement: 50,
+          avgConversions: 5,
+          avgROI: 1.5,
+          totalPosts: 0,
+          topHashtags: [],
+        };
+      }
+
+      // Calculate averages from real data
+      const avgReach = recentMetrics.reduce((sum, m) => sum + m.reach, 0) / recentMetrics.length;
+      const avgEngagement = recentMetrics.reduce((sum, m) => sum + (m.likes + m.comments + m.shares), 0) / recentMetrics.length;
+
+      // Extract hashtags from post metadata
+      const hashtagCounts = new Map<string, number>();
+      for (const metric of recentMetrics) {
+        const metadata = metric.post.metadata as { hashtags?: string[] } | null;
+        if (metadata?.hashtags) {
+          for (const tag of metadata.hashtags) {
+            hashtagCounts.set(tag, (hashtagCounts.get(tag) || 0) + 1);
+          }
+        }
+      }
+
+      // Sort hashtags by frequency
+      const topHashtags = Array.from(hashtagCounts.entries())
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 10)
+        .map(([tag]) => tag);
+
+      // Query campaign data for ROI calculations
+      const campaigns = await prisma.campaign.findMany({
+        where: {
+          userId,
+          platform,
+          status: 'completed',
+        },
+        select: {
+          analytics: true,
+        },
+        take: 10,
+        orderBy: { updatedAt: 'desc' },
+      });
+
+      let avgConversions = 5;
+      let avgROI = 1.5;
+
+      if (campaigns.length > 0) {
+        const analytics = campaigns
+          .map(c => c.analytics as { conversions?: number; roi?: number } | null)
+          .filter(Boolean);
+
+        if (analytics.length > 0) {
+          avgConversions = analytics.reduce((sum, a) => sum + (a?.conversions || 0), 0) / analytics.length;
+          avgROI = analytics.reduce((sum, a) => sum + (a?.roi || 1), 0) / analytics.length;
+        }
+      }
+
+      return {
+        avgReach,
+        avgEngagement,
+        avgConversions,
+        avgROI,
+        totalPosts: recentMetrics.length,
+        topHashtags,
+      };
+    } catch (error) {
+      console.error('Error fetching historical metrics:', error);
+      // Return defaults on error
+      return {
+        avgReach: 1000,
+        avgEngagement: 50,
+        avgConversions: 5,
+        avgROI: 1.5,
+        totalPosts: 0,
+        topHashtags: [],
+      };
+    }
+  }
+
+  /**
+   * Get trending hashtags from platform APIs where available
+   */
+  private async fetchTrendingHashtags(platform: string, userId?: string): Promise<string[]> {
+    // For platforms with trending APIs, we could fetch real trends
+    // For now, query what's performing well in our own data
+    try {
+      const recentPosts = await prisma.platformPost.findMany({
+        where: {
+          connection: {
+            platform,
+          },
+        },
+        orderBy: { createdAt: 'desc' },
+        take: 100,
+        include: {
+          metrics: {
+            orderBy: { recordedAt: 'desc' },
+            take: 1,
+          },
+        },
+      });
+
+      // Extract hashtags from high-performing posts
+      const hashtagPerformance = new Map<string, { count: number; totalEngagement: number }>();
+
+      for (const post of recentPosts) {
+        const metadata = post.metadata as { hashtags?: string[] } | null;
+        const latestMetrics = post.metrics[0];
+
+        if (metadata?.hashtags && latestMetrics) {
+          const engagement = latestMetrics.likes + latestMetrics.comments + latestMetrics.shares;
+
+          for (const tag of metadata.hashtags) {
+            const existing = hashtagPerformance.get(tag) || { count: 0, totalEngagement: 0 };
+            hashtagPerformance.set(tag, {
+              count: existing.count + 1,
+              totalEngagement: existing.totalEngagement + engagement,
+            });
+          }
+        }
+      }
+
+      // Sort by average engagement
+      return Array.from(hashtagPerformance.entries())
+        .map(([tag, stats]) => ({
+          tag,
+          avgEngagement: stats.totalEngagement / stats.count,
+        }))
+        .sort((a, b) => b.avgEngagement - a.avgEngagement)
+        .slice(0, 10)
+        .map(h => h.tag);
+    } catch (error) {
+      console.error('Error fetching trending hashtags:', error);
+      return [];
+    }
   }
 
   private getAlgorithmKnowledge(platform: string): AlgorithmInsight {
@@ -642,25 +820,159 @@ export class PlatformSpecialistCoordinator extends EventEmitter {
     return coordinated;
   }
 
-  // Helper methods
+  // Helper methods - now using real data where available
   private scoreContentForFactor(content: any, factor: any): number {
-    // Implement scoring logic
-    return Math.random() * 0.5 + 0.5; // Placeholder
+    // Score based on content characteristics
+    const factorName = factor.factor?.toLowerCase() || '';
+
+    // Analyze content properties
+    const contentText = typeof content === 'string' ? content : (content?.text || content?.content || '');
+    const hasMedia = content?.mediaUrls?.length > 0 || content?.media?.length > 0;
+    const hasHashtags = (content?.hashtags?.length || 0) > 0;
+
+    let score = 0.6; // Base score
+
+    switch (factorName) {
+      case 'relationship':
+      case 'relevance':
+        // Higher if personalized content
+        if (contentText.includes('@') || content?.mentions?.length > 0) {
+          score += 0.2;
+        }
+        break;
+
+      case 'interest':
+      case 'engagement':
+        // Higher with engaging elements
+        if (contentText.includes('?')) score += 0.1; // Questions
+        if (hasMedia) score += 0.15;
+        break;
+
+      case 'timeliness':
+      case 'recency':
+      case 'freshness':
+        // Always fresh when posting
+        score = 0.9;
+        break;
+
+      case 'media':
+      case 'content_type':
+        score = hasMedia ? 0.9 : 0.5;
+        break;
+
+      case 'completion_rate':
+      case 'watch_time':
+        // Video content factors - estimate based on length
+        if (content?.duration) {
+          score = content.duration < 60 ? 0.8 : 0.6; // Shorter videos have higher completion
+        }
+        break;
+
+      default:
+        // Use content quality heuristics
+        if (contentText.length > 50 && contentText.length < 300) score += 0.1;
+        if (hasHashtags) score += 0.05;
+        break;
+    }
+
+    return Math.min(1, Math.max(0, score));
   }
 
+  // Cache for trending hashtags
+  private trendingHashtagsCache: Map<string, { hashtags: string[]; fetchedAt: number }> = new Map();
+  private HASHTAG_CACHE_TTL = 3600000; // 1 hour
+
   private getTrendingHashtags(platform: string, count: number): string[] {
-    // Get trending hashtags for platform
-    return Array(count).fill(0).map((_, i) => `#trending${i + 1}`);
+    // Check cache first
+    const cached = this.trendingHashtagsCache.get(platform);
+    if (cached && Date.now() - cached.fetchedAt < this.HASHTAG_CACHE_TTL) {
+      return cached.hashtags.slice(0, count);
+    }
+
+    // Fetch async and return cached/empty for now
+    this.fetchTrendingHashtags(platform).then(hashtags => {
+      this.trendingHashtagsCache.set(platform, {
+        hashtags,
+        fetchedAt: Date.now(),
+      });
+    });
+
+    // Return cached if available, otherwise platform-specific defaults
+    if (cached) {
+      return cached.hashtags.slice(0, count);
+    }
+
+    // Platform-specific evergreen hashtags as fallback
+    const defaultHashtags: Record<string, string[]> = {
+      instagram: ['#instagood', '#photooftheday', '#trending', '#viral', '#explore'],
+      tiktok: ['#fyp', '#foryoupage', '#viral', '#trending', '#tiktok'],
+      twitter: ['#trending', '#viral', '#news', '#today', '#update'],
+      linkedin: ['#business', '#leadership', '#innovation', '#growth', '#networking'],
+      youtube: ['#youtube', '#video', '#subscribe', '#trending', '#viral'],
+      pinterest: ['#pinterestinspired', '#trending', '#aesthetic', '#ideas', '#diy'],
+      reddit: [], // Reddit doesn't use hashtags
+      facebook: ['#facebook', '#trending', '#viral', '#share', '#community'],
+    };
+
+    return (defaultHashtags[platform] || []).slice(0, count);
   }
 
   private getRelevantHashtags(content: any, count: number): string[] {
-    // Extract relevant hashtags from content
-    return Array(count).fill(0).map((_, i) => `#relevant${i + 1}`);
+    // Extract relevant hashtags from content text and keywords
+    const hashtags: string[] = [];
+    const contentText = typeof content === 'string' ? content : (content?.text || content?.content || '');
+
+    // Extract existing hashtags
+    const existingMatches = contentText.match(/#\w+/g) || [];
+    hashtags.push(...existingMatches);
+
+    // Extract keywords and convert to hashtags
+    const keywords = content?.keywords || [];
+    for (const keyword of keywords) {
+      if (typeof keyword === 'string') {
+        hashtags.push(`#${keyword.replace(/\s+/g, '')}`);
+      }
+    }
+
+    // Use category if available
+    if (content?.category) {
+      hashtags.push(`#${content.category.replace(/\s+/g, '')}`);
+    }
+
+    // Deduplicate and limit
+    return [...new Set(hashtags)].slice(0, count);
   }
 
   private getNicheHashtags(content: any, platform: string, count: number): string[] {
-    // Generate niche hashtags
-    return Array(count).fill(0).map((_, i) => `#niche${i + 1}`);
+    // Generate niche hashtags based on content specifics
+    const hashtags: string[] = [];
+
+    // Use target audience if available
+    if (content?.targetAudience?.interests) {
+      for (const interest of content.targetAudience.interests.slice(0, count)) {
+        hashtags.push(`#${interest.replace(/\s+/g, '')}`);
+      }
+    }
+
+    // Use industry if available
+    if (content?.industry) {
+      hashtags.push(`#${content.industry.replace(/\s+/g, '')}`);
+    }
+
+    // Combine with platform-specific niche patterns
+    const nichePatterns: Record<string, string[]> = {
+      instagram: ['community', 'love', 'life'],
+      tiktok: ['trend', 'challenge', 'learn'],
+      linkedin: ['tips', 'insights', 'career'],
+      twitter: ['thread', 'discussion', 'opinion'],
+    };
+
+    const patterns = nichePatterns[platform] || [];
+    for (const pattern of patterns.slice(0, count - hashtags.length)) {
+      hashtags.push(`#${pattern}`);
+    }
+
+    return hashtags.slice(0, count);
   }
 
   private adjustForAudience(bestTime: any, audience: any): any {
@@ -714,23 +1026,130 @@ export class PlatformSpecialistCoordinator extends EventEmitter {
   }
 
   private scoreEmotionalImpact(content: any): number {
-    return Math.random() * 0.8 + 0.2;
+    const contentText = typeof content === 'string' ? content : (content?.text || content?.content || '');
+
+    let score = 0.5;
+
+    // Emotional triggers
+    const emotionalWords = ['amazing', 'incredible', 'love', 'hate', 'shocking', 'breaking', 'urgent', 'exclusive'];
+    const emotionalMatches = emotionalWords.filter(word =>
+      contentText.toLowerCase().includes(word)
+    );
+    score += emotionalMatches.length * 0.1;
+
+    // Exclamation points indicate emotion
+    const exclamations = (contentText.match(/!/g) || []).length;
+    score += Math.min(exclamations * 0.05, 0.15);
+
+    // Questions engage emotions
+    if (contentText.includes('?')) score += 0.1;
+
+    // Emojis indicate emotional content
+    const emojiPattern = /[\u{1F600}-\u{1F64F}]|[\u{1F300}-\u{1F5FF}]|[\u{1F680}-\u{1F6FF}]|[\u{1F1E0}-\u{1F1FF}]/gu;
+    const emojiCount = (contentText.match(emojiPattern) || []).length;
+    score += Math.min(emojiCount * 0.05, 0.2);
+
+    return Math.min(1, Math.max(0.2, score));
   }
 
   private scoreShareability(content: any): number {
-    return Math.random() * 0.7 + 0.3;
+    const contentText = typeof content === 'string' ? content : (content?.text || content?.content || '');
+    const hasMedia = content?.mediaUrls?.length > 0 || content?.media?.length > 0;
+
+    let score = 0.4;
+
+    // Media increases shareability
+    if (hasMedia) score += 0.2;
+
+    // Lists and tips are highly shareable
+    if (contentText.match(/\d+\.\s|•|→|-\s/)) score += 0.15;
+
+    // Relatable content
+    const relatablePatterns = ['you', 'your', 'we', 'our', 'everyone', 'anyone'];
+    if (relatablePatterns.some(p => contentText.toLowerCase().includes(p))) {
+      score += 0.1;
+    }
+
+    // Actionable content
+    const actionWords = ['how to', 'tips', 'guide', 'steps', 'learn', 'discover'];
+    if (actionWords.some(w => contentText.toLowerCase().includes(w))) {
+      score += 0.15;
+    }
+
+    return Math.min(1, Math.max(0.3, score));
   }
 
   private scoreTimingRelevance(content: any): number {
-    return Math.random() * 0.6 + 0.4;
+    const contentText = typeof content === 'string' ? content : (content?.text || content?.content || '');
+
+    let score = 0.5;
+
+    // Check for time-sensitive keywords
+    const timeSensitive = ['today', 'now', 'breaking', 'just', 'new', 'latest', 'update'];
+    if (timeSensitive.some(w => contentText.toLowerCase().includes(w))) {
+      score += 0.2;
+    }
+
+    // Seasonal references
+    const months = ['january', 'february', 'march', 'april', 'may', 'june',
+      'july', 'august', 'september', 'october', 'november', 'december'];
+    const currentMonth = months[new Date().getMonth()];
+    if (contentText.toLowerCase().includes(currentMonth)) {
+      score += 0.15;
+    }
+
+    // Year references
+    const currentYear = new Date().getFullYear().toString();
+    if (contentText.includes(currentYear)) {
+      score += 0.1;
+    }
+
+    return Math.min(1, Math.max(0.4, score));
   }
 
   private scoreUniqueness(content: any): number {
-    return Math.random() * 0.8 + 0.2;
+    const contentText = typeof content === 'string' ? content : (content?.text || content?.content || '');
+
+    let score = 0.5;
+
+    // Longer, more detailed content tends to be more unique
+    if (contentText.length > 200) score += 0.15;
+    if (contentText.length > 500) score += 0.1;
+
+    // Original phrases (not common cliches)
+    const cliches = ['game changer', 'think outside the box', 'at the end of the day',
+      'it is what it is', 'paradigm shift'];
+    const hasCliche = cliches.some(c => contentText.toLowerCase().includes(c));
+    if (!hasCliche) score += 0.1;
+
+    // Has specific data or statistics
+    if (contentText.match(/\d+%|\$\d+|\d+\+/)) {
+      score += 0.15;
+    }
+
+    return Math.min(1, Math.max(0.2, score));
   }
 
   private scoreTrendAlignment(content: any, platform: string): number {
-    return Math.random() * 0.7 + 0.3;
+    const contentText = typeof content === 'string' ? content : (content?.text || content?.content || '');
+    const contentHashtags = content?.hashtags || [];
+
+    let score = 0.4;
+
+    // Check against trending hashtags
+    const trendingTags = this.getTrendingHashtags(platform, 10);
+    const matchingTrends = contentHashtags.filter((tag: string) =>
+      trendingTags.some(t => t.toLowerCase() === tag.toLowerCase())
+    );
+    score += matchingTrends.length * 0.1;
+
+    // Check for trending topics in content
+    const trendingTopics = ['ai', 'sustainability', 'remote work', 'crypto', 'wellness'];
+    if (trendingTopics.some(t => contentText.toLowerCase().includes(t))) {
+      score += 0.15;
+    }
+
+    return Math.min(1, Math.max(0.3, score));
   }
 
   private getViralityRecommendations(factors: any): string[] {
@@ -751,23 +1170,171 @@ export class PlatformSpecialistCoordinator extends EventEmitter {
 
   private calculateConsistencyScore(versions: Record<string, any>): number {
     // Calculate how consistent the message is across platforms
-    return 85; // Placeholder
+    const platformKeys = Object.keys(versions);
+    if (platformKeys.length <= 1) return 100;
+
+    let totalScore = 0;
+    let comparisons = 0;
+
+    // Compare each pair of platforms
+    for (let i = 0; i < platformKeys.length; i++) {
+      for (let j = i + 1; j < platformKeys.length; j++) {
+        const v1 = versions[platformKeys[i]];
+        const v2 = versions[platformKeys[j]];
+
+        // Compare content similarity
+        const text1 = v1?.text || v1?.content || '';
+        const text2 = v2?.text || v2?.content || '';
+
+        // Simple word overlap score
+        const words1 = new Set(text1.toLowerCase().split(/\s+/).filter((w: string) => w.length > 3));
+        const words2 = new Set(text2.toLowerCase().split(/\s+/).filter((w: string) => w.length > 3));
+
+        if (words1.size > 0 && words2.size > 0) {
+          const intersection = [...words1].filter(w => words2.has(w)).length;
+          const union = new Set([...words1, ...words2]).size;
+          const similarity = (intersection / union) * 100;
+          totalScore += similarity;
+          comparisons++;
+        }
+      }
+    }
+
+    return comparisons > 0 ? Math.round(totalScore / comparisons) : 85;
+  }
+
+  // Store for cached historical data
+  private historicalDataCache: Map<string, { data: any; fetchedAt: number }> = new Map();
+  private HISTORICAL_CACHE_TTL = 300000; // 5 minutes
+
+  private async getOrFetchHistoricalData(userId: string, platform: string): Promise<any> {
+    const cacheKey = `${userId}:${platform}`;
+    const cached = this.historicalDataCache.get(cacheKey);
+
+    if (cached && Date.now() - cached.fetchedAt < this.HISTORICAL_CACHE_TTL) {
+      return cached.data;
+    }
+
+    const data = await this.getHistoricalMetrics(userId, platform);
+    this.historicalDataCache.set(cacheKey, { data, fetchedAt: Date.now() });
+    return data;
   }
 
   private predictReach(request: any, analysis: any): number {
-    return Math.floor(Math.random() * 100000 + 10000);
+    // Base reach on content quality score and platform averages
+    const qualityScore = analysis?.score || 0.5;
+    const platformMultiplier = this.getPlatformReachMultiplier(request.platform);
+
+    // If we have historical data in request, use it
+    if (request.historicalMetrics?.avgReach) {
+      const base = request.historicalMetrics.avgReach;
+      // Adjust by quality score - high quality can double, low quality halves
+      const adjustment = 0.5 + qualityScore;
+      return Math.floor(base * adjustment * platformMultiplier);
+    }
+
+    // Default estimates based on platform
+    const baseReach: Record<string, number> = {
+      instagram: 5000,
+      tiktok: 15000,
+      youtube: 2000,
+      linkedin: 1000,
+      twitter: 3000,
+      facebook: 2500,
+      pinterest: 4000,
+      reddit: 500,
+    };
+
+    const base = baseReach[request.platform] || 2000;
+    const adjustment = 0.5 + qualityScore;
+    return Math.floor(base * adjustment);
   }
 
   private predictEngagement(request: any, optimizations: any): number {
-    return Math.floor(Math.random() * 10000 + 1000);
+    // Engagement is typically 2-5% of reach for good content
+    const predictedReach = this.predictReach(request, optimizations);
+    const qualityScore = optimizations?.score || 0.5;
+
+    // Base engagement rate varies by platform
+    const engagementRates: Record<string, number> = {
+      instagram: 0.04,
+      tiktok: 0.06,
+      youtube: 0.03,
+      linkedin: 0.02,
+      twitter: 0.015,
+      facebook: 0.025,
+      pinterest: 0.02,
+      reddit: 0.08,
+    };
+
+    const baseRate = engagementRates[request.platform] || 0.03;
+
+    // If we have historical data, blend with actual performance
+    if (request.historicalMetrics?.avgEngagement && request.historicalMetrics?.avgReach) {
+      const historicalRate = request.historicalMetrics.avgEngagement / request.historicalMetrics.avgReach;
+      const blendedRate = (baseRate + historicalRate) / 2;
+      return Math.floor(predictedReach * blendedRate * (0.8 + qualityScore * 0.4));
+    }
+
+    return Math.floor(predictedReach * baseRate * (0.8 + qualityScore * 0.4));
   }
 
   private predictConversions(request: any): number {
-    return Math.floor(Math.random() * 1000 + 100);
+    // Conversions depend on CTA strength and audience targeting
+    const engagement = this.predictEngagement(request, {});
+
+    // Base conversion rate from engagement
+    let conversionRate = 0.01; // 1% of engaged users
+
+    // Adjust based on objectives
+    if (request.objectives?.includes('sales') || request.objectives?.includes('conversions')) {
+      conversionRate = 0.02;
+    }
+
+    // If we have historical conversion data
+    if (request.historicalMetrics?.avgConversions && request.historicalMetrics?.avgEngagement) {
+      const historicalRate = request.historicalMetrics.avgConversions / request.historicalMetrics.avgEngagement;
+      conversionRate = (conversionRate + historicalRate) / 2;
+    }
+
+    return Math.max(1, Math.floor(engagement * conversionRate));
   }
 
   private predictROI(request: any): number {
-    return Math.random() * 5 + 1;
+    // ROI based on historical performance and campaign budget
+    let baseROI = 1.5; // 150% return baseline
+
+    // If we have historical ROI data
+    if (request.historicalMetrics?.avgROI) {
+      baseROI = request.historicalMetrics.avgROI;
+    }
+
+    // Adjust based on budget (smaller budgets often have higher percentage ROI)
+    if (request.budget) {
+      if (request.budget < 500) baseROI *= 1.2;
+      else if (request.budget > 5000) baseROI *= 0.9;
+    }
+
+    // Content quality affects ROI
+    const qualityBonus = request.optimizations?.score || 0.5;
+    baseROI *= (0.8 + qualityBonus * 0.4);
+
+    return Math.round(baseROI * 100) / 100; // Round to 2 decimal places
+  }
+
+  private getPlatformReachMultiplier(platform: string): number {
+    // Platform-specific reach multipliers based on algorithm favorability
+    const multipliers: Record<string, number> = {
+      tiktok: 1.5, // High organic reach
+      instagram: 1.0,
+      youtube: 0.8, // Slower but more sustained
+      linkedin: 0.7,
+      twitter: 1.1,
+      facebook: 0.6, // Pay to play
+      pinterest: 0.9,
+      reddit: 0.5, // Community dependent
+    };
+    return multipliers[platform] || 1.0;
   }
 
   private identifyRisks(content: any, platform: string): string[] {
