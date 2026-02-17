@@ -2,11 +2,11 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { 
-  Search, 
-  FileText, 
-  BarChart3, 
-  Calendar, 
+import {
+  Search,
+  FileText,
+  BarChart3,
+  Calendar,
   Settings,
   User,
   Plus,
@@ -15,7 +15,14 @@ import {
   LogOut,
   Home,
   Command,
-  ArrowRight
+  ArrowRight,
+  File,
+  Beaker,
+  CreditCard,
+  Users,
+  Target,
+  Brain,
+  HelpCircle,
 } from '@/components/icons';
 import { notify } from '@/lib/notifications';
 
@@ -71,7 +78,52 @@ export function CommandPalette() {
       category: 'navigation',
       keywords: ['schedule', 'calendar', 'plan']
     },
-    
+    {
+      id: 'reports',
+      title: 'Reports',
+      description: 'Generate performance reports',
+      icon: File,
+      action: () => router.push('/dashboard/reports'),
+      category: 'navigation',
+      keywords: ['reports', 'generate', 'export', 'pdf']
+    },
+    {
+      id: 'experiments',
+      title: 'Experiments',
+      description: 'A/B testing and optimization',
+      icon: Beaker,
+      action: () => router.push('/dashboard/experiments'),
+      category: 'navigation',
+      keywords: ['experiments', 'ab testing', 'test', 'variants']
+    },
+    {
+      id: 'personas',
+      title: 'Personas',
+      description: 'AI brand voice personas',
+      icon: Brain,
+      action: () => router.push('/dashboard/personas'),
+      category: 'navigation',
+      keywords: ['personas', 'brand voice', 'ai']
+    },
+    {
+      id: 'competitors',
+      title: 'Competitors',
+      description: 'Track competitor activity',
+      icon: Target,
+      action: () => router.push('/dashboard/competitors'),
+      category: 'navigation',
+      keywords: ['competitors', 'competition', 'tracking']
+    },
+    {
+      id: 'team',
+      title: 'Team',
+      description: 'Manage team members',
+      icon: Users,
+      action: () => router.push('/dashboard/team'),
+      category: 'navigation',
+      keywords: ['team', 'members', 'collaboration']
+    },
+
     // Actions
     {
       id: 'new-content',
@@ -129,6 +181,15 @@ export function CommandPalette() {
       keywords: ['profile', 'account', 'user']
     },
     {
+      id: 'billing',
+      title: 'Billing',
+      description: 'Manage subscription and payments',
+      icon: CreditCard,
+      action: () => router.push('/dashboard/billing'),
+      category: 'settings',
+      keywords: ['billing', 'subscription', 'payment', 'invoice']
+    },
+    {
       id: 'logout',
       title: 'Sign Out',
       icon: LogOut,
@@ -139,6 +200,17 @@ export function CommandPalette() {
       },
       category: 'settings',
       keywords: ['logout', 'signout', 'exit']
+    },
+
+    // Help
+    {
+      id: 'help',
+      title: 'Help & Support',
+      description: 'Get help and documentation',
+      icon: HelpCircle,
+      action: () => router.push('/dashboard/help'),
+      category: 'help',
+      keywords: ['help', 'support', 'docs', 'faq']
     },
   ];
   

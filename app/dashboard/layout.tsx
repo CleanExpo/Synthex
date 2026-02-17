@@ -34,7 +34,7 @@ import {
   Database,
   Map,
   Building,
-  FileSpreadsheet,
+  File,
   Beaker,
   CreditCard,
 } from '@/components/icons';
@@ -64,7 +64,7 @@ const sidebarItems = [
   { icon: Calendar, label: 'Schedule', href: '/dashboard/schedule' },
   { icon: ListTodo, label: 'Tasks', href: '/dashboard/tasks' },
   { icon: BarChart3, label: 'Analytics', href: '/dashboard/analytics' },
-  { icon: FileSpreadsheet, label: 'Reports', href: '/dashboard/reports' },
+  { icon: File, label: 'Reports', href: '/dashboard/reports' },
   { icon: Beaker, label: 'Experiments', href: '/dashboard/experiments' },
   { icon: Brain, label: 'Psychology', href: '/dashboard/psychology' },
   { icon: Target, label: 'Competitors', href: '/dashboard/competitors' },
