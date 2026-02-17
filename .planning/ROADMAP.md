@@ -64,13 +64,16 @@ Plans:
 - [x] 11-01: Remove legacy services and document src/ dependencies
 
 #### Phase 12: Deferred Cleanup — Components
-**Goal**: Wire 8 standalone feature components (SentimentAnalysis, AIHashtagGenerator, etc.) to real APIs, consolidate 3 rate limiter files
+**Goal**: Wire 8 standalone feature components (SentimentAnalysis, AIHashtagGenerator, etc.) to real APIs, consolidate 11 rate limiter files
 **Depends on**: Phase 11
 **Research**: Unlikely (internal wiring)
-**Plans**: TBD
+**Plans**: 4 plans
 
 Plans:
-- [ ] 12-01: TBD
+- [ ] 12-01: Wire AI content components (AIHashtagGenerator, SentimentAnalysis, AIWritingAssistant)
+- [ ] 12-02: Wire AI feature components (AIPersonaManager, AIABTesting)
+- [ ] 12-03: Wire analytics components (PredictiveAnalytics, CompetitorAnalysis, ROICalculator)
+- [ ] 12-04: Consolidate rate limiters into lib/rate-limit/
 
 #### Phase 13: Feature Completion — Models
 **Goal**: Add ContentLibrary Prisma model to schema, implement the 2 stub routes (api/library/content) that currently return 501
