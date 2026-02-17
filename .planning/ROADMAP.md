@@ -70,7 +70,7 @@ Plans:
 **Plans**: 4 plans
 
 Plans:
-- [ ] 12-01: Wire AI content components (AIHashtagGenerator, SentimentAnalysis, AIWritingAssistant)
+- [x] 12-01: Wire AI content components (AIHashtagGenerator, SentimentAnalysis, AIWritingAssistant)
 - [ ] 12-02: Wire AI feature components (AIPersonaManager, AIABTesting)
 - [ ] 12-03: Wire analytics components (PredictiveAnalytics, CompetitorAnalysis, ROICalculator)
 - [ ] 12-04: Consolidate rate limiters into lib/rate-limit/
@@ -145,7 +145,7 @@ Plans:
 | 9. Performance | v1.0 | 3/3 | Complete | 2026-02-17 |
 | 10. Final Audit | v1.0 | 2/2 | Complete | 2026-02-17 |
 | 11. Deferred — Legacy | v1.1 | 1/1 | Complete | 2026-02-17 |
-| 12. Deferred — Components | v1.1 | 0/? | Not started | - |
+| 12. Deferred — Components | v1.1 | 1/4 | In progress | - |
 | 13. Feature — Models | v1.1 | 0/? | Not started | - |
 | 14. Feature — Agents | v1.1 | 0/? | Not started | - |
 | 15. Google Console | v1.1 | 0/? | Not started | - |
