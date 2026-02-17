@@ -39,7 +39,7 @@ None (internal platform work)
 - [x] **Phase 21: Multi-format Generation** - Generate platform-specific content variations
 - [x] **Phase 22: Analytics Dashboard v2** - Enhanced visualizations, drill-downs, date ranges
 - [x] **Phase 23: Predictive Analytics** - ML engagement predictions, best-time-to-post
-- [ ] **Phase 24: Custom Reports Builder** - User-created report templates and exports
+- [x] **Phase 24: Custom Reports Builder** - User-created report templates and exports
 - [ ] **Phase 25: Third-party Integrations** - Canva, Buffer, Zapier webhook receivers
 - [ ] **Phase 26: Webhook System** - Outbound webhooks for external integrations
 - [ ] **Phase 27: Approval Workflows** - Content review chains with notifications
@@ -141,11 +141,11 @@ Plans:
 **Goal**: User-created report templates with drag-drop widgets and exports
 **Depends on**: Phase 23
 **Research**: Unlikely (internal patterns)
-**Plans**: 2 | Planned | 2026-02-18
+**Plans**: 2/2 | Complete | 2026-02-18
 
 Plans:
 - [x] 24-01: Hook + API Wiring (useReportTemplates, useReportExport hooks, refactor CustomReportBuilder to real APIs)
-- [ ] 24-02: Page Route + Navigation (builder page, sidebar, command palette, reports page CTA, human verify)
+- [x] 24-02: Page Route + Navigation (builder page, sidebar, command palette, reports page CTA)
 
 #### Phase 25: Third-party Integrations
 
@@ -226,7 +226,7 @@ Plans:
 | 21. Multi-format Generation | v1.2 | 2/2 | Complete | 2026-02-18 |
 | 22. Analytics Dashboard v2 | v1.2 | 2/2 | Complete | 2026-02-18 |
 | 23. Predictive Analytics | v1.2 | 2/2 | Complete | 2026-02-18 |
-| 24. Custom Reports Builder | v1.2 | 1/2 | In progress | - |
+| 24. Custom Reports Builder | v1.2 | 2/2 | Complete | 2026-02-18 |
 | 25. Third-party Integrations | v1.2 | 0/? | Not started | - |
 | 26. Webhook System | v1.2 | 0/? | Not started | - |
 | 27. Approval Workflows | v1.2 | 0/? | Not started | - |
