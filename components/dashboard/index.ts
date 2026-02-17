@@ -23,3 +23,6 @@ export {
   TeamTab,
   SchedulerTab,
 } from './tabs';
+
+// Error handling
+export { DashboardError } from './error-fallback';
