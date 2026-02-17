@@ -108,10 +108,11 @@ Plans:
 **Goal**: Generate platform-specific content variations from single input
 **Depends on**: Phase 20
 **Research**: Unlikely (platform patterns established in v1.0)
-**Plans**: TBD
+**Plans**: 2 | Planned | 2026-02-18
 
 Plans:
-- [ ] 21-01: TBD
+- [ ] 21-01: Multi-format Adapter Service & API (service, endpoint)
+- [ ] 21-02: Multi-format Generation UI (dashboard page, navigation, command palette)
 
 #### Phase 22: Analytics Dashboard v2
 
