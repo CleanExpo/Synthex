@@ -74,8 +74,8 @@ export async function GET(request: NextRequest) {
       whereClause.read = false;
     }
 
-    // Fetch notifications from database
-    const [notifications, total] = await Promise.all([
+    // Fetch notifications, total count, and unread count in parallel
+    const [notifications, total, unreadCount] = await Promise.all([
       prisma.notification.findMany({
         where: whereClause,
         orderBy: { createdAt: 'desc' },
@@ -91,16 +91,14 @@ export async function GET(request: NextRequest) {
           createdAt: true
         }
       }),
-      prisma.notification.count({ where: whereClause })
+      prisma.notification.count({ where: whereClause }),
+      prisma.notification.count({
+        where: {
+          userId: security.context.userId!,
+          read: false
+        }
+      })
     ]);
-
-    // Count unread
-    const unreadCount = await prisma.notification.count({
-      where: {
-        userId: security.context.userId,
-        read: false
-      }
-    });
 
     return APISecurityChecker.createSecureResponse(
       {

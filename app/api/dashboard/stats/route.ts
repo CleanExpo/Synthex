@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Fetch real metrics from database
+    // Fetch real metrics from database — all independent queries in parallel
     const [
       totalPostsCount,
       scheduledPostsCount,
@@ -42,6 +42,7 @@ export async function GET(request: NextRequest) {
       platformConnections,
       platformMetrics,
       recentPostsData,
+      activeCampaignsCount,
     ] = await Promise.all([
       // Total posts count
       prisma.post.count({
@@ -78,13 +79,16 @@ export async function GET(request: NextRequest) {
           })
         : Promise.resolve([]),
 
-      // Get platform metrics for reach/followers
+      // Get platform metrics for reach/followers (select only needed fields)
       prisma.platformMetrics.findMany({
         where: {
           recordedAt: { gte: startDate },
         },
         orderBy: { recordedAt: 'desc' },
         take: 100,
+        select: {
+          reach: true,
+        },
       }),
 
       // Recent posts for activity feed
@@ -102,6 +106,11 @@ export async function GET(request: NextRequest) {
           publishedAt: true,
         },
       }),
+
+      // Active campaigns count (was previously a sequential query)
+      userId
+        ? prisma.campaign.count({ where: { userId, status: 'active' } })
+        : Promise.resolve(0),
     ]);
 
     // Calculate engagement by day
@@ -186,7 +195,7 @@ export async function GET(request: NextRequest) {
         totalImpressions,
         avgEngagementRate,
         totalFollowers: totalFollowers || totalReach,
-        activeCampaigns: userId ? await prisma.campaign.count({ where: { userId, status: 'active' } }) : 0,
+        activeCampaigns: activeCampaignsCount,
       },
       engagementData: engagementByDay,
       platformData: platformStats,

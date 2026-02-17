@@ -238,6 +238,7 @@ export async function POST(request: NextRequest) {
                 platform,
               },
               orderBy: { snapshotAt: 'desc' },
+              select: { followersCount: true },
             });
 
             if (metrics.success) {
@@ -317,6 +318,7 @@ export async function POST(request: NextRequest) {
                 },
                 orderBy: { postedAt: 'desc' },
                 take: 10,
+                select: { id: true },
               }) || [];
 
               totalPostsFound += existingPosts.length;
@@ -387,6 +389,7 @@ async function checkForAlerts(
         where: { competitorId: competitor.id, platform },
         orderBy: { snapshotAt: 'desc' },
         take: 2,
+        select: { id: true, followersCount: true, engagementRate: true },
       }) || [];
 
       if (snapshots.length < 2) continue;
