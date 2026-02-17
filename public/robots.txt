@@ -1,15 +1,12 @@
 # Robots.txt for Synthex
 # https://synthex.social
 
-# Allow all bots
-User-agent: *
-Allow: /
-
 # Sitemap
 Sitemap: https://synthex.social/sitemap.xml
 
-# Disallow admin, API, and auth-gated routes
+# ---- Default: Allow all bots ----
 User-agent: *
+Allow: /
 Disallow: /api/
 Disallow: /admin/
 Disallow: /_next/
@@ -17,12 +14,67 @@ Disallow: /ship-audit/
 Disallow: /dashboard/
 Disallow: /onboarding/
 
-# Common bot rules
+# ---- Googlebot ----
 User-agent: Googlebot
 Allow: /
+Disallow: /api/
+Disallow: /dashboard/
+Disallow: /onboarding/
 
+# ---- Bingbot ----
+User-agent: Bingbot
+Allow: /
+Disallow: /api/
+Disallow: /dashboard/
+Disallow: /onboarding/
+
+# ---- AI Search Crawlers (ALLOW for GEO visibility) ----
+# Google AI (SGE / AI Overviews) — Allow training + serving
+User-agent: Google-Extended
+Allow: /
+
+# ChatGPT web search and browsing
+User-agent: ChatGPT-User
+Allow: /
+
+# Perplexity AI search
+User-agent: PerplexityBot
+Allow: /
+
+# Anthropic Claude web search
+User-agent: anthropic-ai
+Allow: /
+
+# Cohere AI
+User-agent: cohere-ai
+Allow: /
+
+# Meta AI
+User-agent: FacebookBot
+Allow: /
+
+# Microsoft Copilot / Bing Chat
 User-agent: Bingbot
 Allow: /
 
-# Delay for polite crawling
+# Apple Siri / Applebot
+User-agent: Applebot
+Allow: /
+
+# ---- Block known bad bots ----
+User-agent: AhrefsBot
+Crawl-delay: 10
+
+User-agent: SemrushBot
+Crawl-delay: 10
+
+User-agent: MJ12bot
+Disallow: /
+
+User-agent: DotBot
+Disallow: /
+
+# ---- Crawl delay for polite bots ----
+# Note: Googlebot ignores Crawl-delay (uses Search Console settings)
+User-agent: *
 Crawl-delay: 1

@@ -304,6 +304,71 @@ export function ProductSchema({ data }: { data: ProductData }) {
   );
 }
 
+// SocialMediaPosting Schema
+export interface SocialMediaPostingData {
+  headline: string;
+  articleBody: string;
+  datePublished: string;
+  dateModified?: string;
+  author: {
+    name: string;
+    url?: string;
+  };
+  sharedContent?: {
+    url: string;
+    headline?: string;
+  };
+  platform?: string;
+}
+
+export function SocialMediaPostingSchema({ data }: { data: SocialMediaPostingData }) {
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://synthex.social';
+
+  const schema = {
+    '@context': 'https://schema.org',
+    '@type': 'SocialMediaPosting',
+    headline: data.headline,
+    articleBody: data.articleBody,
+    datePublished: data.datePublished,
+    ...(data.dateModified && { dateModified: data.dateModified }),
+    author: {
+      '@type': 'Person',
+      name: data.author.name,
+      ...(data.author.url && { url: data.author.url }),
+    },
+    publisher: {
+      '@type': 'Organization',
+      name: 'Synthex',
+      logo: {
+        '@type': 'ImageObject',
+        url: `${baseUrl}/logo.png`,
+      },
+    },
+    ...(data.sharedContent && {
+      sharedContent: {
+        '@type': 'WebPage',
+        url: data.sharedContent.url,
+        ...(data.sharedContent.headline && { headline: data.sharedContent.headline }),
+      },
+    }),
+    ...(data.platform && {
+      isPartOf: {
+        '@type': 'WebSite',
+        name: data.platform,
+      },
+    }),
+  };
+
+  return (
+    <Script
+      id="social-media-posting-schema"
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+      strategy="afterInteractive"
+    />
+  );
+}
+
 // Combined Schema for main pages
 export function SynthexMainSchema() {
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://synthex.social';
