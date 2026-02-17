@@ -34,6 +34,9 @@ import {
   Database,
   Map,
   Building,
+  FileSpreadsheet,
+  Beaker,
+  CreditCard,
 } from '@/components/icons';
 import { Button } from '@/components/ui/button';
 import { AIPMFloatingButton } from '@/components/ai-pm';
@@ -61,6 +64,8 @@ const sidebarItems = [
   { icon: Calendar, label: 'Schedule', href: '/dashboard/schedule' },
   { icon: ListTodo, label: 'Tasks', href: '/dashboard/tasks' },
   { icon: BarChart3, label: 'Analytics', href: '/dashboard/analytics' },
+  { icon: FileSpreadsheet, label: 'Reports', href: '/dashboard/reports' },
+  { icon: Beaker, label: 'Experiments', href: '/dashboard/experiments' },
   { icon: Brain, label: 'Psychology', href: '/dashboard/psychology' },
   { icon: Target, label: 'Competitors', href: '/dashboard/competitors' },
   { icon: Video, label: 'Video', href: '/dashboard/video' },
