@@ -23,6 +23,21 @@ export const timeRangeOptions = [
   { value: '7d', label: 'Last 7 days' },
   { value: '30d', label: 'Last 30 days' },
   { value: '90d', label: 'Last 90 days' },
+  { value: 'custom', label: 'Custom Range' },
+];
+
+// Platform filter options
+export const platformFilterOptions = [
+  { value: 'all', label: 'All Platforms' },
+  { value: 'twitter', label: 'Twitter' },
+  { value: 'linkedin', label: 'LinkedIn' },
+  { value: 'instagram', label: 'Instagram' },
+  { value: 'tiktok', label: 'TikTok' },
+  { value: 'facebook', label: 'Facebook' },
+  { value: 'youtube', label: 'YouTube' },
+  { value: 'pinterest', label: 'Pinterest' },
+  { value: 'reddit', label: 'Reddit' },
+  { value: 'threads', label: 'Threads' },
 ];
 
 // Transform API platformBreakdown to pie chart format
