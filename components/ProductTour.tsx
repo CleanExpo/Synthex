@@ -120,14 +120,21 @@ export function ProductTour() {
   // Check if should show tour
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    
+
     const hasSeenTour = localStorage.getItem('hasSeenTour');
-    const isNewUser = !localStorage.getItem('onboardingComplete');
-    
-    if (!hasSeenTour && !isNewUser) {
-      setTimeout(() => {
-        setIsActive(true);
-      }, 1000);
+    const showTourOnDashboard = localStorage.getItem('showTourOnDashboard');
+    const onboardingComplete = localStorage.getItem('onboardingComplete');
+
+    // Show tour if:
+    // 1. User just completed onboarding and wants tour (showTourOnDashboard flag)
+    // 2. User hasn't seen tour and has completed onboarding
+    if (showTourOnDashboard === 'true') {
+      // Clear the flag and start tour immediately
+      localStorage.removeItem('showTourOnDashboard');
+      setTimeout(() => setIsActive(true), 500);
+    } else if (!hasSeenTour && onboardingComplete) {
+      // Returning user who hasn't seen tour
+      setTimeout(() => setIsActive(true), 1000);
     }
   }, []);
   
