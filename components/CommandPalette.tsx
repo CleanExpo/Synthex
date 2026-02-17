@@ -23,6 +23,7 @@ import {
   Target,
   Brain,
   HelpCircle,
+  Layers,
 } from '@/components/icons';
 import { notify } from '@/lib/notifications';
 
@@ -70,6 +71,15 @@ export function CommandPalette() {
       action: () => router.push('/dashboard/content/optimize'),
       category: 'navigation',
       keywords: ['optimize', 'score', 'quality', 'improve', 'suggestions', 'content optimizer']
+    },
+    {
+      id: 'multi-format',
+      title: 'Multi-format Generator',
+      description: 'Generate content for multiple platforms at once',
+      icon: Layers,
+      action: () => router.push('/dashboard/content/multi-format'),
+      category: 'navigation',
+      keywords: ['multi-format', 'platforms', 'generate', 'variations', 'cross-platform', 'adapt', 'convert']
     },
     {
       id: 'analytics',
