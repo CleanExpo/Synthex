@@ -136,3 +136,24 @@ export const PRESET_CONFIG = {
   mutation: { category: 'mutation', windowMs: 60_000, maxRequests: 60 },
   readDefault: { category: 'read-default', windowMs: 60_000, maxRequests: 120 },
 } as const;
+
+// ---------------------------------------------------------------------------
+// Legacy rateLimiters (backward compatibility)
+// ---------------------------------------------------------------------------
+
+/**
+ * Legacy rate limiters for backward compatibility.
+ * Prefer using the named exports (authStrict, readDefault, etc.) instead.
+ */
+export const rateLimiters = {
+  /** Strict limit for auth endpoints (5 req/15 min) */
+  auth: authStrict,
+  /** Standard API limit (60 req/min) */
+  api: mutation,
+  /** Generous limit for read operations (120 req/min) */
+  read: readDefault,
+  /** Strict limit for write operations (60 req/min) */
+  write: mutation,
+  /** Very strict limit for expensive operations (20 req/min) */
+  expensive: aiGeneration,
+};

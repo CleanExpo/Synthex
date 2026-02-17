@@ -291,5 +291,79 @@ export async function withRateLimit(
   return response;
 }
 
+// ---------------------------------------------------------------------------
+// Usage Tracker (for subscription-based feature limits)
+// ---------------------------------------------------------------------------
+
+/**
+ * Tracks feature usage for subscription limit enforcement.
+ */
+export class UsageTracker {
+  /**
+   * Track usage of a feature for a user.
+   */
+  static async track(
+    userId: string,
+    feature: string,
+    count: number = 1
+  ): Promise<void> {
+    try {
+      // Use Upstash for tracking if available
+      if (useRedis && UPSTASH_URL && UPSTASH_TOKEN) {
+        const key = `usage:${userId}:${feature}:${new Date().toISOString().slice(0, 7)}`; // monthly key
+        await fetch(`${UPSTASH_URL}`, {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${UPSTASH_TOKEN}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(['INCRBY', key, count]),
+        });
+      }
+    } catch (error) {
+      logger.error('Usage tracking error', { error, userId, feature });
+    }
+  }
+
+  /**
+   * Check if a user is within their usage limits for a feature.
+   */
+  static async checkLimit(
+    userId: string,
+    feature: string,
+    tier: SubscriptionTier = 'free'
+  ): Promise<boolean> {
+    const limits: Record<string, Record<SubscriptionTier, number>> = {
+      ai_posts: { free: 5, professional: 100, business: -1, custom: -1 },
+      social_posts: { free: 10, professional: 100, business: -1, custom: -1 },
+      api_calls: { free: 1000, professional: 10000, business: 100000, custom: -1 },
+    };
+
+    const limit = limits[feature]?.[tier] ?? 0;
+    if (limit === -1) return true; // Unlimited
+
+    try {
+      if (useRedis && UPSTASH_URL && UPSTASH_TOKEN) {
+        const key = `usage:${userId}:${feature}:${new Date().toISOString().slice(0, 7)}`;
+        const res = await fetch(`${UPSTASH_URL}`, {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${UPSTASH_TOKEN}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(['GET', key]),
+        });
+        const data = await res.json();
+        const count = parseInt(data.result || '0', 10);
+        return count < limit;
+      }
+      return true; // Allow if Redis not available
+    } catch (error) {
+      logger.error('Limit check error', { error, userId, feature });
+      return true; // Allow on error
+    }
+  }
+}
+
 // Re-export types
 export type { RateLimitConfig, RateLimitResult, RateLimitHeaders };

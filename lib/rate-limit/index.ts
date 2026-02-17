@@ -46,6 +46,7 @@ export {
   RateLimiter,
   createRateLimiter,
   withRateLimit,
+  UsageTracker,
 } from './rate-limiter';
 
 // Category presets
@@ -58,6 +59,7 @@ export {
   mutation,
   readDefault,
   PRESET_CONFIG,
+  rateLimiters,
 } from './presets';
 
 // Admin utilities
