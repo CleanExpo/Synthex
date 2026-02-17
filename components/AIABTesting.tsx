@@ -78,251 +78,200 @@ export function AIABTesting() {
   const [duration, setDuration] = useState(7);
   const [loading, setLoading] = useState(false);
   
-  // Load tests
-  const loadTests = useCallback(() => {
-    if (typeof window === 'undefined') return;
-    
-    const stored = localStorage.getItem('ab_tests');
-    if (stored) {
-      const data = JSON.parse(stored);
-      setTests(data);
-    } else {
-      // Create sample tests
-      const sampleTests = createSampleTests();
-      setTests(sampleTests);
-      localStorage.setItem('ab_tests', JSON.stringify(sampleTests));
+  // Load tests from API
+  const loadTests = useCallback(async () => {
+    try {
+      const response = await fetch('/api/ab-testing/tests');
+      if (!response.ok) {
+        if (response.status === 401) {
+          setTests([]);
+          return;
+        }
+        throw new Error('Failed to load tests');
+      }
+
+      const { data } = await response.json();
+
+      // Transform API response to component's ABTest format
+      const transformed: ABTest[] = (data || []).map((test: {
+        id: string;
+        name: string;
+        hypothesis?: string;
+        status: string;
+        duration?: number;
+        startDate?: string;
+        endDate?: string;
+        winner?: string;
+        variants: Array<{
+          name: string;
+          content: string;
+          image?: string;
+          cta?: string;
+          hashtags?: string[];
+          impressions: number;
+          engagement: number;
+          conversions: number;
+          conversionRate?: number;
+        }>;
+        metrics?: {
+          sampleSize: number;
+          statisticalSignificance: number;
+          uplift: number;
+          timeToSignificance?: number;
+        };
+      }) => {
+        const variantA = test.variants[0] || { name: 'A', content: '', impressions: 0, engagement: 0, conversions: 0, conversionRate: 0 };
+        const variantB = test.variants[1] || { name: 'B', content: '', impressions: 0, engagement: 0, conversions: 0, conversionRate: 0 };
+
+        return {
+          id: test.id,
+          name: test.name,
+          hypothesis: test.hypothesis || '',
+          status: test.status as ABTest['status'],
+          variantA: {
+            name: variantA.name,
+            content: variantA.content,
+            image: variantA.image,
+            cta: variantA.cta,
+            hashtags: variantA.hashtags,
+            impressions: variantA.impressions || 0,
+            engagement: variantA.engagement || 0,
+            conversions: variantA.conversions || 0,
+            conversionRate: variantA.conversionRate || 0
+          },
+          variantB: {
+            name: variantB.name,
+            content: variantB.content,
+            image: variantB.image,
+            cta: variantB.cta,
+            hashtags: variantB.hashtags,
+            impressions: variantB.impressions || 0,
+            engagement: variantB.engagement || 0,
+            conversions: variantB.conversions || 0,
+            conversionRate: variantB.conversionRate || 0
+          },
+          metrics: test.metrics || { sampleSize: 0, statisticalSignificance: 0, uplift: 0 },
+          duration: test.duration || 7,
+          startDate: test.startDate ? new Date(test.startDate) : undefined,
+          endDate: test.endDate ? new Date(test.endDate) : undefined,
+          winner: test.winner as ABTest['winner'],
+          confidence: test.metrics?.statisticalSignificance || 0,
+          recommendations: generateRecommendationsFromData(test)
+        };
+      });
+
+      setTests(transformed);
+    } catch (error) {
+      console.error('Failed to load tests:', error);
     }
   }, []);
+
+  // Generate recommendations from API data
+  const generateRecommendationsFromData = (test: {
+    winner?: string;
+    variants: Array<{ name: string; content: string; conversionRate?: number }>;
+    metrics?: { uplift: number };
+  }): string[] => {
+    const recommendations: string[] = [];
+    const variantA = test.variants[0];
+    const variantB = test.variants[1];
+
+    if (test.winner === 'B' || test.winner === 'A') {
+      const winningVariant = test.winner === 'B' ? variantB : variantA;
+      recommendations.push(`Implement winning variant: "${winningVariant?.name}"`);
+      if (test.metrics?.uplift) {
+        recommendations.push(`Expected uplift: ${test.metrics.uplift.toFixed(1)}% in conversions`);
+      }
+    }
+
+    return recommendations;
+  };
 
   useEffect(() => {
     loadTests();
   }, [loadTests]);
   
-  // Create sample tests
-  const createSampleTests = (): ABTest[] => {
-    return [
-      {
-        id: 'test-1',
-        name: 'Emoji vs No Emoji',
-        hypothesis: 'Adding emojis to posts will increase engagement by 20%',
-        status: 'completed',
-        variantA: {
-          name: 'Control (No Emoji)',
-          content: 'Check out our new feature launch!',
-          impressions: 5000,
-          engagement: 250,
-          conversions: 50,
-          conversionRate: 1.0
-        },
-        variantB: {
-          name: 'Test (With Emoji)',
-          content: '🚀 Check out our new feature launch! ✨',
-          impressions: 5000,
-          engagement: 375,
-          conversions: 85,
-          conversionRate: 1.7
-        },
-        metrics: {
-          sampleSize: 10000,
-          statisticalSignificance: 95,
-          uplift: 70,
-          timeToSignificance: 3
-        },
-        duration: 7,
-        startDate: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
-        endDate: new Date(),
-        winner: 'B',
-        confidence: 95,
-        recommendations: [
-          'Implement emojis in all future posts',
-          'Test different emoji combinations',
-          'Consider platform-specific emoji usage'
-        ]
-      },
-      {
-        id: 'test-2',
-        name: 'Long vs Short Copy',
-        hypothesis: 'Shorter copy will improve click-through rates',
-        status: 'running',
-        variantA: {
-          name: 'Long Copy',
-          content: 'Discover the ultimate solution for your social media management needs...',
-          impressions: 2500,
-          engagement: 125,
-          conversions: 25,
-          conversionRate: 1.0
-        },
-        variantB: {
-          name: 'Short Copy',
-          content: 'Social media made simple.',
-          impressions: 2500,
-          engagement: 150,
-          conversions: 30,
-          conversionRate: 1.2
-        },
-        metrics: {
-          sampleSize: 5000,
-          statisticalSignificance: 78,
-          uplift: 20,
-          timeToSignificance: undefined
-        },
-        duration: 14,
-        startDate: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
-        confidence: 78,
-        recommendations: [
-          'Continue test for more data',
-          'Current trend favors short copy',
-          'Monitor engagement quality'
-        ]
-      }
-    ];
-  };
-  
-  // Create new test
-  const createTest = () => {
+  // Create new test via API
+  const createTest = async () => {
     if (!testName || !hypothesis || !variantAContent || !variantBContent) {
       notify.error('Please fill in all fields');
       return;
     }
-    
-    const newTest: ABTest = {
-      id: `test-${Date.now()}`,
-      name: testName,
-      hypothesis,
-      status: 'draft',
-      variantA: {
-        name: 'Control',
-        content: variantAContent,
-        impressions: 0,
-        engagement: 0,
-        conversions: 0,
-        conversionRate: 0
-      },
-      variantB: {
-        name: 'Test',
-        content: variantBContent,
-        impressions: 0,
-        engagement: 0,
-        conversions: 0,
-        conversionRate: 0
-      },
-      metrics: {
-        sampleSize: 0,
-        statisticalSignificance: 0,
-        uplift: 0
-      },
-      duration,
-      confidence: 0,
-      recommendations: []
-    };
-    
-    const updated = [...tests, newTest];
-    setTests(updated);
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('ab_tests', JSON.stringify(updated));
-    }
-    setSelectedTest(newTest);
-    setShowCreateForm(false);
-    resetForm();
-    notify.success('A/B test created successfully!');
-  };
-  
-  // Start test
-  const startTest = (test: ABTest) => {
-    test.status = 'running';
-    test.startDate = new Date();
-    const updated = [...tests];
-    setTests(updated);
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('ab_tests', JSON.stringify(updated));
-    }
-    notify.success('Test started!');
-    
-    // Simulate test progress
-    simulateTestProgress(test.id);
-  };
-  
-  // Simulate test progress
-  const simulateTestProgress = (testId: string) => {
-    const interval = setInterval(() => {
-      setTests(prevTests => {
-        const updated = prevTests.map(test => {
-          if (test.id === testId && test.status === 'running') {
-            // Update metrics
-            test.variantA.impressions += Math.floor(Math.random() * 100);
-            test.variantA.engagement += Math.floor(Math.random() * 10);
-            test.variantA.conversions += Math.floor(Math.random() * 2);
-            
-            test.variantB.impressions += Math.floor(Math.random() * 100);
-            test.variantB.engagement += Math.floor(Math.random() * 15);
-            test.variantB.conversions += Math.floor(Math.random() * 3);
-            
-            // Calculate rates
-            test.variantA.conversionRate = (test.variantA.conversions / test.variantA.impressions) * 100;
-            test.variantB.conversionRate = (test.variantB.conversions / test.variantB.impressions) * 100;
-            
-            // Update metrics
-            test.metrics.sampleSize = test.variantA.impressions + test.variantB.impressions;
-            test.metrics.statisticalSignificance = Math.min(95, test.metrics.sampleSize / 100);
-            test.metrics.uplift = ((test.variantB.conversionRate - test.variantA.conversionRate) / test.variantA.conversionRate) * 100;
-            
-            // Check for completion
-            if (test.metrics.statisticalSignificance >= 95) {
-              test.status = 'completed';
-              test.endDate = new Date();
-              test.winner = test.variantB.conversionRate > test.variantA.conversionRate ? 'B' : 'A';
-              test.confidence = test.metrics.statisticalSignificance;
-              test.recommendations = generateRecommendations(test);
-              clearInterval(interval);
-              notify.success(`Test "${test.name}" completed! Winner: Variant ${test.winner}`);
-            }
-          }
-          return test;
-        });
-        
-        if (typeof window !== 'undefined') {
-          localStorage.setItem('ab_tests', JSON.stringify(updated));
-        }
-        return updated;
+
+    setLoading(true);
+    try {
+      const response = await fetch('/api/ab-testing/tests', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: testName,
+          hypothesis,
+          duration,
+          variants: [
+            { name: 'Control', content: variantAContent },
+            { name: 'Test', content: variantBContent }
+          ]
+        })
       });
-    }, 2000);
+
+      if (!response.ok) {
+        throw new Error('Failed to create test');
+      }
+
+      setShowCreateForm(false);
+      resetForm();
+      notify.success('A/B test created successfully!');
+
+      // Reload tests from API
+      await loadTests();
+    } catch (error) {
+      notify.error('Failed to create test');
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
   };
   
-  // Generate AI recommendations
-  const generateRecommendations = (test: ABTest): string[] => {
-    const recommendations: string[] = [];
-    
-    if (test.winner === 'B') {
-      recommendations.push(`Implement Variant B: "${test.variantB.name}" across all content`);
-      recommendations.push(`Expected uplift: ${test.metrics.uplift.toFixed(1)}% in conversions`);
-      
-      // Analyze differences
-      if (test.variantB.content.includes('emoji') || /[\u{1F300}-\u{1F9FF}]/u.test(test.variantB.content)) {
-        recommendations.push('Continue using emojis for better engagement');
+  // Start test via API
+  const startTest = async (test: ABTest) => {
+    try {
+      const response = await fetch(`/api/ab-testing/tests/${test.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'running' })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to start test');
       }
-      
-      if (test.variantB.content.length < test.variantA.content.length) {
-        recommendations.push('Shorter copy performs better - keep it concise');
-      }
-    } else if (test.winner === 'A') {
-      recommendations.push('Keep current approach - control performed better');
-      recommendations.push('Test different variations of the control');
+
+      notify.success('Test started!');
+      await loadTests();
+    } catch (error) {
+      notify.error('Failed to start test');
+      console.error(error);
     }
-    
-    recommendations.push(`Run follow-up test with sample size of ${test.metrics.sampleSize * 2} for higher confidence`);
-    
-    return recommendations;
   };
-  
-  // Pause test
-  const pauseTest = (test: ABTest) => {
-    test.status = 'paused';
-    const updated = [...tests];
-    setTests(updated);
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('ab_tests', JSON.stringify(updated));
+
+  // Pause test via API
+  const pauseTest = async (test: ABTest) => {
+    try {
+      const response = await fetch(`/api/ab-testing/tests/${test.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'paused' })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to pause test');
+      }
+
+      notify.info('Test paused');
+      await loadTests();
+    } catch (error) {
+      notify.error('Failed to pause test');
+      console.error(error);
     }
-    notify.info('Test paused');
   };
   
   // Reset form
@@ -344,21 +293,31 @@ export function AIABTesting() {
     }
   };
   
-  // Generate chart data
+  // Generate chart data from test metrics
   const generateChartData = (test: ABTest) => {
     if (!test.startDate) return [];
-    
+
     const days = Math.min(7, Math.floor((Date.now() - test.startDate.getTime()) / (24 * 60 * 60 * 1000)));
     const data: { day: string; variantA: number; variantB: number }[] = [];
 
+    // Calculate daily averages based on total metrics
+    const avgA = test.variantA.impressions > 0
+      ? (test.variantA.engagement / test.variantA.impressions) * 100
+      : 0;
+    const avgB = test.variantB.impressions > 0
+      ? (test.variantB.engagement / test.variantB.impressions) * 100
+      : 0;
+
+    // Distribute across days (real data would come from API time-series endpoint)
     for (let i = 0; i <= days; i++) {
+      const progress = (i + 1) / (days + 1);
       data.push({
         day: `Day ${i + 1}`,
-        variantA: Math.floor(Math.random() * 100) + 50,
-        variantB: Math.floor(Math.random() * 100) + 60
+        variantA: Math.round(avgA * progress * 100) / 100,
+        variantB: Math.round(avgB * progress * 100) / 100
       });
     }
-    
+
     return data;
   };
   
