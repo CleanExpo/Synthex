@@ -8,10 +8,11 @@
  * - Engagement predictor form with results
  * - Prediction accuracy statistics
  * - Optimal posting time recommendations
- * - Placeholder for engagement forecast chart (Plan 23-02)
+ * - Engagement forecast chart with confidence bands (Plan 23-02)
+ * - Best-time heatmap for platform posting windows (Plan 23-02)
  */
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { PageHeader } from '@/components/dashboard/page-header';
 import { AnalyticsSkeleton } from '@/components/skeletons';
 import { APIErrorCard } from '@/components/error-states';
@@ -19,13 +20,20 @@ import {
   usePredictionHistory,
   useOptimalTimes,
   fetchEngagementPrediction,
+  fetchForecast,
 } from '@/hooks/use-dashboard';
 import {
   PredictionStats,
   EngagementPredictor,
   OptimalTimesCard,
+  ForecastChart,
+  BestTimeHeatmap,
 } from '@/components/predictions';
-import type { PredictionInput, PredictionResult } from '@/components/predictions/types';
+import type {
+  PredictionInput,
+  PredictionResult,
+  EngagementForecast,
+} from '@/components/predictions/types';
 
 // ============================================================================
 // PLATFORMS FOR FILTER
@@ -48,6 +56,8 @@ export default function PredictionsPage() {
   const [platform, setPlatform] = useState('instagram');
   const [predictionResult, setPredictionResult] = useState<PredictionResult | null>(null);
   const [isPredicting, setIsPredicting] = useState(false);
+  const [forecastData, setForecastData] = useState<EngagementForecast | null>(null);
+  const [isForecastLoading, setIsForecastLoading] = useState(false);
 
   // Fetch prediction history / stats
   const {
@@ -62,6 +72,15 @@ export default function PredictionsPage() {
     data: optimalTimesData,
     isLoading: optimalTimesLoading,
   } = useOptimalTimes({ platform });
+
+  // Fetch engagement forecast when platform changes
+  useEffect(() => {
+    setIsForecastLoading(true);
+    fetchForecast({ accountId: 'current', platform, metric: 'engagement', days: 30 })
+      .then((response) => setForecastData(response.forecast))
+      .catch(() => setForecastData(null))
+      .finally(() => setIsForecastLoading(false));
+  }, [platform]);
 
   // Handle engagement prediction
   const handlePredict = useCallback(async (input: PredictionInput) => {
@@ -145,11 +164,16 @@ export default function PredictionsPage() {
         />
       </div>
 
-      {/* Engagement Forecast Placeholder (Plan 23-02 will add ForecastChart) */}
-      <div className="rounded-xl border border-dashed border-white/10 bg-white/[0.02] p-8 text-center">
-        <p className="text-sm text-slate-500">
-          Engagement Forecast Chart -- Coming in Plan 23-02
-        </p>
+      {/* Visualizations: Forecast Chart + Best Time Heatmap */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <ForecastChart
+          forecast={forecastData}
+          isLoading={isForecastLoading}
+        />
+        <BestTimeHeatmap
+          slots={optimalTimesData?.slots ?? []}
+          isLoading={optimalTimesLoading}
+        />
       </div>
     </div>
   );
