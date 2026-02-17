@@ -14,13 +14,10 @@
     "validate:env": "node scripts/validate-env.js",
     "validate:claude": "node scripts/validate-claude-settings.js",
     "validate:all": "npm run validate:env && npm run validate:claude",
-    "build:force": "next build",
     "build:vercel": "npx prisma@6.14.0 generate && next build",
     "vercel-build": "prisma generate && next build",
     "start": "next start",
-    "typecheck": "npm run type-check",
     "format": "prettier --write \"**/*.{js,jsx,ts,tsx,json,css,md}\"",
-    "test:unit": "npm test",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "postinstall": "echo 'Skipping postinstall - Prisma generated during build'",
@@ -50,7 +47,6 @@
     "test:integration:verbose": "node scripts/run-integration-tests.js --verbose",
     "test:integration:health": "RUN_INTEGRATION_TESTS=true jest tests/integration/health-check.test.ts --runInBand",
     "test:integration:quotes": "RUN_INTEGRATION_TESTS=true jest tests/integration/quotes-api.test.ts --runInBand",
-    "dev:api": "next dev",
     "check:env": "node -e \"console.log(Object.keys(process.env).filter(k => k.includes('SUPABASE') || k.includes('OPENROUTER')))\"",
     "deploy:prod": "vercel --prod --yes",
     "ws:dev": "npx tsx scripts/websocket-server.ts",
@@ -58,31 +54,16 @@
     "dev:full": "concurrently \"npm run dev\" \"npm run ws:dev\"",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
-    "storybook:build": "npm run build-storybook",
     "e2e": "playwright test",
     "e2e:ui": "playwright test --ui",
-    "test:e2e": "npm run e2e",
-    "test:e2e:ui": "npm run e2e:ui",
     "test:e2e:staging": "BASE_URL=${STAGING_URL:-http://localhost:3000} npm run e2e",
     "audit": "npm audit --omit=dev",
     "release:check": "npm run type-check && npm run lint && npm test && npm run e2e && npm run build",
-    "ci:verify": "node agents/tools/ci-verify.js",
-    "plan:team": "tsx agents/planner/plan-generator.ts",
     "validate:env:enhanced": "node scripts/validate-env-enhanced.js",
     "env:generate": "node scripts/generate-env-docs.js",
     "security:audit": "npm run env:generate && npm run validate:env:enhanced && npm audit",
     "security:check": "node scripts/validate-env-enhanced.js",
     "build:production": "NODE_ENV=production next build",
-    "build:prod": "npm run build:production",
-    "build:emergency": "next build || true",
-    "deploy": "node scripts/deploy-assistant.js",
-    "diagnose": "node scripts/diagnose-build.js",
-    "check:quick": "bash scripts/final-check.sh",
-    "check:deploy": "node scripts/diagnose-build.js && bash scripts/final-check.sh",
-    "deploy:safe": "npm run check:deploy && git add -A && git commit -m 'chore: deploy to production' && git push origin main",
-    "deploy:push": "git add -A && git commit -m 'chore: deploy to production' && git push origin main",
-    "deploy:emergency": "git add -A && git commit -m 'emergency: force deployment' --no-verify && git push origin main",
-    "fix:deps": "rm -rf node_modules package-lock.json && npm install --legacy-peer-deps",
     "db:validate": "npx prisma validate && npx prisma generate",
     "backup:verify": "node scripts/backup-verification.js verify",
     "backup:verify-all": "node scripts/backup-verification.js verify-all",
@@ -93,8 +74,11 @@
   "dependencies": {
     "@ai-sdk/anthropic": "^3.0.14",
     "@ai-sdk/google": "^3.0.9",
+    "@anthropic-ai/claude-agent-sdk": "^0.2.42",
     "@anthropic-ai/sdk": "^0.20.0",
     "@auth/prisma-adapter": "^2.11.1",
+    "@composio/claude-agent-sdk": "^0.6.3",
+    "@composio/core": "^0.6.3",
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
@@ -289,7 +273,17 @@
     "rules": {
       "react/no-unescaped-entities": "off",
       "@next/next/no-img-element": "off",
-      "no-console": ["warn", { "allow": ["warn", "error", "debug", "info"] }]
+      "no-console": [
+        "warn",
+        {
+          "allow": [
+            "warn",
+            "error",
+            "debug",
+            "info"
+          ]
+        }
+      ]
     }
   }
 }
