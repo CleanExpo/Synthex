@@ -366,8 +366,9 @@ describe('Brand Psychology Generation System', () => {
 
   describe('Psychology Validation', () => {
     it('should validate principle application', async () => {
-      const randomSpy = jest.spyOn(Math, 'random').mockReturnValue(0.9);
-      const brandElement = 'Exclusive Members Club';
+      // Element contains words matching all three Scarcity Principle checks:
+      // suggests_limitation ("exclusive"), implies_exclusivity ("exclusive"), creates_urgency ("now")
+      const brandElement = 'Exclusive Members Club - Join Now';
       const principle = 'Scarcity Principle';
       const context = { audience: 'Luxury', goal: 'exclusivity' };
 
@@ -380,13 +381,13 @@ describe('Brand Psychology Generation System', () => {
       expect(validation.isValid).toBe(true);
       expect(validation.score).toBeGreaterThan(70);
       expect(validation.issues.length).toBe(0);
-      randomSpy.mockRestore();
     });
 
     it('should identify misaligned psychology', async () => {
-      const randomSpy = jest.spyOn(Math, 'random').mockReturnValue(0.1);
+      // "Budget Bargain Barn" has no scarcity/exclusivity/urgency keywords,
+      // so all three Scarcity Principle checks fail deterministically
       const brandElement = 'Budget Bargain Barn';
-      const principle = 'Luxury';
+      const principle = 'Scarcity Principle';
       const context = { audience: 'High-income', goal: 'premium' };
 
       const validation = await tester.validatePsychologyApplication(
@@ -398,7 +399,6 @@ describe('Brand Psychology Generation System', () => {
       expect(validation.isValid).toBe(false);
       expect(validation.issues.length).toBeGreaterThan(0);
       expect(validation.suggestions.length).toBeGreaterThan(0);
-      randomSpy.mockRestore();
     });
   });
 

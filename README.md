@@ -8,7 +8,7 @@
   [![Live Demo](https://img.shields.io/badge/demo-live-brightgreen)](https://synthex.social)
   [![Users](https://img.shields.io/badge/users-1000%2B-blue)](https://synthex.social)
   [![License](https://img.shields.io/badge/license-MIT-purple)](LICENSE)
-  [![Built with Next.js](https://img.shields.io/badge/built%20with-Next.js%2014-black)](https://nextjs.org)
+  [![Built with Next.js](https://img.shields.io/badge/built%20with-Next.js%2015-black)](https://nextjs.org)
 </div>
 
 ---
@@ -38,7 +38,7 @@ Launch and grow your social presence from day one with proven strategies and aut
 ### 🧠 **AI Content Intelligence**
 - **Viral Pattern Analysis**: Our AI analyzes millions of successful posts to understand what makes content go viral
 - **Persona Learning**: The system learns your unique voice and style, ensuring authenticity in every post
-- **Smart Content Generation**: Create engaging posts that resonate with your audience using GPT-4 and advanced AI models
+- **Smart Content Generation**: Create engaging posts that resonate with your audience using multi-provider AI (OpenRouter, Claude, Gemini, GPT)
 - **Trend Prediction**: Stay ahead of trends with predictive analytics
 
 ### 📊 **Advanced Analytics Dashboard**
@@ -74,28 +74,31 @@ Launch and grow your social presence from day one with proven strategies and aut
 ## 🛠️ Technology Stack
 
 ### Frontend
-- **Next.js 14**: React framework with App Router for optimal performance
-- **TypeScript**: Type-safe development experience
+- **Next.js 15**: React framework with App Router for optimal performance
+- **TypeScript 5**: Type-safe development experience
 - **Tailwind CSS**: Modern, responsive design system
 - **Framer Motion**: Smooth animations and transitions
+- **Radix UI**: Accessible component primitives
 
 ### Backend & Infrastructure
-- **Supabase**: PostgreSQL database with real-time capabilities
-- **Prisma ORM**: Type-safe database queries
-- **Redis**: High-performance caching for lightning-fast responses
-- **Vercel**: Global edge deployment for maximum speed
+- **Supabase**: PostgreSQL database with connection pooling
+- **Prisma 6**: Type-safe ORM with 67 models
+- **Redis (Upstash)**: Serverless caching
+- **Vercel**: Global edge deployment (multi-region)
+- **BullMQ**: Background job queues
 
 ### AI & Intelligence
-- **OpenAI GPT-4**: Advanced content generation
-- **Custom ML Models**: Proprietary viral prediction algorithms
-- **Natural Language Processing**: Understanding context and sentiment
-- **Computer Vision**: Analyzing visual content performance
+- **OpenRouter**: Primary AI gateway (multi-model)
+- **Anthropic SDK**: Claude integration
+- **Google AI SDK**: Gemini integration
+- **OpenAI SDK**: GPT integration
+- **Vercel AI SDK**: Streaming and tool use
 
 ### Integrations
-- **Stripe**: Secure payment processing
-- **SendGrid**: Transactional email system
-- **OAuth 2.0**: Secure social media authentication
-- **Webhook Support**: Real-time third-party integrations
+- **Stripe**: Subscription billing with webhooks
+- **SendGrid + Resend**: Transactional email system
+- **OAuth 2.0**: Google & GitHub authentication (NextAuth.js)
+- **9 Social Platforms**: YouTube, Instagram, TikTok, X, Facebook, LinkedIn, Pinterest, Reddit, Threads
 
 ## 🚀 Getting Started
 

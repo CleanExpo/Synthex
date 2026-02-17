@@ -11,52 +11,24 @@ const { execSync } = require('child_process');
 
 console.log('🔧 Fixing Production Site Issues\n');
 
-// Step 1: Fix the layout.tsx file - remove problematic import
-console.log('1. Fixing app/layout.tsx...');
+// Step 1: Verify layout.tsx
+console.log('1. Verifying app/layout.tsx...');
 const layoutPath = 'app/layout.tsx';
 if (fs.existsSync(layoutPath)) {
-  let content = fs.readFileSync(layoutPath, 'utf8');
-  
-  // Remove the validatedEnv import that's causing issues
-  content = content.replace(/import { validatedEnv } from '@\/config\/env.server';?\n?/g, '');
-  
-  // Also remove any usage of validatedEnv
-  content = content.replace(/validatedEnv\./g, 'process.env.');
-  
-  fs.writeFileSync(layoutPath, content);
-  console.log('   ✅ Fixed layout.tsx');
-}
-
-// Step 2: Fix or remove the env.server.ts file
-console.log('2. Fixing config/env.server.ts...');
-const envServerPath = 'config/env.server.ts';
-if (fs.existsSync(envServerPath)) {
-  // Replace with a simpler version that doesn't break production
-  const newContent = `// Environment configuration
-// This file validates environment variables
-
-export const validatedEnv = {
-  NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL || 'https://synthex.social',
-  NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL || '',
-  NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '',
-  OPENROUTER_API_KEY: process.env.OPENROUTER_API_KEY || '',
-  DATABASE_URL: process.env.DATABASE_URL || '',
-  JWT_SECRET: process.env.JWT_SECRET || 'default-jwt-secret',
-};
-
-// Export a validation function that doesn't throw in production
-export function validateEnv() {
-  // In production, we just log warnings instead of throwing
-  if (process.env.NODE_ENV === 'production') {
-    console.log('Environment variables loaded for production');
+  const content = fs.readFileSync(layoutPath, 'utf8');
+  if (content.includes('config/env.server')) {
+    console.log('   ⚠️  layout.tsx still references config/env.server — manual fix needed');
+  } else {
+    console.log('   ✅ layout.tsx is clean');
   }
-  return true;
 }
-`;
-  
-  fs.writeFileSync(envServerPath, newContent);
-  console.log('   ✅ Fixed env.server.ts');
-}
+
+// Step 2: Environment configuration
+console.log('2. Environment configuration...');
+// Note: config/env.server.ts was removed in Phase 4.
+// Environment validation now lives in lib/env/validator.ts.
+// Production env vars are managed via Vercel dashboard.
+console.log('   ✅ Environment managed via Vercel dashboard');
 
 // Step 3: Install missing packages
 console.log('3. Installing missing packages...');

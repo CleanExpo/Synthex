@@ -55,7 +55,7 @@ D:\Synthex\                      # Repository root = app root
 ├── next.config.mjs              # Next.js configuration
 ├── vercel.json                  # Vercel config (crons, headers, regions)
 ├── tsconfig.json                # TypeScript config
-└── package.json                 # Dependencies & 90+ scripts
+└── package.json                 # Dependencies & 65 scripts
 ```
 
 ## Commands

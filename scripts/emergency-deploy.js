@@ -80,21 +80,11 @@ pkg.scripts['build:emergency'] = 'next build || true';
 pkg.scripts['build'] = 'next build || true';
 fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2));
 
-// Step 4: Create production env check bypass
-console.log('4. Bypassing environment checks...');
-const envBypass = `
-// Emergency bypass for production deployment
-const env = {
-  NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL || 'https://synthex.social',
-  NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL || '',
-  NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '',
-};
-
-export const validatedEnv = env;
-export default env;
-`;
-
-fs.writeFileSync('config/env.server.ts', envBypass);
+// Step 4: Environment check
+console.log('4. Environment variables loaded from Vercel dashboard...');
+// Note: env.server.ts was removed in Phase 4.
+// Environment variables are managed via Vercel dashboard and .env files.
+// No bypass needed — production env vars are set in Vercel project settings.
 
 // Step 5: Emergency build
 console.log('5. Running emergency build...');
