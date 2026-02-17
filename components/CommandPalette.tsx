@@ -63,6 +63,15 @@ export function CommandPalette() {
       keywords: ['content', 'generate', 'create', 'write']
     },
     {
+      id: 'content-optimizer',
+      title: 'Content Optimizer',
+      description: 'Score and optimize content quality',
+      icon: Sparkles,
+      action: () => router.push('/dashboard/content/optimize'),
+      category: 'navigation',
+      keywords: ['optimize', 'score', 'quality', 'improve', 'suggestions', 'content optimizer']
+    },
+    {
       id: 'analytics',
       title: 'Analytics',
       icon: BarChart3,

@@ -61,6 +61,7 @@ const sidebarItems = [
   { icon: TrendingUp, label: 'Viral Patterns', href: '/dashboard/patterns' },
   { icon: Brain, label: 'Personas', href: '/dashboard/personas' },
   { icon: FileText, label: 'Content', href: '/dashboard/content' },
+  { icon: Sparkles, label: 'Optimizer', href: '/dashboard/content/optimize' },
   { icon: Palette, label: 'Sandbox', href: '/dashboard/sandbox' },
   { icon: Calendar, label: 'Schedule', href: '/dashboard/schedule' },
   { icon: ListTodo, label: 'Tasks', href: '/dashboard/tasks' },
