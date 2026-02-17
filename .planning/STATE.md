@@ -11,11 +11,11 @@ See: .planning/PROJECT.md (updated 2026-02-17)
 
 Milestone: v1.1 Platform Enhancement
 Phase: 11 of 18 (Deferred Cleanup — Legacy Services)
-Plan: Not started
-Status: Ready to plan
-Last activity: 2026-02-17 — Milestone v1.1 created
+Plan: 01 complete
+Status: Phase 11 complete (single plan)
+Last activity: 2026-02-17 — Plan 11-01 executed
 
-Progress: ░░░░░░░░░░ 0%
+Progress: █░░░░░░░░░ 12.5% (1/8 phases)
 
 ## Performance Metrics
 
@@ -56,7 +56,7 @@ Decisions from v1.0 that affect v1.1 work:
 
 These are the primary targets for v1.1:
 
-- Legacy src/ services with mock data — Phase 11
+- ~~Legacy src/ services with mock data — Phase 11~~ DONE (18 files removed)
 - src/agents/ specialist coordinators with mock metrics — Phase 14
 - 8 standalone feature components with mock data — Phase 12
 - 3 rate limiter files await consolidation — Phase 12
@@ -74,6 +74,6 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-17
-Stopped at: Milestone v1.1 initialization
+Stopped at: Phase 11 complete
 Resume file: None
-Next action: /gsd:plan-phase 11 or /gsd:discuss-phase 11
+Next action: /gsd:plan-phase 12

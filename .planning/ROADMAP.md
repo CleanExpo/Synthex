@@ -25,7 +25,7 @@ None (internal platform work)
 - [x] **Phase 8: Testing — API Contracts** - Contract tests for highest-value API routes + E2E
 - [x] **Phase 9: Performance & Build** - Clean build config, reduce bundle, optimize queries
 - [x] **Phase 10: Final Audit** - Full endpoint audit, documentation, deployment readiness
-- [ ] **Phase 11: Deferred Cleanup — Legacy Services** - Migrate/remove legacy src/ services
+- [x] **Phase 11: Deferred Cleanup — Legacy Services** - Migrate/remove legacy src/ services
 - [ ] **Phase 12: Deferred Cleanup — Components** - Wire standalone components, consolidate rate limiters
 - [ ] **Phase 13: Feature Completion — Models** - Add ContentLibrary model, implement stub routes
 - [ ] **Phase 14: Feature Completion — Agents** - Connect agent coordinators to real APIs
@@ -61,7 +61,7 @@ See [milestones/v1.0-ROADMAP.md](milestones/v1.0-ROADMAP.md) for full details.
 **Plans**: 1 plan
 
 Plans:
-- [ ] 11-01: Remove legacy services and document src/ dependencies
+- [x] 11-01: Remove legacy services and document src/ dependencies
 
 #### Phase 12: Deferred Cleanup — Components
 **Goal**: Wire 8 standalone feature components (SentimentAnalysis, AIHashtagGenerator, etc.) to real APIs, consolidate 3 rate limiter files
@@ -141,7 +141,7 @@ Plans:
 | 8. Testing — API | v1.0 | 4/4 | Complete | 2026-02-17 |
 | 9. Performance | v1.0 | 3/3 | Complete | 2026-02-17 |
 | 10. Final Audit | v1.0 | 2/2 | Complete | 2026-02-17 |
-| 11. Deferred — Legacy | v1.1 | 0/? | Not started | - |
+| 11. Deferred — Legacy | v1.1 | 1/1 | Complete | 2026-02-17 |
 | 12. Deferred — Components | v1.1 | 0/? | Not started | - |
 | 13. Feature — Models | v1.1 | 0/? | Not started | - |
 | 14. Feature — Agents | v1.1 | 0/? | Not started | - |
