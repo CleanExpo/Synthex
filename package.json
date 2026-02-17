@@ -66,6 +66,7 @@
     "security:check": "node scripts/validate-env-enhanced.js",
     "build:production": "NODE_ENV=production next build",
     "db:validate": "npx prisma validate && npx prisma generate",
+    "seed:templates": "npx tsx scripts/seed-templates.ts",
     "backup:verify": "node scripts/backup-verification.js verify",
     "backup:verify-all": "node scripts/backup-verification.js verify-all",
     "backup:run-verification": "node scripts/run-backup-verification.js",
