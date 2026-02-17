@@ -47,17 +47,76 @@ export function AIPersonaManager() {
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('overview');
   
-  // Load personas
-  const loadPersonas = useCallback(() => {
-    if (typeof window === 'undefined') return;
-    
-    const stored = localStorage.getItem('ai_personas');
-    if (stored) {
-      const data = JSON.parse(stored);
-      setPersonas(data);
-      if (data.length > 0) {
-        setSelectedPersona((current) => current || data[0]);
+  // Load personas from API
+  const loadPersonas = useCallback(async () => {
+    try {
+      const response = await fetch('/api/personas');
+      if (!response.ok) {
+        if (response.status === 401) {
+          // Not authenticated - clear local state
+          setPersonas([]);
+          return;
+        }
+        throw new Error('Failed to load personas');
       }
+      const { data } = await response.json();
+
+      // Transform API response to PersonaProfile format
+      const transformed: PersonaProfile[] = (data || []).map((p: {
+        id: string;
+        name: string;
+        description?: string;
+        tone?: string;
+        status?: string;
+        accuracy?: number;
+        trainingSourcesCount?: number;
+        lastTrained?: string;
+      }) => ({
+        id: p.id,
+        name: p.name,
+        description: p.description || '',
+        voiceCharacteristics: {
+          tonePreferences: { primary: p.tone || 'professional', secondary: ['friendly'], avoided: [] },
+          vocabularyStyle: { complexity: 'moderate', jargonLevel: 'minimal', preferredWords: [], bannedWords: [] },
+          sentenceStructure: { averageLength: 15, complexity: 'medium', punctuationStyle: 'standard' },
+          emotionalTone: { positivity: 70, energy: 60, formality: 50, humor: 30 }
+        },
+        contentPreferences: {
+          topics: { primary: [], secondary: [], trending: [], avoided: [] },
+          formats: { preferred: [], successful: [], unsuccessful: [] },
+          timing: { bestDays: ['Tuesday', 'Thursday'], bestHours: [9, 12, 17], frequency: 'daily' },
+          hashtags: { commonly: [], branded: [], performance: {} },
+          emojis: { usage: 'moderate', preferred: ['👍', '❤️', '🚀'] }
+        },
+        audienceInsights: {
+          demographics: { ageRange: '25-44', primaryGender: 'all', locations: [], interests: [], occupations: [] },
+          behavior: { activeHours: [9, 12, 17, 20], engagementPatterns: {}, contentPreferences: [], interactionStyle: 'moderate' },
+          sentiment: { overall: 'positive', topicSentiment: {}, feedbackThemes: [] }
+        },
+        learningData: {
+          contentHistory: [],
+          engagementPatterns: [],
+          adaptations: [],
+          experiments: []
+        },
+        performance: {
+          overallScore: p.accuracy || 70,
+          growthRate: 0,
+          engagementRate: 4.5,
+          consistencyScore: 80,
+          adaptabilityScore: 60,
+          predictions: { nextBestTime: new Date(), recommendedContent: [], expectedEngagement: 5 }
+        },
+        createdAt: new Date(),
+        updatedAt: new Date()
+      }));
+
+      setPersonas(transformed);
+      if (transformed.length > 0) {
+        setSelectedPersona((current) => current || transformed[0]);
+      }
+    } catch (error) {
+      console.error('Failed to load personas:', error);
     }
   }, []);
 
@@ -65,66 +124,105 @@ export function AIPersonaManager() {
     loadPersonas();
   }, [loadPersonas]);
   
-  // Create new persona
-  const createPersona = () => {
+  // Create new persona via API
+  const createPersona = async () => {
     if (!newPersonaName.trim()) {
       notify.error('Please enter a persona name');
       return;
     }
-    
-    const persona = personaLearning.createPersona(
-      newPersonaName,
-      newPersonaDescription
-    );
-    
-    setPersonas([...personas, persona]);
-    setSelectedPersona(persona);
-    setShowCreateForm(false);
-    setNewPersonaName('');
-    setNewPersonaDescription('');
-    notify.success('Persona created successfully!');
+
+    setLoading(true);
+    try {
+      const response = await fetch('/api/personas', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: newPersonaName,
+          description: newPersonaDescription
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to create persona');
+      }
+
+      setShowCreateForm(false);
+      setNewPersonaName('');
+      setNewPersonaDescription('');
+      notify.success('Persona created successfully!');
+
+      // Reload personas from API
+      await loadPersonas();
+    } catch (error) {
+      notify.error('Failed to create persona');
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
   };
   
-  // Delete persona
-  const deletePersona = (id: string) => {
-    const updated = personas.filter(p => p.id !== id);
-    setPersonas(updated);
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('ai_personas', JSON.stringify(updated));
+  // Delete persona via API
+  const deletePersona = async (id: string) => {
+    try {
+      const response = await fetch(`/api/personas?id=${id}`, {
+        method: 'DELETE'
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete persona');
+      }
+
+      // Update local state
+      const updated = personas.filter(p => p.id !== id);
+      setPersonas(updated);
+
+      if (selectedPersona?.id === id) {
+        setSelectedPersona(updated[0] || null);
+      }
+
+      notify.success('Persona deleted');
+    } catch (error) {
+      notify.error('Failed to delete persona');
+      console.error(error);
     }
-    
-    if (selectedPersona?.id === id) {
-      setSelectedPersona(updated[0] || null);
-    }
-    
-    notify.success('Persona deleted');
   };
   
-  // Train persona with sample content
+  // Train persona via API
   const trainPersona = async () => {
     if (!selectedPersona) return;
-    
+
     setLoading(true);
-    
-    // Simulate training with sample data
-    setTimeout(() => {
-      personaLearning.learnFromContent(
-        selectedPersona.id,
-        'Sample training content for the AI persona',
-        {
-          likes: Math.floor(Math.random() * 1000),
-          shares: Math.floor(Math.random() * 100),
-          comments: Math.floor(Math.random() * 50),
-          reach: Math.floor(Math.random() * 10000),
-          engagement: Math.random() * 10
-        },
-        'twitter'
-      );
-      
-      loadPersonas();
+
+    try {
+      const response = await fetch(`/api/personas/${selectedPersona.id}/train`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sources: [
+            {
+              type: 'text',
+              content: 'Sample training content for the AI persona. This content helps the AI learn your brand voice and communication style for better content generation.',
+              metadata: { platform: 'general' }
+            }
+          ]
+        })
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Failed to start training');
+      }
+
+      notify.success('Training started! Check back shortly for results.');
+
+      // Reload personas to get updated status
+      await loadPersonas();
+    } catch (error) {
+      notify.error(error instanceof Error ? error.message : 'Failed to train persona');
+      console.error(error);
+    } finally {
       setLoading(false);
-      notify.success('Persona trained with new data');
-    }, 2000);
+    }
   };
   
   // Get performance score color
