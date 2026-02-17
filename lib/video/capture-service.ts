@@ -8,11 +8,20 @@
  * - APP_URL: Application URL (default: http://localhost:3000)
  */
 
-import puppeteer, { Browser, Page } from 'puppeteer';
-import { PuppeteerScreenRecorder } from 'puppeteer-screen-recorder';
+import type { Browser, Page } from 'puppeteer';
 import * as path from 'path';
 import * as fs from 'fs';
 import { logger } from '@/lib/logger';
+
+// Dynamic imports for puppeteer (not available in serverless/production)
+let puppeteer: typeof import('puppeteer') | null = null;
+let PuppeteerScreenRecorderModule: typeof import('puppeteer-screen-recorder') | null = null;
+try {
+  puppeteer = await import('puppeteer');
+  PuppeteerScreenRecorderModule = await import('puppeteer-screen-recorder');
+} catch {
+  // puppeteer not available in production/serverless
+}
 
 export interface CaptureConfig {
   outputDir: string;
@@ -47,7 +56,7 @@ const DEFAULT_CONFIG: CaptureConfig = {
 export class CaptureService {
   private browser: Browser | null = null;
   private page: Page | null = null;
-  private recorder: PuppeteerScreenRecorder | null = null;
+  private recorder: InstanceType<typeof import('puppeteer-screen-recorder').PuppeteerScreenRecorder> | null = null;
   private currentOutputPath: string | null = null;
   private config: CaptureConfig;
   private appUrl: string;
@@ -66,9 +75,13 @@ export class CaptureService {
    * Initialize browser and page
    */
   async init(): Promise<void> {
+    if (!puppeteer) {
+      throw new Error('Puppeteer not available in this environment');
+    }
+
     logger.info('CaptureService initializing browser');
 
-    this.browser = await puppeteer.launch({
+    this.browser = await puppeteer.default.launch({
       headless: false, // Show browser for verification
       defaultViewport: {
         width: this.config.width,
@@ -100,10 +113,13 @@ export class CaptureService {
     if (!this.page) {
       throw new Error('Browser not initialized. Call init() first.');
     }
+    if (!PuppeteerScreenRecorderModule) {
+      throw new Error('Puppeteer not available in this environment');
+    }
 
     const outputPath = path.join(this.config.outputDir, `${filename}.${this.config.format}`);
 
-    this.recorder = new PuppeteerScreenRecorder(this.page, {
+    this.recorder = new PuppeteerScreenRecorderModule.PuppeteerScreenRecorder(this.page, {
       followNewTab: false,
       fps: this.config.fps,
       videoFrame: {
