@@ -59,6 +59,7 @@ interface OnboardingContextType {
   completeStep: (step: number) => void;
   reset: () => void;
   canProceed: (step: number) => boolean;
+  markOnboardingComplete: () => void;
 }
 
 // ============================================================================
@@ -211,6 +212,13 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
     dispatch({ type: 'RESET' });
   }, []);
 
+  const markOnboardingComplete = useCallback(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('onboardingComplete', 'true');
+      localStorage.setItem('onboardingCompletedAt', new Date().toISOString());
+    }
+  }, []);
+
   const canProceed = useCallback((step: number): boolean => {
     switch (step) {
       case 1:
@@ -238,6 +246,7 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
     completeStep,
     reset,
     canProceed,
+    markOnboardingComplete,
   };
 
   return (
