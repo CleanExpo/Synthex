@@ -10,3 +10,4 @@ export { ReportsStats } from './reports-stats';
 export { ReportsFilters } from './reports-filters';
 export { ReportsList } from './reports-list';
 export { GenerateReportModal } from './generate-report-modal';
+export { ReportBuilder } from './report-builder';

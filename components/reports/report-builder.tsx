@@ -1,106 +1,157 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Checkbox } from '@/components/ui/checkbox';
-import { DatePickerWithRange } from '@/components/ui/date-range-picker';
-import { 
+import {
   FileText,
   Plus,
   Trash2,
   Download,
-  Send,
   Calendar,
   Clock,
-  Filter,
   Layout,
   BarChart3,
-  PieChart,
-  LineChart,
   Table,
   Image as ImageIcon,
   Type,
   Move,
   Settings,
   Save,
-  Share2,
   Mail,
   Printer,
-  ChevronUp,
-  ChevronDown,
-  Eye,
-  EyeOff,
-  Sparkles,
   Database,
   TrendingUp,
-  Users,
-  DollarSign,
-  Activity,
-  Grid,
-  Columns,
-  Rows
+  Loader2,
 } from '@/components/icons';
-import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
+import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { notify } from '@/lib/notifications';
+import { useReportTemplates } from '@/hooks/use-report-templates';
+import { useReportExport } from '@/hooks/use-report-export';
+import type { ReportTemplate, TemplateVisualization } from '@/hooks/use-report-templates';
+
+// ============================================================================
+// TYPES
+// ============================================================================
 
 interface ReportWidget {
   id: string;
   type: 'chart' | 'table' | 'metric' | 'text' | 'image';
   title: string;
   dataSource: string;
-  config: any;
+  config: Record<string, unknown>;
   size: 'small' | 'medium' | 'large' | 'full';
   visible: boolean;
-}
-
-interface ReportTemplate {
-  id: string;
-  name: string;
-  description: string;
-  category: string;
-  widgets: ReportWidget[];
-  schedule?: ReportSchedule;
-  filters: ReportFilter[];
 }
 
 interface ReportSchedule {
   frequency: 'daily' | 'weekly' | 'monthly';
   time: string;
   recipients: string[];
-  format: 'pdf' | 'excel' | 'csv';
+  format: 'pdf' | 'csv';
 }
 
-interface ReportFilter {
-  field: string;
-  operator: 'equals' | 'contains' | 'greater' | 'less' | 'between';
-  value: any;
+// ============================================================================
+// METRIC DATA SOURCES
+// ============================================================================
+
+/** Real metric categories aligned with the report template API */
+const METRIC_DATA_SOURCES = [
+  {
+    id: 'performance',
+    name: 'Performance Metrics',
+    metrics: ['impressions', 'reach', 'engagement_rate'],
+  },
+  {
+    id: 'engagement',
+    name: 'Engagement Metrics',
+    metrics: ['likes', 'comments', 'shares', 'saves'],
+  },
+  {
+    id: 'growth',
+    name: 'Growth Metrics',
+    metrics: ['followers'],
+  },
+  {
+    id: 'content',
+    name: 'Content Metrics',
+    metrics: ['clicks', 'conversions'],
+  },
+  {
+    id: 'financial',
+    name: 'Financial Metrics',
+    metrics: ['revenue', 'cost', 'roi', 'cpc', 'cpm'],
+  },
+];
+
+// ============================================================================
+// HELPER: Convert widgets to template visualizations
+// ============================================================================
+
+function widgetsToVisualizations(widgets: ReportWidget[]): TemplateVisualization[] {
+  return widgets
+    .filter(w => w.visible)
+    .map(w => {
+      // Map widget type to visualization type
+      const typeMap: Record<string, TemplateVisualization['type']> = {
+        chart: 'bar',
+        table: 'table',
+        metric: 'metric',
+        text: 'table',
+        image: 'bar',
+      };
+
+      return {
+        type: typeMap[w.type] || 'bar',
+        title: w.title,
+        metrics: [w.dataSource],
+        dimensions: [],
+      };
+    });
 }
 
-interface DataSource {
-  id: string;
-  name: string;
-  type: 'analytics' | 'social' | 'sales' | 'custom';
-  fields: DataField[];
+/** Map API template to local widget list */
+function templateToWidgets(template: ReportTemplate): ReportWidget[] {
+  const visualizations = template.visualizations;
+  if (!visualizations || !Array.isArray(visualizations)) return [];
+
+  return visualizations.map((viz, idx) => {
+    // Map visualization type to widget type
+    const typeMap: Record<string, ReportWidget['type']> = {
+      line: 'chart',
+      bar: 'chart',
+      pie: 'chart',
+      area: 'chart',
+      table: 'table',
+      metric: 'metric',
+      heatmap: 'chart',
+    };
+
+    return {
+      id: `widget-tmpl-${idx}-${Date.now()}`,
+      type: typeMap[viz.type] || 'chart',
+      title: viz.title,
+      dataSource: viz.metrics[0] || 'impressions',
+      config: {},
+      size: 'medium' as const,
+      visible: true,
+    };
+  });
 }
 
-interface DataField {
-  name: string;
-  type: 'string' | 'number' | 'date' | 'boolean';
-  aggregatable: boolean;
-}
+// ============================================================================
+// SORTABLE WIDGET COMPONENT
+// ============================================================================
 
-// Sortable Widget Component
-function SortableWidget({ widget, onEdit, onDelete }: { 
-  widget: ReportWidget; 
+function SortableWidget({ widget, onEdit, onDelete }: {
+  widget: ReportWidget;
   onEdit: (widget: ReportWidget) => void;
   onDelete: (id: string) => void;
 }) {
@@ -196,114 +247,60 @@ function SortableWidget({ widget, onEdit, onDelete }: {
   );
 }
 
-export function CustomReportBuilder() {
-  const [templates, setTemplates] = useState<ReportTemplate[]>([]);
-  const [currentReport, setCurrentReport] = useState<ReportTemplate | null>(null);
+// ============================================================================
+// REPORT BUILDER COMPONENT
+// ============================================================================
+
+export function ReportBuilder() {
+  // API hooks
+  const {
+    templates: apiTemplates,
+    isLoading: templatesLoading,
+    saveTemplate,
+  } = useReportTemplates();
+
+  const {
+    generateReport,
+    isGenerating,
+    exportStatus,
+  } = useReportExport();
+
+  // Local state
   const [widgets, setWidgets] = useState<ReportWidget[]>([]);
-  const [dataSources, setDataSources] = useState<DataSource[]>([]);
   const [showAddWidget, setShowAddWidget] = useState(false);
   const [showSchedule, setShowSchedule] = useState(false);
   const [editingWidget, setEditingWidget] = useState<ReportWidget | null>(null);
   const [reportName, setReportName] = useState('');
   const [reportDescription, setReportDescription] = useState('');
-  
+  const [isSaving, setIsSaving] = useState(false);
+
   // Widget form
   const [widgetType, setWidgetType] = useState('chart');
   const [widgetTitle, setWidgetTitle] = useState('');
   const [widgetDataSource, setWidgetDataSource] = useState('');
   const [widgetSize, setWidgetSize] = useState('medium');
-  
+
   // Schedule form
   const [scheduleFrequency, setScheduleFrequency] = useState('weekly');
   const [scheduleTime, setScheduleTime] = useState('09:00');
   const [scheduleRecipients, setScheduleRecipients] = useState('');
   const [scheduleFormat, setScheduleFormat] = useState('pdf');
-  
+
   const sensors = useSensors(
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
     })
   );
-  
-  const loadTemplates = useCallback(() => {
-    const mockTemplates: ReportTemplate[] = [
-      {
-        id: 'template-1',
-        name: 'Executive Dashboard',
-        description: 'High-level overview for executives',
-        category: 'Dashboard',
-        widgets: [],
-        filters: []
-      },
-      {
-        id: 'template-2',
-        name: 'Social Media Performance',
-        description: 'Detailed social media analytics',
-        category: 'Analytics',
-        widgets: [],
-        filters: []
-      },
-      {
-        id: 'template-3',
-        name: 'ROI Report',
-        description: 'Return on investment analysis',
-        category: 'Financial',
-        widgets: [],
-        filters: []
-      }
-    ];
-    setTemplates(mockTemplates);
-  }, []);
-  
-  const loadDataSources = useCallback(() => {
-    const sources: DataSource[] = [
-      {
-        id: 'analytics',
-        name: 'Website Analytics',
-        type: 'analytics',
-        fields: [
-          { name: 'pageViews', type: 'number', aggregatable: true },
-          { name: 'uniqueVisitors', type: 'number', aggregatable: true },
-          { name: 'bounceRate', type: 'number', aggregatable: true },
-          { name: 'avgSessionDuration', type: 'number', aggregatable: true }
-        ]
-      },
-      {
-        id: 'social',
-        name: 'Social Media Metrics',
-        type: 'social',
-        fields: [
-          { name: 'followers', type: 'number', aggregatable: true },
-          { name: 'engagement', type: 'number', aggregatable: true },
-          { name: 'reach', type: 'number', aggregatable: true },
-          { name: 'impressions', type: 'number', aggregatable: true }
-        ]
-      },
-      {
-        id: 'sales',
-        name: 'Sales Data',
-        type: 'sales',
-        fields: [
-          { name: 'revenue', type: 'number', aggregatable: true },
-          { name: 'orders', type: 'number', aggregatable: true },
-          { name: 'averageOrderValue', type: 'number', aggregatable: true },
-          { name: 'conversionRate', type: 'number', aggregatable: true }
-        ]
-      }
-    ];
-    setDataSources(sources);
-  }, []);
 
-  useEffect(() => {
-    loadTemplates();
-    loadDataSources();
-  }, [loadTemplates, loadDataSources]);
-  
-  const handleDragEnd = (event: any) => {
+  // ========================================================================
+  // DnD Handler (unchanged)
+  // ========================================================================
+
+  const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
-    
-    if (active.id !== over.id) {
+
+    if (over && active.id !== over.id) {
       setWidgets((items) => {
         const oldIndex = items.findIndex((item) => item.id === active.id);
         const newIndex = items.findIndex((item) => item.id === over.id);
@@ -311,102 +308,153 @@ export function CustomReportBuilder() {
       });
     }
   };
-  
+
+  // ========================================================================
+  // Widget CRUD (unchanged logic)
+  // ========================================================================
+
   const addWidget = () => {
     if (!widgetTitle || !widgetDataSource) {
       notify.error('Please fill in all required fields');
       return;
     }
-    
+
     const newWidget: ReportWidget = {
       id: `widget-${Date.now()}`,
-      type: widgetType as any,
+      type: widgetType as ReportWidget['type'],
       title: widgetTitle,
       dataSource: widgetDataSource,
       config: {},
-      size: widgetSize as any,
+      size: widgetSize as ReportWidget['size'],
       visible: true
     };
-    
+
     setWidgets([...widgets, newWidget]);
     setShowAddWidget(false);
     resetWidgetForm();
     notify.success('Widget added successfully');
   };
-  
+
   const updateWidget = () => {
     if (!editingWidget) return;
-    
-    setWidgets(widgets.map(w => 
-      w.id === editingWidget.id 
-        ? { ...editingWidget, title: widgetTitle, dataSource: widgetDataSource, size: widgetSize as any }
+
+    setWidgets(widgets.map(w =>
+      w.id === editingWidget.id
+        ? { ...editingWidget, title: widgetTitle, dataSource: widgetDataSource, size: widgetSize as ReportWidget['size'] }
         : w
     ));
-    
+
     setEditingWidget(null);
     resetWidgetForm();
     notify.success('Widget updated');
   };
-  
+
   const deleteWidget = (id: string) => {
     setWidgets(widgets.filter(w => w.id !== id));
     notify.info('Widget removed');
   };
-  
-  const toggleWidgetVisibility = (id: string) => {
-    setWidgets(widgets.map(w => 
-      w.id === id ? { ...w, visible: !w.visible } : w
-    ));
-  };
-  
+
   const resetWidgetForm = () => {
     setWidgetTitle('');
     setWidgetDataSource('');
     setWidgetType('chart');
     setWidgetSize('medium');
   };
-  
-  const saveReport = () => {
+
+  // ========================================================================
+  // Save Report (wired to real API)
+  // ========================================================================
+
+  const saveReport = useCallback(async () => {
     if (!reportName) {
       notify.error('Please enter a report name');
       return;
     }
-    
-    const report: ReportTemplate = {
-      id: `report-${Date.now()}`,
-      name: reportName,
-      description: reportDescription,
-      category: 'Custom',
-      widgets,
-      filters: [],
-      schedule: showSchedule ? {
-        frequency: scheduleFrequency as any,
-        time: scheduleTime,
-        recipients: scheduleRecipients.split(',').map(e => e.trim()),
-        format: scheduleFormat as any
-      } : undefined
+
+    setIsSaving(true);
+    try {
+      // Collect all unique metrics from widgets
+      const allMetrics = widgets
+        .filter(w => w.visible)
+        .map(w => w.dataSource)
+        .filter((v, i, a) => a.indexOf(v) === i);
+
+      await saveTemplate({
+        name: reportName,
+        description: reportDescription || undefined,
+        category: 'custom',
+        reportType: 'custom',
+        metrics: allMetrics.length > 0 ? allMetrics : ['impressions'],
+        visualizations: widgetsToVisualizations(widgets),
+        layout: {
+          columns: 4,
+          sections: [{
+            title: 'Main',
+            components: widgets.map(w => w.id),
+          }],
+        },
+      });
+
+      notify.success('Report saved successfully!');
+    } catch (err) {
+      notify.error(err instanceof Error ? err.message : 'Failed to save report');
+    } finally {
+      setIsSaving(false);
+    }
+  }, [reportName, reportDescription, widgets, saveTemplate]);
+
+  // ========================================================================
+  // Export Report (wired to real API)
+  // ========================================================================
+
+  const exportReport = useCallback(async (format: string) => {
+    if (!reportName) {
+      notify.error('Please enter a report name before exporting');
+      return;
+    }
+
+    // Map display format to API format
+    const formatMap: Record<string, 'pdf' | 'csv' | 'json'> = {
+      PDF: 'pdf',
+      pdf: 'pdf',
+      CSV: 'csv',
+      csv: 'csv',
+      JSON: 'json',
+      json: 'json',
     };
-    
-    setCurrentReport(report);
-    notify.success('Report saved successfully!');
-  };
-  
-  const exportReport = (format: string) => {
-    notify.info(`Exporting report as ${format}...`);
-    // Simulate export
-    setTimeout(() => {
-      notify.success(`Report exported as ${format}`);
-    }, 2000);
-  };
-  
-  const loadTemplate = (template: ReportTemplate) => {
-    setCurrentReport(template);
+    const apiFormat = formatMap[format] || 'pdf';
+
+    notify.info(`Generating report as ${format}...`);
+    try {
+      const result = await generateReport({
+        name: reportName,
+        type: 'comprehensive',
+        format: apiFormat,
+      });
+
+      if (result?.downloadUrl) {
+        // Open download URL in new tab
+        window.open(result.downloadUrl, '_blank');
+        notify.success(`Report exported as ${format}`);
+      } else {
+        notify.success('Report generated successfully');
+      }
+    } catch (err) {
+      notify.error(err instanceof Error ? err.message : `Failed to export report as ${format}`);
+    }
+  }, [reportName, generateReport]);
+
+  // ========================================================================
+  // Load Template (from API data)
+  // ========================================================================
+
+  const loadTemplate = useCallback((template: ReportTemplate) => {
     setReportName(template.name);
-    setReportDescription(template.description);
-    setWidgets(template.widgets);
+    setReportDescription(template.description || '');
+    setWidgets(templateToWidgets(template));
     notify.success(`Template "${template.name}" loaded`);
-  };
-  
+  }, []);
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -420,7 +468,7 @@ export function CustomReportBuilder() {
             <p className="text-gray-400">Create personalized reports and dashboards</p>
           </div>
         </div>
-        
+
         <div className="flex gap-2">
           <Button
             variant="outline"
@@ -430,13 +478,21 @@ export function CustomReportBuilder() {
             <Calendar className="h-4 w-4 mr-2" />
             Schedule
           </Button>
-          <Button onClick={saveReport} className="gradient-primary">
-            <Save className="h-4 w-4 mr-2" />
-            Save Report
+          <Button
+            onClick={saveReport}
+            disabled={isSaving}
+            className="gradient-primary"
+          >
+            {isSaving ? (
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+            ) : (
+              <Save className="h-4 w-4 mr-2" />
+            )}
+            {isSaving ? 'Saving...' : 'Save Report'}
           </Button>
         </div>
       </div>
-      
+
       <div className="grid gap-6 lg:grid-cols-4">
         {/* Sidebar */}
         <div className="lg:col-span-1 space-y-4">
@@ -456,7 +512,7 @@ export function CustomReportBuilder() {
                   className="mt-1 bg-white/5 border-white/10"
                 />
               </div>
-              
+
               <div>
                 <Label htmlFor="report-desc">Description</Label>
                 <Input
@@ -469,29 +525,37 @@ export function CustomReportBuilder() {
               </div>
             </CardContent>
           </Card>
-          
-          {/* Templates */}
+
+          {/* Templates (from API) */}
           <Card variant="glass">
             <CardHeader>
               <CardTitle>Templates</CardTitle>
               <CardDescription>Start with a template</CardDescription>
             </CardHeader>
             <CardContent className="space-y-2">
-              {templates.map(template => (
-                <Button
-                  key={template.id}
-                  variant="outline"
-                  className="w-full justify-start bg-white/5 border-white/10"
-                  onClick={() => loadTemplate(template)}
-                >
-                  <FileText className="h-4 w-4 mr-2" />
-                  {template.name}
-                </Button>
-              ))}
+              {templatesLoading ? (
+                <div className="flex items-center justify-center py-4">
+                  <Loader2 className="h-5 w-5 animate-spin text-gray-400" />
+                </div>
+              ) : apiTemplates.length === 0 ? (
+                <p className="text-sm text-gray-500 py-2">No templates available</p>
+              ) : (
+                apiTemplates.map(template => (
+                  <Button
+                    key={template.id}
+                    variant="outline"
+                    className="w-full justify-start bg-white/5 border-white/10"
+                    onClick={() => loadTemplate(template)}
+                  >
+                    <FileText className="h-4 w-4 mr-2" />
+                    {template.name}
+                  </Button>
+                ))
+              )}
             </CardContent>
           </Card>
-          
-          {/* Export Options */}
+
+          {/* Export Options (wired to real API) */}
           <Card variant="glass">
             <CardHeader>
               <CardTitle>Export Options</CardTitle>
@@ -501,25 +565,32 @@ export function CustomReportBuilder() {
                 variant="outline"
                 className="w-full justify-start bg-white/5 border-white/10"
                 onClick={() => exportReport('PDF')}
+                disabled={isGenerating}
               >
-                <Download className="h-4 w-4 mr-2" />
+                {isGenerating && exportStatus !== 'idle' ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <Download className="h-4 w-4 mr-2" />
+                )}
                 Export as PDF
               </Button>
               <Button
                 variant="outline"
                 className="w-full justify-start bg-white/5 border-white/10"
-                onClick={() => exportReport('Excel')}
+                onClick={() => exportReport('CSV')}
+                disabled={isGenerating}
               >
-                <Table className="h-4 w-4 mr-2" />
-                Export as Excel
+                <Database className="h-4 w-4 mr-2" />
+                Export as CSV
               </Button>
               <Button
                 variant="outline"
                 className="w-full justify-start bg-white/5 border-white/10"
-                onClick={() => exportReport('CSV')}
+                onClick={() => exportReport('JSON')}
+                disabled={isGenerating}
               >
-                <Database className="h-4 w-4 mr-2" />
-                Export as CSV
+                <Table className="h-4 w-4 mr-2" />
+                Export as JSON
               </Button>
               <Button
                 variant="outline"
@@ -538,7 +609,7 @@ export function CustomReportBuilder() {
             </CardContent>
           </Card>
         </div>
-        
+
         {/* Main Content */}
         <div className="lg:col-span-3 space-y-4">
           {/* Add Widget Button */}
@@ -553,7 +624,7 @@ export function CustomReportBuilder() {
               </Button>
             </CardContent>
           </Card>
-          
+
           {/* Widgets Grid */}
           <DndContext
             sensors={sensors}
@@ -583,17 +654,17 @@ export function CustomReportBuilder() {
               </div>
             </SortableContext>
           </DndContext>
-          
+
           {widgets.length === 0 && (
             <Card variant="glass" className="p-12 text-center">
               <Layout className="h-12 w-12 text-gray-400 mx-auto mb-4" />
               <p className="text-gray-400">No widgets added yet</p>
-              <p className="text-sm text-gray-500 mt-1">Click "Add Widget" to get started</p>
+              <p className="text-sm text-gray-500 mt-1">Click &quot;Add Widget&quot; to get started</p>
             </Card>
           )}
         </div>
       </div>
-      
+
       {/* Add/Edit Widget Modal */}
       <AnimatePresence>
         {showAddWidget && (
@@ -614,7 +685,7 @@ export function CustomReportBuilder() {
               <h3 className="text-lg font-semibold text-white mb-4">
                 {editingWidget ? 'Edit Widget' : 'Add Widget'}
               </h3>
-              
+
               <div className="space-y-4">
                 <div>
                   <Label>Widget Type</Label>
@@ -631,7 +702,7 @@ export function CustomReportBuilder() {
                     </SelectContent>
                   </Select>
                 </div>
-                
+
                 <div>
                   <Label>Title</Label>
                   <Input
@@ -641,7 +712,7 @@ export function CustomReportBuilder() {
                     className="mt-1 bg-white/5 border-white/10"
                   />
                 </div>
-                
+
                 <div>
                   <Label>Data Source</Label>
                   <Select value={widgetDataSource} onValueChange={setWidgetDataSource}>
@@ -649,7 +720,7 @@ export function CustomReportBuilder() {
                       <SelectValue placeholder="Select data source" />
                     </SelectTrigger>
                     <SelectContent>
-                      {dataSources.map(source => (
+                      {METRIC_DATA_SOURCES.map(source => (
                         <SelectItem key={source.id} value={source.id}>
                           {source.name}
                         </SelectItem>
@@ -657,7 +728,7 @@ export function CustomReportBuilder() {
                     </SelectContent>
                   </Select>
                 </div>
-                
+
                 <div>
                   <Label>Size</Label>
                   <Select value={widgetSize} onValueChange={setWidgetSize}>
@@ -673,7 +744,7 @@ export function CustomReportBuilder() {
                   </Select>
                 </div>
               </div>
-              
+
               <div className="flex gap-2 mt-6">
                 <Button
                   onClick={editingWidget ? updateWidget : addWidget}
@@ -697,7 +768,7 @@ export function CustomReportBuilder() {
           </motion.div>
         )}
       </AnimatePresence>
-      
+
       {/* Schedule Modal */}
       <AnimatePresence>
         {showSchedule && (
@@ -716,7 +787,7 @@ export function CustomReportBuilder() {
               className="bg-gray-900 rounded-lg p-6 max-w-md w-full mx-4"
             >
               <h3 className="text-lg font-semibold text-white mb-4">Schedule Report</h3>
-              
+
               <div className="space-y-4">
                 <div>
                   <Label>Frequency</Label>
@@ -731,7 +802,7 @@ export function CustomReportBuilder() {
                     </SelectContent>
                   </Select>
                 </div>
-                
+
                 <div>
                   <Label>Time</Label>
                   <Input
@@ -741,7 +812,7 @@ export function CustomReportBuilder() {
                     className="mt-1 bg-white/5 border-white/10"
                   />
                 </div>
-                
+
                 <div>
                   <Label>Recipients (comma-separated emails)</Label>
                   <Input
@@ -751,7 +822,7 @@ export function CustomReportBuilder() {
                     className="mt-1 bg-white/5 border-white/10"
                   />
                 </div>
-                
+
                 <div>
                   <Label>Format</Label>
                   <Select value={scheduleFormat} onValueChange={setScheduleFormat}>
@@ -760,13 +831,12 @@ export function CustomReportBuilder() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="pdf">PDF</SelectItem>
-                      <SelectItem value="excel">Excel</SelectItem>
                       <SelectItem value="csv">CSV</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
               </div>
-              
+
               <div className="flex gap-2 mt-6">
                 <Button
                   onClick={() => {
