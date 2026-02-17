@@ -15,6 +15,14 @@
 
 import { useApi, useMutation, fetchWithAuth, UseApiOptions } from './use-api';
 import type { PerformanceData } from '@/components/analytics/types';
+import type {
+  PredictionInput,
+  PredictionResult,
+  PredictionHistoryItem,
+  PredictionStats,
+  OptimalTimesResult,
+  EngagementForecast,
+} from '@/components/predictions/types';
 
 // ============================================================================
 // TYPES
@@ -425,6 +433,105 @@ export function useTeamMembers(options?: UseApiOptions<TeamMember[]>) {
     cacheTime: 15 * 60 * 1000,
     ...options,
   });
+}
+
+// ============================================================================
+// PREDICTION HOOKS
+// ============================================================================
+
+export interface PredictionHistoryParams {
+  platform?: string;
+  withActuals?: boolean;
+  limit?: number;
+}
+
+export function usePredictionHistory(
+  params: PredictionHistoryParams = {},
+  options?: UseApiOptions<{
+    predictions: PredictionHistoryItem[];
+    stats: PredictionStats;
+    total: number;
+    hasMore: boolean;
+  }>
+) {
+  const { platform, withActuals = false, limit = 20 } = params;
+  const searchParams = new URLSearchParams();
+
+  if (platform) searchParams.set('platform', platform);
+  if (withActuals) searchParams.set('withActuals', 'true');
+  searchParams.set('limit', String(limit));
+
+  const url = `/api/analytics/predict-engagement?${searchParams.toString()}`;
+
+  return useApi<{
+    predictions: PredictionHistoryItem[];
+    stats: PredictionStats;
+    total: number;
+    hasMore: boolean;
+  }>(url, {
+    staleTime: 60 * 1000, // 1 minute
+    cacheTime: 5 * 60 * 1000, // 5 minutes
+    ...options,
+    deps: [platform, withActuals, limit, ...(options?.deps || [])],
+  });
+}
+
+export function useOptimalTimes(
+  params: { platform: string; timezone?: string },
+  options?: UseApiOptions<OptimalTimesResult>
+) {
+  const { platform, timezone } = params;
+  const searchParams = new URLSearchParams();
+
+  searchParams.set('platform', platform);
+  if (timezone) searchParams.set('timezone', timezone);
+
+  const url = `/api/optimize/auto-schedule?${searchParams.toString()}`;
+
+  return useApi<OptimalTimesResult>(url, {
+    staleTime: 300 * 1000, // 5 minutes
+    cacheTime: 30 * 60 * 1000, // 30 minutes
+    skip: !platform,
+    ...options,
+    deps: [platform, timezone, ...(options?.deps || [])],
+  });
+}
+
+/**
+ * POST to /api/analytics/predict-engagement with content input.
+ * Returns engagement prediction result.
+ */
+export async function fetchEngagementPrediction(
+  input: PredictionInput
+): Promise<PredictionResult> {
+  return fetchWithAuth<PredictionResult>('/api/analytics/predict-engagement', {
+    method: 'POST',
+    body: input,
+  });
+}
+
+/**
+ * POST to /api/predict/trends?action=forecast with forecast parameters.
+ * Returns engagement forecast data.
+ */
+export async function fetchForecast(params: {
+  accountId: string;
+  platform: string;
+  metric?: string;
+  days?: number;
+}): Promise<{ forecast: EngagementForecast; generatedAt: string }> {
+  return fetchWithAuth<{ forecast: EngagementForecast; generatedAt: string }>(
+    '/api/predict/trends?action=forecast',
+    {
+      method: 'POST',
+      body: {
+        accountId: params.accountId,
+        platform: params.platform,
+        metric: params.metric || 'engagement',
+        days: params.days || 30,
+      },
+    }
+  );
 }
 
 // ============================================================================
