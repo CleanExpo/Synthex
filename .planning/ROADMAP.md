@@ -55,13 +55,13 @@ See [milestones/v1.0-ROADMAP.md](milestones/v1.0-ROADMAP.md) for full details.
 **Milestone Goal:** Complete all deferred items from v1.0, add missing features, enhance UI/UX, and properly configure Google Developer Console for production OAuth.
 
 #### Phase 11: Deferred Cleanup — Legacy Services
-**Goal**: Migrate or remove legacy src/ services (analytics.service.js, dashboard-service.ts, competitor-analysis.js, white-label.js) that still contain mock data
+**Goal**: Remove legacy src/services files with mock data, audit and document remaining src/ dependencies
 **Depends on**: v1.0 complete
-**Research**: Unlikely (internal migration)
-**Plans**: TBD
+**Research**: Unlikely (internal cleanup)
+**Plans**: 1 plan
 
 Plans:
-- [ ] 11-01: TBD (run /gsd:plan-phase 11 to break down)
+- [ ] 11-01: Remove legacy services and document src/ dependencies
 
 #### Phase 12: Deferred Cleanup — Components
 **Goal**: Wire 8 standalone feature components (SentimentAnalysis, AIHashtagGenerator, etc.) to real APIs, consolidate 3 rate limiter files
