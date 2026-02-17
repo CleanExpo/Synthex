@@ -7,6 +7,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
 import { emailService } from '@/lib/email/email-service';
+import { authStrict } from '@/lib/middleware/api-rate-limit';
 
 const requestResetSchema = z.object({
   email: z.string().email(),
@@ -14,6 +15,8 @@ const requestResetSchema = z.object({
 
 // Request password reset
 export async function POST(request: NextRequest) {
+  // Distributed rate limiting via Upstash Redis
+  return authStrict(request, async () => {
   try {
     const body = await request.json();
     const validation = requestResetSchema.safeParse(body);
@@ -52,6 +55,7 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
+  });
 }
 
 export const runtime = 'nodejs';

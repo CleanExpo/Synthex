@@ -93,7 +93,7 @@ const DEFAULT_CORS: CORSOptions = {
  * Generate unique request ID
  */
 function generateRequestId(): string {
-  return `req_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 9)}`;
+  return `req_${crypto.randomUUID()}`;
 }
 
 /**

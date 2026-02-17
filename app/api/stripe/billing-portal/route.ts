@@ -12,6 +12,7 @@ import { stripe } from '@/lib/stripe/config';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
 import { createClient } from '@supabase/supabase-js';
 import { getUserIdFromRequestOrCookies, verifyTokenSafe, unauthorizedResponse } from '@/lib/auth/jwt-utils';
+import { billing } from '@/lib/middleware/api-rate-limit';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -19,6 +20,8 @@ const supabase = createClient(
 );
 
 export async function POST(request: NextRequest) {
+  // Distributed rate limiting via Upstash Redis
+  return billing(request, async () => {
   try {
     // Check if Stripe is configured
     if (!stripe) {
@@ -98,4 +101,5 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
+  });
 }

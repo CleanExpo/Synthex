@@ -17,7 +17,6 @@ import {
   type ViewMode,
   type ScheduledPost,
   type ScheduleStats,
-  mockScheduledPosts,
   ScheduleHeader,
   ScheduleStatsGrid,
   ScheduleFilters,
@@ -25,6 +24,7 @@ import {
   ListView,
   OptimalTimes,
 } from '@/components/schedule';
+import { EmptyState } from '@/components/error-states';
 
 export default function SchedulePage() {
   const [posts, setPosts] = useState<ScheduledPost[]>([]);
@@ -77,18 +77,16 @@ export default function SchedulePage() {
               mediaUrls: (p.mediaUrls as string[]) || [],
             }));
 
-            if (apiPosts.length > 0) {
-              setPosts(apiPosts);
-              setIsLoading(false);
-              return;
-            }
+            setPosts(apiPosts);
+            setIsLoading(false);
+            return;
           }
         }
-        await new Promise(resolve => setTimeout(resolve, 400));
-        setPosts(mockScheduledPosts);
+        // API returned non-OK status
+        setError('Failed to load scheduled posts');
         setIsLoading(false);
       } catch {
-        setPosts(mockScheduledPosts);
+        setError('Failed to load scheduled posts');
         setIsLoading(false);
       }
     };
@@ -252,8 +250,44 @@ export default function SchedulePage() {
   const handleRetry = useCallback(async () => {
     setError(null);
     setIsLoading(true);
-    setPosts(mockScheduledPosts);
-    setIsLoading(false);
+    try {
+      const token = getAuthToken();
+      const response = await fetch('/api/scheduler/posts', {
+        credentials: 'include',
+        headers: token ? { 'Authorization': `Bearer ${token}` } : {},
+      });
+
+      if (response.ok) {
+        const { data } = await response.json();
+        const apiPosts: ScheduledPost[] = data.map((p: Record<string, unknown>) => ({
+          id: String(p.id),
+          content: (p.content as string) || '',
+          platforms: (p.platforms as string[]) || [(p.platform as string) || 'twitter'],
+          scheduledFor: new Date(p.scheduledAt as string),
+          status: (p.status as ScheduledPost['status']) || 'scheduled',
+          engagement: {
+            estimated: ((p.metadata as Record<string, unknown>)?.estimatedEngagement as number) || 5,
+            ...(p.status === 'published' ? {
+              actual: ((p.metadata as Record<string, unknown>)?.engagement as Record<string, unknown>)?.actual as number,
+              likes: ((p.metadata as Record<string, unknown>)?.engagement as Record<string, unknown>)?.likes as number,
+              comments: ((p.metadata as Record<string, unknown>)?.engagement as Record<string, unknown>)?.comments as number,
+              shares: ((p.metadata as Record<string, unknown>)?.engagement as Record<string, unknown>)?.shares as number,
+            } : {}),
+          },
+          persona: ((p.metadata as Record<string, unknown>)?.persona as string) || 'Default',
+          hashtags: (p.hashtags as string[]) || [],
+          mediaUrls: (p.mediaUrls as string[]) || [],
+        }));
+        setPosts(apiPosts);
+        setIsLoading(false);
+      } else {
+        setError('Failed to load scheduled posts');
+        setIsLoading(false);
+      }
+    } catch {
+      setError('Failed to load scheduled posts');
+      setIsLoading(false);
+    }
   }, []);
 
   if (isLoading) {
@@ -262,6 +296,17 @@ export default function SchedulePage() {
 
   if (error) {
     return <APIErrorCard title="Schedule Error" message={error} onRetry={handleRetry} />;
+  }
+
+  if (posts.length === 0) {
+    return (
+      <EmptyState
+        title="No posts scheduled yet"
+        message="Create your first post to get started."
+        actionLabel="Create Post"
+        onAction={() => handlePostCreate(new Date(), new Date().getHours())}
+      />
+    );
   }
 
   return (

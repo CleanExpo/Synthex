@@ -16,6 +16,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { z } from 'zod';
 import { sanitizeErrorForResponse } from '@/lib/utils/error-utils';
+import { admin as adminRateLimit } from '@/lib/middleware/api-rate-limit';
 
 // =============================================================================
 // Schemas
@@ -87,6 +88,8 @@ async function verifyAdmin(request: NextRequest): Promise<{
 // =============================================================================
 
 export async function GET(request: NextRequest) {
+  // Distributed rate limiting via Upstash Redis
+  return adminRateLimit(request, async () => {
   try {
     const auth = await verifyAdmin(request);
     if (!auth.isAdmin) {
@@ -173,6 +176,7 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     );
   }
+  });
 }
 
 // =============================================================================
@@ -180,6 +184,8 @@ export async function GET(request: NextRequest) {
 // =============================================================================
 
 export async function POST(request: NextRequest) {
+  // Distributed rate limiting via Upstash Redis
+  return adminRateLimit(request, async () => {
   try {
     const auth = await verifyAdmin(request);
     if (!auth.isAdmin) {
@@ -359,6 +365,7 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
+  });
 }
 
 export const runtime = 'nodejs';

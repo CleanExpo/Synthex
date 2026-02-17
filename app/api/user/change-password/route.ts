@@ -12,6 +12,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase-client';
 import { z } from 'zod';
+import { mutation } from '@/lib/middleware/api-rate-limit';
 
 // Validation schema for password change
 const changePasswordSchema = z.object({
@@ -31,6 +32,8 @@ const changePasswordSchema = z.object({
 });
 
 export async function POST(request: NextRequest) {
+  // Distributed rate limiting via Upstash Redis
+  return mutation(request, async () => {
   try {
     // Auth check - require authorization header with Supabase token
     const authHeader = request.headers.get('authorization');
@@ -112,4 +115,5 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
+  });
 }

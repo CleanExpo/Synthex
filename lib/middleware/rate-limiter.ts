@@ -1,4 +1,6 @@
 /**
+ * Canonical rate limiter — use this for all new routes.
+ *
  * Rate Limiting Middleware for API Protection
  * Implements per-user and per-tier rate limiting with Upstash Redis backing.
  * Falls back to in-memory storage for local development.

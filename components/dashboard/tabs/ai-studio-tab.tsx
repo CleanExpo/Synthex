@@ -8,11 +8,10 @@
 import { Zap, MessageSquare, Target, Calendar } from '@/components/icons';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { glassStyles } from '@/components/ui/index';
 import { cn } from '@/lib/utils';
 import { AnimatedCard } from '../animated-card';
-import { mockAIGenerations, aiQuickActions } from '../dashboard-config';
+import { aiQuickActions } from '../dashboard-config';
 
 const actionIcons = [
   <MessageSquare key="msg" className="h-4 w-4 sm:h-5 sm:w-5" />,
@@ -54,16 +53,8 @@ export function AIStudioTab() {
           {/* Recent AI Generations */}
           <div>
             <h4 className="font-medium mb-3 sm:mb-4 text-sm sm:text-base">Recent AI Generations</h4>
-            <div className="space-y-2 sm:space-y-3">
-              {mockAIGenerations.map((item, i) => (
-                <div key={i} className="flex items-start sm:items-center justify-between p-2 sm:p-3 rounded-lg bg-white/5 gap-2 touch-manipulation">
-                  <div className="flex items-start sm:items-center gap-2 sm:gap-3 min-w-0 flex-1">
-                    <Badge variant="outline" className="text-[10px] sm:text-xs flex-shrink-0">{item.type}</Badge>
-                    <span className="text-xs sm:text-sm truncate">{item.content}</span>
-                  </div>
-                  <span className="text-[10px] sm:text-xs text-muted-foreground whitespace-nowrap flex-shrink-0">{item.time}</span>
-                </div>
-              ))}
+            <div className="flex items-center justify-center p-4 sm:p-6 rounded-lg bg-white/5">
+              <p className="text-xs sm:text-sm text-muted-foreground">No AI generations yet. Use the tools above to get started.</p>
             </div>
           </div>
         </CardContent>

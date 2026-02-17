@@ -22,36 +22,39 @@ export async function GET(request: NextRequest) {
       .from('content_posts')
       .select('*', { count: 'exact', head: true });
     
-    // Calculate system metrics
+    // System metrics — use null for values that require monitoring integration,
+    // keep real data where we have it (userCount, postCount from Supabase queries above).
     const systemMetrics = {
       system: {
         status: 'operational',
-        uptime: '99.9%',
-        responseTime: Math.floor(Math.random() * 100) + 200, // Simulated
-        errorRate: 0.1,
-        requestCount: postCount || 0,
-        activeUsers: userCount || 0
+        uptime: null, // Requires monitoring integration
+        responseTime: null, // Requires APM integration
+        errorRate: null, // Requires error tracking
+        requestCount: postCount || 0, // Real count
+        activeUsers: userCount || 0, // Real count
       },
       database: {
-        connections: Math.floor(Math.random() * 20) + 5,
-        maxConnections: 100,
-        queryTime: Math.floor(Math.random() * 30) + 10,
-        size: '245 MB',
-        backupStatus: 'completed'
+        status: 'connected', // Basic health check passed (Supabase queries above succeeded)
+        connections: null, // Requires pg_stat_activity access
+        maxConnections: 100, // Configuration constant
+        queryTime: null, // Requires APM integration
+        size: null, // Requires admin access
+        backupStatus: null, // Requires backup service integration
       },
       api: {
-        health: 'healthy',
-        latency: Math.floor(Math.random() * 50) + 100,
-        throughput: Math.floor(Math.random() * 200) + 400,
-        errorCount: Math.floor(Math.random() * 5),
-        successRate: 99.7
+        health: 'healthy', // Based on this request succeeding
+        latency: null, // Requires monitoring
+        throughput: null, // Requires monitoring
+        errorCount: null, // Requires error tracking
+        successRate: null, // Requires monitoring
       },
       security: {
-        threats: 0,
-        blockedAttempts: Math.floor(Math.random() * 20) + 5,
-        lastScan: '5 mins ago',
-        sslStatus: 'valid'
-      }
+        threats: null, // Requires WAF integration
+        blockedAttempts: null, // Requires rate limit tracking
+        lastScan: null, // Requires security scanner
+        sslStatus: 'valid', // Can verify with env check
+      },
+      message: 'Basic health check operational. Detailed metrics require monitoring integration (Datadog, Prometheus, etc.).',
     };
 
     return NextResponse.json(systemMetrics);

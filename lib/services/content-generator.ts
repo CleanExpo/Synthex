@@ -248,10 +248,11 @@ export class ContentGeneratorService {
   private generateContentStructure(hookType: string, topic: string): string {
     const templates = CONTENT_TEMPLATES[hookType as keyof typeof CONTENT_TEMPLATES] || CONTENT_TEMPLATES.question;
     
-    // Select random templates
-    const starter = this.selectRandom(templates.starters);
-    const middle = this.selectRandom(templates.middles);
-    const ending = this.selectRandom(templates.endings);
+    // Select templates deterministically based on topic + hookType
+    const seed = `${hookType}:${topic}`;
+    const starter = this.selectDeterministic(templates.starters, seed + ':start');
+    const middle = this.selectDeterministic(templates.middles, seed + ':mid');
+    const ending = this.selectDeterministic(templates.endings, seed + ':end');
     
     // Build content
     let content = starter.replace('{topic}', topic);
@@ -278,11 +279,12 @@ Maintain the core message but adapt the voice to be ${persona.attributes.emotion
       
       try {
         const aiRewrite = await this.generateWithAI(prompt, 300);
-        if (aiRewrite && !aiRewrite.includes('mock')) {
+        if (aiRewrite) {
           return aiRewrite;
         }
       } catch (error) {
         console.error('Persona voice AI error:', error);
+        // Fall through to basic tone/style transformations below
       }
     }
     
@@ -376,35 +378,29 @@ Maintain the core message but adapt the voice to be ${persona.attributes.emotion
   }
 
   /**
-   * Generate content variations
+   * Generate content variations using AI
+   * Returns empty array when AI is unavailable rather than faking variations.
    */
   private async generateVariations(content: string, count: number): Promise<string[]> {
-    const variations: string[] = [];
-    
-    for (let i = 0; i < count; i++) {
-      // In production, use AI API for variations
-      // For now, create simple variations
-      let variation = content;
-      
-      // Variation strategies
-      switch (i) {
-        case 0:
-          // Question variation
-          variation = this.convertToQuestion(content);
-          break;
-        case 1:
-          // Emoji variation
-          variation = this.varyEmojis(content);
-          break;
-        case 2:
-          // Structure variation
-          variation = this.reorderContent(content);
-          break;
-      }
-      
-      variations.push(variation);
+    if (!this.apiKey) {
+      // AI unavailable — return empty variations instead of faking them
+      return [];
     }
-    
+
+    const variations: string[] = [];
+
+    for (let i = 0; i < count; i++) {
+      const variationPrompt = `Create a unique variation of this content that keeps the same core message but uses a different angle or style:\n\n"${content}"`;
+      try {
+        const variation = await this.generateWithAI(variationPrompt, 300);
+        variations.push(variation);
+      } catch (error) {
+        console.error(`Failed to generate variation ${i + 1}:`, error);
+        // Stop trying more variations if AI is failing
+        break;
+      }
+    }
+
     return variations;
   }
 
@@ -413,8 +409,7 @@ Maintain the core message but adapt the voice to be ${persona.attributes.emotion
    */
   async generateWithAI(prompt: string, maxTokens: number = 500): Promise<string> {
     if (!this.apiKey) {
-      // Return mock AI-generated content
-      return this.generateMockAIContent(prompt);
+      throw new Error('AI API key not configured. Content generation requires an API key. Configure OpenRouter or Anthropic API key in settings.');
     }
 
     try {
@@ -425,7 +420,7 @@ Maintain the core message but adapt the voice to be ${persona.attributes.emotion
       }
     } catch (error) {
       console.error('AI generation error:', error);
-      return this.generateMockAIContent(prompt);
+      throw error;
     }
   }
 
@@ -435,46 +430,45 @@ Maintain the core message but adapt the voice to be ${persona.attributes.emotion
   private async generateWithOpenAI(prompt: string, maxTokens: number): Promise<string> {
     const openRouterKey = process.env.OPENROUTER_API_KEY;
     if (!openRouterKey) {
-      return this.generateMockAIContent(prompt);
+      throw new Error('OpenRouter API key not configured. Configure OPENROUTER_API_KEY in environment variables.');
     }
 
-    try {
-      const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${openRouterKey}`,
-          'Content-Type': 'application/json',
-          'HTTP-Referer': process.env.OPENROUTER_SITE_URL || 'https://synthex.app',
-          'X-Title': 'SYNTHEX Content Generator'
-        },
-        body: JSON.stringify({
-          model: 'openai/gpt-4-turbo-preview',
-          messages: [
-            {
-              role: 'system',
-              content: 'You are a viral content creator specializing in social media marketing. Generate engaging, platform-optimized content.'
-            },
-            {
-              role: 'user',
-              content: prompt
-            }
-          ],
-          max_tokens: maxTokens,
-          temperature: 0.8,
-          top_p: 0.9
-        })
-      });
+    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${openRouterKey}`,
+        'Content-Type': 'application/json',
+        'HTTP-Referer': process.env.OPENROUTER_SITE_URL || 'https://synthex.app',
+        'X-Title': 'SYNTHEX Content Generator'
+      },
+      body: JSON.stringify({
+        model: 'openai/gpt-4-turbo-preview',
+        messages: [
+          {
+            role: 'system',
+            content: 'You are a viral content creator specializing in social media marketing. Generate engaging, platform-optimized content.'
+          },
+          {
+            role: 'user',
+            content: prompt
+          }
+        ],
+        max_tokens: maxTokens,
+        temperature: 0.8,
+        top_p: 0.9
+      })
+    });
 
-      if (!response.ok) {
-        throw new Error(`OpenRouter API error: ${response.status}`);
-      }
-
-      const data = await response.json();
-      return data.choices[0]?.message?.content || this.generateMockAIContent(prompt);
-    } catch (error) {
-      console.error('OpenRouter API error:', error);
-      return this.generateMockAIContent(prompt);
+    if (!response.ok) {
+      throw new Error(`OpenRouter API error: ${response.status}`);
     }
+
+    const data = await response.json();
+    const content = data.choices[0]?.message?.content;
+    if (!content) {
+      throw new Error('AI service returned empty content. Please try again.');
+    }
+    return content;
   }
 
   /**
@@ -483,77 +477,75 @@ Maintain the core message but adapt the voice to be ${persona.attributes.emotion
   private async generateWithAnthropic(prompt: string, maxTokens: number): Promise<string> {
     const openRouterKey = process.env.OPENROUTER_API_KEY;
     if (!openRouterKey) {
-      return this.generateMockAIContent(prompt);
+      throw new Error('OpenRouter API key not configured. Configure OPENROUTER_API_KEY in environment variables.');
     }
 
-    try {
-      const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${openRouterKey}`,
-          'Content-Type': 'application/json',
-          'HTTP-Referer': process.env.OPENROUTER_SITE_URL || 'https://synthex.app',
-          'X-Title': 'SYNTHEX Content Generator'
-        },
-        body: JSON.stringify({
-          model: 'anthropic/claude-3-opus',
-          messages: [
-            {
-              role: 'system',
-              content: 'You are a viral content creator specializing in social media marketing. Generate engaging, platform-optimized content.'
-            },
-            {
-              role: 'user',
-              content: prompt
-            }
-          ],
-          max_tokens: maxTokens,
-          temperature: 0.8
-        })
-      });
+    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${openRouterKey}`,
+        'Content-Type': 'application/json',
+        'HTTP-Referer': process.env.OPENROUTER_SITE_URL || 'https://synthex.app',
+        'X-Title': 'SYNTHEX Content Generator'
+      },
+      body: JSON.stringify({
+        model: 'anthropic/claude-3-opus',
+        messages: [
+          {
+            role: 'system',
+            content: 'You are a viral content creator specializing in social media marketing. Generate engaging, platform-optimized content.'
+          },
+          {
+            role: 'user',
+            content: prompt
+          }
+        ],
+        max_tokens: maxTokens,
+        temperature: 0.8
+      })
+    });
 
-      if (!response.ok) {
-        throw new Error(`OpenRouter API error: ${response.status}`);
-      }
-
-      const data = await response.json();
-      return data.choices[0]?.message?.content || this.generateMockAIContent(prompt);
-    } catch (error) {
-      console.error('OpenRouter API error:', error);
-      return this.generateMockAIContent(prompt);
+    if (!response.ok) {
+      throw new Error(`OpenRouter API error: ${response.status}`);
     }
-  }
 
-  /**
-   * Generate mock AI content for development
-   */
-  private generateMockAIContent(prompt: string): string {
-    const mockResponses = [
-      "🚀 Just discovered the secret to {topic} success: consistency beats perfection every time. Start small, stay focused, and watch the compound effect work its magic. What's your take on this approach?",
-      "Unpopular opinion: {topic} isn't about talent, it's about showing up when you don't feel like it. I've seen this play out countless times. The winners aren't the most gifted - they're the most persistent.",
-      "Story time: Last year, {topic} seemed impossible. Today, it's my reality. The difference? I stopped waiting for the 'perfect moment' and started with what I had. Your turn - what's holding you back?",
-    ];
-    
-    const response = this.selectRandom(mockResponses);
-    return response.replace('{topic}', prompt.slice(0, 50));
+    const data = await response.json();
+    const content = data.choices[0]?.message?.content;
+    if (!content) {
+      throw new Error('AI service returned empty content. Please try again.');
+    }
+    return content;
   }
 
   // Helper methods
-  private selectRandom<T>(array: T[]): T {
-    return array[Math.floor(Math.random() * array.length)];
+
+  /** djb2 hash for deterministic selection from arrays */
+  private djb2(str: string): number {
+    let hash = 5381;
+    for (let i = 0; i < str.length; i++) {
+      hash = ((hash << 5) + hash) + str.charCodeAt(i);
+      hash = hash & hash;
+    }
+    return Math.abs(hash);
+  }
+
+  /** Select from array deterministically based on a seed string */
+  private selectDeterministic<T>(array: T[], seed: string): T {
+    return array[this.djb2(seed) % array.length];
   }
 
   private replacePlaceholders(content: string, data: PlaceholderData): string {
     let result = content;
-    
+
     // Replace topic
     result = result.replace(/{topic}/g, data.topic);
-    
-    // Replace other common placeholders
-    result = result.replace(/{number}/g, String(Math.floor(Math.random() * 5) + 3));
-    result = result.replace(/{adjective}/g, this.selectRandom(['amazing', 'incredible', 'unexpected', 'surprising']));
-    result = result.replace(/{timeframe}/g, this.selectRandom(['3 months', '6 months', '1 year', '2 years']));
-    
+
+    // Replace other common placeholders deterministically based on topic
+    const topicSeed = data.topic;
+    result = result.replace(/{number}/g, String((this.djb2(topicSeed) % 5) + 3));
+    result = result.replace(/{adjective}/g, this.selectDeterministic(['amazing', 'incredible', 'unexpected', 'surprising'], topicSeed + 'adj'));
+    result = result.replace(/{timeframe}/g, this.selectDeterministic(['3 months', '6 months', '1 year', '2 years'], topicSeed + 'time'));
+
     return result;
   }
 
@@ -585,7 +577,7 @@ Maintain the core message but adapt the voice to be ${persona.attributes.emotion
 
   private addEmojis(content: string): string {
     const emojis = ['🚀', '💡', '✨', '🔥', '💪', '🎯', '📈', '💼', '🌟', '⚡'];
-    const emoji = this.selectRandom(emojis);
+    const emoji = this.selectDeterministic(emojis, content.slice(0, 50));
     return emoji + ' ' + content;
   }
 
@@ -678,36 +670,6 @@ Maintain the core message but adapt the voice to be ${persona.attributes.emotion
     return lines.join('\n.\n'); // Add line breaks with dots
   }
 
-  private convertToQuestion(content: string): string {
-    if (content.includes('?')) return content;
-    return content.replace(/\.$/, '?');
-  }
-
-  private varyEmojis(content: string): string {
-    const emojiMap: Record<string, string> = {
-      '🚀': '⚡',
-      '💡': '✨',
-      '🔥': '💪',
-      '📈': '📊',
-      '❤️': '💖',
-    };
-    
-    let varied = content;
-    Object.entries(emojiMap).forEach(([original, replacement]) => {
-      varied = varied.replace(new RegExp(original, 'g'), replacement);
-    });
-    
-    return varied;
-  }
-
-  private reorderContent(content: string): string {
-    const parts = content.split('\n\n');
-    if (parts.length < 2) return content;
-    
-    // Move last part to beginning
-    const reordered = [parts[parts.length - 1], ...parts.slice(0, -1)];
-    return reordered.join('\n\n');
-  }
 }
 
 // Export singleton instance

@@ -698,7 +698,7 @@ class ClientManagementService {
   }
 
   private generateInviteToken(): string {
-    return `inv_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
+    return `inv_${crypto.randomUUID()}`;
   }
 
   private getDefaultPermissions(role: string): string[] {

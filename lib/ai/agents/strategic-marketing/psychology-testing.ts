@@ -88,35 +88,45 @@ export class PsychologyEffectivenessTester {
   async runABTest(
     variantA: ABTestVariant,
     variantB: ABTestVariant,
-    sampleSize: number = 1000,
-    testDurationHours: number = 24
+    _sampleSize: number = 1000,
+    _testDurationHours: number = 24
   ): Promise<ABTestResult> {
-    // Simulate A/B test results
-    const metricsA = await this.simulateUserInteractions(variantA, sampleSize);
-    const metricsB = await this.simulateUserInteractions(variantB, sampleSize);
-    
+    // Use existing variant metrics for comparison (real engagement data
+    // must be populated on the variant objects before calling this method).
+    // Previously this method simulated random metrics — now it requires
+    // the caller to supply real engagement data on each variant.
+    const metricsA = variantA.metrics;
+    const metricsB = variantB.metrics;
+
+    if (!metricsA || !metricsB) {
+      throw new Error(
+        'A/B testing requires real engagement data. ' +
+        'Populate metrics on each variant from analytics before running a test.'
+      );
+    }
+
     // Calculate statistical significance
-    const significance = this.calculateStatisticalSignificance(metricsA, metricsB, sampleSize);
-    
+    const significance = this.calculateStatisticalSignificance(metricsA, metricsB, _sampleSize);
+
     // Determine winner
     const winner = this.determineWinner(variantA, variantB, metricsA, metricsB);
-    
+
     // Calculate improvement
     const improvement = this.calculateImprovement(metricsA, metricsB);
-    
+
     // Generate recommendations
     const recommendations = this.generateRecommendations(winner, metricsA, metricsB);
-    
+
     // Store test results in database
     await this.storeTestResults({
       variants: [variantA, variantB],
       winner,
       metrics: { A: metricsA, B: metricsB },
-      sampleSize,
-      testDurationHours,
+      sampleSize: _sampleSize,
+      testDurationHours: _testDurationHours,
       significance
     });
-    
+
     return {
       winner,
       confidence: significance.confidence,
@@ -295,23 +305,6 @@ export class PsychologyEffectivenessTester {
     };
   }
 
-  private async simulateUserInteractions(
-    variant: ABTestVariant,
-    sampleSize: number
-  ): Promise<PsychologyTestMetrics> {
-    // Simulate user interactions based on psychological principles
-    const baseMetrics = variant.metrics;
-    const variance = 0.1; // 10% variance in simulated data
-    
-    return {
-      engagementScore: this.addVariance(baseMetrics.engagementScore, variance),
-      conversionRate: this.addVariance(baseMetrics.conversionRate, variance),
-      recallScore: this.addVariance(baseMetrics.recallScore, variance),
-      clickThroughRate: this.addVariance(baseMetrics.clickThroughRate, variance),
-      emotionalResonance: this.addVariance(baseMetrics.emotionalResonance, variance),
-      brandAlignment: this.addVariance(baseMetrics.brandAlignment, variance)
-    };
-  }
 
   private calculateStatisticalSignificance(
     metricsA: PsychologyTestMetrics,
@@ -509,10 +502,6 @@ export class PsychologyEffectivenessTester {
     return relevanceMap[audienceType]?.[principle] || 7;
   }
 
-  private addVariance(value: number, variance: number): number {
-    const adjustment = (Math.random() - 0.5) * 2 * variance * value;
-    return Math.max(0, Math.min(100, value + adjustment));
-  }
 
   private calculateAverageMetricDifference(
     metricsA: PsychologyTestMetrics,
@@ -593,8 +582,8 @@ export class PsychologyEffectivenessTester {
     criterion: ValidationCriterion,
     context: ValidationContext
   ): { passed: boolean; score: number; issue: string; suggestion: string } {
-    // Simplified criterion evaluation
-    const passed = Math.random() > 0.3; // Mock evaluation
+    // Deterministic criterion evaluation based on text analysis
+    const passed = this.evaluateCheckDeterministic(element, criterion.check, context);
     const weight = typeof criterion.weight === 'number' ? criterion.weight : 1;
     const score = passed ? weight * 100 : weight * 40;
 
@@ -604,6 +593,45 @@ export class PsychologyEffectivenessTester {
       issue: passed ? '' : `Failed ${criterion.check} validation`,
       suggestion: passed ? '' : `Consider adjusting to better reflect ${criterion.check}`
     };
+  }
+
+  /**
+   * Deterministic check evaluation using text analysis instead of random values.
+   * Each check type examines the element for relevant linguistic signals.
+   */
+  private evaluateCheckDeterministic(
+    element: string,
+    check: string,
+    _context: ValidationContext
+  ): boolean {
+    const lower = element.toLowerCase();
+
+    switch (check) {
+      case 'starts_with_premium':
+        return /^(premium|elite|luxury|exclusive|ultimate|pro)/i.test(element);
+      case 'contains_superlative':
+        return /\b(best|finest|top|leading|greatest|ultimate|supreme)\b/i.test(element);
+      case 'sets_high_expectation':
+        return /\b(guarantee|promise|ensure|deliver|exceed|superior|exceptional)\b/i.test(element);
+      case 'implies_popularity':
+        return /\b(popular|trusted|millions|everyone|community|together|join)\b/i.test(element);
+      case 'references_community':
+        return /\b(community|members|users|followers|network|tribe|family)\b/i.test(element);
+      case 'shows_adoption':
+        return /\b(used by|trusted by|chosen by|loved by|preferred|recommended)\b/i.test(element);
+      case 'suggests_limitation':
+        return /\b(limited|exclusive|rare|only|few|scarce|select)\b/i.test(element);
+      case 'implies_exclusivity':
+        return /\b(exclusive|invitation|members only|private|select|elite|vip)\b/i.test(element);
+      case 'creates_urgency':
+        return /\b(now|today|limited time|hurry|last chance|don't miss|act fast)\b/i.test(element);
+      case 'general_quality':
+        // Pass if the element has reasonable length and no problematic characters
+        return lower.length >= 2 && lower.length <= 200;
+      default:
+        // Unknown check — pass if the element is non-empty
+        return lower.length > 0;
+    }
   }
 
   private getEmotionKeywords(emotion: string): { primary: string[]; secondary: string[] } {

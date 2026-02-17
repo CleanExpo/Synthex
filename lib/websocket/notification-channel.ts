@@ -165,7 +165,7 @@ export class NotificationChannel {
   ): Promise<DeliveryStatus> {
     const fullNotification: Notification = {
       ...notification,
-      id: `notif-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+      id: `notif-${crypto.randomUUID()}`,
       createdAt: new Date(),
       read: false,
     };

@@ -1,6 +1,11 @@
 /**
  * AI Persona Learning System
  * Learns and adapts to brand voice and audience preferences
+ *
+ * NOTE(phase-3): This file is client-side (imported by components/AIPersonaManager.tsx).
+ * It uses in-memory Map and localStorage for persona storage.
+ * Phase 3 will migrate this to API calls backed by Prisma database queries
+ * (the Persona model in prisma/schema.prisma) instead of localStorage.
  */
 
 export interface PersonaProfile {
@@ -379,39 +384,19 @@ export class PersonaLearningSystem {
   
   // Run A/B test experiment
   runExperiment(
-    personaId: string,
-    hypothesis: string,
-    variable: string,
-    control: unknown,
-    variant: unknown
+    _personaId: string,
+    _hypothesis: string,
+    _variable: string,
+    _control: unknown,
+    _variant: unknown
   ): Experiment {
-    const persona = this.personas.get(personaId);
-    if (!persona) throw new Error('Persona not found');
-    
-    const experiment: Experiment = {
-      id: `exp-${Date.now()}`,
-      hypothesis,
-      variable,
-      control,
-      variant,
-      result: 'inconclusive',
-      learning: ''
-    };
-    
-    // Simulate experiment (in production, this would track actual results)
-    setTimeout(() => {
-      // Random result for demonstration
-      const success = Math.random() > 0.5;
-      experiment.result = success ? 'success' : 'failure';
-      experiment.learning = success 
-        ? `${variable} variant performed ${Math.floor(Math.random() * 30 + 10)}% better`
-        : `Control performed better than ${variable} variant`;
-      
-      persona.learningData.experiments.push(experiment);
-      this.savePersonas();
-    }, 5000);
-    
-    return experiment;
+    // Experiment tracking requires analytics integration (API-backed).
+    // This client-side file is pending migration to API calls (see TODO at top).
+    // Previously this used Math.random() to simulate results, which is not useful.
+    throw new Error(
+      'Experiment tracking not configured. ' +
+      'A/B testing requires analytics integration backed by the Persona API.'
+    );
   }
   
   // Get persona recommendations

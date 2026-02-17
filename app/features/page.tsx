@@ -1,6 +1,10 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
+import { PAGE_METADATA } from '@/lib/seo/metadata';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+
+export const metadata: Metadata = PAGE_METADATA.features;
 import {
   Sparkles, TrendingUp, Users, Calendar, BarChart3, Zap,
   Brain, Target, Palette, Shield, Globe,

@@ -107,6 +107,7 @@ export interface PostContent {
   linkUrl?: string;
   visibility?: 'public' | 'connections' | 'private';
   scheduledAt?: Date;
+  metadata?: Record<string, unknown>;
 }
 
 export interface PostResult {

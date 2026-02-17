@@ -1,1 +1,0 @@
-# SYNTHEX Production Status

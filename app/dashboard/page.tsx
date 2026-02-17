@@ -66,7 +66,7 @@ export default function DashboardPage() {
         scheduledPosts: data.stats?.scheduledPosts || 0,
         engagementRate: parseFloat(data.stats?.avgEngagementRate || '0'),
         followers: data.stats?.totalFollowers || 0,
-        trendingTopics: data.trendingTopics || ['#AI', '#SocialMedia', '#Marketing', '#Growth'],
+        trendingTopics: data.trendingTopics || [],
         recentActivity: (data.recentActivity || []).map((activity: { platform: string; action: string; time: string; engagement?: number }, index: number) => ({
           id: String(index + 1),
           type: activity.engagement && activity.engagement > 100 ? 'engagement' : 'post' as const,

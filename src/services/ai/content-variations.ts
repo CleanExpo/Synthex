@@ -15,6 +15,7 @@
  * FAILURE MODE: Returns original content if AI fails
  */
 
+import { randomUUID } from 'crypto';
 import { logger } from '@/lib/logger';
 import { getCache } from '@/lib/cache/cache-manager';
 
@@ -616,61 +617,24 @@ Variation:`;
   }
 
   /**
-   * Generate fallback variations without AI
+   * When AI is unavailable, return an empty array.
+   * Simple string manipulation (adding prefixes, truncating) does not produce
+   * genuine content variations and should not silently substitute for AI output.
    */
   private generateFallbackVariations(
-    content: string,
-    platform: PlatformStyle,
-    count: number
+    _content: string,
+    _platform: PlatformStyle,
+    _count: number
   ): ContentVariation[] {
-    const variations: ContentVariation[] = [];
-    const limits = PLATFORM_LIMITS[platform];
-
-    // Variation 1: Add question
-    if (!content.includes('?')) {
-      const questionVariation = `What do you think about this? ${content}`;
-      variations.push(this.createVariation(questionVariation, 'question', platform, limits));
-    }
-
-    // Variation 2: Add emoji
-    const emojiVariation = `✨ ${content}`;
-    variations.push(this.createVariation(emojiVariation, 'emoji', platform, limits));
-
-    // Variation 3: Shorter version
-    if (content.length > 100) {
-      const shortVariation = content.slice(0, 100) + '...';
-      variations.push(this.createVariation(shortVariation, 'length', platform, limits));
-    }
-
-    return variations.slice(0, count);
-  }
-
-  /**
-   * Create a variation object
-   */
-  private createVariation(
-    content: string,
-    strategy: VariationStrategy,
-    platform: PlatformStyle,
-    limits: { minLength: number; maxLength: number; hashtagLimit: number }
-  ): ContentVariation {
-    const adjusted = this.adjustForPlatform(content, platform, limits);
-    return {
-      id: this.generateId(),
-      content: adjusted,
-      strategy,
-      tone: this.detectTone(adjusted),
-      platform,
-      metadata: this.analyzeContent(adjusted),
-      score: this.estimateEngagement(adjusted),
-    };
+    logger.warn('Content variation generation failed: AI service unavailable. No fallback variations generated.');
+    return [];
   }
 
   /**
    * Generate unique ID
    */
   private generateId(): string {
-    return `var_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 9)}`;
+    return `var_${randomUUID()}`;
   }
 }
 
@@ -686,7 +650,7 @@ export class ABTestService {
     organizationId: string,
     config: ABTestConfig
   ): Promise<{ testId: string; status: string }> {
-    const testId = `abt_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 9)}`;
+    const testId = `abt_${randomUUID()}`;
 
     const cache = getCache();
     await cache.set(

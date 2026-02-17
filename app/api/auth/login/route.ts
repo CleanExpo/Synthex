@@ -12,6 +12,7 @@ import { z } from 'zod';
 import { generateToken } from '@/lib/auth/jwt-utils';
 import { prisma } from '@/lib/prisma';
 import { supabase } from '@/lib/supabase-client';
+import { authStrict } from '@/lib/middleware/api-rate-limit';
 
 const loginSchema = z.object({
   email: z.string().email(),
@@ -23,6 +24,8 @@ export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
 export async function POST(request: NextRequest) {
+  // Distributed rate limiting via Upstash Redis
+  return authStrict(request, async () => {
   try {
     // Parse and validate request body
     const body = await request.json();
@@ -154,4 +157,5 @@ export async function POST(request: NextRequest) {
     );
   }
   // Note: Using connection pooling, no need for prisma.$disconnect()
+  });
 }

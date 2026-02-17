@@ -268,6 +268,62 @@ export const PAGE_METADATA = {
     path: '/api-reference',
     keywords: ['API', 'developer docs', 'integration', 'REST API'],
   }),
+
+  contact: generateMetadata({
+    title: 'Contact Us',
+    description: 'Get in touch with the Synthex team. We\'re here to help with sales, support, and partnerships.',
+    path: '/contact',
+    keywords: ['contact', 'support', 'sales', 'partnerships'],
+  }),
+
+  careers: generateMetadata({
+    title: 'Careers',
+    description: 'Join the Synthex team and help build the future of AI-powered marketing. View open positions.',
+    path: '/careers',
+    keywords: ['careers', 'jobs', 'hiring', 'work at synthex'],
+  }),
+
+  caseStudies: generateMetadata({
+    title: 'Case Studies',
+    description: 'See how businesses use Synthex to transform their social media marketing with AI automation.',
+    path: '/case-studies',
+    keywords: ['case studies', 'success stories', 'customer results', 'ROI'],
+  }),
+
+  changelog: generateMetadata({
+    title: 'Changelog',
+    description: 'Stay up to date with the latest Synthex product updates, new features, and improvements.',
+    path: '/changelog',
+    keywords: ['changelog', 'updates', 'releases', 'new features'],
+  }),
+
+  roadmap: generateMetadata({
+    title: 'Product Roadmap',
+    description: 'See what\'s coming next for Synthex. Our public roadmap shows upcoming features and improvements.',
+    path: '/roadmap',
+    keywords: ['roadmap', 'upcoming features', 'product plans'],
+  }),
+
+  security: generateMetadata({
+    title: 'Security',
+    description: 'Learn about Synthex\'s security practices, data protection measures, and compliance certifications.',
+    path: '/security',
+    keywords: ['security', 'data protection', 'compliance', 'SOC 2', 'encryption'],
+  }),
+
+  support: generateMetadata({
+    title: 'Support',
+    description: 'Get help with Synthex. Access documentation, FAQs, tutorials, and contact our support team.',
+    path: '/support',
+    keywords: ['support', 'help center', 'FAQ', 'documentation', 'tutorials'],
+  }),
+
+  docs: generateMetadata({
+    title: 'Documentation',
+    description: 'Comprehensive documentation for getting started with Synthex. Guides, tutorials, and API reference.',
+    path: '/docs',
+    keywords: ['documentation', 'guides', 'tutorials', 'getting started'],
+  }),
 };
 
 /**

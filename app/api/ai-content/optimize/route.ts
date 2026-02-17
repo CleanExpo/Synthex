@@ -18,6 +18,7 @@ import { openRouterClient } from '@/lib/ai/openrouter-client';
 import { logger } from '@/lib/logger';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
 import { auditLogger } from '@/lib/security/audit-logger';
+import { aiGeneration } from '@/lib/middleware/api-rate-limit';
 
 // Validation schema
 const OptimizeRequestSchema = z.object({
@@ -42,7 +43,21 @@ const PLATFORM_LIMITS: Record<string, number> = {
   youtube: 5000,
 };
 
-// CTA templates by goal
+/**
+ * Deterministic index selection based on content hash.
+ * Replaces Math.random() so the same content always selects the same template,
+ * making responses reproducible and testable.
+ */
+function deterministicIndex(content: string, arrayLength: number): number {
+  let hash = 0;
+  for (let i = 0; i < content.length; i++) {
+    hash = ((hash << 5) - hash) + content.charCodeAt(i);
+    hash |= 0; // Convert to 32-bit integer
+  }
+  return Math.abs(hash) % arrayLength;
+}
+
+// CTA templates by goal — default optimization templates, can be overridden per-user in database
 const CTA_TEMPLATES: Record<string, string[]> = {
   engagement: [
     'What do you think? 👇',
@@ -77,7 +92,7 @@ const CTA_TEMPLATES: Record<string, string[]> = {
   ],
 };
 
-// Engagement-boosting hooks
+// Engagement-boosting hooks — default optimization templates, can be overridden per-user in database
 const HOOK_STARTERS: string[] = [
   'Here\'s what nobody tells you about',
   'The truth about',
@@ -92,6 +107,8 @@ const HOOK_STARTERS: string[] = [
 ];
 
 export async function POST(request: NextRequest) {
+  // Distributed rate limiting via Upstash Redis
+  return aiGeneration(request, async () => {
   try {
     // Security check
     const security = await APISecurityChecker.check(
@@ -274,6 +291,7 @@ Keep the core message but enhance engagement. Follow platform best practices.`
       { status: 500 }
     );
   }
+  });
 }
 
 // Build optimization prompt
@@ -366,7 +384,7 @@ function applyRulesOptimization(
 
   // Add hook if content doesn't start with one
   if (!startsWithHook(optimized)) {
-    const hook = HOOK_STARTERS[Math.floor(Math.random() * HOOK_STARTERS.length)];
+    const hook = HOOK_STARTERS[deterministicIndex(optimized, HOOK_STARTERS.length)];
     if (optimized.length + hook.length + 5 < maxLength) {
       // Don't prepend hook, just suggest it
       suggestions.push(`Consider starting with a hook like: "${hook}"`);
@@ -385,7 +403,7 @@ function applyRulesOptimization(
   // Add CTA if requested
   if (includeCTA && !hasCTA(optimized)) {
     const ctas = CTA_TEMPLATES[goal] || CTA_TEMPLATES.engagement;
-    const cta = ctas[Math.floor(Math.random() * ctas.length)];
+    const cta = ctas[deterministicIndex(optimized, ctas.length)];
     if (optimized.length + cta.length + 5 < maxLength) {
       optimized = optimized + '\n\n' + cta;
       suggestions.push('Added call-to-action for better engagement');
@@ -550,7 +568,7 @@ function getRelevantEmoji(content: string, goal: string): string {
   if (contentLower.includes('love') || contentLower.includes('passion')) return '❤️';
 
   const emojis = goalEmojis[goal] || goalEmojis.engagement;
-  return emojis[Math.floor(Math.random() * emojis.length)];
+  return emojis[deterministicIndex(content + goal, emojis.length)];
 }
 
 function generateBasicHashtags(content: string, platform: string): string {

@@ -211,7 +211,7 @@ export default function SEODashboardPage() {
             <SEOToolCard
               title="GEO / AI Visibility"
               description="Optimize for AI Overviews, ChatGPT, and Perplexity. Analyze brand mentions and AI crawler accessibility."
-              href="/dashboard/seo/geo"
+              href="/dashboard/geo"
               icon={Globe}
               status="beta"
             />

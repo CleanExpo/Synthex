@@ -13,6 +13,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { fetchCompetitorMetrics } from '@/lib/social/competitor-fetcher';
 
 /** Tracked competitor record from database */
 interface TrackedCompetitor {
@@ -46,50 +47,14 @@ interface CompetitorSnapshot {
   snapshotAt: Date;
 }
 
-/** Competitor metrics result */
-interface CompetitorMetrics {
-  followersCount: number;
-  followingCount: number;
-  followerGrowth: number;
-  totalPosts: number;
-  avgLikes: number;
-  avgComments: number;
-  avgShares: number;
-  engagementRate: number;
-  postFrequency: number;
-  topHashtags: string[];
-  contentTypes: Record<string, number>;
-  postingTimes: Record<string, number>;
-  performanceScore: number;
-  growthScore: number;
-  engagementScore: number;
-}
-
-/** Competitor post data */
-interface CompetitorPostData {
-  platform: string;
-  externalId: string;
-  postUrl: string;
-  content: string;
-  mediaUrls: string[];
-  mediaType: string;
-  likes: number;
-  comments: number;
-  shares: number;
-  views: number;
-  sentiment: string;
-  hashtags: string[];
-  mentions: string[];
-  topics: string[];
-  postedAt: Date;
-}
-
 /** Tracking result summary */
 interface TrackingResult {
   competitorId: string;
   competitorName: string;
   platforms: string[];
   snapshotsCreated: number;
+  snapshotsFailed: number;
+  postsFound: number;
 }
 
 /** Tracking error */
@@ -109,6 +74,15 @@ interface AlertData {
   metrics: Record<string, unknown>;
 }
 
+/** Platform connection record */
+interface PlatformConnectionRecord {
+  id: string;
+  userId: string;
+  platform: string;
+  accessToken: string;
+  isActive: boolean;
+}
+
 /** Extended prisma client for competitor tracking */
 interface PrismaWithCompetitors {
   trackedCompetitor?: {
@@ -117,84 +91,18 @@ interface PrismaWithCompetitors {
   };
   competitorSnapshot?: {
     findMany: (args: Record<string, unknown>) => Promise<CompetitorSnapshot[]>;
+    findFirst: (args: Record<string, unknown>) => Promise<CompetitorSnapshot | null>;
     create: (args: Record<string, unknown>) => Promise<CompetitorSnapshot | undefined>;
   };
   competitorPost?: {
+    findMany: (args: Record<string, unknown>) => Promise<Record<string, unknown>[]>;
     findFirst: (args: Record<string, unknown>) => Promise<Record<string, unknown> | null>;
-    create: (args: Record<string, unknown>) => Promise<Record<string, unknown>>;
   };
   competitorAlert?: {
     createMany: (args: { data: AlertData[] }) => Promise<{ count: number }>;
   };
-}
-
-// ============================================================================
-// MOCK DATA GENERATOR (Same as snapshot route)
-// ============================================================================
-
-function generateMockMetrics(_competitor: TrackedCompetitor, _platform: string): CompetitorMetrics {
-  const baseFollowers = Math.floor(Math.random() * 50000) + 1000;
-  const growthRate = (Math.random() * 0.1) - 0.02;
-
-  return {
-    followersCount: baseFollowers,
-    followingCount: Math.floor(baseFollowers * 0.3),
-    followerGrowth: Math.floor(baseFollowers * growthRate),
-    totalPosts: Math.floor(Math.random() * 500) + 50,
-    avgLikes: Math.floor(Math.random() * 200) + 10,
-    avgComments: Math.floor(Math.random() * 30) + 2,
-    avgShares: Math.floor(Math.random() * 20) + 1,
-    engagementRate: Math.round((Math.random() * 5 + 0.5) * 100) / 100,
-    postFrequency: Math.round((Math.random() * 3 + 0.5) * 10) / 10,
-    topHashtags: ['marketing', 'business', 'growth', 'success', 'startup'].slice(
-      0,
-      Math.floor(Math.random() * 5) + 1
-    ),
-    contentTypes: {
-      image: Math.floor(Math.random() * 50) + 20,
-      video: Math.floor(Math.random() * 30) + 5,
-      text: Math.floor(Math.random() * 20) + 5,
-      carousel: Math.floor(Math.random() * 15),
-    },
-    postingTimes: {
-      morning: Math.floor(Math.random() * 30) + 10,
-      afternoon: Math.floor(Math.random() * 30) + 15,
-      evening: Math.floor(Math.random() * 30) + 20,
-    },
-    performanceScore: Math.round((Math.random() * 40 + 50) * 10) / 10,
-    growthScore: Math.round((Math.random() * 40 + 40) * 10) / 10,
-    engagementScore: Math.round((Math.random() * 40 + 45) * 10) / 10,
-  };
-}
-
-function generateMockPost(competitor: TrackedCompetitor, platform: string): CompetitorPostData {
-  const contentTemplates = [
-    'Excited to announce our new product launch! 🚀',
-    'Behind the scenes of our latest campaign...',
-    'Tips for growing your business in 2026',
-    'Customer spotlight: How @user achieved 3x growth',
-    'Join us for our upcoming webinar on digital marketing',
-    'New blog post: 10 strategies that actually work',
-    'Thank you to our amazing community! 💙',
-    'Product update: New features coming soon',
-  ];
-
-  return {
-    platform,
-    externalId: `${platform}_${Date.now()}_${Math.random().toString(36).substring(7)}`,
-    postUrl: `https://${platform}.com/${competitor[`${platform}Handle`]}/post/${Date.now()}`,
-    content: contentTemplates[Math.floor(Math.random() * contentTemplates.length)],
-    mediaUrls: Math.random() > 0.3 ? ['https://example.com/image.jpg'] : [],
-    mediaType: Math.random() > 0.5 ? 'image' : 'text',
-    likes: Math.floor(Math.random() * 500) + 10,
-    comments: Math.floor(Math.random() * 50) + 1,
-    shares: Math.floor(Math.random() * 30),
-    views: Math.floor(Math.random() * 5000) + 100,
-    sentiment: ['positive', 'neutral', 'negative'][Math.floor(Math.random() * 3)],
-    hashtags: ['marketing', 'business', 'growth'].slice(0, Math.floor(Math.random() * 3) + 1),
-    mentions: Math.random() > 0.7 ? ['@user1', '@user2'] : [],
-    topics: ['marketing', 'product', 'announcement'].slice(0, Math.floor(Math.random() * 2) + 1),
-    postedAt: new Date(Date.now() - Math.random() * 86400000 * 7), // Last 7 days
+  platformConnection?: {
+    findFirst: (args: Record<string, unknown>) => Promise<PlatformConnectionRecord | null>;
   };
 }
 
@@ -274,99 +182,146 @@ export async function POST(request: NextRequest) {
     const results: TrackingResult[] = [];
     const errors: TrackingError[] = [];
 
+    // Map platform names to competitor handle fields
+    const platformHandleMap: Record<string, keyof TrackedCompetitor> = {
+      twitter: 'twitterHandle',
+      instagram: 'instagramHandle',
+      linkedin: 'linkedinHandle',
+      facebook: 'facebookHandle',
+      youtube: 'youtubeHandle',
+      tiktok: 'tiktokHandle',
+    };
+
     // Process each competitor
     for (const competitor of dueCompetitors) {
       try {
-        // Determine platforms to track
-        const platforms: string[] = [];
-        if (competitor.twitterHandle) platforms.push('twitter');
-        if (competitor.instagramHandle) platforms.push('instagram');
-        if (competitor.linkedinHandle) platforms.push('linkedin');
-        if (competitor.facebookHandle) platforms.push('facebook');
-        if (competitor.youtubeHandle) platforms.push('youtube');
-        if (competitor.tiktokHandle) platforms.push('tiktok');
+        // Determine platforms to track based on configured handles
+        const platformsWithHandles: { platform: string; handle: string }[] = [];
+        for (const [platform, handleField] of Object.entries(platformHandleMap)) {
+          const handle = competitor[handleField];
+          if (typeof handle === 'string' && handle.length > 0) {
+            platformsWithHandles.push({ platform, handle });
+          }
+        }
 
-        if (platforms.length === 0) {
+        if (platformsWithHandles.length === 0) {
           errors.push({ competitorId: competitor.id, error: 'No social handles configured' });
           continue;
         }
 
-        const snapshots: CompetitorSnapshot[] = [];
+        const platforms = platformsWithHandles.map(p => p.platform);
+        let snapshotsCreated = 0;
+        let snapshotsFailed = 0;
+        let totalPostsFound = 0;
 
-        // Create snapshots for each platform
-        for (const platform of platforms) {
-          const metrics = generateMockMetrics(competitor, platform);
+        // Fetch real metrics for each platform via API
+        for (const { platform, handle } of platformsWithHandles) {
+          try {
+            // Look up the Synthex user's access token for this platform
+            const connection = await (prisma as unknown as PrismaWithCompetitors).platformConnection?.findFirst({
+              where: {
+                userId: competitor.userId,
+                platform,
+                isActive: true,
+              },
+            });
 
-          const snapshot = await (prisma as unknown as PrismaWithCompetitors).competitorSnapshot?.create({
-            data: {
-              competitorId: competitor.id,
-              platform,
-              ...metrics,
-              dataSource: 'cron',
-            },
-          });
+            const accessToken = connection?.accessToken ?? null;
 
-          if (snapshot) {
-            snapshots.push(snapshot);
+            // Fetch real metrics from platform API
+            const metrics = await fetchCompetitorMetrics(platform, handle, accessToken);
+
+            // Get previous snapshot for followerGrowth calculation
+            const previousSnapshot = await (prisma as unknown as PrismaWithCompetitors).competitorSnapshot?.findFirst({
+              where: {
+                competitorId: competitor.id,
+                platform,
+              },
+              orderBy: { snapshotAt: 'desc' },
+            });
+
+            if (metrics.success) {
+              // Calculate follower growth delta
+              const followerGrowth = (metrics.followersCount !== null && previousSnapshot?.followersCount)
+                ? metrics.followersCount - previousSnapshot.followersCount
+                : 0;
+
+              // Create snapshot with real API data
+              await (prisma as unknown as PrismaWithCompetitors).competitorSnapshot?.create({
+                data: {
+                  competitorId: competitor.id,
+                  platform,
+                  followersCount: metrics.followersCount,
+                  followingCount: metrics.followingCount,
+                  followerGrowth,
+                  totalPosts: metrics.postsCount,
+                  engagementRate: metrics.engagementRate,
+                  // Leave calculated fields null — real scores require historical analysis
+                  avgLikes: null,
+                  avgComments: null,
+                  avgShares: null,
+                  postFrequency: null,
+                  topHashtags: [],
+                  contentTypes: {},
+                  postingTimes: {},
+                  performanceScore: null,
+                  growthScore: null,
+                  engagementScore: null,
+                  dataSource: 'api',
+                },
+              });
+              snapshotsCreated++;
+            } else {
+              // API call failed — log warning and create snapshot noting the failure
+              console.warn(
+                `[competitor-cron] Fetch failed for ${competitor.name} on ${platform}: ${metrics.error}`
+              );
+              await (prisma as unknown as PrismaWithCompetitors).competitorSnapshot?.create({
+                data: {
+                  competitorId: competitor.id,
+                  platform,
+                  followersCount: null,
+                  followingCount: null,
+                  followerGrowth: null,
+                  totalPosts: null,
+                  engagementRate: null,
+                  avgLikes: null,
+                  avgComments: null,
+                  avgShares: null,
+                  postFrequency: null,
+                  topHashtags: [],
+                  contentTypes: {},
+                  postingTimes: {},
+                  performanceScore: null,
+                  growthScore: null,
+                  engagementScore: null,
+                  dataSource: metrics.error?.includes('does not support') ? 'unsupported' : 'error',
+                },
+              });
+              snapshotsFailed++;
+            }
+          } catch (snapshotError) {
+            console.error(`Error processing competitor ${competitor.id} on ${platform}:`, snapshotError);
+            snapshotsFailed++;
           }
         }
 
-        // Create aggregated snapshot
-        if (snapshots.length > 0) {
-          const aggregated = {
-            followersCount: snapshots.reduce((sum, s) => sum + (s.followersCount || 0), 0),
-            engagementRate: snapshots.reduce((sum, s) => sum + (s.engagementRate || 0), 0) / snapshots.length,
-            performanceScore: snapshots.reduce((sum, s) => sum + (s.performanceScore || 0), 0) / snapshots.length,
-            growthScore: snapshots.reduce((sum, s) => sum + (s.growthScore || 0), 0) / snapshots.length,
-            engagementScore: snapshots.reduce((sum, s) => sum + (s.engagementScore || 0), 0) / snapshots.length,
-          };
-
-          await (prisma as unknown as PrismaWithCompetitors).competitorSnapshot?.create({
-            data: {
-              competitorId: competitor.id,
-              platform: 'all',
-              followersCount: aggregated.followersCount,
-              engagementRate: Math.round(aggregated.engagementRate * 100) / 100,
-              performanceScore: Math.round(aggregated.performanceScore * 10) / 10,
-              growthScore: Math.round(aggregated.growthScore * 10) / 10,
-              engagementScore: Math.round(aggregated.engagementScore * 10) / 10,
-              dataSource: 'cron_aggregated',
-            },
-          });
-        }
-
-        // Track posts if enabled
+        // Fetch existing posts if post tracking is enabled
         if (competitor.trackPosts) {
           for (const platform of platforms.slice(0, 2)) { // Limit to 2 platforms
-            // Generate 2-5 mock posts
-            const numPosts = Math.floor(Math.random() * 4) + 2;
-            for (let i = 0; i < numPosts; i++) {
-              const postData = generateMockPost(competitor, platform);
-
-              // Check if post already exists
-              const existing = await (prisma as unknown as PrismaWithCompetitors).competitorPost?.findFirst({
+            try {
+              const existingPosts = await (prisma as unknown as PrismaWithCompetitors).competitorPost?.findMany({
                 where: {
                   competitorId: competitor.id,
                   platform,
-                  externalId: postData.externalId,
                 },
-              });
+                orderBy: { postedAt: 'desc' },
+                take: 10,
+              }) || [];
 
-              if (!existing) {
-                const engagementRate = postData.views
-                  ? ((postData.likes + postData.comments + postData.shares) / postData.views) * 100
-                  : 0;
-
-                await (prisma as unknown as PrismaWithCompetitors).competitorPost?.create({
-                  data: {
-                    competitorId: competitor.id,
-                    ...postData,
-                    engagementRate: Math.round(engagementRate * 100) / 100,
-                    isTopPerforming: engagementRate > 5,
-                    performancePercentile: Math.random() * 100,
-                  },
-                });
-              }
+              totalPostsFound += existingPosts.length;
+            } catch (postError) {
+              console.error(`Error fetching posts for competitor ${competitor.id} on ${platform}:`, postError);
             }
           }
         }
@@ -377,14 +332,16 @@ export async function POST(request: NextRequest) {
           data: { lastTrackedAt: now },
         });
 
-        // Check for alerts
-        await checkForAlerts(competitor.userId, competitor);
+        // Check for alerts based on real snapshot data (per-platform)
+        await checkForAlerts(competitor.userId, competitor, platforms);
 
         results.push({
           competitorId: competitor.id,
           competitorName: competitor.name,
           platforms,
-          snapshotsCreated: snapshots.length + 1,
+          snapshotsCreated,
+          snapshotsFailed,
+          postsFound: totalPostsFound,
         });
       } catch (error) {
         console.error(`Error tracking competitor ${competitor.id}:`, error);
@@ -413,40 +370,80 @@ export async function POST(request: NextRequest) {
 }
 
 // ============================================================================
-// ALERT DETECTION (simplified version)
+// ALERT DETECTION — uses real per-platform metric deltas
 // ============================================================================
 
-async function checkForAlerts(userId: string, competitor: TrackedCompetitor): Promise<void> {
+async function checkForAlerts(
+  userId: string,
+  competitor: TrackedCompetitor,
+  platforms: string[]
+): Promise<void> {
   try {
-    // Get last two snapshots for comparison
-    const snapshots = await (prisma as unknown as PrismaWithCompetitors).competitorSnapshot?.findMany({
-      where: { competitorId: competitor.id, platform: 'all' },
-      orderBy: { snapshotAt: 'desc' },
-      take: 2,
-    }) || [];
-
-    if (snapshots.length < 2) return;
-
-    const [current, previous] = snapshots;
     const alerts: AlertData[] = [];
 
-    // Follower spike detection (>10% growth)
-    if (current.followersCount && previous.followersCount) {
-      const growthRate = (current.followersCount - previous.followersCount) / previous.followersCount;
-      if (growthRate > 0.1) {
+    // Check each platform's snapshots for significant changes
+    for (const platform of platforms) {
+      const snapshots = await (prisma as unknown as PrismaWithCompetitors).competitorSnapshot?.findMany({
+        where: { competitorId: competitor.id, platform },
+        orderBy: { snapshotAt: 'desc' },
+        take: 2,
+      }) || [];
+
+      if (snapshots.length < 2) continue;
+
+      const [current, previous] = snapshots;
+
+      // Skip if either snapshot lacks real data
+      if (!current.followersCount || !previous.followersCount) continue;
+
+      // Follower spike detection (>10% growth)
+      const followerGrowthRate =
+        (current.followersCount - previous.followersCount) / previous.followersCount;
+
+      if (followerGrowthRate > 0.1) {
         alerts.push({
           userId,
           competitorId: competitor.id,
           alertType: 'follower_spike',
-          severity: 'important',
-          title: `${competitor.name} gained significant followers`,
-          description: `${competitor.name} grew by ${Math.round(growthRate * 100)}% recently.`,
-          metrics: { growthRate, change: current.followersCount - previous.followersCount },
+          severity: 'warning',
+          title: `${competitor.name} gained ${Math.round(followerGrowthRate * 100)}% followers on ${platform}`,
+          description: `${competitor.name} grew from ${previous.followersCount.toLocaleString()} to ${current.followersCount.toLocaleString()} followers on ${platform} (${Math.round(followerGrowthRate * 100)}% increase).`,
+          metrics: {
+            platform,
+            growthRate: followerGrowthRate,
+            previousFollowers: previous.followersCount,
+            currentFollowers: current.followersCount,
+            change: current.followersCount - previous.followersCount,
+          },
         });
+      }
+
+      // Engagement rate change detection (>50% relative change, if available)
+      if (current.engagementRate && previous.engagementRate && previous.engagementRate > 0) {
+        const engagementDelta =
+          (current.engagementRate - previous.engagementRate) / previous.engagementRate;
+
+        if (Math.abs(engagementDelta) > 0.5) {
+          const direction = engagementDelta > 0 ? 'increased' : 'decreased';
+          alerts.push({
+            userId,
+            competitorId: competitor.id,
+            alertType: 'strategy_change',
+            severity: 'info',
+            title: `${competitor.name}'s engagement ${direction} on ${platform}`,
+            description: `${competitor.name}'s engagement rate ${direction} by ${Math.round(Math.abs(engagementDelta) * 100)}% on ${platform}.`,
+            metrics: {
+              platform,
+              engagementDelta,
+              previousRate: previous.engagementRate,
+              currentRate: current.engagementRate,
+            },
+          });
+        }
       }
     }
 
-    // Create alerts
+    // Create all alerts in batch
     if (alerts.length > 0) {
       await (prisma as unknown as PrismaWithCompetitors).competitorAlert?.createMany({
         data: alerts,

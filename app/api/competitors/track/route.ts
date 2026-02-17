@@ -245,16 +245,19 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // Create initial snapshot (placeholder - would be populated by tracking job)
-    await extendedPrisma.competitorSnapshot?.create({
-      data: {
-        competitorId: competitor.id,
-        platform: 'all',
-        dataSource: 'initial',
-      },
-    }).catch(() => {
-      // Ignore snapshot creation failure
-    });
+    // Create initial snapshot placeholder -- cron will populate real data on next cycle
+    try {
+      await extendedPrisma.competitorSnapshot?.create({
+        data: {
+          competitorId: competitor.id,
+          platform: 'all',
+          dataSource: 'initial',
+        },
+      });
+    } catch (snapshotError) {
+      console.error('Failed to create initial snapshot:', snapshotError);
+      // Don't block competitor creation response -- cron will create snapshots on next cycle
+    }
 
     return NextResponse.json({
       competitor,

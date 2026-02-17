@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { emailService } from '@/lib/email-service';
 import { createClient } from '@supabase/supabase-js';
 import { sanitizeErrorForResponse } from '@/lib/utils/error-utils';
+import { getUserIdFromCookies } from '@/lib/auth/jwt-utils';
 
 const sendEmailSchema = z.object({
   to: z.string().email(),
@@ -32,6 +33,11 @@ const supabase = createClient(
 
 export async function POST(request: NextRequest) {
   try {
+    const userId = await getUserIdFromCookies();
+    if (!userId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const rawBody = await request.json();
     const validation = sendEmailSchema.safeParse(rawBody);
     if (!validation.success) {

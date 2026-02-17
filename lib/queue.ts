@@ -54,7 +54,7 @@ const processingLock = new Set<string>();
  * Generate unique job ID
  */
 function generateJobId(): string {
-  return `job_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  return `job_${crypto.randomUUID()}`;
 }
 
 // =============================================================================

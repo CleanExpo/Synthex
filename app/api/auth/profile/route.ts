@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
+import { getUserIdFromCookies } from '@/lib/auth/jwt-utils';
 
 type ProfileBody = {
   name?: string;
@@ -11,31 +12,33 @@ type ProfileBody = {
 };
 
 /**
- * GET /api/auth/profile?email={email}
- * Returns basic profile data. If DATABASE_URL is not configured or email not provided, returns an empty profile.
+ * GET /api/auth/profile
+ * Returns the authenticated user's profile data.
  */
 export async function GET(req: NextRequest) {
-  const { searchParams } = new URL(req.url);
-  const email = searchParams.get('email') || '';
+  const userId = await getUserIdFromCookies();
+  if (!userId) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
 
   const canUseDb = !!process.env.DATABASE_URL;
-  if (!canUseDb || !email) {
+  if (!canUseDb) {
     return NextResponse.json({
       success: true,
-      data: { name: '', email, preferences: {} },
+      data: { name: '', email: '', preferences: {} },
       persisted: false,
     });
   }
 
   try {
     const user = await prisma.user.findUnique({
-      where: { email },
+      where: { id: userId },
       select: { name: true, email: true, preferences: true },
     });
 
     return NextResponse.json({
       success: true,
-      data: user || { name: '', email, preferences: {} },
+      data: user || { name: '', email: '', preferences: {} },
       persisted: true,
     });
   } catch (err) {
@@ -53,19 +56,16 @@ export async function GET(req: NextRequest) {
  * If DATABASE_URL is configured, updates the user by email. Otherwise, returns success with echo.
  */
 export async function PUT(req: NextRequest) {
+  const userId = await getUserIdFromCookies();
+  if (!userId) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   let body: ProfileBody = {};
   try {
     body = await req.json();
   } catch {
     // ignore
-  }
-
-  const email = (body.email || '').toString().trim();
-  if (!email) {
-    return NextResponse.json(
-      { success: false, error: 'Email is required' },
-      { status: 400 }
-    );
   }
 
   const canUseDb = !!process.env.DATABASE_URL;
@@ -79,7 +79,7 @@ export async function PUT(req: NextRequest) {
 
   try {
     const updated = await prisma.user.update({
-      where: { email },
+      where: { id: userId },
       data: {
         name: body.name,
         // store additional profile fields in preferences json

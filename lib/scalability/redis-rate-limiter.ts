@@ -155,7 +155,7 @@ export class RedisRateLimiter {
       pipeline.zremrangebyscore(key, 0, windowStart);
 
       // Add current request with timestamp as score
-      const requestId = `${now}:${Math.random().toString(36).slice(2)}`;
+      const requestId = `${now}:${crypto.randomUUID()}`;
       pipeline.zadd(key, { score: now, member: requestId });
 
       // Count requests in window
