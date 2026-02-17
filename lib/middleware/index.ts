@@ -25,24 +25,36 @@
  * ```
  */
 
-// Rate Limiter v2
+// Rate Limiter (consolidated module)
 export {
+  RateLimiter,
+  createRateLimiter,
   withRateLimit,
-  checkRateLimits,
-  checkBurstLimit,
-  getIdentifier,
-  getTenantPlan,
-  addRateLimitHeaders,
-  createRateLimitResponse,
-  SlidingWindowRateLimiter,
-  rateLimiter,
-  RATE_LIMIT_TIERS,
+  UsageTracker,
+  authStrict,
+  authGeneral,
+  admin,
+  billing,
+  aiGeneration,
+  mutation,
+  readDefault,
+  PRESET_CONFIG,
+  rateLimiters,
+  getRateLimitStatus,
+  resetRateLimits,
+  getGlobalRateLimitStats,
+  isRedisAvailable,
   type RateLimitConfig,
   type RateLimitResult,
-  type TieredLimits,
-  type RateLimitTier,
-  type RateLimitMiddlewareOptions,
-} from './rate-limiter-v2';
+  type RateLimitHeaders,
+  type RateLimitStatus,
+  type SubscriptionTier,
+  type TierLimits,
+  type CategoryPreset,
+} from '@/lib/rate-limit';
+
+// Re-export stub types from api-middleware for backward compatibility
+export { type RateLimitMiddlewareOptions } from './api-middleware';
 
 // API Middleware
 export {

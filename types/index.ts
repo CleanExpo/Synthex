@@ -52,15 +52,28 @@ export type {
 // =============================================================================
 // Middleware Types
 // =============================================================================
-export type {
-  SessionUser,
-  SessionData as RedisSessionData,
-} from '@/src/middleware/session';
+// Session types (stub - src/middleware/session was removed)
+export interface SessionUser {
+  id: string;
+  email?: string;
+  name?: string;
+}
 
-export type {
-  RateLimitConfig,
-  RateLimitInfo,
-} from '@/src/middleware/rate-limit';
+export interface RedisSessionData {
+  userId: string;
+  expiresAt: number;
+  data?: Record<string, unknown>;
+}
+
+// Rate limit types (from consolidated module)
+export type { RateLimitConfig } from '@/lib/rate-limit';
+
+// Stub for RateLimitInfo (not in new module)
+export interface RateLimitInfo {
+  remaining: number;
+  limit: number;
+  reset: number;
+}
 
 // =============================================================================
 // Schema-derived Types (Zod-validated)

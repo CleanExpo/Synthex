@@ -39,13 +39,15 @@ export {
   type CacheOptions,
 } from './api-cache';
 
-// Rate limiting
+// Rate limiting (consolidated module)
 export {
-  RedisRateLimiter,
-  getRateLimiter,
+  RateLimiter,
+  createRateLimiter,
   withRateLimit,
-  checkRateLimit,
-  rateLimiterConfigs,
+  rateLimiters as rateLimiterConfigs,
   type RateLimitConfig,
   type RateLimitResult,
-} from './redis-rate-limiter';
+} from '@/lib/rate-limit';
+
+// Backward compatibility alias
+export { RateLimiter as RedisRateLimiter } from '@/lib/rate-limit';

@@ -12,9 +12,15 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { enhancedRateLimiters } from '@/src/middleware/enhanced-rate-limit';
+import { aiGeneration } from '@/lib/rate-limit';
 import { createClient } from '@supabase/supabase-js';
 import { verifyTokenSafe } from '@/lib/auth/jwt-utils';
+
+// Backward compatibility: stub for enhancedRateLimiters
+const enhancedRateLimiters = {
+  aiGeneration: (req: NextRequest, handler: () => Promise<NextResponse>) => aiGeneration(req, handler),
+  ai: (req: NextRequest, handler: () => Promise<NextResponse>) => aiGeneration(req, handler),
+};
 
 // Initialize Supabase
 const supabase = createClient(

@@ -4,18 +4,17 @@
  * @description Centralized exports for all security components
  */
 
-// Rate Limiting
+// Rate Limiting (consolidated module)
 export {
   RateLimiter,
-  rateLimiter,
-  getIdentifier,
-  getRateLimitHeaders,
-  RATE_LIMIT_TIERS,
-  ENDPOINT_LIMITS,
+  createRateLimiter,
+  withRateLimit,
+  rateLimiters,
+  PRESET_CONFIG,
   type RateLimitConfig,
   type RateLimitResult,
-  type RateLimitInfo,
-} from './rate-limiter-redis';
+  type RateLimitHeaders,
+} from '@/lib/rate-limit';
 
 // Audit Logging
 export {

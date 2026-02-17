@@ -4,7 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getRateLimitStatus, resetRateLimits } from '@/src/middleware/enhanced-rate-limit';
+import { getRateLimitStatus, resetRateLimits } from '@/lib/rate-limit';
 import { createClient } from '@supabase/supabase-js';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 
