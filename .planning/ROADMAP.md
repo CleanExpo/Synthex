@@ -122,7 +122,7 @@ Plans:
 
 Plans:
 - [x] 17-01: Add missing navigation items (Reports, Experiments to sidebar; Billing to dropdown; expand CommandPalette)
-- [ ] 17-02: Enhance feature discoverability (expand ProductTour, add KeyboardHints component)
+- [x] 17-02: Enhance feature discoverability (expand ProductTour, add KeyboardHints component)
 - [ ] 17-03: Enhance onboarding flow (tour integration, completion page improvements)
 
 #### Phase 18: Final Verification
@@ -154,5 +154,5 @@ Plans:
 | 14. Feature — Agents | v1.1 | 1/1 | Complete | 2026-02-17 |
 | 15. Google Console | v1.1 | 1/1 | Complete | 2026-02-17 |
 | 16. UI/UX — Polish | v1.1 | 3/3 | Complete | 2026-02-17 |
-| 17. UI/UX — Features | v1.1 | 1/3 | In progress | - |
+| 17. UI/UX — Features | v1.1 | 2/3 | In progress | - |
 | 18. Final Verification | v1.1 | 0/? | Not started | - |
