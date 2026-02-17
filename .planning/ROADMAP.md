@@ -12,6 +12,7 @@ None (internal platform work)
 
 - ✅ [v1.0 Production Hardening](milestones/v1.0-ROADMAP.md) (Phases 1-10) — SHIPPED 2026-02-17
 - ✅ [v1.1 Platform Enhancement](milestones/v1.1-ROADMAP.md) (Phases 11-18) — SHIPPED 2026-02-17
+- 🚧 **v1.2 Features** — Phases 19-29 (in progress)
 
 ## Phases
 
@@ -33,6 +34,17 @@ None (internal platform work)
 - [x] **Phase 16: UI/UX — Dashboard Polish** - Improve layouts, loading states, error handling
 - [x] **Phase 17: UI/UX — New Features** - Missing pages, feature discoverability, onboarding
 - [x] **Phase 18: Final Verification** - Regression test, performance audit, documentation
+- [ ] **Phase 19: AI Template Library** - Reusable prompt templates and content patterns
+- [ ] **Phase 20: Content Optimization** - AI-powered suggestions for improving content quality
+- [ ] **Phase 21: Multi-format Generation** - Generate platform-specific content variations
+- [ ] **Phase 22: Analytics Dashboard v2** - Enhanced visualizations, drill-downs, date ranges
+- [ ] **Phase 23: Predictive Analytics** - ML engagement predictions, best-time-to-post
+- [ ] **Phase 24: Custom Reports Builder** - User-created report templates and exports
+- [ ] **Phase 25: Third-party Integrations** - Canva, Buffer, Zapier webhook receivers
+- [ ] **Phase 26: Webhook System** - Outbound webhooks for external integrations
+- [ ] **Phase 27: Approval Workflows** - Content review chains with notifications
+- [ ] **Phase 28: Team Collaboration** - Real-time comments, assignments, activity feeds
+- [ ] **Phase 29: Role Permissions** - Granular access control beyond org membership
 
 ## Phase Details
 
@@ -65,6 +77,124 @@ See [milestones/v1.1-ROADMAP.md](milestones/v1.1-ROADMAP.md) for full details.
 
 </details>
 
+### 🚧 v1.2 Features (In Progress)
+
+**Milestone Goal:** Add new functionality across AI content generation, analytics, integrations, and collaboration.
+
+#### Phase 19: AI Template Library
+
+**Goal**: Build reusable prompt templates and content patterns system
+**Depends on**: v1.1 complete
+**Research**: Unlikely (internal patterns)
+**Plans**: TBD
+
+Plans:
+- [ ] 19-01: TBD (run /gsd:plan-phase 19 to break down)
+
+#### Phase 20: Content Optimization
+
+**Goal**: AI-powered suggestions for improving content quality
+**Depends on**: Phase 19
+**Research**: Likely (AI model selection, prompt engineering best practices)
+**Research topics**: Content scoring algorithms, readability metrics, AI suggestion UX
+**Plans**: TBD
+
+Plans:
+- [ ] 20-01: TBD
+
+#### Phase 21: Multi-format Generation
+
+**Goal**: Generate platform-specific content variations from single input
+**Depends on**: Phase 20
+**Research**: Unlikely (platform patterns established in v1.0)
+**Plans**: TBD
+
+Plans:
+- [ ] 21-01: TBD
+
+#### Phase 22: Analytics Dashboard v2
+
+**Goal**: Enhanced visualizations with drill-downs, custom date ranges, comparisons
+**Depends on**: Phase 21
+**Research**: Unlikely (Recharts patterns exist)
+**Plans**: TBD
+
+Plans:
+- [ ] 22-01: TBD
+
+#### Phase 23: Predictive Analytics
+
+**Goal**: ML-powered engagement predictions and best-time-to-post recommendations
+**Depends on**: Phase 22
+**Research**: Likely (ML model selection, prediction accuracy, training data)
+**Research topics**: Time-series forecasting, engagement prediction models, Vercel Edge ML
+**Plans**: TBD
+
+Plans:
+- [ ] 23-01: TBD
+
+#### Phase 24: Custom Reports Builder
+
+**Goal**: User-created report templates with drag-drop widgets and exports
+**Depends on**: Phase 23
+**Research**: Unlikely (internal patterns)
+**Plans**: TBD
+
+Plans:
+- [ ] 24-01: TBD
+
+#### Phase 25: Third-party Integrations
+
+**Goal**: Connect to Canva, Buffer, Zapier via API/webhooks
+**Depends on**: Phase 24
+**Research**: Likely (external API documentation, OAuth flows)
+**Research topics**: Canva Connect API, Buffer API, Zapier webhook specs
+**Plans**: TBD
+
+Plans:
+- [ ] 25-01: TBD
+
+#### Phase 26: Webhook System
+
+**Goal**: Outbound webhooks allowing external systems to subscribe to events
+**Depends on**: Phase 25
+**Research**: Unlikely (webhook patterns are standard)
+**Plans**: TBD
+
+Plans:
+- [ ] 26-01: TBD
+
+#### Phase 27: Approval Workflows
+
+**Goal**: Content review chains with role-based approvers and notifications
+**Depends on**: Phase 26
+**Research**: Unlikely (internal workflow patterns)
+**Plans**: TBD
+
+Plans:
+- [ ] 27-01: TBD
+
+#### Phase 28: Team Collaboration
+
+**Goal**: Real-time comments, assignments, activity feeds on content
+**Depends on**: Phase 27
+**Research**: Likely (real-time sync, presence indicators)
+**Research topics**: WebSocket vs SSE, Supabase Realtime, optimistic updates
+**Plans**: TBD
+
+Plans:
+- [ ] 28-01: TBD
+
+#### Phase 29: Role Permissions
+
+**Goal**: Granular access control beyond organization membership
+**Depends on**: Phase 28
+**Research**: Unlikely (Prisma RBAC patterns)
+**Plans**: TBD
+
+Plans:
+- [ ] 29-01: TBD
+
 ## Progress
 
 | Phase | Milestone | Plans Complete | Status | Completed |
@@ -87,3 +217,14 @@ See [milestones/v1.1-ROADMAP.md](milestones/v1.1-ROADMAP.md) for full details.
 | 16. UI/UX — Polish | v1.1 | 3/3 | Complete | 2026-02-17 |
 | 17. UI/UX — Features | v1.1 | 3/3 | Complete | 2026-02-17 |
 | 18. Final Verification | v1.1 | 1/1 | Complete | 2026-02-17 |
+| 19. AI Template Library | v1.2 | 0/? | Not started | - |
+| 20. Content Optimization | v1.2 | 0/? | Not started | - |
+| 21. Multi-format Generation | v1.2 | 0/? | Not started | - |
+| 22. Analytics Dashboard v2 | v1.2 | 0/? | Not started | - |
+| 23. Predictive Analytics | v1.2 | 0/? | Not started | - |
+| 24. Custom Reports Builder | v1.2 | 0/? | Not started | - |
+| 25. Third-party Integrations | v1.2 | 0/? | Not started | - |
+| 26. Webhook System | v1.2 | 0/? | Not started | - |
+| 27. Approval Workflows | v1.2 | 0/? | Not started | - |
+| 28. Team Collaboration | v1.2 | 0/? | Not started | - |
+| 29. Role Permissions | v1.2 | 0/? | Not started | - |
