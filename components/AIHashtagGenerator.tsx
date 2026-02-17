@@ -59,110 +59,35 @@ export function AIHashtagGenerator({
       notify.error('Please enter content or keywords');
       return;
     }
-    
+
     setLoading(true);
-    
-    // Simulate AI processing
-    setTimeout(() => {
-      const generated = mockGenerateHashtags(input, platform);
+
+    try {
+      const response = await fetch('/api/ai-content/hashtags', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          content: input,
+          platform: platform === 'all' ? undefined : platform,
+          count: 30
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to generate hashtags');
+      }
+
+      const data = await response.json();
+
+      // Map API response to component's Hashtag interface
+      const generated: Hashtag[] = data.detailed || [];
       setHashtags(generated);
-      setLoading(false);
       notify.success(`Generated ${generated.length} hashtags`);
-    }, 1500);
-  };
-  
-  // Mock hashtag generation
-  const mockGenerateHashtags = (text: string, platform: string): Hashtag[] => {
-    const keywords = extractKeywords(text);
-    const baseTags: Hashtag[] = [];
-    
-    // Generate relevant hashtags
-    keywords.forEach(keyword => {
-      baseTags.push({
-        tag: keyword.toLowerCase().replace(/\s+/g, ''),
-        relevance: Math.random() * 100,
-        popularity: ['high', 'medium', 'low'][Math.floor(Math.random() * 3)] as any,
-        trending: Math.random() > 0.7,
-        reach: Math.floor(Math.random() * 100000),
-        competition: ['high', 'medium', 'low'][Math.floor(Math.random() * 3)] as any,
-        category: 'relevant'
-      });
-    });
-    
-    // Add trending hashtags
-    const trendingTags = [
-      'trending', 'viral', 'fyp', 'explore', 'instagood',
-      'photooftheday', 'love', 'fashion', 'tech', 'startup'
-    ];
-    
-    trendingTags.slice(0, 5).forEach(tag => {
-      baseTags.push({
-        tag,
-        relevance: 50 + Math.random() * 50,
-        popularity: 'high',
-        trending: true,
-        reach: 500000 + Math.floor(Math.random() * 500000),
-        competition: 'high',
-        category: 'trending'
-      });
-    });
-    
-    // Add niche hashtags
-    const nicheTags = [
-      'communityovercompetition', 'smallbusiness', 'handmade',
-      'sustainable', 'minimalist', 'productivity', 'mindfulness'
-    ];
-    
-    nicheTags.slice(0, 3).forEach(tag => {
-      baseTags.push({
-        tag,
-        relevance: 60 + Math.random() * 40,
-        popularity: 'low',
-        trending: false,
-        reach: 10000 + Math.floor(Math.random() * 50000),
-        competition: 'low',
-        category: 'niche'
-      });
-    });
-    
-    // Platform-specific hashtags
-    if (platform !== 'all') {
-      const platformTags: Record<string, string[]> = {
-        instagram: ['instadaily', 'igers', 'instamood'],
-        twitter: ['twitterx', 'tweet', 'twittercommunity'],
-        linkedin: ['linkedinlearning', 'careergrowth', 'professionaldevelopment'],
-        tiktok: ['tiktoktrend', 'foryoupage', 'tiktokviral']
-      };
-      
-      const specific = platformTags[platform] || [];
-      specific.forEach(tag => {
-        baseTags.push({
-          tag,
-          relevance: 70 + Math.random() * 30,
-          popularity: 'medium',
-          trending: Math.random() > 0.5,
-          reach: 50000 + Math.floor(Math.random() * 100000),
-          competition: 'medium',
-          category: platform
-        });
-      });
+    } catch (error) {
+      notify.error('Failed to generate hashtags. Please try again.');
+    } finally {
+      setLoading(false);
     }
-    
-    // Sort by relevance
-    return baseTags.sort((a, b) => b.relevance - a.relevance).slice(0, 30);
-  };
-  
-  // Extract keywords from text
-  const extractKeywords = (text: string): string[] => {
-    const commonWords = new Set(['the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for']);
-    const words = text.toLowerCase()
-      .replace(/[^\w\s]/g, '')
-      .split(/\s+/)
-      .filter(word => word.length > 3 && !commonWords.has(word));
-    
-    // Get unique words
-    const unique = [...new Set(words)];
-    return unique.slice(0, 10);
   };
   
   // Toggle hashtag selection
