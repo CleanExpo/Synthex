@@ -162,7 +162,6 @@
     "openai": "^4.104.0",
     "pg": "^8.18.0",
     "postcss": "^8.4.33",
-    "prisma": "6.14.0",
     "puppeteer": "^24.37.2",
     "puppeteer-screen-recorder": "^3.0.6",
     "react": "^18.2.0",
@@ -246,28 +245,9 @@
     "tsx": "^4.21.0",
     "turbo": "^2.8.1"
   },
-  "overrides": {
-    "three-mesh-bvh": "^0.8.0"
-  },
   "engines": {
     "node": "22.x"
   },
-  "exports": {
-    ".": {
-      "import": {
-        "types": "./dist/index.d.ts",
-        "default": "./dist/index.mjs"
-      },
-      "require": {
-        "types": "./dist/index.d.ts",
-        "default": "./dist/index.js"
-      }
-    },
-    "./package.json": "./package.json"
-  },
-  "files": [
-    "dist"
-  ],
   "eslintConfig": {
     "extends": "next/core-web-vitals",
     "rules": {
