@@ -141,10 +141,11 @@ Plans:
 **Goal**: User-created report templates with drag-drop widgets and exports
 **Depends on**: Phase 23
 **Research**: Unlikely (internal patterns)
-**Plans**: TBD
+**Plans**: 2 | Planned | 2026-02-18
 
 Plans:
-- [ ] 24-01: TBD
+- [ ] 24-01: Hook + API Wiring (useReportTemplates, useReportExport hooks, refactor CustomReportBuilder to real APIs)
+- [ ] 24-02: Page Route + Navigation (builder page, sidebar, command palette, reports page CTA, human verify)
 
 #### Phase 25: Third-party Integrations
 
