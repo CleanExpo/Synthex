@@ -14,6 +14,7 @@
 'use client';
 
 import { useApi, useMutation, fetchWithAuth, UseApiOptions } from './use-api';
+import type { PerformanceData } from '@/components/analytics/types';
 
 // ============================================================================
 // TYPES
@@ -176,6 +177,51 @@ export function useRealtimeAnalytics(options?: UseApiOptions<AnalyticsMetrics>) 
     staleTime: 10 * 1000, // 10 seconds
     pollingInterval: 30 * 1000, // Poll every 30 seconds
     ...options,
+  });
+}
+
+export interface PerformanceAnalyticsParams {
+  period?: string;
+  platform?: string;
+  startDate?: string;
+  endDate?: string;
+  granularity?: string;
+}
+
+export function usePerformanceAnalytics(
+  params: PerformanceAnalyticsParams = {},
+  options?: UseApiOptions<{ success: boolean; data: PerformanceData; period: { start: string; end: string }; generatedAt: string }>
+) {
+  const { period = '30d', platform, startDate, endDate, granularity = 'day' } = params;
+  const searchParams = new URLSearchParams();
+
+  if (startDate && endDate) {
+    searchParams.set('startDate', startDate);
+    searchParams.set('endDate', endDate);
+  } else {
+    // Map period values to API-supported values
+    const periodMap: Record<string, string> = {
+      '24h': '7d',
+      '7d': '7d',
+      '30d': '30d',
+      '90d': '90d',
+      '1y': '1y',
+    };
+    searchParams.set('period', periodMap[period] || '30d');
+  }
+
+  if (platform && platform !== 'all') {
+    searchParams.set('platform', platform);
+  }
+  searchParams.set('granularity', granularity);
+
+  const url = `/api/analytics/performance?${searchParams.toString()}`;
+
+  return useApi<{ success: boolean; data: PerformanceData; period: { start: string; end: string }; generatedAt: string }>(url, {
+    staleTime: 60 * 1000, // 1 minute
+    cacheTime: 10 * 60 * 1000, // 10 minutes
+    ...options,
+    deps: [period, platform, startDate, endDate, granularity, ...(options?.deps || [])],
   });
 }
 

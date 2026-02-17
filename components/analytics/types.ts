@@ -20,11 +20,52 @@ export interface AnalyticsData {
   recentActivity: Array<{ endpoint: string; status: string; createdAt: string }>;
 }
 
+export interface GrowthData {
+  engagementChange: number;
+  reachChange: number;
+  postsChange: number;
+  trend: 'up' | 'down' | 'stable';
+}
+
+export interface PerformanceData {
+  overview: {
+    totalPosts: number;
+    totalEngagement: number;
+    averageEngagementRate: number;
+    totalReach: number;
+    totalImpressions: number;
+  };
+  growth: GrowthData;
+  timeline: Array<{
+    date: string;
+    engagement: number;
+    reach: number;
+    impressions: number;
+    posts: number;
+  }>;
+  platforms: Array<{
+    platform: string;
+    engagement: number;
+    engagementRate: number;
+    posts: number;
+    bestTime: string;
+  }>;
+  topContent: Array<{
+    id: string;
+    content: string;
+    platform: string;
+    engagement: number;
+    engagementRate: number;
+    publishedAt: Date | string;
+  }>;
+}
+
 export interface DisplayData {
   reach: number;
   engagement: number;
   engagementRate: number;
   followerGrowth: number;
+  growth?: GrowthData;
 }
 
 export interface EngagementDataPoint {

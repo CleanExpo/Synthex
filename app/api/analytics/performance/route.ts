@@ -26,6 +26,14 @@ const PerformanceQuerySchema = z.object({
   period: z.enum(['7d', '30d', '90d', '1y']).default('30d'),
   platform: z.string().optional(),
   granularity: z.enum(['day', 'week', 'month']).default('day'),
+  startDate: z.string().optional().refine(
+    (val) => !val || !isNaN(Date.parse(val)),
+    { message: 'startDate must be a valid ISO date string' }
+  ),
+  endDate: z.string().optional().refine(
+    (val) => !val || !isNaN(Date.parse(val)),
+    { message: 'endDate must be a valid ISO date string' }
+  ),
 });
 
 const WebVitalsSchema = z.object({
@@ -146,6 +154,8 @@ export async function GET(request: NextRequest) {
       period: searchParams.get('period') || '30d',
       platform: searchParams.get('platform') || undefined,
       granularity: searchParams.get('granularity') || 'day',
+      startDate: searchParams.get('startDate') || undefined,
+      endDate: searchParams.get('endDate') || undefined,
     });
 
     if (!parseResult.success) {
@@ -155,24 +165,32 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const { period, platform, granularity } = parseResult.data;
+    const { period, platform, granularity, startDate: customStartDate, endDate: customEndDate } = parseResult.data;
 
-    // Calculate date range
-    const endDate = new Date();
-    const startDate = new Date();
-    switch (period) {
-      case '7d':
-        startDate.setDate(endDate.getDate() - 7);
-        break;
-      case '30d':
-        startDate.setDate(endDate.getDate() - 30);
-        break;
-      case '90d':
-        startDate.setDate(endDate.getDate() - 90);
-        break;
-      case '1y':
-        startDate.setFullYear(endDate.getFullYear() - 1);
-        break;
+    // Calculate date range — use custom dates if provided, otherwise compute from period
+    let endDate: Date;
+    let startDate: Date;
+
+    if (customStartDate && customEndDate) {
+      startDate = new Date(customStartDate);
+      endDate = new Date(customEndDate);
+    } else {
+      endDate = new Date();
+      startDate = new Date();
+      switch (period) {
+        case '7d':
+          startDate.setDate(endDate.getDate() - 7);
+          break;
+        case '30d':
+          startDate.setDate(endDate.getDate() - 30);
+          break;
+        case '90d':
+          startDate.setDate(endDate.getDate() - 90);
+          break;
+        case '1y':
+          startDate.setFullYear(endDate.getFullYear() - 1);
+          break;
+      }
     }
 
     // Fetch posts with analytics
@@ -311,7 +329,7 @@ export async function GET(request: NextRequest) {
       category: 'api',
       severity: 'low',
       outcome: 'success',
-      details: { period, platform: platform || 'all' },
+      details: { period: customStartDate && customEndDate ? 'custom' : period, platform: platform || 'all' },
     });
 
     return NextResponse.json({

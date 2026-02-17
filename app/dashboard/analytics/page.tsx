@@ -1,16 +1,16 @@
 'use client';
 
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { AnalyticsSkeleton } from '@/components/skeletons';
 import { APIErrorCard } from '@/components/error-states';
+import { usePerformanceAnalytics } from '@/hooks/use-dashboard';
 
 import {
-  type AnalyticsData,
   type DisplayData,
   type ContentPerformanceItem,
   type GrowthDataPoint,
   type TopPost,
-  transformPlatformData,
+  platformColors,
   transformChartData,
   AnalyticsHeader,
   AnalyticsStats,
@@ -23,112 +23,60 @@ import {
 } from '@/components/analytics';
 
 export default function AnalyticsPage() {
-  const [timeRange, setTimeRange] = useState('7d');
+  const [timeRange, setTimeRange] = useState('30d');
   const [platform, setPlatform] = useState('all');
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(null);
 
-  const getAuthToken = () => {
-    return localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token') || localStorage.getItem('token');
-  };
+  const { data: responseData, isLoading, error, refetch } = usePerformanceAnalytics({
+    period: timeRange,
+    platform,
+    granularity: 'day',
+  });
 
-  useEffect(() => {
-    const loadAnalytics = async () => {
-      setIsLoading(true);
-      setError(null);
-      try {
-        const token = getAuthToken();
-        const params = new URLSearchParams({ timeRange });
-        if (platform !== 'all') {
-          params.append('platform', platform);
-        }
-
-        // Always attempt fetch with credentials: 'include' for httpOnly cookie auth
-        {
-          const response = await fetch(`/api/analytics?${params.toString()}`, {
-            credentials: 'include',
-            headers: token ? { 'Authorization': `Bearer ${token}` } : {},
-          });
-
-          if (response.ok) {
-            const { data } = await response.json();
-            setAnalyticsData(data);
-            setIsLoading(false);
-            return;
-          }
-        }
-
-        setError('Failed to load analytics data');
-        setIsLoading(false);
-      } catch (err) {
-        console.error('Error loading analytics:', err);
-        setError('Failed to load analytics data');
-        setIsLoading(false);
-      }
-    };
-    loadAnalytics();
-  }, [timeRange, platform]);
+  const performanceData = responseData?.data;
 
   const handleRetry = useCallback(async () => {
-    setError(null);
-    setIsLoading(true);
-    try {
-      const token = getAuthToken();
-      const params = new URLSearchParams({ timeRange });
-      if (platform !== 'all') {
-        params.append('platform', platform);
-      }
+    await refetch();
+  }, [refetch]);
 
-      {
-        const response = await fetch(`/api/analytics?${params.toString()}`, {
-          credentials: 'include',
-          headers: token ? { 'Authorization': `Bearer ${token}` } : {},
-        });
-
-        if (response.ok) {
-          const { data } = await response.json();
-          setAnalyticsData(data);
-          setIsLoading(false);
-          return;
-        }
-      }
-      setError('Failed to load analytics data');
-      setIsLoading(false);
-    } catch {
-      setError('Failed to load analytics data');
-      setIsLoading(false);
-    }
-  }, [timeRange, platform]);
-
-  // Use real data if available, otherwise show zeros
+  // Build displayData from performance API overview
   const displayData: DisplayData = useMemo(() => ({
-    reach: analyticsData?.totals?.reach ?? 0,
-    engagement: analyticsData?.totals?.engagement ?? 0,
-    engagementRate: analyticsData?.totals?.engagementRate ?? 0,
+    reach: performanceData?.overview?.totalReach ?? 0,
+    engagement: performanceData?.overview?.totalEngagement ?? 0,
+    engagementRate: performanceData?.overview?.averageEngagementRate ?? 0,
     followerGrowth: 0,
-  }), [analyticsData]);
+    growth: performanceData?.growth,
+  }), [performanceData]);
 
-  // Transform API data for charts
-  const chartPlatformDistribution = useMemo(
-    () => transformPlatformData(analyticsData?.platformBreakdown),
-    [analyticsData?.platformBreakdown]
-  );
+  // Transform platform data for pie chart (from performance API platforms array)
+  const chartPlatformDistribution = useMemo(() => {
+    if (!performanceData?.platforms || performanceData.platforms.length === 0) {
+      return [];
+    }
+    const total = performanceData.platforms.reduce((sum, p) => sum + p.posts, 0);
+    return performanceData.platforms.map((p) => ({
+      name: p.platform.charAt(0).toUpperCase() + p.platform.slice(1),
+      value: total > 0 ? Math.round((p.posts / total) * 100) : 0,
+      color: platformColors[p.platform] ?? '#06b6d4',
+    }));
+  }, [performanceData?.platforms]);
 
-  const chartEngagementData = useMemo(
-    () => transformChartData(analyticsData?.chartData, analyticsData?.platformBreakdown),
-    [analyticsData?.chartData, analyticsData?.platformBreakdown]
-  );
-
-  const handleFilter = useCallback(() => {
-    alert('Filter options coming soon');
-  }, []);
+  // Transform timeline data for engagement chart
+  const chartEngagementData = useMemo(() => {
+    if (!performanceData?.timeline || performanceData.timeline.length === 0) {
+      return [];
+    }
+    return transformChartData(
+      performanceData.timeline.map((t) => ({ date: t.date, posts: t.posts })),
+      undefined
+    );
+  }, [performanceData?.timeline]);
 
   const handleExport = useCallback(() => {
     const exportData = {
-      analyticsData: analyticsData || null,
-      engagementData: chartEngagementData,
-      platformDistribution: chartPlatformDistribution,
+      overview: performanceData?.overview ?? null,
+      growth: performanceData?.growth ?? null,
+      platforms: performanceData?.platforms ?? [],
+      timeline: performanceData?.timeline ?? [],
       timeRange,
       exportedAt: new Date().toISOString(),
     };
@@ -139,10 +87,10 @@ export default function AnalyticsPage() {
     a.href = url;
     a.download = `analytics-${timeRange}.json`;
     a.click();
-  }, [analyticsData, chartEngagementData, chartPlatformDistribution, timeRange]);
+  }, [performanceData, timeRange]);
 
   const handleViewPostDetails = useCallback((postId: number) => {
-    alert(`Viewing details for post ${postId}`);
+    window.location.href = `/dashboard/content?postId=${postId}`;
   }, []);
 
   const handleViewAllPosts = useCallback(() => {
@@ -158,7 +106,7 @@ export default function AnalyticsPage() {
       <div className="p-6">
         <APIErrorCard
           title="Analytics Error"
-          message={error}
+          message={error.message}
           onRetry={handleRetry}
         />
       </div>
@@ -170,11 +118,11 @@ export default function AnalyticsPage() {
       <AnalyticsHeader
         timeRange={timeRange}
         onTimeRangeChange={setTimeRange}
-        onFilter={handleFilter}
+        onFilter={() => {}}
         onExport={handleExport}
       />
 
-      <AnalyticsStats data={displayData} />
+      <AnalyticsStats data={displayData} growth={performanceData?.growth} />
 
       <div className="grid gap-6 lg:grid-cols-2">
         <EngagementChart data={chartEngagementData} />
