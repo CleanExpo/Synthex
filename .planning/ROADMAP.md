@@ -28,7 +28,7 @@ None (internal platform work)
 - [x] **Phase 11: Deferred Cleanup — Legacy Services** - Migrate/remove legacy src/ services
 - [x] **Phase 12: Deferred Cleanup — Components** - Wire standalone components, consolidate rate limiters
 - [x] **Phase 13: Feature Completion — Models** - Add ContentLibrary model, implement stub routes
-- [ ] **Phase 14: Feature Completion — Agents** - Connect agent coordinators to real APIs
+- [x] **Phase 14: Feature Completion — Agents** - Connect agent coordinators to real APIs
 - [ ] **Phase 15: Google Developer Console** - OAuth verification, production API credentials
 - [ ] **Phase 16: UI/UX — Dashboard Polish** - Improve layouts, loading states, error handling
 - [ ] **Phase 17: UI/UX — New Features** - Missing pages, feature discoverability, onboarding
@@ -88,10 +88,10 @@ Plans:
 **Goal**: Connect src/agents/ specialist coordinators to real APIs instead of mock metrics
 **Depends on**: Phase 13
 **Research**: Unlikely (internal wiring)
-**Plans**: TBD
+**Plans**: 1 plan
 
 Plans:
-- [ ] 14-01: TBD
+- [x] 14-01: Wire specialist coordinators to real APIs
 
 #### Phase 15: Google Developer Console
 **Goal**: Configure OAuth consent screens for all Google APIs (YouTube, Gmail), verify apps for production, set up proper API credentials and quotas
@@ -147,7 +147,7 @@ Plans:
 | 11. Deferred — Legacy | v1.1 | 1/1 | Complete | 2026-02-17 |
 | 12. Deferred — Components | v1.1 | 4/4 | Complete | 2026-02-17 |
 | 13. Feature — Models | v1.1 | 1/1 | Complete | 2026-02-17 |
-| 14. Feature — Agents | v1.1 | 0/? | Not started | - |
+| 14. Feature — Agents | v1.1 | 1/1 | Complete | 2026-02-17 |
 | 15. Google Console | v1.1 | 0/? | Not started | - |
 | 16. UI/UX — Polish | v1.1 | 0/? | Not started | - |
 | 17. UI/UX — Features | v1.1 | 0/? | Not started | - |
