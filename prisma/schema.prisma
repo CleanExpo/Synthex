@@ -83,6 +83,9 @@ model User {
   // Content library
   contentLibrary   ContentLibrary[]
 
+  // Prompt templates
+  promptTemplates  PromptTemplate[]
+
   // Multi-business owner system
   isMultiBusinessOwner  Boolean   @default(false) @map("is_multi_business_owner")
   activeOrganizationId  String?   @map("active_organization_id")
@@ -324,6 +327,7 @@ model Organization {
   roles             Role[]
   campaigns         Campaign[]       @relation("OrganizationCampaigns")
   businessOwners    BusinessOwnership[] @relation("BusinessOwners")
+  promptTemplates   PromptTemplate[]
 
   // Indices for multi-tenant queries
   @@index([slug])
@@ -871,6 +875,50 @@ model ContentLibrary {
   @@index([userId, contentType])
   @@index([userId, status])
   @@map("content_library")
+}
+
+// ==========================================
+// Prompt Templates Module
+// Reusable AI prompt templates for content generation
+// ==========================================
+
+model PromptTemplate {
+  id              String   @id @default(cuid())
+  userId          String?  @map("user_id")  // Null for system templates
+  organizationId  String?  @map("organization_id")  // For team-shared templates
+
+  name            String
+  description     String?
+  icon            String?  // Emoji icon
+  category        String   // 'marketing', 'engagement', 'educational', 'promotional', 'personal'
+  platforms       String[] // ['twitter', 'linkedin', 'instagram', etc.]
+
+  // Template structure (JSON matching ContentTemplate interface)
+  structure       Json     // { hook, body, cta?, hashtags?, mediaType? }
+  variables       String[] // Placeholder names to fill in
+  tips            String[] // Usage tips
+
+  // Visibility & sharing
+  isPublic        Boolean  @default(false) @map("is_public")  // Available to all users
+  isSystem        Boolean  @default(false) @map("is_system")  // Built-in template
+
+  // Usage tracking
+  usageCount      Int      @default(0) @map("usage_count")
+  lastUsedAt      DateTime? @map("last_used_at")
+
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  user            User?         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization    Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([organizationId])
+  @@index([category])
+  @@index([isPublic])
+  @@index([isSystem])
+  @@map("prompt_templates")
 }
 
 // ==========================================
