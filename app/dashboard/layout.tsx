@@ -39,6 +39,7 @@ import {
   CreditCard,
   Layers,
   Lightbulb,
+  Layout,
 } from '@/components/icons';
 import { Button } from '@/components/ui/button';
 import { AIPMFloatingButton } from '@/components/ai-pm';
@@ -71,6 +72,7 @@ const sidebarItems = [
   { icon: BarChart3, label: 'Analytics', href: '/dashboard/analytics' },
   { icon: Lightbulb, label: 'Predictions', href: '/dashboard/predictions' },
   { icon: File, label: 'Reports', href: '/dashboard/reports' },
+  { icon: Layout, label: 'Report Builder', href: '/dashboard/reports/builder' },
   { icon: Beaker, label: 'Experiments', href: '/dashboard/experiments' },
   { icon: Brain, label: 'Psychology', href: '/dashboard/psychology' },
   { icon: Target, label: 'Competitors', href: '/dashboard/competitors' },
@@ -111,7 +113,7 @@ export default function DashboardLayout({
     <div className="min-h-screen bg-gray-950">
       {/* Mobile Menu Component */}
       <MobileMenu />
-      
+
       {/* Desktop Sidebar - Hidden on mobile */}
       <aside
         className={cn(

@@ -25,6 +25,7 @@ import {
   HelpCircle,
   Layers,
   Lightbulb,
+  Layout,
 } from '@/components/icons';
 import { notify } from '@/lib/notifications';
 
@@ -45,7 +46,7 @@ export function CommandPalette() {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
-  
+
   const commands: CommandItem[] = [
     // Navigation
     {
@@ -115,6 +116,15 @@ export function CommandPalette() {
       action: () => router.push('/dashboard/reports'),
       category: 'navigation',
       keywords: ['reports', 'generate', 'export', 'pdf']
+    },
+    {
+      id: 'report-builder',
+      title: 'Report Builder',
+      description: 'Create custom report templates with drag-drop widgets',
+      icon: Layout,
+      action: () => router.push('/dashboard/reports/builder'),
+      category: 'navigation',
+      keywords: ['report', 'builder', 'custom', 'template', 'widget', 'drag', 'drop']
     },
     {
       id: 'experiments',
@@ -191,7 +201,7 @@ export function CommandPalette() {
       category: 'actions',
       keywords: ['post', 'quick', 'publish', 'share']
     },
-    
+
     // Settings
     {
       id: 'settings',
@@ -242,7 +252,7 @@ export function CommandPalette() {
       keywords: ['help', 'support', 'docs', 'faq']
     },
   ];
-  
+
   // Filter commands based on search
   const filteredCommands = commands.filter(cmd => {
     const searchLower = search.toLowerCase();
@@ -252,14 +262,14 @@ export function CommandPalette() {
       cmd.keywords.some(k => k.includes(searchLower))
     );
   });
-  
+
   // Group commands by category
   const groupedCommands = filteredCommands.reduce((acc, cmd) => {
     if (!acc[cmd.category]) acc[cmd.category] = [];
     acc[cmd.category].push(cmd);
     return acc;
   }, {} as Record<string, CommandItem[]>);
-  
+
   // Handle keyboard navigation
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -267,9 +277,9 @@ export function CommandPalette() {
         e.preventDefault();
         setIsOpen(true);
       }
-      
+
       if (!isOpen) return;
-      
+
       switch (e.key) {
         case 'ArrowDown':
           e.preventDefault();
@@ -292,18 +302,18 @@ export function CommandPalette() {
           break;
       }
     };
-    
+
     // Custom event listener for opening
     const handleOpen = () => setIsOpen(true);
     window.addEventListener('openCommandPalette', handleOpen);
     window.addEventListener('keydown', handleKeyDown);
-    
+
     return () => {
       window.removeEventListener('openCommandPalette', handleOpen);
       window.removeEventListener('keydown', handleKeyDown);
     };
   }, [isOpen, selectedIndex, filteredCommands]);
-  
+
   // Focus input when opened
   useEffect(() => {
     if (isOpen) {
@@ -312,23 +322,23 @@ export function CommandPalette() {
       setSelectedIndex(0);
     }
   }, [isOpen]);
-  
+
   // Scroll selected item into view
   useEffect(() => {
     const selectedElement = listRef.current?.children[selectedIndex] as HTMLElement;
     selectedElement?.scrollIntoView({ block: 'nearest' });
   }, [selectedIndex]);
-  
+
   if (!isOpen) return null;
-  
+
   return (
     <>
       {/* Backdrop */}
-      <div 
+      <div
         className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50"
         onClick={() => setIsOpen(false)}
       />
-      
+
       {/* Command Palette */}
       <div className="fixed top-1/4 left-1/2 transform -translate-x-1/2 w-full max-w-2xl z-50">
         <div className="bg-white/[0.02] backdrop-blur-xl border border-white/[0.08] rounded-xl shadow-2xl overflow-hidden">
@@ -345,7 +355,7 @@ export function CommandPalette() {
             />
             <kbd className="px-2 py-1 text-xs bg-gray-800 rounded">ESC</kbd>
           </div>
-          
+
           {/* Commands List */}
           <div ref={listRef} className="max-h-96 overflow-y-auto p-2">
             {Object.entries(groupedCommands).map(([category, items]) => (
@@ -356,7 +366,7 @@ export function CommandPalette() {
                 {items.map((cmd, idx) => {
                   const Icon = cmd.icon;
                   const isSelected = filteredCommands.indexOf(cmd) === selectedIndex;
-                  
+
                   return (
                     <button
                       key={cmd.id}
@@ -367,8 +377,8 @@ export function CommandPalette() {
                       className={`
                         w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left
                         transition-colors duration-150
-                        ${isSelected 
-                          ? 'bg-cyan-500/20 text-white' 
+                        ${isSelected
+                          ? 'bg-cyan-500/20 text-white'
                           : 'text-gray-300 hover:bg-white/5 hover:text-white'
                         }
                       `}
@@ -390,14 +400,14 @@ export function CommandPalette() {
                 })}
               </div>
             ))}
-            
+
             {filteredCommands.length === 0 && (
               <div className="text-center py-8 text-gray-500">
-                No commands found for "{search}"
+                No commands found for &quot;{search}&quot;
               </div>
             )}
           </div>
-          
+
           {/* Footer */}
           <div className="border-t border-white/10 px-4 py-2 flex items-center justify-between text-xs text-gray-500">
             <div className="flex gap-4">

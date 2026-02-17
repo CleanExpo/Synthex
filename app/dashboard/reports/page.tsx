@@ -3,6 +3,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import toast, { Toaster } from 'react-hot-toast';
 
+import Link from 'next/link';
+import { Layout } from '@/components/icons';
 import {
   type Report,
   ReportsHeader,
@@ -149,6 +151,15 @@ export default function ReportsPage() {
         onRefresh={fetchReports}
         onNewReport={() => setShowGenerateModal(true)}
       />
+
+      {/* Custom Report Builder CTA */}
+      <Link
+        href="/dashboard/reports/builder"
+        className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 hover:bg-cyan-500/20 transition-colors text-sm font-medium"
+      >
+        <Layout className="w-4 h-4" />
+        Build Custom Report
+      </Link>
 
       <ReportsStats reports={reports} />
 
