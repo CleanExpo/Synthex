@@ -30,3 +30,6 @@ export { DashboardError } from './error-fallback';
 // Layout components
 export { PageHeader } from './page-header';
 export { DashboardEmptyState } from './empty-state';
+
+// Feature discoverability
+export { KeyboardHints } from './keyboard-hints';
