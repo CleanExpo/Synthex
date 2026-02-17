@@ -30,7 +30,7 @@ None (internal platform work)
 - [x] **Phase 13: Feature Completion — Models** - Add ContentLibrary model, implement stub routes
 - [x] **Phase 14: Feature Completion — Agents** - Connect agent coordinators to real APIs
 - [x] **Phase 15: Google Developer Console** - OAuth verification, production API credentials
-- [ ] **Phase 16: UI/UX — Dashboard Polish** - Improve layouts, loading states, error handling
+- [x] **Phase 16: UI/UX — Dashboard Polish** - Improve layouts, loading states, error handling
 - [ ] **Phase 17: UI/UX — New Features** - Missing pages, feature discoverability, onboarding
 - [ ] **Phase 18: Final Verification** - Regression test, performance audit, documentation
 
@@ -118,10 +118,12 @@ Plans:
 **Goal**: Add missing dashboard pages, improve feature discoverability, enhance onboarding flow
 **Depends on**: Phase 16
 **Research**: Unlikely (UI work)
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 17-01: TBD
+- [ ] 17-01: Add missing navigation items (Reports, Experiments to sidebar; Billing to dropdown; expand CommandPalette)
+- [ ] 17-02: Enhance feature discoverability (expand ProductTour, add KeyboardHints component)
+- [ ] 17-03: Enhance onboarding flow (tour integration, completion page improvements)
 
 #### Phase 18: Final Verification
 **Goal**: Full regression test, performance audit, documentation update for v1.1 release
@@ -152,5 +154,5 @@ Plans:
 | 14. Feature — Agents | v1.1 | 1/1 | Complete | 2026-02-17 |
 | 15. Google Console | v1.1 | 1/1 | Complete | 2026-02-17 |
 | 16. UI/UX — Polish | v1.1 | 3/3 | Complete | 2026-02-17 |
-| 17. UI/UX — Features | v1.1 | 0/? | Not started | - |
+| 17. UI/UX — Features | v1.1 | 0/3 | Planned | - |
 | 18. Final Verification | v1.1 | 0/? | Not started | - |

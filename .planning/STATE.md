@@ -10,10 +10,10 @@ See: .planning/PROJECT.md (updated 2026-02-17)
 ## Current Position
 
 Milestone: v1.1 Platform Enhancement
-Phase: 16 of 18 (UI/UX — Dashboard Polish) — COMPLETE
-Plan: 03 of 3 complete
-Status: Phase 16 complete
-Last activity: 2026-02-17 — Plan 16-03 executed
+Phase: 17 of 18 (UI/UX — New Features) — PLANNED
+Plan: 0 of 3 complete
+Status: Ready for execution
+Last activity: 2026-02-17 — Phase 17 plans created
 
 Progress: ███████░░░ 75% (6/8 phases)
 
@@ -48,6 +48,7 @@ Progress: ███████░░░ 75% (6/8 phases)
 | 13 | 1/1 | ~15 min | ~15 min |
 | 14 | 1/1 | ~20 min | ~20 min |
 | 15 | 1/1 | ~15 min | ~15 min |
+| 16 | 3/3 | ~15 min | ~5 min |
 
 ## Accumulated Context
 
@@ -66,16 +67,33 @@ Decisions from v1.1:
 
 - Rate limiters consolidated into lib/rate-limit/ with re-exports for backward compat
 - lib/middleware/api-rate-limit.ts and lib/middleware/rate-limiter.ts kept as thin re-export wrappers
+- Loading states use glassmorphic styling (bg-white/5, bg-[#0f172a]/80, border-cyan-500/10)
+- DashboardError component in components/dashboard/error-fallback.tsx for all error.tsx files
+- PageHeader and DashboardEmptyState components for consistent layouts
 
 ### Deferred Items (from v1.0)
 
-These are the primary targets for v1.1:
+All deferred items from v1.0 resolved:
 
 - ~~Legacy src/ services with mock data — Phase 11~~ DONE (18 files removed)
 - ~~src/agents/ specialist coordinators with mock metrics — Phase 14~~ DONE (3 coordinators wired to real APIs)
 - ~~8 standalone feature components with mock data — Phase 12~~ DONE (8 components wired)
 - ~~Rate limiter files consolidation — Phase 12-04~~ DONE (9 files removed, unified into lib/rate-limit/)
 - ~~ContentLibrary model not in schema — Phase 13~~ DONE (model added, CRUD API implemented)
+
+### Phase 17 Analysis
+
+**Pages discovered but not in navigation:**
+- `/dashboard/reports` — Important feature, fully built
+- `/dashboard/experiments` — A/B testing, fully built
+- `/dashboard/billing` — Subscription management, fully built
+- `/dashboard/admin`, `/dashboard/backups`, `/dashboard/monitoring` — Utility pages
+
+**Current ProductTour:** 7 steps (basic coverage)
+**Target ProductTour:** 12 steps (comprehensive coverage)
+
+**Current CommandPalette:** 10 commands
+**Target CommandPalette:** 17 commands
 
 ### Blockers/Concerns
 
@@ -89,6 +107,6 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-17
-Stopped at: Phase 16 complete
+Stopped at: Phase 17 planning complete
 Resume file: None
-Next action: /gsd:plan-phase 17
+Next action: /gsd:execute-plan 17-01
