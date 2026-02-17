@@ -142,140 +142,190 @@ export function CompetitorAnalysis() {
   useEffect(() => {
     loadCompetitors();
   }, []);
-  
-  const loadCompetitors = () => {
-    // Mock data
-    const mockCompetitors: Competitor[] = [
-      {
-        id: 'comp-1',
-        name: 'TechGiant Inc',
-        domain: 'techgiant.com',
-        description: 'Leading tech innovation company',
-        industry: 'Technology',
-        size: 'enterprise',
-        metrics: {
-          followers: {
-            twitter: 1250000,
-            instagram: 850000,
-            linkedin: 650000,
-            facebook: 920000,
-            youtube: 1100000,
-            total: 4770000
-          },
-          engagement: {
-            twitter: 2.5,
-            instagram: 4.2,
-            linkedin: 3.1,
-            facebook: 1.8,
-            youtube: 5.5,
-            total: 3.4
-          },
-          postFrequency: {
-            twitter: 15,
-            instagram: 3,
-            linkedin: 5,
-            facebook: 2,
-            youtube: 2,
-            total: 27
-          },
-          growthRate: 12.5,
-          sentimentScore: 78,
-          shareOfVoice: 32,
-          contentPerformance: {
-            avgLikes: 5200,
-            avgComments: 420,
-            avgShares: 1850,
-            viralPosts: 23
+
+  const loadCompetitors = async () => {
+    setLoading(true);
+
+    try {
+      // Fetch competitors from both tracking and intelligence APIs
+      const [trackRes, intelRes] = await Promise.all([
+        fetch('/api/competitors/track?active=true'),
+        fetch('/api/intelligence/competitors?action=list')
+      ]);
+
+      const loadedCompetitors: Competitor[] = [];
+
+      // Process tracked competitors
+      if (trackRes.ok) {
+        const trackData = await trackRes.json();
+
+        if (trackData.competitors && Array.isArray(trackData.competitors)) {
+          for (const comp of trackData.competitors) {
+            // Transform API response to component interface
+            const snapshot = comp.latestSnapshot || {};
+
+            loadedCompetitors.push({
+              id: comp.id,
+              name: comp.name,
+              domain: comp.domain || '',
+              description: comp.description || 'Competitor being tracked',
+              industry: comp.industry || 'Unknown',
+              size: determineSizeFromFollowers(snapshot.followers || 0),
+              metrics: {
+                followers: {
+                  twitter: snapshot.twitterFollowers || 0,
+                  instagram: snapshot.instagramFollowers || 0,
+                  linkedin: snapshot.linkedinFollowers || 0,
+                  facebook: snapshot.facebookFollowers || 0,
+                  youtube: snapshot.youtubeFollowers || 0,
+                  tiktok: snapshot.tiktokFollowers || 0,
+                  total: snapshot.followers || 0
+                },
+                engagement: {
+                  twitter: snapshot.twitterEngagement || 0,
+                  instagram: snapshot.instagramEngagement || 0,
+                  linkedin: snapshot.linkedinEngagement || 0,
+                  facebook: snapshot.facebookEngagement || 0,
+                  youtube: snapshot.youtubeEngagement || 0,
+                  tiktok: snapshot.tiktokEngagement || 0,
+                  total: snapshot.engagementRate || 0
+                },
+                postFrequency: {
+                  twitter: snapshot.twitterPostFreq || 0,
+                  instagram: snapshot.instagramPostFreq || 0,
+                  linkedin: snapshot.linkedinPostFreq || 0,
+                  facebook: snapshot.facebookPostFreq || 0,
+                  youtube: snapshot.youtubePostFreq || 0,
+                  tiktok: snapshot.tiktokPostFreq || 0,
+                  total: snapshot.totalPostFreq || 0
+                },
+                growthRate: snapshot.growthRate || 0,
+                sentimentScore: snapshot.sentimentScore || 0,
+                shareOfVoice: snapshot.shareOfVoice || 0,
+                contentPerformance: {
+                  avgLikes: snapshot.avgLikes || 0,
+                  avgComments: snapshot.avgComments || 0,
+                  avgShares: snapshot.avgShares || 0,
+                  viralPosts: snapshot.viralPosts || 0
+                }
+              },
+              socialProfiles: buildSocialProfiles(comp),
+              contentStrategy: {
+                topContent: [],
+                postingTimes: snapshot.postingTimes || [],
+                contentTypes: snapshot.contentTypes || [],
+                hashtagStrategy: comp.tags || [],
+                toneOfVoice: snapshot.toneOfVoice || ''
+              },
+              strengths: snapshot.strengths || [],
+              weaknesses: snapshot.weaknesses || [],
+              opportunities: snapshot.opportunities || [],
+              tracking: comp.isActive !== false
+            });
           }
-        },
-        socialProfiles: [
-          { platform: 'twitter', handle: '@techgiant', url: 'twitter.com/techgiant', verified: true },
-          { platform: 'instagram', handle: '@techgiant', url: 'instagram.com/techgiant', verified: true }
-        ],
-        contentStrategy: {
-          topContent: [],
-          postingTimes: ['9:00 AM', '12:00 PM', '5:00 PM'],
-          contentTypes: [
-            { type: 'Educational', percentage: 35 },
-            { type: 'Promotional', percentage: 25 },
-            { type: 'Entertainment', percentage: 20 },
-            { type: 'User Generated', percentage: 20 }
-          ],
-          hashtagStrategy: ['#TechInnovation', '#FutureTech', '#DigitalTransformation'],
-          toneOfVoice: 'Professional yet approachable'
-        },
-        strengths: ['Strong brand recognition', 'High engagement rates', 'Consistent posting'],
-        weaknesses: ['Limited user-generated content', 'Low Facebook engagement'],
-        opportunities: ['Expand TikTok presence', 'More video content', 'Influencer partnerships'],
-        tracking: true
-      },
-      {
-        id: 'comp-2',
-        name: 'StartupRival',
-        domain: 'startuprival.com',
-        description: 'Agile startup disrupting the market',
-        industry: 'Technology',
-        size: 'medium',
-        metrics: {
-          followers: {
-            twitter: 125000,
-            instagram: 185000,
-            linkedin: 95000,
-            facebook: 62000,
-            tiktok: 220000,
-            total: 687000
-          },
-          engagement: {
-            twitter: 3.8,
-            instagram: 6.2,
-            linkedin: 2.9,
-            facebook: 1.5,
-            tiktok: 8.5,
-            total: 4.6
-          },
-          postFrequency: {
-            twitter: 20,
-            instagram: 5,
-            linkedin: 3,
-            facebook: 2,
-            tiktok: 8,
-            total: 38
-          },
-          growthRate: 28.5,
-          sentimentScore: 82,
-          shareOfVoice: 18,
-          contentPerformance: {
-            avgLikes: 2800,
-            avgComments: 350,
-            avgShares: 950,
-            viralPosts: 15
-          }
-        },
-        socialProfiles: [
-          { platform: 'twitter', handle: '@startuprival', url: 'twitter.com/startuprival', verified: false },
-          { platform: 'tiktok', handle: '@startuprival', url: 'tiktok.com/@startuprival', verified: true }
-        ],
-        contentStrategy: {
-          topContent: [],
-          postingTimes: ['8:00 AM', '1:00 PM', '7:00 PM'],
-          contentTypes: [
-            { type: 'Behind the Scenes', percentage: 30 },
-            { type: 'Educational', percentage: 30 },
-            { type: 'Entertainment', percentage: 25 },
-            { type: 'Promotional', percentage: 15 }
-          ],
-          hashtagStrategy: ['#StartupLife', '#Innovation', '#TechStartup'],
-          toneOfVoice: 'Casual and energetic'
-        },
-        strengths: ['High growth rate', 'Strong TikTok presence', 'Authentic content'],
-        weaknesses: ['Smaller overall reach', 'Inconsistent branding'],
-        opportunities: ['Scale successful TikTok strategy', 'Build email list', 'Content partnerships'],
-        tracking: true
+        }
       }
-    ];
-    
-    setCompetitors(mockCompetitors);
-    setSelectedCompetitor(mockCompetitors[0]);
+
+      // Add competitors from intelligence API if any
+      if (intelRes.ok) {
+        const intelData = await intelRes.json();
+
+        if (intelData.competitors && Array.isArray(intelData.competitors)) {
+          for (const comp of intelData.competitors) {
+            // Only add if not already in list
+            if (!loadedCompetitors.some(c => c.id === comp.id)) {
+              loadedCompetitors.push({
+                id: comp.id,
+                name: comp.name,
+                domain: comp.website || '',
+                description: comp.notes || 'Competitor profile',
+                industry: comp.industry || 'Unknown',
+                size: 'medium',
+                metrics: {
+                  followers: { total: 0 },
+                  engagement: { total: 0 },
+                  postFrequency: { total: 0 },
+                  growthRate: 0,
+                  sentimentScore: 0,
+                  shareOfVoice: 0,
+                  contentPerformance: {
+                    avgLikes: 0,
+                    avgComments: 0,
+                    avgShares: 0,
+                    viralPosts: 0
+                  }
+                },
+                socialProfiles: [],
+                contentStrategy: {
+                  topContent: [],
+                  postingTimes: [],
+                  contentTypes: [],
+                  hashtagStrategy: [],
+                  toneOfVoice: ''
+                },
+                strengths: [],
+                weaknesses: [],
+                opportunities: [],
+                tracking: comp.isActive !== false
+              });
+            }
+          }
+        }
+      }
+
+      setCompetitors(loadedCompetitors);
+      if (loadedCompetitors.length > 0) {
+        setSelectedCompetitor(loadedCompetitors[0]);
+      }
+
+    } catch (error) {
+      console.error('Error loading competitors:', error);
+      notify.error('Failed to load competitors');
+      setCompetitors([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Helper to determine company size from follower count
+  const determineSizeFromFollowers = (followers: number): 'small' | 'medium' | 'large' | 'enterprise' => {
+    if (followers >= 1000000) return 'enterprise';
+    if (followers >= 100000) return 'large';
+    if (followers >= 10000) return 'medium';
+    return 'small';
+  };
+
+  // Helper to build social profiles from competitor data
+  const buildSocialProfiles = (comp: {
+    twitterHandle?: string;
+    instagramHandle?: string;
+    linkedinHandle?: string;
+    facebookHandle?: string;
+    youtubeHandle?: string;
+    tiktokHandle?: string;
+  }): SocialProfile[] => {
+    const profiles: SocialProfile[] = [];
+
+    if (comp.twitterHandle) {
+      profiles.push({ platform: 'twitter', handle: comp.twitterHandle, url: `twitter.com/${comp.twitterHandle}`, verified: false });
+    }
+    if (comp.instagramHandle) {
+      profiles.push({ platform: 'instagram', handle: comp.instagramHandle, url: `instagram.com/${comp.instagramHandle}`, verified: false });
+    }
+    if (comp.linkedinHandle) {
+      profiles.push({ platform: 'linkedin', handle: comp.linkedinHandle, url: `linkedin.com/company/${comp.linkedinHandle}`, verified: false });
+    }
+    if (comp.facebookHandle) {
+      profiles.push({ platform: 'facebook', handle: comp.facebookHandle, url: `facebook.com/${comp.facebookHandle}`, verified: false });
+    }
+    if (comp.youtubeHandle) {
+      profiles.push({ platform: 'youtube', handle: comp.youtubeHandle, url: `youtube.com/${comp.youtubeHandle}`, verified: false });
+    }
+    if (comp.tiktokHandle) {
+      profiles.push({ platform: 'tiktok', handle: comp.tiktokHandle, url: `tiktok.com/@${comp.tiktokHandle}`, verified: false });
+    }
+
+    return profiles;
   };
   
   const addCompetitor = async () => {
@@ -283,17 +333,52 @@ export function CompetitorAnalysis() {
       notify.error('Please enter a competitor URL');
       return;
     }
-    
+
     setLoading(true);
-    
-    // Simulate API call
-    setTimeout(() => {
+
+    try {
+      // Extract domain name for competitor name
+      let domain = newCompetitorUrl;
+      let name = newCompetitorUrl;
+
+      try {
+        const url = new URL(newCompetitorUrl.startsWith('http') ? newCompetitorUrl : `https://${newCompetitorUrl}`);
+        domain = url.hostname.replace(/^www\./, '');
+        name = domain.split('.')[0].charAt(0).toUpperCase() + domain.split('.')[0].slice(1);
+      } catch {
+        // Use as-is if not a valid URL
+      }
+
+      const response = await fetch('/api/competitors/track', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name,
+          domain: newCompetitorUrl.startsWith('http') ? newCompetitorUrl : `https://${newCompetitorUrl}`,
+          description: 'Added for competitive analysis',
+          trackingFrequency: 'daily'
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        if (response.status === 409) {
+          notify.error('Competitor with this domain already exists');
+        } else {
+          throw new Error(errorData.error || 'Failed to add competitor');
+        }
+        return;
+      }
+
+      const data = await response.json();
+
+      // Add the new competitor to state
       const newCompetitor: Competitor = {
-        id: `comp-${Date.now()}`,
-        name: 'New Competitor',
-        domain: newCompetitorUrl,
-        description: 'Analyzing...',
-        industry: 'Unknown',
+        id: data.competitor.id,
+        name: data.competitor.name,
+        domain: domain,
+        description: 'Analyzing... Tracking will begin shortly.',
+        industry: data.competitor.industry || 'Unknown',
         size: 'medium',
         metrics: {
           followers: { total: 0 },
@@ -322,13 +407,18 @@ export function CompetitorAnalysis() {
         opportunities: [],
         tracking: true
       };
-      
+
       setCompetitors([...competitors, newCompetitor]);
       setNewCompetitorUrl('');
       setShowAddForm(false);
-      setLoading(false);
       notify.success('Competitor added for tracking');
-    }, 2000);
+
+    } catch (error) {
+      console.error('Error adding competitor:', error);
+      notify.error('Failed to add competitor');
+    } finally {
+      setLoading(false);
+    }
   };
   
   const toggleComparison = (competitorId: string) => {
