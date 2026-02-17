@@ -11,7 +11,7 @@ None (internal platform work)
 ## Milestones
 
 - ✅ [v1.0 Production Hardening](milestones/v1.0-ROADMAP.md) (Phases 1-10) — SHIPPED 2026-02-17
-- ✅ **v1.1 Platform Enhancement** — Phases 11-18 — SHIPPED 2026-02-17
+- ✅ [v1.1 Platform Enhancement](milestones/v1.1-ROADMAP.md) (Phases 11-18) — SHIPPED 2026-02-17
 
 ## Phases
 
@@ -50,89 +50,20 @@ See [milestones/v1.0-ROADMAP.md](milestones/v1.0-ROADMAP.md) for full details.
 
 </details>
 
-### ✅ v1.1 Platform Enhancement — SHIPPED 2026-02-17
+<details>
+<summary>✅ v1.1 Platform Enhancement (Phases 11-18) — SHIPPED 2026-02-17</summary>
 
-**Milestone Goal:** Complete all deferred items from v1.0, add missing features, enhance UI/UX, and properly configure Google Developer Console for production OAuth.
+See [milestones/v1.1-ROADMAP.md](milestones/v1.1-ROADMAP.md) for full details.
 
-#### Phase 11: Deferred Cleanup — Legacy Services
-**Goal**: Remove legacy src/services files with mock data, audit and document remaining src/ dependencies
-**Depends on**: v1.0 complete
-**Research**: Unlikely (internal cleanup)
-**Plans**: 1 plan
+**Key accomplishments:**
+- Removed 18 legacy service files (11,984 lines of mock data)
+- Wired 8 standalone components to real APIs
+- Consolidated 11 rate limiter files into lib/rate-limit/
+- Added ContentLibrary Prisma model with CRUD API
+- Connected 3 agent coordinators to real platform metrics
+- Enhanced dashboard UX: loading states, error boundaries, ProductTour (12 steps)
 
-Plans:
-- [x] 11-01: Remove legacy services and document src/ dependencies
-
-#### Phase 12: Deferred Cleanup — Components
-**Goal**: Wire 8 standalone feature components (SentimentAnalysis, AIHashtagGenerator, etc.) to real APIs, consolidate 11 rate limiter files
-**Depends on**: Phase 11
-**Research**: Unlikely (internal wiring)
-**Plans**: 4 plans
-
-Plans:
-- [x] 12-01: Wire AI content components (AIHashtagGenerator, SentimentAnalysis, AIWritingAssistant)
-- [x] 12-02: Wire AI feature components (AIPersonaManager, AIABTesting)
-- [x] 12-03: Wire analytics components (PredictiveAnalytics, CompetitorAnalysis, ROICalculator)
-- [x] 12-04: Consolidate rate limiters into lib/rate-limit/
-
-#### Phase 13: Feature Completion — Models
-**Goal**: Add ContentLibrary Prisma model to schema, implement the 2 stub routes (api/library/content) that currently return 501
-**Depends on**: Phase 12
-**Research**: Unlikely (schema extension)
-**Plans**: TBD
-
-Plans:
-- [x] 13-01: Add ContentLibrary model and CRUD API routes
-
-#### Phase 14: Feature Completion — Agents
-**Goal**: Connect src/agents/ specialist coordinators to real APIs instead of mock metrics
-**Depends on**: Phase 13
-**Research**: Unlikely (internal wiring)
-**Plans**: 1 plan
-
-Plans:
-- [x] 14-01: Wire specialist coordinators to real APIs
-
-#### Phase 15: Google Developer Console
-**Goal**: Configure OAuth consent screens for all Google APIs (YouTube, Gmail), verify apps for production, set up proper API credentials and quotas
-**Depends on**: Phase 14
-**Research**: Likely (Google Cloud Console setup, OAuth verification process)
-**Research topics**: OAuth consent screen configuration, app verification requirements, API quota management, production credentials setup
-**Plans**: 1 plan
-
-Plans:
-- [x] 15-01: Create Google Cloud Console setup documentation and validation
-
-#### Phase 16: UI/UX — Dashboard Polish
-**Goal**: Improve dashboard layouts, loading states, error handling, and empty states across all pages
-**Depends on**: Phase 15
-**Research**: Unlikely (UI patterns)
-**Plans**: 3 plans
-
-Plans:
-- [x] 16-01: Create loading states for high-priority dashboard routes
-- [x] 16-02: Add error boundaries and improve error handling
-- [x] 16-03: Create reusable PageHeader and EmptyState components
-
-#### Phase 17: UI/UX — New Features
-**Goal**: Add missing dashboard pages, improve feature discoverability, enhance onboarding flow
-**Depends on**: Phase 16
-**Research**: Unlikely (UI work)
-**Plans**: 3 plans
-
-Plans:
-- [x] 17-01: Add missing navigation items (Reports, Experiments to sidebar; Billing to dropdown; expand CommandPalette)
-- [x] 17-02: Enhance feature discoverability (expand ProductTour, add KeyboardHints component)
-- [x] 17-03: Enhance onboarding flow (tour integration, completion page improvements)
-
-#### Phase 18: Final Verification
-**Goal**: Full regression test, performance audit, documentation update for v1.1 release
-**Depends on**: Phase 17
-**Research**: Unlikely (verification)
-**Plans**: TBD
-
-Plans:
-- [x] 18-01: Final verification for v1.1 release
+</details>
 
 ## Progress
 

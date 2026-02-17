@@ -8,14 +8,16 @@ AI-powered marketing automation platform — production-hardened with zero mock 
 
 **Every endpoint returns real data, every platform works, every dashboard page connects to live APIs.** No mock data, no stubs, no silent fallbacks.
 
-## Current State (v1.0 shipped 2026-02-17)
+## Current State (v1.1 shipped 2026-02-17)
 
-- 225 route files, 395 HTTP endpoints (221 active, 4 intentional stubs, 0 mock, 0 broken)
+- 225 route files, 395 HTTP endpoints (223 active, 2 intentional stubs, 0 mock, 0 broken)
 - 9 social platforms operational (Twitter, LinkedIn, Instagram, Facebook, TikTok, YouTube, Pinterest, Reddit, Threads)
 - 38 test suites, 1064 tests passing
-- 67 Prisma models with optimized indexes
-- Clean build (no workarounds, no --legacy-peer-deps)
-- Env validation at startup, category-based rate limiting, auth on all protected routes
+- 68 Prisma models (added ContentLibrary)
+- Clean build (no workarounds)
+- All standalone components wired to real APIs
+- Consolidated rate limiting in lib/rate-limit/
+- Enhanced dashboard UX: loading states, error boundaries, ProductTour (12 steps)
 
 ## Requirements
 
@@ -41,6 +43,14 @@ AI-powered marketing automation platform — production-hardened with zero mock 
 - 80%+ test coverage on auth, social, core services -- v1.0
 - Clean build configuration -- v1.0
 - Full endpoint audit with 0 broken routes -- v1.0
+- Remove legacy src/services mock data -- v1.1
+- Wire standalone components to real APIs -- v1.1
+- Consolidate rate limiters -- v1.1
+- ContentLibrary model and CRUD API -- v1.1
+- Agent coordinators connected to real data -- v1.1
+- Dashboard loading states and error boundaries -- v1.1
+- ProductTour expanded (12 steps) -- v1.1
+- Onboarding flow connected to ProductTour -- v1.1
 
 ### Active
 
@@ -77,11 +87,16 @@ AI-powered marketing automation platform — production-hardened with zero mock 
 
 ## Deferred Items
 
-- Legacy src/ services with mock data — deferred until Next.js migration
-- src/agents/ specialist coordinators with mock metrics — deferred until agent system connected to real APIs
-- 8 standalone feature components with mock data — not imported by dashboard pages
-- 3 rate limiter files await future consolidation
-- ContentLibrary model not in schema — 2 routes return 501
+All v1.0 deferred items resolved in v1.1:
+- ✓ Legacy src/ services — 18 files removed
+- ✓ Agent coordinators — 3 connected to real APIs
+- ✓ Standalone components — 8 wired to real APIs
+- ✓ Rate limiters — consolidated into lib/rate-limit/
+- ✓ ContentLibrary — model added, CRUD API implemented
+
+**Pre-existing issues (not blocking):**
+- lib/prisma.ts adapter type errors (Prisma 6 driver adapter types)
+- lib/video/capture-service.ts puppeteer-screen-recorder (optional video feature)
 
 ---
-*Last updated: 2026-02-17 after v1.0 milestone*
+*Last updated: 2026-02-17 after v1.1 milestone*
