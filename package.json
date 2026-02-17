@@ -6,7 +6,7 @@
   "packageManager": "npm@11.8.0",
   "type": "module",
   "scripts": {
-    "dev": "turbo run dev",
+    "dev": "next dev --turbopack",
     "build": "next build",
     "lint": "next lint",
     "test": "jest",
