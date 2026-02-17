@@ -5,26 +5,26 @@
 See: .planning/PROJECT.md (updated 2026-02-17)
 
 **Core value:** Every endpoint returns real data, every platform works, every dashboard page connects to live APIs
-**Current focus:** v1.0 milestone complete. All 10 phases shipped. Ready for next milestone or new work.
+**Current focus:** v1.1 Platform Enhancement — Complete deferred items, add features, enhance UI/UX, configure Google Developer Console
 
 ## Current Position
 
-Milestone: v1.0 Production Hardening — SHIPPED
-Phase: 10 of 10 (Final Audit)
-Plan: 2 of 2 in current phase
-Status: Milestone complete
-Last activity: 2026-02-17 — v1.0 milestone archived
+Milestone: v1.1 Platform Enhancement
+Phase: 11 of 18 (Deferred Cleanup — Legacy Services)
+Plan: Not started
+Status: Ready to plan
+Last activity: 2026-02-17 — Milestone v1.1 created
 
-Progress: ██████████ 100% (All Phases)
+Progress: ░░░░░░░░░░ 0%
 
 ## Performance Metrics
 
-**Velocity:**
+**Velocity (from v1.0):**
 - Total plans completed: 30
 - Average duration: ~12 min
 - Total execution time: ~360 min
 
-**By Phase:**
+**By Phase (v1.0):**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
@@ -39,17 +39,41 @@ Progress: ██████████ 100% (All Phases)
 | 9 | 3/3 | ~17 min | ~6 min |
 | 10 | 2/2 | ~24 min | ~12 min |
 
-## Deferred Items
+## Accumulated Context
 
-- Legacy src/ services with mock data — deferred until Next.js migration
-- src/agents/ specialist coordinators with mock metrics — deferred until agent system connected to real APIs
-- 8 standalone feature components with mock data — not imported by dashboard pages
-- 3 rate limiter files await future consolidation
-- ContentLibrary model not in schema — 2 routes return 501
+### Decisions
+
+Decisions from v1.0 that affect v1.1 work:
+
+- crypto.randomUUID() is standard for all server-side ID generation
+- All platform services use fetch() directly (except Twitter uses twitter-api-v2 SDK)
+- Schema-based contract testing pattern — Zod schemas + response shapes
+- Category-based rate limiting: authStrict 5/min through readDefault 120/min
+- Dashboard empty state pattern: inline EmptyState with icon, message, CTA button
+- Standalone feature components not imported by dashboard pages — safe to modify
+
+### Deferred Items (from v1.0)
+
+These are the primary targets for v1.1:
+
+- Legacy src/ services with mock data — Phase 11
+- src/agents/ specialist coordinators with mock metrics — Phase 14
+- 8 standalone feature components with mock data — Phase 12
+- 3 rate limiter files await consolidation — Phase 12
+- ContentLibrary model not in schema — Phase 13
+
+### Blockers/Concerns
+
+None.
+
+## Roadmap Evolution
+
+- v1.0 Production Hardening: 10 phases (1-10) — SHIPPED 2026-02-17
+- v1.1 Platform Enhancement created: 8 phases (11-18), comprehensive scope
 
 ## Session Continuity
 
 Last session: 2026-02-17
-Stopped at: v1.0 milestone archived. All 30/30 plans complete across 10 phases.
+Stopped at: Milestone v1.1 initialization
 Resume file: None
-Next action: /gsd:discuss-milestone or /gsd:new-milestone for next phase of work
+Next action: /gsd:plan-phase 11 or /gsd:discuss-phase 11
