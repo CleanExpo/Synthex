@@ -8,12 +8,14 @@ Allow: /
 # Sitemap
 Sitemap: https://synthex.social/sitemap.xml
 
-# Disallow admin and API routes
+# Disallow admin, API, and auth-gated routes
 User-agent: *
 Disallow: /api/
 Disallow: /admin/
 Disallow: /_next/
 Disallow: /ship-audit/
+Disallow: /dashboard/
+Disallow: /onboarding/
 
 # Common bot rules
 User-agent: Googlebot

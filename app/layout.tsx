@@ -198,6 +198,27 @@ export default function RootLayout({
             }),
           }}
         />
+        {/* WebSite Schema with SearchAction */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              '@context': 'https://schema.org',
+              '@type': 'WebSite',
+              name: 'Synthex - AI Marketing Agency',
+              url: BASE_URL,
+              description: 'AI-powered social media automation platform for content creation, scheduling, and analytics.',
+              potentialAction: {
+                '@type': 'SearchAction',
+                target: {
+                  '@type': 'EntryPoint',
+                  urlTemplate: `${BASE_URL}/search?q={search_term_string}`,
+                },
+                'query-input': 'required name=search_term_string',
+              },
+            }),
+          }}
+        />
         {/* Describer Video Schema */}
         <script
           type="application/ld+json"
