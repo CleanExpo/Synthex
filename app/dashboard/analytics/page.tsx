@@ -1,17 +1,17 @@
 'use client';
 
 import { useState, useMemo, useCallback } from 'react';
+import type { DateRange } from 'react-day-picker';
 import { AnalyticsSkeleton } from '@/components/skeletons';
 import { APIErrorCard } from '@/components/error-states';
 import { usePerformanceAnalytics } from '@/hooks/use-dashboard';
 
 import {
   type DisplayData,
-  type ContentPerformanceItem,
-  type GrowthDataPoint,
-  type TopPost,
   platformColors,
-  transformChartData,
+  transformTimelineToEngagement,
+  transformTimelineToGrowth,
+  transformTopContent,
   AnalyticsHeader,
   AnalyticsStats,
   EngagementChart,
@@ -25,11 +25,22 @@ import {
 export default function AnalyticsPage() {
   const [timeRange, setTimeRange] = useState('30d');
   const [platform, setPlatform] = useState('all');
+  const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
+
+  // Derive startDate/endDate ISO strings when custom range is active
+  const startDate = timeRange === 'custom' && dateRange?.from
+    ? dateRange.from.toISOString()
+    : undefined;
+  const endDate = timeRange === 'custom' && dateRange?.to
+    ? dateRange.to.toISOString()
+    : undefined;
 
   const { data: responseData, isLoading, error, refetch } = usePerformanceAnalytics({
     period: timeRange,
     platform,
     granularity: 'day',
+    startDate,
+    endDate,
   });
 
   const performanceData = responseData?.data;
@@ -37,6 +48,14 @@ export default function AnalyticsPage() {
   const handleRetry = useCallback(async () => {
     await refetch();
   }, [refetch]);
+
+  const handleTimeRangeChange = useCallback((value: string) => {
+    setTimeRange(value);
+    // Clear custom date range when switching away from 'custom'
+    if (value !== 'custom') {
+      setDateRange(undefined);
+    }
+  }, []);
 
   // Build displayData from performance API overview
   const displayData: DisplayData = useMemo(() => ({
@@ -61,15 +80,35 @@ export default function AnalyticsPage() {
   }, [performanceData?.platforms]);
 
   // Transform timeline data for engagement chart
-  const chartEngagementData = useMemo(() => {
-    if (!performanceData?.timeline || performanceData.timeline.length === 0) {
+  const chartEngagementData = useMemo(
+    () => transformTimelineToEngagement(performanceData?.timeline),
+    [performanceData?.timeline]
+  );
+
+  // Transform timeline data for growth chart
+  const chartGrowthData = useMemo(
+    () => transformTimelineToGrowth(performanceData?.timeline),
+    [performanceData?.timeline]
+  );
+
+  // Transform top content for TopPosts
+  const chartTopPosts = useMemo(
+    () => transformTopContent(performanceData?.topContent),
+    [performanceData?.topContent]
+  );
+
+  // Transform platforms for PerformanceChart (radar chart axes: engagement, reach, clicks)
+  const chartPerformanceData = useMemo(() => {
+    if (!performanceData?.platforms || performanceData.platforms.length === 0) {
       return [];
     }
-    return transformChartData(
-      performanceData.timeline.map((t) => ({ date: t.date, posts: t.posts })),
-      undefined
-    );
-  }, [performanceData?.timeline]);
+    return performanceData.platforms.map((p) => ({
+      type: p.platform.charAt(0).toUpperCase() + p.platform.slice(1),
+      engagement: p.engagement,
+      reach: p.engagementRate, // engagementRate maps to reach axis (0-100 scale)
+      clicks: p.posts,
+    }));
+  }, [performanceData?.platforms]);
 
   const handleExport = useCallback(() => {
     const exportData = {
@@ -117,9 +156,12 @@ export default function AnalyticsPage() {
     <div className="space-y-6">
       <AnalyticsHeader
         timeRange={timeRange}
-        onTimeRangeChange={setTimeRange}
-        onFilter={() => {}}
+        onTimeRangeChange={handleTimeRangeChange}
         onExport={handleExport}
+        platform={platform}
+        onPlatformChange={setPlatform}
+        dateRange={dateRange}
+        onDateRangeChange={setDateRange}
       />
 
       <AnalyticsStats data={displayData} growth={performanceData?.growth} />
@@ -129,12 +171,12 @@ export default function AnalyticsPage() {
         <PlatformChart data={chartPlatformDistribution} />
       </div>
 
-      <PerformanceChart data={[] as ContentPerformanceItem[]} />
+      <PerformanceChart data={chartPerformanceData} />
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <GrowthChart data={[] as GrowthDataPoint[]} />
+        <GrowthChart data={chartGrowthData} />
         <TopPosts
-          posts={[] as TopPost[]}
+          posts={chartTopPosts}
           onViewDetails={handleViewPostDetails}
           onViewAll={handleViewAllPosts}
         />

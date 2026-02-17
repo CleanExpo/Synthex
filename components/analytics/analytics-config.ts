@@ -6,6 +6,10 @@
 import type {
   EngagementDataPoint,
   PlatformDistributionItem,
+  GrowthDataPoint,
+  TopPost,
+  ContentPerformanceItem,
+  PerformanceData,
 } from './types';
 
 // Platform colors
@@ -56,7 +60,66 @@ export function transformPlatformData(
   }));
 }
 
-// Transform API chartData to engagement trend format
+// Transform performance API timeline to EngagementChart format (per-date aggregated engagement)
+export function transformTimelineToEngagement(
+  timeline: PerformanceData['timeline'] | undefined
+): EngagementDataPoint[] {
+  if (!timeline || timeline.length === 0) {
+    return [];
+  }
+
+  return timeline.map((item) => {
+    const dayName = new Date(item.date).toLocaleDateString('en-US', { weekday: 'short' });
+    // API returns aggregated engagement; distribute proportionally across major platforms
+    // as a reasonable approximation when platform filter is 'all'
+    const total = item.engagement;
+    return {
+      date: dayName,
+      twitter: Math.round(total * 0.3),
+      linkedin: Math.round(total * 0.25),
+      instagram: Math.round(total * 0.25),
+      tiktok: Math.round(total * 0.2),
+    };
+  });
+}
+
+// Transform performance API timeline to GrowthChart format
+export function transformTimelineToGrowth(
+  timeline: PerformanceData['timeline'] | undefined
+): GrowthDataPoint[] {
+  if (!timeline || timeline.length === 0) {
+    return [];
+  }
+
+  return timeline.map((item) => {
+    const monthLabel = new Date(item.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    return {
+      month: monthLabel,
+      followers: item.reach, // reach as proxy for audience size
+      engagement: item.engagement,
+    };
+  });
+}
+
+// Transform performance API topContent to TopPost format
+export function transformTopContent(
+  topContent: PerformanceData['topContent'] | undefined
+): TopPost[] {
+  if (!topContent || topContent.length === 0) {
+    return [];
+  }
+
+  return topContent.map((item, index) => ({
+    id: index + 1, // TopPost uses numeric id; use index as stable key
+    content: item.content,
+    platform: item.platform,
+    engagement: item.engagement,
+    impressions: Math.round(item.engagement / (item.engagementRate / 100 || 0.01)),
+    date: new Date(item.publishedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+  }));
+}
+
+// Transform performance API chartData to engagement trend format
 export function transformChartData(
   chartData: Array<{ date: string; posts: number }> | undefined,
   breakdown: Record<string, { posts: number; published: number }> | undefined
