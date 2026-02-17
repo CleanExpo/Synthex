@@ -77,6 +77,14 @@ export const metadata: Metadata = {
     ],
     locale: 'en_US',
     type: 'website',
+    videos: [
+      {
+        url: 'https://www.youtube.com/embed/7rRHU8xS-kU',
+        width: 1280,
+        height: 720,
+        type: 'text/html',
+      },
+    ],
   },
   twitter: {
     card: 'summary_large_image',
@@ -190,19 +198,47 @@ export default function RootLayout({
             }),
           }}
         />
-        {/* Video/YouTube Channel Schema */}
+        {/* Describer Video Schema */}
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
             __html: JSON.stringify({
               '@context': 'https://schema.org',
               '@type': 'VideoObject',
-              name: 'Synthex AI Marketing Tutorials',
-              description: 'Learn how to leverage AI for social media marketing with Synthex. Tutorials covering AI content generation, smart scheduling, and automation strategies.',
-              thumbnailUrl: `${BASE_URL}/images/hero-robot.png`,
-              uploadDate: '2026-02-10',
-              contentUrl: 'https://www.youtube.com/@SynthexMedia-25',
-              embedUrl: 'https://www.youtube.com/channel/UCds9Km8AJBrO67p2Up8M3dA',
+              '@id': `${BASE_URL}/#describer-video`,
+              name: 'Synthex — AI-Powered Marketing Agency',
+              description: 'Discover how Synthex uses AI to automate your entire social media marketing — from content creation to scheduling and analytics.',
+              thumbnailUrl: 'https://img.youtube.com/vi/7rRHU8xS-kU/maxresdefault.jpg',
+              uploadDate: '2026-02-17',
+              contentUrl: 'https://youtu.be/7rRHU8xS-kU',
+              embedUrl: 'https://www.youtube.com/embed/7rRHU8xS-kU',
+              duration: 'PT2M',
+              publisher: {
+                '@type': 'Organization',
+                name: 'Synthex',
+                logo: {
+                  '@type': 'ImageObject',
+                  url: `${BASE_URL}/logo.png`,
+                },
+              },
+            }),
+          }}
+        />
+        {/* Demo Video Schema */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              '@context': 'https://schema.org',
+              '@type': 'VideoObject',
+              '@id': `${BASE_URL}/#demo-video`,
+              name: 'Synthex Product Demo',
+              description: 'Full product walkthrough of the Synthex AI marketing platform. See the dashboard, content generator, scheduler, and analytics in action.',
+              thumbnailUrl: 'https://img.youtube.com/vi/vnn6SJUlsWU/maxresdefault.jpg',
+              uploadDate: '2026-02-17',
+              contentUrl: 'https://youtu.be/vnn6SJUlsWU',
+              embedUrl: 'https://www.youtube.com/embed/vnn6SJUlsWU',
+              duration: 'PT5M',
               publisher: {
                 '@type': 'Organization',
                 name: 'Synthex',

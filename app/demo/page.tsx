@@ -13,7 +13,8 @@ import {
   ArrowRight,
   Star,
   Code2,
-  Cpu
+  Cpu,
+  Play
 } from '@/components/icons';
 import MarketingLayout from '@/components/marketing/MarketingLayout';
 
@@ -146,6 +147,28 @@ export default function DemoIndex() {
               Explore our collection of cutting-edge UI animations, 3D effects, and interactive components
             </p>
           </motion.header>
+
+          {/* Product Demo Video */}
+          <div className="container mx-auto px-6 pb-16">
+            <div className="max-w-4xl mx-auto">
+              <div className="relative rounded-2xl overflow-hidden border border-cyan-500/20 bg-[#0f172a]/80 shadow-2xl shadow-cyan-500/10">
+                <div className="aspect-video">
+                  <iframe
+                    src="https://www.youtube.com/embed/vnn6SJUlsWU"
+                    title="Synthex Product Demo"
+                    frameBorder="0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    allowFullScreen
+                    className="w-full h-full"
+                  />
+                </div>
+                <div className="p-6">
+                  <h2 className="text-2xl font-bold text-white mb-2">Synthex Product Demo</h2>
+                  <p className="text-gray-400">Full walkthrough of the Synthex AI marketing platform — see the dashboard, content generator, scheduler, and analytics in action.</p>
+                </div>
+              </div>
+            </div>
+          </div>
 
           {/* Demo Cards Grid */}
           <div className="container mx-auto px-6 pb-20">
