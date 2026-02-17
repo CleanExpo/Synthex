@@ -85,13 +85,17 @@ export default function CompletePage() {
     saveOnboarding();
   }, [completeStep]);
 
-  const handleGoToDashboard = () => {
+  const handleGoToDashboard = (takeTour: boolean = false) => {
+    if (takeTour) {
+      // Remove hasSeenTour to trigger tour
+      localStorage.removeItem('hasSeenTour');
+      // Set flag to show tour immediately on dashboard
+      localStorage.setItem('showTourOnDashboard', 'true');
+    }
+    // Mark onboarding as complete in localStorage
+    localStorage.setItem('onboardingComplete', 'true');
+    localStorage.setItem('onboardingCompletedAt', new Date().toISOString());
     router.push('/dashboard');
-  };
-
-  const handleStartTour = () => {
-    // In production, this would trigger an interactive tour
-    router.push('/dashboard?tour=true');
   };
 
   return (
@@ -175,22 +179,27 @@ export default function CompletePage() {
             {/* Actions */}
             <div className="flex flex-col sm:flex-row gap-3 justify-center mt-8">
               <Button
-                variant="outline"
                 size="lg"
-                onClick={handleStartTour}
-                className="border-cyan-500/30 text-gray-300 hover:bg-cyan-500/10 hover:text-white hover:border-cyan-500/50"
-              >
-                Take a quick tour
-              </Button>
-              <Button
-                size="lg"
-                onClick={handleGoToDashboard}
+                onClick={() => handleGoToDashboard(true)}
                 className="bg-gradient-to-r from-cyan-500 to-cyan-600 hover:from-cyan-400 hover:to-cyan-500 text-white shadow-lg shadow-cyan-500/25 hover:shadow-cyan-500/40 transition-all"
               >
-                Go to Dashboard
+                <Sparkles className="w-4 h-4 mr-2" />
+                Take a Quick Tour
+              </Button>
+              <Button
+                variant="outline"
+                size="lg"
+                onClick={() => handleGoToDashboard(false)}
+                className="border-cyan-500/30 text-gray-300 hover:bg-cyan-500/10 hover:text-white hover:border-cyan-500/50"
+              >
+                Skip to Dashboard
                 <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
             </div>
+
+            <p className="text-center text-sm text-gray-500 mt-4">
+              You can always take the tour later from the Help menu
+            </p>
           </>
         )}
       </div>
