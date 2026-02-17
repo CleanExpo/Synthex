@@ -100,7 +100,8 @@ Plans:
 **Plans**: TBD
 
 Plans:
-- [ ] 20-01: TBD
+- [ ] 20-01: Content Scoring Service & API (scorer, endpoint, React hook)
+- [ ] 20-02: Content Optimization UI (dashboard page, navigation, command palette)
 
 #### Phase 21: Multi-format Generation
 
