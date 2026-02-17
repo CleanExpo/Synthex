@@ -146,6 +146,7 @@ model Campaign {
   organizationId String?
   organization   Organization? @relation("OrganizationCampaigns", fields: [organizationId], references: [id], onDelete: SetNull)
 
+  @@index([userId])
   @@index([organizationId])
   @@map("campaigns")
 }
@@ -187,7 +188,8 @@ model Project {
   // Relations
   userId      String
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+
+  @@index([userId])
   @@map("projects")
 }
 
@@ -208,7 +210,9 @@ model ApiUsage {
   // Relations
   userId    String
   user      User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+
+  @@index([userId])
+  @@index([userId, createdAt])
   @@map("api_usage")
 }
 
@@ -251,6 +255,8 @@ model Notification {
   userId      String   @map("user_id")
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@index([userId])
+  @@index([userId, read, createdAt])
   @@map("notifications")
 }
 
@@ -534,6 +540,7 @@ model AnalyticsEvent {
   @@index([userId])
   @@index([sessionId])
   @@index([timestamp])
+  @@index([userId, timestamp])
   @@map("analytics_events")
 }
 
@@ -1441,6 +1448,7 @@ model CompetitorSnapshot {
   competitor      TrackedCompetitor @relation(fields: [competitorId], references: [id], onDelete: Cascade)
 
   @@index([competitorId])
+  @@index([competitorId, snapshotAt])
   @@index([platform])
   @@index([snapshotAt])
   @@map("competitor_snapshots")
@@ -1917,6 +1925,7 @@ model SEOAudit {
   createdAt       DateTime  @default(now())
 
   @@index([userId])
+  @@index([userId, createdAt])
   @@index([auditType])
   @@map("seo_audits")
 }
