@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-02-16)
 
 **Core value:** Every endpoint returns real data, every platform works, every dashboard page connects to live APIs
-**Current focus:** Phase 9 in progress — Build config cleanup complete (09-01). Dependency optimization next (09-02).
+**Current focus:** Phase 9 in progress — Build config (09-01) and dependency optimization (09-02) complete. Database query optimization next (09-03).
 
 ## Current Position
 
 Phase: 9 of 10 (Performance & Build)
-Plan: 1 of 3 in current phase
-Status: Plan 09-01 complete
-Last activity: 2026-02-17 — Completed 09-01 — Build configuration cleanup (19 scripts removed, metadata cleaned)
+Plan: 2 of 3 in current phase
+Status: Plan 09-02 complete
+Last activity: 2026-02-17 — Completed 09-02 — Dependency optimization (25 packages moved/removed, --legacy-peer-deps removed)
 
-Progress: ███░░░░░░░ 33% (Phase 9)
+Progress: ██████░░░░ 67% (Phase 9)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 25
+- Total plans completed: 26
 - Average duration: ~13 min
-- Total execution time: ~322 min
+- Total execution time: ~330 min
 
 **By Phase:**
 
@@ -35,11 +35,11 @@ Progress: ███░░░░░░░ 33% (Phase 9)
 | 6 | 2/2 | ~18 min | ~9 min |
 | 7 | 3/3 | ~30 min | ~10 min |
 | 8 | 4/4 | ~139 min | ~35 min |
-| 9 | 1/3 | ~3 min | ~3 min |
+| 9 | 2/3 | ~11 min | ~6 min |
 
 **Recent Trend:**
-- Last 5 plans: 08-02 (~45 min), 08-03 (~45 min), 08-04 (~40 min), 09-01 (~3 min)
-- Trend: Config cleanup plans are fast; testing plans take 35-45 min
+- Last 5 plans: 08-03 (~45 min), 08-04 (~40 min), 09-01 (~3 min), 09-02 (~8 min)
+- Trend: Performance/config plans are fast (3-8 min)
 
 ## Accumulated Context
 
@@ -138,6 +138,8 @@ Recent decisions affecting current work:
 - Critical path integration tests use stateful in-memory mocks calling service methods directly (not HTTP) (08-04)
 - Webhook event simulation calls subscription service directly to avoid complex event-queue/uuid dependencies (08-04)
 - Config mock for getProductByPriceId restored in beforeEach to ensure correct plan tier mapping (08-04)
+- --legacy-peer-deps removed from vercel.json — clean npm install works after dependency cleanup (09-02)
+- puppeteer uses dynamic import with try-catch — graceful fallback in serverless environments (09-02)
 
 ### Deferred Issues
 
@@ -153,6 +155,6 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-17
-Stopped at: Completed 09-01 (1 of 3 in Phase 9) — Build config cleanup: 19 dangerous/duplicate/obsolete scripts removed, library metadata fields removed, prisma deduplicated.
+Stopped at: Completed 09-02 (2 of 3 in Phase 9) — Dependency optimization: 15 packages moved to devDeps, 8 unused removed, puppeteer moved to devDeps with graceful fallback, --legacy-peer-deps removed from vercel.json.
 Resume file: None
-Next action: Execute 09-02 (Dependency optimization) — Move 15+ packages to devDeps, remove 8+ unused packages, attempt --legacy-peer-deps removal
+Next action: Execute 09-03 (Database query optimization) — Add 30+ @@index directives to Prisma schema, audit hot API route queries
