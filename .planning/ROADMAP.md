@@ -11,13 +11,13 @@ None (internal platform hardening)
 ## Phases
 
 - [x] **Phase 1: Foundation Cleanup** - Remove legacy code, rewrite CLAUDE.md, consolidate env files
-- [ ] **Phase 2: Mock Data — API Routes** - Replace 9 mock/stub API endpoints with real database queries
-- [ ] **Phase 3: Mock Data — Dashboard** - Remove 3 silent mock fallbacks, implement error/empty states
-- [ ] **Phase 4: Security Hardening** - Env validation at startup, rate limiting audit, auth middleware audit
-- [ ] **Phase 5: Social Platform Completeness** - Implement TikTok, YouTube, Pinterest, Reddit, Threads services
-- [ ] **Phase 6: Cron Jobs & Background Tasks** - Fix competitor cron, implement weekly digest email
-- [ ] **Phase 7: Testing — Auth & Core** - 80%+ coverage on auth, social, and core services
-- [ ] **Phase 8: Testing — API Contracts** - Contract tests for highest-value API routes + E2E
+- [x] **Phase 2: Mock Data — API Routes** - Replace 9 mock/stub API endpoints with real database queries
+- [x] **Phase 3: Mock Data — Dashboard** - Remove 3 silent mock fallbacks, implement error/empty states
+- [x] **Phase 4: Security Hardening** - Env validation at startup, rate limiting audit, auth middleware audit
+- [x] **Phase 5: Social Platform Completeness** - Implement TikTok, YouTube, Pinterest, Reddit, Threads services
+- [x] **Phase 6: Cron Jobs & Background Tasks** - Fix competitor cron, implement weekly digest email
+- [x] **Phase 7: Testing — Auth & Core** - 80%+ coverage on auth, social, and core services
+- [x] **Phase 8: Testing — API Contracts** - Contract tests for highest-value API routes + E2E
 - [ ] **Phase 9: Performance & Build** - Clean build config, reduce bundle, optimize queries
 - [ ] **Phase 10: Final Audit** - Full endpoint audit, documentation, deployment readiness
 
@@ -40,11 +40,11 @@ Plans:
 **Plans**: 5 plans
 
 Plans:
-- [ ] 02-01: Fix competitor tracking mock data (critical — cron active every 30 min)
-- [ ] 02-02: Fix content generation mock persona
-- [ ] 02-03: Fix content library and research endpoints
-- [ ] 02-04: Fix monitoring, SEO, and integration stubs
-- [ ] 02-05: Full endpoint audit (grep for remaining mock patterns)
+- [x] 02-01: Fix competitor tracking mock data (critical — cron active every 30 min)
+- [x] 02-02: Fix content generation mock persona
+- [x] 02-03: Fix content library and research endpoints
+- [x] 02-04: Fix monitoring, SEO, and integration stubs
+- [x] 02-05: Full endpoint audit (grep for remaining mock patterns)
 
 ### Phase 3: Mock Data — Dashboard
 **Goal**: Dashboard pages show error states on failure, empty states with CTAs on empty data — never fake data
@@ -53,8 +53,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 03-01: Fix admin and personas mock fallbacks
-- [ ] 03-02: Fix experiments and full dashboard audit
+- [x] 03-01: Fix admin and personas mock fallbacks
+- [x] 03-02: Fix experiments and full dashboard audit
 
 ### Phase 4: Security Hardening
 **Goal**: Env validation at startup, rate limits on all sensitive routes, auth on all protected routes
@@ -63,9 +63,9 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] 04-01: Startup validation and credential safety
-- [ ] 04-02: Rate limiting coverage audit
-- [ ] 04-03: Auth middleware audit
+- [x] 04-01: Startup validation and credential safety
+- [x] 04-02: Rate limiting coverage audit
+- [x] 04-03: Auth middleware audit
 
 ### Phase 5: Social Platform Completeness
 **Goal**: All 9 platforms (Twitter, LinkedIn, Instagram, Facebook, TikTok, YouTube, Pinterest, Reddit, Threads) return valid services from factory
@@ -75,11 +75,11 @@ Plans:
 **Plans**: 5 plans
 
 Plans:
-- [ ] 05-01: TikTok service implementation
-- [ ] 05-02: YouTube service implementation
-- [ ] 05-03: Pinterest service implementation
-- [ ] 05-04: Reddit service implementation
-- [ ] 05-05: Threads service and factory verification
+- [x] 05-01: TikTok service implementation
+- [x] 05-02: YouTube service implementation
+- [x] 05-03: Pinterest service implementation
+- [x] 05-04: Reddit service implementation
+- [x] 05-05: Threads service and factory verification
 
 ### Phase 6: Cron Jobs & Background Tasks
 **Goal**: All 5 Vercel crons work with real data, weekly digest sends actual email
@@ -88,8 +88,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 06-01: Verify competitor cron uses real API calls
-- [ ] 06-02: Implement weekly digest email and verify all crons
+- [x] 06-01: Verify competitor cron uses real API calls
+- [x] 06-02: Implement weekly digest email and verify all crons
 
 ### Phase 7: Testing — Auth & Core
 **Goal**: 80%+ coverage on lib/auth/ and lib/social/
@@ -98,9 +98,9 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] 07-01: Auth flow test suite
-- [ ] 07-02: Prisma service tests
-- [ ] 07-03: Platform service tests
+- [x] 07-01: Auth flow test suite
+- [x] 07-02: Prisma service tests
+- [x] 07-03: Platform service tests
 
 ### Phase 8: Testing — API Contracts
 **Goal**: Contract tests for top API routes, E2E critical paths, 80%+ coverage on lib/stripe/
@@ -109,10 +109,10 @@ Plans:
 **Plans**: 4 plans
 
 Plans:
-- [ ] 08-01: Content and analytics API tests
-- [ ] 08-02: Auth and user API tests
-- [ ] 08-03: Payment and webhook tests
-- [ ] 08-04: E2E critical path tests
+- [x] 08-01: Content and analytics API tests
+- [x] 08-02: Auth and user API tests
+- [x] 08-03: Payment and webhook tests
+- [x] 08-04: Social posting + critical path integration tests
 
 ### Phase 9: Performance & Build
 **Goal**: Clean build (no || true, no --legacy-peer-deps), smaller bundle, optimized queries
@@ -140,12 +140,12 @@ Plans:
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation Cleanup | 2/2 | Complete | 2026-02-16 |
-| 2. Mock Data — API Routes | 0/5 | Not started | - |
-| 3. Mock Data — Dashboard | 0/2 | Not started | - |
-| 4. Security Hardening | 0/3 | Not started | - |
-| 5. Social Platforms | 0/5 | Not started | - |
-| 6. Cron Jobs | 0/2 | Not started | - |
-| 7. Testing — Auth | 0/3 | Not started | - |
-| 8. Testing — API | 0/4 | Not started | - |
+| 2. Mock Data — API Routes | 5/5 | Complete | 2026-02-16 |
+| 3. Mock Data — Dashboard | 2/2 | Complete | 2026-02-16 |
+| 4. Security Hardening | 3/3 | Complete | 2026-02-16 |
+| 5. Social Platforms | 5/5 | Complete | 2026-02-16 |
+| 6. Cron Jobs | 2/2 | Complete | 2026-02-17 |
+| 7. Testing — Auth | 3/3 | Complete | 2026-02-17 |
+| 8. Testing — API | 4/4 | Complete | 2026-02-17 |
 | 9. Performance | 0/3 | Not started | - |
 | 10. Final Audit | 0/2 | Not started | - |

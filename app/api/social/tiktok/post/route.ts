@@ -1,7 +1,7 @@
 /**
  * TikTok Posting API
  *
- * @description Post videos to TikTok via TikTok Marketing API
+ * @description Post videos to TikTok via TikTokService (BasePlatformService)
  *
  * ENVIRONMENT VARIABLES REQUIRED:
  * - TIKTOK_CLIENT_KEY: TikTok app client key (SECRET)
@@ -17,26 +17,12 @@ import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-securit
 import { createClient } from '@supabase/supabase-js';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { auditLogger } from '@/lib/security/audit-logger';
+import { createPlatformService } from '@/lib/social';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY!
 );
-
-const TIKTOK_API_BASE = 'https://open.tiktokapis.com/v2';
-
-/** TikTok video data from API response */
-interface TikTokVideo {
-  id: string;
-  title?: string;
-  video_description?: string;
-  create_time: number;
-  share_url: string;
-  like_count?: number;
-  comment_count?: number;
-  share_count?: number;
-  view_count?: number;
-}
 
 // Request validation schema
 const PostRequestSchema = z.object({
@@ -52,29 +38,19 @@ const PostRequestSchema = z.object({
 
 type PostRequest = z.infer<typeof PostRequestSchema>;
 
-async function makeTikTokRequest<T>(
-  endpoint: string,
-  accessToken: string,
-  options: RequestInit = {}
-): Promise<T> {
-  const url = `${TIKTOK_API_BASE}${endpoint}`;
-
-  const response = await fetch(url, {
-    ...options,
-    headers: {
-      'Authorization': `Bearer ${accessToken}`,
-      'Content-Type': 'application/json',
-      ...(options.headers || {}),
-    },
-  });
-
-  const data = await response.json();
-
-  if (!response.ok || data.error?.code) {
-    throw new Error(data.error?.message || `TikTok API error: ${response.status}`);
+/**
+ * Map route-level privacy values to service-level visibility
+ */
+function mapPrivacyToVisibility(privacy: string): 'public' | 'connections' | 'private' {
+  switch (privacy) {
+    case 'SELF':
+      return 'private';
+    case 'FRIENDS':
+      return 'connections';
+    case 'PUBLIC':
+    default:
+      return 'public';
   }
-
-  return data;
 }
 
 /**
@@ -190,39 +166,39 @@ export async function POST(request: NextRequest) {
       fullCaption = fullCaption ? `${fullCaption} ${hashtagString}` : hashtagString;
     }
 
-    // Step 1: Initialize video upload
-    const initResponse = await makeTikTokRequest<any>(
-      '/post/publish/video/init/',
-      connection.access_token,
-      {
-        method: 'POST',
-        body: JSON.stringify({
-          post_info: {
-            title: fullCaption,
-            privacy_level: postData.privacy,
-            disable_comment: postData.disableComment,
-            disable_duet: postData.disableDuet,
-            disable_stitch: postData.disableStitch,
-          },
-          source_info: {
-            source: 'PULL_FROM_URL',
-            video_url: postData.videoUrl,
-          },
-        }),
-      }
-    );
+    // Create TikTok service via factory
+    const service = createPlatformService('tiktok', {
+      accessToken: connection.access_token,
+      refreshToken: connection.refresh_token,
+      expiresAt: connection.expires_at ? new Date(connection.expires_at) : undefined,
+      platformUserId: connection.platform_user_id,
+    });
 
-    const publishId = initResponse.data?.publish_id;
-
-    if (!publishId) {
+    if (!service) {
       return NextResponse.json(
-        { error: 'Failed to initialize TikTok video upload' },
+        { error: 'TikTok service unavailable' },
         { status: 500 }
       );
     }
 
+    // Use service to create the post
+    const result = await service.createPost({
+      text: fullCaption,
+      mediaUrls: [postData.videoUrl],
+      visibility: mapPrivacyToVisibility(postData.privacy),
+    });
+
+    if (!result.success) {
+      return NextResponse.json(
+        { error: result.error || 'Failed to initialize TikTok video upload' },
+        { status: 500 }
+      );
+    }
+
+    const publishId = result.postId;
+
     // Save post to database (status will be updated via webhook)
-    const { data: savedPost } = await supabase.from('social_posts').insert({
+    await supabase.from('social_posts').insert({
       user_id: userId,
       platform: 'tiktok',
       content: fullCaption,
@@ -245,7 +221,7 @@ export async function POST(request: NextRequest) {
     await auditLogger.logData(
       'create',
       'social_post',
-      publishId,
+      publishId || '',
       userId,
       'success',
       { action: 'tiktok_post_initiated', privacy: postData.privacy }
@@ -310,33 +286,41 @@ export async function GET(request: NextRequest) {
     }
 
     if (syncFromPlatform) {
-      // Fetch videos from TikTok API
+      // Use TikTok service to sync posts from platform
       try {
-        const videosResponse = await makeTikTokRequest<any>(
-          '/video/list/?fields=id,title,video_description,create_time,share_url,like_count,comment_count,share_count,view_count',
-          connection.access_token,
-          { method: 'POST', body: JSON.stringify({ max_count: limit }) }
-        );
-
-        const videos = ((videosResponse.data?.videos || []) as TikTokVideo[]).map((video) => ({
-          id: video.id,
-          platformId: video.id,
-          content: video.video_description || video.title,
-          publishedAt: new Date(video.create_time * 1000),
-          url: video.share_url,
-          metrics: {
-            likes: video.like_count || 0,
-            comments: video.comment_count || 0,
-            shares: video.share_count || 0,
-            views: video.view_count || 0,
-          },
-        }));
-
-        return NextResponse.json({
-          success: true,
-          data: videos,
-          synced: true,
+        const service = createPlatformService('tiktok', {
+          accessToken: connection.access_token,
+          refreshToken: connection.refresh_token,
+          expiresAt: connection.expires_at ? new Date(connection.expires_at) : undefined,
+          platformUserId: connection.platform_user_id,
         });
+
+        if (service) {
+          const syncResult = await service.syncPosts(limit);
+
+          if (syncResult.success) {
+            // Map to the existing response format to preserve API contract
+            const videos = syncResult.posts.map((post) => ({
+              id: post.id,
+              platformId: post.platformId,
+              content: post.content,
+              publishedAt: post.publishedAt,
+              url: post.url,
+              metrics: {
+                likes: post.metrics.likes,
+                comments: post.metrics.comments,
+                shares: post.metrics.shares,
+                views: post.metrics.impressions || 0,
+              },
+            }));
+
+            return NextResponse.json({
+              success: true,
+              data: videos,
+              synced: true,
+            });
+          }
+        }
       } catch (syncError) {
         console.error('TikTok sync error:', syncError);
         // Fall through to database query

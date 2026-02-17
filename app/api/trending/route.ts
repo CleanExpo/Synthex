@@ -4,7 +4,7 @@
  * @description Returns trending topics based on:
  * - Post performance
  * - Hashtag frequency
- * - Industry trends
+ * - Engagement ratios
  *
  * ENVIRONMENT VARIABLES REQUIRED:
  * - DATABASE_URL: PostgreSQL connection (CRITICAL)
@@ -83,16 +83,21 @@ export async function GET(request: NextRequest) {
       .sort((a, b) => b.volume - a.volume)
       .slice(0, 10);
 
-    // If no hashtags found, return industry defaults
+    // If no hashtags found, return proper empty state
     if (sortedTopics.length === 0) {
-      return NextResponse.json(getDefaultTrendingTopics());
+      return NextResponse.json({
+        data: [],
+        message: 'No trending data available yet. Trending topics will appear as content is published and tracked.',
+      });
     }
 
-    return NextResponse.json(sortedTopics);
+    return NextResponse.json({ data: sortedTopics });
   } catch (error) {
     console.error('Trending topics error:', error);
-    // Return defaults on error
-    return NextResponse.json(getDefaultTrendingTopics());
+    return NextResponse.json(
+      { error: 'Failed to fetch trending topics', message: 'An error occurred while analyzing trending data.' },
+      { status: 500 }
+    );
   }
 }
 
@@ -101,31 +106,19 @@ export async function GET(request: NextRequest) {
 // ============================================================================
 
 function calculateChange(engagement: number, count: number): number {
-  // Simulate change based on engagement ratio
+  // Deterministic change based on engagement-to-post ratio
   const ratio = engagement / Math.max(count, 1);
-  if (ratio > 100) return Math.floor(Math.random() * 30) + 20; // +20-50%
-  if (ratio > 50) return Math.floor(Math.random() * 20) + 5; // +5-25%
-  if (ratio > 10) return Math.floor(Math.random() * 10) - 2; // -2 to +8%
-  return Math.floor(Math.random() * 10) - 5; // -5 to +5%
+  if (ratio > 100) return 50;
+  if (ratio > 50) return 25;
+  if (ratio > 10) return 8;
+  if (ratio > 1) return 2;
+  return 0;
 }
 
 function determineSentiment(avgEngagement: number): 'positive' | 'neutral' | 'negative' {
   if (avgEngagement > 50) return 'positive';
   if (avgEngagement > 10) return 'neutral';
   return 'negative';
-}
-
-function getDefaultTrendingTopics(): TrendingTopic[] {
-  return [
-    { id: 'topic-1', topic: '#AI', volume: 15420, change: 32, sentiment: 'positive' },
-    { id: 'topic-2', topic: '#Marketing', volume: 12350, change: 18, sentiment: 'positive' },
-    { id: 'topic-3', topic: '#SocialMedia', volume: 9870, change: 12, sentiment: 'neutral' },
-    { id: 'topic-4', topic: '#ContentCreation', volume: 7540, change: 25, sentiment: 'positive' },
-    { id: 'topic-5', topic: '#Growth', volume: 6230, change: 8, sentiment: 'neutral' },
-    { id: 'topic-6', topic: '#Automation', volume: 5120, change: 15, sentiment: 'positive' },
-    { id: 'topic-7', topic: '#Startup', volume: 4890, change: -3, sentiment: 'neutral' },
-    { id: 'topic-8', topic: '#Tech', volume: 4560, change: 5, sentiment: 'neutral' },
-  ];
 }
 
 // Node.js runtime required for Prisma

@@ -1,6 +1,10 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
+import { PAGE_METADATA } from '@/lib/seo/metadata';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+
+export const metadata: Metadata = PAGE_METADATA.pricing;
 import { Check, X } from '@/components/icons';
 import { CheckoutButton } from '@/components/stripe/checkout-button';
 import MarketingLayout from '@/components/marketing/MarketingLayout';
@@ -76,9 +80,51 @@ const plans = [
   },
 ];
 
+const pricingFaqs = [
+  {
+    question: 'Can I change plans anytime?',
+    answer: 'Yes! You can upgrade or downgrade your plan at any time. Changes take effect immediately.',
+  },
+  {
+    question: 'What payment methods do you accept?',
+    answer: 'We accept all major credit cards, PayPal, and wire transfers for Enterprise plans.',
+  },
+  {
+    question: 'Is there a free trial?',
+    answer: 'Yes, all plans come with a 14-day free trial. No credit card required to start.',
+  },
+  {
+    question: 'Can I cancel anytime?',
+    answer: 'Absolutely. You can cancel your subscription at any time with no cancellation fees.',
+  },
+];
+
+function PricingFAQSchema() {
+  const schema = {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: pricingFaqs.map((faq) => ({
+      '@type': 'Question',
+      name: faq.question,
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: faq.answer,
+      },
+    })),
+  };
+
+  return (
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+    />
+  );
+}
+
 export default function PricingPage() {
   return (
     <MarketingLayout currentPage="pricing">
+      <PricingFAQSchema />
       {/* Hero Section */}
       <section className="pt-16 pb-20 px-6">
         <div className="container mx-auto text-center">

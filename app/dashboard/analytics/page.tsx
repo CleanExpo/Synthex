@@ -7,9 +7,9 @@ import { APIErrorCard } from '@/components/error-states';
 import {
   type AnalyticsData,
   type DisplayData,
-  contentPerformance,
-  growthData,
-  topPosts,
+  type ContentPerformanceItem,
+  type GrowthDataPoint,
+  type TopPost,
   transformPlatformData,
   transformChartData,
   AnalyticsHeader,
@@ -59,7 +59,7 @@ export default function AnalyticsPage() {
           }
         }
 
-        setAnalyticsData(null);
+        setError('Failed to load analytics data');
         setIsLoading(false);
       } catch (err) {
         console.error('Error loading analytics:', err);
@@ -93,7 +93,7 @@ export default function AnalyticsPage() {
           return;
         }
       }
-      setAnalyticsData(null);
+      setError('Failed to load analytics data');
       setIsLoading(false);
     } catch {
       setError('Failed to load analytics data');
@@ -101,12 +101,12 @@ export default function AnalyticsPage() {
     }
   }, [timeRange, platform]);
 
-  // Use real data if available, otherwise fall back to mock
+  // Use real data if available, otherwise show zeros
   const displayData: DisplayData = useMemo(() => ({
-    reach: analyticsData?.totals?.reach ?? 2400000,
-    engagement: analyticsData?.totals?.engagement ?? 184500,
-    engagementRate: analyticsData?.totals?.engagementRate ?? 7.8,
-    followerGrowth: 12400,
+    reach: analyticsData?.totals?.reach ?? 0,
+    engagement: analyticsData?.totals?.engagement ?? 0,
+    engagementRate: analyticsData?.totals?.engagementRate ?? 0,
+    followerGrowth: 0,
   }), [analyticsData]);
 
   // Transform API data for charts
@@ -181,12 +181,12 @@ export default function AnalyticsPage() {
         <PlatformChart data={chartPlatformDistribution} />
       </div>
 
-      <PerformanceChart data={contentPerformance} />
+      <PerformanceChart data={[] as ContentPerformanceItem[]} />
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <GrowthChart data={growthData} />
+        <GrowthChart data={[] as GrowthDataPoint[]} />
         <TopPosts
-          posts={topPosts}
+          posts={[] as TopPost[]}
           onViewDetails={handleViewPostDetails}
           onViewAll={handleViewAllPosts}
         />

@@ -11,6 +11,7 @@
  * - JWT_SECRET: Token signing key (CRITICAL)
  */
 
+import { randomBytes } from 'crypto';
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
@@ -18,9 +19,10 @@ import prisma from '@/lib/prisma';
 
 function generateReferralCode(): string {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // Excludes confusing chars I/O/0/1
+  const bytes = randomBytes(4); // Cryptographically secure random bytes
   let code = 'SYN-';
   for (let i = 0; i < 4; i++) {
-    code += chars[Math.floor(Math.random() * chars.length)];
+    code += chars[bytes[i] % chars.length];
   }
   return code;
 }

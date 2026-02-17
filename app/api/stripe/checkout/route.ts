@@ -13,6 +13,7 @@ import Stripe from 'stripe';
 import { stripe, PRODUCTS } from '@/lib/stripe/config';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
 import { getUserIdFromRequestOrCookies, unauthorizedResponse } from '@/lib/auth/jwt-utils';
+import { billing } from '@/lib/middleware/api-rate-limit';
 
 const checkoutSchema = z.object({
   priceId: z.string().optional(),
@@ -20,6 +21,8 @@ const checkoutSchema = z.object({
 });
 
 export async function POST(request: NextRequest) {
+  // Distributed rate limiting via Upstash Redis
+  return billing(request, async () => {
   try {
     // Check if Stripe is configured
     if (!stripe) {
@@ -109,4 +112,5 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
+  });
 }

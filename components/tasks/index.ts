@@ -9,9 +9,6 @@ export * from './types';
 // Config
 export * from './task-config';
 
-// Mock Data
-export { mockTasks } from './mock-data';
-
 // Components
 export { TaskStatusBadge, TaskPriorityBadge, TaskTypeBadge, AssigneeAvatars } from './task-badges';
 export { TaskCard } from './task-card';

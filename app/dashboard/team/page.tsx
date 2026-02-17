@@ -18,8 +18,6 @@ import {
   InviteDialog,
   ActivityLogCard,
   RolePermissionsCard,
-  mockTeamMembers,
-  mockActivityLog,
   getRolePermissions,
   formatLastActive,
   capitalizeRole,
@@ -29,13 +27,14 @@ import {
   type TeamRole,
   type TeamStats,
 } from '@/components/team';
+import { EmptyState } from '@/components/error-states';
 
 export default function TeamPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isInviting, setIsInviting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
-  const [activityLog, setActivityLog] = useState<ActivityLog[]>(mockActivityLog);
+  const [activityLog, setActivityLog] = useState<ActivityLog[]>([]);
 
   // Filter state
   const [searchQuery, setSearchQuery] = useState('');
@@ -85,18 +84,16 @@ export default function TeamPage() {
             permissions: getRolePermissions((m.role as string) || 'viewer'),
           }));
 
-          if (apiMembers.length > 0) {
-            setTeamMembers(apiMembers);
-            setIsLoading(false);
-            return;
-          }
+          setTeamMembers(apiMembers);
+          setIsLoading(false);
+          return;
         }
       }
-      // Fallback to mock data
-      setTeamMembers(mockTeamMembers);
+      // API returned non-OK status
+      setError('Failed to load team members');
       setIsLoading(false);
     } catch {
-      setTeamMembers(mockTeamMembers);
+      setError('Failed to load team members');
       setIsLoading(false);
     }
   }, [getAuthToken]);
@@ -285,6 +282,17 @@ export default function TeamPage() {
 
   if (error) {
     return <APIErrorCard title="Team Error" message={error} onRetry={fetchTeamMembers} />;
+  }
+
+  if (teamMembers.length === 0) {
+    return (
+      <EmptyState
+        title="No team members yet"
+        message="Invite your first team member to get started."
+        actionLabel="Invite Member"
+        onAction={() => setInviteDialogOpen(true)}
+      />
+    );
   }
 
   return (

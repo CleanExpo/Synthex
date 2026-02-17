@@ -562,7 +562,7 @@ Time: ${(alert.timestamp || new Date()).toISOString()}
 }
 
 function generateAlertId(): string {
-  return `alert_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+  return `alert_${crypto.randomUUID()}`;
 }
 
 // ============================================================================

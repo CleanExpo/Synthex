@@ -11,6 +11,7 @@
 
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
+import { prisma } from '@/lib/prisma';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
 import { subscriptionService, PLAN_LIMITS } from '@/lib/stripe/subscription-service';
 
@@ -322,15 +323,23 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check audit limits
+    // Check audit limits using real usage count
     const planLimits = PLAN_LIMITS[subscription.plan] || PLAN_LIMITS.free;
-    // TODO: Track and check actual usage
-    // if (planLimits.maxSeoAudits !== -1 && usage >= planLimits.maxSeoAudits) {
-    //   return APISecurityChecker.createSecureResponse(
-    //     { error: 'Monthly audit limit reached', upgradeRequired: true },
-    //     429
-    //   );
-    // }
+    const usageCount = await prisma.sEOAudit.count({
+      where: {
+        userId,
+        createdAt: {
+          gte: new Date(new Date().getFullYear(), new Date().getMonth(), 1), // Start of current month
+        },
+      },
+    });
+
+    if (planLimits.maxSeoAudits !== -1 && usageCount >= planLimits.maxSeoAudits) {
+      return APISecurityChecker.createSecureResponse(
+        { error: 'Monthly audit limit reached', upgradeRequired: true },
+        429
+      );
+    }
 
     // Parse and validate request body
     const body = await request.json();
@@ -349,22 +358,33 @@ export async function POST(request: NextRequest) {
 
     const { url, depth, includeSchemaCheck, includeCoreWebVitals, includeContentAnalysis } = validationResult.data;
 
-    // Perform the audit
-    const auditResult = performSEOAudit(url, {
+    // Perform the audit (async — must be awaited)
+    const auditResult = await performSEOAudit(url, {
       depth,
       includeSchemaCheck,
       includeCoreWebVitals,
       includeContentAnalysis,
     });
 
-    // TODO: Store audit result in database for history
+    // Store audit result in database for history
+    await prisma.sEOAudit.create({
+      data: {
+        userId,
+        url,
+        auditType: 'full',
+        overallScore: auditResult.score,
+        technicalScore: auditResult.lighthouse,
+        recommendations: auditResult.issues,
+        rawData: auditResult,
+      },
+    });
 
     return APISecurityChecker.createSecureResponse({
       success: true,
       audit: auditResult,
       limits: {
-        used: 1, // TODO: Track actual usage
-        remaining: planLimits.maxSeoAudits === -1 ? 'unlimited' : planLimits.maxSeoAudits - 1,
+        used: usageCount + 1, // Including this audit
+        remaining: planLimits.maxSeoAudits === -1 ? 'unlimited' : planLimits.maxSeoAudits - usageCount - 1,
       },
     });
   } catch (error) {
@@ -417,28 +437,34 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // TODO: Fetch actual audit history from database
-    const mockHistory = [
-      {
-        id: '1',
-        url: 'https://synthex.social',
-        score: 92,
-        issues: { total: 8, critical: 0, major: 2, minor: 6 },
-        createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+    // Fetch actual audit history from database
+    const audits = await prisma.sEOAudit.findMany({
+      where: { userId },
+      orderBy: { createdAt: 'desc' },
+      take: 20,
+      select: {
+        id: true,
+        url: true,
+        overallScore: true,
+        auditType: true,
+        recommendations: true,
+        createdAt: true,
       },
-      {
-        id: '2',
-        url: 'https://synthex.social/pricing',
-        score: 87,
-        issues: { total: 15, critical: 1, major: 4, minor: 10 },
-        createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-      },
-    ];
+    });
+
+    if (audits.length === 0) {
+      return APISecurityChecker.createSecureResponse({
+        success: true,
+        audits: [],
+        total: 0,
+        message: 'No SEO audits have been run yet. Run your first audit to start building history.',
+      });
+    }
 
     return APISecurityChecker.createSecureResponse({
       success: true,
-      audits: mockHistory,
-      total: mockHistory.length,
+      audits,
+      total: audits.length,
     });
   } catch (error) {
     console.error('SEO Audit history error:', error);

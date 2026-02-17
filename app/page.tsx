@@ -288,8 +288,8 @@ export default function HomePage() {
             <div className="relative rounded-2xl overflow-hidden border border-cyan-500/20 bg-[#0f172a]/80 shadow-2xl shadow-cyan-500/10">
               <div className="aspect-video">
                 <iframe
-                  src="https://www.youtube.com/embed/N1XWySnSPu4"
-                  title="Synthex Platform Overview"
+                  src="https://www.youtube.com/embed/7rRHU8xS-kU"
+                  title="Synthex — AI-Powered Marketing Agency"
                   frameBorder="0"
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                   allowFullScreen
@@ -297,8 +297,8 @@ export default function HomePage() {
                 />
               </div>
               <div className="p-6">
-                <h3 className="text-xl font-semibold text-white mb-2">Platform Overview</h3>
-                <p className="text-gray-400 text-sm">Complete tour of Synthex dashboard showing all main features</p>
+                <h3 className="text-xl font-semibold text-white mb-2">What is Synthex?</h3>
+                <p className="text-gray-400 text-sm">Discover how Synthex uses AI to automate your entire social media marketing — from content creation to scheduling and analytics.</p>
               </div>
             </div>
           </div>

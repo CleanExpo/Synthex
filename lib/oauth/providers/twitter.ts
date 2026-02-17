@@ -192,11 +192,10 @@ export class TwitterOAuthProvider extends BaseOAuthProvider {
   }
 
   /**
-   * Generate PKCE code challenge
+   * Generate PKCE code challenge using cryptographic randomness
    */
   private generateCodeChallenge(): string {
-    // In production, use proper PKCE with crypto
-    return Math.random().toString(36).slice(2) + Date.now().toString(36);
+    return crypto.randomUUID() + crypto.randomUUID();
   }
 }
 

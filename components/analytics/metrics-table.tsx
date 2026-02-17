@@ -13,9 +13,32 @@ import {
   TabsTrigger,
 } from '@/components/ui/tabs';
 
-const platforms = ['Twitter', 'LinkedIn', 'Instagram', 'TikTok', 'Facebook'];
+const defaultPlatforms = ['Twitter', 'LinkedIn', 'Instagram', 'TikTok', 'Facebook'];
 
-export function MetricsTable() {
+export interface MetricsTableRow {
+  platform: string;
+  followers: number;
+  posts: number;
+  engagement: number;
+  reach: number;
+  growth: number;
+}
+
+interface MetricsTableProps {
+  data?: MetricsTableRow[];
+}
+
+export function MetricsTable({ data }: MetricsTableProps) {
+  const hasData = data && data.length > 0;
+  const platforms = hasData ? data.map(d => d.platform) : defaultPlatforms;
+
+  const getRowData = (platform: string) => {
+    if (hasData) {
+      return data.find(d => d.platform === platform);
+    }
+    return null;
+  };
+
   return (
     <Card variant="glass">
       <CardHeader>
@@ -46,28 +69,35 @@ export function MetricsTable() {
                   </tr>
                 </thead>
                 <tbody>
-                  {platforms.map((platform) => (
-                    <tr key={platform} className="border-b border-white/5">
-                      <td className="py-3 text-white">{platform}</td>
-                      <td className="text-right py-3 text-slate-300">
-                        {Math.floor(Math.random() * 50000 + 10000).toLocaleString()}
-                      </td>
-                      <td className="text-right py-3 text-slate-300">
-                        {Math.floor(Math.random() * 100 + 20)}
-                      </td>
-                      <td className="text-right py-3 text-slate-300">
-                        {(Math.random() * 10 + 2).toFixed(1)}%
-                      </td>
-                      <td className="text-right py-3 text-slate-300">
-                        {Math.floor(Math.random() * 500000 + 100000).toLocaleString()}
-                      </td>
-                      <td className="text-right py-3">
-                        <span className="text-green-500">
-                          +{(Math.random() * 30 + 5).toFixed(1)}%
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
+                  {platforms.map((platform) => {
+                    const row = getRowData(platform);
+                    return (
+                      <tr key={platform} className="border-b border-white/5">
+                        <td className="py-3 text-white">{platform}</td>
+                        <td className="text-right py-3 text-slate-300">
+                          {row ? row.followers.toLocaleString() : '\u2014'}
+                        </td>
+                        <td className="text-right py-3 text-slate-300">
+                          {row ? row.posts : '\u2014'}
+                        </td>
+                        <td className="text-right py-3 text-slate-300">
+                          {row ? `${row.engagement.toFixed(1)}%` : '\u2014'}
+                        </td>
+                        <td className="text-right py-3 text-slate-300">
+                          {row ? row.reach.toLocaleString() : '\u2014'}
+                        </td>
+                        <td className="text-right py-3">
+                          {row ? (
+                            <span className={row.growth >= 0 ? 'text-green-500' : 'text-red-500'}>
+                              {row.growth >= 0 ? '+' : ''}{row.growth.toFixed(1)}%
+                            </span>
+                          ) : (
+                            <span className="text-slate-300">{'\u2014'}</span>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>

@@ -20,6 +20,8 @@ import {
   RefreshCw
 } from '@/components/icons';
 import { abTestingService, Experiment } from '@/lib/ab-testing';
+import { APIErrorCard } from '@/components/error-states';
+import { DashboardSkeleton } from '@/components/skeletons';
 import toast, { Toaster } from 'react-hot-toast';
 
 export default function ExperimentsPage() {
@@ -27,6 +29,7 @@ export default function ExperimentsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [selectedExperiment, setSelectedExperiment] = useState<Experiment | null>(null);
   const [showNewExperimentForm, setShowNewExperimentForm] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     fetchExperiments();
@@ -34,11 +37,13 @@ export default function ExperimentsPage() {
 
   const fetchExperiments = async () => {
     setIsLoading(true);
+    setError(null);
     try {
       const data = await abTestingService.getExperiments();
       setExperiments(data);
-    } catch (error) {
-      console.error('Failed to fetch experiments:', error);
+    } catch (err) {
+      console.error('Failed to fetch experiments:', err);
+      setError('Failed to load experiments');
       toast.error('Failed to load experiments');
     } finally {
       setIsLoading(false);
@@ -70,54 +75,17 @@ export default function ExperimentsPage() {
     );
   };
 
-  const mockExperiments: Experiment[] = [
-    {
-      id: '1',
-      name: 'Post Timing Optimization',
-      description: 'Test optimal posting times for maximum engagement',
-      status: 'running',
-      startDate: new Date('2025-01-10'),
-      variants: [
-        { id: 'control', name: 'Morning (9 AM)', weight: 50, isControl: true, content: {} },
-        { id: 'variant', name: 'Evening (7 PM)', weight: 50, isControl: false, content: {} }
-      ],
-      metrics: {
-        totalParticipants: 1234,
-        conversions: 234,
-        conversionRate: 18.96,
-        engagement: 3456,
-        confidence: 87,
-        winner: undefined
-      },
-      createdAt: new Date('2025-01-10'),
-      updatedAt: new Date()
-    },
-    {
-      id: '2',
-      name: 'Caption Length Test',
-      description: 'Compare short vs long captions',
-      status: 'completed',
-      startDate: new Date('2025-01-05'),
-      endDate: new Date('2025-01-12'),
-      variants: [
-        { id: 'short', name: 'Short (<50 chars)', weight: 50, isControl: true, content: {} },
-        { id: 'long', name: 'Long (>200 chars)', weight: 50, isControl: false, content: {} }
-      ],
-      metrics: {
-        totalParticipants: 2456,
-        conversions: 567,
-        conversionRate: 23.08,
-        engagement: 5678,
-        confidence: 95,
-        winner: 'long'
-      },
-      createdAt: new Date('2025-01-05'),
-      updatedAt: new Date('2025-01-12')
-    }
-  ];
+  if (isLoading) {
+    return <DashboardSkeleton />;
+  }
 
-  // Use mock data if no real experiments
-  const displayExperiments = experiments.length > 0 ? experiments : mockExperiments;
+  if (error) {
+    return (
+      <div className="p-6">
+        <APIErrorCard title="Experiments Error" message={error} onRetry={fetchExperiments} />
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 space-y-6">
@@ -157,7 +125,7 @@ export default function ExperimentsPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold text-white">{displayExperiments.length}</p>
+            <p className="text-2xl font-bold text-white">{experiments.length}</p>
             <p className="text-xs text-gray-400 mt-1">All time</p>
           </CardContent>
         </Card>
@@ -171,7 +139,7 @@ export default function ExperimentsPage() {
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold text-white">
-              {displayExperiments.filter(e => e.status === 'running').length}
+              {experiments.filter(e => e.status === 'running').length}
             </p>
             <p className="text-xs text-gray-400 mt-1">Active now</p>
           </CardContent>
@@ -186,7 +154,7 @@ export default function ExperimentsPage() {
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold text-white">
-              {displayExperiments.reduce((sum, e) => sum + e.metrics.totalParticipants, 0).toLocaleString()}
+              {experiments.reduce((sum, e) => sum + e.metrics.totalParticipants, 0).toLocaleString()}
             </p>
             <p className="text-xs text-gray-400 mt-1">Total tested</p>
           </CardContent>
@@ -213,8 +181,22 @@ export default function ExperimentsPage() {
           <CardDescription>Manage and monitor your A/B tests</CardDescription>
         </CardHeader>
         <CardContent>
+          {experiments.length === 0 ? (
+            <div className="text-center py-12">
+              <Beaker className="h-16 w-16 mx-auto mb-4 text-slate-500" />
+              <h3 className="text-xl font-semibold text-white mb-2">No experiments yet</h3>
+              <p className="text-slate-400 mb-4">Create your first A/B test to get started.</p>
+              <Button
+                className="gradient-primary text-white"
+                onClick={() => setShowNewExperimentForm(true)}
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                New Experiment
+              </Button>
+            </div>
+          ) : (
           <div className="space-y-4">
-            {displayExperiments.map((experiment) => (
+            {experiments.map((experiment) => (
               <div
                 key={experiment.id}
                 className="p-4 bg-white/5 rounded-lg hover:bg-white/10 transition-colors"
@@ -317,6 +299,7 @@ export default function ExperimentsPage() {
               </div>
             ))}
           </div>
+          )}
         </CardContent>
       </Card>
 

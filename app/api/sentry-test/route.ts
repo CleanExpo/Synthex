@@ -1,7 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import * as Sentry from '@sentry/nextjs';
 
+// Guard: disable in production — this is a dev/staging debug tool only
+function productionGuard(): NextResponse | null {
+  if (process.env.NODE_ENV === 'production') {
+    return NextResponse.json({ error: 'Not found' }, { status: 404 });
+  }
+  return null;
+}
+
 export async function GET(request: NextRequest) {
+  const guard = productionGuard();
+  if (guard) return guard;
   try {
     // Check if Sentry is configured
     const isDsnConfigured = !!(process.env.SENTRY_DSN || process.env.NEXT_PUBLIC_SENTRY_DSN);
@@ -74,6 +84,9 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  const guard = productionGuard();
+  if (guard) return guard;
+
   try {
     const body = await request.json();
     

@@ -8,7 +8,6 @@ import toast from 'react-hot-toast';
 import {
   type Persona,
   type NewPersonaForm,
-  mockPersonas,
   defaultNewPersona,
   PersonasHeader,
   PersonaStatsGrid,
@@ -73,18 +72,16 @@ export default function PersonasPage() {
               lastTrained: p.lastTrained ? new Date(p.lastTrained as string).toLocaleDateString() : 'Never',
             }));
 
-            if (apiPersonas.length > 0) {
-              setPersonas(apiPersonas);
-              setIsLoading(false);
-              return;
-            }
+            setPersonas(apiPersonas);
+            setIsLoading(false);
+            return;
           }
         }
-        await new Promise(resolve => setTimeout(resolve, 400));
-        setPersonas(mockPersonas);
+        // API returned non-OK status
+        setError('Failed to load personas');
         setIsLoading(false);
       } catch {
-        setPersonas(mockPersonas);
+        setError('Failed to load personas');
         setIsLoading(false);
       }
     };
@@ -96,24 +93,20 @@ export default function PersonasPage() {
     setIsLoading(true);
     try {
       const token = localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token') || localStorage.getItem('token');
-      {
-        const response = await fetch('/api/personas', {
-          credentials: 'include',
-          headers: token ? { 'Authorization': `Bearer ${token}` } : {},
-        });
-        if (response.ok) {
-          const { data } = await response.json();
-          if (data.length > 0) {
-            setPersonas(data);
-            setIsLoading(false);
-            return;
-          }
-        }
+      const response = await fetch('/api/personas', {
+        credentials: 'include',
+        headers: token ? { 'Authorization': `Bearer ${token}` } : {},
+      });
+      if (response.ok) {
+        const { data } = await response.json();
+        setPersonas(data);
+        setIsLoading(false);
+      } else {
+        setError('Failed to load personas');
+        setIsLoading(false);
       }
-      setPersonas(mockPersonas);
-      setIsLoading(false);
     } catch {
-      setPersonas(mockPersonas);
+      setError('Failed to load personas');
       setIsLoading(false);
     }
   }, []);

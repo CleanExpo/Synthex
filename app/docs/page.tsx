@@ -1,5 +1,9 @@
+import type { Metadata } from 'next';
+import { PAGE_METADATA } from '@/lib/seo/metadata';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+
+export const metadata: Metadata = PAGE_METADATA.docs;
 import {
   BookOpen, Code, Zap, Users,
   Settings, Shield, HelpCircle, ArrowRight

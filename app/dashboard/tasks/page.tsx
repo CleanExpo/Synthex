@@ -19,7 +19,6 @@ import {
   TaskType,
   TaskPriority,
   statusConfig,
-  mockTasks,
   KanbanColumn,
   TaskListRow,
   CreateTaskDialog,
@@ -70,29 +69,21 @@ export default function TasksPage() {
       setError(null);
       try {
         const token = getAuthToken();
-        {
-          const response = await fetch('/api/tasks', {
-            credentials: 'include',
-            headers: token ? { 'Authorization': `Bearer ${token}` } : {},
-          });
+        const response = await fetch('/api/tasks', {
+          credentials: 'include',
+          headers: token ? { 'Authorization': `Bearer ${token}` } : {},
+        });
 
-          if (response.ok) {
-            const { data } = await response.json();
-            const apiTasks: Task[] = data.map(mapApiTaskToTask);
-
-            if (apiTasks.length > 0) {
-              setTasks(apiTasks);
-              setIsLoading(false);
-              return;
-            }
-          }
+        if (response.ok) {
+          const { data } = await response.json();
+          const apiTasks: Task[] = data.map(mapApiTaskToTask);
+          setTasks(apiTasks);
+        } else {
+          setError('Failed to load tasks');
         }
-        // Fall back to mock data for demo
-        await new Promise(resolve => setTimeout(resolve, 500));
-        setTasks(mockTasks);
-        setIsLoading(false);
       } catch {
-        setTasks(mockTasks);
+        setError('Failed to load tasks');
+      } finally {
         setIsLoading(false);
       }
     };
@@ -104,23 +95,20 @@ export default function TasksPage() {
     setIsLoading(true);
     try {
       const token = getAuthToken();
-      {
-        const response = await fetch('/api/tasks', {
-          credentials: 'include',
-          headers: token ? { 'Authorization': `Bearer ${token}` } : {},
-        });
-        if (response.ok) {
-          const { data } = await response.json();
-          const apiTasks = data.map(mapApiTaskToTask);
-          setTasks(apiTasks.length > 0 ? apiTasks : mockTasks);
-          setIsLoading(false);
-          return;
-        }
+      const response = await fetch('/api/tasks', {
+        credentials: 'include',
+        headers: token ? { 'Authorization': `Bearer ${token}` } : {},
+      });
+      if (response.ok) {
+        const { data } = await response.json();
+        const apiTasks = data.map(mapApiTaskToTask);
+        setTasks(apiTasks);
+      } else {
+        setError('Failed to load tasks');
       }
-      setTasks(mockTasks);
-      setIsLoading(false);
     } catch {
-      setTasks(mockTasks);
+      setError('Failed to load tasks');
+    } finally {
       setIsLoading(false);
     }
   };
@@ -327,7 +315,17 @@ export default function TasksPage() {
       />
 
       {/* Task Views */}
-      {view === 'kanban' ? (
+      {tasks.length === 0 ? (
+        <div className="text-center py-12">
+          <ListTodo className="h-16 w-16 mx-auto mb-4 text-slate-500" />
+          <h3 className="text-xl font-semibold text-white mb-2">No tasks yet</h3>
+          <p className="text-slate-400 mb-4">Create your first task to get started.</p>
+          <Button onClick={() => setCreateDialogOpen(true)} className="gradient-primary">
+            <Plus className="w-4 h-4 mr-2" />
+            New Task
+          </Button>
+        </div>
+      ) : view === 'kanban' ? (
         <div className="flex gap-6 overflow-x-auto pb-4">
           {(['todo', 'in_progress', 'review', 'done'] as const).map((status) => (
             <KanbanColumn

@@ -10,7 +10,8 @@ import {
   Calendar,
   ArrowUpRight,
   Download,
-  AlertCircle
+  AlertCircle,
+  RefreshCw
 } from '@/components/icons';
 import toast from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
@@ -44,10 +45,12 @@ export default function BillingPage() {
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [usageData, setUsageData] = useState<UsageData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [portalLoading, setPortalLoading] = useState(false);
   const router = useRouter();
 
   const fetchSubscription = useCallback(async () => {
+    setError(null);
     try {
       const token = localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token') || localStorage.getItem('token');
 
@@ -65,15 +68,17 @@ export default function BillingPage() {
       if (subResponse.ok) {
         const data = await subResponse.json();
         setSubscription(data);
+      } else {
+        setError('Failed to load subscription details');
       }
 
       if (usageResponse.ok) {
         const usage = await usageResponse.json();
         setUsageData(usage);
       }
-    } catch (error) {
-      console.error('Error fetching subscription:', error);
-      toast.error('Failed to load subscription details');
+    } catch (fetchError) {
+      console.error('Error fetching subscription:', fetchError);
+      setError('Failed to load subscription details');
     } finally {
       setLoading(false);
     }
@@ -148,6 +153,28 @@ export default function BillingPage() {
               <div className="h-32 bg-white/10 rounded"></div>
             </div>
           </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-cyan-900 to-gray-900 p-8">
+        <div className="max-w-4xl mx-auto">
+          <Card variant="glass" className="p-6 border-red-500/20">
+            <div className="flex flex-col items-center justify-center py-12 text-center">
+              <div className="p-4 rounded-full bg-red-500/10 mb-4">
+                <AlertCircle className="w-8 h-8 text-red-400" />
+              </div>
+              <h3 className="text-lg font-semibold text-white mb-2">Billing Error</h3>
+              <p className="text-gray-400 mb-6 max-w-md">{error}</p>
+              <Button onClick={fetchSubscription} variant="outline" className="gap-2">
+                <RefreshCw className="w-4 h-4" />
+                Try Again
+              </Button>
+            </div>
+          </Card>
         </div>
       </div>
     );

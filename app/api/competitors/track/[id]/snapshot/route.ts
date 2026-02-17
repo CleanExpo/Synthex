@@ -71,46 +71,6 @@ interface PrismaWithCompetitor {
 }
 
 // ============================================================================
-// MOCK DATA GENERATOR (Simulates social media API responses)
-// In production, this would call actual social media APIs
-// ============================================================================
-
-function generateMockMetrics(_competitor: TrackedCompetitorRecord, _platform: string) {
-  const baseFollowers = Math.floor(Math.random() * 50000) + 1000;
-  const growthRate = (Math.random() * 0.1) - 0.02; // -2% to +8%
-
-  return {
-    followersCount: baseFollowers,
-    followingCount: Math.floor(baseFollowers * 0.3),
-    followerGrowth: Math.floor(baseFollowers * growthRate),
-    totalPosts: Math.floor(Math.random() * 500) + 50,
-    avgLikes: Math.floor(Math.random() * 200) + 10,
-    avgComments: Math.floor(Math.random() * 30) + 2,
-    avgShares: Math.floor(Math.random() * 20) + 1,
-    engagementRate: Math.round((Math.random() * 5 + 0.5) * 100) / 100,
-    postFrequency: Math.round((Math.random() * 3 + 0.5) * 10) / 10,
-    topHashtags: ['marketing', 'business', 'growth', 'success', 'startup'].slice(
-      0,
-      Math.floor(Math.random() * 5) + 1
-    ),
-    contentTypes: {
-      image: Math.floor(Math.random() * 50) + 20,
-      video: Math.floor(Math.random() * 30) + 5,
-      text: Math.floor(Math.random() * 20) + 5,
-      carousel: Math.floor(Math.random() * 15),
-    },
-    postingTimes: {
-      morning: Math.floor(Math.random() * 30) + 10,
-      afternoon: Math.floor(Math.random() * 30) + 15,
-      evening: Math.floor(Math.random() * 30) + 20,
-    },
-    performanceScore: Math.round((Math.random() * 40 + 50) * 10) / 10,
-    growthScore: Math.round((Math.random() * 40 + 40) * 10) / 10,
-    engagementScore: Math.round((Math.random() * 40 + 45) * 10) / 10,
-  };
-}
-
-// ============================================================================
 // GET /api/competitors/track/[id]/snapshot
 // Get snapshot history
 // ============================================================================
@@ -279,52 +239,50 @@ export async function POST(
     if (competitor.youtubeHandle) platforms.push('youtube');
     if (competitor.tiktokHandle) platforms.push('tiktok');
 
+    // Fetch the latest snapshot for each platform from real data
     const snapshots: CompetitorSnapshotRecord[] = [];
 
-    // Create snapshot for each platform
     for (const platform of platforms) {
-      const metrics = generateMockMetrics(competitor, platform);
+      try {
+        const latestSnapshot = await (prisma as unknown as PrismaWithCompetitor).competitorSnapshot?.findFirst({
+          where: {
+            competitorId: id,
+            platform,
+          },
+          orderBy: { snapshotAt: 'desc' },
+        });
 
-      const snapshot = await (prisma as unknown as PrismaWithCompetitor).competitorSnapshot?.create({
-        data: {
-          competitorId: id,
-          platform,
-          ...metrics,
-          dataSource: 'api',
-        },
-      });
-
-      if (snapshot) {
-        snapshots.push(snapshot);
+        if (latestSnapshot) {
+          snapshots.push(latestSnapshot);
+        }
+      } catch (snapshotError) {
+        console.error(`Error fetching snapshot for competitor ${id} on ${platform}:`, snapshotError);
       }
     }
 
-    // Create aggregated 'all' snapshot
-    if (snapshots.length > 0) {
-      const aggregated = {
-        followersCount: snapshots.reduce((sum, s) => sum + (s.followersCount || 0), 0),
-        engagementRate: snapshots.reduce((sum, s) => sum + (s.engagementRate || 0), 0) / snapshots.length,
-        performanceScore: snapshots.reduce((sum, s) => sum + (s.performanceScore || 0), 0) / snapshots.length,
-        growthScore: snapshots.reduce((sum, s) => sum + (s.growthScore || 0), 0) / snapshots.length,
-        engagementScore: snapshots.reduce((sum, s) => sum + (s.engagementScore || 0), 0) / snapshots.length,
-      };
-
-      const allSnapshot = await (prisma as unknown as PrismaWithCompetitor).competitorSnapshot?.create({
-        data: {
+    // Also fetch the aggregated 'all' snapshot
+    try {
+      const allSnapshot = await (prisma as unknown as PrismaWithCompetitor).competitorSnapshot?.findFirst({
+        where: {
           competitorId: id,
           platform: 'all',
-          followersCount: aggregated.followersCount,
-          engagementRate: Math.round(aggregated.engagementRate * 100) / 100,
-          performanceScore: Math.round(aggregated.performanceScore * 10) / 10,
-          growthScore: Math.round(aggregated.growthScore * 10) / 10,
-          engagementScore: Math.round(aggregated.engagementScore * 10) / 10,
-          dataSource: 'aggregated',
         },
+        orderBy: { snapshotAt: 'desc' },
       });
 
       if (allSnapshot) {
         snapshots.push(allSnapshot);
       }
+    } catch (allSnapshotError) {
+      console.error(`Error fetching aggregated snapshot for competitor ${id}:`, allSnapshotError);
+    }
+
+    if (snapshots.length === 0) {
+      return NextResponse.json({
+        data: null,
+        message: 'No snapshot data available yet. Tracking will collect data on the next cycle.',
+        platformsTracked: platforms,
+      });
     }
 
     // Update competitor's lastTrackedAt
@@ -333,11 +291,11 @@ export async function POST(
       data: { lastTrackedAt: new Date() },
     });
 
-    // Check for alerts
+    // Check for alerts using real snapshot data
     await checkForAlerts(userId, competitor, snapshots);
 
     return NextResponse.json({
-      message: 'Snapshot created successfully',
+      message: 'Snapshot retrieved successfully',
       snapshots,
       platformsTracked: platforms,
     });

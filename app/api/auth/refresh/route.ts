@@ -19,10 +19,13 @@ import jwt from 'jsonwebtoken';
 import { prisma } from '@/lib/prisma';
 import { generateToken, verifyTokenSafe } from '@/lib/auth/jwt-utils';
 import { logger } from '@/lib/logger';
+import { authGeneral } from '@/lib/middleware/api-rate-limit';
 
 const GRACE_PERIOD_SECONDS = 24 * 60 * 60; // 24 hours after expiration
 
 export async function POST(request: NextRequest) {
+  // Distributed rate limiting via Upstash Redis
+  return authGeneral(request, async () => {
   try {
     // 1. Extract token from cookie or Authorization header
     const cookieToken = request.cookies.get('auth-token')?.value;
@@ -158,6 +161,7 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
+  });
 }
 
 export const runtime = 'nodejs';

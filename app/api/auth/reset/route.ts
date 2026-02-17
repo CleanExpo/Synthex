@@ -6,6 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { emailService } from '@/lib/email/email-service';
+import { authStrict } from '@/lib/middleware/api-rate-limit';
 
 const resetSchema = z.object({
   token: z.string().min(1).optional(),
@@ -16,6 +17,8 @@ const resetSchema = z.object({
 
 // Reset password with token or code
 export async function POST(request: NextRequest) {
+  // Distributed rate limiting via Upstash Redis
+  return authStrict(request, async () => {
   try {
     const body = await request.json();
     const validation = resetSchema.safeParse(body);
@@ -60,6 +63,7 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
+  });
 }
 
 // Validate reset token

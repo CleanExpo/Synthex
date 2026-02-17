@@ -17,6 +17,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
 import { z } from 'zod';
+import { aiGeneration } from '@/lib/middleware/api-rate-limit';
 
 // ============================================================================
 // VALIDATION SCHEMAS
@@ -338,6 +339,8 @@ function predictEngagement(
 // ============================================================================
 
 export async function POST(request: NextRequest) {
+  // Distributed rate limiting via Upstash Redis
+  return aiGeneration(request, async () => {
   try {
     // Security check
     const security = await APISecurityChecker.check(
@@ -428,6 +431,7 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
+  });
 }
 
 // ============================================================================
