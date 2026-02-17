@@ -161,7 +161,11 @@
     "uuid": "^13.0.0",
     "ws": "^8.14.0",
     "zod": "^3.25.76",
-    "zustand": "^4.4.0"
+    "zustand": "^4.4.0",
+    "autoprefixer": "^10.4.16",
+    "postcss": "^8.4.33",
+    "tailwindcss": "^3.4.0",
+    "tailwindcss-animate": "^1.0.7"
   },
   "prisma": {
     "seed": "node prisma/seed.js"
@@ -195,7 +199,6 @@
     "@types/supertest": "^6.0.3",
     "@types/uuid": "^11.0.0",
     "@types/ws": "^8.5.0",
-    "autoprefixer": "^10.4.16",
     "babel-jest": "^30.2.0",
     "concurrently": "^8.2.0",
     "css-loader": "^6.8.1",
@@ -211,7 +214,6 @@
     "jest-watch-typeahead": "^2.2.2",
     "lint-staged": "^15.2.0",
     "playwright": "^1.54.2",
-    "postcss": "^8.4.33",
     "posthog-js": "^1.96.0",
     "prettier": "^3.1.1",
     "prisma": "6.14.0",
@@ -219,8 +221,6 @@
     "puppeteer-screen-recorder": "^3.0.6",
     "storybook": "^10.2.8",
     "supertest": "^7.2.2",
-    "tailwindcss": "^3.4.0",
-    "tailwindcss-animate": "^1.0.7",
     "ts-jest": "^29.4.6",
     "ts-node": "^10.9.2",
     "tsx": "^4.21.0",
