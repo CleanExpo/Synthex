@@ -13,3 +13,4 @@ export { PerformanceChart } from './performance-chart';
 export { GrowthChart } from './growth-chart';
 export { TopPosts } from './top-posts';
 export { MetricsTable } from './metrics-table';
+export { PostDetailSheet } from './post-detail-sheet';

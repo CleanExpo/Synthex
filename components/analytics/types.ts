@@ -103,3 +103,12 @@ export interface TopPost {
   impressions: number;
   date: string;
 }
+
+export interface TopPostDetail {
+  id: string;
+  content: string;
+  platform: string;
+  engagement: number;
+  engagementRate: number;
+  publishedAt: Date | string;
+}

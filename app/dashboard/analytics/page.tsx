@@ -8,6 +8,7 @@ import { usePerformanceAnalytics } from '@/hooks/use-dashboard';
 
 import {
   type DisplayData,
+  type TopPostDetail,
   platformColors,
   transformTimelineToEngagement,
   transformTimelineToGrowth,
@@ -20,12 +21,15 @@ import {
   GrowthChart,
   TopPosts,
   MetricsTable,
+  PostDetailSheet,
 } from '@/components/analytics';
 
 export default function AnalyticsPage() {
   const [timeRange, setTimeRange] = useState('30d');
   const [platform, setPlatform] = useState('all');
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
+  const [selectedPost, setSelectedPost] = useState<TopPostDetail | null>(null);
+  const [isDetailOpen, setIsDetailOpen] = useState(false);
 
   // Derive startDate/endDate ISO strings when custom range is active
   const startDate = timeRange === 'custom' && dateRange?.from
@@ -128,9 +132,22 @@ export default function AnalyticsPage() {
     a.click();
   }, [performanceData, timeRange]);
 
-  const handleViewPostDetails = useCallback((postId: number) => {
-    window.location.href = `/dashboard/content?postId=${postId}`;
-  }, []);
+  const handleViewPostDetails = useCallback((postIndex: number) => {
+    const topContent = performanceData?.topContent;
+    if (!topContent) return;
+    // postIndex is 1-based (from transformTopContent's index + 1)
+    const rawPost = topContent[postIndex - 1];
+    if (!rawPost) return;
+    setSelectedPost({
+      id: rawPost.id,
+      content: rawPost.content,
+      platform: rawPost.platform,
+      engagement: rawPost.engagement,
+      engagementRate: rawPost.engagementRate,
+      publishedAt: rawPost.publishedAt,
+    });
+    setIsDetailOpen(true);
+  }, [performanceData?.topContent]);
 
   const handleViewAllPosts = useCallback(() => {
     window.location.href = '/dashboard/content';
@@ -183,6 +200,12 @@ export default function AnalyticsPage() {
       </div>
 
       <MetricsTable />
+
+      <PostDetailSheet
+        open={isDetailOpen}
+        onOpenChange={setIsDetailOpen}
+        post={selectedPost}
+      />
     </div>
   );
 }
