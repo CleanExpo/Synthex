@@ -471,10 +471,10 @@ Plans:
 **Goal**: Measure return on content investment and time
 **Depends on**: Phase 48
 **Research**: Unlikely (internal calculation patterns)
-**Plans**: 0/2
+**Plans**: 1/2 | In Progress | 2026-02-18
 
 Plans:
-- [ ] 49-01: ContentInvestment model + ROI service + API + Hook
+- [x] 49-01: ContentInvestment model + ROI service + API + Hook
 - [ ] 49-02: ROI dashboard UI + charts + navigation
 
 #### Phase 50: Sponsor CRM
