@@ -27,6 +27,7 @@ import {
   Lightbulb,
   Layout,
   Zap,
+  Link2,
 } from '@/components/icons';
 import { notify } from '@/lib/notifications';
 
@@ -171,6 +172,15 @@ export function CommandPalette() {
       action: () => router.push('/dashboard/integrations'),
       category: 'navigation',
       keywords: ['integrations', 'connect', 'canva', 'buffer', 'zapier', 'third-party', 'tools']
+    },
+    {
+      id: 'webhooks',
+      title: 'Webhooks',
+      description: 'Send real-time event notifications to external systems',
+      icon: Link2,
+      action: () => router.push('/dashboard/webhooks'),
+      category: 'navigation',
+      keywords: ['webhooks', 'webhook', 'endpoints', 'subscriptions', 'events', 'notifications', 'outbound']
     },
 
     // Actions

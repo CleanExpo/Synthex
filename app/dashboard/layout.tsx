@@ -40,6 +40,7 @@ import {
   Layers,
   Lightbulb,
   Layout,
+  Link2,
 } from '@/components/icons';
 import { Button } from '@/components/ui/button';
 import { AIPMFloatingButton } from '@/components/ai-pm';
@@ -85,6 +86,7 @@ const sidebarItems = [
   { icon: Map, label: 'Local SEO', href: '/dashboard/local' },
   { icon: Users, label: 'Team', href: '/dashboard/team' },
   { icon: Zap, label: 'Integrations', href: '/dashboard/integrations' },
+  { icon: Link2, label: 'Webhooks', href: '/dashboard/webhooks' },
   { icon: Settings, label: 'Settings', href: '/dashboard/settings' },
 ];
 
