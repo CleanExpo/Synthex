@@ -102,6 +102,9 @@ model User {
   trackedKeywords       TrackedKeyword[]
   socialMentions        SocialMention[]
 
+  // Link in Bio
+  linkBioPages          LinkBioPage[]
+
   @@index([organizationId])
   @@map("users")
 }
@@ -2427,4 +2430,80 @@ model SocialMention {
   @@index([postedAt])
   @@index([isRead])
   @@map("social_mentions")
+}
+
+// ==========================================
+// Link in Bio Pages
+// Customizable landing pages for social profiles
+// ==========================================
+
+model LinkBioPage {
+  id              String    @id @default(cuid())
+  userId          String    @map("user_id")
+
+  // Page identity
+  slug            String    @unique  // URL-friendly identifier
+  title           String              // Display name
+  bio             String?   @db.Text  // Short bio/description
+
+  // Profile
+  avatarUrl       String?   @map("avatar_url")
+  coverUrl        String?   @map("cover_url")
+
+  // Theme settings
+  theme           String    @default("default") // 'default', 'minimal', 'gradient', 'dark', 'neon', 'forest'
+  primaryColor    String    @default("#06b6d4") @map("primary_color") // Cyan-500
+  backgroundColor String    @default("#0f172a") @map("background_color") // Gray-900
+  textColor       String    @default("#ffffff") @map("text_color")
+  buttonStyle     String    @default("rounded") @map("button_style") // 'rounded', 'pill', 'square'
+
+  // Social links (JSON array of {platform, url})
+  socialLinks     Json      @default("[]") @map("social_links")
+
+  // Settings
+  isPublished     Boolean   @default(false) @map("is_published")
+  showBranding    Boolean   @default(true) @map("show_branding") // "Powered by Synthex"
+
+  // Analytics
+  totalViews      Int       @default(0) @map("total_views")
+  totalClicks     Int       @default(0) @map("total_clicks")
+
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  links           LinkBioLink[]
+
+  @@index([userId])
+  @@index([slug])
+  @@map("link_bio_pages")
+}
+
+model LinkBioLink {
+  id              String    @id @default(cuid())
+  pageId          String    @map("page_id")
+
+  // Link content
+  title           String
+  url             String
+  description     String?
+  iconType        String?   @map("icon_type")   // 'emoji', 'image', 'lucide'
+  iconValue       String?   @map("icon_value")  // Emoji char, image URL, or lucide icon name
+
+  // Display
+  order           Int       @default(0)
+  isVisible       Boolean   @default(true) @map("is_visible")
+  isHighlighted   Boolean   @default(false) @map("is_highlighted")
+
+  // Analytics
+  clickCount      Int       @default(0) @map("click_count")
+
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  page            LinkBioPage @relation(fields: [pageId], references: [id], onDelete: Cascade)
+
+  @@index([pageId])
+  @@index([pageId, order])
+  @@map("link_bio_links")
 }
