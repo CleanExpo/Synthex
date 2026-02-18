@@ -49,7 +49,7 @@ None (internal platform work)
 - [x] **Phase 30: Technical SEO Dashboard** - UI for CWV metrics, mobile parity, robots.txt audits
 - [x] **Phase 31: Search Console Integration** - Google Search Console API, indexing status, crawl errors
 - [x] **Phase 32: PageSpeed Integration** - PageSpeed Insights API, CWV monitoring, performance trends
-- [ ] **Phase 33: Schema Markup Manager** - Visual JSON-LD editor, validation, injection preview
+- [x] **Phase 33: Schema Markup Manager** - Visual JSON-LD editor, validation, injection preview
 - [ ] **Phase 34: GEO Readiness Dashboard** - AI search citability scores, passage analysis, optimization
 - [ ] **Phase 35: SEO Audit Automation** - Scheduled site audits, alerting, historical tracking
 
@@ -268,11 +268,11 @@ Plans:
 **Goal**: Visual JSON-LD editor, schema validation, injection preview, template library
 **Depends on**: Phase 32
 **Research**: Unlikely (internal patterns, schema.org specs known)
-**Plans**: 1/2 | In progress
+**Plans**: 2/2 | Complete
 
 Plans:
 - [x] 33-01: Schema Markup Service + API Routes (service, validate, extract, templates, rich preview)
-- [ ] 33-02: Hook + Enhanced Dashboard + Navigation (useSchemaMarkup, tabbed UI, hub card, command palette)
+- [x] 33-02: Hook + Enhanced Dashboard + Navigation (useSchemaMarkup, tabbed UI, hub card, command palette)
 
 #### Phase 34: GEO Readiness Dashboard
 
@@ -330,6 +330,6 @@ Plans:
 | 30. Technical SEO Dashboard | v1.3 | 1/1 | Complete | 2026-02-18 |
 | 31. Search Console Integration | v1.3 | 1/1 | Complete | 2026-02-18 |
 | 32. PageSpeed Integration | v1.3 | 1/1 | Complete | 2026-02-18 |
-| 33. Schema Markup Manager | v1.3 | 1/2 | In progress | - |
+| 33. Schema Markup Manager | v1.3 | 2/2 | Complete | - |
 | 34. GEO Readiness Dashboard | v1.3 | 0/? | Not started | - |
 | 35. SEO Audit Automation | v1.3 | 0/? | Not started | - |
