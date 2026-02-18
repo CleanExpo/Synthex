@@ -246,6 +246,15 @@ export function CommandPalette() {
       keywords: ['unified', 'all', 'platforms', 'metrics', 'overview', 'compare', 'aggregate']
     },
     {
+      id: 'audience-insights',
+      title: 'Audience Insights',
+      description: 'View follower demographics and behavior',
+      icon: Users,
+      action: () => router.push('/dashboard/audience'),
+      category: 'navigation',
+      keywords: ['audience', 'demographics', 'followers', 'insights', 'age', 'gender', 'location']
+    },
+    {
       id: 'team',
       title: 'Team',
       description: 'Manage team members',

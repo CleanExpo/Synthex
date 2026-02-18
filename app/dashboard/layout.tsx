@@ -69,6 +69,7 @@ import { useUser } from '@/hooks/use-user';
 const sidebarItems = [
   { icon: Home, label: 'Dashboard', href: '/dashboard' },
   { icon: Grid, label: 'Unified View', href: '/dashboard/unified' },
+  { icon: Users, label: 'Audience', href: '/dashboard/audience' },
   { icon: TrendingUp, label: 'Viral Patterns', href: '/dashboard/patterns' },
   { icon: Brain, label: 'Personas', href: '/dashboard/personas' },
   { icon: MessageSquare, label: 'AI Chat', href: '/dashboard/ai-chat' },
