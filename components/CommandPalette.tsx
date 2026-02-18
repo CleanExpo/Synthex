@@ -212,6 +212,15 @@ export function CommandPalette() {
       category: 'navigation',
       keywords: ['roles', 'permissions', 'access', 'rbac', 'admin', 'editor', 'viewer', 'grant', 'revoke']
     },
+    {
+      id: 'technical-seo',
+      title: 'Technical SEO',
+      description: 'Core Web Vitals, mobile parity, robots.txt validation',
+      icon: Search,
+      action: () => router.push('/dashboard/seo/technical'),
+      category: 'navigation',
+      keywords: ['cwv', 'core web vitals', 'mobile', 'parity', 'robots', 'technical', 'seo', 'performance']
+    },
 
     // Actions
     {

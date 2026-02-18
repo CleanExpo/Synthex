@@ -196,6 +196,13 @@ export default function SEODashboardPage() {
               status="available"
             />
             <SEOToolCard
+              title="Technical SEO"
+              description="Monitor Core Web Vitals trends, check mobile/desktop parity, and validate robots.txt configuration."
+              href="/dashboard/seo/technical"
+              icon={Code}
+              status="available"
+            />
+            <SEOToolCard
               title="Page Analysis"
               description="Deep dive into single page SEO. Check meta tags, content quality, schema markup, and optimization opportunities."
               href="/dashboard/seo/page"
