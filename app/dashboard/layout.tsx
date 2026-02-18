@@ -76,6 +76,7 @@ const sidebarItems = [
   { icon: Image, label: 'AI Images', href: '/dashboard/ai-images' },
   { icon: FileText, label: 'Content', href: '/dashboard/content' },
   { icon: Sparkles, label: 'Optimizer', href: '/dashboard/content/optimize' },
+  { icon: BarChart3, label: 'Performance', href: '/dashboard/content/performance' },
   { icon: Layers, label: 'Multi-format', href: '/dashboard/content/multi-format' },
   { icon: Repeat, label: 'Repurposer', href: '/dashboard/content/repurpose' },
   { icon: Send, label: 'Cross-Post', href: '/dashboard/content/cross-post' },

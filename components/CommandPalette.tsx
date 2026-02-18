@@ -86,6 +86,15 @@ export function CommandPalette() {
       keywords: ['optimize', 'score', 'quality', 'improve', 'suggestions', 'content optimizer']
     },
     {
+      id: 'content-performance',
+      title: 'Content Performance',
+      description: 'AI analysis of what content works',
+      icon: BarChart3,
+      action: () => router.push('/dashboard/content/performance'),
+      category: 'navigation',
+      keywords: ['performance', 'analytics', 'ai', 'insights', 'what works', 'patterns', 'engagement']
+    },
+    {
       id: 'multi-format',
       title: 'Multi-format Generator',
       description: 'Generate content for multiple platforms at once',
