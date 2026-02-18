@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { DashboardSkeleton } from '@/components/skeletons';
 import { APIErrorCard } from '@/components/error-states';
 import toast from 'react-hot-toast';
@@ -14,8 +14,19 @@ import {
   GenerationSettings,
   GeneratedContent,
 } from '@/components/content';
+import { usePersonas } from '@/hooks/use-personas';
 
 export default function ContentPage() {
+  // Fetch personas from API
+  const { personas: apiPersonas, loading: personasLoading } = usePersonas();
+
+  // Transform personas for GenerationSettings (only active ones)
+  const personas = useMemo(() => {
+    return apiPersonas
+      .filter((p) => p.status === 'active')
+      .map((p) => ({ id: p.id, name: p.name }));
+  }, [apiPersonas]);
+
   const [platform, setPlatform] = useState('twitter');
   const [topic, setTopic] = useState('');
   const [hookType, setHookType] = useState('question');
@@ -29,22 +40,9 @@ export default function ContentPage() {
   const [selectedVariation, setSelectedVariation] = useState(0);
   const [editMode, setEditMode] = useState(false);
   const [editedContent, setEditedContent] = useState('');
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [isLoading] = useState(false);
+  const [error] = useState<string | null>(null);
   const [psychologyScore, setPsychologyScore] = useState<{overallScore: number, topPrinciples: {name: string, strength: number}[], predictedEngagement: {level: string}} | null>(null);
-
-  useEffect(() => {
-    const init = async () => {
-      try {
-        await new Promise(resolve => setTimeout(resolve, 500));
-        setIsLoading(false);
-      } catch {
-        setError('Failed to load content generator');
-        setIsLoading(false);
-      }
-    };
-    init();
-  }, []);
 
   const handleGenerate = useCallback(async () => {
     if (!topic) {
@@ -68,7 +66,7 @@ export default function ContentPage() {
           includeEmojis,
           includeCTA: hookType === 'achievement',
           length: targetLength,
-          targetAudience: personaId !== 'none' ? personaId : undefined,
+          personaId: personaId !== 'none' ? personaId : undefined,
         }),
       });
 
@@ -147,13 +145,7 @@ export default function ContentPage() {
     window.location.href = '/dashboard/analytics';
   }, []);
 
-  const handleRetry = useCallback(() => {
-    setError(null);
-    setIsLoading(true);
-    setTimeout(() => setIsLoading(false), 500);
-  }, []);
-
-  if (isLoading) {
+  if (isLoading || personasLoading) {
     return <DashboardSkeleton />;
   }
 
@@ -163,7 +155,7 @@ export default function ContentPage() {
         <APIErrorCard
           title="Content Generator Error"
           message={error}
-          onRetry={handleRetry}
+          onRetry={() => window.location.reload()}
         />
       </div>
     );
@@ -187,6 +179,7 @@ export default function ContentPage() {
           onToneChange={setTone}
           personaId={personaId}
           onPersonaChange={setPersonaId}
+          personas={personas}
           targetLength={targetLength}
           onTargetLengthChange={setTargetLength}
           includeHashtags={includeHashtags}

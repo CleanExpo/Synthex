@@ -17,7 +17,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Wand2, Loader2, Hash, Smile } from '@/components/icons';
-import { platformIcons, hookTypes, toneOptions, lengthOptions, defaultPersonas } from './content-config';
+import { platformIcons, hookTypes, toneOptions, lengthOptions } from './content-config';
 
 interface GenerationSettingsProps {
   platform: string;
@@ -30,6 +30,7 @@ interface GenerationSettingsProps {
   onToneChange: (tone: string) => void;
   personaId: string;
   onPersonaChange: (personaId: string) => void;
+  personas: { id: string; name: string }[];
   targetLength: string;
   onTargetLengthChange: (length: string) => void;
   includeHashtags: boolean;
@@ -51,6 +52,7 @@ export function GenerationSettings({
   onToneChange,
   personaId,
   onPersonaChange,
+  personas,
   targetLength,
   onTargetLengthChange,
   includeHashtags,
@@ -148,11 +150,17 @@ export function GenerationSettings({
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="none">None</SelectItem>
-              {defaultPersonas.map((persona) => (
-                <SelectItem key={persona.id} value={persona.id}>
-                  {persona.name}
+              {personas.length === 0 ? (
+                <SelectItem value="loading" disabled>
+                  No active personas
                 </SelectItem>
-              ))}
+              ) : (
+                personas.map((persona) => (
+                  <SelectItem key={persona.id} value={persona.id}>
+                    {persona.name}
+                  </SelectItem>
+                ))
+              )}
             </SelectContent>
           </Select>
         </div>

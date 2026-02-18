@@ -42,6 +42,10 @@ export const toneOptions: ToneOption[] = [
 
 export const lengthOptions = ['short', 'medium', 'long'] as const;
 
+/**
+ * @deprecated Use usePersonas hook to fetch real personas from database.
+ * Kept for backwards compatibility only.
+ */
 export const defaultPersonas: Persona[] = [
   { id: '1', name: 'Professional Voice' },
   { id: '2', name: 'Casual Creator' },
