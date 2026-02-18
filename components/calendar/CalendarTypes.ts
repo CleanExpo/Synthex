@@ -4,6 +4,8 @@
  * Shared types for the content calendar system
  */
 
+export type ApprovalStatus = 'pending' | 'in_review' | 'approved' | 'rejected' | 'revision_requested';
+
 export interface ScheduledPost {
   id: string;
   title?: string;
@@ -29,6 +31,8 @@ export interface ScheduledPost {
     daysOfWeek?: number[];
   };
   conflict?: ConflictInfo;
+  approvalStatus?: ApprovalStatus;
+  approvalId?: string;
 }
 
 export interface ConflictInfo {

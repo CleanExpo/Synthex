@@ -10,7 +10,7 @@
 import React from 'react';
 import { useDraggable } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
-import { ScheduledPost, PLATFORM_COLORS } from './CalendarTypes';
+import { ScheduledPost, PLATFORM_COLORS, ApprovalStatus } from './CalendarTypes';
 import {
   Twitter,
   Linkedin,
@@ -30,6 +30,15 @@ const platformIcons: Record<string, React.ComponentType<{ className?: string; st
   instagram: Instagram,
   facebook: Facebook,
   tiktok: Video,
+};
+
+// Approval status badge colors and labels
+const approvalStatusConfig: Record<ApprovalStatus, { color: string; bgColor: string; label: string }> = {
+  pending: { color: 'bg-yellow-400', bgColor: 'bg-yellow-500/20', label: 'Pending Approval' },
+  in_review: { color: 'bg-blue-400', bgColor: 'bg-blue-500/20', label: 'In Review' },
+  approved: { color: 'bg-green-400', bgColor: 'bg-green-500/20', label: 'Approved' },
+  rejected: { color: 'bg-red-400', bgColor: 'bg-red-500/20', label: 'Rejected' },
+  revision_requested: { color: 'bg-orange-400', bgColor: 'bg-orange-500/20', label: 'Revision Requested' },
 };
 
 interface DraggablePostCardProps {
@@ -134,6 +143,19 @@ export function DraggablePostCard({
         {post.conflict && (
           <AlertTriangle className="h-3 w-3 text-yellow-500 flex-shrink-0" />
         )}
+
+        {/* Approval Status Badge */}
+        {post.approvalStatus && (
+          <div
+            className="absolute -top-1 -right-1 group/badge"
+            title={approvalStatusConfig[post.approvalStatus].label}
+          >
+            <div className={`w-2.5 h-2.5 rounded-full ${approvalStatusConfig[post.approvalStatus].color} ring-2 ring-gray-900`} />
+            <div className="absolute bottom-full right-0 mb-1 px-2 py-1 bg-gray-800 text-xs text-white rounded whitespace-nowrap opacity-0 group-hover/badge:opacity-100 transition-opacity pointer-events-none">
+              {approvalStatusConfig[post.approvalStatus].label}
+            </div>
+          </div>
+        )}
       </div>
     );
   }
@@ -150,6 +172,7 @@ export function DraggablePostCard({
         ${statusColors[post.status]}
         ${isDragging ? 'ring-2 ring-cyan-500 shadow-xl z-50' : ''}
         ${post.conflict ? 'ring-1 ring-yellow-500/50' : ''}
+        ${post.approvalStatus === 'approved' ? 'ring-1 ring-green-500/30 shadow-green-500/10 shadow-md' : ''}
         ${!disabled ? 'hover:scale-[1.01] hover:shadow-lg cursor-pointer' : ''}
       `}
     >
@@ -232,6 +255,30 @@ export function DraggablePostCard({
       {post.recurrence && (
         <div className="absolute top-1 right-1 p-1 bg-blue-500/20 rounded">
           <span className="text-[10px] text-blue-300">↻</span>
+        </div>
+      )}
+
+      {/* Approval Status Badge (positioned opposite recurrence) */}
+      {post.approvalStatus && !post.recurrence && (
+        <div
+          className="absolute top-1 right-1 group/badge"
+          title={approvalStatusConfig[post.approvalStatus].label}
+        >
+          <div className={`w-3 h-3 rounded-full ${approvalStatusConfig[post.approvalStatus].color} ring-2 ring-gray-900`} />
+          <div className="absolute bottom-full right-0 mb-1 px-2 py-1 bg-gray-800 text-xs text-white rounded whitespace-nowrap opacity-0 group-hover/badge:opacity-100 transition-opacity pointer-events-none z-10">
+            {approvalStatusConfig[post.approvalStatus].label}
+          </div>
+        </div>
+      )}
+      {post.approvalStatus && post.recurrence && (
+        <div
+          className="absolute top-1 right-8 group/badge"
+          title={approvalStatusConfig[post.approvalStatus].label}
+        >
+          <div className={`w-3 h-3 rounded-full ${approvalStatusConfig[post.approvalStatus].color} ring-2 ring-gray-900`} />
+          <div className="absolute bottom-full right-0 mb-1 px-2 py-1 bg-gray-800 text-xs text-white rounded whitespace-nowrap opacity-0 group-hover/badge:opacity-100 transition-opacity pointer-events-none z-10">
+            {approvalStatusConfig[post.approvalStatus].label}
+          </div>
         </div>
       )}
     </div>

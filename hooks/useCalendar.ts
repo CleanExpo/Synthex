@@ -22,6 +22,7 @@ export interface CalendarStats {
   scheduledPosts: number;
   publishedPosts: number;
   conflictCount: number;
+  pendingApprovals?: number;
 }
 
 export interface TimeSuggestion {
@@ -203,6 +204,8 @@ export function useCalendar(options: UseCalendarOptions) {
           engagement: post.engagement as ScheduledPost['engagement'],
           persona: post.persona as string | undefined,
           recurrence: post.recurrence as ScheduledPost['recurrence'],
+          approvalStatus: post.approvalStatus as ScheduledPost['approvalStatus'],
+          approvalId: post.approvalId as string | undefined,
         }));
 
         setPosts(transformedPosts);
@@ -213,6 +216,7 @@ export function useCalendar(options: UseCalendarOptions) {
           scheduledPosts: transformedPosts.filter(p => p.status === 'scheduled').length,
           publishedPosts: transformedPosts.filter(p => p.status === 'published').length,
           conflictCount: calendarData.conflicts?.length || 0,
+          pendingApprovals: 0,
         });
       }
     } catch (err) {

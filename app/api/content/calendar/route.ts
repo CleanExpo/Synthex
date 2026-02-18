@@ -112,13 +112,46 @@ export async function GET(request: NextRequest) {
     const calendar = new CalendarService(organizationId);
     const view = await calendar.getCalendarView(start, end);
 
+    // Fetch approval requests for all posts in the view
+    const postIds = view.posts.map(p => p.id);
+    const approvalRequests = postIds.length > 0
+      ? await prisma.approvalRequest.findMany({
+          where: {
+            contentId: { in: postIds },
+            contentType: 'post',
+          },
+          select: {
+            id: true,
+            contentId: true,
+            status: true,
+          },
+        })
+      : [];
+
+    // Create a map of post ID to approval info
+    const approvalMap = new Map(
+      approvalRequests.map(ar => [ar.contentId, { id: ar.id, status: ar.status }])
+    );
+
+    // Enhance posts with approval status
+    const postsWithApproval = view.posts.map(post => ({
+      ...post,
+      approvalId: approvalMap.get(post.id)?.id,
+      approvalStatus: approvalMap.get(post.id)?.status,
+    }));
+
+    // Count pending approvals
+    const pendingApprovals = approvalRequests.filter(
+      ar => ar.status === 'pending' || ar.status === 'in_review'
+    ).length;
+
     return ResponseOptimizer.createResponse(
       {
         success: true,
         calendar: {
           startDate: view.startDate,
           endDate: view.endDate,
-          posts: view.posts,
+          posts: postsWithApproval,
           conflicts: view.conflicts,
           suggestions: view.suggestions.slice(0, 5), // Top 5 suggestions
           stats: {
@@ -126,6 +159,7 @@ export async function GET(request: NextRequest) {
             scheduledPosts: view.posts.filter(p => p.status === 'scheduled').length,
             publishedPosts: view.posts.filter(p => p.status === 'published').length,
             conflictCount: view.conflicts.length,
+            pendingApprovals,
           },
         },
       },
