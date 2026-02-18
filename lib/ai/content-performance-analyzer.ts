@@ -184,7 +184,7 @@ export class ContentPerformanceAnalyzer {
     try {
       const prompt = this.buildAIPrompt(analysis);
 
-      const response = await this.openRouter.chat({
+      const response = await this.openRouter.complete({
         model: this.openRouter.models.balanced,
         messages: [
           {
