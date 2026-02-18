@@ -353,10 +353,10 @@ Plans:
 **Goal**: Auto-transform long content into multiple formats (blog → threads, video scripts)
 **Depends on**: Phase 37
 **Research**: Unlikely (internal AI patterns exist)
-**Plans**: TBD
+**Plans**: 0/1
 
 Plans:
-- [ ] 38-01: TBD
+- [ ] 38-01: ContentRepurposer service + API + Dashboard UI + Navigation
 
 #### Phase 39: Brand Voice Engine
 
@@ -534,7 +534,7 @@ Plans:
 | 35. SEO Audit Automation | v1.3 | 2/2 | Complete | 2026-02-18 |
 | 36. AI Chat Assistant | v1.4 | 2/2 | Complete | 2026-02-18 |
 | 37. AI Image Generation | v1.4 | 2/2 | Complete | 2026-02-18 |
-| 38. Content Repurposing | v1.4 | 0/? | Not started | - |
+| 38. Content Repurposing | v1.4 | 0/1 | Planned | - |
 | 39. Brand Voice Engine | v1.4 | 0/? | Not started | - |
 | 40. Cross-posting Automation | v1.4 | 0/? | Not started | - |
 | 41. Content Calendar v2 | v1.4 | 0/? | Not started | - |
