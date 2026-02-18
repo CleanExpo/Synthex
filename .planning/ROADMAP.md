@@ -460,10 +460,11 @@ Plans:
 **Goal**: Track income from sponsorships, affiliates, and ads
 **Depends on**: Phase 47
 **Research**: Unlikely (internal tracking patterns)
-**Plans**: TBD
+**Plans**: 0/2
 
 Plans:
-- [ ] 48-01: TBD
+- [ ] 48-01: RevenueEntry model + API routes + useRevenue hook
+- [ ] 48-02: Revenue dashboard UI + charts + navigation
 
 #### Phase 49: ROI Calculator
 
