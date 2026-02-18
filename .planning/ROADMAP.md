@@ -43,7 +43,7 @@ None (internal platform work)
 - [x] **Phase 25: Third-party Integrations** - Canva, Buffer, Zapier webhook receivers
 - [x] **Phase 26: Webhook System** - Outbound webhooks for external integrations
 - [x] **Phase 27: Approval Workflows** - Content review chains with notifications
-- [ ] **Phase 28: Team Collaboration** - Real-time comments, assignments, activity feeds
+- [x] **Phase 28: Team Collaboration** - Real-time comments, assignments, activity feeds
 - [ ] **Phase 29: Role Permissions** - Granular access control beyond org membership
 
 ## Phase Details
@@ -196,11 +196,12 @@ Plans:
 
 **Goal**: Granular access control beyond organization membership
 **Depends on**: Phase 28
-**Research**: Unlikely (Prisma RBAC patterns)
-**Plans**: TBD
+**Research**: Skipped (RoleManager + PermissionEngine already exist)
+**Plans**: 1/2 | In progress
 
 Plans:
-- [ ] 29-01: TBD
+- [x] 29-01: Roles API + useRoles Hook (CRUD routes, grant/revoke, hook)
+- [ ] 29-02: Roles Dashboard + Navigation (role cards, permission editor, user assignment)
 
 ## Progress
 
@@ -234,4 +235,4 @@ Plans:
 | 26. Webhook System | v1.2 | 2/2 | Complete | 2026-02-18 |
 | 27. Approval Workflows | v1.2 | 2/2 | Complete | 2026-02-18 |
 | 28. Team Collaboration | v1.2 | 2/2 | Complete | 2026-02-18 |
-| 29. Role Permissions | v1.2 | 0/? | Not started | - |
+| 29. Role Permissions | v1.2 | 1/2 | In progress | - |

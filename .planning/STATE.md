@@ -10,12 +10,12 @@ See: .planning/PROJECT.md (updated 2026-02-17)
 ## Current Position
 
 Milestone: v1.2 Features (Phases 19-29)
-Phase: 28 of 29 (Team Collaboration) — COMPLETE
-Plan: 2 of 2 in current phase
-Status: Phase 28 complete, ready for Phase 29
-Last activity: 2026-02-18 — Completed Phase 28 (Team Collaboration)
+Phase: 29 of 29 (Role Permissions) — IN PROGRESS
+Plan: 1 of 2 in current phase
+Status: Plan 29-01 complete, ready for 29-02
+Last activity: 2026-02-18 — Completed Plan 29-01 (Roles API + useRoles Hook)
 
-Progress: █████████░ 90%
+Progress: █████████░ 95%
 
 ## Performance Metrics
 
@@ -118,6 +118,6 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-18
-Stopped at: Completed Phase 28 — Team Collaboration (2 plans)
+Stopped at: Completed Plan 29-01 — Roles API + useRoles Hook
 Resume file: None
-Next action: /gsd:plan-phase 29
+Next action: /gsd:execute-plan .planning/phases/29-role-permissions/29-02-PLAN.md
