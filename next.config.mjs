@@ -81,6 +81,8 @@ const nextConfig = {
     '@ffmpeg-installer/ffmpeg',
     'bullmq',
     'ioredis',
+    'puppeteer',
+    'puppeteer-screen-recorder',
   ],
 
   // Experimental features

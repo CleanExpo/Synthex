@@ -18,6 +18,19 @@ export async function register() {
     return;
   }
 
+  // Derive OAUTH_STATE_SECRET from JWT_SECRET if not explicitly set.
+  // This prevents startup crashes while maintaining cryptographic security.
+  if (!process.env.OAUTH_STATE_SECRET && process.env.JWT_SECRET) {
+    const crypto = await import(/* webpackIgnore: true */ 'node:crypto');
+    process.env.OAUTH_STATE_SECRET = crypto
+      .createHash('sha256')
+      .update(process.env.JWT_SECRET + ':oauth-state-secret')
+      .digest('base64');
+    console.warn(
+      '[env-validator] OAUTH_STATE_SECRET not set — derived from JWT_SECRET. Set it explicitly for production: openssl rand -base64 32'
+    );
+  }
+
   const { EnvValidator, SecurityLevel } = await import(
     '@/lib/security/env-validator'
   );

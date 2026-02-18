@@ -54,7 +54,7 @@ export const ENV_VAR_DEFINITIONS: EnvVarDefinition[] = [
     validator: z.string()
       .min(1, 'DATABASE_URL cannot be empty')
       .regex(
-        /^postgres(ql)?:\/\/[^:]+:[^@]+@[^:]+:\d+\/\w+/,
+        /^(prisma\+)?postgres(ql)?:\/\/.+/,
         'Invalid PostgreSQL connection string format'
       ),
     example: 'postgresql://user:password@host:5432/dbname',

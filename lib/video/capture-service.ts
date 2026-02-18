@@ -8,17 +8,23 @@
  * - APP_URL: Application URL (default: http://localhost:3000)
  */
 
-import type { Browser, Page } from 'puppeteer';
 import * as path from 'path';
 import * as fs from 'fs';
 import { logger } from '@/lib/logger';
 
+// Puppeteer types - using any to avoid webpack resolving the module
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type Browser = any;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type Page = any;
+
 // Dynamic imports for puppeteer (not available in serverless/production)
-let puppeteer: typeof import('puppeteer') | null = null;
-let PuppeteerScreenRecorderModule: typeof import('puppeteer-screen-recorder') | null = null;
+// webpackIgnore prevents webpack from trying to resolve these modules at build time
+let puppeteer: any = null;
+let PuppeteerScreenRecorderModule: any = null;
 try {
-  puppeteer = await import('puppeteer');
-  PuppeteerScreenRecorderModule = await import('puppeteer-screen-recorder');
+  puppeteer = await import(/* webpackIgnore: true */ 'puppeteer');
+  PuppeteerScreenRecorderModule = await import(/* webpackIgnore: true */ 'puppeteer-screen-recorder');
 } catch {
   // puppeteer not available in production/serverless
 }
@@ -56,7 +62,7 @@ const DEFAULT_CONFIG: CaptureConfig = {
 export class CaptureService {
   private browser: Browser | null = null;
   private page: Page | null = null;
-  private recorder: InstanceType<typeof import('puppeteer-screen-recorder').PuppeteerScreenRecorder> | null = null;
+  private recorder: any = null;
   private currentOutputPath: string | null = null;
   private config: CaptureConfig;
   private appUrl: string;
