@@ -203,6 +203,13 @@ export default function SEODashboardPage() {
               status="available"
             />
             <SEOToolCard
+              title="Search Console"
+              description="Search performance analytics, indexing coverage, and sitemap health from Google Search Console."
+              href="/dashboard/seo/search-console"
+              icon={BarChart3}
+              status="available"
+            />
+            <SEOToolCard
               title="Page Analysis"
               description="Deep dive into single page SEO. Check meta tags, content quality, schema markup, and optimization opportunities."
               href="/dashboard/seo/page"

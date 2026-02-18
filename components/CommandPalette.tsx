@@ -221,6 +221,15 @@ export function CommandPalette() {
       category: 'navigation',
       keywords: ['cwv', 'core web vitals', 'mobile', 'parity', 'robots', 'technical', 'seo', 'performance']
     },
+    {
+      id: 'search-console',
+      title: 'Search Console',
+      description: 'Search analytics, indexing status, sitemap health',
+      icon: BarChart3,
+      action: () => router.push('/dashboard/seo/search-console'),
+      category: 'navigation',
+      keywords: ['search console', 'gsc', 'google', 'indexing', 'sitemap', 'queries', 'clicks', 'impressions', 'ctr']
+    },
 
     // Actions
     {
