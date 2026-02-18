@@ -98,6 +98,10 @@ model User {
   activeOrganizationId  String?   @map("active_organization_id")
   ownedBusinesses       BusinessOwnership[] @relation("OwnedBusinesses")
 
+  // Social listening
+  trackedKeywords       TrackedKeyword[]
+  socialMentions        SocialMention[]
+
   @@index([organizationId])
   @@map("users")
 }
@@ -361,6 +365,9 @@ model Organization {
   // Approval workflows
   approvalRequests   ApprovalRequest[]
   workflowTemplates  WorkflowTemplate[]
+
+  // Social listening
+  trackedKeywords    TrackedKeyword[]
 
   // Indices for multi-tenant queries
   @@index([slug])
@@ -2333,4 +2340,91 @@ model BusinessOwnership {
   @@index([ownerId])
   @@index([organizationId])
   @@map("business_ownerships")
+}
+
+// ==========================================
+// Social Listening System
+// Track brand mentions, keywords, and hashtags
+// across social platforms.
+// ==========================================
+
+model TrackedKeyword {
+  id              String    @id @default(cuid())
+  userId          String    @map("user_id")
+  organizationId  String?   @map("organization_id")
+
+  keyword         String    // The keyword or hashtag (without #)
+  type            String    // 'keyword', 'hashtag', 'mention', 'brand'
+  platforms       String[]  // Which platforms to monitor
+  isActive        Boolean   @default(true) @map("is_active")
+
+  // Tracking stats
+  lastCheckedAt   DateTime? @map("last_checked_at")
+  totalMentions   Int       @default(0) @map("total_mentions")
+
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization    Organization? @relation(fields: [organizationId], references: [id])
+  mentions        SocialMention[]
+
+  @@index([userId])
+  @@index([organizationId])
+  @@index([keyword])
+  @@index([isActive])
+  @@map("tracked_keywords")
+}
+
+model SocialMention {
+  id              String    @id @default(cuid())
+  keywordId       String    @map("keyword_id")
+  userId          String    @map("user_id")
+
+  // Platform info
+  platform        String    // 'twitter', 'instagram', etc.
+  platformPostId  String    @map("platform_post_id")
+  platformUrl     String?   @map("platform_url")
+
+  // Author info
+  authorHandle    String    @map("author_handle")
+  authorName      String?   @map("author_name")
+  authorAvatar    String?   @map("author_avatar")
+  authorFollowers Int?      @map("author_followers")
+
+  // Content
+  content         String    @db.Text
+  mediaUrls       String[]  @map("media_urls")
+
+  // Metrics
+  likes           Int       @default(0)
+  comments        Int       @default(0)
+  shares          Int       @default(0)
+  reach           Int?      // Estimated reach
+
+  // Analysis
+  sentiment       String?   // 'positive', 'negative', 'neutral'
+  sentimentScore  Float?    @map("sentiment_score") // -1.0 to 1.0
+  isInfluencer    Boolean   @default(false) @map("is_influencer")
+
+  // Status
+  isRead          Boolean   @default(false) @map("is_read")
+  isArchived      Boolean   @default(false) @map("is_archived")
+  isFlagged       Boolean   @default(false) @map("is_flagged")
+
+  postedAt        DateTime  @map("posted_at")
+  fetchedAt       DateTime  @default(now()) @map("fetched_at")
+  createdAt       DateTime  @default(now()) @map("created_at")
+
+  keyword         TrackedKeyword @relation(fields: [keywordId], references: [id], onDelete: Cascade)
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([platform, platformPostId])
+  @@index([keywordId])
+  @@index([userId])
+  @@index([platform])
+  @@index([sentiment])
+  @@index([postedAt])
+  @@index([isRead])
+  @@map("social_mentions")
 }
