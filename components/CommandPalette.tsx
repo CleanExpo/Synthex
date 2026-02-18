@@ -36,6 +36,7 @@ import {
   Repeat,
   Send,
   Bell,
+  Grid,
 } from '@/components/icons';
 import { notify } from '@/lib/notifications';
 
@@ -234,6 +235,15 @@ export function CommandPalette() {
       action: () => router.push('/dashboard/bio'),
       category: 'navigation',
       keywords: ['bio', 'link', 'linktree', 'landing', 'page', 'profile', 'links']
+    },
+    {
+      id: 'unified-dashboard',
+      title: 'Unified Dashboard',
+      description: 'View all platform metrics in one place',
+      icon: Grid,
+      action: () => router.push('/dashboard/unified'),
+      category: 'navigation',
+      keywords: ['unified', 'all', 'platforms', 'metrics', 'overview', 'compare', 'aggregate']
     },
     {
       id: 'team',

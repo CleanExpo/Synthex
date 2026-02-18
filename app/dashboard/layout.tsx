@@ -46,6 +46,7 @@ import {
   Repeat,
   Send,
   Bell,
+  Grid,
 } from '@/components/icons';
 import { Button } from '@/components/ui/button';
 import { AIPMFloatingButton } from '@/components/ai-pm';
@@ -67,6 +68,7 @@ import { useUser } from '@/hooks/use-user';
 
 const sidebarItems = [
   { icon: Home, label: 'Dashboard', href: '/dashboard' },
+  { icon: Grid, label: 'Unified View', href: '/dashboard/unified' },
   { icon: TrendingUp, label: 'Viral Patterns', href: '/dashboard/patterns' },
   { icon: Brain, label: 'Personas', href: '/dashboard/personas' },
   { icon: MessageSquare, label: 'AI Chat', href: '/dashboard/ai-chat' },
