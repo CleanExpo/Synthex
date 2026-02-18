@@ -406,10 +406,11 @@ Plans:
 **Goal**: Customizable landing pages for social profiles
 **Depends on**: Phase 42
 **Research**: Unlikely (internal page building patterns)
-**Plans**: TBD
+**Plans**: 2
 
 Plans:
-- [ ] 43-01: TBD
+- [ ] 43-01: Schema + API + Public page + Analytics tracking
+- [ ] 43-02: Dashboard editor + Themes + Preview + Navigation
 
 #### Phase 44: Unified Dashboard
 
@@ -540,7 +541,7 @@ Plans:
 | 40. Cross-posting Automation | v1.4 | 1/1 | Complete | 2026-02-18 |
 | 41. Content Calendar v2 | v1.4 | 2/2 | Complete | 2026-02-18 |
 | 42. Social Listening | v1.4 | 2/2 | Complete | 2026-02-18 |
-| 43. Link in Bio Pages | v1.4 | 0/? | Not started | - |
+| 43. Link in Bio Pages | v1.4 | 0/2 | Planned | - |
 | 44. Unified Dashboard | v1.4 | 0/? | Not started | - |
 | 45. Audience Insights | v1.4 | 0/? | Not started | - |
 | 46. Content Performance AI | v1.4 | 0/? | Not started | - |
