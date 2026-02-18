@@ -35,6 +35,7 @@ import {
   Image,
   Repeat,
   Send,
+  Bell,
 } from '@/components/icons';
 import { notify } from '@/lib/notifications';
 
@@ -217,6 +218,15 @@ export function CommandPalette() {
       keywords: ['competitors', 'competition', 'tracking']
     },
     {
+      id: 'social-listening',
+      title: 'Social Listening',
+      description: 'Monitor brand mentions, keywords, and hashtags',
+      icon: Bell,
+      action: () => router.push('/dashboard/listening'),
+      category: 'navigation',
+      keywords: ['listening', 'mentions', 'brand', 'monitor', 'keywords', 'hashtags', 'sentiment', 'social']
+    },
+    {
       id: 'team',
       title: 'Team',
       description: 'Manage team members',
@@ -337,6 +347,15 @@ export function CommandPalette() {
       },
       category: 'actions',
       keywords: ['new', 'create', 'generate', 'ai']
+    },
+    {
+      id: 'add-keyword',
+      title: 'Add Tracked Keyword',
+      description: 'Start monitoring a new keyword or hashtag',
+      icon: Bell,
+      action: () => router.push('/dashboard/listening?action=add'),
+      category: 'actions',
+      keywords: ['add', 'track', 'keyword', 'hashtag', 'monitor', 'listening', 'brand']
     },
     {
       id: 'analyze-trends',

@@ -45,6 +45,7 @@ import {
   MessageSquare,
   Repeat,
   Send,
+  Bell,
 } from '@/components/icons';
 import { Button } from '@/components/ui/button';
 import { AIPMFloatingButton } from '@/components/ai-pm';
@@ -86,6 +87,7 @@ const sidebarItems = [
   { icon: Beaker, label: 'Experiments', href: '/dashboard/experiments' },
   { icon: Brain, label: 'Psychology', href: '/dashboard/psychology' },
   { icon: Target, label: 'Competitors', href: '/dashboard/competitors' },
+  { icon: Bell, label: 'Listening', href: '/dashboard/listening' },
   { icon: Video, label: 'Video', href: '/dashboard/video' },
   { icon: Search, label: 'SEO Tools', href: '/dashboard/seo' },
   { icon: Globe, label: 'GEO Analysis', href: '/dashboard/geo' },
