@@ -114,6 +114,10 @@ model User {
   // Sponsor CRM
   sponsors              Sponsor[]
 
+  // Affiliate links
+  affiliateNetworks     AffiliateNetwork[]
+  affiliateLinks        AffiliateLink[]
+
   @@index([organizationId])
   @@map("users")
 }
@@ -2688,4 +2692,99 @@ model LinkBioLink {
   @@index([pageId])
   @@index([pageId, order])
   @@map("link_bio_links")
+}
+
+// =============================================================================
+// AFFILIATE LINK MANAGEMENT
+// =============================================================================
+
+model AffiliateNetwork {
+  id              String    @id @default(cuid())
+  userId          String    @map("user_id")
+
+  // Network details
+  name            String              // Display name
+  slug            String              // amazon, shareasale, cj, impact, etc.
+  apiKey          String?   @map("api_key")       // Encrypted API key
+  trackingId      String?   @map("tracking_id")   // User's tracking/affiliate ID
+
+  // Settings
+  isActive        Boolean   @default(true) @map("is_active")
+  commissionRate  Decimal?  @db.Decimal(5, 2) @map("commission_rate") // Default commission %
+
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  links           AffiliateLink[]
+
+  @@unique([userId, slug])
+  @@index([userId])
+  @@map("affiliate_networks")
+}
+
+model AffiliateLink {
+  id              String    @id @default(cuid())
+  userId          String    @map("user_id")
+  networkId       String?   @map("network_id")
+
+  // Link details
+  name            String              // Display name
+  originalUrl     String    @map("original_url")  // Original product/page URL
+  affiliateUrl    String    @map("affiliate_url") // URL with tracking params
+  shortCode       String?   @unique @map("short_code") // For link cloaking
+
+  // Tracking
+  clickCount      Int       @default(0) @map("click_count")
+  conversionCount Int       @default(0) @map("conversion_count")
+  totalRevenue    Decimal   @default(0) @db.Decimal(12, 2) @map("total_revenue")
+
+  // Metadata
+  productName     String?   @map("product_name")
+  productImage    String?   @map("product_image")
+  category        String?
+  tags            String[]
+
+  // Auto-insertion settings
+  autoInsert      Boolean   @default(false) @map("auto_insert")
+  keywords        String[]  // Trigger keywords for auto-insertion
+
+  isActive        Boolean   @default(true) @map("is_active")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  network         AffiliateNetwork? @relation(fields: [networkId], references: [id], onDelete: SetNull)
+  clicks          AffiliateLinkClick[]
+
+  @@index([userId])
+  @@index([networkId])
+  @@index([shortCode])
+  @@index([autoInsert])
+  @@map("affiliate_links")
+}
+
+model AffiliateLinkClick {
+  id              String    @id @default(cuid())
+  linkId          String    @map("link_id")
+
+  // Click data
+  ipHash          String?   @map("ip_hash")     // Hashed IP for dedup
+  userAgent       String?   @map("user_agent")
+  referer         String?
+  country         String?
+
+  // Conversion
+  converted       Boolean   @default(false)
+  revenue         Decimal?  @db.Decimal(12, 2)
+  orderId         String?   @map("order_id")
+
+  createdAt       DateTime  @default(now()) @map("created_at")
+
+  link            AffiliateLink @relation(fields: [linkId], references: [id], onDelete: Cascade)
+
+  @@index([linkId])
+  @@index([linkId, createdAt])
+  @@index([createdAt])
+  @@map("affiliate_link_clicks")
 }
