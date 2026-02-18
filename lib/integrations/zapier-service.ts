@@ -53,6 +53,22 @@ export class ZapierService {
   }
 
   /**
+   * Validate the current credentials (API key must be present)
+   */
+  async validateCredentials(): Promise<{ valid: boolean; error?: string }> {
+    if (!this.credentials.apiKey) {
+      return { valid: false, error: 'API key is required' };
+    }
+
+    // If a webhook URL is provided, validate it
+    if (this.credentials.webhookUrl) {
+      return this.validateWebhookUrl(this.credentials.webhookUrl);
+    }
+
+    return { valid: true };
+  }
+
+  /**
    * Validate that the provided webhook URL is reachable
    */
   async validateWebhookUrl(url: string): Promise<{ valid: boolean; error?: string }> {
