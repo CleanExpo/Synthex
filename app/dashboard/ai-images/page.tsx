@@ -14,7 +14,7 @@ import { ImageGallery } from '@/components/ai/image-gallery';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { useUser } from '@/hooks/use-user';
+import { useSubscription } from '@/hooks/useSubscription';
 import {
   Image,
   Crown,
@@ -26,15 +26,12 @@ import Link from 'next/link';
 import { notify } from '@/lib/notifications';
 
 export default function AIImagesPage() {
-  const { user, isLoading: userLoading } = useUser();
+  const { isLoading: subscriptionLoading, hasAccess } = useSubscription();
   const { clearResults } = useImageGeneration();
   const [generatedImages, setGeneratedImages] = useState<ImageResult[]>([]);
 
   // Check subscription (Professional+ required)
-  const hasProfessional =
-    user?.subscriptionTier === 'professional' ||
-    user?.subscriptionTier === 'enterprise' ||
-    user?.subscriptionTier === 'agency';
+  const hasProfessional = hasAccess('professional');
 
   // Handle generated image
   const handleImageGenerated = useCallback((result: ImageResult) => {
@@ -90,8 +87,8 @@ export default function AIImagesPage() {
     }
   }, []);
 
-  // Loading state while checking user
-  if (userLoading) {
+  // Loading state while checking subscription
+  if (subscriptionLoading) {
     return null; // Let loading.tsx handle this
   }
 

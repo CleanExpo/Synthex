@@ -32,6 +32,7 @@ import {
   MessageSquare,
   Shield,
   Code,
+  Image,
 } from '@/components/icons';
 import { notify } from '@/lib/notifications';
 
@@ -158,6 +159,15 @@ export function CommandPalette() {
       action: () => router.push('/dashboard/ai-chat'),
       category: 'navigation',
       keywords: ['ai', 'chat', 'assistant', 'help', 'strategy', 'ideas', 'conversation']
+    },
+    {
+      id: 'ai-images',
+      title: 'AI Images',
+      description: 'Generate images with AI',
+      icon: Image,
+      action: () => router.push('/dashboard/ai-images'),
+      category: 'navigation',
+      keywords: ['image', 'generate', 'ai', 'visual', 'picture', 'dalle', 'stability', 'gemini']
     },
     {
       id: 'competitors',
@@ -314,6 +324,15 @@ export function CommandPalette() {
       },
       category: 'actions',
       keywords: ['post', 'quick', 'publish', 'share']
+    },
+    {
+      id: 'generate-image',
+      title: 'Generate Image',
+      description: 'Create a new AI image',
+      icon: Sparkles,
+      action: () => router.push('/dashboard/ai-images'),
+      category: 'actions',
+      keywords: ['create', 'new', 'image', 'generate', 'ai']
     },
 
     // Settings
