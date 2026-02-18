@@ -23,6 +23,7 @@ import {
   Map,
   Languages,
   Eye,
+  Calendar,
 } from '@/components/icons';
 
 // SEO Tool Card Component
@@ -38,7 +39,7 @@ function SEOToolCard({
   description: string;
   href: string;
   icon: React.ElementType;
-  status?: 'available' | 'beta';
+  status?: 'available' | 'beta' | 'new';
   comingSoon?: boolean;
 }) {
   return (
@@ -52,6 +53,11 @@ function SEOToolCard({
             {status === 'beta' && (
               <span className="px-2 py-1 text-xs font-medium bg-cyan-500/10 text-cyan-400 rounded-full border border-cyan-500/20">
                 Beta
+              </span>
+            )}
+            {status === 'new' && (
+              <span className="px-2 py-1 text-xs font-medium bg-green-500/10 text-green-400 rounded-full border border-green-500/20">
+                New
               </span>
             )}
             {comingSoon && (
@@ -215,6 +221,13 @@ export default function SEODashboardPage() {
               href="/dashboard/seo/pagespeed"
               icon={Zap}
               status="available"
+            />
+            <SEOToolCard
+              title="Scheduled Audits"
+              description="Automate recurring SEO audits with regression alerts and historical tracking."
+              href="/dashboard/seo/scheduled-audits"
+              icon={Calendar}
+              status="new"
             />
             <SEOToolCard
               title="Page Analysis"

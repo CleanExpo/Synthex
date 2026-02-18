@@ -258,6 +258,15 @@ export function CommandPalette() {
       category: 'navigation',
       keywords: ['geo', 'generative engine', 'ai search', 'citability', 'passages', 'readiness', 'google aio', 'chatgpt', 'perplexity', 'bing copilot', 'ai visibility']
     },
+    {
+      id: 'scheduled-audits',
+      title: 'Scheduled Audits',
+      description: 'Automated recurring SEO audits with regression alerts',
+      icon: Calendar,
+      action: () => router.push('/dashboard/seo/scheduled-audits'),
+      category: 'navigation',
+      keywords: ['scheduled', 'audits', 'automation', 'alerts', 'regression', 'monitoring', 'recurring', 'cron', 'seo']
+    },
 
     // Actions
     {
