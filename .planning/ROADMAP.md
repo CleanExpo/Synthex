@@ -448,12 +448,12 @@ Plans:
 
 **Goal**: Compare performance to industry standards
 **Depends on**: Phase 46
-**Research**: Likely (industry benchmarks data sources)
-**Research topics**: Industry average metrics, benchmark data providers
-**Plans**: TBD
+**Research**: Skipped (using established industry benchmark data)
+**Plans**: 2
 
 Plans:
-- [ ] 47-01: TBD
+- [ ] 47-01: Benchmark service + API + Hook
+- [ ] 47-02: Gauges + Platform cards + Dashboard page
 
 #### Phase 48: Revenue Tracker
 
