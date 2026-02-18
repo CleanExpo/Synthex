@@ -34,6 +34,7 @@ import {
   Code,
   Image,
   Repeat,
+  Send,
 } from '@/components/icons';
 import { notify } from '@/lib/notifications';
 
@@ -99,6 +100,15 @@ export function CommandPalette() {
       action: () => router.push('/dashboard/content/repurpose'),
       category: 'navigation',
       keywords: ['repurpose', 'transform', 'blog', 'thread', 'video script', 'carousel', 'summary', 'takeaways', 'transcript', 'podcast']
+    },
+    {
+      id: 'cross-post',
+      title: 'Cross-Post',
+      description: 'Publish content to multiple platforms with AI-powered adaptation',
+      icon: Send,
+      action: () => router.push('/dashboard/content/cross-post'),
+      category: 'navigation',
+      keywords: ['cross-post', 'cross post', 'publish', 'multi-platform', 'post everywhere', 'broadcast', 'distribute', 'social media']
     },
     {
       id: 'analytics',
