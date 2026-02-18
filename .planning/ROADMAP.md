@@ -175,10 +175,11 @@ Plans:
 **Goal**: Content review chains with role-based approvers and notifications
 **Depends on**: Phase 26
 **Research**: Unlikely (internal workflow patterns)
-**Plans**: TBD
+**Plans**: 2
 
 Plans:
-- [ ] 27-01: TBD
+- [x] 27-01: ApprovalRequest + WorkflowTemplate models + CRUD API routes
+- [ ] 27-02: useApprovals hook + dashboard page + navigation
 
 #### Phase 28: Team Collaboration
 
