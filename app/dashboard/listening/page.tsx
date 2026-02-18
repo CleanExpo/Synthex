@@ -90,6 +90,29 @@ function SentimentBadge({ sentiment }: { sentiment: string | null }) {
   );
 }
 
+// Sentiment color bar for visual indicator
+function SentimentColorBar({ sentiment, score }: { sentiment: string | null; score: number | null }) {
+  if (!sentiment) return null;
+
+  const colors = {
+    positive: 'bg-gradient-to-r from-green-500/20 via-green-500/40 to-green-500/20',
+    negative: 'bg-gradient-to-r from-red-500/20 via-red-500/40 to-red-500/20',
+    neutral: 'bg-gradient-to-r from-gray-500/20 via-gray-500/30 to-gray-500/20',
+  };
+
+  const borderColors = {
+    positive: 'border-l-green-500',
+    negative: 'border-l-red-500',
+    neutral: 'border-l-gray-500',
+  };
+
+  return (
+    <div
+      className={`absolute left-0 top-0 bottom-0 w-1 ${borderColors[sentiment as keyof typeof borderColors] || borderColors.neutral}`}
+    />
+  );
+}
+
 // Mention card component
 function MentionCard({
   mention,
@@ -106,12 +129,14 @@ function MentionCard({
 
   return (
     <div
-      className={`p-4 rounded-xl border transition-colors ${
+      className={`relative p-4 rounded-xl border transition-colors overflow-hidden ${
         mention.isRead
           ? 'bg-gray-900/30 border-white/5'
           : 'bg-gray-900/50 border-white/10'
       }`}
     >
+      {/* Sentiment color bar on left edge */}
+      <SentimentColorBar sentiment={mention.sentiment} score={mention.sentimentScore} />
       {/* Header */}
       <div className="flex items-start justify-between gap-3 mb-3">
         <div className="flex items-center gap-3">
