@@ -11,18 +11,18 @@ See: .planning/PROJECT.md (updated 2026-02-17)
 
 Milestone: v1.2 Features (Phases 19-29)
 Phase: 25 of 29 (Third-party Integrations)
-Plan: 1 of 2 in current phase
-Status: In progress
-Last activity: 2026-02-18 — Completed 25-01 (integration services & API)
+Plan: 2 of 2 in current phase
+Status: Phase complete
+Last activity: 2026-02-18 — Completed 25-02-PLAN.md
 
-Progress: ██████░░░░ 55%
+Progress: ██████░░░░ 57%
 
 ## Performance Metrics
 
 **Velocity (from v1.0):**
-- Total plans completed: 35
+- Total plans completed: 36
 - Average duration: ~12 min
-- Total execution time: ~473 min
+- Total execution time: ~481 min
 
 **By Phase (v1.0):**
 
@@ -78,6 +78,8 @@ Decisions from v1.2:
 - PlatformConnection model reused for Canva/Buffer/Zapier with metadata JSON (no schema migration)
 - Integration factory pattern: createIntegrationService(provider, credentials) returns typed service
 - Zapier webhook uses dedicated ZAPIER_WEBHOOK_SECRET, separate from platform webhook handler
+- INTEGRATION_REGISTRY as single source of truth for provider metadata, THIRD_PARTY_ICONS lookup for icon mapping
+- ConnectDialog renders OAuth vs credential forms dynamically based on oauthSupported flag
 
 ### Deferred Items (from v1.0)
 
@@ -116,6 +118,6 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-18
-Stopped at: Completed 25-01 — Integration services & API routes
+Stopped at: Completed 25-02 — Integrations UI update (Phase 25 complete)
 Resume file: None
-Next action: /gsd:execute-plan .planning/phases/25-third-party-integrations/25-02-PLAN.md
+Next action: /gsd:plan-phase 26

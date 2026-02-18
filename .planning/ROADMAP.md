@@ -40,7 +40,7 @@ None (internal platform work)
 - [x] **Phase 22: Analytics Dashboard v2** - Enhanced visualizations, drill-downs, date ranges
 - [x] **Phase 23: Predictive Analytics** - ML engagement predictions, best-time-to-post
 - [x] **Phase 24: Custom Reports Builder** - User-created report templates and exports
-- [ ] **Phase 25: Third-party Integrations** - Canva, Buffer, Zapier webhook receivers
+- [x] **Phase 25: Third-party Integrations** - Canva, Buffer, Zapier webhook receivers
 - [ ] **Phase 26: Webhook System** - Outbound webhooks for external integrations
 - [ ] **Phase 27: Approval Workflows** - Content review chains with notifications
 - [ ] **Phase 28: Team Collaboration** - Real-time comments, assignments, activity feeds
@@ -153,11 +153,11 @@ Plans:
 **Depends on**: Phase 24
 **Research**: Likely (external API documentation, OAuth flows)
 **Research topics**: Canva Connect API, Buffer API, Zapier webhook specs
-**Plans**: 1/2 | In progress | 2026-02-18
+**Plans**: 2/2 | Complete | 2026-02-18
 
 Plans:
 - [x] 25-01: Integration Services & API (lib/integrations/, third-party API routes, hook, Zapier webhook receiver)
-- [ ] 25-02: Integrations UI Update (third-party components, page update, command palette)
+- [x] 25-02: Integrations UI Update (third-party components, page update, command palette)
 
 #### Phase 26: Webhook System
 
@@ -228,7 +228,7 @@ Plans:
 | 22. Analytics Dashboard v2 | v1.2 | 2/2 | Complete | 2026-02-18 |
 | 23. Predictive Analytics | v1.2 | 2/2 | Complete | 2026-02-18 |
 | 24. Custom Reports Builder | v1.2 | 2/2 | Complete | 2026-02-18 |
-| 25. Third-party Integrations | v1.2 | 1/2 | In progress | - |
+| 25. Third-party Integrations | v1.2 | 2/2 | Complete | 2026-02-18 |
 | 26. Webhook System | v1.2 | 0/? | Not started | - |
 | 27. Approval Workflows | v1.2 | 0/? | Not started | - |
 | 28. Team Collaboration | v1.2 | 0/? | Not started | - |
