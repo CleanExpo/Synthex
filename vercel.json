@@ -92,6 +92,10 @@
     {
       "path": "/api/cron/proactive-insights",
       "schedule": "0 */6 * * *"
+    },
+    {
+      "path": "/api/cron/seo-audits",
+      "schedule": "0 3 * * *"
     }
   ]
 }
