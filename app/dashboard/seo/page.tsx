@@ -210,6 +210,13 @@ export default function SEODashboardPage() {
               status="available"
             />
             <SEOToolCard
+              title="PageSpeed Insights"
+              description="Run PageSpeed analysis, monitor Core Web Vitals trends, and track performance improvements over time."
+              href="/dashboard/seo/pagespeed"
+              icon={Zap}
+              status="available"
+            />
+            <SEOToolCard
               title="Page Analysis"
               description="Deep dive into single page SEO. Check meta tags, content quality, schema markup, and optimization opportunities."
               href="/dashboard/seo/page"

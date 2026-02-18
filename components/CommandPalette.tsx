@@ -230,6 +230,15 @@ export function CommandPalette() {
       category: 'navigation',
       keywords: ['search console', 'gsc', 'google', 'indexing', 'sitemap', 'queries', 'clicks', 'impressions', 'ctr']
     },
+    {
+      id: 'pagespeed-insights',
+      title: 'PageSpeed Insights',
+      description: 'Page performance analysis, CWV monitoring, Lighthouse scores',
+      icon: Zap,
+      action: () => router.push('/dashboard/seo/pagespeed'),
+      category: 'navigation',
+      keywords: ['pagespeed', 'page speed', 'lighthouse', 'cwv', 'core web vitals', 'performance', 'lcp', 'cls', 'inp', 'speed']
+    },
 
     // Actions
     {
