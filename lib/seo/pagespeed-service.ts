@@ -269,8 +269,9 @@ export async function runPageSpeedAnalysis(
     // Extract top 5 opportunities
     const opportunities: PageSpeedOpportunity[] = [];
     if (audits) {
-      const opportunityAudits = Object.values(audits).filter(
-        (audit: Record<string, unknown>) =>
+      const allAudits = Object.values(audits) as Record<string, unknown>[];
+      const opportunityAudits = allAudits.filter(
+        (audit) =>
           audit?.details &&
           (audit.details as Record<string, unknown>)?.type === 'opportunity' &&
           typeof audit.score === 'number' &&
@@ -278,12 +279,12 @@ export async function runPageSpeedAnalysis(
       );
 
       // Sort by score (lower = more impactful)
-      opportunityAudits.sort((a: Record<string, unknown>, b: Record<string, unknown>) =>
+      opportunityAudits.sort((a, b) =>
         (a.score as number) - (b.score as number)
       );
 
       for (const audit of opportunityAudits.slice(0, 5)) {
-        const details = (audit as Record<string, unknown>).details as Record<string, unknown> | undefined;
+        const details = audit.details as Record<string, unknown> | undefined;
         const overallSavingsMs = details?.overallSavingsMs as number | undefined;
         const overallSavingsBytes = details?.overallSavingsBytes as number | undefined;
 
@@ -295,8 +296,8 @@ export async function runPageSpeedAnalysis(
         }
 
         opportunities.push({
-          title: (audit as Record<string, unknown>).title as string,
-          description: (audit as Record<string, unknown>).description as string,
+          title: audit.title as string,
+          description: audit.description as string,
           savings,
         });
       }
@@ -305,8 +306,9 @@ export async function runPageSpeedAnalysis(
     // Extract top 5 diagnostics
     const diagnostics: PageSpeedDiagnostic[] = [];
     if (audits) {
-      const diagnosticAudits = Object.values(audits).filter(
-        (audit: Record<string, unknown>) =>
+      const allAuditsDiag = Object.values(audits) as Record<string, unknown>[];
+      const diagnosticAudits = allAuditsDiag.filter(
+        (audit) =>
           audit?.details &&
           (audit.details as Record<string, unknown>)?.type !== 'opportunity' &&
           typeof audit.score === 'number' &&
@@ -314,15 +316,15 @@ export async function runPageSpeedAnalysis(
           (audit.score as number) !== null
       );
 
-      diagnosticAudits.sort((a: Record<string, unknown>, b: Record<string, unknown>) =>
+      diagnosticAudits.sort((a, b) =>
         (a.score as number) - (b.score as number)
       );
 
       for (const audit of diagnosticAudits.slice(0, 5)) {
         diagnostics.push({
-          title: (audit as Record<string, unknown>).title as string,
-          description: (audit as Record<string, unknown>).description as string,
-          displayValue: ((audit as Record<string, unknown>).displayValue as string) || null,
+          title: audit.title as string,
+          description: audit.description as string,
+          displayValue: (audit.displayValue as string) || null,
         });
       }
     }
