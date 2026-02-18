@@ -437,11 +437,12 @@ Plans:
 
 **Goal**: AI-powered analysis of what content works and why
 **Depends on**: Phase 45
-**Research**: Unlikely (internal AI patterns)
-**Plans**: TBD
+**Research**: Skipped (internal AI patterns exist)
+**Plans**: 2
 
 Plans:
-- [ ] 46-01: TBD
+- [ ] 46-01: Performance analyzer service + API + Hook
+- [ ] 46-02: Performance charts + AI insights + Dashboard page
 
 #### Phase 47: Benchmark Reports
 
