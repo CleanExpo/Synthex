@@ -185,12 +185,12 @@ Plans:
 
 **Goal**: Real-time comments, assignments, activity feeds on content
 **Depends on**: Phase 27
-**Research**: Likely (real-time sync, presence indicators)
-**Research topics**: WebSocket vs SSE, Supabase Realtime, optimistic updates
-**Plans**: TBD
+**Research**: Skipped (WebSocket infrastructure already exists from v1.1)
+**Plans**: 1/2 | In progress
 
 Plans:
-- [ ] 28-01: TBD
+- [x] 28-01: Comments & Shares API + Hooks (CRUD routes, useComments, useShares)
+- [ ] 28-02: Collaboration Dashboard + Navigation (useActivity, dashboard page, sidebar, command palette)
 
 #### Phase 29: Role Permissions
 
@@ -232,6 +232,6 @@ Plans:
 | 24. Custom Reports Builder | v1.2 | 2/2 | Complete | 2026-02-18 |
 | 25. Third-party Integrations | v1.2 | 2/2 | Complete | 2026-02-18 |
 | 26. Webhook System | v1.2 | 2/2 | Complete | 2026-02-18 |
-| 27. Approval Workflows | v1.2 | 0/? | Not started | - |
-| 28. Team Collaboration | v1.2 | 0/? | Not started | - |
+| 27. Approval Workflows | v1.2 | 2/2 | Complete | 2026-02-18 |
+| 28. Team Collaboration | v1.2 | 1/2 | In progress | - |
 | 29. Role Permissions | v1.2 | 0/? | Not started | - |
