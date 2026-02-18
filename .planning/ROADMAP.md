@@ -77,9 +77,26 @@ See [milestones/v1.1-ROADMAP.md](milestones/v1.1-ROADMAP.md) for full details.
 
 </details>
 
-### 🚧 v1.2 Features (In Progress)
+<details>
+<summary>✅ v1.2 Features (Phases 19-29) — SHIPPED 2026-02-18</summary>
 
 **Milestone Goal:** Add new functionality across AI content generation, analytics, integrations, and collaboration.
+
+**Key accomplishments:**
+- Built AI Template Library with PromptTemplate model and CRUD API
+- Implemented Content Optimization scoring service with dashboard UI
+- Created Multi-format Generation for platform-specific content variations
+- Enhanced Analytics Dashboard v2 with drill-downs, date ranges, comparisons
+- Added Predictive Analytics with forecast charts and best-time heatmaps
+- Built Custom Reports Builder with drag-drop widgets and exports
+- Integrated third-party services (Canva, Buffer, Zapier webhooks)
+- Implemented outbound Webhook System for external subscriptions
+- Created Approval Workflows with role-based review chains
+- Added Team Collaboration with real-time comments and activity feeds
+- Built Role Permissions system with granular access control
+- **Added `search-engineer-pro` skill suite** — Technical SEO execution with Google API integration (Search Console, Business Profile, PageSpeed Insights), mobile parity audits, INP optimization, schema injection
+
+</details>
 
 #### Phase 19: AI Template Library
 

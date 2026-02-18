@@ -27,6 +27,7 @@ Synthex is an AI marketing automation platform built on Express + TypeScript wit
 | `code-architect` | Architecture, code quality | Design decisions, code reviews, refactoring, dependency analysis, security review |
 | `research-analyst` | Deep research, competitive intel | Market research, technology evaluation, competitive analysis, fact verification |
 | `qa-sentinel` | Testing, quality assurance | Test strategy, output validation, regression testing, quality gate enforcement |
+| `search-engineer` | Technical SEO, Core Web Vitals, Google APIs | INP optimization, schema injection, mobile parity audits, GMB sync, Search Console issues |
 
 ## Delegation Protocol
 
