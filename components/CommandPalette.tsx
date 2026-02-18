@@ -183,6 +183,15 @@ export function CommandPalette() {
       keywords: ['report', 'builder', 'custom', 'template', 'widget', 'drag', 'drop']
     },
     {
+      id: 'benchmark-reports',
+      title: 'Benchmark Reports',
+      description: 'Compare your performance to industry standards',
+      icon: Target,
+      action: () => router.push('/dashboard/analytics/benchmarks'),
+      category: 'navigation',
+      keywords: ['benchmark', 'compare', 'industry', 'standards', 'performance', 'percentile']
+    },
+    {
       id: 'experiments',
       title: 'Experiments',
       description: 'A/B testing and optimization',
