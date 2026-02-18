@@ -458,7 +458,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(response);
   } catch (error) {
-    logger.error('Audience insights API error:', error);
+    logger.error('Audience insights API error:', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { success: false, error: 'Failed to fetch audience insights' },
       { status: 500 }

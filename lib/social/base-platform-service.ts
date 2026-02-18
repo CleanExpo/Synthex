@@ -110,6 +110,28 @@ export interface PostContent {
   metadata?: Record<string, unknown>;
 }
 
+// =============================================================================
+// Audience Data Interfaces
+// =============================================================================
+
+export interface AudienceData {
+  demographics: {
+    ageRanges: Array<{ range: string; percentage: number }>;
+    genderSplit: Array<{ gender: string; percentage: number }>;
+    topLocations: Array<{ location: string; percentage: number }>;
+  };
+  behavior: {
+    bestPostingTimes: Array<{ day: number; hour: number; engagement: number }>;
+    activeHours: Array<{ hour: number; activity: number }>;
+  };
+}
+
+export interface SyncAudienceResult {
+  success: boolean;
+  data?: AudienceData;
+  error?: string;
+}
+
 export interface PostResult {
   success: boolean;
   postId?: string;
@@ -194,6 +216,11 @@ export interface PlatformService {
    * Get post metrics
    */
   getPostMetrics(postId: string): Promise<any>;
+
+  /**
+   * Sync audience demographics and behavior data from platform
+   */
+  syncAudience(): Promise<SyncAudienceResult>;
 }
 
 /**
@@ -372,6 +399,27 @@ export abstract class BasePlatformService implements PlatformService {
   abstract createPost(content: PostContent): Promise<PostResult>;
   abstract deletePost(postId: string): Promise<boolean>;
   abstract getPostMetrics(postId: string): Promise<any>;
+
+  /**
+   * Sync audience demographics and behavior data
+   * Default implementation returns empty data - override for platform-specific APIs
+   */
+  async syncAudience(): Promise<SyncAudienceResult> {
+    return {
+      success: true,
+      data: {
+        demographics: {
+          ageRanges: [],
+          genderSplit: [],
+          topLocations: [],
+        },
+        behavior: {
+          bestPostingTimes: [],
+          activeHours: [],
+        },
+      },
+    };
+  }
 
   /**
    * Check if we're rate limited for an endpoint
