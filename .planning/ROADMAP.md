@@ -342,10 +342,11 @@ Plans:
 **Depends on**: Phase 36
 **Research**: Likely (external AI APIs, image generation best practices)
 **Research topics**: Imagen/DALL-E APIs, prompt engineering for images, rate limits
-**Plans**: TBD
+**Plans**: 1/2 complete
 
 Plans:
-- [ ] 37-01: TBD
+- [x] 37-01: Image Generation UI (hook, form, preview, gallery components)
+- [ ] 37-02: Dashboard page + integration
 
 #### Phase 38: Content Repurposing
 
