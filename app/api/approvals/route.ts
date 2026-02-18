@@ -13,6 +13,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
+import { Prisma } from '@prisma/client';
 import { z } from 'zod';
 import { sanitizeErrorForResponse } from '@/lib/utils/error-utils';
 import { getUserIdFromCookies } from '@/lib/auth/jwt-utils';
@@ -273,7 +274,7 @@ export async function GET(request: NextRequest) {
     let filteredApprovals = approvals;
     if (assignedToMe) {
       filteredApprovals = approvals.filter(approval =>
-        isUserAssignedToAnyStep(approval.steps as ApprovalStep[], userId)
+        isUserAssignedToAnyStep(approval.steps as unknown as ApprovalStep[], userId)
       );
     }
 
@@ -357,11 +358,11 @@ export async function POST(request: NextRequest) {
         priority,
         currentStep: 0,
         totalSteps: steps.length,
-        steps: steps,
+        steps: steps as unknown as Prisma.InputJsonValue,
         title,
         description,
         dueDate: dueDate ? new Date(dueDate) : null,
-        metadata,
+        metadata: metadata as Prisma.InputJsonValue,
         organizationId: user?.organizationId,
       },
       include: {
