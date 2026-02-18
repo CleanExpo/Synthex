@@ -398,3 +398,132 @@ export function validatePlatformLimits(
     errors,
   };
 }
+
+// =============================================================================
+// API Response Schemas (for contract testing)
+// =============================================================================
+
+/**
+ * Base post response shape
+ */
+export const postResponseSchema = z.object({
+  id: z.string().uuid(),
+  content: z.string(),
+  status: contentStatusSchema,
+  platform: platformSchema.nullable().optional(),
+  platforms: z.array(platformSchema).optional(),
+  scheduledAt: z.union([z.date(), z.string().datetime(), z.null()]).optional(),
+  publishedAt: z.union([z.date(), z.string().datetime(), z.null()]).optional(),
+  createdAt: z.union([z.date(), z.string().datetime()]),
+  updatedAt: z.union([z.date(), z.string().datetime()]),
+  campaignId: z.string().uuid().nullable().optional(),
+  metadata: z.record(z.unknown()).nullable().optional(),
+});
+
+export type PostResponse = z.infer<typeof postResponseSchema>;
+
+/**
+ * Create post API response
+ */
+export const createPostResponseSchema = z.object({
+  success: z.literal(true),
+  message: z.string().optional(),
+  data: postResponseSchema,
+});
+
+export type CreatePostResponse = z.infer<typeof createPostResponseSchema>;
+
+/**
+ * List posts API response
+ */
+export const listPostsResponseSchema = z.object({
+  success: z.literal(true),
+  data: z.array(postResponseSchema),
+  pagination: z.object({
+    page: z.number(),
+    limit: z.number(),
+    total: z.number(),
+    totalPages: z.number(),
+  }).optional(),
+});
+
+export type ListPostsResponse = z.infer<typeof listPostsResponseSchema>;
+
+/**
+ * Base campaign response shape
+ */
+export const campaignResponseSchema = z.object({
+  id: z.string().uuid(),
+  name: z.string(),
+  description: z.string().nullable().optional(),
+  status: z.enum(['draft', 'active', 'paused', 'completed', 'archived']),
+  platform: platformSchema.nullable().optional(),
+  platforms: z.array(platformSchema).optional(),
+  startDate: z.union([z.date(), z.string().datetime()]).nullable().optional(),
+  endDate: z.union([z.date(), z.string().datetime()]).nullable().optional(),
+  createdAt: z.union([z.date(), z.string().datetime()]),
+  updatedAt: z.union([z.date(), z.string().datetime()]),
+  userId: z.string().uuid(),
+  _count: z.object({
+    posts: z.number(),
+  }).optional(),
+});
+
+export type CampaignResponse = z.infer<typeof campaignResponseSchema>;
+
+/**
+ * Create campaign API response
+ */
+export const createCampaignResponseSchema = z.object({
+  success: z.literal(true),
+  message: z.string().optional(),
+  data: campaignResponseSchema,
+});
+
+export type CreateCampaignResponse = z.infer<typeof createCampaignResponseSchema>;
+
+/**
+ * List campaigns API response
+ */
+export const listCampaignsResponseSchema = z.object({
+  success: z.literal(true),
+  data: z.array(campaignResponseSchema),
+  pagination: z.object({
+    page: z.number(),
+    limit: z.number(),
+    total: z.number(),
+    totalPages: z.number(),
+  }).optional(),
+});
+
+export type ListCampaignsResponse = z.infer<typeof listCampaignsResponseSchema>;
+
+/**
+ * Generic content error response
+ */
+export const contentErrorResponseSchema = z.object({
+  success: z.literal(false).optional(),
+  error: z.string(),
+  message: z.string().optional(),
+  details: z.array(z.object({
+    field: z.string().optional(),
+    message: z.string(),
+  })).optional(),
+});
+
+export type ContentErrorResponse = z.infer<typeof contentErrorResponseSchema>;
+
+/**
+ * AI content generation response
+ */
+export const generateContentResponseSchema = z.object({
+  success: z.literal(true),
+  data: z.object({
+    content: z.string(),
+    hashtags: z.array(z.string()).optional(),
+    variations: z.array(z.string()).optional(),
+    metadata: z.record(z.unknown()).optional(),
+  }),
+});
+
+export type GenerateContentResponse = z.infer<typeof generateContentResponseSchema>;

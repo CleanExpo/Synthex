@@ -288,3 +288,147 @@ export function formatZodErrors(error: z.ZodError): Record<string, string[]> {
 
   return formatted;
 }
+
+// =============================================================================
+// API Response Schemas (for contract testing)
+// =============================================================================
+
+/**
+ * Base user response shape returned by auth endpoints
+ */
+export const userResponseSchema = z.object({
+  id: z.string().uuid(),
+  email: z.string().email(),
+  name: z.string().nullable().optional(),
+  avatar: z.string().url().nullable().optional(),
+  emailVerified: z.union([z.date(), z.string().datetime(), z.null()]).optional(),
+});
+
+export type UserResponse = z.infer<typeof userResponseSchema>;
+
+/**
+ * Login API response schema
+ * POST /api/auth/login
+ */
+export const loginResponseSchema = z.object({
+  success: z.literal(true),
+  message: z.string(),
+  user: userResponseSchema,
+  token: z.string(),
+});
+
+export type LoginResponse = z.infer<typeof loginResponseSchema>;
+
+/**
+ * Signup API response schema
+ * POST /api/auth/signup
+ */
+export const signupResponseSchema = z.object({
+  success: z.literal(true),
+  user: userResponseSchema,
+  message: z.string(),
+  requiresVerification: z.boolean(),
+});
+
+export type SignupResponse = z.infer<typeof signupResponseSchema>;
+
+/**
+ * Get user API response schema
+ * GET /api/auth/user
+ */
+export const getUserResponseSchema = z.object({
+  success: z.literal(true),
+  user: userResponseSchema.extend({
+    createdAt: z.union([z.date(), z.string().datetime()]).optional(),
+    lastLogin: z.union([z.date(), z.string().datetime()]).nullable().optional(),
+    preferences: z.record(z.unknown()).nullable().optional(),
+    organizationId: z.string().uuid().nullable().optional(),
+    isMultiBusinessOwner: z.boolean().optional(),
+    activeOrganizationId: z.string().uuid().nullable().optional(),
+    organization: z.object({
+      id: z.string().uuid(),
+      name: z.string(),
+      slug: z.string(),
+      plan: z.string().nullable().optional(),
+    }).nullable().optional(),
+    unreadNotifications: z.number().optional(),
+    totalCampaigns: z.number().optional(),
+    totalProjects: z.number().optional(),
+    ownedBusinessCount: z.number().optional(),
+  }),
+});
+
+export type GetUserResponse = z.infer<typeof getUserResponseSchema>;
+
+/**
+ * Update user API response schema
+ * PUT /api/auth/user
+ */
+export const updateUserResponseSchema = z.object({
+  success: z.literal(true),
+  message: z.string(),
+  user: userResponseSchema.extend({
+    preferences: z.record(z.unknown()).nullable().optional(),
+  }),
+});
+
+export type UpdateUserResponse = z.infer<typeof updateUserResponseSchema>;
+
+/**
+ * Generic auth error response schema
+ */
+export const authErrorResponseSchema = z.object({
+  error: z.string(),
+  message: z.string().optional(),
+  details: z.array(z.object({
+    field: z.string().optional(),
+    path: z.array(z.string()).optional(),
+    message: z.string(),
+  })).optional(),
+});
+
+export type AuthErrorResponse = z.infer<typeof authErrorResponseSchema>;
+
+/**
+ * Password reset request response
+ * POST /api/auth/request-reset
+ */
+export const requestResetResponseSchema = z.object({
+  success: z.literal(true),
+  message: z.string(),
+});
+
+export type RequestResetResponse = z.infer<typeof requestResetResponseSchema>;
+
+/**
+ * Password reset response
+ * POST /api/auth/reset
+ */
+export const resetPasswordResponseSchema = z.object({
+  success: z.literal(true),
+  message: z.string(),
+});
+
+export type ResetPasswordResponse = z.infer<typeof resetPasswordResponseSchema>;
+
+/**
+ * Email verification response
+ * POST /api/auth/verify-email
+ */
+export const verifyEmailResponseSchema = z.object({
+  success: z.literal(true),
+  message: z.string(),
+});
+
+export type VerifyEmailResponse = z.infer<typeof verifyEmailResponseSchema>;
+
+/**
+ * Logout response
+ * POST /api/auth/logout
+ */
+export const logoutResponseSchema = z.object({
+  success: z.literal(true),
+  message: z.string(),
+});
+
+export type LogoutResponse = z.infer<typeof logoutResponseSchema>;

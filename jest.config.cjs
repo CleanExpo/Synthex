@@ -9,6 +9,8 @@ module.exports = {
     '<rootDir>/tests/unit/**/*.spec.{ts,js}',
     '<rootDir>/tests/integration/**/*.test.{ts,js}',
     '<rootDir>/tests/integration/**/*.spec.{ts,js}',
+    '<rootDir>/tests/contract/**/*.test.{ts,js}',
+    '<rootDir>/tests/contract/**/*.spec.{ts,js}',
     '<rootDir>/tests/strategic-marketing/**/*.test.{ts,js}',
     '<rootDir>/tests/strategic-marketing/**/*.spec.{ts,js}',
     '<rootDir>/src/**/*.test.{ts,js}',

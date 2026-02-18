@@ -52,6 +52,27 @@ export {
   validateOAuthCallback,
   safeValidate,
   formatZodErrors,
+  // Response schemas for contract testing
+  userResponseSchema,
+  type UserResponse,
+  loginResponseSchema,
+  type LoginResponse,
+  signupResponseSchema,
+  type SignupResponse,
+  getUserResponseSchema,
+  type GetUserResponse,
+  updateUserResponseSchema,
+  type UpdateUserResponse,
+  authErrorResponseSchema,
+  type AuthErrorResponse,
+  requestResetResponseSchema,
+  type RequestResetResponse,
+  resetPasswordResponseSchema,
+  type ResetPasswordResponse,
+  verifyEmailResponseSchema,
+  type VerifyEmailResponse,
+  logoutResponseSchema,
+  type LogoutResponse,
 } from './auth';
 
 // Content schemas - export with prefix to avoid conflicts
@@ -97,6 +118,23 @@ export {
   validateCreateCampaign,
   platformLimits,
   validatePlatformLimits,
+  // Response schemas for contract testing
+  postResponseSchema,
+  type PostResponse,
+  createPostResponseSchema,
+  type CreatePostResponse,
+  listPostsResponseSchema,
+  type ListPostsResponse,
+  campaignResponseSchema,
+  type CampaignResponse,
+  createCampaignResponseSchema,
+  type CreateCampaignResponse,
+  listCampaignsResponseSchema,
+  type ListCampaignsResponse,
+  contentErrorResponseSchema,
+  type ContentErrorResponse,
+  generateContentResponseSchema,
+  type GenerateContentResponse,
 } from './content';
 
 // Analytics schemas - export with prefix to avoid conflicts
@@ -141,6 +179,17 @@ export {
   validateGenerateReport,
   periodToDateRange,
   getDefaultMetrics,
+  // Response schemas for contract testing
+  metricDataPointSchema,
+  type MetricDataPoint,
+  dashboardOverviewResponseSchema,
+  type DashboardOverviewResponse,
+  engagementAnalyticsResponseSchema,
+  type EngagementAnalyticsResponse,
+  analyticsExportResponseSchema,
+  type AnalyticsExportResponse,
+  analyticsErrorResponseSchema,
+  type AnalyticsErrorResponse,
 } from './analytics';
 
 // Re-export Zod for convenience

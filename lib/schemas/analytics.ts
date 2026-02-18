@@ -430,3 +430,103 @@ export function getDefaultMetrics(platform: Platform): MetricType[] {
 
   return platformSpecific[platform] || baseMetrics;
 }
+
+// =============================================================================
+// API Response Schemas (for contract testing)
+// =============================================================================
+
+/**
+ * Metric data point shape
+ */
+export const metricDataPointSchema = z.object({
+  date: z.string(),
+  value: z.number(),
+  change: z.number().optional(),
+  changePercent: z.number().optional(),
+});
+
+export type MetricDataPoint = z.infer<typeof metricDataPointSchema>;
+
+/**
+ * Dashboard overview response
+ */
+export const dashboardOverviewResponseSchema = z.object({
+  success: z.literal(true),
+  data: z.object({
+    summary: z.object({
+      totalImpressions: z.number(),
+      totalReach: z.number(),
+      totalEngagement: z.number(),
+      engagementRate: z.number(),
+      followerGrowth: z.number(),
+    }),
+    trends: z.array(metricDataPointSchema).optional(),
+    breakdown: z.record(z.number()).optional(),
+    topPosts: z.array(z.object({
+      id: z.string(),
+      content: z.string().optional(),
+      engagement: z.number(),
+      platform: platformSchema.optional(),
+    })).optional(),
+  }),
+  meta: z.object({
+    dateRange: dateRangeSchema.optional(),
+    platforms: z.array(platformSchema).optional(),
+    generatedAt: z.string().optional(),
+  }).optional(),
+});
+
+export type DashboardOverviewResponse = z.infer<typeof dashboardOverviewResponseSchema>;
+
+/**
+ * Engagement analytics response
+ */
+export const engagementAnalyticsResponseSchema = z.object({
+  success: z.literal(true),
+  data: z.object({
+    total: z.object({
+      likes: z.number(),
+      comments: z.number(),
+      shares: z.number(),
+      saves: z.number().optional(),
+    }),
+    rate: z.number(),
+    trend: z.array(metricDataPointSchema).optional(),
+    byPlatform: z.record(z.number()).optional(),
+    topPosts: z.array(z.object({
+      id: z.string(),
+      engagement: z.number(),
+      engagementRate: z.number().optional(),
+    })).optional(),
+  }),
+});
+
+export type EngagementAnalyticsResponse = z.infer<typeof engagementAnalyticsResponseSchema>;
+
+/**
+ * Analytics export response
+ */
+export const analyticsExportResponseSchema = z.object({
+  success: z.literal(true),
+  data: z.object({
+    url: z.string().url().optional(),
+    filename: z.string(),
+    format: exportFormatSchema,
+    size: z.number().optional(),
+    expiresAt: z.string().datetime().optional(),
+  }),
+});
+
+export type AnalyticsExportResponse = z.infer<typeof analyticsExportResponseSchema>;
+
+/**
+ * Analytics error response
+ */
+export const analyticsErrorResponseSchema = z.object({
+  success: z.literal(false).optional(),
+  error: z.string(),
+  message: z.string().optional(),
+  code: z.string().optional(),
+});
+
+export type AnalyticsErrorResponse = z.infer<typeof analyticsErrorResponseSchema>;

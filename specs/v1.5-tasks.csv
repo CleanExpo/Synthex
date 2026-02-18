@@ -1,0 +1,324 @@
+Title,Description,Priority,Status,Labels
+[52-01] Setup Playwright auth test structure,"Create test fixtures and helpers for auth E2E tests.
+
+**Deliverable:**
+- tests/e2e/auth/fixtures.ts
+- Login page object model
+- Test data factories
+
+**Time:** ~20 min",Medium,Backlog,testing;e2e;p52
+[52-02] E2E test: Email signup flow,"Playwright test for email/password signup.
+
+**Scenario:**
+1. Navigate to /signup
+2. Fill email and password
+3. Submit form
+4. Verify redirect to onboarding
+
+**Time:** ~15 min",Medium,Backlog,testing;e2e;p52
+[52-03] E2E test: Email login flow,"Playwright test for email/password login.
+
+**Scenario:**
+1. Navigate to /login
+2. Enter credentials
+3. Verify dashboard redirect
+4. Verify session exists
+
+**Time:** ~15 min",Medium,Backlog,testing;e2e;p52
+[52-04] E2E test: OAuth Google flow,"Playwright test for Google OAuth login.
+
+**Scenario:**
+1. Click Google sign-in button
+2. Mock OAuth callback
+3. Verify account creation
+4. Verify dashboard redirect
+
+**Time:** ~20 min",Medium,Backlog,testing;e2e;p52
+[52-05] E2E test: Password reset flow,"Playwright test for forgot password.
+
+**Scenario:**
+1. Navigate to /forgot-password
+2. Enter email
+3. Verify email sent message
+4. Mock reset link click
+5. Verify password updated
+
+**Time:** ~20 min",Medium,Backlog,testing;e2e;p52
+[52-06] E2E test: Onboarding wizard,"Playwright test for onboarding steps.
+
+**Scenario:**
+1. Complete profile step
+2. Connect platform step
+3. Select goals step
+4. Verify dashboard redirect
+
+**Time:** ~25 min",Medium,Backlog,testing;e2e;p52
+[52-07] E2E test: Session management,"Playwright test for logout and remember me.
+
+**Scenario:**
+1. Login with remember me
+2. Verify session persists
+3. Logout
+4. Verify redirect to login
+
+**Time:** ~15 min",Medium,Backlog,testing;e2e;p52
+[53-01] Setup Playwright dashboard fixtures,"Create fixtures for dashboard E2E tests.
+
+**Deliverable:**
+- tests/e2e/dashboard/fixtures.ts
+- Authenticated user context
+- Dashboard page objects
+
+**Time:** ~20 min",Medium,Backlog,testing;e2e;p53
+[53-02] E2E test: Dashboard sidebar nav,"Test sidebar navigation works.
+
+**Scenario:**
+1. Click each sidebar item
+2. Verify correct page loads
+3. Verify active state
+
+**Time:** ~20 min",Medium,Backlog,testing;e2e;p53
+[53-03] E2E test: Campaign create flow,"Test creating a new campaign.
+
+**Scenario:**
+1. Navigate to campaigns
+2. Click create button
+3. Fill form fields
+4. Submit and verify created
+
+**Time:** ~20 min",Medium,Backlog,testing;e2e;p53
+[53-04] E2E test: Post scheduling,"Test scheduling a post.
+
+**Scenario:**
+1. Navigate to create post
+2. Enter content
+3. Select date/time
+4. Verify on calendar
+
+**Time:** ~20 min",Medium,Backlog,testing;e2e;p53
+[53-05] E2E test: Analytics page,"Test analytics page interactions.
+
+**Scenario:**
+1. Load analytics page
+2. Change date range
+3. Verify charts update
+4. Test metric filters
+
+**Time:** ~20 min",Medium,Backlog,testing;e2e;p53
+[53-06] E2E test: Settings page,"Test settings page functionality.
+
+**Scenario:**
+1. Update profile info
+2. Change notification prefs
+3. Verify saved
+
+**Time:** ~15 min",Medium,Backlog,testing;e2e;p53
+[54-01] Define Zod schemas for auth routes,"Create response schemas for /api/auth/*.
+
+**Routes:**
+- /api/auth/session
+- /api/auth/signup
+- /api/auth/login
+
+**Time:** ~20 min",Medium,Backlog,testing;api;p54
+[54-02] Define Zod schemas for campaigns routes,"Create response schemas for /api/campaigns/*.
+
+**Routes:**
+- GET /api/campaigns
+- POST /api/campaigns
+- GET /api/campaigns/[id]
+
+**Time:** ~20 min",Medium,Backlog,testing;api;p54
+[54-03] Define Zod schemas for posts routes,"Create response schemas for /api/posts/*.
+
+**Routes:**
+- GET /api/posts
+- POST /api/posts
+- PATCH /api/posts/[id]
+
+**Time:** ~20 min",Medium,Backlog,testing;api;p54
+[54-04] Define Zod schemas for analytics routes,"Create response schemas for /api/analytics/*.
+
+**Routes:**
+- GET /api/analytics/overview
+- GET /api/analytics/metrics
+- GET /api/analytics/posts
+
+**Time:** ~20 min",Medium,Backlog,testing;api;p54
+[54-05] Contract tests for auth endpoints,"Write contract tests validating response shapes.
+
+**Test:**
+1. Call endpoint
+2. Parse with Zod schema
+3. Assert success
+
+**Time:** ~25 min",Medium,Backlog,testing;api;p54
+[54-06] Contract tests for campaigns endpoints,"Write contract tests for campaign APIs.
+
+**Time:** ~25 min",Medium,Backlog,testing;api;p54
+[54-07] Contract tests for posts endpoints,"Write contract tests for posts APIs.
+
+**Time:** ~25 min",Medium,Backlog,testing;api;p54
+[55-01] Audit loading states: Auth pages,"Check auth pages have loading states.
+
+**Pages:**
+- /login
+- /signup
+- /forgot-password
+
+**Checklist:**
+- [ ] Skeleton shown during load
+- [ ] Button disabled while submitting
+
+**Time:** ~15 min",Low,Backlog,ui;audit;p55
+[55-02] Audit loading states: Dashboard pages 1-15,"Check dashboard pages 1-15 have loading states.
+
+**Checklist:**
+- [ ] Loading skeleton present
+- [ ] No content flash
+- [ ] Suspense boundaries
+
+**Time:** ~30 min",Low,Backlog,ui;audit;p55
+[55-03] Audit loading states: Dashboard pages 16-30+,"Check remaining dashboard pages.
+
+**Checklist:**
+- [ ] Loading skeleton present
+- [ ] No content flash
+- [ ] Suspense boundaries
+
+**Time:** ~30 min",Low,Backlog,ui;audit;p55
+[55-04] Audit empty states consistency,"Verify empty states follow design pattern.
+
+**Checklist:**
+- [ ] Icon present
+- [ ] Clear message
+- [ ] CTA button
+- [ ] Consistent styling
+
+**Time:** ~25 min",Low,Backlog,ui;audit;p55
+[55-05] Audit error boundaries coverage,"Verify error.tsx files exist.
+
+**Checklist:**
+- [ ] Each route group has error.tsx
+- [ ] ErrorFallback renders correctly
+- [ ] Reset button works
+
+**Time:** ~20 min",Low,Backlog,ui;audit;p55
+[56-01] Mobile responsive: Auth pages,"Test auth pages on mobile viewport.
+
+**Test at:** 375px, 414px, 768px
+
+**Checklist:**
+- [ ] No horizontal scroll
+- [ ] Touch targets 44px min
+- [ ] Readable text
+
+**Time:** ~20 min",Low,Backlog,ui;responsive;p56
+[56-02] Mobile responsive: Dashboard layout,"Test dashboard layout on mobile.
+
+**Checklist:**
+- [ ] Sidebar collapses
+- [ ] Content readable
+- [ ] Charts resize
+
+**Time:** ~25 min",Low,Backlog,ui;responsive;p56
+[56-03] Mobile responsive: Forms,"Test form inputs on mobile.
+
+**Checklist:**
+- [ ] Input fields full width
+- [ ] Labels visible
+- [ ] Date pickers work
+
+**Time:** ~20 min",Low,Backlog,ui;responsive;p56
+[56-04] WCAG audit: Keyboard navigation,"Test keyboard accessibility.
+
+**Checklist:**
+- [ ] Tab order logical
+- [ ] Focus visible
+- [ ] Escape closes modals
+- [ ] Arrow keys work in menus
+
+**Time:** ~30 min",Low,Backlog,a11y;p56
+[56-05] WCAG audit: Color and ARIA,"Test color contrast and ARIA.
+
+**Checklist:**
+- [ ] 4.5:1 contrast ratio
+- [ ] ARIA labels present
+- [ ] Role attributes correct
+
+**Time:** ~30 min",Low,Backlog,a11y;p56
+[57-01] Bundle analysis: Generate report,"Run webpack-bundle-analyzer.
+
+**Output:**
+- Bundle size report
+- Top 10 largest deps
+- Duplicate modules
+
+**Time:** ~15 min",Medium,Backlog,perf;bundle;p57
+[57-02] Bundle analysis: Fix large deps,"Address top bundle contributors.
+
+**Common fixes:**
+- Tree shake lodash
+- Dynamic import heavy components
+- Remove unused deps
+
+**Time:** ~30 min",Medium,Backlog,perf;bundle;p57
+[57-03] Code split: Route-based splitting,"Verify routes are code split.
+
+**Check:**
+- [ ] Dynamic imports for heavy pages
+- [ ] Shared chunks reasonable
+- [ ] No oversized chunks
+
+**Time:** ~25 min",Medium,Backlog,perf;bundle;p57
+[57-04] Dead code elimination,"Remove unused exports.
+
+**Tools:**
+- ts-prune
+- knip
+
+**Time:** ~30 min",Medium,Backlog,perf;bundle;p57
+[58-01] Redis cache: Verify high-traffic routes,"Check caching on hot paths.
+
+**Routes to verify:**
+- /api/analytics/overview
+- /api/campaigns
+- /api/posts
+
+**Time:** ~20 min",Medium,Backlog,perf;cache;p58
+[58-02] Core Web Vitals: Measure LCP,"Test LCP on key pages.
+
+**Target:** < 2.5s
+
+**Pages:**
+- Landing page
+- Dashboard
+- Analytics
+
+**Time:** ~20 min",Medium,Backlog,perf;cwv;p58
+[58-03] Core Web Vitals: Measure INP,"Test INP on interactive pages.
+
+**Target:** < 200ms
+
+**Test:**
+- Button clicks
+- Form submissions
+- Tab switches
+
+**Time:** ~20 min",Medium,Backlog,perf;cwv;p58
+[58-04] Prisma query optimization,"Review slow queries.
+
+**Check:**
+- [ ] N+1 queries
+- [ ] Missing indexes
+- [ ] Unnecessary includes
+
+**Time:** ~30 min",Medium,Backlog,perf;db;p58
+[58-05] Final CWV compliance check,"Run Lighthouse on all key pages.
+
+**Target scores:**
+- Performance: 90+
+- Accessibility: 95+
+- Best Practices: 95+
+
+**Time:** ~25 min",Medium,Backlog,perf;cwv;p58
