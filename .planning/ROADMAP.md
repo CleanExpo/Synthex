@@ -15,6 +15,7 @@ None (internal platform work)
 - ✅ **v1.2 Features** — Phases 19-29 — SHIPPED 2026-02-18
 - ✅ **v1.3 Features** — Phases 30-35 — SHIPPED 2026-02-18
 - ✅ [v1.4 Creator Monetization & AI Studio](milestones/v1.4-ROADMAP.md) (Phases 36-51) — SHIPPED 2026-02-18
+- 🚧 **v1.5 Deployment Readiness** — Phases 52-58 (in progress)
 
 ## Phases
 
@@ -69,6 +70,13 @@ None (internal platform work)
 - [x] **Phase 49: ROI Calculator** (2/2) - Content investment return measurement
 - [x] **Phase 50: Sponsor CRM** (2/2) - Brand deal management
 - [x] **Phase 51: Affiliate Link Manager** (2/2) - Link insertion and tracking
+- [ ] **Phase 52: E2E Testing - Auth & Onboarding** - Playwright tests for auth flows
+- [ ] **Phase 53: E2E Testing - Dashboard & Campaigns** - Playwright tests for main app flows
+- [ ] **Phase 54: API Contract Verification** - Schema validation for all API routes
+- [ ] **Phase 55: UI Audit - States** - Loading states, empty states, error boundaries
+- [ ] **Phase 56: UI Audit - Responsive** - Responsive design and accessibility
+- [ ] **Phase 57: Performance - Bundle** - Bundle optimization and query analysis
+- [ ] **Phase 58: Performance - Vitals** - Caching verification and Core Web Vitals
 
 ## Phase Details
 
@@ -321,184 +329,95 @@ Plans:
 - [x] 35-01: ScheduledAuditTarget model + CRUD API + Cron job + regression detection + email alerts
 - [x] 35-02: useScheduledAudits + useAuditHistory hooks + 3-tab dashboard page + navigation
 
-### 🚧 v1.4 Creator Monetization & AI Studio (In Progress)
+<details>
+<summary>✅ v1.4 Creator Monetization & AI Studio (Phases 36-51) — SHIPPED 2026-02-18</summary>
 
-**Milestone Goal:** Transform Synthex from a marketing tool into a complete creator business platform with AI-powered content creation, multi-platform publishing, deep analytics, and monetization tracking.
+See [milestones/v1.4-ROADMAP.md](milestones/v1.4-ROADMAP.md) for full details.
 
-#### Phase 36: AI Chat Assistant
+**Key accomplishments:**
+- AI Chat Assistant with streaming SSE and conversation history
+- AI Image Generation (OpenAI/Stability providers)
+- Revenue tracking across sponsorships, affiliates, ads, tips, merchandise
+- Sponsor CRM with deals pipeline and deliverable tracking
+- Affiliate link management with auto-insertion and click tracking
+- Social listening with keyword monitoring and mention alerts
+- Link in Bio pages with customizable themes and analytics
 
-**Goal**: Build conversational AI for content ideas, strategy, and help
-**Depends on**: v1.3 complete
-**Research**: Skipped (AI infrastructure exists in lib/ai/)
-**Plans**: 2/2 | Complete | 2026-02-18
+</details>
 
-Plans:
-- [x] 36-01: Chat Service + API (service, CRUD routes, streaming SSE)
-- [x] 36-02: Chat UI + Dashboard (hooks, components, page, navigation)
+### 🚧 v1.5 Deployment Readiness (In Progress)
 
-#### Phase 37: AI Image Generation
+**Milestone Goal:** Ensure everything built in v1.0-v1.4 is tested, polished, and production-ready. No new features — focus on testing, verification, and optimization.
 
-**Goal**: Generate visuals for posts using AI models (Imagen, DALL-E)
-**Depends on**: Phase 36
-**Research**: Likely (external AI APIs, image generation best practices)
-**Research topics**: Imagen/DALL-E APIs, prompt engineering for images, rate limits
-**Plans**: 2/2 | Complete | 2026-02-18
+#### Phase 52: E2E Testing - Auth & Onboarding
 
-Plans:
-- [x] 37-01: Image Generation UI (hook, form, preview, gallery components)
-- [x] 37-02: Dashboard page + integration
-
-#### Phase 38: Content Repurposing
-
-**Goal**: Auto-transform long content into multiple formats (blog → threads, video scripts)
-**Depends on**: Phase 37
-**Research**: Unlikely (internal AI patterns exist)
-**Plans**: 1/1 | Complete | 2026-02-18
-
-Plans:
-- [x] 38-01: ContentRepurposer service + API + Dashboard UI + Navigation
-
-#### Phase 39: Brand Voice Engine
-
-**Goal**: Train AI on brand's writing style for consistent output
-**Depends on**: Phase 38
-**Research**: Skipped (persona infrastructure already built)
-**Plans**: 1/1 | Complete | 2026-02-18
-
-Plans:
-- [x] 39-01: usePersonas hook + PersonasPage wiring + Content page persona selector
-
-#### Phase 40: Cross-posting Automation
-
-**Goal**: Post once, publish everywhere with platform-specific optimization
-**Depends on**: Phase 39
-**Research**: Unlikely (platform services exist from v1.0)
+**Goal**: Playwright tests for authentication and onboarding user flows
+**Depends on**: v1.4 complete
+**Research**: Unlikely (Playwright patterns exist from v1.0)
 **Plans**: TBD
 
 Plans:
-- [ ] 40-01: TBD
+- [ ] 52-01: TBD (run /gsd:plan-phase 52 to break down)
 
-#### Phase 41: Content Calendar v2
+#### Phase 53: E2E Testing - Dashboard & Campaigns
 
-**Goal**: Enhanced drag-drop calendar with team views and approval status
-**Depends on**: Phase 40
-**Research**: Unlikely (UI patterns established)
-**Plans**: 2/2 | In Progress
-
-Plans:
-- [ ] 41-01: Hook + Dashboard Page + Navigation (useCalendar, /dashboard/calendar, sidebar/command palette)
-- [ ] 41-02: MonthView + Approval Integration (MonthView component, approval badges, view switcher)
-
-#### Phase 42: Social Listening
-
-**Goal**: Monitor mentions, hashtags, and competitor activity across platforms
-**Depends on**: Phase 41
-**Research**: Likely (platform monitoring APIs)
-**Research topics**: Twitter/X mentions API, Instagram hashtag tracking, competitor analysis patterns
-**Plans**: 2/2 | Complete | 2026-02-18
+**Goal**: Playwright tests for dashboard navigation, campaign creation, analytics
+**Depends on**: Phase 52
+**Research**: Unlikely (internal patterns)
+**Plans**: TBD
 
 Plans:
-- [x] 42-01: Schema + API + Hook + Dashboard page
-- [x] 42-02: MentionFetcher + Sentiment + Cron job
+- [ ] 53-01: TBD
 
-#### Phase 43: Link in Bio Pages
+#### Phase 54: API Contract Verification
 
-**Goal**: Customizable landing pages for social profiles
-**Depends on**: Phase 42
-**Research**: Unlikely (internal page building patterns)
-**Plans**: 2/2 | Complete | 2026-02-18
-
-Plans:
-- [x] 43-01: Schema + API + Public page + Analytics tracking
-- [x] 43-02: Dashboard editor + Themes + Preview + Navigation
-
-#### Phase 44: Unified Dashboard
-
-**Goal**: All platforms in one view with key metrics
-**Depends on**: Phase 43
-**Research**: Unlikely (analytics infrastructure exists from v1.2)
-**Plans**: 1
+**Goal**: Schema validation for all 65+ API route categories, Zod response shapes
+**Depends on**: Phase 53
+**Research**: Unlikely (Zod patterns established)
+**Plans**: TBD
 
 Plans:
-- [x] 44-01: Hook + API + Platform cards + Comparison chart + Dashboard page + Navigation
+- [ ] 54-01: TBD
 
-#### Phase 45: Audience Insights
+#### Phase 55: UI Audit - States
 
-**Goal**: Deep dive into follower demographics and behavior
-**Depends on**: Phase 44
-**Research**: Skipped (mock data for initial implementation, real APIs later)
-**Plans**: 2/2 | Complete | 2026-02-18
-
-Plans:
-- [x] 45-01: Hook + API + Platform service audience methods
-- [x] 45-02: Demographics charts + Best times heatmap + Dashboard page
-
-#### Phase 46: Content Performance AI
-
-**Goal**: AI-powered analysis of what content works and why
-**Depends on**: Phase 45
-**Research**: Skipped (internal AI patterns exist)
-**Plans**: 2/2 | Complete | 2026-02-18
+**Goal**: Audit all 30+ dashboard pages for loading states, empty states, error boundaries
+**Depends on**: Phase 54
+**Research**: Unlikely (internal patterns)
+**Plans**: TBD
 
 Plans:
-- [x] 46-01: Performance analyzer service + API + Hook
-- [x] 46-02: Performance charts + AI insights + Dashboard page
+- [ ] 55-01: TBD
 
-#### Phase 47: Benchmark Reports
+#### Phase 56: UI Audit - Responsive
 
-**Goal**: Compare performance to industry standards
-**Depends on**: Phase 46
-**Research**: Skipped (using established industry benchmark data)
-**Plans**: 2
-
-Plans:
-- [ ] 47-01: Benchmark service + API + Hook
-- [ ] 47-02: Gauges + Platform cards + Dashboard page
-
-#### Phase 48: Revenue Tracker
-
-**Goal**: Track income from sponsorships, affiliates, and ads
-**Depends on**: Phase 47
-**Research**: Unlikely (internal tracking patterns)
-**Plans**: 2/2 | Complete | 2026-02-18
+**Goal**: Responsive design audit and accessibility (WCAG 2.1 AA) compliance
+**Depends on**: Phase 55
+**Research**: Unlikely (established guidelines)
+**Plans**: TBD
 
 Plans:
-- [x] 48-01: RevenueEntry model + API routes + useRevenue hook
-- [x] 48-02: Revenue dashboard UI + charts + navigation
+- [ ] 56-01: TBD
 
-#### Phase 49: ROI Calculator
+#### Phase 57: Performance - Bundle
 
-**Goal**: Measure return on content investment and time
-**Depends on**: Phase 48
-**Research**: Unlikely (internal calculation patterns)
-**Plans**: 2/2 | Complete | 2026-02-18
-
-Plans:
-- [x] 49-01: ContentInvestment model + ROI service + API + Hook
-- [x] 49-02: ROI dashboard UI + charts + navigation
-
-#### Phase 50: Sponsor CRM
-
-**Goal**: Manage brand deals, contracts, and deliverables
-**Depends on**: Phase 49
-**Research**: Unlikely (CRM patterns established)
-**Plans**: 2/2
+**Goal**: Bundle size analysis, Prisma query optimization, dead code elimination
+**Depends on**: Phase 56
+**Research**: Unlikely (internal patterns)
+**Plans**: TBD
 
 Plans:
-- [x] 50-01: Sponsor, Deal, Deliverable models + SponsorService + API + Hook
-- [x] 50-02: CRM dashboard UI + pipeline + navigation
+- [ ] 57-01: TBD
 
-#### Phase 51: Affiliate Link Manager
+#### Phase 58: Performance - Vitals
 
-**Goal**: Auto-insert and track affiliate links
-**Depends on**: Phase 50
-**Research**: Likely (affiliate network APIs)
-**Research topics**: Amazon Associates API, ShareASale, link cloaking patterns
-**Plans**: 2/2 | Complete | 2026-02-18
+**Goal**: Redis caching verification, Core Web Vitals compliance (LCP < 2.5s, INP < 200ms)
+**Depends on**: Phase 57
+**Research**: Unlikely (PageSpeed integration exists)
+**Plans**: TBD
 
 Plans:
-- [x] 51-01: AffiliateNetwork + AffiliateLink models + service + API + hook
-- [x] 51-02: Affiliate dashboard UI + analytics + navigation
+- [ ] 58-01: TBD
 
 ## Progress
 
@@ -555,3 +474,10 @@ Plans:
 | 49. ROI Calculator | v1.4 | 2/2 | Complete | 2026-02-18 |
 | 50. Sponsor CRM | v1.4 | 2/2 | Complete | 2026-02-18 |
 | 51. Affiliate Link Manager | v1.4 | 2/2 | Complete | 2026-02-18 |
+| 52. E2E Testing - Auth | v1.5 | 0/? | Not started | - |
+| 53. E2E Testing - Dashboard | v1.5 | 0/? | Not started | - |
+| 54. API Contract Verification | v1.5 | 0/? | Not started | - |
+| 55. UI Audit - States | v1.5 | 0/? | Not started | - |
+| 56. UI Audit - Responsive | v1.5 | 0/? | Not started | - |
+| 57. Performance - Bundle | v1.5 | 0/? | Not started | - |
+| 58. Performance - Vitals | v1.5 | 0/? | Not started | - |
