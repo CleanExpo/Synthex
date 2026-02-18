@@ -301,6 +301,8 @@ export { Heading3 } from './custom/Heading3';
 
 export { Columns } from './custom/Columns';
 export { GripVertical } from './custom/GripVertical';
+export { ToggleLeft } from './custom/ToggleLeft';
+export { ToggleRight } from './custom/ToggleRight';
 
 // ============================================
 // CLOCK ICON (Alias)
