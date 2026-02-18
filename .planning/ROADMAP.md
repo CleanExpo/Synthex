@@ -12,7 +12,7 @@ None (internal platform work)
 
 - ✅ [v1.0 Production Hardening](milestones/v1.0-ROADMAP.md) (Phases 1-10) — SHIPPED 2026-02-17
 - ✅ [v1.1 Platform Enhancement](milestones/v1.1-ROADMAP.md) (Phases 11-18) — SHIPPED 2026-02-17
-- 🚧 **v1.2 Features** — Phases 19-29 (in progress)
+- ✅ **v1.2 Features** — Phases 19-29 — SHIPPED 2026-02-18
 
 ## Phases
 
@@ -44,7 +44,7 @@ None (internal platform work)
 - [x] **Phase 26: Webhook System** - Outbound webhooks for external integrations
 - [x] **Phase 27: Approval Workflows** - Content review chains with notifications
 - [x] **Phase 28: Team Collaboration** - Real-time comments, assignments, activity feeds
-- [ ] **Phase 29: Role Permissions** - Granular access control beyond org membership
+- [x] **Phase 29: Role Permissions** - Granular access control beyond org membership
 
 ## Phase Details
 
@@ -197,11 +197,11 @@ Plans:
 **Goal**: Granular access control beyond organization membership
 **Depends on**: Phase 28
 **Research**: Skipped (RoleManager + PermissionEngine already exist)
-**Plans**: 1/2 | In progress
+**Plans**: 2/2 | Complete | 2026-02-18
 
 Plans:
 - [x] 29-01: Roles API + useRoles Hook (CRUD routes, grant/revoke, hook)
-- [ ] 29-02: Roles Dashboard + Navigation (role cards, permission editor, user assignment)
+- [x] 29-02: Roles Dashboard + Navigation (role cards, permission editor, user assignment)
 
 ## Progress
 
@@ -235,4 +235,4 @@ Plans:
 | 26. Webhook System | v1.2 | 2/2 | Complete | 2026-02-18 |
 | 27. Approval Workflows | v1.2 | 2/2 | Complete | 2026-02-18 |
 | 28. Team Collaboration | v1.2 | 2/2 | Complete | 2026-02-18 |
-| 29. Role Permissions | v1.2 | 1/2 | In progress | - |
+| 29. Role Permissions | v1.2 | 2/2 | Complete | 2026-02-18 |
