@@ -7,7 +7,7 @@
  */
 
 import { useState } from 'react';
-import { Edit2, Trash2, ChevronDown, DollarSign } from '@/components/icons';
+import { Edit, Trash2, ChevronDown, DollarSign } from '@/components/icons';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import type { RevenueEntry, RevenueSource } from '@/lib/revenue/revenue-service';
@@ -167,7 +167,7 @@ export function RevenueEntryList({
                     className="h-8 w-8 text-gray-400 hover:text-white"
                     onClick={() => onEdit(entry)}
                   >
-                    <Edit2 className="w-4 h-4" />
+                    <Edit className="w-4 h-4" />
                   </Button>
                   <Button
                     variant="ghost"

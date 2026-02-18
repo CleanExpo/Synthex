@@ -47,6 +47,7 @@ import {
   Send,
   Bell,
   Grid,
+  DollarSign,
 } from '@/components/icons';
 import { Button } from '@/components/ui/button';
 import { AIPMFloatingButton } from '@/components/ai-pm';
@@ -89,6 +90,7 @@ const sidebarItems = [
   { icon: File, label: 'Reports', href: '/dashboard/reports' },
   { icon: Layout, label: 'Report Builder', href: '/dashboard/reports/builder' },
   { icon: Target, label: 'Benchmarks', href: '/dashboard/analytics/benchmarks' },
+  { icon: DollarSign, label: 'Revenue', href: '/dashboard/revenue' },
   { icon: Beaker, label: 'Experiments', href: '/dashboard/experiments' },
   { icon: Brain, label: 'Psychology', href: '/dashboard/psychology' },
   { icon: Target, label: 'Competitors', href: '/dashboard/competitors' },

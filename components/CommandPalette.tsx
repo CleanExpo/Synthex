@@ -37,6 +37,7 @@ import {
   Send,
   Bell,
   Grid,
+  DollarSign,
 } from '@/components/icons';
 import { notify } from '@/lib/notifications';
 
@@ -190,6 +191,15 @@ export function CommandPalette() {
       action: () => router.push('/dashboard/analytics/benchmarks'),
       category: 'navigation',
       keywords: ['benchmark', 'compare', 'industry', 'standards', 'performance', 'percentile']
+    },
+    {
+      id: 'revenue-tracker',
+      title: 'Revenue Tracker',
+      description: 'Track income from sponsorships, affiliates, and more',
+      icon: DollarSign,
+      action: () => router.push('/dashboard/revenue'),
+      category: 'navigation',
+      keywords: ['revenue', 'income', 'money', 'earnings', 'sponsorship', 'affiliate', 'monetization']
     },
     {
       id: 'experiments',
