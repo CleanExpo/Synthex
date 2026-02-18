@@ -12,6 +12,7 @@ import { useSearchParams } from 'next/navigation';
 import { useCalendar, SchedulePostOptions } from '@/hooks/useCalendar';
 import { useUser } from '@/hooks/use-user';
 import { WeekView } from '@/components/calendar/WeekView';
+import { MonthView } from '@/components/calendar/MonthView';
 import { PostDetailModal } from '@/components/calendar/PostDetailModal';
 import { PageHeader } from '@/components/dashboard/page-header';
 import { DashboardEmptyState } from '@/components/dashboard/empty-state';
@@ -41,6 +42,8 @@ import {
   Clock,
   CheckCircle,
   Loader2,
+  ListTodo,
+  CalendarDays,
 } from '@/components/icons';
 import type { ScheduledPost } from '@/components/calendar/CalendarTypes';
 
@@ -68,6 +71,9 @@ export default function CalendarPage() {
   const searchParams = useSearchParams();
   const { user } = useUser();
   const organizationId = user?.organizationId || '';
+
+  // View mode state
+  const [viewMode, setViewMode] = useState<'week' | 'month'>('week');
 
   // Team filter state
   const [selectedUserId, setSelectedUserId] = useState<string>('all');
@@ -169,6 +175,21 @@ export default function CalendarPage() {
     [goToPreviousWeek, goToNextWeek]
   );
 
+  // Handle month navigation (adjusts by ~4 weeks)
+  const handleMonthChange = useCallback(
+    (direction: 'prev' | 'next') => {
+      // Navigate 4 weeks to approximate month change
+      for (let i = 0; i < 4; i++) {
+        if (direction === 'prev') {
+          goToPreviousWeek();
+        } else {
+          goToNextWeek();
+        }
+      }
+    },
+    [goToPreviousWeek, goToNextWeek]
+  );
+
   // Handle platform toggle in form
   const handlePlatformToggle = (platformId: string) => {
     setScheduleForm((prev) => ({
@@ -249,6 +270,32 @@ export default function CalendarPage() {
         description="Schedule and manage your content across all platforms"
         actions={
           <div className="flex items-center gap-3">
+            {/* View Switcher */}
+            <div className="flex rounded-lg bg-gray-900/50 border border-white/10 p-0.5">
+              <button
+                onClick={() => setViewMode('week')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                  viewMode === 'week'
+                    ? 'bg-cyan-500/20 text-cyan-400'
+                    : 'text-gray-400 hover:text-white hover:bg-white/5'
+                }`}
+              >
+                <CalendarDays className="h-4 w-4" />
+                Week
+              </button>
+              <button
+                onClick={() => setViewMode('month')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                  viewMode === 'month'
+                    ? 'bg-cyan-500/20 text-cyan-400'
+                    : 'text-gray-400 hover:text-white hover:bg-white/5'
+                }`}
+              >
+                <Calendar className="h-4 w-4" />
+                Month
+              </button>
+            </div>
+
             {/* Team Filter */}
             <Select value={selectedUserId} onValueChange={setSelectedUserId}>
               <SelectTrigger className="w-48 bg-gray-900/50 border-white/10">
@@ -287,7 +334,7 @@ export default function CalendarPage() {
       />
 
       {/* Stats Bar */}
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-5 gap-4">
         <div className="bg-gray-900/50 border border-white/10 rounded-xl p-4">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-blue-500/10 rounded-lg">
@@ -326,6 +373,18 @@ export default function CalendarPage() {
 
         <div className="bg-gray-900/50 border border-white/10 rounded-xl p-4">
           <div className="flex items-center gap-3">
+            <div className="p-2 bg-yellow-500/10 rounded-lg">
+              <ListTodo className="h-5 w-5 text-yellow-400" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-white">{stats.pendingApprovals || 0}</p>
+              <p className="text-sm text-gray-400">Pending Approvals</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-gray-900/50 border border-white/10 rounded-xl p-4">
+          <div className="flex items-center gap-3">
             <div className="p-2 bg-orange-500/10 rounded-lg">
               <AlertTriangle className="h-5 w-5 text-orange-400" />
             </div>
@@ -354,14 +413,25 @@ export default function CalendarPage() {
         />
       ) : (
         <div className="flex-1 min-h-[600px]">
-          <WeekView
-            posts={posts}
-            currentDate={currentStartDate}
-            onPostClick={handlePostClick}
-            onPostReschedule={handlePostReschedule}
-            onPostCreate={handlePostCreate}
-            onWeekChange={handleWeekChange}
-          />
+          {viewMode === 'week' ? (
+            <WeekView
+              posts={posts}
+              currentDate={currentStartDate}
+              onPostClick={handlePostClick}
+              onPostReschedule={handlePostReschedule}
+              onPostCreate={handlePostCreate}
+              onWeekChange={handleWeekChange}
+            />
+          ) : (
+            <MonthView
+              posts={posts}
+              currentDate={currentStartDate}
+              onPostClick={handlePostClick}
+              onPostReschedule={handlePostReschedule}
+              onPostCreate={handlePostCreate}
+              onMonthChange={handleMonthChange}
+            />
+          )}
         </div>
       )}
 
