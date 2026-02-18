@@ -482,10 +482,11 @@ Plans:
 **Goal**: Manage brand deals, contracts, and deliverables
 **Depends on**: Phase 49
 **Research**: Unlikely (CRM patterns established)
-**Plans**: TBD
+**Plans**: 0/2
 
 Plans:
-- [ ] 50-01: TBD
+- [ ] 50-01: Sponsor, Deal, Deliverable models + SponsorService + API + Hook
+- [ ] 50-02: CRM dashboard UI + pipeline + navigation
 
 #### Phase 51: Affiliate Link Manager
 
