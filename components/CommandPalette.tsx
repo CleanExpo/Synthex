@@ -30,6 +30,7 @@ import {
   Link2,
   GitBranch as GitPullRequest,
   MessageSquare,
+  Shield,
 } from '@/components/icons';
 import { notify } from '@/lib/notifications';
 
@@ -201,6 +202,15 @@ export function CommandPalette() {
       action: () => router.push('/dashboard/collaboration'),
       category: 'navigation',
       keywords: ['collaboration', 'team', 'activity', 'comments', 'shares', 'feed', 'assign']
+    },
+    {
+      id: 'roles',
+      title: 'Role Management',
+      description: 'Manage roles and permissions',
+      icon: Shield,
+      action: () => router.push('/dashboard/roles'),
+      category: 'navigation',
+      keywords: ['roles', 'permissions', 'access', 'rbac', 'admin', 'editor', 'viewer', 'grant', 'revoke']
     },
 
     // Actions

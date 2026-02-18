@@ -91,6 +91,7 @@ const sidebarItems = [
   { icon: Link2, label: 'Webhooks', href: '/dashboard/webhooks' },
   { icon: GitPullRequest, label: 'Approvals', href: '/dashboard/approvals' },
   { icon: MessageSquare, label: 'Collaboration', href: '/dashboard/collaboration' },
+  { icon: Shield, label: 'Roles', href: '/dashboard/roles' },
   { icon: Settings, label: 'Settings', href: '/dashboard/settings' },
 ];
 
