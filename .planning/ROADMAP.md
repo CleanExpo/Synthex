@@ -426,12 +426,11 @@ Plans:
 
 **Goal**: Deep dive into follower demographics and behavior
 **Depends on**: Phase 44
-**Research**: Likely (platform audience APIs)
-**Research topics**: Instagram Insights API, Twitter Analytics, YouTube Analytics demographics
-**Plans**: 2
+**Research**: Skipped (mock data for initial implementation, real APIs later)
+**Plans**: 1/2 | In Progress | 2026-02-18
 
 Plans:
-- [ ] 45-01: Hook + API + Platform service audience methods
+- [x] 45-01: Hook + API + Platform service audience methods
 - [ ] 45-02: Demographics charts + Best times heatmap + Dashboard page
 
 #### Phase 46: Content Performance AI
