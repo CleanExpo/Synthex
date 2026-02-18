@@ -136,6 +136,24 @@ export function CommandPalette() {
       keywords: ['schedule', 'calendar', 'plan']
     },
     {
+      id: 'calendar',
+      title: 'Go to Calendar',
+      description: 'Visual content calendar with drag-drop scheduling',
+      icon: Calendar,
+      action: () => router.push('/dashboard/calendar'),
+      category: 'navigation',
+      keywords: ['calendar', 'week', 'month', 'schedule', 'drag', 'drop']
+    },
+    {
+      id: 'schedule-post',
+      title: 'Schedule Post',
+      description: 'Open quick scheduler to add a new post',
+      icon: Plus,
+      action: () => router.push('/dashboard/calendar?action=schedule'),
+      category: 'actions',
+      keywords: ['schedule', 'post', 'create', 'new', 'add', 'content']
+    },
+    {
       id: 'reports',
       title: 'Reports',
       description: 'Generate performance reports',

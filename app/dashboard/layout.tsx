@@ -77,6 +77,7 @@ const sidebarItems = [
   { icon: Send, label: 'Cross-Post', href: '/dashboard/content/cross-post' },
   { icon: Palette, label: 'Sandbox', href: '/dashboard/sandbox' },
   { icon: Calendar, label: 'Schedule', href: '/dashboard/schedule' },
+  { icon: Calendar, label: 'Calendar', href: '/dashboard/calendar' },
   { icon: ListTodo, label: 'Tasks', href: '/dashboard/tasks' },
   { icon: BarChart3, label: 'Analytics', href: '/dashboard/analytics' },
   { icon: Lightbulb, label: 'Predictions', href: '/dashboard/predictions' },
