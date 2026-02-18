@@ -164,10 +164,11 @@ Plans:
 **Goal**: Outbound webhooks allowing external systems to subscribe to events
 **Depends on**: Phase 25
 **Research**: Unlikely (webhook patterns are standard)
-**Plans**: TBD
+**Plans**: 0/2 | In Progress | 2026-02-18
 
 Plans:
-- [ ] 26-01: TBD
+- [x] 26-01: WebhookEndpoint Model + CRUD API + Hook (Prisma model, rewrite stub routes, useWebhooks hook)
+- [ ] 26-02: Webhooks Dashboard + Navigation (page, sidebar, command palette)
 
 #### Phase 27: Approval Workflows
 
@@ -229,7 +230,7 @@ Plans:
 | 23. Predictive Analytics | v1.2 | 2/2 | Complete | 2026-02-18 |
 | 24. Custom Reports Builder | v1.2 | 2/2 | Complete | 2026-02-18 |
 | 25. Third-party Integrations | v1.2 | 2/2 | Complete | 2026-02-18 |
-| 26. Webhook System | v1.2 | 0/? | Not started | - |
+| 26. Webhook System | v1.2 | 1/2 | In Progress | - |
 | 27. Approval Workflows | v1.2 | 0/? | Not started | - |
 | 28. Team Collaboration | v1.2 | 0/? | Not started | - |
 | 29. Role Permissions | v1.2 | 0/? | Not started | - |
