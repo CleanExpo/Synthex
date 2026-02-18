@@ -494,10 +494,11 @@ Plans:
 **Depends on**: Phase 50
 **Research**: Likely (affiliate network APIs)
 **Research topics**: Amazon Associates API, ShareASale, link cloaking patterns
-**Plans**: TBD
+**Plans**: 0/2
 
 Plans:
-- [ ] 51-01: TBD
+- [ ] 51-01: AffiliateNetwork + AffiliateLink models + service + API + hook
+- [ ] 51-02: Affiliate dashboard UI + analytics + navigation
 
 ## Progress
 
@@ -546,11 +547,11 @@ Plans:
 | 41. Content Calendar v2 | v1.4 | 2/2 | Complete | 2026-02-18 |
 | 42. Social Listening | v1.4 | 2/2 | Complete | 2026-02-18 |
 | 43. Link in Bio Pages | v1.4 | 2/2 | Complete | 2026-02-18 |
-| 44. Unified Dashboard | v1.4 | 0/1 | Planned | - |
-| 45. Audience Insights | v1.4 | 0/? | Not started | - |
-| 46. Content Performance AI | v1.4 | 0/? | Not started | - |
-| 47. Benchmark Reports | v1.4 | 0/? | Not started | - |
-| 48. Revenue Tracker | v1.4 | 0/? | Not started | - |
-| 49. ROI Calculator | v1.4 | 0/? | Not started | - |
-| 50. Sponsor CRM | v1.4 | 0/? | Not started | - |
-| 51. Affiliate Link Manager | v1.4 | 0/? | Not started | - |
+| 44. Unified Dashboard | v1.4 | 2/2 | Complete | 2026-02-18 |
+| 45. Audience Insights | v1.4 | 2/2 | Complete | 2026-02-18 |
+| 46. Content Performance AI | v1.4 | 2/2 | Complete | 2026-02-18 |
+| 47. Benchmark Reports | v1.4 | 2/2 | Complete | 2026-02-18 |
+| 48. Revenue Tracker | v1.4 | 2/2 | Complete | 2026-02-18 |
+| 49. ROI Calculator | v1.4 | 2/2 | Complete | 2026-02-18 |
+| 50. Sponsor CRM | v1.4 | 2/2 | Complete | 2026-02-18 |
+| 51. Affiliate Link Manager | v1.4 | 0/2 | Planned | - |
