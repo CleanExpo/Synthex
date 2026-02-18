@@ -290,10 +290,11 @@ Plans:
 **Goal**: Scheduled comprehensive site audits, alerting on regressions, historical tracking
 **Depends on**: Phase 34
 **Research**: Unlikely (cron patterns exist from v1.0)
-**Plans**: TBD
+**Plans**: 2/2 | Not started
 
 Plans:
-- [ ] 35-01: TBD
+- [ ] 35-01: ScheduledAuditTarget model + CRUD API + Cron job + regression detection + email alerts
+- [ ] 35-02: useScheduledAudits + useAuditHistory hooks + 3-tab dashboard page + navigation
 
 ## Progress
 
