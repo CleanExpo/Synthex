@@ -66,6 +66,7 @@ const sidebarItems = [
   { icon: Home, label: 'Dashboard', href: '/dashboard' },
   { icon: TrendingUp, label: 'Viral Patterns', href: '/dashboard/patterns' },
   { icon: Brain, label: 'Personas', href: '/dashboard/personas' },
+  { icon: MessageSquare, label: 'AI Chat', href: '/dashboard/ai-chat' },
   { icon: FileText, label: 'Content', href: '/dashboard/content' },
   { icon: Sparkles, label: 'Optimizer', href: '/dashboard/content/optimize' },
   { icon: Layers, label: 'Multi-format', href: '/dashboard/content/multi-format' },

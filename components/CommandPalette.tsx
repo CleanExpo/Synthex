@@ -151,6 +151,15 @@ export function CommandPalette() {
       keywords: ['personas', 'brand voice', 'ai']
     },
     {
+      id: 'ai-chat',
+      title: 'AI Chat Assistant',
+      description: 'Get AI-powered help with content strategy',
+      icon: MessageSquare,
+      action: () => router.push('/dashboard/ai-chat'),
+      category: 'navigation',
+      keywords: ['ai', 'chat', 'assistant', 'help', 'strategy', 'ideas', 'conversation']
+    },
+    {
       id: 'competitors',
       title: 'Competitors',
       description: 'Track competitor activity',
