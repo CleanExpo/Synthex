@@ -75,6 +75,7 @@ model User {
   // GEO / E-E-A-T / Paper Banana relations
   authorProfiles   AuthorProfile[]
   seoAudits        SEOAudit[]
+  scheduledAuditTargets ScheduledAuditTarget[]
   geoAnalyses      GEOAnalysis[]
   researchReports  GEOResearchReport[]
   visualAssets     VisualAsset[]
@@ -2119,6 +2120,28 @@ model SEOAudit {
   @@index([userId, createdAt])
   @@index([auditType])
   @@map("seo_audits")
+}
+
+model ScheduledAuditTarget {
+  id              String    @id @default(cuid())
+  userId          String
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  url             String
+  name            String    // Friendly name like "Main Site" or "Blog"
+  frequency       String    // "daily", "weekly", "monthly"
+  alertThreshold  Int       @default(10) // Score drop percentage to trigger alert
+  enabled         Boolean   @default(true)
+
+  lastRunAt       DateTime?
+  lastScore       Float?
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([userId])
+  @@index([enabled, frequency])
+  @@map("scheduled_audit_targets")
 }
 
 model GEOAnalysis {
