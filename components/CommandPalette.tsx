@@ -39,6 +39,7 @@ import {
   Grid,
   DollarSign,
   Calculator,
+  Briefcase,
 } from '@/components/icons';
 import { notify } from '@/lib/notifications';
 
@@ -210,6 +211,15 @@ export function CommandPalette() {
       action: () => router.push('/dashboard/roi'),
       category: 'navigation',
       keywords: ['roi', 'return', 'investment', 'calculator', 'profit', 'hours', 'time']
+    },
+    {
+      id: 'sponsor-crm',
+      title: 'Sponsor CRM',
+      description: 'Manage brand deals and deliverables',
+      icon: Briefcase,
+      action: () => router.push('/dashboard/sponsors'),
+      category: 'navigation',
+      keywords: ['sponsor', 'crm', 'brand', 'deal', 'partnership', 'deliverable', 'contract']
     },
     {
       id: 'experiments',

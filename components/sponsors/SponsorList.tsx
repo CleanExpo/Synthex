@@ -7,7 +7,7 @@
  */
 
 import { cn } from '@/lib/utils';
-import { Building2, Mail, Globe, Edit, Trash2, DollarSign, Briefcase } from '@/components/icons';
+import { Building, Mail, Globe, Edit, Trash2, DollarSign, Briefcase } from '@/components/icons';
 import type { Sponsor, SponsorStatus } from '@/hooks/useSponsorCRM';
 import { STATUS_LABELS } from '@/hooks/useSponsorCRM';
 
@@ -94,7 +94,7 @@ function SponsorCard({
             />
           ) : (
             <div className="w-12 h-12 rounded-full bg-gradient-to-br from-cyan-500/20 to-purple-500/20 flex items-center justify-center">
-              <Building2 className="h-6 w-6 text-white/50" />
+              <Building className="h-6 w-6 text-white/50" />
             </div>
           )}
           <div>
@@ -187,7 +187,7 @@ export function SponsorList({
   if (sponsors.length === 0) {
     return (
       <div className={cn('bg-gray-900/50 border border-white/10 rounded-xl p-12 text-center', className)}>
-        <Building2 className="h-12 w-12 text-white/20 mx-auto mb-4" />
+        <Building className="h-12 w-12 text-white/20 mx-auto mb-4" />
         <h3 className="text-lg font-semibold text-white mb-2">No sponsors yet</h3>
         <p className="text-white/50">Add your first sponsor to start tracking brand relationships.</p>
       </div>

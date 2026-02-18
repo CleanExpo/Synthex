@@ -49,6 +49,7 @@ import {
   Grid,
   DollarSign,
   Calculator,
+  Briefcase,
 } from '@/components/icons';
 import { Button } from '@/components/ui/button';
 import { AIPMFloatingButton } from '@/components/ai-pm';
@@ -93,6 +94,7 @@ const sidebarItems = [
   { icon: Target, label: 'Benchmarks', href: '/dashboard/analytics/benchmarks' },
   { icon: DollarSign, label: 'Revenue', href: '/dashboard/revenue' },
   { icon: Calculator, label: 'ROI', href: '/dashboard/roi' },
+  { icon: Briefcase, label: 'Sponsors', href: '/dashboard/sponsors' },
   { icon: Beaker, label: 'Experiments', href: '/dashboard/experiments' },
   { icon: Brain, label: 'Psychology', href: '/dashboard/psychology' },
   { icon: Target, label: 'Competitors', href: '/dashboard/competitors' },
