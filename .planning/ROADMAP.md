@@ -14,6 +14,7 @@ None (internal platform work)
 - ✅ [v1.1 Platform Enhancement](milestones/v1.1-ROADMAP.md) (Phases 11-18) — SHIPPED 2026-02-17
 - ✅ **v1.2 Features** — Phases 19-29 — SHIPPED 2026-02-18
 - ✅ **v1.3 Features** — Phases 30-35 — SHIPPED 2026-02-18
+- 🚧 **v1.4 Creator Monetization & AI Studio** — Phases 36-51 (in progress)
 
 ## Phases
 
@@ -52,6 +53,22 @@ None (internal platform work)
 - [x] **Phase 33: Schema Markup Manager** - Visual JSON-LD editor, validation, injection preview
 - [x] **Phase 34: GEO Readiness Dashboard** - AI search citability scores, passage analysis, optimization
 - [x] **Phase 35: SEO Audit Automation** - Scheduled site audits, alerting, historical tracking
+- [ ] **Phase 36: AI Chat Assistant** - Conversational AI for content ideas and strategy
+- [ ] **Phase 37: AI Image Generation** - Generate visuals using AI models
+- [ ] **Phase 38: Content Repurposing** - Transform long content into multiple formats
+- [ ] **Phase 39: Brand Voice Engine** - Train AI on brand writing style
+- [ ] **Phase 40: Cross-posting Automation** - Post once, publish everywhere
+- [ ] **Phase 41: Content Calendar v2** - Enhanced calendar with team features
+- [ ] **Phase 42: Social Listening** - Monitor mentions, hashtags, competitors
+- [ ] **Phase 43: Link in Bio Pages** - Customizable landing pages
+- [ ] **Phase 44: Unified Dashboard** - All-platform metrics view
+- [ ] **Phase 45: Audience Insights** - Follower demographics and behavior
+- [ ] **Phase 46: Content Performance AI** - AI-powered content analysis
+- [ ] **Phase 47: Benchmark Reports** - Industry comparison tools
+- [ ] **Phase 48: Revenue Tracker** - Income tracking across sources
+- [ ] **Phase 49: ROI Calculator** - Content investment return measurement
+- [ ] **Phase 50: Sponsor CRM** - Brand deal management
+- [ ] **Phase 51: Affiliate Link Manager** - Link insertion and tracking
 
 ## Phase Details
 
@@ -304,6 +321,177 @@ Plans:
 - [x] 35-01: ScheduledAuditTarget model + CRUD API + Cron job + regression detection + email alerts
 - [x] 35-02: useScheduledAudits + useAuditHistory hooks + 3-tab dashboard page + navigation
 
+### 🚧 v1.4 Creator Monetization & AI Studio (In Progress)
+
+**Milestone Goal:** Transform Synthex from a marketing tool into a complete creator business platform with AI-powered content creation, multi-platform publishing, deep analytics, and monetization tracking.
+
+#### Phase 36: AI Chat Assistant
+
+**Goal**: Build conversational AI for content ideas, strategy, and help
+**Depends on**: v1.3 complete
+**Research**: Likely (AI conversation patterns, context management)
+**Research topics**: AI conversation state, streaming responses, context windows
+**Plans**: TBD
+
+Plans:
+- [ ] 36-01: TBD (run /gsd:plan-phase 36 to break down)
+
+#### Phase 37: AI Image Generation
+
+**Goal**: Generate visuals for posts using AI models (Imagen, DALL-E)
+**Depends on**: Phase 36
+**Research**: Likely (external AI APIs, image generation best practices)
+**Research topics**: Imagen/DALL-E APIs, prompt engineering for images, rate limits
+**Plans**: TBD
+
+Plans:
+- [ ] 37-01: TBD
+
+#### Phase 38: Content Repurposing
+
+**Goal**: Auto-transform long content into multiple formats (blog → threads, video scripts)
+**Depends on**: Phase 37
+**Research**: Unlikely (internal AI patterns exist)
+**Plans**: TBD
+
+Plans:
+- [ ] 38-01: TBD
+
+#### Phase 39: Brand Voice Engine
+
+**Goal**: Train AI on brand's writing style for consistent output
+**Depends on**: Phase 38
+**Research**: Likely (fine-tuning, style transfer techniques)
+**Research topics**: Brand voice training, style consistency, few-shot learning
+**Plans**: TBD
+
+Plans:
+- [ ] 39-01: TBD
+
+#### Phase 40: Cross-posting Automation
+
+**Goal**: Post once, publish everywhere with platform-specific optimization
+**Depends on**: Phase 39
+**Research**: Unlikely (platform services exist from v1.0)
+**Plans**: TBD
+
+Plans:
+- [ ] 40-01: TBD
+
+#### Phase 41: Content Calendar v2
+
+**Goal**: Enhanced drag-drop calendar with team views and approval status
+**Depends on**: Phase 40
+**Research**: Unlikely (UI patterns established)
+**Plans**: TBD
+
+Plans:
+- [ ] 41-01: TBD
+
+#### Phase 42: Social Listening
+
+**Goal**: Monitor mentions, hashtags, and competitor activity across platforms
+**Depends on**: Phase 41
+**Research**: Likely (platform monitoring APIs)
+**Research topics**: Twitter/X mentions API, Instagram hashtag tracking, competitor analysis patterns
+**Plans**: TBD
+
+Plans:
+- [ ] 42-01: TBD
+
+#### Phase 43: Link in Bio Pages
+
+**Goal**: Customizable landing pages for social profiles
+**Depends on**: Phase 42
+**Research**: Unlikely (internal page building patterns)
+**Plans**: TBD
+
+Plans:
+- [ ] 43-01: TBD
+
+#### Phase 44: Unified Dashboard
+
+**Goal**: All platforms in one view with key metrics
+**Depends on**: Phase 43
+**Research**: Unlikely (analytics infrastructure exists from v1.2)
+**Plans**: TBD
+
+Plans:
+- [ ] 44-01: TBD
+
+#### Phase 45: Audience Insights
+
+**Goal**: Deep dive into follower demographics and behavior
+**Depends on**: Phase 44
+**Research**: Likely (platform audience APIs)
+**Research topics**: Instagram Insights API, Twitter Analytics, YouTube Analytics demographics
+**Plans**: TBD
+
+Plans:
+- [ ] 45-01: TBD
+
+#### Phase 46: Content Performance AI
+
+**Goal**: AI-powered analysis of what content works and why
+**Depends on**: Phase 45
+**Research**: Unlikely (internal AI patterns)
+**Plans**: TBD
+
+Plans:
+- [ ] 46-01: TBD
+
+#### Phase 47: Benchmark Reports
+
+**Goal**: Compare performance to industry standards
+**Depends on**: Phase 46
+**Research**: Likely (industry benchmarks data sources)
+**Research topics**: Industry average metrics, benchmark data providers
+**Plans**: TBD
+
+Plans:
+- [ ] 47-01: TBD
+
+#### Phase 48: Revenue Tracker
+
+**Goal**: Track income from sponsorships, affiliates, and ads
+**Depends on**: Phase 47
+**Research**: Unlikely (internal tracking patterns)
+**Plans**: TBD
+
+Plans:
+- [ ] 48-01: TBD
+
+#### Phase 49: ROI Calculator
+
+**Goal**: Measure return on content investment and time
+**Depends on**: Phase 48
+**Research**: Unlikely (internal calculation patterns)
+**Plans**: TBD
+
+Plans:
+- [ ] 49-01: TBD
+
+#### Phase 50: Sponsor CRM
+
+**Goal**: Manage brand deals, contracts, and deliverables
+**Depends on**: Phase 49
+**Research**: Unlikely (CRM patterns established)
+**Plans**: TBD
+
+Plans:
+- [ ] 50-01: TBD
+
+#### Phase 51: Affiliate Link Manager
+
+**Goal**: Auto-insert and track affiliate links
+**Depends on**: Phase 50
+**Research**: Likely (affiliate network APIs)
+**Research topics**: Amazon Associates API, ShareASale, link cloaking patterns
+**Plans**: TBD
+
+Plans:
+- [ ] 51-01: TBD
+
 ## Progress
 
 | Phase | Milestone | Plans Complete | Status | Completed |
@@ -343,3 +531,19 @@ Plans:
 | 33. Schema Markup Manager | v1.3 | 2/2 | Complete | - |
 | 34. GEO Readiness Dashboard | v1.3 | 2/2 | Complete | 2026-02-18 |
 | 35. SEO Audit Automation | v1.3 | 2/2 | Complete | 2026-02-18 |
+| 36. AI Chat Assistant | v1.4 | 0/? | Not started | - |
+| 37. AI Image Generation | v1.4 | 0/? | Not started | - |
+| 38. Content Repurposing | v1.4 | 0/? | Not started | - |
+| 39. Brand Voice Engine | v1.4 | 0/? | Not started | - |
+| 40. Cross-posting Automation | v1.4 | 0/? | Not started | - |
+| 41. Content Calendar v2 | v1.4 | 0/? | Not started | - |
+| 42. Social Listening | v1.4 | 0/? | Not started | - |
+| 43. Link in Bio Pages | v1.4 | 0/? | Not started | - |
+| 44. Unified Dashboard | v1.4 | 0/? | Not started | - |
+| 45. Audience Insights | v1.4 | 0/? | Not started | - |
+| 46. Content Performance AI | v1.4 | 0/? | Not started | - |
+| 47. Benchmark Reports | v1.4 | 0/? | Not started | - |
+| 48. Revenue Tracker | v1.4 | 0/? | Not started | - |
+| 49. ROI Calculator | v1.4 | 0/? | Not started | - |
+| 50. Sponsor CRM | v1.4 | 0/? | Not started | - |
+| 51. Affiliate Link Manager | v1.4 | 0/? | Not started | - |
