@@ -57,7 +57,7 @@ None (internal platform work)
 - [x] **Phase 37: AI Image Generation** - Generate visuals using AI models
 - [x] **Phase 38: Content Repurposing** - Transform long content into multiple formats
 - [x] **Phase 39: Brand Voice Engine** - Train AI on brand writing style
-- [ ] **Phase 40: Cross-posting Automation** - Post once, publish everywhere
+- [x] **Phase 40: Cross-posting Automation** - Post once, publish everywhere
 - [ ] **Phase 41: Content Calendar v2** - Enhanced calendar with team features
 - [ ] **Phase 42: Social Listening** - Monitor mentions, hashtags, competitors
 - [ ] **Phase 43: Link in Bio Pages** - Customizable landing pages
