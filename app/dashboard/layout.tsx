@@ -88,6 +88,7 @@ const sidebarItems = [
   { icon: Brain, label: 'Psychology', href: '/dashboard/psychology' },
   { icon: Target, label: 'Competitors', href: '/dashboard/competitors' },
   { icon: Bell, label: 'Listening', href: '/dashboard/listening' },
+  { icon: Link2, label: 'Link in Bio', href: '/dashboard/bio' },
   { icon: Video, label: 'Video', href: '/dashboard/video' },
   { icon: Search, label: 'SEO Tools', href: '/dashboard/seo' },
   { icon: Globe, label: 'GEO Analysis', href: '/dashboard/geo' },

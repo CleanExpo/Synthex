@@ -227,6 +227,15 @@ export function CommandPalette() {
       keywords: ['listening', 'mentions', 'brand', 'monitor', 'keywords', 'hashtags', 'sentiment', 'social']
     },
     {
+      id: 'link-in-bio',
+      title: 'Link in Bio Pages',
+      description: 'Create and manage customizable landing pages',
+      icon: Link2,
+      action: () => router.push('/dashboard/bio'),
+      category: 'navigation',
+      keywords: ['bio', 'link', 'linktree', 'landing', 'page', 'profile', 'links']
+    },
+    {
       id: 'team',
       title: 'Team',
       description: 'Manage team members',
@@ -356,6 +365,15 @@ export function CommandPalette() {
       action: () => router.push('/dashboard/listening?action=add'),
       category: 'actions',
       keywords: ['add', 'track', 'keyword', 'hashtag', 'monitor', 'listening', 'brand']
+    },
+    {
+      id: 'create-bio-page',
+      title: 'Create Bio Page',
+      description: 'Create a new Link in Bio landing page',
+      icon: Link2,
+      action: () => router.push('/dashboard/bio?action=create'),
+      category: 'actions',
+      keywords: ['create', 'new', 'bio', 'link', 'page', 'landing', 'linktree']
     },
     {
       id: 'analyze-trends',
