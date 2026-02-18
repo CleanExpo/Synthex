@@ -417,10 +417,10 @@ Plans:
 **Goal**: All platforms in one view with key metrics
 **Depends on**: Phase 43
 **Research**: Unlikely (analytics infrastructure exists from v1.2)
-**Plans**: TBD
+**Plans**: 1
 
 Plans:
-- [ ] 44-01: TBD
+- [ ] 44-01: Hook + API + Platform cards + Comparison chart + Dashboard page + Navigation
 
 #### Phase 45: Audience Insights
 
@@ -542,7 +542,7 @@ Plans:
 | 41. Content Calendar v2 | v1.4 | 2/2 | Complete | 2026-02-18 |
 | 42. Social Listening | v1.4 | 2/2 | Complete | 2026-02-18 |
 | 43. Link in Bio Pages | v1.4 | 2/2 | Complete | 2026-02-18 |
-| 44. Unified Dashboard | v1.4 | 0/? | Not started | - |
+| 44. Unified Dashboard | v1.4 | 0/1 | Planned | - |
 | 45. Audience Insights | v1.4 | 0/? | Not started | - |
 | 46. Content Performance AI | v1.4 | 0/? | Not started | - |
 | 47. Benchmark Reports | v1.4 | 0/? | Not started | - |
