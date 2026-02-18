@@ -48,7 +48,7 @@ None (internal platform work)
 - [x] **Phase 29: Role Permissions** - Granular access control beyond org membership
 - [x] **Phase 30: Technical SEO Dashboard** - UI for CWV metrics, mobile parity, robots.txt audits
 - [x] **Phase 31: Search Console Integration** - Google Search Console API, indexing status, crawl errors
-- [ ] **Phase 32: PageSpeed Integration** - PageSpeed Insights API, CWV monitoring, performance trends
+- [x] **Phase 32: PageSpeed Integration** - PageSpeed Insights API, CWV monitoring, performance trends
 - [ ] **Phase 33: Schema Markup Manager** - Visual JSON-LD editor, validation, injection preview
 - [ ] **Phase 34: GEO Readiness Dashboard** - AI search citability scores, passage analysis, optimization
 - [ ] **Phase 35: SEO Audit Automation** - Scheduled site audits, alerting, historical tracking
@@ -258,10 +258,10 @@ Plans:
 **Depends on**: Phase 31
 **Research**: Likely (PageSpeed Insights API v5, CrUX data)
 **Research topics**: PSI API parameters, field vs lab data, historical tracking
-**Plans**: TBD
+**Plans**: 1/1 | Complete | 2026-02-18
 
 Plans:
-- [ ] 32-01: TBD
+- [x] 32-01: PageSpeed service, API routes, hook, dashboard page, navigation
 
 #### Phase 33: Schema Markup Manager
 
@@ -328,7 +328,7 @@ Plans:
 | 29. Role Permissions | v1.2 | 2/2 | Complete | 2026-02-18 |
 | 30. Technical SEO Dashboard | v1.3 | 1/1 | Complete | 2026-02-18 |
 | 31. Search Console Integration | v1.3 | 1/1 | Complete | 2026-02-18 |
-| 32. PageSpeed Integration | v1.3 | 0/? | Not started | - |
+| 32. PageSpeed Integration | v1.3 | 1/1 | Complete | 2026-02-18 |
 | 33. Schema Markup Manager | v1.3 | 0/? | Not started | - |
 | 34. GEO Readiness Dashboard | v1.3 | 0/? | Not started | - |
 | 35. SEO Audit Automation | v1.3 | 0/? | Not started | - |
