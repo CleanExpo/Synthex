@@ -249,6 +249,15 @@ export function CommandPalette() {
       category: 'navigation',
       keywords: ['schema', 'json-ld', 'structured data', 'markup', 'rich results', 'rich snippets', 'organization', 'product', 'article', 'faq', 'seo', 'validator', 'template']
     },
+    {
+      id: 'geo-readiness',
+      title: 'GEO Readiness Dashboard',
+      description: 'AI search citability scores, passage analysis, platform optimization',
+      icon: Search,
+      action: () => router.push('/dashboard/seo/geo-readiness'),
+      category: 'navigation',
+      keywords: ['geo', 'generative engine', 'ai search', 'citability', 'passages', 'readiness', 'google aio', 'chatgpt', 'perplexity', 'bing copilot', 'ai visibility']
+    },
 
     // Actions
     {

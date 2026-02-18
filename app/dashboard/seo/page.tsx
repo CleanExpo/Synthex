@@ -230,10 +230,17 @@ export default function SEODashboardPage() {
               icon={Code}
             />
             <SEOToolCard
-              title="GEO / AI Visibility"
-              description="Optimize for AI Overviews, ChatGPT, and Perplexity. Analyze brand mentions and AI crawler accessibility."
-              href="/dashboard/geo"
+              title="GEO Readiness"
+              description="Assess content readiness for AI search engines. Track citability scores, passage optimization, and platform-specific readiness."
+              href="/dashboard/seo/geo-readiness"
               icon={Globe}
+              status="beta"
+            />
+            <SEOToolCard
+              title="GEO / AI Visibility"
+              description="Raw GEO analysis engine. Deep-dive into citability scoring, passage extraction, and platform-specific optimization details."
+              href="/dashboard/geo"
+              icon={Eye}
               status="beta"
             />
             <SEOToolCard
