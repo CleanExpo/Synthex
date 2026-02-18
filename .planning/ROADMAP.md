@@ -42,7 +42,7 @@ None (internal platform work)
 - [x] **Phase 24: Custom Reports Builder** - User-created report templates and exports
 - [x] **Phase 25: Third-party Integrations** - Canva, Buffer, Zapier webhook receivers
 - [x] **Phase 26: Webhook System** - Outbound webhooks for external integrations
-- [ ] **Phase 27: Approval Workflows** - Content review chains with notifications
+- [x] **Phase 27: Approval Workflows** - Content review chains with notifications
 - [ ] **Phase 28: Team Collaboration** - Real-time comments, assignments, activity feeds
 - [ ] **Phase 29: Role Permissions** - Granular access control beyond org membership
 
@@ -175,11 +175,11 @@ Plans:
 **Goal**: Content review chains with role-based approvers and notifications
 **Depends on**: Phase 26
 **Research**: Unlikely (internal workflow patterns)
-**Plans**: 2
+**Plans**: 2/2 | Complete | 2026-02-18
 
 Plans:
 - [x] 27-01: ApprovalRequest + WorkflowTemplate models + CRUD API routes
-- [ ] 27-02: useApprovals hook + dashboard page + navigation
+- [x] 27-02: useApprovals hook + dashboard page + navigation
 
 #### Phase 28: Team Collaboration
 
