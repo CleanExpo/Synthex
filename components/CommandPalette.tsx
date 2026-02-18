@@ -33,6 +33,7 @@ import {
   Shield,
   Code,
   Image,
+  Repeat,
 } from '@/components/icons';
 import { notify } from '@/lib/notifications';
 
@@ -89,6 +90,15 @@ export function CommandPalette() {
       action: () => router.push('/dashboard/content/multi-format'),
       category: 'navigation',
       keywords: ['multi-format', 'platforms', 'generate', 'variations', 'cross-platform', 'adapt', 'convert']
+    },
+    {
+      id: 'repurpose',
+      title: 'Content Repurposer',
+      description: 'Transform long-form content into threads, video scripts, and more',
+      icon: Repeat,
+      action: () => router.push('/dashboard/content/repurpose'),
+      category: 'navigation',
+      keywords: ['repurpose', 'transform', 'blog', 'thread', 'video script', 'carousel', 'summary', 'takeaways', 'transcript', 'podcast']
     },
     {
       id: 'analytics',

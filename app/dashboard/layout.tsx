@@ -43,6 +43,7 @@ import {
   Link2,
   GitBranch as GitPullRequest,
   MessageSquare,
+  Repeat,
 } from '@/components/icons';
 import { Button } from '@/components/ui/button';
 import { AIPMFloatingButton } from '@/components/ai-pm';
@@ -71,6 +72,7 @@ const sidebarItems = [
   { icon: FileText, label: 'Content', href: '/dashboard/content' },
   { icon: Sparkles, label: 'Optimizer', href: '/dashboard/content/optimize' },
   { icon: Layers, label: 'Multi-format', href: '/dashboard/content/multi-format' },
+  { icon: Repeat, label: 'Repurposer', href: '/dashboard/content/repurpose' },
   { icon: Palette, label: 'Sandbox', href: '/dashboard/sandbox' },
   { icon: Calendar, label: 'Schedule', href: '/dashboard/schedule' },
   { icon: ListTodo, label: 'Tasks', href: '/dashboard/tasks' },
