@@ -31,6 +31,7 @@ import {
   GitBranch as GitPullRequest,
   MessageSquare,
   Shield,
+  Code,
 } from '@/components/icons';
 import { notify } from '@/lib/notifications';
 
@@ -238,6 +239,15 @@ export function CommandPalette() {
       action: () => router.push('/dashboard/seo/pagespeed'),
       category: 'navigation',
       keywords: ['pagespeed', 'page speed', 'lighthouse', 'cwv', 'core web vitals', 'performance', 'lcp', 'cls', 'inp', 'speed']
+    },
+    {
+      id: 'schema-markup-manager',
+      title: 'Schema Markup Manager',
+      description: 'Create, validate, and manage JSON-LD structured data',
+      icon: Code,
+      action: () => router.push('/dashboard/seo/schema'),
+      category: 'navigation',
+      keywords: ['schema', 'json-ld', 'structured data', 'markup', 'rich results', 'rich snippets', 'organization', 'product', 'article', 'faq', 'seo', 'validator', 'template']
     },
 
     // Actions

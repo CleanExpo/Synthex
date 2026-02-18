@@ -224,8 +224,8 @@ export default function SEODashboardPage() {
               status="available"
             />
             <SEOToolCard
-              title="Schema Generator"
-              description="Generate and validate JSON-LD structured data for Organization, Product, Article, FAQ, and more."
+              title="Schema Markup Manager"
+              description="Create, validate, and manage JSON-LD structured data. Extract schemas from URLs, browse templates, and preview rich results."
               href="/dashboard/seo/schema"
               icon={Code}
             />
