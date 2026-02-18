@@ -79,6 +79,8 @@ const nextConfig = {
   serverExternalPackages: [
     '@ffprobe-installer/ffprobe',
     '@ffmpeg-installer/ffmpeg',
+    'bullmq',
+    'ioredis',
   ],
 
   // Experimental features
