@@ -395,10 +395,11 @@ Plans:
 **Depends on**: Phase 41
 **Research**: Likely (platform monitoring APIs)
 **Research topics**: Twitter/X mentions API, Instagram hashtag tracking, competitor analysis patterns
-**Plans**: TBD
+**Plans**: 2
 
 Plans:
-- [ ] 42-01: TBD
+- [ ] 42-01: Schema + API + Hook + Dashboard page
+- [ ] 42-02: MentionFetcher + Sentiment + Cron job
 
 #### Phase 43: Link in Bio Pages
 
@@ -538,7 +539,7 @@ Plans:
 | 39. Brand Voice Engine | v1.4 | 1/1 | Complete | 2026-02-18 |
 | 40. Cross-posting Automation | v1.4 | 1/1 | Complete | 2026-02-18 |
 | 41. Content Calendar v2 | v1.4 | 2/2 | Complete | 2026-02-18 |
-| 42. Social Listening | v1.4 | 0/? | Not started | - |
+| 42. Social Listening | v1.4 | 0/2 | Planned | - |
 | 43. Link in Bio Pages | v1.4 | 0/? | Not started | - |
 | 44. Unified Dashboard | v1.4 | 0/? | Not started | - |
 | 45. Audience Insights | v1.4 | 0/? | Not started | - |
