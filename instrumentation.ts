@@ -88,4 +88,41 @@ export async function register() {
       `[env-validator] Server starting with ${nonCriticalErrors.length} non-critical validation issue(s)`
     );
   }
+
+  // Verify database connectivity at startup (catches stale credentials immediately)
+  if (process.env.DATABASE_URL) {
+    try {
+      const { Pool } = await import(/* webpackIgnore: true */ 'pg');
+      const url = new URL(process.env.DATABASE_URL);
+      const pool = new Pool({
+        host: url.hostname,
+        port: parseInt(url.port || '5432', 10),
+        database: url.pathname.replace(/^\//, ''),
+        user: url.username,
+        password: decodeURIComponent(url.password),
+        ssl: { rejectUnauthorized: false },
+        connectionTimeoutMillis: 10000,
+        max: 1,
+      });
+      const client = await pool.connect();
+      await client.query('SELECT 1');
+      client.release();
+      await pool.end();
+      console.log('[db-check] Database connection verified successfully');
+    } catch (dbError) {
+      const msg = dbError instanceof Error ? dbError.message : String(dbError);
+      if (msg.includes('SCRAM') || msg.includes('password') || msg.includes('authentication')) {
+        console.error(
+          `[db-check] DATABASE AUTHENTICATION FAILED: ${msg}\n` +
+          `[db-check] ACTION REQUIRED: The database password in DATABASE_URL does not match Supabase.\n` +
+          `[db-check] FIX: Go to Supabase Dashboard → Settings → Database → copy the password,\n` +
+          `[db-check]      then update DATABASE_URL in Vercel Dashboard → Settings → Environment Variables.\n` +
+          `[db-check]      Current DATABASE_URL host: ${new URL(process.env.DATABASE_URL).hostname}`
+        );
+      } else {
+        console.error(`[db-check] Database connection failed: ${msg}`);
+      }
+      // Don't throw - let the app start so it can serve error pages instead of crashing
+    }
+  }
 }

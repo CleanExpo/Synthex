@@ -203,7 +203,17 @@ export async function GET(request: NextRequest) {
       trendingTopics,
     });
   } catch (error) {
-    console.error('Dashboard stats error:', error);
+    const msg = error instanceof Error ? error.message : String(error);
+    console.error('Dashboard stats error:', msg);
+
+    // Surface actionable error for database auth failures
+    if (msg.includes('SCRAM') || msg.includes('password') || msg.includes('authentication')) {
+      console.error('[dashboard] DATABASE_URL password is stale — update in Vercel env vars');
+      return NextResponse.json(
+        { error: 'Database authentication failed', code: 'DB_AUTH_FAILED' },
+        { status: 503 }
+      );
+    }
 
     return NextResponse.json(
       { error: 'Dashboard temporarily unavailable' },
