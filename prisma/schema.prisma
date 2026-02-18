@@ -89,6 +89,9 @@ model User {
   // Webhook subscriptions
   webhookEndpoints WebhookEndpoint[]
 
+  // Approval workflows
+  submittedApprovals ApprovalRequest[] @relation("SubmittedApprovals")
+
   // Multi-business owner system
   isMultiBusinessOwner  Boolean   @default(false) @map("is_multi_business_owner")
   activeOrganizationId  String?   @map("active_organization_id")
@@ -353,6 +356,10 @@ model Organization {
   campaigns         Campaign[]       @relation("OrganizationCampaigns")
   businessOwners    BusinessOwnership[] @relation("BusinessOwners")
   promptTemplates   PromptTemplate[]
+
+  // Approval workflows
+  approvalRequests   ApprovalRequest[]
+  workflowTemplates  WorkflowTemplate[]
 
   // Indices for multi-tenant queries
   @@index([slug])
@@ -1313,6 +1320,83 @@ model TeamNotification {
   @@index([organizationId])
   @@index([createdAt])
   @@map("team_notifications")
+}
+
+// ==========================================
+// Approval Workflow Module
+// ==========================================
+
+model ApprovalRequest {
+  id            String   @id @default(cuid())
+
+  // Content reference
+  contentId     String   // ID of Post, Campaign, etc.
+  contentType   String   // 'post', 'campaign', 'media', 'template'
+
+  // Workflow
+  workflowId    String?  // Optional WorkflowTemplate reference
+
+  // Submitter
+  submittedBy   String   // User ID who submitted
+  submitter     User     @relation("SubmittedApprovals", fields: [submittedBy], references: [id], onDelete: Cascade)
+
+  // Status
+  status        String   @default("pending") // 'pending', 'in_review', 'approved', 'rejected', 'revision_requested'
+  priority      String   @default("normal")  // 'low', 'normal', 'high', 'urgent'
+
+  // Progress
+  currentStep   Int      @default(0)
+  totalSteps    Int      @default(1)
+
+  // Steps stored as JSON array (matches existing service structure)
+  steps         Json     @default("[]")
+
+  // Metadata
+  title         String
+  description   String?
+  dueDate       DateTime?
+  metadata      Json?    // platforms, scheduledTime, tags, etc.
+
+  // Organization scope
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+
+  // Timestamps
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([submittedBy])
+  @@index([organizationId])
+  @@index([status])
+  @@index([contentId])
+  @@map("approval_requests")
+}
+
+model WorkflowTemplate {
+  id             String   @id @default(cuid())
+
+  // Organization scope
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  // Template info
+  name           String
+  description    String?
+
+  // Steps stored as JSON array
+  steps          Json     @default("[]")
+
+  // Configuration
+  isDefault      Boolean  @default(false)
+  contentTypes   Json     @default("[\"post\"]") // Array of content types this applies to
+
+  // Timestamps
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([organizationId])
+  @@index([isDefault])
+  @@map("workflow_templates")
 }
 
 // ==========================================
