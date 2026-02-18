@@ -8,4 +8,5 @@ export * from './CalendarTypes';
 export { DraggablePostCard } from './DraggablePostCard';
 export { DroppableTimeSlot } from './DroppableTimeSlot';
 export { WeekView } from './WeekView';
+export { MonthView } from './MonthView';
 export { PostDetailModal } from './PostDetailModal';
