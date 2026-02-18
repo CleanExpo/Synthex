@@ -40,6 +40,7 @@ import {
   DollarSign,
   Calculator,
   Briefcase,
+  Link,
 } from '@/components/icons';
 import { notify } from '@/lib/notifications';
 
@@ -220,6 +221,15 @@ export function CommandPalette() {
       action: () => router.push('/dashboard/sponsors'),
       category: 'navigation',
       keywords: ['sponsor', 'crm', 'brand', 'deal', 'partnership', 'deliverable', 'contract']
+    },
+    {
+      id: 'affiliate-links',
+      title: 'Affiliate Links',
+      description: 'Manage affiliate networks and track links',
+      icon: Link,
+      action: () => router.push('/dashboard/affiliates'),
+      category: 'navigation',
+      keywords: ['affiliate', 'links', 'tracking', 'amazon', 'network', 'commission', 'revenue']
     },
     {
       id: 'experiments',
