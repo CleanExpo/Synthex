@@ -42,6 +42,7 @@ import {
   Layout,
   Link2,
   GitBranch as GitPullRequest,
+  MessageSquare,
 } from '@/components/icons';
 import { Button } from '@/components/ui/button';
 import { AIPMFloatingButton } from '@/components/ai-pm';
@@ -89,6 +90,7 @@ const sidebarItems = [
   { icon: Zap, label: 'Integrations', href: '/dashboard/integrations' },
   { icon: Link2, label: 'Webhooks', href: '/dashboard/webhooks' },
   { icon: GitPullRequest, label: 'Approvals', href: '/dashboard/approvals' },
+  { icon: MessageSquare, label: 'Collaboration', href: '/dashboard/collaboration' },
   { icon: Settings, label: 'Settings', href: '/dashboard/settings' },
 ];
 

@@ -29,6 +29,7 @@ import {
   Zap,
   Link2,
   GitBranch as GitPullRequest,
+  MessageSquare,
 } from '@/components/icons';
 import { notify } from '@/lib/notifications';
 
@@ -191,6 +192,15 @@ export function CommandPalette() {
       action: () => router.push('/dashboard/approvals'),
       category: 'navigation',
       keywords: ['approvals', 'approval', 'workflow', 'review', 'approve', 'reject', 'content', 'pending']
+    },
+    {
+      id: 'collaboration',
+      title: 'Team Collaboration',
+      description: 'Activity feed, comments, and shared content',
+      icon: MessageSquare,
+      action: () => router.push('/dashboard/collaboration'),
+      category: 'navigation',
+      keywords: ['collaboration', 'team', 'activity', 'comments', 'shares', 'feed', 'assign']
     },
 
     // Actions
