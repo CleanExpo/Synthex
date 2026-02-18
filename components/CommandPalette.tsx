@@ -38,6 +38,7 @@ import {
   Bell,
   Grid,
   DollarSign,
+  Calculator,
 } from '@/components/icons';
 import { notify } from '@/lib/notifications';
 
@@ -200,6 +201,15 @@ export function CommandPalette() {
       action: () => router.push('/dashboard/revenue'),
       category: 'navigation',
       keywords: ['revenue', 'income', 'money', 'earnings', 'sponsorship', 'affiliate', 'monetization']
+    },
+    {
+      id: 'roi-calculator',
+      title: 'ROI Calculator',
+      description: 'Calculate return on content investment',
+      icon: Calculator,
+      action: () => router.push('/dashboard/roi'),
+      category: 'navigation',
+      keywords: ['roi', 'return', 'investment', 'calculator', 'profit', 'hours', 'time']
     },
     {
       id: 'experiments',
