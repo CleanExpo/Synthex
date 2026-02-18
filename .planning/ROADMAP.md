@@ -14,7 +14,7 @@ None (internal platform work)
 - ✅ [v1.1 Platform Enhancement](milestones/v1.1-ROADMAP.md) (Phases 11-18) — SHIPPED 2026-02-17
 - ✅ **v1.2 Features** — Phases 19-29 — SHIPPED 2026-02-18
 - ✅ **v1.3 Features** — Phases 30-35 — SHIPPED 2026-02-18
-- 🚧 **v1.4 Creator Monetization & AI Studio** — Phases 36-51 (in progress)
+- ✅ [v1.4 Creator Monetization & AI Studio](milestones/v1.4-ROADMAP.md) (Phases 36-51) — SHIPPED 2026-02-18
 
 ## Phases
 

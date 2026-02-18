@@ -5,7 +5,7 @@
 See: .planning/PROJECT.md (updated 2026-02-17)
 
 **Core value:** Every endpoint returns real data, every platform works, every dashboard page connects to live APIs
-**Current focus:** v1.4 Creator Monetization & AI Studio
+**Current focus:** v1.4 SHIPPED — Ready for v1.5 planning
 
 ## Current Position
 
@@ -81,6 +81,24 @@ Decisions from v1.2:
 - INTEGRATION_REGISTRY as single source of truth for provider metadata, THIRD_PARTY_ICONS lookup for icon mapping
 - ConnectDialog renders OAuth vs credential forms dynamically based on oauthSupported flag
 
+Decisions from v1.3:
+
+- AuthorProfile model with verified credentials and authority scores
+- SEOAudit and GEOAnalysis models for search optimization
+- Research report engine with Paper Banana visualizations
+- Local case study generator with NAP-consistent citations
+
+Decisions from v1.4:
+
+- Streaming SSE for AI chat (real-time feel)
+- Decimal type for all currency fields (precision in Prisma)
+- Three-tier hierarchical models for CRM (Sponsor → Deal → Deliverable)
+- Short code system for affiliate link cloaking
+- Auto-insert keywords matching for content monetization
+- AIConversation/AIMessage models for persistent chat history
+- TrackedKeyword/SocialMention for social listening
+- LinkBioPage/LinkBioLink for customizable landing pages
+
 ### Deferred Items (from v1.0)
 
 All deferred items from v1.0 resolved:
@@ -115,11 +133,11 @@ None.
 - v1.1 Platform Enhancement: 8 phases (11-18) — SHIPPED 2026-02-17
 - v1.2 Features: 11 phases (19-29), AI content + analytics + integrations + collaboration — SHIPPED 2026-02-18
 - v1.3 Features: 6 phases (30-35), SEO & Search focus — SHIPPED 2026-02-18
-- v1.4 Creator Monetization & AI Studio created: 16 phases (36-51), AI content + publishing + analytics + monetization
+- v1.4 Creator Monetization & AI Studio: 16 phases (36-51) — SHIPPED 2026-02-18
 
 ## Session Continuity
 
 Last session: 2026-02-18
-Stopped at: Completed Phase 51 (Affiliate Link Manager) — v1.4 COMPLETE
+Stopped at: Completed v1.4 milestone ceremony
 Resume file: None
-Next action: Start v1.5 planning or complete milestone review
+Next action: Start v1.5 planning with /gsd:discuss-milestone
