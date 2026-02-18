@@ -28,6 +28,7 @@ import {
   Layout,
   Zap,
   Link2,
+  GitBranch as GitPullRequest,
 } from '@/components/icons';
 import { notify } from '@/lib/notifications';
 
@@ -181,6 +182,15 @@ export function CommandPalette() {
       action: () => router.push('/dashboard/webhooks'),
       category: 'navigation',
       keywords: ['webhooks', 'webhook', 'endpoints', 'subscriptions', 'events', 'notifications', 'outbound']
+    },
+    {
+      id: 'approvals',
+      title: 'Approvals',
+      description: 'Review and approve content before publishing',
+      icon: GitPullRequest,
+      action: () => router.push('/dashboard/approvals'),
+      category: 'navigation',
+      keywords: ['approvals', 'approval', 'workflow', 'review', 'approve', 'reject', 'content', 'pending']
     },
 
     // Actions
