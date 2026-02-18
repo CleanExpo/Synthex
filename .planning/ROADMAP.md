@@ -428,10 +428,11 @@ Plans:
 **Depends on**: Phase 44
 **Research**: Likely (platform audience APIs)
 **Research topics**: Instagram Insights API, Twitter Analytics, YouTube Analytics demographics
-**Plans**: TBD
+**Plans**: 2
 
 Plans:
-- [ ] 45-01: TBD
+- [ ] 45-01: Hook + API + Platform service audience methods
+- [ ] 45-02: Demographics charts + Best times heatmap + Dashboard page
 
 #### Phase 46: Content Performance AI
 
