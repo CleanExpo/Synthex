@@ -56,7 +56,7 @@ None (internal platform work)
 - [x] **Phase 36: AI Chat Assistant** - Conversational AI for content ideas and strategy
 - [x] **Phase 37: AI Image Generation** - Generate visuals using AI models
 - [x] **Phase 38: Content Repurposing** - Transform long content into multiple formats
-- [ ] **Phase 39: Brand Voice Engine** - Train AI on brand writing style
+- [x] **Phase 39: Brand Voice Engine** - Train AI on brand writing style
 - [ ] **Phase 40: Cross-posting Automation** - Post once, publish everywhere
 - [ ] **Phase 41: Content Calendar v2** - Enhanced calendar with team features
 - [ ] **Phase 42: Social Listening** - Monitor mentions, hashtags, competitors
@@ -362,12 +362,11 @@ Plans:
 
 **Goal**: Train AI on brand's writing style for consistent output
 **Depends on**: Phase 38
-**Research**: Likely (fine-tuning, style transfer techniques)
-**Research topics**: Brand voice training, style consistency, few-shot learning
-**Plans**: TBD
+**Research**: Skipped (persona infrastructure already built)
+**Plans**: 1/1 | Complete | 2026-02-18
 
 Plans:
-- [ ] 39-01: TBD
+- [x] 39-01: usePersonas hook + PersonasPage wiring + Content page persona selector
 
 #### Phase 40: Cross-posting Automation
 
@@ -535,7 +534,7 @@ Plans:
 | 36. AI Chat Assistant | v1.4 | 2/2 | Complete | 2026-02-18 |
 | 37. AI Image Generation | v1.4 | 2/2 | Complete | 2026-02-18 |
 | 38. Content Repurposing | v1.4 | 1/1 | Complete | 2026-02-18 |
-| 39. Brand Voice Engine | v1.4 | 0/? | Not started | - |
+| 39. Brand Voice Engine | v1.4 | 1/1 | Complete | 2026-02-18 |
 | 40. Cross-posting Automation | v1.4 | 0/? | Not started | - |
 | 41. Content Calendar v2 | v1.4 | 0/? | Not started | - |
 | 42. Social Listening | v1.4 | 0/? | Not started | - |
