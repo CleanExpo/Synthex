@@ -290,10 +290,10 @@ Plans:
 **Goal**: Scheduled comprehensive site audits, alerting on regressions, historical tracking
 **Depends on**: Phase 34
 **Research**: Unlikely (cron patterns exist from v1.0)
-**Plans**: 2/2 | Not started
+**Plans**: 1/2 | In progress
 
 Plans:
-- [ ] 35-01: ScheduledAuditTarget model + CRUD API + Cron job + regression detection + email alerts
+- [x] 35-01: ScheduledAuditTarget model + CRUD API + Cron job + regression detection + email alerts
 - [ ] 35-02: useScheduledAudits + useAuditHistory hooks + 3-tab dashboard page + navigation
 
 ## Progress
@@ -334,4 +334,4 @@ Plans:
 | 32. PageSpeed Integration | v1.3 | 1/1 | Complete | 2026-02-18 |
 | 33. Schema Markup Manager | v1.3 | 2/2 | Complete | - |
 | 34. GEO Readiness Dashboard | v1.3 | 2/2 | Complete | 2026-02-18 |
-| 35. SEO Audit Automation | v1.3 | 0/? | Not started | - |
+| 35. SEO Audit Automation | v1.3 | 1/2 | In progress | - |
