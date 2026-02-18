@@ -333,7 +333,7 @@ Plans:
 **Plans**: 2/2 | Ready
 
 Plans:
-- [ ] 36-01: Chat Service + API (service, CRUD routes, streaming SSE)
+- [x] 36-01: Chat Service + API (service, CRUD routes, streaming SSE)
 - [ ] 36-02: Chat UI + Dashboard (hooks, components, page, navigation)
 
 #### Phase 37: AI Image Generation
@@ -531,7 +531,7 @@ Plans:
 | 33. Schema Markup Manager | v1.3 | 2/2 | Complete | - |
 | 34. GEO Readiness Dashboard | v1.3 | 2/2 | Complete | 2026-02-18 |
 | 35. SEO Audit Automation | v1.3 | 2/2 | Complete | 2026-02-18 |
-| 36. AI Chat Assistant | v1.4 | 0/2 | Planned | - |
+| 36. AI Chat Assistant | v1.4 | 1/2 | In Progress | - |
 | 37. AI Image Generation | v1.4 | 0/? | Not started | - |
 | 38. Content Repurposing | v1.4 | 0/? | Not started | - |
 | 39. Brand Voice Engine | v1.4 | 0/? | Not started | - |
