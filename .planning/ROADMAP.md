@@ -59,7 +59,7 @@ None (internal platform work)
 - [x] **Phase 39: Brand Voice Engine** - Train AI on brand writing style
 - [x] **Phase 40: Cross-posting Automation** - Post once, publish everywhere
 - [x] **Phase 41: Content Calendar v2** - Enhanced calendar with team features
-- [ ] **Phase 42: Social Listening** - Monitor mentions, hashtags, competitors
+- [x] **Phase 42: Social Listening** - Monitor mentions, hashtags, competitors
 - [ ] **Phase 43: Link in Bio Pages** - Customizable landing pages
 - [ ] **Phase 44: Unified Dashboard** - All-platform metrics view
 - [ ] **Phase 45: Audience Insights** - Follower demographics and behavior
@@ -395,11 +395,11 @@ Plans:
 **Depends on**: Phase 41
 **Research**: Likely (platform monitoring APIs)
 **Research topics**: Twitter/X mentions API, Instagram hashtag tracking, competitor analysis patterns
-**Plans**: 2 | 1/2 complete
+**Plans**: 2/2 | Complete | 2026-02-18
 
 Plans:
 - [x] 42-01: Schema + API + Hook + Dashboard page
-- [ ] 42-02: MentionFetcher + Sentiment + Cron job
+- [x] 42-02: MentionFetcher + Sentiment + Cron job
 
 #### Phase 43: Link in Bio Pages
 
@@ -539,7 +539,7 @@ Plans:
 | 39. Brand Voice Engine | v1.4 | 1/1 | Complete | 2026-02-18 |
 | 40. Cross-posting Automation | v1.4 | 1/1 | Complete | 2026-02-18 |
 | 41. Content Calendar v2 | v1.4 | 2/2 | Complete | 2026-02-18 |
-| 42. Social Listening | v1.4 | 1/2 | In Progress | - |
+| 42. Social Listening | v1.4 | 2/2 | Complete | 2026-02-18 |
 | 43. Link in Bio Pages | v1.4 | 0/? | Not started | - |
 | 44. Unified Dashboard | v1.4 | 0/? | Not started | - |
 | 45. Audience Insights | v1.4 | 0/? | Not started | - |
