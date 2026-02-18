@@ -153,10 +153,10 @@ Plans:
 **Depends on**: Phase 24
 **Research**: Likely (external API documentation, OAuth flows)
 **Research topics**: Canva Connect API, Buffer API, Zapier webhook specs
-**Plans**: 2 | Not started
+**Plans**: 1/2 | In progress | 2026-02-18
 
 Plans:
-- [ ] 25-01: Integration Services & API (lib/integrations/, third-party API routes, hook, Zapier webhook receiver)
+- [x] 25-01: Integration Services & API (lib/integrations/, third-party API routes, hook, Zapier webhook receiver)
 - [ ] 25-02: Integrations UI Update (third-party components, page update, command palette)
 
 #### Phase 26: Webhook System
@@ -228,7 +228,7 @@ Plans:
 | 22. Analytics Dashboard v2 | v1.2 | 2/2 | Complete | 2026-02-18 |
 | 23. Predictive Analytics | v1.2 | 2/2 | Complete | 2026-02-18 |
 | 24. Custom Reports Builder | v1.2 | 2/2 | Complete | 2026-02-18 |
-| 25. Third-party Integrations | v1.2 | 0/? | Not started | - |
+| 25. Third-party Integrations | v1.2 | 1/2 | In progress | - |
 | 26. Webhook System | v1.2 | 0/? | Not started | - |
 | 27. Approval Workflows | v1.2 | 0/? | Not started | - |
 | 28. Team Collaboration | v1.2 | 0/? | Not started | - |

@@ -10,19 +10,19 @@ See: .planning/PROJECT.md (updated 2026-02-17)
 ## Current Position
 
 Milestone: v1.2 Features (Phases 19-29)
-Phase: 24 of 29 (Custom Reports Builder)
-Plan: 2 of 2 in current phase
-Status: Phase complete
-Last activity: 2026-02-18 — Completed 24-02 (page route + navigation)
+Phase: 25 of 29 (Third-party Integrations)
+Plan: 1 of 2 in current phase
+Status: In progress
+Last activity: 2026-02-18 — Completed 25-01 (integration services & API)
 
-Progress: ██████░░░░ 50%
+Progress: ██████░░░░ 55%
 
 ## Performance Metrics
 
 **Velocity (from v1.0):**
-- Total plans completed: 34
+- Total plans completed: 35
 - Average duration: ~12 min
-- Total execution time: ~465 min
+- Total execution time: ~473 min
 
 **By Phase (v1.0):**
 
@@ -73,6 +73,12 @@ Decisions from v1.1:
 - DashboardError component in components/dashboard/error-fallback.tsx for all error.tsx files
 - PageHeader and DashboardEmptyState components for consistent layouts
 
+Decisions from v1.2:
+
+- PlatformConnection model reused for Canva/Buffer/Zapier with metadata JSON (no schema migration)
+- Integration factory pattern: createIntegrationService(provider, credentials) returns typed service
+- Zapier webhook uses dedicated ZAPIER_WEBHOOK_SECRET, separate from platform webhook handler
+
 ### Deferred Items (from v1.0)
 
 All deferred items from v1.0 resolved:
@@ -110,6 +116,6 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-18
-Stopped at: Completed 24-02 — Phase 24 complete (Custom Reports Builder)
+Stopped at: Completed 25-01 — Integration services & API routes
 Resume file: None
-Next action: /gsd:plan-phase 25
+Next action: /gsd:execute-plan .planning/phases/25-third-party-integrations/25-02-PLAN.md
