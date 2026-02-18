@@ -268,10 +268,11 @@ Plans:
 **Goal**: Visual JSON-LD editor, schema validation, injection preview, template library
 **Depends on**: Phase 32
 **Research**: Unlikely (internal patterns, schema.org specs known)
-**Plans**: TBD
+**Plans**: 2 | Not started
 
 Plans:
-- [ ] 33-01: TBD
+- [ ] 33-01: Schema Markup Service + API Routes (service, validate, extract, templates, rich preview)
+- [ ] 33-02: Hook + Enhanced Dashboard + Navigation (useSchemaMarkup, tabbed UI, hub card, command palette)
 
 #### Phase 34: GEO Readiness Dashboard
 
