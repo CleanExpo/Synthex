@@ -86,6 +86,9 @@ model User {
   // Prompt templates
   promptTemplates  PromptTemplate[]
 
+  // Webhook subscriptions
+  webhookEndpoints WebhookEndpoint[]
+
   // Multi-business owner system
   isMultiBusinessOwner  Boolean   @default(false) @map("is_multi_business_owner")
   activeOrganizationId  String?   @map("active_organization_id")
@@ -264,6 +267,28 @@ model Notification {
   @@index([userId])
   @@index([userId, read, createdAt])
   @@map("notifications")
+}
+
+model WebhookEndpoint {
+  id              String   @id @default(cuid())
+  url             String
+  secret          String
+  description     String?
+  events          Json     // Array of WebhookEventType strings stored as JSON
+  active          Boolean  @default(true)
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+  lastDeliveredAt DateTime? @map("last_delivered_at")
+  failureCount    Int      @default(0) @map("failure_count")
+  metadata        Json?    // Additional config (headers, timeout overrides)
+
+  // Relations
+  userId          String   @map("user_id")
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([userId, active])
+  @@map("webhook_endpoints")
 }
 
 model AuditLog {
