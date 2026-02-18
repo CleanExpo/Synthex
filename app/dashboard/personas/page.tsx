@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { DashboardSkeleton } from '@/components/skeletons';
 import { APIErrorCard } from '@/components/error-states';
 import toast from 'react-hot-toast';
@@ -17,112 +17,102 @@ import {
   CreatePersonaDialog,
   PersonaEmptyState,
 } from '@/components/personas';
+import { usePersonas, type Persona as APIPersona, type TrainingSource } from '@/hooks/use-personas';
+
+// Transform API persona to component Persona type
+function transformPersona(p: APIPersona): Persona {
+  return {
+    id: parseInt(p.id, 10) || Date.now(),
+    name: p.name || '',
+    description: p.description || '',
+    trainingData: {
+      sources: p.trainingSourcesCount || 0,
+      words: p.trainingWordsCount || 0,
+      samples: p.trainingSamplesCount || 0,
+    },
+    attributes: {
+      tone: (p.tone || 'Professional').charAt(0).toUpperCase() + (p.tone || 'professional').slice(1),
+      style: (p.style || 'Formal').charAt(0).toUpperCase() + (p.style || 'formal').slice(1),
+      vocabulary: (p.vocabulary || 'Standard').charAt(0).toUpperCase() + (p.vocabulary || 'standard').slice(1),
+      emotion: (p.emotion || 'Neutral').charAt(0).toUpperCase() + (p.emotion || 'neutral').slice(1),
+    },
+    accuracy: p.accuracy || 0,
+    status: (p.status as Persona['status']) || 'draft',
+    lastTrained: p.lastTrained ? new Date(p.lastTrained).toLocaleDateString() : 'Never',
+  };
+}
+
+// Find API persona ID from component persona ID
+function findApiId(apiPersonas: APIPersona[], componentId: number): string | null {
+  const found = apiPersonas.find((p) => parseInt(p.id, 10) === componentId || p.id === String(componentId));
+  return found?.id || null;
+}
 
 export default function PersonasPage() {
-  const [personas, setPersonas] = useState<Persona[]>([]);
+  const {
+    personas: apiPersonas,
+    loading: isLoading,
+    error,
+    refresh,
+    createPersona,
+    deletePersona,
+    startTraining,
+    clearError,
+  } = usePersonas();
+
+  // Transform API personas to component format
+  const personas = useMemo(() => apiPersonas.map(transformPersona), [apiPersonas]);
+
   const [selectedPersona, setSelectedPersona] = useState<Persona | null>(null);
   const [isCreating, setIsCreating] = useState(false);
   const [isTraining, setIsTraining] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [newPersona, setNewPersona] = useState<NewPersonaForm>(defaultNewPersona);
+  const [trainingContent, setTrainingContent] = useState<string[]>([]);
 
   // Calculate stats from personas
-  const stats = useMemo(() => ({
-    activeCount: personas.filter(p => p.status === 'active').length,
-    totalWords: '135K',
-    avgAccuracy: '90.7%',
-    totalSources: 448,
-  }), [personas]);
+  const stats = useMemo(() => {
+    const totalWords = apiPersonas.reduce((sum, p) => sum + (p.trainingWordsCount || 0), 0);
+    const totalSources = apiPersonas.reduce((sum, p) => sum + (p.trainingSourcesCount || 0), 0);
+    const activePersonas = apiPersonas.filter((p) => p.status === 'active');
+    const avgAccuracy = activePersonas.length > 0
+      ? activePersonas.reduce((sum, p) => sum + (p.accuracy || 0), 0) / activePersonas.length
+      : 0;
 
-  // Load personas data
-  useEffect(() => {
-    const loadPersonas = async () => {
-      setIsLoading(true);
-      setError(null);
-      try {
-        const token = localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token') || localStorage.getItem('token');
-        {
-          const response = await fetch('/api/personas', {
-            credentials: 'include',
-            headers: token ? { 'Authorization': `Bearer ${token}` } : {},
-          });
-
-          if (response.ok) {
-            const { data } = await response.json();
-            const apiPersonas = data.map((p: Record<string, unknown>) => ({
-              id: typeof p.id === 'number' ? p.id : parseInt(p.id as string, 10) || Date.now(),
-              name: (p.name as string) || '',
-              description: (p.description as string) || '',
-              trainingData: {
-                sources: (p.trainingSourcesCount as number) || 0,
-                words: (p.trainingWordsCount as number) || 0,
-                samples: (p.trainingSamplesCount as number) || 0,
-              },
-              attributes: {
-                tone: ((p.tone as string) || 'Professional').charAt(0).toUpperCase() + ((p.tone as string) || 'professional').slice(1),
-                style: ((p.style as string) || 'Formal').charAt(0).toUpperCase() + ((p.style as string) || 'formal').slice(1),
-                vocabulary: ((p.vocabulary as string) || 'Standard').charAt(0).toUpperCase() + ((p.vocabulary as string) || 'standard').slice(1),
-                emotion: ((p.emotion as string) || 'Neutral').charAt(0).toUpperCase() + ((p.emotion as string) || 'neutral').slice(1),
-              },
-              accuracy: (p.accuracy as number) || 0,
-              status: (p.status as Persona['status']) || 'draft',
-              lastTrained: p.lastTrained ? new Date(p.lastTrained as string).toLocaleDateString() : 'Never',
-            }));
-
-            setPersonas(apiPersonas);
-            setIsLoading(false);
-            return;
-          }
-        }
-        // API returned non-OK status
-        setError('Failed to load personas');
-        setIsLoading(false);
-      } catch {
-        setError('Failed to load personas');
-        setIsLoading(false);
-      }
+    return {
+      activeCount: activePersonas.length,
+      totalWords: totalWords >= 1000 ? `${(totalWords / 1000).toFixed(0)}K` : String(totalWords),
+      avgAccuracy: `${avgAccuracy.toFixed(1)}%`,
+      totalSources,
     };
-    loadPersonas();
-  }, []);
+  }, [apiPersonas]);
 
   const handleRetry = useCallback(async () => {
-    setError(null);
-    setIsLoading(true);
-    try {
-      const token = localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token') || localStorage.getItem('token');
-      const response = await fetch('/api/personas', {
-        credentials: 'include',
-        headers: token ? { 'Authorization': `Bearer ${token}` } : {},
-      });
-      if (response.ok) {
-        const { data } = await response.json();
-        setPersonas(data);
-        setIsLoading(false);
-      } else {
-        setError('Failed to load personas');
-        setIsLoading(false);
-      }
-    } catch {
-      setError('Failed to load personas');
-      setIsLoading(false);
-    }
-  }, []);
+    clearError();
+    await refresh();
+  }, [clearError, refresh]);
 
-  const handleFiles = useCallback((files: FileList) => {
+  const handleFiles = useCallback(async (files: FileList) => {
     setUploadProgress(0);
-    const interval = setInterval(() => {
-      setUploadProgress((prev) => {
-        if (prev >= 100) {
-          clearInterval(interval);
-          toast.success(`Uploaded ${files.length} file(s) successfully`);
-          return 100;
+    const newContent: string[] = [];
+
+    // Read file contents
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      try {
+        const text = await file.text();
+        if (text.length >= 50) {
+          newContent.push(text);
         }
-        return prev + 10;
-      });
-    }, 200);
+      } catch {
+        // Skip files that can't be read as text
+      }
+      setUploadProgress(Math.round(((i + 1) / files.length) * 100));
+    }
+
+    setTrainingContent((prev) => [...prev, ...newContent]);
+    toast.success(`Added ${newContent.length} file(s) for training`);
   }, []);
 
   const handleFetchUrl = useCallback((url: string) => {
@@ -130,39 +120,55 @@ export default function PersonasPage() {
       toast.error('Please enter a URL');
       return;
     }
-    setUploadProgress(0);
-    const interval = setInterval(() => {
-      setUploadProgress((prev) => {
-        if (prev >= 100) {
-          clearInterval(interval);
-          toast.success('Content fetched from URL successfully');
-          return 100;
-        }
-        return prev + 20;
-      });
-    }, 200);
+    // Store URL as content (training API can handle URL fetching)
+    setTrainingContent((prev) => [...prev, `[URL] ${url.trim()}`]);
+    setUploadProgress(100);
+    toast.success('URL added for training');
   }, []);
 
-  const handleTrainPersona = useCallback(() => {
+  const handleTrainPersona = useCallback(async () => {
+    if (!selectedPersona) {
+      toast.error('No persona selected');
+      return;
+    }
+
+    if (trainingContent.length === 0) {
+      toast.error('Please upload training content first');
+      return;
+    }
+
+    const apiId = findApiId(apiPersonas, selectedPersona.id);
+    if (!apiId) {
+      toast.error('Persona not found');
+      return;
+    }
+
     setIsTraining(true);
-    setTimeout(() => {
-      setIsTraining(false);
-      toast.success('Persona training completed successfully!');
-      if (selectedPersona) {
-        setPersonas(prev => prev.map(p =>
-          p.id === selectedPersona.id
-            ? { ...p, status: 'active' as const, accuracy: Math.min(p.accuracy + 3, 100) }
-            : p
-        ));
-      }
-    }, 3000);
-  }, [selectedPersona]);
+
+    // Convert content to training sources
+    const sources: TrainingSource[] = trainingContent.map((content) => ({
+      type: content.startsWith('[URL]') ? 'website' as const : 'text' as const,
+      content: content.startsWith('[URL]') ? content.replace('[URL] ', '') : content,
+    }));
+
+    const success = await startTraining(apiId, sources);
+
+    setIsTraining(false);
+
+    if (success) {
+      toast.success('Training started! The persona will be active once training completes.');
+      setTrainingContent([]);
+      setUploadProgress(0);
+    } else {
+      toast.error('Failed to start training');
+    }
+  }, [selectedPersona, trainingContent, apiPersonas, startTraining]);
 
   const handleCreatePersona = useCallback(() => {
     setCreateDialogOpen(true);
   }, []);
 
-  const handleSubmitNewPersona = useCallback(() => {
+  const handleSubmitNewPersona = useCallback(async () => {
     if (!newPersona.name.trim()) {
       toast.error('Please enter a persona name');
       return;
@@ -170,41 +176,46 @@ export default function PersonasPage() {
 
     setIsCreating(true);
 
-    const createdPersona: Persona = {
-      id: Date.now(),
+    const result = await createPersona({
       name: newPersona.name,
       description: newPersona.description || `Custom ${newPersona.tone} persona`,
-      trainingData: {
-        sources: 0,
-        words: 0,
-        samples: 0,
-      },
-      attributes: {
-        tone: newPersona.tone.charAt(0).toUpperCase() + newPersona.tone.slice(1),
-        style: newPersona.style.charAt(0).toUpperCase() + newPersona.style.slice(1),
-        vocabulary: newPersona.vocabulary.charAt(0).toUpperCase() + newPersona.vocabulary.slice(1),
-        emotion: newPersona.emotion.charAt(0).toUpperCase() + newPersona.emotion.slice(1),
-      },
-      accuracy: 0,
-      status: 'draft',
-      lastTrained: 'Never',
-    };
+      tone: newPersona.tone as 'professional' | 'casual' | 'authoritative' | 'friendly' | 'humorous',
+      style: newPersona.style as 'formal' | 'conversational' | 'thought-provoking' | 'educational' | 'inspirational',
+      vocabulary: newPersona.vocabulary as 'simple' | 'standard' | 'technical' | 'sophisticated',
+      emotion: newPersona.emotion as 'neutral' | 'friendly' | 'confident' | 'inspiring' | 'empathetic',
+    });
 
-    setPersonas(prev => [...prev, createdPersona]);
-    setSelectedPersona(createdPersona);
-    setCreateDialogOpen(false);
-    setNewPersona(defaultNewPersona);
     setIsCreating(false);
-    toast.success(`Persona "${newPersona.name}" created successfully!`);
-  }, [newPersona]);
 
-  const handleDeletePersona = useCallback((id: number) => {
-    setPersonas(prev => prev.filter(p => p.id !== id));
-    if (selectedPersona?.id === id) {
-      setSelectedPersona(null);
+    if (result) {
+      setCreateDialogOpen(false);
+      setNewPersona(defaultNewPersona);
+      // Select the newly created persona
+      setSelectedPersona(transformPersona(result));
+      toast.success(`Persona "${newPersona.name}" created successfully!`);
+    } else {
+      toast.error('Failed to create persona');
     }
-    toast.success('Persona deleted successfully');
-  }, [selectedPersona]);
+  }, [newPersona, createPersona]);
+
+  const handleDeletePersona = useCallback(async (id: number) => {
+    const apiId = findApiId(apiPersonas, id);
+    if (!apiId) {
+      toast.error('Persona not found');
+      return;
+    }
+
+    const success = await deletePersona(apiId);
+
+    if (success) {
+      if (selectedPersona?.id === id) {
+        setSelectedPersona(null);
+      }
+      toast.success('Persona deleted successfully');
+    } else {
+      toast.error('Failed to delete persona');
+    }
+  }, [apiPersonas, deletePersona, selectedPersona]);
 
   const handleEditPersona = useCallback(() => {
     if (selectedPersona) {
@@ -212,18 +223,32 @@ export default function PersonasPage() {
     }
   }, [selectedPersona]);
 
-  const handleClonePersona = useCallback(() => {
-    if (selectedPersona) {
-      const clonedPersona: Persona = {
-        ...selectedPersona,
-        id: Date.now(),
-        name: `${selectedPersona.name} (Copy)`,
-        status: 'draft',
-      };
-      setPersonas(prev => [...prev, clonedPersona]);
-      toast.success(`Cloned persona: ${selectedPersona.name}`);
+  const handleClonePersona = useCallback(async () => {
+    if (!selectedPersona) return;
+
+    const apiId = findApiId(apiPersonas, selectedPersona.id);
+    const original = apiPersonas.find((p) => p.id === apiId);
+
+    if (!original) {
+      toast.error('Persona not found');
+      return;
     }
-  }, [selectedPersona]);
+
+    const result = await createPersona({
+      name: `${original.name} (Copy)`,
+      description: original.description || undefined,
+      tone: original.tone as 'professional' | 'casual' | 'authoritative' | 'friendly' | 'humorous',
+      style: original.style as 'formal' | 'conversational' | 'thought-provoking' | 'educational' | 'inspirational',
+      vocabulary: original.vocabulary as 'simple' | 'standard' | 'technical' | 'sophisticated',
+      emotion: original.emotion as 'neutral' | 'friendly' | 'confident' | 'inspiring' | 'empathetic',
+    });
+
+    if (result) {
+      toast.success(`Cloned persona: ${selectedPersona.name}`);
+    } else {
+      toast.error('Failed to clone persona');
+    }
+  }, [selectedPersona, apiPersonas, createPersona]);
 
   const handleConfigurePersona = useCallback(() => {
     if (selectedPersona) {
