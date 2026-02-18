@@ -279,10 +279,10 @@ Plans:
 **Goal**: AI search citability scores, passage-level analysis, platform-specific optimization
 **Depends on**: Phase 33
 **Research**: Unlikely (geo-engine skill exists)
-**Plans**: 2 | Not started
+**Plans**: 1/2 | In progress
 
 Plans:
-- [ ] 34-01: GEO Readiness Service + API Routes (service, analyze, history, trends)
+- [x] 34-01: GEO Readiness Service + API Routes (service, analyze, history, trends)
 - [ ] 34-02: useGeoReadiness Hook + Dashboard Page + Navigation (hook, 4-tab page, SEO hub card, command palette)
 
 #### Phase 35: SEO Audit Automation
