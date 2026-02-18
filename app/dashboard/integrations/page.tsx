@@ -6,11 +6,14 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { IntegrationModal } from '@/components/IntegrationModal';
-import { 
-  Twitter, 
-  Linkedin, 
-  Instagram, 
-  Facebook, 
+import { ThirdPartyCard, ConnectDialog } from '@/components/integrations';
+import { useThirdPartyIntegrations, type ThirdPartyProvider } from '@/hooks/use-third-party-integrations';
+import { INTEGRATION_REGISTRY } from '@/lib/integrations/types';
+import {
+  Twitter,
+  Linkedin,
+  Instagram,
+  Facebook,
   Video,
   Link2,
   Unlink,
@@ -20,7 +23,10 @@ import {
   Settings,
   RefreshCw,
   Shield,
-  Loader2
+  Loader2,
+  Palette,
+  Clock,
+  Zap
 } from '@/components/icons';
 import toast from 'react-hot-toast';
 
@@ -35,11 +41,29 @@ interface Integration {
   permissions?: string[];
 }
 
+const THIRD_PARTY_ICONS: Record<ThirdPartyProvider, React.ComponentType<{ className?: string }>> = {
+  canva: Palette,
+  buffer: Clock,
+  zapier: Zap,
+};
+
 export default function IntegrationsPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [connectingId, setConnectingId] = useState<string | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedIntegration, setSelectedIntegration] = useState<Integration | null>(null);
+
+  // Third-party integrations
+  const {
+    integrations: thirdPartyIntegrations,
+    loading: thirdPartyLoading,
+    connect: thirdPartyConnect,
+    disconnect: thirdPartyDisconnect,
+    refresh: thirdPartyRefresh,
+  } = useThirdPartyIntegrations();
+  const [connectDialogOpen, setConnectDialogOpen] = useState(false);
+  const [selectedProvider, setSelectedProvider] = useState<ThirdPartyProvider | null>(null);
+  const [thirdPartyActionLoading, setThirdPartyActionLoading] = useState<ThirdPartyProvider | null>(null);
 
   const [integrations, setIntegrations] = useState<Integration[]>([
     {
@@ -155,7 +179,7 @@ export default function IntegrationsPage() {
 
   const handleRefresh = async (id: string) => {
     setConnectingId(id);
-    
+
     try {
       await new Promise(resolve => setTimeout(resolve, 1500));
       toast.success('Connection refreshed successfully');
@@ -164,6 +188,44 @@ export default function IntegrationsPage() {
     } finally {
       setConnectingId(null);
     }
+  };
+
+  // Third-party handlers
+  const handleThirdPartyConnect = (provider: ThirdPartyProvider) => {
+    setSelectedProvider(provider);
+    setConnectDialogOpen(true);
+  };
+
+  const handleThirdPartyDisconnect = async (provider: ThirdPartyProvider) => {
+    setThirdPartyActionLoading(provider);
+    try {
+      await thirdPartyDisconnect(provider);
+      const config = INTEGRATION_REGISTRY[provider];
+      toast.success(`${config.name} disconnected`);
+    } catch (error) {
+      toast.error('Failed to disconnect. Please try again.');
+    } finally {
+      setThirdPartyActionLoading(null);
+    }
+  };
+
+  const handleThirdPartyRefresh = async (provider: ThirdPartyProvider) => {
+    setThirdPartyActionLoading(provider);
+    try {
+      await thirdPartyRefresh(provider);
+      toast.success('Connection refreshed successfully');
+    } catch (error) {
+      toast.error('Failed to refresh connection');
+    } finally {
+      setThirdPartyActionLoading(null);
+    }
+  };
+
+  const handleThirdPartySubmit = async (credentials: Record<string, string>) => {
+    if (!selectedProvider) return;
+    await thirdPartyConnect(selectedProvider, credentials);
+    const config = INTEGRATION_REGISTRY[selectedProvider];
+    toast.success(`${config.name} connected successfully!`);
   };
 
   return (
@@ -274,6 +336,53 @@ export default function IntegrationsPage() {
           );
         })}
       </div>
+
+      {/* Third-Party Tools Section */}
+      <div className="border-t border-white/10 mt-10 pt-10">
+        <div className="mb-6">
+          <h2 className="text-2xl font-bold text-white mb-1">Third-Party Tools</h2>
+          <p className="text-gray-400">
+            Connect design, scheduling, and automation tools
+          </p>
+        </div>
+
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {(Object.keys(INTEGRATION_REGISTRY) as ThirdPartyProvider[]).map((provider) => {
+            const config = INTEGRATION_REGISTRY[provider];
+            const integration = thirdPartyIntegrations.find((i) => i.provider === provider);
+            const Icon = THIRD_PARTY_ICONS[provider];
+
+            return (
+              <ThirdPartyCard
+                key={provider}
+                provider={provider}
+                name={config.name}
+                description={config.description}
+                icon={Icon}
+                category={config.category}
+                connected={integration?.connected ?? false}
+                loading={thirdPartyActionLoading === provider}
+                onConnect={() => handleThirdPartyConnect(provider)}
+                onDisconnect={() => handleThirdPartyDisconnect(provider)}
+                onConfigure={() => handleThirdPartyRefresh(provider)}
+              />
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Connect Dialog for Third-Party */}
+      {selectedProvider && (
+        <ConnectDialog
+          open={connectDialogOpen}
+          onOpenChange={setConnectDialogOpen}
+          provider={selectedProvider}
+          providerName={INTEGRATION_REGISTRY[selectedProvider].name}
+          requiredFields={INTEGRATION_REGISTRY[selectedProvider].requiredFields}
+          oauthSupported={INTEGRATION_REGISTRY[selectedProvider].oauthSupported}
+          onSubmit={handleThirdPartySubmit}
+        />
+      )}
 
       <Card variant="glass" className="mt-8">
         <CardHeader>

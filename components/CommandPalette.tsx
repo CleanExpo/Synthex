@@ -26,6 +26,7 @@ import {
   Layers,
   Lightbulb,
   Layout,
+  Zap,
 } from '@/components/icons';
 import { notify } from '@/lib/notifications';
 
@@ -161,6 +162,15 @@ export function CommandPalette() {
       action: () => router.push('/dashboard/team'),
       category: 'navigation',
       keywords: ['team', 'members', 'collaboration']
+    },
+    {
+      id: 'integrations',
+      title: 'Integrations',
+      description: 'Manage platform and third-party connections',
+      icon: Zap,
+      action: () => router.push('/dashboard/integrations'),
+      category: 'navigation',
+      keywords: ['integrations', 'connect', 'canva', 'buffer', 'zapier', 'third-party', 'tools']
     },
 
     // Actions
