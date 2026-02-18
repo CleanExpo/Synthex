@@ -153,10 +153,11 @@ Plans:
 **Depends on**: Phase 24
 **Research**: Likely (external API documentation, OAuth flows)
 **Research topics**: Canva Connect API, Buffer API, Zapier webhook specs
-**Plans**: TBD
+**Plans**: 2 | Not started
 
 Plans:
-- [ ] 25-01: TBD
+- [ ] 25-01: Integration Services & API (lib/integrations/, third-party API routes, hook, Zapier webhook receiver)
+- [ ] 25-02: Integrations UI Update (third-party components, page update, command palette)
 
 #### Phase 26: Webhook System
 
