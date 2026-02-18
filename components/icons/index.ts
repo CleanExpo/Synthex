@@ -303,6 +303,7 @@ export { Columns } from './custom/Columns';
 export { GripVertical } from './custom/GripVertical';
 export { ToggleLeft } from './custom/ToggleLeft';
 export { ToggleRight } from './custom/ToggleRight';
+export { Percent } from './custom/Percent';
 
 // ============================================
 // CLOCK ICON (Alias)
