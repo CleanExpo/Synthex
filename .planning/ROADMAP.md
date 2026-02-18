@@ -13,6 +13,7 @@ None (internal platform work)
 - ✅ [v1.0 Production Hardening](milestones/v1.0-ROADMAP.md) (Phases 1-10) — SHIPPED 2026-02-17
 - ✅ [v1.1 Platform Enhancement](milestones/v1.1-ROADMAP.md) (Phases 11-18) — SHIPPED 2026-02-17
 - ✅ **v1.2 Features** — Phases 19-29 — SHIPPED 2026-02-18
+- 🚧 **v1.3 Features** — Phases 30-35 (in progress)
 
 ## Phases
 
@@ -45,6 +46,12 @@ None (internal platform work)
 - [x] **Phase 27: Approval Workflows** - Content review chains with notifications
 - [x] **Phase 28: Team Collaboration** - Real-time comments, assignments, activity feeds
 - [x] **Phase 29: Role Permissions** - Granular access control beyond org membership
+- [ ] **Phase 30: Technical SEO Dashboard** - UI for CWV metrics, mobile parity, robots.txt audits
+- [ ] **Phase 31: Search Console Integration** - Google Search Console API, indexing status, crawl errors
+- [ ] **Phase 32: PageSpeed Integration** - PageSpeed Insights API, CWV monitoring, performance trends
+- [ ] **Phase 33: Schema Markup Manager** - Visual JSON-LD editor, validation, injection preview
+- [ ] **Phase 34: GEO Readiness Dashboard** - AI search citability scores, passage analysis, optimization
+- [ ] **Phase 35: SEO Audit Automation** - Scheduled site audits, alerting, historical tracking
 
 ## Phase Details
 
@@ -220,6 +227,72 @@ Plans:
 - [x] 29-01: Roles API + useRoles Hook (CRUD routes, grant/revoke, hook)
 - [x] 29-02: Roles Dashboard + Navigation (role cards, permission editor, user assignment)
 
+### 🚧 v1.3 Features (In Progress)
+
+**Milestone Goal:** Build comprehensive SEO and search optimization features leveraging the search-engineer-pro skill suite.
+
+#### Phase 30: Technical SEO Dashboard
+
+**Goal**: UI for Core Web Vitals metrics, mobile parity audits, robots.txt validation
+**Depends on**: v1.2 complete
+**Research**: Unlikely (internal patterns, search-engineer-pro skill exists)
+**Plans**: TBD
+
+Plans:
+- [ ] 30-01: TBD (run /gsd:plan-phase 30 to break down)
+
+#### Phase 31: Search Console Integration
+
+**Goal**: Connect Google Search Console API for indexing status, crawl errors, performance data
+**Depends on**: Phase 30
+**Research**: Likely (Google Search Console API setup, OAuth scopes)
+**Research topics**: GSC API authentication, data retrieval patterns, rate limits
+**Plans**: TBD
+
+Plans:
+- [ ] 31-01: TBD
+
+#### Phase 32: PageSpeed Integration
+
+**Goal**: PageSpeed Insights API integration, CWV monitoring dashboard, performance trends
+**Depends on**: Phase 31
+**Research**: Likely (PageSpeed Insights API v5, CrUX data)
+**Research topics**: PSI API parameters, field vs lab data, historical tracking
+**Plans**: TBD
+
+Plans:
+- [ ] 32-01: TBD
+
+#### Phase 33: Schema Markup Manager
+
+**Goal**: Visual JSON-LD editor, schema validation, injection preview, template library
+**Depends on**: Phase 32
+**Research**: Unlikely (internal patterns, schema.org specs known)
+**Plans**: TBD
+
+Plans:
+- [ ] 33-01: TBD
+
+#### Phase 34: GEO Readiness Dashboard
+
+**Goal**: AI search citability scores, passage-level analysis, platform-specific optimization
+**Depends on**: Phase 33
+**Research**: Unlikely (geo-engine skill exists)
+**Plans**: TBD
+
+Plans:
+- [ ] 34-01: TBD
+
+#### Phase 35: SEO Audit Automation
+
+**Goal**: Scheduled comprehensive site audits, alerting on regressions, historical tracking
+**Depends on**: Phase 34
+**Research**: Unlikely (cron patterns exist from v1.0)
+**Plans**: TBD
+
+Plans:
+- [ ] 35-01: TBD
+
 ## Progress
 
 | Phase | Milestone | Plans Complete | Status | Completed |
@@ -253,3 +326,9 @@ Plans:
 | 27. Approval Workflows | v1.2 | 2/2 | Complete | 2026-02-18 |
 | 28. Team Collaboration | v1.2 | 2/2 | Complete | 2026-02-18 |
 | 29. Role Permissions | v1.2 | 2/2 | Complete | 2026-02-18 |
+| 30. Technical SEO Dashboard | v1.3 | 0/? | Not started | - |
+| 31. Search Console Integration | v1.3 | 0/? | Not started | - |
+| 32. PageSpeed Integration | v1.3 | 0/? | Not started | - |
+| 33. Schema Markup Manager | v1.3 | 0/? | Not started | - |
+| 34. GEO Readiness Dashboard | v1.3 | 0/? | Not started | - |
+| 35. SEO Audit Automation | v1.3 | 0/? | Not started | - |
