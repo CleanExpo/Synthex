@@ -6,7 +6,7 @@
  */
 
 import { useState } from 'react';
-import toast, { Toaster } from 'react-hot-toast';
+import { toast } from 'sonner';
 import {
   AnalysisResult,
   ContentInput,
@@ -59,41 +59,7 @@ export default function PsychologyPage() {
       }
     } catch (error) {
       console.error('Analysis error:', error);
-      toast.error('Failed to analyze content');
-
-      // Show demo result for development
-      setResult({
-        overallScore: 78,
-        principles: [
-          { name: 'Social Proof', score: 85, description: 'Leverages social validation', recommendation: 'Add specific numbers or testimonials' },
-          { name: 'Scarcity', score: 60, description: 'Creates urgency', recommendation: 'Emphasize limited availability' },
-          { name: 'Reciprocity', score: 72, description: 'Offers value first', recommendation: 'Lead with a free resource or insight' },
-          { name: 'Authority', score: 80, description: 'Establishes credibility', recommendation: 'Include credentials or data sources' },
-        ],
-        emotionalTone: {
-          primary: 'Confident',
-          secondary: ['Inspiring', 'Professional'],
-          score: 75,
-        },
-        readability: {
-          score: 82,
-          level: 'Easy to read',
-          wordCount: content.split(/\s+/).length,
-          avgSentenceLength: 15,
-        },
-        persuasionMetrics: {
-          clarity: 85,
-          urgency: 65,
-          credibility: 78,
-          engagement: 72,
-        },
-        recommendations: [
-          'Add a clear call-to-action to improve conversion',
-          'Include specific numbers or statistics for credibility',
-          'Create urgency with time-limited offers',
-          'Use more power words to increase emotional impact',
-        ],
-      });
+      toast.error('Failed to analyze content. Please try again.');
     } finally {
       setIsAnalyzing(false);
     }
@@ -101,8 +67,6 @@ export default function PsychologyPage() {
 
   return (
     <div className="p-6 space-y-6">
-      <Toaster position="top-right" />
-
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>

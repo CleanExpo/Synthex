@@ -6,7 +6,9 @@
  */
 
 import { useEffect, useState, useCallback } from 'react';
-import { AlertTriangle, MessageSquare, RefreshCw } from '@/components/icons';
+import Link from 'next/link';
+import { toast } from 'sonner';
+import { AlertTriangle, MessageSquare, RefreshCw, Rocket, Link2, Sparkles, Users } from '@/components/icons';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -99,16 +101,19 @@ export default function DashboardPage() {
     fetchDashboardData();
   }, [fetchDashboardData]);
 
-  const handleReportError = useCallback(() => {
-    const subject = encodeURIComponent('Dashboard Error Report - Synthex');
-    const body = encodeURIComponent(
-      `Error occurred at: ${error?.timestamp?.toISOString() || new Date().toISOString()}\n` +
-        `Page: ${typeof window !== 'undefined' ? window.location.href : 'unknown'}\n` +
-        `Error: ${error?.message || 'Unknown error'}\n` +
-        `Error Code: ${error?.code || 'N/A'}\n\n` +
-        `Please describe what you were doing when this error occurred:\n`
-    );
-    window.open(`mailto:support@synthex.ai?subject=${subject}&body=${body}`);
+  const handleReportError = useCallback(async () => {
+    const details = [
+      `Time: ${error?.timestamp?.toISOString() || new Date().toISOString()}`,
+      `Page: ${typeof window !== 'undefined' ? window.location.href : 'unknown'}`,
+      `Error: ${error?.message || 'Unknown error'}`,
+      `Code: ${error?.code || 'N/A'}`,
+    ].join('\n');
+    try {
+      await navigator.clipboard.writeText(details);
+      toast.success('Error details copied to clipboard');
+    } catch {
+      toast.error('Could not copy to clipboard');
+    }
   }, [error]);
 
   useEffect(() => {
@@ -210,6 +215,50 @@ export default function DashboardPage() {
         <main className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-6">
           <QuickStats stats={stats} />
 
+          {/* New-user Get Started guide — shown when all stats are zero */}
+          {stats && stats.totalPosts === 0 && stats.followers === 0 && stats.scheduledPosts === 0 && (
+            <AnimatedCard delay={0.1}>
+              <Card className={cn(glassStyles.base, 'border-cyan-500/20')}>
+                <CardHeader className="pb-3">
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-full bg-cyan-500/20 flex items-center justify-center flex-shrink-0">
+                      <Rocket className="h-5 w-5 text-cyan-400" />
+                    </div>
+                    <div>
+                      <CardTitle className="text-base sm:text-lg">Welcome to Synthex!</CardTitle>
+                      <CardDescription className="text-xs sm:text-sm">Complete these steps to get the most out of the platform</CardDescription>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <Link href="/dashboard/settings/connections">
+                      <div className="p-4 rounded-lg bg-white/5 hover:bg-cyan-500/10 border border-white/10 hover:border-cyan-500/30 transition-all cursor-pointer group">
+                        <Link2 className="h-5 w-5 text-cyan-400 mb-2 group-hover:scale-110 transition-transform" />
+                        <p className="text-sm font-medium text-white">Connect a platform</p>
+                        <p className="text-xs text-muted-foreground mt-1">Link your social accounts to start publishing</p>
+                      </div>
+                    </Link>
+                    <Link href="/dashboard/campaigns">
+                      <div className="p-4 rounded-lg bg-white/5 hover:bg-cyan-500/10 border border-white/10 hover:border-cyan-500/30 transition-all cursor-pointer group">
+                        <Sparkles className="h-5 w-5 text-cyan-400 mb-2 group-hover:scale-110 transition-transform" />
+                        <p className="text-sm font-medium text-white">Create a campaign</p>
+                        <p className="text-xs text-muted-foreground mt-1">Schedule and publish your first content</p>
+                      </div>
+                    </Link>
+                    <Link href="/dashboard/settings/team">
+                      <div className="p-4 rounded-lg bg-white/5 hover:bg-cyan-500/10 border border-white/10 hover:border-cyan-500/30 transition-all cursor-pointer group">
+                        <Users className="h-5 w-5 text-cyan-400 mb-2 group-hover:scale-110 transition-transform" />
+                        <p className="text-sm font-medium text-white">Invite your team</p>
+                        <p className="text-xs text-muted-foreground mt-1">Collaborate with colleagues on campaigns</p>
+                      </div>
+                    </Link>
+                  </div>
+                </CardContent>
+              </Card>
+            </AnimatedCard>
+          )}
+
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 sm:space-y-6">
             <TabsList className={cn(
               "grid w-full grid-cols-3 sm:grid-cols-5 lg:w-fit h-auto p-1",
@@ -246,20 +295,6 @@ export default function DashboardPage() {
             </TabsContent>
           </Tabs>
 
-          {/* Competitor Analysis */}
-          <AnimatedCard delay={0.4}>
-            <Card className={cn(glassStyles.base)}>
-              <CardHeader className="pb-2 sm:pb-4">
-                <CardTitle className="text-base sm:text-lg">Competitor Analysis</CardTitle>
-                <CardDescription className="text-xs sm:text-sm">Track your competitors (Phase 4B)</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="h-24 sm:h-32 flex items-center justify-center text-xs sm:text-sm text-muted-foreground">
-                  Competitor analysis integration in progress
-                </div>
-              </CardContent>
-            </Card>
-          </AnimatedCard>
         </main>
       </div>
     </ErrorBoundary>

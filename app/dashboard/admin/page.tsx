@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { supabase } from '@/lib/supabase-client';
-import toast, { Toaster } from 'react-hot-toast';
+import { toast } from 'sonner';
 
 import {
   type User,
@@ -170,11 +170,11 @@ export default function AdminPanel() {
   }, [selectedUserIds, users]);
 
   const handleAddUser = useCallback(() => {
-    toast.success('Add User dialog coming soon');
+    // TODO: Add User dialog — not yet implemented
   }, []);
 
   const handleFilter = useCallback(() => {
-    toast.success('Filter options coming soon');
+    // TODO: Filter options — not yet implemented
   }, []);
 
   const handleOpenEditDialog = useCallback((user: User) => {
@@ -205,8 +205,6 @@ export default function AdminPanel() {
 
   return (
     <div className="p-6 space-y-6">
-      <Toaster position="top-right" />
-
       <AdminHeader
         onExport={handleExportUsers}
         onAddUser={handleAddUser}

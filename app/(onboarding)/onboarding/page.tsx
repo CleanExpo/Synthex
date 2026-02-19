@@ -76,6 +76,27 @@ export default function OnboardingPage() {
         ))}
       </div>
 
+      {/* Step preview */}
+      <div className="w-full max-w-xl mx-auto mb-10">
+        <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-4">4 quick steps</p>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          {[
+            { n: 1, label: 'Your details' },
+            { n: 2, label: 'Connect platforms', note: 'Requires social logins' },
+            { n: 3, label: 'Set up persona' },
+            { n: 4, label: 'Review & launch' },
+          ].map(({ n, label, note }) => (
+            <div key={n} className="flex flex-col items-center gap-1 text-center">
+              <div className="w-8 h-8 rounded-full bg-cyan-500/20 border border-cyan-500/30 flex items-center justify-center text-sm font-bold text-cyan-400">
+                {n}
+              </div>
+              <p className="text-xs font-medium text-white">{label}</p>
+              {note && <p className="text-[11px] text-amber-400/80">{note}</p>}
+            </div>
+          ))}
+        </div>
+      </div>
+
       {/* CTA */}
       <div className="space-y-4">
         <Button

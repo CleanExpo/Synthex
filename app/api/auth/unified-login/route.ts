@@ -65,9 +65,10 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json(
-      { 
+      {
         success: false,
-        error: result.error || 'Authentication failed' 
+        error: result.error || 'Authentication failed',
+        existingProvider: result.existingProvider,
       },
       { status: 401 }
     );

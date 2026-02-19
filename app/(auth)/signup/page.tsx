@@ -7,9 +7,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Mail, Lock, User, Chrome, Loader2, CheckCircle } from '@/components/icons';
+import { Mail, Lock, User, Chrome, Loader2, CheckCircle, Eye, EyeOff } from '@/components/icons';
 import { SynthexLogo } from '@/components/marketing/MarketingLayout';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 
 export default function SignupPage() {
   const router = useRouter();
@@ -20,8 +20,10 @@ export default function SignupPage() {
     password: '',
     confirmPassword: '',
   });
-
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [passwordStrength, setPasswordStrength] = useState(0);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const calculatePasswordStrength = (password: string) => {
     let strength = 0;
@@ -34,21 +36,21 @@ export default function SignupPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setFieldErrors({});
 
     if (formData.password !== formData.confirmPassword) {
-      toast.error('Passwords do not match');
+      setFieldErrors({ confirmPassword: 'Passwords do not match' });
       return;
     }
 
     if (passwordStrength < 2) {
-      toast.error('Password is too weak');
+      setFieldErrors({ password: 'Password is too weak. Use uppercase letters, numbers, or symbols.' });
       return;
     }
 
     setIsLoading(true);
 
     try {
-      // TODO: Implement actual registration with Supabase
       const response = await fetch('/api/auth/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -60,14 +62,46 @@ export default function SignupPage() {
         }),
       });
 
-      if (!response.ok) {
-        throw new Error('Registration failed');
+      const data = await response.json();
+
+      if (response.status === 429) {
+        const retryAfter = response.headers.get('Retry-After');
+        const seconds = retryAfter ? parseInt(retryAfter, 10) : 60;
+        const minutes = Math.ceil(seconds / 60);
+        toast.error(`Too many attempts — please wait ${minutes} minute${minutes !== 1 ? 's' : ''} before trying again.`);
+        return;
       }
 
-      toast.success('Account created successfully!');
-      router.push('/onboarding');
-    } catch (error) {
-      toast.error('Failed to create account. Please try again.');
+      if (!response.ok) {
+        // Surface field-level validation errors from the API
+        if (data.details && Array.isArray(data.details)) {
+          const errors: Record<string, string> = {};
+          for (const issue of data.details as { field: string; message: string }[]) {
+            if (issue.field) {
+              errors[issue.field] = issue.message;
+            }
+          }
+          if (Object.keys(errors).length > 0) {
+            setFieldErrors(errors);
+          } else {
+            toast.error(data.error || 'Registration failed. Please try again.');
+          }
+        } else {
+          toast.error(data.error || 'Registration failed. Please try again.');
+        }
+        return;
+      }
+
+      // Success — check if email verification is required
+      if (data.requiresVerification) {
+        toast.success('Account created! Please check your email to verify your account.');
+        router.push('/auth/verify-email');
+      } else {
+        toast.success('Account created successfully!');
+        router.push('/onboarding');
+      }
+    } catch {
+      toast.error('Network error. Please check your connection and try again.');
     } finally {
       setIsLoading(false);
     }
@@ -94,7 +128,6 @@ export default function SignupPage() {
 
       if (error) throw error;
     } catch (error) {
-      // Handle specific OAuth errors
       const message = error instanceof Error ? error.message : 'An unknown error occurred';
       if (message.includes('provider is not enabled')) {
         toast.error('Google signup is not enabled. Please use the regular signup form.');
@@ -163,11 +196,14 @@ export default function SignupPage() {
                   placeholder="John Doe"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="pl-10 bg-white/5 border-cyan-500/20 text-white placeholder:text-gray-500 focus:border-cyan-500/50 focus:ring-cyan-500/20"
+                  className={`pl-10 bg-white/5 border-cyan-500/20 text-white placeholder:text-gray-500 focus:border-cyan-500/50 focus:ring-cyan-500/20 ${fieldErrors.name ? 'border-red-500/60' : ''}`}
                   required
                   disabled={isLoading}
                 />
               </div>
+              {fieldErrors.name && (
+                <p className="text-xs text-red-400">{fieldErrors.name}</p>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -180,11 +216,14 @@ export default function SignupPage() {
                   placeholder="you@example.com"
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className="pl-10 bg-white/5 border-cyan-500/20 text-white placeholder:text-gray-500 focus:border-cyan-500/50 focus:ring-cyan-500/20"
+                  className={`pl-10 bg-white/5 border-cyan-500/20 text-white placeholder:text-gray-500 focus:border-cyan-500/50 focus:ring-cyan-500/20 ${fieldErrors.email ? 'border-red-500/60' : ''}`}
                   required
                   disabled={isLoading}
                 />
               </div>
+              {fieldErrors.email && (
+                <p className="text-xs text-red-400">{fieldErrors.email}</p>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -193,17 +232,25 @@ export default function SignupPage() {
                 <Lock className="absolute left-3 top-3 w-4 h-4 text-gray-500" />
                 <Input
                   id="password"
-                  type="password"
+                  type={showPassword ? 'text' : 'password'}
                   placeholder="••••••••"
                   value={formData.password}
                   onChange={(e) => {
                     setFormData({ ...formData, password: e.target.value });
                     calculatePasswordStrength(e.target.value);
                   }}
-                  className="pl-10 bg-white/5 border-cyan-500/20 text-white placeholder:text-gray-500 focus:border-cyan-500/50 focus:ring-cyan-500/20"
+                  className={`pl-10 pr-10 bg-white/5 border-cyan-500/20 text-white placeholder:text-gray-500 focus:border-cyan-500/50 focus:ring-cyan-500/20 ${fieldErrors.password ? 'border-red-500/60' : ''}`}
                   required
                   disabled={isLoading}
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-3 text-gray-500 hover:text-gray-300 transition-colors"
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
               </div>
               {formData.password && (
                 <div className="space-y-1">
@@ -224,6 +271,9 @@ export default function SignupPage() {
                   </p>
                 </div>
               )}
+              {fieldErrors.password && (
+                <p className="text-xs text-red-400">{fieldErrors.password}</p>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -232,18 +282,30 @@ export default function SignupPage() {
                 <Lock className="absolute left-3 top-3 w-4 h-4 text-gray-500" />
                 <Input
                   id="confirmPassword"
-                  type="password"
+                  type={showConfirmPassword ? 'text' : 'password'}
                   placeholder="••••••••"
                   value={formData.confirmPassword}
                   onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                  className="pl-10 bg-white/5 border-cyan-500/20 text-white placeholder:text-gray-500 focus:border-cyan-500/50 focus:ring-cyan-500/20"
+                  className={`pl-10 pr-10 bg-white/5 border-cyan-500/20 text-white placeholder:text-gray-500 focus:border-cyan-500/50 focus:ring-cyan-500/20 ${fieldErrors.confirmPassword ? 'border-red-500/60' : ''}`}
                   required
                   disabled={isLoading}
                 />
-                {formData.confirmPassword && formData.password === formData.confirmPassword && (
+                {formData.confirmPassword && formData.password === formData.confirmPassword ? (
                   <CheckCircle className="absolute right-3 top-3 w-4 h-4 text-cyan-500" />
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-3 top-3 text-gray-500 hover:text-gray-300 transition-colors"
+                    aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
+                  >
+                    {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
                 )}
               </div>
+              {fieldErrors.confirmPassword && (
+                <p className="text-xs text-red-400">{fieldErrors.confirmPassword}</p>
+              )}
             </div>
 
             <div className="space-y-2">

@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Mail, Lock, Chrome, Loader2, AlertCircle } from '@/components/icons';
+import { Mail, Lock, Chrome, Loader2, AlertCircle, Eye, EyeOff } from '@/components/icons';
 import { SynthexLogo } from '@/components/marketing/MarketingLayout';
 import { toast } from 'sonner';
 
@@ -21,6 +21,8 @@ export default function LoginPage() {
     existingProvider: string;
     newProvider: string;
   } | null>(null);
+  const [oauthHint, setOauthHint] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -53,6 +55,7 @@ export default function LoginPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    setOauthHint(null);
 
     try {
       // Use unified auth endpoint
@@ -69,8 +72,20 @@ export default function LoginPage() {
 
       const data = await response.json();
 
+      if (response.status === 429) {
+        const retryAfter = response.headers.get('Retry-After');
+        const seconds = retryAfter ? parseInt(retryAfter, 10) : 60;
+        const minutes = Math.ceil(seconds / 60);
+        toast.error(`Too many login attempts — please wait ${minutes} minute${minutes !== 1 ? 's' : ''} before trying again.`);
+        return;
+      }
+
       if (!response.ok || !data.success) {
-        throw new Error(data.error || 'Invalid credentials');
+        if (data.existingProvider) {
+          setOauthHint(data.existingProvider as string);
+        }
+        toast.error(data.error || 'Invalid email or password');
+        return;
       }
 
       // Store user profile data in localStorage for UI components (non-sensitive)
@@ -86,8 +101,8 @@ export default function LoginPage() {
 
       toast.success('Welcome back!');
       router.push('/dashboard');
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Invalid email or password');
+    } catch {
+      toast.error('Login failed. Please check your connection and try again.');
     } finally {
       setIsLoading(false);
     }
@@ -222,14 +237,22 @@ export default function LoginPage() {
                 <Lock className="absolute left-3 top-3 w-4 h-4 text-gray-500" />
                 <Input
                   id="password"
-                  type="password"
+                  type={showPassword ? 'text' : 'password'}
                   placeholder="••••••••"
                   value={formData.password}
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  className="pl-10 bg-white/5 border-cyan-500/20 text-white placeholder:text-gray-500 focus:border-cyan-500/50 focus:ring-cyan-500/20"
+                  className="pl-10 pr-10 bg-white/5 border-cyan-500/20 text-white placeholder:text-gray-500 focus:border-cyan-500/50 focus:ring-cyan-500/20"
                   required
                   disabled={isLoading}
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-3 text-gray-500 hover:text-gray-300 transition-colors"
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
               </div>
             </div>
             <div className="flex items-center justify-between">
@@ -256,6 +279,26 @@ export default function LoginPage() {
               )}
             </Button>
           </form>
+
+          {oauthHint === 'google' && (
+            <div className="p-3 bg-blue-500/10 border border-blue-500/30 rounded-lg">
+              <div className="flex items-start gap-2">
+                <AlertCircle className="w-4 h-4 text-blue-400 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-sm text-blue-200">
+                    This email is registered with Google.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={handleGoogleLogin}
+                    className="text-xs text-cyan-400 hover:text-cyan-300 mt-1 underline"
+                  >
+                    Sign in with Google instead →
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
 
           <div className="relative">
             <div className="absolute inset-0 flex items-center">

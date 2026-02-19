@@ -6,9 +6,9 @@
  * @description Success page after completing onboarding with Synthex branding
  */
 
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Check, ArrowRight, Loader2, Sparkles } from '@/components/icons';
+import { Check, ArrowRight, Loader2, Sparkles, XCircle, RefreshCw } from '@/components/icons';
 // Alias for PartyPopper (using Sparkles as visual alternative)
 const PartyPopper = Sparkles;
 import { Button } from '@/components/ui/button';
@@ -34,65 +34,73 @@ export default function CompletePage() {
   const { data, completeStep } = useOnboarding();
   const [saving, setSaving] = useState(true);
   const [saved, setSaved] = useState(false);
+  const [saveError, setSaveError] = useState(false);
+
+  // Keep a ref to the latest onboarding data so doSave stays stable (no dep on data)
+  const dataRef = useRef(data);
+  dataRef.current = data;
+
+  const doSave = useCallback(async () => {
+    setSaving(true);
+    setSaveError(false);
+    const d = dataRef.current;
+
+    try {
+      const res = await fetch('/api/onboarding', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          organizationName: d.organizationName,
+          industry: d.industry,
+          teamSize: d.teamSize,
+          connectedPlatforms: d.connectedPlatforms,
+          personaName: d.personaName,
+          personaTone: d.personaTone,
+          personaTopics: d.personaTopics,
+          skipPersona: d.skipPersona,
+        }),
+      });
+
+      if (!res.ok) {
+        console.error('[Onboarding] Save failed with status:', res.status);
+        setSaveError(true);
+        setSaving(false);
+        return;
+      }
+
+      setSaving(false);
+      setSaved(true);
+
+      // Trigger confetti (dynamically imported)
+      try {
+        const confetti = (await import('canvas-confetti')).default;
+        confetti({
+          particleCount: 100,
+          spread: 70,
+          origin: { y: 0.6 },
+          colors: ['#06b6d4', '#22d3ee', '#0891b2', '#67e8f9'],
+        });
+      } catch {
+        // Confetti not available, continue without it
+      }
+    } catch (error) {
+      console.error('[Onboarding] Failed to save onboarding data:', error);
+      setSaveError(true);
+      setSaving(false);
+    }
+  }, []); // stable — reads from dataRef
 
   useEffect(() => {
-    // Mark step 4 as complete
     completeStep(4);
-
-    // Save onboarding data to backend
-    const saveOnboarding = async () => {
-      try {
-        const res = await fetch('/api/onboarding', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
-          body: JSON.stringify({
-            organizationName: data.organizationName,
-            industry: data.industry,
-            teamSize: data.teamSize,
-            connectedPlatforms: data.connectedPlatforms,
-            personaName: data.personaName,
-            personaTone: data.personaTone,
-            personaTopics: data.personaTopics,
-            skipPersona: data.skipPersona,
-          }),
-        });
-        if (!res.ok) {
-          console.warn('Onboarding save returned non-OK status:', res.status);
-        }
-
-        setSaving(false);
-        setSaved(true);
-
-        // Trigger confetti (dynamically imported)
-        try {
-          const confetti = (await import('canvas-confetti')).default;
-          confetti({
-            particleCount: 100,
-            spread: 70,
-            origin: { y: 0.6 },
-            colors: ['#06b6d4', '#22d3ee', '#0891b2', '#67e8f9'],
-          });
-        } catch {
-          // Confetti not available, continue without it
-        }
-      } catch (error) {
-        console.error('Failed to save onboarding data:', error);
-        setSaving(false);
-      }
-    };
-
-    saveOnboarding();
-  }, [completeStep]);
+    doSave();
+  }, [completeStep, doSave]);
 
   const handleGoToDashboard = (takeTour: boolean = false) => {
     if (takeTour) {
-      // Remove hasSeenTour to trigger tour
       localStorage.removeItem('hasSeenTour');
-      // Set flag to show tour immediately on dashboard
       localStorage.setItem('showTourOnDashboard', 'true');
     }
-    // Mark onboarding as complete in localStorage
     localStorage.setItem('onboardingComplete', 'true');
     localStorage.setItem('onboardingCompletedAt', new Date().toISOString());
     router.push('/dashboard');
@@ -120,6 +128,38 @@ export default function CompletePage() {
                 This will only take a moment
               </p>
             </div>
+          </>
+        ) : saveError ? (
+          <>
+            <div className="w-20 h-20 rounded-full bg-gradient-to-br from-red-500/20 to-red-600/10 border border-red-500/20 flex items-center justify-center mx-auto backdrop-blur-sm">
+              <XCircle className="w-10 h-10 text-red-400" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold text-white">Couldn&apos;t save your setup</h1>
+              <p className="text-gray-400 mt-2">
+                Something went wrong saving your preferences. Your account was created — please try again.
+              </p>
+            </div>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center mt-4">
+              <Button
+                onClick={doSave}
+                className="bg-gradient-to-r from-cyan-500 to-cyan-600 hover:from-cyan-400 hover:to-cyan-500 text-white shadow-lg shadow-cyan-500/25"
+              >
+                <RefreshCw className="w-4 h-4 mr-2" />
+                Try Again
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => handleGoToDashboard(false)}
+                className="border-cyan-500/30 text-gray-300 hover:bg-cyan-500/10 hover:text-white hover:border-cyan-500/50"
+              >
+                Skip to Dashboard
+                <ArrowRight className="w-4 h-4 ml-2" />
+              </Button>
+            </div>
+            <p className="text-xs text-gray-500">
+              You can update your preferences later in Settings
+            </p>
           </>
         ) : (
           <>

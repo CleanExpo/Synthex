@@ -22,7 +22,7 @@ import {
 import { abTestingService, Experiment } from '@/lib/ab-testing';
 import { APIErrorCard } from '@/components/error-states';
 import { DashboardSkeleton } from '@/components/skeletons';
-import toast, { Toaster } from 'react-hot-toast';
+import { toast } from 'sonner';
 
 export default function ExperimentsPage() {
   const [experiments, setExperiments] = useState<Experiment[]>([]);
@@ -89,8 +89,6 @@ export default function ExperimentsPage() {
 
   return (
     <div className="p-6 space-y-6">
-      <Toaster position="top-right" />
-      
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
@@ -104,10 +102,8 @@ export default function ExperimentsPage() {
           </Button>
           <Button
             className="gradient-primary text-white"
-            onClick={() => {
-              setShowNewExperimentForm(true);
-              toast.success('New experiment form coming soon!', { icon: '🧪' });
-            }}
+            disabled
+            title="New experiment creation coming soon"
           >
             <Plus className="w-4 h-4 mr-2" />
             New Experiment
@@ -188,7 +184,8 @@ export default function ExperimentsPage() {
               <p className="text-slate-400 mb-4">Create your first A/B test to get started.</p>
               <Button
                 className="gradient-primary text-white"
-                onClick={() => setShowNewExperimentForm(true)}
+                disabled
+                title="New experiment creation coming soon"
               >
                 <Plus className="w-4 h-4 mr-2" />
                 New Experiment

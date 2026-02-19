@@ -13,7 +13,7 @@ import {
   AlertCircle,
   RefreshCw
 } from '@/components/icons';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 
 interface Subscription {
@@ -134,6 +134,18 @@ export default function BillingPage() {
     }
   };
 
+  const getStatusLabel = (status: string | undefined) => {
+    if (!status || status === 'inactive') return 'Free Plan';
+    switch (status) {
+      case 'active': return 'Active';
+      case 'trialing': return 'Trial';
+      case 'past_due': return 'Past Due';
+      case 'canceled': return 'Canceled';
+      case 'unpaid': return 'Unpaid';
+      default: return status.charAt(0).toUpperCase() + status.slice(1);
+    }
+  };
+
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
@@ -193,7 +205,7 @@ export default function BillingPage() {
               <h2 className="text-xl font-semibold text-white">Current Plan</h2>
             </div>
             <Badge className={`${getStatusColor(subscription?.status || 'inactive')} text-white`}>
-              {subscription?.status || 'No Active Subscription'}
+              {getStatusLabel(subscription?.status)}
             </Badge>
           </div>
 
@@ -293,12 +305,16 @@ export default function BillingPage() {
                   {usageData?.usage.aiPosts ?? 0} / {usageData?.limits.aiPosts === -1 ? '∞' : (usageData?.limits.aiPosts ?? 10)}
                 </span>
               </div>
-              <div className="w-full bg-white/10 rounded-full h-2">
-                <div
-                  className="bg-gradient-to-r from-cyan-500 to-teal-500 h-2 rounded-full transition-all duration-300"
-                  style={{ width: `${usageData?.limits.aiPosts === -1 ? 0 : (usageData?.percentages.aiPosts ?? 0)}%` }}
-                ></div>
-              </div>
+              {usageData?.limits.aiPosts === -1 ? (
+                <span className="text-xs font-medium text-cyan-400">Unlimited</span>
+              ) : (
+                <div className="w-full bg-white/10 rounded-full h-2">
+                  <div
+                    className="bg-gradient-to-r from-cyan-500 to-teal-500 h-2 rounded-full transition-all duration-300"
+                    style={{ width: `${usageData?.percentages.aiPosts ?? 0}%` }}
+                  ></div>
+                </div>
+              )}
             </div>
 
             <div>
@@ -308,12 +324,16 @@ export default function BillingPage() {
                   {usageData?.usage.socialAccounts ?? 0} / {usageData?.limits.socialAccounts === -1 ? '∞' : (usageData?.limits.socialAccounts ?? 2)}
                 </span>
               </div>
-              <div className="w-full bg-white/10 rounded-full h-2">
-                <div
-                  className="bg-gradient-to-r from-cyan-500 to-teal-500 h-2 rounded-full transition-all duration-300"
-                  style={{ width: `${usageData?.limits.socialAccounts === -1 ? 0 : (usageData?.percentages.socialAccounts ?? 0)}%` }}
-                ></div>
-              </div>
+              {usageData?.limits.socialAccounts === -1 ? (
+                <span className="text-xs font-medium text-cyan-400">Unlimited</span>
+              ) : (
+                <div className="w-full bg-white/10 rounded-full h-2">
+                  <div
+                    className="bg-gradient-to-r from-cyan-500 to-teal-500 h-2 rounded-full transition-all duration-300"
+                    style={{ width: `${usageData?.percentages.socialAccounts ?? 0}%` }}
+                  ></div>
+                </div>
+              )}
             </div>
 
             <div>
@@ -323,12 +343,16 @@ export default function BillingPage() {
                   {usageData?.usage.personas ?? 0} / {usageData?.limits.personas === -1 ? '∞' : (usageData?.limits.personas ?? 1)}
                 </span>
               </div>
-              <div className="w-full bg-white/10 rounded-full h-2">
-                <div
-                  className="bg-gradient-to-r from-cyan-500 to-teal-500 h-2 rounded-full transition-all duration-300"
-                  style={{ width: `${usageData?.limits.personas === -1 ? 0 : (usageData?.percentages.personas ?? 0)}%` }}
-                ></div>
-              </div>
+              {usageData?.limits.personas === -1 ? (
+                <span className="text-xs font-medium text-cyan-400">Unlimited</span>
+              ) : (
+                <div className="w-full bg-white/10 rounded-full h-2">
+                  <div
+                    className="bg-gradient-to-r from-cyan-500 to-teal-500 h-2 rounded-full transition-all duration-300"
+                    style={{ width: `${usageData?.percentages.personas ?? 0}%` }}
+                  ></div>
+                </div>
+              )}
             </div>
           </div>
 

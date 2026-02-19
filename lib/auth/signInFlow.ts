@@ -139,9 +139,31 @@ export class SignInFlow {
       });
 
       if (error) {
+        // Check if the user registered with a different auth provider (e.g. Google OAuth),
+        // so we can return a specific recovery hint instead of a generic error.
+        try {
+          const prismaUser = await prisma.user.findUnique({
+            where: { email },
+            select: { authProvider: true },
+          });
+          if (
+            prismaUser?.authProvider &&
+            prismaUser.authProvider !== 'local' &&
+            prismaUser.authProvider !== 'email'
+          ) {
+            const provider = prismaUser.authProvider as AuthProvider;
+            return {
+              success: false,
+              error: `This account uses ${provider === 'google' ? 'Google' : provider} sign-in. Please use the button below.`,
+              existingProvider: provider,
+            };
+          }
+        } catch {
+          // Ignore DB lookup failure — fall through to generic error
+        }
         return {
           success: false,
-          error: error instanceof Error ? error.message : String(error)
+          error: error instanceof Error ? error.message : String(error),
         };
       }
 

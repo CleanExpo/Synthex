@@ -19,10 +19,41 @@ import {
 } from '@/components/icons';
 import { GEOFeatureGate } from '@/components/geo/GEOFeatureGate';
 
+interface GEOScore {
+  overall: number;
+  citability: number;
+  structure: number;
+  multiModal: number;
+  authority: number;
+  technical: number;
+}
+
+interface CitablePassage {
+  isOptimalLength: boolean;
+  answerFirst: boolean;
+  hasCitation: boolean;
+  wordCount: number;
+  score: number;
+  text: string;
+}
+
+interface GEORecommendation {
+  title: string;
+  priority: string;
+  impact: number;
+  description: string;
+}
+
+interface GEOResult {
+  score: GEOScore;
+  citablePassages: CitablePassage[];
+  recommendations: GEORecommendation[];
+}
+
 export default function GEOPage() {
   const [content, setContent] = useState('');
   const [platform, setPlatform] = useState('all');
-  const [result, setResult] = useState<any>(null);
+  const [result, setResult] = useState<GEOResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState('analyze');
@@ -182,10 +213,10 @@ export default function GEOPage() {
                           <div className="flex-1 bg-white/5 rounded-full h-2">
                             <div
                               className="bg-cyan-500 h-2 rounded-full transition-all"
-                              style={{ width: `${result.score[key]}%` }}
+                              style={{ width: `${result.score[key as keyof GEOScore]}%` }}
                             />
                           </div>
-                          <span className="text-sm text-white font-medium w-10 text-right">{result.score[key]}</span>
+                          <span className="text-sm text-white font-medium w-10 text-right">{result.score[key as keyof GEOScore]}</span>
                           <span className="text-xs text-gray-500 w-8">({weight})</span>
                         </div>
                       ))}
@@ -199,12 +230,12 @@ export default function GEOPage() {
                 <Card className="bg-[#0f172a]/80 border border-cyan-500/10">
                   <CardHeader>
                     <CardTitle className="text-white text-lg">
-                      Citable Passages ({result.citablePassages.filter((p: any) => p.isOptimalLength).length}/{result.citablePassages.length} optimal)
+                      Citable Passages ({result.citablePassages.filter((p) => p.isOptimalLength).length}/{result.citablePassages.length} optimal)
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-2">
-                      {result.citablePassages.slice(0, 8).map((p: any, i: number) => (
+                      {result.citablePassages.slice(0, 8).map((p, i) => (
                         <div key={i} className="p-3 rounded-lg bg-white/[0.02] border border-white/[0.05]">
                           <div className="flex items-center justify-between mb-1">
                             <div className="flex gap-2">
@@ -230,7 +261,7 @@ export default function GEOPage() {
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-2">
-                      {result.recommendations.map((rec: any, i: number) => (
+                      {result.recommendations.map((rec, i) => (
                         <div key={i} className="flex items-start gap-3 p-3 rounded-lg bg-white/[0.02]">
                           <Zap className="h-4 w-4 text-amber-400 mt-0.5 shrink-0" />
                           <div>

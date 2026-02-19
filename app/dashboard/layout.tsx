@@ -233,7 +233,7 @@ export default function DashboardLayout({
               <Input
                 type="search"
                 placeholder="Search..."
-                className="w-64 pl-10 bg-white/5 border-white/10 text-white placeholder:text-gray-500"
+                className="w-48 sm:w-64 pl-10 bg-white/5 border-white/10 text-white placeholder:text-gray-500"
               />
             </div>
           </div>
@@ -290,7 +290,7 @@ export default function DashboardLayout({
         </header>
 
         {/* Page Content */}
-        <main className="p-6">
+        <main className="p-3 sm:p-6">
           {children}
         </main>
       </div>

@@ -3,7 +3,7 @@
 import { useState, useCallback, useMemo } from 'react';
 import { DashboardSkeleton } from '@/components/skeletons';
 import { APIErrorCard } from '@/components/error-states';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 import Link from 'next/link';
 import { Brain } from '@/components/icons';
 
@@ -138,7 +138,7 @@ export default function ContentPage() {
   }, []);
 
   const handleTrainAI = useCallback(() => {
-    toast.success('AI training feature coming soon');
+    // TODO: AI training — not yet implemented
   }, []);
 
   const handleViewAnalytics = useCallback(() => {
