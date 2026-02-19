@@ -153,6 +153,9 @@ export class SignInFlow {
       }
 
       // Create unified session
+      // IMPORTANT: Always use our own JWT (signed with JWT_SECRET) for the accessToken.
+      // Supabase's access_token is signed with Supabase's JWT secret, which doesn't
+      // match our JWT_SECRET used by jwt-utils.ts for verification.
       const session: AuthSession = {
         user: {
           id: data.user.id,
@@ -162,7 +165,7 @@ export class SignInFlow {
           provider: 'email',
           emailVerified: !!data.user.confirmed_at
         },
-        accessToken: data.session?.access_token || this.generateJWT(data.user.id),
+        accessToken: this.generateJWT(data.user.id),
         refreshToken: data.session?.refresh_token,
         expiresAt: Date.now() + (7 * 24 * 60 * 60 * 1000) // 7 days
       };
@@ -347,21 +350,18 @@ export class SignInFlow {
    * Create and persist session
    */
   private async createSession(session: AuthSession): Promise<void> {
-    // Store session in database for persistence across environments
-    if (this.isSupabaseConfigured()) {
-      try {
-        await supabase.from('sessions').upsert({
-          user_id: session.user.id,
-          access_token: session.accessToken,
-          refresh_token: session.refreshToken,
-          expires_at: new Date(session.expiresAt).toISOString(),
-          user_data: session.user,
-          created_at: new Date().toISOString()
-        });
-      } catch (error) {
-        console.error('Failed to persist session:', error);
-        // Continue even if session persistence fails
-      }
+    // Store session in database for token revocation support
+    try {
+      await prisma.session.create({
+        data: {
+          token: session.accessToken,
+          userId: session.user.id,
+          expiresAt: new Date(session.expiresAt),
+        },
+      });
+    } catch (error) {
+      console.error('Failed to persist session:', error);
+      // Continue even if session persistence fails — JWT auth still works
     }
   }
 
@@ -370,49 +370,25 @@ export class SignInFlow {
    */
   async validateSession(accessToken: string): Promise<AuthResult> {
     try {
-      // Verify JWT
+      // Verify JWT — this is the primary auth check
       const decoded = jwt.verify(accessToken, JWT_SECRET) as JWTPayload;
-      
-      // Check if session exists in database
-      if (this.isSupabaseConfigured()) {
-        const { data: session } = await supabase
-          .from('sessions')
-          .select('*')
-          .eq('access_token', accessToken)
-          .single();
 
-        if (session && new Date(session.expires_at) > new Date()) {
-          return {
-            success: true,
-            session: {
-              user: session.user_data,
-              accessToken: session.access_token,
-              refreshToken: session.refresh_token,
-              expiresAt: new Date(session.expires_at).getTime()
-            }
-          };
-        }
+      if (!decoded || decoded.exp * 1000 <= Date.now()) {
+        return { success: false, error: 'Session expired' };
       }
 
-      // JWT is valid but no Supabase session — use decoded token data
-      if (decoded && decoded.exp * 1000 > Date.now()) {
-        return {
-          success: true,
-          session: {
-            user: {
-              id: decoded.sub,
-              email: decoded.email || 'unknown',
-              provider: 'email'
-            },
-            accessToken,
-            expiresAt: decoded.exp * 1000
-          }
-        };
-      }
-
+      // JWT is valid — return decoded token data
       return {
-        success: false,
-        error: 'Session expired'
+        success: true,
+        session: {
+          user: {
+            id: decoded.sub,
+            email: decoded.email || 'unknown',
+            provider: 'email'
+          },
+          accessToken,
+          expiresAt: decoded.exp * 1000
+        }
       };
     } catch (error) {
       return {
@@ -426,17 +402,12 @@ export class SignInFlow {
    * Sign out and destroy session
    */
   async signOut(accessToken: string): Promise<void> {
-    if (this.isSupabaseConfigured()) {
-      try {
-        await supabase
-          .from('sessions')
-          .delete()
-          .eq('access_token', accessToken);
-        
-        await supabase.auth.signOut();
-      } catch (error) {
-        console.error('Sign out error:', error);
-      }
+    try {
+      await prisma.session.deleteMany({
+        where: { token: accessToken },
+      });
+    } catch (error) {
+      console.error('Sign out error:', error);
     }
   }
 
