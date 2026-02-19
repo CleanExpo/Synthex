@@ -121,7 +121,7 @@ const createPrismaClient = (): PrismaClient => {
     ssl: {
       rejectUnauthorized: false, // Required for Supabase - allows self-signed certs
     },
-    max: 10, // Maximum connections in pool
+    max: 3, // Keep low for serverless -- prevents Fail2ban trigger on auth failure
     idleTimeoutMillis: 30000, // Close idle connections after 30s
     connectionTimeoutMillis: 10000, // Connection timeout 10s
   });
@@ -130,6 +130,14 @@ const createPrismaClient = (): PrismaClient => {
   pool.on('error', (err) => {
     console.error('[Prisma] Pool error:', err.message);
     globalForPrisma.prismaMetrics.errors++;
+    if (err.message.includes('SCRAM') || err.message.includes('SASL')) {
+      console.error(
+        '[Prisma] SCRAM AUTH FAILURE -- Possible causes:\n' +
+        '  1. IP banned by Fail2ban (check Supabase > Settings > Database > Network Bans)\n' +
+        '  2. Supavisor credential cache stale (wait 5 min after password reset)\n' +
+        '  3. Password mismatch between DATABASE_URL and Supabase'
+      );
+    }
   });
 
   const adapter = new PrismaPg(pool);
@@ -294,7 +302,10 @@ export async function executeWithRetry<T>(
       const isConnectionError =
         lastError.message.includes('connection') ||
         lastError.message.includes('pool') ||
-        lastError.message.includes('timeout');
+        lastError.message.includes('timeout') ||
+        lastError.message.includes('SCRAM') ||
+        lastError.message.includes('SASL') ||
+        lastError.message.includes('password authentication');
 
       if (attempt < maxRetries && isConnectionError) {
         console.warn(
