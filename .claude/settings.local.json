@@ -11,7 +11,9 @@
       "Bash(npx prisma studio)",
       "Bash(npx tsc*)",
       "Bash(node *)",
-      "Bash(powershell *)"
+      "Bash(powershell *)",
+      "Skill(gsd:progress)",
+      "Skill(gsd:complete-milestone)"
     ],
     "deny": [
       "Bash(git push --force*)",
@@ -25,6 +27,10 @@
       "Bash(prisma migrate reset*)"
     ]
   },
+  "enableAllProjectMcpServers": true,
+  "enabledMcpjsonServers": [
+    "linear"
+  ],
   "hooks": {
     "PreToolUse": [
       {
@@ -32,13 +38,11 @@
         "hooks": [
           {
             "type": "command",
-            "command": "powershell -ExecutionPolicy Bypass -File \"D:\\Synthex\\.claude\\hooks\\guard-destructive.ps1\" -ToolInput \"$TOOL_INPUT\"",
-            "exitCodes": { "2": "block" }
+            "command": "powershell -ExecutionPolicy Bypass -File \"D:\\Synthex\\.claude\\hooks\\guard-destructive.ps1\" -ToolInput \"$TOOL_INPUT\""
           },
           {
             "type": "command",
-            "command": "powershell -ExecutionPolicy Bypass -File \"D:\\Synthex\\.claude\\hooks\\pre-build-validate.ps1\" -ToolInput \"$TOOL_INPUT\"",
-            "exitCodes": { "2": "block" }
+            "command": "powershell -ExecutionPolicy Bypass -File \"D:\\Synthex\\.claude\\hooks\\pre-build-validate.ps1\" -ToolInput \"$TOOL_INPUT\""
           }
         ]
       },
@@ -47,8 +51,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "powershell -ExecutionPolicy Bypass -File \"D:\\Synthex\\.claude\\hooks\\pre-write-validate.ps1\" -ToolInput \"$TOOL_INPUT\"",
-            "exitCodes": { "2": "block" }
+            "command": "powershell -ExecutionPolicy Bypass -File \"D:\\Synthex\\.claude\\hooks\\pre-write-validate.ps1\" -ToolInput \"$TOOL_INPUT\""
           }
         ]
       }
