@@ -380,7 +380,7 @@ export const serverDb = {
       const supabase = createServerClient();
       const { error } = await supabase
         .from('audit_logs')
-        .insert(entry);
+        .insert({ id: crypto.randomUUID(), ...entry });
 
       if (error) {
         console.error('Failed to create audit log:', error);
