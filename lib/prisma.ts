@@ -7,21 +7,17 @@
  * IMPORTANT: This is the ONLY place PrismaClient should be instantiated.
  * All other files should import { prisma } from '@/lib/prisma'
  *
- * Connection pooling is handled via:
- * 1. Supabase Supavisor (PgBouncer) on port 6543 (transaction mode)
- * 2. @prisma/adapter-pg for PostgreSQL wire protocol compatibility
+ * Connection pooling is handled via Supabase Supavisor on port 5432 (session mode).
+ * Uses Prisma's built-in query engine (Rust) for SCRAM-SHA-256 auth instead of
+ * node-postgres, which has SCRAM relay failures with Supavisor.
  *
  * ENVIRONMENT VARIABLES:
- * - DATABASE_URL: Pooled connection via Supavisor (port 6543)
- *   Must include ?pgbouncer=true parameter
+ * - DATABASE_URL: Pooled connection via Supavisor (port 5432, session mode)
  * - DIRECT_URL: Direct PostgreSQL connection (port 5432) - CLI only
  */
 
 import { PrismaClient, Prisma } from '@prisma/client';
-import { PrismaPg } from '@prisma/adapter-pg';
-import { Pool } from 'pg';
 import { logger } from '@/lib/logger';
-// Note: Using explicit Pool with SSL config to ensure rejectUnauthorized works correctly
 
 // Global singleton to prevent multiple instances in development
 const globalForPrisma = globalThis as unknown as {
@@ -67,19 +63,16 @@ const getLogConfig = (): Prisma.LogLevel[] => {
 };
 
 /**
- * Create PrismaClient with PrismaPg adapter for Supabase pooler compatibility
+ * Create PrismaClient using Prisma's built-in query engine.
  *
- * The adapter uses the standard PostgreSQL wire protocol which works with
- * Supabase's Supavisor (PgBouncer) connection pooler.
+ * Uses Prisma's Rust-based query engine for PostgreSQL connections instead of
+ * node-postgres (@prisma/adapter-pg). The node-postgres SCRAM-SHA-256 client
+ * implementation fails when Supavisor doesn't faithfully relay the server's
+ * final signature in the SCRAM handshake. Prisma's built-in engine handles
+ * SCRAM authentication independently and is not affected by this Supavisor bug.
  *
- * CRITICAL FIX: Parse DATABASE_URL and use explicit Pool config (NOT connectionString)
- *
- * Why? When using connectionString, the pg library's pg-connection-string parser
- * treats sslmode=require as verify-full, overriding our rejectUnauthorized:false.
- * By parsing the URL ourselves and using explicit host/port/user/password/database,
- * we ensure our SSL config is respected without any URL-based overrides.
- *
- * See: https://www.postgresql.org/docs/current/libpq-ssl.html
+ * DATABASE_URL must include ?pgbouncer=true for Supavisor transaction mode,
+ * or use session mode (port 5432) where prepared statements work natively.
  */
 const createPrismaClient = (): PrismaClient => {
   const connectionString = process.env.DATABASE_URL;
@@ -89,65 +82,25 @@ const createPrismaClient = (): PrismaClient => {
     throw new Error('DATABASE_URL environment variable is required');
   }
 
-  // Parse DATABASE_URL to extract components
-  // This avoids pg-connection-string's SSL mode handling which overrides our config
-  let url: URL;
+  // Log connection target (without password)
   try {
-    url = new URL(connectionString);
-  } catch (parseError) {
-    console.error('[Prisma] Failed to parse DATABASE_URL:', parseError);
-    throw new Error('Invalid DATABASE_URL format');
+    const url = new URL(connectionString);
+    logger.info('Prisma connecting to database', {
+      host: url.hostname,
+      port: url.port || '5432',
+      database: url.pathname.replace(/^\//, ''),
+      mode: 'prisma-engine',
+    });
+  } catch {
+    // URL parsing failure is non-fatal for logging
   }
 
-  // Extract connection components from URL
-  const host = url.hostname;
-  const port = parseInt(url.port || '5432', 10);
-  const database = url.pathname.replace(/^\//, ''); // Remove leading slash
-  const user = url.username;
-  const password = decodeURIComponent(url.password); // Decode URL-encoded password
-
-  logger.info('Prisma connecting to database', { host, port, database, mode: 'explicit config' });
-
-  // Create Pool with EXPLICIT config (NOT connectionString)
-  // This ensures our SSL settings are used without URL-based overrides
-  // The pg-connection-string library treats sslmode=require as verify-full,
-  // which causes "self-signed certificate in certificate chain" errors
-  const pool = new Pool({
-    host,
-    port,
-    database,
-    user,
-    password,
-    ssl: {
-      rejectUnauthorized: false, // Required for Supabase - allows self-signed certs
-    },
-    max: 3, // Keep low for serverless -- prevents Fail2ban trigger on auth failure
-    idleTimeoutMillis: 30000, // Close idle connections after 30s
-    connectionTimeoutMillis: 10000, // Connection timeout 10s
-  });
-
-  // Log pool errors for debugging
-  pool.on('error', (err) => {
-    console.error('[Prisma] Pool error:', err.message);
-    globalForPrisma.prismaMetrics.errors++;
-    if (err.message.includes('SCRAM') || err.message.includes('SASL')) {
-      console.error(
-        '[Prisma] SCRAM AUTH FAILURE -- Possible causes:\n' +
-        '  1. IP banned by Fail2ban (check Supabase > Settings > Database > Network Bans)\n' +
-        '  2. Supavisor credential cache stale (wait 5 min after password reset)\n' +
-        '  3. Password mismatch between DATABASE_URL and Supabase'
-      );
-    }
-  });
-
-  const adapter = new PrismaPg(pool);
-
   const client = new PrismaClient({
-    adapter,
     log: getLogConfig(),
+    datasourceUrl: connectionString,
   });
 
-  logger.info('Prisma client created with PrismaPg adapter', { mode: 'explicit config' });
+  logger.info('Prisma client created with built-in query engine');
 
   // Set up event listeners for connection monitoring (dev only)
   if (process.env.NODE_ENV !== 'production') {
@@ -179,7 +132,7 @@ const getPrismaClient = (): PrismaClient | null => {
   if (!globalForPrisma.prisma) {
     try {
       globalForPrisma.prisma = createPrismaClient();
-      logger.info('Prisma client initialized with PrismaPg adapter');
+      logger.info('Prisma client initialized with built-in query engine');
     } catch (error) {
       console.error('[Prisma] Failed to create client:', error);
       return null;
