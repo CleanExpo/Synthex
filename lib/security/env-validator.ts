@@ -773,7 +773,7 @@ export class EnvValidator {
    */
   public get<T = string>(key: string): T {
     if (!this.validated) {
-      this.validate();
+      this.validate(false);
     }
 
     const def = ENV_VAR_DEFINITIONS.find(d => d.key === key);

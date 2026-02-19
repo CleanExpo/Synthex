@@ -26,31 +26,11 @@ const userUpdateSchema = z.object({
 
 export async function GET(request: NextRequest) {
   try {
-    // Authenticate via centralised auth
+    // Authenticate via centralised auth (JWT verification)
     const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) return unauthorizedResponse();
 
-    // Extract raw token for session lookup
-    const authHeader = request.headers.get('authorization');
-    const token = authHeader?.startsWith('Bearer ')
-      ? authHeader.substring(7)
-      : request.cookies.get('auth-token')?.value;
-
-    if (!token) return unauthorizedResponse();
-
     try {
-      // Check if session exists and is valid
-      const session = await prisma.session.findUnique({
-        where: { token }
-      });
-
-      if (!session || session.expiresAt < new Date()) {
-        return NextResponse.json(
-          { error: 'Session expired' },
-          { status: 401 }
-        );
-      }
-
       // Get user data
       const user = await prisma.user.findUnique({
         where: { id: userId },

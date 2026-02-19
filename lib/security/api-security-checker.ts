@@ -286,7 +286,7 @@ export class APISecurityChecker {
       return {
         allowed: false,
         context,
-        error: error instanceof SecurityError ? error instanceof Error ? error.message : String(error) : 'Security check failed'
+        error: error instanceof SecurityError ? error.message : 'Security check failed'
       };
     }
   }

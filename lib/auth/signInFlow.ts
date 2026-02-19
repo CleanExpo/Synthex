@@ -111,7 +111,7 @@ export class SignInFlow {
 
       return authResult;
     } catch (error) {
-      const errorMessage = error instanceof Error ? error instanceof Error ? error.message : String(error) : 'Unknown error';
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       await this.logAuthError(method, credentials.email || 'unknown', errorMessage);
       return {
         success: false,
@@ -178,7 +178,7 @@ export class SignInFlow {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error instanceof Error ? error.message : String(error) : 'Authentication failed'
+        error: error instanceof Error ? error.message : 'Authentication failed'
       };
     }
   }
@@ -207,7 +207,7 @@ export class SignInFlow {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error instanceof Error ? error.message : String(error) : 'OAuth authentication failed'
+        error: error instanceof Error ? error.message : 'OAuth authentication failed'
       };
     }
   }
@@ -314,7 +314,7 @@ export class SignInFlow {
       console.error('[SignInFlow] OAuth login error:', error);
       return {
         success: false,
-        error: error instanceof Error ? error instanceof Error ? error.message : String(error) : 'OAuth authentication failed',
+        error: error instanceof Error ? error.message : 'OAuth authentication failed',
       };
     }
   }
@@ -341,7 +341,7 @@ export class SignInFlow {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error instanceof Error ? error.message : String(error) : 'Failed to link account',
+        error: error instanceof Error ? error.message : 'Failed to link account',
       };
     }
   }
