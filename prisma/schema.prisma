@@ -4,7 +4,7 @@
 generator client {
   provider        = "prisma-client-js"
   binaryTargets   = ["native", "rhel-openssl-3.0.x"]
-  // driverAdapters removed -- using Prisma's built-in query engine for SCRAM compatibility with Supavisor
+  previewFeatures = ["driverAdapters"]
 }
 
 datasource db {

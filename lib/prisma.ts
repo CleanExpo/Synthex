@@ -7,16 +7,25 @@
  * IMPORTANT: This is the ONLY place PrismaClient should be instantiated.
  * All other files should import { prisma } from '@/lib/prisma'
  *
- * Connection pooling is handled via Supabase Supavisor on port 5432 (session mode).
- * Uses Prisma's built-in query engine (Rust) for SCRAM-SHA-256 auth instead of
- * node-postgres, which has SCRAM relay failures with Supavisor.
+ * Connection pooling is handled via:
+ * 1. Supabase Supavisor on port 6543 (transaction mode)
+ * 2. @prisma/adapter-pg for PostgreSQL wire protocol compatibility
+ * 3. pg-scram-patch to work around Supavisor SCRAM relay bug
  *
  * ENVIRONMENT VARIABLES:
- * - DATABASE_URL: Pooled connection via Supavisor (port 5432, session mode)
+ * - DATABASE_URL: Pooled connection via Supavisor (port 6543)
+ *   Must include ?pgbouncer=true parameter
  * - DIRECT_URL: Direct PostgreSQL connection (port 5432) - CLI only
  */
 
+import { patchPgScram } from '@/lib/pg-scram-patch';
+
+// MUST run before any pg.Pool is created
+patchPgScram();
+
 import { PrismaClient, Prisma } from '@prisma/client';
+import { PrismaPg } from '@prisma/adapter-pg';
+import { Pool } from 'pg';
 import { logger } from '@/lib/logger';
 
 // Global singleton to prevent multiple instances in development
@@ -63,16 +72,10 @@ const getLogConfig = (): Prisma.LogLevel[] => {
 };
 
 /**
- * Create PrismaClient using Prisma's built-in query engine.
+ * Create PrismaClient with PrismaPg adapter for Supabase pooler compatibility.
  *
- * Uses Prisma's Rust-based query engine for PostgreSQL connections instead of
- * node-postgres (@prisma/adapter-pg). The node-postgres SCRAM-SHA-256 client
- * implementation fails when Supavisor doesn't faithfully relay the server's
- * final signature in the SCRAM handshake. Prisma's built-in engine handles
- * SCRAM authentication independently and is not affected by this Supavisor bug.
- *
- * DATABASE_URL must include ?pgbouncer=true for Supavisor transaction mode,
- * or use session mode (port 5432) where prepared statements work natively.
+ * Uses explicit Pool config (NOT connectionString) to control SSL settings.
+ * The pg-scram-patch module suppresses Supavisor's SCRAM relay failures.
  */
 const createPrismaClient = (): PrismaClient => {
   const connectionString = process.env.DATABASE_URL;
@@ -82,27 +85,50 @@ const createPrismaClient = (): PrismaClient => {
     throw new Error('DATABASE_URL environment variable is required');
   }
 
-  // Log connection target (without password)
+  let url: URL;
   try {
-    const url = new URL(connectionString);
-    logger.info('Prisma connecting to database', {
-      host: url.hostname,
-      port: url.port || '5432',
-      database: url.pathname.replace(/^\//, ''),
-      mode: 'prisma-engine',
-    });
-  } catch {
-    // URL parsing failure is non-fatal for logging
+    url = new URL(connectionString);
+  } catch (parseError) {
+    console.error('[Prisma] Failed to parse DATABASE_URL:', parseError);
+    throw new Error('Invalid DATABASE_URL format');
   }
 
-  const client = new PrismaClient({
-    log: getLogConfig(),
-    datasourceUrl: connectionString,
+  const host = url.hostname;
+  const port = parseInt(url.port || '5432', 10);
+  const database = url.pathname.replace(/^\//, '');
+  const user = url.username;
+  const password = decodeURIComponent(url.password);
+
+  logger.info('Prisma connecting to database', { host, port, database, mode: 'adapter-pg + scram-patch' });
+
+  const pool = new Pool({
+    host,
+    port,
+    database,
+    user,
+    password,
+    ssl: {
+      rejectUnauthorized: false,
+    },
+    max: 3,
+    idleTimeoutMillis: 30000,
+    connectionTimeoutMillis: 10000,
   });
 
-  logger.info('Prisma client created with built-in query engine');
+  pool.on('error', (err) => {
+    console.error('[Prisma] Pool error:', err.message);
+    globalForPrisma.prismaMetrics.errors++;
+  });
 
-  // Set up event listeners for connection monitoring (dev only)
+  const adapter = new PrismaPg(pool);
+
+  const client = new PrismaClient({
+    adapter,
+    log: getLogConfig(),
+  });
+
+  logger.info('Prisma client created with PrismaPg adapter + SCRAM patch');
+
   if (process.env.NODE_ENV !== 'production') {
     client.$on('query' as never, (e: { duration: number; query: string }) => {
       if (e.duration > 1000) {
@@ -118,12 +144,10 @@ const createPrismaClient = (): PrismaClient => {
  * Get or create the singleton PrismaClient instance
  */
 const getPrismaClient = (): PrismaClient | null => {
-  // Skip during browser/client-side rendering
   if (typeof window !== 'undefined') {
     return null;
   }
 
-  // Skip if DATABASE_URL is not configured (build time)
   if (!process.env.DATABASE_URL) {
     console.warn('[Prisma] DATABASE_URL not configured, skipping client creation');
     return null;
@@ -132,7 +156,7 @@ const getPrismaClient = (): PrismaClient | null => {
   if (!globalForPrisma.prisma) {
     try {
       globalForPrisma.prisma = createPrismaClient();
-      logger.info('Prisma client initialized with built-in query engine');
+      logger.info('Prisma client initialized');
     } catch (error) {
       console.error('[Prisma] Failed to create client:', error);
       return null;
@@ -159,7 +183,6 @@ if (process.env.NODE_ENV !== 'production' && client) {
 
 /**
  * Health check function - verifies database connectivity
- * @returns Promise<boolean> - true if connection is healthy
  */
 export async function checkDatabaseHealth(): Promise<{
   healthy: boolean;
@@ -173,12 +196,10 @@ export async function checkDatabaseHealth(): Promise<{
       return { healthy: false, latency: 0, error: 'Prisma client not initialized' };
     }
 
-    // Simple query to verify connection
     await prisma.$queryRaw`SELECT 1`;
 
     const latency = Date.now() - startTime;
 
-    // Update metrics
     globalForPrisma.prismaMetrics.lastHealthCheck = new Date();
     globalForPrisma.prismaMetrics.isHealthy = true;
 
@@ -187,7 +208,6 @@ export async function checkDatabaseHealth(): Promise<{
     const latency = Date.now() - startTime;
     const errorMessage = error instanceof Error ? error.message : String(error);
 
-    // Update metrics
     globalForPrisma.prismaMetrics.errors++;
     globalForPrisma.prismaMetrics.isHealthy = false;
     globalForPrisma.prismaMetrics.lastHealthCheck = new Date();
@@ -206,7 +226,6 @@ export function getPoolMetrics(): ConnectionMetrics {
 
 /**
  * Graceful shutdown - close all connections
- * Call this during application shutdown
  */
 export async function disconnectPrisma(): Promise<void> {
   if (prisma) {
@@ -234,9 +253,6 @@ export async function reconnectPrisma(): Promise<boolean> {
 
 /**
  * Execute with connection retry logic
- * @param operation - Function to execute
- * @param maxRetries - Maximum retry attempts (default: 3)
- * @param retryDelay - Delay between retries in ms (default: 1000)
  */
 export async function executeWithRetry<T>(
   operation: () => Promise<T>,
@@ -251,7 +267,6 @@ export async function executeWithRetry<T>(
     } catch (error) {
       lastError = error instanceof Error ? error : new Error(String(error));
 
-      // Check if it's a connection error that might be recoverable
       const isConnectionError =
         lastError.message.includes('connection') ||
         lastError.message.includes('pool') ||
@@ -266,7 +281,6 @@ export async function executeWithRetry<T>(
           lastError.message
         );
         await new Promise(resolve => setTimeout(resolve, retryDelay));
-        // Exponential backoff
         retryDelay *= 2;
       } else {
         throw lastError;
@@ -279,8 +293,6 @@ export async function executeWithRetry<T>(
 
 /**
  * Transaction helper with timeout
- * @param fn - Transaction function
- * @param timeout - Maximum transaction time in ms (default: 5000)
  */
 export async function withTransaction<T>(
   fn: (tx: Prisma.TransactionClient) => Promise<T>,
