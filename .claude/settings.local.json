@@ -38,11 +38,11 @@
         "hooks": [
           {
             "type": "command",
-            "command": "powershell -ExecutionPolicy Bypass -File \"D:\\Synthex\\.claude\\hooks\\guard-destructive.ps1\" -ToolInput \"$TOOL_INPUT\""
+            "command": "powershell -ExecutionPolicy Bypass -File \"C:\\Synthex\\.claude\\hooks\\guard-destructive.ps1\" -ToolInput \"$TOOL_INPUT\""
           },
           {
             "type": "command",
-            "command": "powershell -ExecutionPolicy Bypass -File \"D:\\Synthex\\.claude\\hooks\\pre-build-validate.ps1\" -ToolInput \"$TOOL_INPUT\""
+            "command": "powershell -ExecutionPolicy Bypass -File \"C:\\Synthex\\.claude\\hooks\\pre-build-validate.ps1\" -ToolInput \"$TOOL_INPUT\""
           }
         ]
       },
@@ -51,7 +51,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "powershell -ExecutionPolicy Bypass -File \"D:\\Synthex\\.claude\\hooks\\pre-write-validate.ps1\" -ToolInput \"$TOOL_INPUT\""
+            "command": "powershell -ExecutionPolicy Bypass -File \"C:\\Synthex\\.claude\\hooks\\pre-write-validate.ps1\" -ToolInput \"$TOOL_INPUT\""
           }
         ]
       }
@@ -62,11 +62,11 @@
         "hooks": [
           {
             "type": "command",
-            "command": "powershell -ExecutionPolicy Bypass -File \"D:\\Synthex\\.claude\\hooks\\post-write-quality.ps1\" -ToolInput \"$TOOL_INPUT\""
+            "command": "powershell -ExecutionPolicy Bypass -File \"C:\\Synthex\\.claude\\hooks\\post-write-quality.ps1\" -ToolInput \"$TOOL_INPUT\""
           },
           {
             "type": "command",
-            "command": "powershell -ExecutionPolicy Bypass -File \"D:\\Synthex\\.claude\\hooks\\post-research-capture.ps1\" -ToolInput \"$TOOL_INPUT\""
+            "command": "powershell -ExecutionPolicy Bypass -File \"C:\\Synthex\\.claude\\hooks\\post-research-capture.ps1\" -ToolInput \"$TOOL_INPUT\""
           }
         ]
       }
