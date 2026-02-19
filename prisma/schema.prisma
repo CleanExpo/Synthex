@@ -162,8 +162,8 @@ model Campaign {
   description String?
   platform    String   // 'instagram', 'twitter', 'linkedin', etc.
   status      String   @default("draft") // 'draft', 'active', 'paused', 'completed'
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
 
   // Campaign data
   content     Json?    // Generated content, variations, etc.
@@ -171,12 +171,12 @@ model Campaign {
   settings    Json?    // Platform-specific settings
 
   // Relations
-  userId      String
+  userId      String   @map("user_id")
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   posts       Post[]
 
   // Organization (multi-tenant)
-  organizationId String?
+  organizationId String? @map("organization_id")
   organization   Organization? @relation("OrganizationCampaigns", fields: [organizationId], references: [id], onDelete: SetNull)
 
   @@index([userId])
@@ -189,17 +189,17 @@ model Post {
   content    String
   platform   String
   status     String   @default("draft") // 'draft', 'scheduled', 'published', 'failed'
-  scheduledAt DateTime?
-  publishedAt DateTime?
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  scheduledAt DateTime? @map("scheduled_at")
+  publishedAt DateTime? @map("published_at")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
 
   // Post data
   metadata   Json?    // Images, hashtags, mentions, etc.
   analytics  Json?    // Engagement metrics
 
   // Relations
-  campaignId String
+  campaignId String   @map("campaign_id")
   campaign   Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
 
   // Performance indices for common queries
@@ -215,11 +215,11 @@ model Project {
   description String?
   type        String   // 'marketing', 'content', 'analytics'
   data        Json?    // Project configuration and data
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
   // Relations
-  userId      String
+  userId      String   @map("user_id")
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
@@ -233,15 +233,15 @@ model ApiUsage {
   tokens    Int?     // Tokens consumed
   cost      Float?   // Cost in USD
   status    String   // 'success', 'error', 'rate_limited'
-  createdAt DateTime @default(now())
-  
+  createdAt DateTime @default(now()) @map("created_at")
+
   // Request/Response data
-  requestData  Json?
-  responseData Json?
-  errorMessage String?
-  
+  requestData  Json?  @map("request_data")
+  responseData Json?  @map("response_data")
+  errorMessage String? @map("error_message")
+
   // Relations
-  userId    String
+  userId    String   @map("user_id")
   user      User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
@@ -252,10 +252,10 @@ model ApiUsage {
 model Session {
   id        String   @id @default(cuid())
   token     String   @unique
-  userId    String
-  expiresAt DateTime
-  createdAt DateTime @default(now())
-  
+  userId    String   @map("user_id")
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
   @@map("sessions")
 }
 
@@ -319,21 +319,21 @@ model AuditLog {
   id          String   @id @default(cuid())
   action      String   // 'user_login', 'post_publish', 'password_change', etc.
   resource    String   // 'authentication', 'user', 'post', 'api_key', etc.
-  resourceId  String?  // ID of the affected resource
+  resourceId  String?  @map("resource_id") // ID of the affected resource
   entity      String?  // Backward compatibility - deprecated
-  entityId    String?  // Backward compatibility - deprecated
+  entityId    String?  @map("entity_id") // Backward compatibility - deprecated
   details     Json?    // Additional details about the action
-  ipAddress   String?
-  userAgent   String?
+  ipAddress   String?  @map("ip_address")
+  userAgent   String?  @map("user_agent")
   severity    String   @default("medium") // 'low', 'medium', 'high', 'critical'
   category    String   @default("system") // 'auth', 'data', 'system', 'security', 'compliance', 'api'
   outcome     String   @default("success") // 'success', 'failure', 'warning'
-  createdAt   DateTime @default(now())
-  
+  createdAt   DateTime @default(now()) @map("created_at")
+
   // Relations
-  userId      String?
+  userId      String?  @map("user_id")
   user        User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+
   @@index([userId])
   @@index([createdAt])
   @@index([category])
@@ -348,27 +348,27 @@ model Organization {
   plan        String   @default("free") // 'free', 'starter', 'pro', 'enterprise'
   status      String   @default("active") // 'active', 'suspended', 'pending', 'deleted'
   settings    Json?    // Organization-wide settings
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
 
   // Domain configuration (multi-tenant)
   domain       String?  @unique // Primary subdomain (e.g., acme.synthex.app)
-  customDomain String?  @unique // Custom domain (e.g., marketing.acme.com)
+  customDomain String?  @unique @map("custom_domain") // Custom domain (e.g., marketing.acme.com)
 
   // Branding
   logo         String?
-  primaryColor String?
+  primaryColor String?  @map("primary_color")
   favicon      String?
 
   // Billing
-  stripeCustomerId String?
-  billingEmail     String?
-  billingStatus    String @default("active") // 'active', 'past_due', 'canceled'
+  stripeCustomerId String? @map("stripe_customer_id")
+  billingEmail     String? @map("billing_email")
+  billingStatus    String @default("active") @map("billing_status") // 'active', 'past_due', 'canceled'
 
   // Usage limits
-  maxUsers      Int @default(5)
-  maxPosts      Int @default(500)
-  maxCampaigns  Int @default(10)
+  maxUsers      Int @default(5) @map("max_users")
+  maxPosts      Int @default(500) @map("max_posts")
+  maxCampaigns  Int @default(10) @map("max_campaigns")
 
   // Relations
   users             User[]
@@ -395,55 +395,55 @@ model Organization {
 // Platform Integration Models
 model PlatformConnection {
   id           String   @id @default(cuid())
-  userId       String
+  userId       String   @map("user_id")
   platform     String   // 'facebook', 'instagram', 'twitter', 'linkedin', 'tiktok', 'youtube', 'pinterest', 'reddit'
-  accessToken  String
-  refreshToken String?
-  expiresAt    DateTime?
+  accessToken  String   @map("access_token")
+  refreshToken String?  @map("refresh_token")
+  expiresAt    DateTime? @map("expires_at")
   scope        String?  // Platform-specific permissions
-  profileId    String?  // Platform user/page ID
-  profileName  String?  // Platform username/page name
-  isActive     Boolean  @default(true)
-  lastSync     DateTime?
+  profileId    String?  @map("profile_id") // Platform user/page ID
+  profileName  String?  @map("profile_name") // Platform username/page name
+  isActive     Boolean  @default(true) @map("is_active")
+  lastSync     DateTime? @map("last_sync")
   metadata     Json?    // Platform-specific data
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-  
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
   // Relations
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   platformPosts PlatformPost[]
-  
+
   @@unique([userId, platform, profileId])
   @@map("platform_connections")
 }
 
 model PlatformPost {
   id           String   @id @default(cuid())
-  connectionId String
-  platformId   String   // ID on the platform
+  connectionId String   @map("connection_id")
+  platformId   String   @map("platform_id") // ID on the platform
   content      String   @db.Text
-  mediaUrls    String[]
+  mediaUrls    String[] @map("media_urls")
   hashtags     String[]
   mentions     String[]
   status       String   // 'draft', 'scheduled', 'published', 'failed'
-  scheduledAt  DateTime?
-  publishedAt  DateTime?
-  errorMessage String?
+  scheduledAt  DateTime? @map("scheduled_for")
+  publishedAt  DateTime? @map("published_at")
+  errorMessage String?  @map("error_message")
   metadata     Json?    // Platform-specific post data
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-  
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
   // Relations
   connection   PlatformConnection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
   metrics      PlatformMetrics[]
-  
+
   @@unique([connectionId, platformId])
   @@map("platform_posts")
 }
 
 model PlatformMetrics {
   id          String   @id @default(cuid())
-  postId      String
+  postId      String   @map("post_id")
   likes       Int      @default(0)
   shares      Int      @default(0)
   comments    Int      @default(0)
@@ -452,9 +452,9 @@ model PlatformMetrics {
   impressions Int      @default(0)
   clicks      Int      @default(0)
   saves       Int      @default(0)
-  engagementRate Float?
+  engagementRate Float? @map("engagement_rate")
   metadata    Json?    // Platform-specific metrics
-  recordedAt  DateTime @default(now())
+  recordedAt  DateTime @default(now()) @map("recorded_at")
 
   // Relations
   post        PlatformPost @relation(fields: [postId], references: [id], onDelete: Cascade)
@@ -473,13 +473,13 @@ model TeamInvitation {
   email          String
   role           String
   message        String?
-  campaignAccess Json?
+  campaignAccess Json?    @map("campaign_access")
   status         String   @default("sent")
-  sentAt         DateTime @default(now())
+  sentAt         DateTime @default(now()) @map("sent_at")
 
   // Optional relations (who invited, and org context), kept nullable to avoid blocking usage
-  userId         String?
-  organizationId String?
+  userId         String?  @map("user_id")
+  organizationId String?  @map("organization_id")
   user           User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
   organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
 
@@ -497,13 +497,13 @@ model PsychologyPrinciple {
   name                 String   @unique
   category             String
   description          String?
-  brandingApplication  Json     @default("{}")
-  triggerWords         String[]
-  audienceRelevance    Json     @default("{}")
-  effectivenessScore   Decimal  @default(0.00) @db.Decimal(3, 2)
-  usageCount           Int      @default(0)
-  createdAt            DateTime @default(now())
-  updatedAt            DateTime @updatedAt
+  brandingApplication  Json     @default("{}") @map("branding_application")
+  triggerWords         String[] @map("trigger_words")
+  audienceRelevance    Json     @default("{}") @map("audience_relevance")
+  effectivenessScore   Decimal  @default(0.00) @db.Decimal(3, 2) @map("effectiveness_score")
+  usageCount           Int      @default(0) @map("usage_count")
+  createdAt            DateTime @default(now()) @map("created_at")
+  updatedAt            DateTime @updatedAt @map("updated_at")
 
   @@index([category])
   @@index([effectivenessScore(sort: Desc)])
@@ -512,21 +512,21 @@ model PsychologyPrinciple {
 
 model BrandGeneration {
   id                   String   @id @default(uuid())
-  userId               String
-  businessType         String
-  targetAudience       Json
-  brandGoals           String[]
-  tonePreference       String?
-  psychologyStrategy   Json
-  brandNames           Json
+  userId               String   @map("user_id")
+  businessType         String   @map("business_type")
+  targetAudience       Json     @map("target_audience")
+  brandGoals           String[] @map("brand_goals")
+  tonePreference       String?  @map("tone_preference")
+  psychologyStrategy   Json     @map("psychology_strategy")
+  brandNames           Json     @map("brand_names")
   taglines             Json
-  metadataPackages     Json     @default("{}")
-  implementationGuide  Json     @default("{}")
-  effectivenessScore   Decimal  @default(0.00) @db.Decimal(3, 2)
+  metadataPackages     Json     @default("{}") @map("metadata_packages")
+  implementationGuide  Json     @default("{}") @map("implementation_guide")
+  effectivenessScore   Decimal  @default(0.00) @db.Decimal(3, 2) @map("effectiveness_score")
   status               String   @default("draft")
-  createdAt            DateTime @default(now())
-  updatedAt            DateTime @updatedAt
-  
+  createdAt            DateTime @default(now()) @map("created_at")
+  updatedAt            DateTime @updatedAt @map("updated_at")
+
   user                 User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   psychologyMetrics    PsychologyMetric[]
   competitiveAnalyses  CompetitiveAnalysis[]
@@ -538,19 +538,19 @@ model BrandGeneration {
 
 model PsychologyMetric {
   id                   String   @id @default(uuid())
-  generationId         String
-  principleUsed        String
-  variantType          String
-  variantContent       String
-  engagementScore      Decimal  @default(0.00) @db.Decimal(3, 2)
-  conversionRate       Decimal  @default(0.00) @db.Decimal(5, 2)
-  recallScore          Decimal  @default(0.00) @db.Decimal(3, 2)
-  clickThroughRate     Decimal  @default(0.00) @db.Decimal(5, 2)
-  clientSatisfaction   Int?
-  testDurationHours    Int      @default(24)
-  sampleSize           Int      @default(0)
-  testedAt             DateTime @default(now())
-  
+  generationId         String   @map("generation_id")
+  principleUsed        String   @map("principle_used")
+  variantType          String   @map("variant_type")
+  variantContent       String   @map("variant_content")
+  engagementScore      Decimal  @default(0.00) @db.Decimal(3, 2) @map("engagement_score")
+  conversionRate       Decimal  @default(0.00) @db.Decimal(5, 2) @map("conversion_rate")
+  recallScore          Decimal  @default(0.00) @db.Decimal(3, 2) @map("recall_score")
+  clickThroughRate     Decimal  @default(0.00) @db.Decimal(5, 2) @map("click_through_rate")
+  clientSatisfaction   Int?     @map("client_satisfaction")
+  testDurationHours    Int      @default(24) @map("test_duration_hours")
+  sampleSize           Int      @default(0) @map("sample_size")
+  testedAt             DateTime @default(now()) @map("tested_at")
+
   generation           BrandGeneration @relation(fields: [generationId], references: [id], onDelete: Cascade)
 
   @@index([generationId])
@@ -560,15 +560,15 @@ model PsychologyMetric {
 
 model UserPsychologyPreference {
   id                   String   @id @default(uuid())
-  userId               String   @unique
-  preferredPrinciples  String[]
-  avoidedPrinciples    String[]
-  industryFocus        String?
-  targetDemographic    Json     @default("{}")
-  successMetrics       Json     @default("{}")
-  createdAt            DateTime @default(now())
-  updatedAt            DateTime @updatedAt
-  
+  userId               String   @unique @map("user_id")
+  preferredPrinciples  String[] @map("preferred_principles")
+  avoidedPrinciples    String[] @map("avoided_principles")
+  industryFocus        String?  @map("industry_focus")
+  targetDemographic    Json     @default("{}") @map("target_demographic")
+  successMetrics       Json     @default("{}") @map("success_metrics")
+  createdAt            DateTime @default(now()) @map("created_at")
+  updatedAt            DateTime @updatedAt @map("updated_at")
+
   user                 User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("user_psychology_preferences")
@@ -576,14 +576,14 @@ model UserPsychologyPreference {
 
 model CompetitiveAnalysis {
   id                   String   @id @default(uuid())
-  generationId         String
-  competitorName       String
-  competitorTagline    String?
-  identifiedPrinciples String[]
-  differentiationStrategy String?
-  marketPosition       String?
-  analyzedAt           DateTime @default(now())
-  
+  generationId         String   @map("generation_id")
+  competitorName       String   @map("competitor_name")
+  competitorTagline    String?  @map("competitor_tagline")
+  identifiedPrinciples String[] @map("identified_principles")
+  differentiationStrategy String? @map("differentiation_strategy")
+  marketPosition       String?  @map("market_position")
+  analyzedAt           DateTime @default(now()) @map("analyzed_at")
+
   generation           BrandGeneration @relation(fields: [generationId], references: [id], onDelete: Cascade)
 
   @@map("competitive_analyses")
@@ -592,13 +592,13 @@ model CompetitiveAnalysis {
 model AnalyticsEvent {
   id          String   @id @default(cuid())
   type        String   // Event type
-  userId      String?
-  sessionId   String
+  userId      String?  @map("user_id")
+  sessionId   String   @map("session_id")
   timestamp   DateTime @default(now())
   metadata    Json?
   platform    String?
-  contentId   String?
-  campaignId  String?
+  contentId   String?  @map("content_id")
+  campaignId  String?  @map("campaign_id")
 
   @@index([userId])
   @@index([sessionId])
@@ -609,21 +609,21 @@ model AnalyticsEvent {
 
 model Report {
   id             String   @id @default(cuid())
-  userId         String
-  organizationId String?
+  userId         String   @map("user_id")
+  organizationId String?  @map("organization_id")
   name           String
   type           String   // campaign, analytics, ab-test, psychology, comprehensive
   status         String   @default("pending") // pending, generating, completed, failed
   format         String   @default("pdf") // pdf, csv, json
-  dateRange      Json?    // { start, end }
+  dateRange      Json?    @map("date_range") // { start, end }
   filters        Json?    // Report-specific filters
   data           Json?    // Cached report data
-  fileUrl        String?  // URL to generated file
-  fileSize       Int?     // File size in bytes
-  generatedAt    DateTime?
-  expiresAt      DateTime?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  fileUrl        String?  @map("file_url") // URL to generated file
+  fileSize       Int?     @map("file_size") // File size in bytes
+  generatedAt    DateTime? @map("generated_at")
+  expiresAt      DateTime? @map("expires_at")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
 
   user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -639,29 +639,29 @@ model Report {
 
 model ScheduledReport {
   id             String    @id @default(cuid())
-  userId         String
-  organizationId String?
+  userId         String    @map("user_id")
+  organizationId String?   @map("organization_id")
   name           String
   description    String?
-  templateId     String?   // Reference to ReportTemplate
-  reportType     String    // overview, engagement, content, audience, campaigns, growth, custom
+  templateId     String?   @map("template_id") // Reference to ReportTemplate
+  reportType     String    @map("report_type") // overview, engagement, content, audience, campaigns, growth, custom
   frequency      String    // daily, weekly, biweekly, monthly, quarterly
   schedule       Json      // { dayOfWeek?, dayOfMonth?, hour, minute, timezone }
   format         String    @default("pdf") // pdf, csv, json
-  dateRangeType  String    @default("last_period") // last_period, custom, rolling_7d, rolling_30d
+  dateRangeType  String    @default("last_period") @map("date_range_type") // last_period, custom, rolling_7d, rolling_30d
   filters        Json?     // Platform, campaign, and other filters
   metrics        String[]  // Selected metrics to include
   recipients     String[]  // Email addresses
-  webhookUrl     String?   // Optional webhook delivery
-  isActive       Boolean   @default(true)
-  lastRunAt      DateTime?
-  lastRunStatus  String?   // success, failed, skipped
-  lastReportId   String?   // ID of last generated report
-  nextRunAt      DateTime?
-  runCount       Int       @default(0)
-  failureCount   Int       @default(0)
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
+  webhookUrl     String?   @map("webhook_url") // Optional webhook delivery
+  isActive       Boolean   @default(true) @map("is_active")
+  lastRunAt      DateTime? @map("last_run_at")
+  lastRunStatus  String?   @map("last_run_status") // success, failed, skipped
+  lastReportId   String?   @map("last_report_id") // ID of last generated report
+  nextRunAt      DateTime? @map("next_run_at")
+  runCount       Int       @default(0) @map("run_count")
+  failureCount   Int       @default(0) @map("failure_count")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
 
   template       ReportTemplate? @relation(fields: [templateId], references: [id])
 
@@ -677,23 +677,23 @@ model ScheduledReport {
 
 model ReportTemplate {
   id             String    @id @default(cuid())
-  userId         String?   // null = system template
-  organizationId String?
+  userId         String?   @map("user_id") // null = system template
+  organizationId String?   @map("organization_id")
   name           String
   description    String?
   category       String    // performance, engagement, growth, content, custom
-  reportType     String    // overview, engagement, content, audience, campaigns, growth, custom
+  reportType     String    @map("report_type") // overview, engagement, content, audience, campaigns, growth, custom
   metrics        String[]  // Default metrics
   dimensions     String[]  // Grouping dimensions
   filters        Json?     // Default filters
   visualizations Json?     // Chart configurations
   layout         Json?     // Report layout settings
   branding       Json?     // Custom branding (logo, colors)
-  isSystem       Boolean   @default(false) // System-provided template
-  isPublic       Boolean   @default(false) // Shared with organization
-  usageCount     Int       @default(0)
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
+  isSystem       Boolean   @default(false) @map("is_system") // System-provided template
+  isPublic       Boolean   @default(false) @map("is_public") // Shared with organization
+  usageCount     Int       @default(0) @map("usage_count")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
 
   scheduledReports ScheduledReport[]
 
@@ -710,18 +710,18 @@ model ReportTemplate {
 
 model ReportDelivery {
   id             String    @id @default(cuid())
-  reportId       String
-  scheduledReportId String?
-  deliveryType   String    // email, webhook, download
+  reportId       String    @map("report_id")
+  scheduledReportId String? @map("scheduled_report_id")
+  deliveryType   String    @map("delivery_type") // email, webhook, download
   recipient      String    // Email address or webhook URL
   status         String    // pending, sent, delivered, failed, bounced
-  sentAt         DateTime?
-  deliveredAt    DateTime?
-  failedAt       DateTime?
-  failureReason  String?
-  retryCount     Int       @default(0)
+  sentAt         DateTime? @map("sent_at")
+  deliveredAt    DateTime? @map("delivered_at")
+  failedAt       DateTime? @map("failed_at")
+  failureReason  String?   @map("failure_reason")
+  retryCount     Int       @default(0) @map("retry_count")
   metadata       Json?     // Provider response, message ID, etc.
-  createdAt      DateTime  @default(now())
+  createdAt      DateTime  @default(now()) @map("created_at")
 
   @@index([reportId])
   @@index([scheduledReportId])
@@ -735,9 +735,9 @@ model ReportDelivery {
 
 model SentimentAnalysis {
   id             String    @id @default(cuid())
-  userId         String
-  contentType    String    // 'post', 'comment', 'campaign', 'text'
-  contentId      String?   // Reference to content being analyzed
+  userId         String    @map("user_id")
+  contentType    String    @map("content_type") // 'post', 'comment', 'campaign', 'text'
+  contentId      String?   @map("content_id") // Reference to content being analyzed
   text           String    @db.Text // The analyzed text
 
   // Sentiment scores
@@ -747,19 +747,19 @@ model SentimentAnalysis {
 
   // Detailed analysis
   emotions       Json?     // Array of { emotion, intensity }
-  toneIndicators Json?     // Array of tone indicators
-  keyPhrases     String[]  // Key phrases extracted
+  toneIndicators Json?     @map("tone_indicators") // Array of tone indicators
+  keyPhrases     String[]  @map("key_phrases") // Key phrases extracted
 
   // Engagement prediction
-  predictedEngagement Json? // { likes, comments, shares, engagementRate }
-  actualEngagement    Json? // Populated after post goes live
-  predictionAccuracy  Float? // How accurate was the prediction
+  predictedEngagement Json? @map("predicted_engagement") // { likes, comments, shares, engagementRate }
+  actualEngagement    Json? @map("actual_engagement") // Populated after post goes live
+  predictionAccuracy  Float? @map("prediction_accuracy") // How accurate was the prediction
 
   // Platform context
   platform       String?   // twitter, instagram, linkedin, etc.
 
   // Metadata
-  analyzedAt     DateTime  @default(now())
+  analyzedAt     DateTime  @default(now()) @map("analyzed_at")
   model          String?   // AI model used for analysis
 
   @@index([userId])
@@ -771,28 +771,28 @@ model SentimentAnalysis {
 
 model SentimentTrend {
   id             String    @id @default(cuid())
-  userId         String
-  organizationId String?
+  userId         String    @map("user_id")
+  organizationId String?   @map("organization_id")
   platform       String?   // null = all platforms
   date           DateTime  @db.Date
 
   // Aggregated sentiment
-  avgScore       Float     // Average sentiment score for the day
-  positiveCount  Int       @default(0)
-  neutralCount   Int       @default(0)
-  negativeCount  Int       @default(0)
-  mixedCount     Int       @default(0)
-  totalAnalyzed  Int       @default(0)
+  avgScore       Float     @map("avg_score") // Average sentiment score for the day
+  positiveCount  Int       @default(0) @map("positive_count")
+  neutralCount   Int       @default(0) @map("neutral_count")
+  negativeCount  Int       @default(0) @map("negative_count")
+  mixedCount     Int       @default(0) @map("mixed_count")
+  totalAnalyzed  Int       @default(0) @map("total_analyzed")
 
   // Emotion distribution
-  emotionCounts  Json?     // { joy: 10, anger: 2, sadness: 1, ... }
+  emotionCounts  Json?     @map("emotion_counts") // { joy: 10, anger: 2, sadness: 1, ... }
 
   // Engagement correlation
-  avgEngagement  Float?    // Average engagement rate for content with this sentiment
-  topPerforming  String?   // Sentiment type that performed best
+  avgEngagement  Float?    @map("avg_engagement") // Average engagement rate for content with this sentiment
+  topPerforming  String?   @map("top_performing") // Sentiment type that performed best
 
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
 
   @@unique([userId, platform, date])
   @@index([userId, date])
@@ -802,43 +802,43 @@ model SentimentTrend {
 
 model EngagementPrediction {
   id             String    @id @default(cuid())
-  userId         String
-  contentType    String    // 'post', 'campaign'
-  contentId      String?
+  userId         String    @map("user_id")
+  contentType    String    @map("content_type") // 'post', 'campaign'
+  contentId      String?   @map("content_id")
 
   // Input features
-  sentimentScore Float
+  sentimentScore Float     @map("sentiment_score")
   sentiment      String
   platform       String
-  contentLength  Int
-  hasMedia       Boolean   @default(false)
-  hasHashtags    Boolean   @default(false)
-  hasMentions    Boolean   @default(false)
-  postHour       Int?      // Hour of day (0-23)
-  postDayOfWeek  Int?      // Day of week (0-6)
+  contentLength  Int       @map("content_length")
+  hasMedia       Boolean   @default(false) @map("has_media")
+  hasHashtags    Boolean   @default(false) @map("has_hashtags")
+  hasMentions    Boolean   @default(false) @map("has_mentions")
+  postHour       Int?      @map("post_hour") // Hour of day (0-23)
+  postDayOfWeek  Int?      @map("post_day_of_week") // Day of week (0-6)
 
   // Predictions
-  predictedLikes     Int
-  predictedComments  Int
-  predictedShares    Int
-  predictedReach     Int?
-  predictedEngRate   Float   // Engagement rate
-  confidenceLevel    Float   // 0 to 1
+  predictedLikes     Int   @map("predicted_likes")
+  predictedComments  Int   @map("predicted_comments")
+  predictedShares    Int   @map("predicted_shares")
+  predictedReach     Int?  @map("predicted_reach")
+  predictedEngRate   Float @map("predicted_eng_rate") // Engagement rate
+  confidenceLevel    Float @map("confidence_level") // 0 to 1
 
   // Actual results (populated after publishing)
-  actualLikes        Int?
-  actualComments     Int?
-  actualShares       Int?
-  actualReach        Int?
-  actualEngRate      Float?
+  actualLikes        Int?  @map("actual_likes")
+  actualComments     Int?  @map("actual_comments")
+  actualShares       Int?  @map("actual_shares")
+  actualReach        Int?  @map("actual_reach")
+  actualEngRate      Float? @map("actual_eng_rate")
 
   // Accuracy tracking
   accuracy           Float?  // Overall prediction accuracy
 
   // Metadata
-  predictedAt    DateTime  @default(now())
-  publishedAt    DateTime?
-  resultsAt      DateTime?
+  predictedAt    DateTime  @default(now()) @map("predicted_at")
+  publishedAt    DateTime? @map("published_at")
+  resultsAt      DateTime? @map("results_at")
 
   @@index([userId])
   @@index([platform])
@@ -858,27 +858,27 @@ model Quote {
   source       String?  // Where the quote is from (book, speech, etc.)
   category     String   // 'inspirational', 'motivational', 'business', 'humor', etc.
   tags         String[]
-  isCustom     Boolean  @default(false)  // User-generated vs system
-  isPublic     Boolean  @default(true)
+  isCustom     Boolean  @default(false) @map("is_custom")  // User-generated vs system
+  isPublic     Boolean  @default(true) @map("is_public")
   language     String   @default("en")
 
   // Engagement tracking
-  usageCount   Int      @default(0)
-  likeCount    Int      @default(0)
-  shareCount   Int      @default(0)
+  usageCount   Int      @default(0) @map("usage_count")
+  likeCount    Int      @default(0) @map("like_count")
+  shareCount   Int      @default(0) @map("share_count")
 
   // AI metadata
-  aiGenerated  Boolean  @default(false)
+  aiGenerated  Boolean  @default(false) @map("ai_generated")
   sentiment    String?  // 'positive', 'neutral', 'negative'
-  readingLevel String?  // 'easy', 'medium', 'advanced'
+  readingLevel String?  @map("reading_level") // 'easy', 'medium', 'advanced'
 
   // Relations
-  userId       String?
-  campaignId   String?
+  userId       String?  @map("user_id")
+  campaignId   String?  @map("campaign_id")
 
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-  expiresAt    DateTime?  // Optional expiration for time-sensitive quotes
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+  expiresAt    DateTime? @map("expires_at") // Optional expiration for time-sensitive quotes
 
   @@index([category])
   @@index([userId])
@@ -891,12 +891,12 @@ model QuoteCollection {
   id           String   @id @default(cuid())
   name         String
   description  String?
-  userId       String
-  isPublic     Boolean  @default(false)
-  quoteIds     String[]  // Array of quote IDs in this collection
+  userId       String   @map("user_id")
+  isPublic     Boolean  @default(false) @map("is_public")
+  quoteIds     String[] @map("quote_ids") // Array of quote IDs in this collection
 
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
 
   @@index([userId])
   @@map("quote_collections")
@@ -909,20 +909,20 @@ model QuoteCollection {
 
 model ContentLibrary {
   id           String   @id @default(cuid())
-  userId       String
+  userId       String   @map("user_id")
   title        String
   content      String   @db.Text
-  contentType  String   // 'post', 'caption', 'story', 'thread', 'template', 'snippet'
+  contentType  String   @map("content_type") // 'post', 'caption', 'story', 'thread', 'template', 'snippet'
   platform     String?  // Target platform: 'instagram', 'twitter', 'linkedin', etc.
   category     String?  // User-defined category
   tags         String[] // Array of tags for organization
   status       String   @default("active") // 'active', 'archived', 'deleted'
   metadata     Json?    // Flexible storage for hashtags, mentions, media refs, etc.
-  usageCount   Int      @default(0) // Track how often content is used
-  lastUsedAt   DateTime?
+  usageCount   Int      @default(0) @map("usage_count") // Track how often content is used
+  lastUsedAt   DateTime? @map("last_used_at")
 
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
 
   // Relations
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -987,27 +987,27 @@ model Task {
   description  String?  @db.Text
   status       String   @default("todo") // 'todo', 'in-progress', 'review', 'done'
   priority     String   @default("medium") // 'low', 'medium', 'high', 'urgent'
-  dueDate      DateTime?
+  dueDate      DateTime? @map("due_date")
 
   // Task metadata
   tags         String[]
   category     String?  // 'marketing', 'content', 'analytics', 'campaign'
-  estimatedTime Int?     // In minutes
-  actualTime   Int?      // In minutes
+  estimatedTime Int?    @map("estimated_time") // In minutes
+  actualTime   Int?     @map("actual_time") // In minutes
   progress     Int      @default(0) // 0-100 percent
 
   // Task organization
-  columnId     String?  // For Kanban board columns
+  columnId     String?  @map("column_id") // For Kanban board columns
   order        Int      @default(0) // Position in list
 
   // Relations
-  userId       String
-  assigneeId   String?
-  campaignId   String?
+  userId       String   @map("user_id")
+  assigneeId   String?  @map("assignee_id")
+  campaignId   String?  @map("campaign_id")
 
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-  completedAt  DateTime?
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+  completedAt  DateTime? @map("completed_at")
 
   // Performance indices for common queries
   @@index([userId])
@@ -1036,19 +1036,19 @@ model Persona {
   emotion      String   @default("neutral") // 'neutral', 'friendly', 'confident', 'inspiring'
 
   // Training data stats
-  trainingSourcesCount Int @default(0)
-  trainingWordsCount   Int @default(0)
-  trainingSamplesCount Int @default(0)
+  trainingSourcesCount Int @default(0) @map("training_sources_count")
+  trainingWordsCount   Int @default(0) @map("training_words_count")
+  trainingSamplesCount Int @default(0) @map("training_samples_count")
 
   // Performance metrics
   accuracy     Int      @default(0) // 0-100
-  lastTrained  DateTime?
+  lastTrained  DateTime? @map("last_trained")
 
   // Relations
-  userId       String
+  userId       String   @map("user_id")
 
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
 
   // Relations
   trainingData PersonaTrainingData[]
@@ -1061,25 +1061,25 @@ model Persona {
 // Persona Training Data - stores training samples and extracted insights
 model PersonaTrainingData {
   id           String   @id @default(cuid())
-  personaId    String
+  personaId    String   @map("persona_id")
   persona      Persona  @relation(fields: [personaId], references: [id], onDelete: Cascade)
 
   // Source information
-  sourceType   String   // 'text', 'social_post', 'document', 'website', 'conversation'
-  sourceUrl    String?
+  sourceType   String   @map("source_type") // 'text', 'social_post', 'document', 'website', 'conversation'
+  sourceUrl    String?  @map("source_url")
   platform     String?  // 'twitter', 'linkedin', 'instagram', etc.
 
   // Content
   content      String   @db.Text
-  contentHash  String   // For deduplication
+  contentHash  String   @map("content_hash") // For deduplication
 
   // Extracted characteristics (JSON)
-  extractedTone       Json?    // { primary, secondary, formality, energy, warmth, humor }
-  extractedVocabulary Json?    // { complexity, preferredWords, jargonLevel }
-  extractedPatterns   Json?    // { hooks, closings, ctas, signatures }
+  extractedTone       Json?    @map("extracted_tone") // { primary, secondary, formality, energy, warmth, humor }
+  extractedVocabulary Json?    @map("extracted_vocabulary") // { complexity, preferredWords, jargonLevel }
+  extractedPatterns   Json?    @map("extracted_patterns") // { hooks, closings, ctas, signatures }
 
   // AI Analysis results
-  aiAnalysis   Json?    // Full AI-generated analysis
+  aiAnalysis   Json?    @map("ai_analysis") // Full AI-generated analysis
   sentiment    String?  // 'positive', 'neutral', 'negative'
   topics       String[] // Extracted topics
 
@@ -1088,11 +1088,11 @@ model PersonaTrainingData {
 
   // Metadata
   engagement   Int?     // Original engagement metrics if from social post
-  processedAt  DateTime?
+  processedAt  DateTime? @map("processed_at")
   confidence   Float    @default(0)
 
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
 
   @@unique([personaId, contentHash])
   @@index([personaId])
@@ -1106,36 +1106,36 @@ model PersonaTrainingData {
 
 model Subscription {
   id                   String    @id @default(cuid())
-  userId               String    @unique
-  stripeCustomerId     String?   @unique
-  stripeSubscriptionId String?   @unique
-  stripePriceId        String?
+  userId               String    @unique @map("user_id")
+  stripeCustomerId     String?   @unique @map("stripe_customer_id")
+  stripeSubscriptionId String?   @unique @map("stripe_subscription_id")
+  stripePriceId        String?   @map("stripe_price_id")
 
   // Subscription details
   plan                 String    @default("free") // 'free', 'professional', 'business', 'custom'
   status               String    @default("inactive") // 'active', 'inactive', 'past_due', 'cancelled', 'trialing'
 
   // Billing period
-  currentPeriodStart   DateTime?
-  currentPeriodEnd     DateTime?
-  cancelAtPeriodEnd    Boolean   @default(false)
-  cancelledAt          DateTime?
+  currentPeriodStart   DateTime? @map("current_period_start")
+  currentPeriodEnd     DateTime? @map("current_period_end")
+  cancelAtPeriodEnd    Boolean   @default(false) @map("cancel_at_period_end")
+  cancelledAt          DateTime? @map("cancelled_at")
 
   // Trial
-  trialStart           DateTime?
-  trialEnd             DateTime?
+  trialStart           DateTime? @map("trial_start")
+  trialEnd             DateTime? @map("trial_end")
 
   // Usage limits (based on plan)
-  maxSocialAccounts    Int       @default(2)
-  maxAiPosts           Int       @default(10)
-  maxPersonas          Int       @default(1)
+  maxSocialAccounts    Int       @default(2) @map("max_social_accounts")
+  maxAiPosts           Int       @default(10) @map("max_ai_posts")
+  maxPersonas          Int       @default(1) @map("max_personas")
 
   // Usage tracking
-  currentAiPosts       Int       @default(0)
-  lastResetAt          DateTime  @default(now())
+  currentAiPosts       Int       @default(0) @map("current_ai_posts")
+  lastResetAt          DateTime  @default(now()) @map("last_reset_at")
 
-  createdAt            DateTime  @default(now())
-  updatedAt            DateTime  @updatedAt
+  createdAt            DateTime  @default(now()) @map("created_at")
+  updatedAt            DateTime  @updatedAt @map("updated_at")
 
   @@index([status])
   @@index([plan])
@@ -1148,7 +1148,7 @@ model Subscription {
 
 model RevenueEntry {
   id          String   @id @default(cuid())
-  userId      String
+  userId      String   @map("user_id")
 
   // Revenue details
   source      String   // 'sponsorship', 'affiliate', 'ads', 'tips', 'merchandise', 'other'
@@ -1158,18 +1158,18 @@ model RevenueEntry {
 
   // Optional associations
   platform    String?  // Platform that generated the revenue
-  postId      String?  // Link to specific content
-  brandName   String?  // For sponsorships
+  postId      String?  @map("post_id") // Link to specific content
+  brandName   String?  @map("brand_name") // For sponsorships
 
   // Dates
-  paidAt      DateTime // When payment was received
-  periodStart DateTime? // For recurring/period-based income
-  periodEnd   DateTime?
+  paidAt      DateTime @map("paid_at") // When payment was received
+  periodStart DateTime? @map("period_start") // For recurring/period-based income
+  periodEnd   DateTime? @map("period_end")
 
   // Metadata
   metadata    Json?    // Source-specific details
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
 
   // Relations
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -1183,7 +1183,7 @@ model RevenueEntry {
 
 model ContentInvestment {
   id          String   @id @default(cuid())
-  userId      String
+  userId      String   @map("user_id")
 
   // Investment details
   type        String   // 'time', 'money'
@@ -1194,15 +1194,15 @@ model ContentInvestment {
 
   // Optional associations
   platform    String?  // Platform the investment relates to
-  postId      String?  // Link to specific content
+  postId      String?  @map("post_id") // Link to specific content
 
   // Date
-  investedAt  DateTime // When the investment was made
+  investedAt  DateTime @map("invested_at") // When the investment was made
 
   // Metadata
   metadata    Json?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
 
   // Relations
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -1219,7 +1219,7 @@ model ContentInvestment {
 
 model Sponsor {
   id          String   @id @default(cuid())
-  userId      String
+  userId      String   @map("user_id")
 
   // Brand info
   name        String
@@ -1235,8 +1235,8 @@ model Sponsor {
 
   // Metadata
   metadata    Json?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
 
   // Relations
   user        User           @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -1249,7 +1249,7 @@ model Sponsor {
 
 model SponsorDeal {
   id          String   @id @default(cuid())
-  sponsorId   String
+  sponsorId   String   @map("sponsor_id")
 
   // Deal info
   title       String
@@ -1261,17 +1261,17 @@ model SponsorDeal {
   stage       String   @default("negotiation") // negotiation, contracted, in_progress, delivered, paid, cancelled
 
   // Dates
-  startDate   DateTime?
-  endDate     DateTime?
-  paidAt      DateTime?
+  startDate   DateTime? @map("start_date")
+  endDate     DateTime? @map("end_date")
+  paidAt      DateTime? @map("paid_at")
 
   // Payment tracking
-  revenueEntryId String? @unique // Link to RevenueEntry when paid
+  revenueEntryId String? @unique @map("revenue_entry_id") // Link to RevenueEntry when paid
 
   // Metadata
   metadata    Json?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
 
   // Relations
   sponsor      Sponsor          @relation(fields: [sponsorId], references: [id], onDelete: Cascade)
@@ -1285,7 +1285,7 @@ model SponsorDeal {
 
 model DealDeliverable {
   id          String   @id @default(cuid())
-  dealId      String
+  dealId      String   @map("deal_id")
 
   // Deliverable info
   title       String
@@ -1295,17 +1295,17 @@ model DealDeliverable {
 
   // Status
   status      String   @default("pending") // pending, in_progress, submitted, approved, rejected
-  dueDate     DateTime?
-  completedAt DateTime?
+  dueDate     DateTime? @map("due_date")
+  completedAt DateTime? @map("completed_at")
 
   // Content link
-  contentUrl  String?  // URL to published content
-  postId      String?  // Link to internal Post if applicable
+  contentUrl  String?  @map("content_url") // URL to published content
+  postId      String?  @map("post_id") // Link to internal Post if applicable
 
   // Metadata
   metadata    Json?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
 
   // Relations
   deal        SponsorDeal @relation(fields: [dealId], references: [id], onDelete: Cascade)
@@ -1324,13 +1324,13 @@ model Role {
   name         String
   description  String?
   permissions  String[] // Array of permission strings
-  isDefault    Boolean  @default(false)
-  isSystem     Boolean  @default(false) // System roles cannot be deleted
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  isDefault    Boolean  @default(false) @map("is_default")
+  isSystem     Boolean  @default(false) @map("is_system") // System roles cannot be deleted
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
 
   // Organization scope
-  organizationId String
+  organizationId String @map("organization_id")
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
   // Relations
@@ -1343,11 +1343,11 @@ model Role {
 
 model UserRole {
   id        String   @id @default(cuid())
-  userId    String
-  roleId    String
-  grantedAt DateTime @default(now())
-  grantedBy String?  // ID of user who granted the role
-  expiresAt DateTime?
+  userId    String   @map("user_id")
+  roleId    String   @map("role_id")
+  grantedAt DateTime @default(now()) @map("granted_at")
+  grantedBy String?  @map("granted_by") // ID of user who granted the role
+  expiresAt DateTime? @map("expires_at")
 
   // Relations
   role      Role     @relation(fields: [roleId], references: [id], onDelete: Cascade)
@@ -1361,16 +1361,16 @@ model UserRole {
 model PermissionAudit {
   id           String   @id @default(cuid())
   action       String   // 'grant', 'revoke', 'create_role', 'update_role', 'delete_role'
-  targetUserId String?
-  targetRoleId String?
-  performedBy  String
+  targetUserId String?  @map("target_user_id")
+  targetRoleId String?  @map("target_role_id")
+  performedBy  String   @map("performed_by")
   details      Json?
-  ipAddress    String?
-  userAgent    String?
-  createdAt    DateTime @default(now())
+  ipAddress    String?  @map("ip_address")
+  userAgent    String?  @map("user_agent")
+  createdAt    DateTime @default(now()) @map("created_at")
 
   // Organization scope
-  organizationId String
+  organizationId String @map("organization_id")
 
   @@index([organizationId])
   @@index([performedBy])
@@ -1384,35 +1384,35 @@ model PermissionAudit {
 
 model ContentShare {
   id             String   @id @default(cuid())
-  contentType    String   // 'campaign', 'post', 'calendar_post', 'project'
-  contentId      String   // ID of the shared content
+  contentType    String   @map("content_type") // 'campaign', 'post', 'calendar_post', 'project'
+  contentId      String   @map("content_id") // ID of the shared content
 
   // Sharing target (one of these should be set)
-  sharedWithUserId String?  // Direct user share
-  sharedWithTeamId String?  // Team/org share
-  sharedWithEmail  String?  // External share via email
+  sharedWithUserId String? @map("shared_with_user_id") // Direct user share
+  sharedWithTeamId String? @map("shared_with_team_id") // Team/org share
+  sharedWithEmail  String? @map("shared_with_email") // External share via email
 
   // Permissions
   permission     String   @default("view") // 'view', 'comment', 'edit', 'admin'
-  canDownload    Boolean  @default(true)
-  canReshare     Boolean  @default(false)
+  canDownload    Boolean  @default(true) @map("can_download")
+  canReshare     Boolean  @default(false) @map("can_reshare")
 
   // Access control
-  accessLink     String?  @unique // Shareable link token
+  accessLink     String?  @unique @map("access_link") // Shareable link token
   password       String?  // Optional password protection (hashed)
-  expiresAt      DateTime?
-  maxViews       Int?     // Optional view limit
-  viewCount      Int      @default(0)
+  expiresAt      DateTime? @map("expires_at")
+  maxViews       Int?     @map("max_views") // Optional view limit
+  viewCount      Int      @default(0) @map("view_count")
 
   // Ownership
-  sharedById     String   // Who created this share
-  organizationId String?
+  sharedById     String   @map("shared_by_id") // Who created this share
+  organizationId String?  @map("organization_id")
 
   // Metadata
   message        String?  // Optional message with share
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-  lastAccessedAt DateTime?
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+  lastAccessedAt DateTime? @map("last_accessed_at")
 
   @@index([contentType, contentId])
   @@index([sharedWithUserId])
@@ -1424,32 +1424,32 @@ model ContentShare {
 
 model ContentComment {
   id             String   @id @default(cuid())
-  contentType    String   // 'campaign', 'post', 'calendar_post', 'project'
-  contentId      String   // ID of the content being commented on
+  contentType    String   @map("content_type") // 'campaign', 'post', 'calendar_post', 'project'
+  contentId      String   @map("content_id") // ID of the content being commented on
 
   // Comment content
   content        String   @db.Text
-  parentId       String?  // For threaded comments
+  parentId       String?  @map("parent_id") // For threaded comments
 
   // Author
-  authorId       String
+  authorId       String   @map("author_id")
 
   // Sentiment analysis
   sentiment      String?  // 'positive', 'neutral', 'negative', 'mixed'
-  sentimentScore Float?   // -100 to 100
+  sentimentScore Float?   @map("sentiment_score") // -100 to 100
   emotions       Json?    // Array of detected emotions
 
   // Status
-  isResolved     Boolean  @default(false)
-  resolvedAt     DateTime?
-  resolvedBy     String?
+  isResolved     Boolean  @default(false) @map("is_resolved")
+  resolvedAt     DateTime? @map("resolved_at")
+  resolvedBy     String?  @map("resolved_by")
 
   // Mentions
   mentions       String[] // Array of user IDs mentioned
 
   // Metadata
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
 
   // Self-reference for threads
   parent         ContentComment?  @relation("CommentThread", fields: [parentId], references: [id], onDelete: Cascade)
@@ -1463,20 +1463,20 @@ model ContentComment {
 
 model ContentAccessLog {
   id             String   @id @default(cuid())
-  contentType    String   // 'campaign', 'post', 'calendar_post', 'project'
-  contentId      String
+  contentType    String   @map("content_type") // 'campaign', 'post', 'calendar_post', 'project'
+  contentId      String   @map("content_id")
 
   // Access details
   action         String   // 'view', 'edit', 'download', 'share', 'comment'
-  userId         String?  // May be null for anonymous/link access
-  shareId        String?  // If accessed via share link
+  userId         String?  @map("user_id") // May be null for anonymous/link access
+  shareId        String?  @map("share_id") // If accessed via share link
 
   // Context
-  ipAddress      String?
-  userAgent      String?
+  ipAddress      String?  @map("ip_address")
+  userAgent      String?  @map("user_agent")
   referrer       String?
 
-  createdAt      DateTime @default(now())
+  createdAt      DateTime @default(now()) @map("created_at")
 
   @@index([contentType, contentId])
   @@index([userId])
@@ -1488,30 +1488,30 @@ model TeamNotification {
   id             String   @id @default(cuid())
 
   // Target
-  userId         String   // Recipient
-  organizationId String?  // Team/org context
+  userId         String   @map("user_id") // Recipient
+  organizationId String?  @map("organization_id") // Team/org context
 
   // Notification content
   type           String   // 'invitation', 'role_change', 'content_shared', 'mention', 'comment', 'access_request'
   title          String
   message        String
-  actionUrl      String?
+  actionUrl      String?  @map("action_url")
 
   // Related entities
-  relatedUserId  String?  // The user who triggered this notification
-  relatedContentType String?
-  relatedContentId String?
+  relatedUserId  String?  @map("related_user_id") // The user who triggered this notification
+  relatedContentType String? @map("related_content_type")
+  relatedContentId String? @map("related_content_id")
 
   // Status
   read           Boolean  @default(false)
-  readAt         DateTime?
+  readAt         DateTime? @map("read_at")
 
   // Preferences
-  emailSent      Boolean  @default(false)
-  emailSentAt    DateTime?
+  emailSent      Boolean  @default(false) @map("email_sent")
+  emailSentAt    DateTime? @map("email_sent_at")
 
-  createdAt      DateTime @default(now())
-  expiresAt      DateTime?
+  createdAt      DateTime @default(now()) @map("created_at")
+  expiresAt      DateTime? @map("expires_at")
 
   @@index([userId, read])
   @@index([organizationId])
@@ -1527,14 +1527,14 @@ model ApprovalRequest {
   id            String   @id @default(cuid())
 
   // Content reference
-  contentId     String   // ID of Post, Campaign, etc.
-  contentType   String   // 'post', 'campaign', 'media', 'template'
+  contentId     String   @map("content_id") // ID of Post, Campaign, etc.
+  contentType   String   @map("content_type") // 'post', 'campaign', 'media', 'template'
 
   // Workflow
-  workflowId    String?  // Optional WorkflowTemplate reference
+  workflowId    String?  @map("workflow_id") // Optional WorkflowTemplate reference
 
   // Submitter
-  submittedBy   String   // User ID who submitted
+  submittedBy   String   @map("submitted_by") // User ID who submitted
   submitter     User     @relation("SubmittedApprovals", fields: [submittedBy], references: [id], onDelete: Cascade)
 
   // Status
@@ -1542,8 +1542,8 @@ model ApprovalRequest {
   priority      String   @default("normal")  // 'low', 'normal', 'high', 'urgent'
 
   // Progress
-  currentStep   Int      @default(0)
-  totalSteps    Int      @default(1)
+  currentStep   Int      @default(0) @map("current_step")
+  totalSteps    Int      @default(1) @map("total_steps")
 
   // Steps stored as JSON array (matches existing service structure)
   steps         Json     @default("[]")
@@ -1551,16 +1551,16 @@ model ApprovalRequest {
   // Metadata
   title         String
   description   String?
-  dueDate       DateTime?
+  dueDate       DateTime? @map("due_date")
   metadata      Json?    // platforms, scheduledTime, tags, etc.
 
   // Organization scope
-  organizationId String?
+  organizationId String? @map("organization_id")
   organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
 
   // Timestamps
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
 
   @@index([submittedBy])
   @@index([organizationId])
@@ -1573,7 +1573,7 @@ model WorkflowTemplate {
   id             String   @id @default(cuid())
 
   // Organization scope
-  organizationId String
+  organizationId String   @map("organization_id")
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
   // Template info
@@ -1584,12 +1584,12 @@ model WorkflowTemplate {
   steps          Json     @default("[]")
 
   // Configuration
-  isDefault      Boolean  @default(false)
-  contentTypes   Json     @default("[\"post\"]") // Array of content types this applies to
+  isDefault      Boolean  @default(false) @map("is_default")
+  contentTypes   Json     @default("[\"post\"]") @map("content_types") // Array of content types this applies to
 
   // Timestamps
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
 
   @@index([organizationId])
   @@index([isDefault])
@@ -1606,36 +1606,36 @@ model CalendarPost {
   content        String   @db.Text
   platforms      String[] // Multi-platform support
   status         String   @default("draft") // 'draft', 'scheduled', 'published', 'failed', 'cancelled'
-  scheduledFor   DateTime
-  publishedAt    DateTime?
+  scheduledFor   DateTime @map("scheduled_for")
+  publishedAt    DateTime? @map("published_at")
 
   // Media and content metadata
-  mediaUrls      String[]
+  mediaUrls      String[] @map("media_urls")
   tags           String[]
   hashtags       String[]
   mentions       String[]
 
   // Recurrence support
-  recurrenceType String?  // 'none', 'daily', 'weekly', 'biweekly', 'monthly'
-  recurrenceInterval Int?
-  recurrenceEndDate DateTime?
-  recurrenceOccurrences Int?
-  recurrenceDaysOfWeek Int[] // 0-6 for Sunday-Saturday
-  recurrenceDayOfMonth Int?
-  parentPostId   String?  // Links to parent for recurring posts
+  recurrenceType String?  @map("recurrence_type") // 'none', 'daily', 'weekly', 'biweekly', 'monthly'
+  recurrenceInterval Int? @map("recurrence_interval")
+  recurrenceEndDate DateTime? @map("recurrence_end_date")
+  recurrenceOccurrences Int? @map("recurrence_occurrences")
+  recurrenceDaysOfWeek Int[] @map("recurrence_days_of_week") // 0-6 for Sunday-Saturday
+  recurrenceDayOfMonth Int? @map("recurrence_day_of_month")
+  parentPostId   String?  @map("parent_post_id") // Links to parent for recurring posts
 
   // Campaign and organization
-  campaignId     String?
-  organizationId String
-  userId         String   // Created by
+  campaignId     String?  @map("campaign_id")
+  organizationId String   @map("organization_id")
+  userId         String   @map("user_id") // Created by
 
   // Metadata
   metadata       Json?    // Platform-specific settings
   analytics      Json?    // Engagement metrics after publish
-  errorMessage   String?  // For failed posts
+  errorMessage   String?  @map("error_message") // For failed posts
 
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
 
   // Self-referential relation for recurring posts
   parentPost     CalendarPost?  @relation("RecurringPosts", fields: [parentPostId], references: [id], onDelete: SetNull)
@@ -1663,11 +1663,11 @@ model ABTest {
   // Test configuration
   duration       Int      @default(7) // Duration in days
   platform       String?  // Target platform: 'instagram', 'twitter', etc.
-  targetAudience String?
+  targetAudience String?  @map("target_audience")
 
   // Timing
-  startDate      DateTime?
-  endDate        DateTime?
+  startDate      DateTime? @map("start_date")
+  endDate        DateTime? @map("end_date")
 
   // Results
   winner         String?  // 'A', 'B', or 'inconclusive'
@@ -1677,12 +1677,12 @@ model ABTest {
   recommendations String[]
 
   // Ownership
-  userId         String
-  organizationId String?
-  campaignId     String?
+  userId         String   @map("user_id")
+  organizationId String?  @map("organization_id")
+  campaignId     String?  @map("campaign_id")
 
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
 
   // Relations
   variants       ABTestVariant[]
@@ -1696,7 +1696,7 @@ model ABTest {
 
 model ABTestVariant {
   id             String   @id @default(cuid())
-  testId         String
+  testId         String   @map("test_id")
   name           String   // 'A', 'B', 'C', etc.
 
   // Content
@@ -1711,8 +1711,8 @@ model ABTestVariant {
   clicks         Int      @default(0)
   conversions    Int      @default(0)
 
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
 
   // Relations
   test           ABTest   @relation(fields: [testId], references: [id], onDelete: Cascade)
@@ -1723,8 +1723,8 @@ model ABTestVariant {
 
 model ABTestResult {
   id             String   @id @default(cuid())
-  testId         String
-  variantId      String
+  testId         String   @map("test_id")
+  variantId      String   @map("variant_id")
 
   // Metrics snapshot
   timestamp      DateTime @default(now())
@@ -1734,9 +1734,9 @@ model ABTestResult {
   conversions    Int      @default(0)
 
   // Statistical analysis
-  conversionRate Float    @default(0)
+  conversionRate Float    @default(0) @map("conversion_rate")
   uplift         Float?   // Percentage improvement over control
-  pValue         Float?   // Statistical significance
+  pValue         Float?   @map("p_value") // Statistical significance
 
   // Relations
   test           ABTest   @relation(fields: [testId], references: [id], onDelete: Cascade)
@@ -1754,38 +1754,38 @@ model ABTestResult {
 
 model TrackedCompetitor {
   id             String    @id @default(cuid())
-  userId         String
+  userId         String    @map("user_id")
 
   // Basic info
   name           String
   domain         String?
-  logoUrl        String?
+  logoUrl        String?   @map("logo_url")
   description    String?   @db.Text
   industry       String?
 
   // Social handles
-  twitterHandle  String?
-  instagramHandle String?
-  linkedinHandle String?
-  facebookHandle String?
-  youtubeHandle  String?
-  tiktokHandle   String?
+  twitterHandle  String?   @map("twitter_handle")
+  instagramHandle String?  @map("instagram_handle")
+  linkedinHandle String?   @map("linkedin_handle")
+  facebookHandle String?   @map("facebook_handle")
+  youtubeHandle  String?   @map("youtube_handle")
+  tiktokHandle   String?   @map("tiktok_handle")
 
   // Tracking settings
-  isActive       Boolean   @default(true)
-  trackPosts     Boolean   @default(true)
-  trackMetrics   Boolean   @default(true)
-  trackingFrequency String @default("daily")  // 'hourly', 'daily', 'weekly'
-  alertsEnabled  Boolean   @default(true)
+  isActive       Boolean   @default(true) @map("is_active")
+  trackPosts     Boolean   @default(true) @map("track_posts")
+  trackMetrics   Boolean   @default(true) @map("track_metrics")
+  trackingFrequency String @default("daily") @map("tracking_frequency") // 'hourly', 'daily', 'weekly'
+  alertsEnabled  Boolean   @default(true) @map("alerts_enabled")
 
   // Notes
   notes          String?   @db.Text
   tags           String[]
 
   // Timestamps
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
-  lastTrackedAt  DateTime?
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+  lastTrackedAt  DateTime? @map("last_tracked_at")
 
   // Relations
   snapshots      CompetitorSnapshot[]
@@ -1800,37 +1800,37 @@ model TrackedCompetitor {
 
 model CompetitorSnapshot {
   id              String    @id @default(cuid())
-  competitorId    String
+  competitorId    String    @map("competitor_id")
 
   // Platform metrics
   platform        String    // 'twitter', 'instagram', etc. or 'all'
 
   // Follower metrics
-  followersCount  Int?
-  followingCount  Int?
-  followerGrowth  Int?      // Change since last snapshot
+  followersCount  Int?      @map("followers_count")
+  followingCount  Int?      @map("following_count")
+  followerGrowth  Int?      @map("follower_growth") // Change since last snapshot
 
   // Engagement metrics
-  totalPosts      Int?
-  avgLikes        Float?
-  avgComments     Float?
-  avgShares       Float?
-  engagementRate  Float?
-  postFrequency   Float?    // Posts per day
+  totalPosts      Int?      @map("total_posts")
+  avgLikes        Float?    @map("avg_likes")
+  avgComments     Float?    @map("avg_comments")
+  avgShares       Float?    @map("avg_shares")
+  engagementRate  Float?    @map("engagement_rate")
+  postFrequency   Float?    @map("post_frequency") // Posts per day
 
   // Content metrics
-  topHashtags     String[]
-  contentTypes    Json?     // Distribution of content types
-  postingTimes    Json?     // Typical posting times
+  topHashtags     String[]  @map("top_hashtags")
+  contentTypes    Json?     @map("content_types") // Distribution of content types
+  postingTimes    Json?     @map("posting_times") // Typical posting times
 
   // Calculated scores
-  performanceScore Float?   // 0-100 overall performance
-  growthScore     Float?    // 0-100 growth trajectory
-  engagementScore Float?    // 0-100 engagement health
+  performanceScore Float?   @map("performance_score") // 0-100 overall performance
+  growthScore     Float?    @map("growth_score") // 0-100 growth trajectory
+  engagementScore Float?    @map("engagement_score") // 0-100 engagement health
 
   // Metadata
-  snapshotAt      DateTime  @default(now())
-  dataSource      String    @default("api")  // 'api', 'scraper', 'manual'
+  snapshotAt      DateTime  @default(now()) @map("snapshot_at")
+  dataSource      String    @default("api") @map("data_source") // 'api', 'scraper', 'manual'
 
   // Relations
   competitor      TrackedCompetitor @relation(fields: [competitorId], references: [id], onDelete: Cascade)
@@ -1844,15 +1844,15 @@ model CompetitorSnapshot {
 
 model CompetitorPost {
   id              String    @id @default(cuid())
-  competitorId    String
+  competitorId    String    @map("competitor_id")
 
   // Post details
   platform        String
-  externalId      String?   // Platform-specific post ID
-  postUrl         String?
+  externalId      String?   @map("external_id") // Platform-specific post ID
+  postUrl         String?   @map("post_url")
   content         String?   @db.Text
-  mediaUrls       String[]
-  mediaType       String?   // 'image', 'video', 'carousel', 'text'
+  mediaUrls       String[]  @map("media_urls")
+  mediaType       String?   @map("media_type") // 'image', 'video', 'carousel', 'text'
 
   // Engagement metrics
   likes           Int       @default(0)
@@ -1860,7 +1860,7 @@ model CompetitorPost {
   shares          Int       @default(0)
   views           Int?
   saves           Int?
-  engagementRate  Float?
+  engagementRate  Float?    @map("engagement_rate")
 
   // Content analysis
   sentiment       String?   // 'positive', 'neutral', 'negative'
@@ -1869,13 +1869,13 @@ model CompetitorPost {
   topics          String[]
 
   // Performance
-  isTopPerforming Boolean   @default(false)
-  performancePercentile Float?  // Where this post ranks (0-100)
+  isTopPerforming Boolean   @default(false) @map("is_top_performing")
+  performancePercentile Float? @map("performance_percentile") // Where this post ranks (0-100)
 
   // Timestamps
-  postedAt        DateTime?
-  trackedAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  postedAt        DateTime? @map("posted_at")
+  trackedAt       DateTime  @default(now()) @map("tracked_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
 
   // Relations
   competitor      TrackedCompetitor @relation(fields: [competitorId], references: [id], onDelete: Cascade)
@@ -1890,27 +1890,27 @@ model CompetitorPost {
 
 model CompetitorAlert {
   id              String    @id @default(cuid())
-  userId          String
-  competitorId    String
+  userId          String    @map("user_id")
+  competitorId    String    @map("competitor_id")
 
   // Alert details
-  alertType       String    // 'viral_post', 'follower_spike', 'new_campaign', 'strategy_change', 'milestone'
+  alertType       String    @map("alert_type") // 'viral_post', 'follower_spike', 'new_campaign', 'strategy_change', 'milestone'
   severity        String    @default("info")  // 'info', 'warning', 'important'
   title           String
   description     String    @db.Text
 
   // Related data
-  relatedPostId   String?
+  relatedPostId   String?   @map("related_post_id")
   metrics         Json?     // Relevant metrics that triggered alert
 
   // Status
-  isRead          Boolean   @default(false)
-  isDismissed     Boolean   @default(false)
-  actionTaken     String?   @db.Text
+  isRead          Boolean   @default(false) @map("is_read")
+  isDismissed     Boolean   @default(false) @map("is_dismissed")
+  actionTaken     String?   @db.Text @map("action_taken")
 
   // Timestamps
-  createdAt       DateTime  @default(now())
-  readAt          DateTime?
+  createdAt       DateTime  @default(now()) @map("created_at")
+  readAt          DateTime? @map("read_at")
 
   // Relations
   competitor      TrackedCompetitor @relation(fields: [competitorId], references: [id], onDelete: Cascade)
@@ -1924,23 +1924,23 @@ model CompetitorAlert {
 
 model CompetitorComparison {
   id              String    @id @default(cuid())
-  userId          String
+  userId          String    @map("user_id")
 
   // Comparison config
   name            String
-  competitorIds   String[]
+  competitorIds   String[]  @map("competitor_ids")
   metrics         String[]  // Which metrics to compare
 
   // Cached comparison data
-  comparisonData  Json?
-  lastUpdated     DateTime?
+  comparisonData  Json?     @map("comparison_data")
+  lastUpdated     DateTime? @map("last_updated")
 
   // Settings
-  autoRefresh     Boolean   @default(true)
-  refreshFrequency String   @default("daily")
+  autoRefresh     Boolean   @default(true) @map("auto_refresh")
+  refreshFrequency String   @default("daily") @map("refresh_frequency")
 
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
 
   @@index([userId])
   @@map("competitor_comparisons")
@@ -1953,19 +1953,19 @@ model CompetitorComparison {
 
 model AIConversation {
   id              String    @id @default(cuid())
-  userId          String
+  userId          String    @map("user_id")
   title           String    @default("New Conversation")
   status          String    @default("active") // 'active', 'archived', 'deleted'
 
   // Context snapshot at conversation start (compressed user data for continuity)
-  contextSnapshot Json?
+  contextSnapshot Json?     @map("context_snapshot")
 
   // Stats
-  messageCount    Int       @default(0)
-  lastMessageAt   DateTime?
+  messageCount    Int       @default(0) @map("message_count")
+  lastMessageAt   DateTime? @map("last_message_at")
 
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
 
   // Relations
   user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -1978,7 +1978,7 @@ model AIConversation {
 
 model AIMessage {
   id              String    @id @default(cuid())
-  conversationId  String
+  conversationId  String    @map("conversation_id")
 
   // Message content
   role            String    // 'user', 'assistant', 'system'
@@ -1986,18 +1986,18 @@ model AIMessage {
 
   // AI metadata
   model           String?   // AI model used (e.g. 'claude-sonnet-4-20250514')
-  tokensUsed      Int?      // Total tokens (prompt + completion)
-  latencyMs       Int?      // Response time in milliseconds
+  tokensUsed      Int?      @map("tokens_used") // Total tokens (prompt + completion)
+  latencyMs       Int?      @map("latency_ms") // Response time in milliseconds
 
   // Structured data extracted from AI responses
-  actionItems     Json?     // [{ title, description, priority, completed }]
+  actionItems     Json?     @map("action_items") // [{ title, description, priority, completed }]
   suggestions     Json?     // [{ type, title, description, actionUrl }]
 
   // User feedback on AI response
   rating          Int?      // 1-5 thumbs rating
   feedback        String?   // Free-text feedback
 
-  createdAt       DateTime  @default(now())
+  createdAt       DateTime  @default(now()) @map("created_at")
 
   // Relations
   conversation    AIConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
@@ -2014,25 +2014,25 @@ model AIMessage {
 
 model AIWeeklyDigest {
   id              String    @id @default(cuid())
-  userId          String
+  userId          String    @map("user_id")
 
   // Time window
-  weekStart       DateTime  @db.Date
-  weekEnd         DateTime  @db.Date
+  weekStart       DateTime  @db.Date @map("week_start")
+  weekEnd         DateTime  @db.Date @map("week_end")
 
   // AI-generated content
   summary         String    @db.Text       // Executive summary paragraph
   highlights      Json      // [{ metric, value, change, trend }]
-  actionItems     Json      // [{ title, description, priority, actionUrl }]
+  actionItems     Json      @map("action_items") // [{ title, description, priority, actionUrl }]
   opportunities   Json      // [{ title, description, potentialImpact }]
 
   // Delivery tracking
-  emailSent       Boolean   @default(false)
-  emailSentAt     DateTime?
+  emailSent       Boolean   @default(false) @map("email_sent")
+  emailSentAt     DateTime? @map("email_sent_at")
   opened          Boolean   @default(false)
-  openedAt        DateTime?
+  openedAt        DateTime? @map("opened_at")
 
-  createdAt       DateTime  @default(now())
+  createdAt       DateTime  @default(now()) @map("created_at")
 
   // Relations
   user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -2049,34 +2049,34 @@ model AIWeeklyDigest {
 
 model UserHealthScore {
   id              String    @id @default(cuid())
-  userId          String    @unique
+  userId          String    @unique @map("user_id")
 
   // Composite score (0-100)
   score           Int       @default(50)
   trend           String    @default("stable") // 'improving', 'stable', 'declining', 'critical'
-  riskLevel       String    @default("medium") // 'healthy', 'medium', 'high', 'critical'
+  riskLevel       String    @default("medium") @map("risk_level") // 'healthy', 'medium', 'high', 'critical'
 
   // Component scores (0-100 each)
-  loginScore      Int       @default(50)   // Login frequency (25% weight)
-  contentScore    Int       @default(50)   // Content creation activity (25% weight)
-  featureScore    Int       @default(50)   // Feature breadth usage (20% weight)
-  engagementScore Int       @default(50)   // Platform engagement (20% weight)
-  growthScore     Int       @default(50)   // Growth trajectory (10% weight)
+  loginScore      Int       @default(50) @map("login_score")   // Login frequency (25% weight)
+  contentScore    Int       @default(50) @map("content_score")   // Content creation activity (25% weight)
+  featureScore    Int       @default(50) @map("feature_score")   // Feature breadth usage (20% weight)
+  engagementScore Int       @default(50) @map("engagement_score")   // Platform engagement (20% weight)
+  growthScore     Int       @default(50) @map("growth_score")   // Growth trajectory (10% weight)
 
   // Raw metrics used for scoring
-  daysActive      Int       @default(0)    // Days active in last 30
-  featuresUsed    Int       @default(0)    // Unique features used in last 30 days
-  contentCreated  Int       @default(0)    // Content pieces created in last 30 days
-  lastLoginDaysAgo Int      @default(0)    // Days since last login
+  daysActive      Int       @default(0) @map("days_active")    // Days active in last 30
+  featuresUsed    Int       @default(0) @map("features_used")    // Unique features used in last 30 days
+  contentCreated  Int       @default(0) @map("content_created")    // Content pieces created in last 30 days
+  lastLoginDaysAgo Int      @default(0) @map("last_login_days_ago")    // Days since last login
 
   // Alert tracking
-  alertSent       Boolean   @default(false)
-  alertSentAt     DateTime?
-  lastAlertType   String?   // 'email', 'notification', 'both'
+  alertSent       Boolean   @default(false) @map("alert_sent")
+  alertSentAt     DateTime? @map("alert_sent_at")
+  lastAlertType   String?   @map("last_alert_type") // 'email', 'notification', 'both'
 
-  calculatedAt    DateTime  @default(now())
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  calculatedAt    DateTime  @default(now()) @map("calculated_at")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
 
   // Relations
   user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -2093,20 +2093,20 @@ model UserHealthScore {
 
 model UserStreak {
   id              String    @id @default(cuid())
-  userId          String    @unique
+  userId          String    @unique @map("user_id")
 
   // Streak data
-  currentStreak   Int       @default(0)
-  longestStreak   Int       @default(0)
-  totalDays       Int       @default(0)
-  lastActiveDate  DateTime? @db.Date
+  currentStreak   Int       @default(0) @map("current_streak")
+  longestStreak   Int       @default(0) @map("longest_streak")
+  totalDays       Int       @default(0) @map("total_days")
+  lastActiveDate  DateTime? @db.Date @map("last_active_date")
 
   // Leveling (based on total activity)
   level           Int       @default(1)
   points          Int       @default(0)
 
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
 
   // Relations
   user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -2116,10 +2116,10 @@ model UserStreak {
 
 model UserAchievement {
   id              String    @id @default(cuid())
-  userId          String
+  userId          String    @map("user_id")
 
   // Achievement identity
-  achievementId   String    // Unique key from achievements catalog (e.g. 'first_post', '7_day_streak')
+  achievementId   String    @map("achievement_id") // Unique key from achievements catalog (e.g. 'first_post', '7_day_streak')
   name            String
   description     String
   icon            String    // Emoji or icon name
@@ -2128,10 +2128,10 @@ model UserAchievement {
 
   // Progress tracking
   progress        Int       @default(100) // 0-100 (100 = unlocked)
-  unlockedAt      DateTime?
-  pointsAwarded   Int       @default(0)
+  unlockedAt      DateTime? @map("unlocked_at")
+  pointsAwarded   Int       @default(0) @map("points_awarded")
 
-  createdAt       DateTime  @default(now())
+  createdAt       DateTime  @default(now()) @map("created_at")
 
   // Relations
   user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -2149,9 +2149,9 @@ model UserAchievement {
 
 model Referral {
   id              String    @id @default(cuid())
-  referrerId      String
-  refereeId       String?   @unique // Set when referee signs up (one-to-one)
-  refereeEmail    String    // Email invited
+  referrerId      String    @map("referrer_id")
+  refereeId       String?   @unique @map("referee_id") // Set when referee signs up (one-to-one)
+  refereeEmail    String    @map("referee_email") // Email invited
 
   // Referral code
   code            String    @unique // Format: SYN-XXXX
@@ -2160,18 +2160,18 @@ model Referral {
   status          String    @default("sent") // 'sent', 'clicked', 'signed_up', 'converted', 'expired'
 
   // Reward tracking
-  referrerRewarded Boolean  @default(false)
-  refereeRewarded  Boolean  @default(false)
-  rewardType       String?  // 'credits', 'discount', 'feature_unlock'
-  rewardAmount     Int?     // e.g., 500 for 500 AI credits
+  referrerRewarded Boolean  @default(false) @map("referrer_rewarded")
+  refereeRewarded  Boolean  @default(false) @map("referee_rewarded")
+  rewardType       String?  @map("reward_type") // 'credits', 'discount', 'feature_unlock'
+  rewardAmount     Int?     @map("reward_amount") // e.g., 500 for 500 AI credits
 
   // Metadata
-  clickedAt       DateTime?
-  signedUpAt      DateTime?
-  convertedAt     DateTime?
+  clickedAt       DateTime? @map("clicked_at")
+  signedUpAt      DateTime? @map("signed_up_at")
+  convertedAt     DateTime? @map("converted_at")
 
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
 
   // Relations
   referrer        User      @relation("ReferrerReferrals", fields: [referrerId], references: [id], onDelete: Cascade)
@@ -2190,25 +2190,25 @@ model Referral {
 
 model UserLoyaltyTier {
   id              String    @id @default(cuid())
-  userId          String    @unique
+  userId          String    @unique @map("user_id")
 
   // Tier progression
   tier            String    @default("bronze") // 'bronze', 'silver', 'gold', 'platinum'
   points          Int       @default(0)         // Current period points
-  lifetimePoints  Int       @default(0)         // All-time points
-  monthsActive    Int       @default(0)         // Consecutive months subscribed
+  lifetimePoints  Int       @default(0) @map("lifetime_points")        // All-time points
+  monthsActive    Int       @default(0) @map("months_active")        // Consecutive months subscribed
 
   // Tier benefits
-  bonusAiCredits  Int       @default(0)         // Extra AI posts per month
-  discountPercent Float     @default(0)         // Subscription discount %
-  prioritySupport Boolean   @default(false)
+  bonusAiCredits  Int       @default(0) @map("bonus_ai_credits")        // Extra AI posts per month
+  discountPercent Float     @default(0) @map("discount_percent")        // Subscription discount %
+  prioritySupport Boolean   @default(false) @map("priority_support")
 
   // Tracking
-  lastTierChange  DateTime?
-  nextTierAt      Int?      // Points needed for next tier
+  lastTierChange  DateTime? @map("last_tier_change")
+  nextTierAt      Int?      @map("next_tier_at") // Points needed for next tier
 
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
 
   // Relations
   user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -2224,11 +2224,11 @@ model UserLoyaltyTier {
 
 model FeedbackSurvey {
   id              String    @id @default(cuid())
-  userId          String
+  userId          String    @map("user_id")
 
   // Survey type
   type            String    // 'nps', 'csat', 'feature_request', 'churn_exit'
-  triggerEvent    String?   // What triggered this survey (e.g. 'day_7', 'first_publish', 'cancel')
+  triggerEvent    String?   @map("trigger_event") // What triggered this survey (e.g. 'day_7', 'first_publish', 'cancel')
 
   // Response data
   score           Int?      // NPS: 0-10, CSAT: 1-5
@@ -2236,12 +2236,12 @@ model FeedbackSurvey {
   tags            String[]  // Categorized feedback tags
 
   // Follow-up
-  followUpSent    Boolean   @default(false)
-  followUpAt      DateTime?
+  followUpSent    Boolean   @default(false) @map("follow_up_sent")
+  followUpAt      DateTime? @map("follow_up_at")
   resolved        Boolean   @default(false)
-  resolvedAt      DateTime?
+  resolvedAt      DateTime? @map("resolved_at")
 
-  createdAt       DateTime  @default(now())
+  createdAt       DateTime  @default(now()) @map("created_at")
 
   // Relations
   user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -2261,7 +2261,7 @@ model FeedbackSurvey {
 
 model AuthorProfile {
   id              Int       @id @default(autoincrement())
-  userId          String
+  userId          String    @map("user_id")
   user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   // Identity
@@ -2269,19 +2269,19 @@ model AuthorProfile {
   slug            String    @unique
   bio             String    @db.Text
   credentials     Json?     // [{type, title, institution, year}]
-  socialLinks     Json?     // {linkedin, twitter, youtube, wikipedia, scholar}
-  avatarUrl       String?
+  socialLinks     Json?     @map("social_links") // {linkedin, twitter, youtube, wikipedia, scholar}
+  avatarUrl       String?   @map("avatar_url")
 
   // Entity linking (Schema.org sameAs)
-  sameAsUrls      String[]
-  expertiseAreas  String[]
+  sameAsUrls      String[]  @map("same_as_urls")
+  expertiseAreas  String[]  @map("expertise_areas")
 
   // Verification
-  verifiedAt      DateTime?
-  eeatScore       Float?    // Cached E-E-A-T score for this author
+  verifiedAt      DateTime? @map("verified_at")
+  eeatScore       Float?    @map("eeat_score") // Cached E-E-A-T score for this author
 
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
 
   // Relations
   articles        ArticleAuthor[]
@@ -2293,24 +2293,24 @@ model AuthorProfile {
 
 model SEOAudit {
   id              Int       @id @default(autoincrement())
-  userId          String
+  userId          String    @map("user_id")
   user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   // Audit target
   url             String
-  auditType       String    // 'full', 'page', 'geo', 'eeat'
+  auditType       String    @map("audit_type") // 'full', 'page', 'geo', 'eeat'
 
   // Scores
-  overallScore    Float
-  eeatScore       Json?     // {experience, expertise, authority, trust, overall}
-  geoScore        Json?     // {citability, structure, multiModal, authority, technical, overall}
-  technicalScore  Json?     // {performance, accessibility, seo, bestPractices}
+  overallScore    Float     @map("overall_score")
+  eeatScore       Json?     @map("eeat_score") // {experience, expertise, authority, trust, overall}
+  geoScore        Json?     @map("geo_score") // {citability, structure, multiModal, authority, technical, overall}
+  technicalScore  Json?     @map("technical_score") // {performance, accessibility, seo, bestPractices}
 
   // Results
   recommendations Json      // [{priority, category, description, impact}]
-  rawData         Json?     @db.JsonB
+  rawData         Json?     @db.JsonB @map("raw_data")
 
-  createdAt       DateTime  @default(now())
+  createdAt       DateTime  @default(now()) @map("created_at")
 
   @@index([userId])
   @@index([userId, createdAt])
@@ -2320,20 +2320,20 @@ model SEOAudit {
 
 model ScheduledAuditTarget {
   id              String    @id @default(cuid())
-  userId          String
+  userId          String    @map("user_id")
   user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   url             String
   name            String    // Friendly name like "Main Site" or "Blog"
   frequency       String    // "daily", "weekly", "monthly"
-  alertThreshold  Int       @default(10) // Score drop percentage to trigger alert
+  alertThreshold  Int       @default(10) @map("alert_threshold") // Score drop percentage to trigger alert
   enabled         Boolean   @default(true)
 
-  lastRunAt       DateTime?
-  lastScore       Float?
+  lastRunAt       DateTime? @map("last_run_at")
+  lastScore       Float?    @map("last_score")
 
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
 
   @@index([userId])
   @@index([enabled, frequency])
@@ -2342,31 +2342,31 @@ model ScheduledAuditTarget {
 
 model GEOAnalysis {
   id              Int       @id @default(autoincrement())
-  userId          String
+  userId          String    @map("user_id")
   user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   // Content reference
-  contentId       String?   // Reference to Post or custom content
-  authorId        Int?
+  contentId       String?   @map("content_id") // Reference to Post or custom content
+  authorId        Int?      @map("author_id")
   author          AuthorProfile? @relation(fields: [authorId], references: [id])
-  contentUrl      String?
-  contentText     String    @db.Text
+  contentUrl      String?   @map("content_url")
+  contentText     String    @db.Text @map("content_text")
   platform        String    // 'google_aio', 'chatgpt', 'perplexity', 'all'
 
   // Scores (0-100)
-  overallScore    Float
-  citabilityScore Float     // Passage-level citability (25% weight)
-  structureScore  Float     // Heading hierarchy, lists, tables (20% weight)
-  multiModalScore Float     // Images, video, interactive (15% weight)
-  authorityScore  Float     // E-E-A-T + brand signals (20% weight)
-  technicalScore  Float     // SSR, AI crawlers, llms.txt (20% weight)
+  overallScore    Float     @map("overall_score")
+  citabilityScore Float     @map("citability_score") // Passage-level citability (25% weight)
+  structureScore  Float     @map("structure_score") // Heading hierarchy, lists, tables (20% weight)
+  multiModalScore Float     @map("multi_modal_score") // Images, video, interactive (15% weight)
+  authorityScore  Float     @map("authority_score") // E-E-A-T + brand signals (20% weight)
+  technicalScore  Float     @map("technical_score") // SSR, AI crawlers, llms.txt (20% weight)
 
   // Detailed findings
-  citablePassages Json      // [{text, wordCount, score, startIndex}]
+  citablePassages Json      @map("citable_passages") // [{text, wordCount, score, startIndex}]
   recommendations Json      // [{priority, action, impact, effort}]
-  schemaIssues    Json?     // Missing/invalid structured data
+  schemaIssues    Json?     @map("schema_issues") // Missing/invalid structured data
 
-  createdAt       DateTime  @default(now())
+  createdAt       DateTime  @default(now()) @map("created_at")
 
   @@index([userId])
   @@index([platform])
@@ -2376,36 +2376,36 @@ model GEOAnalysis {
 
 model GEOResearchReport {
   id              Int       @id @default(autoincrement())
-  userId          String
+  userId          String    @map("user_id")
   user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   // Report identity
   title           String
   slug            String    @unique
   status          String    @default("draft") // 'draft', 'review', 'published'
-  sasScore        Float?    // Synthex Authority Score (0-10)
+  sasScore        Float?    @map("sas_score") // Synthex Authority Score (0-10)
 
   // Content sections
-  executiveSummary String?  @db.Text
+  executiveSummary String?  @db.Text @map("executive_summary")
   methodology     String?   @db.Text
   findings        Json?     // [{finding, statistic, source, citationUrl}]
   recommendations Json?     // [{step, description, priority}]
-  fullContent     String?   @db.Text
+  fullContent     String?   @db.Text @map("full_content")
 
   // Data & citations
-  dataSources     Json?     // [{name, url, type, trustLevel}]
+  dataSources     Json?     @map("data_sources") // [{name, url, type, trustLevel}]
   citations       Json?     // [{text, source, url, accessedAt}]
-  datasetUrl      String?   // CSV/JSON download link
+  datasetUrl      String?   @map("dataset_url") // CSV/JSON download link
 
   // SEO metadata
-  schemaMarkup    Json?     // Full JSON-LD
-  metaTitle       String?
-  metaDescription String?
+  schemaMarkup    Json?     @map("schema_markup") // Full JSON-LD
+  metaTitle       String?   @map("meta_title")
+  metaDescription String?   @map("meta_description")
 
   // Timestamps
-  publishedAt     DateTime?
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  publishedAt     DateTime? @map("published_at")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
 
   // Relations
   visuals         VisualAsset[]
@@ -2417,29 +2417,29 @@ model GEOResearchReport {
 
 model VisualAsset {
   id              Int       @id @default(autoincrement())
-  userId          String
+  userId          String    @map("user_id")
   user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   // Report link (optional)
-  reportId        Int?
+  reportId        Int?      @map("report_id")
   report          GEOResearchReport? @relation(fields: [reportId], references: [id])
 
   // Paper Banana metadata
   type            String    // 'diagram', 'plot', 'infographic', 'before_after'
   prompt          String    @db.Text
-  imageUrl        String
-  thumbnailUrl    String?
+  imageUrl        String    @map("image_url")
+  thumbnailUrl    String?   @map("thumbnail_url")
   metadata        Json?     // Paper Banana response metadata
 
   // Quality
-  qualityScore    Float?    // Paper Banana Critic evaluation (0-100)
-  altText         String?   // SEO alt text
+  qualityScore    Float?    @map("quality_score") // Paper Banana Critic evaluation (0-100)
+  altText         String?   @map("alt_text") // SEO alt text
   caption         String?
 
   // Status
   status          String    @default("generated") // 'generated', 'approved', 'published'
 
-  createdAt       DateTime  @default(now())
+  createdAt       DateTime  @default(now()) @map("created_at")
 
   @@index([userId])
   @@index([reportId])
@@ -2449,7 +2449,7 @@ model VisualAsset {
 
 model LocalCaseStudy {
   id              Int       @id @default(autoincrement())
-  userId          String
+  userId          String    @map("user_id")
   user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   // Identity
@@ -2471,18 +2471,18 @@ model LocalCaseStudy {
   testimonial     String?   @db.Text
 
   // Visuals
-  beforeImages    String[]
-  afterImages     String[]
+  beforeImages    String[]  @map("before_images")
+  afterImages     String[]  @map("after_images")
   diagrams        String[]  // Paper Banana generated URLs
 
   // Schema & SEO
-  schemaMarkup    Json?     // LocalBusiness + Service schema
-  napData         Json?     // {name, address, phone} for consistency checking
+  schemaMarkup    Json?     @map("schema_markup") // LocalBusiness + Service schema
+  napData         Json?     @map("nap_data") // {name, address, phone} for consistency checking
 
   // Timestamps
-  publishedAt     DateTime?
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  publishedAt     DateTime? @map("published_at")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
 
   @@index([userId])
   @@index([city, state])
@@ -2491,12 +2491,12 @@ model LocalCaseStudy {
 
 model ArticleAuthor {
   id              Int       @id @default(autoincrement())
-  postId          String    // References Post.id (cuid)
-  authorId        Int
+  postId          String    @map("post_id") // References Post.id (cuid)
+  authorId        Int       @map("author_id")
   author          AuthorProfile @relation(fields: [authorId], references: [id], onDelete: Cascade)
   role            String    @default("author") // 'author', 'reviewer', 'contributor'
 
-  createdAt       DateTime  @default(now())
+  createdAt       DateTime  @default(now()) @map("created_at")
 
   @@unique([postId, authorId])
   @@index([postId])
@@ -2516,9 +2516,9 @@ model BusinessOwnership {
   ownerId          String       @map("owner_id")
   organizationId   String       @map("organization_id")
   displayName      String?      @map("display_name")     // Owner's custom label
-  isActive         Boolean      @default(true)
-  billingStatus    String       @default("active")        // 'active', 'past_due', 'cancelled'
-  monthlyRate      Float        @default(249.0)           // $249/month per business
+  isActive         Boolean      @default(true) @map("is_active")
+  billingStatus    String       @default("active") @map("billing_status")       // 'active', 'past_due', 'cancelled'
+  monthlyRate      Float        @default(249.0) @map("monthly_rate")          // $249/month per business
   createdAt        DateTime     @default(now()) @map("created_at")
   updatedAt        DateTime     @updatedAt @map("updated_at")
 
