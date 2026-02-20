@@ -142,6 +142,7 @@ tools/claude-seo/
 
 # External packages (separate repos)
 paperbanana/
+templates/
 
 # Local Supabase state
 supabase/.branches/
