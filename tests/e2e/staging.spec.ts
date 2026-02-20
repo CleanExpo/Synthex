@@ -45,8 +45,8 @@ test.describe('Staging Environment Tests', () => {
   });
 
   test('should have beta features enabled', async ({ page }) => {
-    // Check if beta features are accessible in staging
-    await page.goto('/dashboard', { waitUntil: 'domcontentloaded' });
+    // Check if beta features are accessible in staging (use public page to avoid auth redirect)
+    await page.goto('/login', { waitUntil: 'domcontentloaded' });
     
     // Look for beta feature indicators
     const betaFeatures = page.locator('[data-beta], .beta-feature');

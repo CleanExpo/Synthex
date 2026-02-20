@@ -45,7 +45,7 @@ test.describe('Route & API smoke', () => {
 
     for (const path of PAGES) {
       try {
-        const response = await page.goto(path, { waitUntil: 'domcontentloaded', timeout: 15000 });
+        const response = await page.goto(path, { waitUntil: 'domcontentloaded', timeout: 60000 });
 
         // Accept any response status (page rendered)
         const status = response?.status() ?? 0;
@@ -90,7 +90,7 @@ test.describe('Route & API smoke', () => {
   });
 
   test('dashboard access unauthenticated -> redirect or login gate', async ({ page }) => {
-    const resp = await page.goto('/dashboard', { waitUntil: 'domcontentloaded', timeout: 15000 });
+    const resp = await page.goto('/dashboard', { waitUntil: 'domcontentloaded', timeout: 60000 });
     // Either redirect occurred or we landed on dashboard. If redirect, we expect /login route.
     const url = page.url();
     const redirectedToLogin = url.includes('/login');

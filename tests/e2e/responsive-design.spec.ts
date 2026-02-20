@@ -224,8 +224,7 @@ test.describe('Cross-Viewport Consistency', () => {
 
     for (const viewport of viewports) {
       await page.setViewportSize(viewport);
-      await page.goto('/');
-      await page.waitForLoadState('domcontentloaded');
+      await page.goto('/', { waitUntil: 'domcontentloaded' });
 
       // Page should load without error
       const body = page.locator('body');
