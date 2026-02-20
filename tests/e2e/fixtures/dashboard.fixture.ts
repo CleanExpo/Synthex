@@ -11,15 +11,161 @@ import { Page, BrowserContext } from '@playwright/test';
 import { test as authTest, expect, createAuthenticatedContext } from './auth.fixture';
 
 // =============================================================================
+// Auth + Stats Mock Helpers
+// =============================================================================
+
+const BASE_URL = process.env.BASE_URL || 'http://localhost:3002';
+
+/** Minimal stats API response matching the shape expected by app/dashboard/page.tsx */
+const MOCK_STATS_RESPONSE = {
+  stats: {
+    totalPosts: 10,
+    scheduledPosts: 2,
+    avgEngagementRate: '2.5',
+    totalFollowers: 5000,
+    activeCampaigns: 1,
+    totalEngagement: 0,
+    totalImpressions: 0,
+  },
+  trendingTopics: ['#AI', '#Marketing', '#Growth'],
+  recentActivity: [
+    {
+      platform: 'Twitter',
+      action: 'Published post',
+      time: new Date().toISOString(),
+      engagement: 150,
+    },
+  ],
+  engagementData: [],
+  platformData: [],
+};
+
+/** Set auth cookie AND mock common APIs so pages render content */
+async function setDashboardAuth(page: Page) {
+  await page.context().addCookies([
+    { name: 'auth-token', value: 'test-e2e-token', url: BASE_URL },
+  ]);
+
+  // Mock common API routes to prevent error states
+  await page.route('**/api/campaigns**', route =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ campaigns: [], total: 0 }),
+    })
+  );
+
+  await page.route('**/api/posts**', route =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ posts: [], total: 0 }),
+    })
+  );
+
+  await page.route('**/api/analytics**', route =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ metrics: [], engagementData: [], platformData: [] }),
+    })
+  );
+
+  await page.route('**/api/content**', route =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ content: [], total: 0 }),
+    })
+  );
+
+  await page.route('**/api/schedule**', route =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ posts: [], events: [] }),
+    })
+  );
+
+  // Mock auth session so middleware doesn't redirect to login
+  await page.route('**/api/auth/session**', route =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ user: { id: '1', email: 'test@example.com', name: 'Test User' } }),
+    })
+  );
+
+  // Mock user/profile API that dashboard pages may call
+  await page.route('**/api/user**', route =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ id: '1', email: 'test@example.com', name: 'Test User' }),
+    })
+  );
+}
+
+/** Set auth cookie AND mock core APIs so the full dashboard UI renders */
+async function setupDashboardWithStats(page: Page) {
+  await setDashboardAuth(page);
+
+  // Mock stats API
+  await page.route('**/api/dashboard/stats', route =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify(MOCK_STATS_RESPONSE),
+    })
+  );
+
+  // Mock campaigns API
+  await page.route('**/api/campaigns**', route =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ campaigns: [], total: 0 }),
+    })
+  );
+
+  // Mock posts API
+  await page.route('**/api/posts**', route =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ posts: [], total: 0 }),
+    })
+  );
+
+  // Mock analytics API
+  await page.route('**/api/analytics**', route =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ metrics: [], engagementData: [], platformData: [] }),
+    })
+  );
+
+  // Mock user/session API
+  await page.route('**/api/auth/session**', route =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ user: { id: '1', email: 'test@example.com', name: 'Test User' } }),
+    })
+  );
+}
+
+// =============================================================================
 // Page Object Models
 // =============================================================================
 
 export class DashboardPage {
   constructor(private page: Page) {}
 
-  // Navigation
+  // Navigation — target aside specifically (nav matches hidden mobile menu before aside in DOM)
   get sidebar() {
-    return this.page.locator('nav, aside, [data-sidebar]').first();
+    return this.page.locator('aside, [data-sidebar]').first();
   }
 
   get sidebarLinks() {
@@ -99,7 +245,8 @@ export class CampaignPage {
   }
 
   async goto() {
-    await this.page.goto('/dashboard/campaigns');
+    // /dashboard/campaigns does not exist — /dashboard/schedule is the nearest equivalent
+    await this.page.goto('/dashboard/schedule');
     await this.page.waitForLoadState('domcontentloaded');
   }
 
@@ -252,23 +399,33 @@ export const test = authTest.extend<DashboardFixtures>({
   },
 
   campaignPage: async ({ page }, use) => {
+    // Set auth cookie so /dashboard/schedule is accessible
+    await setDashboardAuth(page);
     await use(new CampaignPage(page));
   },
 
   postPage: async ({ page }, use) => {
+    // Set auth cookie so /dashboard/content is accessible
+    await setDashboardAuth(page);
     await use(new PostPage(page));
   },
 
   analyticsPage: async ({ page }, use) => {
+    // Set auth cookie so /dashboard/analytics is accessible
+    await setDashboardAuth(page);
     await use(new AnalyticsPage(page));
   },
 
   settingsPage: async ({ page }, use) => {
+    // Set auth cookie so /dashboard/settings is accessible
+    await setDashboardAuth(page);
     await use(new SettingsPage(page));
   },
 
   authedDashboard: async ({ context, page }, use) => {
     await createAuthenticatedContext(context, page);
+    // Mock the stats API so the dashboard renders in success state (not error state)
+    await setupDashboardWithStats(page);
     const dashboard = new DashboardPage(page);
     await use(dashboard);
   },

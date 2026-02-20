@@ -6,7 +6,30 @@
  * @module tests/e2e/responsive-design.spec
  */
 
-import { test, expect } from '@playwright/test';
+import { test, expect, Page } from '@playwright/test';
+
+const BASE_URL = process.env.BASE_URL || 'http://localhost:3002';
+
+/** Set auth cookie so middleware allows access to /dashboard/* routes */
+async function setAuthCookie(page: Page) {
+  await page.context().addCookies([
+    { name: 'auth-token', value: 'test-e2e-token', url: BASE_URL },
+  ]);
+  // Mock stats API so dashboard renders in success state (not error/loading skeleton)
+  await page.route('**/api/dashboard/stats', route =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        stats: { totalPosts: 10, scheduledPosts: 2, avgEngagementRate: '2.5', totalFollowers: 5000 },
+        trendingTopics: ['#AI'],
+        recentActivity: [],
+        engagementData: [],
+        platformData: [],
+      }),
+    })
+  );
+}
 
 // Viewport definitions
 const VIEWPORTS = {
@@ -120,8 +143,8 @@ test.describe('Tablet Responsive Tests', () => {
     await page.goto('/dashboard');
     await page.waitForLoadState('domcontentloaded');
 
-    // Sidebar should be visible on larger tablets
-    const sidebar = page.locator('[class*="sidebar"], nav').first();
+    // Sidebar aside may be visible on larger tablets (md:block at 768px)
+    const sidebar = page.locator('aside, [data-sidebar]').first();
     const isVisible = await sidebar.isVisible().catch(() => false);
 
     // Either sidebar is visible or page adapts appropriately
@@ -132,14 +155,16 @@ test.describe('Tablet Responsive Tests', () => {
 test.describe('Desktop Responsive Tests', () => {
   test.beforeEach(async ({ page }) => {
     await page.setViewportSize(VIEWPORTS.desktop);
+    // Auth cookie required: sidebar visibility assertion needs actual dashboard to render
+    await setAuthCookie(page);
   });
 
   test('should render full dashboard layout', async ({ page }) => {
     await page.goto('/dashboard');
     await page.waitForLoadState('domcontentloaded');
 
-    // Sidebar should be visible
-    const sidebar = page.locator('[class*="sidebar"], nav').first();
+    // Sidebar aside should be visible on desktop (hidden md:block — visible at 1920px)
+    const sidebar = page.locator('aside, [data-sidebar]').first();
     await expect(sidebar).toBeVisible();
 
     // Main content should be visible

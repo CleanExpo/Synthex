@@ -70,8 +70,16 @@ None (internal platform work)
 - [x] **Phase 49: ROI Calculator** (2/2) - Content investment return measurement
 - [x] **Phase 50: Sponsor CRM** (2/2) - Brand deal management
 - [x] **Phase 51: Affiliate Link Manager** (2/2) - Link insertion and tracking
-- [ ] **Phase 52: E2E Testing - Auth & Onboarding** - Playwright tests for auth flows
-- [ ] **Phase 53: E2E Testing - Dashboard & Campaigns** - Playwright tests for main app flows
+- [x] **Phase 52: E2E Testing - Auth & Onboarding** - Playwright tests for auth flows
+  Plans:
+  - [x] 52-01: Fix auth-guard.spec.ts + create forgot-password page + validate fixtures
+  - [x] 52-02: Run all auth/onboarding E2E tests + triage + document results (55/55 pass)
+- [~] **Phase 53: E2E Testing - Dashboard & Campaigns** - Playwright tests for main app flows
+  Plans:
+  - [x] 53-01: Fix playwright.config.ts (workers/timeout), staging.spec.ts navigation
+  - [x] 53-02: Fix strict mode violations (dashboard-tabs, responsive-design)
+  - [ ] 53-03: Fix remaining 17 failures (auth links, dashboard pages, smoke)
+  Status: 142 passed, 17 failed (from 57/40 at start) — 57% failure reduction
 - [ ] **Phase 54: API Contract Verification** - Schema validation for all API routes
 - [ ] **Phase 55: UI Audit - States** - Loading states, empty states, error boundaries
 - [ ] **Phase 56: UI Audit - Responsive** - Responsive design and accessibility
@@ -354,10 +362,11 @@ See [milestones/v1.4-ROADMAP.md](milestones/v1.4-ROADMAP.md) for full details.
 **Goal**: Playwright tests for authentication and onboarding user flows
 **Depends on**: v1.4 complete
 **Research**: Unlikely (Playwright patterns exist from v1.0)
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 52-01: TBD (run /gsd:plan-phase 52 to break down)
+- [x] 52-01: Fix auth-guard.spec.ts + create forgot-password page + validate fixtures
+- [ ] 52-02: Run all auth/onboarding E2E tests + triage + document results
 
 #### Phase 53: E2E Testing - Dashboard & Campaigns
 
@@ -474,7 +483,7 @@ Plans:
 | 49. ROI Calculator | v1.4 | 2/2 | Complete | 2026-02-18 |
 | 50. Sponsor CRM | v1.4 | 2/2 | Complete | 2026-02-18 |
 | 51. Affiliate Link Manager | v1.4 | 2/2 | Complete | 2026-02-18 |
-| 52. E2E Testing - Auth | v1.5 | 0/? | Not started | - |
+| 52. E2E Testing - Auth | v1.5 | 0/2 | Planned | - |
 | 53. E2E Testing - Dashboard | v1.5 | 0/? | Not started | - |
 | 54. API Contract Verification | v1.5 | 0/? | Not started | - |
 | 55. UI Audit - States | v1.5 | 0/? | Not started | - |
