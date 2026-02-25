@@ -118,6 +118,11 @@ model User {
   affiliateNetworks     AffiliateNetwork[]
   affiliateLinks        AffiliateLink[]
 
+  // Business vetting & API credentials
+  vettingResults        BusinessVettingResult[]
+  apiCredentials        APICredential[]
+  onboardingProgress    OnboardingProgress[]
+
   @@index([organizationId])
   @@map("users")
 }
@@ -393,6 +398,11 @@ model Organization {
 
   // Social listening
   trackedKeywords    TrackedKeyword[]
+
+  // Business vetting & API credentials
+  vettingResults     BusinessVettingResult[]
+  apiCredentials     APICredential[]
+  onboardingProgress OnboardingProgress[]
 
   // Indices for multi-tenant queries
   @@index([slug])
@@ -2796,4 +2806,148 @@ model AffiliateLinkClick {
   @@index([linkId, createdAt])
   @@index([createdAt])
   @@map("affiliate_link_clicks")
+}
+
+  @@index([linkId])
+  @@index([linkId, createdAt])
+  @@index([createdAt])
+  @@map("affiliate_link_clicks")
+}
+
+// ──────────────────────────────────────────────────────────────────────────
+// Business Vetting & API Credential Models
+// ──────────────────────────────────────────────────────────────────────────
+
+model BusinessVettingResult {
+  id                  String   @id @default(cuid())
+  userId              String   @map("user_id")
+  organizationId      String?  @map("organization_id")
+  
+  // Vetting input data
+  businessName        String   @map("business_name")
+  website             String?
+  abnNumber           String?  @map("abn_number")     // Australian Business Number
+  businessLocation    String?  @map("business_location")
+  
+  // Health check scores (0-100)
+  overallScore        Int      @map("overall_score")   // Average of component scores
+  seoScore            Int?     @map("seo_score")       // SEO health
+  aeoScore            Int?     @map("aeo_score")       // AI Engine Optimization
+  geoScore            Int?     @map("geo_score")       // Geographic/Local SEO
+  socialScore         Int?     @map("social_score")    // Social media presence
+  
+  // Detailed results (JSON for flexibility)
+  seoDetails          Json?    @map("seo_details")     // { mobileReady, indexingStatus, coreWebVitals, etc }
+  aeoDetails          Json?    @map("aeo_details")     // { schemaMarkup, entityData, eeatSignals, etc }
+  geoDetails          Json?    @map("geo_details")     // { gbp, localCitations, mapSignals, etc }
+  socialDetails       Json?    @map("social_details")  // { platforms: [{ name, handle, followers, etc }] }
+  
+  // Status and recommendations
+  status              String   @default("pending")      // 'pending', 'completed', 'failed'
+  recommendations     Json?                            // AI-generated recommendations
+  vettingApprovedAt   DateTime? @map("vetting_approved_at") // When user approved vetting
+  
+  createdAt           DateTime @default(now()) @map("created_at")
+  updatedAt           DateTime @updatedAt @map("updated_at")
+  
+  // Relations
+  user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization        Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  
+  @@unique([userId, organizationId])
+  @@index([userId])
+  @@index([status])
+  @@map("business_vetting_results")
+}
+
+model APICredential {
+  id                  String   @id @default(cuid())
+  userId              String   @map("user_id")
+  organizationId      String?  @map("organization_id")
+  
+  // Provider type (openai, anthropic, google, openrouter)
+  provider            String   // 'openai', 'anthropic', 'google', 'openrouter'
+  
+  // Encrypted key storage
+  encryptedKey        String   @map("encrypted_key") @db.Text // AES-256-GCM encrypted
+  encryptionKeyVersion Int    @default(1) @map("encryption_key_version")
+  maskedKey           String?  @map("masked_key")    // Last 4 chars for display: "****abcd"
+  
+  // Key validation
+  isValid             Boolean  @default(false) @map("is_valid")
+  lastValidatedAt     DateTime? @map("last_validated_at")
+  validationError     String?  @map("validation_error")
+  
+  // Usage tracking
+  lastUsedAt          DateTime? @map("last_used_at")
+  usageCount          Int       @default(0) @map("usage_count")
+  
+  // Status
+  isActive            Boolean  @default(true) @map("is_active")
+  revokedAt           DateTime? @map("revoked_at")
+  
+  createdAt           DateTime @default(now()) @map("created_at")
+  updatedAt           DateTime @updatedAt @map("updated_at")
+  
+  // Relations
+  user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization        Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  
+  @@unique([userId, provider, organizationId])
+  @@index([userId])
+  @@index([provider])
+  @@index([isActive])
+  @@map("api_credentials")
+}
+
+model OnboardingProgress {
+  id                  String   @id @default(cuid())
+  userId              String   @map("user_id")
+  organizationId      String   @map("organization_id")
+  
+  // Onboarding stage tracking
+  currentStage        String   @default("vetting")     // 'vetting', 'api-setup', 'platforms', 'persona', 'complete'
+  completedStages     String[] @map("completed_stages")
+  
+  // Vetting stage data
+  businessName        String?  @map("business_name")
+  website             String?
+  abnNumber           String?  @map("abn_number")
+  businessLocation    String?  @map("business_location")
+  vettingApproved     Boolean  @default(false) @map("vetting_approved")
+  vettingApprovedAt   DateTime? @map("vetting_approved_at")
+  
+  // API setup stage
+  apiCredentialsAdded Boolean  @default(false) @map("api_credentials_added")
+  apiSetupCompletedAt DateTime? @map("api_setup_completed_at")
+  requiredProviders   String[]  @map("required_providers")  // Providers user must set up
+  
+  // Platforms stage
+  selectedPlatforms   String[]  @map("selected_platforms")
+  platformsApprovedAt DateTime? @map("platforms_approved_at")
+  
+  // Persona stage
+  personaData         Json?    @map("persona_data")     // { name, tone, topics, etc }
+  personaApprovedAt   DateTime? @map("persona_approved_at")
+  
+  // Overall status
+  status              String   @default("in-progress")  // 'in-progress', 'completed', 'abandoned'
+  completedAt         DateTime? @map("completed_at")
+  abandonedAt         DateTime? @map("abandoned_at")
+  
+  // Metadata
+  metadata            Json?                           // Additional tracking data
+  
+  createdAt           DateTime @default(now()) @map("created_at")
+  updatedAt           DateTime @updatedAt @map("updated_at")
+  
+  // Relations
+  user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization        Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, organizationId])
+  @@index([userId])
+  @@index([currentStage])
+  @@index([status])
+  @@map("onboarding_progress")
 }

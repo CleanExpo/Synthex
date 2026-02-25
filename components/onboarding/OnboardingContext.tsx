@@ -3,30 +3,48 @@
 /**
  * Onboarding Context
  *
- * @description Manages onboarding state across all 5 steps:
- *   Step 1: Business Identity (name + website URL)
- *   Step 2: Review AI-Generated Details
+ * @description Manages onboarding state across all 7 steps:
+ *   Step 1: Business Vetting (name, website, ABN, location + health checks)
+ *   Step 2: API Credentials (OpenAI, Anthropic, Google, OpenRouter)
  *   Step 3: Platform Connections
  *   Step 4: Persona Setup
- *   Step 5: Complete
+ *   Step 5: Review & Complete
  */
 
 import React, { createContext, useContext, useReducer, useCallback, ReactNode } from 'react';
 import type { WebsiteAnalysisResult } from '@/lib/ai/website-analyzer';
+import type { HealthCheckResult } from '@/lib/vetting/business-vetting';
 
 // ============================================================================
 // TYPES
 // ============================================================================
 
 export interface OnboardingData {
-  // Step 1: Business Identity
+  // Step 1: Business Vetting
   businessName: string;
   websiteUrl: string;
+  abnNumber: string;
+  businessLocation: string;
 
-  // AI Analysis
+  // Vetting Results
+  vettingResults: HealthCheckResult | null;
+  vettingStatus: 'idle' | 'loading' | 'success' | 'error';
+  vettingError: string | null;
+  vettingApproved: boolean;
+
+  // AI Analysis (legacy - kept for compatibility)
   aiAnalysis: WebsiteAnalysisResult | null;
   analysisStatus: 'idle' | 'loading' | 'success' | 'error';
   analysisError: string | null;
+
+  // Step 2: API Credentials
+  apiCredentials: {
+    openai?: string;
+    anthropic?: string;
+    google?: string;
+    openrouter?: string;
+  };
+  apiSetupComplete: boolean;
 
   // Step 2: Reviewed Business Details (human-approved)
   organizationName: string;
@@ -52,16 +70,27 @@ export interface OnboardingData {
 }
 
 type OnboardingAction =
-  // Step 1: Business Identity
-  | { type: 'SET_BUSINESS_IDENTITY'; payload: { name: string; websiteUrl: string } }
+  // Step 1: Business Vetting
+  | { type: 'SET_VETTING_DATA'; payload: { name: string; website?: string; abn?: string; location?: string } }
+  | { type: 'SET_VETTING_LOADING' }
+  | { type: 'SET_VETTING_RESULT'; payload: HealthCheckResult }
+  | { type: 'SET_VETTING_ERROR'; payload: string }
+  | { type: 'APPROVE_VETTING' }
 
-  // AI Analysis
+  // Legacy: AI Analysis (kept for compatibility)
+  | { type: 'SET_BUSINESS_IDENTITY'; payload: { name: string; websiteUrl: string } }
   | { type: 'SET_ANALYSIS_LOADING' }
   | { type: 'SET_ANALYSIS_RESULT'; payload: WebsiteAnalysisResult }
   | { type: 'SET_ANALYSIS_ERROR'; payload: string }
   | { type: 'CLEAR_ANALYSIS' }
 
-  // Step 2: Reviewed Details
+  // Step 2: API Credentials
+  | { type: 'SET_API_CREDENTIAL'; payload: { provider: 'openai' | 'anthropic' | 'google' | 'openrouter'; key: string } }
+  | { type: 'REMOVE_API_CREDENTIAL'; payload: 'openai' | 'anthropic' | 'google' | 'openrouter' }
+  | { type: 'COMPLETE_API_SETUP' }
+  | { type: 'CLEAR_API_CREDENTIALS' }
+
+  // Step 3+: Reviewed Details
   | { type: 'SET_REVIEWED_DETAILS'; payload: {
       industry: string;
       teamSize: string;
@@ -92,13 +121,23 @@ interface OnboardingContextType {
   data: OnboardingData;
   dispatch: React.Dispatch<OnboardingAction>;
 
-  // Step 1
+  // Step 1: Business Vetting
+  setVettingData: (name: string, website?: string, abn?: string, location?: string) => void;
+  triggerVetting: () => Promise<void>;
+  approveVetting: () => void;
+
+  // Legacy: Step 1 (kept for compatibility)
   setBusinessIdentity: (name: string, websiteUrl: string) => void;
 
-  // AI Analysis
+  // Legacy: AI Analysis
   triggerAnalysis: () => Promise<void>;
 
-  // Step 2
+  // Step 2: API Credentials
+  setAPICredential: (provider: 'openai' | 'anthropic' | 'google' | 'openrouter', key: string) => void;
+  removeAPICredential: (provider: 'openai' | 'anthropic' | 'google' | 'openrouter') => void;
+  completeAPISetup: () => void;
+
+  // Step 3+: Reviewed Details
   setReviewedDetails: (details: {
     industry: string;
     teamSize: string;
@@ -135,11 +174,26 @@ interface OnboardingContextType {
 // ============================================================================
 
 const initialState: OnboardingData = {
+  // Step 1: Business Vetting
   businessName: '',
   websiteUrl: '',
+  abnNumber: '',
+  businessLocation: '',
+  vettingResults: null,
+  vettingStatus: 'idle',
+  vettingError: null,
+  vettingApproved: false,
+
+  // Legacy
   aiAnalysis: null,
   analysisStatus: 'idle',
   analysisError: null,
+
+  // Step 2: API Credentials
+  apiCredentials: {},
+  apiSetupComplete: false,
+
+  // Legacy (Step 2-5)
   organizationName: '',
   industry: '',
   teamSize: '',
@@ -162,6 +216,46 @@ const initialState: OnboardingData = {
 
 function onboardingReducer(state: OnboardingData, action: OnboardingAction): OnboardingData {
   switch (action.type) {
+    // Step 1: Business Vetting
+    case 'SET_VETTING_DATA':
+      return {
+        ...state,
+        businessName: action.payload.name,
+        websiteUrl: action.payload.website || '',
+        abnNumber: action.payload.abn || '',
+        businessLocation: action.payload.location || '',
+        organizationName: action.payload.name,
+      };
+
+    case 'SET_VETTING_LOADING':
+      return {
+        ...state,
+        vettingStatus: 'loading',
+        vettingError: null,
+      };
+
+    case 'SET_VETTING_RESULT':
+      return {
+        ...state,
+        vettingResults: action.payload,
+        vettingStatus: 'success',
+        vettingError: null,
+      };
+
+    case 'SET_VETTING_ERROR':
+      return {
+        ...state,
+        vettingStatus: 'error',
+        vettingError: action.payload,
+      };
+
+    case 'APPROVE_VETTING':
+      return {
+        ...state,
+        vettingApproved: true,
+      };
+
+    // Legacy: SET_BUSINESS_IDENTITY (kept for backward compatibility)
     case 'SET_BUSINESS_IDENTITY':
       return {
         ...state,
@@ -210,6 +304,38 @@ function onboardingReducer(state: OnboardingData, action: OnboardingAction): Onb
         aiAnalysis: null,
         analysisStatus: 'idle',
         analysisError: null,
+      };
+
+    // Step 2: API Credentials
+    case 'SET_API_CREDENTIAL':
+      return {
+        ...state,
+        apiCredentials: {
+          ...state.apiCredentials,
+          [action.payload.provider]: action.payload.key,
+        },
+      };
+
+    case 'REMOVE_API_CREDENTIAL':
+      return {
+        ...state,
+        apiCredentials: {
+          ...state.apiCredentials,
+          [action.payload]: undefined,
+        },
+      };
+
+    case 'COMPLETE_API_SETUP':
+      return {
+        ...state,
+        apiSetupComplete: true,
+      };
+
+    case 'CLEAR_API_CREDENTIALS':
+      return {
+        ...state,
+        apiCredentials: {},
+        apiSetupComplete: false,
       };
 
     case 'SET_REVIEWED_DETAILS':
@@ -292,12 +418,57 @@ const OnboardingContext = createContext<OnboardingContextType | undefined>(undef
 export function OnboardingProvider({ children }: { children: ReactNode }) {
   const [data, dispatch] = useReducer(onboardingReducer, initialState);
 
-  // Step 1: Business Identity
+  // Step 1: Business Vetting
+  const setVettingData = useCallback((name: string, website?: string, abn?: string, location?: string) => {
+    dispatch({ type: 'SET_VETTING_DATA', payload: { name, website, abn, location } });
+  }, []);
+
+  const triggerVetting = useCallback(async () => {
+    if (!data.businessName) return;
+
+    dispatch({ type: 'SET_VETTING_LOADING' });
+
+    try {
+      const response = await fetch('/api/onboarding/vetting', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          businessName: data.businessName,
+          website: data.websiteUrl || undefined,
+          abnNumber: data.abnNumber || undefined,
+          businessLocation: data.businessLocation || undefined,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        dispatch({
+          type: 'SET_VETTING_ERROR',
+          payload: errorData.error || 'Vetting failed',
+        });
+        return;
+      }
+
+      const result = await response.json();
+      dispatch({ type: 'SET_VETTING_RESULT', payload: result });
+    } catch (error) {
+      dispatch({
+        type: 'SET_VETTING_ERROR',
+        payload: 'Failed to perform vetting',
+      });
+    }
+  }, [data.businessName, data.websiteUrl, data.abnNumber, data.businessLocation]);
+
+  const approveVetting = useCallback(() => {
+    dispatch({ type: 'APPROVE_VETTING' });
+  }, []);
+
+  // Legacy: Step 1 Business Identity
   const setBusinessIdentity = useCallback((name: string, websiteUrl: string) => {
     dispatch({ type: 'SET_BUSINESS_IDENTITY', payload: { name, websiteUrl } });
   }, []);
 
-  // AI Analysis — calls the analyze-website API
+  // Legacy: AI Analysis — calls the analyze-website API
   const triggerAnalysis = useCallback(async () => {
     if (!data.websiteUrl || !data.businessName) return;
 
@@ -332,7 +503,20 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
     }
   }, [data.websiteUrl, data.businessName]);
 
-  // Step 2: Reviewed Details
+  // Step 2: API Credentials
+  const setAPICredential = useCallback((provider: 'openai' | 'anthropic' | 'google' | 'openrouter', key: string) => {
+    dispatch({ type: 'SET_API_CREDENTIAL', payload: { provider, key } });
+  }, []);
+
+  const removeAPICredential = useCallback((provider: 'openai' | 'anthropic' | 'google' | 'openrouter') => {
+    dispatch({ type: 'REMOVE_API_CREDENTIAL', payload: provider });
+  }, []);
+
+  const completeAPISetup = useCallback(() => {
+    dispatch({ type: 'COMPLETE_API_SETUP' });
+  }, []);
+
+  // Step 3+: Reviewed Details
   const setReviewedDetails = useCallback((details: {
     industry: string;
     teamSize: string;
@@ -383,12 +567,16 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
   const canProceed = useCallback((step: number): boolean => {
     switch (step) {
       case 1:
-        return Boolean(data.businessName.trim());
+        // Step 1: Vetting - need business name and vetting must be approved
+        return Boolean(data.businessName.trim()) && data.vettingApproved;
       case 2:
-        return Boolean(data.industry && data.teamSize);
+        // Step 2: API Credentials - need at least one API credential
+        return Object.values(data.apiCredentials).some(v => v);
       case 3:
-        return true; // Platforms are optional
+        // Step 3: Platforms - optional
+        return true;
       case 4:
+        // Step 4: Persona - optional or skip allowed
         return data.skipPersona || Boolean(data.personaName && data.personaTone);
       default:
         return true;
@@ -398,8 +586,14 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
   const value: OnboardingContextType = {
     data,
     dispatch,
+    setVettingData,
+    triggerVetting,
+    approveVetting,
     setBusinessIdentity,
     triggerAnalysis,
+    setAPICredential,
+    removeAPICredential,
+    completeAPISetup,
     setReviewedDetails,
     setOrganization,
     addPlatform,

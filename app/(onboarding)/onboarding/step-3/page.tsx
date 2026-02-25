@@ -19,10 +19,12 @@ import { useOnboarding, ProgressIndicator, PlatformConnector } from '@/component
 
 const STEPS = [
   { id: 1, name: 'Business Identity' },
-  { id: 2, name: 'Review Details' },
-  { id: 3, name: 'Platforms' },
-  { id: 4, name: 'Persona' },
-  { id: 5, name: 'Complete' },
+  { id: 2, name: 'Vetting' },
+  { id: 3, name: 'API Setup' },
+  { id: 4, name: 'Review Details' },
+  { id: 5, name: 'Platforms' },
+  { id: 6, name: 'Persona' },
+  { id: 7, name: 'Complete' },
 ];
 
 // ============================================================================
@@ -34,7 +36,7 @@ export default function Step3Page() {
   const { data, completeStep } = useOnboarding();
 
   const handleNext = () => {
-    completeStep(3);
+    completeStep(5);
     router.push('/onboarding/step-4');
   };
 
@@ -53,7 +55,7 @@ export default function Step3Page() {
       {/* Progress */}
       <ProgressIndicator
         steps={STEPS}
-        currentStep={3}
+        currentStep={5}
         completedSteps={data.completedSteps}
       />
 

@@ -22,10 +22,12 @@ import { useOnboarding, ProgressIndicator } from '@/components/onboarding';
 
 const STEPS = [
   { id: 1, name: 'Business Identity' },
-  { id: 2, name: 'Review Details' },
-  { id: 3, name: 'Platforms' },
-  { id: 4, name: 'Persona' },
-  { id: 5, name: 'Complete' },
+  { id: 2, name: 'Vetting' },
+  { id: 3, name: 'API Setup' },
+  { id: 4, name: 'Review Details' },
+  { id: 5, name: 'Platforms' },
+  { id: 6, name: 'Persona' },
+  { id: 7, name: 'Complete' },
 ];
 
 // ============================================================================
@@ -100,7 +102,7 @@ export default function CompletePage() {
   }, []); // stable — reads from dataRef
 
   useEffect(() => {
-    completeStep(5);
+    completeStep(7);
     doSave();
   }, [completeStep, doSave]);
 
@@ -121,8 +123,8 @@ export default function CompletePage() {
       {/* Progress */}
       <ProgressIndicator
         steps={STEPS}
-        currentStep={5}
-        completedSteps={[...data.completedSteps, 5]}
+        currentStep={7}
+        completedSteps={[...data.completedSteps, 7]}
       />
 
       {/* Content */}

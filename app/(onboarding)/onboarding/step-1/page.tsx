@@ -23,10 +23,12 @@ import { WebsiteAnalyzer } from '@/components/onboarding/WebsiteAnalyzer';
 
 const STEPS = [
   { id: 1, name: 'Business Identity' },
-  { id: 2, name: 'Review Details' },
-  { id: 3, name: 'Platforms' },
-  { id: 4, name: 'Persona' },
-  { id: 5, name: 'Complete' },
+  { id: 2, name: 'Vetting' },
+  { id: 3, name: 'API Setup' },
+  { id: 4, name: 'Review Details' },
+  { id: 5, name: 'Platforms' },
+  { id: 6, name: 'Persona' },
+  { id: 7, name: 'Complete' },
 ];
 
 // ============================================================================
@@ -45,17 +47,8 @@ export default function Step1Page() {
     setBusinessIdentity(name, websiteUrl);
     completeStep(1);
 
-    // If URL provided, trigger analysis before navigating
-    if (websiteUrl.trim()) {
-      // The triggerAnalysis uses data from context, but we just dispatched.
-      // We need a small delay for the reducer to process, or call the API directly.
-      // Since triggerAnalysis reads from context which won't update until next render,
-      // we'll navigate first and let step 2 trigger analysis if needed.
-      router.push('/onboarding/step-2');
-    } else {
-      // No URL — go to step 2 in manual mode
-      router.push('/onboarding/step-2');
-    }
+    // Navigate to vetting (step-5) for health checks
+    router.push('/onboarding/step-5');
   };
 
   const isValid = name.trim().length > 0;

@@ -10,3 +10,4 @@ export { PersonaSetup } from './PersonaSetup';
 export { WebsiteAnalyzer } from './WebsiteAnalyzer';
 export { BusinessDetailsReview } from './BusinessDetailsReview';
 export type { ReviewedDetails } from './BusinessDetailsReview';
+export { APIKeySetup } from './APIKeySetup';

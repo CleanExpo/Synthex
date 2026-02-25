@@ -19,10 +19,12 @@ import { useOnboarding, ProgressIndicator, PersonaSetup } from '@/components/onb
 
 const STEPS = [
   { id: 1, name: 'Business Identity' },
-  { id: 2, name: 'Review Details' },
-  { id: 3, name: 'Platforms' },
-  { id: 4, name: 'Persona' },
-  { id: 5, name: 'Complete' },
+  { id: 2, name: 'Vetting' },
+  { id: 3, name: 'API Setup' },
+  { id: 4, name: 'Review Details' },
+  { id: 5, name: 'Platforms' },
+  { id: 6, name: 'Persona' },
+  { id: 7, name: 'Complete' },
 ];
 
 // ============================================================================
@@ -34,7 +36,7 @@ export default function Step4Page() {
   const { data, completeStep } = useOnboarding();
 
   const handleNext = () => {
-    completeStep(4);
+    completeStep(6);
     router.push('/onboarding/complete');
   };
 
@@ -48,7 +50,7 @@ export default function Step4Page() {
       {/* Progress */}
       <ProgressIndicator
         steps={STEPS}
-        currentStep={4}
+        currentStep={6}
         completedSteps={data.completedSteps}
       />
 
