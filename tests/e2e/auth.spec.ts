@@ -2,6 +2,7 @@ import { test, expect } from '@playwright/test';
 
 const DEMO_EMAIL = 'demo@synthex.com';
 const DEMO_PASS = 'demo123';
+const BASE_URL = process.env.BASE_URL || 'http://localhost:3001';
 
 test.describe('Auth flow (dev-login) and gated route access', () => {
   test('login page renders', async ({ page }) => {
@@ -10,22 +11,23 @@ test.describe('Auth flow (dev-login) and gated route access', () => {
     await expect(page.locator('body')).toBeVisible();
   });
 
-  test('dev login returns session and grants dashboard access via cookie', async ({ request, context, page }) => {
-    // Call dev-login endpoint
-    const res = await request.post('/api/auth/dev-login', {
-      data: { email: DEMO_EMAIL, password: DEMO_PASS },
+  test('unified login returns session and grants dashboard access via cookie', async ({ request, context, page }) => {
+    // Call unified-login endpoint (primary auth route)
+    const res = await request.post('/api/auth/unified-login', {
+      data: { method: 'email', email: DEMO_EMAIL, password: DEMO_PASS },
     });
 
-    // Acceptable responses: 200 (success), 401/403 (auth not configured), 404 (endpoint not present in this env)
-    expect(res.status(), await res.text()).toBeOneOf([200, 401, 403, 404]);
+    // May return 200 (success) or 401 (demo user not seeded)
+    expect(res.status(), await res.text()).toBeOneOf([200, 401]);
 
     if (res.status() === 200) {
       const data = await res.json();
-      expect(data?.session?.access_token).toBeTruthy();
+      expect(data?.success).toBe(true);
+      expect(data?.session?.accessToken).toBeTruthy();
 
       // Satisfy middleware auth check (it looks for cookie 'auth-token')
-      const token = data.session.access_token as string;
-      const baseURL = process.env.BASE_URL || 'http://localhost:3000';
+      const token = data.session.accessToken as string;
+      const baseURL = process.env.BASE_URL || 'http://localhost:3001';
       await context.addCookies([
         {
           name: 'auth-token',
@@ -37,12 +39,13 @@ test.describe('Auth flow (dev-login) and gated route access', () => {
       // Now visit dashboard, should not redirect to /login
       const resp = await page.goto('/dashboard', { waitUntil: 'domcontentloaded' });
       expect(resp?.status()).toBeLessThan(400);
-      // Basic assertion that page rendered meaningful content
       await expect(page.locator('body')).toBeVisible();
       const bodyText = await page.locator('body').innerText();
       expect(bodyText.length).toBeGreaterThan(0);
     } else {
-      // 401/403 is acceptable — endpoint unavailable or auth not configured in this env
+      // 401 = demo user not seeded in this environment
+      const data = await res.json();
+      expect(data.success).toBe(false);
     }
   });
 });

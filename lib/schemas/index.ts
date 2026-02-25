@@ -192,6 +192,41 @@ export {
   type AnalyticsErrorResponse,
 } from './analytics';
 
+// Common schemas - shared patterns
+export {
+  paginationSchema,
+  type Pagination,
+  successResponseSchema,
+  dataResponseSchema,
+  paginatedResponseSchema,
+  errorResponseSchema,
+  type ErrorResponse,
+  failureResponseSchema,
+  platformEnumSchema,
+  type PlatformEnum,
+  platformConnectionSchema,
+  type PlatformConnection,
+  listPlatformConnectionsResponseSchema,
+  seoAuditSchema,
+  seoAuditResponseSchema,
+  geoAnalysisSchema,
+  geoAnalysisResponseSchema,
+  revenueEntrySchema,
+  sponsorSchema,
+  affiliateSchema,
+  revenueResponseSchema,
+  sponsorResponseSchema,
+  affiliateResponseSchema,
+  aiConversationSchema,
+  aiMessageSchema,
+  aiChatResponseSchema,
+  reportSchema,
+  reportResponseSchema,
+  teamMemberSchema,
+  organizationSchema,
+  healthCheckResponseSchema,
+} from './common';
+
 // Re-export Zod for convenience
 export { z } from 'zod';
 export type { ZodError, ZodSchema, ZodType } from 'zod';

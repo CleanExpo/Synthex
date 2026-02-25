@@ -8,11 +8,14 @@
  */
 
 import { useState, useCallback } from 'react';
+import dynamic from 'next/dynamic';
 import { useContentPerformance } from '@/hooks/useContentPerformance';
-import { PerformanceOverview } from '@/components/performance/PerformanceOverview';
-import { AIInsightsPanel } from '@/components/performance/AIInsightsPanel';
-import { PatternCharts } from '@/components/performance/PatternCharts';
-import { TopPostsGrid } from '@/components/performance/TopPostsGrid';
+
+// Dynamic imports for heavy chart/AI components
+const PerformanceOverview = dynamic(() => import('@/components/performance/PerformanceOverview').then(m => ({ default: m.PerformanceOverview })), { ssr: false });
+const AIInsightsPanel = dynamic(() => import('@/components/performance/AIInsightsPanel').then(m => ({ default: m.AIInsightsPanel })), { ssr: false });
+const PatternCharts = dynamic(() => import('@/components/performance/PatternCharts').then(m => ({ default: m.PatternCharts })), { ssr: false });
+const TopPostsGrid = dynamic(() => import('@/components/performance/TopPostsGrid').then(m => ({ default: m.TopPostsGrid })), { ssr: false });
 import { PageHeader } from '@/components/dashboard/page-header';
 import { Button } from '@/components/ui/button';
 import {

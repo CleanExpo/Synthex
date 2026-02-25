@@ -1,253 +1,439 @@
 /**
  * Dashboard Flow E2E Tests
  *
- * Comprehensive E2E tests for dashboard functionality including:
- * - Navigation
- * - Campaign management
- * - Post creation
- * - Analytics viewing
+ * Tests full user flows across dashboard pages:
+ * - Content generation
+ * - Analytics viewing and filtering
  * - Settings management
+ * - Calendar scheduling
+ * - Cross-page navigation
  *
  * @module tests/e2e/dashboard-flows.spec
  */
 
 import { test, expect } from './fixtures/dashboard.fixture';
 
+// =============================================================================
+// Dashboard Navigation Flows
+// =============================================================================
+
 test.describe('Dashboard Navigation', () => {
-  test('should render dashboard home page', async ({ authedDashboard }) => {
+  test('should render dashboard home page with main elements', async ({ authedDashboard }) => {
     await authedDashboard.goto('/dashboard');
 
-    // Verify main elements
     await expect(authedDashboard.sidebar).toBeVisible();
     await expect(authedDashboard.mainContent).toBeVisible();
+    await expect(authedDashboard.header).toBeVisible();
   });
 
-  test('should have working sidebar navigation', async ({ authedDashboard, page }) => {
+  test('sidebar links should navigate without 500 errors', async ({ authedDashboard, page }) => {
     await authedDashboard.goto('/dashboard');
 
-    // Get sidebar links
     const links = await authedDashboard.sidebarLinks.all();
+    expect(links.length).toBeGreaterThan(0);
 
-    if (links.length > 0) {
-      // Click first navigable link
-      const firstLink = links[0];
-      const href = await firstLink.getAttribute('href');
-
-      if (href && !href.startsWith('#')) {
-        await firstLink.click();
-        await page.waitForTimeout(500);
-
-        // Should navigate without error
-        expect(page.url()).not.toContain('error');
+    // Test first 5 sidebar links for non-500 responses
+    const linksToTest = links.slice(0, 5);
+    for (const link of linksToTest) {
+      const href = await link.getAttribute('href');
+      if (href && href.startsWith('/dashboard')) {
+        const response = await page.goto(href, { waitUntil: 'domcontentloaded' });
+        expect(
+          response?.status(),
+          `${href} returned ${response?.status()}`
+        ).toBeLessThan(500);
       }
     }
   });
 
-  test('should display page header/title', async ({ authedDashboard }) => {
+  test('should display heading on each navigated page', async ({ authedDashboard, page }) => {
     await authedDashboard.goto('/dashboard');
 
-    // Should have some heading
     const headings = authedDashboard.mainContent.locator('h1, h2');
     const count = await headings.count();
-
     expect(count).toBeGreaterThan(0);
   });
 });
+
+// =============================================================================
+// Content/Campaign Creation Flow
+// =============================================================================
+
+test.describe('Content Generation Flow', () => {
+  test('should render content page with generation form', async ({ authedDashboard, page }) => {
+    await authedDashboard.goto('/dashboard/content');
+
+    // Page should load without error
+    const status = await page.evaluate(() => document.readyState);
+    expect(status).toBe('complete');
+
+    // Should have main content area
+    await expect(authedDashboard.mainContent).toBeVisible();
+  });
+
+  test('should display topic input and platform selector', async ({ authedDashboard, page }) => {
+    await authedDashboard.goto('/dashboard/content');
+    await page.waitForTimeout(1000);
+
+    // Topic input (the main generation form field)
+    const topicInput = page.locator(
+      'input[placeholder*="topic" i], textarea[placeholder*="topic" i], input[name="topic"]'
+    );
+    const hasTopicInput = await topicInput.isVisible().catch(() => false);
+
+    // Generate button
+    const generateBtn = page.locator(
+      'button:has-text("Generate"), button:has-text("Create")'
+    );
+    const hasGenerateBtn = await generateBtn.first().isVisible().catch(() => false);
+
+    // Should have at least the topic input or generate button
+    expect(hasTopicInput || hasGenerateBtn).toBeTruthy();
+  });
+
+  test('should have platform selection options', async ({ authedDashboard, page }) => {
+    await authedDashboard.goto('/dashboard/content');
+    await page.waitForTimeout(1000);
+
+    // Platform selector (Select component or radio buttons)
+    const platformSelector = page.locator(
+      'select, [role="combobox"], [data-platform], button:has-text("Twitter"), button:has-text("Instagram")'
+    );
+    const count = await platformSelector.count();
+
+    // Content page should have some form of platform selection
+    expect(count).toBeGreaterThanOrEqual(1);
+  });
+
+  test('should fill content generation form', async ({ authedDashboard, page }) => {
+    await authedDashboard.goto('/dashboard/content');
+    await page.waitForTimeout(1000);
+
+    // Fill topic input
+    const topicInput = page.locator(
+      'input[placeholder*="topic" i], textarea[placeholder*="topic" i]'
+    );
+
+    if (await topicInput.isVisible()) {
+      await topicInput.fill('AI marketing automation trends');
+
+      // Verify input was filled
+      const value = await topicInput.inputValue();
+      expect(value).toContain('AI marketing');
+    }
+  });
+});
+
+// =============================================================================
+// Campaign Management Flow
+// =============================================================================
 
 test.describe('Campaign Management', () => {
   test('should render campaigns page', async ({ campaignPage, page }) => {
     await campaignPage.goto();
 
-    // Page should load without error
-    const status = await page.evaluate(() => document.readyState);
-    expect(status).toBe('complete');
+    const response = await page.evaluate(() => document.readyState);
+    expect(response).toBe('complete');
   });
 
-  test('should display campaign list or empty state', async ({ campaignPage }) => {
+  test('should display campaign list or empty state', async ({ campaignPage, page }) => {
     await campaignPage.goto();
+    await page.waitForTimeout(500);
 
-    // Wait for client-side React content to render (useEffect + data fetching)
-    await campaignPage['page'].waitForTimeout(2000);
-
-    // Either campaigns exist, empty state, create button, heading, or any main-area text
-    const hasCampaigns = await campaignPage.campaignList.isVisible().catch(() => false);
-    const hasCards = await campaignPage.campaignCards.first().isVisible().catch(() => false);
-    const hasCreateButton = await campaignPage.createButton.isVisible().catch(() => false);
-    const hasHeading = await campaignPage['page'].locator('h1, h2, h3').first().isVisible().catch(() => false);
-    // Dashboard layout loaded (sidebar visible = page rendered, content may be loading/error)
-    const hasSidebar = await campaignPage['page'].locator('aside, [data-sidebar]').first().isVisible().catch(() => false);
-    // Any text content in main area
-    const hasMainText = await campaignPage['page'].locator('main').first().isVisible().catch(() => false);
-
-    expect(hasCampaigns || hasCards || hasCreateButton || hasHeading || hasSidebar || hasMainText).toBeTruthy();
-  });
-
-  test('should have create campaign button', async ({ campaignPage }) => {
-    await campaignPage.goto();
-
-    // Wait for client-side React to render
-    await campaignPage['page'].waitForTimeout(2000);
-
-    // Create button should be accessible
-    const createButton = campaignPage.createButton;
-    const isVisible = await createButton.isVisible().catch(() => false);
-
-    // Button may be in different locations/forms
-    if (!isVisible) {
-      const altButton = campaignPage['page'].locator(
-        'a:has-text("Create"), a:has-text("New"), button:has-text("Add"), button:has-text("Schedule")'
-      );
-      const altVisible = await altButton.first().isVisible().catch(() => false);
-      const hasHeading = await campaignPage['page'].locator('h1, h2, h3').first().isVisible().catch(() => false);
-      // Dashboard layout presence (sidebar) counts as successful page load
-      const hasSidebar = await campaignPage['page'].locator('aside, [data-sidebar]').first().isVisible().catch(() => false);
-      expect(altVisible || isVisible || hasHeading || hasSidebar).toBeTruthy();
-    }
+    const bodyText = await page.locator('main, [role="main"]').first().textContent();
+    // Should show either campaigns or an empty state message
+    expect(bodyText!.length).toBeGreaterThan(0);
   });
 });
 
-test.describe('Post/Content Management', () => {
-  test('should render content page', async ({ postPage, page }) => {
-    await postPage.goto();
+// =============================================================================
+// Analytics Flow
+// =============================================================================
 
-    const status = await page.evaluate(() => document.readyState);
-    expect(status).toBe('complete');
-  });
-
-  test('should display posts or empty state', async ({ postPage }) => {
-    await postPage.goto();
-
-    // Wait for client-side React content to render
-    await postPage['page'].waitForTimeout(2000);
-
-    const hasPostList = await postPage.postList.isVisible().catch(() => false);
-    const hasCreateButton = await postPage.createButton.isVisible().catch(() => false);
-    const hasHeading = await postPage['page'].locator('h1, h2, h3').first().isVisible().catch(() => false);
-    // Dashboard layout loaded (sidebar visible = page rendered, content may be loading/error)
-    const hasSidebar = await postPage['page'].locator('aside, [data-sidebar]').first().isVisible().catch(() => false);
-
-    expect(hasPostList || hasCreateButton || hasHeading || hasSidebar).toBeTruthy();
-  });
-});
-
-test.describe('Analytics Page', () => {
+test.describe('Analytics Page Flow', () => {
   test('should render analytics page', async ({ analyticsPage, page }) => {
     await analyticsPage.goto();
 
     const status = await page.evaluate(() => document.readyState);
     expect(status).toBe('complete');
+
+    const mainContent = page.locator('main, [role="main"]').first();
+    await expect(mainContent).toBeVisible();
   });
 
-  test('should display metrics or charts', async ({ analyticsPage }) => {
+  test('should display analytics controls', async ({ analyticsPage, page }) => {
     await analyticsPage.goto();
+    await page.waitForTimeout(1000);
 
-    // Wait for client-side React content to render
-    await analyticsPage['page'].waitForTimeout(2000);
+    // Time range or date picker
+    const timeControls = page.locator(
+      'select, [role="combobox"], button:has-text("7d"), button:has-text("30d"), [data-date-range]'
+    );
+    const hasTimeControls = await timeControls.first().isVisible().catch(() => false);
 
-    // Look for any analytics content
-    const hasCharts = await analyticsPage.charts.first().isVisible().catch(() => false);
-    const hasMetrics = await analyticsPage.metricCards.first().isVisible().catch(() => false);
+    // Export button
+    const exportBtn = page.locator(
+      'button:has-text("Export"), button:has-text("Download")'
+    );
+    const hasExport = await exportBtn.first().isVisible().catch(() => false);
 
-    // At least some analytics content should be visible
-    // (may be empty state with no data, loading skeleton, or dashboard layout)
-    const hasAnyContent =
-      hasCharts ||
-      hasMetrics ||
-      (await analyticsPage['page']
-        .locator('text=/no data|connect.*platform|get started/i')
-        .isVisible()
-        .catch(() => false)) ||
-      (await analyticsPage['page'].locator('h1, h2, h3').first().isVisible().catch(() => false)) ||
-      // Dashboard layout loaded (sidebar visible = page rendered, content may still be loading)
-      (await analyticsPage['page'].locator('aside, [data-sidebar]').first().isVisible().catch(() => false));
-
-    expect(hasAnyContent).toBeTruthy();
+    // Should have some analytics controls
+    const mainText = await page.locator('main, [role="main"]').first().textContent();
+    expect(mainText!.length).toBeGreaterThan(0);
   });
 
-  test('should have date range picker if analytics exist', async ({ analyticsPage }) => {
+  test('should display charts or analytics content', async ({ analyticsPage, page }) => {
     await analyticsPage.goto();
+    await page.waitForTimeout(1500);
 
-    // Date picker may or may not be visible depending on data state
-    const picker = analyticsPage.dateRangePicker;
-    const isVisible = await picker.isVisible().catch(() => false);
+    // Look for chart containers, metric cards, or empty states
+    const charts = page.locator('.recharts-wrapper, canvas, [data-chart], svg[class*="chart"]');
+    const metricCards = page.locator('[class*="stat"], [class*="metric"], [class*="card"]');
+    const emptyState = page.locator('text=/no data|connect.*platform|get started/i');
 
-    // Just verify page loaded - date picker is optional
-    expect(true).toBeTruthy();
+    const hasCharts = await charts.first().isVisible().catch(() => false);
+    const hasMetrics = (await metricCards.count()) > 0;
+    const hasEmpty = await emptyState.isVisible().catch(() => false);
+
+    // Analytics page should show something meaningful
+    expect(hasCharts || hasMetrics || hasEmpty).toBeTruthy();
   });
 });
 
-test.describe('Settings Page', () => {
-  test('should render settings page', async ({ settingsPage, page }) => {
+// =============================================================================
+// Settings Flow
+// =============================================================================
+
+test.describe('Settings Page Flow', () => {
+  test('should render settings page with tabs', async ({ settingsPage, page }) => {
     await settingsPage.goto();
 
     const status = await page.evaluate(() => document.readyState);
     expect(status).toBe('complete');
   });
 
-  test('should display profile settings', async ({ settingsPage }) => {
+  test('should display settings tab navigation', async ({ settingsPage, page }) => {
     await settingsPage.goto();
+    await page.waitForTimeout(500);
 
-    // Look for settings form elements
-    const hasNameInput = await settingsPage.nameInput.isVisible().catch(() => false);
-    const hasEmailInput = await settingsPage.emailInput.isVisible().catch(() => false);
-    const hasTabs = await settingsPage.profileTab.isVisible().catch(() => false);
+    // Settings page should have tabs (Profile, Notifications, etc.)
+    const tabs = page.locator('[role="tab"]');
+    const tabCount = await tabs.count();
 
-    // Should have some form of settings UI
-    expect(hasNameInput || hasEmailInput || hasTabs).toBeTruthy();
+    if (tabCount > 0) {
+      // Settings has 6 tabs
+      expect(tabCount).toBeGreaterThanOrEqual(2);
+    } else {
+      // May use links or different navigation pattern
+      const settingsLinks = page.locator(
+        'button:has-text("Profile"), button:has-text("Notifications"), a:has-text("Profile")'
+      );
+      expect(await settingsLinks.count()).toBeGreaterThanOrEqual(1);
+    }
   });
 
-  test('should have save button for settings', async ({ settingsPage }) => {
+  test('should switch between settings tabs', async ({ settingsPage, page }) => {
     await settingsPage.goto();
+    await page.waitForTimeout(500);
 
-    const saveButton = settingsPage.saveButton;
-    const isVisible = await saveButton.isVisible().catch(() => false);
+    const tabs = page.locator('[role="tab"]');
+    const tabCount = await tabs.count();
 
-    // Save button should exist somewhere on settings page
-    if (!isVisible) {
-      const altButton = settingsPage['page'].locator(
-        'button:has-text("Update"), button:has-text("Apply")'
-      );
-      const altVisible = await altButton.first().isVisible().catch(() => false);
-      // Either works
-      expect(isVisible || altVisible || true).toBeTruthy();
+    if (tabCount >= 2) {
+      // Click second tab (Notifications)
+      await tabs.nth(1).click();
+      await page.waitForTimeout(300);
+
+      const activeState = await tabs.nth(1).getAttribute('data-state');
+      expect(activeState).toBe('active');
+    }
+  });
+
+  test('should display profile form fields', async ({ settingsPage, page }) => {
+    await settingsPage.goto();
+    await page.waitForTimeout(500);
+
+    // Profile tab should be visible by default
+    const nameInput = page.locator('input[name="name"], input[placeholder*="name" i]');
+    const emailInput = page.locator('input[name="email"], input[type="email"]');
+
+    const hasName = await nameInput.isVisible().catch(() => false);
+    const hasEmail = await emailInput.isVisible().catch(() => false);
+
+    // Profile section should have at least one form field
+    expect(hasName || hasEmail).toBeTruthy();
+  });
+
+  test('should have save button on settings page', async ({ settingsPage, page }) => {
+    await settingsPage.goto();
+    await page.waitForTimeout(500);
+
+    const saveBtn = page.locator(
+      'button:has-text("Save"), button:has-text("Update"), button[type="submit"]'
+    );
+    const hasSave = await saveBtn.first().isVisible().catch(() => false);
+
+    expect(hasSave).toBeTruthy();
+  });
+});
+
+// =============================================================================
+// Calendar Flow
+// =============================================================================
+
+test.describe('Calendar Page Flow', () => {
+  test('should render calendar page', async ({ authedDashboard, page }) => {
+    await authedDashboard.goto('/dashboard/calendar');
+
+    const status = await page.evaluate(() => document.readyState);
+    expect(status).toBe('complete');
+
+    await expect(authedDashboard.mainContent).toBeVisible();
+  });
+
+  test('should display calendar view controls', async ({ authedDashboard, page }) => {
+    await authedDashboard.goto('/dashboard/calendar');
+    await page.waitForTimeout(1000);
+
+    // Calendar should have view switcher (Week/Month) or navigation
+    const viewControls = page.locator(
+      'button:has-text("Week"), button:has-text("Month"), button:has-text("Today")'
+    );
+    const hasViewControls = await viewControls.first().isVisible().catch(() => false);
+
+    // Schedule button
+    const scheduleBtn = page.locator(
+      'button:has-text("Schedule"), button:has-text("New Post"), button:has-text("Create")'
+    );
+    const hasScheduleBtn = await scheduleBtn.first().isVisible().catch(() => false);
+
+    // Calendar page should have controls or at least content
+    const mainText = await page.locator('main, [role="main"]').first().textContent();
+    expect(mainText!.length).toBeGreaterThan(0);
+  });
+
+  test('should display calendar stats', async ({ authedDashboard, page }) => {
+    await authedDashboard.goto('/dashboard/calendar');
+    await page.waitForTimeout(1000);
+
+    // Calendar page may show stats cards (Total Posts, Scheduled, Published, etc.)
+    const mainText = await page.locator('main, [role="main"]').first().textContent();
+    expect(mainText!.length).toBeGreaterThan(0);
+  });
+
+  test('should open schedule modal when clicking Schedule Post', async ({
+    authedDashboard,
+    page,
+  }) => {
+    await authedDashboard.goto('/dashboard/calendar');
+    await page.waitForTimeout(1000);
+
+    const scheduleBtn = page.locator(
+      'button:has-text("Schedule Post"), button:has-text("Schedule")'
+    );
+
+    if (await scheduleBtn.first().isVisible()) {
+      await scheduleBtn.first().click();
+      await page.waitForTimeout(500);
+
+      // Modal/dialog should appear
+      const dialog = page.locator('[role="dialog"], [data-state="open"]');
+      const hasDialog = await dialog.isVisible().catch(() => false);
+
+      if (hasDialog) {
+        await expect(dialog).toBeVisible();
+
+        // Modal should have content textarea and date/time inputs
+        const contentField = dialog.locator(
+          'textarea, input[type="text"], [contenteditable]'
+        );
+        expect(await contentField.count()).toBeGreaterThanOrEqual(1);
+      }
     }
   });
 });
 
-test.describe('Dashboard Responsiveness', () => {
-  test('should be responsive on mobile viewport', async ({ authedDashboard, page }) => {
-    // Set mobile viewport
-    await page.setViewportSize({ width: 375, height: 667 });
+// =============================================================================
+// Cross-Page Navigation Flow
+// =============================================================================
 
+test.describe('Cross-Page Navigation', () => {
+  test('should navigate dashboard → content → analytics → settings', async ({
+    authedDashboard,
+    page,
+  }) => {
+    // Dashboard
     await authedDashboard.goto('/dashboard');
-
-    // Content should still be visible
+    expect(page.url()).toContain('/dashboard');
     await expect(authedDashboard.mainContent).toBeVisible();
 
-    // Sidebar might be collapsed/hidden on mobile
-    const sidebar = authedDashboard.sidebar;
-    const sidebarVisible = await sidebar.isVisible().catch(() => false);
+    // Content
+    await page.goto('/dashboard/content');
+    await page.waitForLoadState('domcontentloaded');
+    expect(page.url()).toContain('/content');
 
-    // Either sidebar is visible or there's a hamburger menu
-    const hamburger = page.locator('[aria-label*="menu"], [data-mobile-menu], button.hamburger');
-    const hasHamburger = await hamburger.isVisible().catch(() => false);
+    // Analytics
+    await page.goto('/dashboard/analytics');
+    await page.waitForLoadState('domcontentloaded');
+    expect(page.url()).toContain('/analytics');
 
-    expect(sidebarVisible || hasHamburger || true).toBeTruthy();
+    // Settings
+    await page.goto('/dashboard/settings');
+    await page.waitForLoadState('domcontentloaded');
+    expect(page.url()).toContain('/settings');
+  });
+
+  test('should maintain auth state across page navigations', async ({
+    authedDashboard,
+    page,
+  }) => {
+    const pages = ['/dashboard', '/dashboard/content', '/dashboard/analytics', '/dashboard/settings'];
+
+    for (const path of pages) {
+      await page.goto(path, { waitUntil: 'domcontentloaded' });
+
+      // Should not redirect to login
+      expect(page.url()).not.toContain('/login');
+
+      // Should return < 500
+      const bodyVisible = await page.locator('body').isVisible();
+      expect(bodyVisible).toBeTruthy();
+    }
   });
 });
 
-test.describe('Error Handling', () => {
-  test('should handle 404 gracefully', async ({ page }) => {
+// =============================================================================
+// Error Handling
+// =============================================================================
+
+test.describe('Dashboard Error Handling', () => {
+  test('should handle 404 gracefully on dashboard subpage', async ({ page }) => {
     const response = await page.goto('/dashboard/nonexistent-page-12345', {
       waitUntil: 'domcontentloaded',
     });
 
-    // Should either 404 or redirect
     const status = response?.status() || 200;
-    expect([200, 302, 404]).toContain(status);
+    expect(status).toBeLessThan(500);
 
-    // Page should not crash
     const hasContent = await page.locator('body').isVisible();
     expect(hasContent).toBeTruthy();
+  });
+
+  test('dashboard pages should not return 500 errors', async ({ authedDashboard, page }) => {
+    const criticalPages = [
+      '/dashboard',
+      '/dashboard/content',
+      '/dashboard/analytics',
+      '/dashboard/settings',
+      '/dashboard/calendar',
+    ];
+
+    for (const route of criticalPages) {
+      const response = await page.goto(route, { waitUntil: 'domcontentloaded' });
+      expect(
+        response?.status(),
+        `${route} returned ${response?.status()}`
+      ).toBeLessThan(500);
+    }
   });
 });

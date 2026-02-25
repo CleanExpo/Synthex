@@ -79,7 +79,7 @@
     },
     {
       "path": "/api/competitors/track/execute",
-      "schedule": "30 * * * *"
+      "schedule": "*/30 * * * *"
     },
     {
       "path": "/api/cron/health-score",

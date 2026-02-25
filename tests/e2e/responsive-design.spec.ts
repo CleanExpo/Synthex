@@ -1,37 +1,15 @@
 /**
  * Responsive Design E2E Tests
  *
- * Tests for mobile, tablet, and desktop viewport compatibility.
+ * Tests mobile, tablet, and desktop viewport compatibility
+ * including navigation patterns, layout adaptation, touch targets,
+ * and orientation changes.
  *
  * @module tests/e2e/responsive-design.spec
  */
 
-import { test, expect, Page } from '@playwright/test';
+import { test, expect } from '@playwright/test';
 
-const BASE_URL = process.env.BASE_URL || 'http://localhost:3002';
-
-/** Set auth cookie so middleware allows access to /dashboard/* routes */
-async function setAuthCookie(page: Page) {
-  await page.context().addCookies([
-    { name: 'auth-token', value: 'test-e2e-token', url: BASE_URL },
-  ]);
-  // Mock stats API so dashboard renders in success state (not error/loading skeleton)
-  await page.route('**/api/dashboard/stats', route =>
-    route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify({
-        stats: { totalPosts: 10, scheduledPosts: 2, avgEngagementRate: '2.5', totalFollowers: 5000 },
-        trendingTopics: ['#AI'],
-        recentActivity: [],
-        engagementData: [],
-        platformData: [],
-      }),
-    })
-  );
-}
-
-// Viewport definitions
 const VIEWPORTS = {
   mobile: { width: 375, height: 667 },
   mobileLandscape: { width: 667, height: 375 },
@@ -41,266 +19,241 @@ const VIEWPORTS = {
   desktop: { width: 1920, height: 1080 },
 };
 
-test.describe('Mobile Responsive Tests', () => {
+test.describe('Mobile (375px)', () => {
   test.beforeEach(async ({ page }) => {
     await page.setViewportSize(VIEWPORTS.mobile);
   });
 
-  test('should render login page on mobile', async ({ page }) => {
+  test('login page renders fully on mobile', async ({ page }) => {
     await page.goto('/login');
+    await page.waitForLoadState('domcontentloaded');
 
-    // Main content should be visible
-    const form = page.locator('form, [role="form"], main');
-    await expect(form.first()).toBeVisible();
-
-    // Submit button should be accessible
     const submitBtn = page.locator('button[type="submit"]');
     await expect(submitBtn).toBeVisible();
+
+    // No horizontal scroll
+    const hasHScroll = await page.evaluate(
+      () => document.documentElement.scrollWidth > document.documentElement.clientWidth + 5
+    );
+    expect(hasHScroll).toBeFalsy();
   });
 
-  test('should render onboarding on mobile', async ({ page }) => {
+  test('onboarding renders on mobile', async ({ page }) => {
     await page.goto('/onboarding');
+    await page.waitForLoadState('domcontentloaded');
 
-    // Welcome heading should be visible
     const heading = page.locator('h1');
     await expect(heading).toBeVisible();
-
-    // Get Started button should be accessible
-    const ctaButton = page.locator('button:has-text("Get Started")');
-    await expect(ctaButton).toBeVisible();
   });
 
-  test('should have mobile navigation pattern', async ({ page }) => {
+  test('dashboard has mobile navigation', async ({ page }) => {
     await page.goto('/dashboard');
     await page.waitForLoadState('domcontentloaded');
 
-    // Either sidebar is visible or hamburger menu exists
-    const sidebar = page.locator('[class*="sidebar"], nav');
-    const hamburger = page.locator(
-      '[aria-label*="menu"], [data-mobile-menu], button:has([class*="hamburger"]), button[aria-expanded]'
-    );
+    // On mobile, sidebar should be hidden or there should be a menu toggle
+    const body = page.locator('body');
+    await expect(body).toBeVisible();
 
-    const sidebarVisible = await sidebar.first().isVisible().catch(() => false);
-    const hamburgerVisible = await hamburger.first().isVisible().catch(() => false);
-
-    expect(sidebarVisible || hamburgerVisible || true).toBeTruthy();
+    // Page should not have excessive horizontal scroll
+    const scrollWidth = await page.evaluate(() => document.documentElement.scrollWidth);
+    expect(scrollWidth).toBeLessThanOrEqual(VIEWPORTS.mobile.width + 20);
   });
 
-  test('should not have horizontal scroll on mobile', async ({ page }) => {
-    await page.goto('/dashboard');
-    await page.waitForLoadState('domcontentloaded');
-
-    const scrollWidth = await page.evaluate(() => {
-      return document.documentElement.scrollWidth > document.documentElement.clientWidth;
-    });
-
-    // Minor horizontal scroll is acceptable on complex pages
-    expect(true).toBeTruthy();
-  });
-
-  test('should have touch-friendly button sizes', async ({ page }) => {
+  test('buttons have touch-friendly sizes', async ({ page }) => {
     await page.goto('/login');
     await page.waitForLoadState('domcontentloaded');
 
-    const buttons = await page.locator('button').all();
+    const buttons = await page.locator('button:visible').all();
+    expect(buttons.length).toBeGreaterThan(0);
 
-    for (const button of buttons.slice(0, 5)) {
+    for (const button of buttons) {
       const box = await button.boundingBox();
       if (box) {
-        // Minimum touch target: 44x44 pixels (WCAG recommendation)
-        // Allow some flexibility for inline buttons
+        // Min 24px height for AA, ideally 44px for AAA
         expect(box.height).toBeGreaterThanOrEqual(24);
+      }
+    }
+  });
+
+  test('form inputs are full-width on mobile', async ({ page }) => {
+    await page.goto('/login');
+    await page.waitForLoadState('domcontentloaded');
+
+    const inputs = page.locator('input:visible');
+    const count = await inputs.count();
+
+    if (count > 0) {
+      const box = await inputs.first().boundingBox();
+      if (box) {
+        // Input should span most of the viewport
+        expect(box.width).toBeGreaterThan(VIEWPORTS.mobile.width * 0.6);
       }
     }
   });
 });
 
-test.describe('Tablet Responsive Tests', () => {
+test.describe('Tablet (768px)', () => {
   test.beforeEach(async ({ page }) => {
     await page.setViewportSize(VIEWPORTS.tablet);
   });
 
-  test('should render dashboard with appropriate layout', async ({ page }) => {
+  test('dashboard renders correctly on tablet', async ({ page }) => {
     await page.goto('/dashboard');
     await page.waitForLoadState('domcontentloaded');
 
-    // Content should be visible
     const main = page.locator('main, [role="main"], [class*="content"]');
     await expect(main.first()).toBeVisible();
   });
 
-  test('should use 2-column grid where appropriate', async ({ page }) => {
+  test('analytics page loads on tablet', async ({ page }) => {
     await page.goto('/dashboard/analytics');
     await page.waitForLoadState('domcontentloaded');
 
-    // Page should load correctly
     const status = await page.evaluate(() => document.readyState);
     expect(status).toBe('complete');
+
+    // No 500 errors
+    const errorText = await page.locator('text=500, text=Internal Server Error').count();
+    expect(errorText).toBe(0);
   });
 
-  test('should have visible sidebar on tablet landscape', async ({ page }) => {
+  test('sidebar visible on tablet landscape', async ({ page }) => {
     await page.setViewportSize(VIEWPORTS.tabletLandscape);
     await page.goto('/dashboard');
     await page.waitForLoadState('domcontentloaded');
 
-    // Sidebar aside may be visible on larger tablets (md:block at 768px)
-    const sidebar = page.locator('aside, [data-sidebar]').first();
-    const isVisible = await sidebar.isVisible().catch(() => false);
-
-    // Either sidebar is visible or page adapts appropriately
-    expect(true).toBeTruthy();
+    // At 1024px, sidebar should be visible
+    const nav = page.locator('nav, [class*="sidebar"]').first();
+    await expect(nav).toBeVisible();
   });
 });
 
-test.describe('Desktop Responsive Tests', () => {
+test.describe('Desktop (1920px)', () => {
   test.beforeEach(async ({ page }) => {
     await page.setViewportSize(VIEWPORTS.desktop);
-    // Auth cookie required: sidebar visibility assertion needs actual dashboard to render
-    await setAuthCookie(page);
   });
 
-  test('should render full dashboard layout', async ({ page }) => {
+  test('full dashboard layout renders', async ({ page }) => {
     await page.goto('/dashboard');
     await page.waitForLoadState('domcontentloaded');
 
-    // Sidebar aside should be visible on desktop (hidden md:block — visible at 1920px)
-    const sidebar = page.locator('aside, [data-sidebar]').first();
-    await expect(sidebar).toBeVisible();
+    // Sidebar visible
+    const nav = page.locator('nav, [class*="sidebar"]').first();
+    await expect(nav).toBeVisible();
 
-    // Main content should be visible
+    // Main content visible
     const main = page.locator('main, [role="main"]').first();
     await expect(main).toBeVisible();
   });
 
-  test('should use multi-column grid', async ({ page }) => {
+  test('grid layouts use multiple columns', async ({ page }) => {
     await page.goto('/dashboard/analytics');
     await page.waitForLoadState('domcontentloaded');
 
-    // Check for grid layout
     const grids = page.locator('[class*="grid"]');
     const count = await grids.count();
-
-    expect(count).toBeGreaterThanOrEqual(0);
+    expect(count).toBeGreaterThan(0);
   });
 
-  test('should have appropriately sized text', async ({ page }) => {
+  test('headings are appropriately sized', async ({ page }) => {
     await page.goto('/dashboard');
     await page.waitForLoadState('domcontentloaded');
 
     const heading = page.locator('h1, h2').first();
     if (await heading.isVisible()) {
-      const fontSize = await heading.evaluate((el) => {
-        return parseFloat(window.getComputedStyle(el).fontSize);
-      });
-
-      // Heading should be at least 18px on desktop
+      const fontSize = await heading.evaluate(el =>
+        parseFloat(window.getComputedStyle(el).fontSize)
+      );
       expect(fontSize).toBeGreaterThanOrEqual(18);
     }
   });
 });
 
 test.describe('Cross-Viewport Consistency', () => {
-  test('should maintain visual hierarchy across viewports', async ({ page }) => {
-    const viewports = [VIEWPORTS.mobile, VIEWPORTS.tablet, VIEWPORTS.desktop];
-
-    for (const viewport of viewports) {
+  test('login form works across all viewports', async ({ page }) => {
+    for (const [name, viewport] of Object.entries({
+      mobile: VIEWPORTS.mobile,
+      tablet: VIEWPORTS.tablet,
+      desktop: VIEWPORTS.desktop,
+    })) {
       await page.setViewportSize(viewport);
       await page.goto('/login');
       await page.waitForLoadState('domcontentloaded');
 
-      // Form elements should be visible in all viewports
-      const form = page.locator('form, [role="form"]');
       const submitBtn = page.locator('button[type="submit"]');
-
-      if ((await form.count()) > 0) {
-        await expect(form.first()).toBeVisible();
-      }
       await expect(submitBtn).toBeVisible();
+
+      const emailInput = page.locator('input[type="email"], input[name="email"]');
+      await expect(emailInput).toBeVisible();
     }
   });
 
-  test('should have consistent branding across viewports', async ({ page }) => {
-    const viewports = [VIEWPORTS.mobile, VIEWPORTS.tablet, VIEWPORTS.desktop];
+  test('pages load without 500 at all viewports', async ({ page }) => {
+    const pages = ['/login', '/signup', '/onboarding'];
 
-    for (const viewport of viewports) {
-      await page.setViewportSize(viewport);
-      await page.goto('/', { waitUntil: 'domcontentloaded' });
-
-      // Page should load without error
-      const body = page.locator('body');
-      await expect(body).toBeVisible();
+    for (const url of pages) {
+      for (const viewport of [VIEWPORTS.mobile, VIEWPORTS.desktop]) {
+        await page.setViewportSize(viewport);
+        const response = await page.goto(url);
+        expect(response?.status()).toBeLessThan(500);
+      }
     }
   });
 });
 
 test.describe('Orientation Changes', () => {
-  test('should handle portrait to landscape transition', async ({ page }) => {
-    // Start in portrait
+  test('mobile portrait to landscape transition', async ({ page }) => {
     await page.setViewportSize(VIEWPORTS.mobile);
     await page.goto('/dashboard');
     await page.waitForLoadState('domcontentloaded');
 
-    // Verify initial render
-    let body = page.locator('body');
-    await expect(body).toBeVisible();
+    const bodyBefore = page.locator('body');
+    await expect(bodyBefore).toBeVisible();
 
     // Switch to landscape
     await page.setViewportSize(VIEWPORTS.mobileLandscape);
-    await page.waitForTimeout(100);
+    await page.waitForTimeout(200);
 
-    // Verify landscape render
-    body = page.locator('body');
-    await expect(body).toBeVisible();
+    const bodyAfter = page.locator('body');
+    await expect(bodyAfter).toBeVisible();
+
+    // Content should still be accessible
+    const main = page.locator('main, [role="main"], [class*="content"]').first();
+    await expect(main).toBeVisible();
   });
 
-  test('should handle tablet orientation change', async ({ page }) => {
-    // Start in portrait
+  test('tablet portrait to landscape transition', async ({ page }) => {
     await page.setViewportSize(VIEWPORTS.tablet);
     await page.goto('/dashboard/content');
     await page.waitForLoadState('domcontentloaded');
 
-    let body = page.locator('body');
-    await expect(body).toBeVisible();
+    await expect(page.locator('body')).toBeVisible();
 
-    // Switch to landscape
     await page.setViewportSize(VIEWPORTS.tabletLandscape);
-    await page.waitForTimeout(100);
+    await page.waitForTimeout(200);
 
-    body = page.locator('body');
-    await expect(body).toBeVisible();
+    await expect(page.locator('body')).toBeVisible();
   });
 });
 
 test.describe('Form Responsiveness', () => {
-  test('should render forms appropriately on mobile', async ({ page }) => {
-    await page.setViewportSize(VIEWPORTS.mobile);
-    await page.goto('/login');
-    await page.waitForLoadState('domcontentloaded');
-
-    // Input fields should be full width or near-full on mobile
-    const inputs = page.locator('input:visible');
-    const inputCount = await inputs.count();
-
-    if (inputCount > 0) {
-      const firstInput = inputs.first();
-      const box = await firstInput.boundingBox();
-
-      if (box) {
-        // Input should use most of the viewport width
-        expect(box.width).toBeGreaterThan(VIEWPORTS.mobile.width * 0.6);
-      }
-    }
-  });
-
-  test('should stack form elements vertically on mobile', async ({ page }) => {
+  test('signup form stacks vertically on mobile', async ({ page }) => {
     await page.setViewportSize(VIEWPORTS.mobile);
     await page.goto('/signup');
     await page.waitForLoadState('domcontentloaded');
 
-    // Form should render correctly
     const form = page.locator('form');
     if ((await form.count()) > 0) {
       await expect(form.first()).toBeVisible();
+
+      // Inputs should not overflow viewport
+      const inputs = await page.locator('input:visible').all();
+      for (const input of inputs) {
+        const box = await input.boundingBox();
+        if (box) {
+          expect(box.x + box.width).toBeLessThanOrEqual(VIEWPORTS.mobile.width + 5);
+        }
+      }
     }
   });
 });

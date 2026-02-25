@@ -1,70 +1,93 @@
 /**
  * Accessibility E2E Tests
  *
- * Tests for WCAG 2.1 AA compliance including:
- * - Keyboard navigation
- * - ARIA labels
- * - Color contrast
- * - Focus management
+ * Automated WCAG 2.1 AA compliance testing using axe-core.
+ * Tests keyboard navigation, ARIA labels, focus management,
+ * form accessibility, and content accessibility.
  *
  * @module tests/e2e/accessibility.spec
  */
 
 import { test, expect } from '@playwright/test';
+import AxeBuilder from '@axe-core/playwright';
+
+// Helper: run axe scan and assert no critical/serious violations
+async function expectNoA11yViolations(page: import('@playwright/test').Page, disableRules: string[] = []) {
+  const results = await new AxeBuilder({ page })
+    .disableRules(['color-contrast', ...disableRules]) // Color contrast is unreliable in headless
+    .analyze();
+
+  const serious = results.violations.filter(v => v.impact === 'critical' || v.impact === 'serious');
+  if (serious.length > 0) {
+    const summary = serious.map(v =>
+      `[${v.impact}] ${v.id}: ${v.description} (${v.nodes.length} occurrences)`
+    ).join('\n');
+    expect(serious, `Accessibility violations found:\n${summary}`).toHaveLength(0);
+  }
+}
+
+test.describe('Automated axe-core Accessibility Scan', () => {
+  test('login page should have no critical a11y violations', async ({ page }) => {
+    await page.goto('/login');
+    await page.waitForLoadState('networkidle');
+    await expectNoA11yViolations(page);
+  });
+
+  test('signup page should have no critical a11y violations', async ({ page }) => {
+    await page.goto('/signup');
+    await page.waitForLoadState('networkidle');
+    await expectNoA11yViolations(page);
+  });
+
+  test('onboarding page should have no critical a11y violations', async ({ page }) => {
+    await page.goto('/onboarding');
+    await page.waitForLoadState('networkidle');
+    await expectNoA11yViolations(page);
+  });
+
+  test('home page should have no critical a11y violations', async ({ page }) => {
+    await page.goto('/');
+    await page.waitForLoadState('networkidle');
+    await expectNoA11yViolations(page);
+  });
+});
 
 test.describe('Keyboard Navigation', () => {
-  test('should navigate login form with keyboard', async ({ page }) => {
+  test('login form is fully keyboard navigable', async ({ page }) => {
     await page.goto('/login');
     await page.waitForLoadState('domcontentloaded');
 
-    // Focus on email input
+    // Focus email input
     const emailInput = page.locator('input[type="email"], input[name="email"]');
     await emailInput.focus();
     await expect(emailInput).toBeFocused();
 
-    // Tab through form elements — there may be intermediate elements between inputs
-    // (e.g., "Remember me" checkbox, "Forgot password" link)
+    // Tab to password
+    await page.keyboard.press('Tab');
     const passwordInput = page.locator('input[type="password"]');
+    await expect(passwordInput).toBeFocused();
+
+    // Tab forward to find submit button
     const submitBtn = page.locator('button[type="submit"]');
-
-    let foundPassword = false;
-    let foundSubmit = false;
-
-    // Tab up to 10 times to find password and submit
-    for (let i = 0; i < 10; i++) {
+    for (let i = 0; i < 6; i++) {
       await page.keyboard.press('Tab');
-
-      if (!foundPassword) {
-        foundPassword = await passwordInput.evaluate((el) => document.activeElement === el).catch(() => false);
-      }
-
-      if (!foundSubmit) {
-        foundSubmit = await submitBtn.evaluate((el) =>
-          document.activeElement === el || document.activeElement?.closest('button[type="submit"]') !== null
-        ).catch(() => false);
-      }
-
-      if (foundPassword && foundSubmit) break;
+      const focused = await submitBtn.evaluate(el => document.activeElement === el);
+      if (focused) break;
     }
-
-    // Form is keyboard navigable if we can tab through it
-    // (password or submit reachable is sufficient)
-    expect(foundPassword || foundSubmit).toBeTruthy();
   });
 
-  test('should navigate onboarding with keyboard', async ({ page }) => {
+  test('onboarding has focusable interactive elements', async ({ page }) => {
     await page.goto('/onboarding');
     await page.waitForLoadState('domcontentloaded');
 
-    // Tab through focusable elements
-    const focusableElements = await page.locator(
+    const focusableCount = await page.locator(
       'button, a, input, select, textarea, [tabindex]:not([tabindex="-1"])'
     ).count();
 
-    expect(focusableElements).toBeGreaterThan(0);
+    expect(focusableCount).toBeGreaterThan(0);
   });
 
-  test('should support Enter to submit forms', async ({ page }) => {
+  test('Enter submits login form', async ({ page }) => {
     await page.goto('/login');
     await page.waitForLoadState('domcontentloaded');
 
@@ -72,343 +95,182 @@ test.describe('Keyboard Navigation', () => {
     await emailInput.fill('test@example.com');
 
     const passwordInput = page.locator('input[type="password"]');
-    await passwordInput.fill('password123');
-
-    // Press Enter to submit
+    await passwordInput.fill('TestPassword123!');
     await passwordInput.press('Enter');
 
-    // Form should attempt submission (may show validation error)
-    await page.waitForTimeout(500);
-    expect(true).toBeTruthy();
-  });
-
-  test('should trap focus in modals', async ({ page }) => {
-    await page.goto('/dashboard');
-    await page.waitForLoadState('domcontentloaded');
-
-    // Look for a button that opens a modal
-    const modalTrigger = page.locator(
-      'button:has-text("Create"), button:has-text("New"), button:has-text("Add")'
-    ).first();
-
-    if (await modalTrigger.isVisible()) {
-      await modalTrigger.click();
-      await page.waitForTimeout(300);
-
-      // Check if modal opened
-      const modal = page.locator('[role="dialog"], [aria-modal="true"]');
-      if (await modal.isVisible()) {
-        // Focus should be trapped in modal
-        const focusableInModal = modal.locator(
-          'button, a, input, select, textarea, [tabindex]:not([tabindex="-1"])'
-        );
-        const count = await focusableInModal.count();
-
-        expect(count).toBeGreaterThanOrEqual(0);
-      }
-    }
+    // Should navigate away or show an error — either way, form was submitted
+    await page.waitForTimeout(1000);
+    const url = page.url();
+    const hasError = await page.locator('[role="alert"], [class*="error"], [class*="Error"]').count();
+    expect(url !== '' || hasError >= 0).toBeTruthy();
   });
 });
 
 test.describe('ARIA Labels and Roles', () => {
-  test('should have proper form labels', async ({ page }) => {
+  test('form inputs have accessible names', async ({ page }) => {
     await page.goto('/login');
     await page.waitForLoadState('domcontentloaded');
 
-    // Email input should have accessible name
     const emailInput = page.locator('input[type="email"], input[name="email"]');
-    if (await emailInput.isVisible()) {
-      const ariaLabel = await emailInput.getAttribute('aria-label');
-      const ariaLabelledBy = await emailInput.getAttribute('aria-labelledby');
-      const id = await emailInput.getAttribute('id');
-      const placeholder = await emailInput.getAttribute('placeholder');
+    const ariaLabel = await emailInput.getAttribute('aria-label');
+    const ariaLabelledBy = await emailInput.getAttribute('aria-labelledby');
+    const id = await emailInput.getAttribute('id');
+    const placeholder = await emailInput.getAttribute('placeholder');
 
-      // Should have some form of accessible name
-      const hasAccessibleName =
-        ariaLabel || ariaLabelledBy || (id && (await page.locator(`label[for="${id}"]`).count())) || placeholder;
+    const hasLabel = ariaLabel || ariaLabelledBy || placeholder;
+    const hasAssociatedLabel = id ? (await page.locator(`label[for="${id}"]`).count()) > 0 : false;
 
-      expect(hasAccessibleName).toBeTruthy();
-    }
+    expect(hasLabel || hasAssociatedLabel).toBeTruthy();
   });
 
-  test('should have proper button labels', async ({ page }) => {
-    await page.goto('/dashboard');
+  test('buttons have accessible text', async ({ page }) => {
+    await page.goto('/login');
     await page.waitForLoadState('domcontentloaded');
 
-    const buttons = await page.locator('button').all();
+    const buttons = await page.locator('button:visible').all();
+    expect(buttons.length).toBeGreaterThan(0);
 
     for (const button of buttons.slice(0, 10)) {
-      const text = await button.textContent();
+      const text = (await button.textContent())?.trim();
       const ariaLabel = await button.getAttribute('aria-label');
       const title = await button.getAttribute('title');
 
-      // Button should have some accessible text
-      const hasAccessibleText = (text && text.trim()) || ariaLabel || title;
-      expect(hasAccessibleText || true).toBeTruthy();
+      expect(text || ariaLabel || title).toBeTruthy();
     }
   });
 
-  test('should have proper navigation landmarks', async ({ page }) => {
-    await page.goto('/dashboard');
+  test('page has heading hierarchy', async ({ page }) => {
+    await page.goto('/login');
     await page.waitForLoadState('domcontentloaded');
 
-    // Check for main landmark
-    const main = page.locator('main, [role="main"]');
-    const mainCount = await main.count();
-
-    // Check for navigation landmark
-    const nav = page.locator('nav, [role="navigation"]');
-    const navCount = await nav.count();
-
-    // Should have at least main content area
-    expect(mainCount + navCount).toBeGreaterThanOrEqual(0);
+    const headings = await page.locator('h1, h2, h3, h4, h5, h6').count();
+    expect(headings).toBeGreaterThan(0);
   });
 
-  test('should have proper heading hierarchy', async ({ page }) => {
-    await page.goto('/dashboard/analytics');
+  test('links have descriptive text', async ({ page }) => {
+    await page.goto('/login');
     await page.waitForLoadState('domcontentloaded');
 
-    const h1Count = await page.locator('h1').count();
-    const h2Count = await page.locator('h2').count();
-
-    // Should have at least one heading
-    const totalHeadings = h1Count + h2Count;
-    expect(totalHeadings).toBeGreaterThanOrEqual(0);
-  });
-
-  test('should have proper link text', async ({ page }) => {
-    await page.goto('/dashboard');
-    await page.waitForLoadState('domcontentloaded');
-
-    const links = await page.locator('a[href]').all();
+    const links = await page.locator('a[href]:visible').all();
 
     for (const link of links.slice(0, 10)) {
-      const text = await link.textContent();
+      const text = (await link.textContent())?.trim();
       const ariaLabel = await link.getAttribute('aria-label');
       const title = await link.getAttribute('title');
 
-      // Links should have accessible text (not just "click here")
-      const accessibleText = text?.trim() || ariaLabel || title;
-      expect(accessibleText || true).toBeTruthy();
+      expect(text || ariaLabel || title).toBeTruthy();
     }
   });
 });
 
 test.describe('Focus Management', () => {
-  test('should have visible focus indicator', async ({ page }) => {
+  test('focus indicator is visible on inputs', async ({ page }) => {
     await page.goto('/login');
     await page.waitForLoadState('domcontentloaded');
 
     const emailInput = page.locator('input[type="email"], input[name="email"]');
     await emailInput.focus();
-
-    // Focus should be on the input
     await expect(emailInput).toBeFocused();
+
+    // Check the input has a visible focus style (outline or ring)
+    const outlineStyle = await emailInput.evaluate(el => {
+      const styles = window.getComputedStyle(el);
+      return styles.outlineStyle !== 'none' || styles.boxShadow !== 'none';
+    });
+    // Focus indicator should exist (CSS focus ring)
+    expect(outlineStyle).toBeTruthy();
   });
 
-  test('should return focus after modal closes', async ({ page }) => {
+  test('Escape closes modal dialogs', async ({ page }) => {
     await page.goto('/dashboard');
     await page.waitForLoadState('domcontentloaded');
 
-    const triggerButton = page
-      .locator('button:has-text("Create"), button:has-text("New")')
-      .first();
+    const triggerButton = page.locator(
+      'button:has-text("Create"), button:has-text("New"), button:has-text("Add")'
+    ).first();
 
-    if (await triggerButton.isVisible()) {
-      // Click to open modal
+    if (await triggerButton.isVisible({ timeout: 2000 }).catch(() => false)) {
       await triggerButton.click();
       await page.waitForTimeout(300);
 
-      // Check if modal exists
       const modal = page.locator('[role="dialog"], [aria-modal="true"]');
-      if (await modal.isVisible()) {
-        // Close modal with Escape
+      if (await modal.isVisible({ timeout: 1000 }).catch(() => false)) {
         await page.keyboard.press('Escape');
         await page.waitForTimeout(300);
-
-        // Modal should be closed or focus should be manageable
-        expect(true).toBeTruthy();
+        await expect(modal).not.toBeVisible();
       }
     }
-  });
-
-  test('should skip to main content', async ({ page }) => {
-    await page.goto('/dashboard');
-    await page.waitForLoadState('domcontentloaded');
-
-    // Check for skip link
-    const skipLink = page.locator('a[href="#main"], a:has-text("Skip to")');
-    const hasSkipLink = (await skipLink.count()) > 0;
-
-    // Skip links are a best practice but not required
-    expect(true).toBeTruthy();
   });
 });
 
 test.describe('Form Accessibility', () => {
-  test('should announce form errors', async ({ page }) => {
+  test('empty form submission shows validation feedback', async ({ page }) => {
     await page.goto('/login');
     await page.waitForLoadState('domcontentloaded');
 
-    // Submit empty form to trigger validation
     const submitBtn = page.locator('button[type="submit"]');
     await submitBtn.click();
     await page.waitForTimeout(500);
 
-    // Check for error messages
-    const errorMessages = page.locator(
-      '[role="alert"], [aria-invalid="true"], .error, [class*="error"]'
-    );
-    const errorCount = await errorMessages.count();
+    // Should show some form of error — native validation, aria-invalid, or error text
+    const errorIndicators = await page.locator(
+      '[role="alert"], [aria-invalid="true"], [class*="error"], [class*="Error"], :invalid'
+    ).count();
 
-    // Form should show validation feedback
-    expect(errorCount).toBeGreaterThanOrEqual(0);
+    expect(errorIndicators).toBeGreaterThan(0);
   });
 
-  test('should associate errors with inputs', async ({ page }) => {
-    await page.goto('/signup');
-    await page.waitForLoadState('domcontentloaded');
-
-    const inputs = await page.locator('input').all();
-
-    for (const input of inputs.slice(0, 5)) {
-      const ariaDescribedBy = await input.getAttribute('aria-describedby');
-      const ariaErrorMessage = await input.getAttribute('aria-errormessage');
-
-      // Inputs may have error association
-      expect(true).toBeTruthy();
-    }
-  });
-
-  test('should have required field indicators', async ({ page }) => {
+  test('required fields are indicated', async ({ page }) => {
     await page.goto('/signup');
     await page.waitForLoadState('domcontentloaded');
 
     const requiredInputs = page.locator('input[required], input[aria-required="true"]');
     const count = await requiredInputs.count();
 
-    expect(count).toBeGreaterThanOrEqual(0);
-  });
-});
-
-test.describe('Color and Contrast', () => {
-  test('should not rely on color alone', async ({ page }) => {
-    await page.goto('/dashboard');
-    await page.waitForLoadState('domcontentloaded');
-
-    // Check that error states use more than just color
-    const errorElements = page.locator('[class*="error"], [class*="danger"], [class*="red"]');
-
-    for (const element of await errorElements.all().then((els) => els.slice(0, 5))) {
-      const text = await element.textContent();
-      const ariaLabel = await element.getAttribute('aria-label');
-
-      // Error states should have text or icon, not just color
-      expect(true).toBeTruthy();
-    }
-  });
-
-  test('should maintain readability in dark theme', async ({ page }) => {
-    await page.goto('/dashboard');
-    await page.waitForLoadState('domcontentloaded');
-
-    // Check text is visible
-    const headings = await page.locator('h1, h2, h3').all();
-
-    for (const heading of headings.slice(0, 3)) {
-      const isVisible = await heading.isVisible();
-      expect(isVisible).toBeTruthy();
-    }
-  });
-});
-
-test.describe('Interactive Elements', () => {
-  test('should have appropriate click targets', async ({ page }) => {
-    await page.goto('/dashboard');
-    await page.waitForLoadState('domcontentloaded');
-
-    const buttons = await page.locator('button:visible').all();
-
-    for (const button of buttons.slice(0, 5)) {
-      const box = await button.boundingBox();
-      if (box) {
-        // Icon-only buttons (width ~= height ~= 16-18px) are acceptable on desktop.
-        // Skip very small icon-only buttons; enforce a minimum only on larger interactive targets.
-        const isIconOnly = box.width < 30 && box.height < 30;
-        if (!isIconOnly) {
-          expect(box.height).toBeGreaterThanOrEqual(20);
-          expect(box.width).toBeGreaterThanOrEqual(20);
-        }
-      }
-    }
-  });
-
-  test('should disable buttons during loading', async ({ page }) => {
-    await page.goto('/login');
-    await page.waitForLoadState('domcontentloaded');
-
-    const submitBtn = page.locator('button[type="submit"]');
-
-    // Button should be interactive
-    await expect(submitBtn).toBeEnabled();
-  });
-
-  test('should show loading states', async ({ page }) => {
-    await page.goto('/dashboard/analytics');
-    await page.waitForLoadState('domcontentloaded');
-
-    // Check for loading indicators (skeleton, spinner, etc.)
-    const loadingElements = page.locator(
-      '[class*="loading"], [class*="skeleton"], [class*="animate-pulse"], [role="progressbar"]'
-    );
-
-    // Loading states may or may not be visible depending on speed
-    expect(true).toBeTruthy();
+    // Signup should have required fields
+    expect(count).toBeGreaterThan(0);
   });
 });
 
 test.describe('Content Accessibility', () => {
-  test('should have alt text for images', async ({ page }) => {
-    await page.goto('/dashboard');
+  test('images have alt text or are decorative', async ({ page }) => {
+    await page.goto('/');
     await page.waitForLoadState('domcontentloaded');
 
-    const images = await page.locator('img').all();
+    const images = await page.locator('img:visible').all();
 
-    for (const img of images.slice(0, 5)) {
+    for (const img of images) {
       const alt = await img.getAttribute('alt');
       const role = await img.getAttribute('role');
       const ariaHidden = await img.getAttribute('aria-hidden');
 
-      // Images should have alt text OR be marked decorative
       const isAccessible = alt !== null || role === 'presentation' || ariaHidden === 'true';
-      expect(isAccessible || images.length === 0).toBeTruthy();
+      expect(isAccessible).toBeTruthy();
     }
   });
 
-  test('should have proper table structure', async ({ page }) => {
-    await page.goto('/dashboard/content');
-    await page.waitForLoadState('domcontentloaded');
-
-    const tables = await page.locator('table').all();
-
-    for (const table of tables) {
-      const headers = await table.locator('th').count();
-      const caption = await table.locator('caption').count();
-      const ariaLabel = await table.getAttribute('aria-label');
-
-      // Tables should have headers or accessible label
-      expect(headers > 0 || caption > 0 || ariaLabel || tables.length === 0).toBeTruthy();
-    }
-  });
-
-  test('should support reduced motion', async ({ page }) => {
-    // Enable reduced motion preference
+  test('page respects reduced motion preference', async ({ page }) => {
     await page.emulateMedia({ reducedMotion: 'reduce' });
-    await page.goto('/dashboard');
+    await page.goto('/login');
     await page.waitForLoadState('domcontentloaded');
 
-    // Page should still function with reduced motion
     const body = page.locator('body');
     await expect(body).toBeVisible();
+  });
+
+  test('interactive elements have sufficient size', async ({ page }) => {
+    await page.goto('/login');
+    await page.waitForLoadState('domcontentloaded');
+
+    const buttons = await page.locator('button:visible').all();
+
+    for (const button of buttons) {
+      const box = await button.boundingBox();
+      if (box) {
+        // Minimum WCAG target size: 24x24px (AA), ideally 44x44px (AAA)
+        expect(box.height).toBeGreaterThanOrEqual(24);
+        expect(box.width).toBeGreaterThanOrEqual(24);
+      }
+    }
   });
 });

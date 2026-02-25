@@ -8,12 +8,15 @@
  */
 
 import { useState, useCallback, useEffect } from 'react';
+import dynamic from 'next/dynamic';
 import { useSearchParams } from 'next/navigation';
 import { useCalendar, SchedulePostOptions } from '@/hooks/useCalendar';
 import { useUser } from '@/hooks/use-user';
-import { WeekView } from '@/components/calendar/WeekView';
-import { MonthView } from '@/components/calendar/MonthView';
-import { PostDetailModal } from '@/components/calendar/PostDetailModal';
+
+// Dynamic imports for heavy calendar components
+const WeekView = dynamic(() => import('@/components/calendar/WeekView').then(m => ({ default: m.WeekView })), { ssr: false });
+const MonthView = dynamic(() => import('@/components/calendar/MonthView').then(m => ({ default: m.MonthView })), { ssr: false });
+const PostDetailModal = dynamic(() => import('@/components/calendar/PostDetailModal').then(m => ({ default: m.PostDetailModal })), { ssr: false });
 import { PageHeader } from '@/components/dashboard/page-header';
 import { DashboardEmptyState } from '@/components/dashboard/empty-state';
 import { Button } from '@/components/ui/button';

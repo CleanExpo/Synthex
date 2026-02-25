@@ -118,6 +118,7 @@
     "@tiptap/starter-kit": "^2.1.0",
     "@upstash/redis": "^1.35.3",
     "ai": "^6.0.37",
+    "autoprefixer": "^10.4.16",
     "axios": "^1.11.0",
     "bcryptjs": "^3.0.2",
     "bullmq": "^5.67.2",
@@ -144,6 +145,7 @@
     "nodemailer": "^7.0.12",
     "openai": "^4.104.0",
     "pg": "^8.18.0",
+    "postcss": "^8.4.33",
     "react": "^18.2.0",
     "react-day-picker": "^8.10.0",
     "react-dom": "^18.2.0",
@@ -161,20 +163,19 @@
     "stripe": "^18.4.0",
     "swr": "^2.2.0",
     "tailwind-merge": "^2.2.0",
+    "tailwindcss": "^3.4.0",
+    "tailwindcss-animate": "^1.0.7",
     "twitter-api-v2": "^1.24.0",
     "uuid": "^13.0.0",
     "ws": "^8.14.0",
     "zod": "^3.25.76",
-    "zustand": "^4.4.0",
-    "autoprefixer": "^10.4.16",
-    "postcss": "^8.4.33",
-    "tailwindcss": "^3.4.0",
-    "tailwindcss-animate": "^1.0.7"
+    "zustand": "^4.4.0"
   },
   "prisma": {
     "seed": "node prisma/seed.js"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.11.1",
     "@babel/preset-env": "^7.28.6",
     "@babel/preset-react": "^7.28.5",
     "@hookform/resolvers": "^3.3.0",
@@ -185,7 +186,6 @@
     "@storybook/addon-links": "^10.2.8",
     "@storybook/nextjs": "^10.2.8",
     "@storybook/react": "^10.2.8",
-    "@testing-library/dom": "^10.0.0",
     "@testing-library/dom": "^10.0.0",
     "@testing-library/jest-dom": "^6.1.0",
     "@testing-library/react": "^14.1.0",

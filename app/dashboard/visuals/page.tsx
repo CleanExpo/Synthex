@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import NextImage from 'next/image';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -138,7 +139,7 @@ export default function VisualsPage() {
           {assets.map((asset) => (
             <Card key={asset.id} className="bg-[#0f172a]/80 border border-cyan-500/10 overflow-hidden group hover:border-cyan-500/30 transition-all">
               <div className="aspect-video bg-white/5 relative">
-                <img src={asset.thumbnailUrl || asset.imageUrl} alt={asset.altText || ''} className="w-full h-full object-cover" loading="lazy" />
+                <NextImage src={asset.thumbnailUrl || asset.imageUrl} alt={asset.altText || ''} className="w-full h-full object-cover" fill sizes="(max-width: 768px) 100vw, 33vw" />
                 {asset.qualityScore !== null && asset.qualityScore !== undefined && (
                   <div className="absolute top-2 right-2">
                     <Badge className={`${asset.qualityScore >= 70 ? 'bg-emerald-500/80' : 'bg-amber-500/80'} text-white text-xs`}>

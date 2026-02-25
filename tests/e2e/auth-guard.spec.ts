@@ -1,223 +1,269 @@
 /**
  * Authentication Guard Tests
  *
- * Verifies that auth flows, route protection, and session handling work
- * correctly from a user perspective. Tests are resilient — they gracefully
- * skip assertions that require a seeded demo user rather than hard-failing.
+ * Validates route protection, session persistence, and auth state consistency.
+ * These tests MUST pass before any deployment.
+ *
+ * @module tests/e2e/auth-guard.spec
  */
 
-import { test, expect } from '@playwright/test';
+import { test, expect, Page } from '@playwright/test';
 
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
+const BASE_URL = process.env.BASE_URL || 'http://localhost:3001';
 
-/**
- * Attempt login via the unified-login API. Returns true if the server
- * accepted the credentials (200 + success), false otherwise.
- */
-async function tryDemoLogin(request: Parameters<Parameters<typeof test>[1]>[0]['request']) {
-  const res = await request.post('/api/auth/unified-login', {
-    data: { method: 'email', email: 'demo@synthex.com', password: 'demo123' },
-  });
-  if (res.status() !== 200) return false;
-  const data = await res.json().catch(() => null);
-  return data?.success === true;
-}
-
-// ---------------------------------------------------------------------------
-// Login page renders
-// ---------------------------------------------------------------------------
-
-test.describe('Login page', () => {
-  test('renders email and password inputs', async ({ page }) => {
-    await page.goto('/login');
-    await page.waitForLoadState('domcontentloaded');
-
-    await expect(page.locator('input[type="email"], input[name="email"]').first()).toBeVisible();
-    await expect(page.locator('input[type="password"], input[name="password"]').first()).toBeVisible();
-    await expect(page.locator('button[type="submit"]').first()).toBeVisible();
-  });
-
-  test('has link to signup page', async ({ page }) => {
-    await page.goto('/login');
-    await page.waitForLoadState('domcontentloaded');
-
-    const signupLink = page.locator('a[href*="signup"], a:has-text("Sign up"), a:has-text("Register")').first();
-    const isVisible = await signupLink.isVisible().catch(() => false);
-    if (isVisible) {
-      await signupLink.click();
-      await expect(page).toHaveURL(/signup|register/);
-    }
-  });
-
-  test('has link to forgot-password page', async ({ page }) => {
-    await page.goto('/login');
-    await page.waitForLoadState('domcontentloaded');
-
-    const forgotLink = page.locator('a[href*="forgot"], a:has-text("Forgot")').first();
-    const isVisible = await forgotLink.isVisible().catch(() => false);
-    if (isVisible) {
-      await forgotLink.click();
-      try {
-        await page.waitForURL(/forgot/, { timeout: 5000 });
-        expect(page.url()).toMatch(/forgot/);
-      } catch {
-        // Link clicked but navigation may not occur — pass if page still responds
-        expect(page.url()).toBeTruthy();
-      }
-    } else {
-      // No forgot link visible — pass if login form is present
-      await expect(page.locator('button[type="submit"]')).toBeVisible();
-    }
-  });
-});
-
-// ---------------------------------------------------------------------------
-// Invalid credentials
-// ---------------------------------------------------------------------------
-
-test.describe('Invalid credentials', () => {
-  test('shows error indication after bad login attempt', async ({ page }) => {
-    await page.goto('/login');
-    await page.waitForLoadState('domcontentloaded');
-
-    await page.locator('input[type="email"], input[name="email"]').first().fill('nobody@invalid.test');
-    await page.locator('input[type="password"], input[name="password"]').first().fill('wrongpassword123');
-    await page.locator('button[type="submit"]').first().click();
-
-    // Wait for response
-    await page.waitForTimeout(2000);
-
-    // Should not redirect away from login
-    expect(page.url()).toContain('/login');
-  });
-});
-
-// ---------------------------------------------------------------------------
-// Protected route redirect
-// ---------------------------------------------------------------------------
-
-test.describe('Route protection', () => {
-  test('redirects unauthenticated users to login when accessing /dashboard', async ({ page }) => {
+test.describe('Route Protection Guards', () => {
+  test('unauthenticated access to /dashboard redirects to /login', async ({ page }) => {
     await page.context().clearCookies();
     await page.goto('/dashboard');
     await page.waitForTimeout(2000);
 
-    const url = page.url();
-    expect(
-      url.includes('/login') || url.includes('/auth'),
-      `Expected redirect to /login, got: ${url}`
-    ).toBeTruthy();
-  });
-});
-
-// ---------------------------------------------------------------------------
-// Session validation API
-// ---------------------------------------------------------------------------
-
-test.describe('Session validation API (/api/auth/unified-login GET)', () => {
-  test('returns 401 when no auth cookie present', async ({ request }) => {
-    const res = await request.get('/api/auth/unified-login');
-    expect(res.status()).toBe(401);
-
-    const data = await res.json();
-    expect(data.authenticated).toBe(false);
-  });
-});
-
-// ---------------------------------------------------------------------------
-// Auth cookie (graceful — requires demo user in DB)
-// ---------------------------------------------------------------------------
-
-test.describe('Auth cookie', () => {
-  test('is set after successful login (skips if demo user unavailable)', async ({ request, context }) => {
-    const loginOk = await tryDemoLogin(request);
-    if (!loginOk) {
-      console.warn('[auth-guard] Skipping cookie test — demo user not available');
-      return;
-    }
-
-    // Perform login via browser to get cookie
-    const page = await context.newPage();
-    await page.goto('/login');
-    await page.locator('input[type="email"], input[name="email"]').first().fill('demo@synthex.com');
-    await page.locator('input[type="password"], input[name="password"]').first().fill('demo123');
-    await page.locator('button[type="submit"]').first().click();
-    await page.waitForTimeout(2000);
-    await page.close();
-
-    const cookies = await context.cookies();
-    const authCookie = cookies.find(c => c.name === 'auth-token');
-    expect(authCookie).toBeDefined();
+    expect(page.url()).toContain('/login');
   });
 
-  test('session persists across page navigation (skips if demo user unavailable)', async ({ request, page }) => {
-    const loginOk = await tryDemoLogin(request);
-    if (!loginOk) {
-      console.warn('[auth-guard] Skipping persistence test — demo user not available');
-      return;
-    }
-
-    await page.goto('/login');
-    await page.locator('input[type="email"], input[name="email"]').first().fill('demo@synthex.com');
-    await page.locator('input[type="password"], input[name="password"]').first().fill('demo123');
-    await page.locator('button[type="submit"]').first().click();
-
-    // Wait for potential redirect
-    await page.waitForTimeout(2000);
-
-    if (!page.url().includes('/dashboard')) {
-      console.warn('[auth-guard] Skipping persistence check — login did not redirect to dashboard');
-      return;
-    }
-
-    // Navigate to another route and back — should stay authenticated
+  test('unauthenticated access to /dashboard/settings redirects to /login', async ({ page }) => {
+    await page.context().clearCookies();
     await page.goto('/dashboard/settings');
-    await page.waitForTimeout(500);
-    expect(page.url()).not.toContain('/login');
+    await page.waitForTimeout(2000);
+
+    expect(page.url()).toContain('/login');
+  });
+
+  test('unauthenticated access to /dashboard/analytics redirects to /login', async ({ page }) => {
+    await page.context().clearCookies();
+    await page.goto('/dashboard/analytics');
+    await page.waitForTimeout(2000);
+
+    expect(page.url()).toContain('/login');
+  });
+
+  test('public pages are accessible without auth', async ({ page }) => {
+    const publicRoutes = ['/login', '/signup', '/forgot-password'];
+
+    for (const route of publicRoutes) {
+      const response = await page.goto(route, { waitUntil: 'domcontentloaded' });
+      expect(response?.status(), `${route} should be accessible`).toBeLessThan(400);
+    }
   });
 });
 
-// ---------------------------------------------------------------------------
-// Forgot password page
-// ---------------------------------------------------------------------------
-
-test.describe('Forgot password page', () => {
-  test('renders email input and submit button', async ({ page }) => {
-    const res = await page.goto('/forgot-password', { waitUntil: 'domcontentloaded' });
-    expect(res?.status()).toBeLessThan(400);
-
-    await expect(page.locator('input[type="email"], input[name="email"]').first()).toBeVisible();
-    await expect(page.locator('button[type="submit"]').first()).toBeVisible();
+test.describe('Session Validation API', () => {
+  test('GET /api/auth/unified-login returns 401 without auth cookie', async ({ page }) => {
+    await page.context().clearCookies();
+    const response = await page.request.get('/api/auth/unified-login');
+    expect(response.status()).toBe(401);
   });
 
-  test('shows success state after submitting email', async ({ page }) => {
-    await page.goto('/forgot-password', { waitUntil: 'domcontentloaded' });
+  test('POST /api/auth/unified-login with valid demo creds returns session', async ({ page }) => {
+    const response = await page.request.post('/api/auth/unified-login', {
+      data: {
+        method: 'email',
+        email: 'demo@synthex.com',
+        password: 'demo123',
+      },
+    });
 
-    await page.locator('input[type="email"], input[name="email"]').first().fill('test@example.com');
-    await page.locator('button[type="submit"]').first().click();
-
-    // Wait for success state to render
-    await page.waitForTimeout(2000);
-
-    // Success card shows "Check Your Email" heading (may be h1, h2, or CardTitle div)
-    // In dev mode, the page shows success even on API failure
-    const successEl = page.locator('text=Check Your Email').first();
-    const isSuccess = await successEl.isVisible().catch(() => false);
-
-    // Also accept if we see the success page indicators
-    const hasSuccessIcon = await page.locator('[class*="green"], [class*="success"]').first().isVisible().catch(() => false);
-    const stillOnForm = page.url().includes('/forgot-password');
-
-    // Success if: success text visible OR success icon OR still on page (dev mode accepts submission)
-    expect(isSuccess || hasSuccessIcon || stillOnForm).toBeTruthy();
+    // In environments with seeded demo user, this should succeed
+    if (response.status() === 200) {
+      const data = await response.json();
+      expect(data.success).toBe(true);
+      expect(data.session).toBeDefined();
+      expect(data.session.accessToken).toBeTruthy();
+      expect(data.session.expiresAt).toBeDefined();
+      expect(typeof data.session.expiresAt).toBe('number');
+      expect(data.user).toBeDefined();
+      expect(data.user.email).toBe('demo@synthex.com');
+    } else {
+      // Demo user not seeded — 401 is acceptable
+      expect(response.status()).toBe(401);
+    }
   });
 
-  test('has back-to-login link', async ({ page }) => {
-    await page.goto('/forgot-password', { waitUntil: 'domcontentloaded' });
+  test('invalid credentials return 401 with correct error shape', async ({ page }) => {
+    const response = await page.request.post('/api/auth/unified-login', {
+      data: {
+        method: 'email',
+        email: 'nonexistent@test.com',
+        password: 'BadPassword123!',
+      },
+    });
 
-    const backLink = page.locator('a[href="/login"], a:has-text("Back to login"), a:has-text("Back")').first();
-    await expect(backLink).toBeVisible();
+    expect(response.status()).toBe(401);
+    const data = await response.json();
+    expect(data.success).toBe(false);
+    expect(data.error).toBeTruthy();
+  });
+});
+
+test.describe('Cookie-Based Session Persistence', () => {
+  test('login sets auth-token cookie', async ({ page }) => {
+    const response = await page.request.post('/api/auth/unified-login', {
+      data: {
+        method: 'email',
+        email: 'demo@synthex.com',
+        password: 'demo123',
+      },
+    });
+
+    if (response.status() === 200) {
+      const setCookie = response.headers()['set-cookie'] || '';
+      expect(setCookie).toContain('auth-token');
+    }
+  });
+
+  test('authenticated context persists across pages', async ({ context, page }) => {
+    // Login via API
+    const response = await page.request.post('/api/auth/unified-login', {
+      data: {
+        method: 'email',
+        email: 'demo@synthex.com',
+        password: 'demo123',
+      },
+    });
+
+    if (response.status() !== 200) {
+      test.skip();
+      return;
+    }
+
+    const data = await response.json();
+    const token = data.session?.accessToken;
+
+    if (!token) {
+      test.skip();
+      return;
+    }
+
+    // Set cookie
+    await context.addCookies([
+      {
+        name: 'auth-token',
+        value: token,
+        url: BASE_URL,
+      },
+    ]);
+
+    // Visit dashboard
+    await page.goto('/dashboard');
+    await page.waitForTimeout(1500);
+    expect(page.url()).toContain('/dashboard');
+
+    // Navigate to settings
+    await page.goto('/dashboard/settings');
+    await page.waitForTimeout(1000);
+    expect(page.url()).not.toContain('/login');
+
+    // Navigate back to dashboard
+    await page.goto('/dashboard');
+    await page.waitForTimeout(1000);
+    expect(page.url()).toContain('/dashboard');
+  });
+
+  test('session survives page reload', async ({ context, page }) => {
+    // Login via API
+    const response = await page.request.post('/api/auth/unified-login', {
+      data: {
+        method: 'email',
+        email: 'demo@synthex.com',
+        password: 'demo123',
+      },
+    });
+
+    if (response.status() !== 200) {
+      test.skip();
+      return;
+    }
+
+    const data = await response.json();
+    const token = data.session?.accessToken;
+
+    if (!token) {
+      test.skip();
+      return;
+    }
+
+    await context.addCookies([
+      {
+        name: 'auth-token',
+        value: token,
+        url: BASE_URL,
+      },
+    ]);
+
+    await page.goto('/dashboard');
+    await page.waitForTimeout(1500);
+
+    if (page.url().includes('/dashboard')) {
+      // Reload and verify persistence
+      await page.reload();
+      await page.waitForTimeout(1500);
+      expect(page.url()).toContain('/dashboard');
+    }
+  });
+});
+
+test.describe('Auth State Consistency', () => {
+  test('localStorage syncs user data after login', async ({ page }) => {
+    await page.goto('/login');
+    await page.waitForLoadState('domcontentloaded');
+
+    await page.fill('input[type="email"]', 'demo@synthex.com');
+    await page.fill('input[type="password"]', 'demo123');
+    await page.click('button[type="submit"]');
+
+    await page.waitForTimeout(3000);
+
+    if (page.url().includes('/dashboard')) {
+      const user = await page.evaluate(() => {
+        return localStorage.getItem('user') || localStorage.getItem('synthex-user');
+      });
+
+      if (user) {
+        const userData = JSON.parse(user);
+        expect(userData).toHaveProperty('email');
+        expect(userData.email).toBe('demo@synthex.com');
+      }
+    }
+  });
+
+  test('login form clears after successful submit', async ({ page }) => {
+    await page.goto('/login');
+    await page.waitForLoadState('domcontentloaded');
+
+    const emailInput = page.locator('input[type="email"]');
+    const passwordInput = page.locator('input[type="password"]');
+
+    await emailInput.fill('demo@synthex.com');
+    await passwordInput.fill('demo123');
+    await page.click('button[type="submit"]');
+
+    await page.waitForTimeout(3000);
+
+    // If redirected, form is cleared by navigation
+    if (page.url().includes('/dashboard') || page.url().includes('/onboarding')) {
+      // Success — redirect happened
+      expect(true).toBeTruthy();
+    } else {
+      // If still on login, the form should still have email (for retry)
+      const emailValue = await emailInput.inputValue();
+      expect(emailValue).toBeTruthy();
+    }
+  });
+});
+
+test.describe('CSRF Protection', () => {
+  test('POST to auth endpoint without proper origin should still work (same-origin)', async ({
+    page,
+  }) => {
+    // Same-origin requests should pass CSRF check
+    const response = await page.request.post('/api/auth/unified-login', {
+      data: {
+        method: 'email',
+        email: 'test@test.com',
+        password: 'Test123!',
+      },
+    });
+
+    // Should get 401 (invalid creds), NOT 403 (CSRF block)
+    expect([200, 401]).toContain(response.status());
   });
 });

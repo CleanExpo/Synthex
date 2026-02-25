@@ -72,19 +72,13 @@ export class LoginPage {
   }
 
   get errorMessage() {
-    // Targets Sonner toast notifications; excludes Next.js route announcer ([role="alert"])
-    return this.page.locator('[data-sonner-toast], .error-message, [data-error="true"]');
+    return this.page.locator('[role="alert"], .error-message, [data-error]');
   }
 
   // Actions
   async goto() {
-    try {
-      await this.page.goto('/login', { timeout: 30000 });
-      await this.page.waitForLoadState('domcontentloaded');
-    } catch (e) {
-      // Server may be slow to respond on cold start — retry once
-      await this.page.goto('/login', { timeout: 30000, waitUntil: 'domcontentloaded' });
-    }
+    await this.page.goto('/login');
+    await this.page.waitForLoadState('domcontentloaded');
   }
 
   async login(email: string, password: string) {
@@ -98,27 +92,9 @@ export class LoginPage {
   }
 
   async expectError(messagePattern?: string | RegExp) {
-    // Wait for the form to finish submitting (submit button leaves loading/disabled state).
-    // The button may stay disabled if there's a validation error or the form is processing.
-    try {
-      await expect(this.submitButton).not.toBeDisabled({ timeout: 5000 });
-    } catch {
-      // Button staying disabled after submit is acceptable (e.g., during validation)
-    }
-
-    // An error is indicated by either a visible toast OR remaining on the login page
-    // (Sonner toasts are ephemeral and may be missed by polling; URL check is authoritative)
-    const url = this.page.url();
-    const hasToast = await this.errorMessage.first().isVisible().catch(() => false);
-    const onLoginPage = url.includes('/login');
-
-    expect(
-      hasToast || onLoginPage,
-      `Expected error state (Sonner toast or URL on /login), got: ${url}`
-    ).toBeTruthy();
-
-    if (messagePattern && hasToast) {
-      await expect(this.errorMessage.first()).toContainText(messagePattern);
+    await expect(this.errorMessage).toBeVisible();
+    if (messagePattern) {
+      await expect(this.errorMessage).toContainText(messagePattern);
     }
   }
 }
@@ -136,12 +112,11 @@ export class SignupPage {
   }
 
   get passwordInput() {
-    // Target by id to avoid matching the confirmPassword field (both have type="password", no name attr)
-    return this.page.locator('input#password, input[name="password"]');
+    return this.page.locator('input[type="password"]:not([name*="confirm"]), input[name="password"]');
   }
 
   get confirmPasswordInput() {
-    return this.page.locator('input#confirmPassword, input[name*="confirm"], input[placeholder*="confirm" i]');
+    return this.page.locator('input[name*="confirm"], input[placeholder*="confirm" i]');
   }
 
   get submitButton() {
@@ -157,8 +132,7 @@ export class SignupPage {
   }
 
   get errorMessage() {
-    // Targets Sonner toast notifications; excludes Next.js route announcer ([role="alert"])
-    return this.page.locator('[data-sonner-toast], .error-message, [data-error="true"]');
+    return this.page.locator('[role="alert"], .error-message, [data-error]');
   }
 
   get successMessage() {
@@ -228,7 +202,7 @@ export class ForgotPasswordPage {
  * Set auth cookie to bypass login for authenticated tests
  */
 export async function setAuthCookie(context: BrowserContext, token: string) {
-  const baseURL = process.env.BASE_URL || 'http://localhost:3002';
+  const baseURL = process.env.BASE_URL || 'http://localhost:3001';
   await context.addCookies([
     {
       name: 'auth-token',
@@ -239,38 +213,64 @@ export async function setAuthCookie(context: BrowserContext, token: string) {
 }
 
 /**
- * Get auth token via API login
+ * Get auth token via unified-login API
  */
 export async function getAuthToken(
-  request: typeof base extends { request: infer R } ? R : never,
+  request: { post: (url: string, options?: Record<string, unknown>) => Promise<{ status: () => number; json: () => Promise<Record<string, unknown>> }> },
   email: string,
   password: string
 ): Promise<string | null> {
-  const response = await request.post('/api/auth/login', {
-    data: { email, password },
+  const response = await request.post('/api/auth/unified-login', {
+    data: { method: 'email', email, password },
   });
 
   if (response.status() === 200) {
-    const data = await response.json();
-    return data.token || data.session?.access_token || null;
+    const data = await response.json() as { session?: { accessToken?: string } };
+    return data.session?.accessToken || null;
   }
   return null;
 }
 
 /**
- * Create authenticated context fixture.
- *
- * The middleware trusts any non-empty `auth-token` cookie — no API call required.
- * Setting this cookie allows tests to access /dashboard/* without a real Supabase session.
- * Dashboard pages will call their own APIs; those that require a session will show
- * error/empty states, which the test assertions handle defensively.
+ * Create authenticated context fixture using unified-login
  */
 export async function createAuthenticatedContext(
   context: BrowserContext,
-  _page: Page
+  page: Page
 ): Promise<boolean> {
-  await setAuthCookie(context, 'test-e2e-token');
-  return true;
+  // Use the primary unified-login endpoint
+  const response = await page.request.post('/api/auth/unified-login', {
+    data: {
+      method: 'email',
+      email: TEST_USERS.demo.email,
+      password: TEST_USERS.demo.password,
+    },
+  });
+
+  if (response.status() === 200) {
+    const data = await response.json();
+    const token = data.session?.accessToken;
+    if (token) {
+      await setAuthCookie(context, token);
+      return true;
+    }
+  }
+
+  // Fallback: try dev-login for development environments
+  const devResponse = await page.request.post('/api/auth/dev-login', {
+    data: { email: TEST_USERS.demo.email, password: TEST_USERS.demo.password },
+  });
+
+  if (devResponse.status() === 200) {
+    const data = await devResponse.json();
+    const token = data.token || data.session?.access_token;
+    if (token) {
+      await setAuthCookie(context, token);
+      return true;
+    }
+  }
+
+  return false;
 }
 
 // =============================================================================

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useMemo, useCallback } from 'react';
+import dynamic from 'next/dynamic';
 import type { DateRange } from 'react-day-picker';
 import { AnalyticsSkeleton } from '@/components/skeletons';
 import { APIErrorCard } from '@/components/error-states';
@@ -15,14 +16,16 @@ import {
   transformTopContent,
   AnalyticsHeader,
   AnalyticsStats,
-  EngagementChart,
-  PlatformChart,
-  PerformanceChart,
-  GrowthChart,
-  TopPosts,
-  MetricsTable,
   PostDetailSheet,
 } from '@/components/analytics';
+
+// Dynamic imports for heavy chart components (Recharts ~80KB)
+const EngagementChart = dynamic(() => import('@/components/analytics').then(m => ({ default: m.EngagementChart })), { ssr: false });
+const PlatformChart = dynamic(() => import('@/components/analytics').then(m => ({ default: m.PlatformChart })), { ssr: false });
+const PerformanceChart = dynamic(() => import('@/components/analytics').then(m => ({ default: m.PerformanceChart })), { ssr: false });
+const GrowthChart = dynamic(() => import('@/components/analytics').then(m => ({ default: m.GrowthChart })), { ssr: false });
+const TopPosts = dynamic(() => import('@/components/analytics').then(m => ({ default: m.TopPosts })), { ssr: false });
+const MetricsTable = dynamic(() => import('@/components/analytics').then(m => ({ default: m.MetricsTable })), { ssr: false });
 
 export default function AnalyticsPage() {
   const [timeRange, setTimeRange] = useState('30d');
