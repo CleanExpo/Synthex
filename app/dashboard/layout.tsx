@@ -69,53 +69,127 @@ import { cn } from '@/lib/utils';
 import { WebSocketProvider } from '@/components/WebSocketProvider';
 import { BusinessSwitcher } from '@/components/business';
 import { useUser } from '@/hooks/use-user';
+import { SidebarGroup, type SidebarItem } from '@/components/dashboard/SidebarGroup';
 
-const sidebarItems = [
-  { icon: Home, label: 'Dashboard', href: '/dashboard' },
-  { icon: Grid, label: 'Unified View', href: '/dashboard/unified' },
-  { icon: Users, label: 'Audience', href: '/dashboard/audience' },
-  { icon: TrendingUp, label: 'Viral Patterns', href: '/dashboard/patterns' },
-  { icon: Brain, label: 'Personas', href: '/dashboard/personas' },
-  { icon: MessageSquare, label: 'AI Chat', href: '/dashboard/ai-chat' },
-  { icon: Image, label: 'AI Images', href: '/dashboard/ai-images' },
-  { icon: FileText, label: 'Content', href: '/dashboard/content' },
-  { icon: Sparkles, label: 'Optimizer', href: '/dashboard/content/optimize' },
-  { icon: BarChart3, label: 'Performance', href: '/dashboard/content/performance' },
-  { icon: Layers, label: 'Multi-format', href: '/dashboard/content/multi-format' },
-  { icon: Repeat, label: 'Repurposer', href: '/dashboard/content/repurpose' },
-  { icon: Send, label: 'Cross-Post', href: '/dashboard/content/cross-post' },
-  { icon: Palette, label: 'Sandbox', href: '/dashboard/sandbox' },
-  { icon: Calendar, label: 'Schedule', href: '/dashboard/schedule' },
-  { icon: Calendar, label: 'Calendar', href: '/dashboard/calendar' },
-  { icon: ListTodo, label: 'Tasks', href: '/dashboard/tasks' },
-  { icon: BarChart3, label: 'Analytics', href: '/dashboard/analytics' },
-  { icon: Lightbulb, label: 'Predictions', href: '/dashboard/predictions' },
-  { icon: File, label: 'Reports', href: '/dashboard/reports' },
-  { icon: Layout, label: 'Report Builder', href: '/dashboard/reports/builder' },
-  { icon: Target, label: 'Benchmarks', href: '/dashboard/analytics/benchmarks' },
-  { icon: DollarSign, label: 'Revenue', href: '/dashboard/revenue' },
-  { icon: Calculator, label: 'ROI', href: '/dashboard/roi' },
-  { icon: Briefcase, label: 'Sponsors', href: '/dashboard/sponsors' },
-  { icon: LinkIcon, label: 'Affiliates', href: '/dashboard/affiliates' },
-  { icon: Beaker, label: 'Experiments', href: '/dashboard/experiments' },
-  { icon: Brain, label: 'Psychology', href: '/dashboard/psychology' },
-  { icon: Target, label: 'Competitors', href: '/dashboard/competitors' },
-  { icon: Bell, label: 'Listening', href: '/dashboard/listening' },
-  { icon: Link2, label: 'Link in Bio', href: '/dashboard/bio' },
-  { icon: Video, label: 'Video', href: '/dashboard/video' },
-  { icon: Search, label: 'SEO Tools', href: '/dashboard/seo' },
-  { icon: Globe, label: 'GEO Analysis', href: '/dashboard/geo' },
-  { icon: Users, label: 'Authors', href: '/dashboard/authors' },
-  { icon: Database, label: 'Research', href: '/dashboard/research' },
-  { icon: Image, label: 'Visuals', href: '/dashboard/visuals' },
-  { icon: Map, label: 'Local SEO', href: '/dashboard/local' },
-  { icon: Users, label: 'Team', href: '/dashboard/team' },
-  { icon: Zap, label: 'Integrations', href: '/dashboard/integrations' },
-  { icon: Link2, label: 'Webhooks', href: '/dashboard/webhooks' },
-  { icon: GitPullRequest, label: 'Approvals', href: '/dashboard/approvals' },
-  { icon: MessageSquare, label: 'Collaboration', href: '/dashboard/collaboration' },
-  { icon: Shield, label: 'Roles', href: '/dashboard/roles' },
-  { icon: Settings, label: 'Settings', href: '/dashboard/settings' },
+// ============================================================================
+// SIDEBAR GROUPS - Organized by semantic categories
+// ============================================================================
+
+const sidebarGroups: Array<{
+  id: string;
+  icon: React.ComponentType<{ className?: string }>;
+  label: string;
+  items: SidebarItem[];
+  defaultOpen?: boolean;
+}> = [
+  {
+    id: 'main',
+    icon: Home,
+    label: 'MAIN',
+    defaultOpen: true,
+    items: [
+      { icon: Home, label: 'Dashboard', href: '/dashboard' },
+      { icon: Grid, label: 'Unified View', href: '/dashboard/unified' },
+    ],
+  },
+  {
+    id: 'content-ai',
+    icon: Sparkles,
+    label: 'CONTENT & AI',
+    items: [
+      { icon: FileText, label: 'Content', href: '/dashboard/content' },
+      { icon: MessageSquare, label: 'AI Chat', href: '/dashboard/ai-chat' },
+      { icon: Image, label: 'AI Images', href: '/dashboard/ai-images' },
+      { icon: Sparkles, label: 'Optimizer', href: '/dashboard/content/optimize' },
+      { icon: Layers, label: 'Multi-format', href: '/dashboard/content/multi-format' },
+      { icon: Repeat, label: 'Repurposer', href: '/dashboard/content/repurpose' },
+      { icon: Send, label: 'Cross-Post', href: '/dashboard/content/cross-post' },
+      { icon: Palette, label: 'Sandbox', href: '/dashboard/sandbox' },
+    ],
+  },
+  {
+    id: 'planning',
+    icon: Calendar,
+    label: 'PLANNING',
+    items: [
+      { icon: Calendar, label: 'Calendar', href: '/dashboard/calendar' },
+      { icon: Calendar, label: 'Schedule', href: '/dashboard/schedule' },
+      { icon: ListTodo, label: 'Tasks', href: '/dashboard/tasks' },
+    ],
+  },
+  {
+    id: 'analytics',
+    icon: BarChart3,
+    label: 'ANALYTICS',
+    items: [
+      { icon: BarChart3, label: 'Analytics', href: '/dashboard/analytics' },
+      { icon: Lightbulb, label: 'Predictions', href: '/dashboard/predictions' },
+      { icon: Target, label: 'Benchmarks', href: '/dashboard/analytics/benchmarks' },
+      { icon: File, label: 'Reports', href: '/dashboard/reports' },
+      { icon: Layout, label: 'Report Builder', href: '/dashboard/reports/builder' },
+    ],
+  },
+  {
+    id: 'monetization',
+    icon: DollarSign,
+    label: 'MONETIZATION',
+    items: [
+      { icon: DollarSign, label: 'Revenue', href: '/dashboard/revenue' },
+      { icon: Calculator, label: 'ROI', href: '/dashboard/roi' },
+      { icon: Briefcase, label: 'Sponsors', href: '/dashboard/sponsors' },
+      { icon: LinkIcon, label: 'Affiliates', href: '/dashboard/affiliates' },
+    ],
+  },
+  {
+    id: 'business-intel',
+    icon: Brain,
+    label: 'BUSINESS INTEL',
+    items: [
+      { icon: Users, label: 'Audience', href: '/dashboard/audience' },
+      { icon: TrendingUp, label: 'Viral Patterns', href: '/dashboard/patterns' },
+      { icon: Target, label: 'Competitors', href: '/dashboard/competitors' },
+      { icon: Bell, label: 'Listening', href: '/dashboard/listening' },
+      { icon: Brain, label: 'Psychology', href: '/dashboard/psychology' },
+      { icon: Beaker, label: 'Experiments', href: '/dashboard/experiments' },
+    ],
+  },
+  {
+    id: 'seo-research',
+    icon: Search,
+    label: 'SEO & RESEARCH',
+    items: [
+      { icon: Search, label: 'SEO Tools', href: '/dashboard/seo' },
+      { icon: Globe, label: 'GEO Analysis', href: '/dashboard/geo' },
+      { icon: Map, label: 'Local SEO', href: '/dashboard/local' },
+      { icon: Users, label: 'Authors', href: '/dashboard/authors' },
+      { icon: Database, label: 'Research', href: '/dashboard/research' },
+      { icon: Link2, label: 'Link in Bio', href: '/dashboard/bio' },
+    ],
+  },
+  {
+    id: 'media',
+    icon: Video,
+    label: 'MEDIA',
+    items: [
+      { icon: Video, label: 'Video', href: '/dashboard/video' },
+      { icon: Image, label: 'Visuals', href: '/dashboard/visuals' },
+      { icon: Brain, label: 'Personas', href: '/dashboard/personas' },
+    ],
+  },
+  {
+    id: 'team-admin',
+    icon: Shield,
+    label: 'TEAM & ADMIN',
+    items: [
+      { icon: Users, label: 'Team', href: '/dashboard/team' },
+      { icon: Shield, label: 'Roles', href: '/dashboard/roles' },
+      { icon: MessageSquare, label: 'Collaboration', href: '/dashboard/collaboration' },
+      { icon: Zap, label: 'Integrations', href: '/dashboard/integrations' },
+      { icon: Link2, label: 'Webhooks', href: '/dashboard/webhooks' },
+      { icon: GitPullRequest, label: 'Approvals', href: '/dashboard/approvals' },
+      { icon: Settings, label: 'Settings', href: '/dashboard/settings' },
+    ],
+  },
 ];
 
 export default function DashboardLayout({
@@ -129,14 +203,22 @@ export default function DashboardLayout({
   const { user } = useUser();
   useTokenRefresh();
 
-  // Conditionally add Businesses item for multi-business owners
-  const dynamicSidebarItems = user?.isMultiBusinessOwner
+  // Insert Businesses group for multi-business owners (after MAIN group)
+  const dynamicSidebarGroups = user?.isMultiBusinessOwner
     ? [
-        ...sidebarItems.slice(0, 1), // Dashboard
-        { icon: Building, label: 'Businesses', href: '/dashboard/businesses' },
-        ...sidebarItems.slice(1),
+        sidebarGroups[0], // MAIN
+        {
+          id: 'businesses',
+          icon: Building,
+          label: 'BUSINESSES',
+          defaultOpen: false,
+          items: [
+            { icon: Building, label: 'Businesses', href: '/dashboard/businesses' },
+          ],
+        },
+        ...sidebarGroups.slice(1), // All other groups
       ]
-    : sidebarItems;
+    : sidebarGroups;
 
   return (
     <WebSocketProvider autoConnect showConnectionStatus={false}>
@@ -176,25 +258,29 @@ export default function DashboardLayout({
           </div>
 
           {/* Navigation */}
-          <nav className="flex-1 space-y-1 px-2 py-4">
-            {dynamicSidebarItems.map((item) => {
-              const isActive = pathname === item.href;
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={cn(
-                    'flex items-center space-x-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
-                    isActive
-                      ? 'bg-cyan-500/20 text-cyan-400'
-                      : 'text-gray-400 hover:bg-white/5 hover:text-white'
-                  )}
+          <nav className="flex-1 space-y-2 px-2 py-4 overflow-y-auto">
+            {dynamicSidebarGroups.map((group) => (
+              sidebarCollapsed ? (
+                // Collapsed mode: show only group icons as tooltips
+                <div
+                  key={group.id}
+                  className="flex items-center justify-center px-2 py-2 text-gray-400 hover:text-white rounded-lg hover:bg-white/5"
+                  title={group.label}
                 >
-                  <item.icon className="h-5 w-5" />
-                  {!sidebarCollapsed && <span>{item.label}</span>}
-                </Link>
-              );
-            })}
+                  <group.icon className="h-5 w-5" />
+                </div>
+              ) : (
+                // Expanded mode: show full sidebar groups
+                <SidebarGroup
+                  key={group.id}
+                  id={group.id}
+                  icon={group.icon}
+                  label={group.label}
+                  items={group.items}
+                  defaultOpen={group.defaultOpen}
+                />
+              )
+            ))}
           </nav>
 
           {/* Help Section */}

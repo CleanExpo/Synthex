@@ -11,7 +11,6 @@ import { toast } from 'sonner';
 import { AlertTriangle, MessageSquare, RefreshCw, Rocket, Link2, Sparkles, Users } from '@/components/icons';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ErrorBoundary } from '@/components/ui/error-boundary';
 import { glassStyles } from '@/components/ui/index';
@@ -25,10 +24,6 @@ import {
   QuickStats,
   AnimatedCard,
   OverviewTab,
-  AnalyticsTab,
-  AIStudioTab,
-  TeamTab,
-  SchedulerTab,
 } from '@/components/dashboard';
 
 export default function DashboardPage() {
@@ -36,7 +31,6 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<FetchError | null>(null);
   const [isRetrying, setIsRetrying] = useState(false);
-  const [activeTab, setActiveTab] = useState('overview');
   const [showNotifications, setShowNotifications] = useState(false);
 
   const fetchDashboardData = useCallback(async () => {
@@ -259,41 +253,17 @@ export default function DashboardPage() {
             </AnimatedCard>
           )}
 
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 sm:space-y-6">
-            <TabsList className={cn(
-              "grid w-full grid-cols-3 sm:grid-cols-5 lg:w-fit h-auto p-1",
-              glassStyles.base
-            )}>
-              <TabsTrigger value="overview" className="text-xs sm:text-sm py-2 sm:py-2.5 px-2 sm:px-4">Overview</TabsTrigger>
-              <TabsTrigger value="analytics" className="text-xs sm:text-sm py-2 sm:py-2.5 px-2 sm:px-4">Analytics</TabsTrigger>
-              <TabsTrigger value="ai-studio" className="text-xs sm:text-sm py-2 sm:py-2.5 px-2 sm:px-4">
-                <span className="hidden sm:inline">AI Studio</span>
-                <span className="sm:hidden">AI</span>
-              </TabsTrigger>
-              <TabsTrigger value="team" className="text-xs sm:text-sm py-2 sm:py-2.5 px-2 sm:px-4 col-span-1">Team</TabsTrigger>
-              <TabsTrigger value="scheduler" className="text-xs sm:text-sm py-2 sm:py-2.5 px-2 sm:px-4 col-span-2 sm:col-span-1">Scheduler</TabsTrigger>
-            </TabsList>
+          {/* Dashboard Overview — single clean view */}
+          <div className="space-y-4 sm:space-y-6">
+            <OverviewTab stats={stats} />
+          </div>
 
-            <TabsContent value="overview" className="space-y-4 sm:space-y-6">
-              <OverviewTab stats={stats} />
-            </TabsContent>
-
-            <TabsContent value="analytics" className="space-y-4 sm:space-y-6">
-              <AnalyticsTab />
-            </TabsContent>
-
-            <TabsContent value="ai-studio" className="space-y-4 sm:space-y-6">
-              <AIStudioTab />
-            </TabsContent>
-
-            <TabsContent value="team" className="space-y-4 sm:space-y-6">
-              <TeamTab />
-            </TabsContent>
-
-            <TabsContent value="scheduler" className="space-y-4 sm:space-y-6">
-              <SchedulerTab />
-            </TabsContent>
-          </Tabs>
+          {/* Other dashboard features are now accessible from the sidebar navigation:
+              - Analytics: /dashboard/analytics
+              - AI Studio: /dashboard/ai-chat
+              - Team: /dashboard/team
+              - Scheduler: /dashboard/schedule
+          */}
 
         </main>
       </div>

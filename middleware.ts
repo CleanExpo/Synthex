@@ -126,6 +126,29 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/dashboard', request.url));
   }
 
+  // ──────────────────────────────────────────────────────────────────────
+  // Onboarding completion check: redirect to /onboarding if incomplete
+  // ──────────────────────────────────────────────────────────────────────
+  if (session && pathname.startsWith('/dashboard')) {
+    try {
+      // Query profiles table for onboarding_completed flag
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('onboarding_completed')
+        .eq('id', session.user.id)
+        .single();
+
+      // If onboarding is incomplete, redirect to /onboarding
+      if (profile && !profile.onboarding_completed) {
+        return NextResponse.redirect(new URL('/onboarding', request.url));
+      }
+    } catch (error) {
+      // Log error but don't block user — profiles table may not exist
+      // or user may not have a profiles entry yet. Proceed to dashboard.
+      console.warn('[Middleware] Could not check onboarding status:', error);
+    }
+  }
+
   // CSRF protection for mutations
   if (['POST', 'PUT', 'DELETE', 'PATCH'].includes(request.method)) {
     const origin = request.headers.get('origin');
