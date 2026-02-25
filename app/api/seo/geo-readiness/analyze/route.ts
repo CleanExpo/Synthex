@@ -106,9 +106,9 @@ export async function POST(request: NextRequest) {
         multiModalScore: result.score.multiModal,
         authorityScore: result.score.authority,
         technicalScore: result.score.technical,
-        citablePassages: result.citablePassages as unknown as Record<string, unknown>[],
-        recommendations: result.recommendations as unknown as Record<string, unknown>[],
-        schemaIssues: result.schemaIssues as unknown as Record<string, unknown>[],
+        citablePassages: JSON.parse(JSON.stringify(result.citablePassages)),
+        recommendations: JSON.parse(JSON.stringify(result.recommendations)),
+        schemaIssues: JSON.parse(JSON.stringify(result.schemaIssues)),
       },
     });
 

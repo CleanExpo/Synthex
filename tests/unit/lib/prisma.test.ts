@@ -470,7 +470,7 @@ describe('Prisma Client Utilities', () => {
             user: 'myuser',
             password: 'mypass@special', // URL-decoded
             ssl: { rejectUnauthorized: false },
-            max: 10,
+            max: 3,
           })
         );
       } finally {

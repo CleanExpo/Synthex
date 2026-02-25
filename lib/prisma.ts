@@ -120,7 +120,8 @@ const createPrismaClient = (): PrismaClient => {
     globalForPrisma.prismaMetrics.errors++;
   });
 
-  const adapter = new PrismaPg(pool);
+  // PrismaPg adapter type doesn't perfectly match SqlDriverAdapterFactory in Prisma 6 — safe to cast
+  const adapter: any = new PrismaPg(pool);
 
   const client = new PrismaClient({
     adapter,

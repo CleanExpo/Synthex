@@ -103,6 +103,7 @@
     "src/index-legacy.ts.disabled",
     "src/presentation/**/*",
     "packages/**/*",
-    "Synthex/**/*"
+    "Synthex/**/*",
+    "with-turbopack-app/**/*"
   ]
 }

@@ -24,6 +24,7 @@ let puppeteer: any = null;
 let PuppeteerScreenRecorderModule: any = null;
 try {
   puppeteer = await import(/* webpackIgnore: true */ 'puppeteer');
+  // @ts-expect-error — puppeteer-screen-recorder has no type declarations
   PuppeteerScreenRecorderModule = await import(/* webpackIgnore: true */ 'puppeteer-screen-recorder');
 } catch {
   // puppeteer not available in production/serverless
@@ -198,7 +199,7 @@ export class CaptureService {
         break;
 
       case 'scroll':
-        await this.page.evaluate((amount) => {
+        await this.page.evaluate((amount: number) => {
           window.scrollBy(0, amount);
         }, step.value as number || 300);
         break;

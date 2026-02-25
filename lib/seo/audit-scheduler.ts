@@ -319,7 +319,7 @@ export async function storeAuditResult(
       overallScore: result.score,
       technicalScore: result.lighthouse,
       recommendations: result.issues,
-      rawData: result,
+      rawData: JSON.parse(JSON.stringify(result)),
     },
   });
 

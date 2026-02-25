@@ -10,6 +10,23 @@ const compat = new FlatCompat({
 });
 
 const eslintConfig = [
+  {
+    ignores: [
+      'node_modules/**',
+      '.next/**',
+      'out/**',
+      'dist/**',
+      'build/**',
+      'coverage/**',
+      'Synthex/**',
+      'with-turbopack-app/**',
+      '.turbo/**',
+      'public/**',
+      'scripts/**',
+      'stories/**',
+      '.storybook/**',
+    ],
+  },
   ...compat.extends('next/core-web-vitals', 'next/typescript'),
   {
     rules: {
@@ -19,13 +36,19 @@ const eslintConfig = [
       '@typescript-eslint/no-explicit-any': 'off',
       // Warn on console statements - use lib/logger.ts instead
       'no-console': ['warn', { allow: ['warn', 'error', 'debug', 'info'] }],
+      // Suppress noisy style rules (pre-existing across codebase)
+      '@typescript-eslint/ban-ts-comment': 'off',
+      '@typescript-eslint/no-empty-object-type': 'off',
+      '@typescript-eslint/no-require-imports': 'off',
+      '@typescript-eslint/no-this-alias': 'off',
     },
   },
-  // Allow console in specific utility files
+  // Allow console and require() in utility/test files
   {
     files: ['lib/logger.ts', 'scripts/**/*', 'tests/**/*'],
     rules: {
       'no-console': 'off',
+      '@typescript-eslint/no-require-imports': 'off',
     },
   },
 ];

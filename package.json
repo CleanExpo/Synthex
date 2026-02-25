@@ -8,7 +8,7 @@
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build",
-    "lint": "next lint",
+    "lint": "eslint .",
     "test": "jest",
     "type-check": "tsc --noEmit",
     "dev:next": "next dev",
@@ -210,7 +210,7 @@
     "css-loader": "^6.8.1",
     "dotenv": "^17.2.1",
     "dotenv-cli": "^11.0.0",
-    "eslint": "^8.57.1",
+    "eslint": "^9.39.3",
     "eslint-config-next": "^15.5.12",
     "glob": "^11.0.3",
     "husky": "^8.0.0",
