@@ -94,7 +94,7 @@ export function decryptApiKey(encrypted: string): string {
     const decipher = crypto.createDecipheriv(ALGORITHM, key, iv);
     decipher.setAuthTag(authTag);
 
-    let decrypted = decipher.update(ciphertext, 'hex', 'utf8');
+    let decrypted = decipher.update(ciphertext).toString('utf8');
     decrypted += decipher.final('utf8');
 
     return decrypted;

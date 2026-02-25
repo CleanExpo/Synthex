@@ -2808,12 +2808,6 @@ model AffiliateLinkClick {
   @@map("affiliate_link_clicks")
 }
 
-  @@index([linkId])
-  @@index([linkId, createdAt])
-  @@index([createdAt])
-  @@map("affiliate_link_clicks")
-}
-
 // ──────────────────────────────────────────────────────────────────────────
 // Business Vetting & API Credential Models
 // ──────────────────────────────────────────────────────────────────────────

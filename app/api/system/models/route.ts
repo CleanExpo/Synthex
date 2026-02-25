@@ -8,7 +8,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { modelManager, getLatestModelForProvider } from '@/lib/ai/model-manager';
 import { getAllLatestModels } from '@/lib/ai/model-registry';
-import { getAuthUser } from '@/lib/auth/auth-utils';
+import { getAuthUser } from '@/lib/supabase-server';
 
 /**
  * GET - Return current model registry status

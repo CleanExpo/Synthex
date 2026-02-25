@@ -160,10 +160,10 @@ export default function Step5VettingPage() {
                   <span className="text-lg text-gray-400">/100</span>
                 </p>
                 <p className="text-sm text-gray-500 mt-2">
-                  {vettingResult.healthStatus === 'excellent' && '🌟 Excellent presence'}
-                  {vettingResult.healthStatus === 'good' && '✅ Good foundation'}
-                  {vettingResult.healthStatus === 'fair' && '⚠️ Needs improvement'}
-                  {vettingResult.healthStatus === 'poor' && '❌ Significant issues'}
+                  {vettingResult.overallScore >= 80 && '🌟 Excellent presence'}
+                  {vettingResult.overallScore >= 60 && vettingResult.overallScore < 80 && '✅ Good foundation'}
+                  {vettingResult.overallScore >= 40 && vettingResult.overallScore < 60 && '⚠️ Needs improvement'}
+                  {vettingResult.overallScore < 40 && '❌ Significant issues'}
                 </p>
               </div>
               <div className="text-right">
@@ -177,8 +177,13 @@ export default function Step5VettingPage() {
           {/* Category Scores */}
           <div className="grid grid-cols-2 gap-4">
             {HEALTH_CATEGORIES.map((cat) => {
-              const scoreKey = cat.key as keyof HealthCheckResult['scores'];
-              const score = vettingResult.scores[scoreKey];
+              const scoreMap: Record<string, number> = {
+                seo: vettingResult.seoScore,
+                aeo: vettingResult.aeoScore,
+                geo: vettingResult.geoScore,
+                social: vettingResult.socialScore,
+              };
+              const score = scoreMap[cat.key];
               return (
                 <div
                   key={cat.key}
@@ -225,8 +230,8 @@ export default function Step5VettingPage() {
               <div className="mt-4 space-y-2 text-sm text-gray-400">
                 <p>Mobile Ready: {vettingResult.seoDetails.mobileReady ? '✓' : '✗'}</p>
                 <p>Sitemap: {vettingResult.seoDetails.hasSitemap ? '✓' : '✗'}</p>
-                <p>Meta Tags: {vettingResult.seoDetails.metaTagsOptimized ? '✓' : '✗'}</p>
-                <p>Schema Markup: {vettingResult.seoDetails.schemaMarkup ? '✓' : '✗'}</p>
+                <p>Meta Tags: {vettingResult.seoDetails.metaTagsComplete ? '✓' : '✗'}</p>
+                <p>Schema Markup: {vettingResult.seoDetails.schemaMarkupPresent ? '✓' : '✗'}</p>
               </div>
             </details>
           )}
