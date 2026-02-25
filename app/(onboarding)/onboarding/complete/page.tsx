@@ -3,7 +3,9 @@
 /**
  * Onboarding Complete Page
  *
- * @description Success page after completing onboarding with Synthex branding
+ * @description Success page after completing onboarding with Synthex branding.
+ * Sends expanded payload including website, description, brand colors, social handles,
+ * and AI-generated data to the API.
  */
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
@@ -19,10 +21,11 @@ import { useOnboarding, ProgressIndicator } from '@/components/onboarding';
 // ============================================================================
 
 const STEPS = [
-  { id: 1, name: 'Organization' },
-  { id: 2, name: 'Platforms' },
-  { id: 3, name: 'Persona' },
-  { id: 4, name: 'Complete' },
+  { id: 1, name: 'Business Identity' },
+  { id: 2, name: 'Review Details' },
+  { id: 3, name: 'Platforms' },
+  { id: 4, name: 'Persona' },
+  { id: 5, name: 'Complete' },
 ];
 
 // ============================================================================
@@ -51,9 +54,14 @@ export default function CompletePage() {
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify({
-          organizationName: d.organizationName,
+          organizationName: d.organizationName || d.businessName,
+          website: d.websiteUrl || '',
           industry: d.industry,
           teamSize: d.teamSize,
+          description: d.description,
+          brandColors: d.brandColors,
+          socialHandles: d.socialHandles,
+          aiGeneratedData: d.aiAnalysis || undefined,
           connectedPlatforms: d.connectedPlatforms,
           personaName: d.personaName,
           personaTone: d.personaTone,
@@ -92,7 +100,7 @@ export default function CompletePage() {
   }, []); // stable — reads from dataRef
 
   useEffect(() => {
-    completeStep(4);
+    completeStep(5);
     doSave();
   }, [completeStep, doSave]);
 
@@ -106,13 +114,15 @@ export default function CompletePage() {
     router.push('/dashboard');
   };
 
+  const d = data;
+
   return (
     <div className="space-y-8">
       {/* Progress */}
       <ProgressIndicator
         steps={STEPS}
-        currentStep={4}
-        completedSteps={[...data.completedSteps, 4]}
+        currentStep={5}
+        completedSteps={[...data.completedSteps, 5]}
       />
 
       {/* Content */}
@@ -169,7 +179,7 @@ export default function CompletePage() {
             <div>
               <h1 className="text-3xl font-bold text-white">You&apos;re all set!</h1>
               <p className="text-gray-400 mt-2 text-lg">
-                Welcome to <span className="text-cyan-400 font-semibold">SYNTHEX</span>, {data.organizationName}
+                Welcome to <span className="text-cyan-400 font-semibold">SYNTHEX</span>, {d.organizationName || d.businessName}
               </p>
             </div>
 
@@ -177,16 +187,41 @@ export default function CompletePage() {
             <div className="max-w-md mx-auto mt-8 p-6 rounded-xl bg-[#0f172a]/80 border border-cyan-500/10 backdrop-blur-sm text-left space-y-4">
               <h3 className="font-semibold text-center mb-4 text-white">Your Setup Summary</h3>
 
+              {/* Business */}
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-500/20 to-cyan-600/10 border border-cyan-500/30 flex items-center justify-center flex-shrink-0">
                   <Check className="w-5 h-5 text-cyan-400" />
                 </div>
                 <div>
-                  <p className="font-medium text-white">Organization</p>
-                  <p className="text-sm text-gray-400">{data.organizationName}</p>
+                  <p className="font-medium text-white">Business</p>
+                  <p className="text-sm text-gray-400">
+                    {d.organizationName || d.businessName}
+                    {d.websiteUrl && (
+                      <span className="text-gray-500"> &middot; {d.websiteUrl}</span>
+                    )}
+                  </p>
                 </div>
               </div>
 
+              {/* Industry & Details */}
+              {d.industry && (
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-500/20 to-cyan-600/10 border border-cyan-500/30 flex items-center justify-center flex-shrink-0">
+                    <Check className="w-5 h-5 text-cyan-400" />
+                  </div>
+                  <div>
+                    <p className="font-medium text-white">Details</p>
+                    <p className="text-sm text-gray-400 capitalize">
+                      {d.industry} &middot; {d.teamSize}
+                      {d.description && (
+                        <span className="block text-gray-500 mt-0.5 line-clamp-1">{d.description}</span>
+                      )}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Platforms */}
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-500/20 to-cyan-600/10 border border-cyan-500/30 flex items-center justify-center flex-shrink-0">
                   <Check className="w-5 h-5 text-cyan-400" />
@@ -194,13 +229,14 @@ export default function CompletePage() {
                 <div>
                   <p className="font-medium text-white">Platforms Connected</p>
                   <p className="text-sm text-gray-400">
-                    {data.connectedPlatforms.length > 0
-                      ? data.connectedPlatforms.join(', ')
+                    {d.connectedPlatforms.length > 0
+                      ? d.connectedPlatforms.join(', ')
                       : 'None yet — connect later in settings'}
                   </p>
                 </div>
               </div>
 
+              {/* Persona */}
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-500/20 to-cyan-600/10 border border-cyan-500/30 flex items-center justify-center flex-shrink-0">
                   <Check className="w-5 h-5 text-cyan-400" />
@@ -208,12 +244,28 @@ export default function CompletePage() {
                 <div>
                   <p className="font-medium text-white">Brand Persona</p>
                   <p className="text-sm text-gray-400">
-                    {data.skipPersona
+                    {d.skipPersona
                       ? 'Skipped — set up later in settings'
-                      : `${data.personaName} (${data.personaTone})`}
+                      : `${d.personaName} (${d.personaTone})`}
                   </p>
                 </div>
               </div>
+
+              {/* Brand Color */}
+              {d.brandColors?.primary && (
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-500/20 to-cyan-600/10 border border-cyan-500/30 flex items-center justify-center flex-shrink-0">
+                    <div
+                      className="w-5 h-5 rounded-full border border-white/20"
+                      style={{ backgroundColor: d.brandColors.primary }}
+                    />
+                  </div>
+                  <div>
+                    <p className="font-medium text-white">Brand Color</p>
+                    <p className="text-sm text-gray-400">{d.brandColors.primary}</p>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Actions */}

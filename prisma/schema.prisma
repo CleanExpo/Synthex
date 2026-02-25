@@ -94,7 +94,7 @@ model User {
   submittedApprovals ApprovalRequest[] @relation("SubmittedApprovals")
 
   // Multi-business owner system
-  isMultiBusinessOwner  Boolean   @default(false) @map("is_multi_business_owner")
+  isMultiBusinessOwner  Boolean   @default(true) @map("is_multi_business_owner")
   activeOrganizationId  String?   @map("active_organization_id")
   ownedBusinesses       BusinessOwnership[] @relation("OwnedBusinesses")
 
@@ -354,6 +354,15 @@ model Organization {
   // Domain configuration (multi-tenant)
   domain       String?  @unique // Primary subdomain (e.g., acme.synthex.app)
   customDomain String?  @unique @map("custom_domain") // Custom domain (e.g., marketing.acme.com)
+
+  // Business identity
+  website        String?
+  industry       String?
+  teamSize       String?   @map("team_size")
+
+  // AI-generated metadata
+  aiGeneratedData  Json?   @map("ai_generated_data")   // Full AI analysis snapshot
+  socialHandles    Json?   @map("social_handles")       // { twitter: "@handle", ... }
 
   // Branding
   logo         String?

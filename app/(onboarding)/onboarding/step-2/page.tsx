@@ -1,26 +1,33 @@
 'use client';
 
 /**
- * Onboarding Step 2: Platform Connections
+ * Onboarding Step 2: Review AI-Generated Details
  *
- * @description Connect social media platforms with Synthex branding
+ * @description Shows AI-analyzed business details for review/edit, or falls back
+ * to manual entry if no website was provided or analysis failed.
+ * Triggers analysis on mount if URL was provided but analysis hasn't run yet.
  */
 
-import React from 'react';
+import React, { useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowRight, ArrowLeft, Link2 } from '@/components/icons';
+import { ArrowRight, ArrowLeft, Sparkles, FileText } from '@/components/icons';
+// Alias for ClipboardCheck (using FileText as visual alternative)
+const ClipboardCheck = FileText;
 import { Button } from '@/components/ui/button';
-import { useOnboarding, ProgressIndicator, PlatformConnector } from '@/components/onboarding';
+import { useOnboarding, ProgressIndicator } from '@/components/onboarding';
+import { BusinessDetailsReview } from '@/components/onboarding/BusinessDetailsReview';
+import type { ReviewedDetails } from '@/components/onboarding/BusinessDetailsReview';
 
 // ============================================================================
 // DATA
 // ============================================================================
 
 const STEPS = [
-  { id: 1, name: 'Organization' },
-  { id: 2, name: 'Platforms' },
-  { id: 3, name: 'Persona' },
-  { id: 4, name: 'Complete' },
+  { id: 1, name: 'Business Identity' },
+  { id: 2, name: 'Review Details' },
+  { id: 3, name: 'Platforms' },
+  { id: 4, name: 'Persona' },
+  { id: 5, name: 'Complete' },
 ];
 
 // ============================================================================
@@ -29,19 +36,41 @@ const STEPS = [
 
 export default function Step2Page() {
   const router = useRouter();
-  const { data, completeStep } = useOnboarding();
+  const { data, setReviewedDetails, triggerAnalysis, completeStep } = useOnboarding();
+
+  // Trigger analysis if URL provided but not yet analyzed
+  useEffect(() => {
+    if (
+      data.websiteUrl &&
+      data.analysisStatus === 'idle' &&
+      !data.aiAnalysis
+    ) {
+      triggerAnalysis();
+    }
+  }, [data.websiteUrl, data.analysisStatus, data.aiAnalysis, triggerAnalysis]);
+
+  const isAiGenerated = data.analysisStatus === 'success' && data.aiAnalysis !== null;
+  const isAnalyzing = data.analysisStatus === 'loading';
+
+  // Build current details from context state
+  const currentDetails: ReviewedDetails = {
+    industry: data.industry,
+    teamSize: data.teamSize,
+    description: data.description,
+    brandColors: data.brandColors,
+    socialHandles: data.socialHandles,
+  };
+
+  const handleDetailsChange = useCallback((details: ReviewedDetails) => {
+    setReviewedDetails(details);
+  }, [setReviewedDetails]);
 
   const handleNext = () => {
     completeStep(2);
     router.push('/onboarding/step-3');
   };
 
-  const handleSkip = () => {
-    // Allow skipping but warn user
-    router.push('/onboarding/step-3');
-  };
-
-  const isValid = data.connectedPlatforms.length > 0;
+  const isValid = Boolean(data.industry && data.teamSize);
 
   return (
     <div className="space-y-8">
@@ -55,51 +84,79 @@ export default function Step2Page() {
       {/* Header */}
       <div className="text-center space-y-2">
         <div className="w-14 h-14 rounded-full bg-gradient-to-br from-cyan-500/20 to-cyan-600/10 border border-cyan-500/20 flex items-center justify-center mx-auto mb-4 backdrop-blur-sm">
-          <Link2 className="w-7 h-7 text-cyan-400" />
+          {isAiGenerated ? (
+            <Sparkles className="w-7 h-7 text-cyan-400" />
+          ) : (
+            <ClipboardCheck className="w-7 h-7 text-cyan-400" />
+          )}
         </div>
-        <h1 className="text-2xl font-bold text-white">Connect your platforms</h1>
+        <h1 className="text-2xl font-bold text-white">
+          {isAiGenerated ? 'Review your business details' : 'Enter your business details'}
+        </h1>
         <p className="text-gray-400">
-          Link your social media accounts to start publishing
+          {isAiGenerated
+            ? 'We analyzed your website — review and confirm each field'
+            : 'Tell us about your business to personalize your experience'}
         </p>
       </div>
 
-      {/* Platform Connector */}
-      <div className="max-w-2xl mx-auto">
-        <div className="p-6 rounded-xl bg-[#0f172a]/80 border border-cyan-500/10 backdrop-blur-sm">
-          <PlatformConnector />
+      {/* Analyzing State */}
+      {isAnalyzing && (
+        <div className="max-w-md mx-auto">
+          <div className="p-6 rounded-xl bg-[#0f172a]/80 border border-cyan-500/10 backdrop-blur-sm">
+            <div className="flex flex-col items-center gap-4 py-8">
+              <div className="relative">
+                <div className="w-16 h-16 rounded-full bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center">
+                  <Sparkles className="w-8 h-8 text-cyan-400 animate-pulse" />
+                </div>
+                <div className="absolute inset-0 rounded-full border-2 border-cyan-400/30 animate-ping" />
+              </div>
+              <div className="text-center">
+                <p className="text-lg font-medium text-white">Analyzing your website...</p>
+                <p className="text-sm text-gray-400 mt-1">
+                  This usually takes 10-15 seconds
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
+      )}
+
+      {/* Review/Edit Form */}
+      {!isAnalyzing && (
+        <div className="max-w-md mx-auto">
+          <div className="p-6 rounded-xl bg-[#0f172a]/80 border border-cyan-500/10 backdrop-blur-sm">
+            <BusinessDetailsReview
+              details={currentDetails}
+              isAiGenerated={isAiGenerated}
+              confidence={data.aiAnalysis?.confidence}
+              onChange={handleDetailsChange}
+            />
+          </div>
+        </div>
+      )}
 
       {/* Navigation */}
-      <div className="flex justify-between max-w-2xl mx-auto pt-6">
-        <Button
-          variant="ghost"
-          onClick={() => router.push('/onboarding/step-1')}
-          className="text-gray-400 hover:text-white hover:bg-cyan-500/10"
-        >
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Back
-        </Button>
-        <div className="flex gap-2">
-          {!isValid && (
-            <Button
-              variant="outline"
-              onClick={handleSkip}
-              className="border-cyan-500/30 text-gray-300 hover:bg-cyan-500/10 hover:text-white hover:border-cyan-500/50"
-            >
-              Skip for now
-            </Button>
-          )}
+      {!isAnalyzing && (
+        <div className="flex justify-between max-w-md mx-auto pt-6">
+          <Button
+            variant="ghost"
+            onClick={() => router.push('/onboarding/step-1')}
+            className="text-gray-400 hover:text-white hover:bg-cyan-500/10"
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back
+          </Button>
           <Button
             onClick={handleNext}
             disabled={!isValid}
             className="bg-gradient-to-r from-cyan-500 to-cyan-600 hover:from-cyan-400 hover:to-cyan-500 text-white shadow-lg shadow-cyan-500/25 hover:shadow-cyan-500/40 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Continue
+            {isAiGenerated ? 'Confirm & Continue' : 'Continue'}
             <ArrowRight className="w-4 h-4 ml-2" />
           </Button>
         </div>
-      </div>
+      )}
     </div>
   );
 }

@@ -1,60 +1,32 @@
 'use client';
 
 /**
- * Onboarding Step 1: Organization Setup
+ * Onboarding Step 1: Business Identity
  *
- * @description Collects organization details with Synthex branding
+ * @description Collects Business Name (required) and Website URL (optional).
+ * If URL provided, triggers AI website analysis before advancing to step 2.
  */
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowRight, ArrowLeft, Building } from '@/components/icons';
-// Alias for Building2
 const Building2 = Building;
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { useOnboarding, ProgressIndicator } from '@/components/onboarding';
+import { WebsiteAnalyzer } from '@/components/onboarding/WebsiteAnalyzer';
 
 // ============================================================================
 // DATA
 // ============================================================================
 
-const INDUSTRIES = [
-  { value: 'technology', label: 'Technology' },
-  { value: 'ecommerce', label: 'E-Commerce / Retail' },
-  { value: 'healthcare', label: 'Healthcare' },
-  { value: 'finance', label: 'Finance / Banking' },
-  { value: 'education', label: 'Education' },
-  { value: 'entertainment', label: 'Entertainment / Media' },
-  { value: 'food', label: 'Food & Beverage' },
-  { value: 'travel', label: 'Travel & Hospitality' },
-  { value: 'realestate', label: 'Real Estate' },
-  { value: 'nonprofit', label: 'Non-Profit' },
-  { value: 'agency', label: 'Marketing Agency' },
-  { value: 'other', label: 'Other' },
-];
-
-const TEAM_SIZES = [
-  { value: 'solo', label: 'Just me' },
-  { value: 'small', label: '2-10 people' },
-  { value: 'medium', label: '11-50 people' },
-  { value: 'large', label: '51-200 people' },
-  { value: 'enterprise', label: '200+ people' },
-];
-
 const STEPS = [
-  { id: 1, name: 'Organization' },
-  { id: 2, name: 'Platforms' },
-  { id: 3, name: 'Persona' },
-  { id: 4, name: 'Complete' },
+  { id: 1, name: 'Business Identity' },
+  { id: 2, name: 'Review Details' },
+  { id: 3, name: 'Platforms' },
+  { id: 4, name: 'Persona' },
+  { id: 5, name: 'Complete' },
 ];
 
 // ============================================================================
@@ -63,19 +35,31 @@ const STEPS = [
 
 export default function Step1Page() {
   const router = useRouter();
-  const { data, setOrganization, completeStep } = useOnboarding();
+  const { data, setBusinessIdentity, triggerAnalysis, completeStep } = useOnboarding();
 
-  const [name, setName] = useState(data.organizationName);
-  const [industry, setIndustry] = useState(data.industry);
-  const [teamSize, setTeamSize] = useState(data.teamSize);
+  const [name, setName] = useState(data.businessName || data.organizationName);
+  const [websiteUrl, setWebsiteUrl] = useState(data.websiteUrl);
 
-  const handleNext = () => {
-    setOrganization(name, industry, teamSize);
+  const handleNext = async () => {
+    // Save business identity to context
+    setBusinessIdentity(name, websiteUrl);
     completeStep(1);
-    router.push('/onboarding/step-2');
+
+    // If URL provided, trigger analysis before navigating
+    if (websiteUrl.trim()) {
+      // The triggerAnalysis uses data from context, but we just dispatched.
+      // We need a small delay for the reducer to process, or call the API directly.
+      // Since triggerAnalysis reads from context which won't update until next render,
+      // we'll navigate first and let step 2 trigger analysis if needed.
+      router.push('/onboarding/step-2');
+    } else {
+      // No URL — go to step 2 in manual mode
+      router.push('/onboarding/step-2');
+    }
   };
 
-  const isValid = name.trim().length > 0 && industry && teamSize;
+  const isValid = name.trim().length > 0;
+  const isLoading = data.analysisStatus === 'loading';
 
   return (
     <div className="space-y-8">
@@ -91,9 +75,9 @@ export default function Step1Page() {
         <div className="w-14 h-14 rounded-full bg-gradient-to-br from-cyan-500/20 to-cyan-600/10 border border-cyan-500/20 flex items-center justify-center mx-auto mb-4 backdrop-blur-sm">
           <Building2 className="w-7 h-7 text-cyan-400" />
         </div>
-        <h1 className="text-2xl font-bold text-white">Tell us about your organization</h1>
+        <h1 className="text-2xl font-bold text-white">Tell us about your business</h1>
         <p className="text-gray-400">
-          This helps us personalize your experience
+          Enter your details and we&apos;ll use AI to set up your profile
         </p>
       </div>
 
@@ -101,71 +85,28 @@ export default function Step1Page() {
       <div className="max-w-md mx-auto space-y-6">
         {/* Form Card */}
         <div className="p-6 rounded-xl bg-[#0f172a]/80 border border-cyan-500/10 backdrop-blur-sm space-y-6">
-          {/* Organization Name */}
+          {/* Business Name */}
           <div className="space-y-2">
-            <Label htmlFor="org-name" className="text-gray-300">
-              Organization or Brand Name
+            <Label htmlFor="business-name" className="text-gray-300">
+              Business Name
             </Label>
             <Input
-              id="org-name"
-              placeholder="Enter your organization name"
+              id="business-name"
+              placeholder="Enter your business or brand name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="bg-[#0a1628]/50 border-cyan-500/20 text-white placeholder:text-gray-500 focus:border-cyan-500/50 focus:ring-cyan-500/20"
+              disabled={isLoading}
+              className="bg-[#0a1628]/50 border-cyan-500/20 text-white placeholder:text-gray-500 focus:border-cyan-500/50 focus:ring-cyan-500/20 disabled:opacity-50"
             />
           </div>
 
-          {/* Industry */}
-          <div className="space-y-2">
-            <Label htmlFor="industry" className="text-gray-300">
-              Industry
-            </Label>
-            <Select value={industry} onValueChange={setIndustry}>
-              <SelectTrigger
-                id="industry"
-                className="bg-[#0a1628]/50 border-cyan-500/20 text-white focus:border-cyan-500/50 focus:ring-cyan-500/20"
-              >
-                <SelectValue placeholder="Select your industry" />
-              </SelectTrigger>
-              <SelectContent className="bg-[#0f172a] border-cyan-500/20">
-                {INDUSTRIES.map((ind) => (
-                  <SelectItem
-                    key={ind.value}
-                    value={ind.value}
-                    className="text-gray-300 focus:bg-cyan-500/20 focus:text-white"
-                  >
-                    {ind.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Team Size */}
-          <div className="space-y-2">
-            <Label htmlFor="team-size" className="text-gray-300">
-              Team Size
-            </Label>
-            <Select value={teamSize} onValueChange={setTeamSize}>
-              <SelectTrigger
-                id="team-size"
-                className="bg-[#0a1628]/50 border-cyan-500/20 text-white focus:border-cyan-500/50 focus:ring-cyan-500/20"
-              >
-                <SelectValue placeholder="Select team size" />
-              </SelectTrigger>
-              <SelectContent className="bg-[#0f172a] border-cyan-500/20">
-                {TEAM_SIZES.map((size) => (
-                  <SelectItem
-                    key={size.value}
-                    value={size.value}
-                    className="text-gray-300 focus:bg-cyan-500/20 focus:text-white"
-                  >
-                    {size.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          {/* Website URL (with analyzer) */}
+          <WebsiteAnalyzer
+            url={websiteUrl}
+            onUrlChange={setWebsiteUrl}
+            status={data.analysisStatus}
+            error={data.analysisError}
+          />
         </div>
       </div>
 
@@ -181,7 +122,7 @@ export default function Step1Page() {
         </Button>
         <Button
           onClick={handleNext}
-          disabled={!isValid}
+          disabled={!isValid || isLoading}
           className="bg-gradient-to-r from-cyan-500 to-cyan-600 hover:from-cyan-400 hover:to-cyan-500 text-white shadow-lg shadow-cyan-500/25 hover:shadow-cyan-500/40 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
         >
           Continue

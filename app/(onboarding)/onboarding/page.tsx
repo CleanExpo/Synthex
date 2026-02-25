@@ -3,7 +3,8 @@
 /**
  * Onboarding Entry Page
  *
- * @description Welcome page that starts the onboarding flow with Synthex branding
+ * @description Welcome page that starts the onboarding flow with Synthex branding.
+ * Updated for 5-step AI-powered flow.
  */
 
 import React from 'react';
@@ -19,8 +20,8 @@ import { SynthexLogo } from '@/components/marketing/MarketingLayout';
 const FEATURES = [
   {
     icon: Brain,
-    title: 'AI-Powered Content',
-    description: 'Generate engaging posts with your unique brand voice',
+    title: 'AI-Powered Setup',
+    description: 'Enter your website and let AI build your business profile',
   },
   {
     icon: Zap,
@@ -77,21 +78,21 @@ export default function OnboardingPage() {
       </div>
 
       {/* Step preview */}
-      <div className="w-full max-w-xl mx-auto mb-10">
-        <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-4">4 quick steps</p>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <div className="w-full max-w-2xl mx-auto mb-10">
+        <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-4">5 quick steps</p>
+        <div className="grid grid-cols-5 gap-3">
           {[
-            { n: 1, label: 'Your details' },
-            { n: 2, label: 'Connect platforms', note: 'Requires social logins' },
-            { n: 3, label: 'Set up persona' },
-            { n: 4, label: 'Review & launch' },
-          ].map(({ n, label, note }) => (
+            { n: 1, label: 'Business Identity' },
+            { n: 2, label: 'Review Details' },
+            { n: 3, label: 'Connect Platforms' },
+            { n: 4, label: 'Set Up Persona' },
+            { n: 5, label: 'Review & Launch' },
+          ].map(({ n, label }) => (
             <div key={n} className="flex flex-col items-center gap-1 text-center">
               <div className="w-8 h-8 rounded-full bg-cyan-500/20 border border-cyan-500/30 flex items-center justify-center text-sm font-bold text-cyan-400">
                 {n}
               </div>
               <p className="text-xs font-medium text-white">{label}</p>
-              {note && <p className="text-[11px] text-amber-400/80">{note}</p>}
             </div>
           ))}
         </div>
