@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Eye, Settings, RefreshCw } from '@/components/icons';
+import { Eye, Settings, RefreshCw, Link2 } from '@/components/icons';
 import { fetchWithCSRF } from '@/lib/csrf';
 
 interface OwnedBusiness {
@@ -27,10 +27,11 @@ interface OwnedBusiness {
 interface BusinessManagementTableProps {
   businesses: OwnedBusiness[];
   onSwitch: (orgId: string) => void;
+  onManageAccounts: (orgId: string) => void;
   onRefresh: () => void;
 }
 
-export function BusinessManagementTable({ businesses, onSwitch, onRefresh }: BusinessManagementTableProps) {
+export function BusinessManagementTable({ businesses, onSwitch, onManageAccounts, onRefresh }: BusinessManagementTableProps) {
   const [switchingId, setSwitchingId] = useState<string | null>(null);
   const [deactivatingId, setDeactivatingId] = useState<string | null>(null);
 
@@ -125,6 +126,9 @@ export function BusinessManagementTable({ businesses, onSwitch, onRefresh }: Bus
                   <th className="px-6 py-4 text-xs font-medium text-gray-400 uppercase tracking-wider">
                     Monthly Rate
                   </th>
+                  <th className="px-6 py-4 text-xs font-medium text-gray-400 uppercase tracking-wider">
+                    Social Accounts
+                  </th>
                   <th className="px-6 py-4 text-xs font-medium text-gray-400 uppercase tracking-wider text-right">
                     Actions
                   </th>
@@ -162,6 +166,22 @@ export function BusinessManagementTable({ businesses, onSwitch, onRefresh }: Bus
                         {formatCurrency(business.monthlyRate)}
                       </span>
                       <span className="text-xs text-gray-500">/month</span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm text-gray-400">
+                          {business.stats?.activePlatforms ?? 0} connected
+                        </span>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => onManageAccounts(business.organizationId)}
+                          className="bg-purple-500/10 border-purple-500/20 text-purple-400 hover:bg-purple-500/20 hover:border-purple-500/30"
+                        >
+                          <Link2 className="h-3 w-3 mr-1" />
+                          Manage
+                        </Button>
+                      </div>
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center justify-end gap-2">
@@ -247,6 +267,22 @@ export function BusinessManagementTable({ businesses, onSwitch, onRefresh }: Bus
                       <span className="text-xs text-gray-500">/month</span>
                     </span>
                   </div>
+                </div>
+
+                {/* Social Accounts */}
+                <div className="flex items-center justify-between pt-2 border-t border-cyan-500/10">
+                  <span className="text-sm text-gray-400">
+                    {business.stats?.activePlatforms ?? 0} social accounts connected
+                  </span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => onManageAccounts(business.organizationId)}
+                    className="bg-purple-500/10 border-purple-500/20 text-purple-400 hover:bg-purple-500/20 hover:border-purple-500/30"
+                  >
+                    <Link2 className="h-3 w-3 mr-1" />
+                    Manage Accounts
+                  </Button>
                 </div>
 
                 {/* Actions */}

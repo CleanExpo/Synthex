@@ -87,6 +87,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
         select: {
           userId: true,
           platform: true,
+          organizationId: true,
         },
       },
     },
@@ -129,11 +130,14 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       }
 
       // -- Fetch active platform connection ----------------------------------
+      // Use organization-scoped connection when available (multi-business support)
+      const organizationId = post.campaign.organizationId;
       const connection = await prisma.platformConnection.findFirst({
         where: {
           userId,
           platform,
           isActive: true,
+          ...(organizationId ? { organizationId } : {}),
         },
         select: {
           id: true,

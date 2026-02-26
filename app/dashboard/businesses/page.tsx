@@ -35,6 +35,16 @@ export default function BusinessesPage() {
     }
   };
 
+  // Handle manage social accounts — switch to business then navigate to integrations
+  const handleManageAccounts = async (organizationId: string) => {
+    try {
+      await switchBusiness(organizationId);
+      router.push('/dashboard/settings?tab=integrations');
+    } catch (error) {
+      console.error('Failed to switch business for account management:', error);
+    }
+  };
+
   const handleRefresh = () => {
     refetchBusinesses();
     refetchOverview();
@@ -132,6 +142,7 @@ export default function BusinessesPage() {
       <BusinessManagementTable
         businesses={businesses}
         onSwitch={handleSwitchBusiness}
+        onManageAccounts={handleManageAccounts}
         onRefresh={handleRefresh}
       />
 

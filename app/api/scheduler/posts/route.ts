@@ -70,6 +70,7 @@ const updatePostSchema = z.object({
 // =============================================================================
 
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
+import { getEffectiveOrganizationId } from '@/lib/multi-business/business-scope';
 
 async function getUserId(request: NextRequest): Promise<string | null> {
   return getUserIdFromRequestOrCookies(request);
@@ -221,14 +222,18 @@ export async function POST(request: NextRequest) {
 
     const data = validation.data;
 
-    // Get or create default campaign
+    // Resolve organization context for multi-business support
+    const organizationId = await getEffectiveOrganizationId(userId);
+
+    // Get or create default campaign (scoped to active organization)
     let campaignId = data.campaignId;
     if (!campaignId) {
-      // Find or create a default scheduled posts campaign
+      // Find or create a default scheduled posts campaign for this org context
       let defaultCampaign = await prisma.campaign.findFirst({
         where: {
           userId,
           name: 'Scheduled Posts',
+          ...(organizationId ? { organizationId } : { organizationId: null }),
         },
       });
 
@@ -240,6 +245,7 @@ export async function POST(request: NextRequest) {
             description: 'Default campaign for scheduled posts',
             platform: 'multi',
             status: 'active',
+            ...(organizationId ? { organizationId } : {}),
           },
         });
       }

@@ -5,7 +5,7 @@ import { DashboardSkeleton } from '@/components/skeletons';
 import { APIErrorCard } from '@/components/error-states';
 import { toast } from 'sonner';
 import Link from 'next/link';
-import { Brain } from '@/components/icons';
+import { Brain, Building, ChevronDown } from '@/components/icons';
 import { fetchWithCSRF } from '@/lib/csrf';
 
 import {
@@ -16,8 +16,12 @@ import {
   GeneratedContent,
 } from '@/components/content';
 import { usePersonas } from '@/hooks/use-personas';
+import { useActiveBusiness } from '@/hooks/useActiveBusiness';
 
 export default function ContentPage() {
+  // Multi-business context
+  const { businesses, activeBusiness, isOwner, switchBusiness } = useActiveBusiness();
+
   // Fetch personas from API
   const { personas: apiPersonas, loading: personasLoading } = usePersonas();
 
@@ -246,6 +250,39 @@ export default function ContentPage() {
   return (
     <div className="space-y-6">
       <ContentHeader onTrainAI={handleTrainAI} onViewAnalytics={handleViewAnalytics} />
+
+      {/* Business context selector for multi-business owners */}
+      {isOwner && businesses.length > 0 && (
+        <div className="glass-card p-3 rounded-xl border border-white/10 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Building className="h-4 w-4 text-cyan-400" />
+            <span className="text-sm text-slate-400">Creating for:</span>
+            <select
+              value={activeBusiness?.organizationId ?? ''}
+              onChange={async (e) => {
+                try {
+                  await switchBusiness(e.target.value || null);
+                  toast.success(`Switched to ${businesses.find(b => b.organizationId === e.target.value)?.displayName || businesses.find(b => b.organizationId === e.target.value)?.organizationName}`);
+                } catch {
+                  toast.error('Failed to switch business');
+                }
+              }}
+              className="bg-[#0f172a] border border-cyan-500/20 rounded-lg px-3 py-1.5 text-sm text-white focus:ring-1 focus:ring-cyan-500/30 focus:outline-none appearance-none cursor-pointer"
+            >
+              {businesses.map((b) => (
+                <option key={b.organizationId} value={b.organizationId}>
+                  {b.displayName || b.organizationName}
+                </option>
+              ))}
+            </select>
+          </div>
+          {activeBusiness && (
+            <span className="text-xs text-slate-500">
+              {activeBusiness.stats?.activePlatforms ?? 0} platforms connected
+            </span>
+          )}
+        </div>
+      )}
 
       <ContentStats />
 
