@@ -10,8 +10,6 @@
  * Returns overall score (0-100) and component scores.
  */
 
-import { prisma } from '@/lib/prisma';
-
 export interface VettingInput {
   businessName: string;
   website?: string;
@@ -106,13 +104,28 @@ async function checkSEO(url: string): Promise<{ score: number; details: SEODetai
       score += 15;
     }
 
-    // Check for robots.txt (would need to fetch separately)
-    // In a real implementation, this would do a separate fetch
-    details.hasRobotsTxt = true; // Assume true for now
-    score += 10;
+    // Check for robots.txt by fetching it directly
+    try {
+      const robotsUrl = new URL('/robots.txt', url).href;
+      const robotsRes = await fetch(robotsUrl, { signal: AbortSignal.timeout(5000) });
+      if (robotsRes.ok) {
+        const robotsText = await robotsRes.text();
+        details.hasRobotsTxt = robotsText.toLowerCase().includes('user-agent');
+        if (details.hasRobotsTxt) {
+          score += 10;
+          // Check for sitemap reference in robots.txt
+          if (robotsText.toLowerCase().includes('sitemap:')) {
+            details.hasSitemap = true;
+            score += 10;
+          }
+        }
+      }
+    } catch {
+      // robots.txt not reachable — that's a signal in itself
+    }
 
-    // Check for sitemap (would need to fetch separately)
-    if (html.includes('sitemap')) {
+    // Fallback sitemap check from HTML if not found in robots.txt
+    if (!details.hasSitemap && html.includes('sitemap')) {
       details.hasSitemap = true;
       score += 10;
     }
@@ -137,9 +150,24 @@ async function checkSEO(url: string): Promise<{ score: number; details: SEODetai
       score += 15;
     }
 
-    // Estimate mobile speed (simplified - would use real API)
-    details.mobileSpeed = Math.random() * 40 + 60; // Mock: 60-100
-    details.desktopSpeed = Math.random() * 40 + 70; // Mock: 70-110
+    // Fetch real PageSpeed scores from Google PageSpeed Insights API (free tier)
+    try {
+      const encodedUrl = encodeURIComponent(url);
+      const [mobileRes, desktopRes] = await Promise.allSettled([
+        fetch(`https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=${encodedUrl}&strategy=mobile&category=performance`, { signal: AbortSignal.timeout(15000) }),
+        fetch(`https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=${encodedUrl}&strategy=desktop&category=performance`, { signal: AbortSignal.timeout(15000) }),
+      ]);
+      if (mobileRes.status === 'fulfilled' && mobileRes.value.ok) {
+        const mData = await mobileRes.value.json();
+        details.mobileSpeed = Math.round((mData?.lighthouseResult?.categories?.performance?.score ?? 0) * 100);
+      }
+      if (desktopRes.status === 'fulfilled' && desktopRes.value.ok) {
+        const dData = await desktopRes.value.json();
+        details.desktopSpeed = Math.round((dData?.lighthouseResult?.categories?.performance?.score ?? 0) * 100);
+      }
+    } catch {
+      // PageSpeed API unavailable — leave speeds as undefined (honest reporting)
+    }
 
   } catch (error) {
     console.error('[SEO Check] Error:', error);
@@ -233,32 +261,29 @@ async function checkGEO(businessName: string, location?: string): Promise<{ scor
   let score = 0;
 
   try {
-    // In a real implementation, this would:
-    // 1. Query Google Business Profile API
-    // 2. Check local citation databases (Yelp, Apple Maps, etc)
-    // 3. Verify NAP (Name, Address, Phone) consistency
-    // 4. Check Google Maps listings
+    // NOTE: Full Google Business Profile API requires OAuth + verified account.
+    // For now we report only what we can verify without external API keys:
+    // - Generate local keyword suggestions based on business name + location
+    // - Mark GBP and citation data as unverified (null)
 
-    // Simulated check
-    details.googleBusinessProfile = true;
-    score += 25;
+    // Google Business Profile status is unknown without API access
+    details.googleBusinessProfile = false; // Cannot verify without GBP API
+    details.mapsSignals = 'unverified';
 
     if (location) {
-      details.localKeywords = [`${businessName} ${location}`, `best ${businessName} in ${location}`];
-      score += 20;
+      details.localKeywords = [
+        `${businessName} ${location}`,
+        `best ${businessName} in ${location}`,
+        `${businessName} near me`,
+      ];
+      score += 20; // Credit for having a location to target
     }
 
-    details.localCitations = Math.floor(Math.random() * 15) + 5;
-    score += Math.min(details.localCitations * 2, 25);
-
-    // Average rating simulation
-    details.averageRating = Math.random() * 2 + 3.5;
-    details.reviewCount = Math.floor(Math.random() * 100) + 10;
-
-    if (details.averageRating >= 4.0) {
-      details.mapsSignals = 'strong-reputation';
-      score += 20;
-    }
+    // Citation count and ratings cannot be verified without external APIs
+    // Report null instead of fake numbers — UI should show "Not yet verified"
+    details.localCitations = 0;
+    details.averageRating = undefined;
+    details.reviewCount = undefined;
 
   } catch (error) {
     console.error('[GEO Check] Error:', error);
@@ -279,48 +304,59 @@ async function checkSocial(businessName: string): Promise<{ score: number; detai
 
   let score = 0;
 
-  const platforms = [
-    { name: 'YouTube', baseScore: 20 },
-    { name: 'Instagram', baseScore: 15 },
-    { name: 'TikTok', baseScore: 15 },
-    { name: 'X', baseScore: 15 },
-    { name: 'Facebook', baseScore: 15 },
-    { name: 'LinkedIn', baseScore: 20 },
-    { name: 'Pinterest', baseScore: 10 },
-    { name: 'Reddit', baseScore: 5 },
-    { name: 'Threads', baseScore: 5 },
+  // Generate a likely handle from the business name
+  const handle = businessName.toLowerCase().replace(/[^a-z0-9]/g, '');
+
+  const platformChecks = [
+    { name: 'YouTube', baseScore: 20, url: `https://www.youtube.com/@${handle}` },
+    { name: 'Instagram', baseScore: 15, url: `https://www.instagram.com/${handle}/` },
+    { name: 'TikTok', baseScore: 15, url: `https://www.tiktok.com/@${handle}` },
+    { name: 'X', baseScore: 15, url: `https://x.com/${handle}` },
+    { name: 'Facebook', baseScore: 15, url: `https://www.facebook.com/${handle}` },
+    { name: 'LinkedIn', baseScore: 20, url: `https://www.linkedin.com/company/${handle}` },
   ];
 
   try {
-    // In a real implementation, this would:
-    // 1. Search for business handles on each platform
-    // 2. Verify account authenticity
-    // 3. Check followers/engagement metrics
-    // 4. Verify blue checkmarks
+    // Check each platform URL with a lightweight HEAD/GET request
+    // A 200-ish response suggests the handle exists (not conclusive for all platforms)
+    const results = await Promise.allSettled(
+      platformChecks.map(async (platform) => {
+        const res = await fetch(platform.url, {
+          method: 'HEAD',
+          redirect: 'follow',
+          signal: AbortSignal.timeout(8000),
+          headers: { 'User-Agent': 'Mozilla/5.0 (compatible; SynthexBot/1.0)' },
+        });
+        return { platform, found: res.ok || res.status === 301 || res.status === 302 };
+      })
+    );
 
-    for (const platform of platforms) {
-      // Simulate finding 2-4 platforms
-      if (Math.random() > 0.6) {
-        const foundPlatform = {
+    for (const result of results) {
+      if (result.status === 'fulfilled' && result.value.found) {
+        const { platform } = result.value;
+        details.platforms.push({
           name: platform.name,
-          handle: `@${businessName.toLowerCase().replace(/\s/g, '')}`,
-          followers: Math.floor(Math.random() * 100000) + 1000,
-          isVerified: Math.random() > 0.7,
-          lastPostDate: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString(),
-        };
-
-        details.platforms.push(foundPlatform);
+          handle: `@${handle}`,
+          // Follower counts, verification, and last post date require authenticated API access
+          // Report undefined instead of fake numbers
+          followers: undefined,
+          isVerified: undefined,
+          lastPostDate: undefined,
+        });
         score += platform.baseScore;
       }
     }
 
     if (details.platforms.length >= 4) {
       details.overallPresence = 'strong';
-      details.engagementLevel = 'active';
+      details.engagementLevel = 'likely-active';
       score = Math.min(score + 15, 100);
     } else if (details.platforms.length >= 2) {
       details.overallPresence = 'moderate';
       details.engagementLevel = 'moderate';
+    } else {
+      details.overallPresence = 'low';
+      details.engagementLevel = 'minimal';
     }
 
   } catch (error) {

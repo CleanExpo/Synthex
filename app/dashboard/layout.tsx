@@ -371,12 +371,18 @@ export default function DashboardLayout({
                 </DropdownMenuItem>
                 <DropdownMenuSeparator className="bg-white/10" />
                 <DropdownMenuItem asChild>
-                  <button 
-                    onClick={() => {
-                      // Clear auth tokens and redirect to login
+                  <button
+                    onClick={async () => {
+                      // Call logout API to destroy server session, then clear client state
+                      try {
+                        await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
+                      } catch {
+                        // Best effort — proceed with client-side cleanup regardless
+                      }
                       document.cookie = 'auth-token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;';
                       document.cookie = 'user-info=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;';
                       localStorage.removeItem('user');
+                      localStorage.removeItem('token-expires-at');
                       window.location.href = '/login';
                     }}
                     className="flex items-center w-full text-left text-red-400 cursor-pointer hover:text-red-500"

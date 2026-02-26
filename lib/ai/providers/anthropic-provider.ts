@@ -31,8 +31,8 @@ export class AnthropicProvider implements AIProvider {
   private apiKey: string;
   private baseURL = 'https://api.anthropic.com/v1';
 
-  constructor() {
-    this.apiKey = process.env.ANTHROPIC_API_KEY || '';
+  constructor(apiKeyOverride?: string) {
+    this.apiKey = apiKeyOverride || process.env.ANTHROPIC_API_KEY || '';
     if (!this.apiKey) {
       logger.warn('Anthropic API key not configured.');
     }

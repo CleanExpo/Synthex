@@ -34,8 +34,8 @@ export class OpenRouterProvider implements AIProvider {
   private apiKey: string;
   private baseURL = 'https://openrouter.ai/api/v1';
 
-  constructor() {
-    this.apiKey = process.env.OPENROUTER_API_KEY || '';
+  constructor(apiKeyOverride?: string) {
+    this.apiKey = apiKeyOverride || process.env.OPENROUTER_API_KEY || '';
     if (!this.apiKey) {
       logger.warn('OpenRouter API key not configured. AI features will be limited.');
     }

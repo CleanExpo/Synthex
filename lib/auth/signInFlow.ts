@@ -19,6 +19,16 @@ import type { AuthUser, AuthSession, AuthResult, AuthProvider, OAuthProfile } fr
 import { accountService } from './account-service';
 import prisma from '@/lib/prisma';
 
+// Supabase admin client for profiles table operations (bypasses RLS)
+function getSupabaseAdmin() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !serviceKey) return null;
+  return createClient(url, serviceKey, {
+    auth: { autoRefreshToken: false, persistSession: false },
+  });
+}
+
 // Re-export for backward compatibility
 export type { AuthUser, AuthSession, AuthResult } from '@/types/auth';
 
@@ -174,6 +184,25 @@ export class SignInFlow {
         };
       }
 
+      // Ensure profiles row exists for onboarding redirect check
+      try {
+        const admin = getSupabaseAdmin();
+        if (admin) {
+          await admin.from('profiles').upsert(
+            {
+              id: data.user.id,
+              email: data.user.email,
+              name: data.user.user_metadata?.name || null,
+              onboarding_completed: false,
+            },
+            { onConflict: 'id', ignoreDuplicates: true }
+          );
+        }
+      } catch (profileErr) {
+        console.warn('[SignInFlow] Failed to ensure profile exists:', profileErr);
+        // Non-fatal — user can still authenticate
+      }
+
       // Create unified session
       // IMPORTANT: Always use our own JWT (signed with JWT_SECRET) for the accessToken.
       // Supabase's access_token is signed with Supabase's JWT secret, which doesn't
@@ -316,6 +345,25 @@ export class SignInFlow {
 
       // Create Account record
       await accountService.createAccount(newUser.id, provider, profile);
+
+      // Ensure profiles row exists for onboarding redirect check
+      try {
+        const admin = getSupabaseAdmin();
+        if (admin) {
+          await admin.from('profiles').upsert(
+            {
+              id: newUser.id,
+              email: newUser.email,
+              name: newUser.name || null,
+              avatar_url: profile.avatar || null,
+              onboarding_completed: false,
+            },
+            { onConflict: 'id', ignoreDuplicates: true }
+          );
+        }
+      } catch (profileErr) {
+        console.warn('[SignInFlow] Failed to ensure profile exists for OAuth user:', profileErr);
+      }
 
       const session: AuthSession = {
         user: {

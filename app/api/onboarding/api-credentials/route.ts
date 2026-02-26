@@ -60,13 +60,11 @@ async function postHandler(request: NextRequest) {
   const maskedKey = maskApiKey(apiKey);
 
   // Check if credential already exists for this provider
-  const existingCredential = await prisma.aPICredential.findUnique({
+  const existingCredential = await prisma.aPICredential.findFirst({
     where: {
-      userId_provider_organizationId: {
-        userId: user.id,
-        provider,
-        organizationId: organizationId || null,
-      },
+      userId: user.id,
+      provider,
+      organizationId: organizationId || null,
     },
   });
 

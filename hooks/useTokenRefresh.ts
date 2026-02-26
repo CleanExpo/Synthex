@@ -61,7 +61,7 @@ export function useTokenRefresh() {
           if (res.status === 401) {
             if (mounted.current) {
               // Only redirect if we're still mounted (user hasn't navigated away)
-              window.location.href = '/auth/login?reason=session_expired';
+              window.location.href = '/login?reason=session_expired';
             }
           }
           // For other errors (500, 503, etc.), silently fail and retry next interval

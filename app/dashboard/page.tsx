@@ -233,11 +233,11 @@ export default function DashboardPage() {
                         <p className="text-xs text-muted-foreground mt-1">Link your social accounts to start publishing</p>
                       </div>
                     </Link>
-                    <Link href="/dashboard/campaigns">
+                    <Link href="/dashboard/content">
                       <div className="p-4 rounded-lg bg-white/5 hover:bg-cyan-500/10 border border-white/10 hover:border-cyan-500/30 transition-all cursor-pointer group">
                         <Sparkles className="h-5 w-5 text-cyan-400 mb-2 group-hover:scale-110 transition-transform" />
-                        <p className="text-sm font-medium text-white">Create a campaign</p>
-                        <p className="text-xs text-muted-foreground mt-1">Schedule and publish your first content</p>
+                        <p className="text-sm font-medium text-white">Create content</p>
+                        <p className="text-xs text-muted-foreground mt-1">Generate and publish your first content</p>
                       </div>
                     </Link>
                     <Link href="/dashboard/settings/team">

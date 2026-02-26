@@ -9,6 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Check, Key, Plus, Trash2 } from '@/components/icons';
+import { AICredentialsManager } from './ai-credentials-manager';
 import type { PlatformConnection, ApiKey } from './types';
 
 interface IntegrationsTabProps {
@@ -85,12 +86,15 @@ export function IntegrationsTab({
         </CardContent>
       </Card>
 
-      {/* API Keys */}
+      {/* AI Provider Credentials */}
+      <AICredentialsManager />
+
+      {/* Platform API Keys */}
       <Card variant="glass">
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
-            <CardTitle>API Keys</CardTitle>
-            <CardDescription>Manage your API keys for external integrations</CardDescription>
+            <CardTitle>Platform API Keys</CardTitle>
+            <CardDescription>Manage Synthex API keys for external integrations</CardDescription>
           </div>
           <Button onClick={onCreateApiKey} size="sm" className="gradient-primary">
             <Plus className="w-4 h-4 mr-2" />

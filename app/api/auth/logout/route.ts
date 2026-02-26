@@ -43,12 +43,18 @@ export async function POST(request: NextRequest) {
       }
     });
 
-    // Return success response
-    return NextResponse.json({
+    // Return success response with cookies cleared
+    const res = NextResponse.json({
       success: true,
       message: 'Logout successful',
       sessionsDeleted: deletedSession.count
     });
+
+    // Clear auth cookies in response (defense in depth — client also clears)
+    res.cookies.set('auth-token', '', { httpOnly: true, secure: process.env.NODE_ENV === 'production', path: '/', maxAge: 0 });
+    res.cookies.set('user-info', '', { httpOnly: false, secure: process.env.NODE_ENV === 'production', path: '/', maxAge: 0 });
+
+    return res;
 
   } catch (error) {
     console.error('Logout error:', error);

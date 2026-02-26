@@ -60,8 +60,8 @@ export class GoogleProvider implements AIProvider {
   private apiKey: string;
   private baseURL = 'https://generativelanguage.googleapis.com/v1beta';
 
-  constructor() {
-    this.apiKey = process.env.GOOGLE_AI_API_KEY || '';
+  constructor(apiKeyOverride?: string) {
+    this.apiKey = apiKeyOverride || process.env.GOOGLE_AI_API_KEY || '';
     if (!this.apiKey) {
       logger.warn('Google AI API key not configured.');
     }

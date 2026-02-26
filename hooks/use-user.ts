@@ -20,6 +20,11 @@ export interface AppUser {
   ownedBusinessCount?: number;
 }
 
+interface UseUserOptions {
+  /** If true, redirect to /login when the API returns 401 (session expired). Default: false. */
+  redirectOnUnauth?: boolean;
+}
+
 interface UseUserReturn {
   user: AppUser | null;
   isLoading: boolean;
@@ -30,8 +35,10 @@ interface UseUserReturn {
 /**
  * Custom hook to get the current authenticated user
  * Uses the custom JWT auth API instead of Supabase Auth
+ *
+ * @param options.redirectOnUnauth If true, redirect to login on 401 (use in dashboard pages)
  */
-export function useUser(): UseUserReturn {
+export function useUser({ redirectOnUnauth = false }: UseUserOptions = {}): UseUserReturn {
   const [user, setUser] = useState<AppUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
@@ -48,8 +55,11 @@ export function useUser(): UseUserReturn {
 
       if (!response.ok) {
         if (response.status === 401) {
-          // Not authenticated - this is a valid state
           setUser(null);
+          if (redirectOnUnauth) {
+            // Session expired or invalid — redirect to login
+            window.location.href = '/login?reason=session_expired';
+          }
           return;
         }
         throw new Error('Failed to fetch user');

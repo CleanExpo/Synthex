@@ -16,3 +16,4 @@ export { IntegrationsTab } from './integrations-tab';
 export { PrivacyTab } from './privacy-tab';
 export { BillingTab } from './billing-tab';
 export { AdvancedTab } from './advanced-tab';
+export { AICredentialsManager } from './ai-credentials-manager';

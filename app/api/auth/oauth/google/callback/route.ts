@@ -153,6 +153,8 @@ export async function GET(request: NextRequest) {
 
     if (existingByGoogleId) {
       // Existing Google user - login
+      // Ensure profiles row exists (may be missing for users created before onboarding migration)
+      await ensureProfileExists(supabaseAdmin, existingByGoogleId.id, existingByGoogleId.email, googleUser.name, googleUser.picture);
       const session = await createSessionForUser(supabaseAdmin, existingByGoogleId.id, googleUser, tokens);
       return redirectWithSession(effectiveBaseUrl, session);
     }
@@ -188,13 +190,16 @@ export async function GET(request: NextRequest) {
         })
         .eq('id', existingByEmail.id);
 
-      // Login the existing user
+      // Login the existing user — ensure profile exists
+      await ensureProfileExists(supabaseAdmin, existingByEmail.id, existingByEmail.email, googleUser.name, googleUser.picture);
       const session = await createSessionForUser(supabaseAdmin, existingByEmail.id, googleUser, tokens);
       return redirectWithSession(effectiveBaseUrl, session);
     }
 
     // New user - create account
     const newUser = await createNewGoogleUser(supabaseAdmin, googleUser);
+    // Create profiles row with onboarding_completed = false (triggers onboarding flow)
+    await ensureProfileExists(supabaseAdmin, newUser.id, googleUser.email, googleUser.name, googleUser.picture);
     const session = await createSessionForUser(supabaseAdmin, newUser.id, googleUser, tokens);
 
     return redirectWithSession(effectiveBaseUrl, session);
@@ -210,6 +215,44 @@ export async function GET(request: NextRequest) {
 // ==========================================
 // Helper Functions
 // ==========================================
+
+/**
+ * Ensure a profiles row exists for the user (required for onboarding redirect).
+ * Uses upsert semantics — safe to call on every login (idempotent).
+ */
+async function ensureProfileExists(
+  supabaseAdmin: SupabaseAdmin,
+  userId: string,
+  email: string,
+  name?: string,
+  avatar?: string
+): Promise<void> {
+  try {
+    const { error } = await supabaseAdmin
+      .from('profiles')
+      .upsert(
+        {
+          id: userId,
+          email,
+          name: name || null,
+          avatar_url: avatar || null,
+          // Only set onboarding_completed = false for NEW rows (ON CONFLICT DO NOTHING for this field)
+          onboarding_completed: false,
+        },
+        {
+          onConflict: 'id',
+          ignoreDuplicates: true, // Don't overwrite existing profiles (preserves onboarding_completed)
+        }
+      );
+
+    if (error) {
+      console.warn('[Google OAuth] Failed to ensure profile exists:', error.message);
+      // Non-fatal — user can still log in, onboarding check will be skipped
+    }
+  } catch (err) {
+    console.warn('[Google OAuth] Error ensuring profile:', err);
+  }
+}
 
 async function exchangeCodeForTokens(
   code: string,
