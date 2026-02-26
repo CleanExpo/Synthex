@@ -185,6 +185,23 @@ export async function middleware(request: NextRequest) {
     }
   }
 
+  // CSRF token generation (double-submit cookie pattern — defense-in-depth)
+  // The primary CSRF defense is origin-based validation in APISecurityChecker.
+  // This cookie provides an additional layer: frontend can read it (non-httpOnly)
+  // and send it as X-CSRF-Token header on mutations.
+  if (!request.cookies.get('csrf-token')?.value) {
+    const csrfToken = crypto.randomUUID().replace(/-/g, '') + crypto.randomUUID().replace(/-/g, '');
+    response.cookies.set({
+      name: 'csrf-token',
+      value: csrfToken,
+      httpOnly: false, // Must be readable by JavaScript
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 86400, // 24 hours
+    });
+  }
+
   // Add request ID for tracing
   const requestId = crypto.randomUUID();
   response.headers.set('X-Request-Id', requestId);

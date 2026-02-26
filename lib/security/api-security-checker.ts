@@ -467,7 +467,38 @@ export class APISecurityChecker {
       return true; // Bearer token auth — CSRF not applicable
     }
 
-    // For cookie-based auth, validate the double-submit CSRF token
+    // ── Layer 1: Origin-based validation (OWASP recommended) ──
+    // Modern browsers always send the Origin header on same-origin and cross-origin
+    // POST/PUT/DELETE/PATCH requests. If the Origin matches our app's hostname,
+    // the request is same-origin and CSRF is not a concern.
+    const origin = request.headers.get('origin');
+    const referer = request.headers.get('referer');
+    const appHost = request.nextUrl.hostname; // e.g. "synthex.social" or "localhost"
+
+    if (origin) {
+      try {
+        const originHost = new URL(origin).hostname;
+        if (originHost === appHost) {
+          return true; // Same-origin request — CSRF not applicable
+        }
+      } catch {
+        // Malformed origin — fall through to token check
+      }
+    } else if (referer) {
+      // Fallback to Referer header when Origin is absent (some older browsers)
+      try {
+        const refererHost = new URL(referer).hostname;
+        if (refererHost === appHost) {
+          return true; // Same-origin referer — CSRF not applicable
+        }
+      } catch {
+        // Malformed referer — fall through to token check
+      }
+    }
+
+    // ── Layer 2: Double-submit CSRF token (defense-in-depth) ──
+    // If origin/referer checks didn't pass (e.g., missing headers, cross-origin),
+    // fall back to the classic double-submit token pattern.
     const csrfToken = request.headers.get('x-csrf-token');
     const cookieToken = request.cookies.get('csrf-token')?.value;
 

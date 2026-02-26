@@ -11,6 +11,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { fetchWithCSRF } from '@/lib/csrf';
 
 // ============================================================================
 // TYPES
@@ -88,9 +89,7 @@ export function useAIChat(): UseAIChatResult {
       setIsLoading(true);
       setError(null);
 
-      const response = await fetch('/api/ai/chat/conversations', {
-        credentials: 'include',
-      });
+      const response = await fetchWithCSRF('/api/ai/chat/conversations');
 
       const data: ConversationsResponse = await response.json();
 
@@ -125,10 +124,8 @@ export function useAIChat(): UseAIChatResult {
     try {
       setError(null);
 
-      const response = await fetch('/api/ai/chat/conversations', {
+      const response = await fetchWithCSRF('/api/ai/chat/conversations', {
         method: 'POST',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ title }),
       });
 
@@ -158,9 +155,8 @@ export function useAIChat(): UseAIChatResult {
     try {
       setError(null);
 
-      const response = await fetch(`/api/ai/chat/conversations/${id}`, {
+      const response = await fetchWithCSRF(`/api/ai/chat/conversations/${id}`, {
         method: 'DELETE',
-        credentials: 'include',
       });
 
       const data = await response.json();
@@ -233,9 +229,7 @@ export function useAIChatConversation(conversationId: string | null): UseAIChatC
       setIsLoading(true);
       setError(null);
 
-      const response = await fetch(`/api/ai/chat/conversations/${conversationId}`, {
-        credentials: 'include',
-      });
+      const response = await fetchWithCSRF(`/api/ai/chat/conversations/${conversationId}`);
 
       const data: ConversationResponse = await response.json();
 
@@ -284,10 +278,8 @@ export function useAIChatConversation(conversationId: string | null): UseAIChatC
       setMessages(prev => [...prev, userMessage]);
 
       // Send request for SSE stream
-      const response = await fetch(`/api/ai/chat/conversations/${conversationId}/messages`, {
+      const response = await fetchWithCSRF(`/api/ai/chat/conversations/${conversationId}/messages`, {
         method: 'POST',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: content.trim() }),
         signal: abortControllerRef.current.signal,
       });
