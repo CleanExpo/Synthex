@@ -271,6 +271,38 @@ export default function RootLayout({
             }),
           }}
         />
+        {/* HowTo Schema — 3-step process */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              '@context': 'https://schema.org',
+              '@type': 'HowTo',
+              name: 'How to Generate AI Marketing Content with Synthex',
+              description: 'Create viral social media content in 3 simple steps using Synthex AI.',
+              step: [
+                {
+                  '@type': 'HowToStep',
+                  position: 1,
+                  name: 'Choose your platform and topic',
+                  text: 'Select the social media platform (Twitter, LinkedIn, Instagram, etc.) and enter your content topic or campaign brief.',
+                },
+                {
+                  '@type': 'HowToStep',
+                  position: 2,
+                  name: 'Generate AI content',
+                  text: 'Click Generate to create multiple content variations with AI-powered hooks, hashtags, and engagement optimization.',
+                },
+                {
+                  '@type': 'HowToStep',
+                  position: 3,
+                  name: 'Schedule or publish',
+                  text: 'Review, edit, and schedule your content for optimal posting times, or publish immediately to your connected accounts.',
+                },
+              ],
+            }),
+          }}
+        />
       </head>
       <body className="min-h-screen bg-background font-sans antialiased">
         {/* Skip to main content link for accessibility */}
