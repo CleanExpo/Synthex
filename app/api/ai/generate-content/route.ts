@@ -9,6 +9,7 @@ import { aiContentGenerator } from '@/lib/ai/content-generator';
 import { authMonitor } from '@/lib/auth/monitoring';
 import { logger } from '@/lib/logger';
 import { verifyTokenSafe } from '@/lib/auth/jwt-utils';
+import { getUserAICredentials } from '@/lib/ai/api-credential-injector';
 
 import { withRateLimit, UsageTracker } from '@/lib/middleware/rate-limiter';
 
@@ -47,6 +48,9 @@ export async function POST(request: NextRequest) {
         );
       }
       const userId = tokenPayload.userId;
+
+      // Resolve user's own API credentials (falls back to platform key when null)
+      const userCreds = await getUserAICredentials(userId);
 
     // Parse request body
     const body = await request.json();
@@ -89,19 +93,23 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Single content generation
-    const generatedContent = await aiContentGenerator.generateContent({
-      type,
-      platform,
-      topic,
-      tone,
-      keywords,
-      targetAudience,
-      length,
-      includeEmojis,
-      includeHashtags,
-      includeCTA
-    });
+    // Single content generation — passes user credentials when available so
+    // the request uses the user's own API key rather than the platform key.
+    const generatedContent = await aiContentGenerator.generateContent(
+      {
+        type,
+        platform,
+        topic,
+        tone,
+        keywords,
+        targetAudience,
+        length,
+        includeEmojis,
+        includeHashtags,
+        includeCTA,
+      },
+      userCreds ?? undefined
+    );
 
     // Track usage for subscription limits
     await UsageTracker.track(userId, 'ai_posts', 1);

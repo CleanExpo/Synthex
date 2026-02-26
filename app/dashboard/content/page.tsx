@@ -129,9 +129,47 @@ export default function ContentPage() {
     toast.success('Copied to clipboard!');
   }, []);
 
-  const handleSave = useCallback(() => {
-    toast.success('Content saved as draft');
-  }, []);
+  const handleSave = useCallback(async () => {
+    const contentToSave = editMode && editedContent
+      ? editedContent
+      : generatedContent?.variations?.[selectedVariation]
+        ? generatedContent.variations[selectedVariation]
+        : generatedContent?.primary;
+
+    if (!contentToSave) {
+      toast.error('Generate content first before saving');
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/content-library', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: topic || `${platform} post`,
+          content: contentToSave,
+          contentType: 'post',
+          platform,
+          metadata: {
+            tone,
+            hookType,
+            hashtags: generatedContent?.metadata?.hashtags || [],
+            savedAt: new Date().toISOString(),
+          },
+        }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error((data as { error?: string }).error || 'Failed to save');
+      }
+
+      toast.success('Content saved to library!');
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to save content');
+    }
+  }, [generatedContent, editMode, editedContent, selectedVariation, topic, platform, tone, hookType]);
 
   const handleSchedule = useCallback(async () => {
     if (!generatedContent) {

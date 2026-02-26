@@ -13,20 +13,20 @@ import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
 import { encryptApiKey, maskApiKey } from '@/lib/encryption/api-key-encryption';
 import { validateAPIKey, APIProvider } from '@/lib/encryption/api-key-validator';
-import { getAuthUser } from '@/lib/supabase-server';
+import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 
 // --- GET: list credentials ---
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    const user = await getAuthUser();
-    if (!user) {
+    const userId = await getUserIdFromRequestOrCookies(request);
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const credentials = await prisma.aPICredential.findMany({
       where: {
-        userId: user.id,
+        userId,
         revokedAt: null,
       },
       select: {
@@ -63,8 +63,8 @@ const AddCredentialSchema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
-    const user = await getAuthUser();
-    if (!user) {
+    const userId = await getUserIdFromRequestOrCookies(request);
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -100,7 +100,7 @@ export async function POST(request: NextRequest) {
     // Upsert: find existing for this user+provider (without org), or create new
     const existing = await prisma.aPICredential.findFirst({
       where: {
-        userId: user.id,
+        userId,
         provider,
         organizationId: null,
         revokedAt: null,
@@ -125,7 +125,7 @@ export async function POST(request: NextRequest) {
     } else {
       credential = await prisma.aPICredential.create({
         data: {
-          userId: user.id,
+          userId,
           organizationId: null,
           provider,
           encryptedKey,
@@ -166,8 +166,8 @@ const DeleteCredentialSchema = z.object({
 
 export async function DELETE(request: NextRequest) {
   try {
-    const user = await getAuthUser();
-    if (!user) {
+    const userId = await getUserIdFromRequestOrCookies(request);
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -185,7 +185,7 @@ export async function DELETE(request: NextRequest) {
     const credential = await prisma.aPICredential.findFirst({
       where: {
         id: parsed.data.id,
-        userId: user.id,
+        userId,
       },
     });
 
@@ -214,3 +214,6 @@ export async function DELETE(request: NextRequest) {
     );
   }
 }
+
+// Required for crypto usage in api-key-encryption (Node.js built-in)
+export const runtime = 'nodejs';

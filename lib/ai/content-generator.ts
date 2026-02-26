@@ -9,6 +9,12 @@ import type { AIProvider } from '@/lib/ai/providers';
 import { logger } from '@/lib/logger';
 import prisma from '@/lib/prisma';
 
+/** Optional user-supplied API credentials that override the platform key. */
+export interface UserProviderCredentials {
+  apiKey: string;
+  provider: string;
+}
+
 // Persona type from database
 interface PersonaData {
   id: string;
@@ -78,9 +84,16 @@ export class AIContentGenerator {
   }
 
   /**
-   * Generate AI content based on request parameters
+   * Generate AI content based on request parameters.
+   *
+   * @param request - Content generation parameters
+   * @param userCredentials - Optional user-supplied API key; when provided it
+   *   overrides the platform-level key for this request only.
    */
-  async generateContent(request: ContentRequest): Promise<GeneratedContent> {
+  async generateContent(
+    request: ContentRequest,
+    userCredentials?: UserProviderCredentials
+  ): Promise<GeneratedContent> {
     const startTime = Date.now();
 
     // Fetch persona data if personaId provided
@@ -115,12 +128,18 @@ export class AIContentGenerator {
     // Select appropriate model based on content type
     const model = this.selectModel(request);
 
+    // Resolve which AI provider to use for this request.
+    // User credentials take priority over the platform singleton.
+    const aiClient: AIProvider = userCredentials
+      ? getAIProvider({ apiKey: userCredentials.apiKey, provider: userCredentials.provider as 'openrouter' | 'anthropic' | 'google' })
+      : this.client;
+
     try {
       // Generate main content
-      const mainContent = await this.callAI(prompt, model);
+      const mainContent = await this.callAI(prompt, model, aiClient);
       
       // Generate variations for A/B testing
-      const variations = await this.generateVariations(mainContent, request);
+      const variations = await this.generateVariations(mainContent, request, aiClient);
       
       // Extract hashtags and emojis
       const hashtags = this.extractHashtags(mainContent);
@@ -238,11 +257,15 @@ Generate content that will maximize engagement and shares.
   }
 
   /**
-   * Call OpenRouter API
+   * Call the AI provider with the given prompt.
+   *
+   * @param prompt - Fully-built prompt string
+   * @param model - Model identifier to use
+   * @param client - Resolved AIProvider instance (platform or user key)
    */
-  private async callAI(prompt: string, model: string): Promise<string> {
+  private async callAI(prompt: string, model: string, client: AIProvider): Promise<string> {
     try {
-      const response = await this.client.complete({
+      const response = await client.complete({
         model,
         messages: [
           {
@@ -274,14 +297,15 @@ Generate content that will maximize engagement and shares.
    * Generate content variations for A/B testing
    */
   private async generateVariations(
-    originalContent: string, 
-    request: ContentRequest
+    originalContent: string,
+    request: ContentRequest,
+    aiClient: AIProvider
   ): Promise<ContentVariation[]> {
     const variations: ContentVariation[] = [];
-    
+
     // Style variations
     const styles = ['more casual', 'more formal', 'with urgency', 'question-based'];
-    
+
     for (const style of styles.slice(0, 2)) { // Generate 2 variations
       const variationPrompt = `
 Rewrite this content to be ${style}:
@@ -289,9 +313,9 @@ Rewrite this content to be ${style}:
 
 Keep the same message but change the style and tone.
       `;
-      
+
       try {
-        const variation = await this.callAI(variationPrompt, this.models.fast);
+        const variation = await this.callAI(variationPrompt, this.models.fast, aiClient);
         variations.push({
           id: `var-${crypto.randomUUID()}`,
           content: variation,
