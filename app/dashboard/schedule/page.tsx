@@ -11,6 +11,7 @@
  */
 
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import { DashboardSkeleton } from '@/components/skeletons';
 import { APIErrorCard } from '@/components/error-states';
 import { WeekView, PostDetailModal, OPTIMAL_TIMES } from '@/components/calendar';
@@ -33,11 +34,14 @@ import { EmptyState } from '@/components/error-states';
 // Map API post shape → frontend ScheduledPost
 function mapApiPost(p: Record<string, unknown>): ScheduledPost {
   const metadata = (p.metadata as Record<string, unknown>) || {};
+  const metaHashtags = (metadata.hashtags as string[]) || [];
+  // scheduledAt may be null for draft posts — fall back to createdAt or now
+  const rawScheduledAt = p.scheduledAt ?? p.createdAt ?? new Date().toISOString();
   return {
     id: String(p.id),
     content: (p.content as string) || '',
     platforms: (p.platforms as string[]) || [(p.platform as string) || 'twitter'],
-    scheduledFor: new Date(p.scheduledAt as string),
+    scheduledFor: new Date(rawScheduledAt as string),
     status: (p.status as ScheduledPost['status']) || 'scheduled',
     engagement: {
       estimated: (metadata.estimatedEngagement as number) || 5,
@@ -49,12 +53,13 @@ function mapApiPost(p: Record<string, unknown>): ScheduledPost {
       } : {}),
     },
     persona: (metadata.persona as string) || 'Default',
-    hashtags: (p.hashtags as string[]) || [],
-    mediaUrls: (p.mediaUrls as string[]) || [],
+    hashtags: metaHashtags,
+    mediaUrls: (metadata.images as string[]) || [],
   };
 }
 
 export default function SchedulePage() {
+  const router = useRouter();
   const [posts, setPosts] = useState<ScheduledPost[]>([]);
   const [currentDate, setCurrentDate] = useState(new Date());
   const [viewMode, setViewMode] = useState<ViewMode>('week');
@@ -178,13 +183,9 @@ export default function SchedulePage() {
     setSelectedPost(post);
   }, []);
 
-  const handlePostCreate = useCallback((date: Date, hour: number) => {
-    const scheduledTime = new Date(date);
-    scheduledTime.setHours(hour, 0, 0, 0);
-    toast.success(`Creating post for ${scheduledTime.toLocaleString()}`);
-    setIsCreating(true);
-    setTimeout(() => setIsCreating(false), 1000);
-  }, []);
+  const handlePostCreate = useCallback((_date?: Date, _hour?: number) => {
+    router.push('/dashboard/content');
+  }, [router]);
 
   // ── Save (update) post ────────────────────────────────────────────────────
   const handleSavePost = useCallback(async (updatedPost: ScheduledPost) => {
@@ -413,9 +414,9 @@ export default function SchedulePage() {
     return (
       <EmptyState
         title="No posts scheduled yet"
-        message="Create your first post to get started."
-        actionLabel="Create Post"
-        onAction={() => handlePostCreate(new Date(), new Date().getHours())}
+        message="Generate content, then click Schedule to add posts to your calendar."
+        actionLabel="Create Content"
+        onAction={() => router.push('/dashboard/content')}
       />
     );
   }
