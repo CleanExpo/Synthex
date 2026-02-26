@@ -15,6 +15,7 @@ import type { PlatformConnection, ApiKey } from './types';
 interface IntegrationsTabProps {
   platforms: PlatformConnection[];
   apiKeys: ApiKey[];
+  activeBusinessName?: string | null;
   onConnect: (platformId: string) => void;
   onDisconnect: (platformId: string) => void;
   onCreateApiKey: () => void;
@@ -24,6 +25,7 @@ interface IntegrationsTabProps {
 export function IntegrationsTab({
   platforms,
   apiKeys,
+  activeBusinessName,
   onConnect,
   onDisconnect,
   onCreateApiKey,
@@ -35,7 +37,16 @@ export function IntegrationsTab({
       <Card variant="glass">
         <CardHeader>
           <CardTitle>Connected Platforms</CardTitle>
-          <CardDescription>Manage your social media integrations</CardDescription>
+          <CardDescription>
+            {activeBusinessName
+              ? `Social accounts for ${activeBusinessName}`
+              : 'Manage your social media integrations'}
+          </CardDescription>
+          {activeBusinessName && (
+            <Badge className="w-fit bg-cyan-500/20 text-cyan-400 border-cyan-500/30 mt-2">
+              Business: {activeBusinessName}
+            </Badge>
+          )}
         </CardHeader>
         <CardContent>
           <div className="space-y-4">

@@ -1,16 +1,21 @@
 /**
  * Integrations API Route
- * GET /api/integrations - Get user integrations
+ * GET /api/integrations - Get user integrations (scoped by active organization)
  * POST /api/integrations - Connect a new integration (manual)
  * DELETE /api/integrations - Disconnect an integration
  *
  * AUTH: Uses `getUserIdFromRequestOrCookies()` for cookie-based JWT auth.
  * DB: Uses Prisma to query `platform_connections` table (same table OAuth callback writes to).
+ *
+ * MULTI-BUSINESS: Connections are scoped by organizationId.
+ * - Multi-business owners: filtered by activeOrganizationId
+ * - Regular users: filtered by user's organizationId (or null for personal)
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
+import { getEffectiveOrganizationId } from '@/lib/multi-business';
 import { z } from 'zod';
 
 const connectIntegrationSchema = z.object({
@@ -33,7 +38,7 @@ const emptyIntegrations = {
   raw: [],
 };
 
-// GET user integrations
+// GET user integrations (scoped by active organization)
 export async function GET(request: NextRequest) {
   try {
     const userId = await getUserIdFromRequestOrCookies(request);
@@ -41,14 +46,19 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Query platform_connections via Prisma (same table OAuth callback writes to)
+    // Determine organization scope for multi-business support
+    const organizationId = await getEffectiveOrganizationId(userId);
+
+    // Query platform_connections via Prisma, scoped by organization
     const connections = await prisma.platformConnection.findMany({
-      where: { userId, isActive: true },
+      where: { userId, organizationId: organizationId ?? null, isActive: true },
       select: {
         platform: true,
         profileName: true,
         profileId: true,
+        accountType: true,
         isActive: true,
+        organizationId: true,
       },
     });
 
@@ -77,6 +87,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       integrations: formattedIntegrations,
       details: connectionDetails,
+      organizationId: organizationId ?? null,
       raw: connections,
     });
   } catch (error) {
@@ -104,24 +115,29 @@ export async function POST(request: NextRequest) {
     }
     const { platform, accessToken, refreshToken, profile } = validation.data;
 
-    // Upsert platform connection via Prisma
+    // Determine organization scope for multi-business support
+    const organizationId = await getEffectiveOrganizationId(userId);
+
+    // Upsert platform connection via Prisma (scoped by organization)
     const connection = await prisma.platformConnection.upsert({
       where: {
-        userId_platform_profileId: {
+        unique_user_platform_org: {
           userId,
           platform,
-          profileId: 'manual',
+          organizationId: organizationId ?? '',
         },
       },
       update: {
         accessToken: accessToken || '',
         refreshToken: refreshToken || null,
+        profileId: 'manual',
         isActive: true,
         updatedAt: new Date(),
         metadata: profile ? ({ profile } as any) : undefined,
       },
       create: {
         userId,
+        organizationId: organizationId ?? null,
         platform,
         accessToken: accessToken || '',
         refreshToken: refreshToken || null,
@@ -161,9 +177,12 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'Platform is required' }, { status: 400 });
     }
 
-    // Soft delete - mark as inactive and clear tokens
+    // Determine organization scope for multi-business support
+    const organizationId = await getEffectiveOrganizationId(userId);
+
+    // Soft delete - mark as inactive and clear tokens (scoped by organization)
     await prisma.platformConnection.updateMany({
-      where: { userId, platform },
+      where: { userId, platform, organizationId: organizationId ?? null },
       data: {
         isActive: false,
         accessToken: '',

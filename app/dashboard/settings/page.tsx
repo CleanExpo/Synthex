@@ -9,6 +9,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { profileAPI, settingsAPI, integrationsAPI } from '@/lib/api/settings';
+import { useActiveBusiness } from '@/hooks/useActiveBusiness';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import {
@@ -48,6 +49,9 @@ export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState<SettingsTab>('profile');
   const [isSaving, setIsSaving] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
+
+  // Multi-business context — integrations are scoped per business
+  const { activeBusiness } = useActiveBusiness();
 
   // Profile state
   const [profile, setProfile] = useState<UserProfile>({
@@ -128,26 +132,8 @@ export default function SettingsPage() {
       // Use defaults - already set in state initialization
     }
 
-    // Load integrations (independent)
-    try {
-      const integrationsData = await integrationsAPI.getIntegrations();
-      if (integrationsData.integrations) {
-        setPlatforms(prev =>
-          prev.map(p => ({
-            ...p,
-            connected: integrationsData.integrations[p.id] ?? false,
-            username: integrationsData.details?.[p.id]?.profileName
-              ? `@${integrationsData.details[p.id].profileName}`
-              : integrationsData.integrations[p.id]
-                ? 'Connected'
-                : undefined,
-          }))
-        );
-      }
-    } catch (integrationsError) {
-      console.error('Error loading integrations:', integrationsError);
-      // Use defaults - already set in state initialization
-    }
+    // Load integrations (moved to separate effect — reloads when active business changes)
+    await loadIntegrations();
 
     // Fetch real billing/subscription data (independent)
     try {
@@ -194,9 +180,38 @@ export default function SettingsPage() {
     }
   }, []);
 
+  // Load integrations — extracted so it can re-run when active business changes
+  const loadIntegrations = useCallback(async () => {
+    try {
+      const integrationsData = await integrationsAPI.getIntegrations();
+      if (integrationsData.integrations) {
+        setPlatforms(prev =>
+          prev.map(p => ({
+            ...p,
+            connected: integrationsData.integrations[p.id] ?? false,
+            username: integrationsData.details?.[p.id]?.profileName
+              ? `@${integrationsData.details[p.id].profileName}`
+              : integrationsData.integrations[p.id]
+                ? 'Connected'
+                : undefined,
+          }))
+        );
+      }
+    } catch (integrationsError) {
+      console.error('Error loading integrations:', integrationsError);
+    }
+  }, []);
+
   useEffect(() => {
     loadUserData();
   }, [loadUserData]);
+
+  // Reload integrations when active business changes
+  useEffect(() => {
+    if (activeBusiness !== undefined) {
+      loadIntegrations();
+    }
+  }, [activeBusiness?.organizationId, loadIntegrations]);
 
   // Handlers
   const handleProfileChange = useCallback((field: keyof UserProfile, value: string) => {
@@ -472,6 +487,7 @@ export default function SettingsPage() {
           <IntegrationsTab
             platforms={platforms}
             apiKeys={apiKeys}
+            activeBusinessName={activeBusiness?.organizationName ?? null}
             onConnect={handleConnect}
             onDisconnect={handleDisconnect}
             onCreateApiKey={handleCreateApiKey}

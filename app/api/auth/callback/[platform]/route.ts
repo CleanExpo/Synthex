@@ -288,7 +288,7 @@ export async function GET(
     }
 
     // Decode state
-    let stateData: { userId?: string; email?: string; platform: string; timestamp: number; flow?: 'integration' };
+    let stateData: { userId?: string; email?: string; platform: string; organizationId?: string | null; timestamp: number; flow?: 'integration' };
     try {
       stateData = JSON.parse(Buffer.from(state, 'base64').toString());
     } catch {
@@ -345,6 +345,9 @@ export async function GET(
     // User is already logged in — just store the platform connection and close popup
     // =========================================================================
     if (stateData.flow === 'integration' && stateData.userId) {
+      // Use organizationId from state (threaded from OAuth initiation)
+      const orgId = stateData.organizationId ?? null;
+
       try {
         const expiresAt = tokenData.expiresIn
           ? new Date(Date.now() + tokenData.expiresIn * 1000)
@@ -357,16 +360,17 @@ export async function GET(
 
         await prisma.platformConnection.upsert({
           where: {
-            userId_platform_profileId: {
+            unique_user_platform_org: {
               userId: stateData.userId,
               platform,
-              profileId: userInfo.id || 'default',
+              organizationId: orgId ?? '',
             },
           },
           update: {
             accessToken: encryptedAccessToken,
             refreshToken: encryptedRefreshToken ?? null,
             expiresAt,
+            profileId: userInfo.id || 'default',
             isActive: true,
             updatedAt: new Date(),
             profileName: userInfo.name || userInfo.username,
@@ -377,6 +381,7 @@ export async function GET(
           },
           create: {
             userId: stateData.userId,
+            organizationId: orgId,
             platform,
             accessToken: encryptedAccessToken,
             refreshToken: encryptedRefreshToken ?? null,
@@ -395,10 +400,10 @@ export async function GET(
         console.error('Failed to store platform connection:', error);
       }
 
-      // Close popup and notify parent window
+      // Close popup and notify parent window (include org context)
       const html = `<!DOCTYPE html><html><body><script>
         if (window.opener) {
-          window.opener.postMessage({ type: 'oauth-success', platform: '${platform}' }, window.location.origin);
+          window.opener.postMessage({ type: 'oauth-success', platform: '${platform}', organizationId: ${orgId ? `'${orgId}'` : 'null'} }, window.location.origin);
         }
         window.close();
       </script><p>Connected to ${platform}! This window will close automatically.</p></body></html>`;
@@ -465,18 +470,22 @@ export async function GET(
         ? encryptField(tokenData.refreshToken) ?? undefined
         : undefined;
 
+      // Login flow — store connection with user's primary org (or null)
+      const loginOrgId = user.organizationId ?? null;
+
       await prisma.platformConnection.upsert({
         where: {
-          userId_platform_profileId: {
+          unique_user_platform_org: {
             userId: user.id,
             platform,
-            profileId: userInfo.id || 'default',
+            organizationId: loginOrgId ?? '',
           },
         },
         update: {
           accessToken: encryptedAccessToken,
           refreshToken: encryptedRefreshToken ?? null,
           expiresAt,
+          profileId: userInfo.id || 'default',
           isActive: true,
           updatedAt: new Date(),
           profileName: userInfo.name || userInfo.username,
@@ -487,6 +496,7 @@ export async function GET(
         },
         create: {
           userId: user.id,
+          organizationId: loginOrgId,
           platform,
           accessToken: encryptedAccessToken,
           refreshToken: encryptedRefreshToken ?? null,

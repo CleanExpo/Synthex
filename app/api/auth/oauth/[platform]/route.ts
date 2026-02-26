@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import prisma from '@/lib/prisma';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
+import { getEffectiveOrganizationId } from '@/lib/multi-business';
 import { sanitizeErrorForResponse } from '@/lib/utils/error-utils';
 
 const oauthCallbackSchema = z.object({
@@ -110,11 +111,15 @@ export async function GET(
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    // Generate state parameter for security
+    // Get active organization for multi-business scoping
+    const organizationId = await getEffectiveOrganizationId(userId);
+
+    // Generate state parameter for security (includes org context)
     const state = Buffer.from(JSON.stringify({
       userId: user.id,
       email: user.email,
       platform,
+      organizationId: organizationId ?? null,
       timestamp: Date.now(),
       flow: 'integration',
     })).toString('base64');

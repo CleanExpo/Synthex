@@ -126,9 +126,9 @@ async function getBusinessStats(
       where: { campaign: { organizationId } },
     });
 
-    // Get unique platforms from platform connections
+    // Get unique platforms from platform connections (directly scoped by organizationId)
     const platformsData = await prisma.platformConnection.findMany({
-      where: { user: { organizationId }, isActive: true },
+      where: { organizationId, isActive: true },
       select: { platform: true },
       distinct: ['platform'],
     });

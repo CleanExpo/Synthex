@@ -399,6 +399,9 @@ model Organization {
   // Social listening
   trackedKeywords    TrackedKeyword[]
 
+  // Platform connections (business-scoped social accounts)
+  platformConnections PlatformConnection[]
+
   // Business vetting & API credentials
   vettingResults     BusinessVettingResult[]
   apiCredentials     APICredential[]
@@ -413,26 +416,31 @@ model Organization {
 
 // Platform Integration Models
 model PlatformConnection {
-  id           String   @id @default(cuid())
-  userId       String   @map("user_id")
-  platform     String   // 'facebook', 'instagram', 'twitter', 'linkedin', 'tiktok', 'youtube', 'pinterest', 'reddit'
-  accessToken  String   @map("access_token")
-  refreshToken String?  @map("refresh_token")
-  expiresAt    DateTime? @map("expires_at")
-  scope        String?  // Platform-specific permissions
-  profileId    String?  @map("profile_id") // Platform user/page ID
-  profileName  String?  @map("profile_name") // Platform username/page name
-  isActive     Boolean  @default(true) @map("is_active")
-  lastSync     DateTime? @map("last_sync")
-  metadata     Json?    // Platform-specific data
-  createdAt    DateTime @default(now()) @map("created_at")
-  updatedAt    DateTime @updatedAt @map("updated_at")
+  id             String   @id @default(cuid())
+  userId         String   @map("user_id")
+  organizationId String?  @map("organization_id") // NULL = personal, non-NULL = business-scoped
+  platform       String   // 'facebook', 'instagram', 'twitter', 'linkedin', 'tiktok', 'youtube', 'pinterest', 'reddit'
+  accessToken    String   @map("access_token")
+  refreshToken   String?  @map("refresh_token")
+  expiresAt      DateTime? @map("expires_at")
+  scope          String?  // Platform-specific permissions
+  profileId      String?  @map("profile_id") // Platform user/page ID
+  profileName    String?  @map("profile_name") // Platform username/page name
+  accountType    String   @default("personal") @map("account_type") // 'personal' | 'business_page' | 'company'
+  isActive       Boolean  @default(true) @map("is_active")
+  lastSync       DateTime? @map("last_sync")
+  metadata       Json?    // Platform-specific data
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
 
   // Relations
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  platformPosts PlatformPost[]
+  user           User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization   Organization?  @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  platformPosts  PlatformPost[]
 
-  @@unique([userId, platform, profileId])
+  // One connection per platform per organization (or per user if no org)
+  @@unique([userId, platform, organizationId], name: "unique_user_platform_org")
+  @@index([organizationId, platform])
   @@map("platform_connections")
 }
 
