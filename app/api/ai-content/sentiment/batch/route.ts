@@ -16,6 +16,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
 import { z } from 'zod';
+import { requireApiKey } from '@/lib/middleware/require-api-key';
 
 // ============================================================================
 // VALIDATION SCHEMAS
@@ -200,6 +201,7 @@ function analyzeWithRules(text: string): SentimentResult {
 // ============================================================================
 
 export async function POST(request: NextRequest) {
+  return requireApiKey(request, async () => {
   try {
     // Security check
     const security = await APISecurityChecker.check(
@@ -319,6 +321,7 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
+  });
 }
 
 // Node.js runtime required for AI calls

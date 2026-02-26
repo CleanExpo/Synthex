@@ -13,8 +13,9 @@
  * Handles partial success gracefully (some platforms succeed, others fail).
  */
 
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { withAuth, AuthenticatedRequest } from '@/lib/middleware/withAuth';
+import { requireApiKey } from '@/lib/middleware/require-api-key';
 import { z } from 'zod';
 import { crossPostService } from '@/lib/ai/cross-post-service';
 import { SUPPORTED_PLATFORMS, SupportedPlatform } from '@/lib/social';
@@ -181,7 +182,13 @@ async function handlePost(request: AuthenticatedRequest): Promise<NextResponse> 
   }
 }
 
-export const POST = withAuth(handlePost);
+const authenticatedHandler = withAuth(handlePost);
+
+export async function POST(request: NextRequest) {
+  return requireApiKey(request, async () => {
+    return authenticatedHandler(request);
+  });
+}
 
 // Edge runtime is not compatible with AI providers or Prisma — use Node.js
 export const runtime = 'nodejs';

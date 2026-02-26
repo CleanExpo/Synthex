@@ -19,6 +19,7 @@ import { logger } from '@/lib/logger';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
 import { auditLogger } from '@/lib/security/audit-logger';
 import { aiGeneration } from '@/lib/middleware/api-rate-limit';
+import { requireApiKey } from '@/lib/middleware/require-api-key';
 
 // Validation schema
 const OptimizeRequestSchema = z.object({
@@ -107,6 +108,7 @@ const HOOK_STARTERS: string[] = [
 ];
 
 export async function POST(request: NextRequest) {
+  return requireApiKey(request, async () => {
   // Distributed rate limiting via Upstash Redis
   return aiGeneration(request, async () => {
   try {
@@ -292,6 +294,7 @@ Keep the core message but enhance engagement. Follow platform best practices.`
       { status: 500 }
     );
   }
+  });
   });
 }
 

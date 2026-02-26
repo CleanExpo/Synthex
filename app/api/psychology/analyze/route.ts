@@ -11,8 +11,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { psychologyAnalyzer } from '@/lib/ai/psychology-analyzer';
 import { z } from 'zod';
-import { getUserIdFromCookies } from '@/lib/auth/jwt-utils';
 import { resolveAIProvider } from '@/lib/ai/api-credential-injector';
+import { requireApiKey } from '@/lib/middleware/require-api-key';
 
 const AnalyzeRequestSchema = z.object({
   content: z.string().min(1, 'Content is required').max(5000, 'Content too long'),
@@ -21,25 +21,13 @@ const AnalyzeRequestSchema = z.object({
   contentType: z.enum(['post', 'ad', 'email', 'landing', 'tagline', 'headline']).optional(),
 });
 
-// Helper to get user ID from auth (uses centralized JWT verification)
-async function getUserId(_request: NextRequest): Promise<string | null> {
-  return getUserIdFromCookies();
-}
-
 /**
  * POST /api/psychology/analyze
  * Analyze content for psychological persuasion effectiveness
  */
 export async function POST(request: NextRequest) {
+  return requireApiKey(request, async (userId) => {
   try {
-    const userId = await getUserId(request);
-    if (!userId) {
-      return NextResponse.json(
-        { error: 'Authentication required' },
-        { status: 401 }
-      );
-    }
-
     const body = await request.json();
     const validation = AnalyzeRequestSchema.safeParse(body);
 
@@ -85,6 +73,7 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
+  });
 }
 
 /**

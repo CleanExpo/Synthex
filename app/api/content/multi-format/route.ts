@@ -12,8 +12,9 @@
  * FAILURE MODE: Returns structured error responses on validation or server failure.
  */
 
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { withAuth, AuthenticatedRequest } from '@/lib/middleware/withAuth';
+import { requireApiKey } from '@/lib/middleware/require-api-key';
 import { z } from 'zod';
 import { multiFormatAdapter } from '@/lib/ai/multi-format-adapter';
 
@@ -129,7 +130,13 @@ async function handlePost(request: AuthenticatedRequest): Promise<NextResponse> 
   }
 }
 
-export const POST = withAuth(handlePost);
+const authenticatedHandler = withAuth(handlePost);
+
+export async function POST(request: NextRequest) {
+  return requireApiKey(request, async () => {
+    return authenticatedHandler(request);
+  });
+}
 
 // Edge runtime is not compatible with AI providers — use Node.js
 export const runtime = 'nodejs';

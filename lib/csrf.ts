@@ -12,6 +12,8 @@
 
 'use client';
 
+import { checkApiKeyRequired } from '@/lib/utils/api-key-interceptor';
+
 /**
  * Read the CSRF token from the cookie.
  * Returns empty string if not found (origin-based validation will still work).
@@ -65,9 +67,14 @@ export async function fetchWithCSRF(
     headers['Content-Type'] = 'application/json';
   }
 
-  return fetch(url, {
+  const response = await fetch(url, {
     ...options,
     credentials: 'include',
     headers,
   });
+
+  // Global 402 interception: prompt user to add AI API key
+  checkApiKeyRequired(response);
+
+  return response;
 }

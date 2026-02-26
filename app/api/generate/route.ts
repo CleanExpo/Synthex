@@ -15,6 +15,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { aiGeneration } from '@/lib/rate-limit';
 import { createClient } from '@supabase/supabase-js';
 import { verifyTokenSafe } from '@/lib/auth/jwt-utils';
+import { requireApiKey } from '@/lib/middleware/require-api-key';
 
 // Backward compatibility: stub for enhancedRateLimiters
 const enhancedRateLimiters = {
@@ -222,10 +223,12 @@ function suggestPostTime(platform: string): string {
   return times[djb2(platform) % times.length];
 }
 
-// Export with enhanced rate limiting
+// Export with API key gate + enhanced rate limiting
 export async function POST(req: NextRequest) {
-  // Apply AI-specific rate limiting
-  return enhancedRateLimiters.ai(req, () => generateContent(req));
+  return requireApiKey(req, async () => {
+    // Apply AI-specific rate limiting
+    return enhancedRateLimiters.ai(req, () => generateContent(req));
+  });
 }
 
 // GET endpoint to check rate limit status

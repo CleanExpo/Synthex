@@ -19,6 +19,7 @@ import { z } from 'zod';
 import { ResponseOptimizer } from '@/lib/api/response-optimizer';
 import { logger } from '@/lib/logger';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
+import { requireApiKey } from '@/lib/middleware/require-api-key';
 import {
   ContentVariationsService,
   type VariationConfig,
@@ -42,6 +43,7 @@ const variationsSchema = z.object({
 });
 
 export async function POST(request: NextRequest) {
+  return requireApiKey(request, async () => {
   try {
     // Authentication required for content generation
     const security = await APISecurityChecker.check(
@@ -126,6 +128,7 @@ export async function POST(request: NextRequest) {
     logger.error('Failed to generate variations', { error });
     return ResponseOptimizer.createErrorResponse('Failed to generate variations', 500);
   }
+  });
 }
 
 // ============================================================================

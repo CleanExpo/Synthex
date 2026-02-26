@@ -19,6 +19,7 @@ import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-securit
 import { z } from 'zod';
 import { aiGeneration } from '@/lib/middleware/api-rate-limit';
 import { resolveAIProvider, hasAIAccess } from '@/lib/ai/api-credential-injector';
+import { requireApiKey } from '@/lib/middleware/require-api-key';
 import type { AIProvider } from '@/lib/ai/providers';
 
 // ============================================================================
@@ -326,6 +327,7 @@ function predictEngagement(
 // ============================================================================
 
 export async function POST(request: NextRequest) {
+  return requireApiKey(request, async () => {
   // Distributed rate limiting via Upstash Redis
   return aiGeneration(request, async () => {
   try {
@@ -422,6 +424,7 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
+  });
   });
 }
 

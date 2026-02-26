@@ -15,6 +15,7 @@ import { z } from 'zod';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import crypto from 'crypto';
 import { resolveAIProvider, hasAIAccess } from '@/lib/ai/api-credential-injector';
+import { requireApiKey } from '@/lib/middleware/require-api-key';
 import { logger } from '@/lib/logger';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
 import { auditLogger } from '@/lib/security/audit-logger';
@@ -66,6 +67,7 @@ const TranslateRequestSchema = z.object({
 });
 
 export async function POST(request: NextRequest) {
+  return requireApiKey(request, async () => {
   try {
     // Security check
     const security = await APISecurityChecker.check(
@@ -289,6 +291,7 @@ Key guidelines:
       { status: 500 }
     );
   }
+  });
 }
 
 // GET endpoint to list supported languages

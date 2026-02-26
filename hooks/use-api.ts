@@ -16,6 +16,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { checkApiKeyRequired } from '@/lib/utils/api-key-interceptor';
 
 // ============================================================================
 // TYPES
@@ -138,6 +139,8 @@ async function fetchWithAuth<T>(
   });
 
   if (!response.ok) {
+    // Global 402 interception: prompt user to add AI API key
+    checkApiKeyRequired(response);
     const errorData = await response.json().catch(() => ({}));
     throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
   }
