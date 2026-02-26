@@ -74,6 +74,8 @@ async function handleLogin(body: z.infer<typeof loginSchema>) {
         email: true,
         name: true,
         password: true,
+        onboardingComplete: true,
+        apiKeyConfigured: true,
       },
     });
 
@@ -101,8 +103,13 @@ async function handleLogin(body: z.infer<typeof loginSchema>) {
       );
     }
 
-    // Generate token
-    const token = generateToken({ userId: user.id, email: user.email });
+    // Generate token (include onboarding flags for middleware)
+    const token = generateToken({
+      userId: user.id,
+      email: user.email,
+      onboardingComplete: user.onboardingComplete,
+      apiKeyConfigured: user.apiKeyConfigured,
+    });
 
     // Return user data (without password)
     const { password: _, ...userData } = user;
@@ -162,8 +169,13 @@ async function handleSignup(body: z.infer<typeof signupSchema>) {
       },
     });
 
-    // Generate token
-    const token = generateToken({ userId: user.id, email: user.email });
+    // Generate token (new user: onboarding not complete)
+    const token = generateToken({
+      userId: user.id,
+      email: user.email,
+      onboardingComplete: false,
+      apiKeyConfigured: false,
+    });
 
     return NextResponse.json({
       user,
@@ -210,6 +222,8 @@ async function handleVerify(request: NextRequest) {
         id: true,
         email: true,
         name: true,
+        onboardingComplete: true,
+        apiKeyConfigured: true,
       },
     });
 

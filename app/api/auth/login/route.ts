@@ -46,7 +46,9 @@ export async function POST(request: NextRequest) {
         email: true,
         name: true,
         emailVerified: true,
-        authProvider: true
+        authProvider: true,
+        onboardingComplete: true,
+        apiKeyConfigured: true,
       }
     });
 
@@ -93,8 +95,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create JWT token
-    const token = generateToken({ userId: user.id, email: user.email });
+    // Create JWT token (include onboarding flags for middleware)
+    const token = generateToken({
+      userId: user.id,
+      email: user.email,
+      onboardingComplete: user.onboardingComplete,
+      apiKeyConfigured: user.apiKeyConfigured,
+    });
 
     // Create or update session
     const expiresAt = new Date();

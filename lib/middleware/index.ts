@@ -56,6 +56,9 @@ export {
 // Re-export stub types from api-middleware for backward compatibility
 export { type RateLimitMiddlewareOptions } from './api-middleware';
 
+// API Key Hard Gate
+export { requireApiKey } from './require-api-key';
+
 // API Middleware
 export {
   withAPIMiddleware,

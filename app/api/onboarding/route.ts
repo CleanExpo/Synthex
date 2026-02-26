@@ -7,8 +7,8 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { createServerClient, getAuthUser } from '@/lib/supabase-server';
 import { prisma } from '@/lib/prisma';
+import { getUserIdFromRequestOrCookies, generateToken } from '@/lib/auth/jwt-utils';
 import { webhookHandler } from '@/lib/webhooks';
 import { logger } from '@/lib/logger';
 
@@ -77,12 +77,19 @@ async function generateUniqueSlug(baseName: string): Promise<string> {
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = createServerClient();
-
-    // Verify authentication
-    const user = await getAuthUser();
-    if (!user) {
+    // Verify authentication via JWT
+    const userId = await getUserIdFromRequestOrCookies(request);
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // Get user details for token generation
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true, email: true, name: true },
+    });
+    if (!user) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
     const rawBody = await request.json();
@@ -179,44 +186,35 @@ export async function POST(request: NextRequest) {
     // Create persona if not skipped
     let persona = null;
     if (!data.skipPersona && data.personaName && data.personaTone) {
-      const { data: personaData, error: personaError } = await supabase
-        .from('personas')
-        .upsert(
-          {
+      try {
+        persona = await prisma.persona.create({
+          data: {
             name: data.personaName,
             tone: data.personaTone,
-            topics: data.personaTopics || [],
-            organization_id: organization.id,
-            user_id: user.id,
-            is_default: true,
-            updated_at: new Date().toISOString(),
+            description: data.personaTopics?.length
+              ? `Topics: ${data.personaTopics.join(', ')}`
+              : null,
+            status: 'active',
+            userId: user.id,
           },
-          {
-            onConflict: 'organization_id,is_default',
-          }
-        )
-        .select()
-        .single();
-
-      if (personaError) {
+        });
+      } catch (personaError) {
         logger.warn('Failed to create persona', { error: String(personaError) });
-      } else {
-        persona = personaData;
       }
     }
 
-    // Update user profile with onboarding completion
-    const { error: profileError } = await supabase
-      .from('profiles')
-      .update({
-        onboarding_completed: true,
-        onboarding_completed_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      })
-      .eq('id', user.id);
-
-    if (profileError) {
-      logger.warn('Failed to update profile', { error: String(profileError) });
+    // Mark onboarding complete in Prisma User model
+    try {
+      await prisma.user.update({
+        where: { id: user.id },
+        data: {
+          onboardingComplete: true,
+        },
+      });
+    } catch (profileError) {
+      logger.warn('Failed to update user onboarding status', {
+        error: String(profileError),
+      });
     }
 
     // Emit webhook event for onboarding completion
@@ -248,11 +246,32 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    return NextResponse.json({
+    // Generate fresh JWT with onboardingComplete: true so middleware
+    // stops redirecting to /onboarding on next request
+    const newToken = generateToken({
+      userId: user.id,
+      email: user.email,
+      name: user.name ?? undefined,
+      onboardingComplete: true,
+      apiKeyConfigured: false, // Will be set later when user configures API key
+    });
+
+    const response = NextResponse.json({
       success: true,
       organization,
       persona,
     });
+
+    // Set updated auth-token cookie
+    response.cookies.set('auth-token', newToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 7 * 24 * 60 * 60, // 7 days
+    });
+
+    return response;
   } catch (error) {
     logger.error('Onboarding error', { error: String(error) });
     return NextResponse.json(
@@ -268,49 +287,49 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
-    const supabase = createServerClient();
-
-    // Verify authentication
-    const user = await getAuthUser();
-    if (!user) {
+    // Verify authentication via JWT
+    const userId = await getUserIdFromRequestOrCookies(request);
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Get profile with onboarding status
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('onboarding_completed, onboarding_completed_at')
-      .eq('id', user.id)
-      .single();
+    // Get user with onboarding status
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        onboardingComplete: true,
+        updatedAt: true,
+      },
+    });
+
+    if (!user) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    }
 
     // Get organization
-    const { data: organization } = await supabase
-      .from('organizations')
-      .select('*')
-      .eq('owner_id', user.id)
-      .single();
+    const organization = await prisma.organization.findFirst({
+      where: { users: { some: { id: userId } } },
+    });
 
-    // Get default persona
-    const { data: persona } = await supabase
-      .from('personas')
-      .select('*')
-      .eq('user_id', user.id)
-      .eq('is_default', true)
-      .single();
+    // Get persona
+    const persona = await prisma.persona.findFirst({
+      where: { userId },
+      orderBy: { createdAt: 'desc' },
+    });
 
     // Get connected platforms
-    const { data: connections } = await supabase
-      .from('platform_connections')
-      .select('platform')
-      .eq('user_id', user.id)
-      .eq('is_active', true);
+    const connections = await prisma.platformConnection.findMany({
+      where: { userId, isActive: true },
+      select: { platform: true },
+    });
 
     return NextResponse.json({
-      completed: profile?.onboarding_completed || false,
-      completedAt: profile?.onboarding_completed_at || null,
+      completed: user.onboardingComplete,
+      completedAt: user.onboardingComplete ? user.updatedAt?.toISOString() : null,
       organization: organization || null,
       persona: persona || null,
-      connectedPlatforms: connections?.map((c: { platform: string }) => c.platform) || [],
+      connectedPlatforms: connections.map((c) => c.platform),
     });
   } catch (error) {
     logger.error('Get onboarding status error', { error: String(error) });

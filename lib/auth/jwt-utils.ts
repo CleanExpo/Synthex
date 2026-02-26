@@ -22,6 +22,8 @@ export interface JWTPayload {
   userId: string;
   email?: string;
   name?: string;
+  onboardingComplete?: boolean;
+  apiKeyConfigured?: boolean;
   iat?: number;
   exp?: number;
 }

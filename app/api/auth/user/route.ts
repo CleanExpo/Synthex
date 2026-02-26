@@ -46,6 +46,13 @@ export async function GET(request: NextRequest) {
           organizationId: true,
           isMultiBusinessOwner: true,
           activeOrganizationId: true,
+          // Onboarding flags (UNI-920)
+          onboardingComplete: true,
+          onboardingStep: true,
+          businessProfileComplete: true,
+          apiKeyConfigured: true,
+          apiKeyValid: true,
+          timezone: true,
           organization: {
             select: {
               id: true,

@@ -516,11 +516,18 @@ export async function GET(
       // Continue - user auth succeeded, just connection storage failed
     }
 
-    // Generate JWT token
-    const token = generateToken({ userId: user.id, email: user.email, name: user.name ?? undefined });
+    // Generate JWT token (include onboarding flags for middleware)
+    const token = generateToken({
+      userId: user.id,
+      email: user.email,
+      name: user.name ?? undefined,
+      onboardingComplete: user.onboardingComplete,
+      apiKeyConfigured: user.apiKeyConfigured,
+    });
 
-    // Create response with redirect to dashboard
-    const response = NextResponse.redirect(new URL('/dashboard', request.url));
+    // Redirect based on onboarding status: new/incomplete → /onboarding, complete → /dashboard
+    const redirectPath = user.onboardingComplete ? '/dashboard' : '/onboarding';
+    const response = NextResponse.redirect(new URL(redirectPath, request.url));
 
     // Set secure cookie with token
     response.cookies.set('auth-token', token, {

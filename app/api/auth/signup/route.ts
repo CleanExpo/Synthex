@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createAuthClient, serverDb } from '@/lib/supabase-server';
 import { prisma } from '@/lib/prisma';
+import { generateToken } from '@/lib/auth/jwt-utils';
 import { z } from 'zod';
 import { authStrict } from '@/lib/middleware/api-rate-limit';
 
@@ -47,7 +48,7 @@ export async function POST(request: NextRequest) {
         data: {
           name: name || email.split('@')[0],
         },
-        emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : '')}/dashboard`
+        emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : '')}/onboarding`
       }
     });
 
@@ -137,20 +138,34 @@ export async function POST(request: NextRequest) {
       requiresVerification: !authData.user.email_confirmed_at
     });
 
+    // Generate JWT auth-token (for middleware onboarding check)
+    const jwtToken = generateToken({
+      userId: authData.user.id,
+      email: authData.user.email!,
+      onboardingComplete: false,
+      apiKeyConfigured: false,
+    });
+
+    const isProduction = process.env.NODE_ENV === 'production';
+    const cookieOptions = {
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: 'lax' as const,
+      path: '/',
+      ...(isProduction && {
+        domain: process.env.COOKIE_DOMAIN || undefined,
+        priority: 'high' as const
+      })
+    };
+
+    // Set auth-token JWT cookie (primary auth for middleware + API routes)
+    response.cookies.set('auth-token', jwtToken, {
+      ...cookieOptions,
+      maxAge: 60 * 60 * 24 * 7, // 7 days
+    });
+
     // Set session cookie if we have a session (enhanced security)
     if (authData.session) {
-      const isProduction = process.env.NODE_ENV === 'production';
-      const cookieOptions = {
-        httpOnly: true,
-        secure: isProduction,
-        sameSite: 'lax' as const,
-        path: '/',
-        ...(isProduction && {
-          domain: process.env.COOKIE_DOMAIN || undefined,
-          priority: 'high' as const
-        })
-      };
-
       response.cookies.set('supabase-auth-token', authData.session.access_token, {
         ...cookieOptions,
         maxAge: 60 * 60 * 24 * 7, // 7 days

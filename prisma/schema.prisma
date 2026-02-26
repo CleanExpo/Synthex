@@ -123,7 +123,17 @@ model User {
   apiCredentials        APICredential[]
   onboardingProgress    OnboardingProgress[]
 
+  // Onboarding state (UNI-920)
+  onboardingComplete      Boolean   @default(false) @map("onboarding_complete")
+  onboardingStep          Int       @default(0)     @map("onboarding_step")       // 0=not started, 1=business, 2=api-key, 3=socials, 4=goals
+  businessProfileComplete Boolean   @default(false) @map("business_profile_complete")
+  apiKeyConfigured        Boolean   @default(false) @map("api_key_configured")
+  apiKeyValid             Boolean   @default(false) @map("api_key_valid")
+  apiKeyLastValidated     DateTime? @map("api_key_last_validated")
+  timezone                String    @default("Australia/Brisbane")
+
   @@index([organizationId])
+  @@index([onboardingComplete])
   @@map("users")
 }
 
@@ -363,6 +373,7 @@ model Organization {
   // Business identity
   website        String?
   industry       String?
+  abn            String?                       // Australian Business Number
   teamSize       String?   @map("team_size")
 
   // AI-generated metadata

@@ -90,7 +90,7 @@ export async function middleware(request: NextRequest) {
   // The middleware matcher below excludes /api/ routes.
 
   // Authentication check for protected routes
-  const protectedPaths = ['/dashboard', '/api/protected', '/api/user', '/api/integrations'];
+  const protectedPaths = ['/dashboard', '/onboarding', '/api/protected', '/api/user', '/api/integrations'];
   // CRITICAL: Both /login and /auth/login exist — /login is the active PKCE flow page,
   // /auth/login is the legacy Supabase page. Treat BOTH as auth paths to prevent loops.
   const authPaths = ['/login', '/auth/login', '/auth/register', '/signup'];
@@ -129,49 +129,25 @@ export async function middleware(request: NextRequest) {
   // ──────────────────────────────────────────────────────────────────────
   // Onboarding completion check: redirect to /onboarding if incomplete
   // ──────────────────────────────────────────────────────────────────────
-  // Check for both Supabase session AND custom auth token (OAuth uses auth-token)
-  if ((session || hasCustomAuth) && pathname.startsWith('/dashboard')) {
+  // Uses JWT claims from auth-token cookie (no DB query needed in Edge Runtime).
+  // The onboardingComplete flag is embedded in the JWT at login/signup time.
+  if (hasCustomAuth && authToken && pathname.startsWith('/dashboard')) {
     try {
-      // Get user ID from session or decode from auth-token
-      let userId: string | undefined;
-      
-      if (session) {
-        userId = session.user.id;
-      } else if (hasCustomAuth && authToken) {
-        // Parse JWT token to get user ID
-        // Format: header.payload.signature
-        try {
-          const parts = authToken.split('.');
-          if (parts.length === 3) {
-            const payload = JSON.parse(Buffer.from(parts[1], 'base64').toString());
-            userId = payload.userId || payload.sub;
-          }
-        } catch {
-          // Token parse failed, skip onboarding check
-          console.warn('[Middleware] Could not parse auth token');
+      const parts = authToken.split('.');
+      if (parts.length === 3) {
+        const payload = JSON.parse(Buffer.from(parts[1], 'base64').toString());
+
+        // Check superadmin bypass — superadmins skip onboarding
+        const isSuperadmin = payload.role === 'superadmin';
+
+        // If onboarding not complete and not superadmin, redirect to /onboarding
+        if (!isSuperadmin && payload.onboardingComplete === false) {
+          return NextResponse.redirect(new URL('/onboarding', request.url));
         }
       }
-
-      if (!userId) {
-        // Could not determine user ID, allow access to dashboard
-        return response;
-      }
-
-      // Query profiles table for onboarding_completed flag
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('onboarding_completed')
-        .eq('id', userId)
-        .single();
-
-      // If onboarding is incomplete, redirect to /onboarding
-      if (profile && !profile.onboarding_completed) {
-        return NextResponse.redirect(new URL('/onboarding', request.url));
-      }
-    } catch (error) {
-      // Log error but don't block user — profiles table may not exist
-      // or user may not have a profiles entry yet. Proceed to dashboard.
-      console.warn('[Middleware] Could not check onboarding status:', error);
+    } catch {
+      // Token parse failed — allow access to dashboard rather than blocking
+      console.warn('[Middleware] Could not parse auth token for onboarding check');
     }
   }
 

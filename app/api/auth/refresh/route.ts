@@ -113,9 +113,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const user = await (prisma as any).user.findUnique({
+    const user = await prisma.user.findUnique({
       where: { id: userId },
-      select: { id: true, email: true, name: true }
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        onboardingComplete: true,
+        apiKeyConfigured: true,
+      }
     });
 
     if (!user) {
@@ -126,9 +132,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 5. Generate fresh token
+    // 5. Generate fresh token (include onboarding flags for middleware)
     const newToken = generateToken(
-      { userId: user.id, email: user.email, name: user.name },
+      {
+        userId: user.id,
+        email: user.email,
+        name: user.name ?? undefined,
+        onboardingComplete: user.onboardingComplete,
+        apiKeyConfigured: user.apiKeyConfigured,
+      },
       '7d'
     );
 

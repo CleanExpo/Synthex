@@ -8,8 +8,8 @@ import { z } from 'zod';
 import { aiContentGenerator } from '@/lib/ai/content-generator';
 import { authMonitor } from '@/lib/auth/monitoring';
 import { logger } from '@/lib/logger';
-import { verifyTokenSafe } from '@/lib/auth/jwt-utils';
 import { getUserAICredentials } from '@/lib/ai/api-credential-injector';
+import { requireApiKey } from '@/lib/middleware/require-api-key';
 
 import { withRateLimit, UsageTracker } from '@/lib/middleware/rate-limiter';
 
@@ -28,27 +28,10 @@ const generateContentSchema = z.object({
 });
 
 export async function POST(request: NextRequest) {
-  // Apply rate limiting
+  // Apply rate limiting + API key hard gate
   return withRateLimit(request, async () => {
+    return requireApiKey(request, async (userId) => {
     try {
-      // Verify authentication and extract user ID
-      const authToken = request.cookies.get('auth-token')?.value;
-      if (!authToken) {
-        return NextResponse.json(
-          { error: 'Authentication required' },
-          { status: 401 }
-        );
-      }
-
-      const tokenPayload = verifyTokenSafe(authToken);
-      if (!tokenPayload?.userId) {
-        return NextResponse.json(
-          { error: 'Invalid authentication token' },
-          { status: 401 }
-        );
-      }
-      const userId = tokenPayload.userId;
-
       // Resolve user's own API credentials (falls back to platform key when null)
       const userCreds = await getUserAICredentials(userId);
 
@@ -131,13 +114,14 @@ export async function POST(request: NextRequest) {
     });
 
     return NextResponse.json(
-      { 
+      {
         error: 'Failed to generate content',
         message: error instanceof Error ? error.message : 'Unknown error'
       },
       { status: 500 }
     );
     }
+    });
   });
 }
 
