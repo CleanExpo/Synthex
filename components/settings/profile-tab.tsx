@@ -5,6 +5,7 @@
  * User profile settings with avatar upload
  */
 
+import Image from 'next/image';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -38,9 +39,20 @@ export function ProfileTab({
         {/* Avatar */}
         <div className="flex items-center gap-6">
           <div className="relative">
-            <div className="w-24 h-24 rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center text-3xl font-bold text-white">
-              {profile.avatar || profile.name.charAt(0).toUpperCase()}
-            </div>
+            {profile.avatar && profile.avatar.startsWith('http') ? (
+              <Image
+                src={profile.avatar}
+                alt={profile.name || 'Avatar'}
+                width={96}
+                height={96}
+                className="w-24 h-24 rounded-full object-cover"
+                unoptimized
+              />
+            ) : (
+              <div className="w-24 h-24 rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center text-3xl font-bold text-white">
+                {(profile.name || 'U').charAt(0).toUpperCase()}
+              </div>
+            )}
             <button
               onClick={onAvatarUpload}
               className="absolute bottom-0 right-0 p-2 bg-cyan-500 rounded-full text-white hover:bg-cyan-600 transition-colors"
@@ -49,8 +61,8 @@ export function ProfileTab({
             </button>
           </div>
           <div>
-            <h3 className="font-semibold text-white">{profile.name}</h3>
-            <p className="text-sm text-slate-400">{profile.role}</p>
+            <h3 className="font-semibold text-white">{profile.name || 'Your Name'}</h3>
+            <p className="text-sm text-slate-400">{profile.role || 'Your Role'}</p>
             <p className="text-xs text-slate-500 mt-1">JPG, PNG or GIF. Max 2MB.</p>
           </div>
         </div>

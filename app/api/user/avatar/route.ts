@@ -1,17 +1,20 @@
+/**
+ * User Avatar API Route
+ * POST /api/user/avatar - Upload avatar image
+ * DELETE /api/user/avatar - Remove avatar image
+ *
+ * AUTH: Uses `getUserIdFromRequestOrCookies()` for cookie-based JWT auth.
+ * DB/Storage: Uses Supabase service-role client to bypass RLS.
+ */
+
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase-client';
+import { createServerClient } from '@/lib/supabase-server';
+import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 
 export async function POST(request: NextRequest) {
   try {
-    const authHeader = request.headers.get('authorization');
-    if (!authHeader) {
-      return NextResponse.json({ error: 'No authorization header' }, { status: 401 });
-    }
-
-    const token = authHeader.replace('Bearer ', '');
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-
-    if (authError || !user) {
+    const userId = await getUserIdFromRequestOrCookies(request);
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -41,15 +44,17 @@ export async function POST(request: NextRequest) {
 
     // Create unique filename
     const fileExt = file.name.split('.').pop();
-    const fileName = `${user.id}-${Date.now()}.${fileExt}`;
+    const fileName = `${userId}-${Date.now()}.${fileExt}`;
     const filePath = `avatars/${fileName}`;
 
     // Convert File to ArrayBuffer then to Buffer
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
+    const supabase = createServerClient();
+
     // Upload to Supabase Storage
-    const { data: uploadData, error: uploadError } = await supabase.storage
+    const { error: uploadError } = await supabase.storage
       .from('avatars')
       .upload(filePath, buffer, {
         contentType: file.type,
@@ -69,11 +74,11 @@ export async function POST(request: NextRequest) {
     // Update user profile with new avatar URL
     const { error: updateError } = await supabase
       .from('profiles')
-      .update({ 
+      .update({
         avatar_url: publicUrl,
         updated_at: new Date().toISOString()
       })
-      .eq('id', user.id);
+      .eq('id', userId);
 
     if (updateError) {
       console.error('Profile update error:', updateError);
@@ -81,11 +86,6 @@ export async function POST(request: NextRequest) {
       await supabase.storage.from('avatars').remove([filePath]);
       throw updateError;
     }
-
-    // Update user metadata
-    await supabase.auth.updateUser({
-      data: { avatar_url: publicUrl }
-    });
 
     return NextResponse.json({
       success: true,
@@ -104,23 +104,18 @@ export async function POST(request: NextRequest) {
 // DELETE avatar
 export async function DELETE(request: NextRequest) {
   try {
-    const authHeader = request.headers.get('authorization');
-    if (!authHeader) {
-      return NextResponse.json({ error: 'No authorization header' }, { status: 401 });
-    }
-
-    const token = authHeader.replace('Bearer ', '');
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-
-    if (authError || !user) {
+    const userId = await getUserIdFromRequestOrCookies(request);
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+
+    const supabase = createServerClient();
 
     // Get current avatar URL
     const { data: profile } = await supabase
       .from('profiles')
       .select('avatar_url')
-      .eq('id', user.id)
+      .eq('id', userId)
       .single();
 
     if (profile?.avatar_url) {
@@ -136,16 +131,11 @@ export async function DELETE(request: NextRequest) {
     // Update profile to remove avatar
     await supabase
       .from('profiles')
-      .update({ 
+      .update({
         avatar_url: null,
         updated_at: new Date().toISOString()
       })
-      .eq('id', user.id);
-
-    // Update user metadata
-    await supabase.auth.updateUser({
-      data: { avatar_url: null }
-    });
+      .eq('id', userId);
 
     return NextResponse.json({
       success: true,

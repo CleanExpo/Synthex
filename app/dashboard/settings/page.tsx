@@ -85,8 +85,9 @@ export default function SettingsPage() {
   });
   const [invoices, setInvoices] = useState<Invoice[]>([]);
 
-  // Load initial data
+  // Load initial data - each section loads independently so one failure doesn't block others
   const loadUserData = useCallback(async () => {
+    // Load profile (independent)
     try {
       const profileData = await profileAPI.getProfile();
       if (profileData.profile) {
@@ -99,7 +100,13 @@ export default function SettingsPage() {
           avatar: profileData.profile.avatar_url || '',
         });
       }
+    } catch (profileError) {
+      console.error('Error loading profile:', profileError);
+      // Don't toast here - profile might just not exist yet, that's OK
+    }
 
+    // Load settings (independent - user_settings table may not exist yet)
+    try {
       const settingsData = await settingsAPI.getSettings();
       if (settingsData.settings) {
         if (settingsData.settings.notifications) {
@@ -116,7 +123,13 @@ export default function SettingsPage() {
           setAdvanced(prev => ({ ...prev, theme: settingsData.settings.theme }));
         }
       }
+    } catch (settingsError) {
+      console.error('Error loading settings:', settingsError);
+      // Use defaults - already set in state initialization
+    }
 
+    // Load integrations (independent)
+    try {
       const integrationsData = await integrationsAPI.getIntegrations();
       if (integrationsData.integrations) {
         setPlatforms(prev =>
@@ -127,56 +140,55 @@ export default function SettingsPage() {
           }))
         );
       }
+    } catch (integrationsError) {
+      console.error('Error loading integrations:', integrationsError);
+      // Use defaults - already set in state initialization
+    }
 
-      // Fetch real billing/subscription data
-      try {
-        const subRes = await fetch('/api/user/subscription', { credentials: 'include' });
-        if (subRes.ok) {
-          const subData = await subRes.json();
-          if (subData.plan) {
-            const planName = subData.plan.charAt(0).toUpperCase() + subData.plan.slice(1);
-            setBilling(prev => ({
-              ...prev,
-              plan: planName,
-              price: subData.price ? `$${subData.price / 100}` : prev.price,
-              billingCycle: subData.interval || prev.billingCycle,
-              nextBilling: subData.current_period_end
-                ? new Date(subData.current_period_end * 1000).toLocaleDateString()
-                : prev.nextBilling,
-              paymentMethod: subData.payment_method?.brand
-                ? subData.payment_method.brand.charAt(0).toUpperCase() + subData.payment_method.brand.slice(1)
-                : prev.paymentMethod,
-              cardLast4: subData.payment_method?.last4 || prev.cardLast4,
-            }));
-          }
+    // Fetch real billing/subscription data (independent)
+    try {
+      const subRes = await fetch('/api/user/subscription', { credentials: 'include' });
+      if (subRes.ok) {
+        const subData = await subRes.json();
+        if (subData.plan) {
+          const planName = subData.plan.charAt(0).toUpperCase() + subData.plan.slice(1);
+          setBilling(prev => ({
+            ...prev,
+            plan: planName,
+            price: subData.price ? `$${subData.price / 100}` : prev.price,
+            billingCycle: subData.interval || prev.billingCycle,
+            nextBilling: subData.current_period_end
+              ? new Date(subData.current_period_end * 1000).toLocaleDateString()
+              : prev.nextBilling,
+            paymentMethod: subData.payment_method?.brand
+              ? subData.payment_method.brand.charAt(0).toUpperCase() + subData.payment_method.brand.slice(1)
+              : prev.paymentMethod,
+            cardLast4: subData.payment_method?.last4 || prev.cardLast4,
+          }));
         }
-      } catch (billingError) {
-        console.error('Error fetching billing data:', billingError);
-        toast.error('Failed to load billing details');
       }
+    } catch (billingError) {
+      console.error('Error fetching billing data:', billingError);
+    }
 
-      try {
-        const invRes = await fetch('/api/invoices', { credentials: 'include' });
-        if (invRes.ok) {
-          const invData = await invRes.json();
-          if (invData.invoices?.length) {
-            setInvoices(
-              invData.invoices.map((inv: { id: string; number?: string; amount: number; currency: string; status: string; created: number }) => ({
-                id: inv.number || inv.id,
-                date: new Date(inv.created * 1000).toLocaleDateString(),
-                amount: `$${(inv.amount / 100).toFixed(2)}`,
-                status: inv.status === 'paid' ? 'paid' as const : 'pending' as const,
-              }))
-            );
-          }
+    // Fetch invoices (independent)
+    try {
+      const invRes = await fetch('/api/invoices', { credentials: 'include' });
+      if (invRes.ok) {
+        const invData = await invRes.json();
+        if (invData.invoices?.length) {
+          setInvoices(
+            invData.invoices.map((inv: { id: string; number?: string; amount: number; currency: string; status: string; created: number }) => ({
+              id: inv.number || inv.id,
+              date: new Date(inv.created * 1000).toLocaleDateString(),
+              amount: `$${(inv.amount / 100).toFixed(2)}`,
+              status: inv.status === 'paid' ? 'paid' as const : 'pending' as const,
+            }))
+          );
         }
-      } catch (invoiceError) {
-        console.error('Error fetching invoices:', invoiceError);
-        toast.error('Failed to load invoices');
       }
-    } catch (error) {
-      console.error('Error loading user data:', error);
-      toast.error('Failed to load settings');
+    } catch (invoiceError) {
+      console.error('Error fetching invoices:', invoiceError);
     }
   }, []);
 
@@ -229,7 +241,9 @@ export default function SettingsPage() {
   const handleSave = useCallback(async () => {
     setIsSaving(true);
     try {
-      await Promise.all([
+      // Use allSettled so each save is independent - profile save shouldn't
+      // fail just because user_settings table might be missing
+      const results = await Promise.allSettled([
         profileAPI.updateProfile({
           name: profile.name,
           company: profile.company,
@@ -244,7 +258,30 @@ export default function SettingsPage() {
         } as Record<string, unknown>),
         settingsAPI.updateSettings('theme', advanced.theme as unknown as Record<string, unknown>),
       ]);
-      toast.success('Settings saved successfully!');
+
+      const failures = results.filter(r => r.status === 'rejected');
+      const successes = results.filter(r => r.status === 'fulfilled');
+
+      if (failures.length === 0) {
+        toast.success('All settings saved successfully!');
+      } else if (successes.length > 0) {
+        // Partial success — profile likely saved even if settings failed
+        const failedItems: string[] = [];
+        if (results[0].status === 'rejected') failedItems.push('profile');
+        if (results[1].status === 'rejected') failedItems.push('notifications');
+        if (results[2].status === 'rejected') failedItems.push('privacy');
+        if (results[3].status === 'rejected') failedItems.push('theme');
+
+        if (failedItems.length > 0 && results[0].status === 'fulfilled') {
+          toast.success('Profile saved! Some preferences could not be saved.');
+        } else {
+          toast.error(`Failed to save: ${failedItems.join(', ')}`);
+        }
+        console.error('Partial save failures:', failures.map(f => f.status === 'rejected' ? f.reason : null));
+      } else {
+        toast.error('Failed to save settings');
+        console.error('All saves failed:', failures.map(f => f.status === 'rejected' ? f.reason : null));
+      }
     } catch (error) {
       console.error('Error saving settings:', error);
       toast.error('Failed to save settings');

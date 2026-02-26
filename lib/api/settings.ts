@@ -1,4 +1,16 @@
-import { supabase } from '@/lib/supabase-client';
+/**
+ * Settings API Client
+ *
+ * Client-side functions for profile, settings, integrations, and billing.
+ *
+ * AUTH: Uses `credentials: 'include'` so the httpOnly `auth-token` cookie
+ * is sent automatically. The server-side routes extract the user ID from
+ * that cookie via `getUserIdFromRequestOrCookies()`.
+ *
+ * This approach works for BOTH:
+ *   - Google OAuth users (custom auth-token JWT)
+ *   - Email/password users (Supabase Auth session cookies)
+ */
 
 /** Profile update data */
 interface ProfileUpdateData {
@@ -8,7 +20,10 @@ interface ProfileUpdateData {
   location?: string;
   website?: string;
   company?: string;
-  [key: string]: string | undefined;
+  role?: string;
+  phone?: string;
+  social_links?: Record<string, string>;
+  [key: string]: string | Record<string, string> | undefined;
 }
 
 /** Settings update data - can be an object or a primitive value */
@@ -17,78 +32,63 @@ type SettingsData = Record<string, unknown> | string | boolean | number;
 // Profile API functions
 export const profileAPI = {
   async getProfile() {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) throw new Error('No session');
-
     const response = await fetch('/api/user/profile', {
-      headers: {
-        'Authorization': `Bearer ${session.access_token}`,
-      },
+      credentials: 'include',
     });
 
     if (!response.ok) {
-      throw new Error('Failed to fetch profile');
+      const err = await response.json().catch(() => ({}));
+      throw new Error(err.error || 'Failed to fetch profile');
     }
 
     return response.json();
   },
 
   async updateProfile(data: ProfileUpdateData) {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) throw new Error('No session');
-
     const response = await fetch('/api/user/profile', {
       method: 'PUT',
+      credentials: 'include',
       headers: {
-        'Authorization': `Bearer ${session.access_token}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(data),
     });
 
     if (!response.ok) {
-      throw new Error('Failed to update profile');
+      const err = await response.json().catch(() => ({}));
+      throw new Error(err.error || 'Failed to update profile');
     }
 
     return response.json();
   },
 
   async uploadAvatar(file: File) {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) throw new Error('No session');
-
     const formData = new FormData();
     formData.append('avatar', file);
 
     const response = await fetch('/api/user/avatar', {
       method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${session.access_token}`,
-      },
+      credentials: 'include',
       body: formData,
     });
 
     if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error || 'Failed to upload avatar');
+      const err = await response.json().catch(() => ({}));
+      throw new Error(err.error || 'Failed to upload avatar');
     }
 
     return response.json();
   },
 
   async deleteAvatar() {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) throw new Error('No session');
-
     const response = await fetch('/api/user/avatar', {
       method: 'DELETE',
-      headers: {
-        'Authorization': `Bearer ${session.access_token}`,
-      },
+      credentials: 'include',
     });
 
     if (!response.ok) {
-      throw new Error('Failed to delete avatar');
+      const err = await response.json().catch(() => ({}));
+      throw new Error(err.error || 'Failed to delete avatar');
     }
 
     return response.json();
@@ -98,37 +98,31 @@ export const profileAPI = {
 // Settings API functions
 export const settingsAPI = {
   async getSettings() {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) throw new Error('No session');
-
     const response = await fetch('/api/user/settings', {
-      headers: {
-        'Authorization': `Bearer ${session.access_token}`,
-      },
+      credentials: 'include',
     });
 
     if (!response.ok) {
-      throw new Error('Failed to fetch settings');
+      const err = await response.json().catch(() => ({}));
+      throw new Error(err.error || 'Failed to fetch settings');
     }
 
     return response.json();
   },
 
   async updateSettings(type: string, settings: SettingsData) {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) throw new Error('No session');
-
     const response = await fetch('/api/user/settings', {
       method: 'PUT',
+      credentials: 'include',
       headers: {
-        'Authorization': `Bearer ${session.access_token}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ type, settings }),
     });
 
     if (!response.ok) {
-      throw new Error('Failed to update settings');
+      const err = await response.json().catch(() => ({}));
+      throw new Error(err.error || 'Failed to update settings');
     }
 
     return response.json();
@@ -138,40 +132,31 @@ export const settingsAPI = {
 // Integrations API functions
 export const integrationsAPI = {
   async getIntegrations() {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) throw new Error('No session');
-
     const response = await fetch('/api/integrations', {
-      headers: {
-        'Authorization': `Bearer ${session.access_token}`,
-      },
+      credentials: 'include',
     });
 
     if (!response.ok) {
-      throw new Error('Failed to fetch integrations');
+      const err = await response.json().catch(() => ({}));
+      throw new Error(err.error || 'Failed to fetch integrations');
     }
 
     return response.json();
   },
 
   async connectPlatform(platform: string) {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) throw new Error('No session');
-
     // Get OAuth URL
     const response = await fetch(`/api/auth/oauth/${platform}`, {
-      headers: {
-        'Authorization': `Bearer ${session.access_token}`,
-      },
+      credentials: 'include',
     });
 
     if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error || 'Failed to initiate OAuth');
+      const err = await response.json().catch(() => ({}));
+      throw new Error(err.error || 'Failed to initiate OAuth');
     }
 
     const data = await response.json();
-    
+
     // Open OAuth window
     const width = 600;
     const height = 700;
@@ -199,18 +184,14 @@ export const integrationsAPI = {
   },
 
   async disconnectPlatform(platform: string) {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) throw new Error('No session');
-
     const response = await fetch(`/api/integrations?platform=${platform}`, {
       method: 'DELETE',
-      headers: {
-        'Authorization': `Bearer ${session.access_token}`,
-      },
+      credentials: 'include',
     });
 
     if (!response.ok) {
-      throw new Error('Failed to disconnect platform');
+      const err = await response.json().catch(() => ({}));
+      throw new Error(err.error || 'Failed to disconnect platform');
     }
 
     return response.json();
