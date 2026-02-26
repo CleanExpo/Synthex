@@ -91,6 +91,7 @@ const sidebarGroups: Array<{
     items: [
       { icon: Home, label: 'Dashboard', href: '/dashboard' },
       { icon: Grid, label: 'Unified View', href: '/dashboard/unified' },
+      { icon: Globe, label: 'Platforms', href: '/dashboard/platforms' },
     ],
   },
   {
