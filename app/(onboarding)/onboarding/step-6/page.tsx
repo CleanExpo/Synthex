@@ -10,7 +10,7 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowRight, ArrowLeft, Key } from 'lucide-react';
+import { ArrowRight, ArrowLeft, Key } from '@/components/icons';
 import { Button } from '@/components/ui/button';
 import { useOnboarding, ProgressIndicator, APIKeySetup } from '@/components/onboarding';
 
@@ -65,7 +65,8 @@ export default function Step6APISetupPage() {
         </div>
         <h1 className="text-2xl font-bold text-white">Connect Your AI Providers</h1>
         <p className="text-gray-400">
-          Enter your API keys to enable AI-powered features across SYNTHEX
+          Add your API keys to unlock text, image, video, and research features.
+          OpenRouter powers text content; Google AI (Gemini) unlocks media generation.
         </p>
       </div>
 

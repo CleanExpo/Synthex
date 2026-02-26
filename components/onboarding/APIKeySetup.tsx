@@ -8,8 +8,8 @@
  * and displays masked keys with validation status.
  */
 
-import React, { useState, useEffect } from 'react';
-import { Check, AlertCircle, Loader2, X, Eye, EyeOff, Info } from 'lucide-react';
+import React, { useState } from 'react';
+import { Check, AlertCircle, Loader2, X, Eye, EyeOff, Info } from '@/components/icons';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
@@ -46,27 +46,29 @@ interface APIKeySetupProps {
 
 const PROVIDERS: Record<
   APIProvider,
-  { label: string; description: string; keyFormat: string }
+  { label: string; description: string; keyFormat: string; badge?: string }
 > = {
-  openai: {
-    label: 'OpenAI',
-    description: 'For GPT-4, GPT-4 Turbo, and other OpenAI models',
-    keyFormat: 'sk-...',
+  openrouter: {
+    label: 'OpenRouter',
+    description: 'Text content generation — access to multiple model providers',
+    keyFormat: 'sk-or-...',
+    badge: 'Recommended',
+  },
+  google: {
+    label: 'Google AI (Gemini)',
+    description: 'Unlocks image generation (Imagen), video reels (Veo), voiceover TTS, and Search grounding',
+    keyFormat: 'AIza...',
+    badge: 'Media & Research',
   },
   anthropic: {
     label: 'Anthropic',
-    description: 'For Claude models (required)',
+    description: 'For Claude models — text generation alternative',
     keyFormat: 'sk-ant-...',
   },
-  google: {
-    label: 'Google AI',
-    description: 'For Gemini models',
-    keyFormat: 'GOOGLE_API_KEY',
-  },
-  openrouter: {
-    label: 'OpenRouter',
-    description: 'For access to multiple model providers',
-    keyFormat: 'sk-or-...',
+  openai: {
+    label: 'OpenAI',
+    description: 'For GPT-4 and other OpenAI models',
+    keyFormat: 'sk-...',
   },
 };
 
@@ -78,7 +80,7 @@ export function APIKeySetup({
   onComplete,
   minProviders = 1,
 }: APIKeySetupProps) {
-  const [selectedProvider, setSelectedProvider] = useState<APIProvider>('anthropic');
+  const [selectedProvider, setSelectedProvider] = useState<APIProvider>('openrouter');
   const [keyInput, setKeyInput] = useState('');
   const [showKey, setShowKey] = useState(false);
   const [isValidating, setIsValidating] = useState(false);
@@ -186,10 +188,15 @@ export function APIKeySetup({
       <div className="p-4 rounded-lg bg-cyan-500/10 border border-cyan-500/20">
         <div className="flex gap-3">
           <Info className="w-4 h-4 text-cyan-400 mt-0.5 shrink-0" />
-          <p className="text-xs text-cyan-300">
-            You pay for your own API usage. SYNTHEX will use your keys to call AI models
-            on your behalf. Minimum {minProviders} provider required.
-          </p>
+          <div className="text-xs text-cyan-300 space-y-1">
+            <p>
+              You pay for your own API usage. SYNTHEX uses your keys to call AI models
+              on your behalf. Minimum {minProviders} provider required.
+            </p>
+            <p className="text-cyan-400/70">
+              <strong>OpenRouter</strong> = text content &nbsp;|&nbsp; <strong>Google AI</strong> = images, video, TTS, research
+            </p>
+          </div>
         </div>
       </div>
 
@@ -213,6 +220,7 @@ export function APIKeySetup({
                   disabled={credentials.has(key as APIProvider)}
                 >
                   {config.label}
+                  {config.badge && !credentials.has(key as APIProvider) ? ` — ${config.badge}` : ''}
                   {credentials.has(key as APIProvider) ? ' (added)' : ''}
                 </SelectItem>
               ))}
