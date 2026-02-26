@@ -67,10 +67,10 @@ const updatePostSchema = z.object({
 // Auth Helper - Uses centralized JWT utilities (no fallback secrets)
 // =============================================================================
 
-import { getUserIdFromRequest } from '@/lib/auth/jwt-utils';
+import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 
 async function getUserId(request: NextRequest): Promise<string | null> {
-  return getUserIdFromRequest(request);
+  return getUserIdFromRequestOrCookies(request);
 }
 
 // Get user's campaign IDs for authorization

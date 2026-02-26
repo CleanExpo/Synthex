@@ -55,38 +55,48 @@ export default function SchedulePage() {
             headers: token ? { 'Authorization': `Bearer ${token}` } : {},
           });
 
-          if (response.ok) {
-            const { data } = await response.json();
-            const apiPosts: ScheduledPost[] = data.map((p: Record<string, unknown>) => ({
-              id: String(p.id),
-              content: (p.content as string) || '',
-              platforms: (p.platforms as string[]) || [(p.platform as string) || 'twitter'],
-              scheduledFor: new Date(p.scheduledAt as string),
-              status: (p.status as ScheduledPost['status']) || 'scheduled',
-              engagement: {
-                estimated: ((p.metadata as Record<string, unknown>)?.estimatedEngagement as number) || 5,
-                ...(p.status === 'published' ? {
-                  actual: ((p.metadata as Record<string, unknown>)?.engagement as Record<string, unknown>)?.actual as number,
-                  likes: ((p.metadata as Record<string, unknown>)?.engagement as Record<string, unknown>)?.likes as number,
-                  comments: ((p.metadata as Record<string, unknown>)?.engagement as Record<string, unknown>)?.comments as number,
-                  shares: ((p.metadata as Record<string, unknown>)?.engagement as Record<string, unknown>)?.shares as number,
-                } : {}),
-              },
-              persona: ((p.metadata as Record<string, unknown>)?.persona as string) || 'Default',
-              hashtags: (p.hashtags as string[]) || [],
-              mediaUrls: (p.mediaUrls as string[]) || [],
-            }));
-
-            setPosts(apiPosts);
-            setIsLoading(false);
-            return;
+          if (!response.ok) {
+            // Non-OK but not a crash — show empty state for 401/404
+            if (response.status === 401 || response.status === 404) {
+              setPosts([]);
+              setIsLoading(false);
+              return;
+            }
+            throw new Error(`API returned ${response.status}`);
           }
+
+          const json = await response.json();
+          const data = Array.isArray(json.data) ? json.data : [];
+          const apiPosts: ScheduledPost[] = data.map((p: Record<string, unknown>) => ({
+            id: String(p.id),
+            content: (p.content as string) || '',
+            platforms: (p.platforms as string[]) || [(p.platform as string) || 'twitter'],
+            scheduledFor: new Date(p.scheduledAt as string),
+            status: (p.status as ScheduledPost['status']) || 'scheduled',
+            engagement: {
+              estimated: ((p.metadata as Record<string, unknown>)?.estimatedEngagement as number) || 5,
+              ...(p.status === 'published' ? {
+                actual: ((p.metadata as Record<string, unknown>)?.engagement as Record<string, unknown>)?.actual as number,
+                likes: ((p.metadata as Record<string, unknown>)?.engagement as Record<string, unknown>)?.likes as number,
+                comments: ((p.metadata as Record<string, unknown>)?.engagement as Record<string, unknown>)?.comments as number,
+                shares: ((p.metadata as Record<string, unknown>)?.engagement as Record<string, unknown>)?.shares as number,
+              } : {}),
+            },
+            persona: ((p.metadata as Record<string, unknown>)?.persona as string) || 'Default',
+            hashtags: (p.hashtags as string[]) || [],
+            mediaUrls: (p.mediaUrls as string[]) || [],
+          }));
+
+          setPosts(apiPosts);
+          setIsLoading(false);
+          return;
         }
-        // API returned non-OK status
-        setError('Failed to load scheduled posts');
+        // Fallback
+        setPosts([]);
         setIsLoading(false);
-      } catch {
-        setError('Failed to load scheduled posts');
+      } catch (err) {
+        console.error('Schedule load error:', err);
+        setError('Failed to load scheduled posts. Please try again.');
         setIsLoading(false);
       }
     };
@@ -257,35 +267,41 @@ export default function SchedulePage() {
         headers: token ? { 'Authorization': `Bearer ${token}` } : {},
       });
 
-      if (response.ok) {
-        const { data } = await response.json();
-        const apiPosts: ScheduledPost[] = data.map((p: Record<string, unknown>) => ({
-          id: String(p.id),
-          content: (p.content as string) || '',
-          platforms: (p.platforms as string[]) || [(p.platform as string) || 'twitter'],
-          scheduledFor: new Date(p.scheduledAt as string),
-          status: (p.status as ScheduledPost['status']) || 'scheduled',
-          engagement: {
-            estimated: ((p.metadata as Record<string, unknown>)?.estimatedEngagement as number) || 5,
-            ...(p.status === 'published' ? {
-              actual: ((p.metadata as Record<string, unknown>)?.engagement as Record<string, unknown>)?.actual as number,
-              likes: ((p.metadata as Record<string, unknown>)?.engagement as Record<string, unknown>)?.likes as number,
-              comments: ((p.metadata as Record<string, unknown>)?.engagement as Record<string, unknown>)?.comments as number,
-              shares: ((p.metadata as Record<string, unknown>)?.engagement as Record<string, unknown>)?.shares as number,
-            } : {}),
-          },
-          persona: ((p.metadata as Record<string, unknown>)?.persona as string) || 'Default',
-          hashtags: (p.hashtags as string[]) || [],
-          mediaUrls: (p.mediaUrls as string[]) || [],
-        }));
-        setPosts(apiPosts);
-        setIsLoading(false);
-      } else {
-        setError('Failed to load scheduled posts');
-        setIsLoading(false);
+      if (!response.ok) {
+        if (response.status === 401 || response.status === 404) {
+          setPosts([]);
+          setIsLoading(false);
+          return;
+        }
+        throw new Error(`API returned ${response.status}`);
       }
-    } catch {
-      setError('Failed to load scheduled posts');
+
+      const json = await response.json();
+      const data = Array.isArray(json.data) ? json.data : [];
+      const apiPosts: ScheduledPost[] = data.map((p: Record<string, unknown>) => ({
+        id: String(p.id),
+        content: (p.content as string) || '',
+        platforms: (p.platforms as string[]) || [(p.platform as string) || 'twitter'],
+        scheduledFor: new Date(p.scheduledAt as string),
+        status: (p.status as ScheduledPost['status']) || 'scheduled',
+        engagement: {
+          estimated: ((p.metadata as Record<string, unknown>)?.estimatedEngagement as number) || 5,
+          ...(p.status === 'published' ? {
+            actual: ((p.metadata as Record<string, unknown>)?.engagement as Record<string, unknown>)?.actual as number,
+            likes: ((p.metadata as Record<string, unknown>)?.engagement as Record<string, unknown>)?.likes as number,
+            comments: ((p.metadata as Record<string, unknown>)?.engagement as Record<string, unknown>)?.comments as number,
+            shares: ((p.metadata as Record<string, unknown>)?.engagement as Record<string, unknown>)?.shares as number,
+          } : {}),
+        },
+        persona: ((p.metadata as Record<string, unknown>)?.persona as string) || 'Default',
+        hashtags: (p.hashtags as string[]) || [],
+        mediaUrls: (p.mediaUrls as string[]) || [],
+      }));
+      setPosts(apiPosts);
+      setIsLoading(false);
+    } catch (err) {
+      console.error('Schedule retry error:', err);
+      setError('Failed to load scheduled posts. Please try again.');
       setIsLoading(false);
     }
   }, []);

@@ -133,9 +133,56 @@ export default function ContentPage() {
     toast.success('Content saved as draft');
   }, []);
 
-  const handleSchedule = useCallback(() => {
-    toast.success('Opening scheduler...');
-  }, []);
+  const handleSchedule = useCallback(async () => {
+    if (!generatedContent) {
+      toast.error('Generate content first before scheduling');
+      return;
+    }
+
+    const content = editMode && editedContent
+      ? editedContent
+      : generatedContent.variations?.[selectedVariation] || generatedContent.primary;
+
+    if (!content) {
+      toast.error('No content to schedule');
+      return;
+    }
+
+    try {
+      // Schedule for 1 hour from now by default
+      const scheduledAt = new Date(Date.now() + 60 * 60 * 1000).toISOString();
+
+      const response = await fetch('/api/scheduler/posts', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          content,
+          platform,
+          scheduledAt,
+          metadata: {
+            hashtags: generatedContent.metadata?.hashtags || [],
+            persona: personaId !== 'none' ? personaId : undefined,
+            estimatedEngagement: psychologyScore?.predictedEngagement ? 8 : 5,
+          },
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || `Failed to schedule (${response.status})`);
+      }
+
+      toast.success('Post scheduled! View it in your Schedule page.', {
+        action: {
+          label: 'View Schedule',
+          onClick: () => { window.location.href = '/dashboard/schedule'; },
+        },
+      });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to schedule post');
+    }
+  }, [generatedContent, editMode, editedContent, selectedVariation, platform, personaId, psychologyScore]);
 
   const handleTrainAI = useCallback(() => {
     // TODO: AI training — not yet implemented
