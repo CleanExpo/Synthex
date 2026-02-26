@@ -6,6 +6,7 @@ import { APIErrorCard } from '@/components/error-states';
 import { toast } from 'sonner';
 import Link from 'next/link';
 import { Brain } from '@/components/icons';
+import { fetchWithCSRF } from '@/lib/csrf';
 
 import {
   type GeneratedContentData,
@@ -142,10 +143,8 @@ export default function ContentPage() {
     }
 
     try {
-      const response = await fetch('/api/content-library', {
+      const response = await fetchWithCSRF('/api/content-library', {
         method: 'POST',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           title: topic || `${platform} post`,
           content: contentToSave,
@@ -190,10 +189,8 @@ export default function ContentPage() {
       // Schedule for 1 hour from now by default
       const scheduledAt = new Date(Date.now() + 60 * 60 * 1000).toISOString();
 
-      const response = await fetch('/api/scheduler/posts', {
+      const response = await fetchWithCSRF('/api/scheduler/posts', {
         method: 'POST',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           content,
           platform,
@@ -208,7 +205,7 @@ export default function ContentPage() {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || `Failed to schedule (${response.status})`);
+        throw new Error((errorData as { message?: string }).message || `Failed to schedule (${response.status})`);
       }
 
       toast.success('Post scheduled! View it in your Schedule page.', {

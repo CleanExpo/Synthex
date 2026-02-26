@@ -5,13 +5,17 @@
  *
  * Enhanced content calendar with drag-and-drop rescheduling,
  * multiple views (week, month, list), and conflict detection.
+ *
+ * All mutations use fetchWithCSRF for CSRF protection and
+ * call /api/scheduler/posts for persistence.
  */
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { DashboardSkeleton } from '@/components/skeletons';
 import { APIErrorCard } from '@/components/error-states';
 import { WeekView, PostDetailModal, OPTIMAL_TIMES } from '@/components/calendar';
 import toast from 'react-hot-toast';
+import { fetchWithCSRF } from '@/lib/csrf';
 
 import {
   type ViewMode,
@@ -26,6 +30,30 @@ import {
 } from '@/components/schedule';
 import { EmptyState } from '@/components/error-states';
 
+// Map API post shape → frontend ScheduledPost
+function mapApiPost(p: Record<string, unknown>): ScheduledPost {
+  const metadata = (p.metadata as Record<string, unknown>) || {};
+  return {
+    id: String(p.id),
+    content: (p.content as string) || '',
+    platforms: (p.platforms as string[]) || [(p.platform as string) || 'twitter'],
+    scheduledFor: new Date(p.scheduledAt as string),
+    status: (p.status as ScheduledPost['status']) || 'scheduled',
+    engagement: {
+      estimated: (metadata.estimatedEngagement as number) || 5,
+      ...(p.status === 'published' ? {
+        actual: (metadata.engagement as Record<string, unknown>)?.actual as number,
+        likes: (metadata.engagement as Record<string, unknown>)?.likes as number,
+        comments: (metadata.engagement as Record<string, unknown>)?.comments as number,
+        shares: (metadata.engagement as Record<string, unknown>)?.shares as number,
+      } : {}),
+    },
+    persona: (metadata.persona as string) || 'Default',
+    hashtags: (p.hashtags as string[]) || [],
+    mediaUrls: (p.mediaUrls as string[]) || [],
+  };
+}
+
 export default function SchedulePage() {
   const [posts, setPosts] = useState<ScheduledPost[]>([]);
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -36,74 +64,67 @@ export default function SchedulePage() {
   const [selectedPost, setSelectedPost] = useState<ScheduledPost | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const mountedRef = useRef(true);
 
-  // Helper to get auth token
-  const getAuthToken = () => {
-    return localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token') || localStorage.getItem('token');
-  };
+  // ── Shared data fetcher ───────────────────────────────────────────────────
+  const fetchPosts = useCallback(async () => {
+    try {
+      const response = await fetch('/api/scheduler/posts', {
+        credentials: 'include',
+      });
 
-  // Load schedule data
+      if (!response.ok) {
+        // Non-OK but not a crash — show empty state for 401/404
+        if (response.status === 401 || response.status === 404) {
+          return [];
+        }
+        throw new Error(`API returned ${response.status}`);
+      }
+
+      const json = await response.json();
+      const data = Array.isArray(json.data) ? json.data : [];
+      return data.map(mapApiPost);
+    } catch (err) {
+      console.error('Schedule fetch error:', err);
+      throw err;
+    }
+  }, []);
+
+  // ── Initial load ──────────────────────────────────────────────────────────
   useEffect(() => {
-    const loadSchedule = async () => {
+    let cancelled = false;
+
+    const load = async () => {
       setIsLoading(true);
       setError(null);
       try {
-        const token = getAuthToken();
-        {
-          const response = await fetch('/api/scheduler/posts', {
-            credentials: 'include',
-            headers: token ? { 'Authorization': `Bearer ${token}` } : {},
-          });
-
-          if (!response.ok) {
-            // Non-OK but not a crash — show empty state for 401/404
-            if (response.status === 401 || response.status === 404) {
-              setPosts([]);
-              setIsLoading(false);
-              return;
-            }
-            throw new Error(`API returned ${response.status}`);
-          }
-
-          const json = await response.json();
-          const data = Array.isArray(json.data) ? json.data : [];
-          const apiPosts: ScheduledPost[] = data.map((p: Record<string, unknown>) => ({
-            id: String(p.id),
-            content: (p.content as string) || '',
-            platforms: (p.platforms as string[]) || [(p.platform as string) || 'twitter'],
-            scheduledFor: new Date(p.scheduledAt as string),
-            status: (p.status as ScheduledPost['status']) || 'scheduled',
-            engagement: {
-              estimated: ((p.metadata as Record<string, unknown>)?.estimatedEngagement as number) || 5,
-              ...(p.status === 'published' ? {
-                actual: ((p.metadata as Record<string, unknown>)?.engagement as Record<string, unknown>)?.actual as number,
-                likes: ((p.metadata as Record<string, unknown>)?.engagement as Record<string, unknown>)?.likes as number,
-                comments: ((p.metadata as Record<string, unknown>)?.engagement as Record<string, unknown>)?.comments as number,
-                shares: ((p.metadata as Record<string, unknown>)?.engagement as Record<string, unknown>)?.shares as number,
-              } : {}),
-            },
-            persona: ((p.metadata as Record<string, unknown>)?.persona as string) || 'Default',
-            hashtags: (p.hashtags as string[]) || [],
-            mediaUrls: (p.mediaUrls as string[]) || [],
-          }));
-
-          setPosts(apiPosts);
-          setIsLoading(false);
-          return;
+        const loadedPosts = await fetchPosts();
+        if (!cancelled) {
+          setPosts(loadedPosts);
         }
-        // Fallback
-        setPosts([]);
-        setIsLoading(false);
-      } catch (err) {
-        console.error('Schedule load error:', err);
-        setError('Failed to load scheduled posts. Please try again.');
-        setIsLoading(false);
+      } catch {
+        if (!cancelled) {
+          setError('Failed to load scheduled posts. Please try again.');
+        }
+      } finally {
+        if (!cancelled) {
+          setIsLoading(false);
+        }
       }
     };
-    loadSchedule();
+
+    load();
+
+    return () => { cancelled = true; };
+  }, [fetchPosts]);
+
+  // Cleanup ref
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => { mountedRef.current = false; };
   }, []);
 
-  // Filter posts
+  // ── Filter posts ──────────────────────────────────────────────────────────
   const filteredPosts = useMemo(() => {
     return posts.filter(post => {
       if (filterPlatform !== 'all' && !post.platforms.includes(filterPlatform)) return false;
@@ -112,7 +133,7 @@ export default function SchedulePage() {
     });
   }, [posts, filterPlatform, filterStatus]);
 
-  // Calculate stats
+  // ── Calculate stats ───────────────────────────────────────────────────────
   const stats: ScheduleStats = useMemo(() => ({
     scheduled: posts.filter(p => p.status === 'scheduled').length,
     published: posts.filter(p => p.status === 'published').length,
@@ -120,32 +141,32 @@ export default function SchedulePage() {
     avgEngagement: posts.reduce((sum, p) => sum + (p.engagement?.actual || p.engagement?.estimated || 0), 0) / Math.max(posts.length, 1),
   }), [posts]);
 
-  // Handle post reschedule via drag-and-drop
+  // ── Reschedule via drag-and-drop ──────────────────────────────────────────
   const handlePostReschedule = useCallback(async (postId: string, newTime: Date) => {
     const post = posts.find(p => p.id === postId);
     if (!post) return;
 
+    // Optimistic update
     setPosts(prev => prev.map(p =>
       p.id === postId ? { ...p, scheduledFor: newTime } : p
     ));
 
-    toast.success(`Rescheduled to ${newTime.toLocaleString()}`);
-
     try {
-      const token = getAuthToken();
-      await fetch('/api/content/calendar', {
+      const response = await fetchWithCSRF('/api/scheduler/posts', {
         method: 'PATCH',
-        credentials: 'include',
-        headers: {
-          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify({
-          postId,
-          newTime: newTime.toISOString(),
+          id: postId,
+          scheduledAt: newTime.toISOString(),
         }),
       });
+
+      if (!response.ok) {
+        throw new Error(`Failed to reschedule (${response.status})`);
+      }
+
+      toast.success(`Rescheduled to ${newTime.toLocaleString()}`);
     } catch {
+      // Rollback on failure
       setPosts(prev => prev.map(p =>
         p.id === postId ? post : p
       ));
@@ -165,37 +186,138 @@ export default function SchedulePage() {
     setTimeout(() => setIsCreating(false), 1000);
   }, []);
 
+  // ── Save (update) post ────────────────────────────────────────────────────
   const handleSavePost = useCallback(async (updatedPost: ScheduledPost) => {
+    const originalPost = posts.find(p => p.id === updatedPost.id);
+
+    // Optimistic update
     setPosts(prev => prev.map(p =>
       p.id === updatedPost.id ? updatedPost : p
     ));
-    toast.success('Post updated successfully!');
-  }, []);
 
+    try {
+      const response = await fetchWithCSRF('/api/scheduler/posts', {
+        method: 'PATCH',
+        body: JSON.stringify({
+          id: updatedPost.id,
+          content: updatedPost.content,
+          platform: updatedPost.platforms[0] || 'twitter',
+          status: updatedPost.status,
+          scheduledAt: new Date(updatedPost.scheduledFor).toISOString(),
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to save (${response.status})`);
+      }
+
+      toast.success('Post updated successfully!');
+    } catch {
+      // Rollback on failure
+      if (originalPost) {
+        setPosts(prev => prev.map(p =>
+          p.id === updatedPost.id ? originalPost : p
+        ));
+      }
+      toast.error('Failed to save post. Please try again.');
+    }
+  }, [posts]);
+
+  // ── Delete post ───────────────────────────────────────────────────────────
   const handleDeletePost = useCallback(async (postId: string) => {
+    const originalPost = posts.find(p => p.id === postId);
+
+    // Optimistic update
     setPosts(prev => prev.filter(p => p.id !== postId));
     setSelectedPost(null);
-    toast.success('Post deleted');
-  }, []);
 
+    try {
+      const response = await fetchWithCSRF(`/api/scheduler/posts?id=${postId}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to delete (${response.status})`);
+      }
+
+      toast.success('Post deleted');
+    } catch {
+      // Rollback on failure
+      if (originalPost) {
+        setPosts(prev => [...prev, originalPost]);
+      }
+      toast.error('Failed to delete post. Please try again.');
+    }
+  }, [posts]);
+
+  // ── Publish now ───────────────────────────────────────────────────────────
   const handlePublishNow = useCallback(async (postId: string) => {
+    const originalPost = posts.find(p => p.id === postId);
+
+    // Optimistic update
     setPosts(prev => prev.map(p =>
       p.id === postId ? { ...p, status: 'published' as const } : p
     ));
-    toast.success('Post published successfully!');
+
+    try {
+      const response = await fetchWithCSRF('/api/scheduler/posts', {
+        method: 'PATCH',
+        body: JSON.stringify({
+          id: postId,
+          status: 'published',
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to publish (${response.status})`);
+      }
+
+      toast.success('Post published successfully!');
+    } catch {
+      // Rollback on failure
+      if (originalPost) {
+        setPosts(prev => prev.map(p =>
+          p.id === postId ? originalPost : p
+        ));
+      }
+      toast.error('Failed to publish post. Please try again.');
+    }
+  }, [posts]);
+
+  // ── Duplicate post ────────────────────────────────────────────────────────
+  const handleDuplicatePost = useCallback(async (post: ScheduledPost) => {
+    const scheduledAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+
+    try {
+      const response = await fetchWithCSRF('/api/scheduler/posts', {
+        method: 'POST',
+        body: JSON.stringify({
+          content: post.content,
+          platform: post.platforms[0] || 'twitter',
+          scheduledAt: scheduledAt.toISOString(),
+          metadata: {
+            persona: post.persona !== 'Default' ? post.persona : undefined,
+            hashtags: post.hashtags || [],
+          },
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to duplicate (${response.status})`);
+      }
+
+      const result = await response.json();
+      if (result.data) {
+        setPosts(prev => [...prev, mapApiPost(result.data)]);
+      }
+
+      toast.success('Post duplicated!');
+    } catch {
+      toast.error('Failed to duplicate post. Please try again.');
+    }
   }, []);
 
-  const handleDuplicatePost = useCallback((post: ScheduledPost) => {
-    const newPost: ScheduledPost = {
-      ...post,
-      id: `${Date.now()}`,
-      status: 'draft',
-      scheduledFor: new Date(Date.now() + 24 * 60 * 60 * 1000),
-    };
-    setPosts(prev => [...prev, newPost]);
-    toast.success('Post duplicated!');
-  }, []);
-
+  // ── Week navigation ───────────────────────────────────────────────────────
   const handleWeekChange = useCallback((direction: 'prev' | 'next') => {
     setCurrentDate(prev => {
       const newDate = new Date(prev);
@@ -204,6 +326,7 @@ export default function SchedulePage() {
     });
   }, []);
 
+  // ── Export ─────────────────────────────────────────────────────────────────
   const handleExportSchedule = useCallback(() => {
     const exportData = {
       exportedAt: new Date().toISOString(),
@@ -225,6 +348,7 @@ export default function SchedulePage() {
     toast.success('Schedule exported successfully!');
   }, [filteredPosts]);
 
+  // ── Import ─────────────────────────────────────────────────────────────────
   const handleImportSchedule = useCallback(() => {
     const input = document.createElement('input');
     input.type = 'file';
@@ -257,54 +381,25 @@ export default function SchedulePage() {
     input.click();
   }, []);
 
+  // ── Retry (uses shared fetcher) ───────────────────────────────────────────
   const handleRetry = useCallback(async () => {
     setError(null);
     setIsLoading(true);
     try {
-      const token = getAuthToken();
-      const response = await fetch('/api/scheduler/posts', {
-        credentials: 'include',
-        headers: token ? { 'Authorization': `Bearer ${token}` } : {},
-      });
-
-      if (!response.ok) {
-        if (response.status === 401 || response.status === 404) {
-          setPosts([]);
-          setIsLoading(false);
-          return;
-        }
-        throw new Error(`API returned ${response.status}`);
+      const loadedPosts = await fetchPosts();
+      if (mountedRef.current) {
+        setPosts(loadedPosts);
       }
-
-      const json = await response.json();
-      const data = Array.isArray(json.data) ? json.data : [];
-      const apiPosts: ScheduledPost[] = data.map((p: Record<string, unknown>) => ({
-        id: String(p.id),
-        content: (p.content as string) || '',
-        platforms: (p.platforms as string[]) || [(p.platform as string) || 'twitter'],
-        scheduledFor: new Date(p.scheduledAt as string),
-        status: (p.status as ScheduledPost['status']) || 'scheduled',
-        engagement: {
-          estimated: ((p.metadata as Record<string, unknown>)?.estimatedEngagement as number) || 5,
-          ...(p.status === 'published' ? {
-            actual: ((p.metadata as Record<string, unknown>)?.engagement as Record<string, unknown>)?.actual as number,
-            likes: ((p.metadata as Record<string, unknown>)?.engagement as Record<string, unknown>)?.likes as number,
-            comments: ((p.metadata as Record<string, unknown>)?.engagement as Record<string, unknown>)?.comments as number,
-            shares: ((p.metadata as Record<string, unknown>)?.engagement as Record<string, unknown>)?.shares as number,
-          } : {}),
-        },
-        persona: ((p.metadata as Record<string, unknown>)?.persona as string) || 'Default',
-        hashtags: (p.hashtags as string[]) || [],
-        mediaUrls: (p.mediaUrls as string[]) || [],
-      }));
-      setPosts(apiPosts);
-      setIsLoading(false);
-    } catch (err) {
-      console.error('Schedule retry error:', err);
-      setError('Failed to load scheduled posts. Please try again.');
-      setIsLoading(false);
+    } catch {
+      if (mountedRef.current) {
+        setError('Failed to load scheduled posts. Please try again.');
+      }
+    } finally {
+      if (mountedRef.current) {
+        setIsLoading(false);
+      }
     }
-  }, []);
+  }, [fetchPosts]);
 
   if (isLoading) {
     return <DashboardSkeleton />;
