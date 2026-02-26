@@ -24,25 +24,36 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const credentials = await prisma.aPICredential.findMany({
-      where: {
-        userId,
-        revokedAt: null,
-      },
-      select: {
-        id: true,
-        provider: true,
-        maskedKey: true,
-        isValid: true,
-        isActive: true,
-        lastValidatedAt: true,
-        lastUsedAt: true,
-        validationError: true,
-        createdAt: true,
-        updatedAt: true,
-      },
-      orderBy: { createdAt: 'desc' },
-    });
+    let credentials;
+    try {
+      credentials = await prisma.aPICredential.findMany({
+        where: {
+          userId,
+          revokedAt: null,
+        },
+        select: {
+          id: true,
+          provider: true,
+          maskedKey: true,
+          isValid: true,
+          isActive: true,
+          lastValidatedAt: true,
+          lastUsedAt: true,
+          validationError: true,
+          createdAt: true,
+          updatedAt: true,
+        },
+        orderBy: { createdAt: 'desc' },
+      });
+    } catch (dbError) {
+      // Handle missing table gracefully (common on first deploy before db push)
+      const msg = dbError instanceof Error ? dbError.message : '';
+      if (msg.includes('does not exist') || msg.includes('relation') || msg.includes('P2021')) {
+        console.warn('[Settings API Credentials] api_credentials table not found — returning empty list');
+        return NextResponse.json({ credentials: [] });
+      }
+      throw dbError; // Re-throw other DB errors to outer catch
+    }
 
     return NextResponse.json({ credentials });
   } catch (error) {
@@ -94,47 +105,71 @@ export async function POST(request: NextRequest) {
     }
 
     // Encrypt and mask
-    const encryptedKey = encryptApiKey(apiKey);
+    let encryptedKey: string;
+    try {
+      encryptedKey = encryptApiKey(apiKey);
+    } catch (encErr) {
+      const msg = encErr instanceof Error ? encErr.message : '';
+      if (msg.includes('not found in environment')) {
+        console.error('[Settings API Credentials] ENCRYPTION_KEY_V1 env var is missing');
+        return NextResponse.json(
+          { error: 'Server encryption not configured. Please contact support.' },
+          { status: 503 }
+        );
+      }
+      throw encErr;
+    }
     const maskedKey = maskApiKey(apiKey);
 
     // Upsert: find existing for this user+provider (without org), or create new
-    const existing = await prisma.aPICredential.findFirst({
-      where: {
-        userId,
-        provider,
-        organizationId: null,
-        revokedAt: null,
-      },
-    });
-
     let credential;
-
-    if (existing) {
-      credential = await prisma.aPICredential.update({
-        where: { id: existing.id },
-        data: {
-          encryptedKey,
-          maskedKey,
-          isValid: true,
-          isActive: true,
-          lastValidatedAt: new Date(),
-          validationError: null,
-          updatedAt: new Date(),
-        },
-      });
-    } else {
-      credential = await prisma.aPICredential.create({
-        data: {
+    try {
+      const existing = await prisma.aPICredential.findFirst({
+        where: {
           userId,
-          organizationId: null,
           provider,
-          encryptedKey,
-          maskedKey,
-          isValid: true,
-          isActive: true,
-          lastValidatedAt: new Date(),
+          organizationId: null,
+          revokedAt: null,
         },
       });
+
+      if (existing) {
+        credential = await prisma.aPICredential.update({
+          where: { id: existing.id },
+          data: {
+            encryptedKey,
+            maskedKey,
+            isValid: true,
+            isActive: true,
+            lastValidatedAt: new Date(),
+            validationError: null,
+            updatedAt: new Date(),
+          },
+        });
+      } else {
+        credential = await prisma.aPICredential.create({
+          data: {
+            userId,
+            organizationId: null,
+            provider,
+            encryptedKey,
+            maskedKey,
+            isValid: true,
+            isActive: true,
+            lastValidatedAt: new Date(),
+          },
+        });
+      }
+    } catch (dbError) {
+      const msg = dbError instanceof Error ? dbError.message : '';
+      if (msg.includes('does not exist') || msg.includes('relation') || msg.includes('P2021')) {
+        console.error('[Settings API Credentials] api_credentials table not found — run `npx prisma db push`');
+        return NextResponse.json(
+          { error: 'Database not configured. Please contact support.' },
+          { status: 503 }
+        );
+      }
+      throw dbError;
     }
 
     return NextResponse.json({
@@ -182,12 +217,25 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Verify ownership before deleting
-    const credential = await prisma.aPICredential.findFirst({
-      where: {
-        id: parsed.data.id,
-        userId,
-      },
-    });
+    let credential;
+    try {
+      credential = await prisma.aPICredential.findFirst({
+        where: {
+          id: parsed.data.id,
+          userId,
+        },
+      });
+    } catch (dbError) {
+      const msg = dbError instanceof Error ? dbError.message : '';
+      if (msg.includes('does not exist') || msg.includes('relation') || msg.includes('P2021')) {
+        console.error('[Settings API Credentials] api_credentials table not found');
+        return NextResponse.json(
+          { error: 'Database not configured. Please contact support.' },
+          { status: 503 }
+        );
+      }
+      throw dbError;
+    }
 
     if (!credential) {
       return NextResponse.json(

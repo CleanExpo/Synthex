@@ -69,19 +69,19 @@ export default function NotFound() {
               Here are some helpful links:
             </p>
             <div className="flex flex-wrap gap-2 justify-center">
-              <Link href="/create" className="text-cyan-400 hover:text-cyan-300 text-sm">
+              <Link href="/dashboard/content" className="text-cyan-400 hover:text-cyan-300 text-sm">
                 Create Content
               </Link>
               <span className="text-gray-600">•</span>
-              <Link href="/analytics" className="text-cyan-400 hover:text-cyan-300 text-sm">
+              <Link href="/dashboard/analytics" className="text-cyan-400 hover:text-cyan-300 text-sm">
                 Analytics
               </Link>
               <span className="text-gray-600">•</span>
-              <Link href="/schedule" className="text-cyan-400 hover:text-cyan-300 text-sm">
+              <Link href="/dashboard/schedule" className="text-cyan-400 hover:text-cyan-300 text-sm">
                 Schedule
               </Link>
               <span className="text-gray-600">•</span>
-              <Link href="/settings" className="text-cyan-400 hover:text-cyan-300 text-sm">
+              <Link href="/dashboard/settings" className="text-cyan-400 hover:text-cyan-300 text-sm">
                 Settings
               </Link>
             </div>
