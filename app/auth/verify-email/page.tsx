@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { CheckCircle, XCircle, Loader2, Mail } from '@/components/icons';
+import { CheckCircle, XCircle, Loader2, Mail, RefreshCw } from '@/components/icons';
 import { toast } from 'sonner';
 
 export default function VerifyEmailPage() {
@@ -16,6 +16,7 @@ export default function VerifyEmailPage() {
   const [verified, setVerified] = useState(false);
   const [error, setError] = useState('');
   const [code, setCode] = useState('');
+  const [resending, setResending] = useState(false);
 
   const verifyEmail = useCallback(async (verificationCode: string) => {
     const codeToVerify = verificationCode.trim();
@@ -153,12 +154,32 @@ export default function VerifyEmailPage() {
 
             <div className="text-center text-sm">
               <p className="text-gray-500">
-                Didn't receive the email?{' '}
+                Didn&apos;t receive the email?{' '}
                 <button
-                  onClick={() => toast.info('Resend functionality coming soon')}
-                  className="text-blue-500 hover:underline"
+                  onClick={async () => {
+                    setResending(true);
+                    try {
+                      const res = await fetch('/api/auth/resend-verification', {
+                        method: 'POST',
+                        credentials: 'include',
+                      });
+                      const data = await res.json();
+                      if (res.ok) {
+                        toast.success(data.message || 'Verification email resent!');
+                      } else {
+                        toast.error(data.error || 'Failed to resend. Please try again.');
+                      }
+                    } catch {
+                      toast.error('Network error. Please check your connection.');
+                    } finally {
+                      setResending(false);
+                    }
+                  }}
+                  disabled={resending}
+                  className="text-blue-500 hover:underline disabled:opacity-50 inline-flex items-center gap-1"
                 >
-                  Resend code
+                  {resending && <RefreshCw className="h-3 w-3 animate-spin" />}
+                  {resending ? 'Sending...' : 'Resend code'}
                 </button>
               </p>
             </div>
