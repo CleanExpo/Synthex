@@ -140,8 +140,27 @@ export class SubscriptionService {
     }
 
     if (!subscription) {
-      logger.warn('No subscription found for Stripe customer', { customerId });
-      throw new Error('Subscription not found');
+      // Auto-create a subscription record if we have a userId from metadata.
+      // This handles the case where the webhook fires before the user ever hit
+      // an endpoint that calls getOrCreateSubscription().
+      const metaUserId = stripeSubscription.metadata?.userId;
+      if (metaUserId) {
+        logger.info('Auto-creating subscription record for Stripe customer', { customerId, userId: metaUserId });
+        subscription = await prisma.subscription.create({
+          data: {
+            userId: metaUserId,
+            stripeCustomerId: customerId,
+            plan: 'free',
+            status: 'inactive',
+            maxSocialAccounts: PLAN_LIMITS.free.maxSocialAccounts,
+            maxAiPosts: PLAN_LIMITS.free.maxAiPosts,
+            maxPersonas: PLAN_LIMITS.free.maxPersonas,
+          },
+        });
+      } else {
+        logger.warn('No subscription found for Stripe customer and no userId in metadata', { customerId });
+        throw new Error('Subscription not found');
+      }
     }
 
     // Determine plan from price ID

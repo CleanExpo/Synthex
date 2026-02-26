@@ -1,23 +1,21 @@
 /**
+ * User Subscription API
+ *
+ * Returns the current user's subscription details and plan features.
+ * Uses Prisma to query the Subscription model (unified with webhook handlers).
+ *
  * ENVIRONMENT VARIABLES REQUIRED:
- * - NEXT_PUBLIC_SUPABASE_URL: Supabase project URL (PUBLIC)
- * - NEXT_PUBLIC_SUPABASE_ANON_KEY: Supabase anonymous key (PUBLIC)
- * - SUPABASE_SERVICE_ROLE_KEY: For bypassing RLS (SECRET) - optional but recommended
+ * - DATABASE_URL: PostgreSQL connection (CRITICAL)
  * - JWT_SECRET: For verifying user authentication (CRITICAL)
  *
  * FAILURE MODE: Returns error response if missing
+ *
+ * @module app/api/user/subscription/route
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
-
-// Use anon key since RLS policy allows SELECT for all authenticated API requests
-// Service role key can be added back when properly rotated
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+import { subscriptionService } from '@/lib/stripe/subscription-service';
 
 export async function GET(request: NextRequest) {
   try {
@@ -43,34 +41,11 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Get subscription details
-    const { data: subscription, error } = await supabase
-      .from('subscriptions')
-      .select('*')
-      .eq('user_id', userId)
-      .single();
+    // Get or create subscription via Prisma (auto-creates free tier if none exists)
+    const subscription = await subscriptionService.getOrCreateSubscription(userId);
 
-    if (error && error.code !== 'PGRST116') { // PGRST116 = no rows found
-      throw error;
-    }
-
-    // If no subscription found, return free tier
-    if (!subscription) {
-      return NextResponse.json({
-        plan: 'free',
-        status: 'inactive',
-        features: {
-          socialAccounts: 1,
-          aiPosts: 5,
-          personas: 1,
-          analytics: 'basic',
-          support: 'community',
-        },
-      });
-    }
-
-    // Get plan features based on subscription
-    const planFeatures = {
+    // Plan features map (matches billing page expectations)
+    const planFeatures: Record<string, Record<string, unknown>> = {
       professional: {
         socialAccounts: 5,
         aiPosts: 100,
@@ -82,7 +57,7 @@ export async function GET(request: NextRequest) {
       },
       business: {
         socialAccounts: 10,
-        aiPosts: -1, // unlimited
+        aiPosts: -1,
         personas: 10,
         analytics: 'advanced',
         support: 'priority',
@@ -93,9 +68,9 @@ export async function GET(request: NextRequest) {
         teamCollaboration: true,
       },
       custom: {
-        socialAccounts: -1, // unlimited
-        aiPosts: -1, // unlimited
-        personas: -1, // unlimited
+        socialAccounts: -1,
+        aiPosts: -1,
+        personas: -1,
         analytics: 'enterprise',
         support: 'dedicated',
         apiAccess: true,
@@ -114,8 +89,12 @@ export async function GET(request: NextRequest) {
     };
 
     return NextResponse.json({
-      ...subscription,
-      features: planFeatures[subscription.plan as keyof typeof planFeatures] || planFeatures.free,
+      plan: subscription.plan,
+      status: subscription.status,
+      currentPeriodEnd: subscription.currentPeriodEnd?.toISOString() ?? null,
+      cancelAtPeriodEnd: subscription.cancelAtPeriodEnd,
+      trialEnd: subscription.trialEnd?.toISOString() ?? null,
+      features: planFeatures[subscription.plan] || planFeatures.free,
     });
   } catch (error: unknown) {
     console.error('Subscription fetch error:', error);
@@ -123,9 +102,11 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(
       {
         error: 'Failed to fetch subscription details',
-        details: process.env.NODE_ENV === 'development' ? errorMessage : undefined
+        details: process.env.NODE_ENV === 'development' ? errorMessage : undefined,
       },
       { status: 500 }
     );
   }
 }
+
+export const runtime = 'nodejs';

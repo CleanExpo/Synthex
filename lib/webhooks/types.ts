@@ -49,6 +49,7 @@ export type WebhookEventType =
   | 'billing.subscription_cancelled'
   | 'billing.payment_succeeded'
   | 'billing.payment_failed'
+  | 'billing.checkout_completed'
   // System events
   | 'system.health_check'
   | 'system.error'

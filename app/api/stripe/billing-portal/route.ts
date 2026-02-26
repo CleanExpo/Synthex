@@ -1,23 +1,27 @@
 /**
+ * Stripe Billing Portal API
+ *
+ * Creates a Stripe billing portal session for the authenticated user.
+ * Uses Prisma to read/write subscription records (unified with webhook handlers).
+ *
  * ENVIRONMENT VARIABLES REQUIRED:
  * - STRIPE_SECRET_KEY: Stripe secret key for API operations (CRITICAL)
  * - NEXT_PUBLIC_APP_URL: Application URL for redirects (PUBLIC)
  * - JWT_SECRET: For verifying user authentication (CRITICAL)
- * 
+ * - DATABASE_URL: PostgreSQL connection (CRITICAL)
+ *
  * FAILURE MODE: Returns error response if missing
+ *
+ * @module app/api/stripe/billing-portal/route
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { stripe } from '@/lib/stripe/config';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
-import { createClient } from '@supabase/supabase-js';
 import { getUserIdFromRequestOrCookies, verifyTokenSafe, unauthorizedResponse } from '@/lib/auth/jwt-utils';
 import { billing } from '@/lib/middleware/api-rate-limit';
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY!
-);
+import prisma from '@/lib/prisma';
+import { subscriptionService } from '@/lib/stripe/subscription-service';
 
 export async function POST(request: NextRequest) {
   // Distributed rate limiting via Upstash Redis
@@ -26,10 +30,10 @@ export async function POST(request: NextRequest) {
     // Check if Stripe is configured
     if (!stripe) {
       return NextResponse.json(
-        { 
+        {
           error: 'Billing portal not available',
           message: 'Payment processing is not configured yet. Contact support for billing inquiries.',
-          bypass: true 
+          bypass: true
         },
         { status: 503 }
       );
@@ -52,43 +56,39 @@ export async function POST(request: NextRequest) {
     const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) return unauthorizedResponse();
 
-    // Extract email from token for Stripe customer creation
-    const authToken = request.headers.get('authorization')?.replace('Bearer ', '');
-    const tokenPayload = authToken ? verifyTokenSafe(authToken) : null;
-    const userEmail = tokenPayload?.email || '';
+    // Get or create subscription record via Prisma
+    const subscription = await subscriptionService.getOrCreateSubscription(userId);
 
-    // Get user's Stripe customer ID from database
-    const { data: subscription } = await supabase
-      .from('subscriptions')
-      .select('stripe_customer_id')
-      .eq('user_id', userId)
-      .single();
+    let customerId = subscription.stripeCustomerId;
 
-    let customerId = subscription?.stripe_customer_id;
-
-    // If no customer exists, create one
+    // If no Stripe customer exists, create one
     if (!customerId) {
-      const customer = await stripe!.customers.create({
+      // Extract email from token for Stripe customer creation
+      const authToken = request.headers.get('authorization')?.replace('Bearer ', '');
+      const tokenPayload = authToken ? verifyTokenSafe(authToken) : null;
+      let userEmail = tokenPayload?.email || '';
+
+      // Fallback: fetch email from user record
+      if (!userEmail) {
+        const user = await prisma.user.findUnique({
+          where: { id: userId },
+          select: { email: true },
+        });
+        userEmail = user?.email || '';
+      }
+
+      const customer = await stripe.customers.create({
         email: userEmail,
-        metadata: {
-          userId,
-        },
+        metadata: { userId },
       });
       customerId = customer.id;
 
-      // Save customer ID
-      await supabase
-        .from('subscriptions')
-        .upsert({
-          user_id: userId,
-          stripe_customer_id: customerId,
-          status: 'inactive',
-          plan: 'free',
-        });
+      // Save customer ID via subscription service
+      await subscriptionService.setStripeCustomerId(userId, customerId);
     }
 
     // Create billing portal session
-    const session = await stripe!.billingPortal.sessions.create({
+    const session = await stripe.billingPortal.sessions.create({
       customer: customerId,
       return_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/billing`,
     });
@@ -103,3 +103,5 @@ export async function POST(request: NextRequest) {
   }
   });
 }
+
+export const runtime = 'nodejs';

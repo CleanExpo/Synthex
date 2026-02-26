@@ -407,6 +407,10 @@ export class WebhookHandler {
       if (type.includes('failed')) return 'billing.payment_failed';
     }
 
+    if (type === 'checkout.session.completed') {
+      return 'billing.checkout_completed';
+    }
+
     return null;
   }
 

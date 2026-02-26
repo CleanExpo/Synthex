@@ -271,10 +271,68 @@ async function handlePaymentFailed(event: WebhookEvent): Promise<void> {
 }
 
 // ============================================================================
+// CHECKOUT HANDLERS
+// ============================================================================
+
+/**
+ * Handle checkout session completed
+ *
+ * Links Stripe customer ID to the user's subscription record so that
+ * subsequent subscription webhooks can find it by customerId.
+ */
+async function handleCheckoutCompleted(event: WebhookEvent): Promise<void> {
+  const data = getWebhookData(event);
+  const session = data.data.object as unknown as Record<string, unknown>;
+
+  const customerId = session.customer as string;
+  const userId = (session.client_reference_id as string)
+    || (session.metadata as Record<string, string>)?.userId;
+
+  logger.info('Handling checkout completed', {
+    sessionId: session.id,
+    customerId,
+    userId,
+  });
+
+  if (!userId || !customerId) {
+    logger.warn('Checkout completed missing userId or customerId', { session: session.id });
+    return;
+  }
+
+  try {
+    // Ensure subscription record exists and has the Stripe customer ID
+    await subscriptionService.setStripeCustomerId(userId, customerId);
+
+    await auditLogger.log({
+      action: 'billing.checkout_completed',
+      resource: 'checkout_session',
+      resourceId: session.id as string,
+      userId,
+      category: 'compliance',
+      severity: 'medium',
+      outcome: 'success',
+      details: {
+        customerId,
+        subscriptionId: session.subscription,
+      },
+    });
+  } catch (error) {
+    logger.error('Failed to handle checkout completed', {
+      error,
+      sessionId: session.id,
+    });
+    throw error;
+  }
+}
+
+// ============================================================================
 // REGISTER HANDLERS
 // ============================================================================
 
 export function registerStripeWebhookHandlers(): void {
+  // Checkout events
+  webhookHandler.on('billing.checkout_completed', handleCheckoutCompleted);
+
   // Subscription events
   webhookHandler.on('billing.subscription_created', handleSubscriptionCreated);
   webhookHandler.on('billing.subscription_updated', handleSubscriptionUpdated);
@@ -295,6 +353,7 @@ registerStripeWebhookHandlers();
 // ============================================================================
 
 export {
+  handleCheckoutCompleted,
   handleSubscriptionCreated,
   handleSubscriptionUpdated,
   handleSubscriptionCancelled,

@@ -19,8 +19,9 @@ import { useRouter } from 'next/navigation';
 interface Subscription {
   plan: string;
   status: string;
-  current_period_end?: string;
-  cancel_at_period_end?: boolean;
+  currentPeriodEnd?: string;
+  cancelAtPeriodEnd?: boolean;
+  trialEnd?: string;
 }
 
 interface UsageData {
@@ -217,24 +218,24 @@ export default function BillingPage() {
               </p>
             </div>
 
-            {subscription?.current_period_end && (
+            {subscription?.currentPeriodEnd && (
               <div>
                 <p className="text-gray-400 mb-1">
-                  {subscription.cancel_at_period_end ? 'Expires On' : 'Next Billing Date'}
+                  {subscription.cancelAtPeriodEnd ? 'Expires On' : 'Next Billing Date'}
                 </p>
                 <p className="text-xl text-white">
-                  {formatDate(subscription.current_period_end)}
+                  {formatDate(subscription.currentPeriodEnd)}
                 </p>
               </div>
             )}
           </div>
 
-          {subscription?.cancel_at_period_end && (
+          {subscription?.cancelAtPeriodEnd && (
             <div className="mt-4 p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
               <div className="flex items-center space-x-2">
                 <AlertCircle className="w-5 h-5 text-yellow-500" />
                 <p className="text-yellow-200">
-                  Your subscription will end on {formatDate(subscription.current_period_end!)}
+                  Your subscription will end on {formatDate(subscription.currentPeriodEnd!)}
                 </p>
               </div>
             </div>
