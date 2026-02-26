@@ -161,13 +161,11 @@ export default function SettingsPage() {
             plan: planName,
             price: subData.price ? `$${subData.price / 100}` : prev.price,
             billingCycle: subData.interval || prev.billingCycle,
-            nextBilling: subData.current_period_end
-              ? new Date(subData.current_period_end * 1000).toLocaleDateString()
+            nextBilling: subData.currentPeriodEnd
+              ? new Date(subData.currentPeriodEnd).toLocaleDateString()
               : prev.nextBilling,
-            paymentMethod: subData.payment_method?.brand
-              ? subData.payment_method.brand.charAt(0).toUpperCase() + subData.payment_method.brand.slice(1)
-              : prev.paymentMethod,
-            cardLast4: subData.payment_method?.last4 || prev.cardLast4,
+            paymentMethod: prev.paymentMethod,
+            cardLast4: prev.cardLast4,
           }));
         }
       }
