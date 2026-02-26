@@ -1,9 +1,9 @@
-'use client';
+﻿'use client';
 
 import { useState, useMemo, useCallback } from 'react';
 import { DashboardSkeleton } from '@/components/skeletons';
 import { APIErrorCard } from '@/components/error-states';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 
 import {
   type Persona,

@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 /**
  * Cross-Post Page
@@ -19,7 +19,7 @@ import { PageHeader } from '@/components/dashboard/page-header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Send, Copy, Check, Loader2, Globe } from '@/components/icons';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 
 // ---------------------------------------------------------------------------
 // Types

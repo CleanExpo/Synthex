@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -21,7 +21,7 @@ import {
   Pause,
   Settings
 } from '@/components/icons';
-import toast, { Toaster } from 'react-hot-toast';
+import { toast } from 'sonner';
 
 interface Backup {
   id: string;
@@ -157,7 +157,6 @@ export default function BackupsPage() {
 
   return (
     <div className="p-6 space-y-6">
-      <Toaster position="top-right" />
       
       {/* Header */}
       <div className="flex justify-between items-center">

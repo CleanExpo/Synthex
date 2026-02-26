@@ -1,9 +1,9 @@
-'use client';
+﻿'use client';
 
 import { createContext, useContext, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { authService, type AuthUser } from '@/lib/auth/auth-service';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 
 interface AuthContextType {
   user: AuthUser | null;

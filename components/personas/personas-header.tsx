@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 /**
  * Personas Header Component
@@ -7,7 +7,7 @@
 
 import { Button } from '@/components/ui/button';
 import { Plus, Download, Loader2 } from '@/components/icons';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 import type { Persona } from './types';
 
 interface PersonasHeaderProps {

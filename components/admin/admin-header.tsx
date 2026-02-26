@@ -25,7 +25,11 @@ export function AdminHeader({ onExport, onAddUser }: AdminHeaderProps) {
           <Download className="w-4 h-4 mr-2" />
           Export Users
         </Button>
-        <Button onClick={onAddUser} className="gradient-primary text-white">
+        <Button
+          disabled
+          title="Add User — coming soon"
+          className="gradient-primary text-white opacity-50 cursor-not-allowed"
+        >
           <UserPlus className="w-4 h-4 mr-2" />
           Add User
         </Button>

@@ -1,9 +1,9 @@
-/**
+﻿/**
  * OAuth Handler for Social Login Integration
  * Provides a unified interface for OAuth authentication
  */
 
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 
 interface OAuthProvider {
   name: string;

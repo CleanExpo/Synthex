@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useRef } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -32,7 +32,7 @@ import {
   Moon,
   Sun
 } from '@/components/icons';
-import toast, { Toaster } from 'react-hot-toast';
+import { toast } from 'sonner';
 
 export default function DemoSettingsPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -141,7 +141,6 @@ export default function DemoSettingsPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-950 via-cyan-950/20 to-gray-950">
-      <Toaster position="top-right" />
       
       {/* Demo Mode Banner */}
       <div className="bg-amber-500/10 border border-amber-500/20 p-3">

@@ -35,7 +35,12 @@ export function UserSearchBar({
           className="pl-10 bg-white/5 border-white/10"
         />
       </div>
-      <Button onClick={onFilter} variant="outline" className="border-white/10">
+      <Button
+        disabled
+        title="Advanced filters — coming soon"
+        variant="outline"
+        className="border-white/10 opacity-50 cursor-not-allowed"
+      >
         <Filter className="w-4 h-4 mr-2" />
         Filter
       </Button>

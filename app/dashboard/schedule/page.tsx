@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 /**
  * Content Schedule Page
@@ -14,7 +14,7 @@ import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { DashboardSkeleton } from '@/components/skeletons';
 import { APIErrorCard } from '@/components/error-states';
 import { WeekView, PostDetailModal, OPTIMAL_TIMES } from '@/components/calendar';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 import { fetchWithCSRF } from '@/lib/csrf';
 
 import {

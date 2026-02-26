@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -28,7 +28,7 @@ import {
   Clock,
   Zap
 } from '@/components/icons';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 
 interface Integration {
   id: string;

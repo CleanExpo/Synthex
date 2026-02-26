@@ -1,9 +1,9 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect, useCallback } from 'react';
 import { AnalyticsSkeleton } from '@/components/skeletons';
 import { APIErrorCard } from '@/components/error-states';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 
 import {
   type ViralPattern,

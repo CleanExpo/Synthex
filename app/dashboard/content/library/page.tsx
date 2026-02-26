@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 /**
  * Content Drafts Library Page
@@ -22,7 +22,7 @@ import {
   Loader2,
   Filter,
 } from '@/components/icons';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 
 // =============================================================================
 // Types

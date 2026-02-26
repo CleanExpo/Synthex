@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import toast, { Toaster } from 'react-hot-toast';
+import { toast } from 'sonner';
 
 import Link from 'next/link';
 import { Layout } from '@/components/icons';
@@ -144,7 +144,6 @@ export default function ReportsPage() {
 
   return (
     <div className="p-6 space-y-6">
-      <Toaster position="top-right" />
 
       <ReportsHeader
         isLoading={isLoading}

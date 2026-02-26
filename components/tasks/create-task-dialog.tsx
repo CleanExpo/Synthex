@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 /**
  * Create Task Dialog Component
@@ -27,7 +27,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Plus, Loader2 } from '@/components/icons';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 import { typeConfig, priorityConfig, teamMembers } from './task-config';
 import type { Task, TaskType, TaskPriority } from './types';
 

@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 /**
  * AI Credentials Manager
@@ -19,7 +19,7 @@ import {
   Plus,
   Trash2,
 } from '@/components/icons';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 
 interface AICredential {
   id: string;

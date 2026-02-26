@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 /**
  * Multi-format Content Generator
@@ -14,7 +14,7 @@ import { PageHeader } from '@/components/dashboard/page-header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Layers, Copy, Check, Loader2, Calendar } from '@/components/icons';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 
 // ---------------------------------------------------------------------------
 // Types

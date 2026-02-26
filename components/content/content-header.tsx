@@ -24,9 +24,10 @@ export function ContentHeader({ onTrainAI, onViewAnalytics }: ContentHeaderProps
       </div>
       <div className="flex space-x-3 mt-4 sm:mt-0">
         <Button
-          onClick={onTrainAI}
+          disabled
+          title="AI Training — coming soon"
           variant="outline"
-          className="bg-white/5 border-white/10 text-white hover:bg-white/10"
+          className="bg-white/5 border-white/10 text-white opacity-50 cursor-not-allowed"
         >
           <Brain className="mr-2 h-4 w-4" />
           Train AI

@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState } from 'react';
 import Link from 'next/link';
@@ -20,7 +20,7 @@ import {
   ArrowRight,
   Sparkles
 } from '@/components/icons';
-import toast, { Toaster } from 'react-hot-toast';
+import { toast } from 'sonner';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -111,7 +111,6 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-950 via-cyan-950/20 to-gray-950 flex items-center justify-center p-4">
-      <Toaster position="top-right" />
 
       {/* Background effects */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">

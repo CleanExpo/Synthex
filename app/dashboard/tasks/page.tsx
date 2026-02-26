@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 /**
  * Tasks Management Page
@@ -12,7 +12,7 @@ import { Button } from '@/components/ui/button';
 import { TasksSkeleton } from '@/components/skeletons';
 import { APIErrorCard } from '@/components/error-states';
 import { Plus, Filter, ListTodo } from '@/components/icons';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 import {
   Task,
   TaskStatus,

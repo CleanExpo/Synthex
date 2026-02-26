@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -18,7 +18,7 @@ import {
   EyeOff,
   ArrowRight
 } from '@/components/icons';
-import toast, { Toaster } from 'react-hot-toast';
+import { toast } from 'sonner';
 
 function ResetPasswordForm() {
   const router = useRouter();
@@ -122,7 +122,6 @@ function ResetPasswordForm() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-950 via-cyan-950/20 to-gray-950 flex items-center justify-center p-4">
-      <Toaster position="top-right" />
 
       {/* Background effects */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">

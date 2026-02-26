@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -20,7 +20,7 @@ import {
   RefreshCw,
   Info
 } from '@/components/icons';
-import toast, { Toaster } from 'react-hot-toast';
+import { toast } from 'sonner';
 
 interface Integration {
   id: string;
@@ -150,7 +150,6 @@ export default function DemoIntegrationsPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-950 via-cyan-950/20 to-gray-950">
-      <Toaster position="top-right" />
       
       {/* Demo Mode Banner */}
       <div className="bg-amber-500/10 border border-amber-500/20 p-3">

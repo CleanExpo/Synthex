@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 /**
  * Platform Management Hub
@@ -36,7 +36,7 @@ import {
   Eye,
   Heart,
 } from '@/components/icons';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 import Link from 'next/link';
 
 // ---------------------------------------------------------------------------

@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 /**
  * Settings Page
@@ -22,7 +22,7 @@ import {
   Shield,
   User,
 } from '@/components/icons';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 import {
   ProfileTab,
   NotificationsTab,

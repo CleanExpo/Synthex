@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 /**
  * Recommendations Card
@@ -9,7 +9,7 @@ import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Lightbulb, Sparkles, Copy, Check } from '@/components/icons';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 
 interface RecommendationsCardProps {
   recommendations: string[];

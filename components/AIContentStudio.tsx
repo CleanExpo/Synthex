@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -16,7 +16,7 @@ import {
   Calendar, Hash, Smile, Target, Wand2, Loader2, Check,
   Twitter, Instagram, Linkedin, Youtube, Facebook, MessageSquare
 } from '@/components/icons';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 
 interface GeneratedContent {
   id: string;

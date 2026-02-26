@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -15,7 +15,7 @@ import {
   Clock, Calendar, Globe, Target, Zap, Activity, ArrowUp, ArrowDown,
   Twitter, Instagram, Linkedin, Youtube, Facebook, RefreshCw, Download
 } from '@/components/icons';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 
 interface AnalyticsData {
   overview: {

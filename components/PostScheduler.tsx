@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -20,7 +20,7 @@ import {
 } from '@/components/icons';
 import { format, addDays, startOfWeek, endOfWeek, eachDayOfInterval, 
          isSameDay, isToday, isPast, isFuture, startOfMonth, endOfMonth } from 'date-fns';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 
 interface ScheduledPost {
   id: string;
