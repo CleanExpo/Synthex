@@ -33,8 +33,17 @@ model User {
   openrouterApiKey String? @map("openrouter_api_key")
   anthropicApiKey  String? @map("anthropic_api_key")
 
-  // User settings
+  // Profile fields (migrated from Supabase profiles table)
+  company          String?
+  jobRole          String?  @map("job_role")
+  bio              String?
+  phone            String?
+  website          String?
+  socialLinks      Json?    @map("social_links")
+
+  // User settings (stores notification, privacy, theme preferences)
   preferences      Json?
+  settings         Json?    @map("user_settings") // Migrated from Supabase user_settings table
 
   // Password reset fields
   resetCode        String? @map("reset_code")

@@ -33,7 +33,15 @@ export async function GET(req: NextRequest) {
   try {
     const user = await prisma.user.findUnique({
       where: { id: userId },
-      select: { name: true, email: true, preferences: true },
+      select: {
+        name: true,
+        email: true,
+        company: true,
+        jobRole: true,
+        bio: true,
+        timezone: true,
+        preferences: true,
+      },
     });
 
     return NextResponse.json({
@@ -81,16 +89,21 @@ export async function PUT(req: NextRequest) {
     const updated = await prisma.user.update({
       where: { id: userId },
       data: {
-        name: body.name,
-        // store additional profile fields in preferences json
-        preferences: {
-          ...(body.timezone ? { timezone: body.timezone } : {}),
-          ...(body.company ? { company: body.company } : {}),
-          ...(body.role ? { role: body.role } : {}),
-          ...(body.bio ? { bio: body.bio } : {}),
-        } as any,
+        ...(body.name !== undefined && { name: body.name }),
+        ...(body.company !== undefined && { company: body.company }),
+        ...(body.role !== undefined && { jobRole: body.role }),
+        ...(body.bio !== undefined && { bio: body.bio }),
+        ...(body.timezone !== undefined && { timezone: body.timezone }),
       },
-      select: { name: true, email: true, preferences: true },
+      select: {
+        name: true,
+        email: true,
+        company: true,
+        jobRole: true,
+        bio: true,
+        timezone: true,
+        preferences: true,
+      },
     });
 
     return NextResponse.json({

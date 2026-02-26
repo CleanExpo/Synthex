@@ -4,12 +4,17 @@
  * DELETE /api/user/avatar - Remove avatar image
  *
  * AUTH: Uses `getUserIdFromRequestOrCookies()` for cookie-based JWT auth.
- * DB/Storage: Uses Supabase service-role client to bypass RLS.
+ * STORAGE: Uses Supabase Storage for file uploads (no FK issues).
+ * DB: Uses Prisma `User.avatar` field (migrated from Supabase `profiles`
+ * table to fix FK constraint violations for OAuth users — UNI-839).
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase-server';
+import { prisma } from '@/lib/prisma';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
+
+export const runtime = 'nodejs';
 
 export async function POST(request: NextRequest) {
   try {
@@ -53,7 +58,7 @@ export async function POST(request: NextRequest) {
 
     const supabase = createServerClient();
 
-    // Upload to Supabase Storage
+    // Upload to Supabase Storage (file storage is fine — no FK constraints)
     const { error: uploadError } = await supabase.storage
       .from('avatars')
       .upload(filePath, buffer, {
@@ -71,20 +76,17 @@ export async function POST(request: NextRequest) {
       .from('avatars')
       .getPublicUrl(filePath);
 
-    // Update user profile with new avatar URL
-    const { error: updateError } = await supabase
-      .from('profiles')
-      .update({
-        avatar_url: publicUrl,
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', userId);
-
-    if (updateError) {
-      console.error('Profile update error:', updateError);
-      // Try to delete uploaded file if profile update fails
+    // Update user avatar in Prisma (NOT Supabase profiles table)
+    try {
+      await prisma.user.update({
+        where: { id: userId },
+        data: { avatar: publicUrl },
+      });
+    } catch (dbError) {
+      console.error('DB update error:', dbError);
+      // Clean up uploaded file if DB update fails
       await supabase.storage.from('avatars').remove([filePath]);
-      throw updateError;
+      throw dbError;
     }
 
     return NextResponse.json({
@@ -109,33 +111,27 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const supabase = createServerClient();
+    // Get current avatar URL from Prisma
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { avatar: true },
+    });
 
-    // Get current avatar URL
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('avatar_url')
-      .eq('id', userId)
-      .single();
-
-    if (profile?.avatar_url) {
-      // Extract file path from URL
-      const urlParts = profile.avatar_url.split('/');
+    if (user?.avatar) {
+      // Extract file path from URL and delete from storage
+      const urlParts = user.avatar.split('/');
       const fileName = urlParts[urlParts.length - 1];
       const filePath = `avatars/${fileName}`;
 
-      // Delete from storage
+      const supabase = createServerClient();
       await supabase.storage.from('avatars').remove([filePath]);
     }
 
-    // Update profile to remove avatar
-    await supabase
-      .from('profiles')
-      .update({
-        avatar_url: null,
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', userId);
+    // Clear avatar in Prisma
+    await prisma.user.update({
+      where: { id: userId },
+      data: { avatar: null },
+    });
 
     return NextResponse.json({
       success: true,

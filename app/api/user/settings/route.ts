@@ -4,20 +4,19 @@
  * PUT /api/user/settings - Update user settings
  *
  * AUTH: Uses `getUserIdFromRequestOrCookies()` for cookie-based JWT auth.
- * DB: Uses Supabase service-role client to bypass RLS.
- *
- * RESILIENCE: If the user_settings table doesn't exist in Supabase,
- * GET returns sensible defaults and PUT returns a soft error (not 500).
+ * DB: Uses Prisma `User.settings` Json field (migrated from Supabase
+ * `user_settings` table to fix FK constraint violations for OAuth users — UNI-839).
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createServerClient } from '@/lib/supabase-server';
+import { prisma } from '@/lib/prisma';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { z } from 'zod';
 
 export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
 
-// Default settings returned when table doesn't exist or no row found
+// Default settings returned when no settings are stored
 const DEFAULT_SETTINGS = {
   notifications: {
     email: true,
@@ -76,6 +75,8 @@ const settingsUpdateSchema = z.discriminatedUnion('type', [
   }),
 ]);
 
+type StoredSettings = typeof DEFAULT_SETTINGS;
+
 // GET user settings
 export async function GET(request: NextRequest) {
   try {
@@ -84,47 +85,28 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const supabase = createServerClient();
+    // Get user settings from Prisma
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { settings: true },
+    });
 
-    // Get user settings from database
-    const { data: settings, error } = await supabase
-      .from('user_settings')
-      .select('*')
-      .eq('user_id', userId)
-      .single();
-
-    // If table doesn't exist or other DB error, return defaults
-    if (error) {
-      if (error.code === 'PGRST116') {
-        // No row found — try to create default settings
-        const defaultRow = {
-          user_id: userId,
-          ...DEFAULT_SETTINGS,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        };
-
-        const { data: createdSettings, error: createError } = await supabase
-          .from('user_settings')
-          .insert([defaultRow])
-          .select()
-          .single();
-
-        if (createError) {
-          // INSERT failed (FK constraint, table missing, etc.) — return defaults anyway
-          console.error('Error creating settings row:', createError);
-          return NextResponse.json({ settings: DEFAULT_SETTINGS });
-        }
-
-        return NextResponse.json({ settings: createdSettings });
-      }
-
-      // Table doesn't exist or other error — return defaults gracefully
-      console.error('Settings fetch error:', error);
+    if (!user || !user.settings) {
+      // No settings stored yet — return defaults
       return NextResponse.json({ settings: DEFAULT_SETTINGS });
     }
 
-    return NextResponse.json({ settings });
+    // Merge stored settings with defaults (in case new fields were added)
+    const stored = user.settings as Partial<StoredSettings>;
+    const merged = {
+      notifications: { ...DEFAULT_SETTINGS.notifications, ...(stored.notifications || {}) },
+      privacy: { ...DEFAULT_SETTINGS.privacy, ...(stored.privacy || {}) },
+      theme: stored.theme || DEFAULT_SETTINGS.theme,
+      language: stored.language || DEFAULT_SETTINGS.language,
+      timezone: stored.timezone || DEFAULT_SETTINGS.timezone,
+    };
+
+    return NextResponse.json({ settings: merged });
   } catch (error: unknown) {
     console.error('Settings fetch error:', error);
     // Return defaults instead of 500 — settings are non-critical
@@ -155,67 +137,64 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    const { type, settings } = validationResult.data;
+    const { type, settings: newValue } = validationResult.data;
 
-    const supabase = createServerClient();
+    // Read current settings (or use defaults)
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { settings: true },
+    });
 
-    // Build update data based on validated type
-    const updatedData: Record<string, unknown> = {
-      updated_at: new Date().toISOString()
+    const currentSettings = (user?.settings as Partial<StoredSettings>) || {};
+
+    // Merge the updated section into current settings
+    const updatedSettings: Record<string, unknown> = {
+      ...DEFAULT_SETTINGS,
+      ...currentSettings,
     };
 
     switch (type) {
       case 'notifications':
-        updatedData.notifications = settings;
+        updatedSettings.notifications = {
+          ...DEFAULT_SETTINGS.notifications,
+          ...(currentSettings.notifications || {}),
+          ...newValue,
+        };
         break;
       case 'privacy':
-        updatedData.privacy = settings;
+        updatedSettings.privacy = {
+          ...DEFAULT_SETTINGS.privacy,
+          ...(currentSettings.privacy || {}),
+          ...newValue,
+        };
         break;
       case 'theme':
-        updatedData.theme = settings;
+        updatedSettings.theme = newValue;
         break;
       case 'language':
-        updatedData.language = settings;
+        updatedSettings.language = newValue;
         break;
       case 'timezone':
-        updatedData.timezone = settings;
+        updatedSettings.timezone = newValue;
         break;
     }
 
-    // Try upsert — works whether row exists or not
-    const { data: result, error: upsertError } = await supabase
-      .from('user_settings')
-      .upsert({
-        user_id: userId,
-        ...updatedData,
-      }, { onConflict: 'user_id' })
-      .select()
-      .single();
-
-    if (upsertError) {
-      console.error('Settings upsert error:', upsertError);
-      // If the table doesn't exist, return a soft success with the data they sent
-      // This prevents the entire save flow from failing
-      return NextResponse.json({
-        success: true,
-        settings: { [type]: settings },
-        message: 'Settings accepted (database sync pending)',
-        _warning: 'user_settings table may not exist'
-      });
-    }
+    // Save to Prisma
+    await prisma.user.update({
+      where: { id: userId },
+      data: { settings: updatedSettings as any },
+    });
 
     return NextResponse.json({
       success: true,
-      settings: result,
+      settings: updatedSettings,
       message: 'Settings updated successfully'
     });
   } catch (error: unknown) {
     console.error('Settings update error:', error);
-    // Return soft success instead of 500 — don't break the entire save
-    return NextResponse.json({
-      success: true,
-      message: 'Settings accepted (database sync pending)',
-      _warning: 'Settings save encountered an error'
-    });
+    return NextResponse.json(
+      { error: 'Failed to update settings' },
+      { status: 500 }
+    );
   }
 }

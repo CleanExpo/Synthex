@@ -5,17 +5,18 @@
  * DELETE /api/user/profile - Delete user account
  *
  * AUTH: Uses `getUserIdFromRequestOrCookies()` which reads the httpOnly
- * `auth-token` JWT cookie (Google OAuth) OR the Authorization header
- * (Supabase Auth). Works for both auth flows.
+ * `auth-token` JWT cookie. Works for both email and OAuth users.
  *
- * DB: Uses Supabase service-role client for database operations so that
- * RLS is bypassed (the user is already authenticated by our own JWT).
+ * DB: Uses Prisma for all database operations (migrated from Supabase
+ * `profiles` table to fix FK constraint violations for OAuth users — UNI-839).
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createServerClient } from '@/lib/supabase-server';
+import { prisma } from '@/lib/prisma';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { z } from 'zod';
+
+export const runtime = 'nodejs';
 
 // Validation schemas
 const profileUpdateSchema = z.object({
@@ -46,59 +47,63 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const supabase = createServerClient();
+    // Get user profile from Prisma
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        avatar: true,
+        company: true,
+        jobRole: true,
+        bio: true,
+        phone: true,
+        website: true,
+        socialLinks: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
 
-    // Get user profile from database
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', userId)
-      .single();
-
-    // If profile found, return it
-    if (profile) {
-      return NextResponse.json({ profile });
+    if (!user) {
+      // Return a default profile object so the UI can still render
+      return NextResponse.json({
+        profile: {
+          id: userId,
+          email: '',
+          name: '',
+          avatar_url: '',
+          company: '',
+          role: '',
+          bio: '',
+          phone: '',
+          website: '',
+          social_links: {},
+        }
+      });
     }
 
-    // No profile row found — try to create one
-    const newProfile = {
-      id: userId,
-      email: '',
-      name: '',
-      avatar_url: '',
-      company: '',
-      role: '',
-      bio: '',
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    };
-
-    if (profileError && profileError.code !== 'PGRST116') {
-      // Real error (not just "no rows") — still return a default profile object
-      // so the UI can load and let the user enter data
-      console.error('Profile fetch error:', profileError);
-      return NextResponse.json({ profile: newProfile });
-    }
-
-    // Try creating the profile row
-    const { data: createdProfile, error: createError } = await supabase
-      .from('profiles')
-      .insert([newProfile])
-      .select()
-      .single();
-
-    if (createError) {
-      // INSERT failed (FK constraint, table missing, etc.)
-      // Still return the default profile object so the UI can display
-      console.error('Error creating profile:', createError);
-      return NextResponse.json({ profile: newProfile });
-    }
-
-    return NextResponse.json({ profile: createdProfile });
+    // Map Prisma fields to the profile shape the frontend expects
+    return NextResponse.json({
+      profile: {
+        id: user.id,
+        email: user.email,
+        name: user.name || '',
+        avatar_url: user.avatar || '',
+        company: user.company || '',
+        role: user.jobRole || '',
+        bio: user.bio || '',
+        phone: user.phone || '',
+        website: user.website || '',
+        social_links: (user.socialLinks as Record<string, string>) || {},
+        created_at: user.createdAt.toISOString(),
+        updated_at: user.updatedAt.toISOString(),
+      }
+    });
   } catch (error: unknown) {
     console.error('Profile fetch error:', error);
     // Return a minimal default profile instead of 500 error
-    // so the settings page UI can still render and accept user input
     return NextResponse.json({
       profile: {
         id: null,
@@ -137,81 +142,55 @@ export async function PUT(request: NextRequest) {
 
     const { name, company, role, bio, phone, website, social_links } = validationResult.data;
 
-    const supabase = createServerClient();
+    // Build update data — only include defined fields
+    const updateData: Record<string, unknown> = {};
+    if (name !== undefined) updateData.name = name;
+    if (company !== undefined) updateData.company = company;
+    if (role !== undefined) updateData.jobRole = role;
+    if (bio !== undefined) updateData.bio = bio;
+    if (phone !== undefined) updateData.phone = phone;
+    if (website !== undefined) updateData.website = website || null;
+    if (social_links !== undefined) updateData.socialLinks = social_links;
 
-    const updateData = {
-      ...(name !== undefined && { name }),
-      ...(company !== undefined && { company }),
-      ...(role !== undefined && { role }),
-      ...(bio !== undefined && { bio }),
-      ...(phone !== undefined && { phone }),
-      ...(website !== undefined && { website }),
-      ...(social_links !== undefined && { social_links }),
-      updated_at: new Date().toISOString()
-    };
-
-    // Try to update existing profile first
-    const { data: updatedProfile, error: updateError } = await supabase
-      .from('profiles')
-      .update(updateData)
-      .eq('id', userId)
-      .select()
-      .single();
-
-    // If update found no rows (PGRST116 = no rows returned), try upsert
-    if (updateError && updateError.code === 'PGRST116') {
-      // Try upsert first
-      const { data: upsertedProfile, error: upsertError } = await supabase
-        .from('profiles')
-        .upsert({
-          id: userId,
-          email: '',
-          ...updateData,
-          created_at: new Date().toISOString()
-        })
-        .select()
-        .single();
-
-      if (upsertError) {
-        console.error('Profile upsert error:', JSON.stringify(upsertError));
-        // If upsert also fails (FK constraint), return success with just the data
-        // The profile will be created when it can be (e.g., after auth.users entry exists)
-        return NextResponse.json({
-          success: true,
-          profile: { id: userId, ...updateData },
-          message: 'Profile data accepted'
-        });
-      }
-
-      return NextResponse.json({
-        success: true,
-        profile: upsertedProfile,
-        message: 'Profile created and updated successfully'
-      });
-    }
-
-    if (updateError) {
-      console.error('Profile update error details:', JSON.stringify(updateError));
-      // Return success with the data the user submitted rather than a 500
-      return NextResponse.json({
-        success: true,
-        profile: { id: userId, ...updateData },
-        message: 'Profile data accepted (database sync pending)'
-      });
-    }
+    // Update user in Prisma (user always exists — created at signup/OAuth)
+    const updatedUser = await prisma.user.update({
+      where: { id: userId },
+      data: updateData,
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        avatar: true,
+        company: true,
+        jobRole: true,
+        bio: true,
+        phone: true,
+        website: true,
+        socialLinks: true,
+        updatedAt: true,
+      },
+    });
 
     return NextResponse.json({
       success: true,
-      profile: updatedProfile,
+      profile: {
+        id: updatedUser.id,
+        email: updatedUser.email,
+        name: updatedUser.name || '',
+        avatar_url: updatedUser.avatar || '',
+        company: updatedUser.company || '',
+        role: updatedUser.jobRole || '',
+        bio: updatedUser.bio || '',
+        phone: updatedUser.phone || '',
+        website: updatedUser.website || '',
+        social_links: (updatedUser.socialLinks as Record<string, string>) || {},
+        updated_at: updatedUser.updatedAt.toISOString(),
+      },
       message: 'Profile updated successfully'
     });
   } catch (error: unknown) {
     console.error('Profile update error:', error);
-    const message = error instanceof Error
-      ? error.message
-      : typeof error === 'object' && error !== null && 'message' in error
-        ? String((error as { message: unknown }).message)
-        : 'An error occurred';
+    const message = error instanceof Error ? error.message : String(error);
     return NextResponse.json(
       { error: 'Failed to update profile', details: message },
       { status: 500 }
@@ -228,7 +207,6 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Require confirmation for account deletion (safety measure)
-    // Client should send { confirmation: "DELETE_MY_ACCOUNT" }
     try {
       const body = await request.json();
       const validationResult = deleteAccountSchema.safeParse(body);
@@ -251,17 +229,10 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    const supabase = createServerClient();
-
-    // Delete profile from database
-    const { error: deleteError } = await supabase
-      .from('profiles')
-      .delete()
-      .eq('id', userId);
-
-    if (deleteError) {
-      throw deleteError;
-    }
+    // Delete user from Prisma (cascade deletes related records)
+    await prisma.user.delete({
+      where: { id: userId },
+    });
 
     return NextResponse.json({
       success: true,
