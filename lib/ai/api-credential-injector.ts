@@ -13,6 +13,8 @@
 import { prisma } from '@/lib/prisma';
 import { decryptApiKey } from '@/lib/encryption/api-key-encryption';
 import { logger } from '@/lib/logger';
+import { getAIProvider } from '@/lib/ai/providers';
+import type { AIProvider } from '@/lib/ai/providers';
 
 /**
  * Maps our credential provider names to the provider factory names.
@@ -102,4 +104,36 @@ export async function getUserAICredentials(
   }
 
   return null;
+}
+
+/**
+ * Resolve the AI provider for a user.
+ *
+ * If the user has stored API credentials, returns a provider instance using
+ * their key. Otherwise falls back to the platform's shared key.
+ *
+ * Usage:
+ *   const ai = await resolveAIProvider(userId);
+ *   const response = await ai.complete({ model: ai.models.balanced, messages: [...] });
+ */
+export async function resolveAIProvider(userId: string): Promise<AIProvider> {
+  const userCreds = await getUserAICredentials(userId);
+  if (userCreds) {
+    return getAIProvider({
+      apiKey: userCreds.apiKey,
+      provider: userCreds.provider as 'openrouter' | 'anthropic' | 'google',
+    });
+  }
+  return getAIProvider();
+}
+
+/**
+ * Check if the user (or the platform) has any AI provider available.
+ * Returns true if the user has stored credentials OR the platform has
+ * an OPENROUTER_API_KEY configured.
+ */
+export async function hasAIAccess(userId: string): Promise<boolean> {
+  const userCreds = await getUserAICredentials(userId);
+  if (userCreds) return true;
+  return !!(process.env.OPENROUTER_API_KEY || process.env.ANTHROPIC_API_KEY || process.env.GOOGLE_AI_API_KEY);
 }

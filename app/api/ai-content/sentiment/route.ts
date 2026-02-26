@@ -18,6 +18,8 @@ import { prisma } from '@/lib/prisma';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
 import { z } from 'zod';
 import { aiGeneration } from '@/lib/middleware/api-rate-limit';
+import { resolveAIProvider, hasAIAccess } from '@/lib/ai/api-credential-injector';
+import type { AIProvider } from '@/lib/ai/providers';
 
 // ============================================================================
 // VALIDATION SCHEMAS
@@ -57,30 +59,21 @@ interface EngagementPrediction {
 // ============================================================================
 
 /**
- * Analyze sentiment using AI
+ * Analyze sentiment using AI (uses user's own API key if available, else platform key)
  */
-async function analyzeSentiment(text: string): Promise<SentimentResult> {
-  const apiKey = process.env.OPENROUTER_API_KEY;
-
-  if (!apiKey) {
-    // Fallback to rule-based analysis
+async function analyzeSentiment(text: string, ai?: AIProvider): Promise<SentimentResult> {
+  if (!ai) {
+    // No AI provider available — fall back to rule-based analysis
     return analyzeWithRules(text);
   }
 
   try {
-    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-        'HTTP-Referer': process.env.NEXT_PUBLIC_APP_URL || 'https://synthex.social',
-      },
-      body: JSON.stringify({
-        model: 'anthropic/claude-3-haiku',
-        messages: [
-          {
-            role: 'system',
-            content: `You are a sentiment analysis expert. Analyze the given text and return a JSON object with:
+    const response = await ai.complete({
+      model: ai.models.balanced,
+      messages: [
+        {
+          role: 'system',
+          content: `You are a sentiment analysis expert. Analyze the given text and return a JSON object with:
 - sentiment: "positive", "neutral", "negative", or "mixed"
 - score: number from -100 (very negative) to 100 (very positive)
 - confidence: number from 0 to 1
@@ -90,23 +83,17 @@ async function analyzeSentiment(text: string): Promise<SentimentResult> {
 - keyPhrases: array of key phrases that influenced the sentiment
 
 Return ONLY valid JSON, no other text.`,
-          },
-          {
-            role: 'user',
-            content: text,
-          },
-        ],
-        temperature: 0.3,
-        max_tokens: 500,
-      }),
+        },
+        {
+          role: 'user',
+          content: text,
+        },
+      ],
+      temperature: 0.3,
+      max_tokens: 500,
     });
 
-    if (!response.ok) {
-      throw new Error('AI request failed');
-    }
-
-    const data = await response.json();
-    const content = data.choices?.[0]?.message?.content || '';
+    const content = response.choices[0]?.message?.content || '';
 
     // Parse JSON response
     const jsonMatch = content.match(/\{[\s\S]*\}/);
@@ -369,8 +356,12 @@ export async function POST(request: NextRequest) {
 
     const { text, contentType, contentId, platform, predictEngagement: shouldPredict } = validation.data;
 
+    // Resolve AI provider (user key → platform key → null)
+    const aiAvailable = await hasAIAccess(userId);
+    const ai = aiAvailable ? await resolveAIProvider(userId) : undefined;
+
     // Analyze sentiment
-    const sentiment = await analyzeSentiment(text);
+    const sentiment = await analyzeSentiment(text, ai);
 
     // Get engagement prediction if requested
     let engagementPrediction: EngagementPrediction | null = null;
@@ -393,7 +384,7 @@ export async function POST(request: NextRequest) {
         keyPhrases: sentiment.keyPhrases,
         predictedEngagement: engagementPrediction,
         platform,
-        model: process.env.OPENROUTER_API_KEY ? 'claude-3-haiku' : 'rule-based',
+        model: ai ? ai.name : 'rule-based',
       },
     });
 

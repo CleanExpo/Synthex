@@ -14,7 +14,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import crypto from 'crypto';
-import { openRouterClient } from '@/lib/ai/openrouter-client';
+import { resolveAIProvider, hasAIAccess } from '@/lib/ai/api-credential-injector';
 import { logger } from '@/lib/logger';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
 import { auditLogger } from '@/lib/security/audit-logger';
@@ -135,10 +135,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if API key is available
-    if (!process.env.OPENROUTER_API_KEY) {
+    // Check if AI access is available (user key or platform key)
+    if (!(await hasAIAccess(userId))) {
       return NextResponse.json(
-        { error: 'Translation service not configured. Please configure OPENROUTER_API_KEY.' },
+        { error: 'Translation service not configured. Please add your AI API key in Settings.' },
         { status: 503 }
       );
     }
@@ -171,8 +171,9 @@ export async function POST(request: NextRequest) {
     let aiMetadata: { model?: string; tokensUsed?: number; responseTime?: number; usage?: Record<string, unknown> } | null = null;
 
     try {
-      const response = await openRouterClient.complete({
-        model: openRouterClient.models.balanced,
+      const ai = await resolveAIProvider(userId);
+      const response = await ai.complete({
+        model: ai.models.balanced,
         messages: [
           {
             role: 'system',
@@ -209,7 +210,7 @@ Key guidelines:
         detectedSourceLanguage = parsed.detectedLanguage || sourceLanguage || null;
         translationNotes = parsed.notes || [];
         aiMetadata = {
-          model: openRouterClient.models.balanced,
+          model: ai.models.balanced,
           usage: response.usage
         };
       } else {

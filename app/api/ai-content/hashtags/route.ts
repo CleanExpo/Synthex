@@ -13,7 +13,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
-import { openRouterClient } from '@/lib/ai/openrouter-client';
+import { resolveAIProvider, hasAIAccess } from '@/lib/ai/api-credential-injector';
 import { logger } from '@/lib/logger';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
 import { auditLogger } from '@/lib/security/audit-logger';
@@ -118,13 +118,14 @@ export async function POST(request: NextRequest) {
     let source: 'ai' | 'fallback' = 'fallback';
     let aiMetadata: { model?: string; tokensUsed?: number; responseTime?: number; usage?: Record<string, unknown> } | null = null;
 
-    // Try AI generation first
+    // Try AI generation first (uses user's own API key if stored, else platform key)
     try {
-      if (process.env.OPENROUTER_API_KEY) {
+      if (await hasAIAccess(userId)) {
+        const ai = await resolveAIProvider(userId);
         const prompt = buildHashtagPrompt(content, platform, effectiveCount, topic, niche, style);
 
-        const response = await openRouterClient.complete({
-          model: openRouterClient.models.balanced,
+        const response = await ai.complete({
+          model: ai.models.balanced,
           messages: [
             {
               role: 'system',
@@ -149,7 +150,7 @@ Example: ["#marketing", "#growth", "#success"]`
           hashtags = parsedHashtags.slice(0, effectiveCount);
           source = 'ai';
           aiMetadata = {
-            model: openRouterClient.models.balanced,
+            model: ai.models.balanced,
             usage: response.usage
           };
         }

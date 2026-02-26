@@ -9,6 +9,8 @@
  */
 
 import { callOpenRouter } from './openrouter';
+import { getAIProvider } from '@/lib/ai/providers';
+import type { AIProvider } from '@/lib/ai/providers';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
 
@@ -160,7 +162,9 @@ export class PsychologyAnalyzer {
   }
 
   /**
-   * Analyze content for psychological persuasion principles
+   * Analyze content for psychological persuasion principles.
+   * If an AIProvider is passed, it will be used for the AI analysis step
+   * (supports user API key injection). Otherwise falls back to callOpenRouter.
    */
   async analyzeContent(
     content: string,
@@ -168,13 +172,14 @@ export class PsychologyAnalyzer {
       targetAudience?: string;
       platform?: string;
       contentType?: string;
-    } = {}
+    } = {},
+    aiProvider?: AIProvider
   ): Promise<AnalysisResult> {
     // First, do rule-based detection
     const ruleBasedResults = this.detectPrinciplesRuleBased(content);
 
     // Then enhance with AI analysis
-    const aiAnalysis = await this.getAIAnalysis(content, options);
+    const aiAnalysis = await this.getAIAnalysis(content, options, aiProvider);
 
     // Merge and calculate final scores
     const mergedPrinciples = this.mergePrincipleResults(ruleBasedResults, aiAnalysis.principles);
@@ -233,11 +238,13 @@ export class PsychologyAnalyzer {
   }
 
   /**
-   * Get AI-powered analysis using OpenRouter
+   * Get AI-powered analysis using the provided AIProvider (user key or platform key).
+   * Falls back to callOpenRouter for backward compatibility.
    */
   private async getAIAnalysis(
     content: string,
-    options: { targetAudience?: string; platform?: string; contentType?: string }
+    options: { targetAudience?: string; platform?: string; contentType?: string },
+    aiProvider?: AIProvider
   ): Promise<{
     principles: { id: string; strength: number; confidence: number; reasoning: string }[];
     emotionalTone: { primary: string; secondary: string[]; intensity: number };
@@ -270,14 +277,23 @@ ${options.contentType ? `Content Type: ${options.contentType}` : ''}
 Provide detailed analysis in JSON format.`;
 
     try {
-      const response = await callOpenRouter(userPrompt, {
-        systemPrompt,
+      let responseText: string;
+
+      // Use provided AIProvider if available, otherwise fall back to callOpenRouter
+      const ai = aiProvider || getAIProvider();
+      const response = await ai.complete({
+        model: ai.models.balanced,
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userPrompt },
+        ],
         temperature: 0.3,
-        maxTokens: 1500,
+        max_tokens: 1500,
       });
+      responseText = response.choices[0]?.message?.content || '';
 
       // Parse JSON from response
-      const jsonMatch = response.match(/\{[\s\S]*\}/);
+      const jsonMatch = responseText.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
         return JSON.parse(jsonMatch[0]);
       }

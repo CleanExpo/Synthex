@@ -14,7 +14,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import crypto from 'crypto';
-import { openRouterClient } from '@/lib/ai/openrouter-client';
+import { resolveAIProvider, hasAIAccess } from '@/lib/ai/api-credential-injector';
 import { logger } from '@/lib/logger';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
 import { auditLogger } from '@/lib/security/audit-logger';
@@ -170,9 +170,10 @@ export async function POST(request: NextRequest) {
     let source: 'ai' | 'rules' = 'rules';
     let aiMetadata: { model?: string; tokensUsed?: number; responseTime?: number; usage?: Record<string, unknown>; changes?: string[] } | null = null;
 
-    // Try AI optimization first
+    // Try AI optimization first (uses user's own API key if stored, else platform key)
     try {
-      if (process.env.OPENROUTER_API_KEY) {
+      if (await hasAIAccess(userId)) {
+        const ai = await resolveAIProvider(userId);
         const prompt = buildOptimizationPrompt(
           content,
           platform,
@@ -185,8 +186,8 @@ export async function POST(request: NextRequest) {
           platformLimit
         );
 
-        const response = await openRouterClient.complete({
-          model: openRouterClient.models.creative,
+        const response = await ai.complete({
+          model: ai.models.creative,
           messages: [
             {
               role: 'system',
@@ -218,7 +219,7 @@ Keep the core message but enhance engagement. Follow platform best practices.`
           suggestions = parsed.suggestions || [];
           source = 'ai';
           aiMetadata = {
-            model: openRouterClient.models.creative,
+            model: ai.models.creative,
             usage: response.usage,
             changes: parsed.changes || []
           };
@@ -231,7 +232,7 @@ Keep the core message but enhance engagement. Follow platform best practices.`
           suggestions = rulesBased.suggestions;
         }
       } else {
-        // No API key, use rules-based optimization
+        // No API key available (neither user nor platform), use rules-based optimization
         const rulesBased = applyRulesOptimization(
           content, platform, goal, includeEmojis, includeHashtags, includeCTA, platformLimit
         );

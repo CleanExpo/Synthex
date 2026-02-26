@@ -12,6 +12,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { psychologyAnalyzer } from '@/lib/ai/psychology-analyzer';
 import { z } from 'zod';
 import { getUserIdFromCookies } from '@/lib/auth/jwt-utils';
+import { resolveAIProvider } from '@/lib/ai/api-credential-injector';
 
 const AnalyzeRequestSchema = z.object({
   content: z.string().min(1, 'Content is required').max(5000, 'Content too long'),
@@ -51,12 +52,15 @@ export async function POST(request: NextRequest) {
 
     const { content, targetAudience, platform, contentType } = validation.data;
 
-    // Perform analysis
+    // Resolve AI provider (user key → platform key)
+    const ai = await resolveAIProvider(userId);
+
+    // Perform analysis with user's AI provider
     const analysis = await psychologyAnalyzer.analyzeContent(content, {
       targetAudience,
       platform,
       contentType,
-    });
+    }, ai);
 
     // Store analysis if generationId provided
     const generationId = body.generationId;
