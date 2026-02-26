@@ -100,6 +100,7 @@ const sidebarGroups: Array<{
     label: 'CONTENT & AI',
     items: [
       { icon: FileText, label: 'Content', href: '/dashboard/content' },
+      { icon: File, label: 'Drafts', href: '/dashboard/content/drafts' },
       { icon: MessageSquare, label: 'AI Chat', href: '/dashboard/ai-chat' },
       { icon: Image, label: 'AI Images', href: '/dashboard/ai-images' },
       { icon: Sparkles, label: 'Optimizer', href: '/dashboard/content/optimize' },

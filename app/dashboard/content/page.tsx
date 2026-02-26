@@ -147,19 +147,17 @@ export default function ContentPage() {
     }
 
     try {
-      const response = await fetchWithCSRF('/api/content-library', {
+      const response = await fetchWithCSRF('/api/content-drafts', {
         method: 'POST',
         body: JSON.stringify({
-          title: topic || `${platform} post`,
-          content: contentToSave,
-          contentType: 'post',
           platform,
-          metadata: {
-            tone,
-            hookType,
-            hashtags: generatedContent?.metadata?.hashtags || [],
-            savedAt: new Date().toISOString(),
-          },
+          content: contentToSave,
+          title: topic || `${platform} post`,
+          hashtags: generatedContent?.metadata?.hashtags || [],
+          hookType,
+          tone,
+          topic,
+          targetLength,
         }),
       });
 
@@ -168,11 +166,16 @@ export default function ContentPage() {
         throw new Error((data as { error?: string }).error || 'Failed to save');
       }
 
-      toast.success('Content saved to library!');
+      toast.success('Draft saved!', {
+        action: {
+          label: 'View Drafts',
+          onClick: () => { window.location.href = '/dashboard/content/drafts'; },
+        },
+      });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Failed to save content');
     }
-  }, [generatedContent, editMode, editedContent, selectedVariation, topic, platform, tone, hookType]);
+  }, [generatedContent, editMode, editedContent, selectedVariation, topic, platform, tone, hookType, targetLength]);
 
   const handleSchedule = useCallback(async () => {
     if (!generatedContent) {

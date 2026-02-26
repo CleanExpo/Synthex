@@ -92,6 +92,7 @@ model User {
 
   // Content library
   contentLibrary   ContentLibrary[]
+  contentDrafts    ContentDraft[]
 
   // Prompt templates
   promptTemplates  PromptTemplate[]
@@ -978,6 +979,35 @@ model ContentLibrary {
   @@index([userId, contentType])
   @@index([userId, status])
   @@map("content_library")
+}
+
+// Content Drafts — saved-but-unpublished content from the generator (UNI-847)
+model ContentDraft {
+  id              String    @id @default(cuid())
+  userId          String    @map("user_id")
+  organizationId  String?   @map("organization_id")
+  platform        String                               // 'twitter', 'instagram', etc.
+  content         String    @db.Text                   // Full generated text
+  title           String?                              // Optional title / topic
+  hashtags        String[]  @default([])               // Extracted hashtags
+  hookType        String?   @map("hook_type")          // e.g. 'question', 'story'
+  tone            String?                              // e.g. 'casual', 'professional'
+  topic           String?                              // User's input topic
+  targetLength    String?   @map("target_length")      // 'short', 'medium', 'long'
+  status          String    @default("draft")          // 'draft' | 'scheduled' | 'published'
+  metadata        Json?                                // Flexible: engagement score, psychology, etc.
+  scheduledPostId String?   @unique @map("scheduled_post_id")
+
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  // Relations
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, status])
+  @@index([userId, platform])
+  @@index([createdAt])
+  @@map("content_drafts")
 }
 
 // ==========================================
