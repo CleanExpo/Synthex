@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { supabase } from '@/lib/supabase-client';
 import prisma from '@/lib/prisma';
+import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { sanitizeErrorForResponse } from '@/lib/utils/error-utils';
 
 const oauthCallbackSchema = z.object({
@@ -95,31 +95,28 @@ export async function GET(
       );
     }
 
-    // Get the current user
-    // Try header-based auth first; fallback to email param for static pages
-    const authHeader = request.headers.get('authorization');
-    let user: { id: string | null; email?: string | null | undefined } | null = null;
-    if (authHeader) {
-      const token = authHeader.replace('Bearer ', '');
-      const { data, error: authError } = await supabase.auth.getUser(token);
-      if (!authError && data?.user) {
-        user = data.user;
-      }
+    // Get the current user from JWT cookie (same auth method as all other API routes)
+    const userId = await getUserIdFromRequestOrCookies(request);
+    if (!userId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+
+    // Look up user for state parameter
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true, email: true },
+    });
     if (!user) {
-      const emailParam = new URL(request.url).searchParams.get('email');
-      if (!emailParam) {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-      }
-      user = { id: null, email: emailParam };
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
     // Generate state parameter for security
     const state = Buffer.from(JSON.stringify({
-      userId: user?.id || null,
-      email: user?.email || null,
+      userId: user.id,
+      email: user.email,
       platform,
-      timestamp: Date.now()
+      timestamp: Date.now(),
+      flow: 'integration',
     })).toString('base64');
 
     // Build redirect URL - require NEXT_PUBLIC_APP_URL in production
@@ -130,7 +127,7 @@ export async function GET(
         { status: 500 }
       );
     }
-    const redirectUri = `${appUrl || 'http://localhost:3000'}/api/auth/oauth/${platform}/callback`;
+    const redirectUri = `${appUrl || 'http://localhost:3000'}/api/auth/callback/${platform}`;
 
     // Build authorization URL
     const authParams = new URLSearchParams({
@@ -198,7 +195,7 @@ export async function POST(
         { status: 500 }
       );
     }
-    const redirectUri = `${appUrl || 'http://localhost:3000'}/api/auth/oauth/${platform}/callback`;
+    const redirectUri = `${appUrl || 'http://localhost:3000'}/api/auth/callback/${platform}`;
 
     // Exchange code for access token
     const tokenParams = new URLSearchParams({

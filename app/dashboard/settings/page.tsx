@@ -136,7 +136,11 @@ export default function SettingsPage() {
           prev.map(p => ({
             ...p,
             connected: integrationsData.integrations[p.id] ?? false,
-            username: integrationsData.integrations[p.id] ? `@${p.id}_user` : undefined,
+            username: integrationsData.details?.[p.id]?.profileName
+              ? `@${integrationsData.details[p.id].profileName}`
+              : integrationsData.integrations[p.id]
+                ? 'Connected'
+                : undefined,
           }))
         );
       }

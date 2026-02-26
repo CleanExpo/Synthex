@@ -67,6 +67,18 @@ const oauthConfigs: Record<string, OAuthConfig> = {
     clientId: process.env.FACEBOOK_CLIENT_ID,
     clientSecret: process.env.FACEBOOK_CLIENT_SECRET,
   },
+  instagram: {
+    tokenUrl: 'https://api.instagram.com/oauth/access_token',
+    userInfoUrl: 'https://graph.instagram.com/me?fields=id,username',
+    clientId: process.env.INSTAGRAM_CLIENT_ID,
+    clientSecret: process.env.INSTAGRAM_CLIENT_SECRET,
+  },
+  tiktok: {
+    tokenUrl: 'https://open.tiktokapis.com/v2/oauth/token/',
+    userInfoUrl: 'https://open.tiktokapis.com/v2/user/info/?fields=open_id,display_name,avatar_url',
+    clientId: process.env.TIKTOK_CLIENT_KEY,
+    clientSecret: process.env.TIKTOK_CLIENT_SECRET,
+  },
 };
 
 // =============================================================================
@@ -214,6 +226,18 @@ async function fetchUserInfo(
         name: data.name,
         avatar: data.picture?.data?.url,
       };
+    case 'instagram':
+      return {
+        id: data.id,
+        username: data.username,
+        name: data.username,
+      };
+    case 'tiktok':
+      return {
+        id: data.data?.user?.open_id || data.open_id || data.id,
+        name: data.data?.user?.display_name || data.display_name,
+        avatar: data.data?.user?.avatar_url || data.avatar_url,
+      };
     default:
       return {
         id: data.id || data.sub,
@@ -264,7 +288,7 @@ export async function GET(
     }
 
     // Decode state
-    let stateData: { userId?: string; email?: string; platform: string; timestamp: number };
+    let stateData: { userId?: string; email?: string; platform: string; timestamp: number; flow?: 'integration' };
     try {
       stateData = JSON.parse(Buffer.from(state, 'base64').toString());
     } catch {
@@ -281,7 +305,18 @@ export async function GET(
     }
 
     // Check if platform is supported
+    // For integration flow, allow all platforms from the initiation route config
     if (!oauthConfigs[platform]) {
+      if (stateData.flow === 'integration') {
+        // Return error HTML that closes the popup
+        const html = `<!DOCTYPE html><html><body><script>
+          if (window.opener) {
+            window.opener.postMessage({ type: 'oauth-error', platform: '${platform}', error: 'Unsupported platform' }, window.location.origin);
+          }
+          window.close();
+        </script><p>Unsupported platform: ${platform}</p></body></html>`;
+        return new NextResponse(html, { status: 200, headers: { 'Content-Type': 'text/html' } });
+      }
       return NextResponse.redirect(
         new URL(`/auth/login?error=Unsupported OAuth provider: ${platform}`, request.url)
       );
@@ -304,6 +339,76 @@ export async function GET(
 
     // Fetch user info
     const userInfo = await fetchUserInfo(platform, tokenData.accessToken);
+
+    // =========================================================================
+    // Integration Flow (popup from Settings > Integrations)
+    // User is already logged in — just store the platform connection and close popup
+    // =========================================================================
+    if (stateData.flow === 'integration' && stateData.userId) {
+      try {
+        const expiresAt = tokenData.expiresIn
+          ? new Date(Date.now() + tokenData.expiresIn * 1000)
+          : null;
+
+        const encryptedAccessToken = encryptField(tokenData.accessToken) as string;
+        const encryptedRefreshToken = tokenData.refreshToken
+          ? encryptField(tokenData.refreshToken) ?? undefined
+          : undefined;
+
+        await prisma.platformConnection.upsert({
+          where: {
+            userId_platform_profileId: {
+              userId: stateData.userId,
+              platform,
+              profileId: userInfo.id || 'default',
+            },
+          },
+          update: {
+            accessToken: encryptedAccessToken,
+            refreshToken: encryptedRefreshToken ?? null,
+            expiresAt,
+            isActive: true,
+            updatedAt: new Date(),
+            profileName: userInfo.name || userInfo.username,
+            metadata: {
+              tokenType: tokenData.tokenType,
+              userInfo,
+            },
+          },
+          create: {
+            userId: stateData.userId,
+            platform,
+            accessToken: encryptedAccessToken,
+            refreshToken: encryptedRefreshToken ?? null,
+            expiresAt,
+            scope: '',
+            profileId: userInfo.id || 'default',
+            profileName: userInfo.name || userInfo.username,
+            isActive: true,
+            metadata: {
+              tokenType: tokenData.tokenType,
+              userInfo,
+            },
+          },
+        });
+      } catch (error) {
+        console.error('Failed to store platform connection:', error);
+      }
+
+      // Close popup and notify parent window
+      const html = `<!DOCTYPE html><html><body><script>
+        if (window.opener) {
+          window.opener.postMessage({ type: 'oauth-success', platform: '${platform}' }, window.location.origin);
+        }
+        window.close();
+      </script><p>Connected to ${platform}! This window will close automatically.</p></body></html>`;
+      return new NextResponse(html, { status: 200, headers: { 'Content-Type': 'text/html' } });
+    }
+
+    // =========================================================================
+    // Login Flow (full-page redirect from login/signup page)
+    // Find or create user, generate JWT, set cookies, redirect to dashboard
+    // =========================================================================
 
     // Find or create user
     let user = await prisma.user.findFirst({
