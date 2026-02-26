@@ -129,13 +129,39 @@ export async function middleware(request: NextRequest) {
   // ──────────────────────────────────────────────────────────────────────
   // Onboarding completion check: redirect to /onboarding if incomplete
   // ──────────────────────────────────────────────────────────────────────
-  if (session && pathname.startsWith('/dashboard')) {
+  // Check for both Supabase session AND custom auth token (OAuth uses auth-token)
+  if ((session || hasCustomAuth) && pathname.startsWith('/dashboard')) {
     try {
+      // Get user ID from session or decode from auth-token
+      let userId: string | undefined;
+      
+      if (session) {
+        userId = session.user.id;
+      } else if (hasCustomAuth && authToken) {
+        // Parse JWT token to get user ID
+        // Format: header.payload.signature
+        try {
+          const parts = authToken.split('.');
+          if (parts.length === 3) {
+            const payload = JSON.parse(Buffer.from(parts[1], 'base64').toString());
+            userId = payload.userId || payload.sub;
+          }
+        } catch {
+          // Token parse failed, skip onboarding check
+          console.warn('[Middleware] Could not parse auth token');
+        }
+      }
+
+      if (!userId) {
+        // Could not determine user ID, allow access to dashboard
+        return response;
+      }
+
       // Query profiles table for onboarding_completed flag
       const { data: profile } = await supabase
         .from('profiles')
         .select('onboarding_completed')
-        .eq('id', session.user.id)
+        .eq('id', userId)
         .single();
 
       // If onboarding is incomplete, redirect to /onboarding
