@@ -59,6 +59,7 @@ export default function SignupPage() {
           name: formData.name,
           email: formData.email,
           password: formData.password,
+          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
         }),
       });
 
@@ -110,30 +111,29 @@ export default function SignupPage() {
   const handleGoogleSignup = async () => {
     setIsLoading(true);
     try {
-      const { supabase } = await import('@/lib/supabase-client');
+      // Use custom OAuth route with PKCE (same as login) — ensures JWT is set
+      // and onboarding redirect works correctly via callback handler
+      const response = await fetch('/api/auth/oauth/google', {
+        credentials: 'include',
+      });
+      const data = await response.json();
 
-      // Check if Supabase is properly configured
-      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-      if (!supabaseUrl || supabaseUrl === 'https://placeholder.supabase.co') {
-        toast.error('OAuth signup is not configured. Please use the regular signup form.');
-        return;
+      if (!response.ok) {
+        if (data.error?.includes('not configured')) {
+          toast.error('Google signup is not configured. Please contact support.');
+          return;
+        }
+        throw new Error(data.error || 'Failed to initiate Google signup');
       }
 
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: `${window.location.origin}/dashboard`,
-        },
-      });
-
-      if (error) throw error;
+      if (data.authorizationUrl) {
+        window.location.href = data.authorizationUrl;
+      } else {
+        throw new Error('No authorization URL received');
+      }
     } catch (error) {
       const message = error instanceof Error ? error.message : 'An unknown error occurred';
-      if (message.includes('provider is not enabled')) {
-        toast.error('Google signup is not enabled. Please use the regular signup form.');
-      } else {
-        toast.error(`Signup error: ${message}`);
-      }
+      toast.error(`Signup error: ${message}`);
     } finally {
       setIsLoading(false);
     }

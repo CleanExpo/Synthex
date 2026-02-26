@@ -12,7 +12,8 @@ const signupSchema = z.object({
   password: z.string()
     .min(8, 'Password must be at least 8 characters')
     .max(128, 'Password too long')
-    .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, 'Password must contain at least one lowercase letter, one uppercase letter, and one number')
+    .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, 'Password must contain at least one lowercase letter, one uppercase letter, and one number'),
+  timezone: z.string().max(100).optional(),
 });
 
 export async function POST(request: NextRequest) {
@@ -36,7 +37,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { name, email, password } = validationResult.data;
+    const { name, email, password, timezone } = validationResult.data;
 
     const supabase = createAuthClient();
 
@@ -99,6 +100,8 @@ export async function POST(request: NextRequest) {
               // Database expects DateTime for emailVerified, not boolean
               // null = not yet verified, will be set to Date when verified
               emailVerified: null,
+              // Auto-detect timezone from browser (falls back to schema default)
+              ...(timezone && { timezone }),
               createdAt: new Date(),
               updatedAt: new Date(),
             }

@@ -42,10 +42,11 @@ export default function VerifyEmailPage() {
       if (response.ok) {
         setVerified(true);
         toast.success('Email verified successfully!');
-        
-        // Redirect to dashboard after 3 seconds
+
+        // Redirect to onboarding after 3 seconds (new users need to complete onboarding)
+        // Middleware will redirect to /dashboard if onboarding is already complete
         setTimeout(() => {
-          router.push('/dashboard');
+          router.push('/onboarding');
         }, 3000);
       } else {
         setError(data.error || 'Verification failed');
@@ -89,8 +90,8 @@ export default function VerifyEmailPage() {
           </CardHeader>
           <CardContent className="text-center">
             <p className="mb-4">You can now access all features of SYNTHEX.</p>
-            <Button onClick={() => router.push('/dashboard')} className="w-full">
-              Go to Dashboard
+            <Button onClick={() => router.push('/onboarding')} className="w-full">
+              Continue Setup
             </Button>
           </CardContent>
         </Card>
