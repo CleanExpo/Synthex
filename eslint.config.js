@@ -14,6 +14,7 @@ const eslintConfig = [
     ignores: [
       'node_modules/**',
       '.next/**',
+      '.next-dev/**',
       'out/**',
       'dist/**',
       'build/**',
@@ -25,6 +26,7 @@ const eslintConfig = [
       'scripts/**',
       'stories/**',
       '.storybook/**',
+      'storybook-static/**',
     ],
   },
   ...compat.extends('next/core-web-vitals', 'next/typescript'),
