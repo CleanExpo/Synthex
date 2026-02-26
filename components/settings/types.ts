@@ -56,6 +56,7 @@ export interface Invoice {
   date: string;
   amount: string;
   status: 'paid' | 'pending' | 'failed';
+  pdfUrl?: string | null;
 }
 
 export interface BillingInfo {

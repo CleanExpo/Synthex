@@ -166,11 +166,12 @@ export default function SettingsPage() {
         const invData = await invRes.json();
         if (invData.invoices?.length) {
           setInvoices(
-            invData.invoices.map((inv: { id: string; number?: string; amount: number; currency: string; status: string; created: number }) => ({
+            invData.invoices.map((inv: { id: string; number?: string; amount: number; currency: string; status: string; created: number; pdfUrl?: string | null }) => ({
               id: inv.number || inv.id,
               date: new Date(inv.created * 1000).toLocaleDateString(),
               amount: `$${(inv.amount / 100).toFixed(2)}`,
               status: inv.status === 'paid' ? 'paid' as const : 'pending' as const,
+              pdfUrl: inv.pdfUrl ?? null,
             }))
           );
         }
@@ -400,13 +401,42 @@ export default function SettingsPage() {
     window.location.href = '/pricing';
   }, []);
 
-  const handleManagePayment = useCallback(() => {
-    toast.success('Opening payment portal...');
+  const handleManagePayment = useCallback(async () => {
+    try {
+      toast.loading('Opening billing portal...', { id: 'billing-portal' });
+      const res = await fetch('/api/stripe/billing-portal', {
+        method: 'POST',
+        credentials: 'include',
+      });
+      const data = await res.json();
+      toast.dismiss('billing-portal');
+
+      if (!res.ok) {
+        if (data.bypass) {
+          toast.info(data.message || 'Billing portal is not yet configured.');
+          return;
+        }
+        throw new Error(data.error || 'Failed to open billing portal');
+      }
+
+      if (data.url) {
+        window.location.href = data.url;
+      }
+    } catch (err) {
+      toast.dismiss('billing-portal');
+      toast.error(err instanceof Error ? err.message : 'Failed to open billing portal');
+    }
   }, []);
 
   const handleDownloadInvoice = useCallback((invoiceId: string) => {
-    toast.success(`Downloading invoice ${invoiceId}...`);
-  }, []);
+    // Find the invoice to get its PDF URL
+    const invoice = invoices.find(inv => inv.id === invoiceId);
+    if (invoice?.pdfUrl) {
+      window.open(invoice.pdfUrl, '_blank', 'noopener,noreferrer');
+    } else {
+      toast.error('Invoice PDF not available');
+    }
+  }, [invoices]);
 
   return (
     <div className="space-y-6">
