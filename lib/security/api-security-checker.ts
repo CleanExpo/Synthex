@@ -458,6 +458,14 @@ export class APISecurityChecker {
     return allowedRoles.includes(userRole);
   }
 
+  /**
+   * Normalize a hostname for comparison.
+   * Strips `www.` prefix and optional port number.
+   */
+  private static normalizeHost(host: string): string {
+    return host.replace(/^www\./, '').split(':')[0].toLowerCase();
+  }
+
   private static checkCSRF(request: NextRequest): boolean {
     // CSRF protection is only needed for cookie-based browser sessions.
     // API clients using Authorization: Bearer tokens are inherently safe from
@@ -467,27 +475,43 @@ export class APISecurityChecker {
       return true; // Bearer token auth — CSRF not applicable
     }
 
-    // ── Layer 1: Origin-based validation (OWASP recommended) ──
-    // Modern browsers always send the Origin header on same-origin and cross-origin
-    // POST/PUT/DELETE/PATCH requests. If the Origin matches our app's hostname,
-    // the request is same-origin and CSRF is not a concern.
+    // ── Layer 0: Sec-Fetch-Site header (most reliable) ──
+    // Modern browsers (Chrome 76+, Firefox 90+, Safari 16.4+) send this header
+    // automatically. It CANNOT be spoofed by JavaScript — the browser sets it.
+    // "same-origin" guarantees the request came from the same origin.
+    const secFetchSite = request.headers.get('sec-fetch-site');
+    if (secFetchSite === 'same-origin') {
+      return true; // Browser-verified same-origin request — CSRF not applicable
+    }
+
+    // ── Layer 1: Origin/Referer-based validation (OWASP recommended) ──
+    // Compare the Origin (or Referer) hostname against the Host header.
+    // Use the Host header (not request.nextUrl.hostname) because it reflects
+    // the actual domain the client connected to, even behind proxies/CDNs.
     const origin = request.headers.get('origin');
     const referer = request.headers.get('referer');
-    const appHost = request.nextUrl.hostname; // e.g. "synthex.social" or "localhost"
+    const hostHeader = request.headers.get('host')
+      || request.headers.get('x-forwarded-host')
+      || request.nextUrl.host;
+    const appHost = this.normalizeHost(hostHeader);
 
     if (origin) {
       try {
-        const originHost = new URL(origin).hostname;
+        const originHost = this.normalizeHost(new URL(origin).host);
         if (originHost === appHost) {
           return true; // Same-origin request — CSRF not applicable
         }
       } catch {
-        // Malformed origin — fall through to token check
+        // Malformed origin — fall through to next checks
       }
-    } else if (referer) {
-      // Fallback to Referer header when Origin is absent (some older browsers)
+    }
+
+    // Also check Referer (not else-if — check BOTH Origin and Referer).
+    // Origin might be present but mismatched due to www/non-www, while
+    // Referer might still match after normalization.
+    if (referer) {
       try {
-        const refererHost = new URL(referer).hostname;
+        const refererHost = this.normalizeHost(new URL(referer).host);
         if (refererHost === appHost) {
           return true; // Same-origin referer — CSRF not applicable
         }

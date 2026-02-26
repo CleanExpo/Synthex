@@ -5,6 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Eye, Settings, RefreshCw } from '@/components/icons';
+import { fetchWithCSRF } from '@/lib/csrf';
 
 interface OwnedBusiness {
   id: string;
@@ -71,12 +72,8 @@ export function BusinessManagementTable({ businesses, onSwitch, onRefresh }: Bus
 
     setDeactivatingId(businessId);
     try {
-      const response = await fetch(`/api/businesses/${businessId}`, {
+      const response = await fetchWithCSRF(`/api/businesses/${businessId}`, {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
         body: JSON.stringify({ isActive: false }),
       });
 

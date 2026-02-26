@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Plus, X } from '@/components/icons';
+import { fetchWithCSRF } from '@/lib/csrf';
 
 interface CreateBusinessDialogProps {
   open: boolean;
@@ -30,12 +31,8 @@ export function CreateBusinessDialog({ open, onOpenChange, onCreated }: CreateBu
 
     try {
       setIsSubmitting(true);
-      const response = await fetch('/api/businesses', {
+      const response = await fetchWithCSRF('/api/businesses', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
         body: JSON.stringify({
           name: businessName.trim(),
           displayName: displayLabel.trim() || undefined,

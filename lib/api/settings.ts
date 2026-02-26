@@ -7,10 +7,15 @@
  * is sent automatically. The server-side routes extract the user ID from
  * that cookie via `getUserIdFromRequestOrCookies()`.
  *
+ * CSRF: Mutation calls (POST/PUT/DELETE) use `fetchWithCSRF` to include
+ * the X-CSRF-Token header for double-submit token defense-in-depth.
+ *
  * This approach works for BOTH:
  *   - Google OAuth users (custom auth-token JWT)
  *   - Email/password users (Supabase Auth session cookies)
  */
+
+import { fetchWithCSRF } from '@/lib/csrf';
 
 /** Profile update data */
 interface ProfileUpdateData {
@@ -45,12 +50,8 @@ export const profileAPI = {
   },
 
   async updateProfile(data: ProfileUpdateData) {
-    const response = await fetch('/api/user/profile', {
+    const response = await fetchWithCSRF('/api/user/profile', {
       method: 'PUT',
-      credentials: 'include',
-      headers: {
-        'Content-Type': 'application/json',
-      },
       body: JSON.stringify(data),
     });
 
@@ -66,9 +67,8 @@ export const profileAPI = {
     const formData = new FormData();
     formData.append('avatar', file);
 
-    const response = await fetch('/api/user/avatar', {
+    const response = await fetchWithCSRF('/api/user/avatar', {
       method: 'POST',
-      credentials: 'include',
       body: formData,
     });
 
@@ -81,9 +81,8 @@ export const profileAPI = {
   },
 
   async deleteAvatar() {
-    const response = await fetch('/api/user/avatar', {
+    const response = await fetchWithCSRF('/api/user/avatar', {
       method: 'DELETE',
-      credentials: 'include',
     });
 
     if (!response.ok) {
@@ -111,12 +110,8 @@ export const settingsAPI = {
   },
 
   async updateSettings(type: string, settings: SettingsData) {
-    const response = await fetch('/api/user/settings', {
+    const response = await fetchWithCSRF('/api/user/settings', {
       method: 'PUT',
-      credentials: 'include',
-      headers: {
-        'Content-Type': 'application/json',
-      },
       body: JSON.stringify({ type, settings }),
     });
 
@@ -228,9 +223,8 @@ export const integrationsAPI = {
   },
 
   async disconnectPlatform(platform: string) {
-    const response = await fetch(`/api/integrations?platform=${platform}`, {
+    const response = await fetchWithCSRF(`/api/integrations?platform=${platform}`, {
       method: 'DELETE',
-      credentials: 'include',
     });
 
     if (!response.ok) {

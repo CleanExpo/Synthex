@@ -8,6 +8,7 @@
 'use client';
 
 import { useState, useCallback, useRef } from 'react';
+import { fetchWithCSRF } from '@/lib/csrf';
 
 export interface AIMessage {
   id: string;
@@ -115,10 +116,8 @@ export function useAIPM(): UseAIPMReturn {
    */
   const createConversation = useCallback(async (title?: string): Promise<string | null> => {
     try {
-      const res = await fetch('/api/ai/pm/conversations', {
+      const res = await fetchWithCSRF('/api/ai/pm/conversations', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
         body: JSON.stringify({ title: title || 'New Conversation' }),
       });
       const data = await res.json();
@@ -195,10 +194,8 @@ export function useAIPM(): UseAIPMReturn {
       const controller = new AbortController();
       abortControllerRef.current = controller;
 
-      const res = await fetch(`/api/ai/pm/conversations/${conversationId}/messages`, {
+      const res = await fetchWithCSRF(`/api/ai/pm/conversations/${conversationId}/messages`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
         body: JSON.stringify({ message }),
         signal: controller.signal,
       });
@@ -313,10 +310,8 @@ export function useAIPM(): UseAIPMReturn {
    */
   const rateMessage = useCallback(async (messageId: string, rating: number) => {
     try {
-      await fetch('/api/ai/pm/feedback', {
+      await fetchWithCSRF('/api/ai/pm/feedback', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
         body: JSON.stringify({ messageId, rating }),
       });
 

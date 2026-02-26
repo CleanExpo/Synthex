@@ -8,6 +8,7 @@
 'use client';
 
 import { useState, useCallback, useEffect, useRef } from 'react';
+import { fetchWithCSRF } from '@/lib/csrf';
 import type {
   Sponsor,
   SponsorDeal,
@@ -190,9 +191,8 @@ export function useSponsorCRM(options: UseSponsorCRMOptions = {}) {
   const createSponsor = useCallback(async (input: CreateSponsorInput): Promise<Sponsor> => {
     setIsMutating(true);
     try {
-      const response = await fetch('/api/sponsors', {
+      const response = await fetchWithCSRF('/api/sponsors', {
         method: 'POST',
-        credentials: 'include',
         headers: getAuthHeaders(),
         body: JSON.stringify(input),
       });
@@ -213,9 +213,8 @@ export function useSponsorCRM(options: UseSponsorCRMOptions = {}) {
   const updateSponsor = useCallback(async (id: string, input: UpdateSponsorInput): Promise<Sponsor> => {
     setIsMutating(true);
     try {
-      const response = await fetch(`/api/sponsors/${id}`, {
+      const response = await fetchWithCSRF(`/api/sponsors/${id}`, {
         method: 'PUT',
-        credentials: 'include',
         headers: getAuthHeaders(),
         body: JSON.stringify(input),
       });
@@ -236,9 +235,8 @@ export function useSponsorCRM(options: UseSponsorCRMOptions = {}) {
   const deleteSponsor = useCallback(async (id: string): Promise<void> => {
     setIsMutating(true);
     try {
-      const response = await fetch(`/api/sponsors/${id}`, {
+      const response = await fetchWithCSRF(`/api/sponsors/${id}`, {
         method: 'DELETE',
-        credentials: 'include',
         headers: getAuthHeaders(),
       });
 
@@ -265,9 +263,8 @@ export function useSponsorCRM(options: UseSponsorCRMOptions = {}) {
       if (input.startDate instanceof Date) body.startDate = input.startDate.toISOString();
       if (input.endDate instanceof Date) body.endDate = input.endDate.toISOString();
 
-      const response = await fetch(`/api/sponsors/${sponsorId}/deals`, {
+      const response = await fetchWithCSRF(`/api/sponsors/${sponsorId}/deals`, {
         method: 'POST',
-        credentials: 'include',
         headers: getAuthHeaders(),
         body: JSON.stringify(body),
       });
@@ -293,9 +290,8 @@ export function useSponsorCRM(options: UseSponsorCRMOptions = {}) {
       if (input.endDate instanceof Date) body.endDate = input.endDate.toISOString();
       if (input.paidAt instanceof Date) body.paidAt = input.paidAt.toISOString();
 
-      const response = await fetch(`/api/sponsors/${sponsorId}/deals/${dealId}`, {
+      const response = await fetchWithCSRF(`/api/sponsors/${sponsorId}/deals/${dealId}`, {
         method: 'PUT',
-        credentials: 'include',
         headers: getAuthHeaders(),
         body: JSON.stringify(body),
       });
@@ -316,9 +312,8 @@ export function useSponsorCRM(options: UseSponsorCRMOptions = {}) {
   const deleteDeal = useCallback(async (sponsorId: string, dealId: string): Promise<void> => {
     setIsMutating(true);
     try {
-      const response = await fetch(`/api/sponsors/${sponsorId}/deals/${dealId}`, {
+      const response = await fetchWithCSRF(`/api/sponsors/${sponsorId}/deals/${dealId}`, {
         method: 'DELETE',
-        credentials: 'include',
         headers: getAuthHeaders(),
       });
 
@@ -348,9 +343,8 @@ export function useSponsorCRM(options: UseSponsorCRMOptions = {}) {
       const body: Record<string, unknown> = { ...input };
       if (input.dueDate instanceof Date) body.dueDate = input.dueDate.toISOString();
 
-      const response = await fetch(`/api/sponsors/${sponsorId}/deals/${dealId}/deliverables`, {
+      const response = await fetchWithCSRF(`/api/sponsors/${sponsorId}/deals/${dealId}/deliverables`, {
         method: 'POST',
-        credentials: 'include',
         headers: getAuthHeaders(),
         body: JSON.stringify(body),
       });
@@ -384,9 +378,8 @@ export function useSponsorCRM(options: UseSponsorCRMOptions = {}) {
 
       // For update/delete deliverable, we'd need a dedicated route
       // For now, we'll use a generic approach
-      const response = await fetch(`/api/sponsors/${sponsorId}/deals/${dealId}/deliverables/${deliverableId}`, {
+      const response = await fetchWithCSRF(`/api/sponsors/${sponsorId}/deals/${dealId}/deliverables/${deliverableId}`, {
         method: 'PUT',
-        credentials: 'include',
         headers: getAuthHeaders(),
         body: JSON.stringify(body),
       });
@@ -416,9 +409,8 @@ export function useSponsorCRM(options: UseSponsorCRMOptions = {}) {
   ): Promise<void> => {
     setIsMutating(true);
     try {
-      const response = await fetch(`/api/sponsors/${sponsorId}/deals/${dealId}/deliverables/${deliverableId}`, {
+      const response = await fetchWithCSRF(`/api/sponsors/${sponsorId}/deals/${dealId}/deliverables/${deliverableId}`, {
         method: 'DELETE',
-        credentials: 'include',
         headers: getAuthHeaders(),
       });
 
