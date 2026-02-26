@@ -75,18 +75,12 @@ export async function GET(
       },
     });
 
-    if (!post) {
+    // Ownership check: treat missing post and wrong owner identically (404)
+    // to avoid leaking that a resource exists for a given ID.
+    if (!post || post.campaign?.userId !== user.id) {
       return NextResponse.json(
         { error: 'Not Found', message: 'Content not found' },
         { status: 404 }
-      );
-    }
-
-    // Verify ownership
-    if (post.campaign?.userId !== user.id) {
-      return NextResponse.json(
-        { error: 'Forbidden', message: 'You do not have access to this content' },
-        { status: 403 }
       );
     }
 
@@ -165,17 +159,14 @@ export async function PATCH(
       },
     });
 
-    if (!existingPost) {
+    // Ownership check: treat missing post and wrong owner identically (404)
+    // to avoid leaking that a resource exists for a given ID.
+    // The nullable guard `?.userId` is intentionally absent here — a post
+    // without a campaign relation is treated as inaccessible (404) to be safe.
+    if (!existingPost || existingPost.campaign?.userId !== user.id) {
       return NextResponse.json(
         { error: 'Not Found', message: 'Content not found' },
         { status: 404 }
-      );
-    }
-
-    if (existingPost.campaign?.userId && existingPost.campaign.userId !== user.id) {
-      return NextResponse.json(
-        { error: 'Forbidden', message: 'You do not have access to this content' },
-        { status: 403 }
       );
     }
 
@@ -276,17 +267,12 @@ export async function DELETE(
       },
     });
 
-    if (!existingPost) {
+    // Ownership check: treat missing post and wrong owner identically (404)
+    // to avoid leaking that a resource exists for a given ID.
+    if (!existingPost || existingPost.campaign?.userId !== user.id) {
       return NextResponse.json(
         { error: 'Not Found', message: 'Content not found' },
         { status: 404 }
-      );
-    }
-
-    if (existingPost.campaign?.userId && existingPost.campaign.userId !== user.id) {
-      return NextResponse.json(
-        { error: 'Forbidden', message: 'You do not have access to this content' },
-        { status: 403 }
       );
     }
 

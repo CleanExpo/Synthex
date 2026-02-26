@@ -94,7 +94,9 @@ export async function GET(
       where: { id },
     });
 
-    if (!comment) {
+    // Ownership check: treat missing comment and wrong author identically (404)
+    // to avoid leaking that a comment exists for a given ID.
+    if (!comment || comment.authorId !== userId) {
       return NextResponse.json(
         { error: 'Not Found', message: 'Comment not found' },
         { status: 404 }

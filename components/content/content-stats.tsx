@@ -2,43 +2,84 @@
 
 /**
  * Content Stats Component
- * Statistics cards for content generation metrics
+ *
+ * Displays real per-user post metrics fetched from
+ * /api/analytics/dashboard-stats.  Falls back to zeros on
+ * fetch error so the page always renders cleanly.
  */
 
+import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Sparkles, BarChart3, Clock, Target } from '@/components/icons';
+import type { DashboardStatsData } from '@/app/api/analytics/dashboard-stats/route';
 
-const statsConfig = [
-  {
-    title: 'Generated Today',
-    value: '24',
-    change: '+12% from yesterday',
-    Icon: Sparkles,
-  },
-  {
-    title: 'Avg Engagement',
-    value: '8.7%',
-    change: 'Above industry avg',
-    Icon: BarChart3,
-  },
-  {
-    title: 'Scheduled',
-    value: '15',
-    change: 'Next 7 days',
-    Icon: Clock,
-  },
-  {
-    title: 'Success Rate',
-    value: '92%',
-    change: 'Hit targets',
-    Icon: Target,
-  },
-];
+interface StatItem {
+  title: string;
+  value: string;
+  change: string;
+  Icon: React.ComponentType<{ className?: string }>;
+}
+
+function buildStats(data: DashboardStatsData): StatItem[] {
+  return [
+    {
+      title: 'Generated Today',
+      value: String(data.todayPosts),
+      change: data.todayPosts === 1 ? '1 post created today' : `${data.todayPosts} posts created today`,
+      Icon: Sparkles,
+    },
+    {
+      title: 'Avg Engagement',
+      value: data.avgEngagement > 0 ? `${data.avgEngagement.toFixed(1)}%` : '—',
+      change: data.avgEngagement > 0 ? 'From connected platforms' : 'Connect platforms to track',
+      Icon: BarChart3,
+    },
+    {
+      title: 'Scheduled',
+      value: String(data.scheduledPosts),
+      change: data.scheduledPosts === 1 ? '1 post queued' : `${data.scheduledPosts} posts queued`,
+      Icon: Clock,
+    },
+    {
+      title: 'Success Rate',
+      value: `${data.successRate}%`,
+      change: data.totalPosts > 0 ? `${data.publishedPosts} of ${data.totalPosts} published` : 'No posts yet',
+      Icon: Target,
+    },
+  ];
+}
+
+const emptyData: DashboardStatsData = {
+  totalPosts: 0,
+  publishedPosts: 0,
+  scheduledPosts: 0,
+  draftPosts: 0,
+  todayPosts: 0,
+  avgEngagement: 0,
+  successRate: 0,
+};
 
 export function ContentStats() {
+  const [statsData, setStatsData] = useState<DashboardStatsData>(emptyData);
+
+  useEffect(() => {
+    fetch('/api/analytics/dashboard-stats', { credentials: 'include' })
+      .then((r) => r.json())
+      .then((body: { success?: boolean; data?: DashboardStatsData }) => {
+        if (body.success && body.data) {
+          setStatsData(body.data);
+        }
+      })
+      .catch(() => {
+        // Graceful fail — keep zeros so the UI still renders
+      });
+  }, []);
+
+  const stats = buildStats(statsData);
+
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-      {statsConfig.map(({ title, value, change, Icon }) => (
+      {stats.map(({ title, value, change, Icon }) => (
         <Card key={title} variant="glass">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-gray-400">{title}</CardTitle>

@@ -22,6 +22,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { testConnection } from '@/lib/supabase-client';
 import { checkDatabaseHealth, getPoolMetrics } from '@/lib/prisma';
 import { EnvValidator } from '@/lib/security/env-validator';
+import { getEnvStatus, type EnvStatus } from '@/lib/env-check';
 
 // Force dynamic rendering - prevent static generation
 export const dynamic = 'force-dynamic';
@@ -189,8 +190,16 @@ export async function GET(request: NextRequest) {
 
     if (simple) {
       // Ultra-lightweight response for frequent polling
+      const envStatus: EnvStatus = getEnvStatus();
       return NextResponse.json(
-        { status: 'ok', timestamp: new Date().toISOString() },
+        {
+          status: 'ok',
+          timestamp: new Date().toISOString(),
+          env: {
+            required: envStatus.required,
+            warnings: envStatus.warnings,
+          },
+        },
         {
           status: 200,
           headers: {
@@ -200,6 +209,9 @@ export async function GET(request: NextRequest) {
         }
       );
     }
+
+    // Snapshot env-check status before parallel checks (sync, no await needed)
+    const envStatus: EnvStatus = getEnvStatus();
 
     // Run all health checks in parallel
     const [database, cache, environment, resources] = await Promise.all([
@@ -230,6 +242,10 @@ export async function GET(request: NextRequest) {
       region: process.env.VERCEL_REGION || 'local',
       uptime: Math.floor((Date.now() - serverStartTime) / 1000),
       responseTime: Date.now() - startTime,
+      env: {
+        required: envStatus.required,
+        warnings: envStatus.warnings,
+      },
       checks: Object.fromEntries(
         Object.entries(checks).map(([key, value]) => [
           key,
