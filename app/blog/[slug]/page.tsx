@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import DOMPurify from 'dompurify';
+import { sanitizeHtml } from '@/lib/sanitize';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -324,7 +324,7 @@ export default function BlogPostPage() {
           <div
             className="prose prose-invert prose-lg max-w-none"
             dangerouslySetInnerHTML={{
-              __html: DOMPurify.sanitize(post.content)
+              __html: sanitizeHtml(post.content)
             }}
           />
           
