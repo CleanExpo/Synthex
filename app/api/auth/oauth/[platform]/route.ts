@@ -72,6 +72,40 @@ const oauthConfig = {
     clientSecret: process.env.TIKTOK_CLIENT_SECRET,
     scope: 'user.info.basic,video.list,video.upload',
   },
+  youtube: {
+    authUrl: 'https://accounts.google.com/o/oauth2/v2/auth',
+    tokenUrl: 'https://oauth2.googleapis.com/token',
+    userInfoUrl: 'https://www.googleapis.com/youtube/v3/channels?part=snippet&mine=true',
+    clientId: process.env.YOUTUBE_CLIENT_ID || process.env.GOOGLE_CLIENT_ID,
+    clientSecret: process.env.YOUTUBE_CLIENT_SECRET || process.env.GOOGLE_CLIENT_SECRET,
+    scope: 'https://www.googleapis.com/auth/youtube.readonly https://www.googleapis.com/auth/youtube.upload',
+    accessType: 'offline',
+    prompt: 'consent',
+  },
+  pinterest: {
+    authUrl: 'https://www.pinterest.com/oauth/',
+    tokenUrl: 'https://api.pinterest.com/v5/oauth/token',
+    userInfoUrl: 'https://api.pinterest.com/v5/user_account',
+    clientId: process.env.PINTEREST_CLIENT_ID,
+    clientSecret: process.env.PINTEREST_CLIENT_SECRET,
+    scope: 'boards:read,pins:read,pins:write,user_accounts:read',
+  },
+  reddit: {
+    authUrl: 'https://www.reddit.com/api/v1/authorize',
+    tokenUrl: 'https://www.reddit.com/api/v1/access_token',
+    userInfoUrl: 'https://oauth.reddit.com/api/v1/me',
+    clientId: process.env.REDDIT_CLIENT_ID,
+    clientSecret: process.env.REDDIT_CLIENT_SECRET,
+    scope: 'identity read submit',
+  },
+  threads: {
+    authUrl: 'https://threads.net/oauth/authorize',
+    tokenUrl: 'https://graph.threads.net/oauth/access_token',
+    userInfoUrl: 'https://graph.threads.net/v1.0/me',
+    clientId: process.env.THREADS_CLIENT_ID || process.env.INSTAGRAM_CLIENT_ID,
+    clientSecret: process.env.THREADS_CLIENT_SECRET || process.env.INSTAGRAM_CLIENT_SECRET,
+    scope: 'threads_basic,threads_content_publish,threads_read_replies',
+  },
 };
 
 // GET - Initiate OAuth flow

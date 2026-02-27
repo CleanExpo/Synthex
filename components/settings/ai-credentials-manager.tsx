@@ -37,10 +37,11 @@ const PROVIDERS = [
   {
     id: 'openrouter',
     name: 'OpenRouter',
-    description: 'Access 100+ models via one API key',
+    description: 'Required — powers all AI features via 100+ models',
     placeholder: 'sk-or-v1-...',
     color: 'text-purple-400',
     bgColor: 'bg-purple-500/20',
+    required: true,
   },
   {
     id: 'anthropic',
@@ -49,6 +50,7 @@ const PROVIDERS = [
     placeholder: 'sk-ant-...',
     color: 'text-amber-400',
     bgColor: 'bg-amber-500/20',
+    required: false,
   },
   {
     id: 'google',
@@ -57,15 +59,29 @@ const PROVIDERS = [
     placeholder: 'AIza...',
     color: 'text-blue-400',
     bgColor: 'bg-blue-500/20',
+    required: false,
   },
   {
     id: 'openai',
     name: 'OpenAI',
-    description: 'GPT models (routed via OpenRouter)',
+    description: 'GPT models (direct API)',
     placeholder: 'sk-...',
     color: 'text-green-400',
     bgColor: 'bg-green-500/20',
+    required: false,
   },
+];
+
+/** Popular models available via OpenRouter */
+const OPENROUTER_MODELS = [
+  { id: 'openai/gpt-4o', name: 'GPT-4o', tier: 'premium' },
+  { id: 'openai/gpt-4o-mini', name: 'GPT-4o Mini', tier: 'budget' },
+  { id: 'anthropic/claude-sonnet-4', name: 'Claude Sonnet 4', tier: 'premium' },
+  { id: 'anthropic/claude-haiku-4', name: 'Claude Haiku 4', tier: 'budget' },
+  { id: 'google/gemini-2.0-flash-001', name: 'Gemini 2.0 Flash', tier: 'budget' },
+  { id: 'google/gemini-2.5-pro-preview', name: 'Gemini 2.5 Pro', tier: 'premium' },
+  { id: 'meta-llama/llama-4-maverick', name: 'Llama 4 Maverick', tier: 'budget' },
+  { id: 'deepseek/deepseek-r1', name: 'DeepSeek R1', tier: 'budget' },
 ];
 
 export function AICredentialsManager() {
@@ -74,6 +90,7 @@ export function AICredentialsManager() {
   const [showAddForm, setShowAddForm] = useState(false);
   const [selectedProvider, setSelectedProvider] = useState('');
   const [apiKeyInput, setApiKeyInput] = useState('');
+  const [selectedModel, setSelectedModel] = useState('openai/gpt-4o');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
@@ -121,9 +138,21 @@ export function AICredentialsManager() {
 
       if (res.ok && data.success) {
         toast.success(`${getProviderName(selectedProvider)} key saved and validated!`);
+        // Save model preference when OpenRouter key is added
+        if (selectedProvider === 'openrouter' && selectedModel) {
+          try {
+            await fetch('/api/user/profile', {
+              method: 'PUT',
+              credentials: 'include',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ openrouterModel: selectedModel }),
+            });
+          } catch { /* non-critical */ }
+        }
         setShowAddForm(false);
         setSelectedProvider('');
         setApiKeyInput('');
+        setSelectedModel('openai/gpt-4o');
         await loadCredentials();
       } else {
         toast.error(data.error || 'Failed to save API key');
@@ -178,8 +207,9 @@ export function AICredentialsManager() {
             AI Provider Keys
           </CardTitle>
           <CardDescription>
-            Add your own API keys to use AI features with your own quota.
-            Keys are encrypted at rest and never exposed.
+            Add your API keys to power AI features. <strong className="text-purple-400">OpenRouter is required</strong> to
+            get started — it gives you access to 100+ models with a single key.
+            All keys are encrypted at rest and never exposed.
           </CardDescription>
         </div>
         {!showAddForm && (
@@ -210,11 +240,16 @@ export function AICredentialsManager() {
                     className={`p-3 rounded-lg border text-left transition-all ${
                       selectedProvider === provider.id
                         ? 'border-cyan-500/50 bg-cyan-500/10'
-                        : 'border-white/10 bg-white/5 hover:border-white/20'
+                        : provider.required && !existingProviders.has(provider.id)
+                          ? 'border-purple-500/30 bg-purple-500/5 hover:border-purple-500/50'
+                          : 'border-white/10 bg-white/5 hover:border-white/20'
                     }`}
                   >
                     <p className={`text-sm font-medium ${provider.color}`}>
                       {provider.name}
+                      {provider.required && !existingProviders.has(provider.id) && (
+                        <span className="ml-2 text-[10px] px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-300 uppercase tracking-wide">Required</span>
+                      )}
                       {existingProviders.has(provider.id) && (
                         <span className="text-xs text-slate-500 ml-1">(update)</span>
                       )}
@@ -226,21 +261,51 @@ export function AICredentialsManager() {
             </div>
 
             {selectedProvider && (
-              <div>
-                <label className="block text-sm font-medium text-slate-300 mb-2">
-                  API Key
-                </label>
-                <input
-                  type="password"
-                  value={apiKeyInput}
-                  onChange={e => setApiKeyInput(e.target.value)}
-                  placeholder={getProviderConfig(selectedProvider)?.placeholder || 'Enter your API key'}
-                  className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500/50 font-mono text-sm"
-                  autoComplete="off"
-                />
-                <p className="text-xs text-slate-500 mt-1">
-                  Your key will be validated with {getProviderName(selectedProvider)} before saving.
-                </p>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">
+                    API Key
+                  </label>
+                  <input
+                    type="password"
+                    value={apiKeyInput}
+                    onChange={e => setApiKeyInput(e.target.value)}
+                    placeholder={getProviderConfig(selectedProvider)?.placeholder || 'Enter your API key'}
+                    className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500/50 font-mono text-sm"
+                    autoComplete="off"
+                  />
+                  <p className="text-xs text-slate-500 mt-1">
+                    Your key will be validated with {getProviderName(selectedProvider)} before saving.
+                  </p>
+                </div>
+
+                {/* Model selector for OpenRouter */}
+                {selectedProvider === 'openrouter' && (
+                  <div>
+                    <label className="block text-sm font-medium text-slate-300 mb-2">
+                      Default Model
+                    </label>
+                    <select
+                      value={selectedModel}
+                      onChange={e => setSelectedModel(e.target.value)}
+                      className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white focus:outline-none focus:border-cyan-500/50 text-sm"
+                    >
+                      <optgroup label="Premium">
+                        {OPENROUTER_MODELS.filter(m => m.tier === 'premium').map(m => (
+                          <option key={m.id} value={m.id}>{m.name}</option>
+                        ))}
+                      </optgroup>
+                      <optgroup label="Budget-friendly">
+                        {OPENROUTER_MODELS.filter(m => m.tier === 'budget').map(m => (
+                          <option key={m.id} value={m.id}>{m.name}</option>
+                        ))}
+                      </optgroup>
+                    </select>
+                    <p className="text-xs text-slate-500 mt-1">
+                      Choose which model Synthex uses for content generation. You can change this anytime.
+                    </p>
+                  </div>
+                )}
               </div>
             )}
 
@@ -275,14 +340,22 @@ export function AICredentialsManager() {
           </div>
         ) : credentials.length === 0 && !showAddForm ? (
           <div className="text-center py-8">
-            <Key className="w-8 h-8 text-slate-600 mx-auto mb-2" />
-            <p className="text-slate-500 text-sm">
-              No AI provider keys configured.
+            <Key className="w-8 h-8 text-purple-500 mx-auto mb-2" />
+            <p className="text-slate-400 text-sm font-medium">
+              No AI provider keys configured
             </p>
-            <p className="text-slate-600 text-xs mt-1">
-              Add your own keys to use AI features with your own quota,
-              or the platform will use its shared keys.
+            <p className="text-slate-500 text-xs mt-1 max-w-sm mx-auto">
+              Add your <strong className="text-purple-400">OpenRouter</strong> API key to unlock all AI features.
+              One key gives you access to GPT-4o, Claude, Gemini, and 100+ other models.
             </p>
+            <Button
+              onClick={() => { setShowAddForm(true); setSelectedProvider('openrouter'); }}
+              size="sm"
+              className="mt-3 gradient-primary"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Add OpenRouter Key
+            </Button>
           </div>
         ) : (
           credentials.map(cred => {

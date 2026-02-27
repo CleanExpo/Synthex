@@ -31,6 +31,8 @@ const profileUpdateSchema = z.object({
     linkedin: z.string().max(100).optional(),
     github: z.string().max(100).optional(),
   }).passthrough().optional(),
+  // AI model preference (stored in user.settings JSON)
+  openrouterModel: z.string().max(100).optional(),
 }).strip();
 
 const deleteAccountSchema = z.object({
@@ -140,7 +142,7 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    const { name, company, role, bio, phone, website, social_links } = validationResult.data;
+    const { name, company, role, bio, phone, website, social_links, openrouterModel } = validationResult.data;
 
     // Build update data — only include defined fields
     const updateData: Record<string, unknown> = {};
@@ -151,6 +153,16 @@ export async function PUT(request: NextRequest) {
     if (phone !== undefined) updateData.phone = phone;
     if (website !== undefined) updateData.website = website || null;
     if (social_links !== undefined) updateData.socialLinks = social_links;
+
+    // Merge openrouterModel into user.settings JSON
+    if (openrouterModel !== undefined) {
+      const existingUser = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { settings: true },
+      });
+      const currentSettings = (existingUser?.settings as Record<string, unknown>) || {};
+      updateData.settings = { ...currentSettings, openrouterModel };
+    }
 
     // Update user in Prisma (user always exists — created at signup/OAuth)
     const updatedUser = await prisma.user.update({

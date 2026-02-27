@@ -25,15 +25,12 @@ const connectIntegrationSchema = z.object({
   profile: z.record(z.unknown()).optional(),
 });
 
+// All supported platforms
+const ALL_PLATFORMS = ['twitter', 'linkedin', 'instagram', 'facebook', 'tiktok', 'youtube', 'pinterest', 'reddit', 'threads'] as const;
+
 // Default empty integrations response
 const emptyIntegrations = {
-  integrations: {
-    twitter: false,
-    linkedin: false,
-    instagram: false,
-    facebook: false,
-    tiktok: false,
-  },
+  integrations: Object.fromEntries(ALL_PLATFORMS.map(p => [p, false])),
   details: {} as Record<string, { profileName: string | null; profileId: string | null }>,
   raw: [],
 };
@@ -62,26 +59,20 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    // Format integrations for frontend
-    const formattedIntegrations: Record<string, boolean> = {
-      twitter: false,
-      linkedin: false,
-      instagram: false,
-      facebook: false,
-      tiktok: false,
-    };
+    // Format integrations for frontend — all supported platforms
+    const formattedIntegrations: Record<string, boolean> = Object.fromEntries(
+      ALL_PLATFORMS.map(p => [p, false])
+    );
 
     const connectionDetails: Record<string, { profileName: string | null; profileId: string | null }> = {};
 
     connections.forEach(conn => {
       const platform = conn.platform.toLowerCase();
-      if (platform in formattedIntegrations) {
-        formattedIntegrations[platform] = true;
-        connectionDetails[platform] = {
-          profileName: conn.profileName,
-          profileId: conn.profileId,
-        };
-      }
+      formattedIntegrations[platform] = true;
+      connectionDetails[platform] = {
+        profileName: conn.profileName,
+        profileId: conn.profileId,
+      };
     });
 
     return NextResponse.json({

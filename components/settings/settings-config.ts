@@ -41,6 +41,10 @@ export const initialPlatforms: PlatformConnection[] = [
   { id: 'instagram', name: 'Instagram', icon: '📷', connected: false },
   { id: 'facebook', name: 'Facebook', icon: 'f', connected: false },
   { id: 'tiktok', name: 'TikTok', icon: '♪', connected: false },
+  { id: 'youtube', name: 'YouTube', icon: '▶', connected: false },
+  { id: 'pinterest', name: 'Pinterest', icon: '📌', connected: false },
+  { id: 'reddit', name: 'Reddit', icon: '🔴', connected: false },
+  { id: 'threads', name: 'Threads', icon: '@', connected: false },
 ];
 
 export const platformConnections: PlatformConnection[] = [
@@ -49,6 +53,10 @@ export const platformConnections: PlatformConnection[] = [
   { id: 'instagram', name: 'Instagram', icon: '📷', connected: false },
   { id: 'facebook', name: 'Facebook', icon: 'f', connected: false },
   { id: 'tiktok', name: 'TikTok', icon: '♪', connected: false },
+  { id: 'youtube', name: 'YouTube', icon: '▶', connected: false },
+  { id: 'pinterest', name: 'Pinterest', icon: '📌', connected: false },
+  { id: 'reddit', name: 'Reddit', icon: '🔴', connected: false },
+  { id: 'threads', name: 'Threads', icon: '@', connected: false },
 ];
 
 export const defaultBillingInfo: BillingInfo = {
