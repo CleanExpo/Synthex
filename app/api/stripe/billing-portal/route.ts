@@ -22,6 +22,7 @@ import { getUserIdFromRequestOrCookies, verifyTokenSafe, unauthorizedResponse } 
 import { billing } from '@/lib/middleware/api-rate-limit';
 import prisma from '@/lib/prisma';
 import { subscriptionService } from '@/lib/stripe/subscription-service';
+import { logger } from '@/lib/logger';
 
 export async function POST(request: NextRequest) {
   // Distributed rate limiting via Upstash Redis
@@ -95,7 +96,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ url: session.url });
   } catch (error) {
-    console.error('Billing portal error:', error);
+    logger.error('Billing portal error', { error });
     return NextResponse.json(
       { error: 'Failed to create billing portal session' },
       { status: 500 }

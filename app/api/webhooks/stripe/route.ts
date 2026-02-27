@@ -7,6 +7,11 @@
  * - STRIPE_WEBHOOK_SECRET: Stripe webhook signing secret
  *
  * SECURITY: Validates Stripe signature before processing
+ *
+ * ARCHITECTURE NOTE (2026-02-28):
+ * Uses `receiveAndProcess()` (synchronous mode) instead of `receive()` (queue
+ * mode) because Vercel serverless functions have no persistent process to poll
+ * the event queue.  All webhook handlers execute inline within this request.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -33,8 +38,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Missing signature' }, { status: 400 });
     }
 
-    // Process the webhook
-    const result = await webhookHandler.receive('stripe', rawBody, {
+    // Process the webhook synchronously (required for serverless)
+    const result = await webhookHandler.receiveAndProcess('stripe', rawBody, {
       'stripe-signature': signature,
     });
 
@@ -43,7 +48,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: result.error }, { status: 400 });
     }
 
-    logger.info('Stripe webhook received', { eventId: result.eventId });
+    logger.info('Stripe webhook processed', { eventId: result.eventId });
 
     return NextResponse.json({
       received: true,

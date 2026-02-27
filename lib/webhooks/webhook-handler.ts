@@ -3,6 +3,19 @@
  *
  * @description Central webhook processing and delivery system
  *
+ * ARCHITECTURE NOTE (2026-02-28):
+ * This handler supports two processing modes:
+ *
+ * 1. **Synchronous (serverless)**: `receiveAndProcess()` — verifies the
+ *    signature, parses the event, and runs all registered handlers inline
+ *    within the HTTP request.  This is the REQUIRED mode for Vercel / any
+ *    serverless runtime because there is no long-lived process to poll a
+ *    queue.
+ *
+ * 2. **Async queue (long-lived process)**: `receive()` + `start()` — enqueues
+ *    events and processes them via a polling interval.  Only suitable for
+ *    traditional servers or background workers.
+ *
  * ENVIRONMENT VARIABLES REQUIRED:
  * - Platform-specific webhook secrets for signature verification
  * - INTERNAL_WEBHOOK_SECRET: For internal system webhooks
@@ -22,6 +35,7 @@ import type {
   WebhookConfig,
   DEFAULT_WEBHOOK_CONFIG,
 } from './types';
+import { v4 as uuidv4 } from 'uuid';
 
 // ============================================================================
 // TYPES
@@ -73,7 +87,94 @@ export class WebhookHandler {
   }
 
   /**
-   * Receive and process an incoming webhook
+   * Receive, verify, and immediately process a webhook event (synchronous mode).
+   *
+   * This is the preferred method for serverless environments (Vercel).
+   * It does NOT use the event queue — handlers run inline within the request.
+   */
+  async receiveAndProcess(
+    platform: WebhookPlatform,
+    payload: string | Buffer,
+    headers: Record<string, string>
+  ): Promise<{ success: boolean; eventId?: string; error?: string }> {
+    // Get signature from headers (varies by platform)
+    const signature = this.extractSignature(platform, headers);
+    const timestamp = this.extractTimestamp(platform, headers);
+
+    if (!signature) {
+      logger.warn('Missing webhook signature', { platform });
+      return { success: false, error: 'Missing signature' };
+    }
+
+    // Verify signature
+    const verification = signatureVerifier.verify(platform, payload, signature, timestamp);
+
+    if (!verification.valid) {
+      logger.warn('Invalid webhook signature', { platform, error: verification.error });
+      return { success: false, error: verification.error || 'Invalid signature' };
+    }
+
+    // Parse payload
+    let data: Record<string, unknown>;
+    try {
+      data = typeof payload === 'string' ? JSON.parse(payload) : JSON.parse(payload.toString());
+    } catch {
+      logger.error('Invalid webhook payload', { platform });
+      return { success: false, error: 'Invalid JSON payload' };
+    }
+
+    // Determine event type from payload
+    const eventType = this.parseEventType(platform, data);
+
+    if (!eventType) {
+      logger.warn('Unknown webhook event type', { platform, data });
+      return { success: false, error: 'Unknown event type' };
+    }
+
+    // Build the event object
+    const eventId = uuidv4();
+    const event: WebhookEvent = {
+      id: eventId,
+      type: eventType,
+      platform,
+      timestamp: new Date(),
+      userId: this.extractUserId(platform, data),
+      organizationId: this.extractOrganizationId(platform, data),
+      data,
+      metadata: {
+        version: '1.0',
+        source: 'synthex',
+        correlationId: eventId,
+        retryCount: 0,
+      },
+    };
+
+    // Log receipt
+    await this.logEvent(eventId, eventType, platform, data);
+
+    // Execute handlers inline (synchronous within request)
+    try {
+      await this.processEvent(event);
+    } catch (error) {
+      logger.error('Webhook handler execution failed', {
+        eventId,
+        eventType,
+        platform,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
+      // Return success to Stripe so it does not retry endlessly; we log the
+      // failure for investigation.  Stripe recommends returning 2xx quickly.
+      // The error is already logged above.
+    }
+
+    return { success: true, eventId };
+  }
+
+  /**
+   * Receive and enqueue a webhook for async processing (queue mode).
+   *
+   * WARNING: This only works if `start()` has been called to poll the queue.
+   * In serverless environments (Vercel), use `receiveAndProcess()` instead.
    */
   async receive(
     platform: WebhookPlatform,
@@ -143,7 +244,7 @@ export class WebhookHandler {
   }
 
   /**
-   * Start processing events
+   * Start processing events (queue mode — only for long-lived processes)
    */
   start(intervalMs: number = 1000): void {
     if (this.processingInterval) {
@@ -220,7 +321,7 @@ export class WebhookHandler {
   }
 
   /**
-   * Process a single event
+   * Process a single event — runs all registered handlers for the event type
    */
   private async processEvent(event: WebhookEvent): Promise<void> {
     const handlers = this.handlers.get(event.type) || [];

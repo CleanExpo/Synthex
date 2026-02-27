@@ -11,7 +11,24 @@
 // Core Auth Types
 // ==========================================
 
-export type AuthProvider = 'email' | 'google' | 'github';
+/**
+ * Auth providers for login/signup (email, Google, GitHub).
+ * Social platforms are listed separately but included for PKCE state storage
+ * which shares the same type for the `provider` field.
+ */
+export type AuthProvider =
+  | 'email'
+  | 'google'
+  | 'github'
+  | 'twitter'
+  | 'linkedin'
+  | 'instagram'
+  | 'facebook'
+  | 'tiktok'
+  | 'youtube'
+  | 'pinterest'
+  | 'reddit'
+  | 'threads';
 
 export interface AuthUser {
   id: string;

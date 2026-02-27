@@ -3,7 +3,7 @@
  * - STRIPE_SECRET_KEY: Stripe secret key for API operations (CRITICAL)
  * - NEXT_PUBLIC_APP_URL: Application URL for redirects (PUBLIC)
  * - JWT_SECRET: For verifying user authentication (CRITICAL)
- * 
+ *
  * FAILURE MODE: Returns error response if missing
  */
 
@@ -14,6 +14,7 @@ import { stripe, PRODUCTS } from '@/lib/stripe/config';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
 import { getUserIdFromRequestOrCookies, unauthorizedResponse } from '@/lib/auth/jwt-utils';
 import { billing } from '@/lib/middleware/api-rate-limit';
+import { logger } from '@/lib/logger';
 
 const checkoutSchema = z.object({
   priceId: z.string().optional(),
@@ -27,10 +28,10 @@ export async function POST(request: NextRequest) {
     // Check if Stripe is configured
     if (!stripe) {
       return NextResponse.json(
-        { 
+        {
           error: 'Payment processing not configured',
           message: 'Stripe is not set up yet. Contact support for manual subscription.',
-          bypass: true 
+          bypass: true
         },
         { status: 503 }
       );
@@ -74,6 +75,23 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Guard against placeholder price IDs that would cause Stripe API errors
+    if (finalPriceId.includes('placeholder')) {
+      logger.error('Stripe checkout attempted with placeholder price ID', {
+        priceId: finalPriceId,
+        planName,
+        userId,
+      });
+      return NextResponse.json(
+        {
+          error: 'Billing not fully configured',
+          message: 'Subscription plans have not been set up in Stripe yet. Contact support.',
+          bypass: true,
+        },
+        { status: 503 }
+      );
+    }
+
     // Create Stripe checkout session
     const session = await stripe.checkout.sessions.create({
       line_items: [
@@ -101,12 +119,12 @@ export async function POST(request: NextRequest) {
       },
     } as Stripe.Checkout.SessionCreateParams);
 
-    return NextResponse.json({ 
+    return NextResponse.json({
       sessionId: session.id,
-      url: session.url 
+      url: session.url
     });
   } catch (error) {
-    console.error('Stripe checkout error:', error);
+    logger.error('Stripe checkout error', { error });
     return NextResponse.json(
       { error: 'Failed to create checkout session' },
       { status: 500 }

@@ -1,11 +1,18 @@
 /**
+ * Stripe Configuration
+ *
  * ENVIRONMENT VARIABLES (OPTIONAL):
  * - STRIPE_SECRET_KEY: Stripe secret key for API operations
- * - STRIPE_PUBLISHABLE_KEY: Stripe publishable key for client-side
+ * - NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: Stripe publishable key for client-side
  * - STRIPE_WEBHOOK_SECRET: Webhook endpoint secret for verification
  * - NEXT_PUBLIC_APP_URL: Application URL for redirects
- * 
- * FAILURE MODE: Stripe features disabled if not configured
+ * - STRIPE_PROFESSIONAL_PRICE_ID: Stripe price ID for Professional plan
+ * - STRIPE_BUSINESS_PRICE_ID: Stripe price ID for Business plan
+ * - STRIPE_CUSTOM_PRICE_ID: Stripe price ID for Custom/Enterprise plan
+ *
+ * FAILURE MODE: Stripe features disabled if not configured.
+ * Placeholder price IDs are kept so the app compiles, but the checkout route
+ * rejects them at runtime with a clear error message.
  */
 
 import Stripe from 'stripe';
@@ -13,15 +20,15 @@ import Stripe from 'stripe';
 // Make Stripe optional - app works without it
 const STRIPE_ENABLED = !!process.env.STRIPE_SECRET_KEY;
 
-export const stripe = STRIPE_ENABLED 
+export const stripe = STRIPE_ENABLED
   ? new Stripe(process.env.STRIPE_SECRET_KEY!, {
       apiVersion: '2025-07-30.basil' as Stripe.LatestApiVersion,
       typescript: true,
     })
   : null;
 
-// Product/Price IDs - These should match your Stripe dashboard
-// Using placeholder IDs - replace with actual Stripe price IDs
+// Product/Price IDs - These MUST match your Stripe dashboard
+// Placeholder IDs are rejected at checkout time (see app/api/stripe/checkout/route.ts)
 export const PRODUCTS = {
   professional: {
     name: 'Professional',
@@ -72,6 +79,15 @@ export const PRODUCTS = {
     },
   },
 };
+
+/**
+ * Check whether Stripe billing is fully configured (keys + at least one real price ID)
+ */
+export function isStripeBillingReady(): boolean {
+  if (!STRIPE_ENABLED) return false;
+  // At minimum, the Professional plan price ID must be a real Stripe ID
+  return !PRODUCTS.professional.priceId.includes('placeholder');
+}
 
 export function getProductByPriceId(priceId: string) {
   return Object.values(PRODUCTS).find(product => product.priceId === priceId);
