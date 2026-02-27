@@ -17,6 +17,7 @@ import { createClient } from '@supabase/supabase-js';
 import jwt from 'jsonwebtoken';
 import type { AuthUser, AuthSession, AuthResult, AuthProvider, OAuthProfile } from '@/types/auth';
 import { accountService } from './account-service';
+import { isOwnerEmail } from './jwt-utils';
 import prisma from '@/lib/prisma';
 
 // Supabase admin client for profiles table operations (bypasses RLS)
@@ -203,6 +204,14 @@ export class SignInFlow {
         // Non-fatal — user can still authenticate
       }
 
+      // Auto-fix DB flags for owner on login (fire-and-forget)
+      if (isOwnerEmail(data.user.email)) {
+        prisma.user.updateMany({
+          where: { email: data.user.email! },
+          data: { onboardingComplete: true, apiKeyConfigured: true },
+        }).catch(() => { /* non-fatal */ });
+      }
+
       // Create unified session
       // IMPORTANT: Always use our own JWT (signed with JWT_SECRET) for the accessToken.
       // Supabase's access_token is signed with Supabase's JWT secret, which doesn't
@@ -216,7 +225,7 @@ export class SignInFlow {
           provider: 'email',
           emailVerified: !!data.user.confirmed_at
         },
-        accessToken: this.generateJWT(data.user.id),
+        accessToken: this.generateJWT(data.user.id, data.user.email),
         refreshToken: data.session?.refresh_token,
         expiresAt: Date.now() + (7 * 24 * 60 * 60 * 1000) // 7 days
       };
@@ -288,10 +297,14 @@ export class SignInFlow {
           return { success: false, error: 'User not found' };
         }
 
-        // Update last login
+        // Update last login + auto-fix owner DB flags
+        const ownerBypass = isOwnerEmail(user.email);
         await prisma.user.update({
           where: { id: user.id },
-          data: { lastLogin: new Date() },
+          data: {
+            lastLogin: new Date(),
+            ...(ownerBypass ? { onboardingComplete: true, apiKeyConfigured: true } : {}),
+          },
         });
 
         const session: AuthSession = {
@@ -304,7 +317,7 @@ export class SignInFlow {
             // Convert Date|null from database to boolean for session
             emailVerified: !!user.emailVerified,
           },
-          accessToken: this.generateJWT(user.id),
+          accessToken: this.generateJWT(user.id, user.email),
           expiresAt: Date.now() + (7 * 24 * 60 * 60 * 1000),
         };
 
@@ -375,7 +388,7 @@ export class SignInFlow {
           // Convert Date|null from database to boolean for session
           emailVerified: !!newUser.emailVerified,
         },
-        accessToken: this.generateJWT(newUser.id),
+        accessToken: this.generateJWT(newUser.id, newUser.email),
         expiresAt: Date.now() + (7 * 24 * 60 * 60 * 1000),
       };
 
@@ -482,17 +495,29 @@ export class SignInFlow {
   }
 
   /**
-   * Generate JWT token
+   * Generate JWT token.
+   * Includes email and owner bypass flags (onboardingComplete, apiKeyConfigured)
+   * so middleware gates work correctly for platform owners.
    */
-  private generateJWT(userId: string): string {
-    return jwt.sign(
-      {
-        sub: userId,
-        iat: Math.floor(Date.now() / 1000),
-        exp: Math.floor(Date.now() / 1000) + (7 * 24 * 60 * 60) // 7 days
-      },
-      JWT_SECRET
-    );
+  private generateJWT(userId: string, email?: string): string {
+    const ownerBypass = isOwnerEmail(email);
+
+    const payload: Record<string, unknown> = {
+      sub: userId,
+      userId, // include both for jwt-utils compatibility
+      iat: Math.floor(Date.now() / 1000),
+      exp: Math.floor(Date.now() / 1000) + (7 * 24 * 60 * 60), // 7 days
+    };
+
+    if (email) payload.email = email;
+
+    // Owner bypass: force full access flags in JWT
+    if (ownerBypass) {
+      payload.onboardingComplete = true;
+      payload.apiKeyConfigured = true;
+    }
+
+    return jwt.sign(payload, JWT_SECRET);
   }
 
   /**

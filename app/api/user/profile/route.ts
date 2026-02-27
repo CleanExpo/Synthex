@@ -21,17 +21,17 @@ export const runtime = 'nodejs';
 // Validation schemas
 const profileUpdateSchema = z.object({
   name: z.string().min(1, 'Name is required').max(100, 'Name too long').optional(),
-  company: z.string().max(100, 'Company name too long').optional(),
-  role: z.string().max(50, 'Role too long').optional(),
-  bio: z.string().max(500, 'Bio too long').optional(),
-  phone: z.string().max(20, 'Phone number too long').regex(/^[+]?[\d\s\-()]*$/, 'Invalid phone format').optional(),
+  company: z.string().max(100, 'Company name too long').optional().or(z.literal('')),
+  role: z.string().max(50, 'Role too long').optional().or(z.literal('')),
+  bio: z.string().max(500, 'Bio too long').optional().or(z.literal('')),
+  phone: z.string().max(20, 'Phone number too long').regex(/^[+]?[\d\s\-()]*$/, 'Invalid phone format').optional().or(z.literal('')),
   website: z.string().url('Invalid website URL').max(200).optional().or(z.literal('')),
   social_links: z.object({
     twitter: z.string().max(100).optional(),
     linkedin: z.string().max(100).optional(),
     github: z.string().max(100).optional(),
   }).passthrough().optional(),
-}).strict();
+}).strip();
 
 const deleteAccountSchema = z.object({
   confirmation: z.literal('DELETE_MY_ACCOUNT', {
