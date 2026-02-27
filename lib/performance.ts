@@ -143,9 +143,7 @@ export function analyzeResourceTiming(): SlowResourceInfo[] | undefined {
       type: resource.initiatorType,
     }));
 
-  if (slowResources.length > 0) {
-    console.warn('Slow resources detected:', slowResources);
-  }
+  // slowResources are returned to caller for handling
 
   return slowResources;
 }
@@ -162,11 +160,7 @@ export function monitorMemoryUsage(): { usedJSHeapSize: string; totalJSHeapSize:
     };
 
 
-    // Warn if memory usage is high
-    const usagePercent = (memory.usedJSHeapSize / memory.jsHeapSizeLimit) * 100;
-    if (usagePercent > 90) {
-      console.warn('High memory usage detected:', usagePercent.toFixed(2) + '%');
-    }
+    // Memory usage is returned to caller for handling
 
     return memoryInfo;
   }
@@ -181,7 +175,6 @@ export async function lazyLoad(
 ): Promise<null> {
   // This is a placeholder - in practice, use next/dynamic or React.lazy
   // Dynamic imports with variables are not supported in webpack
-  console.warn('Use next/dynamic or React.lazy for component lazy loading');
   return Promise.resolve(null);
 }
 

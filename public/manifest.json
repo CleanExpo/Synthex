@@ -1,11 +1,11 @@
 {
-  "name": "Synthex - AI Marketing Agency",
+  "name": "Synthex",
   "short_name": "Synthex",
-  "description": "The world's first fully autonomous AI marketing agency. Use your own API keys for affordable AI-powered content generation and social media automation.",
-  "start_url": "/",
+  "description": "AI-powered marketing automation",
+  "start_url": "/dashboard",
   "display": "standalone",
-  "background_color": "#0a1628",
-  "theme_color": "#06b6d4",
+  "background_color": "#0a0a0f",
+  "theme_color": "#0891b2",
   "orientation": "portrait-primary",
   "icons": [
     {
@@ -63,24 +63,24 @@
       "short_name": "Dashboard",
       "description": "View your marketing dashboard",
       "url": "/dashboard",
-      "icons": [{ "src": "/icons/dashboard.png", "sizes": "192x192" }]
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
     },
     {
       "name": "Create Post",
       "short_name": "New Post",
       "description": "Create new AI-powered marketing content",
       "url": "/dashboard/create",
-      "icons": [{ "src": "/icons/create.png", "sizes": "192x192" }]
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
     },
     {
       "name": "Analytics",
       "short_name": "Analytics",
       "description": "View analytics and insights",
       "url": "/dashboard/analytics",
-      "icons": [{ "src": "/icons/analytics.png", "sizes": "192x192" }]
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
     }
   ],
-  "categories": ["business", "productivity", "social"],
+  "categories": ["business", "productivity"],
   "lang": "en-US",
   "dir": "ltr",
   "prefer_related_applications": false,

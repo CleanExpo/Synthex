@@ -193,7 +193,6 @@ export function exportToPDF(data: ExportData, filename = 'export.pdf') {
  */
 export async function exportToExcel(data: ExportData, filename = 'export.csv') {
   // Using CSV export as safer alternative to vulnerable xlsx package
-  console.warn('Excel export using CSV format for security. Full Excel support coming soon.');
   return exportToCSV(data, filename);
   
   /* Original XLSX code - disabled due to security vulnerability

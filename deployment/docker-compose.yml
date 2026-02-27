@@ -1,12 +1,40 @@
-version: '3.8'
+# =============================================================================
+# Synthex Docker Compose Configuration
+# =============================================================================
+#
+# REQUIRED ENVIRONMENT VARIABLES (set in .env file or export before running):
+#
+#   DATABASE_URL          - PostgreSQL connection string (Supabase pooler)
+#   DIRECT_URL            - PostgreSQL direct connection (for migrations)
+#   JWT_SECRET            - Secret key for JWT signing (min 32 chars)
+#   NEXTAUTH_SECRET       - NextAuth.js session encryption secret
+#   NEXTAUTH_URL          - Canonical site URL (e.g., https://synthex.example.com)
+#
+# OPTIONAL:
+#   NODE_ENV              - Defaults to "production"
+#   PORT                  - API port, defaults to 3000
+#   REDIS_URL             - Redis connection string (Upstash)
+#   SENTRY_DSN            - Sentry error tracking DSN
+#   STRIPE_SECRET_KEY     - Stripe API secret key
+#   SENDGRID_API_KEY      - SendGrid email API key
+#
+# USAGE:
+#   1. Copy .env.example to .env and fill in your values
+#   2. Run: docker compose up -d
+#
+# SECURITY:
+#   - NEVER hardcode secrets in this file
+#   - NEVER commit .env files to version control
+#   - All secrets are injected via environment variables at runtime
+# =============================================================================
 
 services:
   synthex-web:
     image: nginx:alpine
     container_name: synthex-production
     ports:
-      - "80:80"
-      - "443:443"
+      - "${NGINX_HTTP_PORT:-80}:80"
+      - "${NGINX_HTTPS_PORT:-443}:443"
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
       - ../public:/usr/share/nginx/html:ro
@@ -14,6 +42,9 @@ services:
     restart: unless-stopped
     networks:
       - synthex-network
+    depends_on:
+      synthex-api:
+        condition: service_healthy
     healthcheck:
       test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/"]
       interval: 30s
@@ -27,13 +58,23 @@ services:
       dockerfile: deployment/Dockerfile
     container_name: synthex-api
     ports:
-      - "3000:3000"
+      - "${API_PORT:-3000}:3000"
+    # Load environment variables from .env file in the project root
+    env_file:
+      - ../.env
     environment:
-      NODE_ENV: production
-      PORT: 3000
-    volumes:
-      - ../dist:/app/dist
-      - ../.env:/app/.env:ro
+      # Non-sensitive defaults (can be overridden by .env file)
+      NODE_ENV: ${NODE_ENV:-production}
+      PORT: ${PORT:-3000}
+      # Sensitive variables - MUST be set in .env file or environment
+      # These are listed here for documentation; actual values come from env_file above
+      DATABASE_URL: ${DATABASE_URL:?DATABASE_URL is required}
+      DIRECT_URL: ${DIRECT_URL:-}
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required}
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:-}
+      NEXTAUTH_URL: ${NEXTAUTH_URL:-}
+      REDIS_URL: ${REDIS_URL:-}
+      SENTRY_DSN: ${SENTRY_DSN:-}
     restart: unless-stopped
     networks:
       - synthex-network

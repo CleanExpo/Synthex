@@ -42,7 +42,6 @@ class WebSocketClient {
    */
   public connect(token?: string): void {
     if (this.ws?.readyState === WebSocket.OPEN) {
-      console.warn('WebSocket already connected');
       return;
     }
 

@@ -254,8 +254,8 @@ export function useNotifications(
       };
 
       // Handle connected event
-      eventSource.addEventListener('connected', (event) => {
-        console.log('SSE connected:', event.data);
+      eventSource.addEventListener('connected', () => {
+        // Connection established — no action needed
       });
     } catch (err) {
       console.error('Failed to create SSE connection:', err);
