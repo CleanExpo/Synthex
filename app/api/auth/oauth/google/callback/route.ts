@@ -17,7 +17,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { randomUUID } from 'crypto';
-import { generateToken } from '@/lib/auth/jwt-utils';
+import { generateToken, isOwnerEmail } from '@/lib/auth/jwt-utils';
 import { retrievePKCEState } from '@/lib/auth/pkce';
 import { createClient } from '@supabase/supabase-js';
 
@@ -376,15 +376,26 @@ async function createSessionForUser(
     avatar?: string;
   };
 }> {
-  // Update last login
+  // Owner bypass: auto-fix DB flags so owner never gets gated
+  const ownerBypass = isOwnerEmail(googleUser.email);
+
+  // Update last login (and fix owner flags if applicable)
   await supabaseAdmin
     .from('users')
-    .update({ last_login: new Date().toISOString() })
+    .update({
+      last_login: new Date().toISOString(),
+      ...(ownerBypass ? { onboarding_complete: true, api_key_configured: true } : {}),
+    })
     .eq('id', userId);
 
   // Generate JWT token directly (bypass signInFlow to avoid Account table)
   const expiresAt = Date.now() + (7 * 24 * 60 * 60 * 1000); // 7 days
-  const accessToken = generateToken({ userId, email: googleUser.email });
+  const accessToken = generateToken({
+    userId,
+    email: googleUser.email,
+    // Owner bypass: force full-access flags in JWT
+    ...(ownerBypass ? { onboardingComplete: true, apiKeyConfigured: true } : {}),
+  });
 
   return {
     accessToken,
