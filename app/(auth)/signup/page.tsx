@@ -7,9 +7,15 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Mail, Lock, User, Chrome, Loader2, CheckCircle, Eye, EyeOff, Clock } from '@/components/icons';
+import { Mail, Lock, User, Chrome, Loader2, CheckCircle, Eye, EyeOff, Clock, ArrowRight } from '@/components/icons';
 import { SynthexLogo } from '@/components/marketing/MarketingLayout';
 import { toast } from 'sonner';
+
+/** Shape of per-field validation details returned by the signup API */
+interface ValidationDetail {
+  field: string;
+  message: string;
+}
 
 export default function SignupPage() {
   const router = useRouter();
@@ -26,6 +32,9 @@ export default function SignupPage() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [rateLimitSeconds, setRateLimitSeconds] = useState(0);
   const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // UNI-632: Track email verification state to show inline message
+  const [verificationEmail, setVerificationEmail] = useState<string | null>(null);
 
   // Countdown timer for rate limit cooldown
   useEffect(() => {
@@ -133,10 +142,12 @@ export default function SignupPage() {
       }
 
       if (!response.ok) {
-        // Surface field-level validation errors from the API
+        // UNI-629: Surface field-level validation errors from the API.
+        // The signup API returns { error: string, details?: Array<{ field, message }> }
+        // when Zod validation fails (status 400).
         if (data.details && Array.isArray(data.details)) {
           const errors: Record<string, string> = {};
-          for (const issue of data.details as { field: string; message: string }[]) {
+          for (const issue of data.details as ValidationDetail[]) {
             if (issue.field) {
               errors[issue.field] = issue.message;
             }
@@ -144,18 +155,22 @@ export default function SignupPage() {
           if (Object.keys(errors).length > 0) {
             setFieldErrors(errors);
           } else {
+            // details array exists but no field-level errors — show generic
             toast.error(data.error || 'Registration failed. Please try again.');
           }
         } else {
+          // No details array (e.g. 409 duplicate email, 500 server error)
           toast.error(data.error || 'Registration failed. Please try again.');
         }
         return;
       }
 
-      // Success — check if email verification is required
+      // UNI-632: After successful signup, check the requiresVerification flag.
+      // If true, show an inline "Check your email" message with the user's
+      // email displayed, instead of immediately redirecting.
       if (data.requiresVerification) {
-        toast.success('Account created! Please check your email to verify your account.');
-        router.push('/auth/verify-email');
+        setVerificationEmail(formData.email);
+        // Do NOT redirect — show inline verification message
       } else {
         toast.success('Account created successfully!');
         router.push('/onboarding');
@@ -215,6 +230,84 @@ export default function SignupPage() {
   };
 
   const isSubmitDisabled = isLoading || rateLimitSeconds > 0;
+
+  // UNI-632: If email verification is required, render the verification
+  // message instead of the signup form. This gives the user clear feedback
+  // that their account was created and they should check their email.
+  if (verificationEmail) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#0a1628] px-4 py-8 relative overflow-hidden">
+        {/* Deep Navy Gradient Background */}
+        <div className="fixed inset-0 bg-gradient-to-br from-[#0a1628] via-[#0f172a] to-[#0a1628]" />
+
+        {/* Subtle Grid Pattern */}
+        <div className="fixed inset-0 opacity-[0.02]" style={{
+          backgroundImage: `linear-gradient(rgba(6, 182, 212, 0.5) 1px, transparent 1px),
+                            linear-gradient(90deg, rgba(6, 182, 212, 0.5) 1px, transparent 1px)`,
+          backgroundSize: '50px 50px'
+        }} />
+
+        {/* Glow Effects */}
+        <div className="fixed top-1/4 left-1/4 w-96 h-96 bg-cyan-500/5 rounded-full blur-[150px] pointer-events-none" />
+        <div className="fixed bottom-1/4 right-1/4 w-96 h-96 bg-cyan-400/5 rounded-full blur-[150px] pointer-events-none" />
+
+        <Card className="relative z-10 w-full max-w-md bg-[#0f172a]/80 backdrop-blur-xl border border-cyan-500/10 shadow-2xl shadow-cyan-500/5">
+          <CardHeader className="space-y-1">
+            <div className="flex items-center justify-center mb-4">
+              <SynthexLogo className="w-12 h-12" />
+            </div>
+            <div className="flex items-center justify-center mb-2">
+              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-cyan-500/20 to-cyan-600/10 border border-cyan-500/30 flex items-center justify-center">
+                <Mail className="w-8 h-8 text-cyan-400" />
+              </div>
+            </div>
+            <CardTitle className="text-2xl text-center text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-cyan-300">
+              Check your email
+            </CardTitle>
+            <CardDescription className="text-center text-gray-400 space-y-2">
+              <span className="block">
+                Your account has been created. We sent a verification email to:
+              </span>
+              <span className="block text-cyan-300 font-medium">
+                {verificationEmail}
+              </span>
+              <span className="block text-xs text-gray-500 mt-2">
+                Click the link in the email to verify your account.
+                Check your spam folder if you don&apos;t see it.
+              </span>
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {/* UNI-632: Allow user to continue to onboarding without waiting
+                for email verification (since email verification is not fully
+                wired yet). This prevents blocking the user flow. */}
+            <Button
+              onClick={() => router.push('/onboarding')}
+              className="w-full bg-gradient-to-r from-cyan-500 to-cyan-600 hover:from-cyan-400 hover:to-cyan-500 text-white font-medium shadow-lg shadow-cyan-500/25 transition-all hover:shadow-cyan-500/40"
+            >
+              Continue to onboarding
+              <ArrowRight className="ml-2 h-4 w-4" />
+            </Button>
+            <p className="text-center text-xs text-gray-500">
+              You can verify your email later from your account settings
+            </p>
+          </CardContent>
+          <CardFooter>
+            <p className="text-center text-sm text-gray-400 w-full">
+              Wrong email?{' '}
+              <button
+                type="button"
+                onClick={() => setVerificationEmail(null)}
+                className="text-cyan-400 hover:text-cyan-300 transition-colors"
+              >
+                Go back
+              </button>
+            </p>
+          </CardFooter>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#0a1628] px-4 py-8 relative overflow-hidden">

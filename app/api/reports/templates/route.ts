@@ -402,22 +402,17 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
-    // Verify ownership
-    const existing = await extendedPrisma.reportTemplate?.findUnique({
-      where: { id: templateId },
+    // IDOR FIX: Verify ownership using findFirst with both id AND userId
+    // Previously used findUnique(id) then checked userId separately, which
+    // returned 403 and leaked resource existence
+    const existing = await extendedPrisma.reportTemplate?.findFirst({
+      where: { id: templateId, userId },
     });
 
     if (!existing) {
       return NextResponse.json(
         { error: 'Template not found' },
         { status: 404 }
-      );
-    }
-
-    if (existing.userId !== userId) {
-      return NextResponse.json(
-        { error: 'Not authorized to update this template' },
-        { status: 403 }
       );
     }
 
@@ -482,22 +477,17 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    // Verify ownership
-    const existing = await extendedPrisma.reportTemplate?.findUnique({
-      where: { id: templateId },
+    // IDOR FIX: Verify ownership using findFirst with both id AND userId
+    // Previously used findUnique(id) then checked userId separately, which
+    // returned 403 and leaked resource existence
+    const existing = await extendedPrisma.reportTemplate?.findFirst({
+      where: { id: templateId, userId },
     });
 
     if (!existing) {
       return NextResponse.json(
         { error: 'Template not found' },
         { status: 404 }
-      );
-    }
-
-    if (existing.userId !== userId) {
-      return NextResponse.json(
-        { error: 'Not authorized to delete this template' },
-        { status: 403 }
       );
     }
 

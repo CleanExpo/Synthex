@@ -2,18 +2,16 @@
 
 /**
  * Dashboard Page
- * Main dashboard with tabs for overview, analytics, AI studio, team, and scheduler
+ * Main dashboard with overview, quick stats, and onboarding guidance for new users.
  */
 
 import { useEffect, useState, useCallback } from 'react';
-import Link from 'next/link';
 import { toast } from 'sonner';
-import { AlertTriangle, MessageSquare, RefreshCw, Rocket, Link2, Sparkles, Users } from '@/components/icons';
+import { AlertTriangle, MessageSquare, RefreshCw } from '@/components/icons';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ErrorBoundary } from '@/components/ui/error-boundary';
-import { glassStyles } from '@/components/ui/index';
 import { cn } from '@/lib/utils';
 
 import {
@@ -24,6 +22,7 @@ import {
   QuickStats,
   AnimatedCard,
   OverviewTab,
+  GetStartedChecklist,
 } from '@/components/dashboard';
 
 export default function DashboardPage() {
@@ -200,6 +199,12 @@ export default function DashboardPage() {
     );
   }
 
+  // Detect "new user" state: all key metrics are zero
+  const isNewUser = stats !== null
+    && stats.totalPosts === 0
+    && stats.followers === 0
+    && stats.scheduledPosts === 0;
+
   return (
     <ErrorBoundary
       fallbackTitle="Dashboard Error"
@@ -221,51 +226,18 @@ export default function DashboardPage() {
         <main className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-6">
           <QuickStats stats={stats} />
 
-          {/* New-user Get Started guide — shown when all stats are zero */}
-          {stats && stats.totalPosts === 0 && stats.followers === 0 && stats.scheduledPosts === 0 && (
+          {/* Get Started checklist for new users */}
+          {isNewUser && (
             <AnimatedCard delay={0.1}>
-              <Card className={cn(glassStyles.base, 'border-cyan-500/20')}>
-                <CardHeader className="pb-3">
-                  <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-full bg-cyan-500/20 flex items-center justify-center flex-shrink-0">
-                      <Rocket className="h-5 w-5 text-cyan-400" />
-                    </div>
-                    <div>
-                      <CardTitle className="text-base sm:text-lg">Welcome to Synthex!</CardTitle>
-                      <CardDescription className="text-xs sm:text-sm">Complete these steps to get the most out of the platform</CardDescription>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    <Link href="/dashboard/settings/connections">
-                      <div className="p-4 rounded-lg bg-white/5 hover:bg-cyan-500/10 border border-white/10 hover:border-cyan-500/30 transition-all cursor-pointer group">
-                        <Link2 className="h-5 w-5 text-cyan-400 mb-2 group-hover:scale-110 transition-transform" />
-                        <p className="text-sm font-medium text-white">Connect a platform</p>
-                        <p className="text-xs text-muted-foreground mt-1">Link your social accounts to start publishing</p>
-                      </div>
-                    </Link>
-                    <Link href="/dashboard/content">
-                      <div className="p-4 rounded-lg bg-white/5 hover:bg-cyan-500/10 border border-white/10 hover:border-cyan-500/30 transition-all cursor-pointer group">
-                        <Sparkles className="h-5 w-5 text-cyan-400 mb-2 group-hover:scale-110 transition-transform" />
-                        <p className="text-sm font-medium text-white">Create content</p>
-                        <p className="text-xs text-muted-foreground mt-1">Generate and publish your first content</p>
-                      </div>
-                    </Link>
-                    <Link href="/dashboard/settings/team">
-                      <div className="p-4 rounded-lg bg-white/5 hover:bg-cyan-500/10 border border-white/10 hover:border-cyan-500/30 transition-all cursor-pointer group">
-                        <Users className="h-5 w-5 text-cyan-400 mb-2 group-hover:scale-110 transition-transform" />
-                        <p className="text-sm font-medium text-white">Invite your team</p>
-                        <p className="text-xs text-muted-foreground mt-1">Collaborate with colleagues on campaigns</p>
-                      </div>
-                    </Link>
-                  </div>
-                </CardContent>
-              </Card>
+              <GetStartedChecklist
+                hasConnections={stats.followers > 0}
+                hasCampaigns={stats.scheduledPosts > 0}
+                hasContent={stats.totalPosts > 0}
+              />
             </AnimatedCard>
           )}
 
-          {/* Dashboard Overview — single clean view */}
+          {/* Dashboard Overview -- single clean view */}
           <div className="space-y-4 sm:space-y-6">
             <OverviewTab stats={stats} />
           </div>

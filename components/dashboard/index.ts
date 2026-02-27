@@ -31,5 +31,8 @@ export { DashboardError } from './error-fallback';
 export { PageHeader } from './page-header';
 export { DashboardEmptyState } from './empty-state';
 
+// Onboarding
+export { GetStartedChecklist } from './get-started-checklist';
+
 // Feature discoverability
 export { KeyboardHints } from './keyboard-hints';

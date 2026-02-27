@@ -6,6 +6,10 @@
  * @description Success page after completing onboarding with Synthex branding.
  * Sends expanded payload including website, description, brand colors, social handles,
  * and AI-generated data to the API.
+ *
+ * UNI-631: Shows inline error state on failure with automatic retry (exponential
+ * backoff, 2 retries) instead of silently redirecting to dashboard.
+ * Only redirects on confirmed success (200 response).
  */
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
@@ -17,7 +21,7 @@ import { Button } from '@/components/ui/button';
 import { useOnboarding, ProgressIndicator } from '@/components/onboarding';
 
 // ============================================================================
-// DATA
+// CONSTANTS
 // ============================================================================
 
 const STEPS = [
@@ -30,6 +34,24 @@ const STEPS = [
   { id: 7, name: 'Complete' },
 ];
 
+/** Maximum number of automatic retry attempts before showing error to user */
+const MAX_AUTO_RETRIES = 2;
+
+/** Base delay in ms for exponential backoff (doubles each retry) */
+const BASE_RETRY_DELAY_MS = 1000;
+
+// ============================================================================
+// HELPERS
+// ============================================================================
+
+/**
+ * Wait for a given number of milliseconds.
+ * Returns a promise that resolves after the delay.
+ */
+function delay(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 // ============================================================================
 // COMPONENT
 // ============================================================================
@@ -40,62 +62,114 @@ export default function CompletePage() {
   const [saving, setSaving] = useState(true);
   const [saved, setSaved] = useState(false);
   const [saveError, setSaveError] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
 
   // Keep a ref to the latest onboarding data so doSave stays stable (no dep on data)
   const dataRef = useRef(data);
   dataRef.current = data;
 
-  const doSave = useCallback(async () => {
+  // Track whether the component is still mounted to avoid state updates after unmount
+  const mountedRef = useRef(true);
+  useEffect(() => {
+    return () => { mountedRef.current = false; };
+  }, []);
+
+  /**
+   * UNI-631: Save onboarding data with automatic retry and exponential backoff.
+   *
+   * On initial call (isManualRetry = false), the function will automatically
+   * retry up to MAX_AUTO_RETRIES times with exponential backoff before
+   * showing the error state. Manual retries (from the "Try Again" button)
+   * also get the full retry allowance.
+   */
+  const doSave = useCallback(async (isManualRetry = false) => {
+    if (!mountedRef.current) return;
+
     setSaving(true);
     setSaveError(false);
+    if (isManualRetry) {
+      setRetryCount(0);
+    }
+
     const d = dataRef.current;
+    let attempt = 0;
+    const maxAttempts = MAX_AUTO_RETRIES + 1; // initial + retries
 
-    try {
-      const res = await fetch('/api/onboarding', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({
-          organizationName: d.organizationName || d.businessName,
-          website: d.websiteUrl || '',
-          industry: d.industry,
-          teamSize: d.teamSize,
-          description: d.description,
-          brandColors: d.brandColors,
-          socialHandles: d.socialHandles,
-          aiGeneratedData: d.aiAnalysis || undefined,
-          connectedPlatforms: d.connectedPlatforms,
-          personaName: d.personaName,
-          personaTone: d.personaTone,
-          personaTopics: d.personaTopics,
-          skipPersona: d.skipPersona,
-        }),
-      });
-
-      if (!res.ok) {
-        console.error('[Onboarding] Save failed with status:', res.status);
-        setSaveError(true);
-        setSaving(false);
-        return;
-      }
-
-      setSaving(false);
-      setSaved(true);
-
-      // Trigger confetti (dynamically imported)
+    while (attempt < maxAttempts) {
       try {
-        const confetti = (await import('canvas-confetti')).default;
-        confetti({
-          particleCount: 100,
-          spread: 70,
-          origin: { y: 0.6 },
-          colors: ['#06b6d4', '#22d3ee', '#0891b2', '#67e8f9'],
+        const res = await fetch('/api/onboarding', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({
+            organizationName: d.organizationName || d.businessName,
+            website: d.websiteUrl || '',
+            industry: d.industry,
+            teamSize: d.teamSize,
+            description: d.description,
+            brandColors: d.brandColors,
+            socialHandles: d.socialHandles,
+            aiGeneratedData: d.aiAnalysis || undefined,
+            connectedPlatforms: d.connectedPlatforms,
+            personaName: d.personaName,
+            personaTone: d.personaTone,
+            personaTopics: d.personaTopics,
+            skipPersona: d.skipPersona,
+          }),
         });
-      } catch {
-        // Confetti not available, continue without it
+
+        if (res.ok) {
+          // Success — confirmed 200 response
+          if (!mountedRef.current) return;
+          setSaving(false);
+          setSaved(true);
+
+          // Trigger confetti (dynamically imported)
+          try {
+            const confetti = (await import('canvas-confetti')).default;
+            confetti({
+              particleCount: 100,
+              spread: 70,
+              origin: { y: 0.6 },
+              colors: ['#06b6d4', '#22d3ee', '#0891b2', '#67e8f9'],
+            });
+          } catch {
+            // Confetti not available, continue without it
+          }
+          return; // Exit — save succeeded
+        }
+
+        // Non-ok response — log and potentially retry
+        console.error('[Onboarding] Save failed with status:', res.status);
+        attempt++;
+        if (mountedRef.current) {
+          setRetryCount(attempt);
+        }
+
+        if (attempt < maxAttempts) {
+          // Exponential backoff: 1s, 2s
+          const backoffMs = BASE_RETRY_DELAY_MS * Math.pow(2, attempt - 1);
+          await delay(backoffMs);
+          if (!mountedRef.current) return;
+        }
+      } catch (error) {
+        // Network error — log and potentially retry
+        console.error('[Onboarding] Failed to save onboarding data:', error);
+        attempt++;
+        if (mountedRef.current) {
+          setRetryCount(attempt);
+        }
+
+        if (attempt < maxAttempts) {
+          const backoffMs = BASE_RETRY_DELAY_MS * Math.pow(2, attempt - 1);
+          await delay(backoffMs);
+          if (!mountedRef.current) return;
+        }
       }
-    } catch (error) {
-      console.error('[Onboarding] Failed to save onboarding data:', error);
+    }
+
+    // All attempts exhausted — show error state (do NOT redirect)
+    if (mountedRef.current) {
       setSaveError(true);
       setSaving(false);
     }
@@ -137,7 +211,9 @@ export default function CompletePage() {
             <div>
               <h1 className="text-2xl font-bold text-white">Setting up your workspace...</h1>
               <p className="text-gray-400 mt-2">
-                This will only take a moment
+                {retryCount > 0
+                  ? `Retrying... (attempt ${retryCount + 1} of ${MAX_AUTO_RETRIES + 1})`
+                  : 'This will only take a moment'}
               </p>
             </div>
           </>
@@ -154,7 +230,7 @@ export default function CompletePage() {
             </div>
             <div className="flex flex-col sm:flex-row gap-3 justify-center mt-4">
               <Button
-                onClick={doSave}
+                onClick={() => doSave(true)}
                 className="bg-gradient-to-r from-cyan-500 to-cyan-600 hover:from-cyan-400 hover:to-cyan-500 text-white shadow-lg shadow-cyan-500/25"
               >
                 <RefreshCw className="w-4 h-4 mr-2" />

@@ -44,7 +44,7 @@ interface ScheduledReportRecord {
 /** Extended Prisma client with scheduled report model */
 interface ExtendedPrismaClient {
   scheduledReport?: {
-    findUnique: (args: { where: { id: string } }) => Promise<ScheduledReportRecord | null>;
+    findFirst: (args: { where: Record<string, unknown> }) => Promise<ScheduledReportRecord | null>;
     findMany: (args: { where: Record<string, unknown>; orderBy?: Record<string, string>; take?: number; skip?: number; include?: Record<string, unknown> }) => Promise<ScheduledReportRecord[]>;
     create: (args: { data: Record<string, unknown> }) => Promise<ScheduledReportRecord>;
     update: (args: { where: { id: string }; data: Record<string, unknown> }) => Promise<ScheduledReportRecord>;
@@ -366,22 +366,17 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
-    // Verify ownership
-    const existing = await extendedPrisma.scheduledReport?.findUnique({
-      where: { id: scheduleId },
+    // IDOR FIX: Verify ownership using findFirst with both id AND userId
+    // Previously used findUnique(id) then checked userId separately, which
+    // returned 403 and leaked resource existence
+    const existing = await extendedPrisma.scheduledReport?.findFirst({
+      where: { id: scheduleId, userId },
     });
 
     if (!existing) {
       return NextResponse.json(
         { error: 'Scheduled report not found' },
         { status: 404 }
-      );
-    }
-
-    if (existing.userId !== userId) {
-      return NextResponse.json(
-        { error: 'Not authorized to update this schedule' },
-        { status: 403 }
       );
     }
 
@@ -450,22 +445,17 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    // Verify ownership
-    const existing = await extendedPrisma.scheduledReport?.findUnique({
-      where: { id: scheduleId },
+    // IDOR FIX: Verify ownership using findFirst with both id AND userId
+    // Previously used findUnique(id) then checked userId separately, which
+    // returned 403 and leaked resource existence
+    const existing = await extendedPrisma.scheduledReport?.findFirst({
+      where: { id: scheduleId, userId },
     });
 
     if (!existing) {
       return NextResponse.json(
         { error: 'Scheduled report not found' },
         { status: 404 }
-      );
-    }
-
-    if (existing.userId !== userId) {
-      return NextResponse.json(
-        { error: 'Not authorized to delete this schedule' },
-        { status: 403 }
       );
     }
 

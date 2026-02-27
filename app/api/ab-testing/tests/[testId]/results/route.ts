@@ -224,6 +224,21 @@ export async function POST(
 
     const { variantId, ...metrics } = validation.data;
 
+    // IDOR FIX: Verify the variantId belongs to the owned test before updating.
+    // Previously the variant was updated by ID alone without checking it belongs
+    // to this test, allowing an attacker to manipulate another user's test variants
+    // by sending a variantId from a different test.
+    const variantBelongsToTest = test.variants.some(
+      (v: { id: string }) => v.id === variantId
+    );
+
+    if (!variantBelongsToTest) {
+      return NextResponse.json(
+        { error: 'Variant not found' },
+        { status: 404 }
+      );
+    }
+
     // Update variant metrics
     const variant = await prisma.aBTestVariant.update({
       where: { id: variantId },

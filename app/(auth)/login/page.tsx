@@ -11,6 +11,17 @@ import { Mail, Lock, Chrome, Loader2, AlertCircle, Eye, EyeOff, Clock } from '@/
 import { SynthexLogo } from '@/components/marketing/MarketingLayout';
 import { toast } from 'sonner';
 
+/** Map provider keys to human-readable display names */
+const PROVIDER_DISPLAY_NAMES: Record<string, string> = {
+  email: 'Email/Password',
+  google: 'Google',
+  github: 'GitHub',
+};
+
+function getProviderDisplayName(provider: string): string {
+  return PROVIDER_DISPLAY_NAMES[provider] || provider;
+}
+
 export default function LoginPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -141,10 +152,15 @@ export default function LoginPage() {
       }
 
       if (!response.ok || !data.success) {
+        // UNI-630: When an OAuth provider hint is returned, show the inline
+        // banner instead of a generic/misleading toast. The banner provides
+        // a direct "Sign in with <Provider>" action.
         if (data.existingProvider) {
           setOauthHint(data.existingProvider as string);
+          // No toast — the inline OAuth hint banner is more helpful
+        } else {
+          toast.error(data.error || 'Invalid email or password');
         }
-        toast.error(data.error || 'Invalid email or password');
         return;
       }
 
@@ -203,15 +219,6 @@ export default function LoginPage() {
     setAccountExistsError(null);
     // Clear URL params
     router.replace('/login');
-  };
-
-  const getProviderDisplayName = (provider: string) => {
-    const names: Record<string, string> = {
-      email: 'Email/Password',
-      google: 'Google',
-      github: 'GitHub',
-    };
-    return names[provider] || provider;
   };
 
   const isSubmitDisabled = isLoading || rateLimitSeconds > 0;
@@ -367,21 +374,48 @@ export default function LoginPage() {
             </Button>
           </form>
 
-          {oauthHint === 'google' && (
+          {/* UNI-630: Provider-specific OAuth hint banner
+              Shown when a user who signed up with an OAuth provider (e.g. Google)
+              attempts to log in with email/password. Replaces the misleading
+              "Invalid email or password" toast with actionable guidance. */}
+          {oauthHint && (
             <div className="p-3 bg-blue-500/10 border border-blue-500/30 rounded-lg">
               <div className="flex items-start gap-2">
-                <AlertCircle className="w-4 h-4 text-blue-400 flex-shrink-0 mt-0.5" />
-                <div>
-                  <p className="text-sm text-blue-200">
-                    This email is registered with Google.
+                <AlertCircle className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" />
+                <div className="flex-1">
+                  <p className="text-sm text-blue-200 font-medium">
+                    This email is linked to a {getProviderDisplayName(oauthHint)} account
                   </p>
-                  <button
-                    type="button"
-                    onClick={handleGoogleLogin}
-                    className="text-xs text-cyan-400 hover:text-cyan-300 mt-1 underline"
-                  >
-                    Sign in with Google instead →
-                  </button>
+                  <p className="text-xs text-blue-200/70 mt-1">
+                    You signed up with {getProviderDisplayName(oauthHint)} instead of a password.
+                    Use the button below to sign in.
+                  </p>
+                  {oauthHint === 'google' && (
+                    <Button
+                      type="button"
+                      size="sm"
+                      onClick={handleGoogleLogin}
+                      disabled={oauthLoading}
+                      className="mt-2 bg-blue-500/20 border border-blue-500/30 text-blue-200 hover:bg-blue-500/30 hover:text-white text-xs"
+                    >
+                      {oauthLoading ? (
+                        <>
+                          <Loader2 className="mr-1.5 h-3 w-3 animate-spin" />
+                          Connecting...
+                        </>
+                      ) : (
+                        <>
+                          <Chrome className="mr-1.5 h-3 w-3" />
+                          Sign in with Google instead
+                        </>
+                      )}
+                    </Button>
+                  )}
+                  {oauthHint !== 'google' && (
+                    <p className="text-xs text-blue-300 mt-2">
+                      Please use the {getProviderDisplayName(oauthHint)} sign-in option.
+                    </p>
+                  )}
                 </div>
               </div>
             </div>
