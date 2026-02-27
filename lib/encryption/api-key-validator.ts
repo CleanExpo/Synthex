@@ -74,21 +74,15 @@ async function validateAnthropicKey(key: string): Promise<ValidationResult> {
         'content-type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'claude-3-opus-20240229',
-        max_tokens: 10,
-        messages: [{ role: 'user', content: 'test' }],
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1,
+        messages: [{ role: 'user', content: 'hi' }],
       }),
     });
 
-    if (response.status === 200 || response.status === 400) {
-      // 200 = success, 400 = might be rate limited or bad request (but key is valid)
-      // We're just testing that the key is accepted
-      return {
-        isValid: true,
-        provider: 'anthropic',
-      };
-    }
-
+    // Any non-401 response means the key was accepted by Anthropic's auth layer.
+    // 200 = success, 400 = bad request, 404 = model not found,
+    // 429 = rate limited, 529 = overloaded — all confirm a valid key.
     if (response.status === 401) {
       return {
         isValid: false,
@@ -97,10 +91,17 @@ async function validateAnthropicKey(key: string): Promise<ValidationResult> {
       };
     }
 
+    if (response.status === 403) {
+      return {
+        isValid: false,
+        provider: 'anthropic',
+        error: 'API key lacks required permissions',
+      };
+    }
+
     return {
-      isValid: false,
+      isValid: true,
       provider: 'anthropic',
-      error: `Anthropic API returned status ${response.status}`,
     };
   } catch (error) {
     return {
