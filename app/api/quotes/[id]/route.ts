@@ -81,11 +81,11 @@ export async function GET(
           { status: 401 }
         );
       }
-      // Verify ownership for private quotes
+      // Verify ownership for private quotes — return 404 to avoid leaking existence
       if (quote.userId && quote.userId !== security.context?.userId) {
         return NextResponse.json(
-          { success: false, error: 'Not authorized to view this quote' },
-          { status: 403 }
+          { success: false, error: 'Quote not found' },
+          { status: 404 }
         );
       }
     }
@@ -160,11 +160,11 @@ export async function PUT(
       );
     }
 
-    // IDOR Fix: Verify ownership - user can only update their own quotes
+    // IDOR Fix: Verify ownership — return 404 to avoid leaking resource existence (UNI-558)
     if (existingQuote.userId && existingQuote.userId !== security.context?.userId) {
       return NextResponse.json(
-        { success: false, error: 'Not authorized to update this quote' },
-        { status: 403 }
+        { success: false, error: 'Quote not found' },
+        { status: 404 }
       );
     }
 
@@ -287,11 +287,11 @@ export async function DELETE(
       );
     }
 
-    // IDOR Fix: Verify ownership - user can only delete their own quotes
+    // IDOR Fix: Verify ownership — return 404 to avoid leaking resource existence (UNI-558)
     if (existingQuote.userId && existingQuote.userId !== security.context?.userId) {
       return NextResponse.json(
-        { success: false, error: 'Not authorized to delete this quote' },
-        { status: 403 }
+        { success: false, error: 'Quote not found' },
+        { status: 404 }
       );
     }
 
@@ -351,6 +351,15 @@ export async function PATCH(
     });
 
     if (!existingQuote) {
+      return NextResponse.json(
+        { success: false, error: 'Quote not found' },
+        { status: 404 }
+      );
+    }
+
+    // IDOR Fix (UNI-558): Verify ownership — only the quote owner can update engagement metrics
+    if (existingQuote.userId && existingQuote.userId !== security.context?.userId) {
+      // Return 404 instead of 403 to avoid leaking resource existence
       return NextResponse.json(
         { success: false, error: 'Quote not found' },
         { status: 404 }

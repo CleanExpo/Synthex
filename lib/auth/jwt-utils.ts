@@ -35,6 +35,28 @@ export interface AuthResult {
 }
 
 // =============================================================================
+// Owner Access
+// =============================================================================
+
+/**
+ * Owner email(s) that get full platform access without Stripe or onboarding gates.
+ * These users receive `onboardingComplete: true` and `apiKeyConfigured: true` in
+ * their JWT regardless of DB state — and the DB is auto-updated on login.
+ */
+const OWNER_EMAILS: ReadonlySet<string> = new Set([
+  'phill.mcgurk@gmail.com',
+]);
+
+/**
+ * Check if an email belongs to a platform owner.
+ * Owners bypass onboarding and API key requirements.
+ */
+export function isOwnerEmail(email: string | null | undefined): boolean {
+  if (!email) return false;
+  return OWNER_EMAILS.has(email.toLowerCase());
+}
+
+// =============================================================================
 // Secret Management
 // =============================================================================
 

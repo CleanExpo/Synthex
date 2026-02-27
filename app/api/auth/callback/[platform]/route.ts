@@ -20,7 +20,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import { generateToken } from '@/lib/auth/jwt-utils';
+import { generateToken, isOwnerEmail } from '@/lib/auth/jwt-utils';
 import { encryptField } from '@/lib/security/field-encryption';
 
 // =============================================================================
@@ -516,17 +516,30 @@ export async function GET(
       // Continue - user auth succeeded, just connection storage failed
     }
 
+    // Owner bypass: force full access for platform owner(s)
+    const ownerBypass = isOwnerEmail(user.email);
+    const onboardingComplete = ownerBypass ? true : user.onboardingComplete;
+    const apiKeyConfigured = ownerBypass ? true : user.apiKeyConfigured;
+
+    // Auto-fix DB flags for owner on login (fire-and-forget)
+    if (ownerBypass && (!user.onboardingComplete || !user.apiKeyConfigured)) {
+      prisma.user.update({
+        where: { id: user.id },
+        data: { onboardingComplete: true, apiKeyConfigured: true },
+      }).catch(() => { /* non-fatal */ });
+    }
+
     // Generate JWT token (include onboarding flags for middleware)
     const token = generateToken({
       userId: user.id,
       email: user.email,
       name: user.name ?? undefined,
-      onboardingComplete: user.onboardingComplete,
-      apiKeyConfigured: user.apiKeyConfigured,
+      onboardingComplete,
+      apiKeyConfigured,
     });
 
     // Redirect based on onboarding status: new/incomplete → /onboarding, complete → /dashboard
-    const redirectPath = user.onboardingComplete ? '/dashboard' : '/onboarding';
+    const redirectPath = onboardingComplete ? '/dashboard' : '/onboarding';
     const response = NextResponse.redirect(new URL(redirectPath, request.url));
 
     // Set secure cookie with token

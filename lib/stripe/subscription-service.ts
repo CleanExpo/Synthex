@@ -15,6 +15,7 @@
 import { prisma } from '@/lib/prisma';
 import { stripe, PRODUCTS, getProductByPriceId } from './config';
 import { logger } from '@/lib/logger';
+import { isOwnerEmail } from '@/lib/auth/jwt-utils';
 import Stripe from 'stripe';
 
 // ============================================================================
@@ -67,19 +68,37 @@ export class SubscriptionService {
    * Get or create subscription for a user
    */
   async getOrCreateSubscription(userId: string): Promise<SubscriptionInfo> {
+    // Owner bypass: platform owners get unlimited (custom) plan
+    const user = await prisma.user.findUnique({ where: { id: userId }, select: { email: true } });
+    const ownerBypass = isOwnerEmail(user?.email);
+
     let subscription = await prisma.subscription.findUnique({
       where: { userId },
     });
 
     if (!subscription) {
+      const plan = ownerBypass ? 'custom' : 'free';
+      const limits = PLAN_LIMITS[plan];
       subscription = await prisma.subscription.create({
         data: {
           userId,
-          plan: 'free',
+          plan,
           status: 'active',
-          maxSocialAccounts: PLAN_LIMITS.free.maxSocialAccounts,
-          maxAiPosts: PLAN_LIMITS.free.maxAiPosts,
-          maxPersonas: PLAN_LIMITS.free.maxPersonas,
+          maxSocialAccounts: limits.maxSocialAccounts,
+          maxAiPosts: limits.maxAiPosts,
+          maxPersonas: limits.maxPersonas,
+        },
+      });
+    } else if (ownerBypass && subscription.plan === 'free') {
+      // Auto-upgrade existing free subscription for owner
+      const limits = PLAN_LIMITS.custom;
+      subscription = await prisma.subscription.update({
+        where: { userId },
+        data: {
+          plan: 'custom',
+          maxSocialAccounts: limits.maxSocialAccounts,
+          maxAiPosts: limits.maxAiPosts,
+          maxPersonas: limits.maxPersonas,
         },
       });
     }

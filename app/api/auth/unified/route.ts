@@ -3,7 +3,7 @@ import { prisma } from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
 import { z } from 'zod';
 import { rateLimiters } from '@/lib/rate-limit';
-import { generateToken, getUserIdFromRequestOrCookies, unauthorizedResponse } from '@/lib/auth/jwt-utils';
+import { generateToken, getUserIdFromRequestOrCookies, unauthorizedResponse, isOwnerEmail } from '@/lib/auth/jwt-utils';
 
 // Validation schemas
 const loginSchema = z.object({
@@ -103,19 +103,32 @@ async function handleLogin(body: z.infer<typeof loginSchema>) {
       );
     }
 
+    // Owner bypass: force full access for platform owner(s)
+    const ownerBypass = isOwnerEmail(user.email);
+    const onboardingComplete = ownerBypass ? true : user.onboardingComplete;
+    const apiKeyConfigured = ownerBypass ? true : user.apiKeyConfigured;
+
+    // Auto-fix DB flags for owner on login (fire-and-forget)
+    if (ownerBypass && (!user.onboardingComplete || !user.apiKeyConfigured)) {
+      prisma.user.update({
+        where: { id: user.id },
+        data: { onboardingComplete: true, apiKeyConfigured: true },
+      }).catch(() => { /* non-fatal */ });
+    }
+
     // Generate token (include onboarding flags for middleware)
     const token = generateToken({
       userId: user.id,
       email: user.email,
-      onboardingComplete: user.onboardingComplete,
-      apiKeyConfigured: user.apiKeyConfigured,
+      onboardingComplete,
+      apiKeyConfigured,
     });
 
     // Return user data (without password)
     const { password: _, ...userData } = user;
-    
+
     return NextResponse.json({
-      user: userData,
+      user: { ...userData, onboardingComplete, apiKeyConfigured },
       token,
       message: 'Login successful',
     });
