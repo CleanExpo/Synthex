@@ -89,6 +89,34 @@ const PLATFORMS: Platform[] = [
     color: 'border-indigo-500/30 bg-indigo-500/5',
     dotColor: 'bg-indigo-400',
   },
+  {
+    id: 'youtube',
+    label: 'YouTube',
+    charLimit: 5000,
+    color: 'border-red-500/30 bg-red-500/5',
+    dotColor: 'bg-red-400',
+  },
+  {
+    id: 'pinterest',
+    label: 'Pinterest',
+    charLimit: 500,
+    color: 'border-red-600/30 bg-red-600/5',
+    dotColor: 'bg-red-500',
+  },
+  {
+    id: 'reddit',
+    label: 'Reddit',
+    charLimit: 40000,
+    color: 'border-orange-500/30 bg-orange-500/5',
+    dotColor: 'bg-orange-400',
+  },
+  {
+    id: 'threads',
+    label: 'Threads',
+    charLimit: 500,
+    color: 'border-gray-400/30 bg-gray-400/5',
+    dotColor: 'bg-gray-300',
+  },
 ] as const;
 
 const PLATFORM_MAP = new Map<string, Platform>(PLATFORMS.map((p) => [p.id, p]));

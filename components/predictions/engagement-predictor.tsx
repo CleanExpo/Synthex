@@ -25,6 +25,9 @@ const PLATFORMS = [
   { value: 'facebook', label: 'Facebook' },
   { value: 'tiktok', label: 'TikTok' },
   { value: 'youtube', label: 'YouTube' },
+  { value: 'pinterest', label: 'Pinterest' },
+  { value: 'reddit', label: 'Reddit' },
+  { value: 'threads', label: 'Threads' },
 ] as const;
 
 const CONTENT_TYPES = [

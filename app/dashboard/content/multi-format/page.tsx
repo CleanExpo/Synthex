@@ -42,11 +42,15 @@ type Tone = 'casual' | 'professional' | 'humorous' | 'educational';
 // ---------------------------------------------------------------------------
 
 const PLATFORMS: Platform[] = [
-  { id: 'twitter',   label: 'Twitter / X',  charLimit: 280,   color: 'border-sky-500/30 bg-sky-500/5',   dotColor: 'bg-sky-400' },
-  { id: 'linkedin',  label: 'LinkedIn',      charLimit: 3000,  color: 'border-blue-500/30 bg-blue-500/5',  dotColor: 'bg-blue-400' },
-  { id: 'instagram', label: 'Instagram',     charLimit: 2200,  color: 'border-pink-500/30 bg-pink-500/5',  dotColor: 'bg-pink-400' },
-  { id: 'tiktok',    label: 'TikTok',        charLimit: 2200,  color: 'border-rose-500/30 bg-rose-500/5',  dotColor: 'bg-rose-400' },
+  { id: 'twitter',   label: 'Twitter / X',  charLimit: 280,   color: 'border-sky-500/30 bg-sky-500/5',       dotColor: 'bg-sky-400' },
+  { id: 'linkedin',  label: 'LinkedIn',      charLimit: 3000,  color: 'border-blue-500/30 bg-blue-500/5',     dotColor: 'bg-blue-400' },
+  { id: 'instagram', label: 'Instagram',     charLimit: 2200,  color: 'border-pink-500/30 bg-pink-500/5',     dotColor: 'bg-pink-400' },
+  { id: 'tiktok',    label: 'TikTok',        charLimit: 2200,  color: 'border-rose-500/30 bg-rose-500/5',     dotColor: 'bg-rose-400' },
   { id: 'facebook',  label: 'Facebook',      charLimit: 63206, color: 'border-indigo-500/30 bg-indigo-500/5', dotColor: 'bg-indigo-400' },
+  { id: 'youtube',   label: 'YouTube',       charLimit: 5000,  color: 'border-red-500/30 bg-red-500/5',       dotColor: 'bg-red-400' },
+  { id: 'pinterest', label: 'Pinterest',     charLimit: 500,   color: 'border-red-600/30 bg-red-600/5',       dotColor: 'bg-red-500' },
+  { id: 'reddit',    label: 'Reddit',        charLimit: 40000, color: 'border-orange-500/30 bg-orange-500/5', dotColor: 'bg-orange-400' },
+  { id: 'threads',   label: 'Threads',       charLimit: 500,   color: 'border-gray-400/30 bg-gray-400/5',     dotColor: 'bg-gray-300' },
 ] as const;
 
 const TONES: { value: Tone; label: string }[] = [

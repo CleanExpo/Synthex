@@ -20,7 +20,7 @@ interface DeliverableFormProps {
   isLoading?: boolean;
 }
 
-const PLATFORMS = ['YouTube', 'Instagram', 'TikTok', 'Twitter', 'Facebook', 'LinkedIn', 'Pinterest', 'Other'];
+const PLATFORMS = ['YouTube', 'Instagram', 'TikTok', 'Twitter', 'Facebook', 'LinkedIn', 'Pinterest', 'Reddit', 'Threads', 'Other'];
 
 function formatDateForInput(date: Date | string | null): string {
   if (!date) return '';

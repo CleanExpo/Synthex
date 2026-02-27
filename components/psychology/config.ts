@@ -20,6 +20,10 @@ export const PLATFORMS: Platform[] = [
   { id: 'instagram', name: 'Instagram', maxLength: 2200 },
   { id: 'facebook', name: 'Facebook', maxLength: 63206 },
   { id: 'tiktok', name: 'TikTok', maxLength: 2200 },
+  { id: 'youtube', name: 'YouTube', maxLength: 5000 },
+  { id: 'pinterest', name: 'Pinterest', maxLength: 500 },
+  { id: 'reddit', name: 'Reddit', maxLength: 40000 },
+  { id: 'threads', name: 'Threads', maxLength: 500 },
   { id: 'email', name: 'Email', maxLength: 10000 },
   { id: 'web', name: 'Website', maxLength: 10000 },
 ];

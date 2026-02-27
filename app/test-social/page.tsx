@@ -8,10 +8,10 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { 
-  Loader2, 
-  Send, 
-  CheckCircle, 
+import {
+  Loader2,
+  Send,
+  CheckCircle,
   XCircle,
   Twitter,
   Linkedin,
@@ -20,7 +20,9 @@ import {
   Video,
   Hash,
   AtSign,
-  Calendar
+  Calendar,
+  Share2,
+  MessageSquare,
 } from '@/components/icons';
 import { toast } from 'sonner';
 
@@ -29,7 +31,11 @@ const PLATFORMS = [
   { id: 'linkedin', name: 'LinkedIn', icon: Linkedin, color: 'bg-blue-700', maxLength: 3000 },
   { id: 'instagram', name: 'Instagram', icon: Instagram, color: 'bg-pink-500', maxLength: 2200 },
   { id: 'facebook', name: 'Facebook', icon: Facebook, color: 'bg-blue-600', maxLength: 63206 },
-  { id: 'tiktok', name: 'TikTok', icon: Video, color: 'bg-black', maxLength: 2200 }
+  { id: 'tiktok', name: 'TikTok', icon: Video, color: 'bg-black', maxLength: 2200 },
+  { id: 'youtube', name: 'YouTube', icon: Video, color: 'bg-red-600', maxLength: 5000 },
+  { id: 'pinterest', name: 'Pinterest', icon: Share2, color: 'bg-red-700', maxLength: 500 },
+  { id: 'reddit', name: 'Reddit', icon: MessageSquare, color: 'bg-orange-600', maxLength: 40000 },
+  { id: 'threads', name: 'Threads', icon: AtSign, color: 'bg-gray-800', maxLength: 500 },
 ];
 
 export default function TestSocial() {
