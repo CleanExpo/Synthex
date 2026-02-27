@@ -1,20 +1,24 @@
 ﻿'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
-import { IntegrationModal } from '@/components/IntegrationModal';
 import { ThirdPartyCard, ConnectDialog } from '@/components/integrations';
 import { useThirdPartyIntegrations, type ThirdPartyProvider } from '@/hooks/use-third-party-integrations';
 import { INTEGRATION_REGISTRY } from '@/lib/integrations/types';
+import { integrationsAPI } from '@/lib/api/settings';
 import {
   Twitter,
   Linkedin,
   Instagram,
   Facebook,
   Video,
+  Youtube,
+  Pinterest,
+  Reddit,
+  Threads,
   Link2,
   Unlink,
   ExternalLink,
@@ -47,11 +51,94 @@ const THIRD_PARTY_ICONS: Record<ThirdPartyProvider, React.ComponentType<{ classN
   zapier: Zap,
 };
 
+// All 9 supported social platforms
+const DEFAULT_INTEGRATIONS: Integration[] = [
+  {
+    id: 'twitter',
+    name: 'Twitter / X',
+    description: 'Connect your Twitter account to post and analyze tweets',
+    icon: Twitter,
+    connected: false,
+    color: 'text-blue-400',
+    permissions: ['Post tweets', 'Read analytics', 'Schedule posts'],
+  },
+  {
+    id: 'linkedin',
+    name: 'LinkedIn',
+    description: 'Share professional content and track engagement',
+    icon: Linkedin,
+    connected: false,
+    color: 'text-blue-600',
+    permissions: ['Post updates', 'Read analytics', 'Manage pages'],
+  },
+  {
+    id: 'instagram',
+    name: 'Instagram',
+    description: 'Post photos, stories, and reels to Instagram',
+    icon: Instagram,
+    connected: false,
+    color: 'text-pink-500',
+    permissions: ['Post content', 'View insights', 'Manage comments'],
+  },
+  {
+    id: 'facebook',
+    name: 'Facebook',
+    description: 'Manage Facebook pages and track performance',
+    icon: Facebook,
+    connected: false,
+    color: 'text-blue-500',
+    permissions: ['Manage pages', 'Post content', 'Read insights'],
+  },
+  {
+    id: 'tiktok',
+    name: 'TikTok',
+    description: 'Create and schedule TikTok videos',
+    icon: Video,
+    connected: false,
+    color: 'text-gray-900',
+    permissions: ['Post videos', 'View analytics', 'Manage account'],
+  },
+  {
+    id: 'youtube',
+    name: 'YouTube',
+    description: 'Upload and manage YouTube videos and analytics',
+    icon: Youtube,
+    connected: false,
+    color: 'text-red-500',
+    permissions: ['Upload videos', 'Read analytics', 'Manage playlists'],
+  },
+  {
+    id: 'pinterest',
+    name: 'Pinterest',
+    description: 'Create pins, manage boards, and track engagement',
+    icon: Pinterest,
+    connected: false,
+    color: 'text-red-600',
+    permissions: ['Create pins', 'Read analytics', 'Manage boards'],
+  },
+  {
+    id: 'reddit',
+    name: 'Reddit',
+    description: 'Post content and engage with Reddit communities',
+    icon: Reddit,
+    connected: false,
+    color: 'text-orange-500',
+    permissions: ['Submit posts', 'Read content', 'Manage profile'],
+  },
+  {
+    id: 'threads',
+    name: 'Threads',
+    description: 'Share and engage on Meta Threads',
+    icon: Threads,
+    connected: false,
+    color: 'text-gray-300',
+    permissions: ['Post content', 'Read replies', 'View profile'],
+  },
+];
+
 export default function IntegrationsPage() {
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [connectingId, setConnectingId] = useState<string | null>(null);
-  const [modalOpen, setModalOpen] = useState(false);
-  const [selectedIntegration, setSelectedIntegration] = useState<Integration | null>(null);
 
   // Third-party integrations
   const {
@@ -65,93 +152,43 @@ export default function IntegrationsPage() {
   const [selectedProvider, setSelectedProvider] = useState<ThirdPartyProvider | null>(null);
   const [thirdPartyActionLoading, setThirdPartyActionLoading] = useState<ThirdPartyProvider | null>(null);
 
-  const [integrations, setIntegrations] = useState<Integration[]>([
-    {
-      id: 'twitter',
-      name: 'Twitter / X',
-      description: 'Connect your Twitter account to post and analyze tweets',
-      icon: Twitter,
-      connected: false,
-      color: 'text-blue-400',
-      permissions: ['Post tweets', 'Read analytics', 'Schedule posts']
-    },
-    {
-      id: 'linkedin',
-      name: 'LinkedIn',
-      description: 'Share professional content and track engagement',
-      icon: Linkedin,
-      connected: false,
-      color: 'text-blue-600',
-      permissions: ['Post updates', 'Read analytics', 'Manage pages']
-    },
-    {
-      id: 'instagram',
-      name: 'Instagram',
-      description: 'Post photos, stories, and reels to Instagram',
-      icon: Instagram,
-      connected: false,
-      color: 'text-pink-500',
-      permissions: ['Post content', 'View insights', 'Manage comments']
-    },
-    {
-      id: 'facebook',
-      name: 'Facebook',
-      description: 'Manage Facebook pages and track performance',
-      icon: Facebook,
-      connected: false,
-      color: 'text-blue-500',
-      permissions: ['Manage pages', 'Post content', 'Read insights']
-    },
-    {
-      id: 'tiktok',
-      name: 'TikTok',
-      description: 'Create and schedule TikTok videos',
-      icon: Video,
-      connected: false,
-      color: 'text-gray-900',
-      permissions: ['Post videos', 'View analytics', 'Manage account']
-    }
-  ]);
+  const [integrations, setIntegrations] = useState<Integration[]>(DEFAULT_INTEGRATIONS);
 
-  const handleConnect = async (id: string) => {
-    const integration = integrations.find(i => i.id === id);
-    if (integration) {
-      setSelectedIntegration(integration);
-      setModalOpen(true);
-    }
-  };
-
-  const handleModalConnect = async (credentials?: Record<string, string>) => {
-    if (!selectedIntegration) return;
-    
-    setConnectingId(selectedIntegration.id);
-    
+  // Load actual connection status on mount
+  const loadConnectionStatus = useCallback(async () => {
     try {
-      // Call API to save credentials
-      const response = await fetch(`/api/integrations/${selectedIntegration.id}/connect`, {
-        method: 'POST',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(credentials || {})
-      });
+      const data = await integrationsAPI.getIntegrations();
+      const connected = data.integrations || {};
+      const details = data.details || {};
 
-      if (!response.ok) throw new Error('Connection failed');
-      
-      setIntegrations(prev => prev.map(integration => 
-        integration.id === selectedIntegration.id 
-          ? { 
-              ...integration, 
-              connected: true,
-              accountName: `@${integration.name.toLowerCase().replace(/\s+/g, '')}_user`
-            }
-          : integration
-      ));
-      
-      toast.success(`${selectedIntegration.name} connected successfully!`);
-      setModalOpen(false);
+      setIntegrations(prev =>
+        prev.map(integration => ({
+          ...integration,
+          connected: !!connected[integration.id],
+          accountName: details[integration.id]?.profileName || undefined,
+        }))
+      );
+    } catch {
+      // Silently fail — show all as disconnected
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadConnectionStatus();
+  }, [loadConnectionStatus]);
+
+  // OAuth popup connect flow (proper OAuth via /api/auth/oauth/[platform])
+  const handleConnect = async (id: string) => {
+    setConnectingId(id);
+    try {
+      await integrationsAPI.connectPlatform(id);
+      // Reload connection status from API after successful connect
+      await loadConnectionStatus();
+      toast.success(`Connected to ${integrations.find(i => i.id === id)?.name || id} successfully!`);
     } catch (error) {
-      toast.error('Failed to connect. Please try again.');
-      throw error;
+      toast.error(error instanceof Error ? error.message : 'Failed to connect. Please try again.');
     } finally {
       setConnectingId(null);
     }
@@ -159,19 +196,18 @@ export default function IntegrationsPage() {
 
   const handleDisconnect = async (id: string) => {
     setConnectingId(id);
-    
     try {
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      setIntegrations(prev => prev.map(integration => 
-        integration.id === id 
-          ? { ...integration, connected: false, accountName: undefined }
-          : integration
-      ));
-      
+      await integrationsAPI.disconnectPlatform(id);
+      setIntegrations(prev =>
+        prev.map(integration =>
+          integration.id === id
+            ? { ...integration, connected: false, accountName: undefined }
+            : integration
+        )
+      );
       toast.success(`${integrations.find(i => i.id === id)?.name} disconnected`);
     } catch (error) {
-      toast.error('Failed to disconnect. Please try again.');
+      toast.error(error instanceof Error ? error.message : 'Failed to disconnect. Please try again.');
     } finally {
       setConnectingId(null);
     }
@@ -179,12 +215,13 @@ export default function IntegrationsPage() {
 
   const handleRefresh = async (id: string) => {
     setConnectingId(id);
-
     try {
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // Re-run OAuth to get fresh tokens
+      await integrationsAPI.connectPlatform(id);
+      await loadConnectionStatus();
       toast.success('Connection refreshed successfully');
     } catch (error) {
-      toast.error('Failed to refresh connection');
+      toast.error(error instanceof Error ? error.message : 'Failed to refresh connection');
     } finally {
       setConnectingId(null);
     }
@@ -413,17 +450,6 @@ export default function IntegrationsPage() {
         </CardContent>
       </Card>
 
-      {selectedIntegration && (
-        <IntegrationModal
-          isOpen={modalOpen}
-          onClose={() => {
-            setModalOpen(false);
-            setSelectedIntegration(null);
-          }}
-          integration={selectedIntegration}
-          onConnect={handleModalConnect}
-        />
-      )}
     </div>
   );
 }

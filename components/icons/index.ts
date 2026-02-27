@@ -283,6 +283,8 @@ export {
   Youtube,
   Github,
   Reddit,
+  Pinterest,
+  Threads,
 } from './social';
 
 // ============================================
