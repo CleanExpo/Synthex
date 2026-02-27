@@ -25,6 +25,7 @@ import { X, Send, MessageSquare, Check, MoreVertical, Trash2, Edit, Reply, Loade
 // Alias for Edit2 compatibility
 const Edit2 = Edit;
 import { toast } from 'sonner';
+import { fetchWithCSRF } from '@/lib/csrf';
 import type { ContentType } from '@/hooks/useContentShare';
 
 // ============================================================================
@@ -206,10 +207,8 @@ export function CommentsPanel({
 
     setIsLoading(true);
     try {
-      const response = await fetch('/api/content/comments', {
+      const response = await fetchWithCSRF('/api/content/comments', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
         body: JSON.stringify({
           contentType,
           contentId,
@@ -243,10 +242,8 @@ export function CommentsPanel({
 
     setIsLoading(true);
     try {
-      const response = await fetch(`/api/content/comments?id=${commentId}`, {
+      const response = await fetchWithCSRF(`/api/content/comments?id=${commentId}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
         body: JSON.stringify({ content: editContent }),
       });
 
@@ -272,9 +269,8 @@ export function CommentsPanel({
 
     setIsLoading(true);
     try {
-      const response = await fetch(`/api/content/comments?id=${commentId}`, {
+      const response = await fetchWithCSRF(`/api/content/comments?id=${commentId}`, {
         method: 'DELETE',
-        credentials: 'include',
       });
 
       if (response.ok) {
@@ -295,10 +291,8 @@ export function CommentsPanel({
   const handleToggleResolve = async (commentId: string, isResolved: boolean) => {
     setIsLoading(true);
     try {
-      const response = await fetch(`/api/content/comments?id=${commentId}`, {
+      const response = await fetchWithCSRF(`/api/content/comments?id=${commentId}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
         body: JSON.stringify({ isResolved: !isResolved }),
       });
 

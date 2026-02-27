@@ -5,6 +5,7 @@ import { Copy, Check, Users, Gift, TrendingUp } from '@/components/icons';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
+import { fetchWithCSRF } from '@/lib/csrf';
 
 interface ReferralStats {
   totalSent: number;
@@ -56,10 +57,8 @@ export default function ReferralCard() {
     setError('');
 
     try {
-      const res = await fetch('/api/referrals', {
+      const res = await fetchWithCSRF('/api/referrals', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
         body: JSON.stringify({ email: inviteEmail }),
       });
       const data = await res.json();

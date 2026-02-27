@@ -8,6 +8,7 @@ import { Search, Globe, RefreshCw } from '@/components/icons';
 import { GEOScoreCard } from './GEOScoreCard';
 import { GEORecommendations } from './GEORecommendations';
 import { PassageHighlighter } from './PassageHighlighter';
+import { fetchWithCSRF } from '@/lib/csrf';
 
 interface GEOAnalyzerProps {
   initialContent?: string;
@@ -29,10 +30,8 @@ export function GEOAnalyzer({ initialContent }: GEOAnalyzerProps) {
     setError(null);
 
     try {
-      const response = await fetch('/api/geo/analyze', {
+      const response = await fetchWithCSRF('/api/geo/analyze', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
         body: JSON.stringify({ contentText: content, platform }),
       });
 

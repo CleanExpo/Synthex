@@ -3,6 +3,7 @@
 import { useState, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { fetchWithCSRF } from '@/lib/csrf';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -89,10 +90,8 @@ export default function AIContentStudio() {
 
     setIsGenerating(true);
     try {
-      const response = await fetch('/api/ai/generate-content', {
+      const response = await fetchWithCSRF('/api/ai/generate-content', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
         body: JSON.stringify({
           ...formData,
           keywords: formData.keywords ? formData.keywords.split(',').map(k => k.trim()) : []

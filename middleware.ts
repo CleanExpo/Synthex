@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
+import { checkApiKeyGate } from '@/lib/middleware/api-key-gate.edge';
 
 // Note: Using console directly instead of logger for Edge Function compatibility
 
@@ -151,6 +152,16 @@ export async function middleware(request: NextRequest) {
     }
   }
 
+  // ──────────────────────────────────────────────────────────────────────
+  // Hard gate: block /api/ai/* if user has not configured a valid API key.
+  // Uses JWT claim only (Edge-safe). The route handler still performs a
+  // full DB-backed check via requireApiKey().
+  // ──────────────────────────────────────────────────────────────────────
+  if (pathname.startsWith('/api/ai/')) {
+    const blocked = checkApiKeyGate(request);
+    if (blocked) return blocked;
+  }
+
   // CSRF protection for mutations
   if (['POST', 'PUT', 'DELETE', 'PATCH'].includes(request.method)) {
     const origin = request.headers.get('origin');
@@ -197,7 +208,10 @@ export const config = {
      * - favicon.ico (favicon file)
      * - public folder
      * - api routes (rate limited per-route via withRateLimit)
+     *   EXCEPTION: /api/ai/* routes are included so the API key hard gate
+     *   (checkApiKeyGate) can block requests before they reach the route handler.
      */
-    '/((?!_next/static|_next/image|favicon.ico|public/|api/).*)',
+    '/((?!_next/static|_next/image|favicon.ico|public/).*)',
+    '/api/ai/:path*',
   ],
 };

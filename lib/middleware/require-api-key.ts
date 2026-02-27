@@ -1,12 +1,30 @@
 /**
  * API Key Hard Gate Middleware
  *
- * Blocks AI endpoint access for users who have not configured a valid API key.
- * Returns 402 (Payment Required) with a redirect hint to the onboarding/settings page.
+ * Provides two gate functions for /api/ai/* routes:
  *
- * BYPASS: Users with preferences.role === 'superadmin' skip this gate.
+ * 1. `checkApiKeyGate(request)` — Edge-safe, JWT-claims-only check for use in
+ *    middleware.ts (Edge Runtime). Returns a 403 NextResponse if the user's
+ *    `apiKeyConfigured` JWT claim is explicitly false, or null to allow the
+ *    request through.
  *
- * USAGE:
+ * 2. `requireApiKey(request, handler)` — Route-handler wrapper with DB fallback
+ *    for use inside API route files. Returns 402 with redirect hints.
+ *
+ * BYPASS: Superadmin JWT claim (`role === 'superadmin'`) skips both gates.
+ *
+ * USAGE — middleware.ts (Edge):
+ * ```typescript
+ * import { checkApiKeyGate } from '@/lib/middleware/require-api-key';
+ *
+ * // Inside middleware():
+ * if (pathname.startsWith('/api/ai/')) {
+ *   const blocked = checkApiKeyGate(request);
+ *   if (blocked) return blocked;
+ * }
+ * ```
+ *
+ * USAGE — route handler (Node.js runtime):
  * ```typescript
  * import { requireApiKey } from '@/lib/middleware/require-api-key';
  *
@@ -23,6 +41,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyTokenSafe } from '@/lib/auth/jwt-utils';
 import { prisma } from '@/lib/prisma';
+
+// Re-export the Edge-safe gate so callers can use either import path.
+// The actual implementation lives in api-key-gate.edge.ts which has no
+// Node.js-only imports and is safe to use in middleware.ts (Edge Runtime).
+export { checkApiKeyGate } from '@/lib/middleware/api-key-gate.edge';
 
 /**
  * Check if user has a configured and valid API key.

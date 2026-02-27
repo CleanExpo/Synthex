@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Bell } from '@/components/icons';
 import { Button } from '@/components/ui/button';
+import { fetchWithCSRF } from '@/lib/csrf';
 import { cn } from '@/lib/utils';
 
 interface Notification {
@@ -88,7 +89,7 @@ export function NotificationBell() {
 
   const markAsRead = async (id: string) => {
     try {
-      await fetch(`/api/notifications/${id}/read`, { method: 'POST', credentials: 'include' });
+      await fetchWithCSRF(`/api/notifications/${id}/read`, { method: 'PATCH' });
       setNotifications(prev => {
         const updated = prev.map(n => n.id === id ? { ...n, read: true } : n);
         updateUnreadCount(updated);
