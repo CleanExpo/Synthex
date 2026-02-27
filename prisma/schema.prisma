@@ -131,6 +131,7 @@ model User {
   // Business vetting & API credentials
   vettingResults        BusinessVettingResult[]
   apiCredentials        APICredential[]
+  platformOAuthCredentials PlatformOAuthCredential[] @relation("PlatformOAuthConfiguredBy")
   onboardingProgress    OnboardingProgress[]
 
   // Onboarding state (UNI-920)
@@ -2950,6 +2951,36 @@ model APICredential {
   @@index([provider])
   @@index([isActive])
   @@map("api_credentials")
+}
+
+model PlatformOAuthCredential {
+  id                   String   @id @default(cuid())
+
+  // Platform identifier (twitter, linkedin, instagram, facebook, tiktok, youtube, pinterest, reddit, threads)
+  platform             String   @unique
+
+  // Encrypted OAuth credentials (AES-256-GCM via api-key-encryption)
+  encryptedClientId    String   @map("encrypted_client_id") @db.Text
+  encryptedClientSecret String  @map("encrypted_client_secret") @db.Text
+  encryptionKeyVersion Int      @default(1) @map("encryption_key_version")
+
+  // Display-safe masked values
+  maskedClientId       String?  @map("masked_client_id")
+  maskedClientSecret   String?  @map("masked_client_secret")
+
+  // Status
+  isActive             Boolean  @default(true) @map("is_active")
+
+  // Audit trail
+  configuredByUserId   String?  @map("configured_by_user_id")
+  configuredBy         User?    @relation("PlatformOAuthConfiguredBy", fields: [configuredByUserId], references: [id], onDelete: SetNull)
+
+  createdAt            DateTime @default(now()) @map("created_at")
+  updatedAt            DateTime @updatedAt @map("updated_at")
+
+  @@index([platform])
+  @@index([isActive])
+  @@map("platform_oauth_credentials")
 }
 
 model OnboardingProgress {

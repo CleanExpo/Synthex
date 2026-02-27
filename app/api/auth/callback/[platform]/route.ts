@@ -5,13 +5,12 @@
  * Processes authorization codes, exchanges for tokens, and creates/updates users.
  *
  * ENVIRONMENT VARIABLES REQUIRED:
- * - GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET (SECRET)
- * - GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET (SECRET)
- * - TWITTER_CLIENT_ID, TWITTER_CLIENT_SECRET (SECRET)
- * - LINKEDIN_CLIENT_ID, LINKEDIN_CLIENT_SECRET (SECRET)
  * - NEXT_PUBLIC_APP_URL (PUBLIC)
  * - JWT_SECRET (CRITICAL)
  * - FIELD_ENCRYPTION_KEY: 32-byte hex key for token encryption (CRITICAL)
+ *
+ * Platform OAuth credentials (client ID/secret) are loaded dynamically
+ * from the database first, with env var fallback via getPlatformOAuthCredentials().
  *
  * @module app/api/auth/callback/[platform]/route
  *
@@ -22,6 +21,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { generateToken, isOwnerEmail } from '@/lib/auth/jwt-utils';
 import { encryptField } from '@/lib/security/field-encryption';
+import { getPlatformOAuthCredentials } from '@/lib/platform-credentials';
 
 // =============================================================================
 // OAuth Configuration
@@ -30,78 +30,55 @@ import { encryptField } from '@/lib/security/field-encryption';
 interface OAuthConfig {
   tokenUrl: string;
   userInfoUrl: string;
-  clientId: string | undefined;
-  clientSecret: string | undefined;
   headers?: Record<string, string>;
 }
 
+// OAuth configuration for different platforms (credentials loaded dynamically from DB)
 const oauthConfigs: Record<string, OAuthConfig> = {
   google: {
     tokenUrl: 'https://oauth2.googleapis.com/token',
     userInfoUrl: 'https://www.googleapis.com/oauth2/v2/userinfo',
-    clientId: process.env.GOOGLE_CLIENT_ID,
-    clientSecret: process.env.GOOGLE_CLIENT_SECRET,
   },
   github: {
     tokenUrl: 'https://github.com/login/oauth/access_token',
     userInfoUrl: 'https://api.github.com/user',
-    clientId: process.env.GITHUB_CLIENT_ID,
-    clientSecret: process.env.GITHUB_CLIENT_SECRET,
     headers: { Accept: 'application/json' },
   },
   twitter: {
     tokenUrl: 'https://api.twitter.com/2/oauth2/token',
     userInfoUrl: 'https://api.twitter.com/2/users/me?user.fields=profile_image_url,name,username',
-    clientId: process.env.TWITTER_CLIENT_ID,
-    clientSecret: process.env.TWITTER_CLIENT_SECRET,
   },
   linkedin: {
     tokenUrl: 'https://www.linkedin.com/oauth/v2/accessToken',
     userInfoUrl: 'https://api.linkedin.com/v2/userinfo',
-    clientId: process.env.LINKEDIN_CLIENT_ID,
-    clientSecret: process.env.LINKEDIN_CLIENT_SECRET,
   },
   facebook: {
     tokenUrl: 'https://graph.facebook.com/v18.0/oauth/access_token',
     userInfoUrl: 'https://graph.facebook.com/me?fields=id,name,email,picture',
-    clientId: process.env.FACEBOOK_CLIENT_ID,
-    clientSecret: process.env.FACEBOOK_CLIENT_SECRET,
   },
   instagram: {
     tokenUrl: 'https://api.instagram.com/oauth/access_token',
     userInfoUrl: 'https://graph.instagram.com/me?fields=id,username',
-    clientId: process.env.INSTAGRAM_CLIENT_ID,
-    clientSecret: process.env.INSTAGRAM_CLIENT_SECRET,
   },
   tiktok: {
     tokenUrl: 'https://open.tiktokapis.com/v2/oauth/token/',
     userInfoUrl: 'https://open.tiktokapis.com/v2/user/info/?fields=open_id,display_name,avatar_url',
-    clientId: process.env.TIKTOK_CLIENT_KEY,
-    clientSecret: process.env.TIKTOK_CLIENT_SECRET,
   },
   youtube: {
     tokenUrl: 'https://oauth2.googleapis.com/token',
     userInfoUrl: 'https://www.googleapis.com/youtube/v3/channels?part=snippet&mine=true',
-    clientId: process.env.YOUTUBE_CLIENT_ID || process.env.GOOGLE_CLIENT_ID,
-    clientSecret: process.env.YOUTUBE_CLIENT_SECRET || process.env.GOOGLE_CLIENT_SECRET,
   },
   pinterest: {
     tokenUrl: 'https://api.pinterest.com/v5/oauth/token',
     userInfoUrl: 'https://api.pinterest.com/v5/user_account',
-    clientId: process.env.PINTEREST_CLIENT_ID,
-    clientSecret: process.env.PINTEREST_CLIENT_SECRET,
   },
   reddit: {
     tokenUrl: 'https://www.reddit.com/api/v1/access_token',
     userInfoUrl: 'https://oauth.reddit.com/api/v1/me',
-    clientId: process.env.REDDIT_CLIENT_ID,
-    clientSecret: process.env.REDDIT_CLIENT_SECRET,
   },
   threads: {
     tokenUrl: 'https://graph.threads.net/oauth/access_token',
     userInfoUrl: 'https://graph.threads.net/v1.0/me?fields=id,username,name,threads_profile_picture_url',
-    clientId: process.env.THREADS_CLIENT_ID || process.env.INSTAGRAM_CLIENT_ID,
-    clientSecret: process.env.THREADS_CLIENT_SECRET || process.env.INSTAGRAM_CLIENT_SECRET,
   },
 };
 
@@ -116,6 +93,7 @@ async function exchangeCodeForToken(
   platform: string,
   code: string,
   redirectUri: string,
+  credentials: { clientId: string; clientSecret: string },
   codeVerifier?: string
 ): Promise<{
   accessToken: string;
@@ -124,7 +102,7 @@ async function exchangeCodeForToken(
   tokenType?: string;
 }> {
   const config = oauthConfigs[platform];
-  if (!config || !config.clientId || !config.clientSecret) {
+  if (!config) {
     throw new Error(`OAuth not configured for ${platform}`);
   }
 
@@ -132,8 +110,8 @@ async function exchangeCodeForToken(
     grant_type: 'authorization_code',
     code,
     redirect_uri: redirectUri,
-    client_id: config.clientId,
-    client_secret: config.clientSecret,
+    client_id: credentials.clientId,
+    client_secret: credentials.clientSecret,
   };
 
   // Twitter requires PKCE code verifier
@@ -376,6 +354,23 @@ export async function GET(
       );
     }
 
+    // Load credentials dynamically (checks DB first, falls back to env vars)
+    const creds = await getPlatformOAuthCredentials(platform);
+    if (!creds) {
+      if (stateData.flow === 'integration') {
+        const html = `<!DOCTYPE html><html><body><script>
+          if (window.opener) {
+            window.opener.postMessage({ type: 'oauth-error', platform: '${platform}', error: 'Platform not configured' }, window.location.origin);
+          }
+          window.close();
+        </script><p>This platform connection has not been set up yet. Please contact your administrator.</p></body></html>`;
+        return new NextResponse(html, { status: 200, headers: { 'Content-Type': 'text/html' } });
+      }
+      return NextResponse.redirect(
+        new URL('/auth/login?error=This platform connection has not been set up yet. Please contact your administrator.', request.url)
+      );
+    }
+
     // Build redirect URI - require NEXT_PUBLIC_APP_URL in production
     const appUrl = process.env.NEXT_PUBLIC_APP_URL;
     if (!appUrl && process.env.NODE_ENV === 'production') {
@@ -389,7 +384,7 @@ export async function GET(
     const codeVerifier = searchParams.get('code_verifier');
 
     // Exchange code for token
-    const tokenData = await exchangeCodeForToken(platform, code, redirectUri, codeVerifier || undefined);
+    const tokenData = await exchangeCodeForToken(platform, code, redirectUri, creds, codeVerifier || undefined);
 
     // Fetch user info
     const userInfo = await fetchUserInfo(platform, tokenData.accessToken);

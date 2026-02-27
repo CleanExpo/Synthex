@@ -4,20 +4,19 @@ import prisma from '@/lib/prisma';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { getEffectiveOrganizationId } from '@/lib/multi-business';
 import { sanitizeErrorForResponse } from '@/lib/utils/error-utils';
+import { getPlatformOAuthCredentials } from '@/lib/platform-credentials';
 
 const oauthCallbackSchema = z.object({
   code: z.string().min(1),
   state: z.string().min(1),
 });
 
-// OAuth configuration for different platforms
+// OAuth configuration for different platforms (credentials loaded dynamically from DB)
 const oauthConfig = {
   google: {
     authUrl: 'https://accounts.google.com/o/oauth2/v2/auth',
     tokenUrl: 'https://oauth2.googleapis.com/token',
     userInfoUrl: 'https://www.googleapis.com/oauth2/v2/userinfo',
-    clientId: process.env.GOOGLE_CLIENT_ID,
-    clientSecret: process.env.GOOGLE_CLIENT_SECRET,
     scope: 'openid email profile',
     responseType: 'code',
     accessType: 'offline',
@@ -27,16 +26,12 @@ const oauthConfig = {
     authUrl: 'https://github.com/login/oauth/authorize',
     tokenUrl: 'https://github.com/login/oauth/access_token',
     userInfoUrl: 'https://api.github.com/user',
-    clientId: process.env.GITHUB_CLIENT_ID,
-    clientSecret: process.env.GITHUB_CLIENT_SECRET,
     scope: 'read:user user:email',
   },
   twitter: {
     authUrl: 'https://twitter.com/i/oauth2/authorize',
     tokenUrl: 'https://api.twitter.com/2/oauth2/token',
     userInfoUrl: 'https://api.twitter.com/2/users/me',
-    clientId: process.env.TWITTER_CLIENT_ID,
-    clientSecret: process.env.TWITTER_CLIENT_SECRET,
     scope: 'tweet.read tweet.write users.read offline.access',
     codeChallengeMethod: 'S256',
   },
@@ -44,40 +39,30 @@ const oauthConfig = {
     authUrl: 'https://www.linkedin.com/oauth/v2/authorization',
     tokenUrl: 'https://www.linkedin.com/oauth/v2/accessToken',
     userInfoUrl: 'https://api.linkedin.com/v2/userinfo',
-    clientId: process.env.LINKEDIN_CLIENT_ID,
-    clientSecret: process.env.LINKEDIN_CLIENT_SECRET,
     scope: 'openid profile email w_member_social',
   },
   instagram: {
     authUrl: 'https://api.instagram.com/oauth/authorize',
     tokenUrl: 'https://api.instagram.com/oauth/access_token',
     userInfoUrl: 'https://graph.instagram.com/me',
-    clientId: process.env.INSTAGRAM_CLIENT_ID,
-    clientSecret: process.env.INSTAGRAM_CLIENT_SECRET,
     scope: 'user_profile,user_media',
   },
   facebook: {
     authUrl: 'https://www.facebook.com/v18.0/dialog/oauth',
     tokenUrl: 'https://graph.facebook.com/v18.0/oauth/access_token',
     userInfoUrl: 'https://graph.facebook.com/me',
-    clientId: process.env.FACEBOOK_CLIENT_ID,
-    clientSecret: process.env.FACEBOOK_CLIENT_SECRET,
     scope: 'public_profile,email,pages_show_list,pages_read_engagement,pages_manage_posts',
   },
   tiktok: {
     authUrl: 'https://www.tiktok.com/v2/auth/authorize/',
     tokenUrl: 'https://open.tiktokapis.com/v2/oauth/token/',
     userInfoUrl: 'https://open.tiktokapis.com/v2/user/info/',
-    clientId: process.env.TIKTOK_CLIENT_KEY,
-    clientSecret: process.env.TIKTOK_CLIENT_SECRET,
     scope: 'user.info.basic,video.list,video.upload',
   },
   youtube: {
     authUrl: 'https://accounts.google.com/o/oauth2/v2/auth',
     tokenUrl: 'https://oauth2.googleapis.com/token',
     userInfoUrl: 'https://www.googleapis.com/youtube/v3/channels?part=snippet&mine=true',
-    clientId: process.env.YOUTUBE_CLIENT_ID || process.env.GOOGLE_CLIENT_ID,
-    clientSecret: process.env.YOUTUBE_CLIENT_SECRET || process.env.GOOGLE_CLIENT_SECRET,
     scope: 'https://www.googleapis.com/auth/youtube.readonly https://www.googleapis.com/auth/youtube.upload',
     accessType: 'offline',
     prompt: 'consent',
@@ -86,24 +71,18 @@ const oauthConfig = {
     authUrl: 'https://www.pinterest.com/oauth/',
     tokenUrl: 'https://api.pinterest.com/v5/oauth/token',
     userInfoUrl: 'https://api.pinterest.com/v5/user_account',
-    clientId: process.env.PINTEREST_CLIENT_ID,
-    clientSecret: process.env.PINTEREST_CLIENT_SECRET,
     scope: 'boards:read,pins:read,pins:write,user_accounts:read',
   },
   reddit: {
     authUrl: 'https://www.reddit.com/api/v1/authorize',
     tokenUrl: 'https://www.reddit.com/api/v1/access_token',
     userInfoUrl: 'https://oauth.reddit.com/api/v1/me',
-    clientId: process.env.REDDIT_CLIENT_ID,
-    clientSecret: process.env.REDDIT_CLIENT_SECRET,
     scope: 'identity read submit',
   },
   threads: {
     authUrl: 'https://threads.net/oauth/authorize',
     tokenUrl: 'https://graph.threads.net/oauth/access_token',
     userInfoUrl: 'https://graph.threads.net/v1.0/me',
-    clientId: process.env.THREADS_CLIENT_ID || process.env.INSTAGRAM_CLIENT_ID,
-    clientSecret: process.env.THREADS_CLIENT_SECRET || process.env.INSTAGRAM_CLIENT_SECRET,
     scope: 'threads_basic,threads_content_publish,threads_read_replies',
   },
 };
@@ -123,10 +102,12 @@ export async function GET(
     
     const config = oauthConfig[platform];
 
-    if (!config.clientId) {
+    // Load credentials dynamically (checks DB first, falls back to env vars)
+    const creds = await getPlatformOAuthCredentials(platform);
+    if (!creds) {
       return NextResponse.json(
-        { error: `${platform} OAuth not configured. Please add ${platform.toUpperCase()}_CLIENT_ID to environment variables.` },
-        { status: 500 }
+        { error: 'Platform not configured', message: 'This platform connection has not been set up yet. Please contact your administrator.' },
+        { status: 400 }
       );
     }
 
@@ -170,7 +151,7 @@ export async function GET(
 
     // Build authorization URL
     const authParams = new URLSearchParams({
-      client_id: config.clientId,
+      client_id: creds.clientId,
       redirect_uri: redirectUri,
       response_type: 'code',
       scope: config.scope,
@@ -208,6 +189,15 @@ export async function POST(
     
     const config = oauthConfig[platform];
 
+    // Load credentials dynamically (checks DB first, falls back to env vars)
+    const creds = await getPlatformOAuthCredentials(platform);
+    if (!creds) {
+      return NextResponse.json(
+        { error: 'Platform not configured', message: 'This platform connection has not been set up yet. Please contact your administrator.' },
+        { status: 400 }
+      );
+    }
+
     const body = await request.json();
     const validation = oauthCallbackSchema.safeParse(body);
     if (!validation.success) {
@@ -241,8 +231,8 @@ export async function POST(
       grant_type: 'authorization_code',
       code,
       redirect_uri: redirectUri,
-      client_id: config.clientId!,
-      client_secret: config.clientSecret!,
+      client_id: creds.clientId,
+      client_secret: creds.clientSecret,
     });
 
     const tokenResponse = await fetch(config.tokenUrl, {

@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Check, Key, Plus, Trash2 } from '@/components/icons';
 import { AICredentialsManager } from './ai-credentials-manager';
+import { PlatformCredentialsManager } from './platform-credentials-manager';
 import type { PlatformConnection, ApiKey } from './types';
 
 interface IntegrationsTabProps {
@@ -99,6 +100,9 @@ export function IntegrationsTab({
 
       {/* AI Provider Credentials */}
       <AICredentialsManager />
+
+      {/* Platform OAuth Credentials (owner only — self-gates via API) */}
+      <PlatformCredentialsManager />
 
       {/* Platform API Keys */}
       <Card variant="glass">
