@@ -171,6 +171,12 @@ Skills, agents, hooks, and knowledge base live in `.claude/` — outside the bui
 - **Hooks** are PowerShell scripts that validate actions pre/post tool use
 - **Knowledge base** is a structured "second brain" for persistent research
 - **Rules** provide domain-specific context (frontend, backend, database, etc.)
+- **Memory** lives in `.claude/memory/` (committed to git, shared across machines)
+  - `MEMORY.md` — Project state, current priorities, user preferences
+  - `agents-and-skills.md` — Full agent/skill inventory
+  - `linear-backlog.md` — Linear issue snapshot (update after each sprint)
+
+**Important**: Always read `.claude/memory/MEMORY.md` at the start of a session for cross-machine context. Update it when priorities change or significant work completes.
 
 ## Planning System
 
