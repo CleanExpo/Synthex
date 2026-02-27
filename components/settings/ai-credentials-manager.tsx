@@ -74,12 +74,19 @@ const PROVIDERS = [
 
 /** Popular models available via OpenRouter */
 const OPENROUTER_MODELS = [
+  // Premium tier
+  { id: 'anthropic/claude-opus-4.6', name: 'Claude Opus 4.6', tier: 'premium' },
+  { id: 'anthropic/claude-sonnet-4.6', name: 'Claude Sonnet 4.6', tier: 'premium' },
+  { id: 'openai/gpt-5.3-codex', name: 'GPT-5.3 Codex', tier: 'premium' },
   { id: 'openai/gpt-4o', name: 'GPT-4o', tier: 'premium' },
+  { id: 'google/gemini-3.1-pro-preview', name: 'Gemini 3.1 Pro', tier: 'premium' },
+  { id: 'google/gemini-2.5-pro-preview', name: 'Gemini 2.5 Pro', tier: 'premium' },
+  // Budget tier
+  { id: 'google/gemini-3.1-flash-image-preview', name: 'Gemini 3.1 Flash Image', tier: 'budget' },
+  { id: 'qwen/qwen3.5-35b-a3b', name: 'Qwen 3.5 35B', tier: 'budget' },
   { id: 'openai/gpt-4o-mini', name: 'GPT-4o Mini', tier: 'budget' },
-  { id: 'anthropic/claude-sonnet-4', name: 'Claude Sonnet 4', tier: 'premium' },
   { id: 'anthropic/claude-haiku-4', name: 'Claude Haiku 4', tier: 'budget' },
   { id: 'google/gemini-2.0-flash-001', name: 'Gemini 2.0 Flash', tier: 'budget' },
-  { id: 'google/gemini-2.5-pro-preview', name: 'Gemini 2.5 Pro', tier: 'premium' },
   { id: 'meta-llama/llama-4-maverick', name: 'Llama 4 Maverick', tier: 'budget' },
   { id: 'deepseek/deepseek-r1', name: 'DeepSeek R1', tier: 'budget' },
 ];
@@ -90,7 +97,7 @@ export function AICredentialsManager() {
   const [showAddForm, setShowAddForm] = useState(false);
   const [selectedProvider, setSelectedProvider] = useState('');
   const [apiKeyInput, setApiKeyInput] = useState('');
-  const [selectedModel, setSelectedModel] = useState('openai/gpt-4o');
+  const [selectedModel, setSelectedModel] = useState('anthropic/claude-opus-4.6');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
