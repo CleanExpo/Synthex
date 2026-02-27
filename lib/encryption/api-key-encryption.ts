@@ -25,7 +25,7 @@ const SALT_LENGTH = 32;
  * For now, they're read from environment variables
  */
 function getEncryptionKey(version: number = 1): Buffer {
-  const keyEnv = process.env[`ENCRYPTION_KEY_V${version}`];
+  const keyEnv = process.env[`ENCRYPTION_KEY_V${version}`]?.trim();
   if (!keyEnv) {
     throw new Error(`Encryption key version ${version} not found in environment`);
   }
