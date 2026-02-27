@@ -42,7 +42,6 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    console.log('[Revalidate API Keys] Starting re-validation...');
     const startTime = Date.now();
 
     // Calculate the cutoff time (24 hours ago)
@@ -66,8 +65,6 @@ export async function GET(request: NextRequest) {
         isValid: true,
       },
     });
-
-    console.log(`[Revalidate API Keys] Found ${credentials.length} keys to re-validate`);
 
     if (credentials.length === 0) {
       return NextResponse.json({
@@ -154,9 +151,6 @@ export async function GET(request: NextRequest) {
     }
 
     const duration = Date.now() - startTime;
-    console.log(
-      `[Revalidate API Keys] Complete: ${validated} valid, ${invalidated} invalid, ${errors} errors in ${duration}ms`
-    );
 
     return NextResponse.json({
       success: true,

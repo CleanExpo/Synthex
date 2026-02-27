@@ -383,7 +383,6 @@ export class PsychologyEffectivenessTester {
     // Store in database for future analysis
     try {
       // Implementation would store in psychology_metrics table
-      console.log('Test results stored:', testData);
     } catch (error) {
       console.error('Failed to store test results:', error);
     }

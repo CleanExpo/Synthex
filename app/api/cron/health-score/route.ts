@@ -27,15 +27,11 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    console.log('[Health Score Cron] Starting calculation...');
     const startTime = Date.now();
 
     const result = await calculateAllHealthScores();
 
     const duration = Date.now() - startTime;
-    console.log(
-      `[Health Score Cron] Complete: ${result.processed} users processed, ${result.critical} critical, ${result.errors} errors in ${duration}ms`
-    );
 
     return NextResponse.json({
       success: true,

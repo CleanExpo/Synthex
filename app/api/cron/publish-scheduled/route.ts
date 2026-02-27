@@ -65,8 +65,6 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   const startTime = Date.now();
   const now = new Date();
 
-  console.log('[publish-scheduled] Starting run at', now.toISOString());
-
   let processed = 0;
   let published = 0;
   let failed = 0;
@@ -94,8 +92,6 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     orderBy: { scheduledAt: 'asc' },
     take: 50,
   });
-
-  console.log(`[publish-scheduled] Found ${duePosts.length} posts due for publishing`);
 
   // -- Process each post independently ---------------------------------------
   for (const post of duePosts) {
@@ -204,9 +200,6 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
               expiresAt: newCreds.expiresAt,
             },
           });
-          console.log(
-            `[publish-scheduled] Persisted refreshed tokens for connection ${connectionId}`
-          );
         } catch (persistError) {
           console.error(
             `[publish-scheduled] Failed to persist refreshed tokens for connection ${connectionId}:`,
@@ -235,10 +228,6 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       }
 
       // -- Publish -----------------------------------------------------------
-      console.log(
-        `[publish-scheduled] Publishing post ${post.id} to ${platform} for user ${userId}`
-      );
-
       const postResult = await service.createPost({ text: post.content });
 
       if (postResult.success) {
@@ -279,10 +268,6 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
           }
         }
 
-        console.log(
-          `[publish-scheduled] Post ${post.id} published successfully (platformPostId=${postResult.postId ?? 'n/a'})`
-        );
-
         published++;
         results.push({ id: post.id, platform, status: 'published' });
       } else {
@@ -321,10 +306,6 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   }
 
   const durationMs = Date.now() - startTime;
-
-  console.log(
-    `[publish-scheduled] Complete: ${processed} processed, ${published} published, ${failed} failed in ${durationMs}ms`
-  );
 
   return NextResponse.json({
     success: true,

@@ -603,9 +603,6 @@ export class APISecurityChecker {
     }
 
     // In production, send to logging service
-    if (process.env.NODE_ENV === 'production') {
-      console.log('AUDIT:', JSON.stringify(entry));
-    }
   }
 
   /**

@@ -29,7 +29,6 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    console.log('[Weekly Digest Cron] Starting generation...');
     const startTime = Date.now();
 
     // Get all Business/Custom plan users
@@ -107,9 +106,6 @@ export async function GET(request: NextRequest) {
     }
 
     const duration = Date.now() - startTime;
-    console.log(
-      `[Weekly Digest Cron] Complete: ${generated} digests generated, ${emailsSent} emails sent, ${errors} errors in ${duration}ms`
-    );
 
     return NextResponse.json({
       success: true,

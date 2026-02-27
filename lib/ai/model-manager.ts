@@ -75,7 +75,6 @@ class ModelManagerAgent {
       try {
         const latest = getLatestModel(provider);
         this.state.activeModels.set(provider, latest);
-        console.log(`✅ [ModelManager] Initialized ${provider}: ${latest.name}`);
       } catch (error) {
         console.error(`❌ [ModelManager] Failed to initialize ${provider}:`, error);
       }
@@ -188,7 +187,6 @@ class ModelManagerAgent {
    * Force update from registry (for immediate model refresh)
    */
   public forceUpdate(): void {
-    console.log('🔄 [ModelManager] Force-updating from registry...');
     this.initializeLatestModels();
     this.state.lastUpdated = new Date();
   }

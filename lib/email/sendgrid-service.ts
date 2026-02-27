@@ -45,7 +45,6 @@ export class SendGridService {
       };
 
       await sgMail.send(msg);
-      console.log(`Email sent successfully to ${data.to}`);
       return true;
     } catch (error) {
       console.error('SendGrid error:', error);

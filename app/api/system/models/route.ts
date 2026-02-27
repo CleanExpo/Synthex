@@ -99,8 +99,6 @@ export async function POST(request: NextRequest) {
     // Get updated status
     const latestModels = getAllLatestModels();
 
-    console.log(`✅ [Model API] Models refreshed by user ${user.id}`);
-
     return NextResponse.json(
       {
         success: true,

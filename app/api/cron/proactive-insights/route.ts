@@ -143,11 +143,9 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    console.log('[Proactive Insights Cron] Starting anomaly detection...');
     const startTime = Date.now();
 
     const anomalies = await detectAnomalies();
-    console.log(`[Proactive Insights] Found ${anomalies.length} anomalies`);
 
     // Group anomalies by user
     const userAnomalies = new Map<string, DetectedAnomaly[]>();
@@ -193,9 +191,6 @@ export async function GET(request: NextRequest) {
     }
 
     const duration = Date.now() - startTime;
-    console.log(
-      `[Proactive Insights Cron] Complete: ${anomalies.length} anomalies, ${suggestionsGenerated} suggestions, ${notificationsSent} notifications in ${duration}ms`
-    );
 
     return NextResponse.json({
       success: true,

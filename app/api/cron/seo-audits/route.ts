@@ -37,14 +37,12 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    console.log('[SEO Audits Cron] Starting scheduled audits...');
     const startTime = Date.now();
 
     // Get all targets due for audit
     const targets = await getAllTargetsDueForAudit();
 
     if (targets.length === 0) {
-      console.log('[SEO Audits Cron] No targets due for audit');
       return NextResponse.json({
         success: true,
         auditsRun: 0,
@@ -54,8 +52,6 @@ export async function GET(request: NextRequest) {
         durationMs: Date.now() - startTime,
       });
     }
-
-    console.log(`[SEO Audits Cron] Processing ${targets.length} targets...`);
 
     let auditsRun = 0;
     let regressionsDetected = 0;
@@ -127,9 +123,6 @@ export async function GET(request: NextRequest) {
     }
 
     const duration = Date.now() - startTime;
-    console.log(
-      `[SEO Audits Cron] Complete: ${auditsRun} audits run, ${regressionsDetected} regressions detected, ${emailsSent} emails sent, ${errors} errors in ${duration}ms`
-    );
 
     return NextResponse.json({
       success: true,

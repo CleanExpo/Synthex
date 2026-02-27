@@ -52,7 +52,6 @@ export function patchPgScram(): void {
       }
     };
 
-    console.log('[pg-scram-patch] Patched pg SCRAM finalizeSession for Supavisor compatibility');
   } catch (err) {
     console.warn('[pg-scram-patch] Failed to patch pg SASL module:', err);
   }
