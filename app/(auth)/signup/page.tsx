@@ -1,13 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Mail, Lock, User, Chrome, Loader2, CheckCircle, Eye, EyeOff } from '@/components/icons';
+import { Mail, Lock, User, Chrome, Loader2, CheckCircle, Eye, EyeOff, Clock } from '@/components/icons';
 import { SynthexLogo } from '@/components/marketing/MarketingLayout';
 import { toast } from 'sonner';
 
@@ -24,6 +24,48 @@ export default function SignupPage() {
   const [passwordStrength, setPasswordStrength] = useState(0);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [rateLimitSeconds, setRateLimitSeconds] = useState(0);
+  const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Countdown timer for rate limit cooldown
+  useEffect(() => {
+    if (rateLimitSeconds <= 0) {
+      if (countdownRef.current) {
+        clearInterval(countdownRef.current);
+        countdownRef.current = null;
+      }
+      return;
+    }
+
+    countdownRef.current = setInterval(() => {
+      setRateLimitSeconds((prev) => {
+        if (prev <= 1) {
+          if (countdownRef.current) {
+            clearInterval(countdownRef.current);
+            countdownRef.current = null;
+          }
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => {
+      if (countdownRef.current) {
+        clearInterval(countdownRef.current);
+        countdownRef.current = null;
+      }
+    };
+  }, [rateLimitSeconds > 0]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const formatCountdown = useCallback((seconds: number): string => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    if (mins > 0) {
+      return `${mins}:${secs.toString().padStart(2, '0')}`;
+    }
+    return `${secs}s`;
+  }, []);
 
   const calculatePasswordStrength = (password: string) => {
     let strength = 0;
@@ -37,6 +79,8 @@ export default function SignupPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setFieldErrors({});
+
+    if (rateLimitSeconds > 0) return;
 
     if (formData.password !== formData.confirmPassword) {
       setFieldErrors({ confirmPassword: 'Passwords do not match' });
@@ -66,10 +110,25 @@ export default function SignupPage() {
       const data = await response.json();
 
       if (response.status === 429) {
-        const retryAfter = response.headers.get('Retry-After');
-        const seconds = retryAfter ? parseInt(retryAfter, 10) : 60;
-        const minutes = Math.ceil(seconds / 60);
-        toast.error(`Too many attempts — please wait ${minutes} minute${minutes !== 1 ? 's' : ''} before trying again.`);
+        const retryAfterHeader = response.headers.get('Retry-After');
+        let seconds = 60; // sensible default
+
+        if (retryAfterHeader) {
+          const parsed = parseInt(retryAfterHeader, 10);
+          if (!Number.isNaN(parsed) && parsed > 0) {
+            seconds = parsed;
+          }
+        } else if (data.retryAfter) {
+          // Fallback: parse ISO timestamp from response body
+          const resetTime = new Date(data.retryAfter).getTime();
+          const remaining = Math.ceil((resetTime - Date.now()) / 1000);
+          if (remaining > 0) {
+            seconds = remaining;
+          }
+        }
+
+        setRateLimitSeconds(seconds);
+        toast.error(`Too many attempts. Please wait ${Math.ceil(seconds / 60)} minute${Math.ceil(seconds / 60) !== 1 ? 's' : ''} before trying again.`);
         return;
       }
 
@@ -155,6 +214,8 @@ export default function SignupPage() {
     return 'Strong';
   };
 
+  const isSubmitDisabled = isLoading || rateLimitSeconds > 0;
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#0a1628] px-4 py-8 relative overflow-hidden">
       {/* Deep Navy Gradient Background */}
@@ -183,6 +244,26 @@ export default function SignupPage() {
           <CardDescription className="text-center text-gray-400">
             Start automating your social media in minutes
           </CardDescription>
+          {/* Rate limit cooldown banner */}
+          {rateLimitSeconds > 0 && (
+            <div className="mt-4 p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
+              <div className="flex items-start gap-2">
+                <Clock className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
+                <div className="flex-1">
+                  <p className="text-sm text-red-300 font-medium">
+                    Too many attempts
+                  </p>
+                  <p className="text-xs text-red-200/80 mt-1">
+                    Please wait{' '}
+                    <span className="font-mono font-semibold text-red-300">
+                      {formatCountdown(rateLimitSeconds)}
+                    </span>
+                    {' '}before trying again.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
         </CardHeader>
         <CardContent className="space-y-4">
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -198,7 +279,7 @@ export default function SignupPage() {
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   className={`pl-10 bg-white/5 border-cyan-500/20 text-white placeholder:text-gray-500 focus:border-cyan-500/50 focus:ring-cyan-500/20 ${fieldErrors.name ? 'border-red-500/60' : ''}`}
                   required
-                  disabled={isLoading}
+                  disabled={isSubmitDisabled}
                 />
               </div>
               {fieldErrors.name && (
@@ -218,7 +299,7 @@ export default function SignupPage() {
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   className={`pl-10 bg-white/5 border-cyan-500/20 text-white placeholder:text-gray-500 focus:border-cyan-500/50 focus:ring-cyan-500/20 ${fieldErrors.email ? 'border-red-500/60' : ''}`}
                   required
-                  disabled={isLoading}
+                  disabled={isSubmitDisabled}
                 />
               </div>
               {fieldErrors.email && (
@@ -241,7 +322,7 @@ export default function SignupPage() {
                   }}
                   className={`pl-10 pr-10 bg-white/5 border-cyan-500/20 text-white placeholder:text-gray-500 focus:border-cyan-500/50 focus:ring-cyan-500/20 ${fieldErrors.password ? 'border-red-500/60' : ''}`}
                   required
-                  disabled={isLoading}
+                  disabled={isSubmitDisabled}
                 />
                 <button
                   type="button"
@@ -288,7 +369,7 @@ export default function SignupPage() {
                   onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
                   className={`pl-10 pr-10 bg-white/5 border-cyan-500/20 text-white placeholder:text-gray-500 focus:border-cyan-500/50 focus:ring-cyan-500/20 ${fieldErrors.confirmPassword ? 'border-red-500/60' : ''}`}
                   required
-                  disabled={isLoading}
+                  disabled={isSubmitDisabled}
                 />
                 {formData.confirmPassword && formData.password === formData.confirmPassword ? (
                   <CheckCircle className="absolute right-3 top-3 w-4 h-4 text-cyan-500" />
@@ -326,13 +407,18 @@ export default function SignupPage() {
 
             <Button
               type="submit"
-              className="w-full bg-gradient-to-r from-cyan-500 to-cyan-600 hover:from-cyan-400 hover:to-cyan-500 text-white font-medium shadow-lg shadow-cyan-500/25 transition-all hover:shadow-cyan-500/40"
-              disabled={isLoading}
+              className="w-full bg-gradient-to-r from-cyan-500 to-cyan-600 hover:from-cyan-400 hover:to-cyan-500 text-white font-medium shadow-lg shadow-cyan-500/25 transition-all hover:shadow-cyan-500/40 disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={isSubmitDisabled}
             >
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Creating account...
+                </>
+              ) : rateLimitSeconds > 0 ? (
+                <>
+                  <Clock className="mr-2 h-4 w-4" />
+                  Wait {formatCountdown(rateLimitSeconds)}
                 </>
               ) : (
                 'Create account'

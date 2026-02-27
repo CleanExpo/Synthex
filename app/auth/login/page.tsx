@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useState } from 'react';
 import Link from 'next/link';
@@ -10,10 +10,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Separator } from '@/components/ui/separator';
-import { 
-  Mail, 
-  Lock, 
-  Loader2, 
+import {
+  Mail,
+  Lock,
+  Loader2,
   AlertCircle,
   Github,
   Chrome,
@@ -166,7 +166,7 @@ export default function LoginPage() {
                 <div className="flex justify-between">
                   <Label variant="glass" htmlFor="password">Password</Label>
                   <Link
-                    href="/auth/forgot-password"
+                    href="/forgot-password"
                     className="text-sm text-cyan-400 hover:text-cyan-300 transition-colors"
                   >
                     Forgot password?

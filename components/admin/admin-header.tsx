@@ -6,14 +6,14 @@
  */
 
 import { Button } from '@/components/ui/button';
+import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 import { Download, UserPlus } from '@/components/icons';
 
 interface AdminHeaderProps {
   onExport: () => void;
-  onAddUser: () => void;
 }
 
-export function AdminHeader({ onExport, onAddUser }: AdminHeaderProps) {
+export function AdminHeader({ onExport }: AdminHeaderProps) {
   return (
     <div className="flex justify-between items-center">
       <div>
@@ -25,14 +25,20 @@ export function AdminHeader({ onExport, onAddUser }: AdminHeaderProps) {
           <Download className="w-4 h-4 mr-2" />
           Export Users
         </Button>
-        <Button
-          disabled
-          title="Add User — coming soon"
-          className="gradient-primary text-white opacity-50 cursor-not-allowed"
-        >
-          <UserPlus className="w-4 h-4 mr-2" />
-          Add User
-        </Button>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <span tabIndex={0} className="inline-flex">
+              <Button
+                disabled
+                className="gradient-primary text-white opacity-50 cursor-not-allowed"
+              >
+                <UserPlus className="w-4 h-4 mr-2" />
+                Add User
+              </Button>
+            </span>
+          </TooltipTrigger>
+          <TooltipContent variant="glass-solid">Coming soon</TooltipContent>
+        </Tooltip>
       </div>
     </div>
   );

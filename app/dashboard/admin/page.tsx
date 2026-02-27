@@ -169,14 +169,6 @@ export default function AdminPanel() {
     }
   }, [selectedUserIds, users]);
 
-  const handleAddUser = useCallback(() => {
-    // TODO: Add User dialog — not yet implemented
-  }, []);
-
-  const handleFilter = useCallback(() => {
-    // TODO: Filter options — not yet implemented
-  }, []);
-
   const handleOpenEditDialog = useCallback((user: User) => {
     setEditingUser({ ...user });
     setEditDialogOpen(true);
@@ -207,7 +199,6 @@ export default function AdminPanel() {
     <div className="p-6 space-y-6">
       <AdminHeader
         onExport={handleExportUsers}
-        onAddUser={handleAddUser}
       />
 
       <AdminStats stats={stats} />
@@ -221,7 +212,6 @@ export default function AdminPanel() {
           <UserSearchBar
             searchTerm={searchTerm}
             onSearchChange={setSearchTerm}
-            onFilter={handleFilter}
             onRefresh={fetchUsers}
             isLoading={isLoading}
           />

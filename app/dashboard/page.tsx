@@ -104,9 +104,21 @@ export default function DashboardPage() {
     ].join('\n');
     try {
       await navigator.clipboard.writeText(details);
-      toast.success('Error details copied to clipboard');
+      toast.info('Error details copied to clipboard. If this persists, contact support@synthex.social or visit the Help Center.', {
+        duration: 6000,
+        action: {
+          label: 'Help Center',
+          onClick: () => { window.location.href = '/dashboard/help'; },
+        },
+      });
     } catch {
-      toast.error('Could not copy to clipboard');
+      toast.info('If this persists, contact support@synthex.social or visit the Help Center.', {
+        duration: 6000,
+        action: {
+          label: 'Help Center',
+          onClick: () => { window.location.href = '/dashboard/help'; },
+        },
+      });
     }
   }, [error]);
 

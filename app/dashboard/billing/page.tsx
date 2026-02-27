@@ -1,5 +1,14 @@
 'use client';
 
+/**
+ * Billing Page
+ *
+ * Displays subscription status, billing management, and usage limits.
+ *
+ * @task UNI-633 - Show "Free Plan" with appropriate messaging for free-tier users
+ * @task UNI-634 - Fix unlimited plan progress bars rendering at 0% width
+ */
+
 import { useState, useEffect, useCallback } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -11,7 +20,8 @@ import {
   ArrowUpRight,
   Download,
   AlertCircle,
-  RefreshCw
+  RefreshCw,
+  Zap
 } from '@/components/icons';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
@@ -41,6 +51,9 @@ interface UsageData {
     personas: number;
   };
 }
+
+/** Type-safe key for usage resources */
+type UsageResource = 'aiPosts' | 'socialAccounts' | 'personas';
 
 export default function BillingPage() {
   const [subscription, setSubscription] = useState<Subscription | null>(null);
@@ -155,6 +168,60 @@ export default function BillingPage() {
     });
   };
 
+  /** Check if the current plan is free tier */
+  const isFreePlan = !subscription || subscription.plan === 'free';
+
+  /** Check if a given usage resource has an unlimited limit (-1) */
+  const isUnlimited = (resource: UsageResource): boolean => {
+    return usageData?.limits[resource] === -1;
+  };
+
+  /**
+   * Render a usage row with progress bar or "Unlimited" indicator.
+   * Handles the case where usageData is null (shows a placeholder)
+   * and where limits are -1 (shows "Unlimited" instead of a 0% bar).
+   */
+  const renderUsageRow = (
+    label: string,
+    resource: UsageResource,
+    fallbackLimit: number,
+  ) => {
+    const currentUsage = usageData?.usage[resource] ?? 0;
+    const limit = usageData?.limits[resource] ?? fallbackLimit;
+    const unlimited = limit === -1;
+    const percentage = unlimited ? 0 : usageData?.percentages[resource] ?? 0;
+
+    return (
+      <div>
+        <div className="flex justify-between mb-2">
+          <span className="text-gray-400">{label}</span>
+          <span className="text-white">
+            {unlimited ? (
+              <>{currentUsage} / <span className="text-cyan-400">Unlimited</span></>
+            ) : (
+              <>{currentUsage} / {limit}</>
+            )}
+          </span>
+        </div>
+        {unlimited ? (
+          <div className="w-full bg-white/10 rounded-full h-2">
+            <div
+              className="bg-gradient-to-r from-cyan-500 to-teal-500 h-2 rounded-full"
+              style={{ width: '100%' }}
+            />
+          </div>
+        ) : (
+          <div className="w-full bg-white/10 rounded-full h-2">
+            <div
+              className="bg-gradient-to-r from-cyan-500 to-teal-500 h-2 rounded-full transition-all duration-300"
+              style={{ width: `${percentage}%` }}
+            />
+          </div>
+        )}
+      </div>
+    );
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-cyan-900 to-gray-900 p-8">
@@ -205,9 +272,15 @@ export default function BillingPage() {
               <Package className="w-6 h-6 text-cyan-400" />
               <h2 className="text-xl font-semibold text-white">Current Plan</h2>
             </div>
-            <Badge className={`${getStatusColor(subscription?.status || 'inactive')} text-white`}>
-              {getStatusLabel(subscription?.status)}
-            </Badge>
+            {isFreePlan ? (
+              <Badge className="bg-cyan-500/20 text-cyan-400 border-cyan-500/30">
+                Free Plan
+              </Badge>
+            ) : (
+              <Badge className={`${getStatusColor(subscription?.status || 'inactive')} text-white`}>
+                {getStatusLabel(subscription?.status)}
+              </Badge>
+            )}
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -218,7 +291,12 @@ export default function BillingPage() {
               </p>
             </div>
 
-            {subscription?.currentPeriodEnd && (
+            {isFreePlan ? (
+              <div>
+                <p className="text-gray-400 mb-1">Status</p>
+                <p className="text-xl text-white">Active -- no billing required</p>
+              </div>
+            ) : subscription?.currentPeriodEnd ? (
               <div>
                 <p className="text-gray-400 mb-1">
                   {subscription.cancelAtPeriodEnd ? 'Expires On' : 'Next Billing Date'}
@@ -227,8 +305,29 @@ export default function BillingPage() {
                   {formatDate(subscription.currentPeriodEnd)}
                 </p>
               </div>
-            )}
+            ) : null}
           </div>
+
+          {/* Free plan upgrade prompt */}
+          {isFreePlan && (
+            <div className="mt-4 p-4 bg-cyan-500/10 border border-cyan-500/30 rounded-lg">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <Zap className="w-5 h-5 text-cyan-400" />
+                  <p className="text-cyan-200">
+                    Upgrade to unlock more social accounts, unlimited AI posts, and advanced analytics.
+                  </p>
+                </div>
+                <Button
+                  onClick={() => router.push('/pricing')}
+                  size="sm"
+                  className="gradient-primary ml-4 shrink-0"
+                >
+                  View Plans
+                </Button>
+              </div>
+            </div>
+          )}
 
           {subscription?.cancelAtPeriodEnd && (
             <div className="mt-4 p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
@@ -242,53 +341,74 @@ export default function BillingPage() {
           )}
         </Card>
 
-        {/* Billing Management */}
+        {/* Billing Management - adapted for free vs paid */}
         <Card variant="glass" className="p-6 mb-6">
           <div className="flex items-center space-x-3 mb-4">
             <CreditCard className="w-6 h-6 text-cyan-400" />
             <h2 className="text-xl font-semibold text-white">Billing Management</h2>
           </div>
 
-          <p className="text-gray-400 mb-6">
-            Manage your subscription, payment methods, and download invoices through the Stripe billing portal.
-          </p>
-
-          <div className="space-y-4">
-            <Button
-              onClick={openBillingPortal}
-              disabled={portalLoading}
-              className="w-full gradient-primary text-white"
-              size="lg"
-            >
-              {portalLoading ? (
-                'Opening Portal...'
-              ) : (
-                <>
-                  Open Billing Portal
-                  <ArrowUpRight className="w-4 h-4 ml-2" />
-                </>
-              )}
-            </Button>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {isFreePlan ? (
+            /* Free plan: simplified billing section */
+            <div>
+              <p className="text-gray-400 mb-6">
+                You are on the free plan. No payment method is required. Upgrade anytime to access premium features.
+              </p>
               <Button
-                variant="outline"
-                className="w-full border-white/20 text-white hover:bg-white/10"
                 onClick={() => router.push('/pricing')}
+                className="w-full gradient-primary text-white"
+                size="lg"
               >
-                View Plans
-              </Button>
-              <Button
-                variant="outline"
-                className="w-full border-white/20 text-white hover:bg-white/10"
-                onClick={openBillingPortal}
-                disabled={portalLoading}
-              >
-                <Download className="w-4 h-4 mr-2" />
-                View Invoices
+                <Zap className="w-4 h-4 mr-2" />
+                Explore Plans & Pricing
+                <ArrowUpRight className="w-4 h-4 ml-2" />
               </Button>
             </div>
-          </div>
+          ) : (
+            /* Paid plan: full billing portal access */
+            <div>
+              <p className="text-gray-400 mb-6">
+                Manage your subscription, payment methods, and download invoices through the Stripe billing portal.
+              </p>
+
+              <div className="space-y-4">
+                <Button
+                  onClick={openBillingPortal}
+                  disabled={portalLoading}
+                  className="w-full gradient-primary text-white"
+                  size="lg"
+                >
+                  {portalLoading ? (
+                    'Opening Portal...'
+                  ) : (
+                    <>
+                      Open Billing Portal
+                      <ArrowUpRight className="w-4 h-4 ml-2" />
+                    </>
+                  )}
+                </Button>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <Button
+                    variant="outline"
+                    className="w-full border-white/20 text-white hover:bg-white/10"
+                    onClick={() => router.push('/pricing')}
+                  >
+                    View Plans
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="w-full border-white/20 text-white hover:bg-white/10"
+                    onClick={openBillingPortal}
+                    disabled={portalLoading}
+                  >
+                    <Download className="w-4 h-4 mr-2" />
+                    View Invoices
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
         </Card>
 
         {/* Usage & Limits */}
@@ -299,67 +419,20 @@ export default function BillingPage() {
           </div>
 
           <div className="space-y-4">
-            <div>
-              <div className="flex justify-between mb-2">
-                <span className="text-gray-400">AI Posts Generated</span>
-                <span className="text-white">
-                  {usageData?.usage.aiPosts ?? 0} / {usageData?.limits.aiPosts === -1 ? '∞' : (usageData?.limits.aiPosts ?? 10)}
-                </span>
-              </div>
-              {usageData?.limits.aiPosts === -1 ? (
-                <span className="text-xs font-medium text-cyan-400">Unlimited</span>
-              ) : (
-                <div className="w-full bg-white/10 rounded-full h-2">
-                  <div
-                    className="bg-gradient-to-r from-cyan-500 to-teal-500 h-2 rounded-full transition-all duration-300"
-                    style={{ width: `${usageData?.percentages.aiPosts ?? 0}%` }}
-                  ></div>
-                </div>
-              )}
-            </div>
-
-            <div>
-              <div className="flex justify-between mb-2">
-                <span className="text-gray-400">Social Accounts</span>
-                <span className="text-white">
-                  {usageData?.usage.socialAccounts ?? 0} / {usageData?.limits.socialAccounts === -1 ? '∞' : (usageData?.limits.socialAccounts ?? 2)}
-                </span>
-              </div>
-              {usageData?.limits.socialAccounts === -1 ? (
-                <span className="text-xs font-medium text-cyan-400">Unlimited</span>
-              ) : (
-                <div className="w-full bg-white/10 rounded-full h-2">
-                  <div
-                    className="bg-gradient-to-r from-cyan-500 to-teal-500 h-2 rounded-full transition-all duration-300"
-                    style={{ width: `${usageData?.percentages.socialAccounts ?? 0}%` }}
-                  ></div>
-                </div>
-              )}
-            </div>
-
-            <div>
-              <div className="flex justify-between mb-2">
-                <span className="text-gray-400">AI Personas</span>
-                <span className="text-white">
-                  {usageData?.usage.personas ?? 0} / {usageData?.limits.personas === -1 ? '∞' : (usageData?.limits.personas ?? 1)}
-                </span>
-              </div>
-              {usageData?.limits.personas === -1 ? (
-                <span className="text-xs font-medium text-cyan-400">Unlimited</span>
-              ) : (
-                <div className="w-full bg-white/10 rounded-full h-2">
-                  <div
-                    className="bg-gradient-to-r from-cyan-500 to-teal-500 h-2 rounded-full transition-all duration-300"
-                    style={{ width: `${usageData?.percentages.personas ?? 0}%` }}
-                  ></div>
-                </div>
-              )}
-            </div>
+            {renderUsageRow('AI Posts Generated', 'aiPosts', 10)}
+            {renderUsageRow('Social Accounts', 'socialAccounts', 2)}
+            {renderUsageRow('AI Personas', 'personas', 1)}
           </div>
 
           <div className="mt-6 p-4 bg-cyan-500/10 border border-cyan-500/30 rounded-lg">
             <p className="text-cyan-200 text-sm">
-              Need more? <a href="/pricing" className="underline hover:text-cyan-100">Upgrade your plan</a> to unlock higher limits and advanced features.
+              {isFreePlan ? (
+                <>Want more? <a href="/pricing" className="underline hover:text-cyan-100">Upgrade your plan</a> to unlock higher limits and advanced features.</>
+              ) : isUnlimited('aiPosts') ? (
+                <>You have unlimited access on your current plan. Enjoy creating without limits!</>
+              ) : (
+                <>Need more? <a href="/pricing" className="underline hover:text-cyan-100">Upgrade your plan</a> to unlock higher limits and advanced features.</>
+              )}
             </p>
           </div>
         </Card>

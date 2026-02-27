@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 import {
   Beaker,
   Play,
@@ -100,14 +101,20 @@ export default function ExperimentsPage() {
             <RefreshCw className={`w-4 h-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
             Refresh
           </Button>
-          <Button
-            className="gradient-primary text-white"
-            disabled
-            title="New experiment creation coming soon"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            New Experiment
-          </Button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span tabIndex={0} className="inline-flex">
+                <Button
+                  className="gradient-primary text-white opacity-50 cursor-not-allowed"
+                  disabled
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  New Experiment
+                </Button>
+              </span>
+            </TooltipTrigger>
+            <TooltipContent variant="glass-solid">Coming soon</TooltipContent>
+          </Tooltip>
         </div>
       </div>
 
@@ -182,14 +189,20 @@ export default function ExperimentsPage() {
               <Beaker className="h-16 w-16 mx-auto mb-4 text-slate-500" />
               <h3 className="text-xl font-semibold text-white mb-2">No experiments yet</h3>
               <p className="text-slate-400 mb-4">Create your first A/B test to get started.</p>
-              <Button
-                className="gradient-primary text-white"
-                disabled
-                title="New experiment creation coming soon"
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                New Experiment
-              </Button>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span tabIndex={0} className="inline-flex">
+                    <Button
+                      className="gradient-primary text-white opacity-50 cursor-not-allowed"
+                      disabled
+                    >
+                      <Plus className="w-4 h-4 mr-2" />
+                      New Experiment
+                    </Button>
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent variant="glass-solid">Coming soon</TooltipContent>
+              </Tooltip>
             </div>
           ) : (
           <div className="space-y-4">
@@ -311,19 +324,19 @@ export default function ExperimentsPage() {
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="p-3 bg-green-500/10 border border-green-500/20 rounded-lg">
-              <h4 className="font-medium text-white mb-1">✅ Run tests for statistical significance</h4>
+              <h4 className="font-medium text-white mb-1">Run tests for statistical significance</h4>
               <p className="text-xs text-gray-400">Wait for at least 95% confidence before making decisions</p>
             </div>
             <div className="p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
-              <h4 className="font-medium text-white mb-1">📊 Test one variable at a time</h4>
+              <h4 className="font-medium text-white mb-1">Test one variable at a time</h4>
               <p className="text-xs text-gray-400">Isolate variables to understand what drives results</p>
             </div>
             <div className="p-3 bg-cyan-500/10 border border-cyan-500/20 rounded-lg">
-              <h4 className="font-medium text-white mb-1">🎯 Define clear success metrics</h4>
+              <h4 className="font-medium text-white mb-1">Define clear success metrics</h4>
               <p className="text-xs text-gray-400">Know what you're optimizing for before starting</p>
             </div>
             <div className="p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
-              <h4 className="font-medium text-white mb-1">⏱️ Run tests for complete cycles</h4>
+              <h4 className="font-medium text-white mb-1">Run tests for complete cycles</h4>
               <p className="text-xs text-gray-400">Account for weekly and daily patterns in behavior</p>
             </div>
           </div>

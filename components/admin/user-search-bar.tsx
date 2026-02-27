@@ -7,12 +7,12 @@
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 import { Search, Filter, RefreshCw } from '@/components/icons';
 
 interface UserSearchBarProps {
   searchTerm: string;
   onSearchChange: (value: string) => void;
-  onFilter: () => void;
   onRefresh: () => void;
   isLoading: boolean;
 }
@@ -20,7 +20,6 @@ interface UserSearchBarProps {
 export function UserSearchBar({
   searchTerm,
   onSearchChange,
-  onFilter,
   onRefresh,
   isLoading
 }: UserSearchBarProps) {
@@ -35,15 +34,21 @@ export function UserSearchBar({
           className="pl-10 bg-white/5 border-white/10"
         />
       </div>
-      <Button
-        disabled
-        title="Advanced filters — coming soon"
-        variant="outline"
-        className="border-white/10 opacity-50 cursor-not-allowed"
-      >
-        <Filter className="w-4 h-4 mr-2" />
-        Filter
-      </Button>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <span tabIndex={0} className="inline-flex">
+            <Button
+              disabled
+              variant="outline"
+              className="border-white/10 opacity-50 cursor-not-allowed"
+            >
+              <Filter className="w-4 h-4 mr-2" />
+              Filter
+            </Button>
+          </span>
+        </TooltipTrigger>
+        <TooltipContent variant="glass-solid">Coming soon</TooltipContent>
+      </Tooltip>
       <Button onClick={onRefresh} variant="outline" className="border-white/10">
         <RefreshCw className={`w-4 h-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
         Refresh

@@ -226,10 +226,6 @@ export default function ContentPage() {
     }
   }, [generatedContent, editMode, editedContent, selectedVariation, platform, personaId, psychologyScore]);
 
-  const handleTrainAI = useCallback(() => {
-    // TODO: AI training — not yet implemented
-  }, []);
-
   const handleViewAnalytics = useCallback(() => {
     window.location.href = '/dashboard/analytics';
   }, []);
@@ -252,7 +248,7 @@ export default function ContentPage() {
 
   return (
     <div className="space-y-6">
-      <ContentHeader onTrainAI={handleTrainAI} onViewAnalytics={handleViewAnalytics} />
+      <ContentHeader onViewAnalytics={handleViewAnalytics} />
 
       {/* Business context selector for multi-business owners */}
       {isOwner && businesses.length > 0 && (

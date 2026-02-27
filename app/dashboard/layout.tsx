@@ -306,8 +306,8 @@ export default function DashboardLayout({
         sidebarCollapsed ? 'lg:pl-16' : 'lg:pl-64'
       )}>
         {/* Top Navigation */}
-        <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-white/[0.08] bg-white/[0.02] backdrop-blur-xl px-6">
-          <div className="flex items-center space-x-4">
+        <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-white/[0.08] bg-white/[0.02] backdrop-blur-xl px-3 sm:px-4 md:px-6">
+          <div className="flex items-center space-x-2 sm:space-x-4">
             <Button
               variant="ghost"
               size="icon"
@@ -323,12 +323,12 @@ export default function DashboardLayout({
               <Input
                 type="search"
                 placeholder="Search..."
-                className="w-48 sm:w-64 pl-10 bg-white/5 border-white/10 text-white placeholder:text-gray-500"
+                className="w-40 sm:w-48 md:w-64 pl-10 bg-white/5 border-white/10 text-white placeholder:text-gray-500"
               />
             </div>
           </div>
 
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-2 sm:space-x-4">
             {/* Business Switcher (multi-business owners only) */}
             {user?.isMultiBusinessOwner && <BusinessSwitcher />}
 
@@ -401,7 +401,7 @@ export default function DashboardLayout({
         </header>
 
         {/* Page Content */}
-        <main className="p-3 sm:p-6">
+        <main className="p-3 sm:p-4 md:p-6">
           {children}
         </main>
       </div>

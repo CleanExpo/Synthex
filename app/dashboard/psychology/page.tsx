@@ -16,6 +16,7 @@ import {
   RecommendationsCard,
   EmptyState,
 } from '@/components/psychology';
+import { APIErrorCard } from '@/components/error-states';
 
 export default function PsychologyPage() {
   const [content, setContent] = useState('');
@@ -24,6 +25,7 @@ export default function PsychologyPage() {
   const [targetAudience, setTargetAudience] = useState('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [result, setResult] = useState<AnalysisResult | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const handleAnalyze = async () => {
     if (!content.trim()) {
@@ -32,6 +34,7 @@ export default function PsychologyPage() {
     }
 
     setIsAnalyzing(true);
+    setError(null);
     try {
       const response = await fetch('/api/psychology/analyze', {
         method: 'POST',
@@ -57,9 +60,12 @@ export default function PsychologyPage() {
       } else {
         throw new Error(data.error || 'Analysis failed');
       }
-    } catch (error) {
-      console.error('Analysis error:', error);
-      toast.error('Failed to analyze content. Please try again.');
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : 'An unexpected error occurred';
+      console.error('Analysis error:', err);
+      setError(message);
+      setResult(null);
     } finally {
       setIsAnalyzing(false);
     }
@@ -94,7 +100,14 @@ export default function PsychologyPage() {
 
         {/* Results Section */}
         <div className="space-y-6">
-          {result ? (
+          {error ? (
+            <APIErrorCard
+              title="Analysis Failed"
+              message={error}
+              onRetry={handleAnalyze}
+              retryLabel="Retry Analysis"
+            />
+          ) : result ? (
             <>
               <OverallScore score={result.overallScore} />
               <PrinciplesCard principles={result.principles} />

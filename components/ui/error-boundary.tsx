@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import { toast } from 'sonner';
 import { AlertTriangle, RefreshCw, MessageCircle, Home } from '@/components/icons';
 import { Button } from './button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from './card';
@@ -118,16 +119,45 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
   handleReport = (): void => {
     if (this.props.onReport) {
       this.props.onReport();
-    } else {
-      // Default: open email with error details
-      const subject = encodeURIComponent('Error Report - Synthex Dashboard');
-      const body = encodeURIComponent(
-        `Error occurred at: ${new Date().toISOString()}\n` +
-        `Page: ${typeof window !== 'undefined' ? window.location.href : 'unknown'}\n\n` +
-        `Error: ${this.state.error?.message || 'Unknown error'}\n\n` +
-        `Please describe what you were doing when this error occurred:\n`
+      return;
+    }
+
+    // Copy error details to clipboard and show a toast with support info
+    const details = [
+      `Error occurred at: ${new Date().toISOString()}`,
+      `Page: ${typeof window !== 'undefined' ? window.location.href : 'unknown'}`,
+      `Error: ${this.state.error?.message || 'Unknown error'}`,
+    ].join('\n');
+
+    if (typeof navigator !== 'undefined' && navigator.clipboard) {
+      navigator.clipboard.writeText(details).then(
+        () => {
+          toast.info('Error details copied to clipboard. If this persists, contact support@synthex.social or visit the Help Center.', {
+            duration: 6000,
+            action: {
+              label: 'Help Center',
+              onClick: () => { window.location.href = '/dashboard/help'; },
+            },
+          });
+        },
+        () => {
+          toast.info('If this persists, contact support@synthex.social or visit the Help Center.', {
+            duration: 6000,
+            action: {
+              label: 'Help Center',
+              onClick: () => { window.location.href = '/dashboard/help'; },
+            },
+          });
+        }
       );
-      window.open(`mailto:support@synthex.ai?subject=${subject}&body=${body}`);
+    } else {
+      toast.info('If this persists, contact support@synthex.social or visit the Help Center.', {
+        duration: 6000,
+        action: {
+          label: 'Help Center',
+          onClick: () => { window.location.href = '/dashboard/help'; },
+        },
+      });
     }
   };
 
