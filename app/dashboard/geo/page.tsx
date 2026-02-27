@@ -18,42 +18,15 @@ import {
   Zap,
 } from '@/components/icons';
 import { GEOFeatureGate } from '@/components/geo/GEOFeatureGate';
+import type { GEOAnalysisResult, GEOScore } from '@/lib/geo/types';
 
-interface GEOScore {
-  overall: number;
-  citability: number;
-  structure: number;
-  multiModal: number;
-  authority: number;
-  technical: number;
-}
-
-interface CitablePassage {
-  isOptimalLength: boolean;
-  answerFirst: boolean;
-  hasCitation: boolean;
-  wordCount: number;
-  score: number;
-  text: string;
-}
-
-interface GEORecommendation {
-  title: string;
-  priority: string;
-  impact: number;
-  description: string;
-}
-
-interface GEOResult {
-  score: GEOScore;
-  citablePassages: CitablePassage[];
-  recommendations: GEORecommendation[];
-}
+/** The API response extends GEOAnalysisResult with a persisted record id. */
+type GEOAnalysisResponse = GEOAnalysisResult & { id: string };
 
 export default function GEOPage() {
   const [content, setContent] = useState('');
   const [platform, setPlatform] = useState('all');
-  const [result, setResult] = useState<GEOResult | null>(null);
+  const [result, setResult] = useState<GEOAnalysisResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState('analyze');
@@ -91,7 +64,7 @@ export default function GEOPage() {
     { key: 'multiModal', label: 'Multi-Modal', icon: Globe, weight: '15%', color: 'text-amber-400' },
     { key: 'authority', label: 'Authority', icon: Shield, weight: '20%', color: 'text-emerald-400' },
     { key: 'technical', label: 'Technical', icon: TrendingUp, weight: '20%', color: 'text-rose-400' },
-  ];
+  ] as const;
 
   const getTier = (score: number) => {
     if (score >= 80) return { label: 'Excellent', color: 'bg-emerald-500/20 text-emerald-400' };

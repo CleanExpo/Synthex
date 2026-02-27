@@ -1,56 +1,102 @@
-#!/bin/sh
-. "$(dirname "$0")/_/husky.sh"
+#!/usr/bin/env sh
+
+# Husky v8 bootstrap (skip gracefully if not installed, e.g. in CI)
+if [ -f "$(dirname "$0")/_/husky.sh" ]; then
+  . "$(dirname "$0")/_/husky.sh"
+fi
 
 # SECURITY PRE-COMMIT CHECKS
-echo "🔒 Running security checks before commit..."
+# Prevents accidental commit of secrets, credentials, and sensitive files.
+# Bypass with: git commit --no-verify (use only when you are certain it is safe)
+
+echo "[SECURITY] Running pre-commit secret detection..."
 
 # =============================================================================
 # 1. Block .env files and credential files from being committed
 # =============================================================================
-echo "Checking for sensitive files..."
-BLOCKED_FILES=$(git diff --cached --name-only | grep -iE '\.env$|\.env\.[a-z]+$|\.pem$|\.key$|\.p12$|\.pfx$|\.jks$|credentials\.json|service[-_]account.*\.json' | grep -v '\.example$' | grep -v '\.test$')
+echo "[CHECK] Scanning for sensitive file types..."
+BLOCKED_FILES=$(git diff --cached --name-only --diff-filter=ACMR | grep -iE '\.env$|\.env\.[a-z]+$|\.pem$|\.key$|\.p12$|\.pfx$|\.jks$|\.keystore$|credentials\.json|service[-_]account.*\.json' | grep -v '\.example$' | grep -v '\.test$' | grep -v '\.template$' || true)
 if [ -n "$BLOCKED_FILES" ]; then
-  echo "❌ SECURITY ERROR: Attempting to commit sensitive files!"
-  echo "Blocked files:"
-  echo "$BLOCKED_FILES"
   echo ""
-  echo "These files must NEVER be committed to version control."
-  echo "Add them to .gitignore if not already listed."
+  echo "[ERROR] BLOCKED: Attempting to commit sensitive files!"
+  echo ""
+  echo "  Blocked files:"
+  echo "$BLOCKED_FILES" | while IFS= read -r line; do echo "    - $line"; done
+  echo ""
+  echo "  These files must NEVER be committed to version control."
+  echo "  Add them to .gitignore if not already listed."
+  echo "  If this is a false positive, use: git commit --no-verify"
+  echo ""
   exit 1
 fi
 
 # =============================================================================
-# 2. Scan staged files for hardcoded secrets
+# 2. Scan staged files for hardcoded secrets (HIGH confidence = block)
 # =============================================================================
-echo "Scanning for hardcoded secrets..."
+echo "[CHECK] Scanning staged diffs for hardcoded secrets..."
 
-# Get only staged file content (not filenames) to check for secret patterns
-STAGED_FILES=$(git diff --cached --name-only --diff-filter=ACMR | grep -E '\.(ts|tsx|js|jsx|json|yaml|yml|sh|py|env)$' | grep -v 'node_modules' | grep -v '\.test\.' | grep -v '__tests__' | grep -v 'test/' | grep -v 'tests/' | grep -v '\.example' | grep -v '\.md$')
+# Get staged source files (exclude test files from low-confidence checks only)
+STAGED_FILES=$(git diff --cached --name-only --diff-filter=ACMR | grep -E '\.(ts|tsx|js|jsx|json|yaml|yml|sh|py|env|toml|cfg|conf|ini)$' | grep -v 'node_modules' | grep -v '\.example' | grep -v '\.md$' || true)
 
 if [ -n "$STAGED_FILES" ]; then
-  # Check for high-confidence secret patterns (real API keys, not variable names)
-  SECRET_MATCHES=$(echo "$STAGED_FILES" | xargs git diff --cached -- 2>/dev/null | grep '^+' | grep -v '^+++' | grep -iE '(sk_live_[a-zA-Z0-9]{20,}|sk_test_[a-zA-Z0-9]{20,}|pk_live_[a-zA-Z0-9]{20,}|AKIA[A-Z0-9]{16}|ghp_[A-Za-z0-9]{36}|gho_[A-Za-z0-9]{36}|glpat-[A-Za-z0-9\-]{20}|xoxb-[0-9]{10,}|xoxp-[0-9]{10,}|AIzaSy[A-Za-z0-9\-_]{33}|-----BEGIN (RSA |EC )?PRIVATE KEY|eyJ[A-Za-z0-9_-]{20,}\.[A-Za-z0-9_-]{20,}\.)' 2>/dev/null)
+  # -------------------------------------------------------------------------
+  # 2a. High-confidence patterns (block commit)
+  #     These match actual key values, not variable names or references.
+  # -------------------------------------------------------------------------
+  # Patterns:
+  #   - sk-...          OpenAI secret keys
+  #   - sk_live_...     Stripe live secret keys
+  #   - sk_test_...     Stripe test secret keys
+  #   - pk_live_...     Stripe live publishable keys
+  #   - pk_test_...     Stripe test publishable keys
+  #   - rk_live_...     Stripe restricted keys (live)
+  #   - rk_test_...     Stripe restricted keys (test)
+  #   - whsec_...       Stripe webhook signing secrets
+  #   - AKIA...         AWS access key IDs
+  #   - ghp_...         GitHub personal access tokens
+  #   - gho_...         GitHub OAuth tokens
+  #   - glpat-...       GitLab personal access tokens
+  #   - xoxb-...        Slack bot tokens
+  #   - xoxp-...        Slack user tokens
+  #   - SG....          SendGrid API keys
+  #   - AIzaSy...       Google API keys
+  #   - -----BEGIN ...  PEM private keys
+  #   - eyJ...          JWT tokens (base64 encoded JSON)
+
+  SECRET_MATCHES=$(echo "$STAGED_FILES" | xargs git diff --cached -- 2>/dev/null | grep '^+' | grep -v '^+++' | grep -E '(sk-[a-zA-Z0-9]{20,}|sk_live_[a-zA-Z0-9]{20,}|sk_test_[a-zA-Z0-9]{20,}|pk_live_[a-zA-Z0-9]{20,}|pk_test_[a-zA-Z0-9]{20,}|rk_live_[a-zA-Z0-9]{20,}|rk_test_[a-zA-Z0-9]{20,}|whsec_[a-zA-Z0-9]{20,}|AKIA[A-Z0-9]{16}|ghp_[A-Za-z0-9]{36}|gho_[A-Za-z0-9]{36}|glpat-[A-Za-z0-9\-]{20}|xoxb-[0-9]{10,}|xoxp-[0-9]{10,}|SG\.[A-Za-z0-9_\-]{20,}\.[A-Za-z0-9_\-]{20,}|AIzaSy[A-Za-z0-9\-_]{33}|-----BEGIN (RSA |EC |DSA |OPENSSH )?PRIVATE KEY|eyJ[A-Za-z0-9_-]{20,}\.[A-Za-z0-9_-]{20,}\.)' 2>/dev/null || true)
 
   if [ -n "$SECRET_MATCHES" ]; then
-    echo "❌ SECURITY ERROR: Hardcoded secrets detected in staged changes!"
     echo ""
-    echo "Matches found (showing patterns, not values):"
-    echo "$SECRET_MATCHES" | head -5
+    echo "[ERROR] BLOCKED: Hardcoded secrets detected in staged changes!"
     echo ""
-    echo "Remove these secrets and use environment variables instead."
-    echo "Production secrets belong in Vercel dashboard, not in code."
+    echo "  Matches found (first 5 shown):"
+    echo "$SECRET_MATCHES" | head -5 | while IFS= read -r line; do echo "    $line"; done
+    echo ""
+    echo "  Remove these secrets and use environment variables instead."
+    echo "  Production secrets belong in Vercel dashboard, not in code."
+    echo "  If this is a false positive, use: git commit --no-verify"
+    echo ""
     exit 1
   fi
 
-  # Check for common secret assignment patterns (lower confidence, warn only)
-  SUSPICIOUS=$(echo "$STAGED_FILES" | xargs git diff --cached -- 2>/dev/null | grep '^+' | grep -v '^+++' | grep -iE '(password|secret|token|api_key)\s*[:=]\s*["\x27][^"\x27]{8,}' | grep -v 'process\.env' | grep -v 'example' | grep -v 'placeholder' | grep -v 'your_' | grep -v 'xxx' | head -5)
+  # -------------------------------------------------------------------------
+  # 2b. Lower-confidence patterns (warn only, do not block)
+  #     These catch assignment patterns like: password = "something"
+  #     Excluded: process.env references, placeholders, test values
+  # -------------------------------------------------------------------------
+  STAGED_SRC_FILES=$(echo "$STAGED_FILES" | grep -v '\.test\.' | grep -v '__tests__' | grep -v 'test/' | grep -v 'tests/' || true)
+  if [ -n "$STAGED_SRC_FILES" ]; then
+    SUSPICIOUS=$(echo "$STAGED_SRC_FILES" | xargs git diff --cached -- 2>/dev/null | grep '^+' | grep -v '^+++' | grep -iE '(password|secret|token|api_key|apikey|private_key)\s*[:=]\s*["\x27][^"\x27]{8,}' | grep -v 'process\.env' | grep -v 'example' | grep -v 'placeholder' | grep -v 'your_' | grep -v 'xxx' | grep -v 'TODO' | grep -v 'FIXME' | head -5 || true)
 
-  if [ -n "$SUSPICIOUS" ]; then
-    echo "⚠️  Warning: Possible hardcoded credentials detected:"
-    echo "$SUSPICIOUS"
-    echo ""
-    echo "If these are test values or examples, you can proceed."
-    echo "If they are real secrets, remove them NOW."
+    if [ -n "$SUSPICIOUS" ]; then
+      echo ""
+      echo "[WARNING] Possible hardcoded credentials detected:"
+      echo "$SUSPICIOUS" | while IFS= read -r line; do echo "    $line"; done
+      echo ""
+      echo "  If these are test values or examples, you can proceed."
+      echo "  If they are real secrets, remove them NOW."
+      echo ""
+    fi
   fi
 fi
 
@@ -67,9 +113,11 @@ LARGE_FILES=$(git diff --cached --name-only --diff-filter=ACMR | while read -r f
 done)
 
 if [ -n "$LARGE_FILES" ]; then
-  echo "⚠️  Warning: Large files staged for commit:"
-  echo "$LARGE_FILES"
-  echo "Consider adding these to .gitignore if they contain data."
+  echo ""
+  echo "[WARNING] Large files staged for commit (>5MB):"
+  echo "$LARGE_FILES" | while IFS= read -r line; do echo "    - $line"; done
+  echo "  Consider adding these to .gitignore if they contain data."
+  echo ""
 fi
 
-echo "✅ Security checks passed!"
+echo "[OK] Security checks passed."

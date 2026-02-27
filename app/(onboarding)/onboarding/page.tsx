@@ -4,12 +4,24 @@
  * Onboarding Entry Page
  *
  * @description Welcome page that starts the onboarding flow with Synthex branding.
- * Updated for 5-step AI-powered flow.
+ * Shows a visual step preview so users know what to expect, including the
+ * platform-connection requirement (UNI-645).
  */
 
 import React from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowRight, Zap, Target, Brain } from '@/components/icons';
+import {
+  ArrowRight,
+  Zap,
+  Target,
+  Brain,
+  Building,
+  Shield,
+  Key,
+  FileText,
+  Link2,
+  Info,
+} from '@/components/icons';
 import { Button } from '@/components/ui/button';
 import { SynthexLogo } from '@/components/marketing/MarketingLayout';
 
@@ -32,6 +44,49 @@ const FEATURES = [
     icon: Target,
     title: 'Smart Analytics',
     description: 'Track performance and optimize your content strategy',
+  },
+];
+
+// ============================================================================
+// STEPS PREVIEW DATA
+// ============================================================================
+
+const ONBOARDING_STEPS = [
+  {
+    number: 1,
+    label: 'Business Identity',
+    description: 'Enter your business name and website',
+    icon: Building,
+  },
+  {
+    number: 2,
+    label: 'Health Checkup',
+    description: 'AI analyzes your online presence',
+    icon: Shield,
+  },
+  {
+    number: 3,
+    label: 'API Setup',
+    description: 'Connect your AI provider keys',
+    icon: Key,
+  },
+  {
+    number: 4,
+    label: 'Review Details',
+    description: 'Confirm your business profile',
+    icon: FileText,
+  },
+  {
+    number: 5,
+    label: 'Connect Platforms',
+    description: 'Link your social media accounts',
+    icon: Link2,
+  },
+  {
+    number: 6,
+    label: 'Brand Persona',
+    description: 'Define your content voice and tone',
+    icon: Brain,
   },
 ];
 
@@ -77,24 +132,56 @@ export default function OnboardingPage() {
         ))}
       </div>
 
-      {/* Step preview */}
-      <div className="w-full max-w-2xl mx-auto mb-10">
-        <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-4">5 quick steps</p>
-        <div className="grid grid-cols-5 gap-3">
-          {[
-            { n: 1, label: 'Business Identity' },
-            { n: 2, label: 'Review Details' },
-            { n: 3, label: 'Connect Platforms' },
-            { n: 4, label: 'Set Up Persona' },
-            { n: 5, label: 'Review & Launch' },
-          ].map(({ n, label }) => (
-            <div key={n} className="flex flex-col items-center gap-1 text-center">
-              <div className="w-8 h-8 rounded-full bg-cyan-500/20 border border-cyan-500/30 flex items-center justify-center text-sm font-bold text-cyan-400">
-                {n}
+      {/* Step Preview */}
+      <div className="w-full max-w-3xl mx-auto mb-10">
+        <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-5">
+          6 steps to get started
+        </p>
+
+        {/* Desktop: horizontal layout */}
+        <div className="hidden sm:grid sm:grid-cols-6 gap-3">
+          {ONBOARDING_STEPS.map((step) => (
+            <div key={step.number} className="flex flex-col items-center gap-2 text-center group">
+              <div className="w-10 h-10 rounded-full bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center group-hover:bg-cyan-500/20 group-hover:border-cyan-500/40 transition-all">
+                <step.icon className="w-5 h-5 text-cyan-400" />
               </div>
-              <p className="text-xs font-medium text-white">{label}</p>
+              <div>
+                <p className="text-xs font-semibold text-white leading-tight">{step.label}</p>
+                <p className="text-[10px] text-gray-500 mt-0.5 leading-tight hidden lg:block">
+                  {step.description}
+                </p>
+              </div>
             </div>
           ))}
+        </div>
+
+        {/* Mobile: vertical layout */}
+        <div className="sm:hidden space-y-3 max-w-xs mx-auto">
+          {ONBOARDING_STEPS.map((step) => (
+            <div key={step.number} className="flex items-center gap-3 text-left">
+              <div className="w-9 h-9 rounded-full bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center shrink-0">
+                <step.icon className="w-4 h-4 text-cyan-400" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-white leading-tight">
+                  <span className="text-cyan-500 mr-1.5">{step.number}.</span>
+                  {step.label}
+                </p>
+                <p className="text-xs text-gray-500 mt-0.5 leading-tight">{step.description}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Preparation Note */}
+      <div className="w-full max-w-lg mx-auto mb-10">
+        <div className="flex items-start gap-3 p-4 rounded-lg bg-cyan-500/5 border border-cyan-500/15 text-left">
+          <Info className="w-5 h-5 text-cyan-400 shrink-0 mt-0.5" />
+          <p className="text-sm text-gray-300 leading-relaxed">
+            You will connect at least one social media account during setup.
+            <span className="text-gray-400"> Have your login details ready for platforms like Instagram, YouTube, or LinkedIn.</span>
+          </p>
         </div>
       </div>
 

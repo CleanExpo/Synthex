@@ -14,6 +14,35 @@ import { prisma } from '@/lib/prisma';
 import { encryptApiKey, maskApiKey } from '@/lib/encryption/api-key-encryption';
 import { validateAPIKey, APIProvider } from '@/lib/encryption/api-key-validator';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
+import { sanitizeErrorForResponse } from '@/lib/utils/error-utils';
+
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
+// --- Helpers ---
+
+/**
+ * Check whether the Prisma client is available.
+ * Returns false when DATABASE_URL is missing or the client failed to initialise
+ * (e.g. during static generation or a cold-start without a DB connection).
+ */
+function isPrismaAvailable(): boolean {
+  return prisma != null && typeof prisma.aPICredential?.findMany === 'function';
+}
+
+/**
+ * Determine whether a database error indicates the api_credentials table
+ * has not been created yet (common on first deploy before `prisma db push`).
+ */
+function isMissingTableError(error: unknown): boolean {
+  const msg = error instanceof Error ? error.message : String(error);
+  return (
+    msg.includes('does not exist') ||
+    msg.includes('relation') ||
+    msg.includes('P2021') ||
+    msg.includes('P2010')
+  );
+}
 
 // --- GET: list credentials ---
 
@@ -22,6 +51,12 @@ export async function GET(request: NextRequest) {
     const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // If Prisma client is not available, return empty list gracefully
+    if (!isPrismaAvailable()) {
+      console.warn('[Settings API Credentials] Prisma client not available — returning empty list');
+      return NextResponse.json({ credentials: [] });
     }
 
     let credentials;
@@ -46,20 +81,22 @@ export async function GET(request: NextRequest) {
         orderBy: { createdAt: 'desc' },
       });
     } catch (dbError) {
-      // Handle missing table gracefully (common on first deploy before db push)
-      const msg = dbError instanceof Error ? dbError.message : '';
-      if (msg.includes('does not exist') || msg.includes('relation') || msg.includes('P2021')) {
+      // For the GET/read-only endpoint, any database failure should return an
+      // empty list rather than crashing the Settings UI.  We log the actual
+      // error for debugging but never surface it to the client.
+      if (isMissingTableError(dbError)) {
         console.warn('[Settings API Credentials] api_credentials table not found — returning empty list');
-        return NextResponse.json({ credentials: [] });
+      } else {
+        console.error('[Settings API Credentials] Database query failed:', dbError);
       }
-      throw dbError; // Re-throw other DB errors to outer catch
+      return NextResponse.json({ credentials: [] });
     }
 
     return NextResponse.json({ credentials });
   } catch (error) {
     console.error('[Settings API Credentials] GET error:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch credentials' },
+      { error: sanitizeErrorForResponse(error, 'Failed to fetch credentials') },
       { status: 500 }
     );
   }
@@ -101,6 +138,15 @@ export async function POST(request: NextRequest) {
           provider,
         },
         { status: 400 }
+      );
+    }
+
+    // Guard: Prisma must be available for write operations
+    if (!isPrismaAvailable()) {
+      console.error('[Settings API Credentials] Prisma client not available for POST');
+      return NextResponse.json(
+        { error: 'Database not available. Please try again later.' },
+        { status: 503 }
       );
     }
 
@@ -161,8 +207,8 @@ export async function POST(request: NextRequest) {
         });
       }
     } catch (dbError) {
-      const msg = dbError instanceof Error ? dbError.message : '';
-      if (msg.includes('does not exist') || msg.includes('relation') || msg.includes('P2021')) {
+      if (isMissingTableError(dbError)) {
+        // NOTE: The api_credentials table needs to be created. Run `npx prisma db push`.
         console.error('[Settings API Credentials] api_credentials table not found — run `npx prisma db push`');
         return NextResponse.json(
           { error: 'Database not configured. Please contact support.' },
@@ -187,7 +233,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('[Settings API Credentials] POST error:', error);
     return NextResponse.json(
-      { error: 'Failed to save credential' },
+      { error: sanitizeErrorForResponse(error, 'Failed to save credential') },
       { status: 500 }
     );
   }
@@ -216,6 +262,15 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
+    // Guard: Prisma must be available for write operations
+    if (!isPrismaAvailable()) {
+      console.error('[Settings API Credentials] Prisma client not available for DELETE');
+      return NextResponse.json(
+        { error: 'Database not available. Please try again later.' },
+        { status: 503 }
+      );
+    }
+
     // Verify ownership before deleting
     let credential;
     try {
@@ -226,8 +281,7 @@ export async function DELETE(request: NextRequest) {
         },
       });
     } catch (dbError) {
-      const msg = dbError instanceof Error ? dbError.message : '';
-      if (msg.includes('does not exist') || msg.includes('relation') || msg.includes('P2021')) {
+      if (isMissingTableError(dbError)) {
         console.error('[Settings API Credentials] api_credentials table not found');
         return NextResponse.json(
           { error: 'Database not configured. Please contact support.' },
@@ -245,23 +299,28 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Soft-delete: mark as revoked + inactive
-    await prisma.aPICredential.update({
-      where: { id: credential.id },
-      data: {
-        isActive: false,
-        revokedAt: new Date(),
-      },
-    });
+    try {
+      await prisma.aPICredential.update({
+        where: { id: credential.id },
+        data: {
+          isActive: false,
+          revokedAt: new Date(),
+        },
+      });
+    } catch (dbError) {
+      console.error('[Settings API Credentials] Failed to soft-delete credential:', dbError);
+      return NextResponse.json(
+        { error: sanitizeErrorForResponse(dbError, 'Failed to delete credential') },
+        { status: 500 }
+      );
+    }
 
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error('[Settings API Credentials] DELETE error:', error);
     return NextResponse.json(
-      { error: 'Failed to delete credential' },
+      { error: sanitizeErrorForResponse(error, 'Failed to delete credential') },
       { status: 500 }
     );
   }
 }
-
-// Required for crypto usage in api-key-encryption (Node.js built-in)
-export const runtime = 'nodejs';
