@@ -79,6 +79,30 @@ const oauthConfigs: Record<string, OAuthConfig> = {
     clientId: process.env.TIKTOK_CLIENT_KEY,
     clientSecret: process.env.TIKTOK_CLIENT_SECRET,
   },
+  youtube: {
+    tokenUrl: 'https://oauth2.googleapis.com/token',
+    userInfoUrl: 'https://www.googleapis.com/youtube/v3/channels?part=snippet&mine=true',
+    clientId: process.env.YOUTUBE_CLIENT_ID || process.env.GOOGLE_CLIENT_ID,
+    clientSecret: process.env.YOUTUBE_CLIENT_SECRET || process.env.GOOGLE_CLIENT_SECRET,
+  },
+  pinterest: {
+    tokenUrl: 'https://api.pinterest.com/v5/oauth/token',
+    userInfoUrl: 'https://api.pinterest.com/v5/user_account',
+    clientId: process.env.PINTEREST_CLIENT_ID,
+    clientSecret: process.env.PINTEREST_CLIENT_SECRET,
+  },
+  reddit: {
+    tokenUrl: 'https://www.reddit.com/api/v1/access_token',
+    userInfoUrl: 'https://oauth.reddit.com/api/v1/me',
+    clientId: process.env.REDDIT_CLIENT_ID,
+    clientSecret: process.env.REDDIT_CLIENT_SECRET,
+  },
+  threads: {
+    tokenUrl: 'https://graph.threads.net/oauth/access_token',
+    userInfoUrl: 'https://graph.threads.net/v1.0/me?fields=id,username,name,threads_profile_picture_url',
+    clientId: process.env.THREADS_CLIENT_ID || process.env.INSTAGRAM_CLIENT_ID,
+    clientSecret: process.env.THREADS_CLIENT_SECRET || process.env.INSTAGRAM_CLIENT_SECRET,
+  },
 };
 
 // =============================================================================
@@ -237,6 +261,36 @@ async function fetchUserInfo(
         id: data.data?.user?.open_id || data.open_id || data.id,
         name: data.data?.user?.display_name || data.display_name,
         avatar: data.data?.user?.avatar_url || data.avatar_url,
+      };
+    case 'youtube': {
+      const channel = data.items?.[0];
+      return {
+        id: channel?.id || data.id,
+        name: channel?.snippet?.title,
+        avatar: channel?.snippet?.thumbnails?.default?.url,
+        username: channel?.snippet?.customUrl,
+      };
+    }
+    case 'pinterest':
+      return {
+        id: data.username || data.id,
+        name: data.username,
+        avatar: data.profile_image,
+        username: data.username,
+      };
+    case 'reddit':
+      return {
+        id: data.id,
+        name: data.name,
+        avatar: data.icon_img?.split('?')[0],
+        username: data.name,
+      };
+    case 'threads':
+      return {
+        id: data.id,
+        name: data.name || data.username,
+        avatar: data.threads_profile_picture_url,
+        username: data.username,
       };
     default:
       return {
