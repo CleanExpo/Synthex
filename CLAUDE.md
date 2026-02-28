@@ -13,7 +13,7 @@ AI-powered marketing automation platform. Next.js 15 full-stack app deployed on 
 ## Directory Structure
 
 ```
-D:\Synthex\                      # Repository root = app root
+C:\Synthex\                      # Repository root = app root
 ├── app/                         # Next.js App Router
 │   ├── (auth)/                  #   Auth routes (login, signup)
 │   ├── (onboarding)/            #   Onboarding flow
@@ -164,14 +164,21 @@ Production secrets are managed in Vercel dashboard, not in files.
 
 ## Claude Code Integration
 
-Skills, agents, hooks, and knowledge base live in `.claude/` — outside the build pipeline, zero deployment impact.
+Claude Code tools are split across two tiers — project-level (Synthex-specific) and user-level (general-purpose, shared across all projects).
 
-- **Skills** define structured workflows (SKILL.md with YAML frontmatter)
-- **Agents** define specialist roles with tools and delegation protocols
-- **Hooks** are PowerShell scripts that validate actions pre/post tool use
-- **Knowledge base** is a structured "second brain" for persistent research
-- **Rules** provide domain-specific context (frontend, backend, database, etc.)
-- **Memory** lives in `.claude/memory/` (committed to git, shared across machines)
+### Project-level (`.claude/`) — Synthex-specific only
+- **4 agents**: build-engineer, code-architect, qa-sentinel, senior-reviewer
+- **15 skills**: api-testing, architecture-enforcer, build-orchestrator, client-manager, client-retention, code-review, database-prisma, design, platform-showcase, project-scanner, route-auditor, security-hardener, spec-generator, sql-hardener, ui-ux
+- **Hooks**: PowerShell scripts for build validation, pre-commit checks
+- **Rules**: Domain-specific context (frontend, backend, database, operations, etc.)
+- **Knowledge base**: Persistent research in `.claude/knowledge/`
+
+### User-level (`~/.claude/`) — General-purpose, available everywhere
+- **17 agents**: hive-mind orchestrator, blog suite (4), marketing (4), SEO/research (3), video/visual (3), content (2)
+- **34 skills**: blog suite (14), SEO (8), video/visual (3), research (3), meta (5), visual-generator
+
+### Memory
+- Lives in `.claude/memory/` (committed to git, shared across machines)
   - `MEMORY.md` — Project state, current priorities, user preferences
   - `agents-and-skills.md` — Full agent/skill inventory
   - `linear-backlog.md` — Linear issue snapshot (update after each sprint)
