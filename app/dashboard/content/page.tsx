@@ -15,6 +15,7 @@ import {
   GenerationSettings,
   GeneratedContent,
 } from '@/components/content';
+import { GenerateVideoCard, VideoGenerationModal } from '@/components/video';
 import { usePersonas } from '@/hooks/use-personas';
 import { useActiveBusiness } from '@/hooks/useActiveBusiness';
 
@@ -48,6 +49,9 @@ export default function ContentPage() {
   const [isLoading] = useState(false);
   const [error] = useState<string | null>(null);
   const [psychologyScore, setPsychologyScore] = useState<{overallScore: number, topPrinciples: {name: string, strength: number}[], predictedEngagement: {level: string}} | null>(null);
+
+  // Video generation modal
+  const [videoModalOpen, setVideoModalOpen] = useState(false);
 
   const handleGenerate = useCallback(async () => {
     if (!topic) {
@@ -284,6 +288,16 @@ export default function ContentPage() {
       )}
 
       <ContentStats />
+
+      {/* Video generation entry point */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <GenerateVideoCard onClick={() => setVideoModalOpen(true)} />
+      </div>
+
+      <VideoGenerationModal
+        open={videoModalOpen}
+        onOpenChange={setVideoModalOpen}
+      />
 
       <div className="grid gap-6 lg:grid-cols-2">
         <GenerationSettings
