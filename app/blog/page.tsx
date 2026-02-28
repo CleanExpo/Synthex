@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { ArrowRight, Calendar, Clock, User, TrendingUp, Brain, Zap } from '@/components/icons';
+import { ArrowRight, Calendar, Clock, User, TrendingUp, Brain, Zap, Code } from '@/components/icons';
 import { useState, useEffect } from 'react';
 import MarketingLayout from '@/components/marketing/MarketingLayout';
 
@@ -20,6 +20,17 @@ interface BlogPost {
 }
 
 const blogPosts: BlogPost[] = [
+  {
+    id: 'what-is-skill-md-claude-code',
+    title: 'What Is SKILL.md? The Authoritative Guide to Claude Code Skills',
+    excerpt: 'SKILL.md is a structured Markdown file that teaches Claude Code reusable, domain-specific workflows. Learn the format, see real examples, and understand how skills differ from agents and project instructions.',
+    author: 'Phill McGurk',
+    date: '2026-02-28',
+    readTime: '8 min read',
+    category: 'Developer Tools',
+    image: '/blog/skill-md-guide.jpg',
+    featured: true
+  },
   {
     id: '1',
     title: 'How AI is Revolutionizing Social Media Marketing in 2025',
@@ -88,7 +99,7 @@ const blogPosts: BlogPost[] = [
   }
 ];
 
-const categories = ['All', 'AI Trends', 'Strategy', 'Optimization', 'Psychology', 'Case Study', 'Planning'];
+const categories = ['All', 'Developer Tools', 'AI Trends', 'Strategy', 'Optimization', 'Psychology', 'Case Study', 'Planning'];
 
 export default function BlogPage() {
   const [selectedCategory, setSelectedCategory] = useState('All');
@@ -227,6 +238,7 @@ export default function BlogPage() {
               {filteredPosts.map((post) => (
                 <Card key={post.id} className="bg-[#0f172a]/80 backdrop-blur-md border border-cyan-500/20 p-6 hover:border-cyan-400/40 hover:shadow-xl hover:shadow-cyan-500/10 hover:transform hover:scale-[1.02] transition-all">
                   <div className="bg-gradient-to-br from-cyan-500/10 to-cyan-600/5 rounded-lg h-48 mb-4 flex items-center justify-center border border-cyan-500/10">
+                    {post.category === 'Developer Tools' && <Code className="w-16 h-16 text-cyan-400/50" />}
                     {post.category === 'AI Trends' && <Brain className="w-16 h-16 text-cyan-400/50" />}
                     {post.category === 'Strategy' && <TrendingUp className="w-16 h-16 text-cyan-300/50" />}
                     {post.category === 'Optimization' && <Zap className="w-16 h-16 text-cyan-500/50" />}

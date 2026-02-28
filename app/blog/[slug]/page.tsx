@@ -11,6 +11,204 @@ import { ArrowLeft, Calendar, Clock, User, Share2, Twitter, Linkedin, Facebook, 
 
 // Sample blog post data - in production, this would come from a database
 const blogPosts = {
+  'what-is-skill-md-claude-code': {
+    id: 'what-is-skill-md-claude-code',
+    title: 'What Is a SKILL.md File? The Complete Guide for Claude Code Agents',
+    excerpt: 'The definitive guide to SKILL.md — the open standard for defining reusable agent skills in Claude Code. Learn the format, see real examples, and understand how SKILL.md compares to AGENTS.md and CLAUDE.md.',
+    content: `
+      <p>If you've used Claude Code for more than a few sessions, you've probably noticed <code>.claude/skills/</code> directories appearing in projects. Inside each one sits a single file: <strong>SKILL.md</strong>. But what exactly is a SKILL.md file, and why has it become the cornerstone of how AI agents learn specialised workflows?</p>
+
+      <p>This guide explains everything you need to know — from the format specification and real-world examples through to the difference between SKILL.md, AGENTS.md, and CLAUDE.md.</p>
+
+      <h2>What Is a SKILL.md File?</h2>
+      <p>A SKILL.md file is a structured Markdown document that defines a <strong>single, reusable capability</strong> for an AI coding agent. Think of it as a recipe card: it tells the agent what the skill does, when to activate it, and exactly how to execute it step by step.</p>
+
+      <p>Skills live inside <code>.claude/skills/&lt;skill-name&gt;/SKILL.md</code> in your project. When a user's request matches the skill's trigger conditions, Claude Code loads the file and follows its instructions — turning a general-purpose assistant into a domain expert on demand.</p>
+
+      <h3>Why Skills Exist</h3>
+      <p>Without skills, you'd need to re-explain complex workflows every session. A SEO audit, a database migration checklist, a code review protocol — these are multi-step processes with specific rules. Skills encode that knowledge once and make it available permanently.</p>
+
+      <p>The key benefits are:</p>
+      <ul>
+        <li><strong>Consistency</strong> — The agent follows the same process every time, eliminating drift between sessions</li>
+        <li><strong>Shareability</strong> — Skills are plain Markdown files committed to Git, so your entire team benefits</li>
+        <li><strong>Composability</strong> — Skills can reference other skills, creating layered workflows</li>
+        <li><strong>Version control</strong> — Track changes to your agent's capabilities like any other code</li>
+      </ul>
+
+      <h2>The SKILL.md Format</h2>
+      <p>Every SKILL.md file follows a consistent structure: <strong>YAML frontmatter</strong> for metadata, followed by <strong>Markdown body</strong> for instructions.</p>
+
+      <h3>YAML Frontmatter</h3>
+      <p>The frontmatter block at the top of the file defines key metadata that Claude Code uses to decide <em>when</em> and <em>how</em> to activate the skill:</p>
+
+      <pre><code>---
+name: seo-technical-audit
+description: Audit, diagnose, and fix the technical SEO foundation of any website
+triggers:
+  - technical SEO
+  - site speed
+  - Core Web Vitals
+  - crawlability
+  - schema markup
+tools:
+  - Read
+  - Grep
+  - Glob
+  - WebFetch
+  - WebSearch
+---</code></pre>
+
+      <p>The <code>name</code> field is the skill's unique identifier. The <code>description</code> gives Claude a one-line summary. The <code>triggers</code> array lists keywords and phrases that cause the skill to activate — when a user mentions "Core Web Vitals" or "crawlability", this skill loads automatically.</p>
+
+      <p>The optional <code>tools</code> array restricts which tools the skill can use, providing a security boundary.</p>
+
+      <h3>Markdown Body</h3>
+      <p>Below the frontmatter, the body contains the actual skill instructions in plain Markdown. This is where you define the step-by-step process, decision trees, output formats, and quality gates.</p>
+
+      <p>A well-structured body typically includes:</p>
+      <ul>
+        <li><strong>Context section</strong> — Background knowledge the agent needs</li>
+        <li><strong>Process steps</strong> — Numbered or ordered workflow stages</li>
+        <li><strong>Output format</strong> — What the deliverable should look like</li>
+        <li><strong>Quality checklist</strong> — Validation criteria before completion</li>
+        <li><strong>References</strong> — Links to supporting files or external resources</li>
+      </ul>
+
+      <h2>Skill Types in Practice</h2>
+      <p>Skills fall into two broad categories based on how strictly they should be followed:</p>
+
+      <h3>Rigid Skills</h3>
+      <p>These define exact processes that must be followed step by step — test-driven development workflows, security audit checklists, deployment runbooks. Deviating from the process defeats the purpose.</p>
+
+      <h3>Flexible Skills</h3>
+      <p>These provide principles and patterns that the agent adapts to context — content writing guidelines, code review heuristics, design system conventions. The spirit matters more than the letter.</p>
+
+      <p>The skill itself should indicate which type it is. Rigid skills use imperative language ("You MUST", "Always", "Never"), while flexible skills use advisory language ("Prefer", "Consider", "When possible").</p>
+
+      <h2>SKILL.md vs AGENTS.md vs CLAUDE.md</h2>
+      <p>These three file types serve different purposes in the Claude Code ecosystem. Understanding the distinction is essential for structuring your AI-assisted workflows correctly.</p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>File</th>
+            <th>Scope</th>
+            <th>Purpose</th>
+            <th>Location</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>CLAUDE.md</strong></td>
+            <td>Project-wide</td>
+            <td>Project context, conventions, architecture overview</td>
+            <td>Repository root or <code>~/.claude/</code></td>
+          </tr>
+          <tr>
+            <td><strong>SKILL.md</strong></td>
+            <td>Single capability</td>
+            <td>Step-by-step workflow for one specific task</td>
+            <td><code>.claude/skills/&lt;name&gt;/</code></td>
+          </tr>
+          <tr>
+            <td><strong>AGENT.md</strong></td>
+            <td>Agent persona</td>
+            <td>Role definition, tools, delegation rules for a specialist agent</td>
+            <td><code>.claude/agents/&lt;name&gt;.md</code></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p><strong>CLAUDE.md</strong> is the project's instruction manual — it tells the agent about the codebase, tech stack, naming conventions, and preferred workflows. It's always loaded.</p>
+
+      <p><strong>SKILL.md</strong> is a capability module — it teaches the agent <em>how to do one thing well</em>. Skills are loaded on demand when their triggers match the user's request.</p>
+
+      <p><strong>AGENT.md</strong> is a role definition — it creates a specialist persona (e.g., "build-engineer", "code-architect") with its own tools and responsibilities. Agents can invoke skills as part of their work.</p>
+
+      <p>In practice, these compose together: CLAUDE.md sets the project context, an agent receives a task, and the agent invokes relevant skills to execute it. The hierarchy is <strong>project → agent → skill</strong>.</p>
+
+      <h2>Real-World Example: A Complete SKILL.md</h2>
+      <p>Here is a condensed example of a production SKILL.md used for SEO content briefs. Notice how it combines metadata, process steps, and quality gates:</p>
+
+      <pre><code>---
+name: seo-content-brief
+description: Generate production-ready content briefs from verified keywords
+triggers:
+  - content brief
+  - page outline
+  - writing specification
+  - heading structure
+---
+
+# SEO Content Brief Generator
+
+## Process
+1. Receive B.I.D.-verified keyword from seo-geo-architect skill
+2. Analyse top 10 SERP results for the target keyword
+3. Extract heading patterns, word counts, and content gaps
+4. Generate brief with: target word count, heading hierarchy,
+   required sections, internal link targets, schema type
+5. Include E-E-A-T signal requirements
+
+## Output Format
+- H1 title with primary keyword
+- H2/H3 heading hierarchy (minimum 6 headings)
+- Target word count range
+- Required schema markup type
+- Internal linking targets (minimum 3)
+- AI-capture tactics for GEO optimisation
+
+## Quality Gate
+Brief must score 80+ on the output-validator skill
+before being delivered to the writer.</code></pre>
+
+      <p>This skill transforms keyword research into actionable writing specifications. It chains with other skills (references <code>seo-geo-architect</code> and <code>output-validator</code>), demonstrating the composability that makes the system powerful.</p>
+
+      <h2>Building Skills for Your Project</h2>
+      <p>Creating effective skills follows a simple pattern:</p>
+
+      <ol>
+        <li><strong>Identify repetition</strong> — What workflow do you explain to the AI more than twice? That's a skill candidate.</li>
+        <li><strong>Define triggers</strong> — What phrases would a user say that should activate this skill?</li>
+        <li><strong>Write the process</strong> — Document the steps as if training a new team member.</li>
+        <li><strong>Add quality gates</strong> — How do you verify the output is correct?</li>
+        <li><strong>Test and iterate</strong> — Run the skill, check the output, refine the instructions.</li>
+      </ol>
+
+      <p>Start small. A skill with 5 clear steps is more useful than a skill with 50 ambiguous ones. You can always add complexity later as you observe how the agent interprets your instructions.</p>
+
+      <h2>The Skills Ecosystem</h2>
+      <p>Projects that adopt the SKILL.md standard often build substantial skill libraries. At Synthex, for example, we maintain 45 skills covering SEO strategy, content creation, code review, database operations, security hardening, deployment orchestration, and more.</p>
+
+      <p>Skills are composable by design. A "blog-write" skill might chain through "blog-brief" (for the outline), "blog-seo-check" (for on-page validation), and "blog-schema" (for structured data) — each a separate SKILL.md file that can also be invoked independently.</p>
+
+      <p>Because skills are plain Markdown files in Git, they're shareable across projects and teams. The <a href="https://github.com/CleanExpo/agents.md">CleanExpo/agents.md</a> repository provides an open-source reference for the format specification.</p>
+
+      <h2>Getting Started</h2>
+      <p>To add your first skill to a project:</p>
+
+      <ol>
+        <li>Create the directory: <code>mkdir -p .claude/skills/my-skill</code></li>
+        <li>Create the file: <code>touch .claude/skills/my-skill/SKILL.md</code></li>
+        <li>Add YAML frontmatter with name, description, and triggers</li>
+        <li>Write the process instructions in the Markdown body</li>
+        <li>Commit to Git and test by asking Claude Code a question that matches your triggers</li>
+      </ol>
+
+      <p>The skill activates automatically — no configuration beyond the file itself. That's the beauty of the convention-over-configuration approach.</p>
+    `,
+    author: {
+      name: 'Phill McGurk',
+      role: 'Founder & Lead Developer',
+      avatar: '/images/authors/phill-mcgurk.jpg'
+    },
+    category: 'Developer Tools',
+    tags: ['Claude Code', 'SKILL.md', 'AI Agents', 'Developer Tools', 'Automation'],
+    publishedAt: '2026-02-28',
+    readTime: '8 min read',
+    image: '/images/blog/skill-md-guide.jpg'
+  },
   'ai-revolution-social-media': {
     id: 'ai-revolution-social-media',
     title: 'The AI Revolution in Social Media Marketing',
