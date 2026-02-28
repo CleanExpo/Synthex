@@ -382,7 +382,7 @@ function onboardingReducer(state: OnboardingData, action: OnboardingAction): Onb
       return { ...state, skipPersona: true };
 
     case 'NEXT_STEP':
-      return { ...state, currentStep: Math.min(state.currentStep + 1, 5) };
+      return { ...state, currentStep: Math.min(state.currentStep + 1, 4) };
 
     case 'PREV_STEP':
       return { ...state, currentStep: Math.max(state.currentStep - 1, 1) };
@@ -567,16 +567,13 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
   const canProceed = useCallback((step: number): boolean => {
     switch (step) {
       case 1:
-        // Step 1: Vetting - need business name and vetting must be approved
-        return Boolean(data.businessName.trim()) && data.vettingApproved;
+        // Step 1: Business details — need name, industry, and team size
+        return Boolean(data.businessName.trim()) && Boolean(data.industry) && Boolean(data.teamSize);
       case 2:
-        // Step 2: API Credentials - need at least one API credential
-        return Object.values(data.apiCredentials).some(v => v);
-      case 3:
-        // Step 3: Platforms - optional
+        // Step 2: Platforms — optional, always can proceed
         return true;
-      case 4:
-        // Step 4: Persona - optional or skip allowed
+      case 3:
+        // Step 3: Persona — optional or skip allowed
         return data.skipPersona || Boolean(data.personaName && data.personaTone);
       default:
         return true;

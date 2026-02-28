@@ -1,106 +1,80 @@
 'use client';
 
 /**
- * Onboarding Step 3: Platform Connections
+ * Onboarding Step 3: Brand Persona
  *
- * @description Connect social media platforms with Synthex branding.
- * If AI detected social handles, shows them as hints on matching platform cards.
+ * UNI-1150: Persona setup — fully skippable.
+ * Uses existing PersonaSetup component. Users can configure later in Settings.
  */
 
 import React from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowRight, ArrowLeft, Link2 } from '@/components/icons';
+import { ArrowRight, ArrowLeft, Sparkles } from '@/components/icons';
 import { Button } from '@/components/ui/button';
-import { useOnboarding, ProgressIndicator, PlatformConnector } from '@/components/onboarding';
+import { useOnboarding, ProgressIndicator, PersonaSetup } from '@/components/onboarding';
 
 // ============================================================================
-// DATA
+// CONSTANTS
 // ============================================================================
 
 const STEPS = [
-  { id: 1, name: 'Business Identity' },
-  { id: 2, name: 'Vetting' },
-  { id: 3, name: 'API Setup' },
-  { id: 4, name: 'Review Details' },
-  { id: 5, name: 'Platforms' },
-  { id: 6, name: 'Persona' },
-  { id: 7, name: 'Complete' },
+  { id: 1, name: 'Your Business' },
+  { id: 2, name: 'Platforms' },
+  { id: 3, name: 'Persona' },
+  { id: 4, name: 'Complete' },
 ];
 
 // ============================================================================
 // COMPONENT
 // ============================================================================
 
-export default function Step3Page() {
+export default function Step3PersonaPage() {
   const router = useRouter();
-  const { data, completeStep } = useOnboarding();
+  const { data, completeStep, skipPersona } = useOnboarding();
 
   const handleNext = () => {
-    completeStep(5);
-    router.push('/onboarding/step-4');
+    completeStep(3);
+    router.push('/onboarding/complete');
   };
 
   const handleSkip = () => {
-    // Allow skipping but warn user
-    router.push('/onboarding/step-4');
+    skipPersona();
+    completeStep(3);
+    router.push('/onboarding/complete');
   };
 
-  const isValid = data.connectedPlatforms.length > 0;
-
-  // Show detected social handles as a hint
-  const detectedHandles = Object.entries(data.socialHandles || {});
+  const hasPersona = data.personaName && data.personaTone;
 
   return (
     <div className="space-y-8">
       {/* Progress */}
       <ProgressIndicator
         steps={STEPS}
-        currentStep={5}
+        currentStep={3}
         completedSteps={data.completedSteps}
       />
 
       {/* Header */}
       <div className="text-center space-y-2">
         <div className="w-14 h-14 rounded-full bg-gradient-to-br from-cyan-500/20 to-cyan-600/10 border border-cyan-500/20 flex items-center justify-center mx-auto mb-4 backdrop-blur-sm">
-          <Link2 className="w-7 h-7 text-cyan-400" />
+          <Sparkles className="w-7 h-7 text-cyan-400" />
         </div>
-        <h1 className="text-2xl font-bold text-white">Connect your platforms</h1>
+        <h1 className="text-2xl font-bold text-white">Create your brand persona</h1>
         <p className="text-gray-400">
-          Link your social media accounts to start publishing
+          Define how your AI-generated content sounds. This shapes the tone and
+          topics for all your posts.
         </p>
       </div>
 
-      {/* Detected Social Handles Hint */}
-      {detectedHandles.length > 0 && (
-        <div className="max-w-2xl mx-auto">
-          <div className="p-3 rounded-lg bg-cyan-500/5 border border-cyan-500/15">
-            <p className="text-xs text-cyan-300 font-medium mb-2">
-              We detected these social accounts from your website:
-            </p>
-            <div className="flex flex-wrap gap-2">
-              {detectedHandles.map(([platform, handle]) => (
-                <span
-                  key={platform}
-                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-cyan-500/10 text-xs"
-                >
-                  <span className="text-cyan-400 capitalize">{platform}</span>
-                  <span className="text-gray-400">{handle}</span>
-                </span>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Platform Connector */}
+      {/* Persona Setup */}
       <div className="max-w-2xl mx-auto">
         <div className="p-6 rounded-xl bg-[#0f172a]/80 border border-cyan-500/10 backdrop-blur-sm">
-          <PlatformConnector />
+          <PersonaSetup />
         </div>
       </div>
 
       {/* Navigation */}
-      <div className="flex justify-between max-w-2xl mx-auto pt-6">
+      <div className="flex justify-between max-w-2xl mx-auto pt-4">
         <Button
           variant="ghost"
           onClick={() => router.push('/onboarding/step-2')}
@@ -109,8 +83,9 @@ export default function Step3Page() {
           <ArrowLeft className="w-4 h-4 mr-2" />
           Back
         </Button>
-        <div className="flex gap-2">
-          {!isValid && (
+
+        <div className="flex gap-3">
+          {!hasPersona && (
             <Button
               variant="outline"
               onClick={handleSkip}
@@ -121,10 +96,9 @@ export default function Step3Page() {
           )}
           <Button
             onClick={handleNext}
-            disabled={!isValid}
-            className="bg-gradient-to-r from-cyan-500 to-cyan-600 hover:from-cyan-400 hover:to-cyan-500 text-white shadow-lg shadow-cyan-500/25 hover:shadow-cyan-500/40 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            className="bg-gradient-to-r from-cyan-500 to-cyan-600 hover:from-cyan-400 hover:to-cyan-500 text-white shadow-lg shadow-cyan-500/25 hover:shadow-cyan-500/40 transition-all"
           >
-            Continue
+            {hasPersona ? 'Continue' : 'Finish Setup'}
             <ArrowRight className="w-4 h-4 ml-2" />
           </Button>
         </div>
