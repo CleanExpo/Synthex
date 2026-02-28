@@ -90,8 +90,8 @@ export async function PATCH(request: NextRequest) {
         );
       }
 
-      // Update each task's order
-      await Promise.all(
+      // Update each task's order atomically
+      await prisma.$transaction(
         tasks.map(task =>
           prisma.task.update({
             where: { id: task.id },

@@ -94,6 +94,7 @@ export function ChatInput({
           onClick={handleSend}
           disabled={isEmpty || disabled || isOverLimit}
           size="icon"
+          aria-label="Send message"
           className={cn(
             'h-11 w-11 rounded-xl shrink-0',
             'bg-cyan-500/20 border border-cyan-500/30 hover:bg-cyan-500/30',

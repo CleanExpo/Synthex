@@ -373,9 +373,10 @@ export default function AIContentStudio() {
                   <Button
                     size="icon"
                     variant="ghost"
+                    aria-label="Copy content"
                     onClick={() => copyToClipboard(
-                      selectedVariation === 0 
-                        ? generatedContent.content 
+                      selectedVariation === 0
+                        ? generatedContent.content
                         : generatedContent.variations[selectedVariation - 1].content,
                       'content'
                     )}
@@ -386,10 +387,10 @@ export default function AIContentStudio() {
                       <Copy className="w-4 h-4" />
                     )}
                   </Button>
-                  <Button size="icon" variant="ghost" onClick={downloadContent}>
+                  <Button size="icon" variant="ghost" aria-label="Download content" onClick={downloadContent}>
                     <Download className="w-4 h-4" />
                   </Button>
-                  <Button size="icon" variant="ghost" onClick={regenerateContent}>
+                  <Button size="icon" variant="ghost" aria-label="Regenerate content" onClick={regenerateContent}>
                     <RefreshCw className="w-4 h-4" />
                   </Button>
                 </div>
@@ -571,6 +572,7 @@ export default function AIContentStudio() {
                       <Button
                         size="icon"
                         variant="ghost"
+                        aria-label="Copy trending content"
                         onClick={(e) => {
                           e.stopPropagation();
                           copyToClipboard(item.content, item.id);

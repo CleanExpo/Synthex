@@ -165,6 +165,7 @@ export function RevenueEntryList({
                     variant="ghost"
                     size="icon"
                     className="h-8 w-8 text-gray-400 hover:text-white"
+                    aria-label="Edit revenue entry"
                     onClick={() => onEdit(entry)}
                   >
                     <Edit className="w-4 h-4" />
@@ -178,6 +179,7 @@ export function RevenueEntryList({
                         ? 'text-red-400 bg-red-500/10'
                         : 'text-gray-400 hover:text-red-400'
                     )}
+                    aria-label={isConfirmingDelete ? 'Confirm delete revenue entry' : 'Delete revenue entry'}
                     onClick={() => handleDelete(entry.id)}
                   >
                     <Trash2 className="w-4 h-4" />
@@ -186,6 +188,7 @@ export function RevenueEntryList({
                     variant="ghost"
                     size="icon"
                     className="h-8 w-8 text-gray-400 hover:text-white md:hidden"
+                    aria-label={isExpanded ? 'Collapse details' : 'Expand details'}
                     onClick={() => setExpanded(isExpanded ? null : entry.id)}
                   >
                     <ChevronDown className={cn('w-4 h-4 transition-transform', isExpanded && 'rotate-180')} />

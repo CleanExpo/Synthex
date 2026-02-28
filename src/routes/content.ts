@@ -225,7 +225,7 @@ router.put('/scheduled/:id', authenticateToken, async (req: Request, res: Respon
     }
     const userId = user.id;
 
-    // TODO: Implement update logic
+    // Stub: Update logic pending — requires Prisma scheduledPost model integration
     res.json({
       message: 'Scheduled post updated successfully',
       data: { id, content, scheduledAt, platform }
@@ -246,7 +246,7 @@ router.delete('/scheduled/:id', authenticateToken, async (req: Request, res: Res
     }
     const userId = user.id;
 
-    // TODO: Implement delete logic
+    // Stub: Delete logic pending — requires Prisma scheduledPost model integration
     res.json({
       message: 'Scheduled post deleted successfully'
     });

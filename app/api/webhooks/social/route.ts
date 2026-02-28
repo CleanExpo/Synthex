@@ -1,436 +1,216 @@
 /**
- * Social Platform Webhook Handler
+ * Social Platform Webhook Route
  *
  * Handles incoming webhooks from social media platforms for
  * post engagement updates, publishing confirmations, and errors.
  *
+ * Uses the centralised WebhookHandler infrastructure with:
+ * - Per-platform signature verification (timing-safe HMAC)
+ * - Typed event parsing and routing
+ * - Handler registration via auto-import
+ *
+ * Platforms supported: Twitter/X, Facebook, Instagram, Threads, LinkedIn,
+ * TikTok, YouTube, Pinterest, Reddit.
+ *
  * ENVIRONMENT VARIABLES REQUIRED:
- * - TWITTER_WEBHOOK_SECRET (SECRET)
- * - LINKEDIN_WEBHOOK_SECRET (SECRET)
- * - INSTAGRAM_WEBHOOK_SECRET (SECRET)
- * - FACEBOOK_WEBHOOK_SECRET (SECRET)
+ * - TWITTER_WEBHOOK_SECRET
+ * - META_WEBHOOK_SECRET (Facebook, Instagram, Threads)
+ * - LINKEDIN_WEBHOOK_SECRET
+ * - TIKTOK_WEBHOOK_SECRET
+ * - META_WEBHOOK_VERIFY_TOKEN (for GET verification challenge)
  * - DATABASE_URL (CRITICAL)
+ *
+ * ARCHITECTURE NOTE:
+ * Uses `receiveAndProcess()` (synchronous mode) because Vercel serverless
+ * functions have no persistent process to poll an event queue. All registered
+ * handlers execute inline within the HTTP request, matching the Stripe
+ * webhook route pattern.
  *
  * @module app/api/webhooks/social/route
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import prisma from '@/lib/prisma';
-import crypto from 'crypto';
+import { webhookHandler } from '@/lib/webhooks';
+import { logger } from '@/lib/logger';
+import type { WebhookPlatform } from '@/lib/webhooks/types';
 
-// =============================================================================
-// Webhook Secrets
-// =============================================================================
+// Ensure social webhook handlers are registered (auto-registers on import)
+import '@/lib/webhooks/social-webhook-handlers';
 
-const webhookSecrets: Record<string, string | undefined> = {
-  twitter: process.env.TWITTER_WEBHOOK_SECRET,
-  linkedin: process.env.LINKEDIN_WEBHOOK_SECRET,
-  instagram: process.env.INSTAGRAM_WEBHOOK_SECRET,
-  facebook: process.env.FACEBOOK_WEBHOOK_SECRET,
-  tiktok: process.env.TIKTOK_WEBHOOK_SECRET,
-};
+// ============================================================================
+// CONSTANTS
+// ============================================================================
 
-// =============================================================================
-// Signature Verification
-// =============================================================================
+/** Platforms that can send webhooks to this endpoint */
+const VALID_PLATFORMS: WebhookPlatform[] = [
+  'twitter',
+  'facebook',
+  'instagram',
+  'tiktok',
+  'linkedin',
+  'pinterest',
+  'youtube',
+  'threads',
+  'reddit',
+];
 
-function verifySignature(
-  platform: string,
-  payload: string,
-  signature: string
-): boolean {
-  const secret = webhookSecrets[platform];
-  if (!secret) {
-    console.warn(`No webhook secret configured for ${platform}`);
-    return false;
-  }
+// ============================================================================
+// GET — Webhook Verification
+// ============================================================================
 
-  try {
-    // Different platforms use different signature methods
-    switch (platform) {
-      case 'twitter': {
-        // Twitter uses HMAC-SHA256
-        const hash = crypto
-          .createHmac('sha256', secret)
-          .update(payload)
-          .digest('base64');
-        return `sha256=${hash}` === signature;
-      }
-      case 'facebook':
-      case 'instagram': {
-        // Facebook/Instagram use HMAC-SHA1
-        const hash = crypto
-          .createHmac('sha1', secret)
-          .update(payload)
-          .digest('hex');
-        return `sha1=${hash}` === signature;
-      }
-      case 'linkedin': {
-        // LinkedIn uses HMAC-SHA256
-        const hash = crypto
-          .createHmac('sha256', secret)
-          .update(payload)
-          .digest('hex');
-        return hash === signature;
-      }
-      default:
-        return false;
-    }
-  } catch (error) {
-    console.error(`Signature verification error for ${platform}:`, error);
-    return false;
-  }
-}
-
-// =============================================================================
-// Event Handlers
-// =============================================================================
-
-/** Post update data from webhook */
-interface PostUpdateData {
-  url?: string;
-  error?: string;
-  message?: string;
-  likes?: number;
-  comments?: number;
-  shares?: number;
-  impressions?: number;
-  reach?: number;
-  clicks?: number;
-  saves?: number;
-  userId?: string;
-  active?: boolean;
-  [key: string]: unknown;
-}
-
-interface WebhookEvent {
-  platform: string;
-  type: string;
-  postId?: string;
-  externalId?: string;
-  data: PostUpdateData;
-  timestamp: Date;
-}
-
-async function handlePostPublished(event: WebhookEvent) {
-  const { postId, externalId, data } = event;
-
-  if (!postId && !externalId) return;
-
-  // Update post status
-  const updateData: {
-    status: string;
-    publishedAt: Date;
-    updatedAt: Date;
-    externalId?: string;
-    publishedUrl?: string;
-  } = {
-    status: 'published',
-    publishedAt: new Date(),
-    updatedAt: new Date(),
-  };
-
-  if (externalId) {
-    updateData.externalId = externalId;
-  }
-
-  if (data.url) {
-    updateData.publishedUrl = data.url;
-  }
-
-  const where = postId ? { id: postId } : { externalId };
-
-  await prisma.post.updateMany({
-    where,
-    data: updateData,
-  });
-
-  // Log the event
-  await prisma.auditLog.create({
-    data: {
-      action: 'post_published',
-      resource: 'post',
-      resourceId: postId || externalId,
-      details: { platform: event.platform, ...data },
-      severity: 'low',
-      category: 'content',
-      outcome: 'success',
-    },
-  });
-}
-
-async function handlePostEngagement(event: WebhookEvent) {
-  const { postId, externalId, data } = event;
-
-  if (!postId && !externalId) return;
-
-  const where = postId ? { id: postId } : { externalId };
-
-  // Update engagement metrics
-  const updateData: {
-    updatedAt: Date;
-    likes?: number;
-    comments?: number;
-    shares?: number;
-    impressions?: number;
-    reach?: number;
-    clicks?: number;
-    saves?: number;
-  } = {
-    updatedAt: new Date(),
-  };
-
-  if (data.likes !== undefined) updateData.likes = data.likes;
-  if (data.comments !== undefined) updateData.comments = data.comments;
-  if (data.shares !== undefined) updateData.shares = data.shares;
-  if (data.impressions !== undefined) updateData.impressions = data.impressions;
-  if (data.reach !== undefined) updateData.reach = data.reach;
-  if (data.clicks !== undefined) updateData.clicks = data.clicks;
-  if (data.saves !== undefined) updateData.saves = data.saves;
-
-  await prisma.post.updateMany({
-    where,
-    data: updateData,
-  });
-}
-
-async function handlePostFailed(event: WebhookEvent) {
-  const { postId, data } = event;
-
-  if (!postId) return;
-
-  // Get current post metadata to merge with error info
-  const post = await prisma.post.findUnique({
-    where: { id: postId },
-    select: { metadata: true },
-  });
-
-  const currentMetadata = (post?.metadata || {}) as Record<string, unknown>;
-
-  await prisma.post.update({
-    where: { id: postId },
-    data: {
-      status: 'failed',
-      metadata: {
-        ...currentMetadata,
-        errorMessage: data.error || data.message || 'Publishing failed',
-        failedAt: new Date().toISOString(),
-      },
-      updatedAt: new Date(),
-    },
-  });
-
-  // Log error
-  await prisma.auditLog.create({
-    data: {
-      action: 'post_failed',
-      resource: 'post',
-      resourceId: postId,
-      details: { platform: event.platform, error: JSON.stringify(data) },
-      severity: 'high',
-      category: 'content',
-      outcome: 'failure',
-    },
-  });
-}
-
-async function handleAccountUpdate(event: WebhookEvent) {
-  const { data } = event;
-
-  if (!data.userId) return;
-
-  // Update platform connection status
-  await prisma.platformConnection.updateMany({
-    where: {
-      userId: data.userId,
-      platform: event.platform,
-    },
-    data: {
-      isActive: data.active !== false,
-      lastSync: new Date(),
-      metadata: {
-        lastWebhook: new Date().toISOString(),
-        ...data,
-      },
-    },
-  });
-}
-
-// =============================================================================
-// Route Handlers
-// =============================================================================
-
-// GET - Webhook verification (used by Facebook/Instagram)
+/**
+ * Handle verification challenges from platforms.
+ *
+ * - Facebook/Instagram/Threads: hub.mode=subscribe verification
+ * - Twitter/X: CRC token challenge-response
+ */
 export async function GET(request: NextRequest) {
-  const { searchParams } = new URL(request.url);
+  const searchParams = request.nextUrl.searchParams;
 
-  // Facebook/Instagram verification challenge
+  // ------------------------------------------------------------------
+  // Facebook / Instagram / Threads verification challenge
+  // ------------------------------------------------------------------
   const mode = searchParams.get('hub.mode');
   const token = searchParams.get('hub.verify_token');
   const challenge = searchParams.get('hub.challenge');
 
-  if (mode === 'subscribe' && token === process.env.FACEBOOK_WEBHOOK_VERIFY_TOKEN) {
-    return new NextResponse(challenge, { status: 200 });
+  if (mode === 'subscribe' && challenge) {
+    const verifyToken = process.env.META_WEBHOOK_VERIFY_TOKEN;
+
+    if (token === verifyToken) {
+      logger.info('Meta webhook verification succeeded');
+      return new NextResponse(challenge, { status: 200 });
+    }
+
+    logger.warn('Meta webhook verification failed — token mismatch');
+    return NextResponse.json({ error: 'Verification failed' }, { status: 403 });
   }
 
-  return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  // ------------------------------------------------------------------
+  // Twitter/X CRC challenge
+  // ------------------------------------------------------------------
+  const crcToken = searchParams.get('crc_token');
+
+  if (crcToken) {
+    const secret = process.env.TWITTER_WEBHOOK_SECRET;
+
+    if (!secret) {
+      logger.warn('Twitter CRC challenge received but TWITTER_WEBHOOK_SECRET not set');
+      return NextResponse.json({ error: 'Not configured' }, { status: 500 });
+    }
+
+    const crypto = await import('crypto');
+    const hash = crypto.createHmac('sha256', secret).update(crcToken).digest('base64');
+
+    return NextResponse.json({ response_token: `sha256=${hash}` });
+  }
+
+  return NextResponse.json({ error: 'Invalid request' }, { status: 400 });
 }
 
-// POST - Handle incoming webhooks
+// ============================================================================
+// POST — Receive Webhook Events
+// ============================================================================
+
+/**
+ * Receive and process a webhook event from a social platform.
+ *
+ * The platform is identified via the `?platform=` query parameter.
+ * Signature verification, event parsing, and handler dispatch are all
+ * delegated to the centralised `WebhookHandler`.
+ */
 export async function POST(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url);
-    const platform = searchParams.get('platform')?.toLowerCase();
+    // Determine which platform sent this webhook
+    const platformParam = request.nextUrl.searchParams.get('platform')?.toLowerCase();
 
-    if (!platform) {
+    if (!platformParam) {
       return NextResponse.json(
-        { error: 'Bad Request', message: 'Platform parameter required' },
+        { error: 'Bad Request', message: 'Missing ?platform= query parameter' },
         { status: 400 }
       );
     }
 
-    // Get raw body for signature verification
+    if (!VALID_PLATFORMS.includes(platformParam as WebhookPlatform)) {
+      logger.warn('Invalid webhook platform', { platform: platformParam });
+      return NextResponse.json(
+        { error: 'Bad Request', message: `Unsupported platform: ${platformParam}` },
+        { status: 400 }
+      );
+    }
+
+    const platform = platformParam as WebhookPlatform;
+
+    // Read raw body for signature verification (must happen before JSON parsing)
     const rawBody = await request.text();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let body: Record<string, any>;
 
-    try {
-      body = JSON.parse(rawBody);
-    } catch {
+    if (!rawBody) {
       return NextResponse.json(
-        { error: 'Bad Request', message: 'Invalid JSON body' },
+        { error: 'Bad Request', message: 'Empty request body' },
         { status: 400 }
       );
     }
 
-    // Verify webhook signature - ALWAYS required in ALL environments
-    // Security: Never skip signature verification regardless of environment
-    const signature =
-      request.headers.get('x-hub-signature-256') ||
-      request.headers.get('x-twitter-webhooks-signature') ||
-      request.headers.get('x-linkedin-signature') ||
-      '';
+    // Collect headers into a plain object for the handler
+    const headers: Record<string, string> = {};
+    request.headers.forEach((value, key) => {
+      headers[key] = value;
+    });
 
-    if (!verifySignature(platform, rawBody, signature)) {
-      // Log verification failure for security monitoring
-      console.error(
-        `[SECURITY] Webhook signature verification failed for platform: ${platform}, ` +
-        `IP: ${request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown'}, ` +
-        `User-Agent: ${request.headers.get('user-agent') || 'unknown'}`
-      );
+    // Delegate to the centralised handler (signature verification + event
+    // parsing + handler dispatch all happen inside receiveAndProcess)
+    const result = await webhookHandler.receiveAndProcess(platform, rawBody, headers);
 
-      // Attempt to log to audit trail for security monitoring
-      try {
-        await prisma.auditLog.create({
-          data: {
-            action: 'webhook_signature_invalid',
-            resource: 'webhook',
-            resourceId: platform,
-            details: {
-              platform,
-              ip: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown',
-              userAgent: request.headers.get('user-agent') || 'unknown',
-              timestamp: new Date().toISOString(),
-            },
-            severity: 'critical',
-            category: 'security',
-            outcome: 'failure',
-          },
+    if (!result.success) {
+      // Distinguish between auth failures and other errors
+      const isAuthError =
+        result.error?.includes('signature') ||
+        result.error?.includes('Missing signature');
+
+      if (isAuthError) {
+        logger.warn('Webhook signature verification failed', {
+          platform,
+          error: result.error,
+          ip: request.headers.get('x-forwarded-for') || 'unknown',
         });
-      } catch (auditError) {
-        console.error('[SECURITY] Failed to log signature verification failure:', auditError);
+        return NextResponse.json(
+          { error: 'Unauthorized', message: 'Invalid signature' },
+          { status: 401 }
+        );
       }
 
+      logger.warn('Webhook processing failed', { platform, error: result.error });
       return NextResponse.json(
-        { error: 'Unauthorized', message: 'Invalid signature' },
-        { status: 401 }
+        { error: 'Bad Request', message: result.error },
+        { status: 400 }
       );
     }
 
-    // Parse event type based on platform
-    let eventType: string;
-    let eventData: WebhookEvent;
+    logger.info('Social webhook processed', {
+      platform,
+      eventId: result.eventId,
+    });
 
-    switch (platform) {
-      case 'twitter':
-        eventType = body.tweet_create_events ? 'engagement' : body.type || 'unknown';
-        eventData = {
-          platform,
-          type: eventType,
-          externalId: body.data?.id || body.tweet_create_events?.[0]?.id_str,
-          data: body.data || body,
-          timestamp: new Date(),
-        };
-        break;
+    return NextResponse.json({
+      success: true,
+      eventId: result.eventId,
+    });
+  } catch (error) {
+    logger.error('Social webhook error', {
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
 
-      case 'facebook':
-      case 'instagram':
-        eventType = body.entry?.[0]?.changes?.[0]?.field || body.object || 'unknown';
-        eventData = {
-          platform,
-          type: eventType,
-          externalId: body.entry?.[0]?.id,
-          data: body.entry?.[0]?.changes?.[0]?.value || body,
-          timestamp: new Date(),
-        };
-        break;
-
-      case 'linkedin':
-        eventType = body.eventType || 'unknown';
-        eventData = {
-          platform,
-          type: eventType,
-          externalId: body.activityUrn?.split(':').pop(),
-          data: body,
-          timestamp: new Date(),
-        };
-        break;
-
-      default:
-        eventData = {
-          platform,
-          type: body.type || 'unknown',
-          data: body,
-          timestamp: new Date(),
-        };
-    }
-
-    // Process event based on type
-    switch (eventData.type) {
-      case 'post_published':
-      case 'tweet_create':
-      case 'media':
-        await handlePostPublished(eventData);
-        break;
-
-      case 'engagement':
-      case 'insights':
-      case 'reactions':
-        await handlePostEngagement(eventData);
-        break;
-
-      case 'post_failed':
-      case 'error':
-        await handlePostFailed(eventData);
-        break;
-
-      case 'account_update':
-      case 'permissions':
-        await handleAccountUpdate(eventData);
-        break;
-
-      default:
-        // Unknown event types are silently ignored
-        break;
-    }
-
-    // Always return 200 to acknowledge receipt
-    return NextResponse.json({ success: true, received: true });
-  } catch (error: unknown) {
-    console.error('Social webhook error:', error);
-    // Return 200 anyway to prevent retries on processing errors
-    return NextResponse.json({ success: false, error: 'Webhook processing failed' }, { status: 200 });
+    // Return 500 for unexpected errors — platforms will retry
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
   }
 }
 
+// ============================================================================
+// CONFIG
+// ============================================================================
+
 export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';

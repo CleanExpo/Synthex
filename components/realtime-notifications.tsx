@@ -182,6 +182,7 @@ export default function RealtimeNotifications() {
         variant="ghost"
         size="icon"
         className="relative"
+        aria-label={`Notifications${unreadCount > 0 ? ` (${unreadCount} unread)` : ''}`}
         onClick={() => setIsOpen(!isOpen)}
       >
         <Bell className="w-5 h-5" />
@@ -224,6 +225,7 @@ export default function RealtimeNotifications() {
               <Button
                 size="icon"
                 variant="ghost"
+                aria-label="Close notifications"
                 onClick={() => setIsOpen(false)}
                 className="w-6 h-6"
               >

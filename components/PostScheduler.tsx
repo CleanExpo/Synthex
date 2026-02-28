@@ -376,6 +376,7 @@ export default function PostScheduler() {
                   <Button
                     size="icon"
                     variant="ghost"
+                    aria-label="Duplicate post"
                     onClick={() => handleDuplicatePost(post)}
                   >
                     <Copy className="w-4 h-4" />
@@ -383,6 +384,7 @@ export default function PostScheduler() {
                   <Button
                     size="icon"
                     variant="ghost"
+                    aria-label="Edit post"
                     onClick={() => setEditingPost(post)}
                   >
                     <Edit3 className="w-4 h-4" />
@@ -390,6 +392,7 @@ export default function PostScheduler() {
                   <Button
                     size="icon"
                     variant="ghost"
+                    aria-label="Delete post"
                     onClick={() => handleDeletePost(post.id)}
                   >
                     <Trash2 className="w-4 h-4" />
@@ -466,6 +469,7 @@ export default function PostScheduler() {
                   <Button
                     size="icon"
                     variant="ghost"
+                    aria-label="Previous month"
                     onClick={() => setSelectedDate(addDays(selectedDate, -30))}
                   >
                     <ChevronLeft className="w-4 h-4" />
@@ -479,6 +483,7 @@ export default function PostScheduler() {
                   <Button
                     size="icon"
                     variant="ghost"
+                    aria-label="Next month"
                     onClick={() => setSelectedDate(addDays(selectedDate, 30))}
                   >
                     <ChevronRight className="w-4 h-4" />
@@ -517,7 +522,7 @@ export default function PostScheduler() {
                           </div>
                           <p className="text-sm">{post.content}</p>
                         </div>
-                        <Button size="icon" variant="ghost">
+                        <Button size="icon" variant="ghost" aria-label="More post options">
                           <MoreVertical className="w-4 h-4" />
                         </Button>
                       </div>

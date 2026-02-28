@@ -209,23 +209,8 @@ export async function POST(request: NextRequest) {
       finalContent = `${content}\n\n${hashtagString}`;
     }
 
-    // Create campaign if not provided
-    let finalCampaignId = campaignId;
-    if (!campaignId) {
-      const campaign = await prisma.campaign.create({
-        data: {
-          name: `Social Post - ${new Date().toLocaleDateString()}`,
-          description: 'Auto-generated campaign for social media post',
-          platform: platforms.join(','),
-          status: 'active',
-          userId
-        }
-      });
-      finalCampaignId = campaign.id;
-    }
-
-    // Post to each platform
-    const results: { platform: string; success: boolean; postId: string; platformPostId: string; url: string; message: string }[] = [];
+    // Post to each platform (external API calls — must happen outside transaction)
+    const platformResults: { platform: string; postId: string; url: string }[] = [];
     const errors: { platform: string; success: boolean; error: string }[] = [];
 
     for (const platform of platforms) {
@@ -244,7 +229,7 @@ export async function POST(request: NextRequest) {
           ? decryptField(connection.accessToken)
           : undefined;
 
-        // Post to platform
+        // Post to platform (external API call)
         const result = await postToSocialPlatform(
           platform,
           finalContent,
@@ -252,32 +237,10 @@ export async function POST(request: NextRequest) {
           decryptedAccessToken || undefined
         );
 
-        // Save post to database
-        const post = await prisma.post.create({
-          data: {
-            content: finalContent,
-            platform,
-            status: scheduledAt ? 'scheduled' : 'published',
-            scheduledAt: scheduledAt ? new Date(scheduledAt) : null,
-            publishedAt: scheduledAt ? null : new Date(),
-            campaignId: finalCampaignId!,
-            metadata: {
-              platformPostId: result.postId,
-              url: result.url,
-              hashtags: processedHashtags,
-              mentions,
-              mediaUrls
-            }
-          }
-        });
-
-        results.push({
+        platformResults.push({
           platform,
-          success: true,
-          postId: post.id,
-          platformPostId: result.postId,
+          postId: result.postId,
           url: result.url,
-          message: `Successfully posted to ${platform}`
         });
 
       } catch (error: unknown) {
@@ -290,19 +253,71 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Update campaign analytics
-    if (finalCampaignId) {
-      await prisma.campaign.update({
-        where: { id: finalCampaignId },
-        data: {
-          analytics: {
-            postsCreated: results.length,
-            platformsUsed: platforms,
-            lastPostedAt: new Date()
+    // Persist all DB writes atomically: campaign creation + post records + analytics
+    const { finalCampaignId, results } = await prisma.$transaction(async (tx) => {
+      // Create campaign if not provided
+      let txCampaignId = campaignId;
+      if (!campaignId) {
+        const campaign = await tx.campaign.create({
+          data: {
+            name: `Social Post - ${new Date().toLocaleDateString()}`,
+            description: 'Auto-generated campaign for social media post',
+            platform: platforms.join(','),
+            status: 'active',
+            userId
           }
-        }
-      });
-    }
+        });
+        txCampaignId = campaign.id;
+      }
+
+      // Save all successful platform posts to database
+      const postResults: { platform: string; success: boolean; postId: string; platformPostId: string; url: string; message: string }[] = [];
+
+      for (const result of platformResults) {
+        const post = await tx.post.create({
+          data: {
+            content: finalContent,
+            platform: result.platform,
+            status: scheduledAt ? 'scheduled' : 'published',
+            scheduledAt: scheduledAt ? new Date(scheduledAt) : null,
+            publishedAt: scheduledAt ? null : new Date(),
+            campaignId: txCampaignId!,
+            metadata: {
+              platformPostId: result.postId,
+              url: result.url,
+              hashtags: processedHashtags,
+              mentions,
+              mediaUrls
+            }
+          }
+        });
+
+        postResults.push({
+          platform: result.platform,
+          success: true,
+          postId: post.id,
+          platformPostId: result.postId,
+          url: result.url,
+          message: `Successfully posted to ${result.platform}`
+        });
+      }
+
+      // Update campaign analytics
+      if (txCampaignId) {
+        await tx.campaign.update({
+          where: { id: txCampaignId },
+          data: {
+            analytics: {
+              postsCreated: postResults.length,
+              platformsUsed: platforms,
+              lastPostedAt: new Date()
+            }
+          }
+        });
+      }
+
+      return { finalCampaignId: txCampaignId, results: postResults };
+    });
 
     // Return response
     return NextResponse.json({

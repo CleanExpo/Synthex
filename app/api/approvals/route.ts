@@ -347,43 +347,47 @@ export async function POST(request: NextRequest) {
       steps = createDefaultSteps();
     }
 
-    // Create approval request
-    const approval = await prisma.approvalRequest.create({
-      data: {
-        contentId,
-        contentType,
-        workflowId,
-        submittedBy: userId,
-        status: 'pending',
-        priority,
-        currentStep: 0,
-        totalSteps: steps.length,
-        steps: steps as unknown as Prisma.InputJsonValue,
-        title,
-        description,
-        dueDate: dueDate ? new Date(dueDate) : null,
-        metadata: metadata as Prisma.InputJsonValue,
-        organizationId: user?.organizationId,
-      },
-      include: {
-        submitter: {
-          select: { name: true, email: true },
+    // Create approval request and audit log atomically
+    const approval = await prisma.$transaction(async (tx) => {
+      const created = await tx.approvalRequest.create({
+        data: {
+          contentId,
+          contentType,
+          workflowId,
+          submittedBy: userId,
+          status: 'pending',
+          priority,
+          currentStep: 0,
+          totalSteps: steps.length,
+          steps: steps as unknown as Prisma.InputJsonValue,
+          title,
+          description,
+          dueDate: dueDate ? new Date(dueDate) : null,
+          metadata: metadata as Prisma.InputJsonValue,
+          organizationId: user?.organizationId,
         },
-      },
-    });
+        include: {
+          submitter: {
+            select: { name: true, email: true },
+          },
+        },
+      });
 
-    // Log creation
-    await prisma.auditLog.create({
-      data: {
-        action: 'approval_request_created',
-        resource: 'approval_request',
-        resourceId: approval.id,
-        userId,
-        details: { contentId, contentType, title, priority, totalSteps: steps.length },
-        severity: 'low',
-        category: 'content',
-        outcome: 'success',
-      },
+      // Log creation within the same transaction
+      await tx.auditLog.create({
+        data: {
+          action: 'approval_request_created',
+          resource: 'approval_request',
+          resourceId: created.id,
+          userId,
+          details: { contentId, contentType, title, priority, totalSteps: steps.length },
+          severity: 'low',
+          category: 'content',
+          outcome: 'success',
+        },
+      });
+
+      return created;
     });
 
     return NextResponse.json({

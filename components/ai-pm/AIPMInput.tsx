@@ -88,6 +88,7 @@ export default function AIPMInput({ onSend, isSending, disabled }: AIPMInputProp
           onClick={handleSend}
           disabled={!value.trim() || isSending || disabled}
           size="icon"
+          aria-label="Send message"
           className="h-10 w-10 shrink-0 rounded-xl bg-cyan-500 text-white hover:bg-cyan-400 disabled:opacity-50"
         >
           {isSending ? (

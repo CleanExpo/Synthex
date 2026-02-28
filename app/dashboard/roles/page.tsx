@@ -820,8 +820,8 @@ export default function RolesPage() {
   };
 
   const handleAddUser = () => {
-    // TODO: Open user search dialog
-    // For now, just close the users dialog
+    // Future: Requires a user search dialog component to assign users to roles.
+    // Tracked in Linear backlog. For now, close the dialog.
     setUsersDialogOpen(false);
   };
 

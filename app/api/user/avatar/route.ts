@@ -91,6 +91,8 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
+      avatarUrl: publicUrl,
+      // Legacy snake_case alias for backward compatibility
       avatar_url: publicUrl,
       message: 'Avatar uploaded successfully'
     });

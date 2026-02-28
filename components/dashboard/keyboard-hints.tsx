@@ -40,7 +40,7 @@ export function KeyboardHints() {
             <Command className="w-4 h-4 text-cyan-400" />
             <span className="font-medium text-sm">Keyboard Shortcuts</span>
           </div>
-          <button onClick={handleDismiss} className="text-gray-400 hover:text-white">
+          <button onClick={handleDismiss} className="text-gray-400 hover:text-white" aria-label="Dismiss keyboard shortcuts">
             <X className="w-4 h-4" />
           </button>
         </div>

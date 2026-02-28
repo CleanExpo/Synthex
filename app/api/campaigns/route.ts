@@ -95,29 +95,33 @@ export async function POST(request: NextRequest) {
 
     const { name, description, platform, content, settings } = validationResult.data;
 
-    const campaign = await prisma.campaign.create({
-      data: {
-        name,
-        description,
-        platform,
-        content,
-        settings: settings as object | undefined,
-        userId,
-        status: 'draft',
-      }
-    });
+    const campaign = await prisma.$transaction(async (tx) => {
+      const created = await tx.campaign.create({
+        data: {
+          name,
+          description,
+          platform,
+          content,
+          settings: settings as object | undefined,
+          userId,
+          status: 'draft',
+        }
+      });
 
-    // Log campaign creation
-    await prisma.auditLog.create({
-      data: {
-        action: 'campaign_created',
-        resource: 'campaign',
-        resourceId: campaign.id,
-        category: 'data',
-        outcome: 'success',
-        userId,
-        details: { campaignName: name, platform }
-      }
+      // Log campaign creation within the same transaction
+      await tx.auditLog.create({
+        data: {
+          action: 'campaign_created',
+          resource: 'campaign',
+          resourceId: created.id,
+          category: 'data',
+          outcome: 'success',
+          userId,
+          details: { campaignName: name, platform }
+        }
+      });
+
+      return created;
     });
 
     return NextResponse.json({
@@ -216,21 +220,23 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    await prisma.campaign.delete({
-      where: { id }
-    });
+    await prisma.$transaction(async (tx) => {
+      await tx.campaign.delete({
+        where: { id }
+      });
 
-    // Log deletion
-    await prisma.auditLog.create({
-      data: {
-        action: 'campaign_deleted',
-        resource: 'campaign',
-        resourceId: id,
-        category: 'data',
-        outcome: 'success',
-        userId,
-        details: { campaignName: campaign.name }
-      }
+      // Log deletion within the same transaction
+      await tx.auditLog.create({
+        data: {
+          action: 'campaign_deleted',
+          resource: 'campaign',
+          resourceId: id,
+          category: 'data',
+          outcome: 'success',
+          userId,
+          details: { campaignName: campaign.name }
+        }
+      });
     });
 
     return NextResponse.json({

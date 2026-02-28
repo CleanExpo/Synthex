@@ -260,12 +260,34 @@ export async function POST(request: NextRequest) {
       shareData.password = await hashPassword(data.password);
     }
 
-    // Create the share
-    const share = await extendedPrisma.contentShare?.create({
-      data: shareData,
+    // Create the share and log the action atomically
+    const share = await prisma.$transaction(async (tx) => {
+      const extTx = tx as unknown as typeof tx & ExtendedPrismaClient;
+      const created = await extTx.contentShare?.create({
+        data: shareData,
+      });
+
+      // Log the share action within the same transaction
+      await tx.auditLog.create({
+        data: {
+          userId,
+          action: 'content.share',
+          resource: data.contentType,
+          resourceId: data.contentId,
+          category: 'data',
+          outcome: 'success',
+          details: {
+            shareId: created?.id,
+            permission: data.permission,
+            sharedWith: data.sharedWithUserId || data.sharedWithTeamId || data.sharedWithEmail || 'link',
+          },
+        },
+      });
+
+      return created;
     });
 
-    // Send notification if shared with a user
+    // Send notification if shared with a user (outside transaction - non-critical)
     if (data.sharedWithUserId) {
       await sendShareNotification(
         data.sharedWithUserId,
@@ -276,23 +298,6 @@ export async function POST(request: NextRequest) {
         user?.organizationId
       );
     }
-
-    // Log the share action
-    await prisma.auditLog.create({
-      data: {
-        userId,
-        action: 'content.share',
-        resource: data.contentType,
-        resourceId: data.contentId,
-        category: 'data',
-        outcome: 'success',
-        details: {
-          shareId: share?.id,
-          permission: data.permission,
-          sharedWith: data.sharedWithUserId || data.sharedWithTeamId || data.sharedWithEmail || 'link',
-        },
-      },
-    });
 
     return NextResponse.json({
       share,
@@ -435,25 +440,27 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    // Delete the share
-    await extendedPrisma.contentShare?.delete({
-      where: { id: shareId },
-    });
+    // Delete the share and log the revocation atomically
+    await prisma.$transaction(async (tx) => {
+      const extTx = tx as unknown as typeof tx & ExtendedPrismaClient;
+      await extTx.contentShare?.delete({
+        where: { id: shareId },
+      });
 
-    // Log the revocation
-    await prisma.auditLog.create({
-      data: {
-        userId,
-        action: 'content.unshare',
-        resource: share.contentType,
-        resourceId: share.contentId,
-        category: 'data',
-        outcome: 'success',
-        details: {
-          shareId,
-          revokedFrom: share.sharedWithUserId || share.sharedWithTeamId || share.sharedWithEmail || 'link',
+      await tx.auditLog.create({
+        data: {
+          userId,
+          action: 'content.unshare',
+          resource: share.contentType,
+          resourceId: share.contentId,
+          category: 'data',
+          outcome: 'success',
+          details: {
+            shareId,
+            revokedFrom: share.sharedWithUserId || share.sharedWithTeamId || share.sharedWithEmail || 'link',
+          },
         },
-      },
+      });
     });
 
     return NextResponse.json({

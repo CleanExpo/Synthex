@@ -82,35 +82,39 @@ export async function POST(request: NextRequest) {
     // Get plan limits with fallback
     const planLimits = PLAN_LIMITS[plan as keyof typeof PLAN_LIMITS] ?? PLAN_LIMITS.free;
 
-    // Create organization
-    const organization = await prisma.organization.create({
-      data: {
-        name,
-        slug,
-        plan,
-        status: 'active',
-        domain: `${slug}.synthex.app`,
-        settings: JSON.parse(JSON.stringify(createDefaultSettings(plan as TenantPlan))),
-        maxUsers: (planLimits?.maxUsers ?? 5) === -1 ? 999999 : (planLimits?.maxUsers ?? 5),
-        maxPosts: (planLimits?.maxPosts ?? 500) === -1 ? 999999 : (planLimits?.maxPosts ?? 500),
-        maxCampaigns: (planLimits?.maxCampaigns ?? 10) === -1 ? 999999 : (planLimits?.maxCampaigns ?? 10),
-        users: {
-          connect: { id: userId },
-        },
-      },
-      include: {
-        users: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
+    // Create organization and default roles atomically
+    const organization = await prisma.$transaction(async (tx) => {
+      const org = await tx.organization.create({
+        data: {
+          name,
+          slug,
+          plan,
+          status: 'active',
+          domain: `${slug}.synthex.app`,
+          settings: JSON.parse(JSON.stringify(createDefaultSettings(plan as TenantPlan))),
+          maxUsers: (planLimits?.maxUsers ?? 5) === -1 ? 999999 : (planLimits?.maxUsers ?? 5),
+          maxPosts: (planLimits?.maxPosts ?? 500) === -1 ? 999999 : (planLimits?.maxPosts ?? 500),
+          maxCampaigns: (planLimits?.maxCampaigns ?? 10) === -1 ? 999999 : (planLimits?.maxCampaigns ?? 10),
+          users: {
+            connect: { id: userId },
           },
         },
-      },
-    });
+        include: {
+          users: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+            },
+          },
+        },
+      });
 
-    // Create default roles for the organization
-    await createDefaultRoles(organization.id);
+      // Create default roles within the same transaction
+      await createDefaultRoles(org.id, tx);
+
+      return org;
+    });
 
     logger.info('Organization created', {
       organizationId: organization.id,
@@ -247,7 +251,8 @@ export async function GET(request: NextRequest) {
 // HELPER FUNCTIONS
 // ============================================================================
 
-async function createDefaultRoles(organizationId: string): Promise<void> {
+async function createDefaultRoles(organizationId: string, tx?: Parameters<Parameters<typeof prisma.$transaction>[0]>[0]): Promise<void> {
+  const db = tx || prisma;
   const defaultRoles = [
     {
       name: 'Admin',
@@ -288,7 +293,7 @@ async function createDefaultRoles(organizationId: string): Promise<void> {
     },
   ];
 
-  await prisma.role.createMany({
+  await db.role.createMany({
     data: defaultRoles.map(role => ({
       ...role,
       organizationId,

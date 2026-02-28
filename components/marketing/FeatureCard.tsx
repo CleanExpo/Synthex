@@ -51,6 +51,7 @@ export function FeatureCard({ feature, className, variant = 'default', onClick }
         className
       )}
       onClick={onClick}
+      {...(onClick ? { role: 'button', tabIndex: 0, onKeyDown: (e: React.KeyboardEvent) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClick(); } } } : {})}
     >
       {/* Badge */}
       {feature.badge && (

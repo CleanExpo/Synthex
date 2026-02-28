@@ -202,7 +202,7 @@ export class UserRepository extends BaseRepository<User> {
    * NOTE: This method is currently disabled as teamMemberships relation is not defined in the schema
    */
   async findByTeamId(teamId: string): Promise<User[]> {
-    // TODO: Implement when teamMemberships relation is added to schema
+    // Blocked: Requires teamMemberships relation in Prisma schema (not yet defined)
     return [];
     
     // Original implementation commented out:

@@ -103,6 +103,7 @@ export default function ReferralCard() {
             'shrink-0 h-9 w-9',
             copied ? 'text-green-400' : 'text-gray-400 hover:text-white'
           )}
+          aria-label={copied ? 'Referral link copied' : 'Copy referral link'}
           onClick={handleCopy}
         >
           {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}

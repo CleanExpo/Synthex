@@ -101,6 +101,7 @@ export default function AIPMPanel({ open, onOpenChange }: AIPMPanelProps) {
                 variant="ghost"
                 size="icon"
                 className="h-8 w-8 text-gray-400 hover:text-white"
+                aria-label="Back to conversations"
                 onClick={handleBack}
               >
                 <ArrowLeft className="h-4 w-4" />
@@ -120,7 +121,7 @@ export default function AIPMPanel({ open, onOpenChange }: AIPMPanelProps) {
             size="icon"
             className="h-8 w-8 text-gray-400 hover:text-white"
             onClick={handleNewConversation}
-            title="New conversation"
+            aria-label="New conversation"
           >
             <Plus className="h-4 w-4" />
           </Button>

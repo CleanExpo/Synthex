@@ -220,7 +220,7 @@ async function handlePaymentSucceeded(event: WebhookEvent): Promise<void> {
       },
     });
 
-    // TODO: Send payment confirmation email
+    // Future: Send payment confirmation email via SendGrid/Resend (requires email template)
   } catch (error) {
     logger.error('Failed to handle payment succeeded', {
       error,
@@ -259,8 +259,8 @@ async function handlePaymentFailed(event: WebhookEvent): Promise<void> {
       },
     });
 
-    // TODO: Send payment failed notification email
-    // TODO: Consider updating subscription status to past_due
+    // Future: Send payment failed notification email via SendGrid/Resend (requires email template)
+    // Future: Update subscription status to past_due after repeated failures
   } catch (error) {
     logger.error('Failed to handle payment failed', {
       error,

@@ -150,6 +150,7 @@ export function InvestmentForm({
             variant="ghost"
             size="icon"
             onClick={onClose}
+            aria-label="Close form"
             className="text-gray-400 hover:text-white"
           >
             <X className="w-5 h-5" />

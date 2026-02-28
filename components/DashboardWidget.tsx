@@ -80,17 +80,19 @@ export function DashboardWidget({
             size="icon"
             variant="ghost"
             className="h-6 w-6 text-gray-400 hover:text-white"
+            aria-label={isExpanded ? 'Minimise widget' : 'Maximise widget'}
             onClick={() => setIsExpanded(!isExpanded)}
           >
             {isExpanded ? <Minimize2 className="h-3 w-3" /> : <Maximize2 className="h-3 w-3" />}
           </Button>
-          
+
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
                 size="icon"
                 variant="ghost"
                 className="h-6 w-6 text-gray-400 hover:text-white"
+                aria-label="Widget options"
               >
                 <MoreVertical className="h-3 w-3" />
               </Button>

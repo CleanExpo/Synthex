@@ -169,6 +169,7 @@ export default function AIPMChatThread({ messages, onRate }: AIPMChatThreadProps
                 <Button
                   variant="ghost"
                   size="icon"
+                  aria-label="Rate response helpful"
                   className={cn(
                     'h-6 w-6',
                     msg.rating === 5 ? 'text-green-400' : 'text-gray-500 hover:text-green-400'
@@ -180,6 +181,7 @@ export default function AIPMChatThread({ messages, onRate }: AIPMChatThreadProps
                 <Button
                   variant="ghost"
                   size="icon"
+                  aria-label="Rate response unhelpful"
                   className={cn(
                     'h-6 w-6',
                     msg.rating === 1 ? 'text-red-400' : 'text-gray-500 hover:text-red-400'

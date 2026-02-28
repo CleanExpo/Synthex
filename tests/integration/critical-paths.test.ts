@@ -461,7 +461,7 @@ describe('Critical Path Integration Tests', () => {
       // In real flow, webhook handler would:
       // - Log audit event
       // - Send payment failed notification
-      // - Update subscription to past_due (TODO in webhook-handlers.ts)
+      // - Update subscription to past_due (pending in webhook-handlers.ts)
       expect(invoice.status).toBe('open');
       expect(invoice.attempt_count).toBeGreaterThan(0);
 

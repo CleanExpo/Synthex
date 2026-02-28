@@ -531,33 +531,37 @@ export async function PATCH(
       }
     }
 
-    // Update approval request
-    const updated = await prisma.approvalRequest.update({
-      where: { id },
-      data: {
-        status: newStatus,
-        currentStep: newCurrentStep,
-        steps: steps as unknown as Prisma.InputJsonValue,
-      },
-      include: {
-        submitter: {
-          select: { name: true, email: true },
+    // Update approval request and log action atomically
+    const updated = await prisma.$transaction(async (tx) => {
+      const result = await tx.approvalRequest.update({
+        where: { id },
+        data: {
+          status: newStatus,
+          currentStep: newCurrentStep,
+          steps: steps as unknown as Prisma.InputJsonValue,
         },
-      },
-    });
+        include: {
+          submitter: {
+            select: { name: true, email: true },
+          },
+        },
+      });
 
-    // Log action
-    await prisma.auditLog.create({
-      data: {
-        action: `approval_${action}`,
-        resource: 'approval_request',
-        resourceId: id,
-        userId,
-        details: { action, previousStatus: approval.status, newStatus, comment: comment?.substring(0, 100) },
-        severity: action === 'reject' ? 'medium' : 'low',
-        category: 'content',
-        outcome: 'success',
-      },
+      // Log action within the same transaction
+      await tx.auditLog.create({
+        data: {
+          action: `approval_${action}`,
+          resource: 'approval_request',
+          resourceId: id,
+          userId,
+          details: { action, previousStatus: approval.status, newStatus, comment: comment?.substring(0, 100) },
+          severity: action === 'reject' ? 'medium' : 'low',
+          category: 'content',
+          outcome: 'success',
+        },
+      });
+
+      return result;
     });
 
     return NextResponse.json({
@@ -611,22 +615,25 @@ export async function DELETE(
       );
     }
 
-    await prisma.approvalRequest.delete({
-      where: { id },
-    });
+    // Delete approval request and log action atomically
+    await prisma.$transaction(async (tx) => {
+      await tx.approvalRequest.delete({
+        where: { id },
+      });
 
-    // Log deletion
-    await prisma.auditLog.create({
-      data: {
-        action: 'approval_deleted',
-        resource: 'approval_request',
-        resourceId: id,
-        userId,
-        details: { title: approval.title, contentId: approval.contentId },
-        severity: 'medium',
-        category: 'content',
-        outcome: 'success',
-      },
+      // Log deletion within the same transaction
+      await tx.auditLog.create({
+        data: {
+          action: 'approval_deleted',
+          resource: 'approval_request',
+          resourceId: id,
+          userId,
+          details: { title: approval.title, contentId: approval.contentId },
+          severity: 'medium',
+          category: 'content',
+          outcome: 'success',
+        },
+      });
     });
 
     return NextResponse.json({

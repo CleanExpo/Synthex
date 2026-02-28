@@ -391,7 +391,7 @@ export class PersonaLearningSystem {
     _variant: unknown
   ): Experiment {
     // Experiment tracking requires analytics integration (API-backed).
-    // This client-side file is pending migration to API calls (see TODO at top).
+    // This client-side file is pending migration to API calls (see NOTE at top).
     // Previously this used Math.random() to simulate results, which is not useful.
     throw new Error(
       'Experiment tracking not configured. ' +

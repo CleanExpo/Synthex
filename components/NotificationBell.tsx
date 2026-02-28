@@ -122,6 +122,7 @@ export function NotificationBell() {
           "relative transition-all duration-300",
           isAnimating && "animate-pulse scale-110"
         )}
+        aria-label={`Notifications${unreadCount > 0 ? ` (${unreadCount} unread)` : ''}`}
         onClick={() => setIsOpen(!isOpen)}
       >
         <Bell className={cn(

@@ -26,6 +26,12 @@ const profileUpdateSchema = z.object({
   bio: z.string().max(500, 'Bio too long').optional().or(z.literal('')),
   phone: z.string().max(20, 'Phone number too long').regex(/^[+]?[\d\s\-()]*$/, 'Invalid phone format').optional().or(z.literal('')),
   website: z.string().url('Invalid website URL').max(200).optional().or(z.literal('')),
+  socialLinks: z.object({
+    twitter: z.string().max(100).optional(),
+    linkedin: z.string().max(100).optional(),
+    github: z.string().max(100).optional(),
+  }).passthrough().optional(),
+  // Accept legacy snake_case field name for backward compatibility
   social_links: z.object({
     twitter: z.string().max(100).optional(),
     linkedin: z.string().max(100).optional(),
@@ -75,32 +81,45 @@ export async function GET(request: NextRequest) {
           id: userId,
           email: '',
           name: '',
-          avatar_url: '',
+          avatarUrl: '',
           company: '',
           role: '',
           bio: '',
           phone: '',
           website: '',
+          socialLinks: {},
+          // Legacy snake_case aliases for backward compatibility
+          avatar_url: '',
           social_links: {},
         }
       });
     }
 
     // Map Prisma fields to the profile shape the frontend expects
+    const avatarUrl = user.avatar || '';
+    const socialLinks = (user.socialLinks as Record<string, string>) || {};
+    const createdAt = user.createdAt.toISOString();
+    const updatedAt = user.updatedAt.toISOString();
+
     return NextResponse.json({
       profile: {
         id: user.id,
         email: user.email,
         name: user.name || '',
-        avatar_url: user.avatar || '',
+        avatarUrl,
         company: user.company || '',
         role: user.jobRole || '',
         bio: user.bio || '',
         phone: user.phone || '',
         website: user.website || '',
-        social_links: (user.socialLinks as Record<string, string>) || {},
-        created_at: user.createdAt.toISOString(),
-        updated_at: user.updatedAt.toISOString(),
+        socialLinks,
+        createdAt,
+        updatedAt,
+        // Legacy snake_case aliases for backward compatibility
+        avatar_url: avatarUrl,
+        social_links: socialLinks,
+        created_at: createdAt,
+        updated_at: updatedAt,
       }
     });
   } catch (error: unknown) {
@@ -111,10 +130,12 @@ export async function GET(request: NextRequest) {
         id: null,
         email: '',
         name: '',
-        avatar_url: '',
+        avatarUrl: '',
         company: '',
         role: '',
         bio: '',
+        // Legacy snake_case alias for backward compatibility
+        avatar_url: '',
       }
     });
   }
@@ -142,7 +163,7 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    const { name, company, role, bio, phone, website, social_links, openrouterModel } = validationResult.data;
+    const { name, company, role, bio, phone, website, socialLinks, social_links, openrouterModel } = validationResult.data;
 
     // Build update data — only include defined fields
     const updateData: Record<string, unknown> = {};
@@ -152,7 +173,9 @@ export async function PUT(request: NextRequest) {
     if (bio !== undefined) updateData.bio = bio;
     if (phone !== undefined) updateData.phone = phone;
     if (website !== undefined) updateData.website = website || null;
-    if (social_links !== undefined) updateData.socialLinks = social_links;
+    // Accept both camelCase and legacy snake_case field names
+    const resolvedSocialLinks = socialLinks ?? social_links;
+    if (resolvedSocialLinks !== undefined) updateData.socialLinks = resolvedSocialLinks;
 
     // Merge openrouterModel into user.settings JSON
     if (openrouterModel !== undefined) {
@@ -183,20 +206,28 @@ export async function PUT(request: NextRequest) {
       },
     });
 
+    const updatedAvatarUrl = updatedUser.avatar || '';
+    const updatedSocialLinks = (updatedUser.socialLinks as Record<string, string>) || {};
+    const updatedAtStr = updatedUser.updatedAt.toISOString();
+
     return NextResponse.json({
       success: true,
       profile: {
         id: updatedUser.id,
         email: updatedUser.email,
         name: updatedUser.name || '',
-        avatar_url: updatedUser.avatar || '',
+        avatarUrl: updatedAvatarUrl,
         company: updatedUser.company || '',
         role: updatedUser.jobRole || '',
         bio: updatedUser.bio || '',
         phone: updatedUser.phone || '',
         website: updatedUser.website || '',
-        social_links: (updatedUser.socialLinks as Record<string, string>) || {},
-        updated_at: updatedUser.updatedAt.toISOString(),
+        socialLinks: updatedSocialLinks,
+        updatedAt: updatedAtStr,
+        // Legacy snake_case aliases for backward compatibility
+        avatar_url: updatedAvatarUrl,
+        social_links: updatedSocialLinks,
+        updated_at: updatedAtStr,
       },
       message: 'Profile updated successfully'
     });
