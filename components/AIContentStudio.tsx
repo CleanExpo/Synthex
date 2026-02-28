@@ -1,6 +1,6 @@
 ﻿'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { fetchWithCSRF } from '@/lib/csrf';
@@ -12,10 +12,11 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
-import { 
+import {
   Sparkles, Copy, Download, Share2, RefreshCw, Zap, TrendingUp,
   Calendar, Hash, Smile, Target, Wand2, Loader2, Check,
-  Twitter, Instagram, Linkedin, Youtube, Facebook, MessageSquare
+  Twitter, Instagram, Linkedin, Youtube, Facebook, MessageSquare,
+  Building
 } from '@/components/icons';
 import { toast } from 'sonner';
 
@@ -41,6 +42,17 @@ interface GeneratedContent {
     tokens: number;
     processingTime: number;
   };
+}
+
+interface Business {
+  organizationId: string;
+  organizationName: string;
+  displayName: string | null;
+}
+
+interface ConnectionStatus {
+  platform: string;
+  connected: boolean;
 }
 
 const platformIcons = {
@@ -81,6 +93,79 @@ export default function AIContentStudio() {
   });
 
   const [contentHistory, setContentHistory] = useState<GeneratedContent[]>([]);
+
+  // Business selector state
+  const [businesses, setBusinesses] = useState<Business[]>([]);
+  const [selectedBusinessId, setSelectedBusinessId] = useState<string>('');
+  const [connectedPlatforms, setConnectedPlatforms] = useState<Set<string>>(new Set());
+  const [loadingBusinesses, setLoadingBusinesses] = useState(true);
+  const [loadingConnections, setLoadingConnections] = useState(false);
+
+  // Fetch user's businesses on mount
+  useEffect(() => {
+    async function fetchBusinesses() {
+      try {
+        const res = await fetch('/api/businesses');
+        if (res.ok) {
+          const data = await res.json();
+          const biz: Business[] = (data.businesses || []).map((b: Record<string, unknown>) => ({
+            organizationId: b.organizationId as string,
+            organizationName: b.organizationName as string,
+            displayName: b.displayName as string | null,
+          }));
+          setBusinesses(biz);
+          // Auto-select: if active business set, use it; else first business
+          const active = data.activeBusiness as string | null;
+          if (active && biz.some(b => b.organizationId === active)) {
+            setSelectedBusinessId(active);
+          } else if (biz.length === 1) {
+            setSelectedBusinessId(biz[0].organizationId);
+          }
+        }
+        // 403 = not a multi-business owner — personal mode, show all platforms
+      } catch {
+        // Silently fail — personal account mode
+      } finally {
+        setLoadingBusinesses(false);
+      }
+    }
+    fetchBusinesses();
+  }, []);
+
+  // Fetch connections when selected business changes
+  useEffect(() => {
+    if (!selectedBusinessId) {
+      setConnectedPlatforms(new Set());
+      return;
+    }
+    async function fetchConnections() {
+      setLoadingConnections(true);
+      try {
+        const res = await fetch(`/api/auth/connections?organizationId=${selectedBusinessId}`);
+        if (res.ok) {
+          const data = await res.json();
+          const connected = new Set<string>(
+            ((data.connections || []) as ConnectionStatus[])
+              .filter((c) => c.connected)
+              .map((c) => c.platform.toLowerCase())
+          );
+          setConnectedPlatforms(connected);
+          // If current platform is not connected for this business, reset to first connected
+          if (connected.size > 0 && !connected.has(formData.platform)) {
+            const firstConnected = Array.from(connected)[0];
+            if (firstConnected) {
+              setFormData(prev => ({ ...prev, platform: firstConnected }));
+            }
+          }
+        }
+      } catch {
+        setConnectedPlatforms(new Set());
+      } finally {
+        setLoadingConnections(false);
+      }
+    }
+    fetchConnections();
+  }, [selectedBusinessId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleGenerate = async () => {
     if (!formData.topic && !formData.keywords) {
@@ -191,22 +276,73 @@ export default function AIContentStudio() {
             <CardDescription>Customize your AI-generated content</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
+            {/* Business Selector — only show if user has multiple businesses */}
+            {!loadingBusinesses && businesses.length > 1 && (
+              <div className="space-y-2">
+                <Label className="flex items-center gap-2">
+                  <Building className="w-4 h-4 text-cyan-500" />
+                  Creating for
+                </Label>
+                <Select
+                  value={selectedBusinessId}
+                  onValueChange={(value) => setSelectedBusinessId(value)}
+                >
+                  <SelectTrigger className="bg-white/5 border-cyan-500/10">
+                    <SelectValue placeholder="Select a business" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {businesses.map((biz) => (
+                      <SelectItem key={biz.organizationId} value={biz.organizationId}>
+                        {biz.displayName || biz.organizationName}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            {/* Single business indicator — show name when auto-selected */}
+            {!loadingBusinesses && businesses.length === 1 && (
+              <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-cyan-500/5 border border-cyan-500/10 text-sm text-gray-300">
+                <Building className="w-4 h-4 text-cyan-500 shrink-0" />
+                <span>Creating for <span className="font-medium text-cyan-400">{businesses[0].displayName || businesses[0].organizationName}</span></span>
+              </div>
+            )}
+
             {/* Platform Selection */}
             <div className="space-y-2">
               <Label>Platform</Label>
-              <div className="grid grid-cols-3 gap-2">
-                {Object.entries(platformIcons).map(([platform, Icon]) => (
-                  <Button
-                    key={platform}
-                    variant={formData.platform === platform ? 'default' : 'outline'}
-                    className={formData.platform === platform ? platformColors[platform as keyof typeof platformColors] : ''}
-                    onClick={() => setFormData({ ...formData, platform })}
-                  >
-                    <Icon className="w-4 h-4 mr-2" />
-                    {platform.charAt(0).toUpperCase() + platform.slice(1)}
-                  </Button>
-                ))}
-              </div>
+              {loadingConnections ? (
+                <div className="flex items-center gap-2 text-sm text-gray-400 py-2">
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Loading connected platforms...
+                </div>
+              ) : (
+                <div className="grid grid-cols-3 gap-2">
+                  {Object.entries(platformIcons)
+                    .filter(([platform]) => {
+                      // If no business selected or no connections loaded, show all
+                      if (!selectedBusinessId || connectedPlatforms.size === 0) return true;
+                      return connectedPlatforms.has(platform);
+                    })
+                    .map(([platform, Icon]) => (
+                      <Button
+                        key={platform}
+                        variant={formData.platform === platform ? 'default' : 'outline'}
+                        className={formData.platform === platform ? platformColors[platform as keyof typeof platformColors] : ''}
+                        onClick={() => setFormData({ ...formData, platform })}
+                      >
+                        <Icon className="w-4 h-4 mr-2" />
+                        {platform.charAt(0).toUpperCase() + platform.slice(1)}
+                      </Button>
+                    ))}
+                  {selectedBusinessId && connectedPlatforms.size === 0 && !loadingConnections && (
+                    <p className="col-span-3 text-sm text-gray-500 text-center py-2">
+                      No platforms connected for this business. Connect accounts in Settings.
+                    </p>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Content Type */}

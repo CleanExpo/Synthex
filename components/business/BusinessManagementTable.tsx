@@ -1,11 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Eye, Settings, RefreshCw, Link2 } from '@/components/icons';
+import { Eye, Settings, RefreshCw, Link2, ChevronDown, ChevronUp } from '@/components/icons';
 import { fetchWithCSRF } from '@/lib/csrf';
+import { BusinessSocialAccounts } from './BusinessSocialAccounts';
 
 interface OwnedBusiness {
   id: string;
@@ -34,6 +35,7 @@ interface BusinessManagementTableProps {
 export function BusinessManagementTable({ businesses, onSwitch, onManageAccounts, onRefresh }: BusinessManagementTableProps) {
   const [switchingId, setSwitchingId] = useState<string | null>(null);
   const [deactivatingId, setDeactivatingId] = useState<string | null>(null);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -136,7 +138,8 @@ export function BusinessManagementTable({ businesses, onSwitch, onManageAccounts
               </thead>
               <tbody className="divide-y divide-cyan-500/10">
                 {businesses.map((business) => (
-                  <tr key={business.organizationId} className="hover:bg-cyan-500/5 transition-colors">
+                  <React.Fragment key={business.organizationId}>
+                  <tr className="hover:bg-cyan-500/5 transition-colors">
                     <td className="px-6 py-4">
                       <div>
                         <div className="text-sm font-medium text-white">
@@ -172,6 +175,18 @@ export function BusinessManagementTable({ businesses, onSwitch, onManageAccounts
                         <span className="text-sm text-gray-400">
                           {business.stats?.activePlatforms ?? 0} connected
                         </span>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setExpandedId(expandedId === business.organizationId ? null : business.organizationId)}
+                          className="text-gray-400 hover:text-white hover:bg-cyan-500/10"
+                        >
+                          {expandedId === business.organizationId ? (
+                            <ChevronUp className="h-4 w-4" />
+                          ) : (
+                            <ChevronDown className="h-4 w-4" />
+                          )}
+                        </Button>
                         <Button
                           variant="outline"
                           size="sm"
@@ -218,6 +233,18 @@ export function BusinessManagementTable({ businesses, onSwitch, onManageAccounts
                       </div>
                     </td>
                   </tr>
+                  {expandedId === business.organizationId && (
+                    <tr>
+                      <td colSpan={6} className="px-6 py-4 bg-[#0a1020]/50">
+                        <BusinessSocialAccounts
+                          organizationId={business.organizationId}
+                          organizationName={business.displayName || business.organizationName}
+                          onConnectPlatform={onManageAccounts}
+                        />
+                      </td>
+                    </tr>
+                  )}
+                  </React.Fragment>
                 ))}
               </tbody>
             </table>
@@ -270,19 +297,44 @@ export function BusinessManagementTable({ businesses, onSwitch, onManageAccounts
                 </div>
 
                 {/* Social Accounts */}
-                <div className="flex items-center justify-between pt-2 border-t border-cyan-500/10">
-                  <span className="text-sm text-gray-400">
-                    {business.stats?.activePlatforms ?? 0} social accounts connected
-                  </span>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => onManageAccounts(business.organizationId)}
-                    className="bg-purple-500/10 border-purple-500/20 text-purple-400 hover:bg-purple-500/20 hover:border-purple-500/30"
-                  >
-                    <Link2 className="h-3 w-3 mr-1" />
-                    Manage Accounts
-                  </Button>
+                <div className="pt-2 border-t border-cyan-500/10">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-400">
+                      {business.stats?.activePlatforms ?? 0} social accounts connected
+                    </span>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setExpandedId(expandedId === business.organizationId ? null : business.organizationId)}
+                        className="text-gray-400 hover:text-white hover:bg-cyan-500/10"
+                      >
+                        {expandedId === business.organizationId ? (
+                          <ChevronUp className="h-4 w-4" />
+                        ) : (
+                          <ChevronDown className="h-4 w-4" />
+                        )}
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => onManageAccounts(business.organizationId)}
+                        className="bg-purple-500/10 border-purple-500/20 text-purple-400 hover:bg-purple-500/20 hover:border-purple-500/30"
+                      >
+                        <Link2 className="h-3 w-3 mr-1" />
+                        Manage Accounts
+                      </Button>
+                    </div>
+                  </div>
+                  {expandedId === business.organizationId && (
+                    <div className="mt-3">
+                      <BusinessSocialAccounts
+                        organizationId={business.organizationId}
+                        organizationName={business.displayName || business.organizationName}
+                        onConnectPlatform={onManageAccounts}
+                      />
+                    </div>
+                  )}
                 </div>
 
                 {/* Actions */}

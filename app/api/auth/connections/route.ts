@@ -77,8 +77,23 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Get org scope for multi-business support
-    const organizationId = await getEffectiveOrganizationId(userId);
+    // Get org scope — allow explicit override via query param for business management
+    const { searchParams } = new URL(request.url);
+    const orgOverride = searchParams.get('organizationId');
+    const organizationId = orgOverride || await getEffectiveOrganizationId(userId);
+
+    // If org override requested, verify user owns that organization
+    if (orgOverride) {
+      const ownership = await prisma.businessOwnership.findFirst({
+        where: { ownerId: userId, organizationId: orgOverride },
+      });
+      if (!ownership) {
+        return NextResponse.json(
+          { error: 'Access denied to this organization' },
+          { status: 403 }
+        );
+      }
+    }
 
     // Get all connections for user, scoped by organization
     const connections = await prisma.platformConnection.findMany({

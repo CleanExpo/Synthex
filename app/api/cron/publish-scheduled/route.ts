@@ -126,14 +126,19 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       }
 
       // -- Fetch active platform connection ----------------------------------
-      // Use organization-scoped connection when available (multi-business support)
+      // Use organization-scoped connection for multi-business support.
+      // When the post's campaign belongs to a specific organization, we MUST
+      // use that org's connection to avoid publishing with the wrong account.
+      // When no organizationId exists (personal/legacy posts), prefer personal
+      // connections first, then fall back to any active connection.
       const organizationId = post.campaign.organizationId;
-      const connection = await prisma.platformConnection.findFirst({
+
+      let connection = await prisma.platformConnection.findFirst({
         where: {
           userId,
           platform,
           isActive: true,
-          ...(organizationId ? { organizationId } : {}),
+          organizationId: organizationId ?? null,
         },
         select: {
           id: true,
@@ -145,9 +150,31 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
         },
       });
 
+      // Fallback: if no personal connection found for legacy posts (no org),
+      // try any active connection for this user/platform
+      if (!connection && !organizationId) {
+        connection = await prisma.platformConnection.findFirst({
+          where: {
+            userId,
+            platform,
+            isActive: true,
+          },
+          select: {
+            id: true,
+            accessToken: true,
+            refreshToken: true,
+            expiresAt: true,
+            profileId: true,
+            profileName: true,
+          },
+        });
+      }
+
       if (!connection) {
-        const errorMessage = `No connected ${platform} account`;
-        console.error(`[publish-scheduled] Post ${post.id}: ${errorMessage} (userId=${userId})`);
+        const errorMessage = organizationId
+          ? `No connected ${platform} account for organization ${organizationId}`
+          : `No connected ${platform} account`;
+        console.error(`[publish-scheduled] Post ${post.id}: ${errorMessage} (userId=${userId}, orgId=${organizationId ?? 'none'})`);
 
         await markPostFailed(post.id, errorMessage);
 
