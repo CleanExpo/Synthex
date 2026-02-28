@@ -100,6 +100,62 @@ const oauthConfigs: Record<string, OAuthConfig> = {
 };
 
 // =============================================================================
+// HTML Safety
+// =============================================================================
+
+/** Escape a string for safe embedding inside HTML / inline <script> */
+function escapeForHtml(str: string): string {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+/** Escape a string for safe embedding inside a JS string literal */
+function escapeForJs(str: string): string {
+  return str
+    .replace(/\\/g, '\\\\')
+    .replace(/'/g, "\\'")
+    .replace(/"/g, '\\"')
+    .replace(/\n/g, '\\n')
+    .replace(/\r/g, '\\r')
+    .replace(/<\//g, '<\\/');  // prevent </script> injection
+}
+
+/**
+ * Build a safe HTML response that posts a message to the opener window and closes.
+ * All user-controlled values are escaped to prevent XSS.
+ */
+function buildPostMessageHtml(
+  type: 'oauth-success' | 'oauth-error',
+  platform: string,
+  extra: Record<string, string | null> = {},
+  fallbackText?: string
+): string {
+  const safePlatform = escapeForJs(platform);
+  const safeText = escapeForHtml(fallbackText || (type === 'oauth-success' ? `Connected to ${platform}!` : `OAuth error`));
+
+  // Build the postMessage payload as safe JS
+  const payloadParts = [`type: '${type}'`, `platform: '${safePlatform}'`];
+  for (const [key, val] of Object.entries(extra)) {
+    if (val === null) {
+      payloadParts.push(`${escapeForJs(key)}: null`);
+    } else {
+      payloadParts.push(`${escapeForJs(key)}: '${escapeForJs(val)}'`);
+    }
+  }
+
+  return `<!DOCTYPE html><html><body><script>
+if (window.opener) {
+  window.opener.postMessage({ ${payloadParts.join(', ')} }, window.location.origin);
+}
+window.close();
+</script><p>${safeText}</p></body></html>`;
+}
+
+// =============================================================================
 // State Verification
 // =============================================================================
 
@@ -389,6 +445,15 @@ export async function GET(
   try {
     const { platform: rawPlatform } = await params;
     const platform = rawPlatform.toLowerCase();
+
+    // Validate platform string early — only allow alphanumeric characters
+    // to prevent injection through the dynamic route segment
+    if (!/^[a-z0-9]+$/.test(platform)) {
+      return NextResponse.redirect(
+        new URL('/login?error=Invalid platform', request.url)
+      );
+    }
+
     const { searchParams } = new URL(request.url);
 
     // Check for OAuth error from provider
@@ -402,12 +467,7 @@ export async function GET(
       if (state) {
         const stateData = verifyAndDecodeState(state);
         if (stateData?.flow === 'integration') {
-          const html = `<!DOCTYPE html><html><body><script>
-            if (window.opener) {
-              window.opener.postMessage({ type: 'oauth-error', platform: '${platform}', error: ${JSON.stringify(errorDescription)} }, window.location.origin);
-            }
-            window.close();
-          </script><p>OAuth error: ${errorDescription}</p></body></html>`;
+          const html = buildPostMessageHtml('oauth-error', platform, { error: errorDescription }, `OAuth error: ${errorDescription}`);
           return new NextResponse(html, { status: 200, headers: { 'Content-Type': 'text/html' } });
         }
       }
@@ -446,12 +506,7 @@ export async function GET(
     if (stateTimestamp && Date.now() - stateTimestamp > 10 * 60 * 1000) {
       const expiredMsg = 'Authentication session expired. Please try connecting again.';
       if (stateData.flow === 'integration') {
-        const html = `<!DOCTYPE html><html><body><script>
-          if (window.opener) {
-            window.opener.postMessage({ type: 'oauth-error', platform: '${platform}', error: ${JSON.stringify(expiredMsg)} }, window.location.origin);
-          }
-          window.close();
-        </script><p>${expiredMsg}</p></body></html>`;
+        const html = buildPostMessageHtml('oauth-error', platform, { error: expiredMsg }, expiredMsg);
         return new NextResponse(html, { status: 200, headers: { 'Content-Type': 'text/html' } });
       }
       return NextResponse.redirect(
@@ -462,12 +517,7 @@ export async function GET(
     // Check if platform is supported
     if (!oauthConfigs[platform]) {
       if (stateData.flow === 'integration') {
-        const html = `<!DOCTYPE html><html><body><script>
-          if (window.opener) {
-            window.opener.postMessage({ type: 'oauth-error', platform: '${platform}', error: 'Unsupported platform' }, window.location.origin);
-          }
-          window.close();
-        </script><p>Unsupported platform: ${platform}</p></body></html>`;
+        const html = buildPostMessageHtml('oauth-error', platform, { error: 'Unsupported platform' }, `Unsupported platform: ${platform}`);
         return new NextResponse(html, { status: 200, headers: { 'Content-Type': 'text/html' } });
       }
       return NextResponse.redirect(
@@ -479,12 +529,7 @@ export async function GET(
     const creds = await getPlatformOAuthCredentials(platform);
     if (!creds) {
       if (stateData.flow === 'integration') {
-        const html = `<!DOCTYPE html><html><body><script>
-          if (window.opener) {
-            window.opener.postMessage({ type: 'oauth-error', platform: '${platform}', error: 'Platform not configured' }, window.location.origin);
-          }
-          window.close();
-        </script><p>This platform connection has not been set up yet. Please contact your administrator.</p></body></html>`;
+        const html = buildPostMessageHtml('oauth-error', platform, { error: 'Platform not configured' }, 'This platform connection has not been set up yet. Please contact your administrator.');
         return new NextResponse(html, { status: 200, headers: { 'Content-Type': 'text/html' } });
       }
       return NextResponse.redirect(
@@ -520,7 +565,10 @@ export async function GET(
     // =========================================================================
     if (stateData.flow === 'integration' && stateData.userId) {
       const userId = stateData.userId as string;
-      const orgId = (stateData.organizationId as string) ?? null;
+      // Use empty string for null orgId — Prisma composite unique constraints
+      // cannot match NULL values, so we store '' as the "no org" sentinel.
+      const rawOrgId = (stateData.organizationId as string) || null;
+      const orgIdForDb = rawOrgId ?? '';
 
       try {
         const expiresAt = tokenData.expiresIn
@@ -537,7 +585,7 @@ export async function GET(
             unique_user_platform_org: {
               userId,
               platform,
-              organizationId: orgId ?? '',
+              organizationId: orgIdForDb,
             },
           },
           update: {
@@ -555,7 +603,7 @@ export async function GET(
           },
           create: {
             userId,
-            organizationId: orgId,
+            organizationId: orgIdForDb || null,
             platform,
             accessToken: encryptedAccessToken,
             refreshToken: encryptedRefreshToken ?? null,
@@ -575,12 +623,7 @@ export async function GET(
       }
 
       // Close popup and notify parent window (include org context)
-      const html = `<!DOCTYPE html><html><body><script>
-        if (window.opener) {
-          window.opener.postMessage({ type: 'oauth-success', platform: '${platform}', organizationId: ${orgId ? `'${orgId}'` : 'null'} }, window.location.origin);
-        }
-        window.close();
-      </script><p>Connected to ${platform}! This window will close automatically.</p></body></html>`;
+      const html = buildPostMessageHtml('oauth-success', platform, { organizationId: rawOrgId ?? null }, `Connected to ${platform}! This window will close automatically.`);
       return new NextResponse(html, { status: 200, headers: { 'Content-Type': 'text/html' } });
     }
 
@@ -597,40 +640,30 @@ export async function GET(
 
     if (user) {
       // Update existing user with OAuth info
-      const updateData: Record<string, unknown> = {
-        avatar: userInfo.avatar || user.avatar,
-        name: userInfo.name || user.name,
-        emailVerified: true,
-        authProvider: user.authProvider === 'local' ? platform : user.authProvider,
-        updatedAt: new Date(),
-      };
-
-      // Only set googleId if this is a Google login (it's the only platform-specific field on User)
-      if (platform === 'google') {
-        updateData.googleId = userInfo.id;
-      }
-
       user = await prisma.user.update({
         where: { id: user.id },
-        data: updateData,
+        data: {
+          avatar: userInfo.avatar || user.avatar,
+          name: userInfo.name || user.name,
+          emailVerified: true,
+          authProvider: user.authProvider === 'local' ? platform : user.authProvider,
+          updatedAt: new Date(),
+          ...(platform === 'google' ? { googleId: userInfo.id } : {}),
+        },
       });
     } else if (userInfo.email) {
       // Create new user
-      const createData: Record<string, unknown> = {
-        email: userInfo.email,
-        name: userInfo.name || `${platform} User`,
-        password: '', // Empty password for OAuth users
-        avatar: userInfo.avatar,
-        authProvider: platform,
-        emailVerified: true,
-      };
-
-      // Only set googleId if this is a Google login
-      if (platform === 'google') {
-        createData.googleId = userInfo.id;
-      }
-
-      user = await prisma.user.create({ data: createData });
+      user = await prisma.user.create({
+        data: {
+          email: userInfo.email,
+          name: userInfo.name || `${platform} User`,
+          password: '', // Empty password for OAuth users
+          avatar: userInfo.avatar,
+          authProvider: platform,
+          emailVerified: true,
+          ...(platform === 'google' ? { googleId: userInfo.id } : {}),
+        },
+      });
     } else {
       // Platform did not provide email (common for Twitter, TikTok, Reddit, Pinterest)
       // For login flow, we cannot create an account without email
@@ -653,14 +686,15 @@ export async function GET(
         : undefined;
 
       // Login flow -- store connection with user's primary org (or null)
-      const loginOrgId = user.organizationId ?? null;
+      // Use empty string for null orgId to match composite unique constraint
+      const loginOrgId = user.organizationId ?? '';
 
       await prisma.platformConnection.upsert({
         where: {
           unique_user_platform_org: {
             userId: user.id,
             platform,
-            organizationId: loginOrgId ?? '',
+            organizationId: loginOrgId,
           },
         },
         update: {
@@ -678,7 +712,7 @@ export async function GET(
         },
         create: {
           userId: user.id,
-          organizationId: loginOrgId,
+          organizationId: loginOrgId || null,
           platform,
           accessToken: encryptedAccessToken,
           refreshToken: encryptedRefreshToken ?? null,
@@ -757,12 +791,7 @@ export async function GET(
         const stateData = verifyAndDecodeState(state);
         if (stateData?.flow === 'integration') {
           const errorMsg = error instanceof Error ? error.message : 'Authentication failed';
-          const html = `<!DOCTYPE html><html><body><script>
-            if (window.opener) {
-              window.opener.postMessage({ type: 'oauth-error', platform: 'unknown', error: ${JSON.stringify(errorMsg)} }, window.location.origin);
-            }
-            window.close();
-          </script><p>OAuth error: ${errorMsg}</p></body></html>`;
+          const html = buildPostMessageHtml('oauth-error', 'unknown', { error: errorMsg }, `OAuth error: ${errorMsg}`);
           return new NextResponse(html, { status: 200, headers: { 'Content-Type': 'text/html' } });
         }
       }

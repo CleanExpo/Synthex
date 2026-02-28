@@ -51,14 +51,16 @@ export async function GET(request: NextRequest) {
     // Generate state parameter (CSRF protection)
     const state = generateState();
 
-    // Build redirect URI - use request origin for accurate URL detection
-    const origin = request.headers.get('origin') || request.headers.get('host');
-    const protocol = request.headers.get('x-forwarded-proto') ||
-                     (origin?.includes('localhost') ? 'http' : 'https');
-    const baseUrl = origin?.includes('://')
-      ? origin
-      : `${protocol}://${origin || 'localhost:3000'}`;
-    const redirectUri = `${baseUrl}/api/auth/oauth/github/callback`;
+    // Build redirect URI from NEXT_PUBLIC_APP_URL (never from request headers
+    // which can be spoofed, allowing an attacker to redirect the code to their server)
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL;
+    if (!appUrl && process.env.NODE_ENV === 'production') {
+      return NextResponse.json(
+        { error: 'Configuration error', message: 'NEXT_PUBLIC_APP_URL must be configured for OAuth in production.' },
+        { status: 500 }
+      );
+    }
+    const redirectUri = `${appUrl || 'http://localhost:3000'}/api/auth/oauth/github/callback`;
 
     // Store PKCE state for callback verification
     await storePKCEState(
@@ -87,7 +89,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(
       {
         error: 'Failed to initiate GitHub OAuth',
-        message: error instanceof Error ? error instanceof Error ? error.message : String(error) : 'Unknown error',
+        message: error instanceof Error ? error.message : 'Unknown error',
       },
       { status: 500 }
     );

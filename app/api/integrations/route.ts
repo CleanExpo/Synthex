@@ -108,6 +108,8 @@ export async function POST(request: NextRequest) {
 
     // Determine organization scope for multi-business support
     const organizationId = await getEffectiveOrganizationId(userId);
+    // Use empty string for null orgId — must match composite unique constraint
+    const orgIdForDb = organizationId ?? '';
 
     // Upsert platform connection via Prisma (scoped by organization)
     const connection = await prisma.platformConnection.upsert({
@@ -115,7 +117,7 @@ export async function POST(request: NextRequest) {
         unique_user_platform_org: {
           userId,
           platform,
-          organizationId: organizationId ?? '',
+          organizationId: orgIdForDb,
         },
       },
       update: {
@@ -128,7 +130,7 @@ export async function POST(request: NextRequest) {
       },
       create: {
         userId,
-        organizationId: organizationId ?? null,
+        organizationId: orgIdForDb || null,
         platform,
         accessToken: accessToken || '',
         refreshToken: refreshToken || null,

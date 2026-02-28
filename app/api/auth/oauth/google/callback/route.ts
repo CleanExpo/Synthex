@@ -459,7 +459,8 @@ function redirectWithError(effectiveBaseUrl: string, error: string): NextRespons
   // Use /login — the active login page with our custom PKCE Google flow
   // lives at app/(auth)/login/page.tsx which resolves to /login
   const redirectUrl = new URL('/login', effectiveBaseUrl);
-  redirectUrl.searchParams.set('error', encodeURIComponent(error));
+  // URLSearchParams.set() already encodes — no manual encodeURIComponent needed
+  redirectUrl.searchParams.set('error', error);
   return NextResponse.redirect(redirectUrl);
 }
 
