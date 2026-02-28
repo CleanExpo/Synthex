@@ -15,6 +15,7 @@ import { prisma } from '@/lib/prisma';
 import { TwitterApi } from 'twitter-api-v2';
 import { getUserIdFromCookies, unauthorizedResponse } from '@/lib/auth/jwt-utils';
 import { decryptField } from '@/lib/security/field-encryption';
+import { getEffectiveOrganizationId } from '@/lib/multi-business';
 
 const socialPostSchema = z.object({
   content: z.string().min(1),
@@ -178,6 +179,9 @@ export async function POST(request: NextRequest) {
       return unauthorizedResponse();
     }
 
+    // Get org scope for multi-business support
+    const organizationId = await getEffectiveOrganizationId(userId);
+
     // Parse and validate request body
     const rawBody = await request.json();
     const validation = socialPostSchema.safeParse(rawBody);
@@ -215,11 +219,12 @@ export async function POST(request: NextRequest) {
 
     for (const platform of platforms) {
       try {
-        // Get platform connection
+        // Get platform connection (scoped by organization)
         const connection = await prisma.platformConnection.findFirst({
           where: {
             userId,
             platform,
+            organizationId: organizationId ?? null,
             isActive: true
           }
         });

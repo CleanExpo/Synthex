@@ -15,6 +15,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
+import { getEffectiveOrganizationId } from '@/lib/multi-business';
 import { z } from 'zod';
 import { getSupportedPlatforms, getOAuthProvider, isSupportedPlatform } from '@/lib/oauth';
 import type { OAuthPlatform } from '@/lib/oauth/types';
@@ -76,9 +77,12 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Get all connections for user
+    // Get org scope for multi-business support
+    const organizationId = await getEffectiveOrganizationId(userId);
+
+    // Get all connections for user, scoped by organization
     const connections = await prisma.platformConnection.findMany({
-      where: { userId, isActive: true },
+      where: { userId, organizationId: organizationId ?? null, isActive: true },
       select: {
         platform: true,
         profileName: true,
@@ -203,11 +207,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Find the connection
+    // Get org scope for multi-business support
+    const organizationId = await getEffectiveOrganizationId(userId);
+
+    // Find the connection, scoped by organization
     const connection = await prisma.platformConnection.findFirst({
       where: {
         userId,
         platform,
+        organizationId: organizationId ?? null,
         isActive: true,
       },
     });

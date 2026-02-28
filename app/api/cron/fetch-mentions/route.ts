@@ -61,27 +61,41 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    // Get user access tokens for platforms
-    const userIds = [...new Set(keywords.map(k => k.userId))] as string[];
-    const connections = await prisma.platformConnection.findMany({
-      where: {
-        userId: { in: userIds },
-        isActive: true,
-      },
-      select: {
-        userId: true,
-        platform: true,
-        accessToken: true,
-      },
+    // Get user access tokens for platforms, scoped by organization
+    // Build unique (userId, organizationId) pairs from keywords
+    const userOrgPairs = [...new Set(
+      keywords.map(k => `${k.userId}|${k.organizationId ?? ''}`)
+    )].map(pair => {
+      const [userId, orgId] = pair.split('|');
+      return { userId, organizationId: orgId || null };
     });
 
-    // Build token map: userId -> platform -> token
+    // Fetch connections for each user+org pair
+    const allConnections = await Promise.all(
+      userOrgPairs.map(({ userId, organizationId }) =>
+        prisma.platformConnection.findMany({
+          where: {
+            userId,
+            organizationId,
+            isActive: true,
+          },
+          select: {
+            userId: true,
+            platform: true,
+            accessToken: true,
+          },
+        }).then(conns => conns.map(c => ({ ...c, organizationId })))
+      )
+    );
+
+    // Build token map: "userId|orgId" -> platform -> token
     const tokenMap = new Map<string, Map<string, string>>();
-    for (const conn of connections) {
-      if (!tokenMap.has(conn.userId)) {
-        tokenMap.set(conn.userId, new Map());
+    for (const conn of allConnections.flat()) {
+      const key = `${conn.userId}|${conn.organizationId ?? ''}`;
+      if (!tokenMap.has(key)) {
+        tokenMap.set(key, new Map());
       }
-      tokenMap.get(conn.userId)!.set(conn.platform, conn.accessToken);
+      tokenMap.get(key)!.set(conn.platform, conn.accessToken);
     }
 
     let mentionsFetched = 0;
@@ -92,7 +106,8 @@ export async function GET(request: NextRequest) {
     // Process each keyword
     for (const keyword of keywords) {
       try {
-        const userTokens = tokenMap.get(keyword.userId) || new Map<string, string>();
+        const tokenKey = `${keyword.userId}|${keyword.organizationId ?? ''}`;
+        const userTokens = tokenMap.get(tokenKey) || new Map<string, string>();
         const allMentions: Array<{
           platform: string;
           platformPostId: string;

@@ -12,6 +12,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { isSupportedPlatform, revokePlatformTokens } from '@/lib/oauth';
 import { getUserIdFromRequestOrCookies, unauthorizedResponse } from '@/lib/auth/jwt-utils';
+import { getEffectiveOrganizationId } from '@/lib/multi-business';
 import { logger } from '@/lib/logger';
 import { prisma } from '@/lib/prisma';
 
@@ -38,11 +39,15 @@ export async function POST(
     const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) return unauthorizedResponse();
 
-    // Find the connection
+    // Get org scope for multi-business support
+    const organizationId = await getEffectiveOrganizationId(userId);
+
+    // Find the connection, scoped by organization
     const connection = await prisma.platformConnection.findFirst({
       where: {
         userId,
         platform,
+        organizationId: organizationId ?? null,
         isActive: true,
       },
     });

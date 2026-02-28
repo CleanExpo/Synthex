@@ -12,6 +12,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { verifyToken } from '@/lib/auth/jwt-utils';
 import { logger } from '@/lib/logger';
+import { getEffectiveOrganizationId } from '@/lib/multi-business';
 
 // Platform configuration
 const PLATFORM_CONFIG: Record<string, { name: string; color: string }> = {
@@ -278,9 +279,12 @@ export async function GET(request: NextRequest) {
 
     const days = period === '7d' ? 7 : period === '90d' ? 90 : 30;
 
+    // Get org scope for multi-business support
+    const organizationId = await getEffectiveOrganizationId(user.id);
+
     // Fetch connected platforms
     const connections = await prisma.platformConnection.findMany({
-      where: { userId: user.id, isActive: true },
+      where: { userId: user.id, organizationId: organizationId ?? null, isActive: true },
       select: {
         platform: true,
         profileName: true,
