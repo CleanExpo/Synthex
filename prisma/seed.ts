@@ -124,6 +124,108 @@ async function main() {
 
   console.log('✅ Created sample project:', sampleProject.name);
 
+  // ---------------------------------------------------------------------------
+  // Onboarding QA test users (UNI-1030)
+  // 5 users at different onboarding steps for testing the onboarding flow.
+  // Shared password for all test users: TestUser123!
+  // ---------------------------------------------------------------------------
+  const testPassword = await bcrypt.hash('TestUser123!', 12);
+
+  // 1. Brand new user — step 0, no onboarding started
+  await prisma.user.upsert({
+    where: { email: 'test-new@synthex.com' },
+    update: {},
+    create: {
+      email: 'test-new@synthex.com',
+      password: testPassword,
+      name: 'Test New User',
+      emailVerified: true,
+      authProvider: 'local',
+      onboardingComplete: false,
+      onboardingStep: 0,
+      businessProfileComplete: false,
+      apiKeyConfigured: false,
+    },
+  });
+
+  // 2. Completed step 1 (business profile)
+  await prisma.user.upsert({
+    where: { email: 'test-step1@synthex.com' },
+    update: {},
+    create: {
+      email: 'test-step1@synthex.com',
+      password: testPassword,
+      name: 'Test Step1 User',
+      emailVerified: true,
+      authProvider: 'local',
+      onboardingComplete: false,
+      onboardingStep: 1,
+      businessProfileComplete: true,
+      apiKeyConfigured: false,
+    },
+  });
+
+  // 3. Completed step 2 (API key configured)
+  await prisma.user.upsert({
+    where: { email: 'test-step2@synthex.com' },
+    update: {},
+    create: {
+      email: 'test-step2@synthex.com',
+      password: testPassword,
+      name: 'Test Step2 User',
+      emailVerified: true,
+      authProvider: 'local',
+      onboardingComplete: false,
+      onboardingStep: 2,
+      businessProfileComplete: true,
+      apiKeyConfigured: true,
+      apiKeyValid: true,
+    },
+  });
+
+  // 4. Completed step 3 (socials connected)
+  await prisma.user.upsert({
+    where: { email: 'test-step3@synthex.com' },
+    update: {},
+    create: {
+      email: 'test-step3@synthex.com',
+      password: testPassword,
+      name: 'Test Step3 User',
+      emailVerified: true,
+      authProvider: 'local',
+      onboardingComplete: false,
+      onboardingStep: 3,
+      businessProfileComplete: true,
+      apiKeyConfigured: true,
+      apiKeyValid: true,
+    },
+  });
+
+  // 5. Fully onboarded user
+  await prisma.user.upsert({
+    where: { email: 'test-complete@synthex.com' },
+    update: {},
+    create: {
+      email: 'test-complete@synthex.com',
+      password: testPassword,
+      name: 'Test Complete User',
+      emailVerified: true,
+      authProvider: 'local',
+      onboardingComplete: true,
+      onboardingStep: 4,
+      businessProfileComplete: true,
+      apiKeyConfigured: true,
+      apiKeyValid: true,
+      preferences: {
+        onboardingCompleted: true,
+        userType: 'marketer',
+        platforms: ['instagram', 'linkedin'],
+      },
+    },
+  });
+
+  console.log('✅ Created 5 onboarding QA test users (test-new, test-step1..3, test-complete)');
+
   console.log('🎉 Seed completed successfully!');
 }
 
