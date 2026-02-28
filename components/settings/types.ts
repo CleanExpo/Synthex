@@ -68,4 +68,4 @@ export interface BillingInfo {
   cardLast4: string;
 }
 
-export type SettingsTab = 'profile' | 'notifications' | 'integrations' | 'privacy' | 'billing' | 'advanced';
+export type SettingsTab = 'profile' | 'notifications' | 'integrations' | 'privacy' | 'billing' | 'branding' | 'advanced';

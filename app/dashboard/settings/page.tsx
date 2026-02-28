@@ -17,18 +17,22 @@ import {
   CreditCard,
   Download,
   Link2,
+  Palette,
   Save,
   Settings2,
   Shield,
   User,
+  Zap,
 } from '@/components/icons';
 import { toast } from 'sonner';
+import { Card, CardContent } from '@/components/ui/card';
 import {
   ProfileTab,
   NotificationsTab,
   IntegrationsTab,
   PrivacyTab,
   BillingTab,
+  BrandingTab,
   AdvancedTab,
   defaultNotifications,
   defaultPrivacy,
@@ -44,6 +48,13 @@ import {
   type BillingInfo,
   type Invoice,
 } from '@/components/settings';
+
+/** Plans that include white-label branding features */
+const ENTERPRISE_PLANS = ['enterprise', 'business', 'pro'];
+
+function isEnterprisePlan(plan: string): boolean {
+  return ENTERPRISE_PLANS.includes(plan.toLowerCase());
+}
 
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState<SettingsTab>('profile');
@@ -488,6 +499,10 @@ export default function SettingsPage() {
             <CreditCard className="w-4 h-4 mr-2" />
             Billing
           </TabsTrigger>
+          <TabsTrigger value="branding" className="data-[state=active]:bg-white/10">
+            <Palette className="w-4 h-4 mr-2" />
+            Branding
+          </TabsTrigger>
           <TabsTrigger value="advanced" className="data-[state=active]:bg-white/10">
             <Settings2 className="w-4 h-4 mr-2" />
             Advanced
@@ -545,6 +560,33 @@ export default function SettingsPage() {
             onManagePayment={handleManagePayment}
             onDownloadInvoice={handleDownloadInvoice}
           />
+        </TabsContent>
+
+        <TabsContent value="branding" className="mt-6">
+          {isEnterprisePlan(billing.plan) ? (
+            <BrandingTab onSave={handleSave} isSaving={isSaving} />
+          ) : (
+            <Card variant="glass">
+              <CardContent className="py-12">
+                <div className="text-center space-y-4">
+                  <Palette className="w-12 h-12 text-slate-500 mx-auto" />
+                  <div>
+                    <h3 className="text-lg font-semibold text-white mb-1">
+                      White-Label Branding
+                    </h3>
+                    <p className="text-slate-400 max-w-md mx-auto">
+                      Customise your platform with your own logo, colours, domain, and more.
+                      This feature is available on Enterprise plans.
+                    </p>
+                  </div>
+                  <Button onClick={handleUpgrade} className="gradient-primary">
+                    <Zap className="w-4 h-4 mr-2" />
+                    Upgrade to Enterprise
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
 
         <TabsContent value="advanced" className="mt-6">
