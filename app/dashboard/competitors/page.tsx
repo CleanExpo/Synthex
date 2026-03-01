@@ -66,7 +66,22 @@ export default function CompetitorsPage() {
 
       if (insightRes.ok) {
         const insightData = await insightRes.json();
-        setInsights(insightData.data || insightData.insights || []);
+        const raw = insightData.data ?? insightData.insights;
+        if (Array.isArray(raw)) {
+          setInsights(raw);
+        } else if (raw && typeof raw === 'object') {
+          // API returns { actionItems, strengths, weaknesses, ... } — transform to Insight[]
+          const transformed: Insight[] = (raw.actionItems ?? []).map(
+            (item: { priority: 'high' | 'medium' | 'low'; action: string }) => ({
+              type: 'action',
+              title: item.action,
+              description: item.action,
+              priority: item.priority,
+              actionable: true,
+            })
+          );
+          setInsights(transformed);
+        }
       }
 
       setError(null);
