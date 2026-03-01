@@ -125,6 +125,7 @@
     "bullmq": "^5.67.2",
     "canvas-confetti": "^1.9.4",
     "chalk": "^5.5.0",
+    "cheerio": "^1.2.0",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.0",
     "cmdk": "^0.2.0",
