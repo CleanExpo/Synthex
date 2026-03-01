@@ -10,12 +10,12 @@ See: .planning/PROJECT.md (updated 2026-02-17)
 ## Current Position
 
 Milestone: v1.5 Deployment Readiness (Phases 52-58)
-Phase: 54 of 58 (API Contract Verification)
-Plan: 54-01 complete (42 new contract tests: organizations + approvals/roles)
-Status: In progress — 1/2 plans complete
-Last activity: 2026-03-01 — Plan 54-01 complete (182 contract tests, 0 failing)
+Phase: 55 of 58 (UI Audit - States)
+Plan: —
+Status: Ready to plan
+Last activity: 2026-03-02 — Phase 54 complete (198 contract tests passing, 11 suites, 74% route Zod coverage)
 
-Progress: ████░░░░░░ 43% (3/7 phases complete)
+Progress: █████░░░░░ 57% (4/7 phases complete)
 
 ## Performance Metrics
 
@@ -99,6 +99,13 @@ Decisions from v1.4:
 - TrackedKeyword/SocialMention for social listening
 - LinkBioPage/LinkBioLink for customizable landing pages
 
+Decisions from v1.5 (Phase 54):
+
+- 74% route Zod coverage — GET-only utility routes (health, stats, cron) do not require schema validation
+- Prisma mock factory exports both default and named export: `{ __esModule: true, default: instance, prisma: instance }` to satisfy routes that use either import style
+- Route handlers that call `response.cookies.set()` (e.g. onboarding POST) cannot be tested end-to-end in Jest — use schema validation + transaction-call verification instead
+- Jest closure pattern for tx mocks: use plain `() => Promise.resolve(value)` inside `mockImplementation` rather than `jest.fn().mockResolvedValue()` to avoid nested mock complexity
+
 ### Deferred Items (from v1.0)
 
 All deferred items from v1.0 resolved:
@@ -177,8 +184,8 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-01
-Stopped at: Phase 54 Plan 54-01 complete (42 new contract tests, 182 total passing)
-Resume file: .planning/phases/54-api-contract-verification/54-01-SUMMARY.md
-Next action: Phase 54 Plan 54-02 (onboarding/referrals tests + full suite verification)
+Last session: 2026-03-02
+Stopped at: Phase 54 complete (198 contract tests passing, 11 suites)
+Resume file: .planning/phases/54-api-contract-verification/54-02-SUMMARY.md
+Next action: Phase 55 (UI Audit - States) — /gsd:plan-phase
 Linear: UNI-648 tracks E2E stabilisation progress
