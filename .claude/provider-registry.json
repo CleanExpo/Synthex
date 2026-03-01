@@ -17,11 +17,8 @@
     "google": {
       "fast": "gemini-2.0-flash",
       "balanced": "gemini-2.5-pro-preview-05-06",
-      "advanced": "gemini-3-pro-preview",
-      "notes": "Direct Google AI API — requires GOOGLE_AI_API_KEY or user BYOK",
-      "retirements": {
-        "gemini-3-pro-preview": "2026-03-09"
-      }
+      "advanced": "gemini-3.1-pro-preview",
+      "notes": "Direct Google AI API — requires GOOGLE_AI_API_KEY or user BYOK"
     },
     "openrouter": {
       "fast": "anthropic/claude-haiku-4-5",
