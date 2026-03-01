@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Eye, Settings, RefreshCw, Link2, ChevronDown, ChevronUp } from '@/components/icons';
+import { Eye, Settings, RefreshCw, Link2, ChevronDown, ChevronUp, Edit, Check, X } from '@/components/icons';
 import { fetchWithCSRF } from '@/lib/csrf';
 import { BusinessSocialAccounts } from './BusinessSocialAccounts';
 
@@ -36,6 +36,9 @@ export function BusinessManagementTable({ businesses, onSwitch, onManageAccounts
   const [switchingId, setSwitchingId] = useState<string | null>(null);
   const [deactivatingId, setDeactivatingId] = useState<string | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [renamingId, setRenamingId] = useState<string | null>(null);
+  const [renameValue, setRenameValue] = useState('');
+  const [renameSaving, setRenameSaving] = useState(false);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -93,6 +96,35 @@ export function BusinessManagementTable({ businesses, onSwitch, onManageAccounts
     }
   };
 
+  const startRename = (business: OwnedBusiness) => {
+    setRenamingId(business.id);
+    setRenameValue(business.displayName || business.organizationName);
+  };
+
+  const cancelRename = () => {
+    setRenamingId(null);
+    setRenameValue('');
+  };
+
+  const saveRename = async (businessId: string) => {
+    if (!renameValue.trim()) return;
+    setRenameSaving(true);
+    try {
+      const response = await fetchWithCSRF(`/api/businesses/${businessId}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ displayName: renameValue.trim() }),
+      });
+      if (!response.ok) throw new Error('Failed to rename');
+      setRenamingId(null);
+      setRenameValue('');
+      onRefresh();
+    } catch {
+      alert('Failed to save name. Please try again.');
+    } finally {
+      setRenameSaving(false);
+    }
+  };
+
   return (
     <div className="space-y-4">
       {/* Header */}
@@ -142,9 +174,34 @@ export function BusinessManagementTable({ businesses, onSwitch, onManageAccounts
                   <tr className="hover:bg-cyan-500/5 transition-colors">
                     <td className="px-6 py-4">
                       <div>
-                        <div className="text-sm font-medium text-white">
-                          {business.displayName || business.organizationName}
-                        </div>
+                        {renamingId === business.id ? (
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="text"
+                              value={renameValue}
+                              onChange={(e) => setRenameValue(e.target.value)}
+                              onKeyDown={(e) => { if (e.key === 'Enter') saveRename(business.id); if (e.key === 'Escape') cancelRename(); }}
+                              autoFocus
+                              className="px-2 py-1 text-sm bg-[#0f172a] border border-cyan-500/30 rounded text-white focus:outline-none focus:border-cyan-500/60 w-40"
+                              disabled={renameSaving}
+                            />
+                            <Button variant="ghost" size="sm" onClick={() => saveRename(business.id)} disabled={renameSaving} className="h-7 w-7 p-0 text-green-400 hover:text-green-300 hover:bg-green-500/10">
+                              <Check className="h-3 w-3" />
+                            </Button>
+                            <Button variant="ghost" size="sm" onClick={cancelRename} disabled={renameSaving} className="h-7 w-7 p-0 text-gray-400 hover:text-gray-300 hover:bg-white/5">
+                              <X className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-2 group">
+                            <div className="text-sm font-medium text-white">
+                              {business.displayName || business.organizationName}
+                            </div>
+                            <Button variant="ghost" size="sm" onClick={() => startRename(business)} className="h-6 w-6 p-0 text-gray-600 hover:text-gray-300 hover:bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <Edit className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        )}
                         <div className="text-xs text-gray-500 mt-1">@{business.organizationSlug}</div>
                       </div>
                     </td>
@@ -264,9 +321,34 @@ export function BusinessManagementTable({ businesses, onSwitch, onManageAccounts
                 {/* Header */}
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex-1 min-w-0">
-                    <h3 className="text-base font-semibold text-white truncate">
-                      {business.displayName || business.organizationName}
-                    </h3>
+                    {renamingId === business.id ? (
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="text"
+                          value={renameValue}
+                          onChange={(e) => setRenameValue(e.target.value)}
+                          onKeyDown={(e) => { if (e.key === 'Enter') saveRename(business.id); if (e.key === 'Escape') cancelRename(); }}
+                          autoFocus
+                          className="px-2 py-1 text-sm bg-[#0f172a] border border-cyan-500/30 rounded text-white focus:outline-none focus:border-cyan-500/60 w-full"
+                          disabled={renameSaving}
+                        />
+                        <Button variant="ghost" size="sm" onClick={() => saveRename(business.id)} disabled={renameSaving} className="h-7 w-7 p-0 text-green-400 hover:text-green-300 hover:bg-green-500/10 flex-shrink-0">
+                          <Check className="h-3 w-3" />
+                        </Button>
+                        <Button variant="ghost" size="sm" onClick={cancelRename} disabled={renameSaving} className="h-7 w-7 p-0 text-gray-400 hover:text-gray-300 hover:bg-white/5 flex-shrink-0">
+                          <X className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2 group">
+                        <h3 className="text-base font-semibold text-white truncate">
+                          {business.displayName || business.organizationName}
+                        </h3>
+                        <Button variant="ghost" size="sm" onClick={() => startRename(business)} className="h-6 w-6 p-0 text-gray-600 hover:text-gray-300 hover:bg-white/5 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <Edit className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    )}
                     <p className="text-sm text-gray-500 mt-1">@{business.organizationSlug}</p>
                   </div>
                   <div className="flex flex-col gap-2 items-end">
