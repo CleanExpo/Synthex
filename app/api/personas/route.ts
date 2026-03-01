@@ -42,13 +42,14 @@ const updatePersonaSchema = z.object({
 });
 
 // =============================================================================
-// Auth Helper - Uses centralized JWT utilities (no fallback secrets)
+// Auth Helper - Uses APISecurityChecker for NextAuth + JWT compatibility
 // =============================================================================
 
-import { getUserIdFromRequest } from '@/lib/auth/jwt-utils';
+import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
 
 async function getUserId(request: NextRequest): Promise<string | null> {
-  return getUserIdFromRequest(request);
+  const security = await APISecurityChecker.check(request, DEFAULT_POLICIES.AUTHENTICATED_READ);
+  return security.allowed ? security.context.userId ?? null : null;
 }
 
 // =============================================================================
