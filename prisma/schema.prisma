@@ -32,6 +32,8 @@ model User {
   // API Keys (encrypted)
   openrouterApiKey String? @map("openrouter_api_key")
   anthropicApiKey  String? @map("anthropic_api_key")
+  openaiApiKey     String? @map("openai_api_key")
+  geminiApiKey     String? @map("gemini_api_key")
 
   // Profile fields (migrated from Supabase profiles table)
   company          String?
@@ -3018,7 +3020,13 @@ model OnboardingProgress {
   // Persona stage
   personaData         Json?    @map("persona_data")     // { name, tone, topics, etc }
   personaApprovedAt   DateTime? @map("persona_approved_at")
-  
+
+  // New onboarding data fields (UNI-1186 to UNI-1189)
+  auditData           Json?    @map("audit_data")          // Website audit results: SEO, perf, competitors
+  goalsData           Json?    @map("goals_data")          // Goals questionnaire + generated marketing plan
+  postingMode         String?  @map("posting_mode")        // 'manual' | 'assisted' | 'auto'
+  socialProfileUrls   Json?    @map("social_profile_urls") // { platform: url } verified social handles
+
   // Overall status
   status              String   @default("in-progress")  // 'in-progress', 'completed', 'abandoned'
   completedAt         DateTime? @map("completed_at")
