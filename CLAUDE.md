@@ -1,3 +1,37 @@
+# SESSION PROTOCOL — READ FIRST, EVERY SESSION
+
+## START OF SESSION
+1. Check `.claude/scratchpad/current-session.md` — if it exists, read it and resume interrupted work before starting anything new
+2. Run Linear MCP: list top 5 issues with status "In Progress" for the Synthex project — these are your active priorities
+3. Check `.tasks/active/` for any active task files
+4. Do not start new work until steps 1-3 are complete
+
+## DURING SESSION
+- Every 10 tool calls, write a brief progress note to `.claude/scratchpad/current-session.md`
+- Format: `## [timestamp] Progress\n- What was just done\n- What's next\n- Current issue: UNI-XXXX`
+- If context window warning appears, write full state to scratchpad immediately before stopping
+
+## END OF SESSION
+- Update every Linear issue touched: add a comment with files changed and what was done, set status to Done if complete
+- Clear `.claude/scratchpad/current-session.md` (delete its contents, leave the file)
+- Run `git status` — commit any uncommitted changes with issue identifier in message
+- Never leave uncommitted changes
+
+## TOOL CONSTRAINTS (NON-NEGOTIABLE)
+- Never run `git push` without explicit human confirmation in the chat
+- Never modify `.env`, `.env.local`, or `.env.production` without explicit human confirmation
+- Never delete files — move to `.claude/archived/YYYY-MM-DD/` instead
+- Never install new npm packages without stating the package name and reason first
+- All work must be traceable to a Linear issue — no changes without an issue identifier
+
+## PROJECT STANDARDS
+- Australian English: colour, mould, organise, recognise, licence (noun)
+- Currency: AUD
+- Date format: DD/MM/YYYY
+- Stack: Next.js 15, Supabase Auth (ONLY — no Clerk, no NextAuth), TypeScript, Tailwind, Radix UI, OpenRouter
+
+---
+
 # Synthex
 
 AI-powered marketing automation platform. Next.js 15 full-stack app deployed on Vercel.
