@@ -1,0 +1,46 @@
+{
+  "version": "1.0.0",
+  "lastUpdated": "2026-03-01",
+  "models": {
+    "anthropic": {
+      "fast": "claude-haiku-4-5",
+      "balanced": "claude-sonnet-4-5",
+      "advanced": "claude-opus-4-5",
+      "notes": "Direct Anthropic API — requires ANTHROPIC_API_KEY or user BYOK"
+    },
+    "openai": {
+      "fast": "gpt-4o-mini",
+      "balanced": "gpt-4o",
+      "advanced": "o3",
+      "notes": "Direct OpenAI API — requires OPENAI_API_KEY or user BYOK"
+    },
+    "google": {
+      "fast": "gemini-2.0-flash",
+      "balanced": "gemini-2.5-pro-preview-05-06",
+      "advanced": "gemini-3-pro-preview",
+      "notes": "Direct Google AI API — requires GOOGLE_AI_API_KEY or user BYOK",
+      "retirements": {
+        "gemini-3-pro-preview": "2026-03-09"
+      }
+    },
+    "openrouter": {
+      "fast": "anthropic/claude-haiku-4-5",
+      "balanced": "anthropic/claude-sonnet-4-5",
+      "advanced": "anthropic/claude-opus-4-5",
+      "notes": "OpenRouter gateway — requires OPENROUTER_API_KEY or user BYOK. Supports all providers via single key."
+    }
+  },
+  "scoutRules": {
+    "triggerOnModelError": true,
+    "maxAgeDays": 7,
+    "alertOnRetirement": true,
+    "retirementWindowDays": 14,
+    "registryPath": ".claude/provider-registry.json"
+  },
+  "tierAccess": {
+    "free": ["openrouter"],
+    "professional": ["openrouter", "anthropic", "openai"],
+    "business": ["openrouter", "anthropic", "openai", "google"],
+    "custom": ["openrouter", "anthropic", "openai", "google"]
+  }
+}
