@@ -186,7 +186,7 @@ synthex.*.json
 .claude-session/
 .hive-mind/
 ship-audit/
-reports/
+/reports/
 
 # Claude scratchpad — session files only, keep .gitkeep
 .claude/scratchpad/*.md
