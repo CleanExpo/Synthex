@@ -98,7 +98,7 @@ export function BusinessManagementTable({ businesses, onSwitch, onManageAccounts
 
   const startRename = (business: OwnedBusiness) => {
     setRenamingId(business.id);
-    setRenameValue(business.displayName || business.organizationName);
+    setRenameValue(business.organizationName);
   };
 
   const cancelRename = () => {
@@ -195,7 +195,7 @@ export function BusinessManagementTable({ businesses, onSwitch, onManageAccounts
                         ) : (
                           <div className="flex items-center gap-2 group">
                             <div className="text-sm font-medium text-white">
-                              {business.displayName || business.organizationName}
+                              {business.organizationName}
                             </div>
                             <Button variant="ghost" size="sm" onClick={() => startRename(business)} className="h-6 w-6 p-0 text-gray-600 hover:text-gray-300 hover:bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity">
                               <Edit className="h-3 w-3" />
@@ -295,7 +295,7 @@ export function BusinessManagementTable({ businesses, onSwitch, onManageAccounts
                       <td colSpan={6} className="px-6 py-4 bg-[#0a1020]/50">
                         <BusinessSocialAccounts
                           organizationId={business.organizationId}
-                          organizationName={business.displayName || business.organizationName}
+                          organizationName={business.organizationName}
                           onConnectPlatform={onManageAccounts}
                         />
                       </td>
@@ -342,7 +342,7 @@ export function BusinessManagementTable({ businesses, onSwitch, onManageAccounts
                     ) : (
                       <div className="flex items-center gap-2 group">
                         <h3 className="text-base font-semibold text-white truncate">
-                          {business.displayName || business.organizationName}
+                          {business.organizationName}
                         </h3>
                         <Button variant="ghost" size="sm" onClick={() => startRename(business)} className="h-6 w-6 p-0 text-gray-600 hover:text-gray-300 hover:bg-white/5 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
                           <Edit className="h-3 w-3" />
@@ -412,7 +412,7 @@ export function BusinessManagementTable({ businesses, onSwitch, onManageAccounts
                     <div className="mt-3">
                       <BusinessSocialAccounts
                         organizationId={business.organizationId}
-                        organizationName={business.displayName || business.organizationName}
+                        organizationName={business.organizationName}
                         onConnectPlatform={onManageAccounts}
                       />
                     </div>

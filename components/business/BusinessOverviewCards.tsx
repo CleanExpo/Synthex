@@ -147,7 +147,7 @@ export function BusinessOverviewCards({ overview }: BusinessOverviewCardsProps) 
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex-1 min-w-0">
                     <CardTitle className="text-base font-semibold text-white truncate">
-                      {business.displayName || business.organizationName}
+                      {business.organizationName}
                     </CardTitle>
                     <p className="text-sm text-gray-500 mt-1">@{business.organizationSlug}</p>
                   </div>
