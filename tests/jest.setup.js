@@ -34,6 +34,14 @@ if (typeof global.Response === 'undefined') {
     text() {
       return Promise.resolve(String(this.body));
     }
+    // Static method required by NextResponse.json()
+    static json(data, init = {}) {
+      const body = JSON.stringify(data);
+      return new Response(body, {
+        ...init,
+        headers: { 'content-type': 'application/json', ...(init.headers || {}) },
+      });
+    }
   };
 }
 

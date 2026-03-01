@@ -84,15 +84,15 @@ export class OnboardingStep1Page {
   }
 
   get orgNameInput() {
-    return this.page.locator('#org-name, input[placeholder*="organization"]');
+    return this.page.locator('#businessName, #org-name, input[placeholder*="organization"], input[placeholder*="Acme"]');
   }
 
   get industrySelect() {
-    return this.page.locator('#industry, [id*="industry"]').first();
+    return this.page.locator('#industry, [id*="industry"], button:has-text("Select your industry")').first();
   }
 
   get teamSizeSelect() {
-    return this.page.locator('#team-size, [id*="team-size"]').first();
+    return this.page.locator('#team-size, [id*="team-size"], button:has-text("How big is your team")').first();
   }
 
   get continueButton() {
