@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useState, useMemo, useCallback } from 'react';
 import { DashboardSkeleton } from '@/components/skeletons';
@@ -17,36 +17,8 @@ import {
   CreatePersonaDialog,
   PersonaEmptyState,
 } from '@/components/personas';
-import { usePersonas, type Persona as APIPersona, type TrainingSource } from '@/hooks/use-personas';
-
-// Transform API persona to component Persona type
-function transformPersona(p: APIPersona): Persona {
-  return {
-    id: parseInt(p.id, 10) || Date.now(),
-    name: p.name || '',
-    description: p.description || '',
-    trainingData: {
-      sources: p.trainingSourcesCount || 0,
-      words: p.trainingWordsCount || 0,
-      samples: p.trainingSamplesCount || 0,
-    },
-    attributes: {
-      tone: (p.tone || 'Professional').charAt(0).toUpperCase() + (p.tone || 'professional').slice(1),
-      style: (p.style || 'Formal').charAt(0).toUpperCase() + (p.style || 'formal').slice(1),
-      vocabulary: (p.vocabulary || 'Standard').charAt(0).toUpperCase() + (p.vocabulary || 'standard').slice(1),
-      emotion: (p.emotion || 'Neutral').charAt(0).toUpperCase() + (p.emotion || 'neutral').slice(1),
-    },
-    accuracy: p.accuracy || 0,
-    status: (p.status as Persona['status']) || 'draft',
-    lastTrained: p.lastTrained ? new Date(p.lastTrained).toLocaleDateString() : 'Never',
-  };
-}
-
-// Find API persona ID from component persona ID
-function findApiId(apiPersonas: APIPersona[], componentId: number): string | null {
-  const found = apiPersonas.find((p) => parseInt(p.id, 10) === componentId || p.id === String(componentId));
-  return found?.id || null;
-}
+import { transformPersona, findApiId } from '@/components/personas/persona-helpers';
+import { usePersonas, type TrainingSource } from '@/hooks/use-personas';
 
 export default function PersonasPage() {
   const {
@@ -97,7 +69,6 @@ export default function PersonasPage() {
     setUploadProgress(0);
     const newContent: string[] = [];
 
-    // Read file contents
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
       try {
@@ -120,39 +91,25 @@ export default function PersonasPage() {
       toast.error('Please enter a URL');
       return;
     }
-    // Store URL as content (training API can handle URL fetching)
     setTrainingContent((prev) => [...prev, `[URL] ${url.trim()}`]);
     setUploadProgress(100);
     toast.success('URL added for training');
   }, []);
 
   const handleTrainPersona = useCallback(async () => {
-    if (!selectedPersona) {
-      toast.error('No persona selected');
-      return;
-    }
-
-    if (trainingContent.length === 0) {
-      toast.error('Please upload training content first');
-      return;
-    }
+    if (!selectedPersona) { toast.error('No persona selected'); return; }
+    if (trainingContent.length === 0) { toast.error('Please upload training content first'); return; }
 
     const apiId = findApiId(apiPersonas, selectedPersona.id);
-    if (!apiId) {
-      toast.error('Persona not found');
-      return;
-    }
+    if (!apiId) { toast.error('Persona not found'); return; }
 
     setIsTraining(true);
-
-    // Convert content to training sources
     const sources: TrainingSource[] = trainingContent.map((content) => ({
       type: content.startsWith('[URL]') ? 'website' as const : 'text' as const,
       content: content.startsWith('[URL]') ? content.replace('[URL] ', '') : content,
     }));
 
     const success = await startTraining(apiId, sources);
-
     setIsTraining(false);
 
     if (success) {
@@ -164,18 +121,12 @@ export default function PersonasPage() {
     }
   }, [selectedPersona, trainingContent, apiPersonas, startTraining]);
 
-  const handleCreatePersona = useCallback(() => {
-    setCreateDialogOpen(true);
-  }, []);
+  const handleCreatePersona = useCallback(() => setCreateDialogOpen(true), []);
 
   const handleSubmitNewPersona = useCallback(async () => {
-    if (!newPersona.name.trim()) {
-      toast.error('Please enter a persona name');
-      return;
-    }
+    if (!newPersona.name.trim()) { toast.error('Please enter a persona name'); return; }
 
     setIsCreating(true);
-
     const result = await createPersona({
       name: newPersona.name,
       description: newPersona.description || `Custom ${newPersona.tone} persona`,
@@ -184,13 +135,11 @@ export default function PersonasPage() {
       vocabulary: newPersona.vocabulary as 'simple' | 'standard' | 'technical' | 'sophisticated',
       emotion: newPersona.emotion as 'neutral' | 'friendly' | 'confident' | 'inspiring' | 'empathetic',
     });
-
     setIsCreating(false);
 
     if (result) {
       setCreateDialogOpen(false);
       setNewPersona(defaultNewPersona);
-      // Select the newly created persona
       setSelectedPersona(transformPersona(result));
       toast.success(`Persona "${newPersona.name}" created successfully!`);
     } else {
@@ -200,17 +149,11 @@ export default function PersonasPage() {
 
   const handleDeletePersona = useCallback(async (id: number) => {
     const apiId = findApiId(apiPersonas, id);
-    if (!apiId) {
-      toast.error('Persona not found');
-      return;
-    }
+    if (!apiId) { toast.error('Persona not found'); return; }
 
     const success = await deletePersona(apiId);
-
     if (success) {
-      if (selectedPersona?.id === id) {
-        setSelectedPersona(null);
-      }
+      if (selectedPersona?.id === id) setSelectedPersona(null);
       toast.success('Persona deleted successfully');
     } else {
       toast.error('Failed to delete persona');
@@ -218,21 +161,14 @@ export default function PersonasPage() {
   }, [apiPersonas, deletePersona, selectedPersona]);
 
   const handleEditPersona = useCallback(() => {
-    if (selectedPersona) {
-      toast.success(`Editing persona: ${selectedPersona.name}`);
-    }
+    if (selectedPersona) toast.success(`Editing persona: ${selectedPersona.name}`);
   }, [selectedPersona]);
 
   const handleClonePersona = useCallback(async () => {
     if (!selectedPersona) return;
-
     const apiId = findApiId(apiPersonas, selectedPersona.id);
     const original = apiPersonas.find((p) => p.id === apiId);
-
-    if (!original) {
-      toast.error('Persona not found');
-      return;
-    }
+    if (!original) { toast.error('Persona not found'); return; }
 
     const result = await createPersona({
       name: `${original.name} (Copy)`,
@@ -243,44 +179,25 @@ export default function PersonasPage() {
       emotion: original.emotion as 'neutral' | 'friendly' | 'confident' | 'inspiring' | 'empathetic',
     });
 
-    if (result) {
-      toast.success(`Cloned persona: ${selectedPersona.name}`);
-    } else {
-      toast.error('Failed to clone persona');
-    }
+    if (result) toast.success(`Cloned persona: ${selectedPersona.name}`);
+    else toast.error('Failed to clone persona');
   }, [selectedPersona, apiPersonas, createPersona]);
 
   const handleConfigurePersona = useCallback(() => {
-    if (selectedPersona) {
-      toast.success(`Opening configuration for: ${selectedPersona.name}`);
-    }
+    if (selectedPersona) toast.success(`Opening configuration for: ${selectedPersona.name}`);
   }, [selectedPersona]);
 
-  if (isLoading) {
-    return <DashboardSkeleton />;
-  }
-
-  if (error) {
-    return <APIErrorCard title="Personas Error" message={error} onRetry={handleRetry} />;
-  }
+  if (isLoading) return <DashboardSkeleton />;
+  if (error) return <APIErrorCard title="Personas Error" message={error} onRetry={handleRetry} />;
 
   return (
     <div className="space-y-6">
-      <PersonasHeader
-        personas={personas}
-        isCreating={isCreating}
-        onCreateClick={handleCreatePersona}
-      />
-
+      <PersonasHeader personas={personas} isCreating={isCreating} onCreateClick={handleCreatePersona} />
       <PersonaStatsGrid stats={stats} />
 
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="lg:col-span-1">
-          <PersonaList
-            personas={personas}
-            selectedId={selectedPersona?.id ?? null}
-            onSelect={setSelectedPersona}
-          />
+          <PersonaList personas={personas} selectedId={selectedPersona?.id ?? null} onSelect={setSelectedPersona} />
         </div>
 
         <div className="lg:col-span-2">
