@@ -77,6 +77,16 @@ export function useTeamData() {
           setIsLoading(false);
           return;
         }
+
+        // 400 "No organization found" means the user has no org yet — show empty team, not error
+        if (response.status === 400) {
+          const body = await response.json().catch(() => ({}));
+          if ((body as { error?: string }).error === 'No organization found') {
+            setTeamMembers([]);
+            setIsLoading(false);
+            return;
+          }
+        }
       }
       setError('Failed to load team members');
       setIsLoading(false);
