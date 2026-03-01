@@ -1,0 +1,74 @@
+import {
+  Search, FileText, BarChart3, Calendar, Settings, User, Plus, Sparkles,
+  TrendingUp, LogOut, Home, File, Beaker, CreditCard, Users, Target, Brain,
+  HelpCircle, Layers, Lightbulb, Layout, Zap, Link2,
+  GitBranch as GitPullRequest, MessageSquare, Shield, Code, Image,
+  Repeat, Send, Bell, Grid, DollarSign, Calculator, Briefcase, Link,
+} from '@/components/icons';
+import { notify } from '@/lib/notifications';
+import type { CommandItem } from './types';
+
+export function buildCommands(
+  push: (path: string) => void
+): CommandItem[] {
+  return [
+    // Navigation
+    { id: 'dashboard', title: 'Go to Dashboard', icon: Home, action: () => push('/dashboard'), category: 'navigation', keywords: ['home', 'dashboard', 'main'] },
+    { id: 'content', title: 'Content Generator', icon: FileText, action: () => push('/dashboard/content'), category: 'navigation', keywords: ['content', 'generate', 'create', 'write'] },
+    { id: 'content-optimizer', title: 'Content Optimizer', description: 'Score and optimize content quality', icon: Sparkles, action: () => push('/dashboard/content/optimize'), category: 'navigation', keywords: ['optimize', 'score', 'quality', 'improve', 'suggestions', 'content optimizer'] },
+    { id: 'content-performance', title: 'Content Performance', description: 'AI analysis of what content works', icon: BarChart3, action: () => push('/dashboard/content/performance'), category: 'navigation', keywords: ['performance', 'analytics', 'ai', 'insights', 'what works', 'patterns', 'engagement'] },
+    { id: 'multi-format', title: 'Multi-format Generator', description: 'Generate content for multiple platforms at once', icon: Layers, action: () => push('/dashboard/content/multi-format'), category: 'navigation', keywords: ['multi-format', 'platforms', 'generate', 'variations', 'cross-platform', 'adapt', 'convert'] },
+    { id: 'repurpose', title: 'Content Repurposer', description: 'Transform long-form content into threads, video scripts, and more', icon: Repeat, action: () => push('/dashboard/content/repurpose'), category: 'navigation', keywords: ['repurpose', 'transform', 'blog', 'thread', 'video script', 'carousel', 'summary', 'takeaways', 'transcript', 'podcast'] },
+    { id: 'cross-post', title: 'Cross-Post', description: 'Publish content to multiple platforms with AI-powered adaptation', icon: Send, action: () => push('/dashboard/content/cross-post'), category: 'navigation', keywords: ['cross-post', 'cross post', 'publish', 'multi-platform', 'post everywhere', 'broadcast', 'distribute', 'social media'] },
+    { id: 'analytics', title: 'Analytics', icon: BarChart3, action: () => push('/dashboard/analytics'), category: 'navigation', keywords: ['analytics', 'stats', 'metrics', 'data'] },
+    { id: 'predictions', title: 'Predictive Analytics', description: 'ML-powered engagement predictions and optimal posting times', icon: Lightbulb, action: () => push('/dashboard/predictions'), category: 'navigation', keywords: ['predict', 'forecast', 'engagement', 'optimal', 'best time', 'ml', 'ai', 'prediction'] },
+    { id: 'schedule', title: 'Schedule', icon: Calendar, action: () => push('/dashboard/schedule'), category: 'navigation', keywords: ['schedule', 'calendar', 'plan'] },
+    { id: 'calendar', title: 'Go to Calendar', description: 'Visual content calendar with drag-drop scheduling', icon: Calendar, action: () => push('/dashboard/calendar'), category: 'navigation', keywords: ['calendar', 'week', 'month', 'schedule', 'drag', 'drop'] },
+    { id: 'schedule-post', title: 'Schedule Post', description: 'Open quick scheduler to add a new post', icon: Plus, action: () => push('/dashboard/calendar?action=schedule'), category: 'actions', keywords: ['schedule', 'post', 'create', 'new', 'add', 'content'] },
+    { id: 'reports', title: 'Reports', description: 'Generate performance reports', icon: File, action: () => push('/dashboard/reports'), category: 'navigation', keywords: ['reports', 'generate', 'export', 'pdf'] },
+    { id: 'report-builder', title: 'Report Builder', description: 'Create custom report templates with drag-drop widgets', icon: Layout, action: () => push('/dashboard/reports/builder'), category: 'navigation', keywords: ['report', 'builder', 'custom', 'template', 'widget', 'drag', 'drop'] },
+    { id: 'benchmark-reports', title: 'Benchmark Reports', description: 'Compare your performance to industry standards', icon: Target, action: () => push('/dashboard/analytics/benchmarks'), category: 'navigation', keywords: ['benchmark', 'compare', 'industry', 'standards', 'performance', 'percentile'] },
+    { id: 'revenue-tracker', title: 'Revenue Tracker', description: 'Track income from sponsorships, affiliates, and more', icon: DollarSign, action: () => push('/dashboard/revenue'), category: 'navigation', keywords: ['revenue', 'income', 'money', 'earnings', 'sponsorship', 'affiliate', 'monetization'] },
+    { id: 'roi-calculator', title: 'ROI Calculator', description: 'Calculate return on content investment', icon: Calculator, action: () => push('/dashboard/roi'), category: 'navigation', keywords: ['roi', 'return', 'investment', 'calculator', 'profit', 'hours', 'time'] },
+    { id: 'sponsor-crm', title: 'Sponsor CRM', description: 'Manage brand deals and deliverables', icon: Briefcase, action: () => push('/dashboard/sponsors'), category: 'navigation', keywords: ['sponsor', 'crm', 'brand', 'deal', 'partnership', 'deliverable', 'contract'] },
+    { id: 'affiliate-links', title: 'Affiliate Links', description: 'Manage affiliate networks and track links', icon: Link, action: () => push('/dashboard/affiliates'), category: 'navigation', keywords: ['affiliate', 'links', 'tracking', 'amazon', 'network', 'commission', 'revenue'] },
+    { id: 'experiments', title: 'Experiments', description: 'A/B testing and optimization', icon: Beaker, action: () => push('/dashboard/experiments'), category: 'navigation', keywords: ['experiments', 'ab testing', 'test', 'variants'] },
+    { id: 'personas', title: 'Personas', description: 'AI brand voice personas', icon: Brain, action: () => push('/dashboard/personas'), category: 'navigation', keywords: ['personas', 'brand voice', 'ai'] },
+    { id: 'ai-chat', title: 'AI Chat Assistant', description: 'Get AI-powered help with content strategy', icon: MessageSquare, action: () => push('/dashboard/ai-chat'), category: 'navigation', keywords: ['ai', 'chat', 'assistant', 'help', 'strategy', 'ideas', 'conversation'] },
+    { id: 'ai-images', title: 'AI Images', description: 'Generate images with AI', icon: Image, action: () => push('/dashboard/ai-images'), category: 'navigation', keywords: ['image', 'generate', 'ai', 'visual', 'picture', 'dalle', 'stability', 'gemini'] },
+    { id: 'competitors', title: 'Competitors', description: 'Track competitor activity', icon: Target, action: () => push('/dashboard/competitors'), category: 'navigation', keywords: ['competitors', 'competition', 'tracking'] },
+    { id: 'social-listening', title: 'Social Listening', description: 'Monitor brand mentions, keywords, and hashtags', icon: Bell, action: () => push('/dashboard/listening'), category: 'navigation', keywords: ['listening', 'mentions', 'brand', 'monitor', 'keywords', 'hashtags', 'sentiment', 'social'] },
+    { id: 'link-in-bio', title: 'Link in Bio Pages', description: 'Create and manage customizable landing pages', icon: Link2, action: () => push('/dashboard/bio'), category: 'navigation', keywords: ['bio', 'link', 'linktree', 'landing', 'page', 'profile', 'links'] },
+    { id: 'unified-dashboard', title: 'Unified Dashboard', description: 'View all platform metrics in one place', icon: Grid, action: () => push('/dashboard/unified'), category: 'navigation', keywords: ['unified', 'all', 'platforms', 'metrics', 'overview', 'compare', 'aggregate'] },
+    { id: 'audience-insights', title: 'Audience Insights', description: 'View follower demographics and behavior', icon: Users, action: () => push('/dashboard/audience'), category: 'navigation', keywords: ['audience', 'demographics', 'followers', 'insights', 'age', 'gender', 'location'] },
+    { id: 'team', title: 'Team', description: 'Manage team members', icon: Users, action: () => push('/dashboard/team'), category: 'navigation', keywords: ['team', 'members', 'collaboration'] },
+    { id: 'integrations', title: 'Integrations', description: 'Manage platform and third-party connections', icon: Zap, action: () => push('/dashboard/integrations'), category: 'navigation', keywords: ['integrations', 'connect', 'canva', 'buffer', 'zapier', 'third-party', 'tools'] },
+    { id: 'webhooks', title: 'Webhooks', description: 'Send real-time event notifications to external systems', icon: Link2, action: () => push('/dashboard/webhooks'), category: 'navigation', keywords: ['webhooks', 'webhook', 'endpoints', 'subscriptions', 'events', 'notifications', 'outbound'] },
+    { id: 'approvals', title: 'Approvals', description: 'Review and approve content before publishing', icon: GitPullRequest, action: () => push('/dashboard/approvals'), category: 'navigation', keywords: ['approvals', 'approval', 'workflow', 'review', 'approve', 'reject', 'content', 'pending'] },
+    { id: 'collaboration', title: 'Team Collaboration', description: 'Activity feed, comments, and shared content', icon: MessageSquare, action: () => push('/dashboard/collaboration'), category: 'navigation', keywords: ['collaboration', 'team', 'activity', 'comments', 'shares', 'feed', 'assign'] },
+    { id: 'roles', title: 'Role Management', description: 'Manage roles and permissions', icon: Shield, action: () => push('/dashboard/roles'), category: 'navigation', keywords: ['roles', 'permissions', 'access', 'rbac', 'admin', 'editor', 'viewer', 'grant', 'revoke'] },
+    { id: 'technical-seo', title: 'Technical SEO', description: 'Core Web Vitals, mobile parity, robots.txt validation', icon: Search, action: () => push('/dashboard/seo/technical'), category: 'navigation', keywords: ['cwv', 'core web vitals', 'mobile', 'parity', 'robots', 'technical', 'seo', 'performance'] },
+    { id: 'search-console', title: 'Search Console', description: 'Search analytics, indexing status, sitemap health', icon: BarChart3, action: () => push('/dashboard/seo/search-console'), category: 'navigation', keywords: ['search console', 'gsc', 'google', 'indexing', 'sitemap', 'queries', 'clicks', 'impressions', 'ctr'] },
+    { id: 'pagespeed-insights', title: 'PageSpeed Insights', description: 'Page performance analysis, CWV monitoring, Lighthouse scores', icon: Zap, action: () => push('/dashboard/seo/pagespeed'), category: 'navigation', keywords: ['pagespeed', 'page speed', 'lighthouse', 'cwv', 'core web vitals', 'performance', 'lcp', 'cls', 'inp', 'speed'] },
+    { id: 'schema-markup-manager', title: 'Schema Markup Manager', description: 'Create, validate, and manage JSON-LD structured data', icon: Code, action: () => push('/dashboard/seo/schema'), category: 'navigation', keywords: ['schema', 'json-ld', 'structured data', 'markup', 'rich results', 'rich snippets', 'organization', 'product', 'article', 'faq', 'seo', 'validator', 'template'] },
+    { id: 'geo-readiness', title: 'GEO Readiness Dashboard', description: 'AI search citability scores, passage analysis, platform optimization', icon: Search, action: () => push('/dashboard/seo/geo-readiness'), category: 'navigation', keywords: ['geo', 'generative engine', 'ai search', 'citability', 'passages', 'readiness', 'google aio', 'chatgpt', 'perplexity', 'bing copilot', 'ai visibility'] },
+    { id: 'scheduled-audits', title: 'Scheduled Audits', description: 'Automated recurring SEO audits with regression alerts', icon: Calendar, action: () => push('/dashboard/seo/scheduled-audits'), category: 'navigation', keywords: ['scheduled', 'audits', 'automation', 'alerts', 'regression', 'monitoring', 'recurring', 'cron', 'seo'] },
+
+    // Actions
+    { id: 'new-content', title: 'Create New Content', description: 'Generate AI-powered content', icon: Plus, action: () => { push('/dashboard/content'); notify.custom('Ready to create amazing content!'); }, category: 'actions', keywords: ['new', 'create', 'generate', 'ai'] },
+    { id: 'add-keyword', title: 'Add Tracked Keyword', description: 'Start monitoring a new keyword or hashtag', icon: Bell, action: () => push('/dashboard/listening?action=add'), category: 'actions', keywords: ['add', 'track', 'keyword', 'hashtag', 'monitor', 'listening', 'brand'] },
+    { id: 'create-bio-page', title: 'Create Bio Page', description: 'Create a new Link in Bio landing page', icon: Link2, action: () => push('/dashboard/bio?action=create'), category: 'actions', keywords: ['create', 'new', 'bio', 'link', 'page', 'landing', 'linktree'] },
+    { id: 'analyze-trends', title: 'Analyze Viral Trends', description: 'Discover what\'s trending now', icon: TrendingUp, action: () => { push('/dashboard/patterns'); notify.loading('Analyzing trending patterns...'); }, category: 'actions', keywords: ['trends', 'viral', 'popular', 'analyze'] },
+    { id: 'quick-post', title: 'Quick Post', description: 'Post to all platforms', icon: Sparkles, action: () => { const event = new CustomEvent('openQuickPost'); window.dispatchEvent(event); }, category: 'actions', keywords: ['post', 'quick', 'publish', 'share'] },
+    { id: 'generate-image', title: 'Generate Image', description: 'Create a new AI image', icon: Sparkles, action: () => push('/dashboard/ai-images'), category: 'actions', keywords: ['create', 'new', 'image', 'generate', 'ai'] },
+
+    // Settings
+    { id: 'settings', title: 'Settings', icon: Settings, action: () => push('/dashboard/settings'), category: 'settings', keywords: ['settings', 'preferences', 'config'] },
+    { id: 'profile', title: 'Profile', icon: User, action: () => push('/dashboard/settings#profile'), category: 'settings', keywords: ['profile', 'account', 'user'] },
+    { id: 'billing', title: 'Billing', description: 'Manage subscription and payments', icon: CreditCard, action: () => push('/dashboard/billing'), category: 'settings', keywords: ['billing', 'subscription', 'payment', 'invoice'] },
+    { id: 'logout', title: 'Sign Out', icon: LogOut, action: () => { localStorage.clear(); notify.logoutSuccess(); push('/login'); }, category: 'settings', keywords: ['logout', 'signout', 'exit'] },
+
+    // Help
+    { id: 'help', title: 'Help & Support', description: 'Get help and documentation', icon: HelpCircle, action: () => push('/dashboard/help'), category: 'help', keywords: ['help', 'support', 'docs', 'faq'] },
+  ];
+}
