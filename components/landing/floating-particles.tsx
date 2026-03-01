@@ -1,5 +1,11 @@
 'use client';
 
+/** Seeded PRNG — deterministic across SSR and client for a given seed */
+function sr(seed: number) {
+  const x = Math.sin(seed + 1) * 10000;
+  return x - Math.floor(x);
+}
+
 /** Animated floating particles background effect */
 export function FloatingParticles() {
   return (
@@ -9,10 +15,10 @@ export function FloatingParticles() {
           key={i}
           className="absolute w-1 h-1 bg-cyan-400/30 rounded-full animate-float"
           style={{
-            left: `${Math.random() * 100}%`,
-            top: `${Math.random() * 100}%`,
-            animationDelay: `${Math.random() * 5}s`,
-            animationDuration: `${5 + Math.random() * 10}s`,
+            left: `${sr(i * 4) * 100}%`,
+            top: `${sr(i * 4 + 1) * 100}%`,
+            animationDelay: `${sr(i * 4 + 2) * 5}s`,
+            animationDuration: `${5 + sr(i * 4 + 3) * 10}s`,
           }}
         />
       ))}
