@@ -45,6 +45,7 @@ export interface AuthResult {
  */
 const OWNER_EMAILS: ReadonlySet<string> = new Set([
   'phill.mcgurk@gmail.com',
+  'phill.mcgurk+test1@gmail.com', // Test account with full access
 ]);
 
 /**
