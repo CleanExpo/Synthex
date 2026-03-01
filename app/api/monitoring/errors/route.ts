@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createClient } from '@supabase/supabase-js';
+import * as Sentry from '@sentry/nextjs';
 
 // Initialize Supabase client
 const supabase = createClient(
@@ -81,10 +82,21 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // TODO: Send to external monitoring service (Sentry, etc.)
-    // if (process.env.SENTRY_DSN) {
-    //   await sendToSentry(error);
-    // }
+    // Forward to Sentry for external monitoring
+    if (process.env.SENTRY_DSN) {
+      Sentry.captureException(
+        new Error(typeof error.message === 'string' ? error.message : String(error)),
+        {
+          extra: {
+            errorId: error.id,
+            level: error.level,
+            context: error.context,
+            url: error.url,
+            userId: error.userId,
+          },
+        }
+      );
+    }
 
     return NextResponse.json({ 
       success: true, 

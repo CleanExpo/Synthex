@@ -23,6 +23,7 @@
  */
 
 import { logger } from '@/lib/logger';
+import * as Sentry from '@sentry/nextjs';
 
 // ============================================================================
 // TYPES
@@ -231,10 +232,13 @@ export function trackError(
     ...trackedError.context,
   });
 
-  // Send to Sentry if critical
+  // Forward critical/high severity errors to Sentry
   if (severity === ErrorSeverity.CRITICAL || severity === ErrorSeverity.HIGH) {
-    // Sentry integration happens automatically via @sentry/nextjs
-    // Just ensure the error is properly thrown/logged
+    Sentry.captureException(err, {
+      level: severity === ErrorSeverity.CRITICAL ? 'fatal' : 'error',
+      extra: trackedError.context,
+      tags: { category, severity },
+    });
   }
 
   return trackedError;
