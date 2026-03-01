@@ -98,6 +98,8 @@ export const ENV_VAR_DEFINITIONS: EnvVarDefinition[] = [
     errorMessage: 'OAuth flows will fail - generate with: openssl rand -base64 32'
   },
 
+  // TODO UNI-1183: Remove these entries — Synthex uses Supabase Auth exclusively, not NextAuth.
+  // next-auth package uninstalled. These optional definitions are harmless but stale.
   {
     key: 'NEXTAUTH_SECRET',
     description: 'NextAuth.js secret for session encryption',
