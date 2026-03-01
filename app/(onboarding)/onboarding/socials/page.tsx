@@ -314,6 +314,8 @@ export default function OnboardingSocialsPage() {
   const [verifications, setVerifications] = useState<ProfileVerification>({});
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
+  const [completing, setCompleting] = useState(false);
+  const [completionError, setCompletionError] = useState<string | null>(null);
 
   // Restore from sessionStorage on mount
   useEffect(() => {
@@ -395,14 +397,99 @@ export default function OnboardingSocialsPage() {
     }
   };
 
+  /**
+   * Calls POST /api/onboarding to create the Organisation, mark onboardingComplete,
+   * and reissue the JWT. Without this call the middleware will keep redirecting
+   * back to /onboarding. Required data is derived from earlier steps cached in
+   * sessionStorage (audit URL → org name, goals businessType → industry).
+   */
+  const completeOnboarding = async () => {
+    setCompleting(true);
+    setCompletionError(null);
+
+    // Derive required fields from earlier onboarding steps in sessionStorage
+    let orgName = 'My Business';
+    let industry = 'professional';
+    let description = '';
+    let auditData: unknown;
+
+    try {
+      const raw = sessionStorage.getItem('synthex_onboarding_audit');
+      if (raw) {
+        const audit = JSON.parse(raw) as { url?: string; insights?: { summary?: string } };
+        if (audit.url) {
+          const hostname = new URL(audit.url).hostname.replace(/^www\./, '');
+          const domain = hostname.split('.')[0] ?? 'mybusiness';
+          orgName = domain.charAt(0).toUpperCase() + domain.slice(1);
+        }
+        if (audit.insights?.summary) description = audit.insights.summary;
+        auditData = audit;
+      }
+    } catch { /* ignore storage/parse errors */ }
+
+    try {
+      const raw = sessionStorage.getItem('synthex_onboarding_goals');
+      if (raw) {
+        const goals = JSON.parse(raw) as { answers?: { businessType?: string } };
+        const industryMap: Record<string, string> = {
+          ecommerce: 'ecommerce',
+          service: 'professional',
+          saas: 'technology',
+          personal: 'professional',
+          agency: 'agency',
+          nonprofit: 'nonprofit',
+        };
+        const bt = goals.answers?.businessType ?? '';
+        if (bt) industry = industryMap[bt] ?? 'professional';
+      }
+    } catch { /* ignore */ }
+
+    // Build social handles map from filled profile URLs
+    const socialHandles: Record<string, string> = {};
+    for (const [platform, url] of Object.entries(profileUrls)) {
+      if (url) socialHandles[platform] = url;
+    }
+
+    try {
+      const res = await fetch('/api/onboarding', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          organizationName: orgName,
+          website: '',
+          industry,
+          teamSize: 'small',
+          description,
+          socialHandles,
+          aiGeneratedData: auditData ?? null,
+          connectedPlatforms: [],
+          skipPersona: true,
+        }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json() as { error?: string };
+        throw new Error(err.error ?? 'Failed to complete onboarding');
+      }
+
+      // API reissues a JWT with onboardingComplete: true — now safe to enter the dashboard
+      router.push('/dashboard');
+    } catch (err) {
+      setCompletionError(
+        err instanceof Error ? err.message : 'Could not complete setup. Please try again.',
+      );
+      setCompleting(false);
+    }
+  };
+
   const handleFinish = async () => {
-    // If they haven't saved yet and have profiles, save first
+    // If they haven't saved social profiles yet, do that first
     if (filledCount > 0 && !saved) {
       await handleSave();
     }
-    // Navigate to the dashboard — the existing /api/onboarding route
-    // creates the org when called from the final completion step
-    router.push('/dashboard');
+    // Create the Organisation and reissue the JWT before redirecting
+    await completeOnboarding();
   };
 
   return (
@@ -488,6 +575,12 @@ export default function OnboardingSocialsPage() {
           </div>
         )}
 
+        {completionError && (
+          <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-sm text-red-400 text-center">
+            {completionError}
+          </div>
+        )}
+
         {/* Save + Finish Actions */}
         <div className="space-y-3 pt-2">
           {/* Save profiles (optional, before finishing) */}
@@ -512,18 +605,24 @@ export default function OnboardingSocialsPage() {
           {/* Actions row */}
           <div className="flex items-center justify-between">
             <button
-              onClick={() => router.push('/dashboard')}
-              className="text-sm text-gray-500 hover:text-gray-300 transition-colors"
+              onClick={completeOnboarding}
+              disabled={completing}
+              className="text-sm text-gray-500 hover:text-gray-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Skip for now
             </button>
 
             <Button
               onClick={handleFinish}
-              disabled={verificationState === 'verifying'}
+              disabled={verificationState === 'verifying' || completing}
               className="bg-gradient-to-r from-cyan-500 to-cyan-600 hover:from-cyan-400 hover:to-cyan-500 text-white shadow-lg shadow-cyan-500/25 hover:shadow-cyan-500/40 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {verificationState === 'verifying' ? (
+              {completing ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Finishing…
+                </>
+              ) : verificationState === 'verifying' ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                   Saving…

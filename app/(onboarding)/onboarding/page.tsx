@@ -33,7 +33,7 @@ export default function OnboardingPage() {
 
       <Button
         size="lg"
-        onClick={() => router.push('/onboarding/step-1')}
+        onClick={() => router.push('/onboarding/keys')}
         className="bg-gradient-to-r from-cyan-500 to-cyan-600 hover:from-cyan-400 hover:to-cyan-500 text-white shadow-lg shadow-cyan-500/25 hover:shadow-cyan-500/40 transition-all mt-4"
       >
         Get Started
@@ -41,7 +41,7 @@ export default function OnboardingPage() {
       </Button>
 
       <p className="text-xs text-gray-500 mt-2">
-        3 quick steps &middot; You can always update everything later in Settings
+        4 quick steps &middot; You can always update everything later in Settings
       </p>
     </div>
   );
