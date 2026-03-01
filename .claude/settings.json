@@ -191,5 +191,37 @@
     },
     "architecture": "foundation-first",
     "enforcement": "strict"
+  },
+
+  "mcpServers": {
+    "linear": {
+      "transport": "http",
+      "url": "https://mcp.linear.app/mcp"
+    }
+  },
+
+  "hooks": {
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo '[SYNTHEX SESSION END] Check Linear for any In Progress issues and update status before closing.'"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo '[FILE CHANGED] Remember to update the relevant Linear issue when this task is complete.'"
+          }
+        ]
+      }
+    ]
   }
 }
