@@ -13,7 +13,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
 import { encryptApiKey, maskApiKey } from '@/lib/encryption/api-key-encryption';
-import { getUserIdFromRequestOrCookies, isOwnerEmail } from '@/lib/auth/jwt-utils';
+import { isOwnerEmail } from '@/lib/auth/jwt-utils';
+import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
 import { sanitizeErrorForResponse } from '@/lib/utils/error-utils';
 
 export const runtime = 'nodejs';
@@ -49,11 +50,12 @@ function isMissingTableError(error: unknown): boolean {
 async function requireOwner(request: NextRequest): Promise<
   { userId: string } | { error: NextResponse }
 > {
-  const userId = await getUserIdFromRequestOrCookies(request);
-  if (!userId) {
+  const security = await APISecurityChecker.check(request, DEFAULT_POLICIES.AUTHENTICATED_READ);
+  if (!security.allowed) {
     return { error: NextResponse.json({ error: 'Unauthorized' }, { status: 401 }) };
   }
 
+  const userId = security.context.userId!;
   const user = await prisma.user.findUnique({
     where: { id: userId },
     select: { email: true },

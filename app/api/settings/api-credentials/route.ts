@@ -13,7 +13,7 @@ import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
 import { encryptApiKey, maskApiKey } from '@/lib/encryption/api-key-encryption';
 import { validateAPIKey, APIProvider } from '@/lib/encryption/api-key-validator';
-import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
+import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
 import { sanitizeErrorForResponse } from '@/lib/utils/error-utils';
 
 export const runtime = 'nodejs';
@@ -48,10 +48,11 @@ function isMissingTableError(error: unknown): boolean {
 
 export async function GET(request: NextRequest) {
   try {
-    const userId = await getUserIdFromRequestOrCookies(request);
-    if (!userId) {
+    const security = await APISecurityChecker.check(request, DEFAULT_POLICIES.AUTHENTICATED_READ);
+    if (!security.allowed) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+    const userId = security.context.userId!;
 
     // If Prisma client is not available, return empty list gracefully
     if (!isPrismaAvailable()) {
@@ -111,10 +112,11 @@ const AddCredentialSchema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
-    const userId = await getUserIdFromRequestOrCookies(request);
-    if (!userId) {
+    const security = await APISecurityChecker.check(request, DEFAULT_POLICIES.AUTHENTICATED_READ);
+    if (!security.allowed) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+    const userId = security.context.userId!;
 
     const body = await request.json();
     const parsed = AddCredentialSchema.safeParse(body);
@@ -247,10 +249,11 @@ const DeleteCredentialSchema = z.object({
 
 export async function DELETE(request: NextRequest) {
   try {
-    const userId = await getUserIdFromRequestOrCookies(request);
-    if (!userId) {
+    const security = await APISecurityChecker.check(request, DEFAULT_POLICIES.AUTHENTICATED_READ);
+    if (!security.allowed) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+    const userId = security.context.userId!;
 
     const body = await request.json();
     const parsed = DeleteCredentialSchema.safeParse(body);

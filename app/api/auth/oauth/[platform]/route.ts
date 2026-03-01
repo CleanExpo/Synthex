@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import prisma from '@/lib/prisma';
-import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
+import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
 import { getEffectiveOrganizationId } from '@/lib/multi-business';
 import { sanitizeErrorForResponse } from '@/lib/utils/error-utils';
 import { getPlatformOAuthCredentials } from '@/lib/platform-credentials';
@@ -124,11 +124,12 @@ export async function GET(
       );
     }
 
-    // Get the current user from JWT cookie (same auth method as all other API routes)
-    const userId = await getUserIdFromRequestOrCookies(request);
-    if (!userId) {
+    // Get the current user (supports NextAuth sessions + JWT cookies)
+    const security = await APISecurityChecker.check(request, DEFAULT_POLICIES.AUTHENTICATED_READ);
+    if (!security.allowed) {
       return NextResponse.json({ error: 'Unauthorized', message: 'You must be logged in to connect a platform.' }, { status: 401 });
     }
+    const userId = security.context.userId!;
 
     // Look up user for state parameter
     const user = await prisma.user.findUnique({
