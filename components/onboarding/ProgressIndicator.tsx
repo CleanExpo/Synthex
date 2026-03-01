@@ -21,7 +21,7 @@ interface Step {
 }
 
 interface ProgressIndicatorProps {
-  steps: Step[];
+  steps: readonly Step[];
   currentStep: number;
   completedSteps: number[];
   onStepClick?: (step: number) => void;

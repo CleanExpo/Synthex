@@ -13,7 +13,11 @@
       "Bash(node *)",
       "Bash(powershell *)",
       "Skill(gsd:progress)",
-      "Skill(gsd:complete-milestone)"
+      "Skill(gsd:complete-milestone)",
+      "Bash(python -c \"import sys,json; data=json.load\\(sys.stdin\\); issues=[json.loads\\(item[''text'']\\) if item.get\\(''type''\\)==''text'' else item for item in data]; print\\(json.dumps\\(issues, indent=2\\)[:3000]\\)\")",
+      "Skill(commit-commands:commit)",
+      "Skill(commit-commands:commit:*)",
+      "mcp__2f101dc2-2ac2-4d93-9846-ffe27a392a3e__get_issue"
     ],
     "deny": [
       "Bash(git push --force*)",

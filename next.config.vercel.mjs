@@ -26,8 +26,8 @@ const nextConfig = {
       'stripe',
       '@supabase/supabase-js'
     ],
-    // Force SWC transforms for better compatibility
-    forceSwcTransforms: true,
+    // Note: forceSwcTransforms removed — deprecated in Next.js 15 and causes
+    // Turbopack warnings. SWC is the default transformer.
     // Optimize performance
     optimizeCss: false,
     scrollRestoration: true,

@@ -25,7 +25,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     // Only run auth checks on client side
     if (typeof window === 'undefined') return;
-    
+
+    // Skip auth API calls on public marketing pages — these pages never need
+    // user state and firing /api/auth/user wastes a round-trip + returns 401.
+    const PUBLIC_PREFIXES = [
+      '/features', '/pricing', '/about', '/blog', '/integrations',
+      '/contact', '/privacy', '/terms', '/demo', '/changelog',
+    ];
+    const path = window.location.pathname;
+    const isPublicPage =
+      path === '/' ||
+      PUBLIC_PREFIXES.some((p) => path === p || path.startsWith(p + '/'));
+
+    if (isPublicPage) {
+      setLoading(false);
+      return;
+    }
+
     // Check initial session
     checkUser();
 

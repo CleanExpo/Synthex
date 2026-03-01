@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import {
@@ -63,6 +63,21 @@ const backgroundElements = [
 ];
 
 export default function DemoIndex() {
+  // Defer window-dependent values to avoid hydration mismatch.
+  // Server renders with deterministic defaults; client replaces after mount.
+  const [dims, setDims] = useState({ w: 1920, h: 1080 });
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setDims({ w: window.innerWidth, h: window.innerHeight });
+    setMounted(true);
+  }, []);
+
+  // Deterministic pseudo-random positions per element index (avoids Math.random
+  // producing different results on server vs client).
+  const seedPos = (index: number, range: number) =>
+    ((index * 397 + 251) % 1000) / 1000 * range;
+
   return (
     <MarketingLayout currentPage="demo">
       <div className="relative overflow-hidden">
@@ -73,14 +88,14 @@ export default function DemoIndex() {
               key={i}
               className="absolute"
               initial={{
-                x: Math.random() * (typeof window !== 'undefined' ? window.innerWidth : 1920),
+                x: seedPos(i, dims.w),
                 y: -100,
                 rotate: 0
               }}
               animate={{
-                y: typeof window !== 'undefined' ? window.innerHeight + 100 : 1080,
+                y: dims.h + 100,
                 rotate: 360,
-                x: Math.random() * (typeof window !== 'undefined' ? window.innerWidth : 1920)
+                x: seedPos(i + 5, dims.w)
               }}
               transition={{
                 duration,
@@ -89,7 +104,7 @@ export default function DemoIndex() {
                 ease: "linear"
               }}
             >
-              <Icon className="w-8 h-8 text-cyan-500/20" />
+              <Icon className={`w-8 h-8 text-cyan-500/20 ${!mounted ? 'opacity-0' : ''}`} />
             </motion.div>
           ))}
 

@@ -2,12 +2,11 @@
 
 /**
  * Help Center Page
- * Documentation, FAQs, and support resources
+ * Documentation, FAQs, and support resources.
+ * All content is static (imported constants) — no API calls needed.
  */
 
-import { useState, useEffect } from 'react';
-import { DashboardSkeleton } from '@/components/skeletons';
-import { APIErrorCard } from '@/components/error-states';
+import { useState } from 'react';
 import {
   HELP_CATEGORIES,
   FAQS,
@@ -22,40 +21,8 @@ import {
 export default function HelpPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const loadHelp = async () => {
-      setIsLoading(true);
-      setError(null);
-      try {
-        // Simulate loading help content
-        await new Promise((resolve) => setTimeout(resolve, 400));
-        setIsLoading(false);
-      } catch (err) {
-        setError('Failed to load help content');
-        setIsLoading(false);
-      }
-    };
-    loadHelp();
-  }, []);
-
-  const handleRetry = () => {
-    setError(null);
-    setIsLoading(true);
-    setTimeout(() => setIsLoading(false), 400);
-  };
 
   const filteredFAQs = filterFAQs(FAQS, searchQuery, selectedCategory);
-
-  if (isLoading) {
-    return <DashboardSkeleton />;
-  }
-
-  if (error) {
-    return <APIErrorCard title="Help Center Error" message={error} onRetry={handleRetry} />;
-  }
 
   return (
     <div className="p-6 max-w-7xl mx-auto">

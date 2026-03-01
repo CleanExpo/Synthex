@@ -391,7 +391,11 @@ export default function BlogPostPage() {
     return null;
   }
   
-  const shareUrl = typeof window !== 'undefined' ? window.location.href : '';
+  // Defer to useEffect to avoid hydration mismatch (server has no window.location).
+  const [shareUrl, setShareUrl] = useState('');
+  useEffect(() => {
+    setShareUrl(window.location.href);
+  }, []);
   
   const handleShare = (platform: string) => {
     const url = encodeURIComponent(shareUrl);

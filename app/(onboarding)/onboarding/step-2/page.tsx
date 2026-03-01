@@ -12,18 +12,7 @@ import React from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowRight, ArrowLeft, Share2 } from '@/components/icons';
 import { Button } from '@/components/ui/button';
-import { useOnboarding, ProgressIndicator, PlatformConnector } from '@/components/onboarding';
-
-// ============================================================================
-// CONSTANTS
-// ============================================================================
-
-const STEPS = [
-  { id: 1, name: 'Your Business' },
-  { id: 2, name: 'Platforms' },
-  { id: 3, name: 'Persona' },
-  { id: 4, name: 'Complete' },
-];
+import { useOnboarding, ProgressIndicator, PlatformConnector, ONBOARDING_STEPS } from '@/components/onboarding';
 
 // ============================================================================
 // COMPONENT
@@ -49,7 +38,7 @@ export default function Step2PlatformsPage() {
     <div className="space-y-8">
       {/* Progress */}
       <ProgressIndicator
-        steps={STEPS}
+        steps={ONBOARDING_STEPS}
         currentStep={2}
         completedSteps={data.completedSteps}
       />

@@ -10,12 +10,12 @@ const securityHeaders = {
   // Content Security Policy
   'Content-Security-Policy': [
     "default-src 'self'",
-    "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://unpkg.com https://cdn.tailwindcss.com",
+    "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://unpkg.com https://cdn.tailwindcss.com https://js.stripe.com",
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "font-src 'self' https://fonts.gstatic.com",
     "img-src 'self' data: blob: https:",
-    `connect-src 'self' https://api.openrouter.ai https://*.supabase.co wss://*.supabase.co https://res.cloudinary.com https://accounts.google.com https://oauth2.googleapis.com https://www.googleapis.com https://github.com https://api.github.com${process.env.NEXT_PUBLIC_WS_URL ? ` ${process.env.NEXT_PUBLIC_WS_URL}` : ''}`,
-    "frame-src 'self' https://www.youtube.com https://youtube.com https://www.youtube-nocookie.com",
+    `connect-src 'self' https://api.openrouter.ai https://*.supabase.co wss://*.supabase.co https://res.cloudinary.com https://accounts.google.com https://oauth2.googleapis.com https://www.googleapis.com https://github.com https://api.github.com https://api.stripe.com https://js.stripe.com https://r.stripe.com https://m.stripe.com${process.env.NEXT_PUBLIC_WS_URL ? ` ${process.env.NEXT_PUBLIC_WS_URL}` : ''}`,
+    "frame-src 'self' https://www.youtube.com https://youtube.com https://www.youtube-nocookie.com https://js.stripe.com https://hooks.stripe.com",
     "frame-ancestors 'none'",
     "base-uri 'self'",
     "form-action 'self'",

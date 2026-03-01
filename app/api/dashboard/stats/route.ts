@@ -196,6 +196,7 @@ export async function GET(request: NextRequest) {
         avgEngagementRate,
         totalFollowers: totalFollowers || totalReach,
         activeCampaigns: activeCampaignsCount,
+        connectedPlatforms: platformConnections.length,
       },
       engagementData: engagementByDay,
       platformData: platformStats,

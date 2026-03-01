@@ -66,8 +66,12 @@ export class IntegrationService {
     credentials: Record<string, unknown>,
     accountName?: string
   ): Promise<UserIntegration> {
-    const encryptionKey = process.env.ENCRYPTION_KEY!;
-    
+    // Use FIELD_ENCRYPTION_KEY (primary) with ENCRYPTION_KEY fallback for backward compatibility
+    const encryptionKey = process.env.FIELD_ENCRYPTION_KEY || process.env.ENCRYPTION_KEY;
+    if (!encryptionKey) {
+      throw new Error('FIELD_ENCRYPTION_KEY environment variable is required for credential encryption');
+    }
+
     // Encrypt credentials
     const encryptedCredentials = encryptCredentials(credentials, encryptionKey);
     
@@ -117,8 +121,12 @@ export class IntegrationService {
     userId: string,
     platform: IntegrationPlatform
   ): Promise<{ integration: UserIntegration; credentials: Record<string, unknown> }> {
-    const encryptionKey = process.env.ENCRYPTION_KEY!;
-    
+    // Use FIELD_ENCRYPTION_KEY (primary) with ENCRYPTION_KEY fallback for backward compatibility
+    const encryptionKey = process.env.FIELD_ENCRYPTION_KEY || process.env.ENCRYPTION_KEY;
+    if (!encryptionKey) {
+      throw new Error('FIELD_ENCRYPTION_KEY environment variable is required for credential decryption');
+    }
+
     // Get integration from database
     const { data, error } = await supabaseAdmin
       .from('user_integrations')

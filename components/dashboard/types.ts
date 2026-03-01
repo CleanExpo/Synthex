@@ -8,6 +8,10 @@ export interface DashboardStats {
   scheduledPosts: number;
   engagementRate: number;
   followers: number;
+  /** Number of active PlatformConnection records for the user */
+  connectedPlatforms: number;
+  /** Number of active Campaign records for the user */
+  activeCampaigns: number;
   trendingTopics: string[];
   recentActivity: RecentActivity[];
 }

@@ -18,18 +18,11 @@ import { Check, ArrowRight, Loader2, Sparkles, XCircle, RefreshCw } from '@/comp
 // Alias for PartyPopper (using Sparkles as visual alternative)
 const PartyPopper = Sparkles;
 import { Button } from '@/components/ui/button';
-import { useOnboarding, ProgressIndicator } from '@/components/onboarding';
+import { useOnboarding, ProgressIndicator, ONBOARDING_STEPS } from '@/components/onboarding';
 
 // ============================================================================
 // CONSTANTS
 // ============================================================================
-
-const STEPS = [
-  { id: 1, name: 'Your Business' },
-  { id: 2, name: 'Platforms' },
-  { id: 3, name: 'Persona' },
-  { id: 4, name: 'Complete' },
-];
 
 /** Maximum number of automatic retry attempts before showing error to user */
 const MAX_AUTO_RETRIES = 2;
@@ -193,7 +186,7 @@ export default function CompletePage() {
     <div className="space-y-8">
       {/* Progress */}
       <ProgressIndicator
-        steps={STEPS}
+        steps={ONBOARDING_STEPS}
         currentStep={4}
         completedSteps={[...data.completedSteps, 4]}
       />

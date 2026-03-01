@@ -173,9 +173,9 @@ export const ENV_VAR_DEFINITIONS: EnvVarDefinition[] = [
     required: false,
     securityLevel: SecurityLevel.SECRET,
     validator: z.string()
-      .regex(/^sk-[A-Za-z0-9]{48}$/, 'Invalid OpenAI API key format')
+      .regex(/^sk-(proj-|svcacct-)?[A-Za-z0-9_-]{20,}$/, 'Invalid OpenAI API key format. Must start with sk-, sk-proj-, or sk-svcacct-')
       .optional(),
-    example: 'sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
+    example: 'sk-proj-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
     conflictsWith: ['ANTHROPIC_API_KEY']
   },
 

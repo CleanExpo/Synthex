@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useTokenRefresh } from '@/hooks/useTokenRefresh';
@@ -15,6 +15,7 @@ import {
   BarChart3,
   Settings,
   HelpCircle,
+  ChevronDown,
   ChevronLeft,
   ChevronRight,
   Search,
@@ -196,6 +197,13 @@ const sidebarGroups: Array<{
   },
 ];
 
+// ============================================================================
+// PROGRESSIVE DISCLOSURE — New users see only starter groups to reduce overload.
+// After clicking "Show More" the full sidebar is revealed and persisted.
+// ============================================================================
+const STARTER_GROUP_IDS = new Set(['main', 'content-ai', 'planning']);
+const SIDEBAR_EXPANDED_KEY = 'sidebar-show-all-groups';
+
 export default function DashboardLayout({
   children,
 }: {
@@ -204,8 +212,36 @@ export default function DashboardLayout({
   const pathname = usePathname();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [showAllGroups, setShowAllGroups] = useState(false);
   const { user } = useUser();
   useTokenRefresh();
+
+  // Hydrate showAllGroups from localStorage once on mount
+  useEffect(() => {
+    const stored = localStorage.getItem(SIDEBAR_EXPANDED_KEY);
+    if (stored === 'true') setShowAllGroups(true);
+  }, []);
+
+  const toggleShowAllGroups = () => {
+    const next = !showAllGroups;
+    setShowAllGroups(next);
+    localStorage.setItem(SIDEBAR_EXPANDED_KEY, next.toString());
+  };
+
+  // Auto-expand sidebar when the user navigates to a page inside a hidden group
+  // (e.g. direct-linking /dashboard/analytics while groups are collapsed)
+  useEffect(() => {
+    if (showAllGroups) return;
+    const isInHiddenGroup = sidebarGroups.some(
+      (g) =>
+        !STARTER_GROUP_IDS.has(g.id) &&
+        g.items.some((item) => pathname === item.href || pathname.startsWith(item.href + '/'))
+    );
+    if (isInHiddenGroup) {
+      setShowAllGroups(true);
+      localStorage.setItem(SIDEBAR_EXPANDED_KEY, 'true');
+    }
+  }, [pathname, showAllGroups]);
 
   // Insert Businesses group for multi-business owners (after MAIN group)
   const dynamicSidebarGroups = user?.isMultiBusinessOwner
@@ -261,30 +297,51 @@ export default function DashboardLayout({
             </Button>
           </div>
 
-          {/* Navigation */}
+          {/* Navigation — progressive disclosure: show starter groups first */}
           <nav className="flex-1 space-y-2 px-2 py-4 overflow-y-auto">
-            {dynamicSidebarGroups.map((group) => (
-              sidebarCollapsed ? (
-                // Collapsed mode: show only group icons as tooltips
-                <div
-                  key={group.id}
-                  className="flex items-center justify-center px-2 py-2 text-gray-400 hover:text-white rounded-lg hover:bg-white/5"
-                  title={group.label}
-                >
-                  <group.icon className="h-5 w-5" />
-                </div>
-              ) : (
-                // Expanded mode: show full sidebar groups
-                <SidebarGroup
-                  key={group.id}
-                  id={group.id}
-                  icon={group.icon}
-                  label={group.label}
-                  items={group.items}
-                  defaultOpen={group.defaultOpen}
+            {dynamicSidebarGroups
+              .filter((g) => showAllGroups || STARTER_GROUP_IDS.has(g.id))
+              .map((group) => (
+                sidebarCollapsed ? (
+                  // Collapsed mode: show only group icons as tooltips
+                  <div
+                    key={group.id}
+                    className="flex items-center justify-center px-2 py-2 text-gray-400 hover:text-white rounded-lg hover:bg-white/5"
+                    title={group.label}
+                  >
+                    <group.icon className="h-5 w-5" />
+                  </div>
+                ) : (
+                  // Expanded mode: show full sidebar groups
+                  <SidebarGroup
+                    key={group.id}
+                    id={group.id}
+                    icon={group.icon}
+                    label={group.label}
+                    items={group.items}
+                    defaultOpen={group.defaultOpen}
+                  />
+                )
+              ))}
+
+            {/* Show More / Show Less toggle (only in expanded sidebar) */}
+            {!sidebarCollapsed && (
+              <button
+                onClick={toggleShowAllGroups}
+                className="w-full flex items-center gap-2 px-4 py-2 text-xs font-medium text-gray-500 hover:text-gray-300 hover:bg-white/5 rounded-lg transition-colors"
+              >
+                <ChevronDown
+                  className={cn(
+                    'w-3.5 h-3.5 transition-transform',
+                    showAllGroups && 'rotate-180'
+                  )}
                 />
-              )
-            ))}
+                {showAllGroups
+                  ? 'Show Less'
+                  : `Show More (${dynamicSidebarGroups.length - dynamicSidebarGroups.filter((g) => STARTER_GROUP_IDS.has(g.id)).length} more)`
+                }
+              </button>
+            )}
           </nav>
 
           {/* Help Section */}

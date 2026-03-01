@@ -61,6 +61,8 @@ export default function DashboardPage() {
         scheduledPosts: data.stats?.scheduledPosts || 0,
         engagementRate: parseFloat(data.stats?.avgEngagementRate || '0'),
         followers: data.stats?.totalFollowers || 0,
+        connectedPlatforms: data.stats?.connectedPlatforms || 0,
+        activeCampaigns: data.stats?.activeCampaigns || 0,
         trendingTopics: data.trendingTopics || [],
         recentActivity: (data.recentActivity || []).map((activity: { platform: string; action: string; time: string; engagement?: number }, index: number) => ({
           id: String(index + 1),
@@ -230,7 +232,7 @@ export default function DashboardPage() {
           {isNewUser && (
             <AnimatedCard delay={0.1}>
               <GetStartedChecklist
-                hasConnections={stats.followers > 0}
+                hasConnections={stats.connectedPlatforms > 0}
                 hasCampaigns={stats.scheduledPosts > 0}
                 hasContent={stats.totalPosts > 0}
               />

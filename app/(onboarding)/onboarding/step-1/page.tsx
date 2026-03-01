@@ -24,18 +24,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { useOnboarding, ProgressIndicator } from '@/components/onboarding';
+import { useOnboarding, ProgressIndicator, ONBOARDING_STEPS } from '@/components/onboarding';
 
 // ============================================================================
 // CONSTANTS
 // ============================================================================
-
-const STEPS = [
-  { id: 1, name: 'Your Business' },
-  { id: 2, name: 'Platforms' },
-  { id: 3, name: 'Persona' },
-  { id: 4, name: 'Complete' },
-];
 
 const INDUSTRIES = [
   { value: 'technology', label: 'Technology' },
@@ -129,7 +122,7 @@ export default function Step1BusinessPage() {
     <div className="space-y-8">
       {/* Progress */}
       <ProgressIndicator
-        steps={STEPS}
+        steps={ONBOARDING_STEPS}
         currentStep={1}
         completedSteps={data.completedSteps}
       />
