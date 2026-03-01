@@ -8,6 +8,7 @@
  */
 
 import { useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { useSettingsData, isEnterprisePlan } from '@/hooks/use-settings-data';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -36,7 +37,9 @@ import {
 } from '@/components/settings';
 
 export default function SettingsPage() {
-  const [activeTab, setActiveTab] = useState<SettingsTab>('profile');
+  const searchParams = useSearchParams();
+  const initialTab = (searchParams.get('tab') as SettingsTab) || 'profile';
+  const [activeTab, setActiveTab] = useState<SettingsTab>(initialTab);
 
   const {
     isSaving,
