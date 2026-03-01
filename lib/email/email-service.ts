@@ -136,6 +136,35 @@ export class EmailService {
   }
 
   /**
+   * Send referral invite email
+   * Non-blocking — caller should wrap in try/catch so referral still works if email fails
+   */
+  async sendReferralInviteEmail(
+    email: string,
+    referralCode: string,
+    referrerName?: string
+  ): Promise<void> {
+    try {
+      const signupUrl = `${this.baseUrl}/signup?ref=${referralCode}`;
+      const template: EmailTemplate = {
+        to: email,
+        subject: `${referrerName || 'Someone'} invited you to SYNTHEX`,
+        html: this.getReferralInviteEmailTemplate(
+          referrerName || 'A SYNTHEX user',
+          referralCode,
+          signupUrl
+        ),
+        text: `You've been invited to join SYNTHEX by ${referrerName || 'a friend'}! Sign up with this link to get 500 bonus AI credits: ${signupUrl}`,
+      };
+
+      await this.sendEmail(template);
+    } catch (error) {
+      console.error('[EMAIL] Error sending referral invite email:', error);
+      // Non-blocking — don't throw so referral creation still succeeds
+    }
+  }
+
+  /**
    * Send email (mock implementation)
    * In production, integrate with SendGrid, AWS SES, or similar
    */
@@ -445,6 +474,60 @@ export class EmailService {
             <div class="footer">
               <p>© 2024 SYNTHEX. All rights reserved.</p>
               <p>Follow us: <a href="#">Twitter</a> | <a href="#">LinkedIn</a> | <a href="#">Instagram</a></p>
+            </div>
+          </div>
+        </body>
+      </html>
+    `;
+  }
+
+  private getReferralInviteEmailTemplate(
+    referrerName: string,
+    referralCode: string,
+    signupUrl: string
+  ): string {
+    return `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="utf-8">
+          <title>You're Invited to SYNTHEX</title>
+          <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+            .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 40px; text-align: center; border-radius: 10px 10px 0 0; }
+            .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; }
+            .highlight { background: white; padding: 20px; margin: 15px 0; border-radius: 5px; text-align: center; border: 2px dashed #667eea; }
+            .button { display: inline-block; padding: 15px 30px; background: #667eea; color: white; text-decoration: none; border-radius: 5px; margin: 20px 0; }
+            .footer { text-align: center; margin-top: 30px; color: #666; font-size: 14px; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1>🎁 You're Invited!</h1>
+              <p>Join SYNTHEX and get 500 bonus AI credits</p>
+            </div>
+            <div class="content">
+              <h2>Hi there! 👋</h2>
+              <p><strong>${referrerName}</strong> thinks you'd love SYNTHEX — the AI-powered marketing platform that helps you create, schedule, and optimise content across all your social channels.</p>
+
+              <div class="highlight">
+                <p style="font-size: 14px; color: #666; margin: 0;">Your referral code</p>
+                <p style="font-size: 24px; font-weight: bold; color: #667eea; margin: 5px 0;">${referralCode}</p>
+                <p style="font-size: 14px; color: #666; margin: 0;">500 bonus AI credits when you sign up</p>
+              </div>
+
+              <div style="text-align: center;">
+                <a href="${signupUrl}" class="button">Accept Invitation</a>
+              </div>
+
+              <p style="text-align: center; color: #666; font-size: 14px;">
+                Or copy this link: ${signupUrl}
+              </p>
+            </div>
+            <div class="footer">
+              <p>&copy; 2024 SYNTHEX. All rights reserved.</p>
             </div>
           </div>
         </body>

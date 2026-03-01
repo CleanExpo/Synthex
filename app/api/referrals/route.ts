@@ -16,6 +16,7 @@ import { NextRequest } from 'next/server';
 import { z } from 'zod';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
 import prisma from '@/lib/prisma';
+import { emailService } from '@/lib/email/email-service';
 
 function generateReferralCode(): string {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // Excludes confusing chars I/O/0/1
@@ -178,8 +179,16 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // TODO: Send invite email via email service (SendGrid/Resend)
-    // emailService.sendReferralInvite(email, code, referrerName);
+    // Send invite email (non-blocking — referral still works if email fails)
+    try {
+      const referrer = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { name: true },
+      });
+      await emailService.sendReferralInviteEmail(email, code, referrer?.name || undefined);
+    } catch (emailError) {
+      console.error('Failed to send referral invite email:', emailError);
+    }
 
     return APISecurityChecker.createSecureResponse({
       success: true,
