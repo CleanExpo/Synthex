@@ -395,6 +395,7 @@ export function PlatformCredentialsManager() {
                               handleDelete(platform.id);
                             }}
                             className="text-red-400 hover:text-red-300 hover:bg-red-500/10"
+                            aria-label={`Delete ${platform.name} credentials`}
                           >
                             <Trash2 className="w-4 h-4" />
                           </Button>
@@ -443,6 +444,7 @@ export function PlatformCredentialsManager() {
                               copyCallbackUrl(platform.id);
                             }}
                             className="text-slate-400 hover:text-cyan-400 hover:bg-cyan-500/10 flex-shrink-0"
+                            aria-label="Copy callback URL"
                           >
                             <Copy className="w-4 h-4" />
                           </Button>
@@ -463,6 +465,7 @@ export function PlatformCredentialsManager() {
                             className="w-full px-3 py-2 pr-10 rounded-lg bg-white/5 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500/50 font-mono text-sm"
                             autoComplete="off"
                             onClick={(e) => e.stopPropagation()}
+                            aria-label="Client ID"
                           />
                           <button
                             type="button"
@@ -471,6 +474,7 @@ export function PlatformCredentialsManager() {
                               setShowClientId(!showClientId);
                             }}
                             className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors"
+                            aria-label={showClientId ? 'Hide Client ID' : 'Show Client ID'}
                           >
                             {showClientId ? (
                               <EyeOff className="w-4 h-4" />
@@ -495,6 +499,7 @@ export function PlatformCredentialsManager() {
                             className="w-full px-3 py-2 pr-10 rounded-lg bg-white/5 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500/50 font-mono text-sm"
                             autoComplete="off"
                             onClick={(e) => e.stopPropagation()}
+                            aria-label="Client Secret"
                           />
                           <button
                             type="button"
@@ -503,6 +508,7 @@ export function PlatformCredentialsManager() {
                               setShowClientSecret(!showClientSecret);
                             }}
                             className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors"
+                            aria-label={showClientSecret ? 'Hide Client Secret' : 'Show Client Secret'}
                           >
                             {showClientSecret ? (
                               <EyeOff className="w-4 h-4" />

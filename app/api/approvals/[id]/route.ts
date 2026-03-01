@@ -531,7 +531,7 @@ export async function PATCH(
       }
     }
 
-    // Update approval request and log action atomically
+    // Update approval request and log in a transaction
     const updated = await prisma.$transaction(async (tx) => {
       const result = await tx.approvalRequest.update({
         where: { id },
@@ -547,7 +547,6 @@ export async function PATCH(
         },
       });
 
-      // Log action within the same transaction
       await tx.auditLog.create({
         data: {
           action: `approval_${action}`,
@@ -615,13 +614,12 @@ export async function DELETE(
       );
     }
 
-    // Delete approval request and log action atomically
+    // Delete approval and log in a transaction
     await prisma.$transaction(async (tx) => {
       await tx.approvalRequest.delete({
         where: { id },
       });
 
-      // Log deletion within the same transaction
       await tx.auditLog.create({
         data: {
           action: 'approval_deleted',

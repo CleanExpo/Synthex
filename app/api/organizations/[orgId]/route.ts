@@ -335,10 +335,27 @@ export async function PATCH(
       }
     }
 
-    // Update organization
-    const organization = await prisma.organization.update({
-      where: { id: orgId },
-      data: updateData,
+    // Update organization and log in a transaction
+    const organization = await prisma.$transaction(async (tx) => {
+      const updated = await tx.organization.update({
+        where: { id: orgId },
+        data: updateData,
+      });
+
+      await tx.auditLog.create({
+        data: {
+          userId: user.id,
+          action: 'organization_updated',
+          resource: 'organization',
+          resourceId: orgId,
+          details: { updatedFields: Object.keys(updateData) },
+          severity: 'medium',
+          category: 'admin',
+          outcome: 'success',
+        },
+      });
+
+      return updated;
     });
 
     // Invalidate cache
@@ -350,20 +367,6 @@ export async function PATCH(
       updatedFields: Object.keys(updateData),
       userId: user.id,
     });
-
-    // Audit log for security tracking
-    await prisma.auditLog.create({
-      data: {
-        userId: user.id,
-        action: 'organization_updated',
-        resource: 'organization',
-        resourceId: orgId,
-        details: { updatedFields: Object.keys(updateData) },
-        severity: 'medium',
-        category: 'admin',
-        outcome: 'success',
-      },
-    }).catch(() => {}); // Don't fail if audit log fails
 
     return ResponseOptimizer.createResponse(
       {
@@ -428,21 +431,35 @@ export async function DELETE(
       return ResponseOptimizer.createErrorResponse('Organization not found', 404);
     }
 
-    // Soft delete - set status to 'deleted'
-    await prisma.organization.update({
-      where: { id: orgId },
-      data: {
-        status: 'deleted',
-        // Clear domain to allow reuse
-        domain: null,
-        customDomain: null,
-      },
-    });
+    // Soft delete org, remove users, and log in a transaction
+    await prisma.$transaction(async (tx) => {
+      await tx.organization.update({
+        where: { id: orgId },
+        data: {
+          status: 'deleted',
+          // Clear domain to allow reuse
+          domain: null,
+          customDomain: null,
+        },
+      });
 
-    // Remove all users from organization
-    await prisma.user.updateMany({
-      where: { organizationId: orgId },
-      data: { organizationId: null },
+      await tx.user.updateMany({
+        where: { organizationId: orgId },
+        data: { organizationId: null },
+      });
+
+      await tx.auditLog.create({
+        data: {
+          userId: user.id,
+          action: 'organization_deleted',
+          resource: 'organization',
+          resourceId: orgId,
+          details: { organizationName: existing.name, userCount: existing._count.users },
+          severity: 'high',
+          category: 'admin',
+          outcome: 'success',
+        },
+      });
     });
 
     // Invalidate cache
@@ -454,20 +471,6 @@ export async function DELETE(
       userCount: existing._count.users,
       userId: user.id,
     });
-
-    // Audit log for security tracking
-    await prisma.auditLog.create({
-      data: {
-        userId: user.id,
-        action: 'organization_deleted',
-        resource: 'organization',
-        resourceId: orgId,
-        details: { organizationName: existing.name, userCount: existing._count.users },
-        severity: 'high',
-        category: 'admin',
-        outcome: 'success',
-      },
-    }).catch(() => {}); // Don't fail if audit log fails
 
     return ResponseOptimizer.createResponse(
       {

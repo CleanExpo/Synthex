@@ -56,6 +56,7 @@ export function ProfileTab({
             <button
               onClick={onAvatarUpload}
               className="absolute bottom-0 right-0 p-2 bg-cyan-500 rounded-full text-white hover:bg-cyan-600 transition-colors"
+              aria-label="Upload avatar"
             >
               <Camera className="w-4 h-4" />
             </button>

@@ -238,34 +238,35 @@ export async function POST(request: NextRequest) {
         });
         const currentPrefs = (currentUser?.preferences as Record<string, unknown>) || {};
 
-        await prisma.user.update({
-          where: { id: userId },
-          data: {
-            preferences: {
-              ...currentPrefs,
-              status: 'suspended',
+        // Suspend user, invalidate sessions, and log in a transaction
+        await prisma.$transaction(async (tx) => {
+          await tx.user.update({
+            where: { id: userId },
+            data: {
+              preferences: {
+                ...currentPrefs,
+                status: 'suspended',
+              },
+              updatedAt: new Date(),
             },
-            updatedAt: new Date(),
-          },
-        });
+          });
 
-        // Invalidate all sessions
-        await prisma.session.deleteMany({
-          where: { userId },
-        });
+          await tx.session.deleteMany({
+            where: { userId },
+          });
 
-        // Log audit event
-        await prisma.auditLog.create({
-          data: {
-            userId: auth.userId || 'system',
-            action: 'user_suspended',
-            resource: 'user',
-            resourceId: userId,
-            details: { reason, targetEmail: targetUser.email },
-            severity: 'high',
-            category: 'admin',
-            outcome: 'success',
-          },
+          await tx.auditLog.create({
+            data: {
+              userId: auth.userId || 'system',
+              action: 'user_suspended',
+              resource: 'user',
+              resourceId: userId,
+              details: { reason, targetEmail: targetUser.email },
+              severity: 'high',
+              category: 'admin',
+              outcome: 'success',
+            },
+          });
         });
 
         return NextResponse.json({
@@ -282,28 +283,31 @@ export async function POST(request: NextRequest) {
         });
         const currentPrefs = (currentUser?.preferences as Record<string, unknown>) || {};
 
-        await prisma.user.update({
-          where: { id: userId },
-          data: {
-            preferences: {
-              ...currentPrefs,
-              status: 'active',
+        // Activate user and log in a transaction
+        await prisma.$transaction(async (tx) => {
+          await tx.user.update({
+            where: { id: userId },
+            data: {
+              preferences: {
+                ...currentPrefs,
+                status: 'active',
+              },
+              updatedAt: new Date(),
             },
-            updatedAt: new Date(),
-          },
-        });
+          });
 
-        await prisma.auditLog.create({
-          data: {
-            userId: auth.userId || 'system',
-            action: 'user_activated',
-            resource: 'user',
-            resourceId: userId,
-            details: { targetEmail: targetUser.email },
-            severity: 'medium',
-            category: 'admin',
-            outcome: 'success',
-          },
+          await tx.auditLog.create({
+            data: {
+              userId: auth.userId || 'system',
+              action: 'user_activated',
+              resource: 'user',
+              resourceId: userId,
+              details: { targetEmail: targetUser.email },
+              severity: 'medium',
+              category: 'admin',
+              outcome: 'success',
+            },
+          });
         });
 
         return NextResponse.json({
@@ -320,30 +324,32 @@ export async function POST(request: NextRequest) {
         });
         const currentPrefs = (currentUser?.preferences as Record<string, unknown>) || {};
 
-        // Soft delete - mark as deleted in preferences
-        await prisma.user.update({
-          where: { id: userId },
-          data: {
-            preferences: {
-              ...currentPrefs,
-              status: 'deleted',
+        // Soft delete user and log in a transaction
+        await prisma.$transaction(async (tx) => {
+          await tx.user.update({
+            where: { id: userId },
+            data: {
+              preferences: {
+                ...currentPrefs,
+                status: 'deleted',
+              },
+              email: `deleted_${Date.now()}_${targetUser.email}`,
+              updatedAt: new Date(),
             },
-            email: `deleted_${Date.now()}_${targetUser.email}`,
-            updatedAt: new Date(),
-          },
-        });
+          });
 
-        await prisma.auditLog.create({
-          data: {
-            userId: auth.userId || 'system',
-            action: 'user_deleted',
-            resource: 'user',
-            resourceId: userId,
-            details: { reason, targetEmail: targetUser.email },
-            severity: 'critical',
-            category: 'admin',
-            outcome: 'success',
-          },
+          await tx.auditLog.create({
+            data: {
+              userId: auth.userId || 'system',
+              action: 'user_deleted',
+              resource: 'user',
+              resourceId: userId,
+              details: { reason, targetEmail: targetUser.email },
+              severity: 'critical',
+              category: 'admin',
+              outcome: 'success',
+            },
+          });
         });
 
         return NextResponse.json({

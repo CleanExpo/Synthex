@@ -220,7 +220,7 @@ async function handlePaymentSucceeded(event: WebhookEvent): Promise<void> {
       },
     });
 
-    // Future: Send payment confirmation email via SendGrid/Resend (requires email template)
+    // TODO(UNI-475): Send payment confirmation email once email provider is wired up in lib/email-service.ts
   } catch (error) {
     logger.error('Failed to handle payment succeeded', {
       error,
@@ -259,8 +259,8 @@ async function handlePaymentFailed(event: WebhookEvent): Promise<void> {
       },
     });
 
-    // Future: Send payment failed notification email via SendGrid/Resend (requires email template)
-    // Future: Update subscription status to past_due after repeated failures
+    // TODO(UNI-475): Send payment failed notification email once email provider is wired up
+    // TODO(UNI-475): Update subscription status to past_due via Stripe webhook state machine
   } catch (error) {
     logger.error('Failed to handle payment failed', {
       error,

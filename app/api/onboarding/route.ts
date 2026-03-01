@@ -105,116 +105,102 @@ export async function POST(request: NextRequest) {
     // Generate unique slug for organization
     const slug = await generateUniqueSlug(data.organizationName);
 
-    // Create or update organization via Prisma (type-safe with new fields)
+    // Run all onboarding writes in a single transaction for consistency
     let organization;
+    let persona = null;
     try {
-      // Check if user already has an org (re-doing onboarding)
-      const existingOrg = await prisma.organization.findFirst({
-        where: { users: { some: { id: user.id } } },
-      });
-
-      if (existingOrg) {
-        organization = await prisma.organization.update({
-          where: { id: existingOrg.id },
-          data: {
-            name: data.organizationName,
-            website: data.website || null,
-            industry: data.industry,
-            teamSize: data.teamSize,
-            description: data.description || null,
-            primaryColor: data.brandColors?.primary || null,
-            socialHandles: data.socialHandles || undefined,
-            aiGeneratedData: data.aiGeneratedData || undefined,
-          },
-        });
-      } else {
-        organization = await prisma.organization.create({
-          data: {
-            name: data.organizationName,
-            slug,
-            website: data.website || null,
-            industry: data.industry,
-            teamSize: data.teamSize,
-            description: data.description || null,
-            primaryColor: data.brandColors?.primary || null,
-            socialHandles: data.socialHandles || undefined,
-            aiGeneratedData: data.aiGeneratedData || undefined,
-            users: { connect: { id: user.id } },
-          },
+      const result = await prisma.$transaction(async (tx) => {
+        // Check if user already has an org (re-doing onboarding)
+        const existingOrg = await tx.organization.findFirst({
+          where: { users: { some: { id: user.id } } },
         });
 
-        // Create BusinessOwnership record for multi-business support
-        try {
-          await prisma.businessOwnership.create({
+        let org;
+        if (existingOrg) {
+          org = await tx.organization.update({
+            where: { id: existingOrg.id },
+            data: {
+              name: data.organizationName,
+              website: data.website || null,
+              industry: data.industry,
+              teamSize: data.teamSize,
+              description: data.description || null,
+              primaryColor: data.brandColors?.primary || null,
+              socialHandles: data.socialHandles || undefined,
+              aiGeneratedData: data.aiGeneratedData || undefined,
+            },
+          });
+        } else {
+          org = await tx.organization.create({
+            data: {
+              name: data.organizationName,
+              slug,
+              website: data.website || null,
+              industry: data.industry,
+              teamSize: data.teamSize,
+              description: data.description || null,
+              primaryColor: data.brandColors?.primary || null,
+              socialHandles: data.socialHandles || undefined,
+              aiGeneratedData: data.aiGeneratedData || undefined,
+              users: { connect: { id: user.id } },
+            },
+          });
+
+          // Create BusinessOwnership record for multi-business support
+          await tx.businessOwnership.create({
             data: {
               ownerId: user.id,
-              organizationId: organization.id,
+              organizationId: org.id,
               displayName: data.organizationName,
               isActive: true,
             },
           });
-        } catch (ownershipError) {
-          // Non-fatal — might already exist from a previous attempt
-          logger.warn('BusinessOwnership creation skipped', {
-            error: String(ownershipError),
-          });
-        }
 
-        // Set user's active organization and multi-business flag
-        try {
-          await prisma.user.update({
+          // Set user's active organization and multi-business flag
+          await tx.user.update({
             where: { id: user.id },
             data: {
-              activeOrganizationId: organization.id,
+              activeOrganizationId: org.id,
               isMultiBusinessOwner: true,
             },
           });
-        } catch (userUpdateError) {
-          logger.warn('User update for multi-business skipped', {
-            error: String(userUpdateError),
+        }
+
+        // Create persona if not skipped
+        let createdPersona = null;
+        if (!data.skipPersona && data.personaName && data.personaTone) {
+          createdPersona = await tx.persona.create({
+            data: {
+              name: data.personaName,
+              tone: data.personaTone,
+              description: data.personaTopics?.length
+                ? `Topics: ${data.personaTopics.join(', ')}`
+                : null,
+              status: 'active',
+              userId: user.id,
+            },
           });
         }
-      }
-    } catch (orgError) {
-      logger.error('Failed to create organization', { error: String(orgError) });
-      return NextResponse.json(
-        { error: 'Failed to create organization' },
-        { status: 500 }
-      );
-    }
 
-    // Create persona if not skipped
-    let persona = null;
-    if (!data.skipPersona && data.personaName && data.personaTone) {
-      try {
-        persona = await prisma.persona.create({
+        // Mark onboarding complete
+        await tx.user.update({
+          where: { id: user.id },
           data: {
-            name: data.personaName,
-            tone: data.personaTone,
-            description: data.personaTopics?.length
-              ? `Topics: ${data.personaTopics.join(', ')}`
-              : null,
-            status: 'active',
-            userId: user.id,
+            onboardingComplete: true,
           },
         });
-      } catch (personaError) {
-        logger.warn('Failed to create persona', { error: String(personaError) });
-      }
-    }
 
-    // Mark onboarding complete in Prisma User model
-    try {
-      await prisma.user.update({
-        where: { id: user.id },
-        data: {
-          onboardingComplete: true,
-        },
+        return { org, persona: createdPersona };
       });
-    } catch (profileError) {
-      logger.warn('Failed to update user onboarding status', {
-        error: String(profileError),
-      });
+
+      organization = result.org;
+      persona = result.persona;
+    } catch (txError) {
+      logger.error('Onboarding transaction failed', { error: String(txError) });
+      return NextResponse.json(
+        { error: 'Failed to complete onboarding' },
+        { status: 500 }
+      );
     }
 
     // Emit webhook event for onboarding completion

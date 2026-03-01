@@ -219,30 +219,33 @@ export async function PATCH(
     // Convert to Prisma-compatible JSON value
     const settingsJson = JSON.parse(JSON.stringify(newSettings));
 
-    // Update team
-    const team = await prisma.organization.update({
-      where: { id: teamId },
-      data: {
-        ...(validation.data.name && { name: validation.data.name }),
-        ...(validation.data.description !== undefined && { description: validation.data.description }),
-        ...(validation.data.plan && { plan: validation.data.plan }),
-        settings: settingsJson,
-        updatedAt: new Date(),
-      },
-    });
+    // Update team and log in a transaction
+    const team = await prisma.$transaction(async (tx) => {
+      const updated = await tx.organization.update({
+        where: { id: teamId },
+        data: {
+          ...(validation.data.name && { name: validation.data.name }),
+          ...(validation.data.description !== undefined && { description: validation.data.description }),
+          ...(validation.data.plan && { plan: validation.data.plan }),
+          settings: settingsJson,
+          updatedAt: new Date(),
+        },
+      });
 
-    // Log audit event
-    await prisma.auditLog.create({
-      data: {
-        userId: user.id,
-        action: 'team_settings_updated',
-        resource: 'organization',
-        resourceId: teamId,
-        details: { changes: validation.data },
-        severity: 'low',
-        category: 'admin',
-        outcome: 'success',
-      },
+      await tx.auditLog.create({
+        data: {
+          userId: user.id,
+          action: 'team_settings_updated',
+          resource: 'organization',
+          resourceId: teamId,
+          details: { changes: validation.data },
+          severity: 'low',
+          category: 'admin',
+          outcome: 'success',
+        },
+      });
+
+      return updated;
     });
 
     return NextResponse.json({
@@ -299,31 +302,30 @@ export async function DELETE(
       );
     }
 
-    // Delete team and all related data
-    await prisma.$transaction([
+    // Delete team, related data, and log in a single transaction
+    await prisma.$transaction(async (tx) => {
       // Delete team invitations
-      prisma.teamInvitation.deleteMany({ where: { organizationId: teamId } }),
+      await tx.teamInvitation.deleteMany({ where: { organizationId: teamId } });
       // Remove organization from users
-      prisma.user.updateMany({
+      await tx.user.updateMany({
         where: { organizationId: teamId },
         data: { organizationId: null },
-      }),
+      });
+      // Log audit event before deletion (the resource ID is still valid)
+      await tx.auditLog.create({
+        data: {
+          userId: user.id,
+          action: 'team_deleted',
+          resource: 'organization',
+          resourceId: teamId,
+          details: { teamName: team.name },
+          severity: 'high',
+          category: 'admin',
+          outcome: 'success',
+        },
+      });
       // Delete the team
-      prisma.organization.delete({ where: { id: teamId } }),
-    ]);
-
-    // Log audit event
-    await prisma.auditLog.create({
-      data: {
-        userId: user.id,
-        action: 'team_deleted',
-        resource: 'organization',
-        resourceId: teamId,
-        details: { teamName: team.name },
-        severity: 'high',
-        category: 'admin',
-        outcome: 'success',
-      },
+      await tx.organization.delete({ where: { id: teamId } });
     });
 
     return NextResponse.json({

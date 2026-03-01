@@ -407,6 +407,7 @@ export function AICredentialsManager() {
                     disabled={deletingId === cred.id}
                     onClick={() => handleDelete(cred.id)}
                     className="text-red-400 hover:text-red-300 hover:bg-red-500/10"
+                    aria-label={`Delete ${cred.provider} credential`}
                   >
                     <Trash2 className="w-4 h-4" />
                   </Button>

@@ -233,30 +233,33 @@ export async function POST(request: NextRequest) {
       ? `Test webhook failed (${testResult.error}). Endpoint created as inactive.`
       : undefined;
 
-    // Create the webhook endpoint in database
-    const webhook = await prisma.webhookEndpoint.create({
-      data: {
-        url,
-        secret: webhookSecret,
-        description: description || null,
-        events: events,
-        active: shouldBeActive,
-        userId,
-      },
-    });
+    // Create the webhook endpoint and audit log in a transaction
+    const webhook = await prisma.$transaction(async (tx) => {
+      const created = await tx.webhookEndpoint.create({
+        data: {
+          url,
+          secret: webhookSecret,
+          description: description || null,
+          events: events,
+          active: shouldBeActive,
+          userId,
+        },
+      });
 
-    // Log creation
-    await prisma.auditLog.create({
-      data: {
-        action: 'webhook_created',
-        resource: 'webhook',
-        resourceId: webhook.id,
-        userId,
-        details: { url, events, active: shouldBeActive, testResult: testResult.success },
-        severity: 'low',
-        category: 'system',
-        outcome: 'success',
-      },
+      await tx.auditLog.create({
+        data: {
+          action: 'webhook_created',
+          resource: 'webhook',
+          resourceId: created.id,
+          userId,
+          details: { url, events, active: shouldBeActive, testResult: testResult.success },
+          severity: 'low',
+          category: 'system',
+          outcome: 'success',
+        },
+      });
+
+      return created;
     });
 
     return NextResponse.json({
@@ -345,24 +348,27 @@ export async function PATCH(request: NextRequest) {
       }
     }
 
-    // Update the webhook
-    const updated = await prisma.webhookEndpoint.update({
-      where: { id },
-      data: updateData,
-    });
+    // Update the webhook and log in a transaction
+    const updated = await prisma.$transaction(async (tx) => {
+      const result = await tx.webhookEndpoint.update({
+        where: { id },
+        data: updateData,
+      });
 
-    // Log update
-    await prisma.auditLog.create({
-      data: {
-        action: 'webhook_updated',
-        resource: 'webhook',
-        resourceId: id,
-        userId,
-        details: { changes: Object.keys(updateData) },
-        severity: 'low',
-        category: 'system',
-        outcome: 'success',
-      },
+      await tx.auditLog.create({
+        data: {
+          action: 'webhook_updated',
+          resource: 'webhook',
+          resourceId: id,
+          userId,
+          details: { changes: Object.keys(updateData) },
+          severity: 'low',
+          category: 'system',
+          outcome: 'success',
+        },
+      });
+
+      return result;
     });
 
     return NextResponse.json({
@@ -403,9 +409,30 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    // Delete with ownership check (userId in where clause)
-    const deleted = await prisma.webhookEndpoint.deleteMany({
-      where: { id: webhookId, userId },
+    // Delete with ownership check and log in a transaction
+    const deleted = await prisma.$transaction(async (tx) => {
+      const result = await tx.webhookEndpoint.deleteMany({
+        where: { id: webhookId, userId },
+      });
+
+      if (result.count === 0) {
+        return result;
+      }
+
+      await tx.auditLog.create({
+        data: {
+          action: 'webhook_deleted',
+          resource: 'webhook',
+          resourceId: webhookId,
+          userId,
+          details: {},
+          severity: 'low',
+          category: 'system',
+          outcome: 'success',
+        },
+      });
+
+      return result;
     });
 
     if (deleted.count === 0) {
@@ -414,20 +441,6 @@ export async function DELETE(request: NextRequest) {
         { status: 404 }
       );
     }
-
-    // Log deletion
-    await prisma.auditLog.create({
-      data: {
-        action: 'webhook_deleted',
-        resource: 'webhook',
-        resourceId: webhookId,
-        userId,
-        details: {},
-        severity: 'low',
-        category: 'system',
-        outcome: 'success',
-      },
-    });
 
     return NextResponse.json({
       success: true,

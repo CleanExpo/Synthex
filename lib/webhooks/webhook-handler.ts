@@ -21,11 +21,13 @@
  * - INTERNAL_WEBHOOK_SECRET: For internal system webhooks
  */
 
+import { createHash } from 'crypto';
 import { logger } from '@/lib/logger';
 import { prisma } from '@/lib/prisma';
 import { eventQueue } from './event-queue';
 import { retryManager } from './retry-manager';
 import { signatureVerifier } from './signature-verifier';
+import { getRedisClient } from '@/lib/redis-client';
 import type {
   WebhookEvent,
   WebhookEventType,
@@ -195,16 +197,60 @@ export class WebhookHandler {
 
     if (!verification.valid) {
       logger.warn('Invalid webhook signature', { platform, error: verification.error });
+
+      // Log signature failure as security audit event
+      try {
+        await prisma.auditLog.create({
+          data: {
+            action: 'webhook_signature_invalid',
+            resource: 'webhook',
+            resourceId: platform,
+            details: {
+              platform,
+              error: verification.error,
+              timestamp: new Date().toISOString(),
+            },
+            severity: 'critical',
+            category: 'security',
+            outcome: 'failure',
+          },
+        });
+      } catch (auditError) {
+        logger.error('Failed to log webhook signature failure', { auditError });
+      }
+
       return { success: false, error: verification.error || 'Invalid signature' };
     }
 
     // Parse payload
     let data: Record<string, unknown>;
+    const payloadStr = typeof payload === 'string' ? payload : payload.toString();
     try {
-      data = typeof payload === 'string' ? JSON.parse(payload) : JSON.parse(payload.toString());
+      data = JSON.parse(payloadStr);
     } catch {
       logger.error('Invalid webhook payload', { platform });
       return { success: false, error: 'Invalid JSON payload' };
+    }
+
+    // Idempotency check: compute hash of payload to detect duplicate deliveries
+    const payloadHash = createHash('sha256').update(payloadStr).digest('hex');
+    const idempotencyKey = `webhook:idem:${platform}:${payloadHash}`;
+
+    try {
+      const redis = getRedisClient();
+      if (redis.isConnected) {
+        const existing = await redis.get(idempotencyKey);
+        if (existing) {
+          logger.info('Duplicate webhook delivery detected, skipping', {
+            platform,
+            existingEventId: existing,
+          });
+          return { success: true, eventId: existing };
+        }
+      }
+    } catch (idempotencyError) {
+      // Non-fatal: if Redis is down, proceed without idempotency check
+      logger.warn('Idempotency check failed, proceeding anyway', { idempotencyError });
     }
 
     // Determine event type from payload
@@ -221,7 +267,17 @@ export class WebhookHandler {
       organizationId: this.extractOrganizationId(platform, data),
     });
 
-    // Log the event
+    // Store idempotency key with 24h TTL to prevent duplicate processing
+    try {
+      const redis = getRedisClient();
+      if (redis.isConnected) {
+        await redis.set(idempotencyKey, eventId, 86400); // 24h TTL
+      }
+    } catch (redisError) {
+      logger.warn('Failed to store idempotency key', { redisError, eventId });
+    }
+
+    // Log the event to audit trail
     await this.logEvent(eventId, eventType, platform, data);
 
     return { success: true, eventId };
@@ -355,7 +411,7 @@ export class WebhookHandler {
   }
 
   /**
-   * Log event to database
+   * Log event to database audit trail
    */
   private async logEvent(
     eventId: string,
@@ -364,16 +420,32 @@ export class WebhookHandler {
     data: Record<string, unknown>
   ): Promise<void> {
     try {
-      // Log to audit table or dedicated webhook logs
-      // This is a placeholder - implement based on your schema
-      logger.info('Webhook event received', {
+      // Log to audit trail for observability
+      await prisma.auditLog.create({
+        data: {
+          action: 'webhook_received',
+          resource: 'webhook',
+          resourceId: eventId,
+          details: {
+            eventType: type,
+            platform,
+            dataKeys: Object.keys(data),
+            timestamp: new Date().toISOString(),
+          },
+          severity: 'low',
+          category: 'system',
+          outcome: 'success',
+        },
+      });
+
+      logger.info('Webhook event received and logged', {
         eventId,
         type,
         platform,
-        dataKeys: Object.keys(data),
       });
     } catch (error) {
-      logger.error('Failed to log webhook event', { error, eventId });
+      // Non-fatal: don't fail the webhook if audit logging fails
+      logger.error('Failed to log webhook event to audit trail', { error, eventId });
     }
   }
 
@@ -447,6 +519,14 @@ export class WebhookHandler {
         return this.parseMetaEventType(data);
       case 'tiktok':
         return this.parseTikTokEventType(data);
+      case 'linkedin':
+        return this.parseLinkedInEventType(data);
+      case 'pinterest':
+        return this.parsePinterestEventType(data);
+      case 'youtube':
+        return this.parseYouTubeEventType(data);
+      case 'reddit':
+        return this.parseRedditEventType(data);
       case 'stripe':
         return this.parseStripeEventType(data);
       case 'internal':
@@ -460,6 +540,8 @@ export class WebhookHandler {
     if (data.tweet_create_events) return 'post.created';
     if (data.favorite_events) return 'engagement.like';
     if (data.follow_events) return 'follower.gained';
+    if (data.direct_message_events) return 'engagement.comment';
+    if (data.tweet_delete_events) return 'post.deleted';
     return null;
   }
 
@@ -476,6 +558,15 @@ export class WebhookHandler {
         return 'engagement.comment';
       case 'reactions':
         return 'engagement.reaction';
+      case 'likes':
+        return 'engagement.like';
+      case 'shares':
+        return 'engagement.share';
+      case 'mention':
+        return 'engagement.comment';
+      case 'story_insights':
+      case 'insights':
+        return 'analytics.metrics_updated';
       default:
         return null;
     }
@@ -489,6 +580,145 @@ export class WebhookHandler {
         return 'post.published';
       case 'video.create':
         return 'post.created';
+      case 'video.delete':
+        return 'post.deleted';
+      case 'comment.create':
+        return 'engagement.comment';
+      case 'like.create':
+        return 'engagement.like';
+      case 'share.create':
+        return 'engagement.share';
+      case 'authorize':
+        return 'account.connected';
+      case 'deauthorize':
+        return 'account.disconnected';
+      default:
+        return null;
+    }
+  }
+
+  private parseLinkedInEventType(data: Record<string, unknown>): WebhookEventType | null {
+    // LinkedIn sends eventType at the top level
+    const eventType = data.eventType as string;
+
+    switch (eventType) {
+      case 'SHARE_CREATED':
+      case 'SHARE_UPDATED':
+        return 'post.created';
+      case 'SHARE_DELETED':
+        return 'post.deleted';
+      case 'COMMENT_CREATED':
+      case 'COMMENT_UPDATED':
+        return 'engagement.comment';
+      case 'REACTION_CREATED':
+        return 'engagement.reaction';
+      case 'FOLLOWER_ADDED':
+        return 'follower.gained';
+      case 'FOLLOWER_REMOVED':
+        return 'follower.lost';
+      case 'ORGANIZATION_ACCESS_GRANTED':
+        return 'account.connected';
+      case 'ORGANIZATION_ACCESS_REVOKED':
+        return 'account.disconnected';
+      default:
+        break;
+    }
+
+    // Fallback: check for UGC post activity
+    if (data.activity || data.activityUrn) {
+      return 'post.updated';
+    }
+
+    return null;
+  }
+
+  private parsePinterestEventType(data: Record<string, unknown>): WebhookEventType | null {
+    const eventType = data.event_type as string || data.type as string;
+
+    switch (eventType) {
+      case 'pin.created':
+      case 'pin_create':
+        return 'post.created';
+      case 'pin.updated':
+      case 'pin_update':
+        return 'post.updated';
+      case 'pin.deleted':
+      case 'pin_delete':
+        return 'post.deleted';
+      case 'board.created':
+      case 'board.updated':
+        return 'post.updated';
+      case 'pin.saved':
+        return 'engagement.save';
+      case 'pin.clicked':
+        return 'engagement.share';
+      case 'account.connected':
+        return 'account.connected';
+      case 'account.disconnected':
+        return 'account.disconnected';
+      default:
+        return null;
+    }
+  }
+
+  private parseYouTubeEventType(data: Record<string, unknown>): WebhookEventType | null {
+    // YouTube PubSubHubbub / Push notifications
+    const eventType = data.eventType as string || data.type as string;
+
+    // YouTube Data API push notifications
+    if (data.feed) {
+      const feed = data.feed as { entry?: Array<{ 'yt:videoId'?: string }> };
+      if (feed.entry?.length) {
+        return 'post.published';
+      }
+    }
+
+    switch (eventType) {
+      case 'video.published':
+      case 'video_published':
+        return 'post.published';
+      case 'video.updated':
+      case 'video_updated':
+        return 'post.updated';
+      case 'video.deleted':
+      case 'video_deleted':
+        return 'post.deleted';
+      case 'comment.created':
+      case 'comment_created':
+        return 'engagement.comment';
+      case 'subscription.added':
+        return 'follower.gained';
+      case 'subscription.removed':
+        return 'follower.lost';
+      case 'channel.updated':
+        return 'analytics.metrics_updated';
+      default:
+        return null;
+    }
+  }
+
+  private parseRedditEventType(data: Record<string, unknown>): WebhookEventType | null {
+    const eventType = data.event_type as string || data.type as string;
+
+    switch (eventType) {
+      case 'post.created':
+      case 'submission.created':
+        return 'post.created';
+      case 'post.updated':
+      case 'submission.updated':
+        return 'post.updated';
+      case 'post.deleted':
+      case 'submission.deleted':
+        return 'post.deleted';
+      case 'comment.created':
+        return 'engagement.comment';
+      case 'upvote':
+      case 'vote':
+        return 'engagement.like';
+      case 'award':
+        return 'engagement.reaction';
+      case 'crosspost':
+        return 'engagement.share';
       default:
         return null;
     }
@@ -516,18 +746,37 @@ export class WebhookHandler {
   }
 
   /**
-   * Extract user ID from platform-specific payload
+   * Extract user ID from platform-specific payload.
+   * For social platforms, extracts the platform-native user/account ID
+   * which can be matched against PlatformConnection.profileId.
    */
   private extractUserId(
     platform: WebhookPlatform,
     data: Record<string, unknown>
   ): string | undefined {
-    // Platform-specific user ID extraction
     switch (platform) {
       case 'internal':
         return data.userId as string | undefined;
       case 'stripe':
         return (data.data as { object?: { customer?: string } })?.object?.customer;
+      case 'twitter':
+        return (data.for_user_id as string) || undefined;
+      case 'facebook':
+      case 'instagram':
+      case 'threads': {
+        const entry = (data.entry as Array<{ id?: string }>)?.[0];
+        return entry?.id || undefined;
+      }
+      case 'linkedin':
+        return (data.organizationUrn as string)?.split(':').pop() || undefined;
+      case 'tiktok':
+        return (data.user_id as string) || (data.open_id as string) || undefined;
+      case 'pinterest':
+        return (data.user_id as string) || (data.advertiser_id as string) || undefined;
+      case 'youtube':
+        return (data.channel_id as string) || undefined;
+      case 'reddit':
+        return (data.user_id as string) || (data.author as string) || undefined;
       default:
         return undefined;
     }
@@ -542,6 +791,10 @@ export class WebhookHandler {
   ): string | undefined {
     if (platform === 'internal') {
       return data.organizationId as string | undefined;
+    }
+    // LinkedIn organization webhooks include the org URN
+    if (platform === 'linkedin' && data.organizationUrn) {
+      return (data.organizationUrn as string).split(':').pop() || undefined;
     }
     return undefined;
   }

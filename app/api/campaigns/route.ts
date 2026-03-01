@@ -95,6 +95,7 @@ export async function POST(request: NextRequest) {
 
     const { name, description, platform, content, settings } = validationResult.data;
 
+    // Create campaign and audit log in a transaction
     const campaign = await prisma.$transaction(async (tx) => {
       const created = await tx.campaign.create({
         data: {
@@ -108,7 +109,6 @@ export async function POST(request: NextRequest) {
         }
       });
 
-      // Log campaign creation within the same transaction
       await tx.auditLog.create({
         data: {
           action: 'campaign_created',
@@ -220,12 +220,12 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
+    // Delete campaign and log in a transaction
     await prisma.$transaction(async (tx) => {
       await tx.campaign.delete({
         where: { id }
       });
 
-      // Log deletion within the same transaction
       await tx.auditLog.create({
         data: {
           action: 'campaign_deleted',

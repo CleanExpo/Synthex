@@ -298,6 +298,7 @@ export function DataTable<T extends Record<string, any>>({
               onChange={(e) => search.onChange(e.target.value)}
               placeholder={search.placeholder || 'Search...'}
               className="pl-10"
+              aria-label="Search table"
             />
           </div>
         </div>
@@ -326,6 +327,20 @@ export function DataTable<T extends Record<string, any>>({
                   column.sortable && 'cursor-pointer select-none'
                 )}
                 onClick={() => column.sortable && handleSort(column.id)}
+                onKeyDown={(e) => {
+                  if (column.sortable && (e.key === 'Enter' || e.key === ' ')) {
+                    e.preventDefault();
+                    handleSort(column.id);
+                  }
+                }}
+                tabIndex={column.sortable ? 0 : undefined}
+                role={column.sortable ? 'button' : undefined}
+                aria-sort={
+                  column.sortable && sorting?.column === column.id
+                    ? sorting.direction === 'asc' ? 'ascending' : 'descending'
+                    : undefined
+                }
+                aria-label={column.sortable ? `Sort by ${typeof column.header === 'string' ? column.header : column.id}` : undefined}
               >
                 <div
                   className={cn(
@@ -431,6 +446,7 @@ export function DataTable<T extends Record<string, any>>({
                           size="sm"
                           className="h-8 w-8 p-0"
                           onClick={(e) => e.stopPropagation()}
+                          aria-label="Row actions"
                         >
                           <MoreHorizontal className="w-4 h-4" />
                         </Button>
@@ -470,6 +486,7 @@ export function DataTable<T extends Record<string, any>>({
                 value={pagination.pageSize}
                 onChange={(e) => pagination.onPageSizeChange?.(Number(e.target.value))}
                 className="h-8 rounded-md border border-white/[0.1] bg-transparent px-2 text-sm"
+                aria-label="Rows per page"
               >
                 {pagination.pageSizeOptions.map((size) => (
                   <option key={size} value={size}>
@@ -486,6 +503,7 @@ export function DataTable<T extends Record<string, any>>({
                 onClick={() => pagination.onPageChange(1)}
                 disabled={pagination.page === 1}
                 className="h-8 w-8 p-0"
+                aria-label="Go to first page"
               >
                 <ChevronsLeft className="w-4 h-4" />
               </Button>
@@ -495,6 +513,7 @@ export function DataTable<T extends Record<string, any>>({
                 onClick={() => pagination.onPageChange(pagination.page - 1)}
                 disabled={pagination.page === 1}
                 className="h-8 w-8 p-0"
+                aria-label="Go to previous page"
               >
                 <ChevronLeft className="w-4 h-4" />
               </Button>
@@ -507,6 +526,7 @@ export function DataTable<T extends Record<string, any>>({
                 onClick={() => pagination.onPageChange(pagination.page + 1)}
                 disabled={pagination.page >= Math.ceil(pagination.total / pagination.pageSize)}
                 className="h-8 w-8 p-0"
+                aria-label="Go to next page"
               >
                 <ChevronRight className="w-4 h-4" />
               </Button>
@@ -518,6 +538,7 @@ export function DataTable<T extends Record<string, any>>({
                 }
                 disabled={pagination.page >= Math.ceil(pagination.total / pagination.pageSize)}
                 className="h-8 w-8 p-0"
+                aria-label="Go to last page"
               >
                 <ChevronsRight className="w-4 h-4" />
               </Button>

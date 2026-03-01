@@ -18,7 +18,7 @@ import jwt from 'jsonwebtoken';
 import type { AuthUser, AuthSession, AuthResult, AuthProvider, OAuthProfile } from '@/types/auth';
 import { accountService } from './account-service';
 import { isOwnerEmail } from './jwt-utils';
-import { AuthMonitor } from './monitoring';
+import { authMonitor } from './monitoring';
 import prisma from '@/lib/prisma';
 
 // Supabase admin client for profiles table operations (bypasses RLS)
@@ -530,28 +530,24 @@ export class SignInFlow {
   }
 
   /**
-   * Logging methods for monitoring — delegates to AuthMonitor (Sentry + webhooks)
+   * Logging methods for monitoring — delegates to AuthMonitor for Sentry/alerting
    */
   private async logAuthAttempt(method: string, email: string): Promise<void> {
-    const monitor = AuthMonitor.getInstance();
-    await monitor.logEvent({ type: 'attempt', method: method as 'email' | 'oauth' | 'demo', email });
+    authMonitor.trackEvent({ type: 'attempt', method, metadata: { email } });
   }
 
   private async logAuthSuccess(method: string, email: string): Promise<void> {
-    const monitor = AuthMonitor.getInstance();
-    await monitor.logEvent({ type: 'success', method: method as 'email' | 'oauth' | 'demo', email });
+    authMonitor.trackEvent({ type: 'success', method, metadata: { email } });
   }
 
   private async logAuthFailure(method: string, email: string, error?: string): Promise<void> {
     console.error(`[AUTH] Failure: ${method} - ${email} - ${error} - ${new Date().toISOString()}`);
-    const monitor = AuthMonitor.getInstance();
-    await monitor.logEvent({ type: 'failure', method: method as 'email' | 'oauth' | 'demo', email, error });
+    authMonitor.trackEvent({ type: 'failure', method, metadata: { email, error } });
   }
 
   private async logAuthError(method: string, email: string, error: string): Promise<void> {
     console.error(`[AUTH] Error: ${method} - ${email} - ${error} - ${new Date().toISOString()}`);
-    const monitor = AuthMonitor.getInstance();
-    await monitor.logEvent({ type: 'error', method: method as 'email' | 'oauth' | 'demo', email, error });
+    authMonitor.trackEvent({ type: 'error', method, metadata: { email, error } });
   }
 }
 

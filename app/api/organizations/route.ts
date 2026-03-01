@@ -82,7 +82,7 @@ export async function POST(request: NextRequest) {
     // Get plan limits with fallback
     const planLimits = PLAN_LIMITS[plan as keyof typeof PLAN_LIMITS] ?? PLAN_LIMITS.free;
 
-    // Create organization and default roles atomically
+    // Create organization and default roles in a transaction
     const organization = await prisma.$transaction(async (tx) => {
       const org = await tx.organization.create({
         data: {
@@ -110,7 +110,7 @@ export async function POST(request: NextRequest) {
         },
       });
 
-      // Create default roles within the same transaction
+      // Create default roles for the organization within the same transaction
       await createDefaultRoles(org.id, tx);
 
       return org;
@@ -252,7 +252,7 @@ export async function GET(request: NextRequest) {
 // ============================================================================
 
 async function createDefaultRoles(organizationId: string, tx?: Parameters<Parameters<typeof prisma.$transaction>[0]>[0]): Promise<void> {
-  const db = tx || prisma;
+  const db = tx ?? prisma;
   const defaultRoles = [
     {
       name: 'Admin',

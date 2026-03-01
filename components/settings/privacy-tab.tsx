@@ -49,6 +49,7 @@ export function PrivacyTab({
               <Switch
                 checked={settings.publicProfile}
                 onCheckedChange={(checked) => onSettingChange('publicProfile', checked)}
+                aria-label="Public profile"
               />
             </div>
 
@@ -60,6 +61,7 @@ export function PrivacyTab({
               <Switch
                 checked={settings.showAnalytics}
                 onCheckedChange={(checked) => onSettingChange('showAnalytics', checked)}
+                aria-label="Show analytics"
               />
             </div>
 
@@ -71,6 +73,7 @@ export function PrivacyTab({
               <Switch
                 checked={settings.dataCollection}
                 onCheckedChange={(checked) => onSettingChange('dataCollection', checked)}
+                aria-label="Data collection"
               />
             </div>
           </div>

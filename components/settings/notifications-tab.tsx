@@ -47,6 +47,7 @@ export function NotificationsTab({
               <Switch
                 checked={settings.email}
                 onCheckedChange={(checked) => onSettingChange('email', checked)}
+                aria-label="Email notifications"
               />
             </div>
 
@@ -61,6 +62,7 @@ export function NotificationsTab({
               <Switch
                 checked={settings.push}
                 onCheckedChange={(checked) => onSettingChange('push', checked)}
+                aria-label="Push notifications"
               />
             </div>
 
@@ -75,6 +77,7 @@ export function NotificationsTab({
               <Switch
                 checked={settings.sms}
                 onCheckedChange={(checked) => onSettingChange('sms', checked)}
+                aria-label="SMS notifications"
               />
             </div>
           </div>
@@ -92,6 +95,7 @@ export function NotificationsTab({
               <Switch
                 checked={settings.weeklyReport}
                 onCheckedChange={(checked) => onSettingChange('weeklyReport', checked)}
+                aria-label="Weekly report"
               />
             </div>
 
@@ -103,6 +107,7 @@ export function NotificationsTab({
               <Switch
                 checked={settings.viralAlert}
                 onCheckedChange={(checked) => onSettingChange('viralAlert', checked)}
+                aria-label="Viral content alert"
               />
             </div>
 
@@ -114,6 +119,7 @@ export function NotificationsTab({
               <Switch
                 checked={settings.systemUpdates}
                 onCheckedChange={(checked) => onSettingChange('systemUpdates', checked)}
+                aria-label="System updates"
               />
             </div>
           </div>

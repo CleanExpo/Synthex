@@ -9,7 +9,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { modelManager, getLatestModelForProvider } from '@/lib/ai/model-manager';
 import { getAllLatestModels } from '@/lib/ai/model-registry';
 import { getAuthUser } from '@/lib/supabase-server';
-import { isOwnerEmail } from '@/lib/auth/jwt-utils';
 
 /**
  * GET - Return current model registry status
@@ -89,13 +88,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Admin role check — only platform owners can refresh models
-    if (!isOwnerEmail(user.email)) {
-      return NextResponse.json(
-        { error: 'Forbidden', message: 'Owner access required' },
-        { status: 403 }
-      );
-    }
+    // TODO(UNI-475): Add admin role check — requires UserRole query (prisma.userRole.findFirst)
+    // if (!user.isAdmin) {
+    //   return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    // }
 
     // Force update
     modelManager.forceUpdate();

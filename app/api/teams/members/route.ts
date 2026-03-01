@@ -279,7 +279,7 @@ export async function POST(request: NextRequest) {
       }
     });
 
-    // TODO: Send invitation email
+    // TODO(UNI-475): Send team invitation email once email provider is wired up in lib/email-service.ts
     // await sendInvitationEmail(data.email, currentUser.organization?.name, data.role);
 
     return APISecurityChecker.createSecureResponse(

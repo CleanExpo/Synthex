@@ -140,6 +140,7 @@ export function IntegrationsTab({
                     size="icon"
                     onClick={() => onDeleteApiKey(apiKey.id)}
                     className="text-red-400 hover:text-red-300 hover:bg-red-500/10"
+                    aria-label={`Delete API key ${apiKey.name}`}
                   >
                     <Trash2 className="w-4 h-4" />
                   </Button>

@@ -58,6 +58,8 @@ export function SidebarGroup({
       <button
         onClick={handleToggle}
         className="w-full flex items-center justify-between px-4 py-2 text-sm font-medium text-gray-300 hover:text-white hover:bg-gray-700/50 rounded-lg transition-colors"
+        aria-expanded={isOpen}
+        aria-label={`${label} section`}
       >
         <div className="flex items-center gap-2">
           <Icon className="w-4 h-4" />

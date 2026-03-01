@@ -129,6 +129,7 @@ export function AdvancedTab({
               <Switch
                 checked={settings.debugMode}
                 onCheckedChange={(checked) => onSettingChange('debugMode', checked)}
+                aria-label="Debug mode"
               />
             </div>
 
@@ -143,6 +144,7 @@ export function AdvancedTab({
               <Switch
                 checked={settings.betaFeatures}
                 onCheckedChange={(checked) => onSettingChange('betaFeatures', checked)}
+                aria-label="Beta features"
               />
             </div>
           </div>

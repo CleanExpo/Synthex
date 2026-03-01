@@ -51,15 +51,16 @@ export async function GET(request: NextRequest) {
     // Check if user has SEO access
     const hasSeoAccess = subscription.plan !== 'free';
 
-    // Track actual usage from database
-    const now = new Date();
-    const periodStart = new Date(now.getFullYear(), now.getMonth(), 1); // Start of current month
+    // Count actual SEO usage this billing period (last 30 days)
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
     const [auditCount, pageCount] = await Promise.all([
       prisma.sEOAudit.count({
-        where: { userId, createdAt: { gte: periodStart } },
+        where: { userId, auditType: 'full', createdAt: { gte: thirtyDaysAgo } },
       }),
       prisma.sEOAudit.count({
-        where: { userId, createdAt: { gte: periodStart }, auditType: 'page' },
+        where: { userId, auditType: 'page', createdAt: { gte: thirtyDaysAgo } },
       }),
     ]);
 
@@ -158,15 +159,21 @@ export async function POST(request: NextRequest) {
     // Check limits based on action
     const planLimits = PLAN_LIMITS[subscription.plan] || PLAN_LIMITS.free;
 
-    const periodStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+    // Check actual usage against plan limits
+    const billingPeriodStart = new Date();
+    billingPeriodStart.setDate(billingPeriodStart.getDate() - 30);
 
     if (action === 'audit' && planLimits.maxSeoAudits !== -1) {
       const auditUsage = await prisma.sEOAudit.count({
-        where: { userId, createdAt: { gte: periodStart } },
+        where: { userId, auditType: 'full', createdAt: { gte: billingPeriodStart } },
       });
       if (auditUsage >= planLimits.maxSeoAudits) {
         return APISecurityChecker.createSecureResponse(
-          { success: false, error: 'Monthly SEO audit limit reached', upgradeRequired: true },
+          {
+            success: false,
+            error: `SEO audit limit reached (${auditUsage}/${planLimits.maxSeoAudits} this period)`,
+            upgradeRequired: true,
+          },
           429
         );
       }
@@ -174,11 +181,15 @@ export async function POST(request: NextRequest) {
 
     if (action === 'page-analysis' && planLimits.maxSeoPages !== -1) {
       const pageUsage = await prisma.sEOAudit.count({
-        where: { userId, createdAt: { gte: periodStart }, auditType: 'page' },
+        where: { userId, auditType: 'page', createdAt: { gte: billingPeriodStart } },
       });
       if (pageUsage >= planLimits.maxSeoPages) {
         return APISecurityChecker.createSecureResponse(
-          { success: false, error: 'Monthly SEO page analysis limit reached', upgradeRequired: true },
+          {
+            success: false,
+            error: `Page analysis limit reached (${pageUsage}/${planLimits.maxSeoPages} this period)`,
+            upgradeRequired: true,
+          },
           429
         );
       }

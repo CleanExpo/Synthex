@@ -82,18 +82,13 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Forward to Sentry for external monitoring
-    if (process.env.SENTRY_DSN) {
+    // Forward critical errors to Sentry for external monitoring
+    if (process.env.NEXT_PUBLIC_SENTRY_DSN && error.level === 'error') {
       Sentry.captureException(
-        new Error(typeof error.message === 'string' ? error.message : String(error)),
+        new Error(typeof error.message === 'string' ? error.message : String(error.message)),
         {
-          extra: {
-            errorId: error.id,
-            level: error.level,
-            context: error.context,
-            url: error.url,
-            userId: error.userId,
-          },
+          tags: { source: 'error-tracking-api' },
+          extra: { context: error.context, errorId: error.id },
         }
       );
     }
