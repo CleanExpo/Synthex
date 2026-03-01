@@ -11,6 +11,7 @@
 
 import { prisma } from '@/lib/prisma';
 import { logger } from '@/lib/logger';
+import { isOwnerEmail } from '@/lib/auth/jwt-utils';
 import type {
   OwnedBusiness,
   BusinessQuickStats,
@@ -21,15 +22,22 @@ import type {
 /**
  * Check if a user is a multi-business owner
  *
+ * Platform owners (OWNER_EMAILS) are always treated as multi-business owners.
+ *
  * @param userId - The user ID to check
- * @returns True if user has isMultiBusinessOwner flag enabled
+ * @returns True if user has isMultiBusinessOwner flag enabled OR is a platform owner
  */
 export async function isMultiBusinessOwner(userId: string): Promise<boolean> {
   try {
     const user = await prisma.user.findUnique({
       where: { id: userId },
-      select: { isMultiBusinessOwner: true },
+      select: { isMultiBusinessOwner: true, email: true },
     });
+
+    // Platform owners always have multi-business access
+    if (isOwnerEmail(user?.email)) {
+      return true;
+    }
 
     return user?.isMultiBusinessOwner ?? false;
   } catch (error) {
