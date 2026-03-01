@@ -3,7 +3,9 @@
 /**
  * Platform Connector
  *
- * @description Component for connecting social media platforms during onboarding
+ * @description Component for connecting social media platforms during onboarding.
+ * Uses the same OAuth popup flow as the dashboard integrations page
+ * (via /api/auth/oauth/[platform] → popup → /api/auth/callback/[platform]).
  */
 
 import React, { useState } from 'react';
@@ -11,6 +13,7 @@ import { Check, Loader2, ExternalLink, X } from '@/components/icons';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { useOnboarding } from './OnboardingContext';
+import { integrationsAPI } from '@/lib/api/settings';
 
 // ============================================================================
 // TYPES
@@ -109,14 +112,16 @@ export function PlatformConnector({ onConnect, onDisconnect }: PlatformConnector
       if (onConnect) {
         await onConnect(platformId);
       } else {
-        // Default behavior: redirect to OAuth
-        window.location.href = `/api/auth/${platformId}/connect?redirect=/onboarding/step-2`;
-        return;
+        // Use the same OAuth popup flow as dashboard integrations.
+        // This calls /api/auth/oauth/{platform} → opens popup → /api/auth/callback/{platform}
+        // which properly handles token encryption, user ID mapping, and postMessage back.
+        await integrationsAPI.connectPlatform(platformId);
       }
 
       addPlatform(platformId);
     } catch (err) {
-      setError(`Failed to connect ${platformId}. Please try again.`);
+      const message = err instanceof Error ? err.message : `Failed to connect ${platformId}.`;
+      setError(message);
     } finally {
       setConnecting(null);
     }
@@ -129,11 +134,14 @@ export function PlatformConnector({ onConnect, onDisconnect }: PlatformConnector
     try {
       if (onDisconnect) {
         await onDisconnect(platformId);
+      } else {
+        await integrationsAPI.disconnectPlatform(platformId);
       }
 
       removePlatform(platformId);
     } catch (err) {
-      setError(`Failed to disconnect ${platformId}. Please try again.`);
+      const message = err instanceof Error ? err.message : `Failed to disconnect ${platformId}.`;
+      setError(message);
     } finally {
       setConnecting(null);
     }

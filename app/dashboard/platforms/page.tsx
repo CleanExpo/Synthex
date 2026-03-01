@@ -38,6 +38,7 @@ import {
 } from '@/components/icons';
 import { toast } from 'sonner';
 import Link from 'next/link';
+import { integrationsAPI } from '@/lib/api/settings';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -443,12 +444,22 @@ export default function PlatformsPage() {
     fetchStatuses().finally(() => setIsLoading(false));
   }, [fetchStatuses]);
 
-  // Connect handler — redirects to integrations page for now
-  const handleConnect = useCallback((platformId: string) => {
+  // Connect handler — uses the same OAuth popup flow as the integrations page.
+  // This calls /api/auth/oauth/{platform} → opens popup → OAuth provider →
+  // /api/auth/callback/{platform} → postMessage back → popup closes.
+  const handleConnect = useCallback(async (platformId: string) => {
     setConnectingId(platformId);
-
-    // Navigate to integrations page where the OAuth flow lives
-    window.location.href = '/dashboard/integrations';
+    try {
+      await integrationsAPI.connectPlatform(platformId);
+      toast.success(`Connected to ${platformId}!`);
+      // Refresh statuses after successful connection
+      window.location.reload();
+    } catch (err) {
+      const message = err instanceof Error ? err.message : `Failed to connect ${platformId}`;
+      toast.error(message);
+    } finally {
+      setConnectingId(null);
+    }
   }, []);
 
   if (isLoading) {
