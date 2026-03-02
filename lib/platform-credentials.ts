@@ -84,6 +84,15 @@ const ENV_VAR_MAP: Record<string, { clientIdVars: string[]; clientSecretVars: st
     clientIdVars: ['THREADS_CLIENT_ID', 'INSTAGRAM_CLIENT_ID'],
     clientSecretVars: ['THREADS_CLIENT_SECRET', 'INSTAGRAM_CLIENT_SECRET'],
   },
+  // Google platforms share the same GCP OAuth client as YouTube
+  searchconsole: {
+    clientIdVars: ['SEARCHCONSOLE_CLIENT_ID', 'YOUTUBE_CLIENT_ID', 'GOOGLE_CLIENT_ID'],
+    clientSecretVars: ['SEARCHCONSOLE_CLIENT_SECRET', 'YOUTUBE_CLIENT_SECRET', 'GOOGLE_CLIENT_SECRET'],
+  },
+  googleanalytics: {
+    clientIdVars: ['GOOGLEANALYTICS_CLIENT_ID', 'YOUTUBE_CLIENT_ID', 'GOOGLE_CLIENT_ID'],
+    clientSecretVars: ['GOOGLEANALYTICS_CLIENT_SECRET', 'YOUTUBE_CLIENT_SECRET', 'GOOGLE_CLIENT_SECRET'],
+  },
 };
 
 /**
