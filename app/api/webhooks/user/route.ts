@@ -462,7 +462,7 @@ export async function DELETE(request: NextRequest) {
 /**
  * Trigger webhooks for an event - queries subscriptions and broadcasts
  */
-export async function triggerWebhooks(
+async function triggerWebhooks(
   userId: string,
   event: WebhookEventType,
   payload: Record<string, unknown>
@@ -528,10 +528,7 @@ export async function triggerWebhooks(
   }
 }
 
-/**
- * Legacy export for backward compatibility
- */
-export async function deliverWebhook(
+async function deliverWebhook(
   webhookId: string,
   url: string,
   event: string,

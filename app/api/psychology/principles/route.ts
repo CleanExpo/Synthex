@@ -170,7 +170,7 @@ export async function POST(request: NextRequest) {
  * GET /api/psychology/principles/[id]
  * Get detailed info for a specific principle
  */
-export async function getPrincipleById(principleId: string) {
+async function getPrincipleById(principleId: string) {
   const principles = await psychologyAnalyzer.getPrinciples();
   return principles.find(p => p.id === principleId) || null;
 }

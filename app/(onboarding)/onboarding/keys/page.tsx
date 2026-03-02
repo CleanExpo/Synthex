@@ -30,7 +30,7 @@ import { cn } from '@/lib/utils';
 // STEP DEFINITION
 // ============================================================================
 
-export const ONBOARDING_STEPS_V2 = [
+const ONBOARDING_STEPS_V2 = [
   { id: 1, name: 'API Keys' },
   { id: 2, name: 'Website Audit' },
   { id: 3, name: 'Your Goals' },
