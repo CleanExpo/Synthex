@@ -91,8 +91,8 @@ const oauthConfig: Record<string, {
   googleanalytics: {
     authUrl: 'https://accounts.google.com/o/oauth2/v2/auth',
     tokenUrl: 'https://oauth2.googleapis.com/token',
-    userInfoUrl: 'https://analyticsdata.googleapis.com/v1beta/properties',
-    scope: 'https://www.googleapis.com/auth/analytics.readonly',
+    userInfoUrl: 'https://www.googleapis.com/oauth2/v2/userinfo',
+    scope: 'https://www.googleapis.com/auth/analytics.readonly profile email',
     accessType: 'offline',
     prompt: 'consent',
   },

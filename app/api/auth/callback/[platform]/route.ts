@@ -103,7 +103,8 @@ const oauthConfigs: Record<string, OAuthConfig> = {
   },
   googleanalytics: {
     tokenUrl: 'https://oauth2.googleapis.com/token',
-    userInfoUrl: 'https://analyticsdata.googleapis.com/v1beta/properties',
+    // Standard userinfo — GA4 property data is fetched on demand using stored tokens
+    userInfoUrl: 'https://www.googleapis.com/oauth2/v2/userinfo',
   },
 };
 
@@ -451,13 +452,13 @@ async function fetchUserInfo(
       };
     }
     case 'googleanalytics': {
-      // Returns list of GA4 properties
-      const properties = data.properties || [];
-      const firstProp = properties[0];
+      // Standard Google userinfo — GA4 property data is fetched on demand using stored tokens
       return {
-        id: firstProp?.name || 'google-analytics',
-        name: firstProp?.displayName || 'Google Analytics',
-        username: firstProp?.name,
+        id: data.id || data.sub || 'google-analytics',
+        name: data.name || data.email || 'Google Analytics',
+        email: data.email,
+        avatar: data.picture,
+        username: data.email,
       };
     }
     default:
