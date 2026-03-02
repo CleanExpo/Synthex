@@ -187,17 +187,15 @@ None.
 Last session: 2026-03-02
 Stopped at: Phase 54 complete (198 contract tests passing, 11 suites)
 Resume file: .planning/phases/54-api-contract-verification/54-02-SUMMARY.md
-Next action: Execute 55-02-PLAN.md — inline state audit 13 pages (Linear: create UNI issue for Phase 55-02)
+Next action: Execute 55-02-PLAN.md — inline state audit 13 pages (Linear: UNI-1227)
 Linear: UNI-648 tracks E2E stabilisation progress
 
 ## Linear Issues — v1.5 Phase 55-58 Tracking
 
 | Issue | Title | Phase | Status |
 |-------|-------|-------|--------|
-| TBC | Fix /dashboard/competitors crash (r.filter) | 55-BUG-01 | Todo |
-| TBC | Phase 55-02: Inline state audit — 13 pages | 55-02 | Todo |
-| TBC | Phase 56: Responsive design audit + WCAG 2.1 AA | 56 | Todo |
-| TBC | Phase 57: Bundle analysis and Prisma optimisation | 57 | Todo |
-| TBC | Phase 58: Core Web Vitals compliance | 58 | Todo |
-
-*Linear MCP OAuth not active in this session — issues to be created on next Linear-authenticated session.*
+| UNI-1226 | Fix /dashboard/competitors crash (r.filter) | 55-BUG-01 | Todo |
+| UNI-1227 | Phase 55-02: Inline state audit — 13 pages | 55-02 | Todo |
+| UNI-1228 | Phase 56: Responsive design audit + WCAG 2.1 AA | 56 | Todo |
+| UNI-1229 | Phase 57: Bundle analysis and Prisma optimisation | 57 | Todo |
+| UNI-1230 | Phase 58: Core Web Vitals compliance | 58 | Todo |
