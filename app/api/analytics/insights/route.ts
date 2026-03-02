@@ -184,36 +184,40 @@ export async function GET(request: NextRequest) {
       percentage: totalPosts > 0 ? ((p._count.id / totalPosts) * 100).toFixed(1) : 0
     }));
 
-    // Generate daily trends
+    // Generate daily trends — build all day ranges, then count in parallel (avoids N+1)
     const daysDiff = Math.ceil((now.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
-    const trends = [];
+    const dayCount = Math.min(daysDiff, 30);
 
-    for (let i = 0; i < Math.min(daysDiff, 30); i++) {
+    const dayRanges = Array.from({ length: dayCount }, (_, i) => {
       const dayStart = new Date(now);
       dayStart.setDate(now.getDate() - i);
       dayStart.setHours(0, 0, 0, 0);
-
       const dayEnd = new Date(dayStart);
       dayEnd.setHours(23, 59, 59, 999);
+      return { dayStart, dayEnd };
+    });
 
-      const dayPosts = await prisma.post.count({
-        where: {
-          ...postWhereClause,
-          createdAt: { gte: dayStart, lte: dayEnd }
-        }
-      });
+    const dayCounts = await Promise.all(
+      dayRanges.map(({ dayStart, dayEnd }) =>
+        prisma.post.count({
+          where: { ...postWhereClause, createdAt: { gte: dayStart, lte: dayEnd } },
+        })
+      )
+    );
 
-      const dayEvents = analyticsEvents.filter(e => {
-        const eventDate = new Date(e.timestamp);
-        return eventDate >= dayStart && eventDate <= dayEnd;
-      });
-
-      trends.unshift({
-        date: dayStart.toISOString().split('T')[0],
-        posts: dayPosts,
-        engagements: dayEvents.length
-      });
-    }
+    const trends = dayRanges
+      .map(({ dayStart, dayEnd }, i) => {
+        const dayEvents = analyticsEvents.filter(e => {
+          const eventDate = new Date(e.timestamp);
+          return eventDate >= dayStart && eventDate <= dayEnd;
+        });
+        return {
+          date: dayStart.toISOString().split('T')[0],
+          posts: dayCounts[i],
+          engagements: dayEvents.length,
+        };
+      })
+      .reverse(); // reverse to chronological order (oldest first)
 
     return APISecurityChecker.createSecureResponse(
       {
