@@ -96,6 +96,15 @@ const oauthConfig: Record<string, {
     accessType: 'offline',
     prompt: 'consent',
   },
+  // Google Drive — full access so clients can store all their content
+  googledrive: {
+    authUrl: 'https://accounts.google.com/o/oauth2/v2/auth',
+    tokenUrl: 'https://oauth2.googleapis.com/token',
+    userInfoUrl: 'https://www.googleapis.com/oauth2/v2/userinfo',
+    scope: 'https://www.googleapis.com/auth/drive profile email',
+    accessType: 'offline',
+    prompt: 'consent',
+  },
 };
 
 /**

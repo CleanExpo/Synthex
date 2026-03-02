@@ -33,6 +33,7 @@ import {
   Zap,
   Search,
   BarChart2,
+  HardDrive,
 } from '@/components/icons';
 import { toast } from 'sonner';
 
@@ -138,7 +139,7 @@ const DEFAULT_INTEGRATIONS: Integration[] = [
   },
 ];
 
-// Analytics & SEO integrations (Google OAuth, read-only data access)
+// Analytics, SEO & Storage integrations (Google OAuth)
 const DEFAULT_ANALYTICS_INTEGRATIONS: Integration[] = [
   {
     id: 'searchconsole',
@@ -157,6 +158,15 @@ const DEFAULT_ANALYTICS_INTEGRATIONS: Integration[] = [
     connected: false,
     color: 'text-orange-400',
     permissions: ['Read analytics data', 'View conversions', 'Audience insights'],
+  },
+  {
+    id: 'googledrive',
+    name: 'Google Drive',
+    description: 'Store and manage all content, media, and reports in your own Google Drive using QMD format',
+    icon: HardDrive,
+    connected: false,
+    color: 'text-blue-300',
+    permissions: ['Store content & media', 'Organise with QMD taxonomy', 'AI-managed file structure'],
   },
 ];
 
@@ -441,9 +451,9 @@ export default function IntegrationsPage() {
       {/* Analytics & SEO Section */}
       <div className="border-t border-white/10 mt-10 pt-10">
         <div className="mb-6">
-          <h2 className="text-2xl font-bold text-white mb-1">Analytics & SEO</h2>
+          <h2 className="text-2xl font-bold text-white mb-1">Analytics, SEO & Storage</h2>
           <p className="text-gray-400">
-            Connect Google tools to track search performance and web analytics
+            Connect Google tools to track performance, analytics, and store all your content in Drive
           </p>
         </div>
 

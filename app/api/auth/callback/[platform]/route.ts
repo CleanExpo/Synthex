@@ -102,6 +102,10 @@ const oauthConfigs: Record<string, OAuthConfig> = {
     // Standard userinfo — Search Console site data is fetched on demand using stored tokens
     userInfoUrl: 'https://www.googleapis.com/oauth2/v2/userinfo',
   },
+  googledrive: {
+    tokenUrl: 'https://oauth2.googleapis.com/token',
+    userInfoUrl: 'https://www.googleapis.com/oauth2/v2/userinfo',
+  },
   googleanalytics: {
     tokenUrl: 'https://oauth2.googleapis.com/token',
     // Standard userinfo — GA4 property data is fetched on demand using stored tokens
@@ -462,6 +466,15 @@ async function fetchUserInfo(
       return {
         id: data.id || data.sub || 'google-analytics',
         name: data.name || data.email || 'Google Analytics',
+        email: data.email,
+        avatar: data.picture,
+        username: data.email,
+      };
+    }
+    case 'googledrive': {
+      return {
+        id: data.id || data.sub || 'google-drive',
+        name: data.name || data.email || 'Google Drive',
         email: data.email,
         avatar: data.picture,
         username: data.email,

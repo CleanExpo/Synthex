@@ -93,6 +93,11 @@ const ENV_VAR_MAP: Record<string, { clientIdVars: string[]; clientSecretVars: st
     clientIdVars: ['GOOGLEANALYTICS_CLIENT_ID', 'YOUTUBE_CLIENT_ID', 'GOOGLE_CLIENT_ID'],
     clientSecretVars: ['GOOGLEANALYTICS_CLIENT_SECRET', 'YOUTUBE_CLIENT_SECRET', 'GOOGLE_CLIENT_SECRET'],
   },
+  // Google Drive uses the same GCP OAuth client as YouTube
+  googledrive: {
+    clientIdVars: ['GOOGLEDRIVE_CLIENT_ID', 'YOUTUBE_CLIENT_ID', 'GOOGLE_CLIENT_ID'],
+    clientSecretVars: ['GOOGLEDRIVE_CLIENT_SECRET', 'YOUTUBE_CLIENT_SECRET', 'GOOGLE_CLIENT_SECRET'],
+  },
 };
 
 /**

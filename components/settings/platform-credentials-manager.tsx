@@ -25,6 +25,7 @@ import {
   Globe,
   Search,
   BarChart2,
+  HardDrive,
 } from '@/components/icons';
 import {
   Twitter,
@@ -163,6 +164,15 @@ const PLATFORMS: PlatformConfig[] = [
     Icon: BarChart2 as PlatformConfig['Icon'],
     color: 'text-orange-400',
     bgColor: 'bg-orange-500/20',
+    devPortalUrl: 'https://console.cloud.google.com/apis/credentials',
+    devPortalLabel: 'Google Cloud Console (same OAuth client as YouTube)',
+  },
+  {
+    id: 'googledrive',
+    name: 'Google Drive',
+    Icon: HardDrive as PlatformConfig['Icon'],
+    color: 'text-blue-300',
+    bgColor: 'bg-blue-400/20',
     devPortalUrl: 'https://console.cloud.google.com/apis/credentials',
     devPortalLabel: 'Google Cloud Console (same OAuth client as YouTube)',
   },
