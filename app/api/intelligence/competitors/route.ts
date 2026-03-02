@@ -341,7 +341,7 @@ export async function DELETE(request: NextRequest) {
   const { searchParams } = new URL(request.url);
 
   try {
-    const competitorId = searchParams.get('id');
+    const competitorId = searchParams.get('competitorId') || searchParams.get('id');
 
     if (!competitorId) {
       return APISecurityChecker.createSecureResponse(
