@@ -270,6 +270,11 @@ async function exchangeCodeForToken(
       redirect_uri: redirectUri,
     };
 
+    // Reddit requires User-Agent on ALL requests including token exchange
+    if (platform === 'reddit') {
+      headers['User-Agent'] = 'web:Synthex:1.0 (by /u/synthex)';
+    }
+
     // Basic auth: credentials go in Authorization header, not body
     if (config.useBasicAuth) {
       const basicAuth = Buffer.from(`${credentials.clientId}:${credentials.clientSecret}`).toString('base64');
