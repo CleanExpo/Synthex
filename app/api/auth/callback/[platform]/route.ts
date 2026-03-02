@@ -97,6 +97,14 @@ const oauthConfigs: Record<string, OAuthConfig> = {
     tokenUrl: 'https://graph.threads.net/oauth/access_token',
     userInfoUrl: 'https://graph.threads.net/v1.0/me?fields=id,username,name,threads_profile_picture_url',
   },
+  searchconsole: {
+    tokenUrl: 'https://oauth2.googleapis.com/token',
+    userInfoUrl: 'https://www.googleapis.com/webmasters/v3/sites',
+  },
+  googleanalytics: {
+    tokenUrl: 'https://oauth2.googleapis.com/token',
+    userInfoUrl: 'https://analyticsdata.googleapis.com/v1beta/properties',
+  },
 };
 
 // =============================================================================
@@ -147,11 +155,19 @@ function buildPostMessageHtml(
     }
   }
 
+  const safeType = escapeForJs(type);
+  const successRedirect = `/dashboard/integrations?oauth_success=1&platform=${safePlatform}`;
+  const errorRedirect = `/dashboard/integrations?oauth_error=1&platform=${safePlatform}`;
+  const redirectUrl = type === 'oauth-success' ? successRedirect : errorRedirect;
+
   return `<!DOCTYPE html><html><body><script>
 if (window.opener) {
   window.opener.postMessage({ ${payloadParts.join(', ')} }, window.location.origin);
+  window.close();
+} else {
+  // Direct navigation (no popup) — redirect back to integrations
+  window.location.href = '${escapeForJs(redirectUrl)}';
 }
-window.close();
 </script><p>${safeText}</p></body></html>`;
 }
 
@@ -424,6 +440,26 @@ async function fetchUserInfo(
         avatar: data.threads_profile_picture_url,
         username: data.username,
       };
+    case 'searchconsole': {
+      // Returns list of sites — use first verified site as identifier
+      const sites = data.siteEntry || [];
+      const firstSite = sites[0];
+      return {
+        id: firstSite?.siteUrl || 'search-console',
+        name: firstSite?.siteUrl || 'Google Search Console',
+        username: firstSite?.siteUrl,
+      };
+    }
+    case 'googleanalytics': {
+      // Returns list of GA4 properties
+      const properties = data.properties || [];
+      const firstProp = properties[0];
+      return {
+        id: firstProp?.name || 'google-analytics',
+        name: firstProp?.displayName || 'Google Analytics',
+        username: firstProp?.name,
+      };
+    }
     default:
       return {
         id: data.id || data.sub || 'unknown',

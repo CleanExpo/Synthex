@@ -23,6 +23,8 @@ import {
   Copy,
   Trash2,
   Globe,
+  Search,
+  BarChart2,
 } from '@/components/icons';
 import {
   Twitter,
@@ -145,6 +147,24 @@ const PLATFORMS: PlatformConfig[] = [
     bgColor: 'bg-slate-400/20',
     devPortalUrl: 'https://developers.facebook.com',
     devPortalLabel: 'Meta Developers (same as Instagram)',
+  },
+  {
+    id: 'searchconsole',
+    name: 'Google Search Console',
+    Icon: Search as PlatformConfig['Icon'],
+    color: 'text-green-400',
+    bgColor: 'bg-green-500/20',
+    devPortalUrl: 'https://console.cloud.google.com/apis/credentials',
+    devPortalLabel: 'Google Cloud Console (same OAuth client as YouTube)',
+  },
+  {
+    id: 'googleanalytics',
+    name: 'Google Analytics (GA4)',
+    Icon: BarChart2 as PlatformConfig['Icon'],
+    color: 'text-orange-400',
+    bgColor: 'bg-orange-500/20',
+    devPortalUrl: 'https://console.cloud.google.com/apis/credentials',
+    devPortalLabel: 'Google Cloud Console (same OAuth client as YouTube)',
   },
 ];
 

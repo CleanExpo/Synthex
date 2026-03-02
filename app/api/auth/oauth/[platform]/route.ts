@@ -79,6 +79,23 @@ const oauthConfig: Record<string, {
     userInfoUrl: 'https://graph.threads.net/v1.0/me',
     scope: 'threads_basic,threads_content_publish,threads_read_replies',
   },
+  // Google Analytics & Search integrations (use same GCP OAuth client as YouTube)
+  searchconsole: {
+    authUrl: 'https://accounts.google.com/o/oauth2/v2/auth',
+    tokenUrl: 'https://oauth2.googleapis.com/token',
+    userInfoUrl: 'https://www.googleapis.com/webmasters/v3/sites',
+    scope: 'https://www.googleapis.com/auth/webmasters.readonly',
+    accessType: 'offline',
+    prompt: 'consent',
+  },
+  googleanalytics: {
+    authUrl: 'https://accounts.google.com/o/oauth2/v2/auth',
+    tokenUrl: 'https://oauth2.googleapis.com/token',
+    userInfoUrl: 'https://analyticsdata.googleapis.com/v1beta/properties',
+    scope: 'https://www.googleapis.com/auth/analytics.readonly',
+    accessType: 'offline',
+    prompt: 'consent',
+  },
 };
 
 /**

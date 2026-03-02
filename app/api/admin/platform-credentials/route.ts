@@ -73,6 +73,7 @@ async function requireOwner(request: NextRequest): Promise<
 const VALID_PLATFORMS = [
   'twitter', 'linkedin', 'instagram', 'facebook', 'tiktok',
   'youtube', 'pinterest', 'reddit', 'threads',
+  'searchconsole', 'googleanalytics',
 ] as const;
 
 const UpsertCredentialSchema = z.object({

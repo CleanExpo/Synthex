@@ -30,7 +30,9 @@ import {
   Loader2,
   Palette,
   Clock,
-  Zap
+  Zap,
+  Search,
+  BarChart2,
 } from '@/components/icons';
 import { toast } from 'sonner';
 
@@ -136,6 +138,28 @@ const DEFAULT_INTEGRATIONS: Integration[] = [
   },
 ];
 
+// Analytics & SEO integrations (Google OAuth, read-only data access)
+const DEFAULT_ANALYTICS_INTEGRATIONS: Integration[] = [
+  {
+    id: 'searchconsole',
+    name: 'Google Search Console',
+    description: 'Track search performance, queries, impressions, and ranking data',
+    icon: Search,
+    connected: false,
+    color: 'text-green-400',
+    permissions: ['Read search queries', 'View impressions & clicks', 'Monitor rankings'],
+  },
+  {
+    id: 'googleanalytics',
+    name: 'Google Analytics (GA4)',
+    description: 'Web analytics: sessions, users, conversions, and campaign attribution',
+    icon: BarChart2,
+    connected: false,
+    color: 'text-orange-400',
+    permissions: ['Read analytics data', 'View conversions', 'Audience insights'],
+  },
+];
+
 export default function IntegrationsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [connectingId, setConnectingId] = useState<string | null>(null);
@@ -153,6 +177,7 @@ export default function IntegrationsPage() {
   const [thirdPartyActionLoading, setThirdPartyActionLoading] = useState<ThirdPartyProvider | null>(null);
 
   const [integrations, setIntegrations] = useState<Integration[]>(DEFAULT_INTEGRATIONS);
+  const [analyticsIntegrations, setAnalyticsIntegrations] = useState<Integration[]>(DEFAULT_ANALYTICS_INTEGRATIONS);
 
   // Load actual connection status on mount
   const loadConnectionStatus = useCallback(async () => {
@@ -162,6 +187,13 @@ export default function IntegrationsPage() {
       const details = data.details || {};
 
       setIntegrations(prev =>
+        prev.map(integration => ({
+          ...integration,
+          connected: !!connected[integration.id],
+          accountName: details[integration.id]?.profileName || undefined,
+        }))
+      );
+      setAnalyticsIntegrations(prev =>
         prev.map(integration => ({
           ...integration,
           connected: !!connected[integration.id],
@@ -198,14 +230,18 @@ export default function IntegrationsPage() {
     setConnectingId(id);
     try {
       await integrationsAPI.disconnectPlatform(id);
+      const disconnected = { connected: false as const, accountName: undefined };
       setIntegrations(prev =>
-        prev.map(integration =>
-          integration.id === id
-            ? { ...integration, connected: false, accountName: undefined }
-            : integration
-        )
+        prev.map(i => i.id === id ? { ...i, ...disconnected } : i)
       );
-      toast.success(`${integrations.find(i => i.id === id)?.name} disconnected`);
+      setAnalyticsIntegrations(prev =>
+        prev.map(i => i.id === id ? { ...i, ...disconnected } : i)
+      );
+      const name =
+        integrations.find(i => i.id === id)?.name ||
+        analyticsIntegrations.find(i => i.id === id)?.name ||
+        id;
+      toast.success(`${name} disconnected`);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Failed to disconnect. Please try again.');
     } finally {
@@ -372,6 +408,116 @@ export default function IntegrationsPage() {
             </Card>
           );
         })}
+      </div>
+
+      {/* Analytics & SEO Section */}
+      <div className="border-t border-white/10 mt-10 pt-10">
+        <div className="mb-6">
+          <h2 className="text-2xl font-bold text-white mb-1">Analytics & SEO</h2>
+          <p className="text-gray-400">
+            Connect Google tools to track search performance and web analytics
+          </p>
+        </div>
+
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {analyticsIntegrations.map((integration) => {
+            const Icon = integration.icon;
+            const isConnecting = connectingId === integration.id;
+
+            return (
+              <Card key={integration.id} variant="glass">
+                <CardHeader>
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className={`p-2 rounded-lg bg-gray-800/50 ${integration.color}`}>
+                        <Icon className="w-6 h-6" />
+                      </div>
+                      <div>
+                        <CardTitle className="text-lg">{integration.name}</CardTitle>
+                        {integration.connected && integration.accountName && (
+                          <p className="text-sm text-gray-400 mt-1">{integration.accountName}</p>
+                        )}
+                      </div>
+                    </div>
+                    <Badge variant={integration.connected ? "default" : "secondary"}>
+                      {integration.connected ? "Connected" : "Not connected"}
+                    </Badge>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <CardDescription>{integration.description}</CardDescription>
+
+                  {integration.permissions && (
+                    <div className="space-y-1">
+                      <p className="text-xs font-medium text-gray-400 mb-2">Permissions:</p>
+                      <div className="flex flex-wrap gap-1">
+                        {integration.permissions.map((permission) => (
+                          <Badge key={permission} variant="outline" className="text-xs">
+                            {permission}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="flex gap-2">
+                    {integration.connected ? (
+                      <>
+                        <Button
+                          onClick={() => handleRefresh(integration.id)}
+                          disabled={isConnecting}
+                          variant="outline"
+                          size="sm"
+                          className="flex-1"
+                        >
+                          {isConnecting ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                          ) : (
+                            <RefreshCw className="w-4 h-4" />
+                          )}
+                          Refresh
+                        </Button>
+                        <Button
+                          onClick={() => handleDisconnect(integration.id)}
+                          disabled={isConnecting}
+                          variant="destructive"
+                          size="sm"
+                          className="flex-1"
+                        >
+                          {isConnecting ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                          ) : (
+                            <Unlink className="w-4 h-4" />
+                          )}
+                          Disconnect
+                        </Button>
+                      </>
+                    ) : (
+                      <Button
+                        onClick={() => handleConnect(integration.id)}
+                        disabled={isConnecting}
+                        className="w-full gradient-primary text-white"
+                        size="sm"
+                      >
+                        {isConnecting ? (
+                          <>
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            Connecting...
+                          </>
+                        ) : (
+                          <>
+                            <Link2 className="w-4 h-4 mr-2" />
+                            Connect
+                          </>
+                        )}
+                      </Button>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
       </div>
 
       {/* Third-Party Tools Section */}
