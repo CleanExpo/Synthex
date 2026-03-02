@@ -10,12 +10,12 @@ See: .planning/PROJECT.md (updated 2026-02-17)
 ## Current Position
 
 Milestone: v1.5 Deployment Readiness (Phases 52-58)
-Phase: 55 of 58 (UI Audit - States)
-Plan: 1 of 2 in current phase
-Status: In progress
-Last activity: 2026-03-03 — Project management update: CLAUDE.md/PROJECT.md/MEMORY.md patched, 5 Linear issues pending creation (phases 55-58)
+Phase: 58 of 58 (Performance - Core Web Vitals) — COMPLETE
+Plan: 1 of 1 complete
+Status: MILESTONE COMPLETE
+Last activity: 2026-03-03 — v1.5 Deployment Readiness COMPLETE: all 7 phases done, 8 cron jobs verified, CWV config clean, 1482 tests passing
 
-Progress: █████░░░░░ 57% (4/7 phases complete)
+Progress: ██████████ 100% (7/7 phases complete)
 
 ## Performance Metrics
 
@@ -187,7 +187,7 @@ None.
 Last session: 2026-03-02
 Stopped at: Phase 54 complete (198 contract tests passing, 11 suites)
 Resume file: .planning/phases/54-api-contract-verification/54-02-SUMMARY.md
-Next action: Execute 55-02-PLAN.md — inline state audit 13 pages (Linear: UNI-1227)
+Next action: Start v2.0 milestone planning — /gsd:new-milestone
 Linear: UNI-648 tracks E2E stabilisation progress
 
 ## Linear Issues — v1.5 Phase 55-58 Tracking
