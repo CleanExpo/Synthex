@@ -15,7 +15,7 @@ export function FeaturesSection() {
     <section className="relative py-32 z-10">
       <div className="container mx-auto px-6">
         {/* Section Header */}
-        <div className="text-center mb-20">
+        <div data-features-header className="text-center mb-20">
           <span className="inline-block px-4 py-2 bg-cyan-500/10 border border-cyan-500/20 rounded-full text-cyan-400 text-sm font-medium mb-6">
             Powered by AI
           </span>
@@ -32,6 +32,7 @@ export function FeaturesSection() {
           {FEATURES.map((feature, i) => (
             <div
               key={i}
+              data-feature-card
               className="group p-8 bg-gradient-to-b from-white/5 to-transparent border border-white/10 rounded-2xl hover:border-cyan-500/30 transition-all duration-300 hover:shadow-lg hover:shadow-cyan-500/10"
             >
               <div className="w-12 h-12 bg-cyan-500/10 rounded-xl flex items-center justify-center mb-6 group-hover:bg-cyan-500/20 transition-colors">

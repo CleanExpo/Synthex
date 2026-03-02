@@ -54,6 +54,7 @@ function StepCard({ step, index, isActive }: { step: typeof steps[0]; index: num
 
   return (
     <div
+      data-step-card
       className={`relative group transition-all duration-500 ${
         isActive ? 'scale-100 opacity-100' : 'scale-95 opacity-60'
       }`}
@@ -161,7 +162,7 @@ export function HowItWorks() {
 
       <div className="container mx-auto relative">
         {/* Header */}
-        <div className="text-center mb-16">
+        <div data-how-header className="text-center mb-16">
           <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/[0.05] border border-white/[0.08] text-sm font-medium text-cyan-300 mb-6">
             <Zap className="w-4 h-4" />
             Simple 4-Step Process

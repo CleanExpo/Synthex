@@ -21,7 +21,7 @@ export function HeroSection() {
                 <div className="absolute inset-0 bg-gradient-to-t from-cyan-500/30 via-cyan-400/10 to-transparent rounded-3xl blur-3xl scale-110" />
 
                 {/* Main Hero Image */}
-                <div className="relative z-10 rounded-2xl overflow-hidden shadow-2xl shadow-cyan-500/20">
+                <div data-hero-image className="relative z-10 rounded-2xl overflow-hidden shadow-2xl shadow-cyan-500/20">
                   <Image
                     src="/images/hero-robot.png"
                     alt="AI Marketing Automation Robot"
@@ -43,13 +43,13 @@ export function HeroSection() {
           <div className="order-1 lg:order-2 text-center lg:text-left">
             {/* Pill-style Headlines */}
             <div className="flex flex-col items-center lg:items-start gap-4 mb-8">
-              <div className="inline-flex">
-                <span className="px-8 py-5 bg-white text-[#0a1628] text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-black uppercase rounded-2xl tracking-tight shadow-2xl shadow-white/10">
+              <div className="inline-flex overflow-hidden">
+                <span data-hero-pill className="px-8 py-5 bg-white text-[#0a1628] text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-black uppercase rounded-2xl tracking-tight shadow-2xl shadow-white/10">
                   AI Marketing
                 </span>
               </div>
-              <div className="inline-flex">
-                <span className="px-8 py-5 bg-gradient-to-r from-cyan-500 to-cyan-400 text-[#0a1628] text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-black uppercase rounded-2xl tracking-tight shadow-2xl shadow-cyan-500/30">
+              <div className="inline-flex overflow-hidden">
+                <span data-hero-pill className="px-8 py-5 bg-gradient-to-r from-cyan-500 to-cyan-400 text-[#0a1628] text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-black uppercase rounded-2xl tracking-tight shadow-2xl shadow-cyan-500/30">
                   Agency
                 </span>
               </div>
@@ -57,25 +57,25 @@ export function HeroSection() {
 
             {/* Brand Domain */}
             <div className="mb-8">
-              <span className="text-2xl sm:text-3xl font-light tracking-wide text-cyan-400">
+              <span data-hero-content className="text-2xl sm:text-3xl font-light tracking-wide text-cyan-400">
                 synthex.social
               </span>
             </div>
 
             {/* Tagline */}
-            <p className="text-lg sm:text-xl text-gray-400 mb-6 max-w-lg mx-auto lg:mx-0 leading-relaxed">
+            <p data-hero-content className="text-lg sm:text-xl text-gray-400 mb-6 max-w-lg mx-auto lg:mx-0 leading-relaxed">
               The world's first <span className="text-white font-medium">fully autonomous AI marketing agency</span>.
               Powered by advanced AI that creates, optimizes, and scales your social media presence 24/7.
             </p>
 
             {/* Key Differentiator */}
-            <div className="mb-10 p-4 bg-gradient-to-r from-cyan-500/10 to-transparent border-l-2 border-cyan-400 rounded-r-lg max-w-lg mx-auto lg:mx-0">
+            <div data-hero-content className="mb-10 p-4 bg-gradient-to-r from-cyan-500/10 to-transparent border-l-2 border-cyan-400 rounded-r-lg max-w-lg mx-auto lg:mx-0">
               <p className="text-white font-medium mb-1">From just $249/month</p>
               <p className="text-gray-400 text-sm">Use your own API keys to dramatically reduce costs. Custom enterprise rates available.</p>
             </div>
 
             {/* CTA Buttons */}
-            <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start mb-10">
+            <div data-hero-content className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start mb-10">
               <Link href="/signup">
                 <Button
                   size="lg"
@@ -97,7 +97,7 @@ export function HeroSection() {
             </div>
 
             {/* Trust Indicators */}
-            <div className="flex flex-wrap gap-6 justify-center lg:justify-start text-sm text-gray-500">
+            <div data-hero-content className="flex flex-wrap gap-6 justify-center lg:justify-start text-sm text-gray-500">
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4 text-cyan-500" />
                 <span>Use your own API keys</span>

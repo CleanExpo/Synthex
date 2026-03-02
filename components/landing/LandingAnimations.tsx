@@ -94,7 +94,9 @@ export function LandingAnimations() {
         statNumbers.forEach((el) => {
           const target = parseFloat(el.getAttribute('data-value') ?? el.textContent ?? '0');
           const isDecimal = target % 1 !== 0;
-          gsap.from(
+          const proxy = { value: 0 };
+          gsap.fromTo(
+            proxy,
             { value: 0 },
             {
               scrollTrigger: {
@@ -105,10 +107,10 @@ export function LandingAnimations() {
               value: target,
               duration: 1.8,
               ease: 'power2.out',
-              onUpdate: function () {
+              onUpdate() {
                 el.textContent = isDecimal
-                  ? this.targets()[0].value.toFixed(1)
-                  : Math.round(this.targets()[0].value).toString();
+                  ? proxy.value.toFixed(1)
+                  : Math.round(proxy.value).toString();
               },
             }
           );
