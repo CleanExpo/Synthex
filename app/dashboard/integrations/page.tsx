@@ -211,6 +211,34 @@ export default function IntegrationsPage() {
     loadConnectionStatus();
   }, [loadConnectionStatus]);
 
+  // Handle full-page redirect OAuth results (e.g. Reddit)
+  // The callback's no-opener fallback sends ?oauth_success=1&platform=...
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const oauthSuccess = params.get('oauth_success');
+    const oauthError = params.get('oauth_error');
+    const platform = params.get('platform');
+
+    if (!platform) return;
+
+    // Clean the URL immediately regardless of outcome
+    const url = new URL(window.location.href);
+    url.searchParams.delete('oauth_success');
+    url.searchParams.delete('oauth_error');
+    url.searchParams.delete('platform');
+    window.history.replaceState({}, '', url.toString());
+
+    const allIntegrations = [...DEFAULT_INTEGRATIONS, ...DEFAULT_ANALYTICS_INTEGRATIONS];
+    const name = allIntegrations.find(i => i.id === platform)?.name || platform;
+
+    if (oauthSuccess === '1') {
+      toast.success(`Connected to ${name} successfully!`);
+      loadConnectionStatus();
+    } else if (oauthError === '1') {
+      toast.error(`Connection to ${name} was cancelled or failed.`);
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   // OAuth popup connect flow (proper OAuth via /api/auth/oauth/[platform])
   const handleConnect = async (id: string) => {
     setConnectingId(id);

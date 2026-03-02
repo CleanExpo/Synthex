@@ -152,6 +152,15 @@ export const integrationsAPI = {
 
     const data = await response.json();
 
+    // Platforms that need full-page redirect instead of popup
+    // (Reddit's OAuth page blocks popup navigation in some browsers/environments)
+    const REDIRECT_PLATFORMS = new Set(['reddit']);
+    if (REDIRECT_PLATFORMS.has(platform)) {
+      window.location.href = data.authorizationUrl;
+      // Page navigates away — promise intentionally never resolves
+      return new Promise<{ success: boolean; platform: string }>(() => {});
+    }
+
     // Open OAuth window
     const width = 600;
     const height = 700;
