@@ -7,9 +7,20 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+} from '@/components/ui/sheet';
+import { Badge } from '@/components/ui/badge';
 import { SEOFeatureGate } from '@/components/seo';
 import { useToast } from '@/hooks/use-toast';
 import {
@@ -21,6 +32,10 @@ import {
   Clock,
   RefreshCw,
   Download,
+  Sparkles,
+  Copy,
+  Check,
+  Calendar,
 } from '@/components/icons';
 
 import {
@@ -30,12 +45,154 @@ import {
   IssueCategory,
   IssueSummary,
 } from '@/components/seo/audit';
+import type { AuditResult as AuditResultType, AuditIssue } from '@/components/seo/audit/types';
+
+const SEVERITY_ORDER: Record<string, number> = {
+  critical: 0,
+  major: 1,
+  minor: 2,
+  info: 3,
+};
+
+function sortIssuesBySeverity(issues: AuditIssue[]): AuditIssue[] {
+  return [...issues].sort(
+    (a, b) =>
+      (SEVERITY_ORDER[a.severity] ?? 99) - (SEVERITY_ORDER[b.severity] ?? 99)
+  );
+}
+
+function exportAuditPDF(result: AuditResultType) {
+  const doc = new jsPDF();
+  const today = new Date().toLocaleDateString('en-AU');
+
+  // --- Page 1: Summary ---
+  doc.setFontSize(20);
+  doc.setTextColor(6, 182, 212); // cyan-500
+  doc.text('SEO Audit Report', 14, 20);
+
+  doc.setFontSize(11);
+  doc.setTextColor(60, 60, 60);
+  doc.text(`Domain: ${result.domain}`, 14, 32);
+  doc.text(`Audited: ${new Date(result.timestamp).toLocaleString('en-AU')}`, 14, 39);
+  doc.text(`Crawled pages: ${result.crawledPages}`, 14, 46);
+
+  // Score
+  doc.setFontSize(28);
+  doc.setTextColor(
+    result.score >= 80 ? 34 : result.score >= 60 ? 245 : 239,
+    result.score >= 80 ? 197 : result.score >= 60 ? 158 : 68,
+    result.score >= 80 ? 94 : result.score >= 60 ? 11 : 68
+  );
+  doc.text(`${result.score}`, 14, 65);
+  doc.setFontSize(11);
+  doc.setTextColor(100, 100, 100);
+  doc.text('/ 100 SEO Health Score', 32, 65);
+
+  // Issue summary table
+  autoTable(doc, {
+    startY: 75,
+    head: [['Severity', 'Count']],
+    body: [
+      ['Critical', String(result.issues.critical)],
+      ['Major', String(result.issues.major)],
+      ['Minor', String(result.issues.minor)],
+      ['Info', String(result.issues.info)],
+    ],
+    theme: 'grid',
+    headStyles: { fillColor: [6, 182, 212], textColor: 255 },
+    columnStyles: { 0: { cellWidth: 80 }, 1: { cellWidth: 40 } },
+    margin: { left: 14 },
+  });
+
+  // Core Web Vitals if available
+  if (result.categories.coreWebVitals) {
+    const cwv = result.categories.coreWebVitals;
+    const lastY = (doc as jsPDF & { lastAutoTable: { finalY: number } }).lastAutoTable?.finalY ?? 130;
+
+    doc.setFontSize(13);
+    doc.setTextColor(40, 40, 40);
+    doc.text('Core Web Vitals', 14, lastY + 12);
+
+    autoTable(doc, {
+      startY: lastY + 16,
+      head: [['Metric', 'Value', 'Rating']],
+      body: [
+        ['LCP (Largest Contentful Paint)', `${cwv.lcp.value}s`, cwv.lcp.rating],
+        ['FID (First Input Delay)', `${cwv.fid.value}ms`, cwv.fid.rating],
+        ['CLS (Cumulative Layout Shift)', String(cwv.cls.value), cwv.cls.rating],
+        ['INP (Interaction to Next Paint)', `${cwv.inp.value}ms`, cwv.inp.rating],
+      ],
+      theme: 'grid',
+      headStyles: { fillColor: [6, 182, 212], textColor: 255 },
+      margin: { left: 14 },
+    });
+  }
+
+  // --- Page 2: Detailed Issues ---
+  doc.addPage();
+  doc.setFontSize(16);
+  doc.setTextColor(40, 40, 40);
+  doc.text('Detailed Issues', 14, 20);
+
+  const allIssues: Array<[string, string, string, string]> = [];
+
+  const addCategory = (label: string, issues: AuditIssue[]) => {
+    for (const issue of sortIssuesBySeverity(issues)) {
+      allIssues.push([
+        label,
+        issue.severity.toUpperCase(),
+        issue.title,
+        issue.recommendation,
+      ]);
+    }
+  };
+
+  addCategory('Technical', result.categories.technical.issues);
+  addCategory('On-Page', result.categories.onPage.issues);
+  addCategory('Content', result.categories.content.issues);
+
+  autoTable(doc, {
+    startY: 26,
+    head: [['Category', 'Severity', 'Issue', 'Recommendation']],
+    body: allIssues,
+    theme: 'striped',
+    headStyles: { fillColor: [6, 182, 212], textColor: 255 },
+    columnStyles: {
+      0: { cellWidth: 24 },
+      1: { cellWidth: 22 },
+      2: { cellWidth: 60 },
+      3: { cellWidth: 74 },
+    },
+    styles: { fontSize: 8, cellPadding: 2 },
+    margin: { left: 14 },
+  });
+
+  // Footer
+  const pageCount = doc.getNumberOfPages();
+  for (let i = 1; i <= pageCount; i++) {
+    doc.setPage(i);
+    doc.setFontSize(8);
+    doc.setTextColor(150, 150, 150);
+    doc.text(
+      `Generated by Synthex · synthex.social · ${today} · Page ${i} of ${pageCount}`,
+      14,
+      doc.internal.pageSize.height - 8
+    );
+  }
+
+  doc.save(`seo-audit-${result.domain}-${today.replace(/\//g, '-')}.pdf`);
+}
 
 export default function SEOAuditPage() {
   const { toast } = useToast();
+  const router = useRouter();
   const [url, setUrl] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [auditResult, setAuditResult] = useState<AuditResult | null>(null);
+  const [isExporting, setIsExporting] = useState(false);
+  const [isSheetOpen, setIsSheetOpen] = useState(false);
+  const [copiedIds, setCopiedIds] = useState<Set<string>>(new Set());
+  const [isCreatingCampaign, setIsCreatingCampaign] = useState(false);
+  const [auditResult, setAuditResult] = useState<AuditResultType | null>(null);
   const [expandedIssues, setExpandedIssues] = useState<Set<string>>(new Set());
 
   const handleAudit = async () => {
@@ -109,6 +266,93 @@ export default function SEOAuditPage() {
     });
   };
 
+  const handleExportPDF = async () => {
+    if (!auditResult) return;
+    setIsExporting(true);
+    try {
+      exportAuditPDF(auditResult);
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  const handleCopyFix = (issueTitle: string, recommendation: string) => {
+    navigator.clipboard.writeText(recommendation).then(() => {
+      setCopiedIds((prev) => new Set(prev).add(issueTitle));
+      setTimeout(() => {
+        setCopiedIds((prev) => {
+          const next = new Set(prev);
+          next.delete(issueTitle);
+          return next;
+        });
+      }, 2000);
+    });
+  };
+
+  const handleCreateContentCampaign = async () => {
+    if (!auditResult) return;
+    setIsCreatingCampaign(true);
+    try {
+      const contentIssues = sortIssuesBySeverity(auditResult.categories.content.issues);
+      const recommendations = contentIssues
+        .map((issue) => `- **${issue.title}** (${issue.severity}): ${issue.recommendation}`)
+        .join('\n');
+
+      const today = new Date().toLocaleDateString('en-AU');
+      const response = await fetch('/api/campaigns', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: `SEO Content Fix: ${auditResult.domain}`,
+          platform: 'multi',
+          content: `## SEO Content Issues — ${auditResult.domain}\n\n${recommendations}`,
+          description: `Generated from SEO audit on ${today}`,
+        }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Failed to create campaign');
+      }
+
+      toast({
+        title: 'Campaign created!',
+        description: (
+          <span>
+            Your content fix campaign is ready.{' '}
+            <button
+              onClick={() => router.push('/dashboard/content')}
+              className="underline font-medium"
+            >
+              View Campaign →
+            </button>
+          </span>
+        ),
+      });
+      setIsSheetOpen(false);
+    } catch (error) {
+      toast({
+        title: 'Failed to create campaign',
+        description: error instanceof Error ? error.message : 'Something went wrong',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsCreatingCampaign(false);
+    }
+  };
+
+  const contentIssues = auditResult
+    ? sortIssuesBySeverity(auditResult.categories.content.issues)
+    : [];
+
+  const severityColour: Record<string, string> = {
+    critical: 'bg-red-500/20 text-red-400 border-red-500/30',
+    major: 'bg-orange-500/20 text-orange-400 border-orange-500/30',
+    minor: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
+    info: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
+  };
+
   return (
     <div className="space-y-8">
       {/* Header */}
@@ -157,7 +401,7 @@ export default function SEOAuditPage() {
                 {isLoading ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Analyzing...
+                    Analysing...
                   </>
                 ) : (
                   <>
@@ -201,9 +445,19 @@ export default function SEOAuditPage() {
             <Card className="bg-[#0f172a]/80 backdrop-blur-xl border border-cyan-500/10">
               <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle className="text-white">Detailed Issues</CardTitle>
-                <Button variant="outline" size="sm" className="border-cyan-500/30 text-cyan-400">
-                  <Download className="w-4 h-4 mr-2" />
-                  Export Report
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="border-cyan-500/30 text-cyan-400"
+                  onClick={handleExportPDF}
+                  disabled={isExporting}
+                >
+                  {isExporting ? (
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  ) : (
+                    <Download className="w-4 h-4 mr-2" />
+                  )}
+                  {isExporting ? 'Exporting...' : 'Export Report'}
                 </Button>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -233,6 +487,50 @@ export default function SEOAuditPage() {
               </CardContent>
             </Card>
 
+            {/* Quick Wins Action Bar */}
+            <Card className="bg-white/[0.03] backdrop-blur-xl border border-white/[0.08]">
+              <CardContent className="p-6">
+                <p className="text-gray-300 text-sm font-medium mb-4">
+                  What do you want to do with these results?
+                </p>
+                <div className="flex flex-wrap gap-3">
+                  <Button
+                    variant="outline"
+                    className="border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/10"
+                    onClick={handleExportPDF}
+                    disabled={isExporting}
+                  >
+                    {isExporting ? (
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    ) : (
+                      <Download className="w-4 h-4 mr-2" />
+                    )}
+                    Export PDF
+                  </Button>
+
+                  {contentIssues.length > 0 && (
+                    <Button
+                      className="bg-gradient-to-r from-cyan-500 to-cyan-600 hover:from-cyan-400 hover:to-cyan-500 text-white shadow-lg shadow-cyan-500/25"
+                      onClick={() => setIsSheetOpen(true)}
+                    >
+                      <Sparkles className="w-4 h-4 mr-2" />
+                      Fix Content Issues ({contentIssues.length})
+                    </Button>
+                  )}
+
+                  <Link href="/dashboard/seo/scheduled-audits">
+                    <Button
+                      variant="outline"
+                      className="border-white/10 text-gray-300 hover:bg-white/5 hover:text-white"
+                    >
+                      <Calendar className="w-4 h-4 mr-2" />
+                      Schedule Recurring Audit
+                    </Button>
+                  </Link>
+                </div>
+              </CardContent>
+            </Card>
+
             {/* Actions */}
             <div className="flex justify-center gap-4">
               <Button
@@ -259,11 +557,103 @@ export default function SEOAuditPage() {
             <FileSearch className="w-16 h-16 text-gray-600 mx-auto mb-4" />
             <h3 className="text-xl font-medium text-white mb-2">Ready to Audit</h3>
             <p className="text-gray-400 max-w-md mx-auto">
-              Enter a website URL above to run a comprehensive SEO audit. We&apos;ll analyze technical issues, on-page elements, content quality, and Core Web Vitals.
+              Enter a website URL above to run a comprehensive SEO audit. We&apos;ll analyse technical issues, on-page elements, content quality, and Core Web Vitals.
             </p>
           </div>
         )}
       </SEOFeatureGate>
+
+      {/* Content Quick Wins Sheet */}
+      <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
+        <SheetContent
+          variant="glass-solid"
+          side="right"
+          className="w-[480px] sm:max-w-[480px] flex flex-col p-0"
+        >
+          {/* Header */}
+          <div className="p-6 border-b border-white/[0.08]">
+            <SheetHeader>
+              <SheetTitle className="text-white">
+                Content Quick Wins · {auditResult?.domain}
+              </SheetTitle>
+              <SheetDescription className="text-white/60">
+                {contentIssues.length} issue{contentIssues.length !== 1 ? 's' : ''} found · sorted by priority
+              </SheetDescription>
+            </SheetHeader>
+          </div>
+
+          {/* Scrollable body */}
+          <div className="flex-1 overflow-y-auto p-6 space-y-4">
+            {contentIssues.map((issue) => (
+              <div
+                key={issue.title}
+                className="rounded-lg border border-white/[0.08] bg-white/[0.03] p-4 space-y-2"
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div className="space-y-1 flex-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <Badge
+                        variant="outline"
+                        className={`text-xs font-semibold uppercase ${severityColour[issue.severity] ?? severityColour.info}`}
+                      >
+                        {issue.severity}
+                      </Badge>
+                      <span className="text-sm font-medium text-white">{issue.title}</span>
+                    </div>
+                    <p className="text-xs text-white/60 leading-relaxed">{issue.description}</p>
+                  </div>
+                </div>
+                <p className="text-xs text-cyan-300/80 leading-relaxed border-t border-white/[0.06] pt-2">
+                  {issue.recommendation}
+                </p>
+                <div className="flex justify-end">
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="text-white/50 hover:text-white hover:bg-white/10 h-7 text-xs"
+                    onClick={() => handleCopyFix(issue.title, issue.recommendation)}
+                  >
+                    {copiedIds.has(issue.title) ? (
+                      <>
+                        <Check className="w-3 h-3 mr-1" />
+                        Copied!
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="w-3 h-3 mr-1" />
+                        Copy Fix
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Sticky footer */}
+          <div className="p-4 border-t border-white/[0.08] flex gap-3">
+            <Button
+              className="flex-1 bg-gradient-to-r from-cyan-500 to-cyan-600 hover:from-cyan-400 hover:to-cyan-500 text-white shadow-lg shadow-cyan-500/25"
+              onClick={handleCreateContentCampaign}
+              disabled={isCreatingCampaign}
+            >
+              {isCreatingCampaign ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <Sparkles className="w-4 h-4 mr-2" />
+              )}
+              {isCreatingCampaign ? 'Creating...' : 'Create Content Campaign'}
+            </Button>
+            <Button
+              variant="ghost"
+              className="text-white/50 hover:text-white hover:bg-white/10"
+              onClick={() => setIsSheetOpen(false)}
+            >
+              Close
+            </Button>
+          </div>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }
