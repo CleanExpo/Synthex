@@ -16,6 +16,7 @@ import { NextRequest } from 'next/server';
 import { z } from 'zod';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
 import prisma from '@/lib/prisma';
+import { email as emailService } from '@/lib/email/index';
 
 function generateReferralCode(): string {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // Excludes confusing chars I/O/0/1
@@ -167,19 +168,31 @@ export async function POST(request: NextRequest) {
       (await prisma.referral.findUnique({ where: { code } }))
     );
 
-    const referral = await prisma.referral.create({
-      data: {
-        referrerId: userId,
-        refereeEmail: email,
-        code,
-        status: 'sent',
-        rewardType: 'credits',
-        rewardAmount: 500, // 500 bonus AI credits for both parties
-      },
-    });
+    const [referral, referrer] = await Promise.all([
+      prisma.referral.create({
+        data: {
+          referrerId: userId,
+          refereeEmail: email,
+          code,
+          status: 'sent',
+          rewardType: 'credits',
+          rewardAmount: 500, // 500 bonus AI credits for both parties
+        },
+      }),
+      prisma.user.findUnique({ where: { id: userId }, select: { name: true } }),
+    ]);
 
-    // TODO(UNI-475): Send referral invite email once email provider is wired up in lib/email-service.ts
-    // emailService.sendReferralInvite(email, code, referrerName);
+    const referrerName = referrer?.name || 'A SYNTHEX user';
+    const signupUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://synthex.social'}/signup?ref=${code}`;
+
+    // Send referral invite email — non-blocking so referral succeeds even if email fails
+    emailService.send({
+      to: email,
+      subject: `${referrerName} invited you to SYNTHEX`,
+      html: `<p>Hi there!</p><p>${referrerName} has invited you to join SYNTHEX. Sign up with your referral link to receive 500 bonus AI credits: <a href="${signupUrl}">${signupUrl}</a></p>`,
+      text: `${referrerName} invited you to join SYNTHEX! Sign up here to get 500 bonus AI credits: ${signupUrl}`,
+      type: 'transactional',
+    }).catch((err: unknown) => console.error('[referrals] Failed to send invite email:', err));
 
     return APISecurityChecker.createSecureResponse({
       success: true,

@@ -247,7 +247,7 @@ export default function MultiFormatPage() {
     // Fire all requests concurrently; update individual cards as they settle
     const promises = platforms.map(async (platform) => {
       try {
-        const response = await fetch('/api/ai-content/generate', {
+        const response = await fetch('/api/content/generate', {
           method: 'POST',
           credentials: 'include',
           headers: { 'Content-Type': 'application/json' },

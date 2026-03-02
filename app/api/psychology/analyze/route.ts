@@ -44,11 +44,31 @@ export async function POST(request: NextRequest) {
     const ai = await resolveAIProvider(userId);
 
     // Perform analysis with user's AI provider
-    const analysis = await psychologyAnalyzer.analyzeContent(content, {
+    const rawAnalysis = await psychologyAnalyzer.analyzeContent(content, {
       targetAudience,
       platform,
       contentType,
     }, ai);
+
+    // Clamp all numeric scores to valid ranges (0–100) to guard against
+    // out-of-bounds values from the AI model response.
+    const clamp = (n: number, min = 0, max = 100) => Math.max(min, Math.min(max, Math.round(n)));
+    const analysis = {
+      ...rawAnalysis,
+      overallScore: clamp(rawAnalysis.overallScore),
+      principlesDetected: rawAnalysis.principlesDetected.map((p) => ({
+        ...p,
+        strength: clamp(p.strength),
+        confidence: clamp(p.confidence),
+      })),
+      readability: {
+        ...rawAnalysis.readability,
+        score: clamp(rawAnalysis.readability.score),
+      },
+      persuasionMetrics: Object.fromEntries(
+        Object.entries(rawAnalysis.persuasionMetrics).map(([k, v]) => [k, clamp(v as number)])
+      ) as typeof rawAnalysis.persuasionMetrics,
+    };
 
     // Store analysis if generationId provided
     const generationId = body.generationId;

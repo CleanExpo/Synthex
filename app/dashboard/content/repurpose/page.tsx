@@ -258,7 +258,7 @@ export default function RepurposePage() {
     // Fire all requests concurrently; update individual cards as they settle
     const promises = platforms.map(async (platform) => {
       try {
-        const response = await fetch('/api/ai-content/repurpose', {
+        const response = await fetch('/api/content/repurpose', {
           method: 'POST',
           credentials: 'include',
           headers: { 'Content-Type': 'application/json' },

@@ -25,6 +25,23 @@ import { APIErrorCard } from '@/components/error-states';
 import { DashboardSkeleton } from '@/components/skeletons';
 import { toast } from 'sonner';
 
+function computeAvgLift(experiments: Experiment[]): string {
+  const lifts: number[] = [];
+  for (const exp of experiments) {
+    if (!exp.metrics.winner) continue;
+    const control = exp.variants.find(v => v.isControl);
+    const winner = exp.variants.find(v => v.id === exp.metrics.winner);
+    if (!control?.metrics || !winner?.metrics) continue;
+    const controlRate = control.metrics.conversionRate;
+    if (controlRate <= 0) continue;
+    const lift = ((winner.metrics.conversionRate - controlRate) / controlRate) * 100;
+    lifts.push(lift);
+  }
+  if (lifts.length === 0) return '—';
+  const avg = lifts.reduce((a, b) => a + b, 0) / lifts.length;
+  return `${avg >= 0 ? '+' : ''}${avg.toFixed(1)}%`;
+}
+
 export default function ExperimentsPage() {
   const [experiments, setExperiments] = useState<Experiment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -171,8 +188,8 @@ export default function ExperimentsPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold text-white">+15.3%</p>
-            <p className="text-xs text-gray-400 mt-1">Performance gain</p>
+            <p className="text-2xl font-bold text-white">{computeAvgLift(experiments)}</p>
+            <p className="text-xs text-gray-400 mt-1">Across completed tests</p>
           </CardContent>
         </Card>
       </div>

@@ -12,6 +12,7 @@ import { NextRequest } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
+import { email as emailService } from '@/lib/email/index';
 
 // Validation schemas
 const addMemberSchema = z.object({
@@ -55,10 +56,11 @@ export async function GET(request: NextRequest) {
     if (!currentUser?.organizationId) {
       return APISecurityChecker.createSecureResponse(
         {
-          error: 'No organization found',
-          message: 'You must be part of an organization to view team members'
+          data: [],
+          pagination: { total: 0, limit: 50, offset: 0, hasMore: false },
+          organizationId: null
         },
-        400,
+        200,
         security.context
       );
     }
@@ -279,8 +281,16 @@ export async function POST(request: NextRequest) {
       }
     });
 
-    // TODO(UNI-475): Send team invitation email once email provider is wired up in lib/email-service.ts
-    // await sendInvitationEmail(data.email, currentUser.organization?.name, data.role);
+    // Send team invitation email — non-blocking so invitation succeeds even if email fails
+    const orgName = currentUser.organization?.name || 'your team';
+    const acceptUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://synthex.social'}/accept-invite/${invitation.id}`;
+    emailService.send({
+      to: data.email,
+      subject: `You've been invited to join ${orgName} on SYNTHEX`,
+      html: `<p>Hi there!</p><p>You've been invited to join <strong>${orgName}</strong> on SYNTHEX as a <strong>${data.role}</strong>.</p>${data.message ? `<p>"${data.message}"</p>` : ''}<p><a href="${acceptUrl}">Accept Invitation</a></p>`,
+      text: `You've been invited to join ${orgName} on SYNTHEX as a ${data.role}. Accept here: ${acceptUrl}`,
+      type: 'transactional',
+    }).catch((err: unknown) => console.error('[teams/members] Failed to send invite email:', err));
 
     return APISecurityChecker.createSecureResponse(
       {

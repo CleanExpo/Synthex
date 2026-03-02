@@ -61,7 +61,8 @@ export default function CompetitorsPage() {
 
       if (compRes.ok) {
         const compData = await compRes.json();
-        setCompetitors(compData.data || compData.competitors || []);
+        const compList = compData.data || compData.competitors || [];
+        setCompetitors(Array.isArray(compList) ? compList : []);
       }
 
       if (insightRes.ok) {

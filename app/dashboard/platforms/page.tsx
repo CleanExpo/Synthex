@@ -427,9 +427,6 @@ export default function PlatformsPage() {
           connected,
           profileName: detail?.profileName,
           followers: detail?.followers,
-          // Placeholder stats — will be populated from real analytics when available
-          postsThisWeek: connected ? Math.floor(Math.random() * 8) : undefined,
-          engagementRate: connected ? 1.5 + Math.random() * 4 : undefined,
         });
       }
 

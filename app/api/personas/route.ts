@@ -42,14 +42,13 @@ const updatePersonaSchema = z.object({
 });
 
 // =============================================================================
-// Auth Helper - Uses APISecurityChecker for NextAuth + JWT compatibility
+// Auth Helper
 // =============================================================================
 
-import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
+import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 
 async function getUserId(request: NextRequest): Promise<string | null> {
-  const security = await APISecurityChecker.check(request, DEFAULT_POLICIES.AUTHENTICATED_READ);
-  return security.allowed ? security.context.userId ?? null : null;
+  return getUserIdFromRequestOrCookies(request);
 }
 
 // =============================================================================

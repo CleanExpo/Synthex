@@ -470,6 +470,146 @@ function RoleDialog({
 }
 
 // ============================================================================
+// USER SEARCH DIALOG
+// ============================================================================
+
+interface OrgMember {
+  id: string;
+  name: string;
+  email: string;
+  avatar?: string | null;
+  role: string;
+}
+
+interface UserSearchDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  role: { id: string; name: string } | null;
+  onAssign: (userId: string) => Promise<void>;
+}
+
+function UserSearchDialog({ open, onOpenChange, role, onAssign }: UserSearchDialogProps) {
+  const [query, setQuery] = useState('');
+  const [members, setMembers] = useState<OrgMember[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [assigning, setAssigning] = useState<string | null>(null);
+
+  // Fetch org members when dialog opens
+  const fetchMembers = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch('/api/teams/members?limit=100', { credentials: 'include' });
+      if (res.ok) {
+        const data = await res.json();
+        setMembers(Array.isArray(data.data) ? data.data : []);
+      }
+    } catch {
+      // silently fail — empty list will show
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Reset and load when opened
+  const handleOpenChange = (val: boolean) => {
+    if (val) {
+      setQuery('');
+      setAssigning(null);
+      fetchMembers();
+    }
+    onOpenChange(val);
+  };
+
+  const filtered = members.filter(
+    m =>
+      m.name.toLowerCase().includes(query.toLowerCase()) ||
+      m.email.toLowerCase().includes(query.toLowerCase())
+  );
+
+  const handleAssign = async (userId: string) => {
+    setAssigning(userId);
+    try {
+      await onAssign(userId);
+      onOpenChange(false);
+    } finally {
+      setAssigning(null);
+    }
+  };
+
+  if (!role) return null;
+
+  return (
+    <Dialog open={open} onOpenChange={handleOpenChange}>
+      <DialogContent className="bg-[#0f172a]/95 border-cyan-500/20 backdrop-blur-xl sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle className="text-white flex items-center gap-2">
+            <UserPlus className="h-5 w-5 text-cyan-400" />
+            Add user to &quot;{role.name}&quot;
+          </DialogTitle>
+          <DialogDescription className="text-gray-400">
+            Search for a team member to assign this role.
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-4 py-2">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500" />
+            <Input
+              placeholder="Search by name or email..."
+              value={query}
+              onChange={e => setQuery(e.target.value)}
+              className="pl-10 bg-white/5 border-white/10 text-white placeholder:text-gray-500"
+              autoFocus
+            />
+          </div>
+
+          <ScrollArea className="h-[260px]">
+            {loading ? (
+              <div className="flex items-center justify-center py-10">
+                <Loader2 className="h-5 w-5 text-cyan-400 animate-spin" />
+              </div>
+            ) : filtered.length === 0 ? (
+              <div className="text-center py-10 text-gray-400 text-sm">
+                {query ? 'No members match your search.' : 'No team members found.'}
+              </div>
+            ) : (
+              <div className="space-y-1 pr-4">
+                {filtered.map(member => (
+                  <button
+                    key={member.id}
+                    onClick={() => handleAssign(member.id)}
+                    disabled={assigning !== null}
+                    className="w-full flex items-center justify-between p-3 rounded-lg bg-white/[0.04] hover:bg-white/[0.08] transition-colors text-left disabled:opacity-50"
+                  >
+                    <div className="flex items-center gap-3">
+                      <Avatar className="h-8 w-8">
+                        {member.avatar && <AvatarImage src={member.avatar} alt={member.name} />}
+                        <AvatarFallback className="bg-cyan-500/20 text-cyan-400 text-sm">
+                          {member.name.charAt(0).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <p className="text-sm font-medium text-white">{member.name}</p>
+                        <p className="text-xs text-gray-400">{member.email}</p>
+                      </div>
+                    </div>
+                    {assigning === member.id ? (
+                      <Loader2 className="h-4 w-4 text-cyan-400 animate-spin flex-shrink-0" />
+                    ) : (
+                      <UserPlus className="h-4 w-4 text-gray-600 flex-shrink-0" />
+                    )}
+                  </button>
+                ))}
+              </div>
+            )}
+          </ScrollArea>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// ============================================================================
 // ROLE USERS DIALOG
 // ============================================================================
 
@@ -727,6 +867,7 @@ export default function RolesPage() {
   const [roleToDelete, setRoleToDelete] = useState<Role | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [userSearchDialogOpen, setUserSearchDialogOpen] = useState(false);
 
   // Filter roles
   const filteredRoles = useMemo(() => {
@@ -820,9 +961,15 @@ export default function RolesPage() {
   };
 
   const handleAddUser = () => {
-    // TODO(UNI-475): Implement user search dialog to assign roles (needs UserSearchDialog component)
-    // For now, just close the users dialog
-    setUsersDialogOpen(false);
+    setUserSearchDialogOpen(true);
+  };
+
+  const handleAssignUser = async (userId: string) => {
+    if (!selectedRoleForUsers) return;
+    await grantToUser(selectedRoleForUsers.id, userId);
+    // Refresh the users list to show the newly added user
+    const users = await getUsersWithRole(selectedRoleForUsers.id);
+    setRoleUsers(users);
   };
 
   return (
@@ -983,6 +1130,13 @@ export default function RolesPage() {
         role={roleToDelete}
         onConfirm={handleConfirmDelete}
         isDeleting={isDeleting}
+      />
+
+      <UserSearchDialog
+        open={userSearchDialogOpen}
+        onOpenChange={setUserSearchDialogOpen}
+        role={selectedRoleForUsers}
+        onAssign={handleAssignUser}
       />
     </div>
   );

@@ -24,6 +24,7 @@ import {
 } from '@/lib/services/ai/image-generation';
 import { logger } from '@/lib/logger';
 import { createClient } from '@supabase/supabase-js';
+import { subscriptionService } from '@/lib/stripe/subscription-service';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -77,6 +78,21 @@ export async function POST(request: NextRequest) {
   }
 
   const userId = security.context.userId!;
+
+  // Subscription gate — AI Images requires Professional plan or higher
+  const subscription = await subscriptionService.getOrCreateSubscription(userId);
+  const ALLOWED_PLANS = ['professional', 'business', 'custom'];
+  if (!ALLOWED_PLANS.includes(subscription.plan)) {
+    return APISecurityChecker.createSecureResponse(
+      {
+        success: false,
+        error: 'AI Image generation requires a Professional subscription or higher',
+        upgradeRequired: true,
+        requiredPlan: 'professional',
+      },
+      402
+    );
+  }
 
   try {
     const body = await request.json();

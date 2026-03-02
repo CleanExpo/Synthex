@@ -520,7 +520,7 @@ export default function CrossPostPage() {
     // Fire all requests concurrently; update individual cards as they settle
     const promises = platforms.map(async (platform) => {
       try {
-        const response = await fetch('/api/ai-content/cross-post', {
+        const response = await fetch('/api/content/cross-post', {
           method: 'POST',
           credentials: 'include',
           headers: { 'Content-Type': 'application/json' },
