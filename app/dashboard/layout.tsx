@@ -403,7 +403,7 @@ export default function DashboardLayout({
             {/* User Menu */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="relative h-10 w-10 rounded-full">
+                <Button variant="ghost" className="relative h-10 w-10 rounded-full" aria-label="User menu">
                   <Avatar className="h-10 w-10">
                     {user?.avatar && <AvatarImage src={user.avatar} alt={user.name || 'User'} />}
                     <AvatarFallback>{user?.name?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || 'U'}</AvatarFallback>
