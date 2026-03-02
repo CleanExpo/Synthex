@@ -99,7 +99,8 @@ const oauthConfigs: Record<string, OAuthConfig> = {
   },
   searchconsole: {
     tokenUrl: 'https://oauth2.googleapis.com/token',
-    userInfoUrl: 'https://www.googleapis.com/webmasters/v3/sites',
+    // Standard userinfo — Search Console site data is fetched on demand using stored tokens
+    userInfoUrl: 'https://www.googleapis.com/oauth2/v2/userinfo',
   },
   googleanalytics: {
     tokenUrl: 'https://oauth2.googleapis.com/token',
@@ -442,13 +443,13 @@ async function fetchUserInfo(
         username: data.username,
       };
     case 'searchconsole': {
-      // Returns list of sites — use first verified site as identifier
-      const sites = data.siteEntry || [];
-      const firstSite = sites[0];
+      // Standard Google userinfo — Search Console site data is fetched on demand using stored tokens
       return {
-        id: firstSite?.siteUrl || 'search-console',
-        name: firstSite?.siteUrl || 'Google Search Console',
-        username: firstSite?.siteUrl,
+        id: data.id || data.sub || 'search-console',
+        name: data.name || data.email || 'Google Search Console',
+        email: data.email,
+        avatar: data.picture,
+        username: data.email,
       };
     }
     case 'googleanalytics': {
