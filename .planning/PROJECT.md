@@ -2,22 +2,23 @@
 
 ## What This Is
 
-AI-powered marketing automation platform — production-hardened with zero mock data, 9 social platform integrations, 1064 passing tests, and 225 verified API endpoints. Next.js 15 full-stack app deployed on Vercel.
+AI-powered marketing automation platform — production-hardened with zero mock data, 9 social platform integrations, 1433+ passing tests, and 225 verified API endpoints. Next.js 15 full-stack app deployed on Vercel.
 
 ## Core Value
 
 **Every endpoint returns real data, every platform works, every dashboard page connects to live APIs.** No mock data, no stubs, no silent fallbacks.
 
-## Current State (v1.1 shipped 2026-02-17)
+## Current State (v1.5 Deployment Readiness — Phase 55 of 58)
 
 - 225 route files, 395 HTTP endpoints (223 active, 2 intentional stubs, 0 mock, 0 broken)
 - 9 social platforms operational (Twitter, LinkedIn, Instagram, Facebook, TikTok, YouTube, Pinterest, Reddit, Threads)
-- 38 test suites, 1064 tests passing
-- 68 Prisma models (added ContentLibrary)
+- 56 test suites, 1433 tests passing (198 API contract tests, Playwright E2E suite, Jest unit/integration)
+- 91 Prisma models (added v1.2–v1.4 feature models)
 - Clean build (no workarounds)
-- All standalone components wired to real APIs
-- Consolidated rate limiting in lib/rate-limit/
-- Enhanced dashboard UX: loading states, error boundaries, ProductTour (12 steps)
+- v1.2: 3rd-party integrations (Canva, Buffer, Zapier), integration factory pattern, webhook system, approval workflows, team collaboration, role permissions
+- v1.3: SEO & GEO features (AuthorProfile, SEOAudit, GEOAnalysis, Search Console, PageSpeed, Schema Markup, Scheduled Audits)
+- v1.4: Creator Monetisation & AI Studio (AI Chat streaming SSE, Image Gen, Social Listening, Link-in-Bio, Sponsor CRM, Affiliate links)
+- v1.5: E2E suite stabilised (Phases 52–53), API contract tests 74% Zod coverage (Phase 54), UI state audit in progress (Phase 55)
 
 ## Requirements
 
@@ -51,10 +52,23 @@ AI-powered marketing automation platform — production-hardened with zero mock 
 - Dashboard loading states and error boundaries -- v1.1
 - ProductTour expanded (12 steps) -- v1.1
 - Onboarding flow connected to ProductTour -- v1.1
+- 3rd-party integrations: Canva, Buffer, Zapier via integration factory pattern — v1.2
+- Integration registry as single source of truth for provider metadata — v1.2
+- SEO & GEO: AuthorProfile, SEOAudit, GEOAnalysis, Research reports with citations — v1.3
+- Creator Monetisation: Sponsor CRM (Sponsor/Deal/Deliverable), affiliate link cloaking — v1.4
+- AI Studio: Conversational AI with streaming SSE, image generation, content repurposing — v1.4
+- Social Listening: TrackedKeyword, SocialMention, brand monitoring — v1.4
+- Link-in-Bio: Customisable landing pages (LinkBioPage, LinkBioLink) — v1.4
+- E2E test suite: Playwright (auth, dashboard, onboarding flows) — v1.5
+- API contract tests: 198 tests, 11 suites, 74% Zod route coverage — v1.5
+- UI state audit: loading.tsx, error.tsx for all dashboard routes — v1.5
 
 ### Active
 
-(No active requirements — planning next milestone)
+- Phase 55-02: Inline state audit — 13 dashboard pages for loading/empty/error coverage
+- Phase 56: Responsive design audit + WCAG 2.1 AA compliance
+- Phase 57: Bundle analysis, Prisma query optimisation
+- Phase 58: Core Web Vitals compliance, Redis cache verification
 
 ### Out of Scope
 
@@ -77,6 +91,9 @@ AI-powered marketing automation platform — production-hardened with zero mock 
 | Schema-based contract testing | Zod schemas + response shapes, no E2E NextRequest mocking | Good -- 256 tests in Phase 8 |
 | In-memory Maps → Prisma queries | Maps useless in serverless (cold starts reset state) | Good -- reliable across deployments |
 | Category-based rate limiting | authStrict 5/min through readDefault 120/min | Good -- covers all sensitive routes |
+| Integration factory pattern | Single createIntegrationService(provider, credentials) for Canva/Buffer/Zapier | Good — no schema migration needed (uses metadata JSON on PlatformConnection) |
+| Streaming SSE for AI chat | Real-time feel without WebSocket complexity | Good — compatible with Vercel serverless |
+| Schema-based contract testing (74% Zod) | Zod schemas + response shapes, no E2E NextRequest mocking | Good — 198 tests pass in CI, GET-only utility routes exempt |
 
 ## Constraints
 
@@ -97,6 +114,13 @@ All v1.0 deferred items resolved in v1.1:
 **Pre-existing issues (not blocking):**
 - lib/prisma.ts adapter type errors (Prisma 6 driver adapter types)
 - lib/video/capture-service.ts puppeteer-screen-recorder (optional video feature)
+- 2 skipped contract tests require a live server (onboarding integration path)
+
+**Deferred from v1.5 sprint findings:**
+- 754 console.log statements identified — structured logger migration (non-blocking)
+- 14 components over 600 lines — decomposition backlog (non-blocking)
+- Skip links not implemented — WCAG enhancement (Phase 56)
+- 2 E2E flaky tests (passed on retry): focus timing + responsive touch target
 
 ---
-*Last updated: 2026-02-17 after v1.1 milestone*
+*Last updated: 2026-03-03 — v1.5 Phase 55-01 complete*

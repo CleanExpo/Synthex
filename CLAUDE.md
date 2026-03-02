@@ -59,8 +59,8 @@ npm run release:check    # Full pre-release validation
 | `app/` | Pages + API routes (App Router) |
 | `lib/` | Services, utilities, integrations |
 | `components/` | React components (Radix UI + Tailwind) |
-| `prisma/` | Schema (68 models) + migrations |
-| `.claude/skills/` | 18 domain skills (auto-triggered) |
+| `prisma/` | Schema (91 models) + migrations |
+| `.claude/skills/` | 21 domain skills (auto-triggered) |
 | `.claude/rules/` | 6 context rule domains |
 | `.claude/memory/` | Project state + cross-session context |
 | `.claude/scratchpad/` | Ephemeral working space |
@@ -73,7 +73,7 @@ npm run release:check    # Full pre-release validation
 - **AI**: `content-pipeline` skill — Model registry, provider abstraction, BYOK, scoring
 - **Social**: `social-integrations` skill — 9 platforms, OAuth, webhooks, token encryption
 - **API**: `route-auditor` skill — APISecurityChecker, Zod validation, org scoping
-- **DB**: `database-prisma` skill — 68 models, migrations, query patterns
+- **DB**: `database-prisma` skill — 91 models, migrations, query patterns
 - **Security**: `security-hardener` skill — CSP, CORS, rate limiting, audit logging
 - **Deploy**: `build-orchestrator` skill — Vercel, crons, env management
 

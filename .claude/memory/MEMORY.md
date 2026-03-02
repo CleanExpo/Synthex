@@ -10,7 +10,7 @@
 
 ### Project-level (`.claude/`) — Synthex-specific only
 - **4 agents**: build-engineer, code-architect, qa-sentinel, senior-reviewer
-- **18 skills**: api-testing, architecture-enforcer, auth-patterns, build-orchestrator, client-manager, client-retention, code-review, content-pipeline, database-prisma, design, platform-showcase, project-scanner, route-auditor, security-hardener, social-integrations, spec-generator, sql-hardener, ui-ux
+- **21 skills**: api-testing, architecture-enforcer, auth-patterns, build-orchestrator, client-manager, client-retention, code-review, content-pipeline, database-prisma, design, imagen-designer, platform-showcase, project-scanner, route-auditor, scout, security-hardener, social-integrations, spec-generator, sql-hardener, ui-ux, video-engine
 - **19 hooks**: PowerShell scripts for build validation, pre-commit checks
 - **6 rules**: backend, database, development, frontend, operations, skills
 - **Scratchpad**: `.claude/scratchpad/` — ephemeral session working space (date-prefix, 7-day cleanup)
@@ -27,7 +27,7 @@
 
 ## Current State (2026-03-01)
 - **Branch**: main at `961543d`
-- **DB**: 68 Prisma models, schema unchanged
+- **DB**: 91 Prisma models, schema unchanged since v1.4
 - **Test suite**: 56 suites passing, 1433 tests
 
 ### Recent Audit Session (UNI-1169–1179)
@@ -60,7 +60,7 @@
 - Social: 9 platforms with OAuth + webhooks (see `social-integrations` skill)
 - Multi-business: Organisation scoping via `lib/multi-business/`
 - Encryption: API key encryption in `lib/encryption/`
-- 68 Prisma models
+- 91 Prisma models
 
 ## User Preferences
 - Australian English spelling
