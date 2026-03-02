@@ -9,6 +9,7 @@ import { FAQSection, buildFaqSchemaJson } from '@/components/landing/faq-section
 import { CTASection } from '@/components/landing/cta-section';
 import { FooterSection } from '@/components/landing/footer-section';
 import { FloatingParticles } from '@/components/landing/floating-particles';
+import { LandingAnimations } from '@/components/landing/LandingAnimations';
 
 export default function HomePage() {
   return (
@@ -56,6 +57,9 @@ export default function HomePage() {
 
       {/* Footer */}
       <FooterSection />
+
+      {/* GSAP landing page animations — no DOM output */}
+      <LandingAnimations />
 
       {/* Global Styles */}
       <style jsx global>{`

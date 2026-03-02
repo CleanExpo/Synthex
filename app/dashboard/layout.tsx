@@ -182,6 +182,14 @@ const sidebarGroups: Array<{
     ],
   },
   {
+    id: 'web-projects',
+    icon: Globe,
+    label: 'WEB PROJECTS',
+    items: [
+      { icon: Globe, label: 'Projects', href: '/dashboard/web-projects' },
+    ],
+  },
+  {
     id: 'team-admin',
     icon: Shield,
     label: 'TEAM & ADMIN',

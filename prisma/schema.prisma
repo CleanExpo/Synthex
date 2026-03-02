@@ -244,16 +244,25 @@ model Project {
   id          String   @id @default(cuid())
   name        String
   description String?
-  type        String   // 'marketing', 'content', 'analytics'
+  type        String   // 'marketing', 'content', 'analytics', 'webdesign'
   data        Json?    // Project configuration and data
+  status      String   @default("draft")   // 'draft', 'active', 'archived'
+  websiteUrl  String?  @map("website_url")
+  domain      String?
+  pages       Int?
+  colors      Json?    // Array of hex colour strings
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
 
   // Relations
-  userId      String   @map("user_id")
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId         String        @map("user_id")
+  user           User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organizationId String?       @map("organization_id")
+  organization   Organization? @relation("OrganizationProjects", fields: [organizationId], references: [id], onDelete: SetNull)
 
   @@index([userId])
+  @@index([type])
+  @@index([organizationId])
   @@map("projects")
 }
 
@@ -416,6 +425,7 @@ model Organization {
   teamInvitations   TeamInvitation[]
   roles             Role[]
   campaigns         Campaign[]       @relation("OrganizationCampaigns")
+  projects          Project[]        @relation("OrganizationProjects")
   businessOwners    BusinessOwnership[] @relation("BusinessOwners")
   promptTemplates   PromptTemplate[]
 
