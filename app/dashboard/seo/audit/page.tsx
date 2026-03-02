@@ -8,8 +8,6 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { jsPDF } from 'jspdf';
-import autoTable from 'jspdf-autotable';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -61,7 +59,9 @@ function sortIssuesBySeverity(issues: AuditIssue[]): AuditIssue[] {
   );
 }
 
-function exportAuditPDF(result: AuditResultType) {
+async function exportAuditPDF(result: AuditResultType) {
+  const { jsPDF } = await import('jspdf');
+  const { default: autoTable } = await import('jspdf-autotable');
   const doc = new jsPDF();
   const today = new Date().toLocaleDateString('en-AU');
 
@@ -107,7 +107,7 @@ function exportAuditPDF(result: AuditResultType) {
   // Core Web Vitals if available
   if (result.categories.coreWebVitals) {
     const cwv = result.categories.coreWebVitals;
-    const lastY = (doc as jsPDF & { lastAutoTable: { finalY: number } }).lastAutoTable?.finalY ?? 130;
+    const lastY = (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable?.finalY ?? 130;
 
     doc.setFontSize(13);
     doc.setTextColor(40, 40, 40);
@@ -270,7 +270,7 @@ export default function SEOAuditPage() {
     if (!auditResult) return;
     setIsExporting(true);
     try {
-      exportAuditPDF(auditResult);
+      await exportAuditPDF(auditResult);
     } finally {
       setIsExporting(false);
     }
