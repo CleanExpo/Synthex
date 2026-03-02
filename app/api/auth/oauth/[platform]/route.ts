@@ -44,7 +44,7 @@ const oauthConfig: Record<string, {
     authUrl: 'https://www.facebook.com/v18.0/dialog/oauth',
     tokenUrl: 'https://graph.facebook.com/v18.0/oauth/access_token',
     userInfoUrl: 'https://graph.facebook.com/me',
-    scope: 'public_profile,email,pages_show_list,pages_read_engagement,pages_manage_posts',
+    scope: 'public_profile',
   },
   tiktok: {
     authUrl: 'https://www.tiktok.com/v2/auth/authorize/',
