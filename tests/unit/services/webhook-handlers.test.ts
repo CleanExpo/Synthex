@@ -19,6 +19,28 @@ jest.mock('@/lib/stripe/subscription-service', () => ({
   },
 }));
 
+// Mock prisma (used for user email lookups added in Phase 68-01)
+const mockUserFindUnique = jest.fn();
+jest.mock('@/lib/prisma', () => ({
+  prisma: {
+    user: {
+      findUnique: mockUserFindUnique,
+    },
+  },
+  default: {
+    user: {
+      findUnique: mockUserFindUnique,
+    },
+  },
+}));
+
+// Mock billing email functions — fire-and-forget, no side effects in tests
+jest.mock('@/lib/email/billing-emails', () => ({
+  sendPaymentReceiptEmail: jest.fn(),
+  sendPaymentFailedEmail: jest.fn(),
+  sendSubscriptionCancelledEmail: jest.fn(),
+}));
+
 // Mock webhook handler
 const mockOn = jest.fn();
 jest.mock('@/lib/webhooks/webhook-handler', () => ({
@@ -57,6 +79,8 @@ import {
 describe('Stripe Webhook Handlers', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    // Default: no user found for email lookups (email functions not called)
+    mockUserFindUnique.mockResolvedValue(null);
   });
 
   describe('registerStripeWebhookHandlers', () => {

@@ -65,6 +65,28 @@ jest.mock('@/lib/logger', () => ({
   },
 }));
 
+// Mock prisma — used by Phase 68-01 billing email user lookups
+const mockPrismaUserFindUnique = jest.fn();
+jest.mock('@/lib/prisma', () => ({
+  prisma: {
+    user: {
+      findUnique: mockPrismaUserFindUnique,
+    },
+  },
+  default: {
+    user: {
+      findUnique: mockPrismaUserFindUnique,
+    },
+  },
+}));
+
+// Mock billing email functions (fire-and-forget, no side effects in tests)
+jest.mock('@/lib/email/billing-emails', () => ({
+  sendPaymentReceiptEmail: jest.fn(),
+  sendPaymentFailedEmail: jest.fn(),
+  sendSubscriptionCancelledEmail: jest.fn(),
+}));
+
 // ============================================================================
 // TEST FIXTURES
 // ============================================================================
@@ -318,6 +340,8 @@ describe('Stripe Webhook Handlers', () => {
       plan: 'free',
     });
     mockAuditLog.mockResolvedValue(undefined);
+    // Default: no user found for email lookups (Phase 68-01)
+    mockPrismaUserFindUnique.mockResolvedValue(null);
   });
 
   // ==========================================================================
@@ -325,11 +349,15 @@ describe('Stripe Webhook Handlers', () => {
   // ==========================================================================
 
   describe('registerStripeWebhookHandlers', () => {
-    it('should register all 5 event handlers', () => {
+    it('should register all 6 event handlers', () => {
       // Import to trigger registration
       require('@/lib/stripe/webhook-handlers');
 
-      expect(mockWebhookHandlerOn).toHaveBeenCalledTimes(5);
+      expect(mockWebhookHandlerOn).toHaveBeenCalledTimes(6);
+      expect(mockWebhookHandlerOn).toHaveBeenCalledWith(
+        'billing.checkout_completed',
+        expect.any(Function)
+      );
       expect(mockWebhookHandlerOn).toHaveBeenCalledWith(
         'billing.subscription_created',
         expect.any(Function)

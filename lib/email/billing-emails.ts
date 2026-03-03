@@ -17,7 +17,15 @@
 
 import { Resend } from 'resend';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Lazy singleton — instantiated on first use so module import does not throw
+// when RESEND_API_KEY is absent (e.g. in test environments).
+let _resend: Resend | null = null;
+function getResend(): Resend {
+  if (!_resend) {
+    _resend = new Resend(process.env.RESEND_API_KEY);
+  }
+  return _resend;
+}
 
 const FROM = process.env.EMAIL_FROM ?? 'Synthex <noreply@synthex.social>';
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://synthex.social';
@@ -41,7 +49,7 @@ export function sendPaymentReceiptEmail(params: {
   const displayAmount = `${params.currency.toUpperCase()} ${(params.amount / 100).toFixed(2)}`;
   const planLabel = params.plan.charAt(0).toUpperCase() + params.plan.slice(1);
 
-  resend.emails.send({
+  getResend().emails.send({
     from: FROM,
     to: params.email,
     subject: `Payment received — ${planLabel} plan`,
@@ -122,7 +130,7 @@ export function sendPaymentFailedEmail(params: {
 }): void {
   const displayAmount = `${params.currency.toUpperCase()} ${(params.amount / 100).toFixed(2)}`;
 
-  resend.emails.send({
+  getResend().emails.send({
     from: FROM,
     to: params.email,
     subject: 'Payment failed — action required',
@@ -197,7 +205,7 @@ export function sendSubscriptionCancelledEmail(params: {
 }): void {
   const planLabel = params.plan.charAt(0).toUpperCase() + params.plan.slice(1);
 
-  resend.emails.send({
+  getResend().emails.send({
     from: FROM,
     to: params.email,
     subject: 'Your Synthex subscription has been cancelled',
