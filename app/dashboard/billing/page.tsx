@@ -223,14 +223,12 @@ export default function BillingPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-cyan-900 to-gray-900 p-8">
-        <div className="max-w-4xl mx-auto">
-          <div className="animate-pulse">
-            <div className="h-8 bg-white/10 rounded w-1/4 mb-8"></div>
-            <div className="space-y-4">
-              <div className="h-32 bg-white/10 rounded"></div>
-              <div className="h-32 bg-white/10 rounded"></div>
-            </div>
+      <div className="max-w-4xl mx-auto space-y-6">
+        <div className="animate-pulse">
+          <div className="h-8 bg-white/10 rounded w-1/4 mb-8"></div>
+          <div className="space-y-4">
+            <div className="h-32 bg-white/10 rounded"></div>
+            <div className="h-32 bg-white/10 rounded"></div>
           </div>
         </div>
       </div>
@@ -239,33 +237,30 @@ export default function BillingPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-cyan-900 to-gray-900 p-8">
-        <div className="max-w-4xl mx-auto">
-          <Card variant="glass" className="p-6 border-red-500/20">
-            <div className="flex flex-col items-center justify-center py-12 text-center">
-              <div className="p-4 rounded-full bg-red-500/10 mb-4">
-                <AlertCircle className="w-8 h-8 text-red-400" />
-              </div>
-              <h3 className="text-lg font-semibold text-white mb-2">Billing Error</h3>
-              <p className="text-gray-400 mb-6 max-w-md">{error}</p>
-              <Button onClick={fetchSubscription} variant="outline" className="gap-2">
-                <RefreshCw className="w-4 h-4" />
-                Try Again
-              </Button>
+      <div className="max-w-4xl mx-auto space-y-6">
+        <Card variant="glass" className="p-6 border-red-500/20">
+          <div className="flex flex-col items-center justify-center py-12 text-center">
+            <div className="p-4 rounded-full bg-red-500/10 mb-4">
+              <AlertCircle className="w-8 h-8 text-red-400" />
             </div>
-          </Card>
-        </div>
+            <h3 className="text-lg font-semibold text-white mb-2">Billing Error</h3>
+            <p className="text-gray-400 mb-6 max-w-md">{error}</p>
+            <Button onClick={fetchSubscription} variant="outline" className="gap-2">
+              <RefreshCw className="w-4 h-4" />
+              Try Again
+            </Button>
+          </div>
+        </Card>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-cyan-900 to-gray-900 p-8">
-      <div className="max-w-4xl mx-auto">
-        <h1 className="text-3xl font-bold text-white mb-8">Billing & Subscription</h1>
+    <div className="max-w-4xl mx-auto space-y-6">
+        <h1 className="text-3xl font-bold text-white">Billing & Subscription</h1>
 
         {/* Current Plan */}
-        <Card variant="glass" className="p-6 mb-6">
+        <Card variant="glass" className="p-6">
           <div className="flex items-start justify-between mb-4">
             <div className="flex items-center space-x-3">
               <Package className="w-6 h-6 text-cyan-400" />
@@ -341,7 +336,7 @@ export default function BillingPage() {
         </Card>
 
         {/* Billing Management - adapted for free vs paid */}
-        <Card variant="glass" className="p-6 mb-6">
+        <Card variant="glass" className="p-6">
           <div className="flex items-center space-x-3 mb-4">
             <CreditCard className="w-6 h-6 text-cyan-400" />
             <h2 className="text-xl font-semibold text-white">Billing Management</h2>
@@ -435,7 +430,6 @@ export default function BillingPage() {
             </p>
           </div>
         </Card>
-      </div>
     </div>
   );
 }

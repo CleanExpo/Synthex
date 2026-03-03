@@ -177,6 +177,8 @@ export default function CompletePage() {
     }
     localStorage.setItem('onboardingComplete', 'true');
     localStorage.setItem('onboardingCompletedAt', new Date().toISOString());
+    // Ensure new users always start with the starter sidebar groups
+    localStorage.removeItem('sidebar-show-all-groups');
     router.push('/dashboard');
   };
 

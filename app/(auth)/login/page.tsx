@@ -34,6 +34,7 @@ export default function LoginPage() {
   } | null>(null);
   const [oauthHint, setOauthHint] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -147,7 +148,8 @@ export default function LoginPage() {
         }
 
         setRateLimitSeconds(seconds);
-        toast.error(`Too many login attempts. Please wait ${Math.ceil(seconds / 60)} minute${Math.ceil(seconds / 60) !== 1 ? 's' : ''} before trying again.`);
+        // Rate-limit feedback is shown via the inline countdown banner (lines 282–300).
+        // No toast needed — firing both is redundant.
         return;
       }
 
@@ -346,7 +348,12 @@ export default function LoginPage() {
             </div>
             <div className="flex items-center justify-between">
               <label className="flex items-center space-x-2 text-sm">
-                <input type="checkbox" className="rounded border-gray-600 bg-white/5 text-cyan-500 focus:ring-cyan-500/20" />
+                <input
+                  type="checkbox"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                  className="rounded border-gray-600 bg-white/5 text-cyan-500 focus:ring-cyan-500/20"
+                />
                 <span className="text-gray-400">Remember me</span>
               </label>
               <Link href="/forgot-password" className="text-sm text-cyan-400 hover:text-cyan-300 transition-colors">

@@ -431,7 +431,7 @@ export default function DashboardLayout({
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator className="bg-white/10" />
                 <DropdownMenuItem asChild>
-                  <Link href="/dashboard/settings" className="flex items-center cursor-pointer">
+                  <Link href="/dashboard/settings?tab=profile" className="flex items-center cursor-pointer">
                     <User className="mr-2 h-4 w-4" />
                     <span>Profile</span>
                   </Link>
