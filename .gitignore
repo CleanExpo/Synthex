@@ -26,6 +26,9 @@ venv/
 env/
 ENV/
 
+# Kubernetes secrets (never commit real values)
+k8s/manifests/secrets.yaml
+
 # Environment Variables
 .env
 .env.local

@@ -1,0 +1,128 @@
+# =============================================================================
+# Synthex Next.js Application Deployment
+# =============================================================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: synthex-app
+  namespace: synthex
+  labels:
+    app: synthex-app
+    version: local
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: synthex-app
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  template:
+    metadata:
+      labels:
+        app: synthex-app
+    spec:
+      containers:
+        - name: synthex-app
+          image: synthex-app:local
+          # Use local image — never pull from registry for local dev
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 3000
+              protocol: TCP
+          # Non-sensitive config from ConfigMap
+          envFrom:
+            - configMapRef:
+                name: synthex-config
+          # Sensitive config from Secrets
+          env:
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: synthex-secrets
+                  key: DATABASE_URL
+            - name: DIRECT_URL
+              valueFrom:
+                secretKeyRef:
+                  name: synthex-secrets
+                  key: DIRECT_URL
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: synthex-secrets
+                  key: JWT_SECRET
+            - name: NEXTAUTH_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: synthex-secrets
+                  key: NEXTAUTH_SECRET
+            - name: NEXT_PUBLIC_SUPABASE_ANON_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: synthex-secrets
+                  key: NEXT_PUBLIC_SUPABASE_ANON_KEY
+            - name: SUPABASE_SERVICE_ROLE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: synthex-secrets
+                  key: SUPABASE_SERVICE_ROLE_KEY
+            - name: STRIPE_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: synthex-secrets
+                  key: STRIPE_SECRET_KEY
+            - name: STRIPE_WEBHOOK_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: synthex-secrets
+                  key: STRIPE_WEBHOOK_SECRET
+            - name: NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: synthex-secrets
+                  key: NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
+            - name: STRIPE_PROFESSIONAL_PRICE_ID
+              valueFrom:
+                secretKeyRef:
+                  name: synthex-secrets
+                  key: STRIPE_PROFESSIONAL_PRICE_ID
+            - name: STRIPE_BUSINESS_PRICE_ID
+              valueFrom:
+                secretKeyRef:
+                  name: synthex-secrets
+                  key: STRIPE_BUSINESS_PRICE_ID
+            - name: OPENROUTER_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: synthex-secrets
+                  key: OPENROUTER_API_KEY
+            - name: RESEND_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: synthex-secrets
+                  key: RESEND_API_KEY
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "512Mi"
+            limits:
+              cpu: "1000m"
+              memory: "1Gi"
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: 3000
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: 3000
+            initialDelaySeconds: 60
+            periodSeconds: 30
+            failureThreshold: 3
+      # Graceful shutdown
+      terminationGracePeriodSeconds: 30
