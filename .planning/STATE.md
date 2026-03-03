@@ -10,14 +10,14 @@ See: .planning/PROJECT.md (updated 2026-02-17)
 ## Current Position
 
 Milestone: v3.0 Public Launch Readiness (Phases 67-74)
-Phase: 68 of 74 (Stripe Activation) — 0/3 plans executed
-Plan: 68-01 next — Billing email notifications + dashboard bugs
-Status: READY — Phase 68 planned (3 plans), ready for execution
-Last activity: 2026-03-03 — Phase 68 planned (68-01/02/03-PLAN.md created)
+Phase: 68 of 74 (Stripe Activation) — 1/3 plans executed
+Plan: 68-02 next — Subscription feature gate enforcement
+Status: In progress
+Last activity: 2026-03-03 — Completed 68-01 (billing emails + dashboard fixes)
 
-Progress: ░░░░░░░░░░ 13% (1/8 phases complete)
+Progress: ░░░░░░░░░░ 15% (1/8 phases complete, 1/3 plans in Phase 68)
 
-Next action: `/gsd:execute-plan .planning/phases/68-stripe-activation/68-01-PLAN.md`
+Next action: `/gsd:execute-plan .planning/phases/68-stripe-activation/68-02-PLAN.md`
 
 ## Performance Metrics
 
@@ -100,6 +100,14 @@ Decisions from v1.4:
 - AIConversation/AIMessage models for persistent chat history
 - TrackedKeyword/SocialMention for social listening
 - LinkBioPage/LinkBioLink for customizable landing pages
+
+Decisions from v3.0 (Phase 68):
+
+- Billing emails use fire-and-forget Resend SDK with lazy singleton (`getResend()`) — defers `new Resend()` to first call so module imports safely in test environments without `RESEND_API_KEY`
+- Static `/dashboard/billing` URL for billing portal — avoids async Stripe API call in webhook path (must respond <3s)
+- Unlimited progress bars: check `!limit || limit <= 0` (not just `=== -1`) — DB uninitialised 0 also means unlimited
+- HTTP 404 from `/api/user/subscription` = free plan (not error state)
+- `subscription.current_period_end` in Stripe API `2025-07-30.basil` is on `subscription.items.data[0]`, not root
 
 Decisions from v1.5 (Phase 54):
 
@@ -207,9 +215,9 @@ None.
 ## Session Continuity
 
 Last session: 2026-03-03
-Stopped at: Phase 68 planned — 3 PLAN.md files created and committed
+Stopped at: Completed 68-01 — billing lifecycle emails wired + UNI-633/634 fixed
 Resume file: none
-Next action: /gsd:execute-plan .planning/phases/68-stripe-activation/68-01-PLAN.md
+Next action: /gsd:execute-plan .planning/phases/68-stripe-activation/68-02-PLAN.md
 
 ## Linear Issues — v2.0 Phase 59-66 Tracking
 
