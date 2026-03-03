@@ -20,3 +20,4 @@ export { OnboardingProvider, useOnboarding } from './OnboardingContext';
 export { ProgressIndicator } from './ProgressIndicator';
 export { PlatformConnector } from './PlatformConnector';
 export { PersonaSetup } from './PersonaSetup';
+export { StepProgressV2, ONBOARDING_STEPS_V2 } from './StepProgressV2';

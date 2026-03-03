@@ -356,7 +356,7 @@ export default function DashboardLayout({
                 />
                 {showAllGroups
                   ? 'Show Less'
-                  : `Show More (${dynamicSidebarGroups.length - dynamicSidebarGroups.filter((g) => STARTER_GROUP_IDS.has(g.id)).length} more)`
+                  : `Show More (${dynamicSidebarGroups.filter((g) => !STARTER_GROUP_IDS.has(g.id) && g.id !== 'businesses').length} more)`
                 }
               </button>
             )}
@@ -398,6 +398,7 @@ export default function DashboardLayout({
               <Input
                 type="search"
                 placeholder="Search..."
+                aria-label="Search"
                 className="w-40 sm:w-48 md:w-64 pl-10 bg-white/5 border-white/10 text-white placeholder:text-gray-500"
               />
             </div>

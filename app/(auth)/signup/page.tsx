@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Mail, Lock, User, Chrome, Loader2, CheckCircle, Eye, EyeOff, Clock, ArrowRight } from '@/components/icons';
+import { Mail, Lock, User, Chrome, Loader2, CheckCircle, Eye, EyeOff, Clock, ArrowRight, RefreshCw } from '@/components/icons';
 import { SynthexLogo } from '@/components/marketing/MarketingLayout';
 import { toast } from 'sonner';
 
@@ -35,6 +35,8 @@ export default function SignupPage() {
 
   // UNI-632: Track email verification state to show inline message
   const [verificationEmail, setVerificationEmail] = useState<string | null>(null);
+  const [resendLoading, setResendLoading] = useState(false);
+  const [resendStatus, setResendStatus] = useState<'idle' | 'sent' | 'error'>('idle');
 
   // Countdown timer for rate limit cooldown
   useEffect(() => {
@@ -213,6 +215,26 @@ export default function SignupPage() {
     }
   };
 
+  const handleResendVerification = async () => {
+    setResendLoading(true);
+    setResendStatus('idle');
+    try {
+      const response = await fetch('/api/auth/resend-verification', {
+        method: 'POST',
+        credentials: 'include',
+      });
+      if (response.ok) {
+        setResendStatus('sent');
+      } else {
+        setResendStatus('error');
+      }
+    } catch {
+      setResendStatus('error');
+    } finally {
+      setResendLoading(false);
+    }
+  };
+
   const getPasswordStrengthColor = () => {
     if (passwordStrength === 0) return 'bg-gray-600';
     if (passwordStrength === 1) return 'bg-red-500';
@@ -288,6 +310,35 @@ export default function SignupPage() {
               Continue to onboarding
               <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleResendVerification}
+              disabled={resendLoading || resendStatus === 'sent'}
+              className="w-full border-cyan-500/20 text-gray-300 hover:bg-cyan-500/10 hover:text-white"
+            >
+              {resendLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Sending...
+                </>
+              ) : resendStatus === 'sent' ? (
+                <>
+                  <CheckCircle className="mr-2 h-4 w-4 text-cyan-400" />
+                  Verification email sent
+                </>
+              ) : (
+                <>
+                  <RefreshCw className="mr-2 h-4 w-4" />
+                  Resend verification email
+                </>
+              )}
+            </Button>
+            {resendStatus === 'error' && (
+              <p className="text-center text-xs text-red-400">
+                Failed to resend. Please try again.
+              </p>
+            )}
             <p className="text-center text-xs text-gray-500">
               You can verify your email later from your account settings
             </p>

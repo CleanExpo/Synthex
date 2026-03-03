@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { OnboardingProvider } from '@/components/onboarding';
 import { SynthexLogo } from '@/components/marketing/MarketingLayout';
 import Link from 'next/link';
@@ -10,19 +11,40 @@ import Link from 'next/link';
  * @description Wraps all onboarding pages with the onboarding provider and Synthex branding
  */
 
+// Fixed positions used during SSR to avoid hydration mismatch
+const FIXED_POSITIONS = Array.from({ length: 15 }, (_, i) => ({
+  left: ((i * 17 + 7) % 100),
+  top: ((i * 23 + 13) % 100),
+  delay: (i * 0.33) % 5,
+  duration: 5 + ((i * 0.67) % 10),
+}));
+
 // Floating Particles for onboarding
 function OnboardingParticles() {
+  const [positions, setPositions] = useState(FIXED_POSITIONS);
+
+  useEffect(() => {
+    setPositions(
+      Array.from({ length: 15 }, () => ({
+        left: Math.random() * 100,
+        top: Math.random() * 100,
+        delay: Math.random() * 5,
+        duration: 5 + Math.random() * 10,
+      }))
+    );
+  }, []);
+
   return (
     <div className="absolute inset-0 overflow-hidden pointer-events-none">
-      {[...Array(15)].map((_, i) => (
+      {positions.map((pos, i) => (
         <div
           key={i}
           className="absolute w-1 h-1 bg-cyan-400/20 rounded-full animate-float"
           style={{
-            left: `${Math.random() * 100}%`,
-            top: `${Math.random() * 100}%`,
-            animationDelay: `${Math.random() * 5}s`,
-            animationDuration: `${5 + Math.random() * 10}s`,
+            left: `${pos.left}%`,
+            top: `${pos.top}%`,
+            animationDelay: `${pos.delay}s`,
+            animationDuration: `${pos.duration}s`,
           }}
         />
       ))}
