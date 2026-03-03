@@ -447,6 +447,9 @@ model Organization {
   // Video generation
   videoGenerations   VideoGeneration[] @relation("OrganizationVideos")
 
+  // Workflow engine (Phase 62)
+  workflowExecutions WorkflowExecution[]
+
   // Indices for multi-tenant queries
   @@index([slug])
   @@index([status])
@@ -3105,4 +3108,62 @@ model VideoGeneration {
   @@index([organizationId])
   @@index([createdAt(sort: Desc)])
   @@map("video_generations")
+}
+
+// ==========================================
+// Workflow Engine Module (Phase 62)
+// ==========================================
+
+model WorkflowExecution {
+  id               String   @id @default(cuid())
+  organizationId   String   @map("organization_id")
+  workflowId       String?  @map("workflow_id")
+  status           String   @default("pending")
+  // pending | running | waiting_approval | completed | failed | cancelled
+  title            String
+  triggerType      String   @default("manual") @map("trigger_type")
+  // manual | scheduled | api
+  triggeredBy      String   @map("triggered_by")
+  currentStepIndex Int      @default(0) @map("current_step_index")
+  totalSteps       Int      @default(0) @map("total_steps")
+  inputData        Json?    @map("input_data")
+  outputData       Json?    @map("output_data")
+  errorMessage     String?  @map("error_message")
+  startedAt        DateTime? @map("started_at")
+  completedAt      DateTime? @map("completed_at")
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+  organization     Organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  stepExecutions   StepExecution[]
+
+  @@index([organizationId])
+  @@index([organizationId, status])
+  @@map("workflow_executions")
+}
+
+model StepExecution {
+  id                  String   @id @default(cuid())
+  workflowExecutionId String   @map("workflow_execution_id")
+  stepIndex           Int      @map("step_index")
+  stepName            String   @map("step_name")
+  stepType            String   @map("step_type")
+  // ai | approval | action | validation
+  status              String   @default("pending")
+  // pending | running | completed | failed | skipped | waiting_approval
+  inputData           Json?    @map("input_data")
+  outputData          Json?    @map("output_data")
+  confidenceScore     Float?   @map("confidence_score")
+  autoApproved        Boolean  @default(false) @map("auto_approved")
+  approvedBy          String?  @map("approved_by")
+  approvedAt          DateTime? @map("approved_at")
+  errorMessage        String?  @map("error_message")
+  retryCount          Int      @default(0) @map("retry_count")
+  startedAt           DateTime? @map("started_at")
+  completedAt         DateTime? @map("completed_at")
+  createdAt           DateTime @default(now()) @map("created_at")
+  workflowExecution   WorkflowExecution @relation(fields: [workflowExecutionId], references: [id], onDelete: Cascade)
+
+  @@index([workflowExecutionId])
+  @@index([workflowExecutionId, stepIndex])
+  @@map("step_executions")
 }
