@@ -11,9 +11,9 @@ See: .planning/PROJECT.md (updated 2026-02-17)
 
 Milestone: v3.0 Public Launch Readiness (Phases 67-74)
 Phase: 67 of 74 (Codebase Cleanup) — IN PROGRESS
-Plan: 67-01 COMPLETE — Plan 67-02 next (Orphaned API Route Audit)
+Plan: 67-02 COMPLETE — Plan 67-03 next (Fetch Pattern Standardisation)
 Status: EXECUTING — Phase 67 underway
-Last activity: 2026-03-03 — 67-01 package cleanup complete
+Last activity: 2026-03-03 — 67-02 orphaned route audit complete
 
 Progress: ░░░░░░░░░░ 0% (0/8 phases complete, Phase 67 in progress)
 
@@ -205,9 +205,9 @@ None.
 ## Session Continuity
 
 Last session: 2026-03-03
-Stopped at: Phase 67 Plan 01 (package cleanup) complete
+Stopped at: Phase 67 Plan 02 (orphaned route audit) complete
 Resume file: none
-Next action: /gsd:execute-plan .planning/phases/67-codebase-cleanup/67-02-PLAN.md
+Next action: /gsd:execute-plan .planning/phases/67-codebase-cleanup/67-03-PLAN.md
 
 ## Linear Issues — v2.0 Phase 59-66 Tracking
 
