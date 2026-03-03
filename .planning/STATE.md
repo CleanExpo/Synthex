@@ -193,6 +193,6 @@ Next action: /gsd:plan-phase 59 — Context Resilience Infrastructure
 
 | Issue | Title | Phase | Status |
 |-------|-------|-------|--------|
-| UNI-XXXX | Phase 59: Context Resilience Infrastructure | 59 | Todo |
-| UNI-XXXX | Phase 60: Agent Orchestration Hardening | 60 | Todo |
+| UNI-1237 | Phase 59: Context Resilience Infrastructure | 59 | Todo |
+| UNI-1238 | Phase 60: Agent Orchestration Hardening | 60 | Todo |
 | (phases 61-66 issues to be created when phases begin) | — | — | — |
