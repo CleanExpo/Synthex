@@ -17,6 +17,7 @@ None (internal platform work)
 - ✅ [v1.4 Creator Monetization & AI Studio](milestones/v1.4-ROADMAP.md) (Phases 36-51) — SHIPPED 2026-02-18
 - ✅ **v1.5 Deployment Readiness** — Phases 52-58 — SHIPPED 2026-03-03
 - ✅ **v2.0 Reliable AI Agents** — Phases 59-66 — SHIPPED 2026-03-03
+- 🚧 **v3.0 Public Launch Readiness** — Phases 67-74 (in progress)
 
 ## Phases
 
@@ -505,9 +506,17 @@ Plans:
 | 63. Parallel Agent Execution | v2.0 | 0/? | Not started | - |
 | 64. AI Quality & Brand Voice Guardian | v2.0 | 0/? | Not started | - |
 | 65. Campaign Intelligence Engine | v2.0 | 0/? | Not started | - |
-| 66. Autonomous Insights Agent | v2.0 | 0/? | Not started | - |
+| 66. Autonomous Insights Agent | v2.0 | 1/1 | Complete | 2026-03-03 |
+| 67. Codebase Cleanup | v3.0 | 0/? | Not started | - |
+| 68. Stripe Activation | v3.0 | 0/? | Not started | - |
+| 69. Public Landing Page | v3.0 | 0/? | Not started | - |
+| 70. Onboarding Funnel | v3.0 | 0/? | Not started | - |
+| 71. Observability & Monitoring | v3.0 | 0/? | Not started | - |
+| 72. Performance Hardening | v3.0 | 0/? | Not started | - |
+| 73. Pre-launch Security | v3.0 | 0/? | Not started | - |
+| 74. Launch Day | v3.0 | 0/? | Not started | - |
 
-### 🚧 v2.0 Reliable AI Agents (In Progress)
+### ✅ v2.0 Reliable AI Agents (SHIPPED 2026-03-03)
 
 **Milestone Goal:** Context-resilient development infrastructure + AI orchestration platform
 features. Transform Synthex from stateless AI tools into persistent, reliable AI agents.
@@ -611,3 +620,99 @@ Plans:
 
 Plans:
 - [x] 66-01: insights-agent.ts + /api/cron/insights + vercel.json cron + /api/insights + InsightsWidget + /dashboard/insights
+
+### 🚧 v3.0 Public Launch Readiness (In Progress)
+
+**Milestone Goal:** Harden, instrument, and ship synthex.social as a public product —
+real billing, a public-facing landing page, polished onboarding, observability, and a
+verified go-live runbook.
+
+#### Phase 67: Codebase Cleanup
+
+**Goal**: Remove unused packages (canvas-confetti, verify TanStack Table), wire or remove
+remaining orphaned API routes, standardise SWR/fetch patterns across dashboard
+**Depends on**: v2.0 complete
+**Research**: Unlikely (internal work — no new integrations)
+**Plans**: TBD
+
+Plans:
+- [ ] 67-01: TBD
+
+#### Phase 68: Stripe Activation
+
+**Goal**: Enable real Stripe billing — un-gate UNI-1202/1203, enforce subscription feature
+gates, wire customer portal, verify payment webhooks end-to-end
+**Depends on**: Phase 67
+**Research**: Likely (Stripe Billing Portal API, subscription enforcement patterns)
+**Research topics**: Stripe customer portal configuration, subscription gate middleware, proration handling
+**Plans**: TBD
+
+Plans:
+- [ ] 68-01: TBD
+
+#### Phase 69: Public Landing Page
+
+**Goal**: Public-facing marketing pages at synthex.social root — hero, features, pricing
+page with plan comparison, SEO meta tags, Open Graph images
+**Depends on**: Phase 68
+**Research**: Unlikely (existing SEO system + Next.js patterns)
+**Plans**: TBD
+
+Plans:
+- [ ] 69-01: TBD
+
+#### Phase 70: Onboarding Funnel
+
+**Goal**: Reduce signup→first-value friction — improve onboarding wizard, add welcome
+email sequence, refine trial UX, extend product tour to cover new v2.0 features
+**Depends on**: Phase 69
+**Research**: Unlikely (existing onboarding + email infrastructure)
+**Plans**: TBD
+
+Plans:
+- [ ] 70-01: TBD
+
+#### Phase 71: Observability & Monitoring
+
+**Goal**: Wire Sentry error tracking (currently stubbed), add structured logging,
+cron failure alerting, uptime monitoring, and error budget dashboards
+**Depends on**: Phase 70
+**Research**: Likely (Sentry Next.js SDK v8 + source maps + performance monitoring)
+**Research topics**: Sentry Next.js App Router integration, cron check-ins, alert thresholds
+**Plans**: TBD
+
+Plans:
+- [ ] 71-01: TBD
+
+#### Phase 72: Performance Hardening
+
+**Goal**: Redis caching for expensive queries (analytics, recommendations), remaining
+Prisma N+1 fixes, final bundle analysis, Vercel CWV verification on live deployment
+**Depends on**: Phase 71
+**Research**: Unlikely (patterns from v1.5 apply)
+**Plans**: TBD
+
+Plans:
+- [ ] 72-01: TBD
+
+#### Phase 73: Pre-launch Security
+
+**Goal**: Rate limit tuning for public traffic volumes, CSP/CORS audit, secrets rotation
+documentation, Supabase auth configuration review, GDPR compliance check
+**Depends on**: Phase 72
+**Research**: Unlikely (Sprint 3 + existing security patterns)
+**Plans**: TBD
+
+Plans:
+- [ ] 73-01: TBD
+
+#### Phase 74: Launch Day
+
+**Goal**: Smoke test suite against live Vercel deployment, go-live runbook, DNS/CDN
+configuration, rollback procedure, monitoring dashboard setup, launch announcement
+**Depends on**: Phase 73
+**Research**: Unlikely (internal procedures)
+**Plans**: TBD
+
+Plans:
+- [ ] 74-01: TBD

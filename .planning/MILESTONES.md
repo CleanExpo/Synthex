@@ -1,9 +1,33 @@
 # Project Milestones: Synthex
 
-## v2.0 Reliable AI Agents (In Progress — started 2026-03-03)
+## v3.0 Public Launch Readiness (In Progress — started 2026-03-03)
 
-**Goal:** Context-resilient development infrastructure + AI orchestration product features.
-**Phases:** 59-66 | **Status:** Planning
+**Goal:** Take Synthex from internal-only to public launch — clean codebase, live Stripe billing, polished landing page, guided onboarding, observability, performance hardening, and security sign-off.
+**Phases:** 67-74 | **Status:** Planning
+
+---
+
+## v2.0 Reliable AI Agents (Shipped: 2026-03-03)
+
+**Delivered:** Context resilience infrastructure, agent orchestration hardening, AI session memory, multi-step workflow engine with human gates + confidence gating, AI content scheduling, autonomous insights agent. Plus Sprint 3: IDOR + timing attack security fixes, dashboard gamification widget, content suggestions widget.
+
+**Phases completed:** 59-66 (8 phases)
+
+**Key accomplishments:**
+
+- Context resilience: rolling window + embedding-based recall, session state persistence
+- Agent orchestration: deterministic orchestrator with LLM-bounded step types, 2-retry cap
+- AI session memory: AIConversation/AIMessage models, cross-session context retrieval
+- Multi-step workflow engine: WorkflowExecution/StepExecution/WorkflowTemplate models, 7 step types, confidence gating ≥ 0.85
+- AI content scheduling: scheduled posts via workflow engine, human approval gates
+- Autonomous insights agent: `InsightsWidget` + history page + dashboard integration
+- Sprint 3 security: IDOR fix (social posts GET), 3× timing-safe API key comparison, cross-org admin mutation guard, userId spoofing fix in monitoring events
+
+**Stats:**
+
+- 8 phases (59-66), sprint fixes applied post-milestone
+- 1506 tests passing
+- Duration: 2026-03-03
 
 ---
 
