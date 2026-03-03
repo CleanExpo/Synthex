@@ -77,7 +77,7 @@ export async function POST(
     }
 
     // Skip if already renamed from default
-    if (conversation.title !== 'New Chat') {
+    if (conversation.title !== 'New Conversation') {
       return APISecurityChecker.createSecureResponse({
         success: true,
         skipped: true,

@@ -401,10 +401,16 @@ export function useAIChatConversation(
           })
             .then((res) => res.json())
             .then((data) => {
-              if (data.success && !data.skipped && data.title && mountedRef.current) {
+              if (!mountedRef.current) return;
+              if (data.success && !data.skipped && data.title) {
+                // Title was freshly updated — sync it locally
                 setConversation(prev => prev ? { ...prev, title: data.title } : null);
+              }
+              // Always refresh sidebar after first message — title may have been
+              // updated inline by the messages route even if auto-title was skipped
+              if (data.success) {
                 setTitleUpdated(true);
-                options?.onTitleUpdated?.(data.title);
+                options?.onTitleUpdated?.(data.title ?? '');
               }
             })
             .catch(() => {

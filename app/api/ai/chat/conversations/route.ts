@@ -154,7 +154,7 @@ export async function POST(request: NextRequest) {
     const validation = createConversationSchema.safeParse(body);
     const title = validation.success && validation.data.title
       ? validation.data.title
-      : 'New Chat';
+      : 'New Conversation';
 
     const conversation = await prisma.aIConversation.create({
       data: {

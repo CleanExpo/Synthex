@@ -166,7 +166,7 @@ export async function POST(
               messageCount: { increment: 2 }, // user + assistant
               lastMessageAt: new Date(),
               // Auto-title from first user message if still default
-              ...(conversation.title === 'New Chat'
+              ...(conversation.title === 'New Conversation'
                 ? { title: userMessage.substring(0, 80) + (userMessage.length > 80 ? '...' : '') }
                 : {}),
             },
