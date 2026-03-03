@@ -1683,8 +1683,11 @@ model WorkflowTemplate {
   steps          Json     @default("[]")
 
   // Configuration
-  isDefault      Boolean  @default(false) @map("is_default")
-  contentTypes   Json     @default("[\"post\"]") @map("content_types") // Array of content types this applies to
+  isDefault             Boolean  @default(false) @map("is_default")
+  contentTypes          Json     @default("[\"post\"]") @map("content_types") // Array of content types this applies to
+  autoApproveThreshold  Float    @default(0.85) @map("auto_approve_threshold")
+  isActive              Boolean  @default(true) @map("is_active")
+  createdBy             String?  @map("created_by")
 
   // Timestamps
   createdAt      DateTime @default(now()) @map("created_at")
@@ -1692,6 +1695,7 @@ model WorkflowTemplate {
 
   @@index([organizationId])
   @@index([isDefault])
+  @@index([isActive])
   @@map("workflow_templates")
 }
 
