@@ -74,6 +74,7 @@ export interface UseAIChatResult {
   upgradeRequired: boolean;
   createConversation: (title?: string) => Promise<ChatConversation | null>;
   deleteConversation: (id: string) => Promise<void>;
+  archiveConversation: (id: string) => Promise<void>;
   refreshConversations: () => Promise<void>;
 }
 
@@ -173,6 +174,23 @@ export function useAIChat(): UseAIChatResult {
     }
   }, []);
 
+  const archiveConversation = useCallback(async (id: string): Promise<void> => {
+    try {
+      setError(null);
+
+      await fetchWithCSRF(`/api/ai/chat/conversations/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'archived' }),
+      });
+
+      // Remove from active list (archived conversations are filtered out)
+      setConversations(prev => prev.filter(c => c.id !== id));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to archive conversation');
+    }
+  }, []);
+
   // Initial fetch
   useEffect(() => {
     fetchConversations();
@@ -189,6 +207,7 @@ export function useAIChat(): UseAIChatResult {
     upgradeRequired,
     createConversation,
     deleteConversation,
+    archiveConversation,
     refreshConversations: fetchConversations,
   };
 }
@@ -205,17 +224,23 @@ export interface UseAIChatConversationResult {
   sendMessage: (content: string) => Promise<void>;
   streamingContent: string;
   isStreaming: boolean;
+  titleUpdated: boolean;
 }
 
-export function useAIChatConversation(conversationId: string | null): UseAIChatConversationResult {
+export function useAIChatConversation(
+  conversationId: string | null,
+  options?: { onTitleUpdated?: (title: string) => void }
+): UseAIChatConversationResult {
   const [conversation, setConversation] = useState<ChatConversation | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [streamingContent, setStreamingContent] = useState('');
   const [isStreaming, setIsStreaming] = useState(false);
+  const [titleUpdated, setTitleUpdated] = useState(false);
   const mountedRef = useRef(true);
   const abortControllerRef = useRef<AbortController | null>(null);
+  const isFirstMessageRef = useRef(true);
 
   // Fetch conversation and messages
   const fetchConversation = useCallback(async () => {
@@ -366,10 +391,25 @@ export function useAIChatConversation(conversationId: string | null): UseAIChatC
         setMessages(prev => [...prev, assistantMessage]);
         setStreamingContent('');
 
-        // Update conversation title if it was "New Chat"
-        if (conversation?.title === 'New Chat') {
-          const newTitle = content.trim().substring(0, 80) + (content.length > 80 ? '...' : '');
-          setConversation(prev => prev ? { ...prev, title: newTitle } : null);
+        // Auto-title: fire after first response completes (fire-and-forget)
+        if (isFirstMessageRef.current && conversationId) {
+          isFirstMessageRef.current = false;
+          fetchWithCSRF(`/api/ai/chat/conversations/${conversationId}/auto-title`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({}),
+          })
+            .then((res) => res.json())
+            .then((data) => {
+              if (data.success && !data.skipped && data.title && mountedRef.current) {
+                setConversation(prev => prev ? { ...prev, title: data.title } : null);
+                setTitleUpdated(true);
+                options?.onTitleUpdated?.(data.title);
+              }
+            })
+            .catch(() => {
+              // Non-blocking — title update failure is not a critical error
+            });
         }
       }
     } catch (err) {
@@ -390,8 +430,10 @@ export function useAIChatConversation(conversationId: string | null): UseAIChatC
     }
   }, [conversationId, isStreaming, conversation?.title]);
 
-  // Fetch on mount or conversationId change
+  // Fetch on mount or conversationId change; reset first-message tracker
   useEffect(() => {
+    isFirstMessageRef.current = true;
+    setTitleUpdated(false);
     fetchConversation();
   }, [fetchConversation]);
 
@@ -413,5 +455,6 @@ export function useAIChatConversation(conversationId: string | null): UseAIChatC
     sendMessage,
     streamingContent,
     isStreaming,
+    titleUpdated,
   };
 }

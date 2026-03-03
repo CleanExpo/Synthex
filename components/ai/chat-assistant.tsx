@@ -17,9 +17,10 @@ import { cn } from '@/lib/utils';
 
 interface ChatAssistantProps {
   conversationId: string;
+  onTitleUpdated?: () => void;
 }
 
-export function ChatAssistant({ conversationId }: ChatAssistantProps) {
+export function ChatAssistant({ conversationId, onTitleUpdated }: ChatAssistantProps) {
   const {
     conversation,
     messages,
@@ -28,7 +29,7 @@ export function ChatAssistant({ conversationId }: ChatAssistantProps) {
     sendMessage,
     streamingContent,
     isStreaming,
-  } = useAIChatConversation(conversationId);
+  } = useAIChatConversation(conversationId, { onTitleUpdated });
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
