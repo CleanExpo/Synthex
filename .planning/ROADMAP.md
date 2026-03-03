@@ -508,8 +508,8 @@ Plans:
 | 65. Campaign Intelligence Engine | v2.0 | 0/? | Not started | - |
 | 66. Autonomous Insights Agent | v2.0 | 1/1 | Complete | 2026-03-03 |
 | 67. Codebase Cleanup | v3.0 | 3/3 | Done | 2026-03-03 |
-| 68. Stripe Activation | v3.0 | 0/3 | Planned | - |
-| 69. Public Landing Page | v3.0 | 0/? | Not started | - |
+| 68. Stripe Activation | v3.0 | 3/3 | Done | 2026-03-03 |
+| 69. Public Landing Page | v3.0 | 1/1 | Done | 2026-03-03 |
 | 70. Onboarding Funnel | v3.0 | 0/? | Not started | - |
 | 71. Observability & Monitoring | v3.0 | 0/? | Not started | - |
 | 72. Performance Hardening | v3.0 | 0/? | Not started | - |
@@ -665,7 +665,9 @@ page with plan comparison, SEO meta tags, Open Graph images
 **Plans**: TBD
 
 Plans:
-- [ ] 69-01: TBD
+- [x] 69-01: Server component landing page + dynamic OG images + Starter free tier + billing toggle + HowItWorks + Testimonials
+
+**Status**: 1/1 | Done
 
 #### Phase 70: Onboarding Funnel
 

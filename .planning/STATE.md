@@ -10,14 +10,14 @@ See: .planning/PROJECT.md (updated 2026-02-17)
 ## Current Position
 
 Milestone: v3.0 Public Launch Readiness (Phases 67-74)
-Phase: 68 of 74 (Stripe Activation) — 3/3 plans executed — COMPLETE
-Plan: Phase 68 done — next is Phase 69 (Public Landing Page)
+Phase: 69 of 74 (Public Landing Page) — 1/1 plans executed — COMPLETE
+Plan: Phase 69 done — next is Phase 70 (Onboarding Funnel)
 Status: Phase complete
-Last activity: 2026-03-03 — Completed 68-03 (pricing page + Stripe test config + Vercel env vars)
+Last activity: 2026-03-03 — Completed 69-01 (server component landing page, dynamic OG images, free Starter tier, billing toggle, HowItWorks + Testimonials sections)
 
-Progress: ░░░░░░░░░░ 15% (1/8 phases complete, 2/3 plans in Phase 68)
+Progress: ░░░░░░░░░░ 25% (3/8 phases complete in v3.0)
 
-Next action: `/gsd:plan-phase 69`
+Next action: `/gsd:plan-phase 70`
 
 ## Performance Metrics
 
@@ -100,6 +100,14 @@ Decisions from v1.4:
 - AIConversation/AIMessage models for persistent chat history
 - TrackedKeyword/SocialMention for social listening
 - LinkBioPage/LinkBioLink for customizable landing pages
+
+Decisions from v3.0 (Phase 69):
+
+- `app/page.tsx` is a server component — child `'use client'` components work as client subtrees
+- Dynamic OG images via `app/api/og/route.tsx` (Edge runtime) — accepts `?title=` param, 1200×630
+- `generateMetadata()` in `lib/seo/metadata.ts` defaults to `/api/og?title=...` when no explicit image given
+- Billing toggle extracted into `components/pricing/pricing-grid.tsx` (`'use client'`) — pricing page itself stays server component
+- Starter free tier: "Free" price, plain `<Link href="/signup">` CTA, no CheckoutButton needed
 
 Decisions from v3.0 (Phase 68):
 
@@ -223,9 +231,9 @@ None.
 ## Session Continuity
 
 Last session: 2026-03-03
-Stopped at: Completed 68-03 — pricing page, Stripe test account configured, Vercel env vars deployed
+Stopped at: Completed 69-01 — server component landing page, dynamic OG images, Starter free tier, billing toggle, HowItWorks + Testimonials
 Resume file: none
-Next action: /gsd:plan-phase 69
+Next action: /gsd:plan-phase 70
 
 ## Linear Issues — v2.0 Phase 59-66 Tracking
 
