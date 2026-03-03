@@ -1,4 +1,9 @@
 /**
+ * @internal Server-only endpoint — not called directly by frontend UI.
+ * Used by: mobile app SDK clients for offline data synchronisation.
+ */
+
+/**
  * Mobile Data Sync API
  *
  * @description Handles data synchronization between mobile app and server

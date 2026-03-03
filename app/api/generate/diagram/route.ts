@@ -1,4 +1,9 @@
 /**
+ * @internal Server-only endpoint — not called directly by frontend UI.
+ * Used by: Paper Banana microservice integration for AI diagram generation; no UI page exists yet.
+ */
+
+/**
  * Diagram Generation Route
  *
  * Proxies diagram generation requests to the Paper Banana FastAPI microservice.

@@ -1,4 +1,10 @@
 /**
+ * @deprecated No active callers. Candidate for removal in a future cleanup phase.
+ * Last reviewed: 2026-03-03
+ * Reason: Development example/demo stub; session middleware was deleted; no production use.
+ */
+
+/**
  * Example API Route with Redis Integration
  * Demonstrates session management, rate limiting, and caching
  */

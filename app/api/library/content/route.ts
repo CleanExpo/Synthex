@@ -1,4 +1,10 @@
 /**
+ * @internal Server-only endpoint — not called directly by frontend UI.
+ * Used by: content library CRUD; the active frontend caller uses /api/content-library instead.
+ * This path (/api/library/content) is a duplicate route — prefer /api/content-library.
+ */
+
+/**
  * Content Library API
  *
  * @description Manage user's content library items

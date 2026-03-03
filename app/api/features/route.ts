@@ -1,4 +1,9 @@
 /**
+ * @internal Server-only endpoint — not called directly by frontend UI.
+ * Used by: plan-based feature-flag resolution; intended for future useFeatures() hook.
+ */
+
+/**
  * Features API
  *
  * @description Returns available features for the authenticated user based on their plan

@@ -1,3 +1,8 @@
+/**
+ * @internal Server-only endpoint — not called directly by frontend UI.
+ * Used by: internal email delivery service; called server-side by auth flows, notifications, and cron jobs.
+ */
+
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { emailService } from '@/lib/email-service';

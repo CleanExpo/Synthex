@@ -1,4 +1,10 @@
 /**
+ * @internal Server-only endpoint — not called directly by frontend UI.
+ * Used by: agency client management workflows; no dashboard page exists yet.
+ * Wire when a /dashboard/clients page is built.
+ */
+
+/**
  * Client Management API
  *
  * @description CRUD operations for agency clients and workspaces

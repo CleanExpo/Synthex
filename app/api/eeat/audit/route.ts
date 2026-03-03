@@ -1,4 +1,10 @@
 /**
+ * @internal Server-only endpoint — not called directly by frontend UI.
+ * Used by: combined E-E-A-T + GEO audit pipeline; intended for content and SEO audit workflows.
+ * Wire when an EEAT audit panel is added to the content or SEO dashboard pages.
+ */
+
+/**
  * E-E-A-T Full Audit API — Combined E-E-A-T + GEO audit
  *
  * POST /api/eeat/audit

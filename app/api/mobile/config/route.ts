@@ -1,4 +1,9 @@
 /**
+ * @internal Server-only endpoint — not called directly by frontend UI.
+ * Used by: mobile app SDK clients for runtime configuration.
+ */
+
+/**
  * Mobile App Configuration API
  *
  * @description Provides configuration for mobile app clients

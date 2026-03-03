@@ -1,4 +1,9 @@
 /**
+ * @internal Server-only endpoint — not called directly by frontend UI.
+ * Used by: automated content safety pipeline; called server-side before publishing posts.
+ */
+
+/**
  * Content Moderation API
  *
  * @description Content safety checking and compliance verification

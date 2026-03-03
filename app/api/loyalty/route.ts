@@ -1,4 +1,10 @@
 /**
+ * @internal Server-only endpoint — not called directly by frontend UI.
+ * Used by: loyalty tier progression system; no dashboard page exists yet.
+ * Wire when a gamification/loyalty page is built.
+ */
+
+/**
  * Loyalty Tier API
  *
  * GET /api/loyalty - Current tier, points, progress to next tier

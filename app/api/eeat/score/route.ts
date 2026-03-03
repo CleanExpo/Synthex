@@ -1,4 +1,10 @@
 /**
+ * @internal Server-only endpoint — not called directly by frontend UI.
+ * Used by: E-E-A-T content scoring pipeline; intended for use in the content editor and SEO audit flows.
+ * Wire when an EEAT scoring panel is added to the content or SEO dashboard pages.
+ */
+
+/**
  * E-E-A-T Score API — Score content against Google's E-E-A-T framework
  *
  * POST /api/eeat/score

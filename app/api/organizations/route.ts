@@ -1,4 +1,9 @@
 /**
+ * @internal Server-only endpoint — not called directly by frontend UI.
+ * Used by: onboarding flow (org creation) and admin tooling (org listing).
+ */
+
+/**
  * Organizations API
  *
  * @description API endpoints for organization management:

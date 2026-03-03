@@ -1,4 +1,10 @@
 /**
+ * @internal Server-only endpoint — not called directly by frontend UI.
+ * Used by: legacy AI generation wrapper; active callers use /api/ai/generate-content instead.
+ * Kept for backward compatibility with external API consumers.
+ */
+
+/**
  * AI Content Generation API with Enhanced Rate Limiting
  * POST /api/generate - Generate AI content
  * GET /api/generate - Get endpoint info and rate limits

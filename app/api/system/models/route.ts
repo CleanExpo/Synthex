@@ -1,7 +1,12 @@
 /**
+ * @internal Server-only endpoint — not called directly by frontend UI.
+ * Used by: admin tooling for monitoring and managing LLM model selection from the model registry.
+ */
+
+/**
  * GET /api/system/models - Get current model registry status
  * POST /api/system/models/refresh - Force refresh models from registry
- * 
+ *
  * Admin endpoint for monitoring and managing LLM model selection
  */
 

@@ -1,4 +1,9 @@
 /**
+ * @internal Server-only endpoint — not called directly by frontend UI.
+ * Used by: admin tooling and infrastructure diagnostics to inspect and reset rate limit state.
+ */
+
+/**
  * Rate Limit Management API
  * Provides endpoints for checking and managing rate limits
  */

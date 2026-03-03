@@ -1,4 +1,9 @@
 /**
+ * @internal Server-only endpoint — not called directly by frontend UI.
+ * Used by: internal performance monitoring suite; consumed by monitoring dashboards and alerting.
+ */
+
+/**
  * Performance Metrics API
  * Real-time performance metrics endpoint
  *

@@ -1,4 +1,10 @@
 /**
+ * @internal Server-only endpoint — not called directly by frontend UI.
+ * Used by: quote/citation management for content creation; no dashboard page exists yet.
+ * Wire when a quotes/citations UI is built.
+ */
+
+/**
  * Quote API Endpoint
  * CRUD operations for content quotes
  *

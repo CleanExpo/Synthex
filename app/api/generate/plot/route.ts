@@ -1,4 +1,9 @@
 /**
+ * @internal Server-only endpoint — not called directly by frontend UI.
+ * Used by: Paper Banana microservice integration for AI data plot generation; no UI page exists yet.
+ */
+
+/**
  * Plot Generation Route
  *
  * Proxies data plot generation requests to the Paper Banana FastAPI microservice.

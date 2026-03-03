@@ -1,4 +1,9 @@
 /**
+ * @internal Server-only endpoint — not called directly by frontend UI.
+ * Used by: admin tooling and cron jobs to submit URLs to Google's Indexing API.
+ */
+
+/**
  * Google Indexing API Route
  *
  * Submit URLs to Google for instant crawling via the Indexing API.

@@ -1,4 +1,9 @@
 /**
+ * @internal Server-only endpoint — not called directly by frontend UI.
+ * Used by: WebSocket notification infrastructure; the frontend uses SSE via /api/notifications/stream instead.
+ */
+
+/**
  * WebSocket/Notification API Route
  *
  * @description Handles notification delivery and WebSocket info

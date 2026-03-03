@@ -1,4 +1,10 @@
 /**
+ * @deprecated No active callers. Candidate for removal in a future cleanup phase.
+ * Last reviewed: 2026-03-03
+ * Reason: Cache stats duplicated by /api/monitoring/metrics; uses src/infrastructure path not in use.
+ */
+
+/**
  * Cache Management API
  * Provides endpoints for cache statistics and management
  */

@@ -1,3 +1,9 @@
+/**
+ * @deprecated No active callers. Candidate for removal in a future cleanup phase.
+ * Last reviewed: 2026-03-03
+ * Reason: Dev/staging-only Sentry integration test; disabled in production; no UI caller.
+ */
+
 import { NextRequest, NextResponse } from 'next/server';
 import * as Sentry from '@sentry/nextjs';
 
