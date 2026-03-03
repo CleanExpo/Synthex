@@ -26,13 +26,13 @@
 - **Status**: All backlog issues Done. 5 strategic issues (UNI-1180–1184) tracked separately.
 
 ## Current State (2026-03-03)
-- **Branch**: main at `6777131f`
+- **Branch**: main at `6a9800d`
 - **DB**: 91 Prisma models, schema unchanged since v1.4
 - **Test suite**: 62 suites, 1482 passing (25 pre-existing failures: BullMQ transform, Stripe mock, SubscriptionService)
-- **Milestone**: v1.5 Deployment Readiness COMPLETE (Phases 52-58 all done)
-- **Next**: v2.0 milestone planning
+- **Milestone**: v2.0 Reliable AI Agents — Phase 59 (Context Resilience Infrastructure)
+- **v1.5 shipped**: 2026-03-03 — all 7 phases done, 1482 tests passing
 
-### Recent Audit Session (UNI-1169–1179)
+### v1.5 Final (UNI-1226–1230 — all Done)
 | ID | Title | Commit |
 |---|---|---|
 | UNI-1169 | Add 19 missing env vars to .env.example | `e785d9a` |

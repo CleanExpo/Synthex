@@ -15,7 +15,8 @@ None (internal platform work)
 - ✅ **v1.2 Features** — Phases 19-29 — SHIPPED 2026-02-18
 - ✅ **v1.3 Features** — Phases 30-35 — SHIPPED 2026-02-18
 - ✅ [v1.4 Creator Monetization & AI Studio](milestones/v1.4-ROADMAP.md) (Phases 36-51) — SHIPPED 2026-02-18
-- 🚧 **v1.5 Deployment Readiness** — Phases 52-58 (in progress)
+- ✅ **v1.5 Deployment Readiness** — Phases 52-58 — SHIPPED 2026-03-03
+- 🚧 **v2.0 Reliable AI Agents** — Phases 59-66 (in progress)
 
 ## Phases
 
@@ -359,7 +360,7 @@ See [milestones/v1.4-ROADMAP.md](milestones/v1.4-ROADMAP.md) for full details.
 
 </details>
 
-### 🚧 v1.5 Deployment Readiness (In Progress)
+### ✅ v1.5 Deployment Readiness (SHIPPED 2026-03-03)
 
 **Milestone Goal:** Ensure everything built in v1.0-v1.4 is tested, polished, and production-ready. No new features — focus on testing, verification, and optimization.
 
@@ -496,4 +497,101 @@ Plans:
 | 55. UI Audit - States | v1.5 | 1/2 | In progress | 2026-03-02 |
 | 56. UI Audit - Responsive | v1.5 | 0/? | Not started | - |
 | 57. Performance - Bundle | v1.5 | 0/? | Not started | - |
-| 58. Performance - Vitals | v1.5 | 0/? | Not started | - |
+| 58. Performance - Vitals | v1.5 | 1/1 | Complete | 2026-03-03 |
+| 59. Context Resilience Infrastructure | v2.0 | 0/? | Not started | - |
+| 60. Agent Orchestration Hardening | v2.0 | 0/? | Not started | - |
+| 61. AI Session Memory & Persistence | v2.0 | 0/? | Not started | - |
+| 62. Multi-step Workflow Engine | v2.0 | 0/? | Not started | - |
+| 63. Parallel Agent Execution | v2.0 | 0/? | Not started | - |
+| 64. AI Quality & Brand Voice Guardian | v2.0 | 0/? | Not started | - |
+| 65. Campaign Intelligence Engine | v2.0 | 0/? | Not started | - |
+| 66. Autonomous Insights Agent | v2.0 | 0/? | Not started | - |
+
+### 🚧 v2.0 Reliable AI Agents (In Progress)
+
+**Milestone Goal:** Context-resilient development infrastructure + AI orchestration platform
+features. Transform Synthex from stateless AI tools into persistent, reliable AI agents.
+
+Inspired by the "Context Drift Problem" research (Unite-Group, March 2026): PreCompact hooks,
+subagent isolation, disk-based state, and hook enforcement applied to both dev infrastructure
+and product features.
+
+#### Phase 59: Context Resilience Infrastructure
+
+**Goal**: Eliminate context drift risk in the development process
+**Depends on**: v1.5 complete
+**Research**: Done (Context Drift Problem research document, March 2026)
+**Plans**: TBD
+
+Plans:
+- [ ] 59-01: CONSTITUTION.md + PreCompact hook + SessionStart + UserPromptSubmit hooks
+
+#### Phase 60: Agent Orchestration Hardening
+
+**Goal**: Automate Linear MCP session workflow; add project-level hive-mind orchestrator
+**Depends on**: Phase 59
+**Research**: Unlikely (internal patterns established)
+**Plans**: TBD
+
+Plans:
+- [ ] 60-01: Linear session automation + hive-mind agent + pre-agent-dispatch.ps1
+
+#### Phase 61: AI Session Memory & Persistence
+
+**Goal**: AI conversations persist across page reload, re-authentication, and browser close
+**Depends on**: Phase 60
+**Research**: Unlikely (AIConversation model already exists)
+**Plans**: TBD
+
+Plans:
+- [ ] 61-01: TBD
+
+#### Phase 62: Multi-step Workflow Engine
+
+**Goal**: Define and execute sequential AI workflows with human-approval gates
+**Depends on**: Phase 61
+**Research**: Unlikely (Prisma model pattern established)
+**Plans**: TBD
+
+Plans:
+- [ ] 62-01: TBD
+
+#### Phase 63: Parallel Agent Execution
+
+**Goal**: Batch content generation; simultaneous platform variations; progress indicators
+**Depends on**: Phase 62
+**Research**: Unlikely (Promise.all patterns established)
+**Plans**: TBD
+
+Plans:
+- [ ] 63-01: TBD
+
+#### Phase 64: AI Quality & Brand Voice Guardian
+
+**Goal**: Auto-review all content before publishing; brand consistency scoring
+**Depends on**: Phase 63
+**Research**: Unlikely (Brand Voice Engine exists from Phase 39)
+**Plans**: TBD
+
+Plans:
+- [ ] 64-01: TBD
+
+#### Phase 65: Campaign Intelligence Engine
+
+**Goal**: Performance-based learning, pattern extraction, A/B auto-evaluation
+**Depends on**: Phase 64
+**Research**: Unlikely (analytics and A/B models already exist)
+**Plans**: TBD
+
+Plans:
+- [ ] 65-01: TBD
+
+#### Phase 66: Autonomous Insights Agent
+
+**Goal**: Scheduled AI proactively surfaces opportunities and auto-schedules top content
+**Depends on**: Phase 65
+**Research**: Unlikely (cron + AI patterns established)
+**Plans**: TBD
+
+Plans:
+- [ ] 66-01: TBD

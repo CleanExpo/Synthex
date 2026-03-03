@@ -1,5 +1,68 @@
 # Project Milestones: Synthex
 
+## v2.0 Reliable AI Agents (In Progress — started 2026-03-03)
+
+**Goal:** Context-resilient development infrastructure + AI orchestration product features.
+**Phases:** 59-66 | **Status:** Planning
+
+---
+
+## v1.5 Deployment Readiness (Shipped: 2026-03-03)
+
+**Delivered:** E2E test suite (Playwright, auth + dashboard), API contract tests (198 tests,
+74% Zod route coverage), UI state audit (all 30+ dashboard pages), WCAG 2.1 AA fixes,
+bundle optimisation, N+1 Prisma fix, CWV code audit, 8 cron jobs verified.
+
+**Phases completed:** 52-58 (8 plans + UAT + bug fix)
+
+**Key accomplishments:**
+
+- Playwright E2E suite: 55/55 auth tests, 142/159 dashboard tests passing (phased stabilisation)
+- 198 API contract tests across 11 suites — 74% route Zod coverage
+- UI state audit: all 30+ dashboard pages have loading/empty/error states
+- WCAG 2.1 AA: aria-label on user menu, Escape key handler on mobile nav
+- N+1 fix: `analytics/insights` daily trends 30 sequential queries → Promise.all
+- Bundle: 11 packages tree-shaken, jsPDF dynamic, recharts/framer-motion optimised
+- CWV code audit: LCP/CLS/INP/TTFB all configured correctly at code level
+- All 8 Vercel cron jobs verified with CRON_SECRET Bearer auth
+- 1482 tests passing (62 suites), 25 pre-existing failures unchanged
+
+**Stats:**
+
+- Test count: 1064 (v1.0) → 1433 (v1.5) → 1482 (final v1.5)
+- Phases: 7 (52-58), 8 plans + 1 bug fix plan
+- Duration: 2026-02-18 to 2026-03-03
+
+---
+
+## v1.4 Creator Monetisation & AI Studio (Shipped: 2026-02-18)
+
+**Delivered:** AI Chat with streaming SSE, Image Generation, Social Listening, Link-in-Bio,
+Sponsor CRM (3-tier hierarchy), Affiliate link cloaking, Revenue tracking, ROI Calculator.
+
+**Phases completed:** 36-51 (16 phases)
+
+---
+
+## v1.3 Features — SEO & Search (Shipped: 2026-02-18)
+
+**Delivered:** Technical SEO Dashboard, Search Console integration, PageSpeed integration,
+Schema Markup Manager, GEO Readiness Dashboard, SEO Audit Automation (scheduled + alerts).
+
+**Phases completed:** 30-35 (6 phases)
+
+---
+
+## v1.2 Features (Shipped: 2026-02-18)
+
+**Delivered:** AI Template Library, Content Optimization scoring, Multi-format generation,
+Analytics Dashboard v2, Predictive Analytics, Custom Reports Builder, Canva/Buffer/Zapier
+integrations, Webhook system, Approval workflows, Team collaboration, Role permissions.
+
+**Phases completed:** 19-29 (11 phases)
+
+---
+
 ## v1.1 Platform Enhancement (Shipped: 2026-02-17)
 
 **Delivered:** Completed all v1.0 deferred items — removed 18 legacy service files, wired 8 components to real APIs, added ContentLibrary model, connected 3 agent coordinators, and enhanced dashboard UX with loading states, error boundaries, and expanded ProductTour.

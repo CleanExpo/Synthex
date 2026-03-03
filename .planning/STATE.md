@@ -5,17 +5,17 @@
 See: .planning/PROJECT.md (updated 2026-02-17)
 
 **Core value:** Every endpoint returns real data, every platform works, every dashboard page connects to live APIs
-**Current focus:** v1.5 Deployment Readiness
+**Current focus:** v2.0 Reliable AI Agents
 
 ## Current Position
 
-Milestone: v1.5 Deployment Readiness (Phases 52-58)
-Phase: 58 of 58 (Performance - Core Web Vitals) — COMPLETE
-Plan: 1 of 1 complete
-Status: MILESTONE COMPLETE
-Last activity: 2026-03-03 — v1.5 Deployment Readiness COMPLETE: all 7 phases done, 8 cron jobs verified, CWV config clean, 1482 tests passing
+Milestone: v2.0 Reliable AI Agents (Phases 59-66)
+Phase: 59 of 66 (Context Resilience Infrastructure) — PLANNING
+Plan: 0 of 1 (59-01 not yet written)
+Status: IN PROGRESS — Phase 59 next
+Last activity: 2026-03-03 — v2.0 milestone created; v1.5 archived
 
-Progress: ██████████ 100% (7/7 phases complete)
+Progress: ░░░░░░░░░░ 0% (0/8 phases complete)
 
 ## Performance Metrics
 
@@ -184,18 +184,15 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-02
-Stopped at: Phase 54 complete (198 contract tests passing, 11 suites)
-Resume file: .planning/phases/54-api-contract-verification/54-02-SUMMARY.md
-Next action: Start v2.0 milestone planning — /gsd:new-milestone
-Linear: UNI-648 tracks E2E stabilisation progress
+Last session: 2026-03-03
+Stopped at: v2.0 milestone structure created (phases 59-66 defined)
+Resume file: .planning/phases/59-context-resilience/ (no plan yet)
+Next action: /gsd:plan-phase 59 — Context Resilience Infrastructure
 
-## Linear Issues — v1.5 Phase 55-58 Tracking
+## Linear Issues — v2.0 Phase 59-66 Tracking
 
 | Issue | Title | Phase | Status |
 |-------|-------|-------|--------|
-| UNI-1226 | Fix /dashboard/competitors crash (r.filter) | 55-BUG-01 | Todo |
-| UNI-1227 | Phase 55-02: Inline state audit — 13 pages | 55-02 | Todo |
-| UNI-1228 | Phase 56: Responsive design audit + WCAG 2.1 AA | 56 | Todo |
-| UNI-1229 | Phase 57: Bundle analysis and Prisma optimisation | 57 | Todo |
-| UNI-1230 | Phase 58: Core Web Vitals compliance | 58 | Todo |
+| UNI-XXXX | Phase 59: Context Resilience Infrastructure | 59 | Todo |
+| UNI-XXXX | Phase 60: Agent Orchestration Hardening | 60 | Todo |
+| (phases 61-66 issues to be created when phases begin) | — | — | — |
