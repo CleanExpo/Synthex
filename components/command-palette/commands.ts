@@ -54,6 +54,11 @@ export function buildCommands(
     { id: 'geo-readiness', title: 'GEO Readiness Dashboard', description: 'AI search citability scores, passage analysis, platform optimization', icon: Search, action: () => push('/dashboard/seo/geo-readiness'), category: 'navigation', keywords: ['geo', 'generative engine', 'ai search', 'citability', 'passages', 'readiness', 'google aio', 'chatgpt', 'perplexity', 'bing copilot', 'ai visibility'] },
     { id: 'scheduled-audits', title: 'Scheduled Audits', description: 'Automated recurring SEO audits with regression alerts', icon: Calendar, action: () => push('/dashboard/seo/scheduled-audits'), category: 'navigation', keywords: ['scheduled', 'audits', 'automation', 'alerts', 'regression', 'monitoring', 'recurring', 'cron', 'seo'] },
 
+    // Workflows (AI Agents — Phase 62)
+    { id: 'workflows', title: 'Open Workflows', description: 'View and manage AI workflow executions', icon: GitPullRequest, action: () => push('/dashboard/workflows'), category: 'navigation', keywords: ['workflow', 'automation', 'ai', 'execution', 'steps', 'agents'] },
+    { id: 'new-workflow', title: 'New Workflow', description: 'Start a new AI workflow execution', icon: Plus, action: () => push('/dashboard/workflows?action=new'), category: 'actions', keywords: ['workflow', 'new', 'start', 'create', 'automation', 'ai'] },
+    { id: 'pending-approvals-workflows', title: 'View Pending Approvals', description: 'See workflow steps waiting for your approval', icon: GitPullRequest, action: () => push('/dashboard/workflows?filter=waiting_approval'), category: 'navigation', keywords: ['workflow', 'approval', 'pending', 'waiting', 'review', 'approve'] },
+
     // Actions
     { id: 'new-content', title: 'Create New Content', description: 'Generate AI-powered content', icon: Plus, action: () => { push('/dashboard/content'); notify.custom('Ready to create amazing content!'); }, category: 'actions', keywords: ['new', 'create', 'generate', 'ai'] },
     { id: 'add-keyword', title: 'Add Tracked Keyword', description: 'Start monitoring a new keyword or hashtag', icon: Bell, action: () => push('/dashboard/listening?action=add'), category: 'actions', keywords: ['add', 'track', 'keyword', 'hashtag', 'monitor', 'listening', 'brand'] },
