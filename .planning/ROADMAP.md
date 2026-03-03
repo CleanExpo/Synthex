@@ -16,7 +16,7 @@ None (internal platform work)
 - ✅ **v1.3 Features** — Phases 30-35 — SHIPPED 2026-02-18
 - ✅ [v1.4 Creator Monetization & AI Studio](milestones/v1.4-ROADMAP.md) (Phases 36-51) — SHIPPED 2026-02-18
 - ✅ **v1.5 Deployment Readiness** — Phases 52-58 — SHIPPED 2026-03-03
-- 🚧 **v2.0 Reliable AI Agents** — Phases 59-66 (in progress)
+- ✅ **v2.0 Reliable AI Agents** — Phases 59-66 — SHIPPED 2026-03-03
 
 ## Phases
 
@@ -570,10 +570,10 @@ Plans:
 **Architecture**: True parallelism — N workflow executions simultaneously via BullMQ
   concurrency control; partial success model (allSettled not allRejected); each execution
   reads its own StepExecution chain with no shared state
-**Plans**: TBD
+**Plans**: 1/1 — COMPLETE (2026-03-03)
 
 Plans:
-- [ ] 63-01: TBD
+- [x] 63-01: WORKFLOW_PARALLEL queue + enqueueWorkflowBatch + parallel-executor.ts + batch API routes + ParallelExecutionWidget + batchId schema field
 
 #### Phase 64: AI Quality & Brand Voice Guardian
 
@@ -583,10 +583,10 @@ Plans:
 **Architecture**: This IS the mandatory human review gate. Confidence scoring routes
   low-confidence content to human review; high-confidence auto-approved. Integrates with
   Phase 62 WorkflowExecution as a validation step type.
-**Plans**: TBD
+**Plans**: 1/1 — COMPLETE (2026-03-03)
 
 Plans:
-- [ ] 64-01: TBD
+- [x] 64-01: QualityScorer + brand-voice API routes (score + review queue) + QualityScoreCard + ReviewQueuePanel + /dashboard/brand-voice
 
 #### Phase 65: Campaign Intelligence Engine
 
@@ -595,10 +595,10 @@ Plans:
 **Research**: Done (Minions: step output history as training signal)
 **Architecture**: StepExecution.outputData + approval decisions feed back to prompt
   optimisation. Context > model — improve context assembly, not model version.
-**Plans**: TBD
+**Plans**: 1/1 — COMPLETE (2026-03-03)
 
 Plans:
-- [ ] 65-01: TBD
+- [x] 65-01: pattern-extractor.ts + prompt-optimizer.ts + intelligence API + IntelligencePanel + Performance tab in WorkflowsPageClient
 
 #### Phase 66: Autonomous Insights Agent
 
@@ -607,7 +607,7 @@ Plans:
 **Research**: Done (Minions "minion invoked from cron" pattern)
 **Architecture**: Scheduled workflow executions triggered by Vercel cron, bounded by
   circuit breakers (equivalent to Minions 2-round CI cap for scheduled agents).
-**Plans**: TBD
+**Plans**: 1/1 — COMPLETE (2026-03-03)
 
 Plans:
-- [ ] 66-01: TBD
+- [x] 66-01: insights-agent.ts + /api/cron/insights + vercel.json cron + /api/insights + InsightsWidget + /dashboard/insights
