@@ -34,9 +34,13 @@ jest.mock('@/lib/workflow/orchestrator', () => ({
   cancelExecution: jest.fn(),
 }))
 
+// Mock logger
+jest.mock('@/lib/logger', () => ({
+  logger: { info: jest.fn(), error: jest.fn(), warn: jest.fn() },
+}))
+
 import { APISecurityChecker } from '@/lib/security/api-security-checker'
 import { prisma } from '@/lib/prisma'
-import { NextRequest } from 'next/server'
 
 const mockSecurityAllowed = {
   allowed: true,
@@ -58,13 +62,43 @@ const mockExecution = {
   createdAt: new Date(),
 }
 
+/**
+ * Create a mock request object compatible with Next.js route handlers.
+ * Uses a plain object to avoid NextRequest polyfill issues in Jest.
+ */
+function createMockRequest(opts: {
+  method?: string
+  body?: object
+  url?: string
+  searchParams?: Record<string, string>
+} = {}) {
+  const { method = 'GET', body, url = 'http://localhost/api/workflows/executions', searchParams = {} } = opts
+  const fullUrl = new URL(url)
+  Object.entries(searchParams).forEach(([k, v]) => fullUrl.searchParams.set(k, v))
+  const bodyString = body ? JSON.stringify(body) : undefined
+  return {
+    url: fullUrl.toString(),
+    method,
+    headers: {
+      get: (name: string) => name === 'content-type' ? 'application/json' : null,
+      has: () => false,
+    },
+    nextUrl: fullUrl,
+    json: async () => (bodyString ? JSON.parse(bodyString) : {}),
+    text: async () => bodyString ?? '',
+    ip: '127.0.0.1',
+    geo: {},
+    cookies: { get: () => undefined, getAll: () => [], has: () => false },
+  } as any // eslint-disable-line @typescript-eslint/no-explicit-any
+}
+
 describe('GET /api/workflows/executions', () => {
   beforeEach(() => jest.clearAllMocks())
 
   it('returns 401 when not authenticated', async () => {
     ;(APISecurityChecker.check as jest.Mock).mockResolvedValue(mockSecurityDenied)
     const { GET } = await import('@/app/api/workflows/executions/route')
-    const req = new NextRequest('http://localhost/api/workflows/executions')
+    const req = createMockRequest()
     const res = await GET(req)
     expect(res.status).toBe(401)
   })
@@ -73,7 +107,7 @@ describe('GET /api/workflows/executions', () => {
     ;(APISecurityChecker.check as jest.Mock).mockResolvedValue(mockSecurityAllowed)
     ;(prisma.user.findUnique as jest.Mock).mockResolvedValue({ organizationId: null })
     const { GET } = await import('@/app/api/workflows/executions/route')
-    const req = new NextRequest('http://localhost/api/workflows/executions')
+    const req = createMockRequest()
     const res = await GET(req)
     expect(res.status).toBe(403)
   })
@@ -83,7 +117,7 @@ describe('GET /api/workflows/executions', () => {
     ;(prisma.user.findUnique as jest.Mock).mockResolvedValue(mockUser)
     ;(prisma.workflowExecution.findMany as jest.Mock).mockResolvedValue([mockExecution])
     const { GET } = await import('@/app/api/workflows/executions/route')
-    const req = new NextRequest('http://localhost/api/workflows/executions')
+    const req = createMockRequest()
     const res = await GET(req)
     expect(res.status).toBe(200)
     const json = await res.json()
@@ -98,9 +132,9 @@ describe('POST /api/workflows/executions', () => {
   it('returns 401 when not authenticated', async () => {
     ;(APISecurityChecker.check as jest.Mock).mockResolvedValue(mockSecurityDenied)
     const { POST } = await import('@/app/api/workflows/executions/route')
-    const req = new NextRequest('http://localhost/api/workflows/executions', {
+    const req = createMockRequest({
       method: 'POST',
-      body: JSON.stringify({ title: 'Test', steps: [{ name: 'Step 1', type: 'ai' }] }),
+      body: { title: 'Test', steps: [{ name: 'Step 1', type: 'ai' }] },
     })
     const res = await POST(req)
     expect(res.status).toBe(401)
@@ -110,9 +144,9 @@ describe('POST /api/workflows/executions', () => {
     ;(APISecurityChecker.check as jest.Mock).mockResolvedValue(mockSecurityAllowed)
     ;(prisma.user.findUnique as jest.Mock).mockResolvedValue(mockUser)
     const { POST } = await import('@/app/api/workflows/executions/route')
-    const req = new NextRequest('http://localhost/api/workflows/executions', {
+    const req = createMockRequest({
       method: 'POST',
-      body: JSON.stringify({ steps: [{ name: 'Step 1', type: 'ai' }] }),
+      body: { steps: [{ name: 'Step 1', type: 'ai' }] },
     })
     const res = await POST(req)
     expect(res.status).toBe(400)
@@ -123,9 +157,9 @@ describe('POST /api/workflows/executions', () => {
     ;(prisma.user.findUnique as jest.Mock).mockResolvedValue(mockUser)
     ;(prisma.workflowExecution.create as jest.Mock).mockResolvedValue(mockExecution)
     const { POST } = await import('@/app/api/workflows/executions/route')
-    const req = new NextRequest('http://localhost/api/workflows/executions', {
+    const req = createMockRequest({
       method: 'POST',
-      body: JSON.stringify({ title: 'Test', steps: [{ name: 'Step 1', type: 'ai' }] }),
+      body: { title: 'Test', steps: [{ name: 'Step 1', type: 'ai' }] },
     })
     const res = await POST(req)
     expect(res.status).toBe(201)
