@@ -23,6 +23,7 @@ export const QUEUE_NAMES = {
   CONTENT_OPTIMIZATION: 'content-optimization',
   PLATFORM_SYNC: 'platform-sync',
   WORKFLOW_STEPS: 'workflow-steps',
+  WORKFLOW_PARALLEL: 'workflow-parallel',
 } as const;
 
 // Job types
@@ -428,6 +429,29 @@ export async function shutdownQueues(): Promise<void> {
   queues.clear();
 
   logger.info('All queues shut down');
+}
+
+/**
+ * Enqueue a batch of workflow executions for parallel processing
+ */
+export async function enqueueWorkflowBatch(
+  batchId: string,
+  workflowExecutionIds: string[]
+): Promise<Job<WorkflowStepJobData>[]> {
+  return Promise.all(
+    workflowExecutionIds.map((id, index) =>
+      addJob<WorkflowStepJobData>(
+        QUEUE_NAMES.WORKFLOW_PARALLEL,
+        {
+          type: 'workflow:execute-step',
+          workflowExecutionId: id,
+          stepIndex: 0,
+          retryCount: 0,
+        },
+        { jobId: `workflow-batch-${batchId}-${index}` }
+      )
+    )
+  )
 }
 
 /**
