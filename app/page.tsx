@@ -1,15 +1,19 @@
-'use client';
-
+import type { Metadata } from 'next';
+import { PAGE_METADATA } from '@/lib/seo/metadata';
 import { NavBar } from '@/components/landing/nav-bar';
 import { HeroSection } from '@/components/landing/hero-section';
 import { FeaturesSection } from '@/components/landing/features-section';
+import { HowItWorks } from '@/components/landing/how-it-works';
 import { VideoSection } from '@/components/landing/video-section';
 import { StatsSection } from '@/components/landing/stats-section';
+import { Testimonials } from '@/components/landing/testimonials';
 import { FAQSection, buildFaqSchemaJson } from '@/components/landing/faq-section';
 import { CTASection } from '@/components/landing/cta-section';
 import { FooterSection } from '@/components/landing/footer-section';
 import { FloatingParticles } from '@/components/landing/floating-particles';
 import { LandingAnimations } from '@/components/landing/LandingAnimations';
+
+export const metadata: Metadata = PAGE_METADATA.home;
 
 export default function HomePage() {
   return (
@@ -43,11 +47,17 @@ export default function HomePage() {
       {/* Features Section */}
       <FeaturesSection />
 
+      {/* How It Works Section */}
+      <HowItWorks />
+
       {/* Video Explainer Section */}
       <VideoSection />
 
       {/* Stats Section */}
       <StatsSection />
+
+      {/* Testimonials Section */}
+      <Testimonials />
 
       {/* FAQ Section */}
       <FAQSection />
