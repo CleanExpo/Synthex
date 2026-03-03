@@ -22,6 +22,7 @@ export const QUEUE_NAMES = {
   REPORT_GENERATION: 'report-generation',
   CONTENT_OPTIMIZATION: 'content-optimization',
   PLATFORM_SYNC: 'platform-sync',
+  WORKFLOW_STEPS: 'workflow-steps',
 } as const;
 
 // Job types
@@ -32,7 +33,8 @@ export type JobType =
   | 'process-media'
   | 'generate-report'
   | 'optimize-content'
-  | 'sync-platform';
+  | 'sync-platform'
+  | 'workflow:execute-step';
 
 // Job data interfaces
 export interface ScheduledPostJobData {
@@ -94,6 +96,13 @@ export interface PlatformSyncJobData {
   syncType: 'posts' | 'analytics' | 'profile' | 'full';
 }
 
+export interface WorkflowStepJobData {
+  type: 'workflow:execute-step';
+  workflowExecutionId: string;
+  stepIndex: number;
+  retryCount: number;
+}
+
 export type QueueJobData =
   | ScheduledPostJobData
   | AnalyticsJobData
@@ -101,7 +110,8 @@ export type QueueJobData =
   | MediaProcessingJobData
   | ReportJobData
   | ContentOptimizationJobData
-  | PlatformSyncJobData;
+  | PlatformSyncJobData
+  | WorkflowStepJobData;
 
 // Redis connection configuration
 function getRedisConnection(): ConnectionOptions {
@@ -418,6 +428,26 @@ export async function shutdownQueues(): Promise<void> {
   queues.clear();
 
   logger.info('All queues shut down');
+}
+
+/**
+ * Enqueue a workflow step for async execution
+ */
+export async function enqueueWorkflowStep(
+  workflowExecutionId: string,
+  stepIndex: number,
+  retryCount: number = 0
+): Promise<Job<WorkflowStepJobData>> {
+  return addJob<WorkflowStepJobData>(
+    QUEUE_NAMES.WORKFLOW_STEPS,
+    {
+      type: 'workflow:execute-step',
+      workflowExecutionId,
+      stepIndex,
+      retryCount,
+    },
+    { jobId: `workflow-step-${workflowExecutionId}-${stepIndex}-${retryCount}` }
+  )
 }
 
 // Export queue events for monitoring
