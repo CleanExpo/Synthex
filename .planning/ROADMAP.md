@@ -507,7 +507,7 @@ Plans:
 | 64. AI Quality & Brand Voice Guardian | v2.0 | 0/? | Not started | - |
 | 65. Campaign Intelligence Engine | v2.0 | 0/? | Not started | - |
 | 66. Autonomous Insights Agent | v2.0 | 1/1 | Complete | 2026-03-03 |
-| 67. Codebase Cleanup | v3.0 | 0/? | Not started | - |
+| 67. Codebase Cleanup | v3.0 | 0/3 | Planned | - |
 | 68. Stripe Activation | v3.0 | 0/? | Not started | - |
 | 69. Public Landing Page | v3.0 | 0/? | Not started | - |
 | 70. Onboarding Funnel | v3.0 | 0/? | Not started | - |
@@ -636,7 +636,9 @@ remaining orphaned API routes, standardise SWR/fetch patterns across dashboard
 **Plans**: TBD
 
 Plans:
-- [ ] 67-01: TBD
+- [ ] 67-01: Remove @tanstack/react-table + @tanstack/react-query (confirmed unused)
+- [ ] 67-02: Orphaned API route audit — wire or document all orphans
+- [ ] 67-03: Fetch pattern standardisation + CLAUDE.md canonical pattern
 
 #### Phase 68: Stripe Activation
 
