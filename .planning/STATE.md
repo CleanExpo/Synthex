@@ -10,10 +10,10 @@ See: .planning/PROJECT.md (updated 2026-02-17)
 ## Current Position
 
 Milestone: v2.0 Reliable AI Agents (Phases 59-66)
-Phase: 60 of 66 (Agent Orchestration Hardening) — COMPLETE
-Plan: 2 of 2 (60-01 + 60-02 complete)
-Status: IN PROGRESS — Phase 61 next
-Last activity: 2026-03-03 — Phase 60 complete: pre-agent-dispatch.ps1, AGENT-REGISTRY.md, hive-mind.md, Linear session query
+Phase: 61 of 66 (AI Session Memory & Persistence) — IN PROGRESS
+Plan: 1 of 2 (61-01 complete)
+Status: IN PROGRESS — 61-02 next (auto-title, search, archive)
+Last activity: 2026-03-03 — Phase 61-01: URL-based conversation routing complete
 
 Progress: ██░░░░░░░░ 25% (2/8 phases complete)
 
@@ -185,9 +185,9 @@ None.
 ## Session Continuity
 
 Last session: 2026-03-03
-Stopped at: Phase 60 complete — pre-agent-dispatch.ps1, AGENT-REGISTRY.md, hive-mind.md, session-start Linear query
-Resume file: .planning/phases/60-agent-orchestration/60-02-SUMMARY.md
-Next action: /gsd:plan-phase 61 — AI Session Memory & Persistence
+Stopped at: Phase 61-01 complete — URL-based AI chat routing, [conversationId] dynamic route
+Resume file: .planning/phases/61-ai-session-memory/61-01-SUMMARY.md
+Next action: /gsd:execute-plan .planning/phases/61-ai-session-memory/61-02-PLAN.md
 
 ## Linear Issues — v2.0 Phase 59-66 Tracking
 
