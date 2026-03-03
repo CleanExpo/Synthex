@@ -541,10 +541,11 @@ Plans:
 **Goal**: AI conversations persist across page reload, re-authentication, and browser close
 **Depends on**: Phase 60
 **Research**: Unlikely (AIConversation model already exists)
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 61-01: TBD
+- [ ] 61-01: URL-based conversation routing (reload-persistent selection)
+- [ ] 61-02: Auto-title + conversation search + archive toggle
 
 #### Phase 62: Multi-step Workflow Engine
 
