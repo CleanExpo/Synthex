@@ -21,6 +21,7 @@ import { useUser } from '@/hooks/use-user';
 import { ExecutionList } from './ExecutionList';
 import { ExecutionDetail } from './ExecutionDetail';
 import { NewWorkflowDialog } from './NewWorkflowDialog';
+import { ParallelExecutionWidget } from './ParallelExecutionWidget';
 import useSWR from 'swr';
 import { cn } from '@/lib/utils';
 
@@ -147,6 +148,9 @@ export function WorkflowsPageClient() {
           </Button>
         }
       />
+
+      {/* Parallel execution concurrency stats — shown when >1 execution is active */}
+      <ParallelExecutionWidget executions={executions} />
 
       {/* Main content */}
       {isLoading ? (
