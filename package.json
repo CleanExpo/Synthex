@@ -113,8 +113,6 @@
     "@stripe/stripe-js": "^7.8.0",
     "@supabase/ssr": "^0.6.1",
     "@supabase/supabase-js": "^2.55.0",
-    "@tanstack/react-query": "^5.17.0",
-    "@tanstack/react-table": "^8.11.0",
     "@tiptap/react": "^2.1.0",
     "@tiptap/starter-kit": "^2.1.0",
     "@upstash/redis": "^1.35.3",
