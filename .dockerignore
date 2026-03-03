@@ -48,6 +48,20 @@ build
 .nuxt
 .turbo
 *.tgz
+output/
+test-results/
+playwright-report/
+storybook-static/
+
+# ========================
+# Stray project directories at root (not part of Next.js app)
+# ========================
+Synthex/
+with-turbopack-app/
+packages/
+paperbanana/
+tools/
+src/
 
 # ========================
 # Testing & Coverage
