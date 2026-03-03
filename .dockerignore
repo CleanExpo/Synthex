@@ -61,7 +61,6 @@ with-turbopack-app/
 packages/
 paperbanana/
 tools/
-src/
 
 # ========================
 # Testing & Coverage
