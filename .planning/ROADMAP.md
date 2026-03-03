@@ -636,9 +636,11 @@ remaining orphaned API routes, standardise SWR/fetch patterns across dashboard
 **Plans**: TBD
 
 Plans:
-- [ ] 67-01: Remove @tanstack/react-table + @tanstack/react-query (confirmed unused)
-- [ ] 67-02: Orphaned API route audit — wire or document all orphans
-- [ ] 67-03: Fetch pattern standardisation + CLAUDE.md canonical pattern
+- [x] 67-01: Remove @tanstack/react-table + @tanstack/react-query (confirmed unused)
+- [x] 67-02: Orphaned API route audit — wire or document all orphans
+- [x] 67-03: Fetch pattern standardisation + CLAUDE.md canonical pattern
+
+**Status**: 3/3 | Done
 
 #### Phase 68: Stripe Activation
 
