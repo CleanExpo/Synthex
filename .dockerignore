@@ -43,6 +43,8 @@ yarn-error.log*
 dist
 build
 .next
+.next-alt
+.next-dev
 .nuxt
 .turbo
 *.tgz
@@ -103,9 +105,15 @@ docs/
 .planning/
 
 # ========================
-# Claude Code / AI tooling
+# Claude Code / AI tooling & local dev tools
 # ========================
 .claude/
+.claude-session/
+.hive-mind/
+.playwright-mcp/
+.superdesign/
+.swarm/
+.cursor/
 
 # ========================
 # Git
