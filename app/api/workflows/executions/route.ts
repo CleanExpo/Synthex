@@ -83,6 +83,7 @@ export async function POST(request: NextRequest) {
       currentStepIndex: 0,
       totalSteps: steps.length,
       triggerType,
+      triggeredBy: security.context.userId,
       inputData: { steps, ...(inputData ?? {}) } as object,
       ...(workflowId ? { workflowId } : {}),
     },
