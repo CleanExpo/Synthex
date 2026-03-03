@@ -23,6 +23,13 @@ jest.mock('@/lib/security/api-security-checker', () => ({
   },
 }))
 
+// Mock subscriptionService — professional plan passes the gate
+jest.mock('@/lib/stripe/subscription-service', () => ({
+  subscriptionService: {
+    getSubscription: jest.fn(),
+  },
+}))
+
 // Mock bull-queue
 jest.mock('@/lib/queue/bull-queue', () => ({
   enqueueWorkflowStep: jest.fn().mockResolvedValue({}),
@@ -41,6 +48,9 @@ jest.mock('@/lib/logger', () => ({
 
 import { APISecurityChecker } from '@/lib/security/api-security-checker'
 import { prisma } from '@/lib/prisma'
+import { subscriptionService } from '@/lib/stripe/subscription-service'
+
+const mockProfessionalSubscription = { plan: 'professional', status: 'active' }
 
 const mockSecurityAllowed = {
   allowed: true,
@@ -93,7 +103,10 @@ function createMockRequest(opts: {
 }
 
 describe('GET /api/workflows/executions', () => {
-  beforeEach(() => jest.clearAllMocks())
+  beforeEach(() => {
+    jest.clearAllMocks()
+    ;(subscriptionService.getSubscription as jest.Mock).mockResolvedValue(mockProfessionalSubscription)
+  })
 
   it('returns 401 when not authenticated', async () => {
     ;(APISecurityChecker.check as jest.Mock).mockResolvedValue(mockSecurityDenied)
@@ -127,7 +140,10 @@ describe('GET /api/workflows/executions', () => {
 })
 
 describe('POST /api/workflows/executions', () => {
-  beforeEach(() => jest.clearAllMocks())
+  beforeEach(() => {
+    jest.clearAllMocks()
+    ;(subscriptionService.getSubscription as jest.Mock).mockResolvedValue(mockProfessionalSubscription)
+  })
 
   it('returns 401 when not authenticated', async () => {
     ;(APISecurityChecker.check as jest.Mock).mockResolvedValue(mockSecurityDenied)
