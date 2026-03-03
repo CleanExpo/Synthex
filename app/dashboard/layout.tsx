@@ -190,6 +190,14 @@ const sidebarGroups: Array<{
     ],
   },
   {
+    id: 'ai-agents',
+    icon: GitPullRequest,
+    label: 'AI AGENTS',
+    items: [
+      { icon: GitPullRequest, label: 'Workflows', href: '/dashboard/workflows' },
+    ],
+  },
+  {
     id: 'team-admin',
     icon: Shield,
     label: 'TEAM & ADMIN',
