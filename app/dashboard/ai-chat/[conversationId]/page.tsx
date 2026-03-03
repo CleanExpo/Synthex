@@ -4,6 +4,12 @@
  * @description Two-column layout with conversation sidebar and active conversation.
  * The active conversation is determined by the URL param, so the selection
  * persists across page reloads and browser history works correctly.
+ *
+ * Features:
+ * - URL-based conversation selection (persists on reload)
+ * - Sidebar search (client-side, filters by title)
+ * - Archive toggle (soft-delete to archived status)
+ * - Auto-title: sidebar refreshes after first response renames the conversation
  */
 
 'use client';
@@ -20,6 +26,7 @@ import {
   MessageSquare,
   Plus,
   Trash2,
+  Archive,
   Loader2,
   AlertTriangle,
   Sparkles,
@@ -59,11 +66,18 @@ export default function AIConversationPage({ params }: PageProps) {
     upgradeRequired,
     createConversation,
     deleteConversation,
+    archiveConversation,
     refreshConversations,
   } = useAIChat();
 
   const [isCreating, setIsCreating] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [archivingId, setArchivingId] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const filteredConversations = conversations.filter((c) =>
+    c.title.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   const handleCreateConversation = useCallback(async () => {
     setIsCreating(true);
@@ -99,6 +113,34 @@ export default function AIConversationPage({ params }: PageProps) {
     },
     [deleteConversation, pathname, conversations, router]
   );
+
+  const handleArchiveConversation = useCallback(
+    async (id: string, e: React.MouseEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      setArchivingId(id);
+      try {
+        await archiveConversation(id);
+        // If archiving the active conversation, route to next available or index
+        if (pathname === `/dashboard/ai-chat/${id}`) {
+          const remaining = conversations.filter((c) => c.id !== id);
+          if (remaining.length > 0) {
+            router.replace(`/dashboard/ai-chat/${remaining[0].id}`);
+          } else {
+            router.replace('/dashboard/ai-chat');
+          }
+        }
+      } finally {
+        setArchivingId(null);
+      }
+    },
+    [archiveConversation, pathname, conversations, router]
+  );
+
+  // Called by ChatAssistant after auto-title fires — refresh sidebar titles
+  const handleTitleUpdated = useCallback(() => {
+    refreshConversations();
+  }, [refreshConversations]);
 
   // Upgrade required state
   if (upgradeRequired) {
@@ -208,7 +250,7 @@ export default function AIConversationPage({ params }: PageProps) {
         {/* Conversation sidebar */}
         <div className="w-80 border-r border-white/10 flex flex-col bg-[#0f172a]/30">
           {/* New chat button */}
-          <div className="p-4 border-b border-white/10">
+          <div className="p-4 border-b border-white/10 space-y-3">
             <Button
               onClick={handleCreateConversation}
               disabled={isCreating}
@@ -221,6 +263,16 @@ export default function AIConversationPage({ params }: PageProps) {
               )}
               New Chat
             </Button>
+
+            {/* Search input */}
+            <input
+              type="text"
+              placeholder="Search conversations..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full px-3 py-2 text-sm bg-white/5 border border-white/10 rounded-lg
+                         text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500/50"
+            />
           </div>
 
           {/* Conversation list */}
@@ -230,9 +282,13 @@ export default function AIConversationPage({ params }: PageProps) {
                 <p className="text-sm">No conversations yet</p>
                 <p className="text-xs mt-1">Click &quot;New Chat&quot; to start</p>
               </div>
+            ) : filteredConversations.length === 0 ? (
+              <div className="p-4 text-center text-gray-400">
+                <p className="text-sm">No results for &quot;{searchQuery}&quot;</p>
+              </div>
             ) : (
               <div className="p-2 space-y-1">
-                {conversations.map((conv) => {
+                {filteredConversations.map((conv) => {
                   const isActive = pathname === `/dashboard/ai-chat/${conv.id}`;
                   return (
                     <Link
@@ -260,20 +316,33 @@ export default function AIConversationPage({ params }: PageProps) {
                             </span>
                           </div>
                         </div>
-                        <button
-                          onClick={(e) => handleDeleteConversation(conv.id, e)}
-                          disabled={deletingId === conv.id}
-                          className={cn(
-                            'p-1.5 rounded opacity-0 group-hover:opacity-100 transition-opacity',
-                            'hover:bg-red-500/20 text-gray-400 hover:text-red-400'
-                          )}
-                        >
-                          {deletingId === conv.id ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                          ) : (
-                            <Trash2 className="h-4 w-4" />
-                          )}
-                        </button>
+                        {/* Archive + Delete buttons (visible on hover) */}
+                        <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button
+                            onClick={(e) => handleArchiveConversation(conv.id, e)}
+                            disabled={archivingId === conv.id}
+                            title="Archive conversation"
+                            className="p-1.5 rounded hover:bg-amber-500/20 text-gray-400 hover:text-amber-400"
+                          >
+                            {archivingId === conv.id ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <Archive className="h-4 w-4" />
+                            )}
+                          </button>
+                          <button
+                            onClick={(e) => handleDeleteConversation(conv.id, e)}
+                            disabled={deletingId === conv.id}
+                            title="Delete conversation"
+                            className="p-1.5 rounded hover:bg-red-500/20 text-gray-400 hover:text-red-400"
+                          >
+                            {deletingId === conv.id ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <Trash2 className="h-4 w-4" />
+                            )}
+                          </button>
+                        </div>
                       </div>
                     </Link>
                   );
@@ -285,7 +354,10 @@ export default function AIConversationPage({ params }: PageProps) {
 
         {/* Chat area */}
         <div className="flex-1 flex flex-col bg-[#0a0f1a]">
-          <ChatAssistant conversationId={conversationId} />
+          <ChatAssistant
+            conversationId={conversationId}
+            onTitleUpdated={handleTitleUpdated}
+          />
         </div>
       </div>
     </div>
