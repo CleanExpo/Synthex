@@ -82,6 +82,9 @@ export default function BillingPage() {
       if (subResponse.ok) {
         const data = await subResponse.json();
         setSubscription(data);
+      } else if (subResponse.status === 404) {
+        // No subscription record — user is on the free plan (valid state, not an error)
+        setSubscription({ plan: 'free', status: 'inactive' });
       } else {
         setError('Failed to load subscription details');
       }
@@ -188,8 +191,9 @@ export default function BillingPage() {
   ) => {
     const currentUsage = usageData?.usage[resource] ?? 0;
     const limit = usageData?.limits[resource] ?? fallbackLimit;
-    const unlimited = limit === -1;
-    const percentage = unlimited ? 0 : usageData?.percentages[resource] ?? 0;
+    // Treat -1 (explicit unlimited) and 0 (uninitialised/unlimited) as unlimited
+    const unlimited = !limit || limit <= 0;
+    const percentage = unlimited ? 100 : Math.min((usageData?.percentages[resource] ?? 0), 100);
 
     return (
       <div>
@@ -204,12 +208,7 @@ export default function BillingPage() {
           </span>
         </div>
         {unlimited ? (
-          <div className="w-full bg-white/10 rounded-full h-2">
-            <div
-              className="bg-gradient-to-r from-cyan-500 to-teal-500 h-2 rounded-full"
-              style={{ width: '100%' }}
-            />
-          </div>
+          <span className="text-sm text-cyan-400">Unlimited</span>
         ) : (
           <div className="w-full bg-white/10 rounded-full h-2">
             <div
