@@ -20,13 +20,14 @@ WORKDIR /app
 
 RUN apk add --no-cache libc6-compat python3 make g++
 
+# Upgrade npm to match the version used to generate package-lock.json (v11)
+RUN npm install -g npm@11
+
 COPY package*.json ./
 COPY prisma ./prisma/
 
 # Install ALL deps (including devDeps needed for build)
-# Note: npm install used instead of npm ci because package-lock.json has minor
-# version drift for dev tooling deps (ajv). For production, sync the lock file first.
-RUN npm install --legacy-peer-deps
+RUN npm ci
 
 # Stage 2: Build
 FROM node:22-alpine AS builder
