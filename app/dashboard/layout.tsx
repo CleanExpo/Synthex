@@ -195,6 +195,8 @@ const sidebarGroups: Array<{
     label: 'AI AGENTS',
     items: [
       { icon: GitPullRequest, label: 'Workflows', href: '/dashboard/workflows' },
+      { icon: Shield, label: 'Brand Voice', href: '/dashboard/brand-voice' },
+      { icon: Lightbulb, label: 'AI Insights', href: '/dashboard/insights' },
     ],
   },
   {
