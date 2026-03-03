@@ -8,7 +8,7 @@
  * fetch error so the page always renders cleanly.
  */
 
-import { useEffect, useState } from 'react';
+import useSWR from 'swr';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Sparkles, BarChart3, Clock, Target } from '@/components/icons';
 import type { DashboardStatsData } from '@/app/api/analytics/dashboard-stats/route';
@@ -59,22 +59,25 @@ const emptyData: DashboardStatsData = {
   successRate: 0,
 };
 
+interface ApiResponse {
+  success?: boolean;
+  data?: DashboardStatsData;
+}
+
+const fetchJson = async (url: string): Promise<ApiResponse | null> => {
+  const res = await fetch(url, { credentials: 'include' });
+  if (!res.ok) return null;
+  return res.json();
+};
+
 export function ContentStats() {
-  const [statsData, setStatsData] = useState<DashboardStatsData>(emptyData);
+  const { data: body } = useSWR<ApiResponse | null>(
+    '/api/analytics/dashboard-stats',
+    fetchJson,
+    { revalidateOnFocus: false }
+  );
 
-  useEffect(() => {
-    fetch('/api/analytics/dashboard-stats', { credentials: 'include' })
-      .then((r) => r.json())
-      .then((body: { success?: boolean; data?: DashboardStatsData }) => {
-        if (body.success && body.data) {
-          setStatsData(body.data);
-        }
-      })
-      .catch(() => {
-        // Graceful fail — keep zeros so the UI still renders
-      });
-  }, []);
-
+  const statsData = body?.success && body?.data ? body.data : emptyData;
   const stats = buildStats(statsData);
 
   return (

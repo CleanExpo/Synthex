@@ -30,6 +30,21 @@
 - Date format: DD/MM/YYYY
 - Stack: Next.js 15, Supabase Auth (ONLY — no Clerk, no NextAuth), TypeScript, Tailwind, Radix UI, OpenRouter
 
+## Data Fetching Pattern
+
+Three patterns exist — use the right one for the context:
+
+| Context | Pattern | Package |
+|---------|---------|---------|
+| Hook in `hooks/` | `useApi()` / `useMutation()` | `hooks/use-api.ts` (internal) |
+| Standalone widget/component | `useSWR(url, fetchJson, opts)` | `swr` |
+| Server-side (API route, server action) | `fetch()` directly | native |
+
+**SWR rule:** Always use `credentials: 'include'` fetcher. Reference: `components/dashboard/GamificationWidget.tsx`
+
+**Never add** new raw `fetch()` calls inside `'use client'` components — use SWR instead.
+**Never add** new custom fetch abstractions — use the existing patterns above.
+
 ---
 
 # Synthex

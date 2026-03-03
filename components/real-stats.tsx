@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import useSWR from 'swr';
 import { Loader2 } from '@/components/icons';
 
 interface Stats {
@@ -33,43 +33,20 @@ interface Stats {
   };
 }
 
+const fetchJson = async (url: string): Promise<Stats> => {
+  const res = await fetch(url, { credentials: 'include' });
+  if (!res.ok) return null as unknown as Stats;
+  return res.json();
+};
+
 export function RealStats() {
-  const [stats, setStats] = useState<Stats | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { data: stats, isLoading } = useSWR<Stats>(
+    '/api/stats',
+    fetchJson,
+    { revalidateOnFocus: false, refreshInterval: 5 * 60 * 1000 }
+  );
 
-  useEffect(() => {
-    fetchStats();
-    // Refresh stats every 5 minutes
-    const interval = setInterval(fetchStats, 5 * 60 * 1000);
-    return () => clearInterval(interval);
-  }, []);
-
-  async function fetchStats() {
-    try {
-      const response = await fetch('/api/stats', { credentials: 'include' });
-      const data = await response.json();
-      setStats(data);
-    } catch (error) {
-      console.error('Failed to fetch stats:', error);
-      // Use fallback stats
-      setStats({
-        users: { total: 0, formatted: '0', label: 'Users', growth: 0 },
-        engagement: { 
-          multiplier: '1.0', 
-          formatted: '1.0x', 
-          label: 'Engagement',
-          description: 'Loading...'
-        },
-        campaigns: { total: 0, formatted: '0', label: 'Campaigns' },
-        posts: { total: 0, published: 0, formatted: '0', label: 'Posts' },
-        aiPowered: { enabled: false, features: [] }
-      });
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[1, 2, 3, 4].map(i => (
@@ -99,7 +76,7 @@ export function RealStats() {
           )}
         </span>
       </div>
-      
+
       <div className="text-center">
         <div className="text-2xl md:text-3xl font-bold text-primary">
           {stats.engagement.formatted}
@@ -108,7 +85,7 @@ export function RealStats() {
           {stats.engagement.label}
         </span>
       </div>
-      
+
       <div className="text-center">
         <div className="text-2xl md:text-3xl font-bold text-primary">
           {stats.posts.formatted}
@@ -117,7 +94,7 @@ export function RealStats() {
           {stats.posts.label}
         </span>
       </div>
-      
+
       <div className="text-center">
         <div className="text-2xl md:text-3xl font-bold text-primary">
           {stats.aiPowered.enabled ? 'AI' : 'Setup'}
@@ -132,53 +109,23 @@ export function RealStats() {
 
 // Standalone stat component for individual use
 export function UserCount() {
-  const [count, setCount] = useState('Loading...');
-
-  useEffect(() => {
-    fetch('/api/stats', { credentials: 'include' })
-      .then(res => res.json())
-      .then(data => setCount(data.users.formatted + '+ ' + data.users.label))
-      .catch(() => setCount('Join Us'));
-  }, []);
-
+  const { data } = useSWR<Stats>('/api/stats', fetchJson, { revalidateOnFocus: false });
+  const count = data ? `${data.users.formatted}+ ${data.users.label}` : 'Join Us';
   return <span>{count}</span>;
 }
 
 export function EngagementBoost() {
-  const [boost, setBoost] = useState('Loading...');
-
-  useEffect(() => {
-    fetch('/api/stats', { credentials: 'include' })
-      .then(res => res.json())
-      .then(data => setBoost(data.engagement.formatted + ' ' + data.engagement.label))
-      .catch(() => setBoost('AI Powered'));
-  }, []);
-
+  const { data } = useSWR<Stats>('/api/stats', fetchJson, { revalidateOnFocus: false });
+  const boost = data ? `${data.engagement.formatted} ${data.engagement.label}` : 'AI Powered';
   return <span>{boost}</span>;
 }
 
 export function CampaignCount() {
-  const [count, setCount] = useState('0');
-
-  useEffect(() => {
-    fetch('/api/stats', { credentials: 'include' })
-      .then(res => res.json())
-      .then(data => setCount(data.campaigns.formatted))
-      .catch(() => setCount('0'));
-  }, []);
-
-  return <span>{count}</span>;
+  const { data } = useSWR<Stats>('/api/stats', fetchJson, { revalidateOnFocus: false });
+  return <span>{data?.campaigns.formatted ?? '0'}</span>;
 }
 
 export function PostCount() {
-  const [count, setCount] = useState('0');
-
-  useEffect(() => {
-    fetch('/api/stats', { credentials: 'include' })
-      .then(res => res.json())
-      .then(data => setCount(data.posts.formatted))
-      .catch(() => setCount('0'));
-  }, []);
-
-  return <span>{count}</span>;
+  const { data } = useSWR<Stats>('/api/stats', fetchJson, { revalidateOnFocus: false });
+  return <span>{data?.posts.formatted ?? '0'}</span>;
 }

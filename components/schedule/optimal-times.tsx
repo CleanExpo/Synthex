@@ -6,7 +6,7 @@
  * with fallback to industry defaults.
  */
 
-import { useState, useEffect } from 'react';
+import useSWR from 'swr';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { platformIcons, bestTimes } from './schedule-config';
 import { PLATFORM_COLORS } from '@/components/calendar';
@@ -26,47 +26,42 @@ interface PlatformPrediction {
   methodology: 'historical' | 'industry' | 'hybrid';
 }
 
+interface ApiResponse {
+  success: boolean;
+  data: Record<string, PlatformPrediction>;
+}
+
 function formatHour(hour: number): string {
   const period = hour >= 12 ? 'PM' : 'AM';
   const h = hour % 12 || 12;
   return `${h}:00 ${period}`;
 }
 
+const platforms = 'twitter,linkedin,instagram,facebook,tiktok';
+
+const fetchJson = async (url: string): Promise<ApiResponse | null> => {
+  const res = await fetch(url, { credentials: 'include' });
+  if (!res.ok) return null;
+  const json: ApiResponse = await res.json();
+  if (!json.success || !json.data) return null;
+  return json;
+};
+
 export function OptimalTimes() {
-  const [predictions, setPredictions] = useState<Record<string, PlatformPrediction> | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [usingFallback, setUsingFallback] = useState(false);
+  const tz = typeof window !== 'undefined'
+    ? Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'
+    : 'UTC';
 
-  useEffect(() => {
-    const fetchPredictions = async () => {
-      try {
-        const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
-        const platforms = 'twitter,linkedin,instagram,facebook,tiktok';
-        const res = await fetch(
-          `/api/optimize/auto-schedule?action=multi-platform&platforms=${platforms}&timezone=${encodeURIComponent(tz)}`,
-          { credentials: 'include' }
-        );
+  const apiUrl = `/api/optimize/auto-schedule?action=multi-platform&platforms=${platforms}&timezone=${encodeURIComponent(tz)}`;
 
-        if (res.ok) {
-          const json = await res.json();
-          if (json.success && json.data) {
-            setPredictions(json.data);
-            setLoading(false);
-            return;
-          }
-        }
+  const { data, isLoading } = useSWR<ApiResponse | null>(
+    apiUrl,
+    fetchJson,
+    { revalidateOnFocus: false }
+  );
 
-        // API failed — use fallback
-        setUsingFallback(true);
-      } catch {
-        setUsingFallback(true);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchPredictions();
-  }, []);
+  const predictions = data?.data ?? null;
+  const usingFallback = !isLoading && !predictions;
 
   return (
     <Card variant="glass">
@@ -89,7 +84,7 @@ export function OptimalTimes() {
         </div>
       </CardHeader>
       <CardContent>
-        {loading ? (
+        {isLoading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
             {Array.from({ length: 5 }).map((_, i) => (
               <div key={i} className="animate-pulse">

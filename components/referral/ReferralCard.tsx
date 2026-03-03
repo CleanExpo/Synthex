@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import useSWR, { useSWRConfig } from 'swr';
 import { Copy, Check, Users, Gift, TrendingUp } from '@/components/icons';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -14,32 +15,35 @@ interface ReferralStats {
   rewardsEarned: number;
 }
 
+interface ReferralData {
+  success: boolean;
+  referralCode: string;
+  referralLink: string;
+  stats: ReferralStats;
+}
+
+const fetchJson = async (url: string): Promise<ReferralData | null> => {
+  const res = await fetch(url, { credentials: 'include' });
+  if (!res.ok) return null;
+  return res.json();
+};
+
 export default function ReferralCard() {
-  const [referralCode, setReferralCode] = useState('');
-  const [referralLink, setReferralLink] = useState('');
-  const [stats, setStats] = useState<ReferralStats | null>(null);
   const [copied, setCopied] = useState(false);
   const [inviteEmail, setInviteEmail] = useState('');
   const [sending, setSending] = useState(false);
   const [error, setError] = useState('');
 
-  useEffect(() => {
-    loadReferralData();
-  }, []);
+  const { mutate } = useSWRConfig();
+  const { data } = useSWR<ReferralData | null>(
+    '/api/referrals',
+    fetchJson,
+    { revalidateOnFocus: false }
+  );
 
-  const loadReferralData = async () => {
-    try {
-      const res = await fetch('/api/referrals', { credentials: 'include' });
-      const data = await res.json();
-      if (data.success) {
-        setReferralCode(data.referralCode);
-        setReferralLink(data.referralLink);
-        setStats(data.stats);
-      }
-    } catch {
-      // Non-critical
-    }
-  };
+  const referralCode = data?.referralCode ?? '';
+  const referralLink = data?.referralLink ?? '';
+  const stats = data?.stats ?? null;
 
   const handleCopy = async () => {
     try {
@@ -61,13 +65,13 @@ export default function ReferralCard() {
         method: 'POST',
         body: JSON.stringify({ email: inviteEmail }),
       });
-      const data = await res.json();
+      const responseData = await res.json();
 
-      if (data.success) {
+      if (responseData.success) {
         setInviteEmail('');
-        loadReferralData(); // Refresh stats
+        mutate('/api/referrals'); // Revalidate SWR cache
       } else {
-        setError(data.error || 'Failed to send invite');
+        setError(responseData.error || 'Failed to send invite');
       }
     } catch {
       setError('Network error');
