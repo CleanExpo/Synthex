@@ -24,6 +24,7 @@ import {
   OverviewTab,
   GetStartedChecklist,
 } from '@/components/dashboard';
+import { InsightsWidget } from '@/components/insights/InsightsWidget';
 
 export default function DashboardPage() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
@@ -243,6 +244,9 @@ export default function DashboardPage() {
           <div className="space-y-4 sm:space-y-6">
             <OverviewTab stats={stats} />
           </div>
+
+          {/* AI Insights widget — Phase 66 */}
+          <InsightsWidget />
 
           {/* Other dashboard features are now accessible from the sidebar navigation:
               - Analytics: /dashboard/analytics
