@@ -7,6 +7,7 @@
 import { Worker } from 'bullmq';
 import { createScheduledPostsWorker } from './scheduled-posts-worker';
 import { createAnalyticsWorker } from './analytics-worker';
+import { createWorkflowStepWorker } from './workflow-step.worker';
 import { logger } from '@/lib/logger';
 
 // Store worker instances for graceful shutdown
@@ -25,6 +26,10 @@ export function startAllWorkers(): Worker[] {
   // Start analytics collection worker
   const analyticsWorker = createAnalyticsWorker();
   workers.push(analyticsWorker);
+
+  // Start workflow step worker
+  const workflowStepWorker = createWorkflowStepWorker();
+  workers.push(workflowStepWorker);
 
   logger.info(`Started ${workers.length} workers`);
 
@@ -61,3 +66,4 @@ export function getWorkersStatus(): Array<{
 // Export individual worker creators
 export { createScheduledPostsWorker } from './scheduled-posts-worker';
 export { createAnalyticsWorker } from './analytics-worker';
+export { createWorkflowStepWorker } from './workflow-step.worker';
