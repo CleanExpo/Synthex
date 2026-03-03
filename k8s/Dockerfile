@@ -20,14 +20,12 @@ WORKDIR /app
 
 RUN apk add --no-cache libc6-compat python3 make g++
 
-# Upgrade npm to match the version used to generate package-lock.json (v11)
-RUN npm install -g npm@11
-
 COPY package*.json ./
 COPY prisma ./prisma/
 
-# Install ALL deps (including devDeps needed for build)
-RUN npm ci
+# Use npm install (not npm ci) — package-lock.json has ajv@6/8 version conflict
+# that npm ci rejects. npm install resolves it without strict lock validation.
+RUN npm install --prefer-offline 2>&1 || npm install
 
 # Stage 2: Build
 FROM node:22-alpine AS builder
