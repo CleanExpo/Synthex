@@ -10,14 +10,14 @@ See: .planning/PROJECT.md (updated 2026-02-17)
 ## Current Position
 
 Milestone: v3.0 Public Launch Readiness (Phases 67-74)
-Phase: 68 of 74 (Stripe Activation) — 1/3 plans executed
-Plan: 68-02 next — Subscription feature gate enforcement
+Phase: 68 of 74 (Stripe Activation) — 2/3 plans executed
+Plan: 68-03 next — Public pricing page + Stripe production config
 Status: In progress
-Last activity: 2026-03-03 — Completed 68-01 (billing emails + dashboard fixes)
+Last activity: 2026-03-03 — Completed 68-02 (subscription feature gates + UpgradePrompt)
 
-Progress: ░░░░░░░░░░ 15% (1/8 phases complete, 1/3 plans in Phase 68)
+Progress: ░░░░░░░░░░ 15% (1/8 phases complete, 2/3 plans in Phase 68)
 
-Next action: `/gsd:execute-plan .planning/phases/68-stripe-activation/68-02-PLAN.md`
+Next action: `/gsd:execute-plan .planning/phases/68-stripe-activation/68-03-PLAN.md`
 
 ## Performance Metrics
 
@@ -108,6 +108,10 @@ Decisions from v3.0 (Phase 68):
 - Unlimited progress bars: check `!limit || limit <= 0` (not just `=== -1`) — DB uninitialised 0 also means unlimited
 - HTTP 404 from `/api/user/subscription` = free plan (not error state)
 - `subscription.current_period_end` in Stripe API `2025-07-30.basil` is on `subscription.items.data[0]`, not root
+- Feature gate pattern: `{ error: '...', upgrade: true }` 403 — `upgrade: true` lets UI distinguish plan gates from regular auth 403s
+- `subscriptionService.getSubscription(userId)` used for gate checks — exists in `lib/stripe/subscription-service.ts`
+- Workflows page client (`WorkflowsPageClient.tsx`) and insights page client (`InsightsPageClient.tsx`) are the actual render points — `app/dashboard/*/page.tsx` are thin wrappers that pass to client components
+- All 10 workflow sub-routes gated (executions, templates, batch, intelligence endpoints)
 
 Decisions from v1.5 (Phase 54):
 
@@ -215,9 +219,9 @@ None.
 ## Session Continuity
 
 Last session: 2026-03-03
-Stopped at: Completed 68-01 — billing lifecycle emails wired + UNI-633/634 fixed
+Stopped at: Completed 68-02 — subscription feature gates (SEO audit, workflows, insights) + UpgradePrompt
 Resume file: none
-Next action: /gsd:execute-plan .planning/phases/68-stripe-activation/68-02-PLAN.md
+Next action: /gsd:execute-plan .planning/phases/68-stripe-activation/68-03-PLAN.md
 
 ## Linear Issues — v2.0 Phase 59-66 Tracking
 
