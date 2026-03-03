@@ -105,6 +105,82 @@ These agents are general-purpose and available across all projects.
 
 ---
 
+## Blueprint Library (Minions-Inspired)
+
+Repeatable execution patterns for common development tasks. Each blueprint specifies the
+agent sequence, tools required, and verification gate before the next step can begin.
+
+Reference: `.planning/research/stripe-minions-synthesis.md`
+
+### blueprint:feature
+**For**: New feature implementation (new model, API route, UI component)
+
+```
+1. [Explore]   → discover: existing patterns, related files, schema
+2. [Plan]      → design: file list, contract signatures, acceptance criteria
+3. [code-architect] → implement: schema, service, route, component
+4. [qa-sentinel]    → verify: type-check, tests, acceptance criteria met
+5. [senior-reviewer]→ audit: security, org-scoping, arch patterns
+6. [build-engineer] → commit + validate build
+```
+
+**Verification gate**: `npm run type-check && npm test` must pass before commit.
+**Isolation**: Use `isolation: "worktree"` for significant features.
+
+### blueprint:bugfix
+**For**: Reported bug, test failure, production issue
+
+```
+1. [Explore]   → reproduce: find failing code, understand root cause
+2. [code-architect] → fix: targeted change, no unrelated refactoring
+3. [qa-sentinel]    → regression: test that covers the bug
+4. [build-engineer] → commit
+```
+
+**Verification gate**: Regression test must pass. No new TypeScript errors.
+**Principle**: Fix root cause. Never bypass gates to make symptoms disappear.
+
+### blueprint:refactor
+**For**: Structural improvement without behaviour change
+
+```
+1. [Explore]       → read: understand current structure fully
+2. [Plan]          → design: target architecture, file moves
+3. [code-architect]→ extract: apply changes incrementally
+4. [qa-sentinel]   → verify: all existing tests still pass
+```
+
+**Verification gate**: Zero behaviour change. All tests green before and after.
+**Constraint**: Only touches files in scope. No opportunistic cleanup.
+
+### blueprint:api-route
+**For**: New API endpoint
+
+```
+1. [Explore]       → schema: check Prisma models, existing similar routes
+2. [code-architect]→ implement: route handler + Zod validation + org-scoping
+3. [senior-reviewer]→ audit: route-auditor skill — auth, validation, scoping
+4. [qa-sentinel]   → test: contract test + error cases
+```
+
+**Verification gate**: route-auditor skill passes. Auth + org-scope confirmed.
+**Required**: Zod input schema + org-scoped query in every mutation handler.
+
+### blueprint:workflow-step
+**For**: Adding a new step type to the Phase 62 workflow engine
+
+```
+1. [Explore]       → read: existing step-types/, orchestrator.ts, context-builder.ts
+2. [code-architect]→ implement: step-types/[name].ts + orchestrator routing
+3. [qa-sentinel]   → test: unit test for step execution + confidence scoring
+4. [senior-reviewer]→ audit: isolation, error handling, retry logic
+```
+
+**Verification gate**: Step returns { output, confidenceScore } or throws structured error.
+**Required**: Confidence score (0.0–1.0) for all AI step types.
+
+---
+
 ## Dispatch Template
 
 When spawning a specialist, always include:

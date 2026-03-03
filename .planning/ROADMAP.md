@@ -501,7 +501,7 @@ Plans:
 | 59. Context Resilience Infrastructure | v2.0 | 0/? | Not started | - |
 | 60. Agent Orchestration Hardening | v2.0 | 0/? | Not started | - |
 | 61. AI Session Memory & Persistence | v2.0 | 2/2 | Complete | 2026-03-03 |
-| 62. Multi-step Workflow Engine | v2.0 | 0/? | Not started | - |
+| 62. Multi-step Workflow Engine | v2.0 | 0/3 | Planned | - |
 | 63. Parallel Agent Execution | v2.0 | 0/? | Not started | - |
 | 64. AI Quality & Brand Voice Guardian | v2.0 | 0/? | Not started | - |
 | 65. Campaign Intelligence Engine | v2.0 | 0/? | Not started | - |
@@ -551,17 +551,25 @@ Plans:
 
 **Goal**: Define and execute sequential AI workflows with human-approval gates
 **Depends on**: Phase 61
-**Research**: Unlikely (Prisma model pattern established)
-**Plans**: TBD
+**Research**: Done (Stripe Minions synthesis — `.planning/research/stripe-minions-synthesis.md`)
+**Architecture**: Minions-inspired blueprint pattern — deterministic orchestrator, bounded AI
+  steps, confidence-gated auto-approval, 2-retry cap, human gates for external actions
+**Plans**: 0/3
 
 Plans:
-- [ ] 62-01: TBD
+- [ ] 62-01: Prisma schema (WorkflowExecution + StepExecution) + core library
+             (orchestrator.ts + step-executor.ts + context-builder.ts)
+- [ ] 62-02: API routes (6 endpoints) + step type implementations (7 types) + BullMQ integration
+- [ ] 62-03: Dashboard page (execution list, step progress, approval UI)
 
 #### Phase 63: Parallel Agent Execution
 
 **Goal**: Batch content generation; simultaneous platform variations; progress indicators
 **Depends on**: Phase 62
-**Research**: Unlikely (Promise.all patterns established)
+**Research**: Done (Minions synthesis covers parallelism)
+**Architecture**: True parallelism — N workflow executions simultaneously via BullMQ
+  concurrency control; partial success model (allSettled not allRejected); each execution
+  reads its own StepExecution chain with no shared state
 **Plans**: TBD
 
 Plans:
@@ -571,7 +579,10 @@ Plans:
 
 **Goal**: Auto-review all content before publishing; brand consistency scoring
 **Depends on**: Phase 63
-**Research**: Unlikely (Brand Voice Engine exists from Phase 39)
+**Research**: Done (Minions "human review is load-bearing" principle directly applies)
+**Architecture**: This IS the mandatory human review gate. Confidence scoring routes
+  low-confidence content to human review; high-confidence auto-approved. Integrates with
+  Phase 62 WorkflowExecution as a validation step type.
 **Plans**: TBD
 
 Plans:
@@ -581,7 +592,9 @@ Plans:
 
 **Goal**: Performance-based learning, pattern extraction, A/B auto-evaluation
 **Depends on**: Phase 64
-**Research**: Unlikely (analytics and A/B models already exist)
+**Research**: Done (Minions: step output history as training signal)
+**Architecture**: StepExecution.outputData + approval decisions feed back to prompt
+  optimisation. Context > model — improve context assembly, not model version.
 **Plans**: TBD
 
 Plans:
@@ -591,7 +604,9 @@ Plans:
 
 **Goal**: Scheduled AI proactively surfaces opportunities and auto-schedules top content
 **Depends on**: Phase 65
-**Research**: Unlikely (cron + AI patterns established)
+**Research**: Done (Minions "minion invoked from cron" pattern)
+**Architecture**: Scheduled workflow executions triggered by Vercel cron, bounded by
+  circuit breakers (equivalent to Minions 2-round CI cap for scheduled agents).
 **Plans**: TBD
 
 Plans:

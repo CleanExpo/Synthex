@@ -10,10 +10,10 @@ See: .planning/PROJECT.md (updated 2026-02-17)
 ## Current Position
 
 Milestone: v2.0 Reliable AI Agents (Phases 59-66)
-Phase: 61 of 66 (AI Session Memory & Persistence) — COMPLETE
-Plan: 2 of 2 (61-01 + 61-02 complete)
-Status: IN PROGRESS — Phase 62 next (Multi-step Workflow Engine)
-Last activity: 2026-03-03 — Phase 61 complete: URL routing, auto-title, search, archive
+Phase: 62 of 66 (Multi-step Workflow Engine) — IN PROGRESS
+Plan: 0 of 3 (62-01 schema+lib, 62-02 API+steps, 62-03 dashboard)
+Status: PLANNED — Stripe Minions synthesis done, 3 PLAN.md files written, ready for 62-01
+Last activity: 2026-03-03 — Phase 62 architecture planned (Minions-inspired blueprint engine)
 
 Progress: ███░░░░░░░ 38% (3/8 phases complete)
 
@@ -169,6 +169,24 @@ All deferred items from v1.0 resolved:
 - 1x accessibility focus test (email input `toBeFocused` timing)
 - 1x responsive touch target size (16px button vs 24px minimum)
 
+### Phase 62 Architecture Decisions (2026-03-03)
+
+Research applied: Stripe Minions synthesis (`.planning/research/stripe-minions-synthesis.md`)
+
+- **Orchestrator pattern**: Deterministic `orchestrator.ts` controls flow; LLM is called only
+  within bounded step types. The system runs the model, not the other way around.
+- **Context assembly**: `context-builder.ts` with token budget. Each AI step receives previous
+  StepExecution.outputData (last 3 steps max), not full conversation history.
+- **Confidence gating**: Every AI step returns `confidenceScore` (0.0–1.0). Auto-approve if
+  ≥ 0.85 (configurable per template). Below threshold → queue for human approval.
+- **2-retry cap**: `retryCount >= 2` → mark step failed, surface to human. Never loop.
+- **Human gates are mandatory**: Any step writing to external systems (publish, schedule, notify)
+  requires human approval regardless of confidence score.
+- **3 new Prisma models**: WorkflowExecution, StepExecution, WorkflowTemplate.
+- **7 step types**: ai-generate, ai-analyse, ai-enrich, human-approval, action-publish,
+  action-schedule, action-notify.
+- **Phases 63-66 updated**: Each phase now has Minions-informed architecture note in ROADMAP.md.
+
 ### Blockers/Concerns
 
 None.
@@ -185,9 +203,9 @@ None.
 ## Session Continuity
 
 Last session: 2026-03-03
-Stopped at: Phase 61 complete — URL routing, auto-title, conversation search, archive
-Resume file: .planning/phases/61-ai-session-memory/61-02-SUMMARY.md
-Next action: /gsd:plan-phase 62 — Multi-step Workflow Engine
+Stopped at: Phase 62 architecture planned — Minions synthesis, PLAN files written
+Resume file: .planning/phases/62-workflow-engine/62-01-PLAN.md
+Next action: /gsd:execute-plan 62-01 — Prisma schema + core workflow library
 
 ## Linear Issues — v2.0 Phase 59-66 Tracking
 

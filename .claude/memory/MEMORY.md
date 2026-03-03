@@ -64,7 +64,18 @@
 - Social: 9 platforms with OAuth + webhooks (see `social-integrations` skill)
 - Multi-business: Organisation scoping via `lib/multi-business/`
 - Encryption: API key encryption in `lib/encryption/`
-- 91 Prisma models
+- 91 Prisma models (+ 3 being added in Phase 62: WorkflowExecution, StepExecution, WorkflowTemplate)
+
+## Minions-Inspired Architecture (Phase 62+)
+Research synthesis: `.planning/research/stripe-minions-synthesis.md`
+5 core principles applied to Synthex development:
+1. Context > Model — assemble perfect context per step (context-builder.ts)
+2. System runs the model — orchestrator.ts drives, LLM responds to step prompts only
+3. One-shot over loops — single LLM call per step with rich context
+4. Parallelise over iterate — Phase 63 adds N-execution parallelism via BullMQ
+5. Walls before models — 2-retry cap, confidence gates, human approval for external actions
+Phase 62 workflow path: lib/workflow/{orchestrator,step-executor,context-builder}.ts + step-types/
+Blueprint library: AGENT-REGISTRY.md has 5 execution patterns (feature, bugfix, refactor, api-route, workflow-step)
 
 ## User Preferences
 - Australian English spelling
