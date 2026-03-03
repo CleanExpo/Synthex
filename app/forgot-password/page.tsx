@@ -33,8 +33,7 @@ export default function ForgotPasswordPage() {
         throw new Error('Please enter a valid email address');
       }
 
-      // In production, this would call the actual password reset API
-      const response = await fetch('/api/auth/reset-password', {
+      const response = await fetch('/api/auth/request-reset', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
