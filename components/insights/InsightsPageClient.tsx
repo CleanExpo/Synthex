@@ -11,6 +11,10 @@ import { PageHeader } from '@/components/dashboard/page-header'
 import { Lightbulb, Loader2, CheckCircle, Clock, AlertTriangle } from '@/components/icons'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
+import { useSubscription } from '@/hooks/useSubscription'
+import { UpgradePrompt } from '@/components/billing/UpgradePrompt'
+
+const ALLOWED_PLANS = ['professional', 'business', 'custom']
 
 interface InsightsRun {
   id: string
@@ -93,9 +97,14 @@ function StatusBadge({ status }: { status: string }) {
 }
 
 export function InsightsPageClient() {
-  const { data, isLoading, mutate } = useSWR<InsightsResponse>('/api/insights', fetcher, {
-    refreshInterval: 30000,
-  })
+  const { subscription, isLoading: subscriptionLoading } = useSubscription()
+  const hasAccess = subscription && ALLOWED_PLANS.includes(subscription.plan)
+
+  const { data, isLoading, mutate } = useSWR<InsightsResponse>(
+    hasAccess ? '/api/insights' : null,
+    fetcher,
+    { refreshInterval: 30000 }
+  )
   const [runningNow, setRunningNow] = useState(false)
 
   const isDev = process.env.NODE_ENV !== 'production'
@@ -116,6 +125,21 @@ export function InsightsPageClient() {
   }
 
   const insights = data?.insights ?? []
+
+  // Gate: show upgrade prompt for free-plan users
+  if (!subscriptionLoading && !hasAccess) {
+    return (
+      <div className="space-y-6">
+        <PageHeader
+          title="AI Insights"
+          description="Autonomous AI agent surfaces content opportunities every 4 hours."
+        />
+        <div className="container py-8">
+          <UpgradePrompt feature="AI Insights Agent" />
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-6">

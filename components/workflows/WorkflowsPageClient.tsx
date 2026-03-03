@@ -20,6 +20,8 @@ import {
   type WorkflowExecutionWithSteps,
 } from '@/lib/workflow/hooks/use-workflow-executions';
 import { useUser } from '@/hooks/use-user';
+import { useSubscription } from '@/hooks/useSubscription';
+import { UpgradePrompt } from '@/components/billing/UpgradePrompt';
 import { ExecutionList } from './ExecutionList';
 import { ExecutionDetail } from './ExecutionDetail';
 import { NewWorkflowDialog } from './NewWorkflowDialog';
@@ -27,6 +29,8 @@ import { ParallelExecutionWidget } from './ParallelExecutionWidget';
 import { IntelligencePanel } from './IntelligencePanel';
 import useSWR from 'swr';
 import { cn } from '@/lib/utils';
+
+const ALLOWED_PLANS = ['professional', 'business', 'custom'];
 
 // ---------------------------------------------------------------------------
 // Fetcher for single execution detail (with steps)
@@ -78,6 +82,8 @@ export function WorkflowsPageClient() {
   const searchParams = useSearchParams();
   const { user } = useUser();
   const orgId = user?.organizationId ?? user?.activeOrganizationId ?? null;
+  const { subscription, isLoading: subscriptionLoading } = useSubscription();
+  const hasAccess = subscription && ALLOWED_PLANS.includes(subscription.plan);
 
   // Dialog open state — also triggered by ?action=new from command palette
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -158,6 +164,21 @@ export function WorkflowsPageClient() {
   // -------------------------------------------------------------------------
 
   const hasExecutions = filteredExecutions.length > 0;
+
+  // Gate: show upgrade prompt for free-plan users
+  if (!subscriptionLoading && !hasAccess) {
+    return (
+      <div className="space-y-6">
+        <PageHeader
+          title="Workflows"
+          description="Monitor and manage AI workflow executions."
+        />
+        <div className="container py-8">
+          <UpgradePrompt feature="Multi-step Workflows" />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
