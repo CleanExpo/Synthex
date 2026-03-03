@@ -108,6 +108,10 @@
     {
       "path": "/api/cron/revalidate-api-keys",
       "schedule": "0 4 * * *"
+    },
+    {
+      "path": "/api/cron/insights",
+      "schedule": "0 */4 * * *"
     }
   ]
 }
