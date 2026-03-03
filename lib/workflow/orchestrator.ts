@@ -357,7 +357,7 @@ async function resolveStepDefinition(
       select: { steps: true },
     })
     if (template?.steps) {
-      const steps = template.steps as WorkflowStepDefinition[]
+      const steps = template.steps as unknown as WorkflowStepDefinition[]
       return steps[stepIndex] ?? null
     }
   }
