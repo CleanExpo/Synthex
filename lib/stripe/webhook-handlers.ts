@@ -15,6 +15,12 @@ import { webhookHandler } from '@/lib/webhooks/webhook-handler';
 import { subscriptionService } from './subscription-service';
 import { auditLogger } from '@/lib/security/audit-logger';
 import { logger } from '@/lib/logger';
+import { prisma } from '@/lib/prisma';
+import {
+  sendPaymentReceiptEmail,
+  sendPaymentFailedEmail,
+  sendSubscriptionCancelledEmail,
+} from '@/lib/email/billing-emails';
 import Stripe from 'stripe';
 
 // ============================================================================
@@ -164,6 +170,31 @@ async function handleSubscriptionCancelled(event: WebhookEvent): Promise<void> {
     if (existingSub) {
       // Downgrade to free plan
       await subscriptionService.downgradeToFree(existingSub.userId);
+
+      // Send cancellation email (fire-and-forget — do not await)
+      const user = await prisma.user.findUnique({
+        where: { id: existingSub.userId },
+        select: { email: true, name: true },
+      });
+      if (user?.email) {
+        // Format the period end date (DD/MM/YYYY per project convention)
+        // current_period_end lives on the subscription item in newer Stripe API versions
+        const firstItemPeriodEnd = subscription.items.data[0]?.current_period_end;
+        const periodEnd = subscription.cancel_at
+          ? new Date(subscription.cancel_at * 1000)
+          : firstItemPeriodEnd
+            ? new Date(firstItemPeriodEnd * 1000)
+            : null;
+        const endDate = periodEnd
+          ? periodEnd.toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' })
+          : 'the end of your billing period';
+        sendSubscriptionCancelledEmail({
+          email: user.email,
+          name: user.name ?? undefined,
+          plan: existingSub.plan,
+          endDate,
+        });
+      }
     }
 
     await auditLogger.log({
@@ -220,7 +251,26 @@ async function handlePaymentSucceeded(event: WebhookEvent): Promise<void> {
       },
     });
 
-    // TODO(UNI-475): Send payment confirmation email once email provider is wired up in lib/email-service.ts
+    // Send payment receipt email (fire-and-forget — do not await)
+    const subRecord = await subscriptionService.getByStripeCustomerId(
+      invoice.customer as string
+    );
+    if (subRecord) {
+      const user = await prisma.user.findUnique({
+        where: { id: subRecord.userId },
+        select: { email: true, name: true },
+      });
+      if (user?.email) {
+        sendPaymentReceiptEmail({
+          email: user.email,
+          name: user.name ?? undefined,
+          amount: invoice.amount_paid,
+          currency: invoice.currency,
+          plan: subRecord.plan,
+          billingPortalUrl: `${process.env.NEXT_PUBLIC_APP_URL ?? 'https://synthex.social'}/dashboard/billing`,
+        });
+      }
+    }
   } catch (error) {
     logger.error('Failed to handle payment succeeded', {
       error,
@@ -259,8 +309,25 @@ async function handlePaymentFailed(event: WebhookEvent): Promise<void> {
       },
     });
 
-    // TODO(UNI-475): Send payment failed notification email once email provider is wired up
-    // TODO(UNI-475): Update subscription status to past_due via Stripe webhook state machine
+    // Send payment failed alert email (fire-and-forget — do not await)
+    const subRecord = await subscriptionService.getByStripeCustomerId(
+      invoice.customer as string
+    );
+    if (subRecord) {
+      const user = await prisma.user.findUnique({
+        where: { id: subRecord.userId },
+        select: { email: true, name: true },
+      });
+      if (user?.email) {
+        sendPaymentFailedEmail({
+          email: user.email,
+          name: user.name ?? undefined,
+          amount: invoice.amount_due,
+          currency: invoice.currency,
+          billingPortalUrl: `${process.env.NEXT_PUBLIC_APP_URL ?? 'https://synthex.social'}/dashboard/billing`,
+        });
+      }
+    }
   } catch (error) {
     logger.error('Failed to handle payment failed', {
       error,
