@@ -215,7 +215,7 @@ Example: ["#marketing", "#growth", "#success"]`
     );
   }
   });
-  });
+  }, { allowWithoutKey: true });
 }
 
 // Build AI prompt for hashtag generation

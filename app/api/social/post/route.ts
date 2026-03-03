@@ -12,10 +12,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
-import { TwitterApi } from 'twitter-api-v2';
 import { getUserIdFromCookies, unauthorizedResponse } from '@/lib/auth/jwt-utils';
 import { decryptField } from '@/lib/security/field-encryption';
 import { getEffectiveOrganizationId } from '@/lib/multi-business';
+import { createPlatformService, type SupportedPlatform, type PlatformCredentials } from '@/lib/social';
 
 const socialPostSchema = z.object({
   content: z.string().min(1),
@@ -27,149 +27,6 @@ const socialPostSchema = z.object({
   campaignId: z.string().optional(),
 });
 
-// Platform posting configurations
-const PLATFORM_CONFIGS = {
-  twitter: {
-    maxLength: 280,
-    supportsImages: true,
-    supportsVideos: true,
-    hashtagLimit: 30,
-    apiEndpoint: 'https://api.twitter.com/2/tweets'
-  },
-  linkedin: {
-    maxLength: 3000,
-    supportsImages: true,
-    supportsVideos: true,
-    hashtagLimit: 30,
-    apiEndpoint: 'https://api.linkedin.com/v2/shares'
-  },
-  instagram: {
-    maxLength: 2200,
-    supportsImages: true,
-    supportsVideos: true,
-    hashtagLimit: 30,
-    requiresImage: true,
-    apiEndpoint: 'https://graph.instagram.com/v12.0'
-  },
-  facebook: {
-    maxLength: 63206,
-    supportsImages: true,
-    supportsVideos: true,
-    hashtagLimit: 100,
-    apiEndpoint: 'https://graph.facebook.com/v12.0'
-  },
-  tiktok: {
-    maxLength: 2200,
-    supportsImages: false,
-    supportsVideos: true,
-    hashtagLimit: 100,
-    requiresVideo: true,
-    apiEndpoint: 'https://open-api.tiktok.com'
-  }
-};
-
-interface PostRequest {
-  content: string;
-  platforms: string[];
-  mediaUrls?: string[];
-  scheduledAt?: string;
-  hashtags?: string[];
-  mentions?: string[];
-  campaignId?: string;
-}
-
-// Real function to post to social media platforms
-async function postToSocialPlatform(
-  platform: string, 
-  content: string, 
-  mediaUrls?: string[],
-  accessToken?: string
-) {
-  const config = PLATFORM_CONFIGS[platform as keyof typeof PLATFORM_CONFIGS];
-  
-  if (!config) {
-    throw new Error(`Unsupported platform: ${platform}`);
-  }
-
-  // Validate content length
-  if (content.length > config.maxLength) {
-    throw new Error(`Content exceeds ${platform} character limit of ${config.maxLength}`);
-  }
-
-  // Handle Twitter/X posting
-  if (platform === 'twitter') {
-    try {
-      const twitterClient = new TwitterApi({
-        appKey: process.env.TWITTER_API_KEY!,
-        appSecret: process.env.TWITTER_API_SECRET!,
-        accessToken: process.env.TWITTER_ACCESS_TOKEN!,
-        accessSecret: process.env.TWITTER_ACCESS_TOKEN_SECRET!,
-      });
-
-      // Post tweet
-      const tweet = await twitterClient.v2.tweet(content);
-      
-      return {
-        platform,
-        postId: tweet.data.id,
-        url: `https://twitter.com/i/web/status/${tweet.data.id}`,
-        publishedAt: new Date().toISOString(),
-        status: 'published'
-      };
-    } catch (error) {
-      console.error('Twitter API error:', error);
-      throw new Error(`Failed to post to Twitter: ${error instanceof Error ? error instanceof Error ? error.message : String(error) : 'Unknown error'}`);
-    }
-  }
-  
-  // Handle LinkedIn posting
-  if (platform === 'linkedin' && process.env.LINKEDIN_ACCESS_TOKEN) {
-    try {
-      const response = await fetch('https://api.linkedin.com/v2/ugcPosts', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${process.env.LINKEDIN_ACCESS_TOKEN}`,
-          'Content-Type': 'application/json',
-          'X-Restli-Protocol-Version': '2.0.0'
-        },
-        body: JSON.stringify({
-          author: `urn:li:person:${process.env.LINKEDIN_PERSON_ID}`,
-          lifecycleState: 'PUBLISHED',
-          specificContent: {
-            'com.linkedin.ugc.ShareContent': {
-              shareCommentary: {
-                text: content
-              },
-              shareMediaCategory: 'NONE'
-            }
-          },
-          visibility: {
-            'com.linkedin.ugc.MemberNetworkVisibility': 'PUBLIC'
-          }
-        })
-      });
-
-      if (!response.ok) {
-        throw new Error(`LinkedIn API error: ${response.status}`);
-      }
-
-      const data = await response.json();
-      return {
-        platform,
-        postId: data.id,
-        url: data.id,
-        publishedAt: new Date().toISOString(),
-        status: 'published'
-      };
-    } catch (error) {
-      console.error('LinkedIn API error:', error);
-      throw new Error(`Failed to post to LinkedIn: ${error instanceof Error ? error instanceof Error ? error.message : String(error) : 'Unknown error'}`);
-    }
-  }
-
-  // For other platforms, return a clear message that they need configuration
-  throw new Error(`${platform} API integration not configured. Please add API credentials for ${platform}.`);
-}
 
 export async function POST(request: NextRequest) {
   try {
@@ -229,23 +86,55 @@ export async function POST(request: NextRequest) {
           }
         });
 
-        // Decrypt access token if connection exists
-        const decryptedAccessToken = connection?.accessToken
-          ? decryptField(connection.accessToken)
-          : undefined;
+        if (!connection) {
+          errors.push({
+            platform,
+            success: false,
+            error: `Not connected to ${platform}. Please connect your ${platform} account in Settings.`
+          });
+          continue;
+        }
 
-        // Post to platform (external API call)
-        const result = await postToSocialPlatform(
-          platform,
-          finalContent,
-          mediaUrls,
-          decryptedAccessToken || undefined
-        );
+        // Build per-user credentials from stored OAuth tokens
+        const accessToken = decryptField(connection.accessToken);
+        if (!accessToken) {
+          errors.push({
+            platform,
+            success: false,
+            error: `Access token for ${platform} could not be decrypted. Please reconnect your account.`
+          });
+          continue;
+        }
+        const credentials: PlatformCredentials = {
+          accessToken,
+          refreshToken: connection.refreshToken ? decryptField(connection.refreshToken) ?? undefined : undefined,
+          expiresAt: connection.expiresAt ?? undefined,
+          platformUserId: connection.profileId ?? undefined,
+          platformUsername: connection.profileName ?? undefined,
+        };
+
+        const service = createPlatformService(platform as SupportedPlatform, credentials);
+
+        if (!service) {
+          errors.push({
+            platform,
+            success: false,
+            error: `Platform ${platform} is not supported`
+          });
+          continue;
+        }
+
+        // Post via per-user OAuth token
+        const result = await service.createPost({ text: finalContent, mediaUrls });
+
+        if (!result.success || !result.postId) {
+          throw new Error(result.error || `Failed to post to ${platform}`);
+        }
 
         platformResults.push({
           platform,
           postId: result.postId,
-          url: result.url,
+          url: result.url || '',
         });
 
       } catch (error: unknown) {

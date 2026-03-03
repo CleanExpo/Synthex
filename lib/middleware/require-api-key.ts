@@ -118,11 +118,14 @@ async function isSuperadmin(userId: string): Promise<boolean> {
  *
  * @param request The incoming request
  * @param handler The route handler to call if the gate passes. Receives userId.
+ * @param options.allowWithoutKey If true, call the handler even when no API key is
+ *   configured (for routes that have rule-based fallbacks and do not require AI).
  * @returns NextResponse
  */
 export async function requireApiKey(
   request: NextRequest,
-  handler: (userId: string) => Promise<NextResponse>
+  handler: (userId: string) => Promise<NextResponse>,
+  options?: { allowWithoutKey?: boolean }
 ): Promise<NextResponse> {
   // 1. Authenticate
   const authToken = request.cookies.get('auth-token')?.value;
@@ -152,6 +155,10 @@ export async function requireApiKey(
   const hasKey = await hasValidApiKey(userId, payload.apiKeyConfigured);
 
   if (!hasKey) {
+    // If the caller opted in to allow fallback behaviour, proceed without a key
+    if (options?.allowWithoutKey) {
+      return handler(userId);
+    }
     return NextResponse.json(
       {
         error: 'API key required',

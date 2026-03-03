@@ -295,7 +295,7 @@ Keep the core message but enhance engagement. Follow platform best practices.`
     );
   }
   });
-  });
+  }, { allowWithoutKey: true });
 }
 
 // Build optimization prompt

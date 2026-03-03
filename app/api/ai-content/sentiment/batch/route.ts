@@ -321,7 +321,7 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
-  });
+  }, { allowWithoutKey: true });
 }
 
 // Node.js runtime required for AI calls

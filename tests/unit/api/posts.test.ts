@@ -52,6 +52,16 @@ jest.mock('@/lib/security/field-encryption', () => ({
 // Mock twitter-api-v2 to prevent import errors
 jest.mock('twitter-api-v2', () => ({
   TwitterApi: jest.fn(),
+  TwitterApiV2Settings: {},
+}));
+
+// Mock social services so tests don't hit real APIs
+const mockCreatePost = jest.fn();
+jest.mock('@/lib/social', () => ({
+  createPlatformService: jest.fn().mockReturnValue({
+    createPost: mockCreatePost,
+    isConfigured: jest.fn().mockReturnValue(true),
+  }),
 }));
 
 import { POST, GET } from '@/app/api/social/post/route';

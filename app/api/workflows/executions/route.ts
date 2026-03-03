@@ -89,8 +89,19 @@ export async function POST(request: NextRequest) {
     },
   })
 
-  // Enqueue step 0
-  await enqueueWorkflowStep(execution.id, 0, 0)
+  // Enqueue step 0 — Redis may be unavailable in some environments
+  try {
+    await enqueueWorkflowStep(execution.id, 0, 0)
+  } catch (queueError) {
+    await prisma.workflowExecution.update({
+      where: { id: execution.id },
+      data: { status: 'failed', errorMessage: 'Queue unavailable — ensure REDIS_URL is configured' },
+    })
+    return NextResponse.json(
+      { error: 'Workflow queue unavailable', details: 'REDIS_URL not configured' },
+      { status: 503 }
+    )
+  }
 
   return NextResponse.json({ execution }, { status: 201 })
 }
