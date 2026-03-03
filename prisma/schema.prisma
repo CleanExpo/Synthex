@@ -3126,7 +3126,7 @@ model WorkflowExecution {
   // pending | running | waiting_approval | completed | failed | cancelled
   title            String
   triggerType      String   @default("manual") @map("trigger_type")
-  // manual | scheduled | api
+  // manual | scheduled | api | cron
   triggeredBy      String   @map("triggered_by")
   currentStepIndex Int      @default(0) @map("current_step_index")
   totalSteps       Int      @default(0) @map("total_steps")
@@ -3137,11 +3137,14 @@ model WorkflowExecution {
   completedAt      DateTime? @map("completed_at")
   createdAt        DateTime @default(now()) @map("created_at")
   updatedAt        DateTime @updatedAt @map("updated_at")
+  // Phase 63: batch execution grouping
+  batchId          String?  @map("batch_id")
   organization     Organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   stepExecutions   StepExecution[]
 
   @@index([organizationId])
   @@index([organizationId, status])
+  @@index([batchId])
   @@map("workflow_executions")
 }
 
