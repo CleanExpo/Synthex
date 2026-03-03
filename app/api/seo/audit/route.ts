@@ -307,19 +307,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get subscription
-    const subscription = await subscriptionService.getOrCreateSubscription(userId);
-
-    // Check if user has SEO access
-    if (subscription.plan === 'free') {
+    // Check subscription — Professional plan or higher required
+    const ALLOWED_PLANS = ['professional', 'business', 'custom'];
+    const subscription = await subscriptionService.getSubscription(userId);
+    if (!subscription || !ALLOWED_PLANS.includes(subscription.plan)) {
       return APISecurityChecker.createSecureResponse(
         {
-          success: false,
-          error: 'SEO audits require a paid subscription',
-          upgradeRequired: true,
-          requiredPlan: 'professional',
+          error: 'This feature requires a Professional or Business plan.',
+          upgrade: true,
         },
-        402
+        403
       );
     }
 
@@ -423,17 +420,16 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Get subscription
-    const subscription = await subscriptionService.getOrCreateSubscription(userId);
-
-    if (subscription.plan === 'free') {
+    // Check subscription — Professional plan or higher required
+    const ALLOWED_PLANS = ['professional', 'business', 'custom'];
+    const subscription = await subscriptionService.getSubscription(userId);
+    if (!subscription || !ALLOWED_PLANS.includes(subscription.plan)) {
       return APISecurityChecker.createSecureResponse(
         {
-          success: false,
-          error: 'SEO audits require a paid subscription',
-          upgradeRequired: true,
+          error: 'This feature requires a Professional or Business plan.',
+          upgrade: true,
         },
-        402
+        403
       );
     }
 

@@ -2,9 +2,12 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker'
+import { subscriptionService } from '@/lib/stripe/subscription-service'
 import { approveCurrentStep } from '@/lib/workflow/orchestrator'
 
 export const runtime = 'nodejs'
+
+const ALLOWED_PLANS = ['professional', 'business', 'custom']
 
 const approveSchema = z.object({ comment: z.string().max(2000).optional() })
 
@@ -18,7 +21,15 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   if (!security.allowed || !security.context.userId) {
     return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
   }
-  const orgId = await getOrgId(security.context.userId)
+  const userId = security.context.userId
+  const subscription = await subscriptionService.getSubscription(userId)
+  if (!subscription || !ALLOWED_PLANS.includes(subscription.plan)) {
+    return NextResponse.json(
+      { error: 'This feature requires a Professional or Business plan.', upgrade: true },
+      { status: 403 }
+    )
+  }
+  const orgId = await getOrgId(userId)
   if (!orgId) return NextResponse.json({ error: 'No organisation found' }, { status: 403 })
 
   const { id } = await params
@@ -41,7 +52,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   }
 
   try {
-    await approveCurrentStep(id, security.context.userId)
+    await approveCurrentStep(id, userId)
     const updated = await prisma.stepExecution.findFirst({
       where: { workflowExecutionId: id },
       orderBy: { stepIndex: 'desc' },

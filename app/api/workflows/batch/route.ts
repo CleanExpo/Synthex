@@ -6,9 +6,12 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker'
+import { subscriptionService } from '@/lib/stripe/subscription-service'
 import { executeParallel, MAX_BATCH_SIZE } from '@/lib/workflow/parallel-executor'
 
 export const runtime = 'nodejs'
+
+const ALLOWED_PLANS = ['professional', 'business', 'custom']
 
 const stepDefSchema = z.object({
   name: z.string().min(1),
@@ -56,7 +59,15 @@ export async function POST(request: NextRequest) {
   if (!security.allowed || !security.context.userId) {
     return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
   }
-  const orgId = await getOrgId(security.context.userId)
+  const userId = security.context.userId
+  const subscription = await subscriptionService.getSubscription(userId)
+  if (!subscription || !ALLOWED_PLANS.includes(subscription.plan)) {
+    return NextResponse.json(
+      { error: 'This feature requires a Professional or Business plan.', upgrade: true },
+      { status: 403 }
+    )
+  }
+  const orgId = await getOrgId(userId)
   if (!orgId) return NextResponse.json({ error: 'No organisation found' }, { status: 403 })
 
   let body: unknown
@@ -86,7 +97,7 @@ export async function POST(request: NextRequest) {
       workflowId: t.id,
     }))
 
-    const settled = await executeParallel(inputs, orgId, security.context.userId, batchId)
+    const settled = await executeParallel(inputs, orgId, userId, batchId)
     const executions = await prisma.workflowExecution.findMany({
       where: { batchId },
       orderBy: { createdAt: 'asc' },
@@ -113,7 +124,7 @@ export async function POST(request: NextRequest) {
       workflowId: template.id,
     }))
 
-    const settled = await executeParallel(execInputs, orgId, security.context.userId, batchId)
+    const settled = await executeParallel(execInputs, orgId, userId, batchId)
     const executions = await prisma.workflowExecution.findMany({
       where: { batchId },
       orderBy: { createdAt: 'asc' },
@@ -125,7 +136,7 @@ export async function POST(request: NextRequest) {
   // Handle batch-by-steps: arbitrary executions with inline step definitions
   if ('executions' in parsed.data) {
     const { executions } = parsed.data
-    const settled = await executeParallel(executions, orgId, security.context.userId, batchId)
+    const settled = await executeParallel(executions, orgId, userId, batchId)
     const dbExecutions = await prisma.workflowExecution.findMany({
       where: { batchId },
       orderBy: { createdAt: 'asc' },
@@ -142,7 +153,15 @@ export async function GET(request: NextRequest) {
   if (!security.allowed || !security.context.userId) {
     return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
   }
-  const orgId = await getOrgId(security.context.userId)
+  const userId = security.context.userId
+  const subscription = await subscriptionService.getSubscription(userId)
+  if (!subscription || !ALLOWED_PLANS.includes(subscription.plan)) {
+    return NextResponse.json(
+      { error: 'This feature requires a Professional or Business plan.', upgrade: true },
+      { status: 403 }
+    )
+  }
+  const orgId = await getOrgId(userId)
   if (!orgId) return NextResponse.json({ error: 'No organisation found' }, { status: 403 })
 
   // List unique batches for this org
