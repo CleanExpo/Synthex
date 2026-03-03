@@ -507,8 +507,8 @@ Plans:
 | 64. AI Quality & Brand Voice Guardian | v2.0 | 0/? | Not started | - |
 | 65. Campaign Intelligence Engine | v2.0 | 0/? | Not started | - |
 | 66. Autonomous Insights Agent | v2.0 | 1/1 | Complete | 2026-03-03 |
-| 67. Codebase Cleanup | v3.0 | 0/3 | Planned | - |
-| 68. Stripe Activation | v3.0 | 0/? | Not started | - |
+| 67. Codebase Cleanup | v3.0 | 3/3 | Done | 2026-03-03 |
+| 68. Stripe Activation | v3.0 | 0/3 | Planned | - |
 | 69. Public Landing Page | v3.0 | 0/? | Not started | - |
 | 70. Onboarding Funnel | v3.0 | 0/? | Not started | - |
 | 71. Observability & Monitoring | v3.0 | 0/? | Not started | - |
@@ -649,10 +649,12 @@ gates, wire customer portal, verify payment webhooks end-to-end
 **Depends on**: Phase 67
 **Research**: Likely (Stripe Billing Portal API, subscription enforcement patterns)
 **Research topics**: Stripe customer portal configuration, subscription gate middleware, proration handling
-**Plans**: TBD
+**Plans**: 0/3 | Planned
 
 Plans:
-- [ ] 68-01: TBD
+- [ ] 68-01: Billing email notifications (receipt, failure, cancellation) + dashboard display bugs UNI-633/634
+- [ ] 68-02: Subscription feature gate enforcement (SEO audit, workflows, insights) + UpgradePrompt component
+- [ ] 68-03: Public pricing page (/pricing) + Stripe production config checkpoint + E2E verification
 
 #### Phase 69: Public Landing Page
 
