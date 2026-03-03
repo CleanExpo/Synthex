@@ -89,6 +89,17 @@ node_modules/
 # Next.js
 .next/
 .next-dev/
+.next-alt/
+
+# Turbopack / Turborepo cache
+.turbo/
+
+# Experimental app directories
+with-turbopack-app/
+
+# Claude Code temp project files
+*.tmp-projects.json
+*tmp-projects.json
 
 # Vercel
 .vercel
