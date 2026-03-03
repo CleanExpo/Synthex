@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { SEOFeatureGate } from '@/components/seo';
 import { useSubscription } from '@/hooks/useSubscription';
+import { useToast } from '@/hooks/use-toast';
 import {
   Search,
   FileSearch,
@@ -42,44 +43,64 @@ function SEOToolCard({
   status?: 'available' | 'beta' | 'new';
   comingSoon?: boolean;
 }) {
-  return (
-    <Link href={comingSoon ? '#' : href} className={comingSoon ? 'cursor-not-allowed' : ''}>
-      <Card className="group bg-[#0f172a]/80 backdrop-blur-xl border border-cyan-500/10 hover:border-cyan-500/30 transition-all duration-300 h-full">
-        <CardContent className="p-6">
-          <div className="flex items-start justify-between mb-4">
-            <div className="p-3 rounded-xl bg-cyan-500/10 group-hover:bg-cyan-500/20 transition-colors">
-              <Icon className="w-6 h-6 text-cyan-400" />
-            </div>
-            {status === 'beta' && (
-              <span className="px-2 py-1 text-xs font-medium bg-cyan-500/10 text-cyan-400 rounded-full border border-cyan-500/20">
-                Beta
-              </span>
-            )}
-            {status === 'new' && (
-              <span className="px-2 py-1 text-xs font-medium bg-green-500/10 text-green-400 rounded-full border border-green-500/20">
-                New
-              </span>
-            )}
-            {comingSoon && (
-              <span className="px-2 py-1 text-xs font-medium bg-gray-500/10 text-gray-400 rounded-full border border-gray-500/20">
-                Coming Soon
-              </span>
-            )}
+  const { toast } = useToast();
+
+  const cardContent = (
+    <Card className="group bg-[#0f172a]/80 backdrop-blur-xl border border-cyan-500/10 hover:border-cyan-500/30 transition-all duration-300 h-full">
+      <CardContent className="p-6">
+        <div className="flex items-start justify-between mb-4">
+          <div className="p-3 rounded-xl bg-cyan-500/10 group-hover:bg-cyan-500/20 transition-colors">
+            <Icon className="w-6 h-6 text-cyan-400" />
           </div>
-          <h3 className="text-lg font-semibold text-white mb-2 group-hover:text-cyan-400 transition-colors">
-            {title}
-          </h3>
-          <p className="text-gray-400 text-sm leading-relaxed">
-            {description}
-          </p>
-          {!comingSoon && (
-            <div className="mt-4 flex items-center text-cyan-400 text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity">
-              Open Tool
-              <ArrowRight className="w-4 h-4 ml-1" />
-            </div>
+          {status === 'beta' && (
+            <span className="px-2 py-1 text-xs font-medium bg-cyan-500/10 text-cyan-400 rounded-full border border-cyan-500/20">
+              Beta
+            </span>
           )}
-        </CardContent>
-      </Card>
+          {status === 'new' && (
+            <span className="px-2 py-1 text-xs font-medium bg-green-500/10 text-green-400 rounded-full border border-green-500/20">
+              New
+            </span>
+          )}
+          {comingSoon && (
+            <span className="px-2 py-1 text-xs font-medium bg-gray-500/10 text-gray-400 rounded-full border border-gray-500/20">
+              Coming Soon
+            </span>
+          )}
+        </div>
+        <h3 className="text-lg font-semibold text-white mb-2 group-hover:text-cyan-400 transition-colors">
+          {title}
+        </h3>
+        <p className="text-gray-400 text-sm leading-relaxed">
+          {description}
+        </p>
+        {!comingSoon && (
+          <div className="mt-4 flex items-center text-cyan-400 text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity">
+            Open Tool
+            <ArrowRight className="w-4 h-4 ml-1" />
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+
+  if (comingSoon) {
+    return (
+      <div
+        role="button"
+        tabIndex={0}
+        onClick={() => toast({ title: 'Coming Soon', description: `${title} is currently in development` })}
+        onKeyDown={(e) => e.key === 'Enter' && toast({ title: 'Coming Soon', description: `${title} is currently in development` })}
+        className="cursor-pointer"
+      >
+        {cardContent}
+      </div>
+    );
+  }
+
+  return (
+    <Link href={href}>
+      {cardContent}
     </Link>
   );
 }

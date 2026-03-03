@@ -15,6 +15,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { timingSafeEqual } from 'crypto';
 import { createClient } from '@supabase/supabase-js';
 import { z } from 'zod';
 import { PLAN_LIMITS } from '@/lib/stripe/subscription-service';
@@ -44,6 +45,15 @@ const upgradeSchema = z.object({
 });
 
 // =============================================================================
+// Helpers
+// =============================================================================
+
+function safeCompare(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  return timingSafeEqual(Buffer.from(a), Buffer.from(b));
+}
+
+// =============================================================================
 // Admin Auth
 // =============================================================================
 
@@ -53,7 +63,7 @@ async function verifyAdmin(request: NextRequest): Promise<{
   error?: string;
 }> {
   const apiKey = request.headers.get('x-admin-api-key');
-  if (apiKey && apiKey === process.env.ADMIN_API_KEY) {
+  if (apiKey && safeCompare(apiKey, process.env.ADMIN_API_KEY ?? '')) {
     return { isAdmin: true };
   }
 

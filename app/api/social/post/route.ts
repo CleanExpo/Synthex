@@ -256,6 +256,8 @@ export async function GET(request: NextRequest) {
     const where: Record<string, unknown> = {};
     if (platform) where.platform = platform;
     if (status) where.status = status;
+    // Scope to current user via campaign relation
+    where['campaign'] = { userId };
 
     // Get posts from database
     const posts = await prisma.post.findMany({
@@ -275,6 +277,7 @@ export async function GET(request: NextRequest) {
     // Get platform statistics
     const stats = await prisma.post.groupBy({
       by: ['platform', 'status'],
+      where: { campaign: { userId } },
       _count: {
         id: true
       }

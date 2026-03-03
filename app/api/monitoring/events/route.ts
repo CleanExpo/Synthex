@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
+import { getUserIdFromCookies } from '@/lib/auth/jwt-utils';
 
 /** Monitoring event structure */
 interface MonitoringEvent {
@@ -36,13 +37,17 @@ export async function POST(request: NextRequest) {
     }
     const body = validation.data;
 
+    // Resolve authenticated user to prevent userId spoofing in logs
+    const authUserId = await getUserIdFromCookies().catch(() => null);
+    const verifiedUserId = authUserId ?? null;
+
     // Process errors
     if (body.errors && body.errors.length > 0) {
       for (const error of body.errors) {
         console.error('[Error Tracked]:', {
           message: error instanceof Error ? error.message : String(error),
           url: error.context?.url,
-          userId: body.userId,
+          userId: verifiedUserId,
           sessionId: body.sessionId,
           timestamp: error.timestamp,
         });

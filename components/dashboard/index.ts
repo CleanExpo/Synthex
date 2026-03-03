@@ -36,3 +36,7 @@ export { GetStartedChecklist } from './get-started-checklist';
 
 // Feature discoverability
 export { KeyboardHints } from './keyboard-hints';
+
+// Sprint 3 widgets
+export { GamificationWidget } from './GamificationWidget';
+export { ContentSuggestionsWidget } from './ContentSuggestionsWidget';

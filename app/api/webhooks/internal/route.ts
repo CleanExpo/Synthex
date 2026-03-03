@@ -10,10 +10,16 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { timingSafeEqual } from 'crypto';
 import { z } from 'zod';
 import { webhookHandler, emit } from '@/lib/webhooks';
 import { logger } from '@/lib/logger';
 import type { WebhookEventType } from '@/lib/webhooks/types';
+
+function safeCompare(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  return timingSafeEqual(Buffer.from(a), Buffer.from(b));
+}
 
 const emitEventSchema = z.object({
   type: z.string().min(1),
@@ -84,7 +90,7 @@ export async function PUT(request: NextRequest) {
     const apiKey = request.headers.get('x-api-key');
     const expectedKey = process.env.INTERNAL_API_KEY;
 
-    if (!expectedKey || apiKey !== expectedKey) {
+    if (!expectedKey || !apiKey || !safeCompare(apiKey, expectedKey)) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 

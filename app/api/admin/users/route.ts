@@ -13,6 +13,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { timingSafeEqual } from 'crypto';
 import prisma from '@/lib/prisma';
 import { z } from 'zod';
 import { sanitizeErrorForResponse } from '@/lib/utils/error-utils';
@@ -38,6 +39,15 @@ const updateUserStatusSchema = z.object({
 });
 
 // =============================================================================
+// Helpers
+// =============================================================================
+
+function safeCompare(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  return timingSafeEqual(Buffer.from(a), Buffer.from(b));
+}
+
+// =============================================================================
 // Admin Auth
 // =============================================================================
 
@@ -48,7 +58,7 @@ async function verifyAdmin(request: NextRequest): Promise<{
 }> {
   // Check for admin API key
   const apiKey = request.headers.get('x-admin-api-key');
-  if (apiKey && apiKey === process.env.ADMIN_API_KEY) {
+  if (apiKey && safeCompare(apiKey, process.env.ADMIN_API_KEY ?? '')) {
     return { isAdmin: true };
   }
 
@@ -210,7 +220,7 @@ export async function POST(request: NextRequest) {
     // Get target user
     const targetUser = await prisma.user.findUnique({
       where: { id: userId },
-      select: { id: true, email: true, preferences: true },
+      select: { id: true, email: true, preferences: true, organizationId: true },
     });
 
     if (!targetUser) {
@@ -218,6 +228,20 @@ export async function POST(request: NextRequest) {
         { error: 'Not Found', message: 'User not found' },
         { status: 404 }
       );
+    }
+
+    // Enforce org scope: JWT-authenticated admins cannot mutate users from other orgs
+    if (auth.userId) {
+      const adminUser = await prisma.user.findUnique({
+        where: { id: auth.userId },
+        select: { organizationId: true },
+      });
+      if (adminUser?.organizationId && targetUser.organizationId !== adminUser.organizationId) {
+        return NextResponse.json(
+          { error: 'Forbidden', message: 'User not in your organisation' },
+          { status: 403 }
+        );
+      }
     }
 
     // Prevent modifying superadmins

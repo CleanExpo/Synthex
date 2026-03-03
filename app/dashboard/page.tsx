@@ -23,6 +23,8 @@ import {
   AnimatedCard,
   OverviewTab,
   GetStartedChecklist,
+  GamificationWidget,
+  ContentSuggestionsWidget,
 } from '@/components/dashboard';
 import { InsightsWidget } from '@/components/insights/InsightsWidget';
 
@@ -247,6 +249,12 @@ export default function DashboardPage() {
 
           {/* AI Insights widget — Phase 66 */}
           <InsightsWidget />
+
+          {/* Gamification + Content Suggestions — Sprint 3 */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+            <GamificationWidget />
+            <ContentSuggestionsWidget />
+          </div>
 
           {/* Other dashboard features are now accessible from the sidebar navigation:
               - Analytics: /dashboard/analytics
