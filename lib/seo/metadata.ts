@@ -32,7 +32,7 @@ export function generateMetadata(config: PageSEOConfig): Metadata {
     title,
     description = DEFAULT_DESCRIPTION,
     path = '',
-    image = '/og-image.png',
+    image,
     type = 'website',
     keywords = [],
     noIndex = false,
@@ -43,7 +43,14 @@ export function generateMetadata(config: PageSEOConfig): Metadata {
 
   const url = `${BASE_URL}${path}`;
   const fullTitle = title === SITE_NAME ? title : `${title} | ${SITE_NAME}`;
-  const imageUrl = image.startsWith('http') ? image : `${BASE_URL}${image}`;
+
+  // Use dynamic OG image route; fall back to static only if an explicit image is provided
+  const ogImageUrl = image
+    ? image.startsWith('http')
+      ? image
+      : `${BASE_URL}${image}`
+    : `${BASE_URL}/api/og?title=${encodeURIComponent(fullTitle)}`;
+  const imageUrl = ogImageUrl;
 
   const defaultKeywords = [
     'AI marketing',
