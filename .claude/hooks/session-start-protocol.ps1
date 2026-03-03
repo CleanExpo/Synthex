@@ -28,6 +28,34 @@ if (Test-Path $constitutionFile) {
     Write-Output "--- END CONSTITUTION ---"
 }
 
+# 2.5. Linear status (live query if LINEAR_API_KEY env var is set)
+$linearApiKey = $env:LINEAR_API_KEY
+if ($linearApiKey) {
+    try {
+        $query = '{"query":"{ issues(filter: { state: { name: { eq: \"In Progress\" } }, team: { key: { eq: \"UNI\" } } }) { nodes { identifier title } } }"}'
+        $result = Invoke-RestMethod `
+            -Uri "https://api.linear.app/graphql" `
+            -Method POST `
+            -Headers @{ "Authorization" = $linearApiKey; "Content-Type" = "application/json" } `
+            -Body $query `
+            -ErrorAction Stop
+        $issues = $result.data.issues.nodes
+        if ($issues -and $issues.Count -gt 0) {
+            Write-Output ""
+            Write-Output "--- LINEAR: IN PROGRESS ---"
+            foreach ($issue in $issues) {
+                Write-Output ("  " + $issue.identifier + ": " + $issue.title)
+            }
+            Write-Output "--- END LINEAR ---"
+        }
+    } catch {
+        # Linear API unavailable - compass.md Active Issues section is fallback
+    }
+} else {
+    Write-Output ""
+    Write-Output "  [TIP: Set LINEAR_API_KEY env var for live Linear status at session start]"
+}
+
 # 3. Pre-compact state if recent (< 2 hours old)
 $preCompactFile = "D:\Synthex\.claude\scratchpad\pre-compact-state.md"
 if (Test-Path $preCompactFile) {

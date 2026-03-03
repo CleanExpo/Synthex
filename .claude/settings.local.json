@@ -152,6 +152,15 @@
     ],
     "PreToolUse": [
       {
+        "matcher": "Task",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell -ExecutionPolicy Bypass -File \"D:\\Synthex\\.claude\\hooks\\pre-agent-dispatch.ps1\""
+          }
+        ]
+      },
+      {
         "matcher": "Bash",
         "hooks": [
           {

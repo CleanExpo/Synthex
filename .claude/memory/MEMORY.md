@@ -26,12 +26,13 @@
 - **Status**: All backlog issues Done. 5 strategic issues (UNI-1180–1184) tracked separately.
 
 ## Current State (2026-03-03)
-- **Branch**: main at `6a9800d`
+- **Branch**: main at `4f167b60` (Phase 60 commit pending)
 - **DB**: 91 Prisma models, schema unchanged since v1.4
 - **Test suite**: 62 suites, 1482 passing (25 pre-existing failures: BullMQ transform, Stripe mock, SubscriptionService)
-- **Milestone**: v2.0 Reliable AI Agents — Phase 60 next (UNI-1238); Phase 59 DONE (UNI-1237)
+- **Milestone**: v2.0 Reliable AI Agents — Phase 61 next; Phase 59 DONE (UNI-1237), Phase 60 DONE (UNI-1238)
 - **v1.5 shipped**: 2026-03-03 — all 7 phases done, 1482 tests passing
 - **Deploy status**: Not yet public — synthex.social is live URL but in GOD MODE testing only. Stripe integration on hold. UNI-1202/UNI-1203 human-gated.
+- **v2.0 dev infra complete**: CONSTITUTION.md, PreCompact + SessionStart + pre-agent-dispatch hooks, AGENT-REGISTRY.md, hive-mind.md orchestrator
 
 ### v1.5 Final (UNI-1226–1230 — all Done)
 | ID | Title | Commit |
