@@ -649,12 +649,12 @@ gates, wire customer portal, verify payment webhooks end-to-end
 **Depends on**: Phase 67
 **Research**: Likely (Stripe Billing Portal API, subscription enforcement patterns)
 **Research topics**: Stripe customer portal configuration, subscription gate middleware, proration handling
-**Plans**: 2/3 | In progress
+**Plans**: 3/3 | Done
 
 Plans:
 - [x] 68-01: Billing email notifications (receipt, failure, cancellation) + dashboard display bugs UNI-633/634
 - [x] 68-02: Subscription feature gate enforcement (SEO audit, workflows, insights) + UpgradePrompt component
-- [ ] 68-03: Public pricing page (/pricing) + Stripe production config checkpoint + E2E verification
+- [x] 68-03: Public pricing page (/pricing) + Stripe test account configured + Vercel env vars deployed
 
 #### Phase 69: Public Landing Page
 

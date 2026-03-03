@@ -10,14 +10,14 @@ See: .planning/PROJECT.md (updated 2026-02-17)
 ## Current Position
 
 Milestone: v3.0 Public Launch Readiness (Phases 67-74)
-Phase: 68 of 74 (Stripe Activation) — 2/3 plans executed
-Plan: 68-03 next — Public pricing page + Stripe production config
-Status: In progress
-Last activity: 2026-03-03 — Completed 68-02 (subscription feature gates + UpgradePrompt)
+Phase: 68 of 74 (Stripe Activation) — 3/3 plans executed — COMPLETE
+Plan: Phase 68 done — next is Phase 69 (Public Landing Page)
+Status: Phase complete
+Last activity: 2026-03-03 — Completed 68-03 (pricing page + Stripe test config + Vercel env vars)
 
 Progress: ░░░░░░░░░░ 15% (1/8 phases complete, 2/3 plans in Phase 68)
 
-Next action: `/gsd:execute-plan .planning/phases/68-stripe-activation/68-03-PLAN.md`
+Next action: `/gsd:plan-phase 69`
 
 ## Performance Metrics
 
@@ -112,6 +112,10 @@ Decisions from v3.0 (Phase 68):
 - `subscriptionService.getSubscription(userId)` used for gate checks — exists in `lib/stripe/subscription-service.ts`
 - Workflows page client (`WorkflowsPageClient.tsx`) and insights page client (`InsightsPageClient.tsx`) are the actual render points — `app/dashboard/*/page.tsx` are thin wrappers that pass to client components
 - All 10 workflow sub-routes gated (executions, templates, batch, intelligence endpoints)
+- Stripe test account: acct_1SzE5KGib5mMf28d (Synthex) — products/prices/webhook created in test mode
+- Professional price ID: `price_1T6qNuGib5mMf28dqhxMIsP7` (AUD $249/mo), Business: `price_1T6qO3Gib5mMf28d44AXcz6c` (AUD $399/mo)
+- Webhook ID: `we_1T6qO8Gib5mMf28dOiQP3fTX` — all 5 Stripe env vars set in Vercel via CLI (production+preview+development)
+- To go live: replace sk_test_/pk_test_ with sk_live_/pk_live_ and register a new live-mode webhook
 
 Decisions from v1.5 (Phase 54):
 
@@ -219,9 +223,9 @@ None.
 ## Session Continuity
 
 Last session: 2026-03-03
-Stopped at: Completed 68-02 — subscription feature gates (SEO audit, workflows, insights) + UpgradePrompt
+Stopped at: Completed 68-03 — pricing page, Stripe test account configured, Vercel env vars deployed
 Resume file: none
-Next action: /gsd:execute-plan .planning/phases/68-stripe-activation/68-03-PLAN.md
+Next action: /gsd:plan-phase 69
 
 ## Linear Issues — v2.0 Phase 59-66 Tracking
 
