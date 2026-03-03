@@ -32,11 +32,14 @@ FROM node:22-alpine AS builder
 WORKDIR /app
 
 # Build-time args for Next.js static analysis + Prisma client gen
-# These are placeholder values — real secrets are injected at runtime
+# These are placeholder values — real secrets are injected at runtime via Kubernetes Secrets
+# SUPABASE_SERVICE_ROLE_KEY is required here because 17 service files create Supabase admin
+# clients at module scope; Next.js executes these imports during "Collecting page data".
 ARG DATABASE_URL=postgresql://placeholder:placeholder@localhost:5432/synthex
 ARG DIRECT_URL=postgresql://placeholder:placeholder@localhost:5432/synthex
 ARG NEXT_PUBLIC_SUPABASE_URL=https://placeholder.supabase.co
 ARG NEXT_PUBLIC_SUPABASE_ANON_KEY=placeholder-anon-key
+ARG SUPABASE_SERVICE_ROLE_KEY=placeholder-service-role-key-build-only
 ARG NEXTAUTH_SECRET=placeholder-secret-32-chars-minimum-here
 ARG NEXTAUTH_URL=http://localhost:3000
 
@@ -44,6 +47,7 @@ ENV DATABASE_URL=${DATABASE_URL}
 ENV DIRECT_URL=${DIRECT_URL}
 ENV NEXT_PUBLIC_SUPABASE_URL=${NEXT_PUBLIC_SUPABASE_URL}
 ENV NEXT_PUBLIC_SUPABASE_ANON_KEY=${NEXT_PUBLIC_SUPABASE_ANON_KEY}
+ENV SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
 ENV NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
 ENV NEXTAUTH_URL=${NEXTAUTH_URL}
 
