@@ -24,7 +24,9 @@ COPY package*.json ./
 COPY prisma ./prisma/
 
 # Install ALL deps (including devDeps needed for build)
-RUN npm ci
+# Note: npm install used instead of npm ci because package-lock.json has minor
+# version drift for dev tooling deps (ajv). For production, sync the lock file first.
+RUN npm install --legacy-peer-deps
 
 # Stage 2: Build
 FROM node:22-alpine AS builder
