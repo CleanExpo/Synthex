@@ -8,6 +8,13 @@
  */
 
 import type { WorkflowStepDefinition, StepContext, StepResult } from './types'
+import { execute as executeAiGenerate } from './step-types/ai-generate'
+import { execute as executeAiAnalyse } from './step-types/ai-analyse'
+import { execute as executeAiEnrich } from './step-types/ai-enrich'
+import { execute as executeHumanApproval } from './step-types/human-approval'
+import { execute as executeActionPublish } from './step-types/action-publish'
+import { execute as executeActionSchedule } from './step-types/action-schedule'
+import { execute as executeActionNotify } from './step-types/action-notify'
 
 /** Default step execution timeout in milliseconds */
 const DEFAULT_TIMEOUT_MS = 30_000
@@ -78,43 +85,44 @@ async function executeStepByType(
 }
 
 // ---------------------------------------------------------------------------
-// Step type stubs — replaced with real implementations in Phase 62-02
+// Step type handlers — wired to real implementations in Phase 62-02
 // ---------------------------------------------------------------------------
 
 async function executeAiStep(
   stepDef: WorkflowStepDefinition,
-  _context: StepContext
+  context: StepContext
 ): Promise<StepResult> {
-  // Stub: Phase 62-02 will implement lib/workflow/step-types/ai-generate.ts etc.
-  return {
-    success: false,
-    error: `AI step "${stepDef.name}" not yet implemented — coming in Phase 62-02`,
-    terminal: true,
+  const subType = (stepDef.config as { subType?: string } | undefined)?.subType
+  switch (subType) {
+    case 'analyse':
+      return executeAiAnalyse(stepDef, context)
+    case 'enrich':
+      return executeAiEnrich(stepDef, context)
+    default:
+      return executeAiGenerate(stepDef, context)
   }
 }
 
 async function executeApprovalStep(
   stepDef: WorkflowStepDefinition,
-  _context: StepContext
+  context: StepContext
 ): Promise<StepResult> {
-  // Approval steps always pause for human review — not an error
-  return {
-    success: true,
-    output: { waitingFor: 'human_approval', stepName: stepDef.name },
-    confidenceScore: 1.0,
-    requiresApproval: true,
-  }
+  return executeHumanApproval(stepDef, context)
 }
 
 async function executeActionStep(
   stepDef: WorkflowStepDefinition,
-  _context: StepContext
+  context: StepContext
 ): Promise<StepResult> {
-  // Stub: Phase 62-02 will implement action-publish, action-schedule, action-notify
-  return {
-    success: false,
-    error: `Action step "${stepDef.name}" not yet implemented — coming in Phase 62-02`,
-    terminal: true,
+  switch (stepDef.actionType) {
+    case 'publish':
+      return executeActionPublish(stepDef, context)
+    case 'schedule':
+      return executeActionSchedule(stepDef, context)
+    case 'notify':
+      return executeActionNotify(stepDef, context)
+    default:
+      return { success: false, error: 'Unknown action type', terminal: true }
   }
 }
 
