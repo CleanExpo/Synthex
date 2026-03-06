@@ -22,6 +22,11 @@ const mockPrismaData = new Map<string, any>();
 
 jest.mock('@/lib/prisma', () => ({
   prisma: {
+    user: {
+      findUnique: jest.fn(),
+      findFirst: jest.fn(),
+      update: jest.fn(),
+    },
     subscription: {
       findUnique: jest.fn(),
       findFirst: jest.fn(),
@@ -37,6 +42,10 @@ jest.mock('@/lib/prisma', () => ({
     },
     post: {
       create: jest.fn(),
+    },
+    apiUsage: {
+      findUnique: jest.fn(),
+      upsert: jest.fn(),
     },
   },
 }));

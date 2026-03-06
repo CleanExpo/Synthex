@@ -325,11 +325,15 @@ describe('Stripe Webhook Handlers', () => {
   // ==========================================================================
 
   describe('registerStripeWebhookHandlers', () => {
-    it('should register all 5 event handlers', () => {
+    it('should register all 6 event handlers', () => {
       // Import to trigger registration
       require('@/lib/stripe/webhook-handlers');
 
-      expect(mockWebhookHandlerOn).toHaveBeenCalledTimes(5);
+      expect(mockWebhookHandlerOn).toHaveBeenCalledTimes(6);
+      expect(mockWebhookHandlerOn).toHaveBeenCalledWith(
+        'billing.checkout_completed',
+        expect.any(Function)
+      );
       expect(mockWebhookHandlerOn).toHaveBeenCalledWith(
         'billing.subscription_created',
         expect.any(Function)
