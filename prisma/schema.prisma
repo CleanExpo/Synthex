@@ -13,6 +13,9 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
+/// Core user account - the primary identity for authentication and ownership.
+/// Supports local auth (email/password) and OAuth providers via Account relation.
+/// All business entities (campaigns, posts, subscriptions) link back to User.
 model User {
   id        String   @id @default(uuid())
   email     String   @unique
@@ -187,6 +190,9 @@ model Account {
   @@map("accounts")
 }
 
+/// Marketing campaign container - organises posts, content, and analytics.
+/// Targets a specific platform with AI-generated content variations.
+/// Tracks performance metrics and A/B test results.
 model Campaign {
   id          String   @id @default(cuid())
   name        String
@@ -215,6 +221,9 @@ model Campaign {
   @@map("campaigns")
 }
 
+/// Individual social media post - the atomic unit of content.
+/// Supports scheduling, multi-platform publishing, and engagement tracking.
+/// Links to PlatformPost for platform-specific metadata after publishing.
 model Post {
   id         String   @id @default(cuid())
   content    String
@@ -380,6 +389,9 @@ model AuditLog {
   @@map("audit_logs")
 }
 
+/// Multi-tenant business entity - groups users, campaigns, and resources.
+/// Supports tiered plans (free/starter/pro/enterprise) with feature limits.
+/// Can have custom domains for white-label deployments.
 model Organization {
   id          String   @id @default(cuid())
   name        String
@@ -458,6 +470,10 @@ model Organization {
 }
 
 // Platform Integration Models
+
+/// OAuth connection to a social media platform (9 supported).
+/// Stores encrypted tokens for API access and handles token refresh.
+/// Supports both personal accounts and business pages.
 model PlatformConnection {
   id             String   @id @default(cuid())
   userId         String   @map("user_id")
@@ -1203,6 +1219,9 @@ model PersonaTrainingData {
 // Subscription & Billing Module
 // ==========================================
 
+/// Stripe-integrated billing subscription - controls feature access and limits.
+/// Plans: free (2 accounts, 10 posts), professional (5/100), business (unlimited).
+/// Handles trial periods, billing cycles, and usage metering.
 model Subscription {
   id                   String    @id @default(cuid())
   userId               String    @unique @map("user_id")
@@ -1668,6 +1687,9 @@ model ApprovalRequest {
   @@map("approval_requests")
 }
 
+/// Reusable workflow blueprint - defines a sequence of AI/human steps.
+/// Supports auto-approval thresholds for AI-generated content.
+/// Step types: ai_generate, ai_analyse, ai_enrich, human_approval, action_publish.
 model WorkflowTemplate {
   id             String   @id @default(cuid())
 
@@ -3118,6 +3140,9 @@ model VideoGeneration {
 // Workflow Engine Module (Phase 62)
 // ==========================================
 
+/// Running instance of a WorkflowTemplate - tracks execution state.
+/// Supports parallel step execution, human approval gates, and auto-rollback.
+/// Status flow: pending → running → waiting_approval → completed/failed.
 model WorkflowExecution {
   id               String   @id @default(cuid())
   organizationId   String   @map("organization_id")
