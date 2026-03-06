@@ -69,8 +69,8 @@ async function generateWithRunway(
   }
 
   try {
-    let endpoint = '/generations';
-    let payload: {
+    const endpoint = '/generations';
+    const payload: {
       model: string;
       duration: number;
       aspect_ratio: string;

@@ -768,7 +768,7 @@ export class TrendPredictorCoordinator extends EventEmitter {
 
       // Analyze post performance patterns
       let totalEngagement = 0;
-      let peakEngagements: number[] = [];
+      const peakEngagements: number[] = [];
       const lifespans: number[] = [];
 
       for (const post of similarPosts) {

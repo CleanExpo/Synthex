@@ -376,7 +376,7 @@ export class TodoPredictionEngine extends EventEmitter {
     pattern: TaskPattern | null
   ): { hours: number; confidence: number } {
     // Base estimate from pattern or historical average
-    let baseHours = pattern?.averageHours || 
+    const baseHours = pattern?.averageHours || 
       this.getHistoricalAverage(category);
     
     // Adjust based on complexity indicators

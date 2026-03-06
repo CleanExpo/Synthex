@@ -190,7 +190,7 @@ export function useCalendar(options: UseCalendarOptions) {
         const calendarData = data.calendar as CalendarViewData;
 
         // Transform posts to match ScheduledPost type
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+         
         const transformedPosts: ScheduledPost[] = (calendarData.posts as any[]).map((post) => ({
           id: post.id as string,
           title: post.title as string | undefined,

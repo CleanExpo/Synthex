@@ -659,7 +659,7 @@ export class WebhookValidator {
     try {
       const elements = signature.split(',');
       let timestamp = '';
-      let signatures: string[] = [];
+      const signatures: string[] = [];
 
       for (const element of elements) {
         const [key, value] = element.split('=');

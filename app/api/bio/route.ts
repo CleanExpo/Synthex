@@ -62,7 +62,7 @@ function generateRandomSuffix(): string {
 }
 
 async function generateUniqueSlug(title: string): Promise<string> {
-  let slug = slugify(title);
+  const slug = slugify(title);
 
   // Check if slug exists
   const existing = await prisma.linkBioPage.findUnique({ where: { slug } });

@@ -21,7 +21,7 @@ import { generateToken, isOwnerEmail } from '@/lib/auth/jwt-utils';
 import { retrievePKCEState } from '@/lib/auth/pkce';
 import { createClient } from '@supabase/supabase-js';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+ 
 type SupabaseAdmin = ReturnType<typeof createClient<any>>;
 
 // Create Supabase admin client (bypasses RLS, uses REST API instead of connection pooler)

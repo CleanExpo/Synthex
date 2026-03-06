@@ -199,7 +199,7 @@ async function isRedisAvailable(): Promise<boolean> {
 
   try {
     // Dynamic import to avoid requiring redis in development
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
+     
     const { createClient } = await (import('redis' as string) as Promise<{ createClient: (opts: { url: string }) => RedisClientLike }>);
     const client = createClient({ url: redisUrl });
     await client.connect();

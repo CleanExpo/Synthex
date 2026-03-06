@@ -278,7 +278,7 @@ export async function POST(request: NextRequest) {
 
       for (const slot of platformResult.slots) {
         // Calculate next occurrence of this slot
-        let candidateTime = new Date(startDate);
+        const candidateTime = new Date(startDate);
         const daysUntil = (slot.day - candidateTime.getDay() + 7) % 7;
         candidateTime.setDate(candidateTime.getDate() + daysUntil);
         candidateTime.setHours(slot.hour, 0, 0, 0);

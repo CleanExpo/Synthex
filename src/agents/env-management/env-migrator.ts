@@ -102,7 +102,7 @@ export class EnvMigrator extends EnvAgent {
       const targetFile = path.join(this.projectPath, `.env.${plan.targetEnvironment}`);
 
       const sourceVars = await this.loadEnvFile(sourceFile);
-      let targetVars = await this.loadEnvFile(targetFile).catch(() => new Map());
+      const targetVars = await this.loadEnvFile(targetFile).catch(() => new Map());
 
       if (plan.backupEnabled) {
         await this.createBackup(targetFile, plan.targetEnvironment);

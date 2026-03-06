@@ -486,7 +486,7 @@ class PostingTimePredictor {
     excluding: Date[],
     timezone: string
   ): Date {
-    let candidate = this.calculateNextOptimalTime(slot, timezone);
+    const candidate = this.calculateNextOptimalTime(slot, timezone);
 
     // Ensure it's after the reference time
     while (candidate <= after) {

@@ -26,7 +26,7 @@ export function patchPgScram(): void {
   patched = true;
 
   try {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
+     
     const sasl = require('pg/lib/crypto/sasl');
     const originalFinalizeSession = sasl.finalizeSession;
 

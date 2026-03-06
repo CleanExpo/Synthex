@@ -405,7 +405,7 @@ async function handleAccountUpdate(event: WebhookEvent) {
 
 function parseWebhookEvent(
   platform: string,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   body: Record<string, any>
 ): WebhookEvent {
   switch (platform) {
@@ -541,7 +541,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     let body: Record<string, any>;
 
     try {

@@ -17,7 +17,7 @@ interface SentryLike {
 // Optional Sentry import - only import if package is available
 let Sentry: SentryLike;
 try {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
+   
   Sentry = require('@sentry/nextjs');
 } catch {
   // Sentry not installed, use mock

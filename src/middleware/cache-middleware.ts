@@ -27,7 +27,7 @@ function generateCacheKey(req: NextRequest, options: CacheOptions = {}): string 
   const url = new URL(req.url);
   
   // Start with pathname
-  let keyParts = [url.pathname];
+  const keyParts = [url.pathname];
   
   // Add query parameters (excluding specified ones)
   const queryParams = new URLSearchParams(url.search);

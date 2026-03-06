@@ -162,7 +162,7 @@ export async function PATCH(
     const { incrementUsage, ...updateData } = validation.data;
 
     // Build update object
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     const updatePayload: Record<string, any> = {};
 
     if (updateData.title !== undefined) updatePayload.title = updateData.title;
