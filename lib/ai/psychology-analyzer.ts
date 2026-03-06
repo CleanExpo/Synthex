@@ -277,8 +277,6 @@ ${options.contentType ? `Content Type: ${options.contentType}` : ''}
 Provide detailed analysis in JSON format.`;
 
     try {
-      let responseText: string;
-
       // Use provided AIProvider if available, otherwise fall back to callOpenRouter
       const ai = aiProvider || getAIProvider();
       const response = await ai.complete({
@@ -290,7 +288,7 @@ Provide detailed analysis in JSON format.`;
         temperature: 0.3,
         max_tokens: 1500,
       });
-      responseText = response.choices[0]?.message?.content || '';
+      const responseText = response.choices[0]?.message?.content || '';
 
       // Parse JSON from response
       const jsonMatch = responseText.match(/\{[\s\S]*\}/);
