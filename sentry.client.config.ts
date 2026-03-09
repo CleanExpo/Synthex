@@ -24,11 +24,11 @@ Sentry.init({
   replaysSessionSampleRate: 0.1,
   
   integrations: [
-    new Sentry.Replay({
+    Sentry.replayIntegration({
       maskAllText: true,
       blockAllMedia: true,
     }),
-    new Sentry.BrowserTracing({
+    Sentry.browserTracingIntegration({
       // Set `tracePropagationTargets` to control what URLs are traced
       tracePropagationTargets: [
         'localhost',
