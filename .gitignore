@@ -204,3 +204,4 @@ ship-audit/
 
 # Claude scratchpad — session files only, keep .gitkeep
 .claude/scratchpad/*.md
+.superpowers/
