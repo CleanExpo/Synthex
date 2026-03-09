@@ -51,10 +51,4 @@ Sentry.init({
     'ETIMEDOUT',
     'ECONNRESET',
   ],
-  
-  // Performance monitoring
-  integrations: [
-    // Automatically instrument Node.js libraries and frameworks
-    ...Sentry.autoDiscoverNodePerformanceMonitoringIntegrations(),
-  ],
 });
