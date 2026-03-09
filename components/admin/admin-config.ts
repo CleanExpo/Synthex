@@ -19,29 +19,36 @@ export const statusOptions = [
 
 export function calculateStats(users: User[]): AdminStatsData {
   const now = new Date();
-  const today = new Date(now.setHours(0, 0, 0, 0));
-  const weekAgo = new Date(now.setDate(now.getDate() - 7));
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
 
   return {
     totalUsers: users.length,
-    activeToday: users.filter(u => u.last_sign_in_at && new Date(u.last_sign_in_at) > today).length,
-    newThisWeek: users.filter(u => new Date(u.created_at) > weekAgo).length,
-    bannedUsers: users.filter(u => u.status === 'banned').length
+    activeToday: users.filter(
+      (u) => u.lastLogin && new Date(u.lastLogin) > today
+    ).length,
+    newThisWeek: users.filter((u) => new Date(u.createdAt) > weekAgo).length,
+    bannedUsers: users.filter(
+      (u) => u.status === 'banned' || u.status === 'suspended'
+    ).length,
   };
 }
 
 export function exportUsersToCSV(users: User[], filename = 'users.csv') {
   const csv = [
-    ['ID', 'Email', 'Created At', 'Last Sign In', 'Status', 'Role'],
-    ...users.map(u => [
+    ['ID', 'Email', 'Name', 'Created At', 'Last Login', 'Status', 'Role'],
+    ...users.map((u) => [
       u.id,
       u.email,
-      u.created_at,
-      u.last_sign_in_at || 'Never',
+      u.name || '',
+      u.createdAt,
+      u.lastLogin || 'Never',
       u.status || 'active',
-      u.role || 'user'
-    ])
-  ].map(row => row.join(',')).join('\n');
+      u.role || 'user',
+    ]),
+  ]
+    .map((row) => row.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(','))
+    .join('\n');
 
   const blob = new Blob([csv], { type: 'text/csv' });
   const url = window.URL.createObjectURL(blob);
@@ -49,4 +56,5 @@ export function exportUsersToCSV(users: User[], filename = 'users.csv') {
   a.href = url;
   a.download = filename;
   a.click();
+  window.URL.revokeObjectURL(url);
 }

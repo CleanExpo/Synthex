@@ -1,8 +1,25 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+/**
+ * Admin Panel Page
+ *
+ * Rewritten to use SWR + real /api/admin/* endpoints.
+ *
+ * Removed:
+ *   - supabase.auth.admin.listUsers() (security bug — service-role key in browser)
+ *   - fake setTimeout in handleSaveUser
+ *   - stub toast-only user actions
+ *
+ * Added:
+ *   - SWR data fetching from /api/admin/users with credentials: 'include'
+ *   - Real suspend/activate/delete via POST /api/admin/users
+ *   - Tabs: Users | Platform Health | Audit Log
+ */
+
+import { useState, useCallback } from 'react';
+import useSWR from 'swr';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { supabase } from '@/lib/supabase-client';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 
 import {
@@ -20,93 +37,150 @@ import {
   EditUserDialog,
 } from '@/components/admin';
 
+import { PlatformHealth } from '@/components/admin/platform-health';
+import { AuditLogViewer } from '@/components/admin/audit-log-viewer';
+
+// =============================================================================
+// SWR Fetcher — always sends httpOnly auth-token cookie
+// =============================================================================
+
+function fetchJson(url: string) {
+  return fetch(url, { credentials: 'include' }).then((r) => r.json());
+}
+
+// =============================================================================
+// Map API response row → User shape
+// The Prisma API returns camelCase; preferences.status/role are nested.
+// =============================================================================
+
+function mapApiUser(raw: Record<string, unknown>): User {
+  const prefs = (raw.preferences as Record<string, unknown>) ?? {};
+  return {
+    id: raw.id as string,
+    email: raw.email as string,
+    name: raw.name as string | null,
+    avatar: raw.avatar as string | null,
+    createdAt: raw.createdAt as string,
+    lastLogin: raw.lastLogin as string | null,
+    emailVerified: raw.emailVerified as boolean,
+    authProvider: raw.authProvider as string | null,
+    preferences: prefs,
+    status: (prefs.status as string) ?? 'active',
+    role: (prefs.role as string) ?? 'user',
+    _count: raw._count as { campaigns: number } | undefined,
+  };
+}
+
+// =============================================================================
+// Admin Panel
+// =============================================================================
+
 export default function AdminPanel() {
-  const [users, setUsers] = useState<User[]>([]);
-  const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [isLoading, setIsLoading] = useState(true);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [selectedUserIds, setSelectedUserIds] = useState<Set<string>>(new Set());
   const [isBulkProcessing, setIsBulkProcessing] = useState(false);
-  const [stats, setStats] = useState<AdminStatsData>({
-    totalUsers: 0,
-    activeToday: 0,
-    newThisWeek: 0,
-    bannedUsers: 0
-  });
 
-  const fetchUsers = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      const { data: { users }, error } = await supabase.auth.admin.listUsers();
-      if (error) throw error;
-      setUsers((users as User[]) || []);
-      setFilteredUsers((users as User[]) || []);
-    } catch (error) {
-      console.error('Error fetching users:', error);
-      toast.error('Failed to fetch users');
-      setUsers([]);
-      setFilteredUsers([]);
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+  // ---------------------------------------------------------------------------
+  // SWR — fetch users from Prisma API
+  // ---------------------------------------------------------------------------
+  const { data: apiResponse, isLoading, mutate } = useSWR(
+    '/api/admin/users?limit=50',
+    fetchJson
+  );
 
-  useEffect(() => {
-    fetchUsers();
-  }, [fetchUsers]);
+  // Map raw API users to typed User shape
+  const users: User[] = (apiResponse?.data ?? []).map(
+    (raw: Record<string, unknown>) => mapApiUser(raw)
+  );
 
-  useEffect(() => {
-    const filtered = users.filter(user =>
-      user.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.id?.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-    setFilteredUsers(filtered);
-  }, [searchTerm, users]);
+  // Client-side search filter
+  const filteredUsers = users.filter(
+    (u) =>
+      u.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      u.id?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (u.name ?? '').toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
-  useEffect(() => {
-    try {
-      setStats(calculateStats(users));
-    } catch (error) {
-      console.error('Error calculating stats:', error);
-    }
-  }, [users]);
+  // Derive stats from SWR data
+  const stats: AdminStatsData = calculateStats(users);
 
-  const handleUserAction = useCallback(async (userId: string, action: UserAction) => {
-    try {
-      switch (action) {
-        case 'ban':
-          toast.success('User banned successfully');
-          break;
-        case 'unban':
-          toast.success('User unbanned successfully');
-          break;
-        case 'delete':
-          if (confirm('Are you sure you want to delete this user?')) {
-            const { error } = await supabase.auth.admin.deleteUser(userId);
-            if (error) throw error;
-            toast.success('User deleted successfully');
-            fetchUsers();
-          }
-          break;
-        case 'reset-password':
-          toast.success('Password reset email sent');
-          break;
-      }
-    } catch (error) {
-      console.error(`Error performing ${action}:`, error);
-      toast.error(`Failed to ${action} user`);
-    }
-  }, [fetchUsers]);
+  // ---------------------------------------------------------------------------
+  // Handlers
+  // ---------------------------------------------------------------------------
+
+  const handleRefresh = useCallback(() => {
+    mutate();
+  }, [mutate]);
 
   const handleExportUsers = useCallback(() => {
     exportUsersToCSV(users);
   }, [users]);
 
+  const handleUserAction = useCallback(
+    async (userId: string, action: UserAction) => {
+      try {
+        switch (action) {
+          case 'ban': {
+            const res = await fetch('/api/admin/users', {
+              method: 'POST',
+              credentials: 'include',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ userId, action: 'suspend' }),
+            });
+            const json = await res.json();
+            if (!res.ok) throw new Error(json.message ?? 'Failed to suspend user');
+            toast.success('User suspended successfully');
+            mutate();
+            break;
+          }
+
+          case 'unban': {
+            const res = await fetch('/api/admin/users', {
+              method: 'POST',
+              credentials: 'include',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ userId, action: 'activate' }),
+            });
+            const json = await res.json();
+            if (!res.ok) throw new Error(json.message ?? 'Failed to activate user');
+            toast.success('User activated successfully');
+            mutate();
+            break;
+          }
+
+          case 'delete': {
+            if (!confirm('Are you sure you want to delete this user?')) return;
+            const res = await fetch('/api/admin/users', {
+              method: 'POST',
+              credentials: 'include',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ userId, action: 'delete' }),
+            });
+            const json = await res.json();
+            if (!res.ok) throw new Error(json.message ?? 'Failed to delete user');
+            toast.success('User deleted successfully');
+            mutate();
+            break;
+          }
+
+          case 'reset-password':
+            // TODO: implement password reset endpoint (SYN-18)
+            toast.info('Password reset emails are not yet supported via the API');
+            break;
+        }
+      } catch (error) {
+        console.error(`Error performing ${action}:`, error);
+        toast.error(error instanceof Error ? error.message : `Failed to ${action} user`);
+      }
+    },
+    [mutate]
+  );
+
   const toggleUserSelection = useCallback((userId: string) => {
-    setSelectedUserIds(prev => {
+    setSelectedUserIds((prev) => {
       const next = new Set(prev);
       if (next.has(userId)) {
         next.delete(userId);
@@ -121,53 +195,93 @@ export default function AdminPanel() {
     if (selectedUserIds.size === filteredUsers.length) {
       setSelectedUserIds(new Set());
     } else {
-      setSelectedUserIds(new Set(filteredUsers.map(u => u.id)));
+      setSelectedUserIds(new Set(filteredUsers.map((u) => u.id)));
     }
   }, [selectedUserIds.size, filteredUsers]);
 
-  const handleBulkAction = useCallback(async (action: BulkAction) => {
-    if (selectedUserIds.size === 0) {
-      toast.error('Please select users first');
-      return;
-    }
-
-    setIsBulkProcessing(true);
-    try {
-      const selectedCount = selectedUserIds.size;
-
-      switch (action) {
-        case 'ban':
-          setUsers(prev => prev.map(u =>
-            selectedUserIds.has(u.id) ? { ...u, status: 'banned' } : u
-          ));
-          toast.success(`${selectedCount} user(s) banned`);
-          break;
-        case 'unban':
-          setUsers(prev => prev.map(u =>
-            selectedUserIds.has(u.id) ? { ...u, status: 'active' } : u
-          ));
-          toast.success(`${selectedCount} user(s) unbanned`);
-          break;
-        case 'delete':
-          if (confirm(`Are you sure you want to delete ${selectedCount} user(s)?`)) {
-            setUsers(prev => prev.filter(u => !selectedUserIds.has(u.id)));
-            toast.success(`${selectedCount} user(s) deleted`);
-          }
-          break;
-        case 'export':
-          const selectedUsers = users.filter(u => selectedUserIds.has(u.id));
-          exportUsersToCSV(selectedUsers, `selected-users-${Date.now()}.csv`);
-          toast.success(`Exported ${selectedCount} user(s)`);
-          break;
+  const handleBulkAction = useCallback(
+    async (action: BulkAction) => {
+      if (selectedUserIds.size === 0) {
+        toast.error('Please select users first');
+        return;
       }
-      setSelectedUserIds(new Set());
-    } catch (error) {
-      console.error(`Bulk ${action} failed:`, error);
-      toast.error(`Failed to ${action} users`);
-    } finally {
-      setIsBulkProcessing(false);
-    }
-  }, [selectedUserIds, users]);
+
+      setIsBulkProcessing(true);
+      try {
+        const selectedCount = selectedUserIds.size;
+
+        switch (action) {
+          case 'ban': {
+            // Suspend each selected user sequentially
+            const results = await Promise.allSettled(
+              Array.from(selectedUserIds).map((userId) =>
+                fetch('/api/admin/users', {
+                  method: 'POST',
+                  credentials: 'include',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ userId, action: 'suspend' }),
+                })
+              )
+            );
+            const failed = results.filter((r) => r.status === 'rejected').length;
+            toast.success(`${selectedCount - failed} user(s) suspended${failed ? `, ${failed} failed` : ''}`);
+            mutate();
+            break;
+          }
+
+          case 'unban': {
+            const results = await Promise.allSettled(
+              Array.from(selectedUserIds).map((userId) =>
+                fetch('/api/admin/users', {
+                  method: 'POST',
+                  credentials: 'include',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ userId, action: 'activate' }),
+                })
+              )
+            );
+            const failed = results.filter((r) => r.status === 'rejected').length;
+            toast.success(`${selectedCount - failed} user(s) activated${failed ? `, ${failed} failed` : ''}`);
+            mutate();
+            break;
+          }
+
+          case 'delete': {
+            if (!confirm(`Are you sure you want to delete ${selectedCount} user(s)?`)) break;
+            const results = await Promise.allSettled(
+              Array.from(selectedUserIds).map((userId) =>
+                fetch('/api/admin/users', {
+                  method: 'POST',
+                  credentials: 'include',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ userId, action: 'delete' }),
+                })
+              )
+            );
+            const failed = results.filter((r) => r.status === 'rejected').length;
+            toast.success(`${selectedCount - failed} user(s) deleted${failed ? `, ${failed} failed` : ''}`);
+            mutate();
+            break;
+          }
+
+          case 'export': {
+            const selectedUsers = users.filter((u) => selectedUserIds.has(u.id));
+            exportUsersToCSV(selectedUsers, `selected-users-${Date.now()}.csv`);
+            toast.success(`Exported ${selectedCount} user(s)`);
+            break;
+          }
+        }
+
+        setSelectedUserIds(new Set());
+      } catch (error) {
+        console.error(`Bulk ${action} failed:`, error);
+        toast.error(`Failed to ${action} users`);
+      } finally {
+        setIsBulkProcessing(false);
+      }
+    },
+    [selectedUserIds, users, mutate]
+  );
 
   const handleOpenEditDialog = useCallback((user: User) => {
     setEditingUser({ ...user });
@@ -179,61 +293,102 @@ export default function AdminPanel() {
 
     setIsSaving(true);
     try {
-      await new Promise(resolve => setTimeout(resolve, 800));
+      // Map status to API action
+      const action =
+        editingUser.status === 'suspended' || editingUser.status === 'banned'
+          ? 'suspend'
+          : editingUser.status === 'deleted'
+          ? 'delete'
+          : 'activate';
 
-      setUsers(prev => prev.map(u =>
-        u.id === editingUser.id ? editingUser : u
-      ));
+      const res = await fetch('/api/admin/users', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: editingUser.id, action }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.message ?? 'Failed to update user');
 
       toast.success('User updated successfully');
       setEditDialogOpen(false);
       setEditingUser(null);
-    } catch {
-      toast.error('Failed to update user');
+      mutate();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to update user');
     } finally {
       setIsSaving(false);
     }
-  }, [editingUser]);
+  }, [editingUser, mutate]);
+
+  // ---------------------------------------------------------------------------
+  // Render
+  // ---------------------------------------------------------------------------
 
   return (
     <div className="p-6 space-y-6">
-      <AdminHeader
-        onExport={handleExportUsers}
-      />
+      <AdminHeader onExport={handleExportUsers} />
 
       <AdminStats stats={stats} />
 
-      <Card variant="glass">
-        <CardHeader>
-          <CardTitle>User Management</CardTitle>
-          <CardDescription>View and manage all registered users</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <UserSearchBar
-            searchTerm={searchTerm}
-            onSearchChange={setSearchTerm}
-            onRefresh={fetchUsers}
-            isLoading={isLoading}
-          />
+      <Tabs defaultValue="users">
+        <TabsList variant="glass">
+          <TabsTrigger value="users">Users</TabsTrigger>
+          <TabsTrigger value="platform-health">Platform Health</TabsTrigger>
+          <TabsTrigger value="audit-log">Audit Log</TabsTrigger>
+        </TabsList>
 
-          <BulkActionsBar
-            selectedCount={selectedUserIds.size}
-            onClear={() => setSelectedUserIds(new Set())}
-            onBulkAction={handleBulkAction}
-            isProcessing={isBulkProcessing}
-          />
+        {/* ------------------------------------------------------------------ */}
+        {/* Users Tab                                                           */}
+        {/* ------------------------------------------------------------------ */}
+        <TabsContent value="users">
+          <Card variant="glass">
+            <CardHeader>
+              <CardTitle>User Management</CardTitle>
+              <CardDescription>View and manage all registered users</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <UserSearchBar
+                searchTerm={searchTerm}
+                onSearchChange={setSearchTerm}
+                onRefresh={handleRefresh}
+                isLoading={isLoading}
+              />
 
-          <UsersTable
-            users={filteredUsers}
-            isLoading={isLoading}
-            selectedUserIds={selectedUserIds}
-            onToggleSelection={toggleUserSelection}
-            onToggleSelectAll={toggleSelectAll}
-            onUserAction={handleUserAction}
-            onEditUser={handleOpenEditDialog}
-          />
-        </CardContent>
-      </Card>
+              <BulkActionsBar
+                selectedCount={selectedUserIds.size}
+                onClear={() => setSelectedUserIds(new Set())}
+                onBulkAction={handleBulkAction}
+                isProcessing={isBulkProcessing}
+              />
+
+              <UsersTable
+                users={filteredUsers}
+                isLoading={isLoading}
+                selectedUserIds={selectedUserIds}
+                onToggleSelection={toggleUserSelection}
+                onToggleSelectAll={toggleSelectAll}
+                onUserAction={handleUserAction}
+                onEditUser={handleOpenEditDialog}
+              />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* ------------------------------------------------------------------ */}
+        {/* Platform Health Tab                                                 */}
+        {/* ------------------------------------------------------------------ */}
+        <TabsContent value="platform-health">
+          <PlatformHealth />
+        </TabsContent>
+
+        {/* ------------------------------------------------------------------ */}
+        {/* Audit Log Tab                                                       */}
+        {/* ------------------------------------------------------------------ */}
+        <TabsContent value="audit-log">
+          <AuditLogViewer />
+        </TabsContent>
+      </Tabs>
 
       <EditUserDialog
         open={editDialogOpen}

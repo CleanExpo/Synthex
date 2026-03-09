@@ -111,11 +111,11 @@ export function UsersTable({
                   </Badge>
                 </td>
                 <td className="py-3 px-4 text-sm text-gray-400">
-                  {new Date(user.created_at).toLocaleDateString()}
+                  {new Date(user.createdAt).toLocaleDateString()}
                 </td>
                 <td className="py-3 px-4 text-sm text-gray-400">
-                  {user.last_sign_in_at
-                    ? new Date(user.last_sign_in_at).toLocaleDateString()
+                  {user.lastLogin
+                    ? new Date(user.lastLogin).toLocaleDateString()
                     : 'Never'
                   }
                 </td>

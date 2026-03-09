@@ -110,10 +110,10 @@ export function EditUserDialog({
                 <strong>ID:</strong> {user.id}
               </p>
               <p className="text-xs text-gray-400">
-                <strong>Created:</strong> {new Date(user.created_at).toLocaleDateString()}
+                <strong>Created:</strong> {new Date(user.createdAt).toLocaleDateString()}
               </p>
               <p className="text-xs text-gray-400">
-                <strong>Last Sign In:</strong> {user.last_sign_in_at ? new Date(user.last_sign_in_at).toLocaleDateString() : 'Never'}
+                <strong>Last Login:</strong> {user.lastLogin ? new Date(user.lastLogin).toLocaleDateString() : 'Never'}
               </p>
             </div>
           </div>
