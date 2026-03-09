@@ -716,10 +716,10 @@ Plans:
 documentation, Supabase auth configuration review, GDPR compliance check
 **Depends on**: Phase 72
 **Research**: Unlikely (Sprint 3 + existing security patterns)
-**Plans**: TBD
+**Plans**: 1/1 | Complete | 2026-03-10
 
 Plans:
-- [ ] 73-01: TBD
+- [x] 73-01: CSP hardening (remove unsafe-eval), CORS distributed tracing headers, SECURITY.md
 
 #### Phase 74: Launch Day
 
