@@ -10,6 +10,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
+import { getCache } from '@/lib/cache/cache-manager';
 
 export interface DashboardStatsData {
   totalPosts: number;
@@ -27,6 +28,15 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   const userId = await getUserIdFromRequestOrCookies(request);
   if (!userId) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  const cache = getCache();
+  const cacheKey = `analytics:dashboard-stats:${userId}`;
+  const cached = await cache.get<DashboardStatsData>(cacheKey);
+  if (cached) {
+    return NextResponse.json(cached, {
+      headers: { 'Cache-Control': 'private, max-age=300, stale-while-revalidate=60' },
+    });
   }
 
   try {
@@ -77,7 +87,11 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       successRate,
     };
 
-    return NextResponse.json({ success: true, data });
+    await cache.set(cacheKey, data, { ttl: 300, tags: [`user:${userId}`] });
+
+    return NextResponse.json(data, {
+      headers: { 'Cache-Control': 'private, max-age=300, stale-while-revalidate=60' },
+    });
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error);
     console.error('[analytics/dashboard-stats] Error:', msg);
