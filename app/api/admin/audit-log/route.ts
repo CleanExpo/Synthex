@@ -16,6 +16,7 @@ import prisma from '@/lib/prisma';
 import { z } from 'zod';
 import { sanitizeErrorForResponse } from '@/lib/utils/error-utils';
 import { admin as adminRateLimit } from '@/lib/middleware/api-rate-limit';
+import { verifyAdmin } from '@/lib/admin/verify-admin';
 
 // =============================================================================
 // Schemas
@@ -34,49 +35,6 @@ const auditLogQuerySchema = z.object({
   endDate: z.string().datetime().optional(),
   sortOrder: z.enum(['asc', 'desc']).optional().default('desc'),
 });
-
-// =============================================================================
-// Admin Auth
-// =============================================================================
-
-async function verifyAdmin(request: NextRequest): Promise<{
-  isAdmin: boolean;
-  userId?: string;
-  error?: string;
-}> {
-  const apiKey = request.headers.get('x-admin-api-key');
-  if (apiKey && apiKey === process.env.ADMIN_API_KEY) {
-    return { isAdmin: true };
-  }
-
-  const authHeader = request.headers.get('authorization');
-  if (!authHeader) {
-    return { isAdmin: false, error: 'Authentication required' };
-  }
-
-  try {
-    const token = authHeader.replace('Bearer ', '');
-    const { verifyToken } = await import('@/lib/auth/jwt-utils');
-    const decoded = verifyToken(token) as {
-      userId: string;
-      role?: string;
-    };
-
-    const user = await prisma.user.findUnique({
-      where: { id: decoded.userId },
-      select: { id: true, preferences: true },
-    });
-
-    const prefs = user?.preferences as { role?: string } | null;
-    if (!user || (prefs?.role !== 'admin' && prefs?.role !== 'superadmin')) {
-      return { isAdmin: false, userId: decoded.userId, error: 'Admin access required' };
-    }
-
-    return { isAdmin: true, userId: decoded.userId };
-  } catch {
-    return { isAdmin: false, error: 'Invalid token' };
-  }
-}
 
 // =============================================================================
 // GET - Query Audit Logs

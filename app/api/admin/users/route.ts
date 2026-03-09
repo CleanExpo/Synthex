@@ -13,11 +13,11 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { timingSafeEqual } from 'crypto';
 import prisma from '@/lib/prisma';
 import { z } from 'zod';
 import { sanitizeErrorForResponse } from '@/lib/utils/error-utils';
 import { admin as adminRateLimit } from '@/lib/middleware/api-rate-limit';
+import { verifyAdmin } from '@/lib/admin/verify-admin';
 
 // =============================================================================
 // Schemas
@@ -37,61 +37,6 @@ const updateUserStatusSchema = z.object({
   action: z.enum(['suspend', 'activate', 'delete']),
   reason: z.string().max(500).optional(),
 });
-
-// =============================================================================
-// Helpers
-// =============================================================================
-
-function safeCompare(a: string, b: string): boolean {
-  if (a.length !== b.length) return false;
-  return timingSafeEqual(Buffer.from(a), Buffer.from(b));
-}
-
-// =============================================================================
-// Admin Auth
-// =============================================================================
-
-async function verifyAdmin(request: NextRequest): Promise<{
-  isAdmin: boolean;
-  userId?: string;
-  error?: string;
-}> {
-  // Check for admin API key
-  const apiKey = request.headers.get('x-admin-api-key');
-  if (apiKey && safeCompare(apiKey, process.env.ADMIN_API_KEY ?? '')) {
-    return { isAdmin: true };
-  }
-
-  // Check for JWT token with admin role
-  const authHeader = request.headers.get('authorization');
-  if (!authHeader) {
-    return { isAdmin: false, error: 'Authentication required' };
-  }
-
-  try {
-    const token = authHeader.replace('Bearer ', '');
-    const { verifyToken } = await import('@/lib/auth/jwt-utils');
-    const decoded = verifyToken(token) as {
-      userId: string;
-      role?: string;
-    };
-
-    // Check if user is admin via preferences JSON field
-    const user = await prisma.user.findUnique({
-      where: { id: decoded.userId },
-      select: { id: true, preferences: true },
-    });
-
-    const prefs = user?.preferences as { role?: string } | null;
-    if (!user || (prefs?.role !== 'admin' && prefs?.role !== 'superadmin')) {
-      return { isAdmin: false, userId: decoded.userId, error: 'Admin access required' };
-    }
-
-    return { isAdmin: true, userId: decoded.userId };
-  } catch {
-    return { isAdmin: false, error: 'Invalid token' };
-  }
-}
 
 // =============================================================================
 // GET - List Users

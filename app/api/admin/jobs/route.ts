@@ -22,49 +22,7 @@ import {
   getJob,
   type JobStatus,
 } from '@/lib/queue';
-import prisma from '@/lib/prisma';
-
-// =============================================================================
-// Admin Auth
-// =============================================================================
-
-async function verifyAdmin(request: NextRequest): Promise<{
-  isAdmin: boolean;
-  error?: string;
-}> {
-  const apiKey = request.headers.get('x-admin-api-key');
-  if (apiKey && apiKey === process.env.ADMIN_API_KEY) {
-    return { isAdmin: true };
-  }
-
-  const authHeader = request.headers.get('authorization');
-  if (!authHeader) {
-    return { isAdmin: false, error: 'Authentication required' };
-  }
-
-  try {
-    const token = authHeader.replace('Bearer ', '');
-    const { verifyToken } = await import('@/lib/auth/jwt-utils');
-    const decoded = verifyToken(token) as {
-      userId: string;
-      role?: string;
-    };
-
-    const user = await prisma.user.findUnique({
-      where: { id: decoded.userId },
-      select: { preferences: true },
-    });
-
-    const prefs = user?.preferences as { role?: string } | null;
-    if (!user || (prefs?.role !== 'admin' && prefs?.role !== 'superadmin')) {
-      return { isAdmin: false, error: 'Admin access required' };
-    }
-
-    return { isAdmin: true };
-  } catch {
-    return { isAdmin: false, error: 'Invalid token' };
-  }
-}
+import { verifyAdmin } from '@/lib/admin/verify-admin';
 
 // =============================================================================
 // GET - Queue Statistics and Jobs
