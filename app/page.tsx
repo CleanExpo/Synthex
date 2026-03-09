@@ -7,7 +7,8 @@ import { HowItWorks } from '@/components/landing/how-it-works';
 import { VideoSection } from '@/components/landing/video-section';
 import { StatsSection } from '@/components/landing/stats-section';
 import { Testimonials } from '@/components/landing/testimonials';
-import { FAQSection, buildFaqSchemaJson } from '@/components/landing/faq-section';
+import { FAQSection } from '@/components/landing/faq-section';
+import { buildFaqSchemaJson } from '@/lib/seo/faq-data';
 import { CTASection } from '@/components/landing/cta-section';
 import { FooterSection } from '@/components/landing/footer-section';
 import { FloatingParticles } from '@/components/landing/floating-particles';
@@ -71,38 +72,7 @@ export default function HomePage() {
       {/* GSAP landing page animations — no DOM output */}
       <LandingAnimations />
 
-      {/* Global Styles */}
-      <style jsx global>{`
-        @keyframes float {
-          0%, 100% {
-            transform: translateY(0) translateX(0);
-            opacity: 0.3;
-          }
-          50% {
-            transform: translateY(-20px) translateX(-10px);
-            opacity: 0.6;
-          }
-        }
 
-        @keyframes disperse {
-          0% {
-            transform: translate(0, 0) scale(1);
-            opacity: 0.6;
-          }
-          100% {
-            transform: translate(-100px, -50px) scale(0);
-            opacity: 0;
-          }
-        }
-
-        .animate-float {
-          animation: float 8s ease-in-out infinite;
-        }
-
-        .animate-disperse {
-          animation: disperse 4s ease-out infinite;
-        }
-      `}</style>
     </div>
   );
 }
