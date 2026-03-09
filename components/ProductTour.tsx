@@ -13,6 +13,7 @@ interface TourStep {
   target: string; // CSS selector for the element to highlight
   position: 'top' | 'bottom' | 'left' | 'right';
   action?: () => void;
+  showIf?: () => boolean;
 }
 
 const tourSteps: TourStep[] = [
@@ -98,6 +99,28 @@ const tourSteps: TourStep[] = [
     position: 'right'
   },
   {
+    id: 'workflows',
+    title: 'AI Workflow Engine',
+    content: 'Build multi-step AI workflows that research, write, and publish content automatically. Set it and forget it.',
+    target: '[href="/dashboard/workflows"]',
+    position: 'right'
+  },
+  {
+    id: 'insights',
+    title: 'Performance Insights',
+    content: 'AI-powered insights show you exactly what to improve — content gaps, best posting times, and competitor analysis.',
+    target: '[href="/dashboard/insights"]',
+    position: 'right'
+  },
+  {
+    id: 'upgrade',
+    title: 'Unlock the Full Platform',
+    content: 'Upgrade to Pro to remove limits and access unlimited AI generations, workflows, and all integrations.',
+    target: '[href="/dashboard/billing"]',
+    position: 'right',
+    showIf: () => typeof localStorage !== 'undefined' && (localStorage.getItem('userPlan') === 'starter' || !localStorage.getItem('userPlan'))
+  },
+  {
     id: 'complete',
     title: 'You\'re All Set! 🚀',
     content: 'Start creating amazing content that goes viral. We\'re here to help you succeed!',
@@ -114,8 +137,10 @@ export function ProductTour() {
   const [isActive, setIsActive] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
   const [highlightPosition, setHighlightPosition] = useState({ top: 0, left: 0, width: 0, height: 0 });
-  
-  const step = tourSteps[currentStep];
+
+  // Filter steps based on showIf condition (evaluated client-side)
+  const activeSteps = tourSteps.filter(s => !s.showIf || s.showIf());
+  const step = activeSteps[currentStep];
   
   // Check if should show tour
   useEffect(() => {
@@ -170,16 +195,16 @@ export function ProductTour() {
   }, [step]);
 
   const nextStep = useCallback(() => {
-    if (currentStep < tourSteps.length - 1) {
+    if (currentStep < activeSteps.length - 1) {
       const nextIndex = currentStep + 1;
       setCurrentStep(nextIndex);
-      if (tourSteps[nextIndex].action) {
-        tourSteps[nextIndex].action?.();
+      if (activeSteps[nextIndex].action) {
+        activeSteps[nextIndex].action?.();
       }
     } else {
       completeTour();
     }
-  }, [completeTour, currentStep]);
+  }, [completeTour, currentStep, activeSteps]);
   
   const prevStep = useCallback(() => {
     if (currentStep > 0) {
@@ -308,7 +333,7 @@ export function ProductTour() {
           
           {/* Progress */}
           <div className="flex gap-1">
-            {tourSteps.map((_, index) => (
+            {activeSteps.map((_, index) => (
               <div
                 key={index}
                 className={`h-1.5 flex-1 rounded-full transition-colors ${
@@ -346,7 +371,7 @@ export function ProductTour() {
                 onClick={nextStep}
                 className="gradient-primary text-white"
               >
-                {currentStep === tourSteps.length - 1 ? (
+                {currentStep === activeSteps.length - 1 ? (
                   'Get Started'
                 ) : (
                   <>
