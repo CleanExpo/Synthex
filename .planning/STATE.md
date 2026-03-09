@@ -10,13 +10,13 @@ See: .planning/PROJECT.md (updated 2026-02-17)
 ## Current Position
 
 Milestone: v3.0 Public Launch Readiness (Phases 67-74)
-Phase: 71 of 74 (Observability & Monitoring) — not started
-Status: Phase 70 complete — both plans done
-Last activity: 2026-03-10 — Completed 70-02 (ProductTour v2.0: 3 new steps + showIf filter; onboarding complete page Start Tour / Skip tour CTAs + userPlan localStorage; API returns plan field)
+Phase: 72 of 74 (Performance Hardening) — not started
+Status: Phase 71 complete — plan 71-01 done
+Last activity: 2026-03-10 — Completed 71-01 (Sentry v8 activation: withSentryConfig in next.config.mjs, v8 API updates, cron monitors on 3 routes, lib/logger.ts)
 
-Progress: ░░░░░░░░░░ 50% (4/8 phases complete in v3.0)
+Progress: ░░░░░░░░░░ 63% (5/8 phases complete in v3.0)
 
-Next action: Execute Phase 71 — Observability & Monitoring
+Next action: Execute Phase 72 — Performance Hardening
 
 ## Performance Metrics
 
@@ -230,9 +230,9 @@ None.
 ## Session Continuity
 
 Last session: 2026-03-10
-Stopped at: Completed 70-02 — ProductTour v2.0 extension + onboarding tour CTA (SYN-53)
+Stopped at: Completed 71-01 — Sentry v8 activation (SYN-54)
 Resume file: none
-Next action: Execute Phase 71 — Observability & Monitoring
+Next action: Execute Phase 72 — Performance Hardening
 
 ## Linear Issues — v2.0 Phase 59-66 Tracking
 

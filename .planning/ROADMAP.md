@@ -511,7 +511,7 @@ Plans:
 | 68. Stripe Activation | v3.0 | 3/3 | Done | 2026-03-03 |
 | 69. Public Landing Page | v3.0 | 1/1 | Done | 2026-03-03 |
 | 70. Onboarding Funnel | v3.0 | 2/2 | Done | 2026-03-10 |
-| 71. Observability & Monitoring | v3.0 | 0/? | Not started | - |
+| 71. Observability & Monitoring | v3.0 | 1/1 | Done | 2026-03-10 |
 | 72. Performance Hardening | v3.0 | 0/? | Not started | - |
 | 73. Pre-launch Security | v3.0 | 0/? | Not started | - |
 | 74. Launch Day | v3.0 | 0/? | Not started | - |
@@ -693,7 +693,9 @@ cron failure alerting, uptime monitoring, and error budget dashboards
 **Plans**: TBD
 
 Plans:
-- [ ] 71-01: TBD
+- [x] 71-01: Sentry v8 activation (withSentryConfig, cron monitors, logger)
+
+**Status**: 1/1 | Done | 2026-03-10
 
 #### Phase 72: Performance Hardening
 
