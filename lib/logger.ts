@@ -11,6 +11,12 @@ function formatMessage(prefix: string, message: string, context?: LogContext): s
 }
 
 export const logger = {
+  debug(message: string, context?: LogContext): void {
+    if (process.env.NODE_ENV !== 'production') {
+      console.debug(formatMessage('[DEBUG]', message, context));
+    }
+  },
+
   info(message: string, context?: LogContext): void {
     console.info(formatMessage('[INFO]', message, context));
   },
