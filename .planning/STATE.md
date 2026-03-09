@@ -10,13 +10,13 @@ See: .planning/PROJECT.md (updated 2026-02-17)
 ## Current Position
 
 Milestone: v3.1 First Users (Phases 75+)
-Phase: 75 (God Mode Admin Panel) — NOT STARTED
-Status: v3.0 archived — v3.1 milestone started — ready to plan Phase 75
-Last activity: 2026-03-10 — v3.0 milestone archived, v3.1 created
+Phase: 75 (God Mode Admin Panel) — COMPLETE
+Status: Phase 75-01 executed — admin panel fully wired, owner guard added, tabs added
+Last activity: 2026-03-10 — Phase 75-01 complete (SYN-18)
 
-Progress: ░░░░░░░░░░ 0% (0/? phases complete in v3.1)
+Progress: ██░░░░░░░░ ~10% (1/? phases complete in v3.1)
 
-Next action: /gsd:plan-phase 75 (God Mode Admin Panel — SYN-18)
+Next action: /gsd:plan-phase — plan Phase 76
 
 ## Performance Metrics
 
@@ -212,6 +212,14 @@ Research applied: Stripe Minions synthesis (`.planning/research/stripe-minions-s
   action-schedule, action-notify.
 - **Phases 63-66 updated**: Each phase now has Minions-informed architecture note in ROADMAP.md.
 
+Decisions from v3.1 (Phase 75):
+
+- Admin route guard uses `verifyTokenSafe()` + cookie read + Prisma lookup in a server layout — `auth-service.ts` is client-side only; no `getServerSession` exists
+- Shared `verifyAdmin` in `lib/admin/verify-admin.ts` replaces 3× copy-paste: checks API key (timing-safe), then JWT Bearer header, then `auth-token` cookie; isOwnerEmail() bypass runs before role check
+- `User` type in `components/admin/types.ts` now uses Prisma field names (`createdAt`, `lastLogin`) not Supabase names (`created_at`, `last_sign_in_at`)
+- Subscription model has no `amount` field — MRR must come from Stripe API (deferred)
+- Admin handleSaveUser maps status choice to API action ('suspend'/'activate'/'delete') — role updates not yet persisted (no API action for role change)
+
 ### Blockers/Concerns
 
 None.
@@ -230,9 +238,9 @@ None.
 ## Session Continuity
 
 Last session: 2026-03-10
-Stopped at: Completed 74-01 — Launch Day (SYN-57) — v3.0 COMPLETE
+Stopped at: Completed 75-01 — God Mode Admin Panel (SYN-18) — Phase 75 COMPLETE
 Resume file: none
-Next action: /gsd:complete-milestone — archive v3.0, prepare v3.1
+Next action: /gsd:plan-phase — plan Phase 76
 
 ## Linear Issues — v2.0 Phase 59-66 Tracking
 
