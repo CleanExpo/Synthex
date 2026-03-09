@@ -81,9 +81,23 @@ export const ENV_VAR_DEFINITIONS: EnvVarDefinition[] = [
     securityLevel: SecurityLevel.CRITICAL,
     validator: z.string()
       .length(64, 'FIELD_ENCRYPTION_KEY must be exactly 64 hex characters (32 bytes)')
-      .regex(/^[A-Fa-f0-9]+$/, 'FIELD_ENCRYPTION_KEY must be valid hex encoding'),
-    example: '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef',
+      .regex(/^[A-Fa-f0-9]+$/, 'FIELD_ENCRYPTION_KEY must be valid hex encoding')
+      .refine(v => !/^0+$/.test(v), 'FIELD_ENCRYPTION_KEY is all zeros — generate a real key: openssl rand -hex 32'),
+    example: 'generate with: openssl rand -hex 32',
     errorMessage: 'OAuth tokens and API keys cannot be encrypted - generate with: openssl rand -hex 32'
+  },
+
+  {
+    key: 'ENCRYPTION_KEY',
+    description: 'AES-256 encryption key for general field encryption (64 hex chars = 32 bytes)',
+    required: true,
+    securityLevel: SecurityLevel.CRITICAL,
+    validator: z.string()
+      .length(64, 'ENCRYPTION_KEY must be exactly 64 hex characters (32 bytes)')
+      .regex(/^[A-Fa-f0-9]+$/, 'ENCRYPTION_KEY must be valid hex encoding')
+      .refine(v => !/^0+$/.test(v), 'ENCRYPTION_KEY is all zeros — generate a real key: openssl rand -hex 32'),
+    example: 'generate with: openssl rand -hex 32',
+    errorMessage: 'Encryption will fail — generate with: openssl rand -hex 32'
   },
 
   {
@@ -229,37 +243,71 @@ export const ENV_VAR_DEFINITIONS: EnvVarDefinition[] = [
   },
 
   {
-    key: 'STRIPE_PROFESSIONAL_PRICE_ID',
-    description: 'Stripe price ID for Professional plan',
+    key: 'STRIPE_PRO_PRICE_ID',
+    description: 'Stripe price ID for Pro plan ($249/mo AUD)',
     required: false,
     securityLevel: SecurityLevel.INTERNAL,
     validator: z.string()
       .regex(/^price_/, 'Must be a valid Stripe price ID')
+      .refine(v => !v.includes('placeholder'), 'STRIPE_PRO_PRICE_ID is a placeholder — create real Stripe product first')
       .optional(),
+    example: 'price_1xxxxxxxxxxxxxxxxx',
+    dependsOn: ['STRIPE_SECRET_KEY']
+  },
+
+  {
+    key: 'STRIPE_GROWTH_PRICE_ID',
+    description: 'Stripe price ID for Growth plan ($449/mo AUD)',
+    required: false,
+    securityLevel: SecurityLevel.INTERNAL,
+    validator: z.string()
+      .regex(/^price_/, 'Must be a valid Stripe price ID')
+      .refine(v => !v.includes('placeholder'), 'STRIPE_GROWTH_PRICE_ID is a placeholder — create real Stripe product first')
+      .optional(),
+    example: 'price_1xxxxxxxxxxxxxxxxx',
+    dependsOn: ['STRIPE_SECRET_KEY']
+  },
+
+  {
+    key: 'STRIPE_SCALE_PRICE_ID',
+    description: 'Stripe price ID for Scale plan ($799/mo AUD)',
+    required: false,
+    securityLevel: SecurityLevel.INTERNAL,
+    validator: z.string()
+      .regex(/^price_/, 'Must be a valid Stripe price ID')
+      .refine(v => !v.includes('placeholder'), 'STRIPE_SCALE_PRICE_ID is a placeholder — create real Stripe product first')
+      .optional(),
+    example: 'price_1xxxxxxxxxxxxxxxxx',
+    dependsOn: ['STRIPE_SECRET_KEY']
+  },
+
+  // Legacy aliases — kept for backward compat during migration to Pro/Growth/Scale
+  {
+    key: 'STRIPE_PROFESSIONAL_PRICE_ID',
+    description: 'Legacy: use STRIPE_PRO_PRICE_ID instead',
+    required: false,
+    securityLevel: SecurityLevel.INTERNAL,
+    validator: z.string().regex(/^price_/).refine(v => !v.includes('placeholder'), 'Placeholder price ID detected').optional(),
     example: 'price_1xxxxxxxxxxxxxxxxx',
     dependsOn: ['STRIPE_SECRET_KEY']
   },
 
   {
     key: 'STRIPE_BUSINESS_PRICE_ID',
-    description: 'Stripe price ID for Business plan',
+    description: 'Legacy: use STRIPE_GROWTH_PRICE_ID instead',
     required: false,
     securityLevel: SecurityLevel.INTERNAL,
-    validator: z.string()
-      .regex(/^price_/, 'Must be a valid Stripe price ID')
-      .optional(),
+    validator: z.string().regex(/^price_/).refine(v => !v.includes('placeholder'), 'Placeholder price ID detected').optional(),
     example: 'price_1xxxxxxxxxxxxxxxxx',
     dependsOn: ['STRIPE_SECRET_KEY']
   },
 
   {
     key: 'STRIPE_CUSTOM_PRICE_ID',
-    description: 'Stripe price ID for Custom/Enterprise plan',
+    description: 'Legacy: use STRIPE_SCALE_PRICE_ID instead',
     required: false,
     securityLevel: SecurityLevel.INTERNAL,
-    validator: z.string()
-      .regex(/^price_/, 'Must be a valid Stripe price ID')
-      .optional(),
+    validator: z.string().regex(/^price_/).refine(v => !v.includes('placeholder'), 'Placeholder price ID detected').optional(),
     example: 'price_1xxxxxxxxxxxxxxxxx',
     dependsOn: ['STRIPE_SECRET_KEY']
   },
