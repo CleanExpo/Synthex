@@ -17,7 +17,7 @@ None (internal platform work)
 - ✅ [v1.4 Creator Monetization & AI Studio](milestones/v1.4-ROADMAP.md) (Phases 36-51) — SHIPPED 2026-02-18
 - ✅ **v1.5 Deployment Readiness** — Phases 52-58 — SHIPPED 2026-03-03
 - ✅ **v2.0 Reliable AI Agents** — Phases 59-66 — SHIPPED 2026-03-03
-- 🚧 **v3.0 Public Launch Readiness** — Phases 67-74 (in progress)
+- ✅ **v3.0 Public Launch Readiness** — Phases 67-74 — SHIPPED 2026-03-10
 
 ## Phases
 
@@ -727,7 +727,7 @@ Plans:
 configuration, rollback procedure, monitoring dashboard setup, launch announcement
 **Depends on**: Phase 73
 **Research**: Unlikely (internal procedures)
-**Plans**: TBD
+**Plans**: 1/1 | Complete | 2026-03-10
 
 Plans:
-- [ ] 74-01: TBD
+- [x] 74-01: Smoke test script (scripts/smoke-test.mjs), LAUNCH-RUNBOOK.md with go-live checklist + rollback procedure
