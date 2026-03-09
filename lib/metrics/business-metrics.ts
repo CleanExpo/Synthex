@@ -532,19 +532,32 @@ async function getPlatformDistribution(
 
     const totalPosts = platformStats.reduce((sum, p) => sum + p._count.id, 0);
 
-    // Get engagement per platform
+    // Single query for all posts (replaces N separate queries)
+    const allPosts = await prisma.post.findMany({
+      where: {
+        platform: { in: platformStats.map(p => p.platform) },
+        createdAt: { gte: start, lte: end },
+      },
+      select: {
+        platform: true,
+        analytics: true,
+      },
+    });
+
+    // Group by platform in memory
+    const postsByPlatform = new Map<string, typeof allPosts>();
+    for (const post of allPosts) {
+      if (!post.platform) continue;
+      const existing = postsByPlatform.get(post.platform) ?? [];
+      existing.push(post);
+      postsByPlatform.set(post.platform, existing);
+    }
+
+    // Build distributions using in-memory groups (no extra DB calls)
     const distributions: PlatformDistribution[] = [];
 
     for (const stat of platformStats) {
-      const platformPosts = await prisma.post.findMany({
-        where: {
-          platform: stat.platform,
-          createdAt: { gte: start, lte: end },
-        },
-        select: {
-          analytics: true,
-        },
-      });
+      const platformPosts = postsByPlatform.get(stat.platform) ?? [];
 
       let totalEngagement = 0;
       let engagementRateSum = 0;
