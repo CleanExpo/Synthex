@@ -14,6 +14,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import * as Sentry from '@sentry/nextjs';
 import prisma from '@/lib/prisma';
 import {
   createPlatformService,
@@ -53,7 +54,7 @@ interface PostResult {
 // ---------------------------------------------------------------------------
 
 export async function GET(request: NextRequest): Promise<NextResponse> {
-  // -- Auth ------------------------------------------------------------------
+  // -- Auth (keep OUTSIDE monitor) -------------------------------------------
   const authHeader = request.headers.get('authorization');
   const cronSecret = process.env.CRON_SECRET;
 
@@ -61,6 +62,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
+  return Sentry.withMonitor('cron-publish-scheduled', async () => {
   // -- Setup -----------------------------------------------------------------
   const startTime = Date.now();
   const now = new Date();
@@ -342,6 +344,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     durationMs,
     results,
   });
+  }); // end Sentry.withMonitor
 }
 
 // ---------------------------------------------------------------------------

@@ -19,6 +19,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import * as Sentry from '@sentry/nextjs';
 import { prisma } from '@/lib/prisma';
 import {
   sendWelcomeSequenceDay3,
@@ -78,7 +79,7 @@ function parsePreferences(raw: unknown): Record<string, unknown> {
 // ============================================================================
 
 export async function GET(request: NextRequest) {
-  // Authorise: Bearer <CRON_SECRET>
+  // Authorise: Bearer <CRON_SECRET> (keep OUTSIDE monitor)
   const authHeader = request.headers.get('authorization');
   const cronSecret = process.env.CRON_SECRET;
 
@@ -86,6 +87,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
   }
 
+  return Sentry.withMonitor('cron-welcome-sequence', async () => {
   try {
     const startTime = Date.now();
 
@@ -200,4 +202,5 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     );
   }
+  }); // end Sentry.withMonitor
 }

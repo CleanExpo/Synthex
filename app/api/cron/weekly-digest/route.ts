@@ -12,6 +12,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import * as Sentry from '@sentry/nextjs';
 import prisma from '@/lib/prisma';
 import { generateWeeklyDigest } from '@/lib/ai/project-manager';
 import emailQueue from '@/lib/email/queue';
@@ -21,6 +22,7 @@ export const dynamic = 'force-dynamic';
 export const maxDuration = 300; // 5 minutes max
 
 export async function GET(request: NextRequest) {
+  // Auth (keep OUTSIDE monitor)
   const authHeader = request.headers.get('authorization');
   const cronSecret = process.env.CRON_SECRET;
 
@@ -28,6 +30,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
+  return Sentry.withMonitor('cron-weekly-digest', async () => {
   try {
     const startTime = Date.now();
 
@@ -122,6 +125,7 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     );
   }
+  }); // end Sentry.withMonitor
 }
 
 // ============================================================================
