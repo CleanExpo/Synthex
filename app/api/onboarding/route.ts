@@ -11,6 +11,9 @@ import { prisma } from '@/lib/prisma';
 import { getUserIdFromRequestOrCookies, generateToken } from '@/lib/auth/jwt-utils';
 import { webhookHandler } from '@/lib/webhooks';
 import { logger } from '@/lib/logger';
+import {
+  sendWelcomeSequenceDay0,
+} from '@/lib/email/billing-emails';
 
 // ============================================================================
 // VALIDATION
@@ -202,6 +205,38 @@ export async function POST(request: NextRequest) {
         { status: 500 }
       );
     }
+
+    // Fire D+0 welcome email and store sequence start timestamp (fire-and-forget)
+    const emailSequenceStartedAt = new Date().toISOString();
+    try {
+      // Fetch current preferences so we can merge without overwriting existing data
+      const currentPrefs = await prisma.user.findUnique({
+        where: { id: user.id },
+        select: { preferences: true },
+      });
+      const existingPrefs =
+        currentPrefs?.preferences !== null &&
+        typeof currentPrefs?.preferences === 'object' &&
+        !Array.isArray(currentPrefs?.preferences)
+          ? (currentPrefs.preferences as Record<string, unknown>)
+          : {};
+
+      await prisma.user.update({
+        where: { id: user.id },
+        data: {
+          preferences: {
+            ...existingPrefs,
+            emailSequenceStartedAt,
+          },
+        },
+      });
+    } catch (prefError) {
+      logger.warn('Failed to store emailSequenceStartedAt in preferences', {
+        error: String(prefError),
+      });
+    }
+
+    sendWelcomeSequenceDay0(user.email, user.name ?? undefined);
 
     // Emit webhook event for onboarding completion
     try {
