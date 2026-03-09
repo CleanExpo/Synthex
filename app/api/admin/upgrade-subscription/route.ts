@@ -41,7 +41,7 @@ function getSupabaseAdmin() {
 
 const upgradeSchema = z.object({
   email: z.string().email(),
-  plan: z.enum(['professional', 'business', 'custom']),
+  plan: z.enum(['pro', 'growth', 'scale', 'professional', 'business', 'custom']),
 });
 
 // =============================================================================

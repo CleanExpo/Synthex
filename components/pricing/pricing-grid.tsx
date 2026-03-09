@@ -40,7 +40,7 @@ const plans: Plan[] = [
     ctaHref: '/signup',
   },
   {
-    name: 'Professional',
+    name: 'Pro',
     monthlyPrice: '$249',
     annualPrice: '$199',
     description: 'Perfect for professionals and content creators',
@@ -63,9 +63,9 @@ const plans: Plan[] = [
     ctaLabel: 'Start Free Trial',
   },
   {
-    name: 'Business',
-    monthlyPrice: '$399',
-    annualPrice: '$319',
+    name: 'Growth',
+    monthlyPrice: '$449',
+    annualPrice: '$359',
     description: 'For businesses and marketing teams',
     features: [
       '10 social media accounts',
@@ -90,8 +90,9 @@ const plans: Plan[] = [
     ctaLabel: 'Start Free Trial',
   },
   {
-    name: 'Custom',
-    monthlyPrice: 'Custom',
+    name: 'Scale',
+    monthlyPrice: '$799',
+    annualPrice: '$639',
     description: 'Enterprise solutions tailored to your needs',
     features: [
       'Unlimited social media accounts',
@@ -110,9 +111,7 @@ const plans: Plan[] = [
       'Priority development',
     ],
     notIncluded: [],
-    isCustom: true,
-    ctaLabel: 'Contact Sales',
-    ctaHref: '/contact',
+    ctaLabel: 'Start Free Trial',
   },
 ];
 

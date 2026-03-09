@@ -54,8 +54,12 @@ export interface PlanLimits {
 
 export const PLAN_LIMITS: Record<string, PlanLimits> = {
   free: { maxSocialAccounts: 2, maxAiPosts: 10, maxPersonas: 1, maxSeoAudits: 0, maxSeoPages: 0 },
+  pro: { maxSocialAccounts: 5, maxAiPosts: 100, maxPersonas: 3, maxSeoAudits: 10, maxSeoPages: 50 },
+  growth: { maxSocialAccounts: 10, maxAiPosts: -1, maxPersonas: 10, maxSeoAudits: -1, maxSeoPages: -1 }, // -1 = unlimited
+  scale: { maxSocialAccounts: -1, maxAiPosts: -1, maxPersonas: -1, maxSeoAudits: -1, maxSeoPages: -1 },
+  // Backward-compat aliases for any existing DB records with old plan names
   professional: { maxSocialAccounts: 5, maxAiPosts: 100, maxPersonas: 3, maxSeoAudits: 10, maxSeoPages: 50 },
-  business: { maxSocialAccounts: 10, maxAiPosts: -1, maxPersonas: 10, maxSeoAudits: -1, maxSeoPages: -1 }, // -1 = unlimited
+  business: { maxSocialAccounts: 10, maxAiPosts: -1, maxPersonas: 10, maxSeoAudits: -1, maxSeoPages: -1 },
   custom: { maxSocialAccounts: -1, maxAiPosts: -1, maxPersonas: -1, maxSeoAudits: -1, maxSeoPages: -1 },
 };
 
@@ -77,7 +81,7 @@ export class SubscriptionService {
     });
 
     if (!subscription) {
-      const plan = ownerBypass ? 'custom' : 'free';
+      const plan = ownerBypass ? 'scale' : 'free';
       const limits = PLAN_LIMITS[plan];
       subscription = await prisma.subscription.create({
         data: {
@@ -91,11 +95,11 @@ export class SubscriptionService {
       });
     } else if (ownerBypass && subscription.plan === 'free') {
       // Auto-upgrade existing free subscription for owner
-      const limits = PLAN_LIMITS.custom;
+      const limits = PLAN_LIMITS.scale;
       subscription = await prisma.subscription.update({
         where: { userId },
         data: {
-          plan: 'custom',
+          plan: 'scale',
           maxSocialAccounts: limits.maxSocialAccounts,
           maxAiPosts: limits.maxAiPosts,
           maxPersonas: limits.maxPersonas,
@@ -184,8 +188,8 @@ export class SubscriptionService {
 
     // Determine plan from price ID
     const product = getProductByPriceId(priceId || '');
-    const planName = product?.name?.toLowerCase() || 'professional';
-    const limits = PLAN_LIMITS[planName] || PLAN_LIMITS.professional;
+    const planName = product?.name?.toLowerCase() || 'pro';
+    const limits = PLAN_LIMITS[planName] || PLAN_LIMITS.pro;
 
     // Map Stripe status to our status
     const status = this.mapStripeStatus(stripeSubscription.status);

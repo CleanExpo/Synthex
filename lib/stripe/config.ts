@@ -6,9 +6,9 @@
  * - NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: Stripe publishable key for client-side
  * - STRIPE_WEBHOOK_SECRET: Webhook endpoint secret for verification
  * - NEXT_PUBLIC_APP_URL: Application URL for redirects
- * - STRIPE_PROFESSIONAL_PRICE_ID: Stripe price ID for Professional plan
- * - STRIPE_BUSINESS_PRICE_ID: Stripe price ID for Business plan
- * - STRIPE_CUSTOM_PRICE_ID: Stripe price ID for Custom/Enterprise plan
+ * - STRIPE_PRO_PRICE_ID: Stripe price ID for Pro plan ($249 AUD/mo)
+ * - STRIPE_GROWTH_PRICE_ID: Stripe price ID for Growth plan ($449 AUD/mo)
+ * - STRIPE_SCALE_PRICE_ID: Stripe price ID for Scale plan ($799 AUD/mo)
  *
  * FAILURE MODE: Stripe features disabled if not configured.
  * Placeholder price IDs are kept so the app compiles, but the checkout route
@@ -30,9 +30,9 @@ export const stripe = STRIPE_ENABLED
 // Product/Price IDs - These MUST match your Stripe dashboard
 // Placeholder IDs are rejected at checkout time (see app/api/stripe/checkout/route.ts)
 export const PRODUCTS = {
-  professional: {
-    name: 'Professional',
-    priceId: process.env.STRIPE_PROFESSIONAL_PRICE_ID || 'price_professional_placeholder',
+  pro: {
+    name: 'Pro',
+    priceId: process.env.STRIPE_PRO_PRICE_ID || process.env.STRIPE_PROFESSIONAL_PRICE_ID || 'price_pro_placeholder',
     price: 249,
     features: {
       socialAccounts: 5,
@@ -44,10 +44,10 @@ export const PRODUCTS = {
       contentLibrary: true,
     },
   },
-  business: {
-    name: 'Business',
-    priceId: process.env.STRIPE_BUSINESS_PRICE_ID || 'price_business_placeholder',
-    price: 399,
+  growth: {
+    name: 'Growth',
+    priceId: process.env.STRIPE_GROWTH_PRICE_ID || process.env.STRIPE_BUSINESS_PRICE_ID || 'price_growth_placeholder',
+    price: 449,
     features: {
       socialAccounts: 10,
       aiPosts: -1, // unlimited
@@ -61,10 +61,10 @@ export const PRODUCTS = {
       teamCollaboration: true,
     },
   },
-  custom: {
-    name: 'Custom',
-    priceId: process.env.STRIPE_CUSTOM_PRICE_ID || 'price_custom_placeholder',
-    price: -1, // custom pricing
+  scale: {
+    name: 'Scale',
+    priceId: process.env.STRIPE_SCALE_PRICE_ID || process.env.STRIPE_CUSTOM_PRICE_ID || 'price_scale_placeholder',
+    price: 799,
     features: {
       socialAccounts: -1, // unlimited
       aiPosts: -1, // unlimited
@@ -85,8 +85,8 @@ export const PRODUCTS = {
  */
 export function isStripeBillingReady(): boolean {
   if (!STRIPE_ENABLED) return false;
-  // At minimum, the Professional plan price ID must be a real Stripe ID
-  return !PRODUCTS.professional.priceId.includes('placeholder');
+  // At minimum, the Pro plan price ID must be a real Stripe ID
+  return !PRODUCTS.pro.priceId.includes('placeholder');
 }
 
 export function getProductByPriceId(priceId: string) {
@@ -94,5 +94,6 @@ export function getProductByPriceId(priceId: string) {
 }
 
 export function getProductByName(name: string) {
-  return PRODUCTS[name.toLowerCase() as keyof typeof PRODUCTS];
+  const key = name.toLowerCase() as keyof typeof PRODUCTS;
+  return PRODUCTS[key];
 }

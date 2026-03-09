@@ -56,6 +56,32 @@ export async function GET(request: NextRequest) {
         'manual-posting',
         'basic-templates',
       ],
+      pro: [
+        'basic-analytics',
+        'advanced-analytics',
+        'multi-platform',
+        'scheduled-posting',
+        'ai-content-generation',
+        'custom-templates',
+        'team-collaboration',
+      ],
+      growth: [
+        'basic-analytics',
+        'advanced-analytics',
+        'multi-platform',
+        'scheduled-posting',
+        'ai-content-generation',
+        'custom-templates',
+        'team-collaboration',
+        'white-label',
+        'api-access',
+        'priority-support',
+        'custom-integrations',
+      ],
+      scale: [
+        'all-features',
+      ],
+      // Backward-compat aliases
       professional: [
         'basic-analytics',
         'advanced-analytics',

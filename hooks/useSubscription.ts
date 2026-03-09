@@ -5,7 +5,7 @@ import { useUser } from './use-user';
 
 export interface SubscriptionData {
   id: string;
-  plan: 'free' | 'professional' | 'business' | 'custom';
+  plan: 'free' | 'pro' | 'growth' | 'scale' | 'professional' | 'business' | 'custom';
   status: string;
   limits: {
     socialAccounts: number;
@@ -28,10 +28,10 @@ interface UseSubscriptionReturn {
   isLoading: boolean;
   error: Error | null;
   refetch: () => Promise<void>;
-  hasAccess: (requiredPlan: 'free' | 'professional' | 'business' | 'custom') => boolean;
+  hasAccess: (requiredPlan: 'free' | 'pro' | 'growth' | 'scale' | 'professional' | 'business' | 'custom') => boolean;
 }
 
-const PLAN_HIERARCHY = ['free', 'professional', 'business', 'custom'];
+const PLAN_HIERARCHY = ['free', 'pro', 'growth', 'scale', 'professional', 'business', 'custom'];
 
 /**
  * Custom hook to get the current user's subscription
@@ -72,8 +72,8 @@ export function useSubscription(): UseSubscriptionReturn {
         ...data,
         limits: {
           ...data.limits,
-          seoAudits: data.limits?.seoAudits ?? (data.plan === 'free' ? 0 : data.plan === 'professional' ? 10 : -1),
-          seoPages: data.limits?.seoPages ?? (data.plan === 'free' ? 0 : data.plan === 'professional' ? 50 : -1),
+          seoAudits: data.limits?.seoAudits ?? (data.plan === 'free' ? 0 : (data.plan === 'pro' || data.plan === 'professional') ? 10 : -1),
+          seoPages: data.limits?.seoPages ?? (data.plan === 'free' ? 0 : (data.plan === 'pro' || data.plan === 'professional') ? 50 : -1),
         },
         usage: {
           ...data.usage,
@@ -104,7 +104,7 @@ export function useSubscription(): UseSubscriptionReturn {
   }, [userLoading, fetchSubscription]);
 
   const hasAccess = useCallback(
-    (requiredPlan: 'free' | 'professional' | 'business' | 'custom') => {
+    (requiredPlan: 'free' | 'pro' | 'growth' | 'scale' | 'professional' | 'business' | 'custom') => {
       if (!subscription) return false;
       const userPlanIndex = PLAN_HIERARCHY.indexOf(subscription.plan);
       const requiredPlanIndex = PLAN_HIERARCHY.indexOf(requiredPlan);

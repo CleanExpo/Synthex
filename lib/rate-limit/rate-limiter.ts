@@ -118,6 +118,10 @@ function memoryIncr(
 
 const DEFAULT_TIER_LIMITS: TierLimits = {
   free: 100,
+  pro: 500,
+  growth: 2000,
+  scale: 10000,
+  // Backward-compat aliases
   professional: 500,
   business: 2000,
   custom: 10000,
@@ -126,18 +130,27 @@ const DEFAULT_TIER_LIMITS: TierLimits = {
 const ENDPOINT_LIMITS: Record<string, TierLimits> = {
   '/api/ai/generate-content': {
     free: 5,
+    pro: 20,
+    growth: 100,
+    scale: 500,
     professional: 20,
     business: 100,
     custom: 500,
   },
   '/api/social/post': {
     free: 10,
+    pro: 50,
+    growth: 200,
+    scale: 1000,
     professional: 50,
     business: 200,
     custom: 1000,
   },
   '/api/analytics': {
     free: 30,
+    pro: 100,
+    growth: 500,
+    scale: 2000,
     professional: 100,
     business: 500,
     custom: 2000,
@@ -334,9 +347,9 @@ export class UsageTracker {
     tier: SubscriptionTier = 'free'
   ): Promise<boolean> {
     const limits: Record<string, Record<SubscriptionTier, number>> = {
-      ai_posts: { free: 5, professional: 100, business: -1, custom: -1 },
-      social_posts: { free: 10, professional: 100, business: -1, custom: -1 },
-      api_calls: { free: 1000, professional: 10000, business: 100000, custom: -1 },
+      ai_posts: { free: 5, pro: 100, growth: -1, scale: -1, professional: 100, business: -1, custom: -1 },
+      social_posts: { free: 10, pro: 100, growth: -1, scale: -1, professional: 100, business: -1, custom: -1 },
+      api_calls: { free: 1000, pro: 10000, growth: 100000, scale: -1, professional: 10000, business: 100000, custom: -1 },
     };
 
     const limit = limits[feature]?.[tier] ?? 0;

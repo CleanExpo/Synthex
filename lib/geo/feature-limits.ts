@@ -5,9 +5,9 @@
  * These limits are enforced at the API route level.
  *
  * PRICING (from CLAUDE.md — DO NOT CHANGE WITHOUT APPROVAL):
- * - Professional: $249/month
- * - Business: $399/month
- * - Custom: Contact Sales
+ * - Pro: $249/month
+ * - Growth: $449/month
+ * - Scale: $799/month
  *
  * @module lib/geo/feature-limits
  */
@@ -34,6 +34,31 @@ export const PLAN_LIMITS: Record<string, GEOFeatureLimits> = {
     authorProfiles: 0,
     localCaseStudies: 0,
   },
+  pro: {
+    geoAnalyses: 50,
+    eeatAudits: 10,
+    paperBananaVisuals: 20,
+    researchReports: 2,
+    authorProfiles: 3,
+    localCaseStudies: 5,
+  },
+  growth: {
+    geoAnalyses: -1,
+    eeatAudits: -1,
+    paperBananaVisuals: -1,
+    researchReports: -1,
+    authorProfiles: 10,
+    localCaseStudies: -1,
+  },
+  scale: {
+    geoAnalyses: -1,
+    eeatAudits: -1,
+    paperBananaVisuals: -1,
+    researchReports: -1,
+    authorProfiles: -1,
+    localCaseStudies: -1,
+  },
+  // Backward-compat aliases for existing DB records
   professional: {
     geoAnalyses: 50,
     eeatAudits: 10,
@@ -98,9 +123,9 @@ export function isWithinLimit(plan: string, feature: GEOFeatureKey, currentUsage
  */
 export function getMinimumPlan(feature: GEOFeatureKey): string {
   if (PLAN_LIMITS.free[feature] > 0) return 'free';
-  if (PLAN_LIMITS.professional[feature] > 0) return 'professional';
-  if (PLAN_LIMITS.business[feature] > 0) return 'business';
-  return 'custom';
+  if (PLAN_LIMITS.pro[feature] > 0) return 'pro';
+  if (PLAN_LIMITS.growth[feature] > 0) return 'growth';
+  return 'scale';
 }
 
 /**

@@ -20,18 +20,14 @@ export interface RateLimitConfig {
 
 /**
  * Subscription tier names for tier-based rate limiting.
+ * New names: pro / growth / scale. Old names kept for backward compat.
  */
-export type SubscriptionTier = 'free' | 'professional' | 'business' | 'custom';
+export type SubscriptionTier = 'free' | 'pro' | 'growth' | 'scale' | 'professional' | 'business' | 'custom';
 
 /**
  * Rate limits per subscription tier.
  */
-export interface TierLimits {
-  free: number;
-  professional: number;
-  business: number;
-  custom: number;
-}
+export type TierLimits = Record<SubscriptionTier, number>;
 
 /**
  * Result of a rate limit check.

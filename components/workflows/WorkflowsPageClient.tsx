@@ -30,7 +30,7 @@ import { IntelligencePanel } from './IntelligencePanel';
 import useSWR from 'swr';
 import { cn } from '@/lib/utils';
 
-const ALLOWED_PLANS = ['professional', 'business', 'custom'];
+const ALLOWED_PLANS = ['pro', 'growth', 'scale', 'professional', 'business', 'custom'];
 
 // ---------------------------------------------------------------------------
 // Fetcher for single execution detail (with steps)

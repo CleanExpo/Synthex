@@ -99,7 +99,7 @@ async function main() {
   const subscriptionData = {
     id: generateId(),
     user_id: user.id,
-    plan: 'custom',
+    plan: 'scale',
     status: 'active',
     current_period_start: now.toISOString(),
     current_period_end: tenYearsFromNow.toISOString(),
@@ -166,7 +166,7 @@ async function main() {
       resource_id: user.id,
       details: {
         promoted_to: 'superadmin',
-        subscription_plan: 'custom',
+        subscription_plan: 'scale',
         multi_business_owner: true,
       },
       severity: 'high',

@@ -21,7 +21,7 @@ import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import Stripe from 'stripe';
 
 const changePlanSchema = z.object({
-  newPlan: z.enum(['professional', 'business', 'custom']),
+  newPlan: z.enum(['pro', 'growth', 'scale', 'professional', 'business', 'custom']),
   prorationBehavior: z.enum(['create_prorations', 'none', 'always_invoice']).optional(),
 });
 
@@ -109,7 +109,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Determine if upgrade or downgrade
-    const planOrder = ['free', 'professional', 'business', 'custom'];
+    const planOrder = ['free', 'pro', 'growth', 'scale', 'professional', 'business', 'custom'];
     const currentPlanIndex = planOrder.indexOf(subscription.plan);
     const newPlanIndex = planOrder.indexOf(newPlan);
     const isUpgrade = newPlanIndex > currentPlanIndex;
