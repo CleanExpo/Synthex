@@ -1,3 +1,5 @@
+import { withSentryConfig } from '@sentry/nextjs';
+
 // Conditionally load bundle analyzer only when ANALYZE=true
 let withBundleAnalyzer = (config) => config;
 if (process.env.ANALYZE === 'true') {
@@ -249,5 +251,16 @@ const nextConfig = {
   },
 }
 
+const sentryConfig = {
+  org: process.env.SENTRY_ORG,
+  project: process.env.SENTRY_PROJECT,
+  authToken: process.env.SENTRY_AUTH_TOKEN,
+  silent: !process.env.CI,
+  hideSourceMaps: false,
+  disableLogger: process.env.NODE_ENV === 'development',
+  tunnelRoute: '/monitoring',
+  autoInstrumentServerFunctions: true,
+};
+
 // Export with bundle analyzer wrapper
-export default withBundleAnalyzer(nextConfig);
+export default withSentryConfig(withBundleAnalyzer(nextConfig), sentryConfig);
