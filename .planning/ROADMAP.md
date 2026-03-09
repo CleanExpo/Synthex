@@ -510,7 +510,7 @@ Plans:
 | 67. Codebase Cleanup | v3.0 | 3/3 | Done | 2026-03-03 |
 | 68. Stripe Activation | v3.0 | 3/3 | Done | 2026-03-03 |
 | 69. Public Landing Page | v3.0 | 1/1 | Done | 2026-03-03 |
-| 70. Onboarding Funnel | v3.0 | 0/? | Not started | - |
+| 70. Onboarding Funnel | v3.0 | 2/2 | Done | 2026-03-10 |
 | 71. Observability & Monitoring | v3.0 | 0/? | Not started | - |
 | 72. Performance Hardening | v3.0 | 0/? | Not started | - |
 | 73. Pre-launch Security | v3.0 | 0/? | Not started | - |
@@ -678,7 +678,10 @@ email sequence, refine trial UX, extend product tour to cover new v2.0 features
 **Plans**: TBD
 
 Plans:
-- [ ] 70-01: TBD
+- [x] 70-01: Welcome email sequence D+0/D+3/D+7 (Resend templates, onboarding trigger, cron)
+- [x] 70-02: ProductTour v2.0 extension (workflows/insights/upgrade steps) + onboarding complete tour CTA
+
+**Status**: 2/2 | Done | 2026-03-10
 
 #### Phase 71: Observability & Monitoring
 

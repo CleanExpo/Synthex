@@ -10,14 +10,13 @@ See: .planning/PROJECT.md (updated 2026-02-17)
 ## Current Position
 
 Milestone: v3.0 Public Launch Readiness (Phases 67-74)
-Phase: 70 of 74 (Onboarding Funnel) — 1/2 plans executed
-Plan: 70-01 done (welcome email sequence D+0/D+3/D+7) — next is 70-02
-Status: Phase in progress
-Last activity: 2026-03-10 — Completed 70-01 (welcome email sequence: 3 Resend templates, D+0 trigger in onboarding route, D+3/D+7 cron at /api/cron/welcome-sequence, vercel.json cron entry)
+Phase: 71 of 74 (Observability & Monitoring) — not started
+Status: Phase 70 complete — both plans done
+Last activity: 2026-03-10 — Completed 70-02 (ProductTour v2.0: 3 new steps + showIf filter; onboarding complete page Start Tour / Skip tour CTAs + userPlan localStorage; API returns plan field)
 
-Progress: ░░░░░░░░░░ 25% (3/8 phases complete in v3.0)
+Progress: ░░░░░░░░░░ 50% (4/8 phases complete in v3.0)
 
-Next action: Execute 70-02-PLAN.md
+Next action: Execute Phase 71 — Observability & Monitoring
 
 ## Performance Metrics
 
@@ -231,9 +230,9 @@ None.
 ## Session Continuity
 
 Last session: 2026-03-10
-Stopped at: Completed 70-01 — welcome email sequence D+0/D+3/D+7 (SYN-52)
+Stopped at: Completed 70-02 — ProductTour v2.0 extension + onboarding tour CTA (SYN-53)
 Resume file: none
-Next action: Execute 70-02-PLAN.md
+Next action: Execute Phase 71 — Observability & Monitoring
 
 ## Linear Issues — v2.0 Phase 59-66 Tracking
 
