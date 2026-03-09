@@ -95,6 +95,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
+    // Fetch subscription plan for ProductTour upgrade step
+    const subscription = await prisma.subscription.findFirst({
+      where: { userId },
+      select: { plan: true },
+      orderBy: { createdAt: 'desc' },
+    });
+    const userPlan = subscription?.plan || 'starter';
+
     const rawBody = await request.json();
     const validation = onboardingSchema.safeParse(rawBody);
     if (!validation.success) {
@@ -281,6 +289,7 @@ export async function POST(request: NextRequest) {
       success: true,
       organization,
       persona,
+      plan: userPlan,
     });
 
     // Set updated auth-token cookie

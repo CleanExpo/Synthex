@@ -111,6 +111,17 @@ export default function CompletePage() {
         if (res.ok) {
           // Success — confirmed 200 response
           if (!mountedRef.current) return;
+
+          // Store plan in localStorage so ProductTour can conditionally show upgrade step
+          try {
+            const responseJson = await res.json();
+            if (responseJson?.plan && typeof window !== 'undefined') {
+              localStorage.setItem('userPlan', responseJson.plan);
+            }
+          } catch {
+            // JSON parse failed — continue without storing plan
+          }
+
           setSaving(false);
           setSaved(true);
 
@@ -338,24 +349,42 @@ export default function CompletePage() {
               )}
             </div>
 
+            {/* What's next */}
+            <div className="max-w-md mx-auto mt-8 p-5 rounded-xl bg-[#0f172a]/80 border border-cyan-500/10 backdrop-blur-sm text-left">
+              <h3 className="font-semibold text-white mb-3">What&apos;s next:</h3>
+              <ul className="space-y-2 text-sm text-gray-400">
+                <li className="flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 flex-shrink-0" />
+                  Connect your first social platform
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 flex-shrink-0" />
+                  Generate your first piece of content
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 flex-shrink-0" />
+                  Set up an AI workflow
+                </li>
+              </ul>
+            </div>
+
             {/* Actions */}
-            <div className="flex flex-col sm:flex-row gap-3 justify-center mt-8">
+            <div className="flex flex-col sm:flex-row gap-3 justify-center mt-6">
               <Button
                 size="lg"
                 onClick={() => handleGoToDashboard(true)}
                 className="bg-gradient-to-r from-cyan-500 to-cyan-600 hover:from-cyan-400 hover:to-cyan-500 text-white shadow-lg shadow-cyan-500/25 hover:shadow-cyan-500/40 transition-all"
               >
                 <Sparkles className="w-4 h-4 mr-2" />
-                Take a Quick Tour
+                Start Tour
               </Button>
               <Button
-                variant="outline"
+                variant="ghost"
                 size="lg"
                 onClick={() => handleGoToDashboard(false)}
-                className="border-cyan-500/30 text-gray-300 hover:bg-cyan-500/10 hover:text-white hover:border-cyan-500/50"
+                className="text-gray-400 hover:text-white"
               >
-                Skip to Dashboard
-                <ArrowRight className="w-4 h-4 ml-2" />
+                Skip tour
               </Button>
             </div>
 
