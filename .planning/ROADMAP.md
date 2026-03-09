@@ -17,7 +17,8 @@ None (internal platform work)
 - ✅ [v1.4 Creator Monetization & AI Studio](milestones/v1.4-ROADMAP.md) (Phases 36-51) — SHIPPED 2026-02-18
 - ✅ **v1.5 Deployment Readiness** — Phases 52-58 — SHIPPED 2026-03-03
 - ✅ **v2.0 Reliable AI Agents** — Phases 59-66 — SHIPPED 2026-03-03
-- ✅ **v3.0 Public Launch Readiness** — Phases 67-74 — SHIPPED 2026-03-10
+- ✅ [v3.0 Public Launch Readiness](milestones/v3.0-ROADMAP.md) — Phases 67-74 — SHIPPED 2026-03-10
+- 🚧 **v3.1 First Users** — Phases 75+ — In progress
 
 ## Phases
 
@@ -621,13 +622,45 @@ Plans:
 Plans:
 - [x] 66-01: insights-agent.ts + /api/cron/insights + vercel.json cron + /api/insights + InsightsWidget + /dashboard/insights
 
-### 🚧 v3.0 Public Launch Readiness (In Progress)
+<details>
+<summary>✅ v3.0 Public Launch Readiness (Phases 67-74) — SHIPPED 2026-03-10</summary>
 
-**Milestone Goal:** Harden, instrument, and ship synthex.social as a public product —
-real billing, a public-facing landing page, polished onboarding, observability, and a
-verified go-live runbook.
+See [milestones/v3.0-ROADMAP.md](milestones/v3.0-ROADMAP.md) for full details.
 
-#### Phase 67: Codebase Cleanup
+**Key accomplishments:**
+- Codebase cleanup: SWR standard enforced, 300 routes audited, dead packages removed
+- Stripe Activation: AUD billing, feature gates, billing emails
+- Public landing page: dynamic OG images, Starter tier, billing toggle
+- Onboarding: D+0/D+3/D+7 welcome emails, ProductTour 18 steps
+- Sentry v8, structured logging, Redis caching, CSP hardening
+- LAUNCH-RUNBOOK.md + smoke-test.mjs — v3.0 go-live ready
+
+</details>
+
+### 🚧 v3.1 First Users (In Progress)
+
+**Milestone Goal:** Get Synthex ready for first real users — God Mode admin panel for
+founder control, NEXUS branding, Unite-Hub API connector, content scheduling engine,
+and social media presence established.
+
+#### Phase 75: God Mode Admin Panel
+
+**Goal**: Founder admin panel for managing users, orgs, and platform health
+**Linear**: SYN-18
+**Plans**: TBD
+
+#### Phase 76: NEXUS Branding & Unite-Hub Connector
+
+**Goal**: Apply NEXUS branding throughout the app; wire Unite-Hub API connector
+**Linear**: SYN-1, SYN-2
+**Plans**: TBD
+
+---
+
+<details>
+<summary>📦 Archived v3.0 Phase Details</summary>
+
+#### Phase 67: Codebase Cleanup (ARCHIVED)
 
 **Goal**: Remove unused packages (canvas-confetti, verify TanStack Table), wire or remove
 remaining orphaned API routes, standardise SWR/fetch patterns across dashboard
@@ -731,3 +764,6 @@ configuration, rollback procedure, monitoring dashboard setup, launch announceme
 
 Plans:
 - [x] 74-01: Smoke test script (scripts/smoke-test.mjs), LAUNCH-RUNBOOK.md with go-live checklist + rollback procedure
+
+</details>
+

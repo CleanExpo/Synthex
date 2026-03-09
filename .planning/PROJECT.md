@@ -8,17 +8,18 @@ AI-powered marketing automation platform — production-hardened with zero mock 
 
 **Every endpoint returns real data, every platform works, every dashboard page connects to live APIs.** No mock data, no stubs, no silent fallbacks.
 
-## Current State (v1.5 Deployment Readiness — Phase 55 of 58)
+## Current State (v3.0 Public Launch Readiness — SHIPPED 2026-03-10)
 
-- 225 route files, 395 HTTP endpoints (223 active, 2 intentional stubs, 0 mock, 0 broken)
-- 9 social platforms operational (Twitter, LinkedIn, Instagram, Facebook, TikTok, YouTube, Pinterest, Reddit, Threads)
-- 56 test suites, 1433 tests passing (198 API contract tests, Playwright E2E suite, Jest unit/integration)
-- 91 Prisma models (added v1.2–v1.4 feature models)
-- Clean build (no workarounds)
-- v1.2: 3rd-party integrations (Canva, Buffer, Zapier), integration factory pattern, webhook system, approval workflows, team collaboration, role permissions
-- v1.3: SEO & GEO features (AuthorProfile, SEOAudit, GEOAnalysis, Search Console, PageSpeed, Schema Markup, Scheduled Audits)
-- v1.4: Creator Monetisation & AI Studio (AI Chat streaming SSE, Image Gen, Social Listening, Link-in-Bio, Sponsor CRM, Affiliate links)
-- v1.5: E2E suite stabilised (Phases 52–53), API contract tests 74% Zod coverage (Phase 54), UI state audit in progress (Phase 55)
+- Live Stripe billing: AUD pricing (Free/Professional $249/mo/Business $399/mo), billing emails, feature gates
+- Public landing page at synthex.social with dynamic OG images, HowItWorks, Testimonials
+- Welcome email sequence: D+0/D+3/D+7 via Resend, triggered on onboarding completion
+- ProductTour v2.0: 18 steps (added workflows, insights, upgrade steps)
+- Sentry v8 observability: error tracking, cron monitors, structured logging
+- Performance: Redis caching on dashboard/analytics endpoints, N+1 fixes
+- Security: CSP hardened (no unsafe-eval), CORS tracing headers, SECURITY.md, smoke-test.mjs
+- LAUNCH-RUNBOOK.md: complete go-live checklist + rollback procedure
+- 225 route files, 395 HTTP endpoints (300 audited — 250+ wired, 45 internal, 25 orphaned/documented)
+- 9 social platforms operational, 91 Prisma models, clean build
 
 ## Requirements
 
@@ -63,20 +64,33 @@ AI-powered marketing automation platform — production-hardened with zero mock 
 - API contract tests: 198 tests, 11 suites, 74% Zod route coverage — v1.5
 - UI state audit: loading.tsx, error.tsx for all dashboard routes — v1.5
 
-### Active
+### Active (v3.1 First Users)
 
-- Phase 55-02: Inline state audit — 13 dashboard pages for loading/empty/error coverage
-- Phase 56: Responsive design audit + WCAG 2.1 AA compliance
-- Phase 57: Bundle analysis, Prisma query optimisation
-- Phase 58: Core Web Vitals compliance, Redis cache verification
+- SYN-18: God Mode founder admin panel
+- SYN-1: NEXUS branding
+- SYN-2: Unite-Hub API connector
+- SYN-44: Scheduling engine — post queue
+- SYN-45: Upload/Generate/Preview flow
+- SYN-15/16: God Mode profile setup (4 brands + Synthex profile)
+- SYN-7/8/6: Social media audit, 7 social accounts, content strategy
+
+### Validated (v3.0)
+
+- Live Stripe billing with AUD pricing and billing emails — v3.0
+- Subscription feature gates (SEO audit, workflows, insights) — v3.0
+- Public landing page with dynamic OG images — v3.0
+- Welcome email sequence D+0/D+3/D+7 — v3.0
+- ProductTour v2.0 (18 steps) — v3.0
+- Sentry v8 observability with cron monitors — v3.0
+- Redis caching on dashboard/analytics endpoints — v3.0
+- CSP hardening (no unsafe-eval) — v3.0
+- smoke-test.mjs + LAUNCH-RUNBOOK.md — v3.0
 
 ### Out of Scope
 
-- New feature development (beyond completing existing stubs)
-- UI redesign or new dashboard pages
-- Database schema changes (beyond adding indexes)
-- New third-party integrations
 - Mobile app development
+- New third-party integrations (beyond Unite-Hub)
+- Full WCAG 2.1 AA audit (deferred)
 
 ## Key Decisions
 
@@ -123,4 +137,4 @@ All v1.0 deferred items resolved in v1.1:
 - 2 E2E flaky tests (passed on retry): focus timing + responsive touch target
 
 ---
-*Last updated: 2026-03-03 — v1.5 Phase 55-01 complete*
+*Last updated: 2026-03-10 — v3.0 milestone SHIPPED*

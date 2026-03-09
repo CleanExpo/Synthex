@@ -1,9 +1,30 @@
 # Project Milestones: Synthex
 
-## v3.0 Public Launch Readiness (In Progress — started 2026-03-03)
+## v3.0 Public Launch Readiness (Shipped: 2026-03-10)
 
-**Goal:** Take Synthex from internal-only to public launch — clean codebase, live Stripe billing, polished landing page, guided onboarding, observability, performance hardening, and security sign-off.
-**Phases:** 67-74 | **Status:** Planning
+**Delivered:** Codebase cleanup (SWR standard, 25 orphan routes documented), live Stripe billing (AUD pricing, feature gates, billing emails), public landing page with dynamic OG images, welcome email sequence (D+0/D+3/D+7), ProductTour v2.0 (18 steps), Sentry v8 observability, Redis caching, CSP hardening, smoke test suite, and a full go-live runbook.
+
+**Phases completed:** 67–74 (8 phases, 13 plans)
+
+**Key accomplishments:**
+
+- Codebase cleanup: removed dead @tanstack packages, audited 300 routes, standardised SWR data-fetching
+- Stripe Activation: real billing emails, subscription feature gates, AUD pricing page, test account configured
+- Public Landing Page: server component with dynamic OG images, Starter free tier, billing toggle
+- Onboarding Funnel: D+0/D+3/D+7 welcome emails, ProductTour extended to 18 steps
+- Observability: Sentry v8 wired, structured logger, cron monitors on 3 critical routes
+- Performance: Redis caching on analytics/dashboard endpoints, N+1 fixed in business-metrics
+- Security: CSP hardened (removed unsafe-eval), CORS tracing headers, SECURITY.md
+- Launch readiness: smoke-test.mjs + LAUNCH-RUNBOOK.md go-live checklist + rollback procedure
+
+**Stats:**
+
+- 8 phases (67–74), 13 plans
+- 137 files changed, +6,317 / -922 LOC
+- Duration: 7 days (2026-03-03 → 2026-03-10)
+- Git range: `chore(67-01)` → `docs(74-01)`
+
+**What's next:** v3.1 — First users sprint (God Mode admin, Unite-Hub connector, scheduling engine, social accounts, content strategy)
 
 ---
 
