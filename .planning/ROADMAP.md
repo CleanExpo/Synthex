@@ -512,7 +512,7 @@ Plans:
 | 69. Public Landing Page | v3.0 | 1/1 | Done | 2026-03-03 |
 | 70. Onboarding Funnel | v3.0 | 2/2 | Done | 2026-03-10 |
 | 71. Observability & Monitoring | v3.0 | 1/1 | Done | 2026-03-10 |
-| 72. Performance Hardening | v3.0 | 0/? | Not started | - |
+| 72. Performance Hardening | v3.0 | 1/1 | Done | 2026-03-10 |
 | 73. Pre-launch Security | v3.0 | 0/? | Not started | - |
 | 74. Launch Day | v3.0 | 0/? | Not started | - |
 
@@ -706,7 +706,9 @@ Prisma N+1 fixes, final bundle analysis, Vercel CWV verification on live deploym
 **Plans**: TBD
 
 Plans:
-- [ ] 72-01: TBD
+- [x] 72-01: Cache dashboard endpoints + fix N+1 in business-metrics
+
+**Status**: 1/1 | Done | 2026-03-10
 
 #### Phase 73: Pre-launch Security
 
