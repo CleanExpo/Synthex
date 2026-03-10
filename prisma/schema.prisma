@@ -140,6 +140,10 @@ model User {
   // Video generation
   videoGenerations      VideoGeneration[]
 
+  // Authority Engine (Phase 86)
+  authorityAnalyses     AuthorityAnalysis[]
+  citationMonitors      CitationMonitor[]
+
   // Onboarding state (UNI-920)
   onboardingComplete      Boolean   @default(false) @map("onboarding_complete")
   onboardingStep          Int       @default(0)     @map("onboarding_step")       // 0=not started, 1=business, 2=api-key, 3=socials, 4=goals
@@ -3200,4 +3204,61 @@ model StepExecution {
   @@index([workflowExecutionId])
   @@index([workflowExecutionId, stepIndex])
   @@map("step_executions")
+}
+
+// ==========================================
+// Phase 86: Authority Engine Models
+// ==========================================
+
+model AuthorityAnalysis {
+  id              String   @id @default(cuid())
+  userId          String
+  orgId           String
+  contentText     String   @db.Text
+  overallScore    Float
+  claimsFound     Int
+  claimsVerified  Int
+  claimsFailed    Int
+  sourceBreakdown Json
+  analysisResult  Json
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  user            User     @relation(fields: [userId], references: [id])
+  citations       AuthorityCitation[]
+
+  @@index([userId])
+  @@index([orgId])
+}
+
+model AuthorityCitation {
+  id           String            @id @default(cuid())
+  analysisId   String
+  claimText    String            @db.Text
+  sourceUrl    String
+  sourceType   String
+  sourceName   String
+  confidence   Float
+  citationText String            @db.Text
+  verified     Boolean           @default(false)
+  createdAt    DateTime          @default(now())
+  analysis     AuthorityAnalysis @relation(fields: [analysisId], references: [id], onDelete: Cascade)
+
+  @@index([analysisId])
+}
+
+model CitationMonitor {
+  id            String    @id @default(cuid())
+  userId        String
+  orgId         String
+  contentUrl    String
+  lastChecked   DateTime?
+  citationCount Int       @default(0)
+  platforms     Json
+  alertOnChange Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  user          User      @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([orgId])
 }
