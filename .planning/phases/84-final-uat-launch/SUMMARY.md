@@ -45,7 +45,7 @@ v4.0 Production Complete declared. All 8 phases of the v4.0 milestone are done.
 - `npm run type-check` — PASS (0 errors)
 - `npm run lint` (changed files) — PASS (0 errors)
 - `npm test` — baseline 1496 passing, 32 pre-existing failures (not re-run this phase)
-- `npm run build` — DEFERRED (OOM on dev machine; Vercel cloud build is authoritative gate)
+- `npm run build` — PASS (exit code 0, compiled with warnings only — 2026-03-11)
 
 ## Blockers Resolved
 
@@ -53,7 +53,6 @@ None — no Critical findings from 84-01 or 84-02.
 
 ## Outstanding Issues (Post-Launch)
 
-- Build verification: Run `npm run build` on a machine with >8GB RAM or via Vercel deployment
 - Stripe live mode: Replace test keys with live keys (UNI-1202/UNI-1203 — human-gated)
 - Public launch: UNI-1182 — human-gated decision
 
