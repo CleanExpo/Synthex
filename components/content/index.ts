@@ -15,3 +15,5 @@ export { CharacterCounter } from './character-counter';
 export * from './platform-limits';
 export { PublishConfirmModal } from './publish-confirm-modal';
 export type { PublishOptions, PublishConfirmModalProps, PlatformScheduleResult } from './publish-confirm-modal';
+export { PostStatusTracker } from './post-status-tracker';
+export type { PostStatusTrackerProps } from './post-status-tracker';
