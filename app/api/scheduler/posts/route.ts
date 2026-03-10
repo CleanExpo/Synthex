@@ -25,6 +25,7 @@ const listPostsQuerySchema = z.object({
   limit: z.coerce.number().min(1).max(100).optional().default(20),
   status: z.enum(['draft', 'scheduled', 'published', 'failed', 'all']).optional().default('all'),
   platform: z.string().optional(),
+  batchId: z.string().optional(),
   startDate: z.string().datetime().optional(),
   endDate: z.string().datetime().optional(),
   sortBy: z.enum(['scheduledAt', 'createdAt', 'publishedAt']).optional().default('scheduledAt'),
@@ -42,6 +43,7 @@ const createPostSchema = z.object({
     mentions: z.array(z.string()).optional(),
     persona: z.string().optional(),
     estimatedEngagement: z.number().optional(),
+    batchId: z.string().optional(),
   }).optional(),
 });
 
@@ -113,7 +115,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const { page, limit, status, platform, startDate, endDate, sortBy, sortOrder } = validation.data;
+    const { page, limit, status, platform, batchId, startDate, endDate, sortBy, sortOrder } = validation.data;
     const skip = (page - 1) * limit;
 
     // Get user's campaign IDs
@@ -130,6 +132,11 @@ export async function GET(request: NextRequest) {
 
     if (platform) {
       where.platform = platform;
+    }
+
+    // Filter by batchId stored in metadata JSON (PostgreSQL JSON path filter)
+    if (batchId) {
+      where.metadata = { path: ['batchId'], equals: batchId };
     }
 
     if (startDate || endDate) {
