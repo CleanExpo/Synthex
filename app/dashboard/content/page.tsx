@@ -16,6 +16,8 @@ import {
   GeneratedContent,
   MediaAttacher,
   PlatformPreview,
+  PublishConfirmModal,
+  type PublishOptions,
 } from '@/components/content';
 import { GenerateVideoCard, VideoGenerationModal } from '@/components/video';
 import { usePersonas } from '@/hooks/use-personas';
@@ -57,6 +59,9 @@ export default function ContentPage() {
 
   // Video generation modal
   const [videoModalOpen, setVideoModalOpen] = useState(false);
+
+  // Publish confirmation modal
+  const [publishModalOpen, setPublishModalOpen] = useState(false);
 
   const handleGenerate = useCallback(async () => {
     if (!topic) {
@@ -187,55 +192,51 @@ export default function ContentPage() {
     }
   }, [generatedContent, editMode, editedContent, selectedVariation, topic, platform, tone, hookType, targetLength, mediaUrls]);
 
-  const handleSchedule = useCallback(async () => {
+  const handleScheduleClick = useCallback(() => {
     if (!generatedContent) {
       toast.error('Generate content first before scheduling');
       return;
     }
+    setPublishModalOpen(true);
+  }, [generatedContent]);
 
-    const content = editMode && editedContent
+  const handlePublishConfirm = useCallback(async (options: PublishOptions) => {
+    const contentText = editMode && editedContent
       ? editedContent
-      : generatedContent.variations?.[selectedVariation] || generatedContent.primary;
+      : generatedContent?.variations?.[selectedVariation] || generatedContent?.primary;
 
-    if (!content) {
+    if (!contentText) {
       toast.error('No content to schedule');
       return;
     }
 
-    try {
-      // Schedule for 1 hour from now by default
-      const scheduledAt = new Date(Date.now() + 60 * 60 * 1000).toISOString();
-
-      const response = await fetchWithCSRF('/api/scheduler/posts', {
-        method: 'POST',
-        body: JSON.stringify({
-          content,
-          platform,
-          scheduledAt,
-          metadata: {
-            hashtags: generatedContent.metadata?.hashtags || [],
-            persona: personaId !== 'none' ? personaId : undefined,
-            estimatedEngagement: psychologyScore?.predictedEngagement ? 8 : 5,
-            ...(mediaUrls.length > 0 ? { images: mediaUrls } : {}),
-          },
-        }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error((errorData as { message?: string }).message || `Failed to schedule (${response.status})`);
-      }
-
-      toast.success('Post scheduled! View it in your Schedule page.', {
-        action: {
-          label: 'View Schedule',
-          onClick: () => { window.location.href = '/dashboard/schedule'; },
+    const response = await fetchWithCSRF('/api/scheduler/posts', {
+      method: 'POST',
+      body: JSON.stringify({
+        content: contentText,
+        platform: options.platform,
+        scheduledAt: options.scheduledAt,
+        metadata: {
+          hashtags: generatedContent?.metadata?.hashtags || [],
+          persona: personaId !== 'none' ? personaId : undefined,
+          estimatedEngagement: psychologyScore?.predictedEngagement ? 8 : 5,
+          ...(mediaUrls.length > 0 ? { images: mediaUrls } : {}),
         },
-      });
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Failed to schedule post');
+      }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error((errorData as { message?: string }).message || `Failed to schedule (${response.status})`);
     }
-  }, [generatedContent, editMode, editedContent, selectedVariation, platform, personaId, psychologyScore, mediaUrls]);
+
+    toast.success('Post scheduled! View it in your Schedule page.', {
+      action: {
+        label: 'View Schedule',
+        onClick: () => { window.location.href = '/dashboard/schedule'; },
+      },
+    });
+  }, [generatedContent, editMode, editedContent, selectedVariation, personaId, psychologyScore, mediaUrls]);
 
   const handleViewAnalytics = useCallback(() => {
     window.location.href = '/dashboard/analytics';
@@ -349,7 +350,7 @@ export default function ContentPage() {
           onRefresh={handleGenerate}
           onCopy={handleCopy}
           onSave={handleSave}
-          onSchedule={handleSchedule}
+          onSchedule={handleScheduleClick}
         />
       </div>
 
@@ -404,6 +405,21 @@ export default function ContentPage() {
           </div>
         </div>
       )}
+
+      {/* Publish confirmation modal */}
+      <PublishConfirmModal
+        open={publishModalOpen}
+        onOpenChange={setPublishModalOpen}
+        content={
+          editMode && editedContent
+            ? editedContent
+            : generatedContent?.variations?.[selectedVariation] || generatedContent?.primary || ''
+        }
+        platform={platform}
+        mediaUrls={mediaUrls}
+        hashtags={generatedContent?.metadata?.hashtags}
+        onConfirm={handlePublishConfirm}
+      />
     </div>
   );
 }
