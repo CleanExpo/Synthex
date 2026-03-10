@@ -17,6 +17,7 @@ import {
   MediaAttacher,
   PlatformPreview,
   PublishConfirmModal,
+  PostStatusTracker,
   type PublishOptions,
   type PlatformScheduleResult,
 } from '@/components/content';
@@ -552,6 +553,15 @@ export default function ContentPage() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Post status tracker (shown after multi-platform schedule) */}
+      {lastBatchId && (
+        <PostStatusTracker
+          batchId={lastBatchId}
+          onRefresh={() => setLastBatchId(lastBatchId)}
+          onDismiss={() => setLastBatchId(null)}
+        />
       )}
 
       {/* Publish confirmation modal */}
