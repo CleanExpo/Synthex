@@ -529,6 +529,7 @@ Plans:
 | 74. Launch Day | v3.0 | 0/? | Not started | - |
 | 75. God Mode Admin Panel | v3.1 | 1/1 | Complete | 2026-03-10 |
 | 76. NEXUS Branding & Unite-Hub | v3.1 | 1/1 | Complete | 2026-03-10 |
+| 77. Content Creation Flow | v4.0 | 0/4 | Planned | - |
 
 ### ✅ v2.0 Reliable AI Agents (SHIPPED 2026-03-03)
 
@@ -674,10 +675,13 @@ See [milestones/v3.1-ROADMAP.md](milestones/v3.1-ROADMAP.md) for full details.
 **Depends on**: v3.1 complete
 **Linear**: SYN-45
 **Research**: Unlikely (existing AI generation + media upload patterns)
-**Plans**: TBD
+**Plans**: 4 plans
 
 Plans:
-- [ ] 77-01: TBD
+- [ ] 77-01: Media upload & attachment pipeline (Supabase Storage, upload API, MediaAttacher, publish cron media pass-through)
+- [ ] 77-02: Platform preview cards & content composer upgrade (PlatformPreview, CharacterCounter, platform limits)
+- [ ] 77-03: Draft-to-publish pipeline & publish confirmation (PublishConfirmModal, draft edit/schedule, platform account check)
+- [ ] 77-04: Multi-platform publish & post status tracking (multi-platform selector, content adaptation, PostStatusTracker)
 
 #### Phase 78: Post Queue & Scheduling
 
