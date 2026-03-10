@@ -8,8 +8,11 @@ AI-powered marketing automation platform — production-hardened with zero mock 
 
 **Every endpoint returns real data, every platform works, every dashboard page connects to live APIs.** No mock data, no stubs, no silent fallbacks.
 
-## Current State (v3.0 Public Launch Readiness — SHIPPED 2026-03-10)
+## Current State (v3.1 First Users — SHIPPED 2026-03-10)
 
+- God Mode admin panel: owner-only route guard, real user management, platform health, audit logs
+- Unite-Group NEXUS branding: footer, metadata, about page, JSON-LD parentOrganization
+- Unite-Hub connector: fire-and-forget events into Stripe webhooks + publish flow, pull endpoint, daily revenue cron
 - Live Stripe billing: AUD pricing (Free/Professional $249/mo/Business $399/mo), billing emails, feature gates
 - Public landing page at synthex.social with dynamic OG images, HowItWorks, Testimonials
 - Welcome email sequence: D+0/D+3/D+7 via Resend, triggered on onboarding completion
@@ -64,15 +67,11 @@ AI-powered marketing automation platform — production-hardened with zero mock 
 - API contract tests: 198 tests, 11 suites, 74% Zod route coverage — v1.5
 - UI state audit: loading.tsx, error.tsx for all dashboard routes — v1.5
 
-### Active (v3.1 First Users)
+### Validated (v3.1)
 
-- SYN-18: God Mode founder admin panel
-- SYN-1: NEXUS branding
-- SYN-2: Unite-Hub API connector
-- SYN-44: Scheduling engine — post queue
-- SYN-45: Upload/Generate/Preview flow
-- SYN-15/16: God Mode profile setup (4 brands + Synthex profile)
-- SYN-7/8/6: Social media audit, 7 social accounts, content strategy
+- God Mode admin panel: owner-only route guard, real user management, platform health, audit logs — v3.1
+- Unite-Group NEXUS branding: footer, metadata, about page, JSON-LD parentOrganization — v3.1
+- Unite-Hub connector: fire-and-forget events, Stripe webhook hooks, pull endpoint, daily revenue cron — v3.1
 
 ### Validated (v3.0)
 
@@ -137,4 +136,4 @@ All v1.0 deferred items resolved in v1.1:
 - 2 E2E flaky tests (passed on retry): focus timing + responsive touch target
 
 ---
-*Last updated: 2026-03-10 — v3.0 milestone SHIPPED*
+*Last updated: 2026-03-10 — v3.1 milestone SHIPPED*

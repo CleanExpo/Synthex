@@ -18,7 +18,7 @@ None (internal platform work)
 - ✅ **v1.5 Deployment Readiness** — Phases 52-58 — SHIPPED 2026-03-03
 - ✅ **v2.0 Reliable AI Agents** — Phases 59-66 — SHIPPED 2026-03-03
 - ✅ [v3.0 Public Launch Readiness](milestones/v3.0-ROADMAP.md) — Phases 67-74 — SHIPPED 2026-03-10
-- 🚧 **v3.1 First Users** — Phases 75+ — In progress
+- ✅ [v3.1 First Users](milestones/v3.1-ROADMAP.md) (Phases 75-76) — SHIPPED 2026-03-10
 
 ## Phases
 
@@ -94,6 +94,8 @@ None (internal platform work)
 - [ ] **Phase 56: UI Audit - Responsive** - Responsive design and accessibility
 - [ ] **Phase 57: Performance - Bundle** - Bundle optimization and query analysis
 - [ ] **Phase 58: Performance - Vitals** - Caching verification and Core Web Vitals
+- [x] **Phase 75: God Mode Admin Panel** - Founder admin panel for managing users, orgs, platform health
+- [x] **Phase 76: NEXUS Branding & Unite-Hub** - NEXUS branding throughout app + Unite-Hub API connector
 
 ## Phase Details
 
@@ -516,6 +518,8 @@ Plans:
 | 72. Performance Hardening | v3.0 | 1/1 | Done | 2026-03-10 |
 | 73. Pre-launch Security | v3.0 | 0/? | Not started | - |
 | 74. Launch Day | v3.0 | 0/? | Not started | - |
+| 75. God Mode Admin Panel | v3.1 | 1/1 | Complete | 2026-03-10 |
+| 76. NEXUS Branding & Unite-Hub | v3.1 | 1/1 | Complete | 2026-03-10 |
 
 ### ✅ v2.0 Reliable AI Agents (SHIPPED 2026-03-03)
 
@@ -637,26 +641,19 @@ See [milestones/v3.0-ROADMAP.md](milestones/v3.0-ROADMAP.md) for full details.
 
 </details>
 
-### 🚧 v3.1 First Users (In Progress)
+<details>
+<summary>✅ v3.1 First Users (Phases 75-76) — SHIPPED 2026-03-10</summary>
 
-**Milestone Goal:** Get Synthex ready for first real users — God Mode admin panel for
-founder control, NEXUS branding, Unite-Hub API connector, content scheduling engine,
-and social media presence established.
+See [milestones/v3.1-ROADMAP.md](milestones/v3.1-ROADMAP.md) for full details.
 
-#### Phase 75: God Mode Admin Panel
+**Key accomplishments:**
+- God Mode admin panel: owner-only route guard, real SWR data fetching, suspend/activate/delete actions
+- Shared verifyAdmin utility replacing 3x copy-paste auth implementations
+- Unite-Group NEXUS branding in footer, metadata, about page, and JSON-LD org schema
+- Unite-Hub connector: fire-and-forget event hooks wired into Stripe webhooks + publish flow
+- Unite-Hub pull endpoint + daily revenue cron for cross-product metrics
 
-**Goal**: Founder admin panel for managing users, orgs, and platform health
-**Linear**: SYN-18
-**Plans**: 1 plan
-
-Plans:
-- [ ] 75-01: Owner route guard + real user management + platform health + audit log tabs
-
-#### Phase 76: NEXUS Branding & Unite-Hub Connector
-
-**Goal**: Apply NEXUS branding throughout the app; wire Unite-Hub API connector
-**Linear**: SYN-1, SYN-2
-**Plans**: TBD
+</details>
 
 ---
 

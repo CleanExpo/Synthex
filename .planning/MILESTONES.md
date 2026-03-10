@@ -1,5 +1,30 @@
 # Project Milestones: Synthex
 
+## v3.1 First Users (Shipped: 2026-03-10)
+
+**Delivered:** Owner-only God Mode admin panel with real user management, platform health monitoring, and audit logs. Unite-Group NEXUS branding applied across footer, metadata, about page, and JSON-LD schema. Unite-Hub fire-and-forget connector wired into Stripe webhooks and publish flows with daily revenue cron.
+
+**Phases completed:** 75–76 (2 phases, 2 plans)
+
+**Key accomplishments:**
+
+- God Mode admin panel: owner-only route guard, real SWR data fetching, suspend/activate/delete actions
+- Shared verifyAdmin utility replacing 3x copy-paste auth implementations
+- Unite-Group NEXUS branding in footer, metadata, about page, and JSON-LD org schema
+- Unite-Hub connector: fire-and-forget event hooks wired into Stripe webhooks + publish flow
+- Unite-Hub pull endpoint + daily revenue cron for cross-product metrics
+
+**Stats:**
+
+- 2 phases (75–76), 2 plans
+- 26 files changed, +1,829 / -331 LOC
+- Duration: 1 day (2026-03-10)
+- Git range: `feat(75-01)` → `feat(76-01)`
+
+**What's next:** v3.2 — next milestone TBD
+
+---
+
 ## v3.0 Public Launch Readiness (Shipped: 2026-03-10)
 
 **Delivered:** Codebase cleanup (SWR standard, 25 orphan routes documented), live Stripe billing (AUD pricing, feature gates, billing emails), public landing page with dynamic OG images, welcome email sequence (D+0/D+3/D+7), ProductTour v2.0 (18 steps), Sentry v8 observability, Redis caching, CSP hardening, smoke test suite, and a full go-live runbook.
