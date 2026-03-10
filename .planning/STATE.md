@@ -11,13 +11,13 @@ See: .planning/PROJECT.md (updated 2026-02-17)
 
 Milestone: v4.0 Production Complete
 Phase: 84 of 84 (Final UAT & Launch)
-Plan: Not started
-Status: Ready to plan
-Last activity: 2026-03-10 — Phase 83 complete (3 plans, 5 commits)
+Plan: 1 of 3 complete (84-01 done)
+Status: In progress
+Last activity: 2026-03-10 — Completed 84-01 (pre-launch audit: arch P1–P10 PASS, security PASS, type-check 0 errors)
 
-Progress: ███████░░░ 87% (7/8 phases complete in v4.0)
+Progress: ███████░░░ 95% (84-01 complete, 84-02 UAT and 84-03 release gate remain)
 
-Next action: /gsd:plan-phase 84
+Next action: Execute 84-02-PLAN.md (UAT — critical user journeys)
 
 ## Performance Metrics
 
@@ -241,9 +241,9 @@ None.
 ## Session Continuity
 
 Last session: 2026-03-10
-Stopped at: Plan 83-03 complete (collapsed sidebar keyboard access, aria-expanded, E2E test expansion)
+Stopped at: Plan 84-01 complete (pre-launch audit)
 Resume file: none
-Next action: /gsd:plan-phase 84
+Next action: Execute 84-02-PLAN.md (UAT — critical user journeys)
 
 ## Linear Issues — v2.0 Phase 59-66 Tracking
 
