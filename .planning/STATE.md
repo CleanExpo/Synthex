@@ -11,13 +11,13 @@ See: .planning/PROJECT.md (updated 2026-02-17)
 
 Milestone: v5.0 AI-Native GEO & Citation Engine
 Phase: 86 of 100 (Authority Engine & Design Audit) — IN PROGRESS
-Plan: 5 of 7 complete
+Plan: 6 of 7 complete
 Status: Plans created, execution in progress
-Last activity: 2026-03-11 — Executed 86-05-PLAN.md: Authority UI components (FeatureGate, ScoreCard, ClaimBadge, CitationList, SourcePanel), authority dashboard page (Analyse/Citations/Sources tabs), sidebar nav + command palette entries
+Last activity: 2026-03-11 — Executed 86-06-PLAN.md: Design audit engine — types, heading hierarchy, content structure, CRO signals, mobile readiness, PageSpeed performance checker, LLM citation fitness scorer (CITABLE 7 dimensions), main design-analyzer orchestrator
 
-Progress: ██░░░░░░░░ ~6% (5/~49 plans)
+Progress: ██░░░░░░░░ ~6% (6/~49 plans)
 
-Next action: `/gsd:execute-plan` for 86-06-PLAN.md
+Next action: `/gsd:execute-plan` for 86-07-PLAN.md
 
 ## Performance Metrics
 
