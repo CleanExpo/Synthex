@@ -492,7 +492,7 @@ export function PlatformCredentialsManager() {
                             value={clientIdInput}
                             onChange={e => setClientIdInput(e.target.value)}
                             placeholder="Enter Client ID"
-                            className="w-full px-3 py-2 pr-10 rounded-lg bg-white/5 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500/50 font-mono text-sm"
+                            className="w-full px-3 py-2 pr-10 rounded-lg bg-white/5 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500/50 focus-visible:ring-2 focus-visible:ring-cyan-500/50 focus-visible:ring-offset-0 font-mono text-sm"
                             autoComplete="off"
                             onClick={(e) => e.stopPropagation()}
                             aria-label="Client ID"
@@ -526,7 +526,7 @@ export function PlatformCredentialsManager() {
                             value={clientSecretInput}
                             onChange={e => setClientSecretInput(e.target.value)}
                             placeholder="Enter Client Secret"
-                            className="w-full px-3 py-2 pr-10 rounded-lg bg-white/5 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500/50 font-mono text-sm"
+                            className="w-full px-3 py-2 pr-10 rounded-lg bg-white/5 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500/50 focus-visible:ring-2 focus-visible:ring-cyan-500/50 focus-visible:ring-offset-0 font-mono text-sm"
                             autoComplete="off"
                             onClick={(e) => e.stopPropagation()}
                             aria-label="Client Secret"
