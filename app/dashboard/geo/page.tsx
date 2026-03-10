@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -58,14 +58,20 @@ export default function GEOPage() {
     }
   };
 
-  const scoreDimensions = [
+  const scoreDimensions: Array<{
+    key: keyof GEOScore;
+    label: string;
+    icon: React.ComponentType<{ className?: string }>;
+    weight: string;
+    color: string;
+  }> = [
     { key: 'citability', label: 'Citability', icon: Eye, weight: '25%', color: 'text-cyan-400' },
     { key: 'structure', label: 'Structure', icon: Database, weight: '20%', color: 'text-purple-400' },
     { key: 'multiModal', label: 'Multi-Modal', icon: Globe, weight: '15%', color: 'text-amber-400' },
     { key: 'authority', label: 'Authority', icon: Shield, weight: '20%', color: 'text-emerald-400' },
     { key: 'technical', label: 'Technical', icon: TrendingUp, weight: '20%', color: 'text-rose-400' },
     { key: 'entityCoherence', label: 'Entities', icon: Target, weight: '(diagnostic)', color: 'text-violet-400' },
-  ] as const;
+  ];
 
   const getTier = (score: number) => {
     if (score >= 80) return { label: 'Excellent', color: 'bg-emerald-500/20 text-emerald-400' };
