@@ -678,6 +678,17 @@ export async function GET(
         console.error('Failed to store platform connection:', dbError);
       }
 
+      // Determine where to redirect after successful connection.
+      // If returnTo is set in state (e.g. from platforms page), do a full-page redirect.
+      // Otherwise close popup and notify parent window.
+      const returnTo = stateData.returnTo as string | undefined;
+      if (returnTo) {
+        const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+        const redirectUrl = new URL(returnTo, appUrl);
+        redirectUrl.searchParams.set('connected', platform);
+        return NextResponse.redirect(redirectUrl.toString());
+      }
+
       // Close popup and notify parent window (include org context)
       const html = buildPostMessageHtml('oauth-success', platform, { organizationId: rawOrgId ?? null }, `Connected to ${platform}! This window will close automatically.`);
       return new NextResponse(html, { status: 200, headers: { 'Content-Type': 'text/html' } });

@@ -1,15 +1,15 @@
-﻿'use client';
+'use client';
 
 /**
  * Platform Management Hub
  *
  * Shows all social platforms with connection status, account details,
- * recent post metrics, and quick actions (post, view analytics, manage).
- * Fetches connection status from /api/integrations and platform metrics
- * from /api/analytics/platforms.
+ * and quick actions (post, view analytics, disconnect).
+ * Uses useSocialConnections SWR hook for all connection state.
  */
 
 import { useState, useEffect, useCallback } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { PageHeader } from '@/components/dashboard/page-header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -21,7 +21,6 @@ import {
   Facebook,
   Video,
   Globe,
-  ExternalLink,
   Link2,
   Unlink,
   RefreshCw,
@@ -30,7 +29,6 @@ import {
   CheckCircle,
   AlertCircle,
   Loader2,
-  Settings,
   TrendingUp,
   Users,
   Eye,
@@ -38,7 +36,7 @@ import {
 } from '@/components/icons';
 import { toast } from 'sonner';
 import Link from 'next/link';
-import { integrationsAPI } from '@/lib/api/settings';
+import { useSocialConnections } from '@/hooks/use-social-connections';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -58,7 +56,6 @@ interface PlatformInfo {
 interface PlatformStatus {
   connected: boolean;
   profileName?: string;
-  profileUrl?: string;
   lastPostDate?: string;
   followers?: number;
   postsThisWeek?: number;
@@ -204,10 +201,12 @@ interface PlatformCardProps {
   platform: PlatformInfo;
   status: PlatformStatus;
   onConnect: (id: string) => void;
+  onDisconnect: (id: string) => void;
   connecting: boolean;
+  disconnecting: boolean;
 }
 
-function PlatformCard({ platform, status, onConnect, connecting }: PlatformCardProps) {
+function PlatformCard({ platform, status, onConnect, onDisconnect, connecting, disconnecting }: PlatformCardProps) {
   const Icon = platform.icon;
 
   return (
@@ -290,13 +289,19 @@ function PlatformCard({ platform, status, onConnect, connecting }: PlatformCardP
                 <BarChart3 className="h-3.5 w-3.5" />
                 Analytics
               </Link>
-              <Link
-                href="/dashboard/settings"
-                className="inline-flex items-center justify-center h-8 w-8 text-zinc-400 hover:text-white bg-zinc-800/50 hover:bg-zinc-800 border border-zinc-700/50 rounded-md transition-colors"
-                aria-label="Platform settings"
+              <button
+                onClick={() => onDisconnect(platform.id)}
+                disabled={disconnecting}
+                title="Disconnect"
+                aria-label={`Disconnect ${platform.name}`}
+                className="inline-flex items-center justify-center h-8 w-8 text-zinc-400 hover:text-red-400 bg-zinc-800/50 hover:bg-zinc-800 border border-zinc-700/50 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <Settings className="h-3.5 w-3.5" />
-              </Link>
+                {disconnecting ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <Unlink className="h-3.5 w-3.5" />
+                )}
+              </button>
             </div>
           </>
         ) : (
@@ -329,17 +334,15 @@ function PlatformCard({ platform, status, onConnect, connecting }: PlatformCardP
 // Summary stats
 // ---------------------------------------------------------------------------
 
-function PlatformSummary({ statuses }: { statuses: Map<string, PlatformStatus> }) {
-  const connected = Array.from(statuses.values()).filter((s) => s.connected).length;
-  const totalFollowers = Array.from(statuses.values()).reduce(
-    (sum, s) => sum + (s.followers ?? 0),
-    0
-  );
-  const avgEngagement =
-    Array.from(statuses.values())
-      .filter((s) => s.connected && s.engagementRate !== undefined)
-      .reduce((sum, s, _, arr) => sum + (s.engagementRate ?? 0) / arr.length, 0);
-
+function PlatformSummary({
+  connectedCount,
+  totalFollowers,
+  avgEngagement,
+}: {
+  connectedCount: number;
+  totalFollowers: number;
+  avgEngagement: number;
+}) {
   return (
     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
       <Card className="bg-zinc-900/50 border border-zinc-800/50">
@@ -348,7 +351,7 @@ function PlatformSummary({ statuses }: { statuses: Map<string, PlatformStatus> }
             <CheckCircle className="h-5 w-5 text-green-400" />
           </div>
           <div>
-            <p className="text-2xl font-bold text-white">{connected}</p>
+            <p className="text-2xl font-bold text-white">{connectedCount}</p>
             <p className="text-xs text-zinc-500">Connected</p>
           </div>
         </CardContent>
@@ -359,7 +362,7 @@ function PlatformSummary({ statuses }: { statuses: Map<string, PlatformStatus> }
             <AlertCircle className="h-5 w-5 text-zinc-400" />
           </div>
           <div>
-            <p className="text-2xl font-bold text-white">{PLATFORMS.length - connected}</p>
+            <p className="text-2xl font-bold text-white">{PLATFORMS.length - connectedCount}</p>
             <p className="text-xs text-zinc-500">Available</p>
           </div>
         </CardContent>
@@ -397,67 +400,65 @@ function PlatformSummary({ statuses }: { statuses: Map<string, PlatformStatus> }
 // ---------------------------------------------------------------------------
 
 export default function PlatformsPage() {
-  const [statuses, setStatuses] = useState<Map<string, PlatformStatus>>(new Map());
-  const [isLoading, setIsLoading] = useState(true);
+  const { connections, summary, isLoading, connect, disconnect, mutate } = useSocialConnections();
+  const searchParams = useSearchParams();
   const [connectingId, setConnectingId] = useState<string | null>(null);
+  const [disconnectingId, setDisconnectingId] = useState<string | null>(null);
 
-  // Fetch connection statuses
-  const fetchStatuses = useCallback(async () => {
-    try {
-      const response = await fetch('/api/integrations', { credentials: 'include' });
+  // Map hook connections to a lookup by platform id
+  const connectionMap = new Map(connections.map((c) => [c.platform, c]));
 
-      if (!response.ok) {
-        // Non-critical — default to all disconnected
-        setStatuses(new Map());
-        return;
-      }
-
-      const data = await response.json();
-      const integrations = (data.integrations ?? {}) as Record<string, boolean>;
-      const details = (data.details ?? {}) as Record<
-        string,
-        { profileName?: string; followers?: number }
-      >;
-
-      const map = new Map<string, PlatformStatus>();
-      for (const platform of PLATFORMS) {
-        const connected = integrations[platform.id] === true;
-        const detail = details[platform.id];
-        map.set(platform.id, {
-          connected,
-          profileName: detail?.profileName,
-          followers: detail?.followers,
-        });
-      }
-
-      setStatuses(map);
-    } catch {
-      setStatuses(new Map());
-    }
-  }, []);
-
+  // Show success toast when redirected back after OAuth
   useEffect(() => {
-    setIsLoading(true);
-    fetchStatuses().finally(() => setIsLoading(false));
-  }, [fetchStatuses]);
+    const connected = searchParams.get('connected');
+    if (connected) {
+      toast.success(`Connected to ${connected}!`);
+      // Clean up the URL param without full page reload
+      const url = new URL(window.location.href);
+      url.searchParams.delete('connected');
+      window.history.replaceState({}, '', url.toString());
+    }
+  }, [searchParams]);
 
-  // Connect handler — uses the same OAuth popup flow as the integrations page.
-  // This calls /api/auth/oauth/{platform} → opens popup → OAuth provider →
-  // /api/auth/callback/{platform} → postMessage back → popup closes.
   const handleConnect = useCallback(async (platformId: string) => {
     setConnectingId(platformId);
     try {
-      await integrationsAPI.connectPlatform(platformId);
-      toast.success(`Connected to ${platformId}!`);
-      // Refresh statuses after successful connection
-      window.location.reload();
+      await connect(platformId);
+      // connect() redirects to OAuth provider — no further action needed here
     } catch (err) {
       const message = err instanceof Error ? err.message : `Failed to connect ${platformId}`;
       toast.error(message);
-    } finally {
       setConnectingId(null);
     }
-  }, []);
+    // Note: setConnectingId(null) NOT called on success — page navigates away
+  }, [connect]);
+
+  const handleDisconnect = useCallback(async (platformId: string) => {
+    setDisconnectingId(platformId);
+    try {
+      await disconnect(platformId);
+      toast.success(`Disconnected from ${platformId}`);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : `Failed to disconnect ${platformId}`;
+      toast.error(message);
+    } finally {
+      setDisconnectingId(null);
+    }
+  }, [disconnect]);
+
+  // Build platform status for each known platform
+  const buildStatus = (platformId: string): PlatformStatus => {
+    const conn = connectionMap.get(platformId);
+    if (!conn?.connected) return { connected: false };
+    return {
+      connected: true,
+      profileName: conn.username,
+    };
+  };
+
+  const connectedPlatforms = PLATFORMS.filter((p) => connectionMap.get(p.id)?.connected);
+  const availablePlatforms = PLATFORMS.filter((p) => !connectionMap.get(p.id)?.connected);
+  const connectedCount = connectedPlatforms.length;
 
   if (isLoading) {
     return <DashboardSkeleton />;
@@ -473,10 +474,7 @@ export default function PlatformsPage() {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => {
-                setIsLoading(true);
-                fetchStatuses().finally(() => setIsLoading(false));
-              }}
+              onClick={() => mutate()}
               className="text-zinc-400 hover:text-white border border-zinc-700/50 hover:bg-zinc-800/50"
             >
               <RefreshCw className="h-4 w-4 mr-2" />
@@ -496,22 +494,38 @@ export default function PlatformsPage() {
       />
 
       {/* Summary stats */}
-      <PlatformSummary statuses={statuses} />
+      <PlatformSummary
+        connectedCount={connectedCount}
+        totalFollowers={0}
+        avgEngagement={0}
+      />
+
+      {/* Empty state — no platforms connected */}
+      {summary?.connected === 0 && !isLoading && (
+        <div className="text-center py-12 rounded-xl border border-dashed border-white/10 bg-white/[0.02]">
+          <p className="text-slate-400 text-sm font-medium">No platforms connected yet</p>
+          <p className="text-slate-500 text-xs mt-1">
+            Click &ldquo;Connect&rdquo; on any platform card below to get started.
+          </p>
+        </div>
+      )}
 
       {/* Connected platforms */}
-      {Array.from(statuses.values()).some((s) => s.connected) && (
+      {connectedPlatforms.length > 0 && (
         <div className="space-y-3">
           <h2 className="text-sm font-medium text-zinc-400 uppercase tracking-wide">
             Connected Platforms
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {PLATFORMS.filter((p) => statuses.get(p.id)?.connected).map((platform) => (
+            {connectedPlatforms.map((platform) => (
               <PlatformCard
                 key={platform.id}
                 platform={platform}
-                status={statuses.get(platform.id) ?? { connected: false }}
+                status={buildStatus(platform.id)}
                 onConnect={handleConnect}
+                onDisconnect={handleDisconnect}
                 connecting={connectingId === platform.id}
+                disconnecting={disconnectingId === platform.id}
               />
             ))}
           </div>
@@ -519,19 +533,21 @@ export default function PlatformsPage() {
       )}
 
       {/* Available platforms */}
-      {Array.from(statuses.values()).some((s) => !s.connected) && (
+      {availablePlatforms.length > 0 && (
         <div className="space-y-3">
           <h2 className="text-sm font-medium text-zinc-400 uppercase tracking-wide">
             Available Platforms
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {PLATFORMS.filter((p) => !statuses.get(p.id)?.connected).map((platform) => (
+            {availablePlatforms.map((platform) => (
               <PlatformCard
                 key={platform.id}
                 platform={platform}
-                status={statuses.get(platform.id) ?? { connected: false }}
+                status={buildStatus(platform.id)}
                 onConnect={handleConnect}
+                onDisconnect={handleDisconnect}
                 connecting={connectingId === platform.id}
+                disconnecting={disconnectingId === platform.id}
               />
             ))}
           </div>

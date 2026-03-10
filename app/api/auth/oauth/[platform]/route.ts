@@ -179,6 +179,9 @@ export async function GET(
     }
     const redirectUri = `${appUrl || 'http://localhost:3000'}/api/auth/callback/${platform}`;
 
+    // Extract optional returnTo param — used by the platforms page to redirect back after OAuth
+    const returnTo = request.nextUrl.searchParams.get('returnTo') ?? '/dashboard/settings?tab=integrations';
+
     // Generate HMAC-signed state parameter for security (includes org context)
     const statePayload = Buffer.from(JSON.stringify({
       userId: user.id,
@@ -188,6 +191,7 @@ export async function GET(
       timestamp: Date.now(),
       flow: 'integration',
       nonce: crypto.randomBytes(16).toString('hex'),
+      returnTo,
     })).toString('base64url');
     const state = signState(statePayload);
 

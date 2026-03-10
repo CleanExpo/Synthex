@@ -73,6 +73,7 @@ import { WebSocketProvider } from '@/components/WebSocketProvider';
 import { BusinessSwitcher } from '@/components/business';
 import { useUser } from '@/hooks/use-user';
 import { SidebarGroup, type SidebarItem } from '@/components/dashboard/SidebarGroup';
+import { SocialConnectBanner } from '@/components/dashboard/SocialConnectBanner';
 
 // ============================================================================
 // SIDEBAR GROUPS - Organized by semantic categories
@@ -477,6 +478,9 @@ export default function DashboardLayout({
             </DropdownMenu>
           </div>
         </header>
+
+        {/* Social Connect Banner — shown to users with zero connected platforms */}
+        <SocialConnectBanner />
 
         {/* Page Content */}
         <main className="p-3 sm:p-4 md:p-6">
