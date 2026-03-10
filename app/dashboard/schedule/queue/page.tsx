@@ -20,7 +20,8 @@ import { DashboardSkeleton } from '@/components/skeletons/DashboardSkeleton';
 import { APIErrorCard } from '@/components/error-states/api-error';
 import { EmptyState } from '@/components/EmptyState';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, ChevronLeft, ChevronRight } from '@/components/icons';
+import { ArrowLeft, ChevronLeft, ChevronRight, Layers } from '@/components/icons';
+import { BulkScheduleWizard } from '@/components/scheduling';
 
 // =============================================================================
 // SWR Fetcher
@@ -51,6 +52,7 @@ export default function QueuePage() {
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [page, setPage] = useState(1);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkWizardOpen, setBulkWizardOpen] = useState(false);
 
   const limit = 25;
 
@@ -256,7 +258,21 @@ export default function QueuePage() {
             </p>
           </div>
         </div>
+        <Button
+          className="gradient-primary text-white"
+          onClick={() => setBulkWizardOpen(true)}
+        >
+          <Layers className="h-4 w-4 mr-2" />
+          Bulk Schedule
+        </Button>
       </div>
+
+      {/* Bulk Schedule Wizard */}
+      <BulkScheduleWizard
+        open={bulkWizardOpen}
+        onOpenChange={setBulkWizardOpen}
+        onComplete={() => mutate()}
+      />
 
       {/* Stats */}
       <QueueStats

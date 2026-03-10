@@ -5,7 +5,7 @@ import { DashboardSkeleton } from '@/components/skeletons';
 import { APIErrorCard } from '@/components/error-states';
 import { toast } from 'sonner';
 import Link from 'next/link';
-import { Brain, Building, ChevronDown } from '@/components/icons';
+import { Brain, Building, ChevronDown, Layers } from '@/components/icons';
 import { fetchWithCSRF } from '@/lib/csrf';
 
 import {
@@ -22,6 +22,7 @@ import {
   type PlatformScheduleResult,
 } from '@/components/content';
 import { GenerateVideoCard, VideoGenerationModal } from '@/components/video';
+import { BulkScheduleWizard } from '@/components/scheduling';
 import { usePersonas } from '@/hooks/use-personas';
 import { useActiveBusiness } from '@/hooks/useActiveBusiness';
 
@@ -73,6 +74,9 @@ export default function ContentPage() {
 
   // Post status tracking (populated after multi-platform schedule)
   const [lastBatchId, setLastBatchId] = useState<string | null>(null);
+
+  // Bulk schedule wizard
+  const [bulkWizardOpen, setBulkWizardOpen] = useState(false);
 
   const handleGenerate = useCallback(async () => {
     if (!topic) {
@@ -475,6 +479,30 @@ export default function ContentPage() {
           onSchedule={handleScheduleClick}
         />
       </div>
+
+      {/* Schedule More -- opens BulkScheduleWizard pre-filled with current content */}
+      {generatedContent && (
+        <div className="flex justify-end">
+          <button
+            onClick={() => setBulkWizardOpen(true)}
+            className="flex items-center gap-1.5 text-sm text-cyan-400 hover:text-cyan-300 transition-colors"
+          >
+            <Layers className="h-4 w-4" />
+            Schedule More Posts
+          </button>
+        </div>
+      )}
+
+      <BulkScheduleWizard
+        open={bulkWizardOpen}
+        onOpenChange={setBulkWizardOpen}
+        initialContent={
+          generatedContent
+            ? (editMode && editedContent ? editedContent : generatedContent.primary)
+            : undefined
+        }
+        initialPlatform={platform}
+      />
 
       {/* Platform preview(s) */}
       {generatedContent && (

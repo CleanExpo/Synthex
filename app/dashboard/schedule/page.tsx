@@ -30,6 +30,7 @@ import {
   OptimalTimes,
 } from '@/components/schedule';
 import { EmptyState } from '@/components/error-states';
+import { BulkScheduleWizard } from '@/components/scheduling';
 
 // Map API post shape → frontend ScheduledPost
 function mapApiPost(p: Record<string, unknown>): ScheduledPost {
@@ -69,6 +70,7 @@ export default function SchedulePage() {
   const [selectedPost, setSelectedPost] = useState<ScheduledPost | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [bulkWizardOpen, setBulkWizardOpen] = useState(false);
   const mountedRef = useRef(true);
 
   // ── Shared data fetcher ───────────────────────────────────────────────────
@@ -428,6 +430,16 @@ export default function SchedulePage() {
         onImport={handleImportSchedule}
         onExport={handleExportSchedule}
         onCreate={() => handlePostCreate(new Date(), new Date().getHours())}
+        onBulkSchedule={() => setBulkWizardOpen(true)}
+      />
+
+      <BulkScheduleWizard
+        open={bulkWizardOpen}
+        onOpenChange={setBulkWizardOpen}
+        onComplete={async () => {
+          const refreshedPosts = await fetchPosts();
+          if (mountedRef.current) setPosts(refreshedPosts);
+        }}
       />
 
       <ScheduleStatsGrid stats={stats} />

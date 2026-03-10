@@ -7,16 +7,17 @@
 
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { Upload, Download, Plus, Loader2, List } from '@/components/icons';
+import { Upload, Download, Plus, Loader2, List, Layers } from '@/components/icons';
 
 interface ScheduleHeaderProps {
   isCreating: boolean;
   onImport: () => void;
   onExport: () => void;
   onCreate: () => void;
+  onBulkSchedule?: () => void;
 }
 
-export function ScheduleHeader({ isCreating, onImport, onExport, onCreate }: ScheduleHeaderProps) {
+export function ScheduleHeader({ isCreating, onImport, onExport, onCreate, onBulkSchedule }: ScheduleHeaderProps) {
   return (
     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
       <div>
@@ -35,6 +36,16 @@ export function ScheduleHeader({ isCreating, onImport, onExport, onCreate }: Sch
             Queue
           </Button>
         </Link>
+        {onBulkSchedule && (
+          <Button
+            onClick={onBulkSchedule}
+            variant="outline"
+            className="bg-white/5 border-white/10 text-white hover:bg-white/10"
+          >
+            <Layers className="mr-2 h-4 w-4" />
+            Bulk Schedule
+          </Button>
+        )}
         <Button
           onClick={onImport}
           variant="outline"
