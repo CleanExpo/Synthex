@@ -742,6 +742,7 @@ Plans:
 
 Plans:
 - [x] 82-01: Auth centralisation — remove 49 local auth helpers from API routes (SYN-57)
+- [x] 82-02: Logger migration (248 files) + icon barrel FileQuestion fix (SYN-57)
 
 #### Phase 83: Accessibility & Polish
 
