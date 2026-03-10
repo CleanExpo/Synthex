@@ -15,6 +15,7 @@ import type { GEOAnalysisInput, GEOAnalysisResult, GEOScore, GEOPlatform, Platfo
 import { extractCitablePassages } from './passage-extractor';
 import { scoreCitability } from './citability-scorer';
 import { analyzeStructure } from './structure-analyzer';
+import { analyzeEntities } from './entity-analyzer';
 import { optimizeForPlatform } from './platform-optimizer';
 import { analyzeSchema } from './schema-enhancer';
 import { generateRecommendations } from './recommendations';
@@ -38,6 +39,9 @@ export async function analyzeGEO(input: GEOAnalysisInput): Promise<GEOAnalysisRe
 
     // Analyze structure
     const structureAnalysis = analyzeStructure(input.contentText);
+
+    // Analyse entity coherence
+    const entityAnalysis = analyzeEntities(input.contentText);
 
     // Score citability
     const citabilityScore = scoreCitability(passages, input.contentText);
@@ -93,12 +97,14 @@ export async function analyzeGEO(input: GEOAnalysisInput): Promise<GEOAnalysisRe
       multiModal: multiModalScore,
       authority: authorityScore,
       technical: technicalScore,
+      entityCoherence: entityAnalysis.score,    // Standalone diagnostic — not part of weighted overall
       overall: Math.round(
         citabilityScore * WEIGHTS.citability +
         structureAnalysis.readabilityScore * WEIGHTS.structure +
         multiModalScore * WEIGHTS.multiModal +
         authorityScore * WEIGHTS.authority +
         technicalScore * WEIGHTS.technical
+        // Note: entityCoherence is NOT added to overall — preserves backward compatibility
       ),
     };
 
@@ -117,6 +123,7 @@ export async function analyzeGEO(input: GEOAnalysisInput): Promise<GEOAnalysisRe
       score,
       citablePassages: passages,
       structureAnalysis,
+      entityAnalysis,
       platformScores,
       recommendations,
       schemaIssues,
