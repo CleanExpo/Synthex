@@ -88,6 +88,7 @@ model User {
   seoAudits        SEOAudit[]
   scheduledAuditTargets ScheduledAuditTarget[]
   geoAnalyses      GEOAnalysis[]
+  entityAnalyses   EntityAnalysis[]
   researchReports  GEOResearchReport[]
   visualAssets     VisualAsset[]
   localCaseStudies LocalCaseStudy[]
@@ -2463,11 +2464,15 @@ model GEOAnalysis {
   multiModalScore Float     @map("multi_modal_score") // Images, video, interactive (15% weight)
   authorityScore  Float     @map("authority_score") // E-E-A-T + brand signals (20% weight)
   technicalScore  Float     @map("technical_score") // SSR, AI crawlers, llms.txt (20% weight)
+  entityCoherenceScore Float?   @map("entity_coherence_score") // Entity density + coherence (standalone metric)
 
   // Detailed findings
   citablePassages Json      @map("citable_passages") // [{text, wordCount, score, startIndex}]
   recommendations Json      // [{priority, action, impact, effort}]
   schemaIssues    Json?     @map("schema_issues") // Missing/invalid structured data
+
+  // Relations
+  entityAnalysis  EntityAnalysis?
 
   createdAt       DateTime  @default(now()) @map("created_at")
 
@@ -2475,6 +2480,28 @@ model GEOAnalysis {
   @@index([platform])
   @@index([overallScore])
   @@map("geo_analyses")
+}
+
+model EntityAnalysis {
+  id              Int          @id @default(autoincrement())
+  geoAnalysisId   Int          @unique @map("geo_analysis_id")
+  geoAnalysis     GEOAnalysis  @relation(fields: [geoAnalysisId], references: [id], onDelete: Cascade)
+  userId          String       @map("user_id")
+  user            User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Entity extraction results
+  entityCount     Int          @map("entity_count")
+  uniqueEntityCount Int        @map("unique_entity_count")
+  properNounDensity Float      @map("proper_noun_density")
+  coherenceScore  Float        @map("coherence_score")
+  entities        Json         // EntityMention[] — full extraction result
+  coherenceIssues Json         @map("coherence_issues") // string[]
+
+  createdAt       DateTime     @default(now()) @map("created_at")
+
+  @@index([userId])
+  @@index([coherenceScore])
+  @@map("entity_analyses")
 }
 
 model GEOResearchReport {
