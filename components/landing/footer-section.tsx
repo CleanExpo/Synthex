@@ -54,9 +54,22 @@ export function FooterSection() {
 
         {/* Bottom Bar */}
         <div className="pt-8 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-4">
-          <p className="text-sm text-gray-600">
-            &copy; 2026 SYNTHEX. All rights reserved.
-          </p>
+          <div className="flex flex-col items-center md:items-start gap-1">
+            <p className="text-sm text-gray-600">
+              &copy; 2026 SYNTHEX. All rights reserved.
+            </p>
+            <p className="text-xs text-gray-600">
+              Part of the{' '}
+              <a
+                href="https://unite-group.com.au"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-cyan-400 transition-colors"
+              >
+                Unite-Group Nexus
+              </a>
+            </p>
+          </div>
           <div className="flex items-center gap-6">
             {/* Twitter/X */}
             <a href="https://twitter.com/synthexai" target="_blank" rel="noopener noreferrer" className="text-gray-500 hover:text-cyan-400 transition-colors" aria-label="Follow us on Twitter">

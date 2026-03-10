@@ -120,10 +120,22 @@ export default function AboutPage() {
                   Our founders, having worked at leading tech companies, saw firsthand how powerful AI tools
                   were being used by large corporations but remained inaccessible to individual creators.
                 </p>
-                <p className="text-gray-300 mb-6">
+                <p className="text-gray-300 mb-4">
                   We set out to change that. Today, Synthex empowers thousands of users to create engaging content,
                   understand their audience, and grow their social media presence using the same AI technology
                   that powers the world&apos;s largest platforms.
+                </p>
+                <p className="text-gray-400 text-sm mb-6">
+                  Synthex is a{' '}
+                  <a
+                    href="https://unite-group.com.au"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-cyan-400 hover:text-cyan-300 transition-colors"
+                  >
+                    Unite-Group
+                  </a>
+                  {' '}product — AI-powered marketing automation for modern businesses.
                 </p>
                 <Button className="bg-gradient-to-r from-cyan-500 to-cyan-600 hover:from-cyan-400 hover:to-cyan-500 text-white shadow-lg shadow-cyan-500/25">
                   Join Our Journey
