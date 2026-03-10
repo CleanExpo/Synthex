@@ -104,7 +104,7 @@ export default function ActivityStreamSVG() {
   const activityCount = activities.length * 247;
 
   return (
-    <div className="w-full h-[500px] relative rounded-2xl overflow-hidden bg-[#030014]">
+    <div className="w-full h-[500px] relative rounded-2xl overflow-hidden bg-surface-void">
       {/* Background effects */}
       <div className="absolute inset-0">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_60%_60%_at_50%_50%,rgba(6,182,212,0.2),transparent)]" />

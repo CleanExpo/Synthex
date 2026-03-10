@@ -20,7 +20,7 @@ interface IssueSummaryProps {
 
 export function IssueSummary({ issues, crawledPages }: IssueSummaryProps) {
   return (
-    <Card className="bg-[#0f172a]/80 backdrop-blur-xl border border-cyan-500/10 lg:col-span-2">
+    <Card className="bg-surface-base/80 backdrop-blur-xl border border-cyan-500/10 lg:col-span-2">
       <CardHeader>
         <CardTitle className="text-white">Issues Found</CardTitle>
         <CardDescription>Across {crawledPages} pages analyzed</CardDescription>

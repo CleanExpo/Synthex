@@ -221,7 +221,7 @@ export function BestTimeHeatmap({ slots, isLoading }: BestTimeHeatmapProps) {
             className="fixed z-50 pointer-events-none -translate-x-1/2 -translate-y-full"
             style={{ left: tooltip.x, top: tooltip.y - 6 }}
           >
-            <div className="rounded-lg bg-[#0f172a]/90 border border-white/10 px-2.5 py-1.5 shadow-xl text-xs">
+            <div className="rounded-lg bg-surface-base/90 border border-white/10 px-2.5 py-1.5 shadow-xl text-xs">
               <p className="text-slate-300 font-medium">
                 {DAY_FULL[tooltip.day]}, {formatHour(tooltip.hour)}
               </p>

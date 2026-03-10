@@ -166,7 +166,7 @@ export default function DemoIndex() {
           {/* Product Demo Video */}
           <div className="container mx-auto px-6 pb-16">
             <div className="max-w-4xl mx-auto">
-              <div className="relative rounded-2xl overflow-hidden border border-cyan-500/20 bg-[#0f172a]/80 shadow-2xl shadow-cyan-500/10">
+              <div className="relative rounded-2xl overflow-hidden border border-cyan-500/20 bg-surface-base/80 shadow-2xl shadow-cyan-500/10">
                 <div className="aspect-video">
                   <iframe
                     src="https://www.youtube.com/embed/vnn6SJUlsWU"
@@ -204,7 +204,7 @@ export default function DemoIndex() {
                         className="relative group h-full"
                       >
                         {/* Card */}
-                        <div className="relative bg-[#0f172a]/80 backdrop-blur-xl rounded-2xl border border-cyan-500/20 overflow-hidden h-full hover:border-cyan-500/40 transition-colors">
+                        <div className="relative bg-surface-base/80 backdrop-blur-xl rounded-2xl border border-cyan-500/20 overflow-hidden h-full hover:border-cyan-500/40 transition-colors">
                           {/* New Badge */}
                           {demo.new && (
                             <motion.div

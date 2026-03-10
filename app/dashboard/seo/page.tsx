@@ -46,7 +46,7 @@ function SEOToolCard({
   const { toast } = useToast();
 
   const cardContent = (
-    <Card className="group bg-[#0f172a]/80 backdrop-blur-xl border border-cyan-500/10 hover:border-cyan-500/30 transition-all duration-300 h-full">
+    <Card className="group bg-surface-base/80 backdrop-blur-xl border border-cyan-500/10 hover:border-cyan-500/30 transition-all duration-300 h-full">
       <CardContent className="p-6">
         <div className="flex items-start justify-between mb-4">
           <div className="p-3 rounded-xl bg-cyan-500/10 group-hover:bg-cyan-500/20 transition-colors">
@@ -120,7 +120,7 @@ function QuickStatCard({
   trend: 'up' | 'down' | 'neutral';
 }) {
   return (
-    <Card className="bg-[#0f172a]/80 backdrop-blur-xl border border-cyan-500/10">
+    <Card className="bg-surface-base/80 backdrop-blur-xl border border-cyan-500/10">
       <CardContent className="p-6">
         <div className="flex items-center justify-between mb-4">
           <div className="p-2 rounded-lg bg-cyan-500/10">
@@ -312,7 +312,7 @@ export default function SEODashboardPage() {
             <BarChart3 className="w-5 h-5 text-cyan-400" />
             Recent Audits
           </h2>
-          <Card className="bg-[#0f172a]/80 backdrop-blur-xl border border-cyan-500/10">
+          <Card className="bg-surface-base/80 backdrop-blur-xl border border-cyan-500/10">
             <CardContent className="p-6">
               <div className="space-y-4">
                 {[

@@ -20,7 +20,7 @@ export default function ScheduleLoading() {
       </div>
 
       {/* Calendar Header */}
-      <Card className="bg-[#0f172a]/80 border border-cyan-500/10">
+      <Card className="bg-surface-base/80 border border-cyan-500/10">
         <CardHeader className="pb-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
@@ -48,7 +48,7 @@ export default function ScheduleLoading() {
           {/* Calendar Grid */}
           <div className="grid grid-cols-7 gap-px bg-white/5 rounded-lg overflow-hidden">
             {[...Array(35)].map((_, i) => (
-              <div key={i} className="bg-[#0f172a] p-2 min-h-[100px]">
+              <div key={i} className="bg-surface-base p-2 min-h-[100px]">
                 <div className="h-5 w-5 bg-white/5 rounded mb-2" />
                 {i % 5 === 0 && (
                   <div className="h-6 w-full bg-cyan-500/10 rounded mb-1" />

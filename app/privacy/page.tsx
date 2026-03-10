@@ -73,7 +73,7 @@ export default function PrivacyPage() {
       {/* Key Points */}
       <section className="px-6 pb-12">
         <div className="container mx-auto">
-          <Card className="bg-[#0f172a]/80 border border-cyan-500/20 backdrop-blur-sm p-8 max-w-4xl mx-auto">
+          <Card className="bg-surface-base/80 border border-cyan-500/20 backdrop-blur-sm p-8 max-w-4xl mx-auto">
             <h2 className="text-2xl font-bold text-white mb-6">Key Privacy Commitments</h2>
             <div className="space-y-3">
               <div className="flex items-start gap-3">
@@ -106,7 +106,7 @@ export default function PrivacyPage() {
         <div className="container mx-auto">
           <div className="grid md:grid-cols-2 gap-6 max-w-5xl mx-auto">
             {sections.map((section, index) => (
-              <Card key={index} className="bg-[#0f172a]/80 border border-cyan-500/20 backdrop-blur-sm p-6">
+              <Card key={index} className="bg-surface-base/80 border border-cyan-500/20 backdrop-blur-sm p-6">
                 <div className="flex items-center gap-3 mb-4">
                   <section.icon className="w-8 h-8 text-cyan-400" />
                   <h3 className="text-xl font-semibold text-white">{section.title}</h3>
@@ -128,7 +128,7 @@ export default function PrivacyPage() {
       {/* Additional Information */}
       <section className="px-6 pb-20">
         <div className="container mx-auto">
-          <Card className="bg-[#0f172a]/80 border border-cyan-500/20 backdrop-blur-sm p-8 max-w-4xl mx-auto">
+          <Card className="bg-surface-base/80 border border-cyan-500/20 backdrop-blur-sm p-8 max-w-4xl mx-auto">
             <h2 className="text-2xl font-bold text-white mb-6">Additional Information</h2>
 
             <div className="space-y-6">

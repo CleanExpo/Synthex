@@ -26,7 +26,7 @@ function getScoreBgGradient(score: number): string {
 export function ScoreGauge({ score }: ScoreGaugeProps) {
   return (
     <div className={`relative w-32 h-32 rounded-full bg-gradient-to-br ${getScoreBgGradient(score)} flex items-center justify-center`}>
-      <div className="absolute inset-2 rounded-full bg-[#0f172a]" />
+      <div className="absolute inset-2 rounded-full bg-surface-base" />
       <span className={`relative text-4xl font-bold ${getScoreColor(score)}`}>
         {score}
       </span>

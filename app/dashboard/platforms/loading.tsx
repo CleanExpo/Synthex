@@ -19,7 +19,7 @@ export default function PlatformsLoading() {
       {/* 9-Platform Grid (3×3) */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {[...Array(9)].map((_, i) => (
-          <Card key={i} className="bg-[#0f172a]/80 border border-cyan-500/10">
+          <Card key={i} className="bg-surface-base/80 border border-cyan-500/10">
             <CardContent className="p-6">
               {/* Icon + title row */}
               <div className="flex items-center gap-3 mb-4">

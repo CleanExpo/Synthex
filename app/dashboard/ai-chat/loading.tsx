@@ -21,7 +21,7 @@ export default function AIChatLoading() {
 
       <div className="flex-1 flex overflow-hidden">
         {/* Sidebar skeleton */}
-        <div className="w-80 border-r border-white/10 flex flex-col bg-[#0f172a]/30">
+        <div className="w-80 border-r border-white/10 flex flex-col bg-surface-base/30">
           <div className="p-4 border-b border-white/10">
             <div className="h-10 w-full bg-white/5 rounded-lg animate-pulse" />
           </div>
@@ -37,7 +37,7 @@ export default function AIChatLoading() {
         </div>
 
         {/* Chat area skeleton */}
-        <div className="flex-1 flex items-center justify-center bg-[#0a0f1a]">
+        <div className="flex-1 flex items-center justify-center bg-surface-darker">
           <div className="text-center">
             <div className="w-16 h-16 rounded-full bg-white/5 animate-pulse mx-auto mb-4" />
             <div className="h-5 w-48 bg-white/5 rounded animate-pulse mx-auto mb-2" />

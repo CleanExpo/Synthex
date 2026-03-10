@@ -119,7 +119,7 @@ function ProviderCard({
           ? 'bg-white/2 border-white/5 opacity-60'
           : state.status === 'valid'
           ? 'bg-cyan-500/5 border-cyan-500/30'
-          : 'bg-[#0f172a]/80 border-cyan-500/10 backdrop-blur-sm'
+          : 'bg-surface-base/80 border-cyan-500/10 backdrop-blur-sm'
       )}
     >
       <div className="flex items-start justify-between mb-3">
@@ -160,7 +160,7 @@ function ProviderCard({
               placeholder={provider.placeholder}
               type="password"
               className={cn(
-                'bg-[#0a1628]/50 border text-white placeholder:text-gray-600 focus:ring-cyan-500/20 text-sm',
+                'bg-surface-dark/50 border text-white placeholder:text-gray-600 focus:ring-cyan-500/20 text-sm',
                 state.status === 'valid'
                   ? 'border-green-500/40 focus:border-green-500/60'
                   : state.status === 'invalid'

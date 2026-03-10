@@ -458,7 +458,7 @@ export default function SchemaMarkupManagerPage() {
         {activeTab === 'editor' && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Form */}
-            <Card className="bg-[#0f172a]/80 backdrop-blur-xl border border-cyan-500/10">
+            <Card className="bg-surface-base/80 backdrop-blur-xl border border-cyan-500/10">
               <CardHeader>
                 <CardTitle className="text-white">Schema Configuration</CardTitle>
               </CardHeader>
@@ -545,7 +545,7 @@ export default function SchemaMarkupManagerPage() {
         {activeTab === 'validator' && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Input */}
-            <Card className="bg-[#0f172a]/80 backdrop-blur-xl border border-cyan-500/10">
+            <Card className="bg-surface-base/80 backdrop-blur-xl border border-cyan-500/10">
               <CardHeader>
                 <CardTitle className="text-white flex items-center gap-2">
                   <FileCode className="w-5 h-5 text-cyan-400" />
@@ -580,7 +580,7 @@ export default function SchemaMarkupManagerPage() {
             </Card>
 
             {/* Results */}
-            <Card className="bg-[#0f172a]/80 backdrop-blur-xl border border-cyan-500/10">
+            <Card className="bg-surface-base/80 backdrop-blur-xl border border-cyan-500/10">
               <CardHeader>
                 <CardTitle className="text-white flex items-center gap-2">
                   <Search className="w-5 h-5 text-cyan-400" />
@@ -684,7 +684,7 @@ export default function SchemaMarkupManagerPage() {
         {activeTab === 'extractor' && (
           <div className="space-y-6">
             {/* URL Input */}
-            <Card className="bg-[#0f172a]/80 backdrop-blur-xl border border-cyan-500/10">
+            <Card className="bg-surface-base/80 backdrop-blur-xl border border-cyan-500/10">
               <CardHeader>
                 <CardTitle className="text-white flex items-center gap-2">
                   <Globe className="w-5 h-5 text-cyan-400" />
@@ -741,7 +741,7 @@ export default function SchemaMarkupManagerPage() {
                 </div>
 
                 {hook.extractionResult.schemas.map((s, i) => (
-                  <Card key={i} className="bg-[#0f172a]/80 backdrop-blur-xl border border-cyan-500/10">
+                  <Card key={i} className="bg-surface-base/80 backdrop-blur-xl border border-cyan-500/10">
                     <CardContent className="p-4">
                       <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center gap-3">
@@ -858,7 +858,7 @@ export default function SchemaMarkupManagerPage() {
                 {filteredTemplates.map((template) => (
                   <Card
                     key={template.id}
-                    className="bg-[#0f172a]/80 backdrop-blur-xl border border-cyan-500/10 hover:border-cyan-500/30 transition-all duration-200"
+                    className="bg-surface-base/80 backdrop-blur-xl border border-cyan-500/10 hover:border-cyan-500/30 transition-all duration-200"
                   >
                     <CardContent className="p-5">
                       <div className="flex items-start justify-between mb-3">
@@ -936,7 +936,7 @@ export default function SchemaMarkupManagerPage() {
                     </div>
 
                     {/* Google-like container */}
-                    <div className="p-6 rounded-xl bg-[#0f172a]/80 backdrop-blur-xl border border-cyan-500/10">
+                    <div className="p-6 rounded-xl bg-surface-base/80 backdrop-blur-xl border border-cyan-500/10">
                       <div className="flex items-center gap-2 mb-4">
                         <Search className="w-4 h-4 text-gray-500" />
                         <div className="flex-1 h-8 rounded-full bg-white/10 border border-white/20 flex items-center px-3">

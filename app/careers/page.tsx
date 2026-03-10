@@ -132,21 +132,21 @@ export default function CareersPage() {
             Why <span className="bg-gradient-to-r from-cyan-400 to-cyan-500 bg-clip-text text-transparent">Synthex?</span>
           </h2>
           <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-            <Card className="bg-[#0f172a]/80 border-cyan-500/10 p-6 text-center">
+            <Card className="bg-surface-base/80 border-cyan-500/10 p-6 text-center">
               <Rocket className="w-12 h-12 text-cyan-400 mx-auto mb-4" />
               <h3 className="text-xl font-semibold text-white mb-2">Massive Impact</h3>
               <p className="text-gray-400">
                 Help millions of creators and businesses succeed with AI-powered tools.
               </p>
             </Card>
-            <Card className="bg-[#0f172a]/80 border-cyan-500/10 p-6 text-center">
+            <Card className="bg-surface-base/80 border-cyan-500/10 p-6 text-center">
               <TrendingUp className="w-12 h-12 text-cyan-400 mx-auto mb-4" />
               <h3 className="text-xl font-semibold text-white mb-2">Rapid Growth</h3>
               <p className="text-gray-400">
                 Join a fast-growing startup with 10x growth trajectory and unlimited potential.
               </p>
             </Card>
-            <Card className="bg-[#0f172a]/80 border-cyan-500/10 p-6 text-center">
+            <Card className="bg-surface-base/80 border-cyan-500/10 p-6 text-center">
               <Code className="w-12 h-12 text-cyan-400 mx-auto mb-4" />
               <h3 className="text-xl font-semibold text-white mb-2">Cutting-Edge Tech</h3>
               <p className="text-gray-400">
@@ -165,7 +165,7 @@ export default function CareersPage() {
           </h2>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
             {benefits.map((benefit, index) => (
-              <Card key={index} className="bg-[#0f172a]/80 border-cyan-500/10 p-6 hover:scale-105 transition-transform">
+              <Card key={index} className="bg-surface-base/80 border-cyan-500/10 p-6 hover:scale-105 transition-transform">
                 <benefit.icon className="w-10 h-10 text-cyan-400 mb-3" />
                 <h3 className="text-lg font-semibold text-white mb-1">{benefit.title}</h3>
                 <p className="text-gray-400 text-sm">{benefit.description}</p>
@@ -178,7 +178,7 @@ export default function CareersPage() {
       {/* Culture */}
       <section className="px-6 pb-20">
         <div className="container mx-auto">
-          <Card className="bg-[#0f172a]/80 border-cyan-500/10 p-12">
+          <Card className="bg-surface-base/80 border-cyan-500/10 p-12">
             <div className="grid md:grid-cols-2 gap-12 items-center">
               <div>
                 <h2 className="text-4xl font-bold text-white mb-6 heading-serif">
@@ -227,7 +227,7 @@ export default function CareersPage() {
                 className={`px-4 py-2 rounded-full transition-all ${
                   selectedDepartment === dept
                     ? 'bg-gradient-to-r from-cyan-500 to-cyan-600 text-white'
-                    : 'bg-[#0f172a]/80 text-gray-300 hover:bg-[#0f172a] border border-cyan-500/10'
+                    : 'bg-surface-base/80 text-gray-300 hover:bg-surface-base border border-cyan-500/10'
                 }`}
               >
                 {dept}
@@ -238,7 +238,7 @@ export default function CareersPage() {
           {/* Job Listings */}
           <div className="space-y-4 max-w-4xl mx-auto">
             {filteredJobs.map((job) => (
-              <Card key={job.id} className="bg-[#0f172a]/80 border-cyan-500/10 p-6 hover:shadow-xl transition-all">
+              <Card key={job.id} className="bg-surface-base/80 border-cyan-500/10 p-6 hover:shadow-xl transition-all">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                   <div className="flex-grow">
                     <h3 className="text-xl font-semibold text-white mb-2">{job.title}</h3>
@@ -279,7 +279,7 @@ export default function CareersPage() {
       {/* CTA Section */}
       <section className="px-6 pb-20">
         <div className="container mx-auto">
-          <Card className="bg-[#0f172a]/80 border-cyan-500/10 p-12 text-center">
+          <Card className="bg-surface-base/80 border-cyan-500/10 p-12 text-center">
             <Briefcase className="w-16 h-16 text-cyan-400 mx-auto mb-6" />
             <h2 className="text-4xl font-bold text-white mb-4">
               Don't See the Right Role?

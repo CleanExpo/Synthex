@@ -98,7 +98,7 @@ export function DealForm({
       />
 
       {/* Modal */}
-      <div className="relative bg-[#0f172a] border border-white/10 rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-2xl">
+      <div className="relative bg-surface-base border border-white/10 rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-2xl">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-white/10">
           <h2 className="text-xl font-semibold text-white">
@@ -170,7 +170,7 @@ export function DealForm({
                 className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-transparent"
               >
                 {CURRENCIES.map((curr) => (
-                  <option key={curr} value={curr} className="bg-[#0f172a]">
+                  <option key={curr} value={curr} className="bg-surface-base">
                     {curr}
                   </option>
                 ))}
@@ -189,7 +189,7 @@ export function DealForm({
               className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-transparent"
             >
               {DEAL_STAGES.map((stage) => (
-                <option key={stage} value={stage} className="bg-[#0f172a]">
+                <option key={stage} value={stage} className="bg-surface-base">
                   {STAGE_LABELS[stage]}
                 </option>
               ))}

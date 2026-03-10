@@ -470,7 +470,7 @@ export default function PageSpeedPage() {
         description="Access real-time page performance analysis with Lighthouse scores, Core Web Vitals, and historical trend tracking."
       >
         {/* Analyze URL Section */}
-        <Card className="bg-[#0f172a]/80 backdrop-blur-xl border border-cyan-500/10">
+        <Card className="bg-surface-base/80 backdrop-blur-xl border border-cyan-500/10">
           <CardContent className="p-6">
             <div className="mb-6">
               <h2 className="text-xl font-semibold text-white flex items-center gap-2">
@@ -556,7 +556,7 @@ export default function PageSpeedPage() {
         </Card>
 
         {/* Performance Trends */}
-        <Card className="bg-[#0f172a]/80 backdrop-blur-xl border border-cyan-500/10">
+        <Card className="bg-surface-base/80 backdrop-blur-xl border border-cyan-500/10">
           <CardContent className="p-6">
             <div className="mb-6">
               <h2 className="text-xl font-semibold text-white flex items-center gap-2">
@@ -578,7 +578,7 @@ export default function PageSpeedPage() {
         </Card>
 
         {/* Analysis History */}
-        <Card className="bg-[#0f172a]/80 backdrop-blur-xl border border-cyan-500/10">
+        <Card className="bg-surface-base/80 backdrop-blur-xl border border-cyan-500/10">
           <CardContent className="p-6">
             <div className="mb-6">
               <h2 className="text-xl font-semibold text-white flex items-center gap-2">

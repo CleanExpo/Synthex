@@ -40,7 +40,7 @@ export function SEOFeatureGate({
 
   if (!userHasAccess) {
     return (
-      <Card className="bg-[#0f172a]/80 backdrop-blur-xl border border-cyan-500/20 overflow-hidden">
+      <Card className="bg-surface-base/80 backdrop-blur-xl border border-cyan-500/20 overflow-hidden">
         <CardContent className="p-8 relative">
           {/* Background gradient */}
           <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 via-transparent to-cyan-500/10 pointer-events-none" />

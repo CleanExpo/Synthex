@@ -57,7 +57,7 @@ export default function Step3PersonaPage() {
 
       {/* Persona Setup */}
       <div className="max-w-2xl mx-auto">
-        <div className="p-6 rounded-xl bg-[#0f172a]/80 border border-cyan-500/10 backdrop-blur-sm">
+        <div className="p-6 rounded-xl bg-surface-base/80 border border-cyan-500/10 backdrop-blur-sm">
           <PersonaSetup />
         </div>
       </div>

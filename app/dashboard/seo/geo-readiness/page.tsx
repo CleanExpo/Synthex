@@ -136,7 +136,7 @@ function ReadinessCheckTab({
   return (
     <div className="space-y-6">
       {/* Input Form */}
-      <Card className="bg-[#0f172a]/80 backdrop-blur-xl border border-cyan-500/10">
+      <Card className="bg-surface-base/80 backdrop-blur-xl border border-cyan-500/10">
         <CardContent className="p-6">
           <div className="mb-4">
             <h2 className="text-xl font-semibold text-white flex items-center gap-2">
@@ -232,7 +232,7 @@ function ReadinessResults({ result }: { result: GeoReadinessResult }) {
   const tierBadge = getTierBadge(result.readinessTier);
 
   return (
-    <Card className="bg-[#0f172a]/80 backdrop-blur-xl border border-cyan-500/10">
+    <Card className="bg-surface-base/80 backdrop-blur-xl border border-cyan-500/10">
       <CardContent className="p-6 space-y-6">
         {/* Overall Score */}
         <div className="flex items-center justify-between">
@@ -331,7 +331,7 @@ function PassagesTab({ result }: { result: GeoReadinessResult | null }) {
 
   if (!result || result.citablePassages.length === 0) {
     return (
-      <Card className="bg-[#0f172a]/80 backdrop-blur-xl border border-cyan-500/10">
+      <Card className="bg-surface-base/80 backdrop-blur-xl border border-cyan-500/10">
         <CardContent className="p-6">
           <div className="text-center py-12">
             <FileText className="w-12 h-12 text-gray-600 mx-auto mb-4" />
@@ -350,7 +350,7 @@ function PassagesTab({ result }: { result: GeoReadinessResult | null }) {
     : result.citablePassages;
 
   return (
-    <Card className="bg-[#0f172a]/80 backdrop-blur-xl border border-cyan-500/10">
+    <Card className="bg-surface-base/80 backdrop-blur-xl border border-cyan-500/10">
       <CardContent className="p-6">
         <div className="flex items-center justify-between mb-6">
           <div>
@@ -427,7 +427,7 @@ function TrendsTab({ trends, loading }: { trends: GeoScoreTrend[]; loading: bool
 
   if (loading && trends.length === 0) {
     return (
-      <Card className="bg-[#0f172a]/80 backdrop-blur-xl border border-cyan-500/10">
+      <Card className="bg-surface-base/80 backdrop-blur-xl border border-cyan-500/10">
         <CardContent className="p-6">
           <div className="flex items-center justify-center py-12">
             <Loader2 className="w-8 h-8 text-cyan-400 animate-spin" />
@@ -439,7 +439,7 @@ function TrendsTab({ trends, loading }: { trends: GeoScoreTrend[]; loading: bool
 
   if (trends.length === 0) {
     return (
-      <Card className="bg-[#0f172a]/80 backdrop-blur-xl border border-cyan-500/10">
+      <Card className="bg-surface-base/80 backdrop-blur-xl border border-cyan-500/10">
         <CardContent className="p-6">
           <div className="text-center py-12">
             <TrendingUp className="w-12 h-12 text-gray-600 mx-auto mb-4" />
@@ -473,7 +473,7 @@ function TrendsTab({ trends, loading }: { trends: GeoScoreTrend[]; loading: bool
   ];
 
   return (
-    <Card className="bg-[#0f172a]/80 backdrop-blur-xl border border-cyan-500/10">
+    <Card className="bg-surface-base/80 backdrop-blur-xl border border-cyan-500/10">
       <CardContent className="p-6">
         <div className="mb-6">
           <h2 className="text-xl font-semibold text-white flex items-center gap-2">
@@ -557,7 +557,7 @@ function HistoryTab({ history, loading }: { history: GeoAnalysisHistoryItem[]; l
 
   if (loading && history.length === 0) {
     return (
-      <Card className="bg-[#0f172a]/80 backdrop-blur-xl border border-cyan-500/10">
+      <Card className="bg-surface-base/80 backdrop-blur-xl border border-cyan-500/10">
         <CardContent className="p-6">
           <div className="flex items-center justify-center py-12">
             <Loader2 className="w-8 h-8 text-cyan-400 animate-spin" />
@@ -569,7 +569,7 @@ function HistoryTab({ history, loading }: { history: GeoAnalysisHistoryItem[]; l
 
   if (history.length === 0) {
     return (
-      <Card className="bg-[#0f172a]/80 backdrop-blur-xl border border-cyan-500/10">
+      <Card className="bg-surface-base/80 backdrop-blur-xl border border-cyan-500/10">
         <CardContent className="p-6">
           <div className="text-center py-12">
             <Activity className="w-12 h-12 text-gray-600 mx-auto mb-4" />
@@ -584,7 +584,7 @@ function HistoryTab({ history, loading }: { history: GeoAnalysisHistoryItem[]; l
   }
 
   return (
-    <Card className="bg-[#0f172a]/80 backdrop-blur-xl border border-cyan-500/10">
+    <Card className="bg-surface-base/80 backdrop-blur-xl border border-cyan-500/10">
       <CardContent className="p-6">
         <div className="mb-6">
           <h2 className="text-xl font-semibold text-white flex items-center gap-2">

@@ -96,7 +96,7 @@ export default function ResearchPage() {
       </div>
 
       {showCreate && (
-        <Card className="bg-[#0f172a]/80 border border-cyan-500/10">
+        <Card className="bg-surface-base/80 border border-cyan-500/10">
           <CardContent className="p-6 space-y-4">
             <input
               value={newReport.title}
@@ -123,13 +123,13 @@ export default function ResearchPage() {
       {loading ? (
         <div className="space-y-4">
           {[1, 2].map(i => (
-            <Card key={i} className="bg-[#0f172a]/80 border border-cyan-500/10">
+            <Card key={i} className="bg-surface-base/80 border border-cyan-500/10">
               <CardContent className="p-6 animate-pulse"><div className="h-6 bg-white/10 rounded w-1/2" /></CardContent>
             </Card>
           ))}
         </div>
       ) : reports.length === 0 ? (
-        <Card className="bg-[#0f172a]/80 border border-cyan-500/10">
+        <Card className="bg-surface-base/80 border border-cyan-500/10">
           <CardContent className="p-12 text-center text-gray-400">
             <Database className="h-12 w-12 mx-auto mb-3 opacity-30" />
             <p>No research reports yet</p>
@@ -139,7 +139,7 @@ export default function ResearchPage() {
       ) : (
         <div className="space-y-3">
           {reports.map((report) => (
-            <Card key={report.id} className="bg-[#0f172a]/80 border border-cyan-500/10 hover:border-cyan-500/30 transition-all">
+            <Card key={report.id} className="bg-surface-base/80 border border-cyan-500/10 hover:border-cyan-500/30 transition-all">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>

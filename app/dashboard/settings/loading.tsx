@@ -14,7 +14,7 @@ export default function SettingsLoading() {
       {/* Settings Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         {/* Settings Sidebar */}
-        <Card className="bg-[#0f172a]/80 border border-cyan-500/10 lg:col-span-1">
+        <Card className="bg-surface-base/80 border border-cyan-500/10 lg:col-span-1">
           <CardContent className="p-4 space-y-2">
             {[...Array(8)].map((_, i) => (
               <div key={i} className={`flex items-center gap-3 p-3 rounded-lg ${i === 0 ? 'bg-cyan-500/10' : ''}`}>
@@ -26,7 +26,7 @@ export default function SettingsLoading() {
         </Card>
 
         {/* Settings Form */}
-        <Card className="bg-[#0f172a]/80 border border-cyan-500/10 lg:col-span-3">
+        <Card className="bg-surface-base/80 border border-cyan-500/10 lg:col-span-3">
           <CardHeader>
             <div className="h-6 w-32 bg-white/5 rounded" />
             <div className="h-4 w-64 bg-white/5 rounded mt-2" />

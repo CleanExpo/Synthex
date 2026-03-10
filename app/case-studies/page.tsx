@@ -148,7 +148,7 @@ export default function CaseStudiesPage() {
       {/* Stats Bar */}
       <section className="pb-16 px-6">
         <div className="container mx-auto">
-          <div className="bg-[#0f172a]/80 backdrop-blur-xl border border-cyan-500/10 rounded-2xl p-8">
+          <div className="bg-surface-base/80 backdrop-blur-xl border border-cyan-500/10 rounded-2xl p-8">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
               {stats.map((stat, index) => (
                 <div key={index} className="text-center">
@@ -171,7 +171,7 @@ export default function CaseStudiesPage() {
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {featuredStudies.map((study) => (
-              <Card key={study.id} className="bg-[#0f172a]/60 backdrop-blur-xl border border-cyan-500/10 p-8 relative overflow-hidden hover:border-cyan-500/30 transition-all">
+              <Card key={study.id} className="bg-surface-base/60 backdrop-blur-xl border border-cyan-500/10 p-8 relative overflow-hidden hover:border-cyan-500/30 transition-all">
                 <div className="absolute top-4 right-4">
                   <span className="bg-cyan-500/20 text-cyan-300 text-xs px-3 py-1 rounded-full border border-cyan-500/30">
                     Featured
@@ -198,7 +198,7 @@ export default function CaseStudiesPage() {
 
                 <div className="grid grid-cols-3 gap-4 mb-6">
                   {study.results.map((result, idx) => (
-                    <div key={idx} className="text-center bg-[#0a1628]/60 border border-cyan-500/10 rounded-lg p-3">
+                    <div key={idx} className="text-center bg-surface-dark/60 border border-cyan-500/10 rounded-lg p-3">
                       <div className="text-2xl font-bold text-emerald-400">{result.metric}</div>
                       <div className="text-xs text-gray-500">{result.label}</div>
                     </div>
@@ -225,7 +225,7 @@ export default function CaseStudiesPage() {
       </section>
 
       {/* More Case Studies */}
-      <section className="py-20 px-6 bg-[#0f172a]/50 border-y border-cyan-500/10">
+      <section className="py-20 px-6 bg-surface-base/50 border-y border-cyan-500/10">
         <div className="container mx-auto">
           <h2 className="text-3xl font-bold text-center text-white mb-4">More Success Stories</h2>
           <p className="text-gray-500 text-center mb-12 max-w-2xl mx-auto">
@@ -234,7 +234,7 @@ export default function CaseStudiesPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {moreStudies.map((study) => (
-              <Card key={study.id} className="bg-[#0f172a]/60 backdrop-blur-xl border border-cyan-500/10 p-6 hover:border-cyan-500/30 transition-all cursor-pointer group">
+              <Card key={study.id} className="bg-surface-base/60 backdrop-blur-xl border border-cyan-500/10 p-6 hover:border-cyan-500/30 transition-all cursor-pointer group">
                 <div className="text-3xl mb-4">{study.logo}</div>
                 <h3 className="text-lg font-bold text-white mb-1">{study.company}</h3>
                 <p className="text-cyan-400 text-xs mb-4">{study.industry}</p>
@@ -275,7 +275,7 @@ export default function CaseStudiesPage() {
               { icon: Users, name: 'Creators', count: '5,100+' },
               { icon: Globe, name: 'Non-profits', count: '680+' },
             ].map((industry, index) => (
-              <div key={index} className="text-center bg-[#0f172a]/60 backdrop-blur-xl border border-cyan-500/10 rounded-xl p-4 hover:border-cyan-500/30 transition-all">
+              <div key={index} className="text-center bg-surface-base/60 backdrop-blur-xl border border-cyan-500/10 rounded-xl p-4 hover:border-cyan-500/30 transition-all">
                 <industry.icon className="w-8 h-8 text-cyan-400 mx-auto mb-2" />
                 <div className="text-white font-medium mb-1">{industry.name}</div>
                 <div className="text-gray-500 text-sm">{industry.count}</div>
@@ -286,13 +286,13 @@ export default function CaseStudiesPage() {
       </section>
 
       {/* Testimonials Grid */}
-      <section className="py-20 px-6 bg-[#0f172a]/50 border-y border-cyan-500/10">
+      <section className="py-20 px-6 bg-surface-base/50 border-y border-cyan-500/10">
         <div className="container mx-auto">
           <h2 className="text-3xl font-bold text-center text-white mb-12">What Our Customers Say</h2>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
             {caseStudies.slice(0, 3).map((study) => (
-              <Card key={study.id} className="bg-[#0f172a]/60 backdrop-blur-xl border border-cyan-500/10 p-6">
+              <Card key={study.id} className="bg-surface-base/60 backdrop-blur-xl border border-cyan-500/10 p-6">
                 <div className="flex gap-1 mb-4">
                   {[1, 2, 3, 4, 5].map((star) => (
                     <Star key={star} className="w-4 h-4 text-amber-400 fill-amber-400" />

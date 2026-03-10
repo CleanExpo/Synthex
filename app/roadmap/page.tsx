@@ -63,7 +63,7 @@ export default function RoadmapPage() {
 
           <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
             {quarters.map((quarter, idx) => (
-              <Card key={idx} className={`bg-[#0f172a]/80 p-6 ${
+              <Card key={idx} className={`bg-surface-base/80 p-6 ${
                 quarter.status === 'completed' ? 'border-cyan-500/50' :
                 quarter.status === 'in-progress' ? 'border-cyan-400/50 animate-pulse-glow' :
                 'border-cyan-500/10'
@@ -121,7 +121,7 @@ export default function RoadmapPage() {
           </div>
 
           <div className="mt-16">
-            <Card className="bg-[#0f172a]/80 border-cyan-500/10 p-8 text-center">
+            <Card className="bg-surface-base/80 border-cyan-500/10 p-8 text-center">
               <h2 className="text-3xl font-bold text-white mb-4">Have a Feature Request?</h2>
               <p className="text-gray-300 mb-6">
                 We're always looking for ways to improve Synthex. Share your ideas and help shape the future of our platform.

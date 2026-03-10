@@ -21,7 +21,7 @@ export default function AIImagesLoading() {
 
       <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
         {/* Generator panel skeleton */}
-        <div className="w-full lg:w-[450px] lg:border-r border-white/10 p-6 bg-[#0f172a]/30">
+        <div className="w-full lg:w-[450px] lg:border-r border-white/10 p-6 bg-surface-base/30">
           <div className="space-y-6">
             {/* Card header */}
             <div className="h-6 w-32 bg-white/5 rounded animate-pulse" />
@@ -52,7 +52,7 @@ export default function AIImagesLoading() {
         </div>
 
         {/* Gallery panel skeleton */}
-        <div className="flex-1 p-6 bg-[#0a0f1a]">
+        <div className="flex-1 p-6 bg-surface-darker">
           <div className="mb-4">
             <div className="h-6 w-40 bg-white/5 rounded animate-pulse" />
           </div>

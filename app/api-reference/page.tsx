@@ -114,7 +114,7 @@ export default function ApiReferencePage() {
         <div className="container mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {features.map((feature, index) => (
-              <Card key={index} className="bg-[#0f172a]/60 backdrop-blur-xl border border-cyan-500/10 p-6 hover:border-cyan-500/30 transition-all">
+              <Card key={index} className="bg-surface-base/60 backdrop-blur-xl border border-cyan-500/10 p-6 hover:border-cyan-500/30 transition-all">
                 <feature.icon className="w-10 h-10 text-cyan-400 mb-4" />
                 <h3 className="text-lg font-semibold text-white mb-2">{feature.title}</h3>
                 <p className="text-gray-500 text-sm">{feature.description}</p>
@@ -125,7 +125,7 @@ export default function ApiReferencePage() {
       </section>
 
       {/* API Endpoints */}
-      <section className="py-20 px-6 bg-[#0f172a]/50 border-y border-cyan-500/10">
+      <section className="py-20 px-6 bg-surface-base/50 border-y border-cyan-500/10">
         <div className="container mx-auto">
           <h2 className="text-3xl font-bold text-center text-white mb-4">API Endpoints</h2>
           <p className="text-gray-500 text-center mb-12 max-w-2xl mx-auto">
@@ -134,7 +134,7 @@ export default function ApiReferencePage() {
 
           <div className="space-y-8 max-w-4xl mx-auto">
             {apiEndpoints.map((category, index) => (
-              <Card key={index} className="bg-[#0f172a]/60 backdrop-blur-xl border border-cyan-500/10 overflow-hidden">
+              <Card key={index} className="bg-surface-base/60 backdrop-blur-xl border border-cyan-500/10 overflow-hidden">
                 <div className="flex items-center gap-3 px-6 py-4 border-b border-cyan-500/10 bg-cyan-500/5">
                   <category.icon className="w-5 h-5 text-cyan-400" />
                   <h3 className="text-lg font-semibold text-white">{category.category}</h3>
@@ -174,7 +174,7 @@ export default function ApiReferencePage() {
           </p>
 
           <div className="max-w-3xl mx-auto">
-            <Card className="bg-[#0f172a]/80 backdrop-blur-xl border border-cyan-500/10 overflow-hidden">
+            <Card className="bg-surface-base/80 backdrop-blur-xl border border-cyan-500/10 overflow-hidden">
               <div className="flex items-center gap-2 px-4 py-3 border-b border-cyan-500/10 bg-cyan-500/5">
                 <div className="w-3 h-3 rounded-full bg-red-500/80" />
                 <div className="w-3 h-3 rounded-full bg-amber-500/80" />

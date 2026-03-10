@@ -166,12 +166,12 @@ export default function AIImagesPage() {
       {/* Main content - two column layout */}
       <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
         {/* Generator panel */}
-        <div className="w-full lg:w-[450px] lg:border-r border-white/10 overflow-y-auto p-6 bg-[#0f172a]/30">
+        <div className="w-full lg:w-[450px] lg:border-r border-white/10 overflow-y-auto p-6 bg-surface-base/30">
           <ImageGenerator onGenerate={handleImageGenerated} />
         </div>
 
         {/* Gallery panel */}
-        <div className="flex-1 overflow-y-auto p-6 bg-[#0a0f1a]">
+        <div className="flex-1 overflow-y-auto p-6 bg-surface-darker">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-lg font-semibold text-white">
               Generated Images

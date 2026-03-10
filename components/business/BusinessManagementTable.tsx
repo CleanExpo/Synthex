@@ -134,7 +134,7 @@ export function BusinessManagementTable({ businesses, onSwitch, onManageAccounts
           variant="outline"
           size="sm"
           onClick={onRefresh}
-          className="bg-[#0f172a]/80 border-cyan-500/10 text-white hover:bg-cyan-500/10 hover:border-cyan-500/20"
+          className="bg-surface-base/80 border-cyan-500/10 text-white hover:bg-cyan-500/10 hover:border-cyan-500/20"
         >
           <RefreshCw className="h-4 w-4 mr-2" />
           Refresh
@@ -143,7 +143,7 @@ export function BusinessManagementTable({ businesses, onSwitch, onManageAccounts
 
       {/* Desktop Table View */}
       <div className="hidden lg:block">
-        <Card className="bg-[#0f172a]/80 backdrop-blur-xl border border-cyan-500/10 overflow-hidden">
+        <Card className="bg-surface-base/80 backdrop-blur-xl border border-cyan-500/10 overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead className="border-b border-cyan-500/10">
@@ -182,7 +182,7 @@ export function BusinessManagementTable({ businesses, onSwitch, onManageAccounts
                               onChange={(e) => setRenameValue(e.target.value)}
                               onKeyDown={(e) => { if (e.key === 'Enter') saveRename(business.id); if (e.key === 'Escape') cancelRename(); }}
                               autoFocus
-                              className="px-2 py-1 text-sm bg-[#0f172a] border border-cyan-500/30 rounded text-white focus:outline-none focus:border-cyan-500/60 w-40"
+                              className="px-2 py-1 text-sm bg-surface-base border border-cyan-500/30 rounded text-white focus:outline-none focus:border-cyan-500/60 w-40"
                               disabled={renameSaving}
                             />
                             <Button variant="ghost" size="sm" onClick={() => saveRename(business.id)} disabled={renameSaving} className="h-7 w-7 p-0 text-green-400 hover:text-green-300 hover:bg-green-500/10">
@@ -314,7 +314,7 @@ export function BusinessManagementTable({ businesses, onSwitch, onManageAccounts
         {businesses.map((business) => (
           <Card
             key={business.organizationId}
-            className="bg-[#0f172a]/80 backdrop-blur-xl border border-cyan-500/10"
+            className="bg-surface-base/80 backdrop-blur-xl border border-cyan-500/10"
           >
             <CardContent className="pt-6">
               <div className="space-y-4">
@@ -329,7 +329,7 @@ export function BusinessManagementTable({ businesses, onSwitch, onManageAccounts
                           onChange={(e) => setRenameValue(e.target.value)}
                           onKeyDown={(e) => { if (e.key === 'Enter') saveRename(business.id); if (e.key === 'Escape') cancelRename(); }}
                           autoFocus
-                          className="px-2 py-1 text-sm bg-[#0f172a] border border-cyan-500/30 rounded text-white focus:outline-none focus:border-cyan-500/60 w-full"
+                          className="px-2 py-1 text-sm bg-surface-base border border-cyan-500/30 rounded text-white focus:outline-none focus:border-cyan-500/60 w-full"
                           disabled={renameSaving}
                         />
                         <Button variant="ghost" size="sm" onClick={() => saveRename(business.id)} disabled={renameSaving} className="h-7 w-7 p-0 text-green-400 hover:text-green-300 hover:bg-green-500/10 flex-shrink-0">
@@ -459,7 +459,7 @@ export function BusinessManagementTable({ businesses, onSwitch, onManageAccounts
       </div>
 
       {businesses.length === 0 && (
-        <Card className="bg-[#0f172a]/80 backdrop-blur-xl border border-cyan-500/10">
+        <Card className="bg-surface-base/80 backdrop-blur-xl border border-cyan-500/10">
           <CardContent className="py-12 text-center">
             <p className="text-gray-400">No businesses found</p>
           </CardContent>

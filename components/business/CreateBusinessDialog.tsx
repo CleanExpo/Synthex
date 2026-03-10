@@ -101,7 +101,7 @@ export function CreateBusinessDialog({ open, onOpenChange, onCreated }: CreateBu
                 value={businessName}
                 onChange={(e) => setBusinessName(e.target.value)}
                 placeholder="Acme Corporation"
-                className="w-full px-3 py-2 bg-[#0f172a]/80 border border-cyan-500/10 rounded-lg text-white placeholder:text-gray-500 focus:outline-none focus:border-cyan-500/30 focus:ring-2 focus:ring-cyan-500/20 transition-all"
+                className="w-full px-3 py-2 bg-surface-base/80 border border-cyan-500/10 rounded-lg text-white placeholder:text-gray-500 focus:outline-none focus:border-cyan-500/30 focus:ring-2 focus:ring-cyan-500/20 transition-all"
                 disabled={isSubmitting}
                 required
               />
@@ -121,7 +121,7 @@ export function CreateBusinessDialog({ open, onOpenChange, onCreated }: CreateBu
                 value={displayLabel}
                 onChange={(e) => setDisplayLabel(e.target.value)}
                 placeholder="Acme Corp - Marketing"
-                className="w-full px-3 py-2 bg-[#0f172a]/80 border border-cyan-500/10 rounded-lg text-white placeholder:text-gray-500 focus:outline-none focus:border-cyan-500/30 focus:ring-2 focus:ring-cyan-500/20 transition-all"
+                className="w-full px-3 py-2 bg-surface-base/80 border border-cyan-500/10 rounded-lg text-white placeholder:text-gray-500 focus:outline-none focus:border-cyan-500/30 focus:ring-2 focus:ring-cyan-500/20 transition-all"
                 disabled={isSubmitting}
               />
               <p className="text-xs text-gray-500">

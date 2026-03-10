@@ -104,7 +104,7 @@ export default function GEOPage() {
         </TabsList>
 
         <TabsContent value="analyze" className="space-y-4 mt-4">
-          <Card className="bg-[#0f172a]/80 backdrop-blur-xl border border-cyan-500/10">
+          <Card className="bg-surface-base/80 backdrop-blur-xl border border-cyan-500/10">
             <CardHeader>
               <CardTitle className="text-white flex items-center gap-2">
                 <Search className="h-5 w-5 text-cyan-400" />
@@ -151,7 +151,7 @@ export default function GEOPage() {
               { icon: Target, title: 'Platform Scoring', desc: 'Google AIO, ChatGPT, Perplexity, Bing Copilot' },
               { icon: Zap, title: 'Schema Enhancement', desc: 'Dataset, SpeakableSpec, ClaimReview schemas' },
             ].map(({ icon: Icon, title, desc }) => (
-              <Card key={title} className="bg-[#0f172a]/80 border border-cyan-500/10">
+              <Card key={title} className="bg-surface-base/80 border border-cyan-500/10">
                 <CardContent className="p-4">
                   <Icon className="h-8 w-8 text-cyan-400 mb-3" />
                   <h3 className="text-white font-medium text-sm">{title}</h3>
@@ -167,7 +167,7 @@ export default function GEOPage() {
             <div className="space-y-6">
               {/* Score Overview */}
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <Card className="bg-[#0f172a]/80 border border-cyan-500/10">
+                <Card className="bg-surface-base/80 border border-cyan-500/10">
                   <CardContent className="p-6 text-center">
                     <div className="text-6xl font-bold text-white mb-2">{result.score.overall}</div>
                     <Badge className={getTier(result.score.overall).color}>
@@ -177,7 +177,7 @@ export default function GEOPage() {
                   </CardContent>
                 </Card>
                 <div className="lg:col-span-2">
-                  <Card className="bg-[#0f172a]/80 border border-cyan-500/10 h-full">
+                  <Card className="bg-surface-base/80 border border-cyan-500/10 h-full">
                     <CardContent className="p-6 space-y-3">
                       {scoreDimensions.map(({ key, label, icon: Icon, weight, color }) => (
                         <div key={key} className="flex items-center gap-3">
@@ -200,7 +200,7 @@ export default function GEOPage() {
 
               {/* Passages */}
               {result.citablePassages?.length > 0 && (
-                <Card className="bg-[#0f172a]/80 border border-cyan-500/10">
+                <Card className="bg-surface-base/80 border border-cyan-500/10">
                   <CardHeader>
                     <CardTitle className="text-white text-lg">
                       Citable Passages ({result.citablePassages.filter((p) => p.isOptimalLength).length}/{result.citablePassages.length} optimal)
@@ -228,7 +228,7 @@ export default function GEOPage() {
 
               {/* Recommendations */}
               {result.recommendations?.length > 0 && (
-                <Card className="bg-[#0f172a]/80 border border-cyan-500/10">
+                <Card className="bg-surface-base/80 border border-cyan-500/10">
                   <CardHeader>
                     <CardTitle className="text-white text-lg">Recommendations</CardTitle>
                   </CardHeader>
@@ -258,7 +258,7 @@ export default function GEOPage() {
         </TabsContent>
 
         <TabsContent value="history" className="mt-4">
-          <Card className="bg-[#0f172a]/80 border border-cyan-500/10">
+          <Card className="bg-surface-base/80 border border-cyan-500/10">
             <CardContent className="p-12 text-center text-gray-400">
               <BarChart3 className="h-12 w-12 mx-auto mb-3 opacity-30" />
               <p>Analysis history coming soon</p>

@@ -379,7 +379,7 @@ export default function SEOAuditPage() {
         description="Run comprehensive SEO audits to identify technical issues, on-page problems, and optimization opportunities."
       >
         {/* URL Input */}
-        <Card className="bg-[#0f172a]/80 backdrop-blur-xl border border-cyan-500/10">
+        <Card className="bg-surface-base/80 backdrop-blur-xl border border-cyan-500/10">
           <CardContent className="p-6">
             <div className="flex flex-col md:flex-row gap-4">
               <div className="flex-1 relative">
@@ -420,7 +420,7 @@ export default function SEOAuditPage() {
             {/* Overview */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {/* Score */}
-              <Card className="bg-[#0f172a]/80 backdrop-blur-xl border border-cyan-500/10 lg:col-span-1">
+              <Card className="bg-surface-base/80 backdrop-blur-xl border border-cyan-500/10 lg:col-span-1">
                 <CardContent className="p-6 flex flex-col items-center">
                   <ScoreGauge score={auditResult.score} />
                   <h3 className="text-lg font-semibold text-white mt-4">SEO Health Score</h3>
@@ -442,7 +442,7 @@ export default function SEOAuditPage() {
             )}
 
             {/* Detailed Issues */}
-            <Card className="bg-[#0f172a]/80 backdrop-blur-xl border border-cyan-500/10">
+            <Card className="bg-surface-base/80 backdrop-blur-xl border border-cyan-500/10">
               <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle className="text-white">Detailed Issues</CardTitle>
                 <Button

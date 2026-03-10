@@ -181,10 +181,10 @@ export function BusinessDetailsReview({
             value={details.industry}
             onValueChange={(v) => updateField('industry', v)}
           >
-            <SelectTrigger className="bg-[#0a1628]/50 border-cyan-500/20 text-white focus:border-cyan-500/50 focus:ring-cyan-500/20">
+            <SelectTrigger className="bg-surface-dark/50 border-cyan-500/20 text-white focus:border-cyan-500/50 focus:ring-cyan-500/20">
               <SelectValue placeholder="Select your industry" />
             </SelectTrigger>
-            <SelectContent className="bg-[#0f172a] border-cyan-500/20">
+            <SelectContent className="bg-surface-base border-cyan-500/20">
               {INDUSTRIES.map((ind) => (
                 <SelectItem
                   key={ind.value}
@@ -197,7 +197,7 @@ export function BusinessDetailsReview({
             </SelectContent>
           </Select>
         ) : (
-          <div className="flex items-center gap-2 p-2.5 rounded-md bg-[#0a1628]/50 border border-cyan-500/10">
+          <div className="flex items-center gap-2 p-2.5 rounded-md bg-surface-dark/50 border border-cyan-500/10">
             <Check className="w-4 h-4 text-emerald-400" />
             <span className="text-white">{industryLabel}</span>
           </div>
@@ -216,10 +216,10 @@ export function BusinessDetailsReview({
             value={details.teamSize}
             onValueChange={(v) => updateField('teamSize', v)}
           >
-            <SelectTrigger className="bg-[#0a1628]/50 border-cyan-500/20 text-white focus:border-cyan-500/50 focus:ring-cyan-500/20">
+            <SelectTrigger className="bg-surface-dark/50 border-cyan-500/20 text-white focus:border-cyan-500/50 focus:ring-cyan-500/20">
               <SelectValue placeholder="Select team size" />
             </SelectTrigger>
-            <SelectContent className="bg-[#0f172a] border-cyan-500/20">
+            <SelectContent className="bg-surface-base border-cyan-500/20">
               {TEAM_SIZES.map((size) => (
                 <SelectItem
                   key={size.value}
@@ -232,7 +232,7 @@ export function BusinessDetailsReview({
             </SelectContent>
           </Select>
         ) : (
-          <div className="flex items-center gap-2 p-2.5 rounded-md bg-[#0a1628]/50 border border-cyan-500/10">
+          <div className="flex items-center gap-2 p-2.5 rounded-md bg-surface-dark/50 border border-cyan-500/10">
             <Check className="w-4 h-4 text-emerald-400" />
             <span className="text-white">{teamSizeLabel}</span>
           </div>
@@ -252,10 +252,10 @@ export function BusinessDetailsReview({
             onChange={(e) => updateField('description', e.target.value)}
             placeholder="A brief description of your business..."
             rows={3}
-            className="w-full rounded-md bg-[#0a1628]/50 border border-cyan-500/20 text-white placeholder:text-gray-500 focus:border-cyan-500/50 focus:ring-cyan-500/20 p-2.5 text-sm resize-none"
+            className="w-full rounded-md bg-surface-dark/50 border border-cyan-500/20 text-white placeholder:text-gray-500 focus:border-cyan-500/50 focus:ring-cyan-500/20 p-2.5 text-sm resize-none"
           />
         ) : (
-          <div className="flex items-start gap-2 p-2.5 rounded-md bg-[#0a1628]/50 border border-cyan-500/10">
+          <div className="flex items-start gap-2 p-2.5 rounded-md bg-surface-dark/50 border border-cyan-500/10">
             <Check className="w-4 h-4 text-emerald-400 mt-0.5 shrink-0" />
             <span className="text-white text-sm">{details.description || 'No description'}</span>
           </div>
@@ -300,7 +300,7 @@ export function BusinessDetailsReview({
             {Object.entries(details.socialHandles).map(([platform, handle]) => (
               <div
                 key={platform}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#0a1628]/50 border border-cyan-500/10 text-sm"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-surface-dark/50 border border-cyan-500/10 text-sm"
               >
                 <span className="text-cyan-400 capitalize">{platform}</span>
                 <span className="text-gray-400">{handle}</span>

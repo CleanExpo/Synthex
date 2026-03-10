@@ -106,7 +106,7 @@ export default function AuthorsPage() {
 
       {/* Create Form */}
       {showCreate && (
-        <Card className="bg-[#0f172a]/80 border border-cyan-500/10">
+        <Card className="bg-surface-base/80 border border-cyan-500/10">
           <CardContent className="p-6 space-y-4">
             <input
               value={newAuthor.name}
@@ -140,7 +140,7 @@ export default function AuthorsPage() {
       {loading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {[1, 2].map(i => (
-            <Card key={i} className="bg-[#0f172a]/80 border border-cyan-500/10">
+            <Card key={i} className="bg-surface-base/80 border border-cyan-500/10">
               <CardContent className="p-6 animate-pulse space-y-3">
                 <div className="h-6 bg-white/10 rounded w-1/3" />
                 <div className="h-4 bg-white/10 rounded w-full" />
@@ -150,7 +150,7 @@ export default function AuthorsPage() {
           ))}
         </div>
       ) : authors.length === 0 ? (
-        <Card className="bg-[#0f172a]/80 border border-cyan-500/10">
+        <Card className="bg-surface-base/80 border border-cyan-500/10">
           <CardContent className="p-12 text-center text-gray-400">
             <Users className="h-12 w-12 mx-auto mb-3 opacity-30" />
             <p>No author profiles yet</p>
@@ -160,7 +160,7 @@ export default function AuthorsPage() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {authors.map((author) => (
-            <Card key={author.id} className="bg-[#0f172a]/80 border border-cyan-500/10 hover:border-cyan-500/30 transition-all">
+            <Card key={author.id} className="bg-surface-base/80 border border-cyan-500/10 hover:border-cyan-500/30 transition-all">
               <CardContent className="p-6">
                 <div className="flex items-start justify-between mb-3">
                   <div>

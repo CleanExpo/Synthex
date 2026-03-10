@@ -61,7 +61,7 @@ export default function ForgotPasswordPage() {
 
   if (isSubmitted) {
     return (
-      <div className="min-h-screen bg-[#0a1628] flex items-center justify-center p-4 relative overflow-hidden">
+      <div className="min-h-screen bg-surface-dark flex items-center justify-center p-4 relative overflow-hidden">
         {/* Deep Navy Gradient Background */}
         <div className="fixed inset-0 bg-gradient-to-br from-[#0a1628] via-[#0f172a] to-[#0a1628]" />
 
@@ -76,7 +76,7 @@ export default function ForgotPasswordPage() {
         <div className="fixed top-1/4 left-1/4 w-96 h-96 bg-cyan-500/5 rounded-full blur-[150px] pointer-events-none" />
         <div className="fixed bottom-1/4 right-1/4 w-96 h-96 bg-cyan-400/5 rounded-full blur-[150px] pointer-events-none" />
 
-        <Card className="relative z-10 w-full max-w-md bg-[#0f172a]/80 backdrop-blur-xl border border-cyan-500/10 shadow-2xl shadow-cyan-500/5">
+        <Card className="relative z-10 w-full max-w-md bg-surface-base/80 backdrop-blur-xl border border-cyan-500/10 shadow-2xl shadow-cyan-500/5">
           <CardHeader className="text-center">
             <div className="mx-auto mb-4 w-12 h-12 bg-green-500/10 rounded-full flex items-center justify-center border border-green-500/20">
               <CheckCircle className="h-6 w-6 text-green-400" />
@@ -131,7 +131,7 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0a1628] flex items-center justify-center p-4 relative overflow-hidden">
+    <div className="min-h-screen bg-surface-dark flex items-center justify-center p-4 relative overflow-hidden">
       {/* Deep Navy Gradient Background */}
       <div className="fixed inset-0 bg-gradient-to-br from-[#0a1628] via-[#0f172a] to-[#0a1628]" />
 
@@ -146,7 +146,7 @@ export default function ForgotPasswordPage() {
       <div className="fixed top-1/4 left-1/4 w-96 h-96 bg-cyan-500/5 rounded-full blur-[150px] pointer-events-none" />
       <div className="fixed bottom-1/4 right-1/4 w-96 h-96 bg-cyan-400/5 rounded-full blur-[150px] pointer-events-none" />
 
-      <Card className="relative z-10 w-full max-w-md bg-[#0f172a]/80 backdrop-blur-xl border border-cyan-500/10 shadow-2xl shadow-cyan-500/5">
+      <Card className="relative z-10 w-full max-w-md bg-surface-base/80 backdrop-blur-xl border border-cyan-500/10 shadow-2xl shadow-cyan-500/5">
         <CardHeader>
           <Link
             href="/login"
@@ -188,7 +188,7 @@ export default function ForgotPasswordPage() {
                   placeholder="name@example.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="pl-10 bg-[#0a1628]/50 border-cyan-500/20 focus:border-cyan-500/50 focus:ring-cyan-500/20 text-white placeholder:text-gray-500"
+                  className="pl-10 bg-surface-dark/50 border-cyan-500/20 focus:border-cyan-500/50 focus:ring-cyan-500/20 text-white placeholder:text-gray-500"
                   required
                   disabled={isLoading}
                 />

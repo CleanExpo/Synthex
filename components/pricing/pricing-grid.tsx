@@ -129,7 +129,7 @@ function PlanCard({ plan, billing }: { plan: Plan; billing: BillingCycle }) {
   return (
     <Card
       variant={plan.popular ? 'glass-primary' : 'glass'}
-      className={`p-8 relative bg-[#0f172a]/80 backdrop-blur-sm border border-cyan-500/10 hover:border-cyan-500/30 transition-all duration-300 ${
+      className={`p-8 relative bg-surface-base/80 backdrop-blur-sm border border-cyan-500/10 hover:border-cyan-500/30 transition-all duration-300 ${
         plan.popular ? 'scale-105 border-cyan-500/30 shadow-lg shadow-cyan-500/10' : ''
       }`}
     >
@@ -177,7 +177,7 @@ function PlanCard({ plan, billing }: { plan: Plan; billing: BillingCycle }) {
       {plan.isFree && plan.ctaHref ? (
         <Link href={plan.ctaHref} className="block">
           <Button
-            className="w-full bg-[#0a1628] border border-cyan-500/20 text-gray-300 hover:bg-cyan-500/10 hover:text-cyan-400 hover:border-cyan-500/40 transition-all duration-300"
+            className="w-full bg-surface-dark border border-cyan-500/20 text-gray-300 hover:bg-cyan-500/10 hover:text-cyan-400 hover:border-cyan-500/40 transition-all duration-300"
             size="lg"
           >
             {plan.ctaLabel}
@@ -186,7 +186,7 @@ function PlanCard({ plan, billing }: { plan: Plan; billing: BillingCycle }) {
       ) : plan.isCustom && plan.ctaHref ? (
         <Link href={plan.ctaHref} className="block">
           <Button
-            className="w-full bg-[#0a1628] border border-cyan-500/20 text-gray-300 hover:bg-cyan-500/10 hover:text-cyan-400 hover:border-cyan-500/40 transition-all duration-300"
+            className="w-full bg-surface-dark border border-cyan-500/20 text-gray-300 hover:bg-cyan-500/10 hover:text-cyan-400 hover:border-cyan-500/40 transition-all duration-300"
             size="lg"
           >
             Contact Sales
@@ -198,7 +198,7 @@ function PlanCard({ plan, billing }: { plan: Plan; billing: BillingCycle }) {
           className={`w-full ${
             plan.popular
               ? 'bg-gradient-to-r from-cyan-500 to-cyan-600 hover:from-cyan-400 hover:to-cyan-500 text-white shadow-lg shadow-cyan-500/25 hover:shadow-cyan-500/40'
-              : 'bg-[#0a1628] border border-cyan-500/20 text-gray-300 hover:bg-cyan-500/10 hover:text-cyan-400 hover:border-cyan-500/40'
+              : 'bg-surface-dark border border-cyan-500/20 text-gray-300 hover:bg-cyan-500/10 hover:text-cyan-400 hover:border-cyan-500/40'
           } transition-all duration-300`}
         >
           {plan.ctaLabel}

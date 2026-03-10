@@ -32,7 +32,7 @@ function formatVitalValue(key: string, value: number): string {
 
 export function CoreWebVitalsCard({ vitals }: CoreWebVitalsCardProps) {
   return (
-    <Card className="bg-[#0f172a]/80 backdrop-blur-xl border border-cyan-500/10">
+    <Card className="bg-surface-base/80 backdrop-blur-xl border border-cyan-500/10">
       <CardHeader>
         <CardTitle className="text-white flex items-center gap-2">
           <TrendingUp className="w-5 h-5 text-cyan-400" />

@@ -63,10 +63,10 @@ export default function BusinessesPage() {
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="h-32 bg-[#0f172a]/80 border border-cyan-500/10 rounded-xl animate-pulse" />
+            <div key={i} className="h-32 bg-surface-base/80 border border-cyan-500/10 rounded-xl animate-pulse" />
           ))}
         </div>
-        <div className="h-96 bg-[#0f172a]/80 border border-cyan-500/10 rounded-xl animate-pulse" />
+        <div className="h-96 bg-surface-base/80 border border-cyan-500/10 rounded-xl animate-pulse" />
       </div>
     );
   }
@@ -75,7 +75,7 @@ export default function BusinessesPage() {
   if (!user?.isMultiBusinessOwner) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <Card className="max-w-md bg-[#0f172a]/80 border border-cyan-500/10">
+        <Card className="max-w-md bg-surface-base/80 border border-cyan-500/10">
           <CardContent className="p-8 text-center space-y-4">
             <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mx-auto">
               <Building className="w-8 h-8 text-red-400" />
@@ -125,13 +125,13 @@ export default function BusinessesPage() {
       {overviewLoading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="h-32 bg-[#0f172a]/80 border border-cyan-500/10 rounded-xl animate-pulse" />
+            <div key={i} className="h-32 bg-surface-base/80 border border-cyan-500/10 rounded-xl animate-pulse" />
           ))}
         </div>
       ) : overview ? (
         <BusinessOverviewCards overview={overview} />
       ) : (
-        <Card className="bg-[#0f172a]/80 border border-cyan-500/10">
+        <Card className="bg-surface-base/80 border border-cyan-500/10">
           <CardContent className="p-8 text-center">
             <p className="text-gray-400">No overview data available</p>
           </CardContent>

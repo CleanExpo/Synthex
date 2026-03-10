@@ -59,7 +59,7 @@ export function WebsiteAnalyzer({ url, onUrlChange, status, error }: WebsiteAnal
           value={url}
           onChange={(e) => onUrlChange(e.target.value)}
           disabled={status === 'loading'}
-          className="pl-10 bg-[#0a1628]/50 border-cyan-500/20 text-white placeholder:text-gray-500 focus:border-cyan-500/50 focus:ring-cyan-500/20 disabled:opacity-50"
+          className="pl-10 bg-surface-dark/50 border-cyan-500/20 text-white placeholder:text-gray-500 focus:border-cyan-500/50 focus:ring-cyan-500/20 disabled:opacity-50"
         />
       </div>
 

@@ -204,7 +204,7 @@ function MetricCard({
   iconColour?: string;
 }) {
   return (
-    <Card className="bg-[#0f172a]/80 border border-cyan-500/10">
+    <Card className="bg-surface-base/80 border border-cyan-500/10">
       <CardContent className="p-5">
         <div className="flex items-start justify-between">
           <div>
@@ -352,7 +352,7 @@ export default function LocalPage() {
           {/* ========== OVERVIEW TAB ========== */}
           <TabsContent value="overview" className="space-y-6 mt-6">
             {/* Rating highlight */}
-            <Card className="bg-[#0f172a]/80 border border-cyan-500/10">
+            <Card className="bg-surface-base/80 border border-cyan-500/10">
               <CardContent className="p-6">
                 <div className="flex items-center gap-4">
                   <div className="text-4xl font-bold text-white">
@@ -442,7 +442,7 @@ export default function LocalPage() {
               {filteredReviews.map((review) => (
                 <Card
                   key={review.id}
-                  className="bg-[#0f172a]/80 border border-cyan-500/10"
+                  className="bg-surface-base/80 border border-cyan-500/10"
                 >
                   <CardContent className="p-5">
                     <div className="flex items-start justify-between mb-3">
@@ -507,7 +507,7 @@ export default function LocalPage() {
               ))}
 
               {filteredReviews.length === 0 && (
-                <Card className="bg-[#0f172a]/80 border border-cyan-500/10">
+                <Card className="bg-surface-base/80 border border-cyan-500/10">
                   <CardContent className="p-12 text-center text-gray-400">
                     <Star className="h-10 w-10 mx-auto mb-3 opacity-30" />
                     <p>No reviews match this filter</p>
@@ -520,7 +520,7 @@ export default function LocalPage() {
           {/* ========== INSIGHTS TAB ========== */}
           <TabsContent value="insights" className="space-y-6 mt-6">
             {/* Views line chart */}
-            <Card className="bg-[#0f172a]/80 border border-cyan-500/10">
+            <Card className="bg-surface-base/80 border border-cyan-500/10">
               <CardHeader>
                 <CardTitle className="text-lg text-white flex items-center gap-2">
                   <Eye className="h-5 w-5 text-cyan-400" />
@@ -565,7 +565,7 @@ export default function LocalPage() {
             </Card>
 
             {/* Actions bar chart */}
-            <Card className="bg-[#0f172a]/80 border border-cyan-500/10">
+            <Card className="bg-surface-base/80 border border-cyan-500/10">
               <CardHeader>
                 <CardTitle className="text-lg text-white flex items-center gap-2">
                   <BarChart3 className="h-5 w-5 text-cyan-400" />
@@ -621,7 +621,7 @@ export default function LocalPage() {
 
           {/* ========== RANKINGS TAB ========== */}
           <TabsContent value="rankings" className="space-y-6 mt-6">
-            <Card className="bg-[#0f172a]/80 border border-cyan-500/10">
+            <Card className="bg-surface-base/80 border border-cyan-500/10">
               <CardHeader>
                 <CardTitle className="text-lg text-white flex items-center gap-2">
                   <Search className="h-5 w-5 text-cyan-400" />
@@ -694,7 +694,7 @@ export default function LocalPage() {
               {MOCK_POSTS.map((post) => (
                 <Card
                   key={post.id}
-                  className="bg-[#0f172a]/80 border border-cyan-500/10 hover:border-cyan-500/20 transition-all"
+                  className="bg-surface-base/80 border border-cyan-500/10 hover:border-cyan-500/20 transition-all"
                 >
                   <CardContent className="p-5">
                     {/* Image placeholder */}
@@ -744,7 +744,7 @@ export default function LocalPage() {
             {caseStudiesLoading ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {[1, 2].map((i) => (
-                  <Card key={i} className="bg-[#0f172a]/80 border border-cyan-500/10">
+                  <Card key={i} className="bg-surface-base/80 border border-cyan-500/10">
                     <CardContent className="p-6 animate-pulse space-y-3">
                       <div className="h-6 bg-white/10 rounded w-2/3" />
                       <div className="h-4 bg-white/10 rounded w-full" />
@@ -753,7 +753,7 @@ export default function LocalPage() {
                 ))}
               </div>
             ) : caseStudies.length === 0 ? (
-              <Card className="bg-[#0f172a]/80 border border-cyan-500/10">
+              <Card className="bg-surface-base/80 border border-cyan-500/10">
                 <CardContent className="p-12 text-center text-gray-400">
                   <Map className="h-12 w-12 mx-auto mb-3 opacity-30" />
                   <p>No case studies yet</p>
@@ -767,7 +767,7 @@ export default function LocalPage() {
                 {caseStudies.map((cs) => (
                   <Card
                     key={cs.id}
-                    className="bg-[#0f172a]/80 border border-cyan-500/10 hover:border-cyan-500/30 transition-all"
+                    className="bg-surface-base/80 border border-cyan-500/10 hover:border-cyan-500/30 transition-all"
                   >
                     <CardContent className="p-6">
                       <div className="flex items-start justify-between mb-3">

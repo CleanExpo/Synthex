@@ -33,7 +33,7 @@ ${JSON.stringify(schema, null, 2)}
   };
 
   return (
-    <Card className="bg-[#0f172a]/80 backdrop-blur-xl border border-cyan-500/10">
+    <Card className="bg-surface-base/80 backdrop-blur-xl border border-cyan-500/10">
       <CardHeader className="flex flex-row items-center justify-between">
         <div>
           <CardTitle className="text-white">Generated Schema</CardTitle>

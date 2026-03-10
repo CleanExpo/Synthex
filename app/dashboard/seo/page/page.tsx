@@ -147,7 +147,7 @@ export default function PageAnalysisPage() {
         description="Analyze individual pages for meta tags, content quality, schema markup, and optimization opportunities."
       >
         {/* URL Input */}
-        <Card className="bg-[#0f172a]/80 backdrop-blur-xl border border-cyan-500/10">
+        <Card className="bg-surface-base/80 backdrop-blur-xl border border-cyan-500/10">
           <CardContent className="p-6">
             <div className="flex flex-col md:flex-row gap-4">
               <div className="flex-1 relative">
@@ -181,7 +181,7 @@ export default function PageAnalysisPage() {
           <div className="space-y-6">
             {/* Score Overview */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <Card className="bg-[#0f172a]/80 backdrop-blur-xl border border-cyan-500/10">
+              <Card className="bg-surface-base/80 backdrop-blur-xl border border-cyan-500/10">
                 <CardContent className="p-6 text-center">
                   <div className={`text-4xl font-bold mb-1 ${
                     result.score >= 80 ? 'text-green-400' : result.score >= 50 ? 'text-yellow-400' : 'text-red-400'
@@ -191,19 +191,19 @@ export default function PageAnalysisPage() {
                   <p className="text-gray-400 text-sm">Overall Score</p>
                 </CardContent>
               </Card>
-              <Card className="bg-[#0f172a]/80 backdrop-blur-xl border border-cyan-500/10">
+              <Card className="bg-surface-base/80 backdrop-blur-xl border border-cyan-500/10">
                 <CardContent className="p-6 text-center">
                   <div className="text-2xl font-bold text-white mb-1">{result.content.wordCount}</div>
                   <p className="text-gray-400 text-sm">Words</p>
                 </CardContent>
               </Card>
-              <Card className="bg-[#0f172a]/80 backdrop-blur-xl border border-cyan-500/10">
+              <Card className="bg-surface-base/80 backdrop-blur-xl border border-cyan-500/10">
                 <CardContent className="p-6 text-center">
                   <div className="text-2xl font-bold text-white mb-1">{result.images.total}</div>
                   <p className="text-gray-400 text-sm">Images</p>
                 </CardContent>
               </Card>
-              <Card className="bg-[#0f172a]/80 backdrop-blur-xl border border-cyan-500/10">
+              <Card className="bg-surface-base/80 backdrop-blur-xl border border-cyan-500/10">
                 <CardContent className="p-6 text-center">
                   <div className="text-2xl font-bold text-white mb-1">{result.links.internal + result.links.external}</div>
                   <p className="text-gray-400 text-sm">Links</p>
@@ -212,7 +212,7 @@ export default function PageAnalysisPage() {
             </div>
 
             {/* Meta Tags */}
-            <Card className="bg-[#0f172a]/80 backdrop-blur-xl border border-cyan-500/10">
+            <Card className="bg-surface-base/80 backdrop-blur-xl border border-cyan-500/10">
               <CardHeader>
                 <CardTitle className="text-white flex items-center gap-2">
                   <FileText className="w-5 h-5 text-cyan-400" />
@@ -254,7 +254,7 @@ export default function PageAnalysisPage() {
             </Card>
 
             {/* Heading Structure */}
-            <Card className="bg-[#0f172a]/80 backdrop-blur-xl border border-cyan-500/10">
+            <Card className="bg-surface-base/80 backdrop-blur-xl border border-cyan-500/10">
               <CardHeader>
                 <CardTitle className="text-white flex items-center gap-2">
                   <Type className="w-5 h-5 text-cyan-400" />
@@ -292,7 +292,7 @@ export default function PageAnalysisPage() {
 
             {/* Images & Links */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Card className="bg-[#0f172a]/80 backdrop-blur-xl border border-cyan-500/10">
+              <Card className="bg-surface-base/80 backdrop-blur-xl border border-cyan-500/10">
                 <CardHeader>
                   <CardTitle className="text-white flex items-center gap-2">
                     <Image className="w-5 h-5 text-cyan-400" />
@@ -313,7 +313,7 @@ export default function PageAnalysisPage() {
                 </CardContent>
               </Card>
 
-              <Card className="bg-[#0f172a]/80 backdrop-blur-xl border border-cyan-500/10">
+              <Card className="bg-surface-base/80 backdrop-blur-xl border border-cyan-500/10">
                 <CardHeader>
                   <CardTitle className="text-white flex items-center gap-2">
                     <LinkIcon className="w-5 h-5 text-cyan-400" />
@@ -334,7 +334,7 @@ export default function PageAnalysisPage() {
             </div>
 
             {/* Schema Detection */}
-            <Card className="bg-[#0f172a]/80 backdrop-blur-xl border border-cyan-500/10">
+            <Card className="bg-surface-base/80 backdrop-blur-xl border border-cyan-500/10">
               <CardHeader>
                 <CardTitle className="text-white flex items-center gap-2">
                   <Code className="w-5 h-5 text-cyan-400" />

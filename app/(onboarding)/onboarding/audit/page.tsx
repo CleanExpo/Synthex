@@ -255,7 +255,7 @@ export default function OnboardingAuditPage() {
             onKeyDown={(e) => e.key === 'Enter' && !loading && runAudit()}
             placeholder="https://yoursite.com.au"
             type="url"
-            className="bg-[#0a1628]/50 border border-cyan-500/20 text-white placeholder:text-gray-600 focus:border-cyan-500/50 focus:ring-cyan-500/20 flex-1"
+            className="bg-surface-dark/50 border border-cyan-500/20 text-white placeholder:text-gray-600 focus:border-cyan-500/50 focus:ring-cyan-500/20 flex-1"
             disabled={loading}
           />
           <Button
@@ -273,7 +273,7 @@ export default function OnboardingAuditPage() {
 
         {/* Loading state */}
         {loading && (
-          <div className="mt-4 p-4 rounded-xl bg-[#0f172a]/80 border border-cyan-500/10 backdrop-blur-sm flex items-center gap-3">
+          <div className="mt-4 p-4 rounded-xl bg-surface-base/80 border border-cyan-500/10 backdrop-blur-sm flex items-center gap-3">
             <Loader2 className="w-4 h-4 text-cyan-400 animate-spin shrink-0" />
             <p className="text-sm text-cyan-400">{loadingStage}</p>
           </div>
@@ -292,7 +292,7 @@ export default function OnboardingAuditPage() {
       {result && (
         <div className="max-w-lg mx-auto space-y-4">
           {/* Overall health + summary */}
-          <div className="p-5 rounded-xl bg-[#0f172a]/80 border border-cyan-500/10 backdrop-blur-sm space-y-3">
+          <div className="p-5 rounded-xl bg-surface-base/80 border border-cyan-500/10 backdrop-blur-sm space-y-3">
             <div className="flex items-center justify-between">
               <h2 className="text-sm font-semibold text-white">Overall Marketing Health</h2>
               {badge && (
@@ -305,7 +305,7 @@ export default function OnboardingAuditPage() {
           </div>
 
           {/* SEO Signals */}
-          <div className="p-5 rounded-xl bg-[#0f172a]/80 border border-cyan-500/10 backdrop-blur-sm space-y-3">
+          <div className="p-5 rounded-xl bg-surface-base/80 border border-cyan-500/10 backdrop-blur-sm space-y-3">
             <div className="flex items-center justify-between mb-1">
               <h2 className="text-sm font-semibold text-white flex items-center gap-1.5">
                 <Search className="w-4 h-4 text-cyan-400" />
@@ -339,7 +339,7 @@ export default function OnboardingAuditPage() {
           </div>
 
           {/* Page Speed */}
-          <div className="p-5 rounded-xl bg-[#0f172a]/80 border border-cyan-500/10 backdrop-blur-sm">
+          <div className="p-5 rounded-xl bg-surface-base/80 border border-cyan-500/10 backdrop-blur-sm">
             <h2 className="text-sm font-semibold text-white flex items-center gap-1.5 mb-3">
               <Zap className="w-4 h-4 text-cyan-400" />
               Page Speed
@@ -351,7 +351,7 @@ export default function OnboardingAuditPage() {
           </div>
 
           {/* AI Insights */}
-          <div className="p-5 rounded-xl bg-[#0f172a]/80 border border-cyan-500/10 backdrop-blur-sm space-y-4">
+          <div className="p-5 rounded-xl bg-surface-base/80 border border-cyan-500/10 backdrop-blur-sm space-y-4">
             <h2 className="text-sm font-semibold text-white flex items-center gap-1.5">
               <TrendingUp className="w-4 h-4 text-cyan-400" />
               Marketing Insights

@@ -179,7 +179,7 @@ function PlatformRow({
             placeholder={platform.placeholder}
             type="url"
             className={cn(
-              'bg-[#0a1628]/50 border text-white placeholder:text-gray-600 text-sm',
+              'bg-surface-dark/50 border text-white placeholder:text-gray-600 text-sm',
               verified === true
                 ? 'border-green-500/40 focus:border-green-500/60'
                 : verified === false

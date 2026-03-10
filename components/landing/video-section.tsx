@@ -43,7 +43,7 @@ export function VideoSection() {
 
         {/* Main Platform Overview Video */}
         <div className="max-w-4xl mx-auto mb-12">
-          <div className="relative rounded-2xl overflow-hidden border border-cyan-500/20 bg-[#0f172a]/80 shadow-2xl shadow-cyan-500/10">
+          <div className="relative rounded-2xl overflow-hidden border border-cyan-500/20 bg-surface-base/80 shadow-2xl shadow-cyan-500/10">
             <div className="aspect-video">
               <iframe
                 src="https://www.youtube.com/embed/7rRHU8xS-kU"
@@ -66,7 +66,7 @@ export function VideoSection() {
           {FEATURE_VIDEOS.map((video, i) => (
             <div
               key={i}
-              className="relative group rounded-2xl overflow-hidden border border-cyan-500/10 bg-[#0f172a]/60 hover:border-cyan-500/30 transition-all"
+              className="relative group rounded-2xl overflow-hidden border border-cyan-500/10 bg-surface-base/60 hover:border-cyan-500/30 transition-all"
             >
               <div className="aspect-video">
                 <iframe

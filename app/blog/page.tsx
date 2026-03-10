@@ -148,7 +148,7 @@ export default function BlogPage() {
                 placeholder="Search articles..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full px-6 py-4 bg-[#0f172a]/80 backdrop-blur-md border border-cyan-500/20 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-cyan-400/50 transition-colors"
+                className="w-full px-6 py-4 bg-surface-base/80 backdrop-blur-md border border-cyan-500/20 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-cyan-400/50 transition-colors"
               />
               <button className="absolute right-2 top-1/2 transform -translate-y-1/2 p-2">
                 <svg className="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -167,7 +167,7 @@ export default function BlogPage() {
                 className={`px-4 py-2 rounded-full transition-all ${
                   selectedCategory === category
                     ? 'bg-gradient-to-r from-cyan-500 to-cyan-600 text-white shadow-lg shadow-cyan-500/25'
-                    : 'bg-[#0f172a]/60 text-gray-400 hover:bg-[#0f172a] hover:text-cyan-400 border border-cyan-500/10'
+                    : 'bg-surface-base/60 text-gray-400 hover:bg-surface-base hover:text-cyan-400 border border-cyan-500/10'
                 }`}
               >
                 {category}
@@ -181,7 +181,7 @@ export default function BlogPage() {
       {featuredPost && selectedCategory === 'All' && !searchTerm && (
         <section className="px-6 pb-12">
           <div className="container mx-auto">
-            <Card className="bg-[#0f172a]/80 backdrop-blur-md border border-cyan-500/20 p-8 hover:border-cyan-400/40 hover:shadow-xl hover:shadow-cyan-500/10 transition-all">
+            <Card className="bg-surface-base/80 backdrop-blur-md border border-cyan-500/20 p-8 hover:border-cyan-400/40 hover:shadow-xl hover:shadow-cyan-500/10 transition-all">
               <div className="grid md:grid-cols-2 gap-8">
                 <div className="bg-gradient-to-br from-cyan-500/20 to-cyan-600/10 rounded-xl h-64 md:h-full flex items-center justify-center border border-cyan-500/10">
                   <Brain className="w-24 h-24 text-cyan-400/50" />
@@ -236,7 +236,7 @@ export default function BlogPage() {
           ) : (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredPosts.map((post) => (
-                <Card key={post.id} className="bg-[#0f172a]/80 backdrop-blur-md border border-cyan-500/20 p-6 hover:border-cyan-400/40 hover:shadow-xl hover:shadow-cyan-500/10 hover:transform hover:scale-[1.02] transition-all">
+                <Card key={post.id} className="bg-surface-base/80 backdrop-blur-md border border-cyan-500/20 p-6 hover:border-cyan-400/40 hover:shadow-xl hover:shadow-cyan-500/10 hover:transform hover:scale-[1.02] transition-all">
                   <div className="bg-gradient-to-br from-cyan-500/10 to-cyan-600/5 rounded-lg h-48 mb-4 flex items-center justify-center border border-cyan-500/10">
                     {post.category === 'Developer Tools' && <Code className="w-16 h-16 text-cyan-400/50" />}
                     {post.category === 'AI Trends' && <Brain className="w-16 h-16 text-cyan-400/50" />}
@@ -273,7 +273,7 @@ export default function BlogPage() {
       {/* Newsletter Section */}
       <section className="px-6 pb-20">
         <div className="container mx-auto">
-          <Card className="bg-[#0f172a]/80 backdrop-blur-md border border-cyan-500/20 p-12 text-center">
+          <Card className="bg-surface-base/80 backdrop-blur-md border border-cyan-500/20 p-12 text-center">
             <h2 className="text-3xl font-bold text-white mb-4">
               Stay Updated with AI Marketing Insights
             </h2>
@@ -284,7 +284,7 @@ export default function BlogPage() {
               <input
                 type="email"
                 placeholder="Enter your email"
-                className="flex-1 px-4 py-3 bg-[#0a1628]/80 border border-cyan-500/20 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-cyan-400/50 transition-colors"
+                className="flex-1 px-4 py-3 bg-surface-dark/80 border border-cyan-500/20 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-cyan-400/50 transition-colors"
               />
               <Button className="bg-gradient-to-r from-cyan-500 to-cyan-600 hover:from-cyan-400 hover:to-cyan-500 text-white px-6 shadow-lg shadow-cyan-500/25 transition-all hover:shadow-cyan-500/40">
                 Subscribe

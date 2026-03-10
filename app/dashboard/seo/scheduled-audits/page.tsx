@@ -156,7 +156,7 @@ function ScheduledSitesTab({
     <div className="space-y-6">
       {/* Add Site Form */}
       {showForm ? (
-        <Card className="bg-[#0f172a]/80 backdrop-blur-xl border border-cyan-500/20">
+        <Card className="bg-surface-base/80 backdrop-blur-xl border border-cyan-500/20">
           <CardContent className="p-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold text-white">Add New Site</h3>
@@ -241,7 +241,7 @@ function ScheduledSitesTab({
 
       {/* Targets List */}
       {targets.length === 0 ? (
-        <Card className="bg-[#0f172a]/80 backdrop-blur-xl border border-cyan-500/10">
+        <Card className="bg-surface-base/80 backdrop-blur-xl border border-cyan-500/10">
           <CardContent className="p-12 text-center">
             <Calendar className="w-12 h-12 text-gray-600 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-white mb-2">No scheduled audits yet</h3>
@@ -257,7 +257,7 @@ function ScheduledSitesTab({
           {targets.map((target) => {
             const freqBadge = getFrequencyBadge(target.frequency);
             return (
-              <Card key={target.id} className="bg-[#0f172a]/80 backdrop-blur-xl border border-cyan-500/10 hover:border-cyan-500/30 transition-all">
+              <Card key={target.id} className="bg-surface-base/80 backdrop-blur-xl border border-cyan-500/10 hover:border-cyan-500/30 transition-all">
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4">
@@ -368,7 +368,7 @@ function AuditHistoryTab({
 
       {/* Trends Chart */}
       {selectedUrl && trends.length > 0 && (
-        <Card className="bg-[#0f172a]/80 backdrop-blur-xl border border-cyan-500/10">
+        <Card className="bg-surface-base/80 backdrop-blur-xl border border-cyan-500/10">
           <CardContent className="p-6">
             <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
               <Activity className="w-5 h-5 text-cyan-400" />
@@ -419,7 +419,7 @@ function AuditHistoryTab({
       )}
 
       {/* History Table */}
-      <Card className="bg-[#0f172a]/80 backdrop-blur-xl border border-cyan-500/10">
+      <Card className="bg-surface-base/80 backdrop-blur-xl border border-cyan-500/10">
         <CardContent className="p-6">
           <h3 className="text-lg font-semibold text-white mb-4">Audit History</h3>
           {history.length === 0 ? (
@@ -502,7 +502,7 @@ function AlertsTab({
 
   if (regressions.length === 0) {
     return (
-      <Card className="bg-[#0f172a]/80 backdrop-blur-xl border border-cyan-500/10">
+      <Card className="bg-surface-base/80 backdrop-blur-xl border border-cyan-500/10">
         <CardContent className="p-12 text-center">
           <CheckCircle className="w-12 h-12 text-emerald-400 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-white mb-2">No regressions detected</h3>
@@ -517,7 +517,7 @@ function AlertsTab({
       {regressions.map((regression) => (
         <Card
           key={regression.id}
-          className={`bg-[#0f172a]/80 backdrop-blur-xl border ${
+          className={`bg-surface-base/80 backdrop-blur-xl border ${
             regression.severity === 'critical' ? 'border-red-500/30' : 'border-amber-500/30'
           }`}
         >

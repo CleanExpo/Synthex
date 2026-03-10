@@ -114,7 +114,7 @@ export default function CompetitorPagesPage() {
         description="Create SEO-optimized 'X vs Y' comparisons and 'alternatives to X' pages with structured data and keyword targeting."
       >
         {/* Input */}
-        <Card className="bg-[#0f172a]/80 backdrop-blur-xl border border-cyan-500/10">
+        <Card className="bg-surface-base/80 backdrop-blur-xl border border-cyan-500/10">
           <CardContent className="p-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
               <div>
@@ -155,7 +155,7 @@ export default function CompetitorPagesPage() {
         {results.length > 0 && (
           <div className="space-y-6">
             {results.map((page, index) => (
-              <Card key={index} className="bg-[#0f172a]/80 backdrop-blur-xl border border-cyan-500/10">
+              <Card key={index} className="bg-surface-base/80 backdrop-blur-xl border border-cyan-500/10">
                 <CardHeader>
                   <div className="flex items-start justify-between">
                     <div>

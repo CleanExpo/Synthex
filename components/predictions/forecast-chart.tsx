@@ -89,7 +89,7 @@ function ForecastTooltip({ active, payload, label }: CustomTooltipProps) {
   const upperBound = lowerBound + bandWidth;
 
   return (
-    <div className="rounded-lg bg-[#0f172a]/90 border border-white/10 px-3 py-2 shadow-xl text-xs">
+    <div className="rounded-lg bg-surface-base/90 border border-white/10 px-3 py-2 shadow-xl text-xs">
       <p className="text-slate-400 mb-1">{label}</p>
       <p className="text-cyan-400 font-medium">
         Predicted: <span className="text-white">{predicted.toLocaleString()}</span>

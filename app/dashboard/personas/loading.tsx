@@ -20,7 +20,7 @@ export default function PersonasLoading() {
       {/* Two-column layout */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Personas List */}
-        <Card className="bg-[#0f172a]/80 border border-cyan-500/10">
+        <Card className="bg-surface-base/80 border border-cyan-500/10">
           <CardHeader>
             <div className="h-6 w-32 bg-white/5 rounded" />
           </CardHeader>
@@ -39,7 +39,7 @@ export default function PersonasLoading() {
         </Card>
 
         {/* Persona Detail */}
-        <Card className="lg:col-span-2 bg-[#0f172a]/80 border border-cyan-500/10">
+        <Card className="lg:col-span-2 bg-surface-base/80 border border-cyan-500/10">
           <CardHeader>
             <div className="flex items-center gap-4">
               <div className="w-16 h-16 bg-white/5 rounded-full" />

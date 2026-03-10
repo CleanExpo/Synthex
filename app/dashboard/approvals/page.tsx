@@ -252,7 +252,7 @@ function RequestDetailDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-[#0f172a]/95 border-cyan-500/20 backdrop-blur-xl max-w-full sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="bg-surface-base/95 border-cyan-500/20 backdrop-blur-xl max-w-full sm:max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <div className="flex items-start justify-between">
             <div>

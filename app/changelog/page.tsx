@@ -112,9 +112,9 @@ export default function ChangelogPage() {
               {changelogEntries.map((entry, index) => (
                 <div key={index} className="relative">
                   {/* Timeline dot */}
-                  <div className="absolute left-6 top-8 w-4 h-4 rounded-full bg-cyan-500 border-4 border-[#0a1628] hidden md:block" />
+                  <div className="absolute left-6 top-8 w-4 h-4 rounded-full bg-cyan-500 border-4 border-surface-dark hidden md:block" />
 
-                  <Card className="bg-[#0f172a]/80 border border-cyan-500/20 backdrop-blur-sm p-6 md:ml-16">
+                  <Card className="bg-surface-base/80 border border-cyan-500/20 backdrop-blur-sm p-6 md:ml-16">
                     <div className="flex flex-wrap items-center gap-3 mb-4">
                       {getTypeIcon(entry.type)}
                       <span className="text-white font-bold text-lg">{entry.version}</span>
@@ -157,7 +157,7 @@ export default function ChangelogPage() {
               <input
                 type="email"
                 placeholder="Enter your email"
-                className="flex-1 px-4 py-3 bg-[#0a1628] border border-cyan-500/30 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-cyan-400 transition-colors"
+                className="flex-1 px-4 py-3 bg-surface-dark border border-cyan-500/30 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-cyan-400 transition-colors"
               />
               <button className="px-6 py-3 bg-gradient-to-r from-cyan-500 to-cyan-600 hover:from-cyan-400 hover:to-cyan-500 text-white font-medium rounded-lg shadow-lg shadow-cyan-500/25 transition-all">
                 Subscribe

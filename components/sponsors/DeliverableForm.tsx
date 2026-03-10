@@ -98,7 +98,7 @@ export function DeliverableForm({
       />
 
       {/* Modal */}
-      <div className="relative bg-[#0f172a] border border-white/10 rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-2xl">
+      <div className="relative bg-surface-base border border-white/10 rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-2xl">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-white/10">
           <h2 className="text-xl font-semibold text-white">
@@ -155,7 +155,7 @@ export function DeliverableForm({
                 className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-transparent"
               >
                 {DELIVERABLE_TYPES.map((type) => (
-                  <option key={type} value={type} className="bg-[#0f172a]">
+                  <option key={type} value={type} className="bg-surface-base">
                     {TYPE_LABELS[type]}
                   </option>
                 ))}
@@ -170,9 +170,9 @@ export function DeliverableForm({
                 onChange={(e) => setFormData({ ...formData, platform: e.target.value })}
                 className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-transparent"
               >
-                <option value="" className="bg-[#0f172a]">Select platform</option>
+                <option value="" className="bg-surface-base">Select platform</option>
                 {PLATFORMS.map((platform) => (
-                  <option key={platform} value={platform} className="bg-[#0f172a]">
+                  <option key={platform} value={platform} className="bg-surface-base">
                     {platform}
                   </option>
                 ))}
@@ -192,7 +192,7 @@ export function DeliverableForm({
                 className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-transparent"
               >
                 {DELIVERABLE_STATUSES.map((status) => (
-                  <option key={status} value={status} className="bg-[#0f172a]">
+                  <option key={status} value={status} className="bg-surface-base">
                     {DELIVERABLE_STATUS_LABELS[status]}
                   </option>
                 ))}

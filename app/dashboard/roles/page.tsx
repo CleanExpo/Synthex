@@ -321,7 +321,7 @@ function RoleDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-[#0f172a]/95 border-cyan-500/20 backdrop-blur-xl sm:max-w-2xl max-h-[90vh]">
+      <DialogContent className="bg-surface-base/95 border-cyan-500/20 backdrop-blur-xl sm:max-w-2xl max-h-[90vh]">
         <DialogHeader>
           <DialogTitle className="text-white">
             {role ? 'Edit Role' : 'Create New Role'}
@@ -540,7 +540,7 @@ function UserSearchDialog({ open, onOpenChange, role, onAssign }: UserSearchDial
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="bg-[#0f172a]/95 border-cyan-500/20 backdrop-blur-xl sm:max-w-md">
+      <DialogContent className="bg-surface-base/95 border-cyan-500/20 backdrop-blur-xl sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="text-white flex items-center gap-2">
             <UserPlus className="h-5 w-5 text-cyan-400" />
@@ -651,7 +651,7 @@ function RoleUsersDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-[#0f172a]/95 border-cyan-500/20 backdrop-blur-xl sm:max-w-lg max-h-[80vh]">
+      <DialogContent className="bg-surface-base/95 border-cyan-500/20 backdrop-blur-xl sm:max-w-lg max-h-[80vh]">
         <DialogHeader>
           <DialogTitle className="text-white flex items-center gap-2">
             {getRoleIcon(role.name, role.isSystem)}
@@ -756,7 +756,7 @@ function DeleteDialog({ open, onOpenChange, role, onConfirm, isDeleting }: Delet
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-[#0f172a]/95 border-red-500/20 backdrop-blur-xl sm:max-w-md">
+      <DialogContent className="bg-surface-base/95 border-red-500/20 backdrop-blur-xl sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="text-white flex items-center gap-2">
             <AlertTriangle className="h-5 w-5 text-red-400" />

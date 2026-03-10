@@ -72,7 +72,7 @@ export default function TermsPage() {
       {/* Agreement Overview */}
       <section className="px-6 pb-12">
         <div className="container mx-auto">
-          <Card className="bg-[#0f172a]/80 border border-cyan-500/20 backdrop-blur-sm p-8 max-w-4xl mx-auto">
+          <Card className="bg-surface-base/80 border border-cyan-500/20 backdrop-blur-sm p-8 max-w-4xl mx-auto">
             <h2 className="text-2xl font-bold text-white mb-6">Agreement Overview</h2>
             <p className="text-gray-300 mb-4">
               By using Synthex, you agree to these terms. We've written them to be clear and fair,
@@ -97,7 +97,7 @@ export default function TermsPage() {
         <div className="container mx-auto">
           <div className="grid md:grid-cols-2 gap-6 max-w-5xl mx-auto">
             {sections.map((section, index) => (
-              <Card key={index} className="bg-[#0f172a]/80 border border-cyan-500/20 backdrop-blur-sm p-6">
+              <Card key={index} className="bg-surface-base/80 border border-cyan-500/20 backdrop-blur-sm p-6">
                 <div className="flex items-center gap-3 mb-4">
                   <section.icon className="w-8 h-8 text-cyan-400" />
                   <h3 className="text-xl font-semibold text-white">{section.title}</h3>
@@ -119,7 +119,7 @@ export default function TermsPage() {
       {/* Detailed Terms */}
       <section className="px-6 pb-20">
         <div className="container mx-auto">
-          <Card className="bg-[#0f172a]/80 border border-cyan-500/20 backdrop-blur-sm p-8 max-w-4xl mx-auto">
+          <Card className="bg-surface-base/80 border border-cyan-500/20 backdrop-blur-sm p-8 max-w-4xl mx-auto">
             <h2 className="text-2xl font-bold text-white mb-6">Service Terms</h2>
 
             <div className="space-y-6">
@@ -200,7 +200,7 @@ export default function TermsPage() {
       {/* SLA for Pro/Enterprise */}
       <section className="px-6 pb-20">
         <div className="container mx-auto">
-          <Card className="bg-[#0f172a]/80 border border-cyan-500/20 backdrop-blur-sm p-8 max-w-4xl mx-auto">
+          <Card className="bg-surface-base/80 border border-cyan-500/20 backdrop-blur-sm p-8 max-w-4xl mx-auto">
             <DollarSign className="w-10 h-10 text-amber-400 mb-4" />
             <h2 className="text-2xl font-bold text-white mb-6">Service Level Agreement (Pro & Enterprise)</h2>
             <div className="grid md:grid-cols-2 gap-6">

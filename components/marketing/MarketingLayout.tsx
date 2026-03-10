@@ -55,7 +55,7 @@ export function FloatingParticles() {
 // Navigation Component
 export function MarketingNav({ currentPage }: { currentPage?: string }) {
   return (
-    <nav className="fixed top-0 w-full z-50 bg-[#0a1628]/80 backdrop-blur-md border-b border-cyan-500/10">
+    <nav className="fixed top-0 w-full z-50 bg-surface-dark/80 backdrop-blur-md border-b border-cyan-500/10">
       <div className="container mx-auto px-6 py-4">
         <div className="flex items-center justify-between">
           {/* Logo */}
@@ -114,7 +114,7 @@ export function MarketingNav({ currentPage }: { currentPage?: string }) {
 // Footer Component
 export function MarketingFooter() {
   return (
-    <footer className="relative z-10 border-t border-cyan-500/10 bg-[#0a1628]/50">
+    <footer className="relative z-10 border-t border-cyan-500/10 bg-surface-dark/50">
       <div className="container mx-auto px-6 py-16">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-12">
           {/* Brand */}

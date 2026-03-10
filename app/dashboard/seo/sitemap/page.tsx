@@ -110,7 +110,7 @@ export default function SitemapAnalyzerPage() {
         description="Validate XML sitemaps, check URL structure, detect issues, and ensure search engines can crawl your site effectively."
       >
         {/* URL Input */}
-        <Card className="bg-[#0f172a]/80 backdrop-blur-xl border border-cyan-500/10">
+        <Card className="bg-surface-base/80 backdrop-blur-xl border border-cyan-500/10">
           <CardContent className="p-6">
             <div className="flex flex-col md:flex-row gap-4">
               <div className="flex-1 relative">
@@ -144,7 +144,7 @@ export default function SitemapAnalyzerPage() {
           <div className="space-y-6">
             {/* Overview */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <Card className="bg-[#0f172a]/80 backdrop-blur-xl border border-cyan-500/10">
+              <Card className="bg-surface-base/80 backdrop-blur-xl border border-cyan-500/10">
                 <CardContent className="p-6 text-center">
                   {result.valid ? (
                     <CheckCircle className="w-8 h-8 text-green-400 mx-auto mb-2" />
@@ -155,13 +155,13 @@ export default function SitemapAnalyzerPage() {
                   <p className="text-gray-400 text-sm">XML Structure</p>
                 </CardContent>
               </Card>
-              <Card className="bg-[#0f172a]/80 backdrop-blur-xl border border-cyan-500/10">
+              <Card className="bg-surface-base/80 backdrop-blur-xl border border-cyan-500/10">
                 <CardContent className="p-6 text-center">
                   <div className="text-2xl font-bold text-white mb-1">{result.urlCount}</div>
                   <p className="text-gray-400 text-sm">Total URLs</p>
                 </CardContent>
               </Card>
-              <Card className="bg-[#0f172a]/80 backdrop-blur-xl border border-cyan-500/10">
+              <Card className="bg-surface-base/80 backdrop-blur-xl border border-cyan-500/10">
                 <CardContent className="p-6 text-center">
                   <div className={`text-2xl font-bold mb-1 ${result.stats.duplicates > 0 ? 'text-red-400' : 'text-green-400'}`}>
                     {result.stats.duplicates}
@@ -169,7 +169,7 @@ export default function SitemapAnalyzerPage() {
                   <p className="text-gray-400 text-sm">Duplicates</p>
                 </CardContent>
               </Card>
-              <Card className="bg-[#0f172a]/80 backdrop-blur-xl border border-cyan-500/10">
+              <Card className="bg-surface-base/80 backdrop-blur-xl border border-cyan-500/10">
                 <CardContent className="p-6 text-center">
                   <div className={`text-2xl font-bold mb-1 ${result.stats.staleUrls > 0 ? 'text-yellow-400' : 'text-green-400'}`}>
                     {result.stats.staleUrls}
@@ -181,7 +181,7 @@ export default function SitemapAnalyzerPage() {
 
             {/* Issues */}
             {result.issues.length > 0 && (
-              <Card className="bg-[#0f172a]/80 backdrop-blur-xl border border-cyan-500/10">
+              <Card className="bg-surface-base/80 backdrop-blur-xl border border-cyan-500/10">
                 <CardHeader>
                   <CardTitle className="text-white flex items-center gap-2">
                     <AlertTriangle className="w-5 h-5 text-yellow-400" />
@@ -206,7 +206,7 @@ export default function SitemapAnalyzerPage() {
             )}
 
             {/* Completeness Stats */}
-            <Card className="bg-[#0f172a]/80 backdrop-blur-xl border border-cyan-500/10">
+            <Card className="bg-surface-base/80 backdrop-blur-xl border border-cyan-500/10">
               <CardHeader>
                 <CardTitle className="text-white flex items-center gap-2">
                   <FileText className="w-5 h-5 text-cyan-400" />
@@ -236,7 +236,7 @@ export default function SitemapAnalyzerPage() {
             </Card>
 
             {/* URL List */}
-            <Card className="bg-[#0f172a]/80 backdrop-blur-xl border border-cyan-500/10">
+            <Card className="bg-surface-base/80 backdrop-blur-xl border border-cyan-500/10">
               <CardHeader>
                 <CardTitle className="text-white flex items-center gap-2">
                   <LinkIcon className="w-5 h-5 text-cyan-400" />

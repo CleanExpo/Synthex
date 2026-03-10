@@ -27,7 +27,7 @@ export function TypeSelector({ value, onChange }: TypeSelectorProps) {
         <SelectTrigger className="bg-white/5 border-white/10 text-white">
           <SelectValue placeholder="Select schema type" />
         </SelectTrigger>
-        <SelectContent className="bg-[#0f172a] border-white/10">
+        <SelectContent className="bg-surface-base border-white/10">
           {SCHEMA_TYPES.map((type) => (
             <SelectItem
               key={type.value}

@@ -140,7 +140,7 @@ export default function Step1BusinessPage() {
 
       {/* Form */}
       <div className="max-w-lg mx-auto space-y-5">
-        <div className="p-6 rounded-xl bg-[#0f172a]/80 border border-cyan-500/10 backdrop-blur-sm space-y-5">
+        <div className="p-6 rounded-xl bg-surface-base/80 border border-cyan-500/10 backdrop-blur-sm space-y-5">
           {/* Business Name */}
           <div className="space-y-2">
             <Label htmlFor="businessName" className="text-gray-300">
@@ -151,7 +151,7 @@ export default function Step1BusinessPage() {
               value={businessName}
               onChange={(e) => handleNameChange(e.target.value)}
               placeholder="e.g. Acme Marketing Co"
-              className="bg-[#0a1628]/50 border-cyan-500/20 text-white placeholder:text-gray-500 focus:border-cyan-500/50 focus:ring-cyan-500/20"
+              className="bg-surface-dark/50 border-cyan-500/20 text-white placeholder:text-gray-500 focus:border-cyan-500/50 focus:ring-cyan-500/20"
               autoFocus
             />
           </div>
@@ -170,7 +170,7 @@ export default function Step1BusinessPage() {
                 onChange={(e) => setWebsiteUrl(e.target.value)}
                 onBlur={handleWebsiteBlur}
                 placeholder="https://example.com"
-                className="bg-[#0a1628]/50 border-cyan-500/20 text-white placeholder:text-gray-500 focus:border-cyan-500/50 focus:ring-cyan-500/20"
+                className="bg-surface-dark/50 border-cyan-500/20 text-white placeholder:text-gray-500 focus:border-cyan-500/50 focus:ring-cyan-500/20"
               />
               {analyzing && (
                 <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
@@ -187,10 +187,10 @@ export default function Step1BusinessPage() {
               Industry <span className="text-red-400">*</span>
             </Label>
             <Select value={industry} onValueChange={setIndustry}>
-              <SelectTrigger className="bg-[#0a1628]/50 border-cyan-500/20 text-white focus:border-cyan-500/50 focus:ring-cyan-500/20">
+              <SelectTrigger className="bg-surface-dark/50 border-cyan-500/20 text-white focus:border-cyan-500/50 focus:ring-cyan-500/20">
                 <SelectValue placeholder="Select your industry" />
               </SelectTrigger>
-              <SelectContent className="bg-[#0f172a] border-cyan-500/20">
+              <SelectContent className="bg-surface-base border-cyan-500/20">
                 {INDUSTRIES.map((ind) => (
                   <SelectItem
                     key={ind.value}
@@ -210,10 +210,10 @@ export default function Step1BusinessPage() {
               Team Size <span className="text-red-400">*</span>
             </Label>
             <Select value={teamSize} onValueChange={setTeamSize}>
-              <SelectTrigger className="bg-[#0a1628]/50 border-cyan-500/20 text-white focus:border-cyan-500/50 focus:ring-cyan-500/20">
+              <SelectTrigger className="bg-surface-dark/50 border-cyan-500/20 text-white focus:border-cyan-500/50 focus:ring-cyan-500/20">
                 <SelectValue placeholder="How big is your team?" />
               </SelectTrigger>
-              <SelectContent className="bg-[#0f172a] border-cyan-500/20">
+              <SelectContent className="bg-surface-base border-cyan-500/20">
                 {TEAM_SIZES.map((size) => (
                   <SelectItem
                     key={size.value}
@@ -239,7 +239,7 @@ export default function Step1BusinessPage() {
               onChange={(e) => setDescription(e.target.value)}
               placeholder="A brief description of what your business does..."
               rows={3}
-              className="w-full rounded-md bg-[#0a1628]/50 border border-cyan-500/20 text-white placeholder:text-gray-500 focus:border-cyan-500/50 focus:ring-cyan-500/20 p-2.5 text-sm resize-none"
+              className="w-full rounded-md bg-surface-dark/50 border border-cyan-500/20 text-white placeholder:text-gray-500 focus:border-cyan-500/50 focus:ring-cyan-500/20 p-2.5 text-sm resize-none"
             />
           </div>
         </div>

@@ -126,7 +126,7 @@ function PostCard({ post, index }: { post: Post; index: number }) {
 
 export default function FloatingPostsSVG() {
   return (
-    <div className="w-full h-[600px] relative rounded-2xl overflow-hidden bg-[#030014]">
+    <div className="w-full h-[600px] relative rounded-2xl overflow-hidden bg-surface-void">
       {/* Animated background */}
       <div className="absolute inset-0">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,rgba(120,119,198,0.3),transparent)]" />

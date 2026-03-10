@@ -152,7 +152,7 @@ export default function ContactPage() {
                     required
                     value={formData.name}
                     onChange={handleChange}
-                    className="w-full px-4 py-3 bg-[#0a1628] border border-cyan-500/20 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500/50 focus:ring-2 focus:ring-cyan-500/20 transition-all"
+                    className="w-full px-4 py-3 bg-surface-dark border border-cyan-500/20 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500/50 focus:ring-2 focus:ring-cyan-500/20 transition-all"
                     placeholder="John Doe"
                   />
                 </div>
@@ -169,7 +169,7 @@ export default function ContactPage() {
                     required
                     value={formData.email}
                     onChange={handleChange}
-                    className="w-full px-4 py-3 bg-[#0a1628] border border-cyan-500/20 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500/50 focus:ring-2 focus:ring-cyan-500/20 transition-all"
+                    className="w-full px-4 py-3 bg-surface-dark border border-cyan-500/20 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500/50 focus:ring-2 focus:ring-cyan-500/20 transition-all"
                     placeholder="john@example.com"
                   />
                 </div>
@@ -185,7 +185,7 @@ export default function ContactPage() {
                     required
                     value={formData.subject}
                     onChange={handleChange}
-                    className="w-full px-4 py-3 bg-[#0a1628] border border-cyan-500/20 rounded-lg text-white focus:outline-none focus:border-cyan-500/50 focus:ring-2 focus:ring-cyan-500/20 transition-all"
+                    className="w-full px-4 py-3 bg-surface-dark border border-cyan-500/20 rounded-lg text-white focus:outline-none focus:border-cyan-500/50 focus:ring-2 focus:ring-cyan-500/20 transition-all"
                   >
                     <option value="general">General Inquiry</option>
                     <option value="sales">Sales</option>
@@ -207,7 +207,7 @@ export default function ContactPage() {
                     value={formData.message}
                     onChange={handleChange}
                     rows={6}
-                    className="w-full px-4 py-3 bg-[#0a1628] border border-cyan-500/20 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500/50 focus:ring-2 focus:ring-cyan-500/20 transition-all resize-none"
+                    className="w-full px-4 py-3 bg-surface-dark border border-cyan-500/20 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500/50 focus:ring-2 focus:ring-cyan-500/20 transition-all resize-none"
                     placeholder="Tell us about your project, questions, or how we can help..."
                   />
                 </div>
@@ -260,7 +260,7 @@ export default function ContactPage() {
                       href={social.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center gap-3 p-4 bg-[#0a1628] border border-cyan-500/20 rounded-lg hover:border-cyan-500/40 hover:bg-[#0a1628]/80 transition-all group"
+                      className="flex items-center gap-3 p-4 bg-surface-dark border border-cyan-500/20 rounded-lg hover:border-cyan-500/40 hover:bg-surface-dark/80 transition-all group"
                     >
                       <social.icon className="w-6 h-6 text-cyan-400 group-hover:scale-110 transition-transform" />
                       <span className="text-gray-300 group-hover:text-cyan-400 transition-colors">

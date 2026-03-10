@@ -22,7 +22,7 @@ export default function ReportsLoading() {
         <div className="h-6 w-40 bg-white/5 rounded mb-4" />
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {[...Array(4)].map((_, i) => (
-            <Card key={i} className="bg-[#0f172a]/80 border border-cyan-500/10">
+            <Card key={i} className="bg-surface-base/80 border border-cyan-500/10">
               <CardContent className="p-6">
                 <div className="w-12 h-12 bg-white/5 rounded-xl mb-4" />
                 <div className="h-5 w-32 bg-white/5 rounded mb-2" />
@@ -35,7 +35,7 @@ export default function ReportsLoading() {
       </div>
 
       {/* Recent Reports Table */}
-      <Card className="bg-[#0f172a]/80 border border-cyan-500/10">
+      <Card className="bg-surface-base/80 border border-cyan-500/10">
         <CardHeader>
           <div className="flex items-center justify-between">
             <div className="h-6 w-36 bg-white/5 rounded" />
@@ -71,7 +71,7 @@ export default function ReportsLoading() {
       </Card>
 
       {/* Scheduled Reports */}
-      <Card className="bg-[#0f172a]/80 border border-cyan-500/10">
+      <Card className="bg-surface-base/80 border border-cyan-500/10">
         <CardHeader>
           <div className="h-6 w-40 bg-white/5 rounded" />
         </CardHeader>

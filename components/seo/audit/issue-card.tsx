@@ -44,7 +44,7 @@ export function IssueCard({ issue, isExpanded, onToggle }: IssueCardProps) {
       {isExpanded && (
         <div className="px-4 pb-4 space-y-3">
           <p className="text-gray-400 text-sm">{issue.description}</p>
-          <div className="bg-[#0f172a]/50 p-3 rounded-lg">
+          <div className="bg-surface-base/50 p-3 rounded-lg">
             <p className="text-cyan-400 text-sm font-medium mb-1">Recommendation</p>
             <p className="text-gray-300 text-sm">{issue.recommendation}</p>
           </div>

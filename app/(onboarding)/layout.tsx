@@ -59,7 +59,7 @@ export default function OnboardingLayout({
 }) {
   return (
     <OnboardingProvider>
-      <div className="min-h-screen bg-[#0a1628] text-white overflow-hidden">
+      <div className="min-h-screen bg-surface-dark text-white overflow-hidden">
         {/* Deep Navy Gradient Background */}
         <div className="fixed inset-0 bg-gradient-to-br from-[#0a1628] via-[#0f172a] to-[#0a1628]" />
 
@@ -81,7 +81,7 @@ export default function OnboardingLayout({
         <div className="fixed bottom-1/4 right-1/4 w-96 h-96 bg-cyan-400/5 rounded-full blur-[150px] pointer-events-none" />
 
         {/* Header with Logo */}
-        <header className="relative z-20 border-b border-cyan-500/10 bg-[#0a1628]/80 backdrop-blur-md">
+        <header className="relative z-20 border-b border-cyan-500/10 bg-surface-dark/80 backdrop-blur-md">
           <div className="container max-w-4xl mx-auto px-4 py-4">
             <Link href="/" className="flex items-center space-x-3 w-fit group">
               <SynthexLogo className="w-8 h-8 transition-transform group-hover:scale-110" />

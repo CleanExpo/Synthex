@@ -69,7 +69,7 @@ export function BusinessOverviewCards({ overview }: BusinessOverviewCardsProps) 
       {/* Summary Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Total Businesses */}
-        <Card className="bg-[#0f172a]/80 backdrop-blur-xl border border-cyan-500/10">
+        <Card className="bg-surface-base/80 backdrop-blur-xl border border-cyan-500/10">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium text-gray-400 flex items-center gap-2">
               <Building className="h-4 w-4 text-cyan-400" />
@@ -86,7 +86,7 @@ export function BusinessOverviewCards({ overview }: BusinessOverviewCardsProps) 
         </Card>
 
         {/* Total Campaigns */}
-        <Card className="bg-[#0f172a]/80 backdrop-blur-xl border border-cyan-500/10">
+        <Card className="bg-surface-base/80 backdrop-blur-xl border border-cyan-500/10">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium text-gray-400 flex items-center gap-2">
               <BarChart3 className="h-4 w-4 text-cyan-400" />
@@ -102,7 +102,7 @@ export function BusinessOverviewCards({ overview }: BusinessOverviewCardsProps) 
         </Card>
 
         {/* Total Engagement */}
-        <Card className="bg-[#0f172a]/80 backdrop-blur-xl border border-cyan-500/10">
+        <Card className="bg-surface-base/80 backdrop-blur-xl border border-cyan-500/10">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium text-gray-400 flex items-center gap-2">
               <TrendingUp className="h-4 w-4 text-cyan-400" />
@@ -118,7 +118,7 @@ export function BusinessOverviewCards({ overview }: BusinessOverviewCardsProps) 
         </Card>
 
         {/* Monthly Spend */}
-        <Card className="bg-[#0f172a]/80 backdrop-blur-xl border border-cyan-500/10">
+        <Card className="bg-surface-base/80 backdrop-blur-xl border border-cyan-500/10">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium text-gray-400 flex items-center gap-2">
               <DollarSign className="h-4 w-4 text-cyan-400" />
@@ -141,7 +141,7 @@ export function BusinessOverviewCards({ overview }: BusinessOverviewCardsProps) 
           {overview.perBusiness.map((business) => (
             <Card
               key={business.organizationId}
-              className="bg-[#0f172a]/80 backdrop-blur-xl border border-cyan-500/10 hover:border-cyan-500/20 transition-all"
+              className="bg-surface-base/80 backdrop-blur-xl border border-cyan-500/10 hover:border-cyan-500/20 transition-all"
             >
               <CardHeader className="pb-3">
                 <div className="flex items-start justify-between gap-2">

@@ -258,7 +258,7 @@ export default function SignupPage() {
   // that their account was created and they should check their email.
   if (verificationEmail) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#0a1628] px-4 py-8 relative overflow-hidden">
+      <div className="min-h-screen flex items-center justify-center bg-surface-dark px-4 py-8 relative overflow-hidden">
         {/* Deep Navy Gradient Background */}
         <div className="fixed inset-0 bg-gradient-to-br from-[#0a1628] via-[#0f172a] to-[#0a1628]" />
 
@@ -273,7 +273,7 @@ export default function SignupPage() {
         <div className="fixed top-1/4 left-1/4 w-96 h-96 bg-cyan-500/5 rounded-full blur-[150px] pointer-events-none" />
         <div className="fixed bottom-1/4 right-1/4 w-96 h-96 bg-cyan-400/5 rounded-full blur-[150px] pointer-events-none" />
 
-        <Card className="relative z-10 w-full max-w-md bg-[#0f172a]/80 backdrop-blur-xl border border-cyan-500/10 shadow-2xl shadow-cyan-500/5">
+        <Card className="relative z-10 w-full max-w-md bg-surface-base/80 backdrop-blur-xl border border-cyan-500/10 shadow-2xl shadow-cyan-500/5">
           <CardHeader className="space-y-1">
             <div className="flex items-center justify-center mb-4">
               <SynthexLogo className="w-12 h-12" />
@@ -361,7 +361,7 @@ export default function SignupPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#0a1628] px-4 py-8 relative overflow-hidden">
+    <div className="min-h-screen flex items-center justify-center bg-surface-dark px-4 py-8 relative overflow-hidden">
       {/* Deep Navy Gradient Background */}
       <div className="fixed inset-0 bg-gradient-to-br from-[#0a1628] via-[#0f172a] to-[#0a1628]" />
 
@@ -377,7 +377,7 @@ export default function SignupPage() {
       <div className="fixed bottom-1/4 right-1/4 w-96 h-96 bg-cyan-400/5 rounded-full blur-[150px] pointer-events-none" />
 
       {/* Card Container */}
-      <Card className="relative z-10 w-full max-w-md bg-[#0f172a]/80 backdrop-blur-xl border border-cyan-500/10 shadow-2xl shadow-cyan-500/5">
+      <Card className="relative z-10 w-full max-w-md bg-surface-base/80 backdrop-blur-xl border border-cyan-500/10 shadow-2xl shadow-cyan-500/5">
         <CardHeader className="space-y-1">
           <div className="flex items-center justify-center mb-4">
             <SynthexLogo className="w-12 h-12" />
@@ -575,7 +575,7 @@ export default function SignupPage() {
               <span className="w-full border-t border-cyan-500/10" />
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-[#0f172a] px-2 text-gray-500">Or continue with</span>
+              <span className="bg-surface-base px-2 text-gray-500">Or continue with</span>
             </div>
           </div>
 

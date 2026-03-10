@@ -7,7 +7,7 @@ import { SynthexLogo } from './synthex-logo';
 /** Fixed top navigation bar for the landing page */
 export function NavBar() {
   return (
-    <nav className="fixed top-0 w-full z-50 bg-[#0a1628]/80 backdrop-blur-md border-b border-cyan-500/10">
+    <nav className="fixed top-0 w-full z-50 bg-surface-dark/80 backdrop-blur-md border-b border-cyan-500/10">
       <div className="container mx-auto px-6 py-4">
         <div className="flex items-center justify-between">
           {/* Logo */}

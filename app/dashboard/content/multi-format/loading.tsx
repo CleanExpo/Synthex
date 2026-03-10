@@ -19,7 +19,7 @@ export default function MultiFormatLoading() {
       </div>
 
       {/* Input card skeleton */}
-      <Card className="bg-[#0f172a]/80 border border-cyan-500/10">
+      <Card className="bg-surface-base/80 border border-cyan-500/10">
         <CardHeader className="pb-4">
           <div className="h-6 w-48 bg-white/5 rounded" />
         </CardHeader>

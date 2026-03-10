@@ -174,7 +174,7 @@ export function ChatAssistant({ conversationId, onTitleUpdated }: ChatAssistantP
       </div>
 
       {/* Input area */}
-      <div className="border-t border-white/10 p-4 bg-[#0f172a]/50 backdrop-blur-sm">
+      <div className="border-t border-white/10 p-4 bg-surface-base/50 backdrop-blur-sm">
         <ChatInput
           onSend={handleSend}
           disabled={isStreaming}

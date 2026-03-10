@@ -298,7 +298,7 @@ export default function ContentOptimizePage() {
             LEFT PANEL — Editor (60%)
         ============================================================ */}
         <div className="w-full lg:w-[60%] space-y-4">
-          <Card className="bg-[#0f172a]/80 border border-cyan-500/10">
+          <Card className="bg-surface-base/80 border border-cyan-500/10">
             <CardHeader className="pb-4">
               <CardTitle className="text-white text-lg flex items-center gap-2">
                 <FileText className="w-5 h-5 text-cyan-400" />
@@ -393,7 +393,7 @@ export default function ContentOptimizePage() {
         <div className="w-full lg:w-[40%] space-y-4">
 
           {/* Overall score card */}
-          <Card className="bg-[#0f172a]/80 border border-cyan-500/10">
+          <Card className="bg-surface-base/80 border border-cyan-500/10">
             <CardHeader className="pb-3">
               <CardTitle className="text-white text-lg flex items-center gap-2">
                 <Sparkles className="w-5 h-5 text-cyan-400" />
@@ -440,7 +440,7 @@ export default function ContentOptimizePage() {
 
           {/* Top suggestions card */}
           {score && score.topSuggestions.length > 0 && (
-            <Card className="bg-[#0f172a]/80 border border-cyan-500/10">
+            <Card className="bg-surface-base/80 border border-cyan-500/10">
               <CardHeader className="pb-3">
                 <CardTitle className="text-white text-base flex items-center gap-2">
                   <Lightbulb className="w-4 h-4 text-yellow-400" />
@@ -461,7 +461,7 @@ export default function ContentOptimizePage() {
           )}
 
           {/* Suggested templates card */}
-          <Card className="bg-[#0f172a]/80 border border-cyan-500/10">
+          <Card className="bg-surface-base/80 border border-cyan-500/10">
             <CardHeader className="pb-3">
               <CardTitle className="text-white text-base flex items-center gap-2">
                 <FileText className="w-4 h-4 text-cyan-400" />

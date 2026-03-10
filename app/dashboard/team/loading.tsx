@@ -19,7 +19,7 @@ export default function TeamLoading() {
       {/* Team Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         {[...Array(4)].map((_, i) => (
-          <Card key={i} className="bg-[#0f172a]/80 border border-cyan-500/10">
+          <Card key={i} className="bg-surface-base/80 border border-cyan-500/10">
             <CardContent className="p-6">
               <div className="h-4 w-24 bg-white/5 rounded mb-2" />
               <div className="h-8 w-12 bg-white/5 rounded" />
@@ -29,7 +29,7 @@ export default function TeamLoading() {
       </div>
 
       {/* Team Members Grid */}
-      <Card className="bg-[#0f172a]/80 border border-cyan-500/10">
+      <Card className="bg-surface-base/80 border border-cyan-500/10">
         <CardHeader>
           <div className="flex items-center justify-between">
             <div className="h-6 w-36 bg-white/5 rounded" />
@@ -54,7 +54,7 @@ export default function TeamLoading() {
       </Card>
 
       {/* Pending Invitations */}
-      <Card className="bg-[#0f172a]/80 border border-cyan-500/10">
+      <Card className="bg-surface-base/80 border border-cyan-500/10">
         <CardHeader>
           <div className="h-6 w-44 bg-white/5 rounded" />
         </CardHeader>

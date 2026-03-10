@@ -94,7 +94,7 @@ export default function VisualsPage() {
       </div>
 
       {showGenerate && (
-        <Card className="bg-[#0f172a]/80 border border-cyan-500/10">
+        <Card className="bg-surface-base/80 border border-cyan-500/10">
           <CardContent className="p-6 space-y-4">
             <select
               value={genForm.type}
@@ -127,7 +127,7 @@ export default function VisualsPage() {
           {[1,2,3,4].map(i => <div key={i} className="aspect-video bg-white/5 rounded-lg animate-pulse" />)}
         </div>
       ) : assets.length === 0 ? (
-        <Card className="bg-[#0f172a]/80 border border-cyan-500/10">
+        <Card className="bg-surface-base/80 border border-cyan-500/10">
           <CardContent className="p-12 text-center text-gray-400">
             <Image className="h-12 w-12 mx-auto mb-3 opacity-30" />
             <p>No visuals generated yet</p>
@@ -137,7 +137,7 @@ export default function VisualsPage() {
       ) : (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {assets.map((asset) => (
-            <Card key={asset.id} className="bg-[#0f172a]/80 border border-cyan-500/10 overflow-hidden group hover:border-cyan-500/30 transition-all">
+            <Card key={asset.id} className="bg-surface-base/80 border border-cyan-500/10 overflow-hidden group hover:border-cyan-500/30 transition-all">
               <div className="aspect-video bg-white/5 relative">
                 <NextImage src={asset.thumbnailUrl || asset.imageUrl} alt={asset.altText || ''} className="w-full h-full object-cover" fill sizes="(max-width: 768px) 100vw, 33vw" />
                 {asset.qualityScore !== null && asset.qualityScore !== undefined && (

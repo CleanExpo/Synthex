@@ -248,7 +248,7 @@ export default function AIConversationPage({ params }: PageProps) {
       {/* Main content - two column layout */}
       <div className="flex-1 flex overflow-hidden">
         {/* Conversation sidebar */}
-        <div className="w-80 border-r border-white/10 flex flex-col bg-[#0f172a]/30">
+        <div className="w-80 border-r border-white/10 flex flex-col bg-surface-base/30">
           {/* New chat button */}
           <div className="p-4 border-b border-white/10 space-y-3">
             <Button
@@ -353,7 +353,7 @@ export default function AIConversationPage({ params }: PageProps) {
         </div>
 
         {/* Chat area */}
-        <div className="flex-1 flex flex-col bg-[#0a0f1a]">
+        <div className="flex-1 flex flex-col bg-surface-darker">
           <ChatAssistant
             conversationId={conversationId}
             onTitleUpdated={handleTitleUpdated}

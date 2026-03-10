@@ -265,7 +265,7 @@ export default function CompletePage() {
             </div>
 
             {/* Summary */}
-            <div className="max-w-md mx-auto mt-8 p-6 rounded-xl bg-[#0f172a]/80 border border-cyan-500/10 backdrop-blur-sm text-left space-y-4">
+            <div className="max-w-md mx-auto mt-8 p-6 rounded-xl bg-surface-base/80 border border-cyan-500/10 backdrop-blur-sm text-left space-y-4">
               <h3 className="font-semibold text-center mb-4 text-white">Your Setup Summary</h3>
 
               {/* Business */}
@@ -350,7 +350,7 @@ export default function CompletePage() {
             </div>
 
             {/* What's next */}
-            <div className="max-w-md mx-auto mt-8 p-5 rounded-xl bg-[#0f172a]/80 border border-cyan-500/10 backdrop-blur-sm text-left">
+            <div className="max-w-md mx-auto mt-8 p-5 rounded-xl bg-surface-base/80 border border-cyan-500/10 backdrop-blur-sm text-left">
               <h3 className="font-semibold text-white mb-3">What&apos;s next:</h3>
               <ul className="space-y-2 text-sm text-gray-400">
                 <li className="flex items-center gap-2">

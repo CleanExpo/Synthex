@@ -208,10 +208,10 @@ export function APIKeySetup({
             Select Provider
           </Label>
           <Select value={selectedProvider} onValueChange={(v) => setSelectedProvider(v as APIProvider)}>
-            <SelectTrigger className="bg-[#0a1628]/50 border-cyan-500/20 text-white focus:border-cyan-500/50 focus:ring-cyan-500/20">
+            <SelectTrigger className="bg-surface-dark/50 border-cyan-500/20 text-white focus:border-cyan-500/50 focus:ring-cyan-500/20">
               <SelectValue />
             </SelectTrigger>
-            <SelectContent className="bg-[#0f172a] border-cyan-500/20">
+            <SelectContent className="bg-surface-base border-cyan-500/20">
               {Object.entries(PROVIDERS).map(([key, config]) => (
                 <SelectItem
                   key={key}
@@ -245,7 +245,7 @@ export function APIKeySetup({
                   setError(null);
                 }}
                 placeholder={`Paste your ${currentProviderConfig.label} API key (${currentProviderConfig.keyFormat})`}
-                className="w-full rounded-md bg-[#0a1628]/50 border border-cyan-500/20 text-white placeholder:text-gray-600 focus:border-cyan-500/50 focus:ring-cyan-500/20 p-2.5 text-sm pr-10"
+                className="w-full rounded-md bg-surface-dark/50 border border-cyan-500/20 text-white placeholder:text-gray-600 focus:border-cyan-500/50 focus:ring-cyan-500/20 p-2.5 text-sm pr-10"
               />
               <button
                 type="button"
@@ -326,7 +326,7 @@ export function APIKeySetup({
             {Array.from(credentials.entries()).map(([provider, cred]) => (
               <div
                 key={provider}
-                className="flex items-center justify-between p-3 rounded-lg bg-[#0a1628]/50 border border-cyan-500/10"
+                className="flex items-center justify-between p-3 rounded-lg bg-surface-dark/50 border border-cyan-500/10"
               >
                 <div className="flex items-center gap-3">
                   {cred.isValid ? (

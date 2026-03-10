@@ -10,7 +10,7 @@ export default function DesignSystemPage() {
     <MarketingLayout currentPage="design-system" showFooter={true}>
       <div className="min-h-screen text-white">
         {/* Header */}
-        <header className="sticky top-20 z-40 border-b border-cyan-500/10 bg-[#0a1628]/80 backdrop-blur-xl">
+        <header className="sticky top-20 z-40 border-b border-cyan-500/10 bg-surface-dark/80 backdrop-blur-xl">
           <div className="mx-auto max-w-7xl px-6 py-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
@@ -120,7 +120,7 @@ export default function DesignSystemPage() {
               {/* Display Headlines */}
               <div className="space-y-6">
                 <h3 className="text-xl font-semibold">Display Headlines</h3>
-                <div className="space-y-4 rounded-2xl border border-cyan-500/10 bg-[#0a1628]/50 p-8">
+                <div className="space-y-4 rounded-2xl border border-cyan-500/10 bg-surface-dark/50 p-8">
                   <div className="border-b border-cyan-500/10 pb-4">
                     <span className="mb-2 block text-xs text-white/40">display-xl - 72px - Black (900)</span>
                     <h1 className="text-7xl font-black tracking-tighter">AI Marketing</h1>
@@ -140,19 +140,19 @@ export default function DesignSystemPage() {
               <div className="space-y-6">
                 <h3 className="text-xl font-semibold">Section Headlines</h3>
                 <div className="grid gap-4 md:grid-cols-2">
-                  <div className="rounded-xl border border-cyan-500/10 bg-[#0a1628]/50 p-6">
+                  <div className="rounded-xl border border-cyan-500/10 bg-surface-dark/50 p-6">
                     <span className="mb-2 block text-xs text-white/40">heading-xl - 36px</span>
                     <h2 className="text-4xl font-semibold">Features Overview</h2>
                   </div>
-                  <div className="rounded-xl border border-cyan-500/10 bg-[#0a1628]/50 p-6">
+                  <div className="rounded-xl border border-cyan-500/10 bg-surface-dark/50 p-6">
                     <span className="mb-2 block text-xs text-white/40">heading-lg - 30px</span>
                     <h2 className="text-3xl font-semibold">How It Works</h2>
                   </div>
-                  <div className="rounded-xl border border-cyan-500/10 bg-[#0a1628]/50 p-6">
+                  <div className="rounded-xl border border-cyan-500/10 bg-surface-dark/50 p-6">
                     <span className="mb-2 block text-xs text-white/40">heading-md - 24px</span>
                     <h3 className="text-2xl font-semibold">Content Generation</h3>
                   </div>
-                  <div className="rounded-xl border border-cyan-500/10 bg-[#0a1628]/50 p-6">
+                  <div className="rounded-xl border border-cyan-500/10 bg-surface-dark/50 p-6">
                     <span className="mb-2 block text-xs text-white/40">heading-sm - 20px</span>
                     <h4 className="text-xl font-medium">Quick Actions</h4>
                   </div>
@@ -163,19 +163,19 @@ export default function DesignSystemPage() {
               <div className="space-y-6">
                 <h3 className="text-xl font-semibold">Body Text</h3>
                 <div className="space-y-4">
-                  <div className="rounded-xl border border-cyan-500/10 bg-[#0a1628]/50 p-6">
+                  <div className="rounded-xl border border-cyan-500/10 bg-surface-dark/50 p-6">
                     <span className="mb-2 block text-xs text-white/40">body-lg - 18px - Gray 300</span>
                     <p className="text-lg leading-relaxed text-gray-300">
                       Generate viral content with AI, analyze engagement patterns, and automate your social media presence across all platforms.
                     </p>
                   </div>
-                  <div className="rounded-xl border border-cyan-500/10 bg-[#0a1628]/50 p-6">
+                  <div className="rounded-xl border border-cyan-500/10 bg-surface-dark/50 p-6">
                     <span className="mb-2 block text-xs text-white/40">body-md - 16px - Gray 400</span>
                     <p className="text-base leading-normal text-gray-400">
                       Our platform uses advanced machine learning to understand your brand voice and create content that resonates with your audience.
                     </p>
                   </div>
-                  <div className="rounded-xl border border-cyan-500/10 bg-[#0a1628]/50 p-6">
+                  <div className="rounded-xl border border-cyan-500/10 bg-surface-dark/50 p-6">
                     <span className="mb-2 block text-xs text-white/40">body-sm - 14px - Gray 500</span>
                     <p className="text-sm leading-normal text-gray-500">
                       Last updated 2 hours ago - 1.2k views - 45 shares
@@ -187,7 +187,7 @@ export default function DesignSystemPage() {
               {/* Gradient Text */}
               <div className="space-y-6">
                 <h3 className="text-xl font-semibold">Gradient Text</h3>
-                <div className="rounded-2xl border border-cyan-500/10 bg-[#0a1628]/50 p-8">
+                <div className="rounded-2xl border border-cyan-500/10 bg-surface-dark/50 p-8">
                   <h1 className="bg-gradient-to-r from-cyan-400 via-cyan-300 to-cyan-500 bg-clip-text text-6xl font-bold tracking-tight text-transparent">
                     Next-Gen Marketing
                   </h1>
@@ -198,10 +198,10 @@ export default function DesignSystemPage() {
               <div className="space-y-6">
                 <h3 className="text-xl font-semibold">Pill Headlines (Reference Style)</h3>
                 <div className="flex flex-wrap gap-4">
-                  <span className="rounded-lg bg-[#0a1628] px-6 py-3 text-3xl font-black uppercase tracking-tight text-white border border-cyan-500/20">
+                  <span className="rounded-lg bg-surface-dark px-6 py-3 text-3xl font-black uppercase tracking-tight text-white border border-cyan-500/20">
                     AI Marketing
                   </span>
-                  <span className="rounded-lg bg-white px-6 py-3 text-3xl font-black uppercase tracking-tight text-[#0a1628]">
+                  <span className="rounded-lg bg-white px-6 py-3 text-3xl font-black uppercase tracking-tight text-surface-dark">
                     Agency Guide
                   </span>
                   <span className="rounded-lg bg-gradient-to-r from-cyan-500 to-cyan-600 px-6 py-3 text-3xl font-black uppercase tracking-tight text-white">
@@ -223,7 +223,7 @@ export default function DesignSystemPage() {
               {/* Buttons */}
               <div className="space-y-6">
                 <h3 className="text-xl font-semibold">Buttons</h3>
-                <div className="rounded-2xl border border-cyan-500/10 bg-[#0a1628]/50 p-8">
+                <div className="rounded-2xl border border-cyan-500/10 bg-surface-dark/50 p-8">
                   <div className="flex flex-wrap gap-4">
                     <button className="rounded-lg bg-gradient-to-r from-cyan-500 to-cyan-600 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-cyan-500/25 transition-all hover:from-cyan-400 hover:to-cyan-500 hover:shadow-cyan-500/40">
                       Primary Button
@@ -258,7 +258,7 @@ export default function DesignSystemPage() {
               {/* Pills & Badges */}
               <div className="space-y-6">
                 <h3 className="text-xl font-semibold">Pills & Badges</h3>
-                <div className="flex flex-wrap gap-3 rounded-2xl border border-cyan-500/10 bg-[#0a1628]/50 p-8">
+                <div className="flex flex-wrap gap-3 rounded-2xl border border-cyan-500/10 bg-surface-dark/50 p-8">
                   <span className="inline-flex items-center gap-1.5 rounded-full border border-cyan-500/20 bg-cyan-500/10 px-3 py-1 text-xs font-medium text-gray-300 backdrop-blur-md">
                     New Feature
                   </span>
@@ -284,7 +284,7 @@ export default function DesignSystemPage() {
                 <h3 className="text-xl font-semibold">Cards</h3>
                 <div className="grid gap-6 md:grid-cols-3">
                   {/* Basic Card */}
-                  <div className="rounded-xl border border-cyan-500/10 bg-[#0f172a] p-6 transition-all hover:border-cyan-500/30">
+                  <div className="rounded-xl border border-cyan-500/10 bg-surface-base p-6 transition-all hover:border-cyan-500/30">
                     <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-cyan-500/20">
                       <svg className="h-5 w-5 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
@@ -332,7 +332,7 @@ export default function DesignSystemPage() {
               {/* Inputs */}
               <div className="space-y-6">
                 <h3 className="text-xl font-semibold">Inputs</h3>
-                <div className="grid gap-4 rounded-2xl border border-cyan-500/10 bg-[#0a1628]/50 p-8 md:grid-cols-2">
+                <div className="grid gap-4 rounded-2xl border border-cyan-500/10 bg-surface-dark/50 p-8 md:grid-cols-2">
                   <div>
                     <label className="mb-2 block text-sm font-medium text-gray-400">Standard Input</label>
                     <input
@@ -355,7 +355,7 @@ export default function DesignSystemPage() {
               {/* Avatars */}
               <div className="space-y-6">
                 <h3 className="text-xl font-semibold">Avatars</h3>
-                <div className="flex items-center gap-6 rounded-2xl border border-cyan-500/10 bg-[#0a1628]/50 p-8">
+                <div className="flex items-center gap-6 rounded-2xl border border-cyan-500/10 bg-surface-dark/50 p-8">
                   <div className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-cyan-500/30 bg-gradient-to-br from-cyan-500 to-cyan-600 text-xs font-bold">
                     SM
                   </div>
@@ -370,10 +370,10 @@ export default function DesignSystemPage() {
                   </div>
                   {/* Avatar Group */}
                   <div className="flex -space-x-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-[#0a1628] bg-cyan-500 text-xs font-bold">JD</div>
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-[#0a1628] bg-cyan-600 text-xs font-bold">AK</div>
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-[#0a1628] bg-cyan-400 text-xs font-bold">MR</div>
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-[#0a1628] bg-cyan-500/30 text-xs font-bold">+5</div>
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-surface-dark bg-cyan-500 text-xs font-bold">JD</div>
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-surface-dark bg-cyan-600 text-xs font-bold">AK</div>
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-surface-dark bg-cyan-400 text-xs font-bold">MR</div>
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-surface-dark bg-cyan-500/30 text-xs font-bold">+5</div>
                   </div>
                 </div>
               </div>
@@ -481,19 +481,19 @@ export default function DesignSystemPage() {
               <div className="space-y-6">
                 <h3 className="text-xl font-semibold">Animations</h3>
                 <div className="grid gap-6 md:grid-cols-4">
-                  <div className="flex flex-col items-center gap-4 rounded-xl border border-cyan-500/10 bg-[#0a1628]/50 p-6">
+                  <div className="flex flex-col items-center gap-4 rounded-xl border border-cyan-500/10 bg-surface-dark/50 p-6">
                     <div className="h-12 w-12 animate-pulse rounded-lg bg-cyan-500/50" />
                     <span className="text-xs text-gray-400">Pulse</span>
                   </div>
-                  <div className="flex flex-col items-center gap-4 rounded-xl border border-cyan-500/10 bg-[#0a1628]/50 p-6">
+                  <div className="flex flex-col items-center gap-4 rounded-xl border border-cyan-500/10 bg-surface-dark/50 p-6">
                     <div className="h-12 w-12 animate-bounce rounded-lg bg-cyan-400/50" />
                     <span className="text-xs text-gray-400">Bounce</span>
                   </div>
-                  <div className="flex flex-col items-center gap-4 rounded-xl border border-cyan-500/10 bg-[#0a1628]/50 p-6">
+                  <div className="flex flex-col items-center gap-4 rounded-xl border border-cyan-500/10 bg-surface-dark/50 p-6">
                     <div className="h-12 w-12 animate-spin rounded-lg border-2 border-cyan-500/50 border-t-cyan-500" />
                     <span className="text-xs text-gray-400">Spin</span>
                   </div>
-                  <div className="flex flex-col items-center gap-4 rounded-xl border border-cyan-500/10 bg-[#0a1628]/50 p-6">
+                  <div className="flex flex-col items-center gap-4 rounded-xl border border-cyan-500/10 bg-surface-dark/50 p-6">
                     <div className="h-12 w-12 animate-ping rounded-full bg-green-500/50" />
                     <span className="text-xs text-gray-400">Ping</span>
                   </div>
@@ -528,7 +528,7 @@ function ColorSwatch({ name, color, desc }: { name: string; color: string; desc:
   return (
     <div className="overflow-hidden rounded-xl border border-cyan-500/10">
       <div className="h-20" style={{ backgroundColor: color }} />
-      <div className="bg-[#0f172a] p-3">
+      <div className="bg-surface-base p-3">
         <p className="font-medium">{name}</p>
         <p className="text-xs text-gray-500">{color}</p>
         <p className="mt-1 text-xs text-gray-400">{desc}</p>

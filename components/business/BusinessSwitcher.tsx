@@ -42,7 +42,7 @@ export function BusinessSwitcher() {
       <DropdownMenuTrigger asChild>
         <Button
           variant="outline"
-          className="bg-[#0f172a]/80 backdrop-blur-xl border border-cyan-500/10 text-white hover:bg-cyan-500/10 hover:border-cyan-500/20 transition-all"
+          className="bg-surface-base/80 backdrop-blur-xl border border-cyan-500/10 text-white hover:bg-cyan-500/10 hover:border-cyan-500/20 transition-all"
           disabled={isSwitching}
         >
           <Building className="mr-2 h-4 w-4 text-cyan-400" />

@@ -22,7 +22,7 @@ export default function TasksLoading() {
       <div className="flex gap-4 overflow-x-auto pb-4">
         {/* To Do Column */}
         <div className="flex-shrink-0 w-80">
-          <Card className="bg-[#0f172a]/80 border border-cyan-500/10">
+          <Card className="bg-surface-base/80 border border-cyan-500/10">
             <CardHeader className="pb-2">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
@@ -52,7 +52,7 @@ export default function TasksLoading() {
 
         {/* In Progress Column */}
         <div className="flex-shrink-0 w-80">
-          <Card className="bg-[#0f172a]/80 border border-cyan-500/10">
+          <Card className="bg-surface-base/80 border border-cyan-500/10">
             <CardHeader className="pb-2">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
@@ -81,7 +81,7 @@ export default function TasksLoading() {
 
         {/* Review Column */}
         <div className="flex-shrink-0 w-80">
-          <Card className="bg-[#0f172a]/80 border border-cyan-500/10">
+          <Card className="bg-surface-base/80 border border-cyan-500/10">
             <CardHeader className="pb-2">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
@@ -110,7 +110,7 @@ export default function TasksLoading() {
 
         {/* Done Column */}
         <div className="flex-shrink-0 w-80">
-          <Card className="bg-[#0f172a]/80 border border-cyan-500/10">
+          <Card className="bg-surface-base/80 border border-cyan-500/10">
             <CardHeader className="pb-2">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">

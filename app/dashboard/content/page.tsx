@@ -400,7 +400,7 @@ export default function ContentPage() {
                   toast.error('Failed to switch business');
                 }
               }}
-              className="bg-[#0f172a] border border-cyan-500/20 rounded-lg px-3 py-1.5 text-sm text-white focus:ring-1 focus:ring-cyan-500/30 focus:outline-none appearance-none cursor-pointer"
+              className="bg-surface-base border border-cyan-500/20 rounded-lg px-3 py-1.5 text-sm text-white focus:ring-1 focus:ring-cyan-500/30 focus:outline-none appearance-none cursor-pointer"
             >
               {businesses.map((b) => (
                 <option key={b.organizationId} value={b.organizationId}>

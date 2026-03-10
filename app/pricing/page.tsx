@@ -99,7 +99,7 @@ export default function PricingPage() {
                 a: 'Absolutely. You can cancel your subscription at any time with no cancellation fees.',
               },
             ].map((faq) => (
-              <Card key={faq.q} variant="glass" className="p-6 bg-[#0f172a]/80 backdrop-blur-sm border border-cyan-500/10 hover:border-cyan-500/20 transition-all duration-300">
+              <Card key={faq.q} variant="glass" className="p-6 bg-surface-base/80 backdrop-blur-sm border border-cyan-500/10 hover:border-cyan-500/20 transition-all duration-300">
                 <h3 className="text-lg font-semibold text-white mb-2">{faq.q}</h3>
                 <p className="text-gray-400">{faq.a}</p>
               </Card>

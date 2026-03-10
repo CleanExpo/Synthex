@@ -68,6 +68,13 @@ module.exports = {
         warning: 'rgb(var(--color-warning) / <alpha-value>)',
         error: 'rgb(var(--color-error) / <alpha-value>)',
         info: 'rgb(var(--color-info) / <alpha-value>)',
+        // App Surface Colors (dark theme backgrounds — tokens prevent inline hex)
+        surface: {
+          dark: '#0a1628',    // deep navy — primary page background
+          darker: '#0a0f1a',  // near-black — AI chat / image panels
+          base: '#0f172a',    // slate-900 equivalent — card/panel backgrounds
+          void: '#030014',    // near-black — marketing visual backgrounds
+        },
         // Glass Colors
         glass: {
           bg: {

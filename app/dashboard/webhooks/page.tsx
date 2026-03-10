@@ -374,7 +374,7 @@ function CreateWebhookDialog({ open, onOpenChange, onSubmit, availableEvents }: 
   if (createdSecret) {
     return (
       <Dialog open={open} onOpenChange={handleDone}>
-        <DialogContent className="bg-[#0f172a]/95 border-cyan-500/20 backdrop-blur-xl sm:max-w-md">
+        <DialogContent className="bg-surface-base/95 border-cyan-500/20 backdrop-blur-xl sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="text-white flex items-center gap-2">
               <Check className="w-5 h-5 text-green-400" />
@@ -435,7 +435,7 @@ function CreateWebhookDialog({ open, onOpenChange, onSubmit, availableEvents }: 
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="bg-[#0f172a]/95 border-cyan-500/20 backdrop-blur-xl sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="bg-surface-base/95 border-cyan-500/20 backdrop-blur-xl sm:max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-white">Create Webhook</DialogTitle>
           <DialogDescription className="text-gray-400">

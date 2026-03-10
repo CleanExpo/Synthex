@@ -192,7 +192,7 @@ export default function SecurityPage() {
             </div>
             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
               {dataProtectionPrinciples.map((principle, index) => (
-                <div key={index} className="bg-[#0a1628]/60 border border-cyan-500/10 rounded-xl p-6 text-center">
+                <div key={index} className="bg-surface-dark/60 border border-cyan-500/10 rounded-xl p-6 text-center">
                   <principle.icon className="w-10 h-10 text-cyan-400 mx-auto mb-4" />
                   <h3 className="text-lg font-semibold text-white mb-2">{principle.title}</h3>
                   <p className="text-gray-400 text-sm">{principle.description}</p>
@@ -313,7 +313,7 @@ export default function SecurityPage() {
                 We value the security research community. If you discover a security vulnerability,
                 please report it responsibly to help us protect our users.
               </p>
-              <div className="bg-[#0a1628]/60 border border-amber-500/20 rounded-xl p-8 max-w-2xl mx-auto">
+              <div className="bg-surface-dark/60 border border-amber-500/20 rounded-xl p-8 max-w-2xl mx-auto">
                 <h3 className="text-xl font-semibold text-white mb-4">Report Security Issues</h3>
                 <div className="space-y-3 mb-6">
                   <div className="flex items-center gap-3">
