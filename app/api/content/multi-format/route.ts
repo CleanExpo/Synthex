@@ -17,6 +17,7 @@ import { withAuth, AuthenticatedRequest } from '@/lib/middleware/withAuth';
 import { requireApiKey } from '@/lib/middleware/require-api-key';
 import { z } from 'zod';
 import { multiFormatAdapter } from '@/lib/ai/multi-format-adapter';
+import { logger } from '@/lib/logger';
 
 // ============================================================================
 // VALIDATION
@@ -122,7 +123,7 @@ async function handlePost(request: AuthenticatedRequest): Promise<NextResponse> 
       variants: result.variants,
     });
   } catch (error) {
-    console.error('[content/multi-format] Generation failed:', error);
+    logger.error('[content/multi-format] Generation failed:', error);
     return NextResponse.json(
       { success: false, error: 'Failed to generate content variants' },
       { status: 500 }

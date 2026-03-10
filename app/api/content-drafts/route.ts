@@ -8,6 +8,7 @@ import { z } from 'zod';
 import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
+import { logger } from '@/lib/logger';
 
 export const runtime = 'nodejs';
 
@@ -81,7 +82,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ drafts, total, limit, offset });
   } catch (error) {
-    console.error('[content-drafts] GET error:', error);
+    logger.error('[content-drafts] GET error:', error);
     return NextResponse.json(
       { error: 'Failed to fetch drafts' },
       { status: 500 }
@@ -131,7 +132,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ draft }, { status: 201 });
   } catch (error) {
-    console.error('[content-drafts] POST error:', error);
+    logger.error('[content-drafts] POST error:', error);
     return NextResponse.json(
       { error: 'Failed to create draft' },
       { status: 500 }

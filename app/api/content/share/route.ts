@@ -18,6 +18,7 @@ import { prisma } from '@/lib/prisma';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
 import { randomBytes } from 'crypto';
 import { z } from 'zod';
+import { logger } from '@/lib/logger';
 
 // ============================================================================
 // TYPE DEFINITIONS
@@ -138,7 +139,7 @@ async function sendShareNotification(
       },
     });
   } catch (error) {
-    console.error('Failed to create share notification:', error);
+    logger.error('Failed to create share notification:', error);
     // Don't fail the share if notification fails
   }
 }
@@ -307,7 +308,7 @@ export async function POST(request: NextRequest) {
       created: true,
     });
   } catch (error) {
-    console.error('Content share error:', error);
+    logger.error('Content share error:', error);
     return NextResponse.json(
       { error: 'Failed to create share' },
       { status: 500 }
@@ -382,7 +383,7 @@ export async function GET(request: NextRequest) {
       hasMore: (shares?.length || 0) === limit,
     });
   } catch (error) {
-    console.error('Get shares error:', error);
+    logger.error('Get shares error:', error);
     return NextResponse.json(
       { error: 'Failed to fetch shares' },
       { status: 500 }
@@ -468,7 +469,7 @@ export async function DELETE(request: NextRequest) {
       message: 'Share revoked successfully',
     });
   } catch (error) {
-    console.error('Revoke share error:', error);
+    logger.error('Revoke share error:', error);
     return NextResponse.json(
       { error: 'Failed to revoke share' },
       { status: 500 }

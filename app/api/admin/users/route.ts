@@ -18,6 +18,7 @@ import { z } from 'zod';
 import { sanitizeErrorForResponse } from '@/lib/utils/error-utils';
 import { admin as adminRateLimit } from '@/lib/middleware/api-rate-limit';
 import { verifyAdmin } from '@/lib/admin/verify-admin';
+import { logger } from '@/lib/logger';
 
 // =============================================================================
 // Schemas
@@ -131,7 +132,7 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error: unknown) {
-    console.error('Admin list users error:', error);
+    logger.error('Admin list users error:', error);
     return NextResponse.json(
       { error: 'Internal Server Error', message: sanitizeErrorForResponse(error, 'Failed to process request') },
       { status: 500 }
@@ -340,7 +341,7 @@ export async function POST(request: NextRequest) {
         );
     }
   } catch (error: unknown) {
-    console.error('Admin update user error:', error);
+    logger.error('Admin update user error:', error);
     return NextResponse.json(
       { error: 'Internal Server Error', message: sanitizeErrorForResponse(error, 'Failed to process request') },
       { status: 500 }
@@ -472,7 +473,7 @@ export async function PATCH(request: NextRequest) {
       message: 'User updated',
     });
   } catch (error: unknown) {
-    console.error('Admin update user error:', error);
+    logger.error('Admin update user error:', error);
     return NextResponse.json(
       { error: 'Internal Server Error', message: sanitizeErrorForResponse(error, 'Failed to process request') },
       { status: 500 }

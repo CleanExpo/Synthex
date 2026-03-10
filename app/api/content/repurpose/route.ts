@@ -17,6 +17,7 @@ import { withAuth, AuthenticatedRequest } from '@/lib/middleware/withAuth';
 import { requireApiKey } from '@/lib/middleware/require-api-key';
 import { z } from 'zod';
 import { contentRepurposer } from '@/lib/ai/content-repurposer';
+import { logger } from '@/lib/logger';
 
 // ============================================================================
 // VALIDATION
@@ -98,7 +99,7 @@ async function handlePost(request: AuthenticatedRequest): Promise<NextResponse> 
       results: result.results,
     });
   } catch (error) {
-    console.error('[content/repurpose] Generation failed:', error);
+    logger.error('[content/repurpose] Generation failed:', error);
     return NextResponse.json(
       { success: false, error: 'Failed to repurpose content' },
       { status: 500 }

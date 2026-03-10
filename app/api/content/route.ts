@@ -15,6 +15,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { getEffectiveOrganizationId } from '@/lib/multi-business';
 import prisma from '@/lib/prisma';
+import { logger } from '@/lib/logger';
 
 export async function GET(request: NextRequest) {
   try {
@@ -61,7 +62,7 @@ export async function GET(request: NextRequest) {
       total: posts.length,
     });
   } catch (error) {
-    console.error('[Content] Error:', error);
+    logger.error('[Content] Error:', error);
     return NextResponse.json({ error: 'Failed to fetch content' }, { status: 500 });
   }
 }

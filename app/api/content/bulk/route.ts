@@ -51,6 +51,7 @@ const bulkCreateSchema = z.object({
 // =============================================================================
 
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
+import { logger } from '@/lib/logger';
 
 
 // =============================================================================
@@ -235,7 +236,7 @@ export async function POST(request: NextRequest) {
         );
     }
   } catch (error: unknown) {
-    console.error('Bulk operation error:', error);
+    logger.error('Bulk operation error:', error);
     return NextResponse.json(
       { error: 'Internal Server Error', message: error instanceof Error ? error instanceof Error ? error.message : String(error) : String(error) },
       { status: 500 }

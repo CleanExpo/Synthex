@@ -20,6 +20,7 @@ import { sanitizeErrorForResponse } from '@/lib/utils/error-utils';
 import { verifyAdmin } from '@/lib/admin/verify-admin';
 import { admin as adminRateLimit } from '@/lib/middleware/api-rate-limit';
 import { calculateMRR } from '@/lib/admin/mrr-calculator';
+import { logger } from '@/lib/logger';
 
 export async function GET(request: NextRequest) {
   return adminRateLimit(request, async () => {
@@ -74,7 +75,7 @@ export async function GET(request: NextRequest) {
         },
       });
     } catch (error: unknown) {
-      console.error('Admin platform stats error:', error);
+      logger.error('Admin platform stats error:', error);
       return NextResponse.json(
         {
           error: 'Internal Server Error',

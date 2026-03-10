@@ -23,6 +23,7 @@ import {
   type JobStatus,
 } from '@/lib/queue';
 import { verifyAdmin } from '@/lib/admin/verify-admin';
+import { logger } from '@/lib/logger';
 
 // =============================================================================
 // GET - Queue Statistics and Jobs
@@ -113,7 +114,7 @@ export async function GET(request: NextRequest) {
       }
     }
   } catch (error: unknown) {
-    console.error('Admin jobs GET error:', error);
+    logger.error('Admin jobs GET error:', error);
     return NextResponse.json(
       { error: 'Internal Server Error', message: sanitizeErrorForResponse(error, 'Failed to process job request') },
       { status: 500 }
@@ -244,7 +245,7 @@ export async function POST(request: NextRequest) {
         );
     }
   } catch (error: unknown) {
-    console.error('Admin jobs POST error:', error);
+    logger.error('Admin jobs POST error:', error);
     return NextResponse.json(
       { error: 'Internal Server Error', message: sanitizeErrorForResponse(error, 'Failed to process job request') },
       { status: 500 }

@@ -8,6 +8,7 @@ import { z } from 'zod';
 import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
+import { logger } from '@/lib/logger';
 
 export const runtime = 'nodejs';
 
@@ -82,7 +83,7 @@ export async function PATCH(
 
     return NextResponse.json({ draft });
   } catch (error) {
-    console.error('[content-drafts] PATCH error:', error);
+    logger.error('[content-drafts] PATCH error:', error);
     return NextResponse.json(
       { error: 'Failed to update draft' },
       { status: 500 }
@@ -116,7 +117,7 @@ export async function DELETE(
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('[content-drafts] DELETE error:', error);
+    logger.error('[content-drafts] DELETE error:', error);
     return NextResponse.json(
       { error: 'Failed to delete draft' },
       { status: 500 }

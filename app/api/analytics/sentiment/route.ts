@@ -14,6 +14,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
+import { logger } from '@/lib/logger';
 
 /** Sentiment analysis record from database */
 interface SentimentAnalysisRecord {
@@ -281,7 +282,7 @@ export async function GET(request: NextRequest) {
       insights,
     });
   } catch (error) {
-    console.error('Sentiment analytics error:', error);
+    logger.error('Sentiment analytics error:', error);
     return NextResponse.json(
       { error: 'Failed to fetch sentiment analytics' },
       { status: 500 }

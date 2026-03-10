@@ -17,6 +17,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
 import { z } from 'zod';
+import { logger } from '@/lib/logger';
 
 // ============================================================================
 // VALIDATION SCHEMAS
@@ -493,7 +494,7 @@ export async function POST(request: NextRequest) {
       predictedAt: new Date().toISOString(),
     });
   } catch (error) {
-    console.error('Engagement prediction error:', error);
+    logger.error('Engagement prediction error:', error);
     return NextResponse.json(
       { error: 'Failed to predict engagement' },
       { status: 500 }
@@ -563,7 +564,7 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('Get predictions error:', error);
+    logger.error('Get predictions error:', error);
     return NextResponse.json(
       { error: 'Failed to fetch predictions' },
       { status: 500 }

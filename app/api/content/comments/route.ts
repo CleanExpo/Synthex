@@ -18,6 +18,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
 import { z } from 'zod';
+import { logger } from '@/lib/logger';
 
 /** Comment record from database */
 interface CommentRecord {
@@ -121,7 +122,7 @@ async function sendMentionNotifications(
       data: notifications,
     });
   } catch (error) {
-    console.error('Failed to send mention notifications:', error);
+    logger.error('Failed to send mention notifications:', error);
   }
 }
 
@@ -168,7 +169,7 @@ async function notifyContentOwner(
       },
     });
   } catch (error) {
-    console.error('Failed to notify content owner:', error);
+    logger.error('Failed to notify content owner:', error);
   }
 }
 
@@ -288,7 +289,7 @@ export async function POST(request: NextRequest) {
       created: true,
     });
   } catch (error) {
-    console.error('Create comment error:', error);
+    logger.error('Create comment error:', error);
     return NextResponse.json(
       { error: 'Failed to create comment' },
       { status: 500 }
@@ -390,7 +391,7 @@ export async function GET(request: NextRequest) {
       hasMore: (comments?.length || 0) === limit,
     });
   } catch (error) {
-    console.error('Get comments error:', error);
+    logger.error('Get comments error:', error);
     return NextResponse.json(
       { error: 'Failed to fetch comments' },
       { status: 500 }
@@ -490,7 +491,7 @@ export async function PATCH(request: NextRequest) {
       updated: true,
     });
   } catch (error) {
-    console.error('Update comment error:', error);
+    logger.error('Update comment error:', error);
     return NextResponse.json(
       { error: 'Failed to update comment' },
       { status: 500 }
@@ -571,7 +572,7 @@ export async function DELETE(request: NextRequest) {
       message: 'Comment deleted successfully',
     });
   } catch (error) {
-    console.error('Delete comment error:', error);
+    logger.error('Delete comment error:', error);
     return NextResponse.json(
       { error: 'Failed to delete comment' },
       { status: 500 }

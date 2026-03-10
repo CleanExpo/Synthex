@@ -12,6 +12,7 @@ import { z } from 'zod';
 import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
+import { logger } from '@/lib/logger';
 
 // Validation schemas
 const querySchema = z.object({
@@ -249,7 +250,7 @@ export async function GET(request: NextRequest) {
     );
 
   } catch (error) {
-    console.error('Analytics insights error:', error);
+    logger.error('Analytics insights error:', error);
 
     if (error instanceof z.ZodError) {
       return APISecurityChecker.createSecureResponse(

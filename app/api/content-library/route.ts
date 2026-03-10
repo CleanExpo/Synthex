@@ -15,6 +15,7 @@ import { Prisma } from '@prisma/client';
 import prisma from '@/lib/prisma';
 import { z } from 'zod';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
+import { logger } from '@/lib/logger';
 
 export const runtime = 'nodejs';
 
@@ -118,7 +119,7 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('[content-library] GET error:', error);
+    logger.error('[content-library] GET error:', error);
     return NextResponse.json(
       { error: 'Internal Server Error', message: 'Failed to fetch content library' },
       { status: 500 }
@@ -181,7 +182,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ data: item }, { status: 201 });
   } catch (error) {
-    console.error('[content-library] POST error:', error);
+    logger.error('[content-library] POST error:', error);
     return NextResponse.json(
       { error: 'Internal Server Error', message: 'Failed to save content' },
       { status: 500 }

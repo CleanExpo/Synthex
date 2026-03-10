@@ -19,6 +19,7 @@ import { requireApiKey } from '@/lib/middleware/require-api-key';
 import { z } from 'zod';
 import { crossPostService } from '@/lib/ai/cross-post-service';
 import { SUPPORTED_PLATFORMS, SupportedPlatform } from '@/lib/social';
+import { logger } from '@/lib/logger';
 
 // ============================================================================
 // VALIDATION
@@ -170,7 +171,7 @@ async function handlePost(request: AuthenticatedRequest): Promise<NextResponse> 
       },
     });
   } catch (error) {
-    console.error('[content/cross-post] Operation failed:', error);
+    logger.error('[content/cross-post] Operation failed:', error);
     return NextResponse.json(
       {
         success: false,

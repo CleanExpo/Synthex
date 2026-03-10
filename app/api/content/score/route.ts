@@ -17,6 +17,7 @@ import { withAuth, AuthenticatedRequest } from '@/lib/middleware/withAuth';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
 import { contentScorer, ScoreResult } from '@/lib/ai/content-scorer';
+import { logger } from '@/lib/logger';
 
 // ============================================================================
 // VALIDATION
@@ -252,7 +253,7 @@ async function handlePost(request: AuthenticatedRequest): Promise<NextResponse> 
       }
     } catch (error) {
       // Non-critical failure — score result is still valid
-      console.error('[content/score] Template lookup failed:', error);
+      logger.error('[content/score] Template lookup failed:', error);
       templateMatch = null;
     }
   }

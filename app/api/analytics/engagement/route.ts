@@ -13,6 +13,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { analyticsTracker } from '@/lib/analytics/analytics-tracker';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
+import { logger } from '@/lib/logger';
 
 const engagementSchema = z.object({
   contentId: z.string().min(1),
@@ -58,7 +59,7 @@ export async function POST(request: NextRequest) {
       }
     });
   } catch (error: unknown) {
-    console.error('Engagement tracking error:', error);
+    logger.error('Engagement tracking error:', error);
     return NextResponse.json(
       { error: 'Failed to track engagement' },
       { status: 500 }

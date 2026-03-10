@@ -10,6 +10,7 @@
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
+import { logger } from '@/lib/logger';
 
 /**
  * GET /api/analytics/realtime
@@ -218,7 +219,7 @@ export async function GET(request: NextRequest) {
     );
 
   } catch (error) {
-    console.error('Analytics realtime error:', error);
+    logger.error('Analytics realtime error:', error);
 
     return APISecurityChecker.createSecureResponse(
       { error: 'Failed to fetch realtime analytics' },

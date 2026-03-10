@@ -20,6 +20,7 @@ import { sanitizeErrorForResponse } from '@/lib/utils/error-utils';
 // =============================================================================
 
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
+import { logger } from '@/lib/logger';
 
 
 // =============================================================================
@@ -77,7 +78,7 @@ export async function GET(
       data: post,
     });
   } catch (error: unknown) {
-    console.error('GET content error:', error);
+    logger.error('GET content error:', error);
     return NextResponse.json(
       { error: 'Internal Server Error', message: sanitizeErrorForResponse(error, 'Failed to process content request') },
       { status: 500 }
@@ -210,7 +211,7 @@ export async function PATCH(
       data: updatedPost,
     });
   } catch (error: unknown) {
-    console.error('PATCH content error:', error);
+    logger.error('PATCH content error:', error);
     return NextResponse.json(
       { error: 'Internal Server Error', message: sanitizeErrorForResponse(error, 'Failed to process content request') },
       { status: 500 }
@@ -286,7 +287,7 @@ export async function DELETE(
       message: softDelete ? 'Content archived successfully' : 'Content deleted successfully',
     });
   } catch (error: unknown) {
-    console.error('DELETE content error:', error);
+    logger.error('DELETE content error:', error);
     return NextResponse.json(
       { error: 'Internal Server Error', message: sanitizeErrorForResponse(error, 'Failed to process content request') },
       { status: 500 }

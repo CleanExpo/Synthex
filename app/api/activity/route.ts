@@ -17,6 +17,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
+import { logger } from '@/lib/logger';
 
 // ============================================================================
 // TYPES
@@ -189,7 +190,7 @@ export async function GET(request: NextRequest) {
       hasMore: filteredActivities.length === limit,
     });
   } catch (error) {
-    console.error('Activity feed error:', error);
+    logger.error('Activity feed error:', error);
     return NextResponse.json(
       { error: 'Failed to fetch activity feed' },
       { status: 500 }
@@ -300,7 +301,7 @@ export async function POST(request: NextRequest) {
       success: true,
     });
   } catch (error) {
-    console.error('Activity create error:', error);
+    logger.error('Activity create error:', error);
     return NextResponse.json(
       { error: 'Failed to create activity' },
       { status: 500 }

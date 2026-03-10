@@ -11,6 +11,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { getCache } from '@/lib/cache/cache-manager';
+import { logger } from '@/lib/logger';
 
 export interface DashboardStatsData {
   totalPosts: number;
@@ -94,7 +95,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     });
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error);
-    console.error('[analytics/dashboard-stats] Error:', msg);
+    logger.error('[analytics/dashboard-stats] Error:', msg);
     return NextResponse.json(
       { error: 'Failed to fetch dashboard stats' },
       { status: 500 },

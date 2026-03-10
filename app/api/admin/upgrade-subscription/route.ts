@@ -19,6 +19,7 @@ import { timingSafeEqual } from 'crypto';
 import { createClient } from '@supabase/supabase-js';
 import { z } from 'zod';
 import { PLAN_LIMITS } from '@/lib/stripe/subscription-service';
+import { logger } from '@/lib/logger';
 
 // =============================================================================
 // Supabase Admin Client
@@ -244,7 +245,7 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error: unknown) {
-    console.error('Admin upgrade subscription error:', error);
+    logger.error('Admin upgrade subscription error:', error);
     return NextResponse.json(
       {
         error: 'Internal Server Error',

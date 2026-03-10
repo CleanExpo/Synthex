@@ -4,6 +4,7 @@ import { db } from '@/lib/supabase-client';
 import { prisma } from '@/lib/prisma';
 import { withAuth, AuthenticatedRequest } from '@/lib/middleware/withAuth';
 import { z } from 'zod';
+import { logger } from '@/lib/logger';
 
 // Input validation schema
 const generateContentSchema = z.object({
@@ -109,7 +110,7 @@ async function handlePost(request: AuthenticatedRequest) {
         status: 'draft',
       });
     } catch (dbError) {
-      console.error('Failed to save content:', dbError);
+      logger.error('Failed to save content:', dbError);
       // Non-critical error - continue returning the generated content
     }
 
@@ -120,7 +121,7 @@ async function handlePost(request: AuthenticatedRequest) {
       timestamp: new Date().toISOString(),
     });
   } catch (error: unknown) {
-    console.error('Content generation error:', error);
+    logger.error('Content generation error:', error);
     const message = error instanceof Error ? error instanceof Error ? error.message : String(error) : 'Failed to generate content';
     return NextResponse.json(
       { success: false, error: message },
@@ -168,7 +169,7 @@ async function handlePut(request: AuthenticatedRequest) {
       timestamp: new Date().toISOString(),
     });
   } catch (error: unknown) {
-    console.error('AI generation error:', error);
+    logger.error('AI generation error:', error);
     const message = error instanceof Error ? error instanceof Error ? error.message : String(error) : 'Failed to generate with AI';
     return NextResponse.json(
       { success: false, error: message },

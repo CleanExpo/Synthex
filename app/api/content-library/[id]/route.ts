@@ -15,6 +15,7 @@ import { Prisma } from '@prisma/client';
 import prisma from '@/lib/prisma';
 import { z } from 'zod';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
+import { logger } from '@/lib/logger';
 
 export const runtime = 'nodejs';
 
@@ -87,7 +88,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
 
     return NextResponse.json({ data: item });
   } catch (error) {
-    console.error('[content-library/[id]] GET error:', error);
+    logger.error('[content-library/[id]] GET error:', error);
     return NextResponse.json(
       { error: 'Internal Server Error', message: 'Failed to fetch content item' },
       { status: 500 }
@@ -156,7 +157,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 
     return NextResponse.json({ data: updated });
   } catch (error) {
-    console.error('[content-library/[id]] PATCH error:', error);
+    logger.error('[content-library/[id]] PATCH error:', error);
     return NextResponse.json(
       { error: 'Internal Server Error', message: 'Failed to update content item' },
       { status: 500 }
@@ -195,7 +196,7 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('[content-library/[id]] DELETE error:', error);
+    logger.error('[content-library/[id]] DELETE error:', error);
     return NextResponse.json(
       { error: 'Internal Server Error', message: 'Failed to delete content item' },
       { status: 500 }

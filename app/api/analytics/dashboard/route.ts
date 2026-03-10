@@ -6,6 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { analyticsTracker } from '@/lib/analytics/analytics-tracker';
 import { getUserIdFromCookies, unauthorizedResponse } from '@/lib/auth/jwt-utils';
+import { logger } from '@/lib/logger';
 
 export async function GET(request: NextRequest) {
   try {
@@ -24,7 +25,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(dashboardMetrics);
   } catch (error: unknown) {
-    console.error('Dashboard API error:', error);
+    logger.error('Dashboard API error:', error);
     return NextResponse.json(
       { error: 'Failed to fetch dashboard metrics' },
       { status: 500 }
