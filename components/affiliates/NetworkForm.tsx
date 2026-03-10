@@ -108,6 +108,7 @@ export function NetworkForm({
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g., My Amazon Account"
               required
+              aria-label="Display name"
               className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50"
             />
           </div>
@@ -152,6 +153,7 @@ export function NetworkForm({
               value={trackingId}
               onChange={(e) => setTrackingId(e.target.value)}
               placeholder="Your affiliate ID"
+              aria-label="Tracking/Affiliate ID"
               className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50"
             />
           </div>
@@ -166,6 +168,7 @@ export function NetworkForm({
               value={apiKey}
               onChange={(e) => setApiKey(e.target.value)}
               placeholder="For automated reporting"
+              aria-label="API key"
               className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50"
             />
           </div>
@@ -183,6 +186,7 @@ export function NetworkForm({
               value={commissionRate}
               onChange={(e) => setCommissionRate(e.target.value)}
               placeholder="e.g., 5.00"
+              aria-label="Default commission rate (%)"
               className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50"
             />
           </div>
