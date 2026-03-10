@@ -324,14 +324,16 @@ export default function DashboardLayout({
               .filter((g) => showAllGroups || STARTER_GROUP_IDS.has(g.id))
               .map((group) => (
                 sidebarCollapsed ? (
-                  // Collapsed mode: show only group icons as tooltips
-                  <div
+                  // Collapsed mode: icon link navigates to first item in group
+                  <Link
                     key={group.id}
-                    className="flex items-center justify-center px-2 py-2 text-gray-400 hover:text-white rounded-lg hover:bg-white/5"
+                    href={group.items[0]?.href ?? '/dashboard'}
+                    className="flex items-center justify-center px-2 py-2 text-gray-400 hover:text-white rounded-lg hover:bg-white/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 focus-visible:ring-inset"
+                    aria-label={group.label}
                     title={group.label}
                   >
                     <group.icon className="h-5 w-5" />
-                  </div>
+                  </Link>
                 ) : (
                   // Expanded mode: show full sidebar groups
                   <SidebarGroup
@@ -349,7 +351,9 @@ export default function DashboardLayout({
             {!sidebarCollapsed && (
               <button
                 onClick={toggleShowAllGroups}
-                className="w-full flex items-center gap-2 px-4 py-2 text-xs font-medium text-gray-500 hover:text-gray-300 hover:bg-white/5 rounded-lg transition-colors"
+                aria-expanded={showAllGroups}
+                aria-label={showAllGroups ? 'Show fewer navigation sections' : 'Show all navigation sections'}
+                className="w-full flex items-center gap-2 px-4 py-2 text-xs font-medium text-gray-500 hover:text-gray-300 hover:bg-white/5 rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500/50 focus-visible:ring-inset"
               >
                 <ChevronDown
                   className={cn(
