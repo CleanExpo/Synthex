@@ -133,7 +133,7 @@ export default function AIPMPanel({ open, onOpenChange }: AIPMPanelProps) {
           <div className="flex-1 overflow-y-auto">
             {isLoading ? (
               <div className="flex h-40 items-center justify-center">
-                <Loader2 className="h-6 w-6 animate-spin text-cyan-400" />
+                <Loader2 className="h-6 w-6 animate-spin text-cyan-400" role="status" aria-label="Loading conversations" />
               </div>
             ) : conversations.length === 0 ? (
               <div className="flex flex-col items-center justify-center px-8 py-12 text-center">
