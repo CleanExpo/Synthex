@@ -55,15 +55,14 @@ interface PostResult {
   error?: string;
 }
 
-/** A single lifecycle event stored in metadata.history */
-interface HistoryEntry {
-  event: string;
-  at: string;
-  reason?: string;
-  attempt?: number;
-  retryAt?: string;
-  platformPostId?: string;
-  attempts?: number;
+/**
+ * Sanitise a metadata object so it satisfies Prisma's InputJsonValue.
+ * JSON.parse(JSON.stringify(...)) strips TypeScript-specific type info and
+ * produces plain JSON-compatible objects/arrays.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function jsonSafe(obj: Record<string, unknown>): any {
+  return JSON.parse(JSON.stringify(obj));
 }
 
 // ---------------------------------------------------------------------------
@@ -145,7 +144,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       const platform = (post.platform || post.campaign.platform).toLowerCase();
       const userId = post.campaign.userId;
       const metadata = (post.metadata as Record<string, unknown>) || {};
-      const existingHistory = (metadata.history as HistoryEntry[]) || [];
+      const existingHistory = (metadata.history as Record<string, unknown>[]) || [];
       const retryCount = (metadata.retryCount as number) || 0;
 
       // -- Guard: unsupported platform ---------------------------------------
@@ -349,13 +348,13 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
               platformPostId: postResult.postId ?? null,
               platformPostUrl: postResult.url ?? null,
             },
-            metadata: {
+            metadata: jsonSafe({
               ...metadata,
               history: [
                 ...existingHistory,
                 { event: 'published', at: new Date().toISOString(), platformPostId: postResult.postId },
               ],
-            },
+            }),
           },
         });
 
@@ -411,7 +410,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
             where: { id: post.id },
             data: {
               scheduledAt: retryAt,
-              metadata: {
+              metadata: jsonSafe({
                 ...metadata,
                 retryCount: retryCount + 1,
                 lastRetryError: errorMessage,
@@ -426,7 +425,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
                     retryAt: retryAt.toISOString(),
                   },
                 ],
-              },
+              }),
             },
           });
 
@@ -472,7 +471,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       console.error(`[publish-scheduled] Unexpected error for post ${post.id}:`, err);
 
       const metadata = (post.metadata as Record<string, unknown>) || {};
-      const existingHistory = (metadata.history as HistoryEntry[]) || [];
+      const existingHistory = (metadata.history as Record<string, unknown>[]) || [];
       const retryCount = (metadata.retryCount as number) || 0;
       const userId = post.campaign.userId;
       const platform = (post.platform || post.campaign.platform).toLowerCase();
@@ -487,7 +486,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
             where: { id: post.id },
             data: {
               scheduledAt: retryAt,
-              metadata: {
+              metadata: jsonSafe({
                 ...metadata,
                 retryCount: retryCount + 1,
                 lastRetryError: errorMessage,
@@ -502,7 +501,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
                     retryAt: retryAt.toISOString(),
                   },
                 ],
-              },
+              }),
             },
           });
 
@@ -606,12 +605,12 @@ async function markPostFailed(
     where: { id: postId },
     data: {
       status: 'failed',
-      metadata: {
+      metadata: jsonSafe({
         ...existingMetadata,
         publishError: errorMessage,
         failedAt: new Date().toISOString(),
         ...(extraMetadata ?? {}),
-      },
+      }),
     },
   });
 }
@@ -625,7 +624,7 @@ async function createNotification(
   type: string,
   title: string,
   message: string,
-  data: Record<string, unknown>
+  notifData: Record<string, unknown>
 ): Promise<void> {
   try {
     await prisma.notification.create({
@@ -634,7 +633,7 @@ async function createNotification(
         type,
         title,
         message,
-        data,
+        data: notifData as Record<string, string | number | boolean | null>,
         read: false,
       },
     });

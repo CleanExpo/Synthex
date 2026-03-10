@@ -543,7 +543,7 @@ function PostLifecycleTimeline({ metadata }: { metadata?: Record<string, unknown
                     {config.label}
                     {entry.attempt !== undefined && (
                       <span className="text-xs text-gray-400 ml-1">
-                        ({entry.attempt}/{metadata.maxRetries ?? 3})
+                        ({entry.attempt}/{(metadata?.maxRetries as number) ?? 3})
                       </span>
                     )}
                   </span>
