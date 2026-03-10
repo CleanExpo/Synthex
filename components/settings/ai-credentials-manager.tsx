@@ -277,7 +277,8 @@ export function AICredentialsManager() {
                     value={apiKeyInput}
                     onChange={e => setApiKeyInput(e.target.value)}
                     placeholder={getProviderConfig(selectedProvider)?.placeholder || 'Enter your API key'}
-                    className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500/50 font-mono text-sm"
+                    aria-label="API key"
+                    className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500/50 focus-visible:ring-2 focus-visible:ring-cyan-500/50 focus-visible:ring-offset-0 font-mono text-sm"
                     autoComplete="off"
                   />
                   <p className="text-xs text-slate-500 mt-1">
@@ -294,7 +295,8 @@ export function AICredentialsManager() {
                     <select
                       value={selectedModel}
                       onChange={e => setSelectedModel(e.target.value)}
-                      className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white focus:outline-none focus:border-cyan-500/50 text-sm"
+                      aria-label="Default model"
+                      className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white focus:outline-none focus:border-cyan-500/50 focus-visible:ring-2 focus-visible:ring-cyan-500/50 focus-visible:ring-offset-0 text-sm"
                     >
                       <optgroup label="Premium">
                         {OPENROUTER_MODELS.filter(m => m.tier === 'premium').map(m => (
