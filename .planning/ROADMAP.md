@@ -102,7 +102,7 @@ None (internal platform work)
 - [x] **Phase 79: Admin Completion** - Role updates, password reset, MRR from Stripe, audit log detail
 - [x] **Phase 80: Brand Profile Setup** - Multi-brand profile configuration in God Mode
 - [x] **Phase 81: Social Account Onboarding** - Connect real social accounts, audit presence, content strategy
-- [ ] **Phase 82: Code Quality** - Structured logger migration, component decomposition
+- [x] **Phase 82: Code Quality** - Structured logger migration, component decomposition
 - [ ] **Phase 83: Accessibility & Polish** - WCAG skip links, E2E flaky test fixes, responsive edge cases
 - [ ] **Phase 84: Final UAT & Launch** - End-to-end acceptance testing, production verification
 
@@ -738,11 +738,12 @@ Plans:
 **Goal**: Structured logger migration (754 console.logs), component decomposition (14 large components)
 **Depends on**: Phase 81
 **Research**: Unlikely (internal patterns, existing structured logger)
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [x] 82-01: Auth centralisation — remove 49 local auth helpers from API routes (SYN-57)
-- [x] 82-02: Logger migration (248 files) + icon barrel FileQuestion fix (SYN-57)
+- [x] 82-01: Auth centralisation — 49 local auth helpers removed
+- [x] 82-02: Logger migration (248 files) + icon barrel fix
+- [x] 82-03: TypeScript `any` elimination (57 usages) + hex colour token cleanup
 
 #### Phase 83: Accessibility & Polish
 
