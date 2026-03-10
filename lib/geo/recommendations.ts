@@ -154,6 +154,78 @@ export function generateRecommendations(
     });
   }
 
+  // --- Design-aware recommendations ---
+  // These are based on content analysis already available and do NOT require the design audit addon.
+
+  // 1. Long paragraphs: passages with more than 100 words that are not optimal length and don't answer-first
+  const longParagraphCount = passages.filter(p => p.wordCount > 100 && !p.isOptimalLength).length;
+  if (longParagraphCount > 0) {
+    recommendations.push({
+      category: 'design',
+      priority: 'high',
+      title: 'Break long paragraphs into claim-isolated blocks',
+      description: `${longParagraphCount} passage${longParagraphCount > 1 ? 's exceed' : ' exceeds'} 100 words without optimal structure. Break them into claim-isolated blocks (25-40 words each) for better AI citation pickup.`,
+      impact: 10,
+    });
+  }
+
+  // 2. Insufficient tables/lists
+  if (!structure.hasLists && !structure.hasTables) {
+    // Only add if not already added by the structure block above (avoid duplicate)
+    const alreadyAdded = recommendations.some(r => r.title === 'Add structured data elements');
+    if (!alreadyAdded) {
+      recommendations.push({
+        category: 'design',
+        priority: 'medium',
+        title: 'Add structured data tables or numbered lists',
+        description: 'Add structured data tables or numbered lists — AI search engines cite structured content 2.3x more than unstructured prose.',
+        impact: 7,
+      });
+    }
+  }
+
+  // 3. Lacks FAQ patterns
+  if (!structure.hasFAQ) {
+    const alreadyAdded = recommendations.some(r => r.title === 'Add FAQ section');
+    if (!alreadyAdded) {
+      recommendations.push({
+        category: 'design',
+        priority: 'medium',
+        title: 'Add Q&A sections with question headings',
+        description: 'Add Q&A sections with question headings — aligns with how users prompt AI search and increases citation probability.',
+        impact: 6,
+      });
+    }
+  }
+
+  // 4. Heading hierarchy issues
+  if (!structure.headingHierarchy) {
+    const alreadyAdded = recommendations.some(r => r.title === 'Fix heading hierarchy');
+    if (!alreadyAdded) {
+      recommendations.push({
+        category: 'design',
+        priority: 'high',
+        title: 'Fix heading hierarchy (H1→H2→H3)',
+        description: 'Fix heading hierarchy (H1→H2→H3) — skipped levels confuse both search engines and AI crawlers, reducing citation eligibility.',
+        impact: 8,
+      });
+    }
+  }
+
+  // 5. Lacks inline citations
+  if (citationDensity < 0.5) {
+    const alreadyAdded = recommendations.some(r => r.category === 'authority' && r.title === 'Increase citation density');
+    if (!alreadyAdded) {
+      recommendations.push({
+        category: 'design',
+        priority: 'high',
+        title: 'Add source attributions for AI citation eligibility',
+        description: 'Add source attributions — content with inline citations gets 3.2x more AI citations. Aim for at least one attribution per 200 words.',
+        impact: 12,
+      });
+    }
+  }
+
   // Sort by priority then impact
   const priorityOrder = { critical: 0, high: 1, medium: 2, low: 3 };
   recommendations.sort((a, b) => {

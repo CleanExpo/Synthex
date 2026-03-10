@@ -64,7 +64,7 @@ export interface PlatformScore {
 }
 
 export interface GEORecommendation {
-  category: 'citability' | 'structure' | 'multiModal' | 'authority' | 'technical';
+  category: 'citability' | 'structure' | 'multiModal' | 'authority' | 'technical' | 'design';
   priority: 'critical' | 'high' | 'medium' | 'low';
   title: string;
   description: string;
