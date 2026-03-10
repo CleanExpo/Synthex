@@ -282,7 +282,8 @@ export function ShareDialog({
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                       placeholder="Search people or enter email..."
-                      className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder:text-white/40 focus:outline-none focus:border-cyan-500/50"
+                      aria-label="Search people or enter email"
+                      className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder:text-white/40 focus:outline-none focus:border-cyan-500/50 focus-visible:ring-2 focus-visible:ring-cyan-500/50 focus-visible:ring-offset-0"
                     />
                     {isSearching && (
                       <Loader2 className="absolute right-3 top-2.5 w-4 h-4 text-white/40 animate-spin" />
@@ -291,7 +292,8 @@ export function ShareDialog({
                   <select
                     value={selectedPermission}
                     onChange={(e) => setSelectedPermission(e.target.value as Permission)}
-                    className="px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:border-cyan-500/50"
+                    aria-label="Permission level"
+                    className="px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:border-cyan-500/50 focus-visible:ring-2 focus-visible:ring-cyan-500/50 focus-visible:ring-offset-0"
                   >
                     {PERMISSION_OPTIONS.map((opt) => (
                       <option key={opt.value} value={opt.value}>
@@ -403,7 +405,8 @@ export function ShareDialog({
                   <select
                     value={linkPermission}
                     onChange={(e) => setLinkPermission(e.target.value as Permission)}
-                    className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-cyan-500/50"
+                    aria-label="Link permission"
+                    className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-cyan-500/50 focus-visible:ring-2 focus-visible:ring-cyan-500/50 focus-visible:ring-offset-0"
                   >
                     {PERMISSION_OPTIONS.map((opt) => (
                       <option key={opt.value} value={opt.value}>
@@ -420,7 +423,8 @@ export function ShareDialog({
                     type="datetime-local"
                     value={linkExpiration}
                     onChange={(e) => setLinkExpiration(e.target.value)}
-                    className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-cyan-500/50"
+                    aria-label="Expiration date and time"
+                    className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-cyan-500/50 focus-visible:ring-2 focus-visible:ring-cyan-500/50 focus-visible:ring-offset-0"
                   />
                 </div>
 
@@ -432,7 +436,8 @@ export function ShareDialog({
                     value={linkPassword}
                     onChange={(e) => setLinkPassword(e.target.value)}
                     placeholder="Enter password..."
-                    className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder:text-white/40 focus:outline-none focus:border-cyan-500/50"
+                    aria-label="Link password"
+                    className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder:text-white/40 focus:outline-none focus:border-cyan-500/50 focus-visible:ring-2 focus-visible:ring-cyan-500/50 focus-visible:ring-offset-0"
                   />
                 </div>
 
@@ -445,7 +450,8 @@ export function ShareDialog({
                     onChange={(e) => setLinkMaxViews(e.target.value)}
                     placeholder="Unlimited"
                     min="1"
-                    className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder:text-white/40 focus:outline-none focus:border-cyan-500/50"
+                    aria-label="Maximum views"
+                    className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder:text-white/40 focus:outline-none focus:border-cyan-500/50 focus-visible:ring-2 focus-visible:ring-cyan-500/50 focus-visible:ring-offset-0"
                   />
                 </div>
 
