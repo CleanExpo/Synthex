@@ -23,6 +23,7 @@ export interface GEOScore {
   multiModal: number;       // 0-100, weight 15%
   authority: number;        // 0-100, weight 20%
   technical: number;        // 0-100, weight 20%
+  entityCoherence: number;  // 0-100, standalone metric (not part of overall weighted score)
 }
 
 export interface CitablePassage {
@@ -71,10 +72,31 @@ export interface SchemaIssue {
   recommendation: string;
 }
 
+export type EntityType = 'PERSON' | 'ORGANISATION' | 'LOCATION' | 'CONCEPT';
+
+export interface EntityMention {
+  text: string;
+  type: EntityType;
+  count: number;           // occurrences in content
+  firstIndex: number;      // char position of first occurrence
+  variants: string[];      // alternative forms found (e.g., ["Apple", "Apple Inc"])
+}
+
+export interface EntityAnalysisResult {
+  entities: EntityMention[];
+  entityCount: number;
+  uniqueEntityCount: number;
+  properNounDensity: number;    // percentage of total words
+  entityTypes: Record<EntityType, number>;  // count per type
+  coherenceIssues: string[];    // e.g., "Entity 'Apple' referred to as 'the company' — ambiguous"
+  score: number;                // 0-100 entity coherence score
+}
+
 export interface GEOAnalysisResult {
   score: GEOScore;
   citablePassages: CitablePassage[];
   structureAnalysis: StructureAnalysis;
+  entityAnalysis: EntityAnalysisResult;
   platformScores: PlatformScore[];
   recommendations: GEORecommendation[];
   schemaIssues: SchemaIssue[];
