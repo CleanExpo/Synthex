@@ -259,6 +259,128 @@ export default function GEOPage() {
           )}
         </TabsContent>
 
+        <TabsContent value="entities" className="mt-4">
+          {result?.entityAnalysis && (
+            <div className="space-y-4">
+              {/* Entity Coherence Score + Stats */}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                <Card className="bg-surface-base/80 border border-violet-500/10">
+                  <CardContent className="p-6 text-center">
+                    <div className="text-5xl font-bold text-white mb-2">
+                      {result.score.entityCoherence}
+                    </div>
+                    <Badge className={getTier(result.score.entityCoherence).color}>
+                      {getTier(result.score.entityCoherence).label}
+                    </Badge>
+                    <p className="text-gray-400 text-sm mt-2">Entity Coherence Score</p>
+                    <p className="text-gray-500 text-xs mt-1">
+                      {result.entityAnalysis.entityCount} entities &middot; {result.entityAnalysis.properNounDensity.toFixed(1)}% density
+                    </p>
+                    <p className="text-gray-600 text-xs mt-1">
+                      Target: 15+ entities, ~20.6% density
+                    </p>
+                  </CardContent>
+                </Card>
+
+                <div className="lg:col-span-2">
+                  <Card className="bg-surface-base/80 border border-violet-500/10 h-full">
+                    <CardContent className="p-6">
+                      <h3 className="text-white font-medium mb-4">Entity Breakdown</h3>
+                      <div className="grid grid-cols-2 gap-3">
+                        {([
+                          { type: 'PERSON', label: 'Persons', pillColor: 'bg-blue-500/20 text-blue-400', icon: '👤' },
+                          { type: 'ORGANISATION', label: 'Organisations', pillColor: 'bg-purple-500/20 text-purple-400', icon: '🏢' },
+                          { type: 'LOCATION', label: 'Locations', pillColor: 'bg-emerald-500/20 text-emerald-400', icon: '📍' },
+                          { type: 'CONCEPT', label: 'Concepts', pillColor: 'bg-amber-500/20 text-amber-400', icon: '💡' },
+                        ] as const).map(({ type, label, pillColor, icon }) => (
+                          <div key={type} className={`flex items-center gap-2 p-3 rounded-lg ${pillColor}`}>
+                            <span className="text-lg">{icon}</span>
+                            <div>
+                              <div className="text-lg font-bold">
+                                {(result.entityAnalysis as EntityAnalysisResult).entityTypes[type] ?? 0}
+                              </div>
+                              <div className="text-xs opacity-80">{label}</div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="mt-4 flex gap-4 text-sm text-gray-400">
+                        <span>{result.entityAnalysis.entityCount} total entities</span>
+                        <span>&middot;</span>
+                        <span>{result.entityAnalysis.properNounDensity.toFixed(1)}% density</span>
+                        <span>&middot;</span>
+                        <span>{result.entityAnalysis.uniqueEntityCount} unique</span>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              </div>
+
+              {/* Entity List */}
+              {result.entityAnalysis.entities.length > 0 && (
+                <Card className="bg-surface-base/80 border border-violet-500/10">
+                  <CardHeader>
+                    <CardTitle className="text-white text-lg flex items-center gap-2">
+                      <Target className="h-5 w-5 text-violet-400" />
+                      Detected Entities ({result.entityAnalysis.entities.length})
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      {result.entityAnalysis.entities.slice(0, 20).map((entity, i) => {
+                        const typeColors: Record<string, string> = {
+                          PERSON: 'bg-blue-500/20 text-blue-400',
+                          ORGANISATION: 'bg-purple-500/20 text-purple-400',
+                          LOCATION: 'bg-emerald-500/20 text-emerald-400',
+                          CONCEPT: 'bg-amber-500/20 text-amber-400',
+                        };
+                        return (
+                          <div key={i} className="flex items-center gap-3 p-2 rounded-lg bg-white/[0.02] border border-white/[0.05]">
+                            <Badge className={`text-xs shrink-0 ${typeColors[entity.type] ?? 'bg-gray-500/20 text-gray-400'}`}>
+                              {entity.type}
+                            </Badge>
+                            <span className="text-sm text-white font-medium flex-1">{entity.text}</span>
+                            {entity.variants.length > 1 && (
+                              <span className="text-xs text-gray-500">
+                                also: {entity.variants.slice(1).join(', ')}
+                              </span>
+                            )}
+                            <span className="text-xs text-gray-400 shrink-0">{entity.count}&times;</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Coherence Issues */}
+              <Card className="bg-surface-base/80 border border-violet-500/10">
+                <CardHeader>
+                  <CardTitle className="text-white text-lg">Coherence Analysis</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {result.entityAnalysis.coherenceIssues.length === 0 ? (
+                    <div className="flex items-center gap-2 text-emerald-400">
+                      <Zap className="h-4 w-4" />
+                      <span className="text-sm">No coherence issues detected — entities are consistently named.</span>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      {result.entityAnalysis.coherenceIssues.map((issue, i) => (
+                        <div key={i} className="flex items-start gap-2 p-2 rounded-lg bg-amber-500/5 border border-amber-500/20">
+                          <span className="text-amber-400 text-xs mt-0.5">&#9888;</span>
+                          <span className="text-sm text-gray-300">{issue}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          )}
+        </TabsContent>
+
         <TabsContent value="history" className="mt-4">
           <Card className="bg-surface-base/80 border border-cyan-500/10">
             <CardContent className="p-12 text-center text-gray-400">
