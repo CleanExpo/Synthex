@@ -25,14 +25,25 @@
 - **Team**: Unite-Hub (key: UNI)
 - **Status**: All backlog issues Done. 5 strategic issues (UNI-1180–1184) tracked separately.
 
-## Current State (2026-03-03)
-- **Branch**: main at `41413357`
+## Current State (2026-03-10 — v4.0 COMPLETE)
+- **Branch**: main at `1a5e1225` (84-03 docs commit follows this)
 - **DB**: 91 Prisma models, schema unchanged since v1.4
-- **Test suite**: 62 suites, 1482 passing (25 pre-existing failures: BullMQ transform, Stripe mock, SubscriptionService)
-- **Milestone**: v2.0 Reliable AI Agents — Phase 62 next; Phase 59 DONE (UNI-1237), Phase 60 DONE (UNI-1238), Phase 61 DONE
-- **v1.5 shipped**: 2026-03-03 — all 7 phases done, 1482 tests passing
-- **Deploy status**: Not yet public — synthex.social is live URL but in GOD MODE testing only. Stripe integration on hold. UNI-1202/UNI-1203 human-gated.
-- **v2.0 dev infra complete**: CONSTITUTION.md, PreCompact + SessionStart + pre-agent-dispatch hooks, AGENT-REGISTRY.md, hive-mind.md orchestrator
+- **Test suite**: 1496 passing, 32 pre-existing failures (BullMQ, Stripe, SubscriptionService)
+- **Milestone**: v4.0 Production Complete — ALL 8 phases (77–84) DONE
+- **Deploy status**: Codebase production-ready; public launch is human-gated (UNI-1182)
+- **Next milestone**: v5.0 (TBD — pending roadmap definition)
+
+### v4.0 Phases (all Done)
+| Phase | Focus | Linear |
+|-------|-------|--------|
+| 77 | Content Creation Flow | SYN-52 |
+| 78 | Post Queue & Scheduling | SYN-53 |
+| 79 | Admin Panel Completion | SYN-18 |
+| 80 | Brand Profile Setup | SYN-54 |
+| 81 | Social Account Onboarding | SYN-55 |
+| 82 | Code Quality Hardening | SYN-57 |
+| 83 | Accessibility Polish (WCAG 2.1 AA) | SYN-58 |
+| 84 | Final UAT + Launch Readiness | SYN-60 |
 
 ### v1.5 Final (UNI-1226–1230 — all Done)
 | ID | Title | Commit |

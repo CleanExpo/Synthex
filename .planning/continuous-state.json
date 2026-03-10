@@ -1,16 +1,15 @@
 {
   "version": "1.0",
   "active": false,
-  "state": "PAUSED",
+  "state": "COMPLETE",
   "milestone": "v4.0",
   "currentPhase": 84,
-  "currentPlan": "84-01",
+  "currentPlan": null,
   "phasesRequested": [77, 78, 79, 80, 81, 82, 83, 84],
-  "phasesCompleted": [77, 78, 79, 80, 81, 82, 83],
+  "phasesCompleted": [77, 78, 79, 80, 81, 82, 83, 84],
   "baselineTestCount": 1496,
   "baselineFailedTests": 32,
-  "pauseReason": "User stopped — rate limit hit on 84-01 subagent",
-  "startedAt": "2026-03-10T12:15:00+11:00",
-  "toolCallCount": 90,
-  "resumeNote": "84-01, 84-02, 84-03 plans exist. Execute 84-01 first, then 84-02, then 84-03 to complete v4.0."
+  "pauseReason": null,
+  "completedAt": "2026-03-10T22:59:57+11:00",
+  "milestone_v40_complete": true
 }
