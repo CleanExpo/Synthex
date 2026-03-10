@@ -258,7 +258,16 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       }
 
       // -- Publish -----------------------------------------------------------
-      const postResult = await service.createPost({ text: post.content });
+      // Extract media URLs from post metadata (populated by the content page)
+      const postMetadata = (post.metadata as Record<string, unknown>) || {};
+      const postMediaUrls = Array.isArray(postMetadata.images)
+        ? (postMetadata.images as string[])
+        : [];
+
+      const postResult = await service.createPost({
+        text: post.content,
+        ...(postMediaUrls.length > 0 ? { mediaUrls: postMediaUrls } : {}),
+      });
 
       if (postResult.success) {
         // Mark post as published and store platform identifiers
@@ -282,7 +291,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
                 connectionId,
                 platformId: postResult.postId,
                 content: post.content,
-                mediaUrls: [],
+                mediaUrls: postMediaUrls,
                 hashtags: [],
                 mentions: [],
                 status: 'published',
