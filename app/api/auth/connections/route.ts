@@ -303,5 +303,80 @@ export async function POST(request: NextRequest) {
   }
 }
 
+/**
+ * DELETE /api/auth/connections?platform=twitter
+ * Disconnect a social platform — soft delete (isActive=false, tokens cleared)
+ */
+export async function DELETE(request: NextRequest) {
+  try {
+    const security = await APISecurityChecker.check(
+      request,
+      DEFAULT_POLICIES.AUTHENTICATED_WRITE
+    );
+    if (!security.allowed) {
+      return APISecurityChecker.createSecureResponse({ error: security.error }, 403);
+    }
+
+    const userId = await getUserIdFromRequestOrCookies(request);
+    if (!userId) {
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+    }
+
+    const { searchParams } = new URL(request.url);
+    const platform = searchParams.get('platform');
+    if (!platform) {
+      return NextResponse.json({ error: 'platform query parameter is required' }, { status: 400 });
+    }
+
+    const organizationId = await getEffectiveOrganizationId(userId);
+
+    // Verify connection exists before attempting delete
+    const connection = await prisma.platformConnection.findFirst({
+      where: { userId, platform, organizationId: organizationId ?? null, isActive: true },
+      select: { id: true },
+    });
+
+    if (!connection) {
+      return NextResponse.json(
+        { error: `No active connection found for platform: ${platform}` },
+        { status: 404 }
+      );
+    }
+
+    // Soft delete — clear tokens, mark inactive
+    await prisma.platformConnection.updateMany({
+      where: { userId, platform, organizationId: organizationId ?? null },
+      data: {
+        isActive: false,
+        accessToken: '',
+        refreshToken: null,
+        updatedAt: new Date(),
+      },
+    });
+
+    // Audit log the disconnection
+    await auditLogger.log({
+      userId,
+      action: 'social.platform_disconnected',
+      resource: 'platform_connection',
+      resourceId: connection.id,
+      category: 'data',
+      severity: 'medium',
+      outcome: 'success',
+      details: { platform },
+    });
+
+    logger.info('Platform disconnected', { platform, userId });
+
+    return NextResponse.json({
+      success: true,
+      message: `Disconnected from ${platform} successfully`,
+    });
+  } catch (error) {
+    logger.error('Failed to disconnect platform', { error });
+    return NextResponse.json({ error: 'Failed to disconnect platform' }, { status: 500 });
+  }
+}
+
 // Node.js runtime required for Prisma
 export const runtime = 'nodejs';
