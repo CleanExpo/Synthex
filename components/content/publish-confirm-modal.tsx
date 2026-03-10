@@ -31,6 +31,7 @@ import {
   Send,
   Check,
 } from '@/components/icons';
+import { TimeSlotPicker } from '@/components/scheduling';
 import Link from 'next/link';
 
 // =============================================================================
@@ -111,21 +112,10 @@ async function fetchJson<T>(url: string): Promise<T> {
 }
 
 /**
- * Returns a datetime-local string 1 hour from now in the user's local
- * timezone, which is used as the default value for the date picker.
+ * Returns a Date 1 hour from now, used as the default schedule time.
  */
-function getDefaultScheduleTime(): string {
-  const d = new Date(Date.now() + 60 * 60 * 1000);
-  // datetime-local expects YYYY-MM-DDTHH:mm
-  const pad = (n: number) => n.toString().padStart(2, '0');
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
-}
-
-/** Minimum datetime-local value (now, rounded to the minute) */
-function getMinDateTime(): string {
-  const d = new Date();
-  const pad = (n: number) => n.toString().padStart(2, '0');
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+function getDefaultScheduleDate(): Date {
+  return new Date(Date.now() + 60 * 60 * 1000);
 }
 
 // =============================================================================
@@ -144,7 +134,7 @@ export function PublishConfirmModal({
   platformAdaptations,
   onMultiConfirm,
 }: PublishConfirmModalProps) {
-  const [scheduledAt, setScheduledAt] = useState(getDefaultScheduleTime);
+  const [scheduledDate, setScheduledDate] = useState<Date | null>(getDefaultScheduleDate);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [scheduleResults, setScheduleResults] = useState<PlatformScheduleResult[] | null>(null);
 
@@ -154,7 +144,7 @@ export function PublishConfirmModal({
   // Reset state when modal opens
   useEffect(() => {
     if (open) {
-      setScheduledAt(getDefaultScheduleTime());
+      setScheduledDate(getDefaultScheduleDate());
       setScheduleResults(null);
     }
   }, [open]);
@@ -189,9 +179,10 @@ export function PublishConfirmModal({
 
   // Single-platform confirm
   const handleSingleConfirm = useCallback(async () => {
+    if (!scheduledDate) return;
     setIsSubmitting(true);
     try {
-      const isoDate = new Date(scheduledAt).toISOString();
+      const isoDate = scheduledDate.toISOString();
       await onConfirm({
         scheduledAt: isoDate,
         platform,
@@ -202,15 +193,15 @@ export function PublishConfirmModal({
     } finally {
       setIsSubmitting(false);
     }
-  }, [scheduledAt, platform, onConfirm, onOpenChange]);
+  }, [scheduledDate, platform, onConfirm, onOpenChange]);
 
   // Multi-platform confirm
   const handleMultiConfirm = useCallback(async () => {
-    if (!onMultiConfirm || !selectedPlatforms) return;
+    if (!onMultiConfirm || !selectedPlatforms || !scheduledDate) return;
     setIsSubmitting(true);
     setScheduleResults(null);
     try {
-      const isoDate = new Date(scheduledAt).toISOString();
+      const isoDate = scheduledDate.toISOString();
       const batchId = `batch-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
       const results = await onMultiConfirm({
         scheduledAt: isoDate,
@@ -229,11 +220,11 @@ export function PublishConfirmModal({
     } finally {
       setIsSubmitting(false);
     }
-  }, [scheduledAt, selectedPlatforms, onMultiConfirm, onOpenChange]);
+  }, [scheduledDate, selectedPlatforms, onMultiConfirm, onOpenChange]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent variant="glass-solid" className={isMultiPlatform ? 'max-w-lg' : 'max-w-md'}>
+      <DialogContent variant="glass-solid" className={isMultiPlatform ? 'max-w-2xl' : 'max-w-xl'}>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Calendar className="h-5 w-5 text-cyan-400" />
@@ -272,23 +263,14 @@ export function PublishConfirmModal({
             </div>
           </div>
 
-          {/* Date / time picker */}
-          <div className="space-y-1.5">
-            <label
-              htmlFor="schedule-datetime"
-              className="text-xs font-medium text-slate-300"
-            >
-              Schedule for
-            </label>
-            <input
-              id="schedule-datetime"
-              type="datetime-local"
-              value={scheduledAt}
-              min={getMinDateTime()}
-              onChange={(e) => setScheduledAt(e.target.value)}
-              className="w-full rounded-lg border border-white/[0.08] bg-white/[0.03] px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/30 focus:border-cyan-500/40 [color-scheme:dark]"
-            />
-          </div>
+          {/* Smart Time Slot Picker */}
+          <TimeSlotPicker
+            value={scheduledDate}
+            onChange={setScheduledDate}
+            platform={platform}
+            platforms={isMultiPlatform ? selectedPlatforms : undefined}
+            minDate={new Date()}
+          />
 
           {/* Platform account status */}
           <div className="space-y-1.5">
@@ -417,7 +399,7 @@ export function PublishConfirmModal({
           {!scheduleResults && (
             <Button
               onClick={isMultiPlatform ? handleMultiConfirm : handleSingleConfirm}
-              disabled={isSubmitting || !scheduledAt}
+              disabled={isSubmitting || !scheduledDate}
               className="gradient-primary text-white gap-2"
             >
               {isSubmitting ? (
