@@ -11,6 +11,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { getUserIdFromRequestOrCookies, unauthorizedResponse } from '@/lib/auth/jwt-utils';
 import { z } from 'zod';
+import { pushUniteHubEvent } from '@/lib/unite-hub-connector';
 
 // Validation schemas
 const campaignCreateSchema = z.object({
@@ -178,6 +179,23 @@ export async function PUT(request: NextRequest) {
         ...(settings !== undefined && { settings: settings as object })
       }
     });
+
+    // Push campaign lifecycle events to Unite-Hub (fire-and-forget)
+    if (restUpdateData.status && existingCampaign.status !== restUpdateData.status) {
+      if (restUpdateData.status === 'active') {
+        void pushUniteHubEvent({
+          type: 'campaign.started',
+          userId,
+          campaignId: id,
+        });
+      } else if (restUpdateData.status === 'completed') {
+        void pushUniteHubEvent({
+          type: 'campaign.completed',
+          userId,
+          campaignId: id,
+        });
+      }
+    }
 
     return NextResponse.json({
       success: true,

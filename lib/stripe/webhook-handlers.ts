@@ -21,6 +21,7 @@ import {
   sendPaymentFailedEmail,
   sendSubscriptionCancelledEmail,
 } from '@/lib/email/billing-emails';
+import { pushUniteHubEvent } from '@/lib/unite-hub-connector';
 import Stripe from 'stripe';
 
 // ============================================================================
@@ -125,7 +126,29 @@ async function handleSubscriptionUpdated(event: WebhookEvent): Promise<void> {
   });
 
   try {
+    // Capture old plan before updating, for user.upgrade event
+    const existingSub = await subscriptionService.getByStripeCustomerId(
+      subscription.customer as string
+    );
+    const oldPlan = existingSub?.plan;
+
     await subscriptionService.updateFromStripeSubscription(subscription);
+
+    // Fetch updated sub to get new plan name
+    const updatedSub = await subscriptionService.getByStripeCustomerId(
+      subscription.customer as string
+    );
+    const newPlan = updatedSub?.plan;
+
+    // Push user.upgrade event if plan actually changed (fire-and-forget)
+    if (oldPlan && newPlan && oldPlan !== newPlan && existingSub?.userId) {
+      void pushUniteHubEvent({
+        type: 'user.upgrade',
+        userId: existingSub.userId,
+        fromPlan: oldPlan,
+        toPlan: newPlan,
+      });
+    }
 
     await auditLogger.log({
       action: 'billing.subscription_updated',
@@ -170,6 +193,13 @@ async function handleSubscriptionCancelled(event: WebhookEvent): Promise<void> {
     if (existingSub) {
       // Downgrade to free plan
       await subscriptionService.downgradeToFree(existingSub.userId);
+
+      // Push user.churn event to Unite-Hub (fire-and-forget)
+      void pushUniteHubEvent({
+        type: 'user.churn',
+        userId: existingSub.userId,
+        plan: existingSub.plan,
+      });
 
       // Send cancellation email (fire-and-forget — do not await)
       const user = await prisma.user.findUnique({
@@ -270,6 +300,14 @@ async function handlePaymentSucceeded(event: WebhookEvent): Promise<void> {
           billingPortalUrl: `${process.env.NEXT_PUBLIC_APP_URL ?? 'https://synthex.social'}/dashboard/billing`,
         });
       }
+
+      // Push payment.received event to Unite-Hub (fire-and-forget)
+      void pushUniteHubEvent({
+        type: 'payment.received',
+        userId: subRecord.userId,
+        amount: invoice.amount_paid,
+        currency: invoice.currency,
+      });
     }
   } catch (error) {
     logger.error('Failed to handle payment succeeded', {
@@ -369,6 +407,21 @@ async function handleCheckoutCompleted(event: WebhookEvent): Promise<void> {
   try {
     // Ensure subscription record exists and has the Stripe customer ID
     await subscriptionService.setStripeCustomerId(userId, customerId);
+
+    // Fetch plan details for Unite-Hub event
+    const userSub = await subscriptionService.getByStripeCustomerId(customerId);
+    const userRecord = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { email: true },
+    });
+
+    // Push user.signup event to Unite-Hub (fire-and-forget)
+    void pushUniteHubEvent({
+      type: 'user.signup',
+      userId,
+      plan: userSub?.plan ?? 'unknown',
+      email: userRecord?.email ?? '',
+    });
 
     await auditLogger.log({
       action: 'billing.checkout_completed',

@@ -26,6 +26,7 @@ import {
   decryptFieldSafe,
   encryptField,
 } from '@/lib/security/field-encryption';
+import { pushUniteHubEvent } from '@/lib/unite-hub-connector';
 
 // ---------------------------------------------------------------------------
 // Vercel edge config
@@ -296,6 +297,14 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
             );
           }
         }
+
+        // Push content.published event to Unite-Hub (fire-and-forget)
+        void pushUniteHubEvent({
+          type: 'content.published',
+          userId,
+          platform,
+          postId: post.id,
+        });
 
         published++;
         results.push({ id: post.id, platform, status: 'published' });
