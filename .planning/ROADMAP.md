@@ -97,7 +97,7 @@ None (internal platform work)
 - [ ] **Phase 58: Performance - Vitals** - Caching verification and Core Web Vitals
 - [x] **Phase 75: God Mode Admin Panel** - Founder admin panel for managing users, orgs, platform health
 - [x] **Phase 76: NEXUS Branding & Unite-Hub** - NEXUS branding throughout app + Unite-Hub API connector
-- [ ] **Phase 77: Content Creation Flow** - Upload/generate/preview UX for real content publishing
+- [x] **Phase 77: Content Creation Flow** - Upload/generate/preview UX for real content publishing
 - [ ] **Phase 78: Post Queue & Scheduling** - Scheduling engine UX, queue management, bulk scheduling
 - [ ] **Phase 79: Admin Completion** - Role updates, password reset, MRR from Stripe, audit log detail
 - [ ] **Phase 80: Brand Profile Setup** - Multi-brand profile configuration in God Mode
@@ -678,10 +678,10 @@ See [milestones/v3.1-ROADMAP.md](milestones/v3.1-ROADMAP.md) for full details.
 **Plans**: 4 plans
 
 Plans:
-- [ ] 77-01: Media upload & attachment pipeline (Supabase Storage, upload API, MediaAttacher, publish cron media pass-through)
-- [ ] 77-02: Platform preview cards & content composer upgrade (PlatformPreview, CharacterCounter, platform limits)
-- [ ] 77-03: Draft-to-publish pipeline & publish confirmation (PublishConfirmModal, draft edit/schedule, platform account check)
-- [ ] 77-04: Multi-platform publish & post status tracking (multi-platform selector, content adaptation, PostStatusTracker)
+- [x] 77-01: Media upload & attachment pipeline
+- [x] 77-02: Platform preview cards & content composer upgrade
+- [x] 77-03: Draft-to-publish pipeline & publish confirmation
+- [x] 77-04: Multi-platform publish & post status tracking
 
 #### Phase 78: Post Queue & Scheduling
 
