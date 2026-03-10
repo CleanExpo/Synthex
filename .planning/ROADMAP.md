@@ -101,7 +101,7 @@ None (internal platform work)
 - [x] **Phase 78: Post Queue & Scheduling** - Scheduling engine UX, queue management, bulk scheduling
 - [x] **Phase 79: Admin Completion** - Role updates, password reset, MRR from Stripe, audit log detail
 - [x] **Phase 80: Brand Profile Setup** - Multi-brand profile configuration in God Mode
-- [ ] **Phase 81: Social Account Onboarding** - Connect real social accounts, audit presence, content strategy
+- [x] **Phase 81: Social Account Onboarding** - Connect real social accounts, audit presence, content strategy
 - [ ] **Phase 82: Code Quality** - Structured logger migration, component decomposition
 - [ ] **Phase 83: Accessibility & Polish** - WCAG skip links, E2E flaky test fixes, responsive edge cases
 - [ ] **Phase 84: Final UAT & Launch** - End-to-end acceptance testing, production verification
