@@ -65,9 +65,10 @@ export function EditUserDialog({
               <Input
                 id="edit-email"
                 value={user.email}
-                onChange={(e) => onUserChange({ ...user, email: e.target.value })}
-                className="bg-white/5 border-white/10 text-white"
+                readOnly
+                className="bg-white/5 border-white/10 text-gray-400 cursor-not-allowed"
               />
+              <p className="text-xs text-gray-500">Email cannot be changed from the admin panel</p>
             </div>
             <div className="space-y-2">
               <Label className="text-gray-300">Role</Label>

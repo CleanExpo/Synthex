@@ -38,6 +38,12 @@ const updateUserStatusSchema = z.object({
   reason: z.string().max(500).optional(),
 });
 
+const updateUserSchema = z.object({
+  userId: z.string().uuid(),
+  role: z.enum(['user', 'admin', 'moderator']).optional(),
+  status: z.enum(['active', 'suspended', 'banned']).optional(),
+});
+
 // =============================================================================
 // GET - List Users
 // =============================================================================
@@ -333,6 +339,138 @@ export async function POST(request: NextRequest) {
           { status: 400 }
         );
     }
+  } catch (error: unknown) {
+    console.error('Admin update user error:', error);
+    return NextResponse.json(
+      { error: 'Internal Server Error', message: sanitizeErrorForResponse(error, 'Failed to process request') },
+      { status: 500 }
+    );
+  }
+  });
+}
+
+// =============================================================================
+// PATCH - Update User Role / Status
+// =============================================================================
+
+export async function PATCH(request: NextRequest) {
+  // Distributed rate limiting via Upstash Redis
+  return adminRateLimit(request, async () => {
+  try {
+    const auth = await verifyAdmin(request);
+    if (!auth.isAdmin) {
+      return NextResponse.json(
+        { error: 'Forbidden', message: auth.error || 'Admin access required' },
+        { status: 403 }
+      );
+    }
+
+    const body = await request.json();
+    const validation = updateUserSchema.safeParse(body);
+
+    if (!validation.success) {
+      return NextResponse.json(
+        { error: 'Validation Error', details: validation.error.issues },
+        { status: 400 }
+      );
+    }
+
+    const { userId, role, status } = validation.data;
+
+    // At least one field must be provided
+    if (!role && !status) {
+      return NextResponse.json(
+        { error: 'Bad Request', message: 'At least one of role or status must be provided' },
+        { status: 400 }
+      );
+    }
+
+    // Get target user
+    const targetUser = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true, email: true, preferences: true, organizationId: true },
+    });
+
+    if (!targetUser) {
+      return NextResponse.json(
+        { error: 'Not Found', message: 'User not found' },
+        { status: 404 }
+      );
+    }
+
+    // Enforce org scope: JWT-authenticated admins cannot mutate users from other orgs
+    if (auth.userId) {
+      const adminUser = await prisma.user.findUnique({
+        where: { id: auth.userId },
+        select: { organizationId: true },
+      });
+      if (adminUser?.organizationId && targetUser.organizationId !== adminUser.organizationId) {
+        return NextResponse.json(
+          { error: 'Forbidden', message: 'User not in your organisation' },
+          { status: 403 }
+        );
+      }
+    }
+
+    // Prevent modifying superadmins
+    const targetPrefs = targetUser.preferences as { role?: string } | null;
+    if (targetPrefs?.role === 'superadmin') {
+      return NextResponse.json(
+        { error: 'Forbidden', message: 'Cannot modify superadmin users' },
+        { status: 403 }
+      );
+    }
+
+    // Build updated preferences
+    const currentPrefs = (targetUser.preferences as Record<string, string | number | boolean | null>) || {};
+    const updatedPrefs: Record<string, string | number | boolean | null> = { ...currentPrefs };
+    if (role) updatedPrefs.role = role;
+    if (status) updatedPrefs.status = status;
+
+    // Determine if sessions should be invalidated (status changed to suspended or banned)
+    const shouldDeleteSessions =
+      status && (status === 'suspended' || status === 'banned');
+
+    // Update user in a transaction with audit log
+    await prisma.$transaction(async (tx) => {
+      await tx.user.update({
+        where: { id: userId },
+        data: {
+          preferences: updatedPrefs,
+          updatedAt: new Date(),
+        },
+      });
+
+      // Delete sessions if status changed to suspended or banned
+      if (shouldDeleteSessions) {
+        await tx.session.deleteMany({
+          where: { userId },
+        });
+      }
+
+      await tx.auditLog.create({
+        data: {
+          userId: auth.userId || 'system',
+          action: 'user_role_updated',
+          resource: 'user',
+          resourceId: targetUser.id,
+          details: {
+            targetEmail: targetUser.email,
+            changes: { role: role ?? null, status: status ?? null },
+            previousRole: (currentPrefs.role as string) ?? null,
+            previousStatus: (currentPrefs.status as string) ?? null,
+          },
+          severity: role === 'admin' ? 'high' : 'medium',
+          category: 'admin',
+          outcome: 'success',
+        },
+      });
+    });
+
+    return NextResponse.json({
+      success: true,
+      message: 'User updated',
+    });
   } catch (error: unknown) {
     console.error('Admin update user error:', error);
     return NextResponse.json(

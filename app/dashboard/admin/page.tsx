@@ -166,17 +166,34 @@ export default function AdminPanel() {
             break;
           }
 
-          case 'reset-password':
-            // TODO: implement password reset endpoint (SYN-18)
-            toast.info('Password reset emails are not yet supported via the API');
+          case 'reset-password': {
+            // Send password reset email via the existing auth endpoint
+            const targetUser = users.find((u) => u.id === userId);
+            if (!targetUser?.email) {
+              toast.error('User email not found');
+              break;
+            }
+            try {
+              const res = await fetch('/api/auth/request-reset', {
+                method: 'POST',
+                credentials: 'include',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: targetUser.email }),
+              });
+              if (!res.ok) throw new Error('Failed to send reset email');
+              toast.success(`Password reset email sent to ${targetUser.email}`);
+            } catch (resetError) {
+              toast.error(resetError instanceof Error ? resetError.message : 'Failed to send password reset');
+            }
             break;
+          }
         }
       } catch (error) {
         console.error(`Error performing ${action}:`, error);
         toast.error(error instanceof Error ? error.message : `Failed to ${action} user`);
       }
     },
-    [mutate]
+    [mutate, users]
   );
 
   const toggleUserSelection = useCallback((userId: string) => {
@@ -293,19 +310,15 @@ export default function AdminPanel() {
 
     setIsSaving(true);
     try {
-      // Map status to API action
-      const action =
-        editingUser.status === 'suspended' || editingUser.status === 'banned'
-          ? 'suspend'
-          : editingUser.status === 'deleted'
-          ? 'delete'
-          : 'activate';
-
       const res = await fetch('/api/admin/users', {
-        method: 'POST',
+        method: 'PATCH',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: editingUser.id, action }),
+        body: JSON.stringify({
+          userId: editingUser.id,
+          role: editingUser.role || 'user',
+          status: editingUser.status || 'active',
+        }),
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json.message ?? 'Failed to update user');
