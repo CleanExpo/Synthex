@@ -42,6 +42,7 @@ export interface ValidatedClaim extends ExtractedClaim {
 
 // Analysis result types
 export interface AuthorityAnalysisResult {
+  id?: string; // DB record id when persisted
   overallScore: number; // 0-100
   claims: ValidatedClaim[];
   claimsFound: number;
@@ -50,6 +51,7 @@ export interface AuthorityAnalysisResult {
   sourceBreakdown: Record<SourceType, number>;
   citations: GeneratedCitation[];
   recommendations: AuthorityRecommendation[];
+  addonRequired?: boolean; // true when deep validation requested without addon
 }
 
 export interface GeneratedCitation {
