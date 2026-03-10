@@ -110,7 +110,7 @@ export async function POST(request: NextRequest) {
       dimensions = {
         width: optimal.width,
         height: optimal.height,
-        aspectRatio: optimal.aspectRatio as any,
+        aspectRatio: optimal.aspectRatio as '1:1' | '16:9' | '9:16' | '4:3' | '3:4' | undefined,
       };
     }
 

@@ -80,7 +80,8 @@ export async function POST(request: NextRequest) {
         break;
 
       case 'weeklyReport':
-        success = await emailService.sendWeeklyReport(to, variables as any);
+        // variables conforms to WeeklyReportTemplateVariables shape (validated at call site)
+        success = await emailService.sendWeeklyReport(to, variables as Parameters<typeof emailService.sendWeeklyReport>[1]);
         break;
 
       default:

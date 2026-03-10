@@ -226,7 +226,7 @@ export function ShareDialog({
       />
 
       {/* Dialog */}
-      <div className="relative w-full max-w-lg mx-4 bg-[#0a0a0a] border border-white/10 rounded-xl shadow-2xl">
+      <div className="relative w-full max-w-lg mx-4 bg-gray-950 border border-white/10 rounded-xl shadow-2xl">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-white/10">
           <div>

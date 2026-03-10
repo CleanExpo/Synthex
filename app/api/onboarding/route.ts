@@ -248,6 +248,8 @@ export async function POST(request: NextRequest) {
 
     // Emit webhook event for onboarding completion
     try {
+      // 'onboarding.completed' is not in WebhookEventType — suppress until onboarding events are added to the webhook type union
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       await webhookHandler.emit(
         'onboarding.completed' as any,
         {

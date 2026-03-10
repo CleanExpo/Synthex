@@ -61,6 +61,7 @@ interface PostResult {
  * JSON.parse(JSON.stringify(...)) strips TypeScript-specific type info and
  * produces plain JSON-compatible objects/arrays.
  */
+// Return type must be `any` so callers can pass it to Prisma's InputJsonValue without further casting
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function jsonSafe(obj: Record<string, unknown>): any {
   return JSON.parse(JSON.stringify(obj));

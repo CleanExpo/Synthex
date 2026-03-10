@@ -648,7 +648,7 @@ export function BulkScheduleWizard({
                           onChange={(e) =>
                             updateItem(item.id, { platform: e.target.value })
                           }
-                          className="bg-[#0f172a] border border-white/10 rounded-lg px-2 py-1 text-xs text-white focus:ring-1 focus:ring-cyan-500/30 focus:outline-none"
+                          className="bg-gray-950 border border-white/10 rounded-lg px-2 py-1 text-xs text-white focus:ring-1 focus:ring-cyan-500/30 focus:outline-none"
                         >
                           {SUPPORTED_PLATFORMS.map((p) => (
                             <option key={p.value} value={p.value}>
@@ -895,7 +895,7 @@ export function BulkScheduleWizard({
                     )
                   );
                 }}
-                className="bg-[#0f172a] border border-white/10 rounded-lg px-3 py-2 text-sm text-white w-full focus:ring-1 focus:ring-cyan-500/30 focus:outline-none"
+                className="bg-gray-950 border border-white/10 rounded-lg px-3 py-2 text-sm text-white w-full focus:ring-1 focus:ring-cyan-500/30 focus:outline-none"
               >
                 {SUPPORTED_PLATFORMS.map((p) => (
                   <option key={p.value} value={p.value}>
@@ -916,7 +916,7 @@ export function BulkScheduleWizard({
                   type="date"
                   value={startDate}
                   onChange={(e) => setStartDate(e.target.value)}
-                  className="bg-[#0f172a] border border-white/10 rounded-lg px-3 py-2 text-sm text-white w-full focus:ring-1 focus:ring-cyan-500/30 focus:outline-none"
+                  className="bg-gray-950 border border-white/10 rounded-lg px-3 py-2 text-sm text-white w-full focus:ring-1 focus:ring-cyan-500/30 focus:outline-none"
                 />
               </div>
               <div>
@@ -928,7 +928,7 @@ export function BulkScheduleWizard({
                   type="date"
                   value={endDate}
                   onChange={(e) => setEndDate(e.target.value)}
-                  className="bg-[#0f172a] border border-white/10 rounded-lg px-3 py-2 text-sm text-white w-full focus:ring-1 focus:ring-cyan-500/30 focus:outline-none"
+                  className="bg-gray-950 border border-white/10 rounded-lg px-3 py-2 text-sm text-white w-full focus:ring-1 focus:ring-cyan-500/30 focus:outline-none"
                 />
               </div>
             </div>
@@ -943,7 +943,7 @@ export function BulkScheduleWizard({
                 <select
                   value={minInterval}
                   onChange={(e) => setMinInterval(Number(e.target.value))}
-                  className="bg-[#0f172a] border border-white/10 rounded-lg px-3 py-2 text-sm text-white w-full focus:ring-1 focus:ring-cyan-500/30 focus:outline-none"
+                  className="bg-gray-950 border border-white/10 rounded-lg px-3 py-2 text-sm text-white w-full focus:ring-1 focus:ring-cyan-500/30 focus:outline-none"
                 >
                   {INTERVAL_OPTIONS.map((o) => (
                     <option key={o.value} value={o.value}>
@@ -959,7 +959,7 @@ export function BulkScheduleWizard({
                 <select
                   value={maxPerDay}
                   onChange={(e) => setMaxPerDay(Number(e.target.value))}
-                  className="bg-[#0f172a] border border-white/10 rounded-lg px-3 py-2 text-sm text-white w-full focus:ring-1 focus:ring-cyan-500/30 focus:outline-none"
+                  className="bg-gray-950 border border-white/10 rounded-lg px-3 py-2 text-sm text-white w-full focus:ring-1 focus:ring-cyan-500/30 focus:outline-none"
                 >
                   {MAX_PER_DAY_OPTIONS.map((o) => (
                     <option key={o.value} value={o.value}>

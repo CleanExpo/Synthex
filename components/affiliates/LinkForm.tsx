@@ -140,9 +140,9 @@ export function LinkForm({
       />
 
       {/* Modal */}
-      <div className="relative bg-[#0f172a] border border-white/10 rounded-xl w-full max-w-2xl mx-4 shadow-2xl max-h-[90vh] overflow-y-auto">
+      <div className="relative bg-gray-950 border border-white/10 rounded-xl w-full max-w-2xl mx-4 shadow-2xl max-h-[90vh] overflow-y-auto">
         {/* Header */}
-        <div className="sticky top-0 z-10 flex items-center justify-between p-4 border-b border-white/10 bg-[#0f172a]">
+        <div className="sticky top-0 z-10 flex items-center justify-between p-4 border-b border-white/10 bg-gray-950">
           <h2 className="text-lg font-semibold text-white">
             {isEditing ? 'Edit Link' : 'Add Affiliate Link'}
           </h2>

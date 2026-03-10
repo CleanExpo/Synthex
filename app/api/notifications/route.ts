@@ -196,7 +196,7 @@ export async function POST(request: NextRequest) {
     // Broadcast via WebSocket/SSE for real-time delivery
     try {
       await NotificationChannel.notify(targetUserId!, {
-        type: data.type as any,
+        type: data.type as 'info' | 'success' | 'warning' | 'error',
         title: data.title,
         message: data.message,
         data: data.data,

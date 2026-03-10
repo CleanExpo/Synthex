@@ -405,6 +405,7 @@ async function handleAccountUpdate(event: WebhookEvent) {
 
 function parseWebhookEvent(
   platform: string,
+  // Third-party social platform webhook payloads have varying shapes — no shared typed interface available
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   body: Record<string, any>
 ): WebhookEvent {
@@ -541,6 +542,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Third-party webhook body is a raw JSON object with platform-specific shape
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let body: Record<string, any>;
 

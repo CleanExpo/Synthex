@@ -22,6 +22,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
+import { Prisma } from '@prisma/client';
 import prisma from '@/lib/prisma';
 import { getUserIdFromRequest } from '@/lib/auth/jwt-utils';
 import { scoreEEAT } from '@/lib/eeat/eeat-scorer';
@@ -81,8 +82,8 @@ export async function POST(request: NextRequest) {
         url: url || 'inline-content',
         auditType: 'eeat',
         overallScore: result.score.overall,
-        eeatScore: result.score as any,
-        recommendations: result.recommendations as any,
+        eeatScore: result.score as unknown as Prisma.InputJsonValue,
+        recommendations: result.recommendations as unknown as Prisma.InputJsonValue,
         rawData: {
           experienceSignals: result.experienceSignals,
           expertiseSignals: result.expertiseSignals,
@@ -90,7 +91,7 @@ export async function POST(request: NextRequest) {
           trustSignals: result.trustSignals,
           aiDetection: result.aiDetection,
           tier: result.tier,
-        } as any,
+        } as unknown as Prisma.InputJsonValue,
       },
     });
 

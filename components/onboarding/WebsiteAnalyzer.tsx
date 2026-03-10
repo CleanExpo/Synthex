@@ -88,7 +88,7 @@ export function WebsiteAnalyzer({ url, onUrlChange, status, error }: WebsiteAnal
           </div>
 
           {/* Progress bar */}
-          <div className="mt-3 h-1 bg-[#0a1628] rounded-full overflow-hidden">
+          <div className="mt-3 h-1 bg-slate-950 rounded-full overflow-hidden">
             <div
               className="h-full bg-gradient-to-r from-cyan-500 to-cyan-400 rounded-full transition-all duration-[2500ms] ease-linear"
               style={{ width: `${((animationStep + 1) / ANALYSIS_STEPS.length) * 100}%` }}

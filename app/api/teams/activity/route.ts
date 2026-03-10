@@ -140,7 +140,7 @@ export async function GET(request: NextRequest) {
       };
 
       // Extract target from details if available
-      const details = (log.details as any) || {};
+      const details = (log.details as Record<string, unknown>) || {};
       let target = details.name || details.email || details.campaignName || log.resourceId || '';
 
       // For platform-related actions

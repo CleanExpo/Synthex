@@ -13,6 +13,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import * as Sentry from '@sentry/nextjs';
+import { Prisma } from '@prisma/client';
 import prisma from '@/lib/prisma';
 import { generateWeeklyDigest } from '@/lib/ai/project-manager';
 import emailQueue from '@/lib/email/queue';
@@ -65,9 +66,9 @@ export async function GET(request: NextRequest) {
             weekStart,
             weekEnd: now,
             summary: digest.summary,
-            highlights: digest.highlights as any,
-            actionItems: digest.actionItems as any,
-            opportunities: digest.opportunities as any,
+            highlights: digest.highlights as Prisma.InputJsonValue,
+            actionItems: digest.actionItems as Prisma.InputJsonValue,
+            opportunities: digest.opportunities as Prisma.InputJsonValue,
           },
         });
 

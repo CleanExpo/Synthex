@@ -16,6 +16,13 @@ import prisma from '@/lib/prisma';
 import { getUserIdFromRequest } from '@/lib/auth/jwt-utils';
 import { logger } from '@/lib/logger';
 
+interface AuthorCredential {
+  type?: string;
+  title?: string;
+  institution?: string;
+  year?: number | string;
+}
+
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const userId = await getUserIdFromRequest(request);
@@ -34,7 +41,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       return NextResponse.json({ error: 'Not Found', message: 'Author profile not found' }, { status: 404 });
     }
 
-    const credentials = (author.credentials as any[]) || [];
+    const credentials = (author.credentials as AuthorCredential[]) || [];
     const socialLinks = (author.socialLinks as Record<string, string>) || {};
 
     // Person schema

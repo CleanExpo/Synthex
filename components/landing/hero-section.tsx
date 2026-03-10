@@ -44,12 +44,12 @@ export function HeroSection() {
             {/* Pill-style Headlines */}
             <div className="flex flex-col items-center lg:items-start gap-4 mb-8">
               <div className="inline-flex overflow-hidden">
-                <span data-hero-pill className="px-8 py-5 bg-white text-[#0a1628] text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-black uppercase rounded-2xl tracking-tight shadow-2xl shadow-white/10">
+                <span data-hero-pill className="px-8 py-5 bg-white text-slate-950 text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-black uppercase rounded-2xl tracking-tight shadow-2xl shadow-white/10">
                   AI Marketing
                 </span>
               </div>
               <div className="inline-flex overflow-hidden">
-                <span data-hero-pill className="px-8 py-5 bg-gradient-to-r from-cyan-500 to-cyan-400 text-[#0a1628] text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-black uppercase rounded-2xl tracking-tight shadow-2xl shadow-cyan-500/30">
+                <span data-hero-pill className="px-8 py-5 bg-gradient-to-r from-cyan-500 to-cyan-400 text-slate-950 text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-black uppercase rounded-2xl tracking-tight shadow-2xl shadow-cyan-500/30">
                   Agency
                 </span>
               </div>

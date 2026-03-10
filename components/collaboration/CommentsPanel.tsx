@@ -350,7 +350,7 @@ export function CommentsPanel({
   return (
     <div
       ref={panelRef}
-      className="fixed right-0 top-0 h-full w-96 bg-[#0a0a0a] border-l border-white/10 shadow-2xl z-50 flex flex-col"
+      className="fixed right-0 top-0 h-full w-96 bg-gray-950 border-l border-white/10 shadow-2xl z-50 flex flex-col"
     >
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-white/10">
@@ -421,7 +421,7 @@ export function CommentsPanel({
                           <button className="p-1 text-white/40 hover:text-white hover:bg-white/10 rounded transition-colors">
                             <MoreVertical className="w-4 h-4" />
                           </button>
-                          <div className="absolute right-0 top-full mt-1 py-1 bg-[#1a1a1a] border border-white/10 rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-10 min-w-[120px]">
+                          <div className="absolute right-0 top-full mt-1 py-1 bg-gray-900 border border-white/10 rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-10 min-w-[120px]">
                             <button
                               onClick={() => {
                                 setEditingId(comment.id);
@@ -575,7 +575,7 @@ export function CommentsPanel({
 
           {/* Mention Autocomplete */}
           {showMentions && mentionResults.length > 0 && (
-            <div className="absolute left-0 bottom-full mb-2 w-full bg-[#1a1a1a] border border-white/10 rounded-lg shadow-xl max-h-48 overflow-y-auto">
+            <div className="absolute left-0 bottom-full mb-2 w-full bg-gray-900 border border-white/10 rounded-lg shadow-xl max-h-48 overflow-y-auto">
               {mentionResults.map((member) => (
                 <button
                   key={member.id}

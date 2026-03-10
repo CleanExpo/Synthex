@@ -17,10 +17,22 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { z } from 'zod';
 import prisma from '@/lib/prisma';
+import { Prisma } from '@prisma/client';
 import { ResponseOptimizer } from '@/lib/api/response-optimizer';
 import { logger } from '@/lib/logger';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
 import { auditLogger } from '@/lib/security/audit-logger';
+
+// Type for the JSON filters blob stored in the report
+interface ReportFiltersJson {
+  isActive?: boolean;
+  schedule?: { frequency?: string; time?: string; timezone?: string; dayOfWeek?: number; dayOfMonth?: number };
+  nextRun?: string | null;
+  lastRun?: string | null;
+  recipients?: unknown[];
+  cancelledAt?: string;
+  [key: string]: unknown;
+}
 
 // Validation schemas
 const ScheduleSchema = z.object({
@@ -234,7 +246,7 @@ export async function GET(request: NextRequest) {
     // Transform reports to scheduled report format
     const scheduledReports = reports
       .map((report) => {
-        const filters = (report.filters as any) || {};
+        const filters = (report.filters as ReportFiltersJson) || {};
         const isActive = filters.isActive !== false;
 
         // Filter by active status if requested
@@ -340,7 +352,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Deactivate the scheduled report (soft delete)
-    const filters = (report.filters as any) || {};
+    const filters = (report.filters as ReportFiltersJson) || {};
     await prisma.report.update({
       where: { id: reportId },
       data: {
@@ -349,7 +361,7 @@ export async function DELETE(request: NextRequest) {
           ...filters,
           isActive: false,
           cancelledAt: new Date().toISOString(),
-        },
+        } as unknown as Prisma.InputJsonValue,
       },
     });
 

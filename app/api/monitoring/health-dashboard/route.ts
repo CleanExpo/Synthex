@@ -12,6 +12,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getSystemHealth, getQuickHealth, getRecentErrors, getErrorStats } from '@/lib/observability';
+import { ErrorSeverity, ErrorCategory } from '@/lib/observability/error-tracker';
 import { logger } from '@/lib/logger';
 
 export const dynamic = 'force-dynamic';
@@ -75,8 +76,8 @@ export async function GET(request: NextRequest) {
 
       case 'errors': {
         const count = parseInt(searchParams.get('count') || '50', 10);
-        const severity = searchParams.get('severity') as any;
-        const category = searchParams.get('category') as any;
+        const severity = searchParams.get('severity') as ErrorSeverity | undefined;
+        const category = searchParams.get('category') as ErrorCategory | undefined;
         const sinceMinutes = parseInt(searchParams.get('since') || '60', 10);
 
         const errors = getRecentErrors(count, {

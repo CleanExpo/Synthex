@@ -13,6 +13,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { Prisma } from '@prisma/client';
 import prisma from '@/lib/prisma';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { getEffectiveOrganizationId } from '@/lib/multi-business';
@@ -127,7 +128,7 @@ export async function POST(request: NextRequest) {
         profileId: 'manual',
         isActive: true,
         updatedAt: new Date(),
-        metadata: profile ? ({ profile } as any) : undefined,
+        metadata: profile ? ({ profile } as Prisma.InputJsonValue) : undefined,
       },
       create: {
         userId,
@@ -138,7 +139,7 @@ export async function POST(request: NextRequest) {
         scope: '',
         profileId: 'manual',
         isActive: true,
-        metadata: profile ? ({ profile } as any) : undefined,
+        metadata: profile ? ({ profile } as Prisma.InputJsonValue) : undefined,
       },
     });
 

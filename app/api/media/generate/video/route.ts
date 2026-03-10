@@ -95,7 +95,7 @@ export async function POST(request: NextRequest) {
     const action = searchParams.get('action') || 'generate';
 
     let result;
-    let validated;
+    let validated: z.infer<typeof VideoGenerationSchema> | z.infer<typeof ScriptVideoSchema> | z.infer<typeof AnimateImageSchema>;
 
     switch (action) {
       case 'script': {
@@ -189,9 +189,9 @@ export async function POST(request: NextRequest) {
           status: result.status,
           metadata: {
             ...result.metadata,
-            type: (validated as any).type || action,
-            prompt: (validated as any).prompt,
-            script: (validated as any).script,
+            type: ('type' in validated ? validated.type : undefined) || action,
+            prompt: ('prompt' in validated ? validated.prompt : undefined),
+            script: ('script' in validated ? validated.script : undefined),
           },
           video_url: result.videoUrl,
           created_at: new Date().toISOString(),
@@ -214,7 +214,7 @@ export async function POST(request: NextRequest) {
       {
         action: 'MEDIA_GENERATE',
         provider: result.provider,
-        type: (validated as any).type || action,
+        type: ('type' in validated ? validated.type : undefined) || action,
         videoId: result.videoId,
         status: result.status,
       }

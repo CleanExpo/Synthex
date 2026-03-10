@@ -196,7 +196,7 @@ export default function MarketingLayout({
   showFooter = true
 }: MarketingLayoutProps) {
   return (
-    <div className="min-h-screen bg-[#0a1628] text-white overflow-hidden">
+    <div className="min-h-screen bg-slate-950 text-white overflow-hidden">
       {/* Deep Navy Gradient Background */}
       <div className="fixed inset-0 bg-gradient-to-br from-[#0a1628] via-[#0f172a] to-[#0a1628]" />
 

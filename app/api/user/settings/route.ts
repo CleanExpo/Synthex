@@ -9,6 +9,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { z } from 'zod';
@@ -183,7 +184,7 @@ export async function PUT(request: NextRequest) {
     // Save to Prisma
     await prisma.user.update({
       where: { id: userId },
-      data: { settings: updatedSettings as any },
+      data: { settings: updatedSettings as Prisma.InputJsonValue },
     });
 
     return NextResponse.json({

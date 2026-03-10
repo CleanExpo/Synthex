@@ -4,16 +4,36 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { 
-  healthCheck, 
-  getStats, 
-  set, 
-  get, 
+import {
+  healthCheck,
+  getStats,
+  set,
+  get,
   del,
-  getImplementationType 
+  getImplementationType
 } from '@/lib/redis-unified';
 import { withOptionalSession } from '@/src/middleware/session';
 import { logger } from '@/lib/logger';
+
+interface PerfStats {
+  min?: number;
+  max?: number;
+  avg?: number;
+  median?: number;
+  p95?: number;
+  p99?: number;
+  total?: number;
+}
+
+interface PerfSummary {
+  write?: PerfStats | null;
+  read?: PerfStats | null;
+  delete?: PerfStats | null;
+  totalTime?: number;
+  totalOperations?: number;
+  successRate?: { write: number; read: number; delete: number };
+  health?: string;
+}
 
 // Force dynamic rendering - prevent static generation
 export const dynamic = 'force-dynamic';
@@ -140,7 +160,7 @@ export async function POST(request: NextRequest) {
           read: { times: [] as number[], errors: 0 },
           delete: { times: [] as number[], errors: 0 }
         },
-        summary: {} as any
+        summary: {} as PerfSummary
       };
       
       // Generate test data
@@ -226,10 +246,10 @@ export async function POST(request: NextRequest) {
       };
       
       // Overall health assessment
-      const overallSuccessRate = 
-        (results.summary.successRate.write + 
-         results.summary.successRate.read + 
-         results.summary.successRate.delete) / 3;
+      const sr = results.summary.successRate;
+      const overallSuccessRate = sr
+        ? (sr.write + sr.read + sr.delete) / 3
+        : 0;
       
       results.summary.health = 
         overallSuccessRate === 100 ? 'excellent' :

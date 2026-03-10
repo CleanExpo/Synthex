@@ -173,7 +173,7 @@ export async function GET(request: NextRequest) {
       return APISecurityChecker.createSecureResponse({ clients: [], total: 0 });
     }
 
-    const status = searchParams.get('status') as any || 'active';
+    const status = (searchParams.get('status') || 'active') as 'active' | 'paused' | 'archived' | 'all';
     const search = searchParams.get('search');
     const limit = parseInt(searchParams.get('limit') || '50', 10);
     const offset = parseInt(searchParams.get('offset') || '0', 10);
@@ -388,8 +388,12 @@ export async function PUT(request: NextRequest) {
 
     // Update client
     const validated = UpdateClientSchema.parse(body);
-    // Type assertion needed as Zod schema has optional nested fields
-    const client = await clientManagement.updateClient(clientId, userId, validated as any);
+    // Zod-inferred optional nested fields are structurally compatible with the service's expected Partial type
+    const client = await clientManagement.updateClient(
+      clientId,
+      userId,
+      validated as Parameters<typeof clientManagement.updateClient>[2]
+    );
 
     if (!client) {
       return APISecurityChecker.createSecureResponse(

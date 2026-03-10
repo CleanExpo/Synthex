@@ -13,6 +13,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
+import { Prisma } from '@prisma/client';
 import prisma from '@/lib/prisma';
 import { getUserIdFromRequest } from '@/lib/auth/jwt-utils';
 import { logger } from '@/lib/logger';
@@ -96,8 +97,8 @@ export async function POST(request: NextRequest) {
         name: data.name,
         slug,
         bio: data.bio,
-        credentials: data.credentials as any || [],
-        socialLinks: data.socialLinks as any || {},
+        credentials: (data.credentials ?? []) as Prisma.InputJsonValue,
+        socialLinks: (data.socialLinks ?? {}) as Prisma.InputJsonValue,
         avatarUrl: data.avatarUrl || null,
         sameAsUrls,
         expertiseAreas: data.expertiseAreas || [],

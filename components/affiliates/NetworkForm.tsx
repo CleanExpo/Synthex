@@ -81,7 +81,7 @@ export function NetworkForm({
       />
 
       {/* Modal */}
-      <div className="relative bg-[#0f172a] border border-white/10 rounded-xl w-full max-w-lg mx-4 shadow-2xl">
+      <div className="relative bg-gray-950 border border-white/10 rounded-xl w-full max-w-lg mx-4 shadow-2xl">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-white/10">
           <h2 className="text-lg font-semibold text-white">

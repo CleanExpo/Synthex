@@ -14,6 +14,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
+import { Prisma } from '@prisma/client';
 import prisma from '@/lib/prisma';
 import { getUserIdFromRequest } from '@/lib/auth/jwt-utils';
 import { logger } from '@/lib/logger';
@@ -105,8 +106,8 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       data: {
         ...(data.name && { name: data.name }),
         ...(data.bio && { bio: data.bio }),
-        ...(data.credentials && { credentials: data.credentials as any }),
-        ...(data.socialLinks && { socialLinks: data.socialLinks as any }),
+        ...(data.credentials && { credentials: data.credentials as Prisma.InputJsonValue }),
+        ...(data.socialLinks && { socialLinks: data.socialLinks as Prisma.InputJsonValue }),
         ...(data.avatarUrl !== undefined && { avatarUrl: data.avatarUrl }),
         ...(data.expertiseAreas && { expertiseAreas: data.expertiseAreas }),
         ...(sameAsUrls && { sameAsUrls }),

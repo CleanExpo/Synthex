@@ -22,6 +22,7 @@ import { retrievePKCEState } from '@/lib/auth/pkce';
 import { createClient } from '@supabase/supabase-js';
 import { logger } from '@/lib/logger';
 
+// Supabase createClient generic parameter requires `any` when the database schema is not provided at this call site
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type SupabaseAdmin = ReturnType<typeof createClient<any>>;
 

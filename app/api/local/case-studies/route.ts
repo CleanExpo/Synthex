@@ -13,6 +13,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
+import { Prisma } from '@prisma/client';
 import prisma from '@/lib/prisma';
 import { getUserIdFromRequest } from '@/lib/auth/jwt-utils';
 import { logger } from '@/lib/logger';
@@ -50,12 +51,12 @@ export async function GET(request: NextRequest) {
     const city = searchParams.get('city');
     const state = searchParams.get('state');
 
-    const where: Record<string, unknown> = { userId };
+    const where: Prisma.LocalCaseStudyWhereInput = { userId };
     if (city) where.city = city;
     if (state) where.state = state;
 
     const caseStudies = await prisma.localCaseStudy.findMany({
-      where: where as any,
+      where,
       orderBy: { createdAt: 'desc' },
     });
 
@@ -95,8 +96,8 @@ export async function POST(request: NextRequest) {
         solution: data.solution || null,
         results: data.results || null,
         testimonial: data.testimonial || null,
-        coordinates: data.coordinates as any || null,
-        napData: data.napData as any || null,
+        coordinates: data.coordinates != null ? data.coordinates as Prisma.InputJsonValue : Prisma.JsonNull,
+        napData: data.napData != null ? data.napData as Prisma.InputJsonValue : Prisma.JsonNull,
         beforeImages: [],
         afterImages: [],
         diagrams: [],

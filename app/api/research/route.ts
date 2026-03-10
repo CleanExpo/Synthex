@@ -13,6 +13,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
+import { Prisma } from '@prisma/client';
 import prisma from '@/lib/prisma';
 import { getUserIdFromRequest } from '@/lib/auth/jwt-utils';
 import { logger } from '@/lib/logger';
@@ -47,11 +48,11 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const status = searchParams.get('status');
 
-    const where: Record<string, unknown> = { userId };
+    const where: Prisma.GEOResearchReportWhereInput = { userId };
     if (status) where.status = status;
 
     const reports = await prisma.gEOResearchReport.findMany({
-      where: where as any,
+      where,
       orderBy: { createdAt: 'desc' },
       include: { _count: { select: { visuals: true } } },
     });
@@ -92,8 +93,8 @@ export async function POST(request: NextRequest) {
         status: 'draft',
         executiveSummary: data.executiveSummary || null,
         methodology: data.methodology || null,
-        findings: data.findings as any || [],
-        dataSources: data.dataSources as any || [],
+        findings: (data.findings ?? []) as Prisma.InputJsonValue,
+        dataSources: (data.dataSources ?? []) as Prisma.InputJsonValue,
       },
     });
 

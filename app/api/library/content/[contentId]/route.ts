@@ -168,7 +168,7 @@ export async function PATCH(
 
     const { incrementUsage, ...updateData } = validation.data;
 
-    // Build update object
+    // Build update object — dynamic field names prevent a fully-typed accumulator here
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const updatePayload: Record<string, any> = {};
 

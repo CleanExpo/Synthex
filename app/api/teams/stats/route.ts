@@ -18,6 +18,15 @@ import { ResponseOptimizer } from '@/lib/api/response-optimizer';
 import { logger } from '@/lib/logger';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
 
+interface PostAnalytics {
+  reach?: number;
+  impressions?: number;
+  likes?: number;
+  comments?: number;
+  shares?: number;
+  [key: string]: unknown;
+}
+
 // ============================================================================
 // GET - Team Statistics
 // ============================================================================
@@ -114,7 +123,8 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    // Get pending invitations count
+    // teamInvitation is a Prisma model not yet in the generated client type — runtime access via dynamic client
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const pendingInvitations = await (prisma as any).teamInvitation.count({
       where: {
         organizationId,
@@ -191,7 +201,7 @@ export async function GET(request: NextRequest) {
     let totalImpressions = 0;
 
     for (const post of postsWithAnalytics) {
-      const analytics = (post.analytics as any) || {};
+      const analytics = (post.analytics as PostAnalytics) || {};
       totalReach += analytics.reach || 0;
       totalImpressions += analytics.impressions || 0;
       totalEngagement +=

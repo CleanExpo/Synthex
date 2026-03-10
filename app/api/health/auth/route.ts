@@ -22,7 +22,7 @@ export async function GET() {
       database: false
     },
     errors: [] as string[],
-    stats: {} as any
+    stats: {} as { totalEvents?: number; failureRate?: number; successRate?: string }
   };
 
   try {

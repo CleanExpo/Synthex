@@ -250,7 +250,7 @@ export async function POST(request: NextRequest) {
         outcome: 'success',
         details: {
           type: data.type,
-          targetType: 'type' in data && 'target' in data ? Object.keys((data as any).target)[0] : 'unknown',
+          targetType: 'type' in data && 'target' in data ? Object.keys((data as Record<string, unknown>).target as Record<string, unknown>)[0] : 'unknown',
         },
       });
     }

@@ -17,6 +17,7 @@
 
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
+import { Prisma } from '@prisma/client';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
 import { subscriptionService } from '@/lib/stripe/subscription-service';
 import prisma from '@/lib/prisma';
@@ -173,7 +174,7 @@ export async function POST(
             data: {
               messageCount: { increment: 2 }, // user + assistant
               lastMessageAt: new Date(),
-              contextSnapshot: contextSnapshot as any,
+              contextSnapshot: contextSnapshot as unknown as Prisma.InputJsonValue,
               // Auto-title from first user message if still default
               ...(conversation.title === 'New Conversation'
                 ? { title: userMessage.substring(0, 80) + (userMessage.length > 80 ? '...' : '') }

@@ -16,6 +16,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
+import { Prisma } from '@prisma/client';
 import prisma from '@/lib/prisma';
 import { getUserIdFromRequest } from '@/lib/auth/jwt-utils';
 import { analyzeGEO } from '@/lib/geo/geo-analyzer';
@@ -75,9 +76,9 @@ export async function POST(request: NextRequest) {
         multiModalScore: result.score.multiModal,
         authorityScore: result.score.authority,
         technicalScore: result.score.technical,
-        citablePassages: result.citablePassages as any,
-        recommendations: result.recommendations as any,
-        schemaIssues: result.schemaIssues as any,
+        citablePassages: result.citablePassages as unknown as Prisma.InputJsonValue,
+        recommendations: result.recommendations as unknown as Prisma.InputJsonValue,
+        schemaIssues: result.schemaIssues as unknown as Prisma.InputJsonValue,
       },
     });
 

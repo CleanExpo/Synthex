@@ -373,6 +373,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Store analysis
+    // Prisma client type does not expose sentimentAnalysis in the generated type union — runtime model
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const analysis = await (prisma as any).sentimentAnalysis?.create({
       data: {
         userId,
@@ -393,6 +395,8 @@ export async function POST(request: NextRequest) {
 
     // If analyzing a comment, update the comment's sentiment
     if (contentType === 'comment' && contentId) {
+      // Prisma client type does not expose contentComment in the generated type union — runtime model
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       await (prisma as any).contentComment?.update({
         where: { id: contentId },
         data: {
@@ -471,6 +475,8 @@ export async function GET(request: NextRequest) {
     if (sentiment) where.sentiment = sentiment;
 
     const [analyses, total] = await Promise.all([
+      // Prisma client type does not expose sentimentAnalysis in the generated type union — runtime model
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (prisma as any).sentimentAnalysis?.findMany({
         where,
         orderBy: { analyzedAt: 'desc' },
@@ -489,6 +495,7 @@ export async function GET(request: NextRequest) {
           analyzedAt: true,
         },
       }) || [],
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (prisma as any).sentimentAnalysis?.count({ where }) || 0,
     ]);
 
