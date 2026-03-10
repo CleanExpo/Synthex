@@ -101,6 +101,7 @@ export default function GEOPage() {
         <TabsList className="bg-white/5 border-white/10">
           <TabsTrigger value="analyze">Analyze Content</TabsTrigger>
           <TabsTrigger value="results" disabled={!result}>Results</TabsTrigger>
+          <TabsTrigger value="entities" disabled={!result}>Entities</TabsTrigger>
           <TabsTrigger value="history">History</TabsTrigger>
         </TabsList>
 
