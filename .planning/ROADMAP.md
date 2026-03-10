@@ -100,7 +100,7 @@ None (internal platform work)
 - [x] **Phase 77: Content Creation Flow** - Upload/generate/preview UX for real content publishing
 - [x] **Phase 78: Post Queue & Scheduling** - Scheduling engine UX, queue management, bulk scheduling
 - [x] **Phase 79: Admin Completion** - Role updates, password reset, MRR from Stripe, audit log detail
-- [ ] **Phase 80: Brand Profile Setup** - Multi-brand profile configuration in God Mode
+- [x] **Phase 80: Brand Profile Setup** - Multi-brand profile configuration in God Mode
 - [ ] **Phase 81: Social Account Onboarding** - Connect real social accounts, audit presence, content strategy
 - [ ] **Phase 82: Code Quality** - Structured logger migration, component decomposition
 - [ ] **Phase 83: Accessibility & Polish** - WCAG skip links, E2E flaky test fixes, responsive edge cases
@@ -716,10 +716,11 @@ Plans:
 **Depends on**: Phase 79
 **Linear**: SYN-15, SYN-16
 **Research**: Unlikely (existing admin panel patterns)
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 80-01: TBD
+- [x] 80-01: Brand Profile API (GET + PATCH, Zod validation)
+- [x] 80-02: Brand Profile UI (SWR hook, settings tab, logo upload)
 
 #### Phase 81: Social Account Onboarding
 
