@@ -741,7 +741,7 @@ Plans:
 **Plans**: TBD
 
 Plans:
-- [ ] 82-01: TBD
+- [x] 82-01: Auth centralisation — remove 49 local auth helpers from API routes (SYN-57)
 
 #### Phase 83: Accessibility & Polish
 

@@ -11,20 +11,20 @@ See: .planning/PROJECT.md (updated 2026-02-17)
 
 Milestone: v4.0 Production Complete
 Phase: 82 of 84 (Code Quality)
-Plan: Not started
-Status: Ready to plan
-Last activity: 2026-03-10 — Phase 81 complete (2 plans, 3 commits)
+Plan: 82-01 complete (1/? plans in phase 82)
+Status: In progress
+Last activity: 2026-03-10 — Plan 82-01 complete — auth centralisation across 49 API routes (SYN-57)
 
 Progress: █████░░░░░ 62% (5/8 phases complete in v4.0)
 
-Next action: /gsd:plan-phase 82
+Next action: /gsd:plan-phase 82 (next plan in phase 82, or /gsd:progress to assess)
 
 ## Performance Metrics
 
 **Velocity (from v1.0):**
-- Total plans completed: 39
+- Total plans completed: 40
 - Average duration: ~13 min
-- Total execution time: ~510 min
+- Total execution time: ~600 min
 
 **By Phase (v1.0):**
 
@@ -241,9 +241,9 @@ None.
 ## Session Continuity
 
 Last session: 2026-03-10
-Stopped at: Milestone v4.0 initialization
+Stopped at: Plan 82-01 complete (auth centralisation)
 Resume file: none
-Next action: /gsd:plan-phase 80
+Next action: /gsd:plan-phase 82 (next plan)
 
 ## Linear Issues — v2.0 Phase 59-66 Tracking
 
