@@ -27,6 +27,7 @@ import {
   CheckCircle,
   Clock,
   XCircle,
+  DollarSign,
 } from '@/components/icons';
 
 // =============================================================================
@@ -60,6 +61,13 @@ interface PlatformStatsApiResponse {
     cancelledSubscriptions: number;
     freeUsers: number;
     mrr: number;
+    mrrDetails?: {
+      stripeMrr: number;
+      estimatedMrr: number;
+      currency: string;
+      stripeActiveCount: number;
+      calculatedAt: string;
+    };
   };
 }
 
@@ -166,7 +174,7 @@ export function PlatformHealth() {
           {platformLoading ? (
             <p className="text-gray-400 text-sm">Loading...</p>
           ) : (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
               <StatCard
                 label="Total Users"
                 value={platform?.totalUsers ?? 0}
@@ -193,6 +201,17 @@ export function PlatformHealth() {
                 icon={Users}
                 iconClass="text-gray-400"
                 description="No active subscription"
+              />
+              <StatCard
+                label="Monthly Revenue"
+                value={`$${(platform?.mrr ?? 0).toLocaleString('en-AU', { minimumFractionDigits: 0 })} AUD`}
+                icon={DollarSign}
+                iconClass="text-emerald-400"
+                description={
+                  platform?.mrrDetails?.stripeMrr
+                    ? `From Stripe (${platform.mrrDetails.stripeActiveCount} subs)`
+                    : 'Estimated from plan prices'
+                }
               />
             </div>
           )}

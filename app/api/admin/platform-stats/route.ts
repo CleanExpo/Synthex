@@ -4,7 +4,7 @@
  * Returns aggregate subscription and user metrics for the Platform Health tab.
  *
  * Response shape:
- *   { totalUsers, activeSubscriptions, freeUsers, mrr }
+ *   { totalUsers, activeSubscriptions, freeUsers, mrr, mrrDetails }
  *
  * ENVIRONMENT VARIABLES REQUIRED:
  *   - DATABASE_URL (CRITICAL)
@@ -19,6 +19,7 @@ import prisma from '@/lib/prisma';
 import { sanitizeErrorForResponse } from '@/lib/utils/error-utils';
 import { verifyAdmin } from '@/lib/admin/verify-admin';
 import { admin as adminRateLimit } from '@/lib/middleware/api-rate-limit';
+import { calculateMRR } from '@/lib/admin/mrr-calculator';
 
 export async function GET(request: NextRequest) {
   return adminRateLimit(request, async () => {
@@ -50,10 +51,7 @@ export async function GET(request: NextRequest) {
         }),
       ]);
 
-      // MRR estimate: $0 until Stripe amount field is added to schema (SYN-future)
-      // The Subscription model currently tracks plan tier ('free', 'professional', 'business')
-      // but does not store the billing amount — that lives in Stripe.
-      const mrr = 0;
+      const mrrResult = await calculateMRR();
 
       const freeUsers = totalUsers - activeSubscriptions - trialingSubscriptions;
 
@@ -65,7 +63,14 @@ export async function GET(request: NextRequest) {
           trialingSubscriptions,
           cancelledSubscriptions,
           freeUsers: Math.max(0, freeUsers),
-          mrr,
+          mrr: mrrResult.stripeMrr || mrrResult.estimatedMrr,
+          mrrDetails: {
+            stripeMrr: mrrResult.stripeMrr,
+            estimatedMrr: mrrResult.estimatedMrr,
+            currency: mrrResult.currency,
+            stripeActiveCount: mrrResult.activeCount,
+            calculatedAt: mrrResult.calculatedAt,
+          },
         },
       });
     } catch (error: unknown) {
