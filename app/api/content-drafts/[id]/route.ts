@@ -25,6 +25,7 @@ const updateDraftSchema = z.object({
   topic: z.string().optional(),
   targetLength: z.string().optional(),
   status: z.enum(['draft', 'scheduled', 'published']).optional(),
+  scheduledPostId: z.string().optional(),
   metadata: z.record(z.unknown()).optional(),
 });
 
