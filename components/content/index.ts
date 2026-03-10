@@ -10,3 +10,6 @@ export { ContentStats } from './content-stats';
 export { GenerationSettings } from './generation-settings';
 export { GeneratedContent } from './generated-content';
 export { MediaAttacher } from './media-attacher';
+export { PlatformPreview } from './platform-preview';
+export { CharacterCounter } from './character-counter';
+export * from './platform-limits';
