@@ -99,7 +99,7 @@ None (internal platform work)
 - [x] **Phase 76: NEXUS Branding & Unite-Hub** - NEXUS branding throughout app + Unite-Hub API connector
 - [x] **Phase 77: Content Creation Flow** - Upload/generate/preview UX for real content publishing
 - [x] **Phase 78: Post Queue & Scheduling** - Scheduling engine UX, queue management, bulk scheduling
-- [ ] **Phase 79: Admin Completion** - Role updates, password reset, MRR from Stripe, audit log detail
+- [x] **Phase 79: Admin Completion** - Role updates, password reset, MRR from Stripe, audit log detail
 - [ ] **Phase 80: Brand Profile Setup** - Multi-brand profile configuration in God Mode
 - [ ] **Phase 81: Social Account Onboarding** - Connect real social accounts, audit presence, content strategy
 - [ ] **Phase 82: Code Quality** - Structured logger migration, component decomposition
@@ -706,9 +706,9 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] 79-01: Role update API, edit-user dialog wiring, password reset action
-- [ ] 79-02: MRR from Stripe API with caching + plan-based fallback
-- [ ] 79-03: Audit log detail drawer with full entry metadata
+- [x] 79-01: Role update API, edit-user dialog, password reset
+- [x] 79-02: MRR from Stripe API with caching + fallback
+- [x] 79-03: Audit log detail drawer
 
 #### Phase 80: Brand Profile Setup
 
