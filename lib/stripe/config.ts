@@ -97,3 +97,6 @@ export function getProductByName(name: string) {
   const key = name.toLowerCase() as keyof typeof PRODUCTS;
   return PRODUCTS[key];
 }
+
+// Add-on price IDs
+export const AUTHORITY_ADDON_PRICE_ID = process.env.STRIPE_AUTHORITY_ADDON_PRICE_ID || '';

@@ -68,6 +68,61 @@ export const PLAN_LIMITS: Record<string, PlanLimits> = {
 // ============================================================================
 
 export class SubscriptionService {
+  // Cache for hasAuthorityAddon results — avoid hammering Stripe API on every request
+  private addonCache = new Map<string, { result: boolean; expiresAt: number }>();
+
+  /**
+   * Check whether a user has an active Authority Ranking add-on subscription item.
+   * Results are cached per-userId for 5 minutes.
+   */
+  async hasAuthorityAddon(userId: string): Promise<boolean> {
+    // Check in-memory cache first
+    const cached = this.addonCache.get(userId);
+    if (cached && Date.now() < cached.expiresAt) {
+      return cached.result;
+    }
+
+    const cacheResult = (result: boolean): boolean => {
+      this.addonCache.set(userId, { result, expiresAt: Date.now() + 5 * 60 * 1000 });
+      return result;
+    };
+
+    // Owner bypass — platform owners always have all features enabled
+    const user = await prisma.user.findUnique({ where: { id: userId }, select: { email: true } });
+    if (isOwnerEmail(user?.email)) {
+      return cacheResult(true);
+    }
+
+    // Fetch subscription record
+    const sub = await prisma.subscription.findUnique({ where: { userId } });
+    if (!sub?.stripeSubscriptionId) {
+      return cacheResult(false);
+    }
+
+    // Check env var — if not configured, addon is disabled for everyone
+    const addonPriceId = process.env.STRIPE_AUTHORITY_ADDON_PRICE_ID;
+    if (!addonPriceId) {
+      return cacheResult(false);
+    }
+
+    // Query Stripe for the subscription items to check if the addon price is present
+    if (!stripe) {
+      return cacheResult(false);
+    }
+
+    try {
+      const stripeSub = await stripe.subscriptions.retrieve(sub.stripeSubscriptionId, {
+        expand: ['items'],
+      });
+
+      const hasAddon = stripeSub.items.data.some(item => item.price.id === addonPriceId);
+      return cacheResult(hasAddon);
+    } catch (err) {
+      logger.warn('Failed to retrieve Stripe subscription for addon check', { err, userId });
+      return cacheResult(false);
+    }
+  }
+
   /**
    * Get or create subscription for a user
    */
@@ -491,3 +546,15 @@ export class SubscriptionService {
 
 export const subscriptionService = new SubscriptionService();
 export default subscriptionService;
+
+// ============================================================================
+// STANDALONE HELPERS (delegates to singleton)
+// ============================================================================
+
+/**
+ * Convenience wrapper — check authority addon without importing the class.
+ * Usage: import { hasAuthorityAddon } from '@/lib/stripe/subscription-service';
+ */
+export async function hasAuthorityAddon(userId: string): Promise<boolean> {
+  return subscriptionService.hasAuthorityAddon(userId);
+}
