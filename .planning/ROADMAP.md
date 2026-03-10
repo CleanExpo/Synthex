@@ -103,7 +103,7 @@ None (internal platform work)
 - [x] **Phase 80: Brand Profile Setup** - Multi-brand profile configuration in God Mode
 - [x] **Phase 81: Social Account Onboarding** - Connect real social accounts, audit presence, content strategy
 - [x] **Phase 82: Code Quality** - Structured logger migration, component decomposition
-- [ ] **Phase 83: Accessibility & Polish** - WCAG skip links, E2E flaky test fixes, responsive edge cases
+- [x] **Phase 83: Accessibility & Polish** - WCAG skip links, E2E flaky test fixes, responsive edge cases
 - [ ] **Phase 84: Final UAT & Launch** - End-to-end acceptance testing, production verification
 
 ## Phase Details
@@ -750,10 +750,11 @@ Plans:
 **Goal**: WCAG skip links, E2E flaky test fixes, responsive edge cases
 **Depends on**: Phase 82
 **Research**: Unlikely (established WCAG guidelines)
-**Plans**: TBD
+**Plans**: 2
 
 Plans:
-- [ ] 83-01: TBD
+- [x] 83-01: Keyboard navigation, skip links, aria-current, table row access (a67f6d74)
+- [x] 83-02: Form accessibility — focus-visible rings, spinner aria-labels, input labels (c86138d5)
 
 #### Phase 84: Final UAT & Launch
 
