@@ -10,14 +10,14 @@ See: .planning/PROJECT.md (updated 2026-02-17)
 ## Current Position
 
 Milestone: v5.0 AI-Native GEO & Citation Engine
-Phase: 85 of 100 (Entity Coherence Engine)
-Plan: 1 of 2 complete
-Status: In progress
-Last activity: 2026-03-11 — Completed 85-01 (entity-analyzer service, Prisma EntityAnalysis model, GEOScore extension)
+Phase: 85 of 100 (Entity Coherence Engine) — COMPLETE
+Plan: 2 of 2 complete
+Status: Done
+Last activity: 2026-03-11 — Completed 85-02 (Entities tab on GEO dashboard page)
 
-Progress: ░░░░░░░░░░ ~2% (1/~42 plans)
+Progress: ██░░░░░░░░ ~6% (2/~42 plans)
 
-Next action: `/gsd:execute-plan` for 85-02 (Entity dashboard UI tab)
+Next action: `/gsd:plan-phase` for Phase 86 (Citation Tracking & Source Attribution)
 
 ## Performance Metrics
 
@@ -242,9 +242,9 @@ None.
 ## Session Continuity
 
 Last session: 2026-03-11
-Stopped at: 85-01 complete — entity analyzer service layer shipped
+Stopped at: Phase 85 complete — both plans shipped (service layer + dashboard UI)
 Resume file: none
-Next action: Execute 85-02-PLAN.md (Entity dashboard UI tab)
+Next action: Plan Phase 86 (Citation Tracking & Source Attribution)
 
 ## Linear Issues — v2.0 Phase 59-66 Tracking
 
