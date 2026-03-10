@@ -703,10 +703,12 @@ Plans:
 **Depends on**: Phase 78
 **Research**: Likely (Stripe API for subscription amount/MRR calculation)
 **Research topics**: Stripe Subscription API amount fields, invoice line items for MRR
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 79-01: TBD
+- [ ] 79-01: Role update API, edit-user dialog wiring, password reset action
+- [ ] 79-02: MRR from Stripe API with caching + plan-based fallback
+- [ ] 79-03: Audit log detail drawer with full entry metadata
 
 #### Phase 80: Brand Profile Setup
 
