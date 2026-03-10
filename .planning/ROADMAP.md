@@ -107,7 +107,7 @@ None (internal platform work)
 - [x] **Phase 83: Accessibility & Polish** - WCAG skip links, E2E flaky test fixes, responsive edge cases
 - [x] **Phase 84: Final UAT & Launch** - End-to-end acceptance testing, production verification
 - [x] **Phase 85: Entity Coherence Engine** - NLP entity extraction, density scoring, coherence checking for AI citation
-- [ ] **Phase 86: Citation Tracking & Monitoring** - Monitor brand citations across ChatGPT, Perplexity, Google AI, Claude
+- [ ] **Phase 86: Authority Engine & Design Audit** - Authoritative citation validation, claim verification against gov/academic/industry sources, Design & CRO audit with CITABLE framework, $22/month addon
 - [ ] **Phase 87: GEO Content Optimiser v2** - Princeton 9-tactic framework with real-time scoring and AI rewriting
 - [ ] **Phase 88: Writing Context & Voice Fingerprinting** - Human writing methodology, voice pattern extraction, Content Capsule Technique
 - [ ] **Phase 89: AI Slop Detection & Content Quality Gate** - Tell-phrase scanning, humanness scoring, quality enforcement
@@ -816,14 +816,16 @@ Plans:
 **Plans**: 2 plans (service + API, dashboard UI)
 **New models**: `EntityAnalysis`
 
-#### Phase 86: Citation Tracking & Monitoring
+#### Phase 86: Authority Engine & Design Audit
 
-**Goal**: Monitor brand mentions and citations across ChatGPT, Perplexity, Google AI Overviews, and Claude
+**Goal**: Real-time claim validation engine verifying marketing claims against authoritative sources (government, academic, industry), plus Design & Conversion Audit with CITABLE framework for LLM citation fitness
 **Depends on**: Phase 85
-**Research**: Likely (Bing Webmaster Tools API, citation probing methodology)
-**Plans**: 3 plans (Bing API integration, citation probing service, dashboard + alerts)
-**New models**: `CitationRecord`, `CitationQuery`, `CitationAlert`
-**OAuth**: Bing Webmaster Tools
+**Research**: Applied — Aaron Tay "Agentic Researcher" pattern, Claude API citations, Semantic Scholar (214M papers), Australian Government APIs, 2026 CRO/design research (Core Web Vitals, LLM citation structure, CITABLE framework)
+**Plans**: 7 plans (Prisma + types, source connectors, core engine, API routes + subscription gating, dashboard UI, design audit services, design audit UI + integration)
+**New models**: `AuthorityAnalysis`, `AuthorityCitation`, `CitationMonitor`
+**Business model**: $22 AUD/month "Authoritative Ranking" addon — separate Stripe product
+**Architecture**: Claude API direct (not MCP SDK) — `web_search_20250305` tool with domain filtering
+**Key innovation**: CITABLE framework (7 LLM citation fitness dimensions), 4 source connectors, Design Quality + CRO + LLM Citation Fitness scoring
 
 #### Phase 87: GEO Content Optimiser v2
 
