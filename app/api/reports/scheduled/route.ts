@@ -18,6 +18,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
 import { z } from 'zod';
+import { logger } from '@/lib/logger';
 
 // ============================================================================
 // TYPE DEFINITIONS
@@ -222,7 +223,7 @@ export async function GET(request: NextRequest) {
       hasMore: (scheduledReports?.length || 0) === limit,
     });
   } catch (error) {
-    console.error('Get scheduled reports error:', error);
+    logger.error('Get scheduled reports error:', error);
     return NextResponse.json(
       { error: 'Failed to fetch scheduled reports' },
       { status: 500 }
@@ -318,7 +319,7 @@ export async function POST(request: NextRequest) {
       created: true,
     });
   } catch (error) {
-    console.error('Create scheduled report error:', error);
+    logger.error('Create scheduled report error:', error);
     return NextResponse.json(
       { error: 'Failed to create scheduled report' },
       { status: 500 }
@@ -406,7 +407,7 @@ export async function PATCH(request: NextRequest) {
       updated: true,
     });
   } catch (error) {
-    console.error('Update scheduled report error:', error);
+    logger.error('Update scheduled report error:', error);
     return NextResponse.json(
       { error: 'Failed to update scheduled report' },
       { status: 500 }
@@ -481,7 +482,7 @@ export async function DELETE(request: NextRequest) {
       message: 'Scheduled report deleted successfully',
     });
   } catch (error) {
-    console.error('Delete scheduled report error:', error);
+    logger.error('Delete scheduled report error:', error);
     return NextResponse.json(
       { error: 'Failed to delete scheduled report' },
       { status: 500 }

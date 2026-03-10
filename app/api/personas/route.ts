@@ -46,6 +46,7 @@ const updatePersonaSchema = z.object({
 // =============================================================================
 
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
+import { logger } from '@/lib/logger';
 
 // =============================================================================
 // GET - List Personas
@@ -68,7 +69,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ data: personas });
   } catch (error) {
-    console.error('Error fetching personas:', error);
+    logger.error('Error fetching personas:', error);
     return NextResponse.json(
       { error: 'Internal Server Error', message: 'Failed to fetch personas' },
       { status: 500 }
@@ -111,7 +112,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ data: persona }, { status: 201 });
   } catch (error) {
-    console.error('Error creating persona:', error);
+    logger.error('Error creating persona:', error);
     return NextResponse.json(
       { error: 'Internal Server Error', message: 'Failed to create persona' },
       { status: 500 }
@@ -179,7 +180,7 @@ export async function PATCH(request: NextRequest) {
 
     return NextResponse.json({ data: persona });
   } catch (error) {
-    console.error('Error updating persona:', error);
+    logger.error('Error updating persona:', error);
     return NextResponse.json(
       { error: 'Internal Server Error', message: 'Failed to update persona' },
       { status: 500 }
@@ -228,7 +229,7 @@ export async function DELETE(request: NextRequest) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Error deleting persona:', error);
+    logger.error('Error deleting persona:', error);
     return NextResponse.json(
       { error: 'Internal Server Error', message: 'Failed to delete persona' },
       { status: 500 }

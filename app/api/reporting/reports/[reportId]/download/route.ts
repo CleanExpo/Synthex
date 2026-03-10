@@ -10,6 +10,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { reportGenerator } from '@/lib/reports/report-generator';
 import { getUserIdFromCookies } from '@/lib/auth/jwt-utils';
+import { logger } from '@/lib/logger';
 
 /**
  * GET /api/reporting/reports/[reportId]/download
@@ -97,7 +98,7 @@ export async function GET(
       },
     });
   } catch (error) {
-    console.error('Report download error:', error);
+    logger.error('Report download error:', error);
     return NextResponse.json(
       { error: 'Failed to download report' },
       { status: 500 }

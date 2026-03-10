@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { cookies } from 'next/headers';
 import { IntegrationService, IntegrationPlatform } from '@/lib/supabase';
 import { createClient } from '@supabase/supabase-js';
+import { logger } from '@/lib/logger';
 
 const connectCredentialsSchema = z.object({
   accountName: z.string().optional(),
@@ -106,7 +107,7 @@ export async function POST(
       }
     });
   } catch (error: unknown) {
-    console.error('Error connecting integration:', error);
+    logger.error('Error connecting integration:', error);
     return NextResponse.json(
       { error: error instanceof Error ? error.message : String(error) || 'Failed to connect integration' },
       { status: 500 }
@@ -172,7 +173,7 @@ export async function GET(
       lastUsed: integration.last_used
     });
   } catch (error: unknown) {
-    console.error('Error getting integration status:', error);
+    logger.error('Error getting integration status:', error);
     return NextResponse.json(
       { error: 'Failed to get integration status' },
       { status: 500 }
@@ -228,7 +229,7 @@ export async function DELETE(
       message: 'Integration disconnected successfully'
     });
   } catch (error: unknown) {
-    console.error('Error disconnecting integration:', error);
+    logger.error('Error disconnecting integration:', error);
     return NextResponse.json(
       { error: 'Failed to disconnect integration' },
       { status: 500 }

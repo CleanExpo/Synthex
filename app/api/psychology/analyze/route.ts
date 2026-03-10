@@ -13,6 +13,7 @@ import { psychologyAnalyzer } from '@/lib/ai/psychology-analyzer';
 import { z } from 'zod';
 import { resolveAIProvider } from '@/lib/ai/api-credential-injector';
 import { requireApiKey } from '@/lib/middleware/require-api-key';
+import { logger } from '@/lib/logger';
 
 const AnalyzeRequestSchema = z.object({
   content: z.string().min(1, 'Content is required').max(5000, 'Content too long'),
@@ -87,7 +88,7 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('Psychology analysis error:', error);
+    logger.error('Psychology analysis error:', error);
     return NextResponse.json(
       { error: 'Analysis failed' },
       { status: 500 }
@@ -119,7 +120,7 @@ export async function GET() {
       },
     });
   } catch (error) {
-    console.error('Psychology capabilities error:', error);
+    logger.error('Psychology capabilities error:', error);
     return NextResponse.json(
       { error: 'Failed to fetch capabilities' },
       { status: 500 }

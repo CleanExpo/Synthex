@@ -16,6 +16,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import prisma from '@/lib/prisma';
 import { getUserIdFromRequest } from '@/lib/auth/jwt-utils';
+import { logger } from '@/lib/logger';
 
 const updateReportSchema = z.object({
   title: z.string().min(5).max(200).optional(),
@@ -54,7 +55,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     if (!report) return NextResponse.json({ error: 'Not Found' }, { status: 404 });
     return NextResponse.json(report);
   } catch (error) {
-    console.error('Get report error:', error);
+    logger.error('Get report error:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }
@@ -96,7 +97,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 
     return NextResponse.json(updated);
   } catch (error) {
-    console.error('Update report error:', error);
+    logger.error('Update report error:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }
@@ -116,7 +117,7 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
     await prisma.gEOResearchReport.delete({ where: { id: reportId } });
     return NextResponse.json({ success: true, message: 'Research report deleted' });
   } catch (error) {
-    console.error('Delete report error:', error);
+    logger.error('Delete report error:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }

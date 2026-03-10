@@ -11,6 +11,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
+import { logger } from '@/lib/logger';
 
 export async function GET(request: NextRequest) {
   // Security check - requires authentication
@@ -60,7 +61,7 @@ export async function GET(request: NextRequest) {
       security.context
     );
   } catch (error) {
-    console.error('Error fetching trends:', error);
+    logger.error('Error fetching trends:', error);
     return APISecurityChecker.createSecureResponse(
       { error: 'Failed to fetch trends' },
       500,

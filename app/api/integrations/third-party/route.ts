@@ -11,6 +11,7 @@
 import { NextResponse } from 'next/server';
 import { getUserIdFromCookies, unauthorizedResponse } from '@/lib/auth/jwt-utils';
 import { prisma } from '@/lib/prisma';
+import { logger } from '@/lib/logger';
 import {
   SUPPORTED_PROVIDERS,
   INTEGRATION_REGISTRY,
@@ -68,7 +69,7 @@ export async function GET() {
 
     return NextResponse.json({ integrations });
   } catch (error) {
-    console.error('Failed to list third-party integrations:', error);
+    logger.error('Failed to list third-party integrations:', error);
     return NextResponse.json(
       { error: 'Failed to fetch integrations', message: 'An unexpected error occurred' },
       { status: 500 }

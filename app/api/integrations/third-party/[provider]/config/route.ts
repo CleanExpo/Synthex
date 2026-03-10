@@ -13,6 +13,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { getUserIdFromCookies, unauthorizedResponse } from '@/lib/auth/jwt-utils';
 import { prisma } from '@/lib/prisma';
+import { logger } from '@/lib/logger';
 import {
   isValidProvider,
   INTEGRATION_REGISTRY,
@@ -94,7 +95,7 @@ export async function GET(
       connected: connection?.isActive || false,
     });
   } catch (error) {
-    console.error('Failed to get integration config:', error);
+    logger.error('Failed to get integration config:', error);
     return NextResponse.json(
       { error: 'Failed to get configuration', message: 'An unexpected error occurred' },
       { status: 500 }
@@ -180,7 +181,7 @@ export async function PUT(
       message: 'Configuration updated successfully',
     });
   } catch (error) {
-    console.error('Failed to update integration config:', error);
+    logger.error('Failed to update integration config:', error);
     return NextResponse.json(
       { error: 'Failed to update configuration', message: 'An unexpected error occurred' },
       { status: 500 }

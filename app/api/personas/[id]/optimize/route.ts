@@ -14,6 +14,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
+import { logger } from '@/lib/logger';
 
 // ============================================================================
 // TYPES
@@ -128,7 +129,7 @@ export async function GET(
         })),
     });
   } catch (error) {
-    console.error('Optimization analysis error:', error);
+    logger.error('Optimization analysis error:', error);
     return NextResponse.json(
       { error: 'Failed to analyze optimization' },
       { status: 500 }
@@ -231,7 +232,7 @@ export async function POST(
       message: `Applied ${applied.length} optimization(s)`,
     });
   } catch (error) {
-    console.error('Optimization apply error:', error);
+    logger.error('Optimization apply error:', error);
     return NextResponse.json(
       { error: 'Failed to apply optimizations' },
       { status: 500 }

@@ -11,6 +11,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { reportGenerator } from '@/lib/reports/report-generator';
 import { z } from 'zod';
 import { getUserIdFromCookies } from '@/lib/auth/jwt-utils';
+import { logger } from '@/lib/logger';
 
 const GenerateRequestSchema = z.object({
   name: z.string().min(1, 'Report name is required').max(200),
@@ -62,7 +63,7 @@ export async function POST(request: NextRequest) {
       },
     }, { status: 202 });
   } catch (error) {
-    console.error('Report generation error:', error);
+    logger.error('Report generation error:', error);
     return NextResponse.json(
       { error: 'Failed to generate report' },
       { status: 500 }

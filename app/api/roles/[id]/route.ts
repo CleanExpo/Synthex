@@ -17,6 +17,7 @@ import { getUserIdFromCookies } from '@/lib/auth/jwt-utils';
 import { RoleManager } from '@/lib/auth/rbac/role-manager';
 import { PermissionEngine } from '@/lib/auth/rbac/permission-engine';
 import { sanitizeErrorForResponse } from '@/lib/utils/error-utils';
+import { logger } from '@/lib/logger';
 
 // =============================================================================
 // Schemas
@@ -146,7 +147,7 @@ export async function GET(
       },
     });
   } catch (error: unknown) {
-    console.error('Get role error:', error);
+    logger.error('Get role error:', error);
     return NextResponse.json(
       { error: 'Internal Server Error', message: sanitizeErrorForResponse(error, 'Failed to get role') },
       { status: 500 }
@@ -244,7 +245,7 @@ export async function PATCH(
       },
     });
   } catch (error: unknown) {
-    console.error('Update role error:', error);
+    logger.error('Update role error:', error);
 
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     if (errorMessage.includes('system roles')) {
@@ -332,7 +333,7 @@ export async function DELETE(
       message: 'Role deleted successfully',
     });
   } catch (error: unknown) {
-    console.error('Delete role error:', error);
+    logger.error('Delete role error:', error);
 
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     if (errorMessage.includes('system roles')) {

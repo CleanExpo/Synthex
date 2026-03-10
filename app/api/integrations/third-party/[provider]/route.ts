@@ -14,6 +14,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { getUserIdFromCookies, unauthorizedResponse } from '@/lib/auth/jwt-utils';
 import { prisma } from '@/lib/prisma';
+import { logger } from '@/lib/logger';
 import {
   isValidProvider,
   createIntegrationService,
@@ -165,7 +166,7 @@ export async function POST(
       message: `Connected to ${INTEGRATION_REGISTRY[provider].name} successfully`,
     });
   } catch (error) {
-    console.error('Failed to connect integration:', error);
+    logger.error('Failed to connect integration:', error);
     return NextResponse.json(
       { error: 'Failed to connect integration', message: 'An unexpected error occurred' },
       { status: 500 }
@@ -232,7 +233,7 @@ export async function GET(
       error: validationResult.error || null,
     });
   } catch (error) {
-    console.error('Failed to check integration status:', error);
+    logger.error('Failed to check integration status:', error);
     return NextResponse.json(
       { error: 'Failed to check integration status', message: 'An unexpected error occurred' },
       { status: 500 }
@@ -293,7 +294,7 @@ export async function DELETE(
       message: `Disconnected from ${INTEGRATION_REGISTRY[provider].name} successfully`,
     });
   } catch (error) {
-    console.error('Failed to disconnect integration:', error);
+    logger.error('Failed to disconnect integration:', error);
     return NextResponse.json(
       { error: 'Failed to disconnect integration', message: 'An unexpected error occurred' },
       { status: 500 }

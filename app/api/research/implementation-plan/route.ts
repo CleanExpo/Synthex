@@ -12,6 +12,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
 import { z } from 'zod';
+import { logger } from '@/lib/logger';
 
 // Validation schema
 const planRequestSchema = z.object({
@@ -71,7 +72,7 @@ export async function POST(request: NextRequest) {
       security.context
     );
   } catch (error) {
-    console.error('Error generating plan:', error);
+    logger.error('Error generating plan:', error);
     return APISecurityChecker.createSecureResponse(
       { error: 'Failed to generate plan' },
       500,

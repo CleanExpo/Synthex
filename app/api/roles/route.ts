@@ -17,6 +17,7 @@ import { getUserIdFromCookies } from '@/lib/auth/jwt-utils';
 import { RoleManager } from '@/lib/auth/rbac/role-manager';
 import { PermissionEngine, ALL_PERMISSIONS } from '@/lib/auth/rbac/permission-engine';
 import { sanitizeErrorForResponse } from '@/lib/utils/error-utils';
+import { logger } from '@/lib/logger';
 
 // =============================================================================
 // Schemas
@@ -120,7 +121,7 @@ export async function GET() {
       availablePermissions: ALL_PERMISSIONS,
     });
   } catch (error: unknown) {
-    console.error('List roles error:', error);
+    logger.error('List roles error:', error);
     return NextResponse.json(
       { error: 'Internal Server Error', message: sanitizeErrorForResponse(error, 'Failed to list roles') },
       { status: 500 }
@@ -188,7 +189,7 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error: unknown) {
-    console.error('Create role error:', error);
+    logger.error('Create role error:', error);
 
     // Handle known errors
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';

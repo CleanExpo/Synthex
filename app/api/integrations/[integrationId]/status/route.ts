@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getUserIdFromCookies, unauthorizedResponse } from '@/lib/auth/jwt-utils';
 import { prisma } from '@/lib/prisma';
+import { logger } from '@/lib/logger';
 
 export async function GET(
   request: NextRequest,
@@ -53,7 +54,7 @@ export async function GET(
       },
     });
   } catch (error) {
-    console.error('Error checking integration status:', error);
+    logger.error('Error checking integration status:', error);
     return NextResponse.json(
       { error: 'Failed to check integration status' },
       { status: 500 }

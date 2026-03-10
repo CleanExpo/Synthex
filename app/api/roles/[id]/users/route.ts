@@ -17,6 +17,7 @@ import { getUserIdFromCookies } from '@/lib/auth/jwt-utils';
 import { RoleManager } from '@/lib/auth/rbac/role-manager';
 import { PermissionEngine } from '@/lib/auth/rbac/permission-engine';
 import { sanitizeErrorForResponse } from '@/lib/utils/error-utils';
+import { logger } from '@/lib/logger';
 
 // =============================================================================
 // Schemas
@@ -147,7 +148,7 @@ export async function GET(
       data: usersWithRoleInfo,
     });
   } catch (error: unknown) {
-    console.error('Get role users error:', error);
+    logger.error('Get role users error:', error);
     return NextResponse.json(
       { error: 'Internal Server Error', message: sanitizeErrorForResponse(error, 'Failed to get role users') },
       { status: 500 }
@@ -254,7 +255,7 @@ export async function POST(
       message: 'Role granted successfully',
     });
   } catch (error: unknown) {
-    console.error('Grant role error:', error);
+    logger.error('Grant role error:', error);
     return NextResponse.json(
       { error: 'Internal Server Error', message: sanitizeErrorForResponse(error, 'Failed to grant role') },
       { status: 500 }
@@ -331,7 +332,7 @@ export async function DELETE(
       message: 'Role revoked successfully',
     });
   } catch (error: unknown) {
-    console.error('Revoke role error:', error);
+    logger.error('Revoke role error:', error);
     return NextResponse.json(
       { error: 'Internal Server Error', message: sanitizeErrorForResponse(error, 'Failed to revoke role') },
       { status: 500 }

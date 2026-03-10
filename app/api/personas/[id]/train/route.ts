@@ -15,6 +15,7 @@ import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
 import { PersonaTrainingPipeline, TrainingSource } from '@/src/services/ai/persona-training-pipeline';
+import { logger } from '@/lib/logger';
 
 // ============================================================================
 // VALIDATION SCHEMAS
@@ -121,7 +122,7 @@ export async function POST(
         });
       })
       .catch(async (error) => {
-        console.error('Training failed:', error);
+        logger.error('Training failed:', error);
         await prisma.persona.update({
           where: { id: personaId },
           data: { status: 'draft' },
@@ -135,7 +136,7 @@ export async function POST(
       sourcesCount: sources.length,
     });
   } catch (error) {
-    console.error('Training start error:', error);
+    logger.error('Training start error:', error);
     return NextResponse.json(
       { error: 'Failed to start training' },
       { status: 500 }
@@ -208,7 +209,7 @@ export async function GET(
       },
     });
   } catch (error) {
-    console.error('Training status error:', error);
+    logger.error('Training status error:', error);
     return NextResponse.json(
       { error: 'Failed to get training status' },
       { status: 500 }

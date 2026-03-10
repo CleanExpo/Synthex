@@ -10,6 +10,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { reportGenerator } from '@/lib/reports/report-generator';
 import { getUserIdFromCookies } from '@/lib/auth/jwt-utils';
+import { logger } from '@/lib/logger';
 
 /**
  * GET /api/reporting/reports
@@ -58,7 +59,7 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('Reports list error:', error);
+    logger.error('Reports list error:', error);
     return NextResponse.json(
       { error: 'Failed to fetch reports' },
       { status: 500 }

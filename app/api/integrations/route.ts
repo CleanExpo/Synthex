@@ -17,6 +17,7 @@ import prisma from '@/lib/prisma';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { getEffectiveOrganizationId } from '@/lib/multi-business';
 import { z } from 'zod';
+import { logger } from '@/lib/logger';
 
 const connectIntegrationSchema = z.object({
   platform: z.string().min(1),
@@ -82,7 +83,7 @@ export async function GET(request: NextRequest) {
       raw: connections,
     });
   } catch (error) {
-    console.error('Integrations fetch error:', error);
+    logger.error('Integrations fetch error:', error);
     // Return empty integrations instead of 500 — non-critical feature
     return NextResponse.json(emptyIntegrations);
   }
@@ -147,7 +148,7 @@ export async function POST(request: NextRequest) {
       message: `Connected to ${platform} successfully`,
     });
   } catch (error) {
-    console.error('Integration connection error:', error);
+    logger.error('Integration connection error:', error);
     return NextResponse.json(
       { error: 'Failed to connect integration', details: error instanceof Error ? error.message : String(error) },
       { status: 500 }
@@ -189,7 +190,7 @@ export async function DELETE(request: NextRequest) {
       message: `Disconnected from ${platform} successfully`,
     });
   } catch (error) {
-    console.error('Integration disconnection error:', error);
+    logger.error('Integration disconnection error:', error);
     return NextResponse.json(
       { error: 'Failed to disconnect integration', details: error instanceof Error ? error.message : String(error) },
       { status: 500 }

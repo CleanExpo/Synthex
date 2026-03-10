@@ -21,6 +21,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { logger } from '@/lib/logger';
 
 // ============================================================================
 // TYPES
@@ -110,7 +111,7 @@ function verifyCronAuth(request: NextRequest): boolean {
   }
 
   if (!cronSecret) {
-    console.warn('CRON_SECRET not configured');
+    logger.warn('CRON_SECRET not configured');
     return false;
   }
 
@@ -298,12 +299,12 @@ async function sendReportEmail(
           });
           sentCount++;
         } catch (err) {
-          console.error(`Failed to send to ${recipient}:`, err);
+          logger.error(`Failed to send to ${recipient}:`, err);
         }
       }
       return sentCount;
     } catch (err) {
-      console.error('Resend error:', err);
+      logger.error('Resend error:', err);
     }
   }
 
@@ -324,16 +325,16 @@ async function sendReportEmail(
           });
           sentCount++;
         } catch (err) {
-          console.error(`Failed to send to ${recipient}:`, err);
+          logger.error(`Failed to send to ${recipient}:`, err);
         }
       }
       return sentCount;
     } catch (err) {
-      console.error('SendGrid error:', err);
+      logger.error('SendGrid error:', err);
     }
   }
 
-  console.warn('No email provider configured');
+  logger.warn('No email provider configured');
   return 0;
 }
 
@@ -417,7 +418,7 @@ async function sendWebhook(
 
     return response.ok;
   } catch (err) {
-    console.error('Webhook delivery failed:', err);
+    logger.error('Webhook delivery failed:', err);
     return false;
   }
 }
@@ -594,7 +595,7 @@ export async function POST(request: NextRequest) {
         result.status = 'success';
         result.deliveries = deliveryCount;
       } catch (err) {
-        console.error(`Failed to execute scheduled report ${scheduled.id}:`, err);
+        logger.error(`Failed to execute scheduled report ${scheduled.id}:`, err);
 
         // Update failure count
         await (prisma as unknown as PrismaWithScheduledReports).scheduledReport?.update({
@@ -621,7 +622,7 @@ export async function POST(request: NextRequest) {
       timestamp: now.toISOString(),
     });
   } catch (error) {
-    console.error('Scheduled report execution error:', error);
+    logger.error('Scheduled report execution error:', error);
     return NextResponse.json(
       { error: 'Execution failed', details: (error as Error).message },
       { status: 500 }
@@ -675,7 +676,7 @@ export async function GET(request: NextRequest) {
       timestamp: now.toISOString(),
     });
   } catch (error) {
-    console.error('Status check error:', error);
+    logger.error('Status check error:', error);
     return NextResponse.json(
       { error: 'Status check failed' },
       { status: 500 }

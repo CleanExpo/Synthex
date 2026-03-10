@@ -10,6 +10,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { reportGenerator } from '@/lib/reports/report-generator';
 import { getUserIdFromCookies } from '@/lib/auth/jwt-utils';
+import { logger } from '@/lib/logger';
 
 /**
  * GET /api/reporting/reports/[reportId]
@@ -53,7 +54,7 @@ export async function GET(
       },
     });
   } catch (error) {
-    console.error('Report GET error:', error);
+    logger.error('Report GET error:', error);
     return NextResponse.json(
       { error: 'Failed to fetch report' },
       { status: 500 }
@@ -93,7 +94,7 @@ export async function DELETE(
       message: 'Report deleted successfully',
     });
   } catch (error) {
-    console.error('Report DELETE error:', error);
+    logger.error('Report DELETE error:', error);
     return NextResponse.json(
       { error: 'Failed to delete report' },
       { status: 500 }
