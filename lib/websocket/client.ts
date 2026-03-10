@@ -31,7 +31,7 @@ class WebSocketClient {
   private heartbeatInterval: NodeJS.Timeout | null = null;
   private isReconnecting = false;
   private messageQueue: WebSocketMessage[] = [];
-  private eventListeners: Map<string, Set<(...args: unknown[]) => void>> = new Map();
+  private eventListeners: Map<string, Set<(...args: any[]) => void>> = new Map();
 
   constructor(url: string) {
     this.url = url;
@@ -98,7 +98,7 @@ class WebSocketClient {
   /**
    * Add event listener
    */
-  public on(event: string, callback: (...args: unknown[]) => void): void {
+  public on(event: string, callback: (...args: any[]) => void): void {
     if (!this.eventListeners.has(event)) {
       this.eventListeners.set(event, new Set());
     }
@@ -108,7 +108,7 @@ class WebSocketClient {
   /**
    * Remove event listener
    */
-  public off(event: string, callback: (...args: unknown[]) => void): void {
+  public off(event: string, callback: (...args: any[]) => void): void {
     const listeners = this.eventListeners.get(event);
     if (listeners) {
       listeners.delete(callback);
