@@ -750,11 +750,12 @@ Plans:
 **Goal**: WCAG skip links, E2E flaky test fixes, responsive edge cases
 **Depends on**: Phase 82
 **Research**: Unlikely (established WCAG guidelines)
-**Plans**: 2
+**Plans**: 3 plans
 
 Plans:
-- [x] 83-01: Keyboard navigation, skip links, aria-current, table row access (a67f6d74)
-- [x] 83-02: Form accessibility — focus-visible rings, spinner aria-labels, input labels (c86138d5)
+- [x] 83-01: Keyboard navigation, aria-current, table row access
+- [x] 83-02: Form accessibility — focus-visible rings, spinner aria-labels, input labels
+- [x] 83-03: Dashboard landmark, collapsed sidebar keyboard, E2E accessibility tests
 
 #### Phase 84: Final UAT & Launch
 
