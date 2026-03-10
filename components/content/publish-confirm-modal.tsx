@@ -3,9 +3,9 @@
 /**
  * Publish Confirmation Modal
  *
- * Reusable modal for scheduling/publishing content. Shows a date/time
- * picker, platform account selector (fetched from connected accounts),
- * and a content summary before confirming the schedule action.
+ * Reusable modal for scheduling/publishing content. Supports both single-platform
+ * and multi-platform scheduling. Shows a date/time picker, platform account
+ * status per platform, and a content summary before confirming the schedule action.
  *
  * Used by:
  * - Content page (/dashboard/content)
@@ -43,6 +43,13 @@ export interface PublishOptions {
   connectionId?: string; // specific platform connection to use
 }
 
+/** Result per platform after multi-platform scheduling */
+export interface PlatformScheduleResult {
+  platform: string;
+  success: boolean;
+  error?: string;
+}
+
 export interface PublishConfirmModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -51,6 +58,14 @@ export interface PublishConfirmModalProps {
   mediaUrls?: string[];
   hashtags?: string[];
   onConfirm: (options: PublishOptions) => Promise<void>;
+  /** Multi-platform props */
+  selectedPlatforms?: string[];
+  platformAdaptations?: Record<string, string>;
+  onMultiConfirm?: (options: {
+    scheduledAt: string;
+    platforms: string[];
+    batchId: string;
+  }) => Promise<PlatformScheduleResult[]>;
 }
 
 // =============================================================================
@@ -125,18 +140,26 @@ export function PublishConfirmModal({
   mediaUrls,
   hashtags,
   onConfirm,
+  selectedPlatforms,
+  platformAdaptations,
+  onMultiConfirm,
 }: PublishConfirmModalProps) {
   const [scheduledAt, setScheduledAt] = useState(getDefaultScheduleTime);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [scheduleResults, setScheduleResults] = useState<PlatformScheduleResult[] | null>(null);
 
-  // Reset time picker when modal opens
+  const isMultiPlatform = selectedPlatforms && selectedPlatforms.length > 1 && onMultiConfirm;
+  const platforms = isMultiPlatform ? selectedPlatforms : [platform];
+
+  // Reset state when modal opens
   useEffect(() => {
     if (open) {
       setScheduledAt(getDefaultScheduleTime());
+      setScheduleResults(null);
     }
   }, [open]);
 
-  // Fetch connected accounts for the selected platform
+  // Fetch connected accounts
   const { data: connectionsData, isLoading: connectionsLoading } =
     useSWR<ConnectionsResponse>(
       open ? '/api/auth/connections' : null,
@@ -144,23 +167,28 @@ export function PublishConfirmModal({
       { revalidateOnFocus: false }
     );
 
-  // Filter to only the connections for this platform
-  const platformConnections = useMemo(() => {
-    if (!connectionsData?.connections) return [];
-    return connectionsData.connections.filter(
-      (c) => c.platform === platform.toLowerCase() && c.connected
-    );
-  }, [connectionsData, platform]);
+  // Map connections by platform
+  const connectionsByPlatform = useMemo(() => {
+    if (!connectionsData?.connections) return {} as Record<string, ConnectionStatus | undefined>;
+    const map: Record<string, ConnectionStatus | undefined> = {};
+    for (const c of connectionsData.connections) {
+      if (c.connected) {
+        map[c.platform.toLowerCase()] = c;
+      }
+    }
+    return map;
+  }, [connectionsData]);
 
-  const hasConnection = platformConnections.length > 0;
-  const connectionLabel =
-    platformConnections.length === 1 ? platformConnections[0].username : undefined;
+  // Single-platform backward compat
+  const hasConnection = !!connectionsByPlatform[platform.toLowerCase()];
+  const connectionLabel = connectionsByPlatform[platform.toLowerCase()]?.username;
 
   // Content preview
   const preview =
     content.length > 100 ? content.slice(0, 100) + '...' : content;
 
-  const handleConfirm = useCallback(async () => {
+  // Single-platform confirm
+  const handleSingleConfirm = useCallback(async () => {
     setIsSubmitting(true);
     try {
       const isoDate = new Date(scheduledAt).toISOString();
@@ -176,16 +204,45 @@ export function PublishConfirmModal({
     }
   }, [scheduledAt, platform, onConfirm, onOpenChange]);
 
+  // Multi-platform confirm
+  const handleMultiConfirm = useCallback(async () => {
+    if (!onMultiConfirm || !selectedPlatforms) return;
+    setIsSubmitting(true);
+    setScheduleResults(null);
+    try {
+      const isoDate = new Date(scheduledAt).toISOString();
+      const batchId = `batch-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+      const results = await onMultiConfirm({
+        scheduledAt: isoDate,
+        platforms: selectedPlatforms,
+        batchId,
+      });
+      setScheduleResults(results);
+
+      const successCount = results.filter((r) => r.success).length;
+      if (successCount === results.length) {
+        // All succeeded — close after brief delay to show results
+        setTimeout(() => onOpenChange(false), 1500);
+      }
+    } catch {
+      // Error handling left to the parent
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, [scheduledAt, selectedPlatforms, onMultiConfirm, onOpenChange]);
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent variant="glass-solid" className="max-w-md">
+      <DialogContent variant="glass-solid" className={isMultiPlatform ? 'max-w-lg' : 'max-w-md'}>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Calendar className="h-5 w-5 text-cyan-400" />
-            Schedule Post
+            {isMultiPlatform ? `Schedule to ${platforms.length} Platforms` : 'Schedule Post'}
           </DialogTitle>
           <DialogDescription>
-            Confirm the date, time, and platform account before scheduling.
+            {isMultiPlatform
+              ? 'Review platform accounts and confirm scheduling for all platforms.'
+              : 'Confirm the date, time, and platform account before scheduling.'}
           </DialogDescription>
         </DialogHeader>
 
@@ -194,9 +251,14 @@ export function PublishConfirmModal({
           <div className="rounded-lg border border-white/[0.06] bg-white/[0.02] p-3 space-y-2">
             <p className="text-xs text-slate-400 leading-relaxed">{preview}</p>
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-[10px] font-medium text-cyan-400 bg-cyan-500/10 px-2 py-0.5 rounded-full border border-cyan-500/20">
-                {getPlatformLabel(platform)}
-              </span>
+              {platforms.map((p) => (
+                <span
+                  key={p}
+                  className="text-[10px] font-medium text-cyan-400 bg-cyan-500/10 px-2 py-0.5 rounded-full border border-cyan-500/20"
+                >
+                  {getPlatformLabel(p)}
+                </span>
+              ))}
               {mediaUrls && mediaUrls.length > 0 && (
                 <span className="text-[10px] text-slate-400">
                   {mediaUrls.length} {mediaUrls.length === 1 ? 'image' : 'images'}
@@ -231,13 +293,73 @@ export function PublishConfirmModal({
           {/* Platform account status */}
           <div className="space-y-1.5">
             <label className="text-xs font-medium text-slate-300">
-              Platform account
+              {isMultiPlatform ? 'Platform accounts' : 'Platform account'}
             </label>
 
             {connectionsLoading ? (
               <div className="flex items-center gap-2 text-xs text-slate-400 py-2">
                 <Loader2 className="h-3.5 w-3.5 animate-spin" />
                 Checking connected accounts...
+              </div>
+            ) : isMultiPlatform ? (
+              /* Multi-platform: per-platform connection status */
+              <div className="space-y-2">
+                {platforms.map((p) => {
+                  const conn = connectionsByPlatform[p.toLowerCase()];
+                  const result = scheduleResults?.find((r) => r.platform === p);
+                  const adaptedPreview = platformAdaptations?.[p];
+
+                  return (
+                    <div
+                      key={p}
+                      className={`rounded-lg border px-3 py-2 ${
+                        result
+                          ? result.success
+                            ? 'border-emerald-500/20 bg-emerald-500/5'
+                            : 'border-red-500/20 bg-red-500/5'
+                          : conn
+                            ? 'border-white/[0.06] bg-white/[0.02]'
+                            : 'border-amber-500/20 bg-amber-500/5'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <span
+                            className={`h-2 w-2 rounded-full ${
+                              result
+                                ? result.success ? 'bg-emerald-400' : 'bg-red-400'
+                                : conn ? 'bg-emerald-400' : 'bg-amber-400'
+                            }`}
+                          />
+                          <span className="text-xs font-medium text-white">
+                            {getPlatformLabel(p)}
+                          </span>
+                        </div>
+                        <span className="text-[10px] text-slate-400">
+                          {result
+                            ? result.success ? 'Scheduled' : result.error || 'Failed'
+                            : conn
+                              ? conn.username ? `@${conn.username}` : 'Connected'
+                              : 'Not connected'}
+                        </span>
+                      </div>
+                      {adaptedPreview && (
+                        <p className="text-[10px] text-slate-500 mt-1 line-clamp-1">
+                          {adaptedPreview.slice(0, 80)}...
+                        </p>
+                      )}
+                      {!conn && !result && (
+                        <Link
+                          href="/dashboard/platforms"
+                          className="inline-flex items-center gap-1 text-[10px] text-cyan-400 hover:text-cyan-300 transition-colors mt-1"
+                        >
+                          Connect account
+                          <ExternalLink className="h-2.5 w-2.5" />
+                        </Link>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             ) : hasConnection ? (
               <div className="flex items-center gap-2 rounded-lg border border-emerald-500/20 bg-emerald-500/5 px-3 py-2">
@@ -265,6 +387,22 @@ export function PublishConfirmModal({
               </div>
             )}
           </div>
+
+          {/* Multi-platform results summary */}
+          {scheduleResults && (
+            <div className="rounded-lg border border-white/[0.06] bg-white/[0.02] p-3">
+              <div className="flex items-center gap-2">
+                {scheduleResults.every((r) => r.success) ? (
+                  <Check className="h-4 w-4 text-emerald-400" />
+                ) : (
+                  <AlertTriangle className="h-4 w-4 text-amber-400" />
+                )}
+                <span className="text-xs text-white font-medium">
+                  {scheduleResults.filter((r) => r.success).length}/{scheduleResults.length} platforms scheduled
+                </span>
+              </div>
+            </div>
+          )}
         </div>
 
         <DialogFooter className="gap-2 sm:gap-2">
@@ -274,20 +412,26 @@ export function PublishConfirmModal({
             className="text-slate-400 hover:text-white hover:bg-white/5"
             disabled={isSubmitting}
           >
-            Cancel
+            {scheduleResults ? 'Close' : 'Cancel'}
           </Button>
-          <Button
-            onClick={handleConfirm}
-            disabled={isSubmitting || !scheduledAt}
-            className="gradient-primary text-white gap-2"
-          >
-            {isSubmitting ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <Send className="h-4 w-4" />
-            )}
-            {isSubmitting ? 'Scheduling...' : 'Schedule'}
-          </Button>
+          {!scheduleResults && (
+            <Button
+              onClick={isMultiPlatform ? handleMultiConfirm : handleSingleConfirm}
+              disabled={isSubmitting || !scheduledAt}
+              className="gradient-primary text-white gap-2"
+            >
+              {isSubmitting ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Send className="h-4 w-4" />
+              )}
+              {isSubmitting
+                ? 'Scheduling...'
+                : isMultiPlatform
+                  ? `Schedule ${platforms.length} Posts`
+                  : 'Schedule'}
+            </Button>
+          )}
         </DialogFooter>
       </DialogContent>
     </Dialog>

@@ -18,6 +18,7 @@ import {
   PlatformPreview,
   PublishConfirmModal,
   type PublishOptions,
+  type PlatformScheduleResult,
 } from '@/components/content';
 import { GenerateVideoCard, VideoGenerationModal } from '@/components/video';
 import { usePersonas } from '@/hooks/use-personas';
@@ -286,6 +287,74 @@ export default function ContentPage() {
     });
   }, [generatedContent, editMode, editedContent, selectedVariation, personaId, psychologyScore, mediaUrls]);
 
+  const handleMultiPublishConfirm = useCallback(async (options: {
+    scheduledAt: string;
+    platforms: string[];
+    batchId: string;
+  }): Promise<PlatformScheduleResult[]> => {
+    const results: PlatformScheduleResult[] = [];
+
+    for (const targetPlatform of options.platforms) {
+      try {
+        const contentText = platformAdaptations[targetPlatform]
+          || (editMode && editedContent ? editedContent : null)
+          || generatedContent?.primary
+          || '';
+
+        const response = await fetchWithCSRF('/api/scheduler/posts', {
+          method: 'POST',
+          body: JSON.stringify({
+            content: contentText,
+            platform: targetPlatform,
+            scheduledAt: options.scheduledAt,
+            metadata: {
+              hashtags: generatedContent?.metadata?.hashtags || [],
+              persona: personaId !== 'none' ? personaId : undefined,
+              estimatedEngagement: psychologyScore?.predictedEngagement ? 8 : 5,
+              batchId: options.batchId,
+              ...(mediaUrls.length > 0 ? { images: mediaUrls } : {}),
+            },
+          }),
+        });
+
+        if (response.ok) {
+          results.push({ platform: targetPlatform, success: true });
+        } else {
+          const errData = await response.json().catch(() => ({}));
+          results.push({
+            platform: targetPlatform,
+            success: false,
+            error: (errData as { message?: string }).message || `HTTP ${response.status}`,
+          });
+        }
+      } catch (err) {
+        results.push({
+          platform: targetPlatform,
+          success: false,
+          error: err instanceof Error ? err.message : 'Unknown error',
+        });
+      }
+    }
+
+    const successCount = results.filter((r) => r.success).length;
+    if (successCount === results.length) {
+      setLastBatchId(options.batchId);
+      toast.success(`Scheduled to ${successCount} platforms!`, {
+        action: {
+          label: 'View Schedule',
+          onClick: () => { window.location.href = '/dashboard/schedule'; },
+        },
+      });
+    } else if (successCount > 0) {
+      setLastBatchId(options.batchId);
+      toast.warning(`Scheduled ${successCount}/${results.length} platforms. Some failed.`);
+    } else {
+      toast.error('All platform schedules failed.');
+    }
+
+    return results;
+  }, [platformAdaptations, editMode, editedContent, generatedContent, personaId, psychologyScore, mediaUrls]);
+
   const handleViewAnalytics = useCallback(() => {
     window.location.href = '/dashboard/analytics';
   }, []);
@@ -498,6 +567,9 @@ export default function ContentPage() {
         mediaUrls={mediaUrls}
         hashtags={generatedContent?.metadata?.hashtags}
         onConfirm={handlePublishConfirm}
+        selectedPlatforms={multiPlatformEnabled ? selectedPlatforms : undefined}
+        platformAdaptations={multiPlatformEnabled ? platformAdaptations : undefined}
+        onMultiConfirm={multiPlatformEnabled && selectedPlatforms.length > 1 ? handleMultiPublishConfirm : undefined}
       />
     </div>
   );
