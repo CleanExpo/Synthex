@@ -19,6 +19,7 @@ None (internal platform work)
 - ✅ **v2.0 Reliable AI Agents** — Phases 59-66 — SHIPPED 2026-03-03
 - ✅ [v3.0 Public Launch Readiness](milestones/v3.0-ROADMAP.md) — Phases 67-74 — SHIPPED 2026-03-10
 - ✅ [v3.1 First Users](milestones/v3.1-ROADMAP.md) (Phases 75-76) — SHIPPED 2026-03-10
+- 🚧 **v4.0 Production Complete** — Phases 77-84 — In progress
 
 ## Phases
 
@@ -96,6 +97,14 @@ None (internal platform work)
 - [ ] **Phase 58: Performance - Vitals** - Caching verification and Core Web Vitals
 - [x] **Phase 75: God Mode Admin Panel** - Founder admin panel for managing users, orgs, platform health
 - [x] **Phase 76: NEXUS Branding & Unite-Hub** - NEXUS branding throughout app + Unite-Hub API connector
+- [ ] **Phase 77: Content Creation Flow** - Upload/generate/preview UX for real content publishing
+- [ ] **Phase 78: Post Queue & Scheduling** - Scheduling engine UX, queue management, bulk scheduling
+- [ ] **Phase 79: Admin Completion** - Role updates, password reset, MRR from Stripe, audit log detail
+- [ ] **Phase 80: Brand Profile Setup** - Multi-brand profile configuration in God Mode
+- [ ] **Phase 81: Social Account Onboarding** - Connect real social accounts, audit presence, content strategy
+- [ ] **Phase 82: Code Quality** - Structured logger migration, component decomposition
+- [ ] **Phase 83: Accessibility & Polish** - WCAG skip links, E2E flaky test fixes, responsive edge cases
+- [ ] **Phase 84: Final UAT & Launch** - End-to-end acceptance testing, production verification
 
 ## Phase Details
 
@@ -654,6 +663,95 @@ See [milestones/v3.1-ROADMAP.md](milestones/v3.1-ROADMAP.md) for full details.
 - Unite-Hub pull endpoint + daily revenue cron for cross-product metrics
 
 </details>
+
+### 🚧 v4.0 Production Complete (In Progress)
+
+**Milestone Goal:** Finalise Synthex for full production use — content creation UX, scheduling engine, admin completion, brand profiles, social account onboarding, code quality, accessibility, and final UAT.
+
+#### Phase 77: Content Creation Flow
+
+**Goal**: Upload/generate/preview UX for real content publishing
+**Depends on**: v3.1 complete
+**Linear**: SYN-45
+**Research**: Unlikely (existing AI generation + media upload patterns)
+**Plans**: TBD
+
+Plans:
+- [ ] 77-01: TBD
+
+#### Phase 78: Post Queue & Scheduling
+
+**Goal**: Scheduling engine UX — queue management, time-slot picker, bulk scheduling
+**Depends on**: Phase 77
+**Linear**: SYN-44
+**Research**: Unlikely (scheduling infrastructure exists from Phase 40-41)
+**Plans**: TBD
+
+Plans:
+- [ ] 78-01: TBD
+
+#### Phase 79: Admin Completion
+
+**Goal**: Complete admin panel — role update API, password reset, MRR from Stripe API, audit log detail drawer
+**Depends on**: Phase 78
+**Research**: Likely (Stripe API for subscription amount/MRR calculation)
+**Research topics**: Stripe Subscription API amount fields, invoice line items for MRR
+**Plans**: TBD
+
+Plans:
+- [ ] 79-01: TBD
+
+#### Phase 80: Brand Profile Setup
+
+**Goal**: Multi-brand profile configuration in God Mode — 4 brands + Synthex profile
+**Depends on**: Phase 79
+**Linear**: SYN-15, SYN-16
+**Research**: Unlikely (existing admin panel patterns)
+**Plans**: TBD
+
+Plans:
+- [ ] 80-01: TBD
+
+#### Phase 81: Social Account Onboarding
+
+**Goal**: Connect real social accounts, audit existing presence, define initial content strategy
+**Depends on**: Phase 80
+**Linear**: SYN-7, SYN-8, SYN-6
+**Research**: Unlikely (9-platform connection hub already exists)
+**Plans**: TBD
+
+Plans:
+- [ ] 81-01: TBD
+
+#### Phase 82: Code Quality
+
+**Goal**: Structured logger migration (754 console.logs), component decomposition (14 large components)
+**Depends on**: Phase 81
+**Research**: Unlikely (internal patterns, existing structured logger)
+**Plans**: TBD
+
+Plans:
+- [ ] 82-01: TBD
+
+#### Phase 83: Accessibility & Polish
+
+**Goal**: WCAG skip links, E2E flaky test fixes, responsive edge cases
+**Depends on**: Phase 82
+**Research**: Unlikely (established WCAG guidelines)
+**Plans**: TBD
+
+Plans:
+- [ ] 83-01: TBD
+
+#### Phase 84: Final UAT & Launch
+
+**Goal**: End-to-end user acceptance testing, production smoke tests, go-live verification
+**Depends on**: Phase 83
+**Research**: Unlikely (existing smoke-test.mjs + LAUNCH-RUNBOOK.md)
+**Plans**: TBD
+
+Plans:
+- [ ] 84-01: TBD
 
 ---
 
