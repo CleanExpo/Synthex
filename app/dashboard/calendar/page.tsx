@@ -12,6 +12,7 @@ import dynamic from 'next/dynamic';
 import { useSearchParams } from 'next/navigation';
 import { useCalendar, SchedulePostOptions } from '@/hooks/useCalendar';
 import { useUser } from '@/hooks/use-user';
+import { TimeSlotPicker } from '@/components/scheduling';
 
 // Dynamic imports for heavy calendar components
 const WeekView = dynamic(() => import('@/components/calendar/WeekView').then(m => ({ default: m.WeekView })), { ssr: false });
@@ -33,7 +34,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -87,7 +87,6 @@ export default function CalendarPage() {
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
   const [scheduleDate, setScheduleDate] = useState<Date | null>(null);
-  const [scheduleHour, setScheduleHour] = useState<number>(12);
 
   // Schedule form state
   const [scheduleForm, setScheduleForm] = useState({
@@ -161,8 +160,9 @@ export default function CalendarPage() {
 
   // Handle create post click (clicking on empty slot)
   const handlePostCreate = useCallback((date: Date, hour: number) => {
-    setScheduleDate(date);
-    setScheduleHour(hour);
+    const d = new Date(date);
+    d.setHours(hour, 0, 0, 0);
+    setScheduleDate(d);
     setIsScheduleModalOpen(true);
   }, []);
 
@@ -211,13 +211,10 @@ export default function CalendarPage() {
 
     setIsSubmitting(true);
 
-    const scheduledFor = new Date(scheduleDate);
-    scheduledFor.setHours(scheduleHour, 0, 0, 0);
-
     const options: SchedulePostOptions = {
       content: scheduleForm.content,
       platforms: scheduleForm.platforms,
-      scheduledFor,
+      scheduledFor: scheduleDate,
     };
 
     const result = await schedulePost(options);
@@ -323,8 +320,7 @@ export default function CalendarPage() {
             {/* Schedule Post CTA */}
             <Button
               onClick={() => {
-                setScheduleDate(new Date());
-                setScheduleHour(12);
+                setScheduleDate(new Date(Date.now() + 60 * 60 * 1000));
                 setIsScheduleModalOpen(true);
               }}
               className="bg-cyan-500 hover:bg-cyan-600 text-white"
@@ -408,8 +404,7 @@ export default function CalendarPage() {
           action={{
             label: 'Schedule Post',
             onClick: () => {
-              setScheduleDate(new Date());
-              setScheduleHour(12);
+              setScheduleDate(new Date(Date.now() + 60 * 60 * 1000));
               setIsScheduleModalOpen(true);
             },
           }}
@@ -449,7 +444,7 @@ export default function CalendarPage() {
 
       {/* Schedule Post Modal */}
       <Dialog open={isScheduleModalOpen} onOpenChange={setIsScheduleModalOpen}>
-        <DialogContent className="bg-gray-900 border-white/10 max-w-lg">
+        <DialogContent className="bg-gray-900 border-white/10 max-w-xl">
           <DialogHeader>
             <DialogTitle className="text-white">Schedule Post</DialogTitle>
           </DialogHeader>
@@ -471,41 +466,15 @@ export default function CalendarPage() {
               />
             </div>
 
-            {/* Date & Time */}
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="date" className="text-gray-300">
-                  Date
-                </Label>
-                <Input
-                  id="date"
-                  type="date"
-                  value={scheduleDate?.toISOString().split('T')[0] || ''}
-                  onChange={(e) => setScheduleDate(new Date(e.target.value))}
-                  className="bg-gray-800/50 border-white/10 text-white"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="time" className="text-gray-300">
-                  Time
-                </Label>
-                <Select
-                  value={scheduleHour.toString()}
-                  onValueChange={(v) => setScheduleHour(parseInt(v))}
-                >
-                  <SelectTrigger className="bg-gray-800/50 border-white/10">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {Array.from({ length: 24 }, (_, i) => (
-                      <SelectItem key={i} value={i.toString()}>
-                        {i % 12 || 12}:00 {i >= 12 ? 'PM' : 'AM'}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
+            {/* Date & Time -- Smart Picker */}
+            <TimeSlotPicker
+              value={scheduleDate}
+              onChange={setScheduleDate}
+              platform={scheduleForm.platforms[0] || 'twitter'}
+              platforms={scheduleForm.platforms.length > 0 ? scheduleForm.platforms : undefined}
+              minDate={new Date()}
+              compact
+            />
 
             {/* Platforms */}
             <div className="space-y-2">
