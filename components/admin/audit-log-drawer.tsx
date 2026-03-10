@@ -103,7 +103,7 @@ function MetadataItem({
             type="button"
             onClick={handleCopy}
             className="shrink-0 p-0.5 text-gray-500 hover:text-white transition-colors"
-            title="Copy to clipboard"
+            aria-label={`Copy ${label} to clipboard`}
           >
             <Copy className="w-3 h-3" />
           </button>

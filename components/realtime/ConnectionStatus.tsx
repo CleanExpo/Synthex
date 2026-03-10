@@ -148,7 +148,7 @@ export function ConnectionStatus({
             p-1 rounded hover:bg-white/10 transition-colors
             ${config.color}
           `}
-          title="Reconnect"
+          aria-label="Reconnect to real-time service"
         >
           <RefreshCw className={sizeClass.icon} />
         </button>

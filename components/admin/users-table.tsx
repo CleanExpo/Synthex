@@ -34,20 +34,21 @@ export function UsersTable({
       <table className="w-full">
         <thead>
           <tr className="border-b border-white/10">
-            <th className="py-3 px-4 w-10">
+            <th scope="col" className="py-3 px-4 w-10">
               <input
                 type="checkbox"
                 checked={selectedUserIds.size === users.length && users.length > 0}
                 onChange={onToggleSelectAll}
+                aria-label="Select all users"
                 className="rounded border-white/20 bg-white/5 text-cyan-500 focus:ring-cyan-500"
               />
             </th>
-            <th className="text-left py-3 px-4 text-sm font-medium text-gray-400">User</th>
-            <th className="text-left py-3 px-4 text-sm font-medium text-gray-400">Status</th>
-            <th className="text-left py-3 px-4 text-sm font-medium text-gray-400">Role</th>
-            <th className="text-left py-3 px-4 text-sm font-medium text-gray-400">Joined</th>
-            <th className="text-left py-3 px-4 text-sm font-medium text-gray-400">Last Active</th>
-            <th className="text-left py-3 px-4 text-sm font-medium text-gray-400">Actions</th>
+            <th scope="col" className="text-left py-3 px-4 text-sm font-medium text-gray-400">User</th>
+            <th scope="col" className="text-left py-3 px-4 text-sm font-medium text-gray-400">Status</th>
+            <th scope="col" className="text-left py-3 px-4 text-sm font-medium text-gray-400">Role</th>
+            <th scope="col" className="text-left py-3 px-4 text-sm font-medium text-gray-400">Joined</th>
+            <th scope="col" className="text-left py-3 px-4 text-sm font-medium text-gray-400">Last Active</th>
+            <th scope="col" className="text-left py-3 px-4 text-sm font-medium text-gray-400">Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -76,6 +77,7 @@ export function UsersTable({
                     type="checkbox"
                     checked={selectedUserIds.has(user.id)}
                     onChange={() => onToggleSelection(user.id)}
+                    aria-label={`Select ${user.name ?? user.email}`}
                     className="rounded border-white/20 bg-white/5 text-cyan-500 focus:ring-cyan-500"
                   />
                 </td>

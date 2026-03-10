@@ -90,7 +90,7 @@ export function ContentSuggestionsWidget({ className }: { className?: string }) 
                   <button
                     onClick={() => handleCopy(rec.content ?? rec.description ?? '')}
                     className="shrink-0 opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-white/10 text-white/40 hover:text-white/70"
-                    title="Copy to clipboard"
+                    aria-label="Copy suggestion to clipboard"
                   >
                     <Copy className="h-3.5 w-3.5" />
                   </button>

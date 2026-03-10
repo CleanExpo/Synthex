@@ -265,13 +265,13 @@ export function AuditLogViewer() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-white/10">
-                <th className="text-left py-2 px-3 text-gray-400 font-medium">Timestamp</th>
-                <th className="text-left py-2 px-3 text-gray-400 font-medium">User</th>
-                <th className="text-left py-2 px-3 text-gray-400 font-medium">Action</th>
-                <th className="text-left py-2 px-3 text-gray-400 font-medium">Resource</th>
-                <th className="text-left py-2 px-3 text-gray-400 font-medium">Severity</th>
-                <th className="text-left py-2 px-3 text-gray-400 font-medium">Outcome</th>
-                <th className="w-8"></th>
+                <th scope="col" className="text-left py-2 px-3 text-gray-400 font-medium">Timestamp</th>
+                <th scope="col" className="text-left py-2 px-3 text-gray-400 font-medium">User</th>
+                <th scope="col" className="text-left py-2 px-3 text-gray-400 font-medium">Action</th>
+                <th scope="col" className="text-left py-2 px-3 text-gray-400 font-medium">Resource</th>
+                <th scope="col" className="text-left py-2 px-3 text-gray-400 font-medium">Severity</th>
+                <th scope="col" className="text-left py-2 px-3 text-gray-400 font-medium">Outcome</th>
+                <th scope="col" className="w-8" aria-label="Row actions" />
               </tr>
             </thead>
             <tbody>
@@ -291,8 +291,17 @@ export function AuditLogViewer() {
                 logs.map((entry) => (
                   <tr
                     key={entry.id}
-                    className="border-b border-white/5 hover:bg-white/5 transition-colors cursor-pointer"
+                    role="button"
+                    tabIndex={0}
+                    aria-label={`View audit log: ${entry.action} — ${entry.user?.email ?? entry.userId.slice(0, 8)}`}
+                    className="border-b border-white/5 hover:bg-white/5 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-cyan-500"
                     onClick={() => setSelectedEntry(entry)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        setSelectedEntry(entry);
+                      }
+                    }}
                   >
                     <td className="py-2 px-3 text-gray-400 whitespace-nowrap text-xs">
                       {new Date(entry.createdAt).toLocaleString()}

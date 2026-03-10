@@ -81,6 +81,7 @@ export function SidebarGroup({
               <Link
                 key={item.href}
                 href={item.href}
+                aria-current={isActive ? 'page' : undefined}
                 className={`flex items-center gap-3 px-4 py-2 text-sm rounded-lg transition-colors ${
                   isActive
                     ? 'bg-cyan-500/10 text-cyan-400 border-l border-cyan-500'

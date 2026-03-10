@@ -293,7 +293,7 @@ export function QueueTable({
                     variant="ghost"
                     className="h-7 w-7 p-0 text-cyan-400 hover:text-cyan-300 hover:bg-white/10"
                     onClick={() => onRetryPost(post.id)}
-                    title="Retry"
+                    aria-label="Retry post"
                   >
                     <RefreshCw className="h-3.5 w-3.5" />
                   </Button>
@@ -303,7 +303,7 @@ export function QueueTable({
                   variant="ghost"
                   className="h-7 w-7 p-0 text-gray-400 hover:text-red-400 hover:bg-white/10"
                   onClick={() => onDeletePost(post.id)}
-                  title="Delete"
+                  aria-label="Delete post"
                 >
                   <Trash2 className="h-3.5 w-3.5" />
                 </Button>
