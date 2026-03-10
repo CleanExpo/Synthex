@@ -45,8 +45,8 @@ export function ChatAssistant({ conversationId, onTitleUpdated }: ChatAssistantP
   if (isLoading && messages.length === 0) {
     return (
       <div className="h-full flex items-center justify-center">
-        <div className="flex flex-col items-center gap-3 text-gray-400">
-          <Loader2 className="h-8 w-8 animate-spin text-cyan-400" />
+        <div className="flex flex-col items-center gap-3 text-gray-400" role="status">
+          <Loader2 className="h-8 w-8 animate-spin text-cyan-400" aria-hidden="true" />
           <span>Loading conversation...</span>
         </div>
       </div>
@@ -152,8 +152,8 @@ export function ChatAssistant({ conversationId, onTitleUpdated }: ChatAssistantP
         {isStreaming && !streamingContent && (
           <div className="flex justify-start">
             <div className="bg-white/5 border border-white/10 rounded-2xl px-4 py-3">
-              <div className="flex items-center gap-2 text-gray-400">
-                <Loader2 className="h-4 w-4 animate-spin" />
+              <div className="flex items-center gap-2 text-gray-400" role="status">
+                <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
                 <span className="text-sm">Thinking...</span>
               </div>
             </div>
