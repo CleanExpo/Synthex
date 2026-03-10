@@ -5,3 +5,4 @@
  */
 
 export { TimeSlotPicker, type TimeSlotPickerProps } from './time-slot-picker';
+export { BulkScheduleWizard, type BulkScheduleWizardProps } from './bulk-schedule-wizard';
