@@ -19,6 +19,8 @@ import { analyzeEntities } from './entity-analyzer';
 import { optimizeForPlatform } from './platform-optimizer';
 import { analyzeSchema } from './schema-enhancer';
 import { generateRecommendations } from './recommendations';
+import { analyzeAuthority as analyzeAuthorityDeep } from '@/lib/authority/authority-analyzer';
+import { hasAuthorityAddon } from '@/lib/stripe/subscription-service';
 
 // Score weights
 const WEIGHTS = {
@@ -136,6 +138,33 @@ export async function analyzeGEO(input: GEOAnalysisInput): Promise<GEOAnalysisRe
         analyzedAt: new Date().toISOString(),
       },
     };
+
+    // Enhanced authority analysis for Authority Ranking add-on users
+    if (input.userId) {
+      try {
+        const addonActive = await hasAuthorityAddon(input.userId);
+        if (addonActive) {
+          const deepAuthority = await analyzeAuthorityDeep(input.contentText, {
+            userId: input.userId,
+            orgId: input.orgId ?? '',
+            deepValidation: true,
+          });
+          // Blend: 30% heuristic score + 70% deep validation score
+          result.score.authority = Math.round((result.score.authority * 0.3) + (deepAuthority.overallScore * 0.7));
+          // Recalculate overall with updated authority score
+          result.score.overall = Math.round(
+            result.score.citability * WEIGHTS.citability +
+            result.score.structure * WEIGHTS.structure +
+            result.score.multiModal * WEIGHTS.multiModal +
+            result.score.authority * WEIGHTS.authority +
+            result.score.technical * WEIGHTS.technical
+          );
+          result.authorityAnalysis = deepAuthority;
+        }
+      } catch (err) {
+        logger.warn('Deep authority analysis failed, using heuristic', { err });
+      }
+    }
 
     logger.info('GEO analysis complete', { overall: score.overall, duration: Date.now() - startTime });
     return result;

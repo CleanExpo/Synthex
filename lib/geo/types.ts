@@ -6,12 +6,18 @@
  * @module lib/geo/types
  */
 
+import type { AuthorityAnalysisResult } from '@/lib/authority/types';
+
 export interface GEOAnalysisInput {
   contentText: string;
   contentUrl?: string;
   contentId?: string;
   authorId?: number;
   platform?: GEOPlatform;
+  /** Optional user ID — enables deep authority analysis for Authority add-on users */
+  userId?: string;
+  /** Optional org ID — required alongside userId for authority analysis persistence */
+  orgId?: string;
 }
 
 export type GEOPlatform = 'google_aio' | 'chatgpt' | 'perplexity' | 'bing_copilot' | 'all';
@@ -108,4 +114,6 @@ export interface GEOAnalysisResult {
     optimalPassageCount: number;
     analyzedAt: string;
   };
+  /** Deep authority analysis — only present for Authority Ranking add-on users */
+  authorityAnalysis?: AuthorityAnalysisResult;
 }
