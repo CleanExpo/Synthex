@@ -169,6 +169,7 @@ export function LinkForm({
                 onChange={(e) => setName(e.target.value)}
                 placeholder="e.g., Blue Widget Pro"
                 required
+                aria-label="Link name"
                 className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50"
               />
             </div>
@@ -181,6 +182,7 @@ export function LinkForm({
               <select
                 value={networkId}
                 onChange={(e) => setNetworkId(e.target.value)}
+                aria-label="Network"
                 className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50"
               >
                 <option value="">No network</option>
@@ -205,6 +207,7 @@ export function LinkForm({
                 onChange={(e) => setOriginalUrl(e.target.value)}
                 placeholder="https://example.com/product"
                 required
+                aria-label="Original URL"
                 className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50"
               />
             </div>
@@ -219,6 +222,7 @@ export function LinkForm({
                 onChange={(e) => setAffiliateUrl(e.target.value)}
                 placeholder="https://example.com/product?ref=YOUR_ID"
                 required
+                aria-label="Affiliate URL"
                 className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50"
               />
             </div>
@@ -248,6 +252,7 @@ export function LinkForm({
                   value={shortCode}
                   onChange={(e) => setShortCode(e.target.value.replace(/[^a-zA-Z0-9]/g, ''))}
                   placeholder="custom-code"
+                  aria-label="Short code"
                   className="flex-1 px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50"
                 />
               </div>
@@ -265,6 +270,7 @@ export function LinkForm({
                 value={productName}
                 onChange={(e) => setProductName(e.target.value)}
                 placeholder="Widget Pro 2024"
+                aria-label="Product name"
                 className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50"
               />
             </div>
@@ -277,6 +283,7 @@ export function LinkForm({
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
                 placeholder="e.g., Electronics"
+                aria-label="Category"
                 className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50"
               />
             </div>
@@ -291,6 +298,7 @@ export function LinkForm({
               value={productImage}
               onChange={(e) => setProductImage(e.target.value)}
               placeholder="https://example.com/image.jpg"
+              aria-label="Product image URL"
               className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50"
             />
           </div>
@@ -324,6 +332,7 @@ export function LinkForm({
                 onChange={(e) => setTagInput(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddTag())}
                 placeholder="Add tag..."
+                aria-label="Add tag"
                 className="flex-1 px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50"
               />
               <button
@@ -391,6 +400,7 @@ export function LinkForm({
                     onChange={(e) => setKeywordInput(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddKeyword())}
                     placeholder="Add keyword..."
+                    aria-label="Add keyword"
                     className="flex-1 px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500/50"
                   />
                   <button
