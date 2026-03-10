@@ -314,6 +314,12 @@ export { Percent } from './custom/Percent';
 export { ClockIcon as Clock } from '@heroicons/react/24/outline';
 
 // ============================================
+// LUCIDE-REACT DIRECT EXPORTS (No Heroicons equivalent)
+// ============================================
+
+export { FileQuestion } from 'lucide-react';
+
+// ============================================
 // TYPE DEFINITIONS
 // ============================================
 

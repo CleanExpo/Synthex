@@ -1,6 +1,6 @@
 'use client';
 
-import { FileQuestion } from 'lucide-react';
+import { FileQuestion } from '@/components/icons';
 import { DashboardEmptyState } from '@/components/dashboard/empty-state';
 import { useRouter } from 'next/navigation';
 
