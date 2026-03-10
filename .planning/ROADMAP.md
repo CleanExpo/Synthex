@@ -106,7 +106,7 @@ None (internal platform work)
 - [x] **Phase 82: Code Quality** - Structured logger migration, component decomposition
 - [x] **Phase 83: Accessibility & Polish** - WCAG skip links, E2E flaky test fixes, responsive edge cases
 - [x] **Phase 84: Final UAT & Launch** - End-to-end acceptance testing, production verification
-- [ ] **Phase 85: Entity Coherence Engine** - NLP entity extraction, density scoring, coherence checking for AI citation
+- [x] **Phase 85: Entity Coherence Engine** - NLP entity extraction, density scoring, coherence checking for AI citation
 - [ ] **Phase 86: Citation Tracking & Monitoring** - Monitor brand citations across ChatGPT, Perplexity, Google AI, Claude
 - [ ] **Phase 87: GEO Content Optimiser v2** - Princeton 9-tactic framework with real-time scoring and AI rewriting
 - [ ] **Phase 88: Writing Context & Voice Fingerprinting** - Human writing methodology, voice pattern extraction, Content Capsule Technique
