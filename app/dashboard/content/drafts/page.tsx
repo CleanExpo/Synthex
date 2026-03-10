@@ -15,6 +15,7 @@ import { useRouter } from 'next/navigation';
 import { PageHeader } from '@/components/dashboard/page-header';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
 import {
   FileText,
   Copy,
@@ -25,9 +26,13 @@ import {
   Edit,
   Clock,
   Plus,
+  Calendar,
+  X,
+  Save,
 } from '@/components/icons';
 import { toast } from 'sonner';
 import { fetchWithCSRF } from '@/lib/csrf';
+import { PublishConfirmModal, type PublishOptions } from '@/components/content';
 
 // =============================================================================
 // Types
@@ -171,11 +176,18 @@ interface DraftCardProps {
   draft: ContentDraft;
   onCopy: (content: string) => void;
   onDelete: (id: string) => void;
+  onUpdate: (id: string, data: Partial<ContentDraft>) => void;
+  onSchedule: (draft: ContentDraft) => void;
   isDeleting: boolean;
 }
 
-function DraftCard({ draft, onCopy, onDelete, isDeleting }: DraftCardProps) {
+function DraftCard({ draft, onCopy, onDelete, onUpdate, onSchedule, isDeleting }: DraftCardProps) {
   const [copied, setCopied] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editContent, setEditContent] = useState(draft.content);
+  const [editPlatform, setEditPlatform] = useState(draft.platform);
+  const [isSaving, setIsSaving] = useState(false);
+
   const platform = getPlatformMeta(draft.platform);
   const badgeClass = STATUS_BADGES[draft.status] ?? STATUS_BADGES.draft;
   const preview = draft.content.length > 180 ? draft.content.slice(0, 180) + '...' : draft.content;
@@ -185,6 +197,41 @@ function DraftCard({ draft, onCopy, onDelete, isDeleting }: DraftCardProps) {
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   }, [draft.content, onCopy]);
+
+  const handleEditSave = useCallback(async () => {
+    if (!editContent.trim()) {
+      toast.error('Content cannot be empty');
+      return;
+    }
+    setIsSaving(true);
+    try {
+      const response = await fetchWithCSRF(`/api/content-drafts/${draft.id}`, {
+        method: 'PATCH',
+        body: JSON.stringify({
+          content: editContent,
+          platform: editPlatform,
+        }),
+      });
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error((data as { error?: string }).error || 'Failed to save');
+      }
+      // Update local state optimistically
+      onUpdate(draft.id, { content: editContent, platform: editPlatform });
+      setIsEditing(false);
+      toast.success('Draft updated');
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to save draft');
+    } finally {
+      setIsSaving(false);
+    }
+  }, [draft.id, editContent, editPlatform, onUpdate]);
+
+  const handleEditCancel = useCallback(() => {
+    setEditContent(draft.content);
+    setEditPlatform(draft.platform);
+    setIsEditing(false);
+  }, [draft.content, draft.platform]);
 
   return (
     <div className="group rounded-xl border border-zinc-800/50 bg-zinc-900/50 p-5 flex flex-col gap-3 hover:border-zinc-700/60 transition-colors">
@@ -204,63 +251,142 @@ function DraftCard({ draft, onCopy, onDelete, isDeleting }: DraftCardProps) {
         {draft.title || draft.topic || `${platform.label} draft`}
       </h3>
 
-      {/* Content preview */}
-      <p className="text-xs text-slate-400 leading-relaxed flex-1">
-        {preview}
-      </p>
-
-      {/* Tags row */}
-      {draft.hashtags.length > 0 && (
-        <div className="flex flex-wrap gap-1">
-          {draft.hashtags.slice(0, 4).map((tag) => (
-            <span key={tag} className="text-[10px] text-cyan-400/70 bg-cyan-500/10 px-1.5 py-0.5 rounded">
-              #{tag.replace(/^#/, '')}
-            </span>
-          ))}
-          {draft.hashtags.length > 4 && (
-            <span className="text-[10px] text-slate-500">
-              +{draft.hashtags.length - 4} more
-            </span>
-          )}
+      {/* Edit mode OR content preview */}
+      {isEditing ? (
+        <div className="space-y-3">
+          <Textarea
+            variant="glass"
+            resize="vertical"
+            value={editContent}
+            onChange={(e) => setEditContent(e.target.value)}
+            rows={5}
+            className="text-xs"
+            placeholder="Draft content..."
+          />
+          <select
+            value={editPlatform}
+            onChange={(e) => setEditPlatform(e.target.value)}
+            className="w-full text-xs bg-zinc-900/70 border border-zinc-800/50 text-slate-300 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-cyan-500/50"
+          >
+            {ALL_PLATFORMS.map((p) => (
+              <option key={p} value={p}>
+                {getPlatformMeta(p).label}
+              </option>
+            ))}
+          </select>
+          <div className="flex gap-2 justify-end">
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={handleEditCancel}
+              disabled={isSaving}
+              className="h-7 px-3 text-xs text-slate-400 hover:text-white hover:bg-zinc-800/70 gap-1"
+            >
+              <X className="h-3.5 w-3.5" />
+              Cancel
+            </Button>
+            <Button
+              size="sm"
+              onClick={handleEditSave}
+              disabled={isSaving}
+              className="h-7 px-3 text-xs gradient-primary text-white gap-1"
+            >
+              {isSaving ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <Save className="h-3.5 w-3.5" />
+              )}
+              Save
+            </Button>
+          </div>
         </div>
+      ) : (
+        <>
+          {/* Content preview */}
+          <p className="text-xs text-slate-400 leading-relaxed flex-1">
+            {preview}
+          </p>
+
+          {/* Tags row */}
+          {draft.hashtags.length > 0 && (
+            <div className="flex flex-wrap gap-1">
+              {draft.hashtags.slice(0, 4).map((tag) => (
+                <span key={tag} className="text-[10px] text-cyan-400/70 bg-cyan-500/10 px-1.5 py-0.5 rounded">
+                  #{tag.replace(/^#/, '')}
+                </span>
+              ))}
+              {draft.hashtags.length > 4 && (
+                <span className="text-[10px] text-slate-500">
+                  +{draft.hashtags.length - 4} more
+                </span>
+              )}
+            </div>
+          )}
+        </>
       )}
 
       {/* Footer: relative time + actions */}
-      <div className="flex items-center justify-between pt-1 gap-2">
-        <span className="text-xs text-slate-500 flex items-center gap-1">
-          <Clock className="h-3 w-3" />
-          {formatRelativeTime(draft.updatedAt)}
-        </span>
-        <div className="flex gap-1.5">
-          <Button
-            size="sm"
-            variant="ghost"
-            onClick={handleCopy}
-            className="h-7 px-2 text-xs text-slate-400 hover:text-white hover:bg-zinc-800/70 gap-1"
-          >
-            {copied ? (
-              <Check className="h-3.5 w-3.5 text-emerald-400" />
-            ) : (
-              <Copy className="h-3.5 w-3.5" />
+      {!isEditing && (
+        <div className="flex items-center justify-between pt-1 gap-2">
+          <span className="text-xs text-slate-500 flex items-center gap-1">
+            <Clock className="h-3 w-3" />
+            {formatRelativeTime(draft.updatedAt)}
+          </span>
+          <div className="flex gap-1">
+            {/* Edit */}
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => setIsEditing(true)}
+              title="Edit draft"
+              className="h-7 w-7 p-0 text-slate-400 hover:text-cyan-400 hover:bg-cyan-500/10"
+            >
+              <Edit className="h-3.5 w-3.5" />
+            </Button>
+            {/* Schedule */}
+            {draft.status === 'draft' && (
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => onSchedule(draft)}
+                title="Schedule draft"
+                className="h-7 w-7 p-0 text-slate-400 hover:text-cyan-400 hover:bg-cyan-500/10"
+              >
+                <Calendar className="h-3.5 w-3.5" />
+              </Button>
             )}
-            {copied ? 'Copied' : 'Copy'}
-          </Button>
-          <Button
-            size="sm"
-            variant="ghost"
-            onClick={() => onDelete(draft.id)}
-            disabled={isDeleting}
-            className="h-7 px-2 text-xs text-slate-400 hover:text-red-400 hover:bg-red-500/10 gap-1"
-          >
-            {isDeleting ? (
-              <Loader2 className="h-3.5 w-3.5 animate-spin" />
-            ) : (
-              <Trash2 className="h-3.5 w-3.5" />
-            )}
-            Delete
-          </Button>
+            {/* Copy */}
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={handleCopy}
+              title={copied ? 'Copied!' : 'Copy to clipboard'}
+              className="h-7 w-7 p-0 text-slate-400 hover:text-white hover:bg-zinc-800/70"
+            >
+              {copied ? (
+                <Check className="h-3.5 w-3.5 text-emerald-400" />
+              ) : (
+                <Copy className="h-3.5 w-3.5" />
+              )}
+            </Button>
+            {/* Delete */}
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => onDelete(draft.id)}
+              disabled={isDeleting}
+              title="Delete draft"
+              className="h-7 w-7 p-0 text-slate-400 hover:text-red-400 hover:bg-red-500/10"
+            >
+              {isDeleting ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <Trash2 className="h-3.5 w-3.5" />
+              )}
+            </Button>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
@@ -342,6 +468,10 @@ export default function DraftsLibraryPage() {
   const [platformFilter, setPlatformFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
 
+  // Publish confirmation modal state
+  const [publishModalOpen, setPublishModalOpen] = useState(false);
+  const [schedulingDraft, setSchedulingDraft] = useState<ContentDraft | null>(null);
+
   // ---------------------------------------------------------------------------
   // Fetch
   // ---------------------------------------------------------------------------
@@ -411,6 +541,72 @@ export default function DraftsLibraryPage() {
   );
 
   // ---------------------------------------------------------------------------
+  // Update (optimistic local state)
+  // ---------------------------------------------------------------------------
+
+  const handleUpdate = useCallback((id: string, data: Partial<ContentDraft>) => {
+    setDrafts((prev) =>
+      prev.map((d) =>
+        d.id === id ? { ...d, ...data, updatedAt: new Date().toISOString() } : d
+      )
+    );
+  }, []);
+
+  // ---------------------------------------------------------------------------
+  // Schedule from draft
+  // ---------------------------------------------------------------------------
+
+  const handleScheduleDraft = useCallback((draft: ContentDraft) => {
+    setSchedulingDraft(draft);
+    setPublishModalOpen(true);
+  }, []);
+
+  const handlePublishConfirm = useCallback(async (options: PublishOptions) => {
+    if (!schedulingDraft) return;
+
+    // 1. Create scheduled post
+    const scheduleRes = await fetchWithCSRF('/api/scheduler/posts', {
+      method: 'POST',
+      body: JSON.stringify({
+        content: schedulingDraft.content,
+        platform: options.platform,
+        scheduledAt: options.scheduledAt,
+        metadata: {
+          hashtags: schedulingDraft.hashtags || [],
+          ...(schedulingDraft.metadata as Record<string, unknown> || {}),
+        },
+      }),
+    });
+
+    if (!scheduleRes.ok) {
+      const errorData = await scheduleRes.json().catch(() => ({}));
+      throw new Error((errorData as { message?: string }).message || 'Failed to schedule');
+    }
+
+    const scheduleData = await scheduleRes.json();
+    const postId = scheduleData.data?.id || scheduleData.post?.id;
+
+    // 2. Update draft status + link to scheduled post
+    const patchBody: Record<string, unknown> = { status: 'scheduled' };
+    if (postId) patchBody.scheduledPostId = postId;
+
+    await fetchWithCSRF(`/api/content-drafts/${schedulingDraft.id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(patchBody),
+    });
+
+    // 3. Update local state
+    handleUpdate(schedulingDraft.id, { status: 'scheduled' });
+
+    toast.success('Draft scheduled!', {
+      action: {
+        label: 'View Schedule',
+        onClick: () => { window.location.href = '/dashboard/schedule'; },
+      },
+    });
+  }, [schedulingDraft, handleUpdate]);
+
+  // ---------------------------------------------------------------------------
   // Render
   // ---------------------------------------------------------------------------
 
@@ -469,10 +665,24 @@ export default function DraftsLibraryPage() {
               draft={draft}
               onCopy={handleCopy}
               onDelete={handleDelete}
+              onUpdate={handleUpdate}
+              onSchedule={handleScheduleDraft}
               isDeleting={deletingId === draft.id}
             />
           ))}
         </div>
+      )}
+
+      {/* Publish confirmation modal */}
+      {schedulingDraft && (
+        <PublishConfirmModal
+          open={publishModalOpen}
+          onOpenChange={setPublishModalOpen}
+          content={schedulingDraft.content}
+          platform={schedulingDraft.platform}
+          hashtags={schedulingDraft.hashtags}
+          onConfirm={handlePublishConfirm}
+        />
       )}
     </div>
   );
