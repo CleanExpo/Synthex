@@ -133,6 +133,27 @@ export function generateRecommendations(
     });
   }
 
+  // Entity coherence recommendations
+  if (score.entityCoherence < 40) {
+    recommendations.push({
+      category: 'citability',
+      priority: 'critical',
+      title: 'Increase entity density for AI citation eligibility',
+      description: 'Content has fewer than 15 named entities. AI engines cite pages with 15+ entities at 4.8x higher rates (Princeton KDD 2024). Add specific named people, organisations, locations, and concepts.',
+      impact: 18,
+    });
+  }
+
+  if (score.entityCoherence >= 40 && score.entityCoherence < 70) {
+    recommendations.push({
+      category: 'citability',
+      priority: 'high',
+      title: 'Improve entity naming consistency',
+      description: 'Entities are referenced inconsistently (e.g., switching between "Google" and "the company"). Use consistent, full entity names throughout to reduce AI disambiguation uncertainty.',
+      impact: 10,
+    });
+  }
+
   // Sort by priority then impact
   const priorityOrder = { critical: 0, high: 1, medium: 2, low: 3 };
   recommendations.sort((a, b) => {
