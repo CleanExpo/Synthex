@@ -215,7 +215,7 @@ export async function POST(request: NextRequest) {
               data: {
                 status: 'scheduled',
                 scheduledAt: retryDate,
-                metadata: cleanMeta,
+                metadata: cleanMeta as Record<string, string | number | boolean | null>,
               },
             });
             results.push({ id: post.id, status: 'updated' });

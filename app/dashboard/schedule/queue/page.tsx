@@ -81,7 +81,7 @@ export default function QueuePage() {
     { revalidateOnFocus: false }
   );
 
-  const posts: QueuePost[] = data?.data ?? [];
+  const posts: QueuePost[] = useMemo(() => data?.data ?? [], [data]);
   const pagination = data?.pagination ?? { page: 1, totalPages: 1, total: 0 };
   const stats = data?.stats ?? { scheduled: 0, published: 0, draft: 0, failed: 0 };
 
