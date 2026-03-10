@@ -25,6 +25,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ChevronLeft, ChevronRight, RefreshCw } from '@/components/icons';
+import { AuditLogDrawer } from './audit-log-drawer';
 
 // =============================================================================
 // Types
@@ -38,6 +39,8 @@ interface AuditLogEntry {
   resource: string;
   resourceId?: string | null;
   details?: Record<string, unknown> | null;
+  ipAddress?: string | null;
+  userAgent?: string | null;
   severity: 'low' | 'medium' | 'high' | 'critical';
   category: string;
   outcome: 'success' | 'failure';
@@ -118,6 +121,7 @@ export function AuditLogViewer() {
   const [outcome, setOutcome] = useState('all');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
+  const [selectedEntry, setSelectedEntry] = useState<AuditLogEntry | null>(null);
 
   const limit = 25;
 
@@ -267,18 +271,19 @@ export function AuditLogViewer() {
                 <th className="text-left py-2 px-3 text-gray-400 font-medium">Resource</th>
                 <th className="text-left py-2 px-3 text-gray-400 font-medium">Severity</th>
                 <th className="text-left py-2 px-3 text-gray-400 font-medium">Outcome</th>
+                <th className="w-8"></th>
               </tr>
             </thead>
             <tbody>
               {isLoading ? (
                 <tr>
-                  <td colSpan={6} className="text-center py-8 text-gray-400">
+                  <td colSpan={7} className="text-center py-8 text-gray-400">
                     Loading audit log...
                   </td>
                 </tr>
               ) : logs.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="text-center py-8 text-gray-400">
+                  <td colSpan={7} className="text-center py-8 text-gray-400">
                     No audit log entries found
                   </td>
                 </tr>
@@ -286,7 +291,8 @@ export function AuditLogViewer() {
                 logs.map((entry) => (
                   <tr
                     key={entry.id}
-                    className="border-b border-white/5 hover:bg-white/5 transition-colors"
+                    className="border-b border-white/5 hover:bg-white/5 transition-colors cursor-pointer"
+                    onClick={() => setSelectedEntry(entry)}
                   >
                     <td className="py-2 px-3 text-gray-400 whitespace-nowrap text-xs">
                       {new Date(entry.createdAt).toLocaleString()}
@@ -326,6 +332,9 @@ export function AuditLogViewer() {
                       >
                         {entry.outcome}
                       </Badge>
+                    </td>
+                    <td className="py-2 px-1 text-gray-600">
+                      <ChevronRight className="w-3 h-3" />
                     </td>
                   </tr>
                 ))
@@ -367,6 +376,13 @@ export function AuditLogViewer() {
           </div>
         )}
       </CardContent>
+
+      {/* Audit log detail drawer */}
+      <AuditLogDrawer
+        entry={selectedEntry}
+        open={!!selectedEntry}
+        onClose={() => setSelectedEntry(null)}
+      />
     </Card>
   );
 }
