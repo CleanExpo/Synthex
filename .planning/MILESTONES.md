@@ -1,5 +1,32 @@
 # Project Milestones: Synthex
 
+## v4.0 Production Complete (Shipped: 2026-03-10)
+
+**Delivered:** Content creation flow with media upload and multi-platform publishing, post queue and scheduling engine with bulk scheduling and CSV import, admin panel completion (role updates, password reset, MRR from Stripe, audit log detail drawer), multi-brand profile configuration, social account onboarding, code quality hardening (auth centralisation, structured logger migration, TypeScript `any` elimination), WCAG accessibility polish, and final UAT verification.
+
+**Phases completed:** 77–84 (8 phases, 22 plans)
+
+**Key accomplishments:**
+
+- Content creation flow: media upload pipeline, platform preview cards, draft-to-publish pipeline, multi-platform publish with status tracking
+- Post queue & scheduling: queue management dashboard, time-slot picker with conflict detection, bulk scheduling wizard with CSV import, publish cron hardening
+- Admin completion: role update API, edit-user dialog, password reset, MRR from Stripe API with caching, audit log detail drawer
+- Brand profile setup: Brand Profile API (GET + PATCH, Zod validation), settings tab with logo upload
+- Social account onboarding: connect real social accounts, audit presence, content strategy
+- Code quality: 49 local auth helpers centralised, 248 files logger migration, 57 TypeScript `any` usages eliminated, hex colour token cleanup
+- Accessibility: keyboard navigation, aria-current, form focus-visible rings, dashboard landmarks, E2E accessibility tests
+- Final UAT: pre-launch production readiness audit, UAT journey verification, type-check PASS gate
+
+**Stats:**
+
+- 8 phases (77–84), 22 plans
+- Duration: 2026-03-10
+- Git range: `feat(77-01)` → `docs(84)`
+
+**What's next:** v5.0 — AI-Native GEO & Citation Engine
+
+---
+
 ## v3.1 First Users (Shipped: 2026-03-10)
 
 **Delivered:** Owner-only God Mode admin panel with real user management, platform health monitoring, and audit logs. Unite-Group NEXUS branding applied across footer, metadata, about page, and JSON-LD schema. Unite-Hub fire-and-forget connector wired into Stripe webhooks and publish flows with daily revenue cron.

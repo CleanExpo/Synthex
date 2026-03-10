@@ -19,7 +19,8 @@ None (internal platform work)
 - ✅ **v2.0 Reliable AI Agents** — Phases 59-66 — SHIPPED 2026-03-03
 - ✅ [v3.0 Public Launch Readiness](milestones/v3.0-ROADMAP.md) — Phases 67-74 — SHIPPED 2026-03-10
 - ✅ [v3.1 First Users](milestones/v3.1-ROADMAP.md) (Phases 75-76) — SHIPPED 2026-03-10
-- 🚧 **v4.0 Production Complete** — Phases 77-84 — In progress
+- ✅ **v4.0 Production Complete** — Phases 77-84 — SHIPPED 2026-03-10
+- 🚧 **v5.0 AI-Native GEO & Citation Engine** — Phases 85-100 — In progress
 
 ## Phases
 
@@ -104,7 +105,23 @@ None (internal platform work)
 - [x] **Phase 81: Social Account Onboarding** - Connect real social accounts, audit presence, content strategy
 - [x] **Phase 82: Code Quality** - Structured logger migration, component decomposition
 - [x] **Phase 83: Accessibility & Polish** - WCAG skip links, E2E flaky test fixes, responsive edge cases
-- [ ] **Phase 84: Final UAT & Launch** - End-to-end acceptance testing, production verification
+- [x] **Phase 84: Final UAT & Launch** - End-to-end acceptance testing, production verification
+- [ ] **Phase 85: Entity Coherence Engine** - NLP entity extraction, density scoring, coherence checking for AI citation
+- [ ] **Phase 86: Citation Tracking & Monitoring** - Monitor brand citations across ChatGPT, Perplexity, Google AI, Claude
+- [ ] **Phase 87: GEO Content Optimiser v2** - Princeton 9-tactic framework with real-time scoring and AI rewriting
+- [ ] **Phase 88: Writing Context & Voice Fingerprinting** - Human writing methodology, voice pattern extraction, Content Capsule Technique
+- [ ] **Phase 89: AI Slop Detection & Content Quality Gate** - Tell-phrase scanning, humanness scoring, quality enforcement
+- [ ] **Phase 90: E-E-A-T Score Builder** - Automated 20-point E-E-A-T auditing and asset generation
+- [ ] **Phase 91: Personal & Business Brand Builder** - Brand recognition automation, Knowledge Panel optimisation
+- [ ] **Phase 92: Journalist & PR Relationship Manager** - CRM for journalist relationships, pitch tracking, coverage monitoring
+- [ ] **Phase 93: Press Release Generator & Distribution** - AI-optimised PR creation with indexed distribution
+- [ ] **Phase 94: Award & Directory Orchestrator** - Systematic award submissions and niche directory listings
+- [ ] **Phase 95: AI Backlink Prospector** - AI-powered link opportunity finder with outreach automation
+- [ ] **Phase 96: Prompt Intelligence Tool** - Discover AI prompts, track competitive visibility, gap analysis
+- [ ] **Phase 97: Algorithm Sentinel & Site Health Agent** - Autonomous algorithm monitoring, crash detection, GSC integration
+- [ ] **Phase 98: Autonomous A/B Testing & Self-Healing Agent** - SEO experiments, recovery automation, dog-fooding enforcement
+- [ ] **Phase 99: Citation Performance Dashboard** - Unified GEO + SEO + citation + agent activity command centre
+- [ ] **Phase 100: v5.0 Integration Testing & Polish** - End-to-end verification, agent validation, documentation
 
 ## Phase Details
 
@@ -530,6 +547,22 @@ Plans:
 | 75. God Mode Admin Panel | v3.1 | 1/1 | Complete | 2026-03-10 |
 | 76. NEXUS Branding & Unite-Hub | v3.1 | 1/1 | Complete | 2026-03-10 |
 | 77. Content Creation Flow | v4.0 | 0/4 | Planned | - |
+| 85. Entity Coherence Engine | v5.0 | 0/2 | Planned | - |
+| 86. Citation Tracking & Monitoring | v5.0 | 0/3 | Planned | - |
+| 87. GEO Content Optimiser v2 | v5.0 | 0/3 | Planned | - |
+| 88. Writing Context & Voice Fingerprinting | v5.0 | 0/3 | Planned | - |
+| 89. AI Slop Detection & Content Quality Gate | v5.0 | 0/3 | Planned | - |
+| 90. E-E-A-T Score Builder | v5.0 | 0/3 | Planned | - |
+| 91. Personal & Business Brand Builder | v5.0 | 0/3 | Planned | - |
+| 92. Journalist & PR Relationship Manager | v5.0 | 0/2 | Planned | - |
+| 93. Press Release Generator & Distribution | v5.0 | 0/2 | Planned | - |
+| 94. Award & Directory Orchestrator | v5.0 | 0/2 | Planned | - |
+| 95. AI Backlink Prospector | v5.0 | 0/3 | Planned | - |
+| 96. Prompt Intelligence Tool | v5.0 | 0/2 | Planned | - |
+| 97. Algorithm Sentinel & Site Health Agent | v5.0 | 0/3 | Planned | - |
+| 98. Autonomous A/B Testing & Self-Healing Agent | v5.0 | 0/3 | Planned | - |
+| 99. Citation Performance Dashboard | v5.0 | 0/2 | Planned | - |
+| 100. v5.0 Integration Testing & Polish | v5.0 | 0/2 | Planned | - |
 
 ### ✅ v2.0 Reliable AI Agents (SHIPPED 2026-03-03)
 
@@ -665,7 +698,7 @@ See [milestones/v3.1-ROADMAP.md](milestones/v3.1-ROADMAP.md) for full details.
 
 </details>
 
-### 🚧 v4.0 Production Complete (In Progress)
+### ✅ v4.0 Production Complete (SHIPPED 2026-03-10)
 
 **Milestone Goal:** Finalise Synthex for full production use — content creation UX, scheduling engine, admin completion, brand profiles, social account onboarding, code quality, accessibility, and final UAT.
 
@@ -766,6 +799,145 @@ Plans:
 
 Plans:
 - [ ] 84-01: TBD
+
+### 🚧 v5.0 AI-Native GEO & Citation Engine (Phases 85-100)
+
+**Milestone Goal:** Transform Synthex's existing GEO dashboard into a full AI citation and authority-building platform with human-quality writing methodology and autonomous intelligence agents. Every feature builds on the existing `lib/geo/` infrastructure. All content must read as genuinely human. Autonomous agents protect site health. Synthex eats its own dog food.
+
+**Architectural Mandate:** Every intelligence system built for clients must simultaneously run on Synthex's own properties. Dog-fooding is non-negotiable.
+
+**Research basis:** Edward Sturm "Google Is Crushing Anchor Links" (2026), Nico | AI Ranking "Perfect SEO Copywriter with Claude Skills" (2026), Princeton KDD 2024 GEO study, BrightEdge/LatticeOcean citation data, Northeastern "Measuring AI Slop in Text"
+
+#### Phase 85: Entity Coherence Engine
+
+**Goal**: Analyse content for entity density, disambiguation, and coherence — the #1 factor in AI citation
+**Depends on**: None (extends existing GEO infrastructure)
+**Research**: Unlikely
+**Plans**: 2 plans (service + API, dashboard UI)
+**New models**: `EntityAnalysis`
+
+#### Phase 86: Citation Tracking & Monitoring
+
+**Goal**: Monitor brand mentions and citations across ChatGPT, Perplexity, Google AI Overviews, and Claude
+**Depends on**: Phase 85
+**Research**: Likely (Bing Webmaster Tools API, citation probing methodology)
+**Plans**: 3 plans (Bing API integration, citation probing service, dashboard + alerts)
+**New models**: `CitationRecord`, `CitationQuery`, `CitationAlert`
+**OAuth**: Bing Webmaster Tools
+
+#### Phase 87: GEO Content Optimiser v2
+
+**Goal**: Real-time content editor scoring and rewriting content using the Princeton 9-tactic framework
+**Depends on**: Phase 85, Phase 86
+**Research**: Unlikely
+**Plans**: 3 plans (tactic scorer service, AI rewrite pipeline, editor UI integration)
+
+#### Phase 88: Writing Context & Voice Fingerprinting
+
+**Goal**: Human writing methodology engine — capture voice patterns, inject rich writing context, eliminate AI slop at the source
+**Depends on**: Phase 87
+**Research**: Unlikely (methodology frameworks from Nico + Sturm research)
+**Plans**: 3 plans (voice fingerprint service, methodology engine + prompt integration, dashboard wizard)
+**New models**: `WritingMethodology`, `VoiceFingerprint`
+**Key files**: `lib/ai/content-generator.ts` → `buildPrompt()`, `lib/ai/content-scorer.ts`
+
+#### Phase 89: AI Slop Detection & Content Quality Gate
+
+**Goal**: Detect AI-generated content quality issues, enforce human writing standards, provide iterative improvement suggestions
+**Depends on**: Phase 88
+**Research**: Unlikely
+**Plans**: 3 plans (slop detector + humanness scorer, content scorer/optimizer integration, dashboard + quality gate)
+**New models**: `ContentQualityAudit`
+**Key files**: `lib/ai/content-scorer.ts` → new 6th `writingQuality` dimension
+
+#### Phase 90: E-E-A-T Score Builder
+
+**Goal**: Automated E-E-A-T auditing AND building — not just identifying gaps but generating the assets to fill them
+**Depends on**: Phase 85, Phase 87, Phase 88
+**Research**: Unlikely
+**Plans**: 3 plans (scorer + auto-generator service, API routes, dashboard page)
+**New models**: `EEATAudit`, `AuthorProfile` extension
+
+#### Phase 91: Personal & Business Brand Builder
+
+**Goal**: Automated personal and business brand recognition system — build E-E-A-T for individuals and organisations
+**Depends on**: Phase 90
+**Research**: Likely (Knowledge Panel trigger patterns, brand discovery APIs)
+**Plans**: 3 plans (brand profile service + discovery, consistency checker, dashboard + calendar)
+**New models**: `BrandIdentity`, `BrandCredential`, `BrandMention`
+
+#### Phase 92: Journalist & PR Relationship Manager
+
+**Goal**: CRM for journalist relationships, pitch tracking, and media coverage monitoring
+**Depends on**: Phase 91
+**Research**: Likely (journalist database sources, media monitoring APIs)
+**Plans**: 2 plans (service + API, dashboard UI)
+**New models**: `JournalistContact`, `PRPitch`, `MediaCoverage`
+
+#### Phase 93: Press Release Generator & Distribution
+
+**Goal**: AI-optimised press release creation with distribution to indexed services
+**Depends on**: Phase 92, Phase 88
+**Research**: Likely (PR distribution API integrations)
+**Plans**: 2 plans (generator service + distribution, dashboard + analytics)
+**New models**: `PressRelease`, `PRDistribution`
+
+#### Phase 94: Award & Directory Orchestrator
+
+**Goal**: Systematic award submissions and niche directory listings for AI visibility and backlink building
+**Depends on**: Phase 91
+**Research**: Unlikely
+**Plans**: 2 plans (service + tracker, dashboard + submission writer)
+**New models**: `AwardListing`, `DirectoryListing`, `SubmissionTracker`
+
+#### Phase 95: AI Backlink Prospector
+
+**Goal**: AI-powered link-building opportunity identification, evaluation, and prioritisation
+**Depends on**: Phase 92
+**Research**: Likely (backlink data sources — Ahrefs/Moz API or alternatives)
+**Plans**: 3 plans (prospector service, outreach automation, dashboard + pipeline)
+**New models**: `LinkProspect`, `OutreachCampaign`, `AcquiredLink`
+
+#### Phase 96: Prompt Intelligence Tool
+
+**Goal**: Discover what questions people ask AI about a brand's category, track trending prompts, map competitive visibility
+**Depends on**: Phase 86
+**Research**: Likely (prompt discovery methodology)
+**Plans**: 2 plans (discovery + monitoring service, dashboard + alerts)
+**New models**: `TrackedPrompt`, `PromptCitation`
+
+#### Phase 97: Algorithm Sentinel & Site Health Agent
+
+**Goal**: Autonomous agent monitoring Google algorithm volatility, detecting site crashes, diagnosing root causes, triggering protective responses
+**Depends on**: Phase 86, Phase 95
+**Research**: Likely (Semrush Sensor scraping, GSC API OAuth flow)
+**Plans**: 3 plans (sentinel agent core + volatility monitor, GSC API integration + crash detection, competitor radar + alerts)
+**New models**: `AlgorithmEvent`, `SiteHealthSnapshot`, `CrashDiagnosis`, `CompetitorAlert`
+**Cron**: `/api/cron/algorithm-sentinel` — daily + on-demand
+**Key pattern**: Follows `lib/agents/insights-agent.ts` — circuit breaker, workflow execution, confidence scoring
+
+#### Phase 98: Autonomous A/B Testing & Self-Healing Agent
+
+**Goal**: Agent that continuously A/B tests SEO/GEO strategies, detects what works, auto-applies winners, and executes recovery workflows
+**Depends on**: Phase 97, Phase 88, Phase 89, Phase 90
+**Research**: Unlikely (A/B testing infra exists)
+**Plans**: 3 plans (experimenter agent + experiment types, self-healing agent + recovery pipeline, weekly report + learning loop)
+**New models**: `SEOExperiment`, `ExperimentResult`, `RecoveryWorkflow`, `RecoveryAction`
+**Crons**: `/api/cron/seo-experimenter` (weekly), `/api/cron/self-healing` (triggered + daily)
+
+#### Phase 99: Citation Performance Dashboard
+
+**Goal**: Unified analytics combining GEO metrics, citation tracking, E-E-A-T scores, writing quality, algorithm health, and agent activity
+**Depends on**: Phases 85-98
+**Research**: Unlikely
+**Plans**: 2 plans (unified data service + API, dashboard page)
+
+#### Phase 100: v5.0 Integration Testing & Polish
+
+**Goal**: End-to-end verification, performance optimisation, autonomous agent validation, and polish
+**Depends on**: Phases 85-99
+**Research**: None
+**Plans**: 2 plans (testing + fixes, polish + docs + agent runbooks)
 
 ---
 

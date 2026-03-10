@@ -5,19 +5,19 @@
 See: .planning/PROJECT.md (updated 2026-02-17)
 
 **Core value:** Every endpoint returns real data, every platform works, every dashboard page connects to live APIs
-**Current focus:** v4.0 Production Complete
+**Current focus:** v5.0 AI-Native GEO & Citation Engine
 
 ## Current Position
 
-Milestone: v4.0 Production Complete
-Phase: 84 of 84 (Final UAT & Launch)
-Plan: 3 of 3 complete
-Status: Phase complete — v4.0 milestone achieved
-Last activity: 2026-03-10 — Completed 84-03 (release gate: type-check PASS, no critical findings, v4.0 declared complete)
+Milestone: v5.0 AI-Native GEO & Citation Engine
+Phase: 85 of 100 (Entity Coherence Engine)
+Plan: 0 of 2 complete
+Status: Milestone created — ready for Phase 85 planning
+Last activity: 2026-03-11 — v5.0 milestone defined (16 phases, ~32 new models, ~42 plans)
 
-Progress: ██████████ 100%
+Progress: ░░░░░░░░░░ 0%
 
-Next action: v5.0 roadmap definition (human-gated)
+Next action: `/gsd:plan-phase` for Phase 85 (Entity Coherence Engine)
 
 ## Performance Metrics
 
@@ -236,14 +236,15 @@ None.
 - v2.0 Reliable AI Agents: 8 phases (59-66), context resilience + AI orchestration + workflow engine + insights — SHIPPED 2026-03-03
 - v3.0 Public Launch Readiness: 8 phases (67-74), cleanup + Stripe + landing + onboarding + observability + performance + security + launch — SHIPPED 2026-03-10
 - v3.1 First Users: 2 phases (75-76), God Mode admin + NEXUS branding + Unite-Hub connector — SHIPPED 2026-03-10
-- v4.0 Production Complete: 8 phases (77-84), content creation + scheduling + admin + brand profiles + social onboarding + code quality + accessibility + UAT
+- v4.0 Production Complete: 8 phases (77-84), content creation + scheduling + admin + brand profiles + social onboarding + code quality + accessibility + UAT — SHIPPED 2026-03-10
+- v5.0 AI-Native GEO & Citation Engine: 16 phases (85-100), entity coherence + citation tracking + GEO optimiser v2 + writing methodology + AI slop detection + E-E-A-T + brand building + PR + awards + backlinks + prompt intelligence + algorithm sentinel + autonomous A/B testing + self-healing + citation dashboard
 
 ## Session Continuity
 
-Last session: 2026-03-10
-Stopped at: Phase 84 complete — v4.0 Production Complete declared
+Last session: 2026-03-11
+Stopped at: v5.0 milestone created — ready for Phase 85 planning
 Resume file: none
-Next action: v5.0 roadmap definition (human-gated)
+Next action: `/gsd:plan-phase` for Phase 85 (Entity Coherence Engine)
 
 ## Linear Issues — v2.0 Phase 59-66 Tracking
 
