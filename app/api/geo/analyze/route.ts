@@ -76,9 +76,24 @@ export async function POST(request: NextRequest) {
         multiModalScore: result.score.multiModal,
         authorityScore: result.score.authority,
         technicalScore: result.score.technical,
+        entityCoherenceScore: result.score.entityCoherence,
         citablePassages: result.citablePassages as unknown as Prisma.InputJsonValue,
         recommendations: result.recommendations as unknown as Prisma.InputJsonValue,
         schemaIssues: result.schemaIssues as unknown as Prisma.InputJsonValue,
+      },
+    });
+
+    // Persist entity analysis
+    await prisma.entityAnalysis.create({
+      data: {
+        geoAnalysisId: analysis.id,
+        userId,
+        entityCount: result.entityAnalysis.entityCount,
+        uniqueEntityCount: result.entityAnalysis.uniqueEntityCount,
+        properNounDensity: result.entityAnalysis.properNounDensity,
+        coherenceScore: result.entityAnalysis.score,
+        entities: result.entityAnalysis.entities as unknown as Prisma.InputJsonValue,
+        coherenceIssues: result.entityAnalysis.coherenceIssues as unknown as Prisma.InputJsonValue,
       },
     });
 
