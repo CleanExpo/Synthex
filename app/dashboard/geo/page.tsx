@@ -64,6 +64,7 @@ export default function GEOPage() {
     { key: 'multiModal', label: 'Multi-Modal', icon: Globe, weight: '15%', color: 'text-amber-400' },
     { key: 'authority', label: 'Authority', icon: Shield, weight: '20%', color: 'text-emerald-400' },
     { key: 'technical', label: 'Technical', icon: TrendingUp, weight: '20%', color: 'text-rose-400' },
+    { key: 'entityCoherence', label: 'Entities', icon: Target, weight: '(diagnostic)', color: 'text-violet-400' },
   ] as const;
 
   const getTier = (score: number) => {
