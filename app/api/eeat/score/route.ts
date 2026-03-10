@@ -26,6 +26,7 @@ import prisma from '@/lib/prisma';
 import { getUserIdFromRequest } from '@/lib/auth/jwt-utils';
 import { scoreEEAT } from '@/lib/eeat/eeat-scorer';
 import type { ContentType } from '@/lib/eeat/types';
+import { logger } from '@/lib/logger';
 
 const eeatSchema = z.object({
   content: z.string().min(100, 'Content must be at least 100 characters for meaningful scoring'),
@@ -95,7 +96,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(result);
   } catch (error) {
-    console.error('E-E-A-T score error:', error);
+    logger.error('E-E-A-T score error:', error);
     return NextResponse.json(
       { error: 'Internal Server Error', message: 'Failed to score content' },
       { status: 500 }

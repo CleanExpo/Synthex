@@ -12,6 +12,7 @@ import prisma from '@/lib/prisma';
 import { getUserIdFromRequestOrCookies, unauthorizedResponse } from '@/lib/auth/jwt-utils';
 import { z } from 'zod';
 import { pushUniteHubEvent } from '@/lib/unite-hub-connector';
+import { logger } from '@/lib/logger';
 
 // Validation schemas
 const campaignCreateSchema = z.object({
@@ -66,7 +67,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ campaigns });
   } catch (error: unknown) {
-    console.error('Get campaigns error:', error);
+    logger.error('Get campaigns error:', error);
     return NextResponse.json(
       { error: 'Failed to fetch campaigns' },
       { status: 500 }
@@ -130,7 +131,7 @@ export async function POST(request: NextRequest) {
       campaign
     });
   } catch (error: unknown) {
-    console.error('Create campaign error:', error);
+    logger.error('Create campaign error:', error);
     return NextResponse.json(
       { error: 'Failed to create campaign' },
       { status: 500 }
@@ -202,7 +203,7 @@ export async function PUT(request: NextRequest) {
       campaign
     });
   } catch (error: unknown) {
-    console.error('Update campaign error:', error);
+    logger.error('Update campaign error:', error);
     return NextResponse.json(
       { error: 'Failed to update campaign' },
       { status: 500 }
@@ -262,7 +263,7 @@ export async function DELETE(request: NextRequest) {
       message: 'Campaign deleted successfully'
     });
   } catch (error: unknown) {
-    console.error('Delete campaign error:', error);
+    logger.error('Delete campaign error:', error);
     return NextResponse.json(
       { error: 'Failed to delete campaign' },
       { status: 500 }

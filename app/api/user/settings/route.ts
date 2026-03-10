@@ -12,6 +12,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { z } from 'zod';
+import { logger } from '@/lib/logger';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -108,7 +109,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ settings: merged });
   } catch (error: unknown) {
-    console.error('Settings fetch error:', error);
+    logger.error('Settings fetch error:', error);
     // Return defaults instead of 500 — settings are non-critical
     return NextResponse.json({ settings: DEFAULT_SETTINGS });
   }
@@ -191,7 +192,7 @@ export async function PUT(request: NextRequest) {
       message: 'Settings updated successfully'
     });
   } catch (error: unknown) {
-    console.error('Settings update error:', error);
+    logger.error('Settings update error:', error);
     return NextResponse.json(
       { error: 'Failed to update settings' },
       { status: 500 }

@@ -16,6 +16,7 @@ import { getUserIdFromCookies, unauthorizedResponse } from '@/lib/auth/jwt-utils
 import { decryptField } from '@/lib/security/field-encryption';
 import { getEffectiveOrganizationId } from '@/lib/multi-business';
 import { createPlatformService, type SupportedPlatform, type PlatformCredentials } from '@/lib/social';
+import { logger } from '@/lib/logger';
 
 const socialPostSchema = z.object({
   content: z.string().min(1),
@@ -138,7 +139,7 @@ export async function POST(request: NextRequest) {
         });
 
       } catch (error: unknown) {
-        console.error(`Error posting to ${platform}:`, error);
+        logger.error(`Error posting to ${platform}:`, error);
         errors.push({
           platform,
           success: false,
@@ -226,7 +227,7 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error: unknown) {
-    console.error('Social posting error:', error);
+    logger.error('Social posting error:', error);
     return NextResponse.json(
       { 
         error: 'Failed to post to social media',
@@ -294,7 +295,7 @@ export async function GET(request: NextRequest) {
     });
 
   } catch (error: unknown) {
-    console.error('Get posts error:', error);
+    logger.error('Get posts error:', error);
     return NextResponse.json(
       { error: 'Failed to fetch posts' },
       { status: 500 }

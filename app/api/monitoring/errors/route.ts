@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createClient } from '@supabase/supabase-js';
 import * as Sentry from '@sentry/nextjs';
+import { logger } from '@/lib/logger';
 
 // Initialize Supabase client
 const supabase = createClient(
@@ -62,7 +63,7 @@ export async function POST(request: NextRequest) {
           error.userEmail = user.email;
         }
       } catch (authError) {
-        console.error('Failed to get user from token:', authError);
+        logger.error('Failed to get user from token:', authError);
       }
     }
 
@@ -74,7 +75,7 @@ export async function POST(request: NextRequest) {
 
     // Log critical errors
     if (error.level === 'error') {
-      console.error('[Error Tracking]', {
+      logger.error('[Error Tracking]', {
         message: error instanceof Error ? error.message : String(error),
         stack: error.stack,
         context: error.context,
@@ -98,7 +99,7 @@ export async function POST(request: NextRequest) {
       id: error.id 
     });
   } catch (err) {
-    console.error('Error tracking failed:', err);
+    logger.error('Error tracking failed:', err);
     return NextResponse.json(
       { error: 'Failed to track error' },
       { status: 500 }
@@ -150,7 +151,7 @@ export async function GET(request: NextRequest) {
       stats
     });
   } catch (err) {
-    console.error('Failed to retrieve errors:', err);
+    logger.error('Failed to retrieve errors:', err);
     return NextResponse.json(
       { error: 'Failed to retrieve errors' },
       { status: 500 }

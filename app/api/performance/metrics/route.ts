@@ -13,6 +13,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import performanceMonitor from '@/lib/monitoring/performance-monitor';
+import { logger } from '@/lib/logger';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -118,7 +119,7 @@ export async function GET(request: NextRequest) {
       }
     );
   } catch (error: unknown) {
-    console.error('Metrics error:', error);
+    logger.error('Metrics error:', error);
 
     return NextResponse.json(
       {
@@ -166,7 +167,7 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error: unknown) {
-    console.error('Failed to record metrics:', error);
+    logger.error('Failed to record metrics:', error);
 
     return NextResponse.json(
       { success: false, error: error instanceof Error ? error.message : String(error) || 'Failed to record metrics' },

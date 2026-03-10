@@ -15,6 +15,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import prisma from '@/lib/prisma';
 import { getUserIdFromRequest } from '@/lib/auth/jwt-utils';
+import { logger } from '@/lib/logger';
 
 const createCaseStudySchema = z.object({
   title: z.string().min(5).max(200),
@@ -60,7 +61,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ caseStudies, total: caseStudies.length });
   } catch (error) {
-    console.error('List case studies error:', error);
+    logger.error('List case studies error:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }
@@ -104,7 +105,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(caseStudy, { status: 201 });
   } catch (error) {
-    console.error('Create case study error:', error);
+    logger.error('Create case study error:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }

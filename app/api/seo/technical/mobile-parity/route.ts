@@ -16,6 +16,7 @@ import { z } from 'zod';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
 import { subscriptionService } from '@/lib/stripe/subscription-service';
 import { checkMobileParity } from '@/lib/seo/technical-seo-service';
+import { logger } from '@/lib/logger';
 
 // Request validation schema
 const MobileParityRequestSchema = z.object({
@@ -90,7 +91,7 @@ export async function POST(request: NextRequest) {
       mobileParity,
     });
   } catch (error) {
-    console.error('Mobile Parity API error:', error);
+    logger.error('Mobile Parity API error:', error);
     return APISecurityChecker.createSecureResponse(
       { error: 'Failed to check mobile parity' },
       500

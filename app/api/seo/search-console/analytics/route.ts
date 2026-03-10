@@ -13,6 +13,7 @@ import { NextRequest } from 'next/server';
 import { z } from 'zod';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
 import { getSearchAnalytics } from '@/lib/google/search-console';
+import { logger } from '@/lib/logger';
 
 // Request validation schema
 const AnalyticsRequestSchema = z.object({
@@ -84,7 +85,7 @@ export async function POST(request: NextRequest) {
       analytics,
     });
   } catch (error) {
-    console.error('Search Console Analytics API error:', error);
+    logger.error('Search Console Analytics API error:', error);
     return APISecurityChecker.createSecureResponse(
       { error: 'Failed to fetch search analytics' },
       500

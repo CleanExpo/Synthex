@@ -13,6 +13,7 @@ import { NextRequest } from 'next/server';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
 import { recordDailyActivity, checkAndUnlockAchievements } from '@/lib/retention/achievement-tracker';
 import prisma from '@/lib/prisma';
+import { logger } from '@/lib/logger';
 
 export async function GET(request: NextRequest) {
   const security = await APISecurityChecker.check(
@@ -49,7 +50,7 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('Streak GET error:', error);
+    logger.error('Streak GET error:', error);
     return APISecurityChecker.createSecureResponse(
       { error: 'Failed to fetch streak' },
       500
@@ -95,7 +96,7 @@ export async function POST(request: NextRequest) {
       })),
     });
   } catch (error) {
-    console.error('Streak POST error:', error);
+    logger.error('Streak POST error:', error);
     return APISecurityChecker.createSecureResponse(
       { error: 'Failed to record activity' },
       500

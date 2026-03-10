@@ -12,6 +12,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
+import { logger } from '@/lib/logger';
 
 // ============================================================================
 // TYPES
@@ -130,7 +131,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(teamMembers);
   } catch (error) {
-    console.error('Team API error:', error);
+    logger.error('Team API error:', error);
     return NextResponse.json(
       { error: 'Failed to fetch team members' },
       { status: 500 }
@@ -215,7 +216,7 @@ export async function POST(request: NextRequest) {
         : 'Invitation sent to email',
     });
   } catch (error) {
-    console.error('Team invite error:', error);
+    logger.error('Team invite error:', error);
     return NextResponse.json(
       { error: 'Failed to invite team member' },
       { status: 500 }

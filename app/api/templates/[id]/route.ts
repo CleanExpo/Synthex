@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { withAuth, AuthenticatedRequest } from '@/lib/middleware/withAuth';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
+import { logger } from '@/lib/logger';
 
 // Validation schema for updates (all fields optional)
 const updateTemplateSchema = z.object({
@@ -76,7 +77,7 @@ async function handleGet(
       template,
     });
   } catch (error) {
-    console.error('Error fetching template:', error);
+    logger.error('Error fetching template:', error);
     return NextResponse.json(
       { success: false, error: 'Failed to fetch template' },
       { status: 500 }
@@ -160,7 +161,7 @@ async function handlePut(
       template,
     });
   } catch (error) {
-    console.error('Error updating template:', error);
+    logger.error('Error updating template:', error);
     return NextResponse.json(
       { success: false, error: 'Failed to update template' },
       { status: 500 }
@@ -223,7 +224,7 @@ async function handleDelete(
       message: 'Template deleted successfully',
     });
   } catch (error) {
-    console.error('Error deleting template:', error);
+    logger.error('Error deleting template:', error);
     return NextResponse.json(
       { success: false, error: 'Failed to delete template' },
       { status: 500 }

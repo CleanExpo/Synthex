@@ -20,6 +20,7 @@ import prisma from '@/lib/prisma';
 import { getUserIdFromRequest } from '@/lib/auth/jwt-utils';
 import { analyzeGEO } from '@/lib/geo/geo-analyzer';
 import type { GEOPlatform } from '@/lib/geo/types';
+import { logger } from '@/lib/logger';
 
 const analyzeSchema = z.object({
   contentText: z.string().min(50, 'Content must be at least 50 characters'),
@@ -85,7 +86,7 @@ export async function POST(request: NextRequest) {
       ...result,
     });
   } catch (error) {
-    console.error('GEO analysis error:', error);
+    logger.error('GEO analysis error:', error);
     return NextResponse.json(
       { error: 'Internal Server Error', message: 'Failed to analyze content' },
       { status: 500 }

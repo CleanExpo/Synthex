@@ -12,6 +12,7 @@ import { NextRequest } from 'next/server';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
 import { ACHIEVEMENTS_CATALOG } from '@/lib/retention/achievements-catalog';
 import prisma from '@/lib/prisma';
+import { logger } from '@/lib/logger';
 
 export async function GET(request: NextRequest) {
   const security = await APISecurityChecker.check(
@@ -79,7 +80,7 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('Achievements GET error:', error);
+    logger.error('Achievements GET error:', error);
     return APISecurityChecker.createSecureResponse(
       { error: 'Failed to fetch achievements' },
       500

@@ -15,6 +15,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
+import { logger } from '@/lib/logger';
 import {
   generatePKCEChallenge,
   generateState,
@@ -87,7 +88,7 @@ export async function GET(request: NextRequest) {
       message: 'Redirecting to Google to link your account...',
     });
   } catch (error) {
-    console.error('[Link Google] Error:', error);
+    logger.error('[Link Google] Error:', error);
     return NextResponse.json(
       { error: 'Failed to initiate account linking' },
       { status: 500 }

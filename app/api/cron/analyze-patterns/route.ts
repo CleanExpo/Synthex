@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { headers } from 'next/headers';
 import { patternScraper } from '@/lib/services/pattern-scraper';
+import { logger } from '@/lib/logger';
 
 // This route should be called by a cron job (e.g., Vercel Cron or external service)
 export async function GET(request: Request) {
@@ -36,7 +37,7 @@ export async function GET(request: Request) {
       timestamp: new Date().toISOString(),
     });
   } catch (error: unknown) {
-    console.error('Pattern analysis cron error:', error);
+    logger.error('Pattern analysis cron error:', error);
     return NextResponse.json(
       { error: error instanceof Error ? error.message : String(error) || 'Failed to analyze patterns' },
       { status: 500 }
@@ -78,7 +79,7 @@ export async function POST(request: Request) {
       timestamp: new Date().toISOString(),
     });
   } catch (error: unknown) {
-    console.error('Manual pattern analysis error:', error);
+    logger.error('Manual pattern analysis error:', error);
     return NextResponse.json(
       { error: error instanceof Error ? error.message : String(error) || 'Failed to analyze patterns' },
       { status: 500 }

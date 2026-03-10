@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { withAuth, AuthenticatedRequest } from '@/lib/middleware/withAuth';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
+import { logger } from '@/lib/logger';
 
 // Validation schemas
 const createTemplateSchema = z.object({
@@ -113,7 +114,7 @@ async function handleGet(request: AuthenticatedRequest) {
       offset,
     });
   } catch (error) {
-    console.error('Error listing templates:', error);
+    logger.error('Error listing templates:', error);
     return NextResponse.json(
       { success: false, error: 'Failed to list templates' },
       { status: 500 }
@@ -168,7 +169,7 @@ async function handlePost(request: AuthenticatedRequest) {
       template,
     }, { status: 201 });
   } catch (error) {
-    console.error('Error creating template:', error);
+    logger.error('Error creating template:', error);
     return NextResponse.json(
       { success: false, error: 'Failed to create template' },
       { status: 500 }

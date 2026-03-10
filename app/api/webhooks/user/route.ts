@@ -18,6 +18,7 @@ import { z } from 'zod';
 import { sanitizeErrorForResponse } from '@/lib/utils/error-utils';
 import { getUserIdFromCookies } from '@/lib/auth/jwt-utils';
 import { sendTestWebhook, broadcastWebhook, type WebhookEventType } from '@/lib/webhooks/sender';
+import { logger } from '@/lib/logger';
 
 // =============================================================================
 // Constants - All available webhook event types
@@ -188,7 +189,7 @@ export async function GET() {
       availableEvents: AVAILABLE_EVENTS,
     });
   } catch (error: unknown) {
-    console.error('List webhooks error:', error);
+    logger.error('List webhooks error:', error);
     return NextResponse.json(
       { error: 'Internal Server Error', message: sanitizeErrorForResponse(error, 'Failed to list webhooks') },
       { status: 500 }
@@ -281,7 +282,7 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error: unknown) {
-    console.error('Create webhook error:', error);
+    logger.error('Create webhook error:', error);
     return NextResponse.json(
       { error: 'Internal Server Error', message: sanitizeErrorForResponse(error, 'Failed to create webhook') },
       { status: 500 }
@@ -378,7 +379,7 @@ export async function PATCH(request: NextRequest) {
       data: transformWebhookForResponse(updated),
     });
   } catch (error: unknown) {
-    console.error('Update webhook error:', error);
+    logger.error('Update webhook error:', error);
     return NextResponse.json(
       { error: 'Internal Server Error', message: sanitizeErrorForResponse(error, 'Failed to update webhook') },
       { status: 500 }
@@ -447,7 +448,7 @@ export async function DELETE(request: NextRequest) {
       message: 'Webhook subscription deleted',
     });
   } catch (error: unknown) {
-    console.error('Delete webhook error:', error);
+    logger.error('Delete webhook error:', error);
     return NextResponse.json(
       { error: 'Internal Server Error', message: sanitizeErrorForResponse(error, 'Failed to delete webhook') },
       { status: 500 }
@@ -523,7 +524,7 @@ async function triggerWebhooks(
       }
     }
   } catch (error) {
-    console.error('triggerWebhooks error:', error);
+    logger.error('triggerWebhooks error:', error);
     // Don't throw - webhook failures shouldn't break the main operation
   }
 }

@@ -11,6 +11,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getUserIdFromRequestOrCookies, unauthorizedResponse } from '@/lib/auth/jwt-utils';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
+import { logger } from '@/lib/logger';
 
 // Validation schema for user update
 const userUpdateSchema = z.object({
@@ -94,7 +95,7 @@ export async function GET(request: NextRequest) {
         }
       });
     } catch (dbError) {
-      console.error('Database unavailable:', dbError);
+      logger.error('Database unavailable:', dbError);
       return NextResponse.json(
         { error: 'Database temporarily unavailable' },
         { status: 503 }
@@ -102,7 +103,7 @@ export async function GET(request: NextRequest) {
     }
 
   } catch (error: unknown) {
-    console.error('Get user error:', error);
+    logger.error('Get user error:', error);
     return NextResponse.json(
       { error: 'Failed to fetch user data' },
       { status: 500 }
@@ -175,7 +176,7 @@ export async function PUT(request: NextRequest) {
     });
 
   } catch (error: unknown) {
-    console.error('Update user error:', error);
+    logger.error('Update user error:', error);
     return NextResponse.json(
       { error: 'Failed to update user data' },
       { status: 500 }

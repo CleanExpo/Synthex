@@ -7,6 +7,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { emailService } from '@/lib/email/email-service';
 import { authStrict } from '@/lib/middleware/api-rate-limit';
+import { logger } from '@/lib/logger';
 
 const resetSchema = z.object({
   token: z.string().min(1).optional(),
@@ -57,7 +58,7 @@ export async function POST(request: NextRequest) {
       message: result.message
     });
   } catch (error: unknown) {
-    console.error('Password reset error:', error);
+    logger.error('Password reset error:', error);
     return NextResponse.json(
       { error: 'Failed to reset password' },
       { status: 500 }
@@ -94,7 +95,7 @@ export async function GET(request: NextRequest) {
       message: 'Token is valid'
     });
   } catch (error: unknown) {
-    console.error('Token validation error:', error);
+    logger.error('Token validation error:', error);
     return NextResponse.json(
       { error: 'Failed to validate token' },
       { status: 500 }

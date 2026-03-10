@@ -17,6 +17,7 @@ import { NextRequest } from 'next/server';
 import { z } from 'zod';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
 import { submitUrl, submitBatch, getSynthexPublicUrls } from '@/lib/google/indexing';
+import { logger } from '@/lib/logger';
 
 const SubmitSchema = z.object({
   url: z.string().url().optional(),
@@ -76,7 +77,7 @@ export async function POST(request: NextRequest) {
       400
     );
   } catch (error) {
-    console.error('Indexing API error:', error);
+    logger.error('Indexing API error:', error);
     return APISecurityChecker.createSecureResponse(
       { error: 'Failed to submit URL for indexing' },
       500

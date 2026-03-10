@@ -16,6 +16,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
+import { logger } from '@/lib/logger';
 import {
   validateFile,
   uploadToStorage,
@@ -68,7 +69,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ data: result }, { status: 201 });
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Upload failed';
-    console.error('[media/upload] Upload error:', message);
+    logger.error('[media/upload] Upload error:', message);
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

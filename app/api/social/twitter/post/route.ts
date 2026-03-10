@@ -15,6 +15,7 @@ import { twitterService } from '@/lib/social/twitter-service';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
 import { createClient } from '@supabase/supabase-js';
 import { getUserIdFromRequestOrCookies, unauthorizedResponse } from '@/lib/auth/jwt-utils';
+import { logger } from '@/lib/logger';
 
 const twitterPostSchema = z.object({
   text: z.string().optional(),
@@ -80,7 +81,7 @@ export async function POST(request: NextRequest) {
           const mediaId = await twitterService.uploadMedia(url);
           mediaIds.push(mediaId);
         } catch (error) {
-          console.error('Media upload failed:', error);
+          logger.error('Media upload failed:', error);
         }
       }
     }
@@ -164,7 +165,7 @@ export async function POST(request: NextRequest) {
       data: result,
     });
   } catch (error: unknown) {
-    console.error('Twitter post error:', error);
+    logger.error('Twitter post error:', error);
     return NextResponse.json(
       { 
         error: 'Failed to post to Twitter',
@@ -224,7 +225,7 @@ export async function GET(request: NextRequest) {
               post.metrics = metrics;
             }
           } catch (error) {
-            console.error('Failed to update metrics:', error);
+            logger.error('Failed to update metrics:', error);
           }
         }
       }
@@ -235,7 +236,7 @@ export async function GET(request: NextRequest) {
       data: posts,
     });
   } catch (error) {
-    console.error('Get posts error:', error);
+    logger.error('Get posts error:', error);
     return NextResponse.json(
       { error: 'Failed to get Twitter posts' },
       { status: 500 }

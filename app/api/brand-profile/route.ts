@@ -24,6 +24,7 @@ import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import type { BrandProfileResponse } from './types';
+import { logger } from '@/lib/logger';
 
 export const runtime = 'nodejs';
 
@@ -156,7 +157,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 
     return NextResponse.json({ data: formatBrandProfile(org) }, { status: 200 });
   } catch (error) {
-    console.error('[brand-profile] GET failed:', error instanceof Error ? error.message : error);
+    logger.error('[brand-profile] GET failed:', error instanceof Error ? error.message : error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
@@ -218,7 +219,7 @@ export async function PATCH(request: NextRequest): Promise<NextResponse> {
 
     return NextResponse.json({ data: formatBrandProfile(updated) }, { status: 200 });
   } catch (error) {
-    console.error('[brand-profile] PATCH failed:', error instanceof Error ? error.message : error);
+    logger.error('[brand-profile] PATCH failed:', error instanceof Error ? error.message : error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

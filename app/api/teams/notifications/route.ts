@@ -17,6 +17,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
+import { logger } from '@/lib/logger';
 
 const markNotificationsReadSchema = z.object({
   notificationIds: z.array(z.string()).optional(),
@@ -177,7 +178,7 @@ export async function GET(request: NextRequest) {
       hasMore: (notifications?.length || 0) === limit,
     });
   } catch (error) {
-    console.error('Get team notifications error:', error);
+    logger.error('Get team notifications error:', error);
     return NextResponse.json(
       { error: 'Failed to fetch notifications' },
       { status: 500 }
@@ -260,7 +261,7 @@ export async function PATCH(request: NextRequest) {
       });
     }
   } catch (error) {
-    console.error('Mark notifications read error:', error);
+    logger.error('Mark notifications read error:', error);
     return NextResponse.json(
       { error: 'Failed to update notifications' },
       { status: 500 }
@@ -359,7 +360,7 @@ export async function DELETE(request: NextRequest) {
       { status: 400 }
     );
   } catch (error) {
-    console.error('Delete notifications error:', error);
+    logger.error('Delete notifications error:', error);
     return NextResponse.json(
       { error: 'Failed to delete notifications' },
       { status: 500 }
@@ -440,7 +441,7 @@ export async function POST(request: NextRequest) {
       createdCount: result?.count || 0,
     });
   } catch (error) {
-    console.error('Create notification error:', error);
+    logger.error('Create notification error:', error);
     return NextResponse.json(
       { error: 'Failed to create notification' },
       { status: 500 }

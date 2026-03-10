@@ -14,6 +14,7 @@ import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
 import { NotificationChannel } from '@/lib/websocket/notification-channel';
+import { logger } from '@/lib/logger';
 
 // Validation schemas
 const createNotificationSchema = z.object({
@@ -116,7 +117,7 @@ export async function GET(request: NextRequest) {
     );
 
   } catch (error) {
-    console.error('Notifications fetch error:', error);
+    logger.error('Notifications fetch error:', error);
 
     if (error instanceof z.ZodError) {
       return APISecurityChecker.createSecureResponse(
@@ -215,7 +216,7 @@ export async function POST(request: NextRequest) {
     );
 
   } catch (error) {
-    console.error('Notification creation error:', error);
+    logger.error('Notification creation error:', error);
 
     if (error instanceof z.ZodError) {
       return APISecurityChecker.createSecureResponse(

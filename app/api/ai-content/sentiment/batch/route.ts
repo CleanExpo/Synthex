@@ -17,6 +17,7 @@ import { prisma } from '@/lib/prisma';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
 import { z } from 'zod';
 import { requireApiKey } from '@/lib/middleware/require-api-key';
+import { logger } from '@/lib/logger';
 
 // ============================================================================
 // VALIDATION SCHEMAS
@@ -143,7 +144,7 @@ Return a JSON array with one result per input text. Return ONLY valid JSON array
 
     throw new Error('Failed to parse batch response');
   } catch (error) {
-    console.error('Batch AI analysis failed:', error);
+    logger.error('Batch AI analysis failed:', error);
     return texts.map((text) => analyzeWithRules(text));
   }
 }
@@ -279,7 +280,7 @@ export async function POST(request: NextRequest) {
     await (prisma as unknown as PrismaWithSentiment).sentimentAnalysis?.createMany({
       data: analysesToCreate,
     }).catch((err: unknown) => {
-      console.error('Failed to store batch analyses:', err);
+      logger.error('Failed to store batch analyses:', err);
     });
 
     // Update comments with sentiment
@@ -315,7 +316,7 @@ export async function POST(request: NextRequest) {
       processedAt: new Date().toISOString(),
     });
   } catch (error) {
-    console.error('Batch sentiment analysis error:', error);
+    logger.error('Batch sentiment analysis error:', error);
     return NextResponse.json(
       { error: 'Failed to analyze batch' },
       { status: 500 }

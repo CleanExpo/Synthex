@@ -15,6 +15,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import emailQueue from '@/lib/email/queue';
+import { logger } from '@/lib/logger';
 import {
   getAllTargetsDueForAudit,
   runScheduledAudit,
@@ -108,7 +109,7 @@ export async function GET(request: NextRequest) {
               });
               emailsSent++;
             } catch (emailErr) {
-              console.error(`[SEO Audits Cron] Email failed for target ${target.id}:`, emailErr);
+              logger.error(`[SEO Audits Cron] Email failed for target ${target.id}:`, emailErr);
               // Email failure does not stop batch processing
             }
           }
@@ -117,7 +118,7 @@ export async function GET(request: NextRequest) {
         // Small delay between audits to respect PageSpeed API rate limits
         await new Promise(resolve => setTimeout(resolve, 1000));
       } catch (err) {
-        console.error(`[SEO Audits Cron] Failed for target ${target.id}:`, err);
+        logger.error(`[SEO Audits Cron] Failed for target ${target.id}:`, err);
         errors++;
       }
     }
@@ -134,7 +135,7 @@ export async function GET(request: NextRequest) {
       durationMs: duration,
     });
   } catch (error) {
-    console.error('[SEO Audits Cron] Fatal error:', error);
+    logger.error('[SEO Audits Cron] Fatal error:', error);
     return NextResponse.json(
       { error: 'Scheduled SEO audits failed' },
       { status: 500 }

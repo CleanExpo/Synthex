@@ -13,6 +13,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { db, supabase } from '@/lib/supabase-client';
+import { logger } from '@/lib/logger';
 
 /** Pattern record from database */
 interface PatternRecord {
@@ -171,7 +172,7 @@ export async function GET(request: NextRequest) {
       count: filteredPatterns.length,
     });
   } catch (error: unknown) {
-    console.error('Pattern analysis error:', error);
+    logger.error('Pattern analysis error:', error);
     return NextResponse.json(
       { error: error instanceof Error ? error.message : String(error) || 'Failed to analyze patterns' },
       { status: 500 }
@@ -257,7 +258,7 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error: unknown) {
-    console.error('Pattern creation error:', error);
+    logger.error('Pattern creation error:', error);
     return NextResponse.json(
       { error: error instanceof Error ? error.message : String(error) || 'Failed to create pattern' },
       { status: 500 }

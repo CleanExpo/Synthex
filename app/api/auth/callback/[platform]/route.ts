@@ -25,6 +25,7 @@ import { generateToken, isOwnerEmail } from '@/lib/auth/jwt-utils';
 import { encryptField } from '@/lib/security/field-encryption';
 import { getPlatformOAuthCredentials } from '@/lib/platform-credentials';
 import { retrievePKCEState } from '@/lib/auth/pkce';
+import { logger } from '@/lib/logger';
 
 // =============================================================================
 // OAuth Configuration
@@ -304,7 +305,7 @@ async function exchangeCodeForToken(
 
   if (!response.ok) {
     const errorText = await response.text();
-    console.error(`Token exchange failed for ${platform} (${response.status}):`, errorText);
+    logger.error(`Token exchange failed for ${platform} (${response.status}):`, errorText);
     throw new Error(`Failed to exchange code for ${platform}: ${response.status} ${errorText.substring(0, 200)}`);
   }
 
@@ -351,7 +352,7 @@ async function fetchUserInfo(
 
   if (!response.ok) {
     const errorText = await response.text();
-    console.error(`User info fetch failed for ${platform} (${response.status}):`, errorText);
+    logger.error(`User info fetch failed for ${platform} (${response.status}):`, errorText);
     throw new Error(`Failed to fetch user info from ${platform}: ${response.status}`);
   }
 
@@ -516,7 +517,7 @@ export async function GET(
     const error = searchParams.get('error');
     if (error) {
       const errorDescription = searchParams.get('error_description') || 'Authentication failed';
-      console.error(`OAuth error for ${platform}:`, error, errorDescription);
+      logger.error(`OAuth error for ${platform}:`, error, errorDescription);
 
       // Check if this was an integration flow by looking at state
       const state = searchParams.get('state');
@@ -675,7 +676,7 @@ export async function GET(
           },
         });
       } catch (dbError) {
-        console.error('Failed to store platform connection:', dbError);
+        logger.error('Failed to store platform connection:', dbError);
       }
 
       // Determine where to redirect after successful connection.
@@ -795,7 +796,7 @@ export async function GET(
         },
       });
     } catch (dbError) {
-      console.error('Failed to store platform connection:', dbError);
+      logger.error('Failed to store platform connection:', dbError);
       // Continue - user auth succeeded, just connection storage failed
     }
 
@@ -849,7 +850,7 @@ export async function GET(
 
     return response;
   } catch (error: unknown) {
-    console.error('OAuth callback error:', error);
+    logger.error('OAuth callback error:', error);
 
     // Try to determine if this was an integration flow to show popup error
     try {

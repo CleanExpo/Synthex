@@ -18,6 +18,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
 import { extractUserId } from '@/lib/middleware/withAuth';
+import { logger } from '@/lib/logger';
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic';
@@ -172,7 +173,7 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('GET /api/quotes error:', error);
+    logger.error('GET /api/quotes error:', error);
     return NextResponse.json(
       {
         success: false,
@@ -258,7 +259,7 @@ export async function POST(request: NextRequest) {
       { status: 201 }
     );
   } catch (error) {
-    console.error('POST /api/quotes error:', error);
+    logger.error('POST /api/quotes error:', error);
     return NextResponse.json(
       {
         success: false,
@@ -311,7 +312,7 @@ export async function DELETE(request: NextRequest) {
       message: `${result.count} quote(s) deleted successfully`,
     });
   } catch (error) {
-    console.error('DELETE /api/quotes error:', error);
+    logger.error('DELETE /api/quotes error:', error);
     return NextResponse.json(
       {
         success: false,

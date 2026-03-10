@@ -18,6 +18,7 @@ import { z } from 'zod';
 import { getUserIdFromRequest } from '@/lib/auth/jwt-utils';
 import { analyzeGEO } from '@/lib/geo/geo-analyzer';
 import type { GEOPlatform } from '@/lib/geo/types';
+import { logger } from '@/lib/logger';
 
 const scoreSchema = z.object({
   contentText: z.string().min(50, 'Content must be at least 50 characters'),
@@ -60,7 +61,7 @@ export async function POST(request: NextRequest) {
       metadata: result.metadata,
     });
   } catch (error) {
-    console.error('GEO score error:', error);
+    logger.error('GEO score error:', error);
     return NextResponse.json(
       { error: 'Internal Server Error', message: 'Failed to score content' },
       { status: 500 }

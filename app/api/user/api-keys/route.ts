@@ -19,6 +19,7 @@ import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import prisma from '@/lib/prisma';
 import { type Prisma } from '@prisma/client';
 import { randomBytes } from 'crypto';
+import { logger } from '@/lib/logger';
 
 const CreateKeySchema = z.object({
   name: z.string().min(1).max(64).default('New API Key'),
@@ -71,7 +72,7 @@ export async function GET(request: NextRequest) {
       })),
     });
   } catch (error) {
-    console.error('[User API Keys] GET error:', error);
+    logger.error('[User API Keys] GET error:', error);
     return NextResponse.json({ error: 'Failed to fetch API keys' }, { status: 500 });
   }
 }
@@ -138,7 +139,7 @@ export async function POST(request: NextRequest) {
       lastUsed: 'Never',
     });
   } catch (error) {
-    console.error('[User API Keys] POST error:', error);
+    logger.error('[User API Keys] POST error:', error);
     return NextResponse.json({ error: 'Failed to create API key' }, { status: 500 });
   }
 }
@@ -180,7 +181,7 @@ export async function DELETE(request: NextRequest) {
 
     return NextResponse.json({ success: true, message: 'API key revoked' });
   } catch (error) {
-    console.error('[User API Keys] DELETE error:', error);
+    logger.error('[User API Keys] DELETE error:', error);
     return NextResponse.json({ error: 'Failed to delete API key' }, { status: 500 });
   }
 }

@@ -14,6 +14,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
+import { logger } from '@/lib/logger';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -90,7 +91,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       },
     });
   } catch (error) {
-    console.error('[unite-hub] Failed to gather health stats:', error);
+    logger.error('[unite-hub] Failed to gather health stats:', error);
     return NextResponse.json(
       { error: 'Failed to retrieve health stats' },
       { status: 500 }

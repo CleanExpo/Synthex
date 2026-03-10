@@ -8,6 +8,7 @@ import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
 import { emailService } from '@/lib/email/email-service';
 import { authStrict } from '@/lib/middleware/api-rate-limit';
+import { logger } from '@/lib/logger';
 
 const requestResetSchema = z.object({
   email: z.string().email(),
@@ -49,7 +50,7 @@ export async function POST(request: NextRequest) {
       message: 'If an account exists with this email, you will receive a password reset link'
     });
   } catch (error: unknown) {
-    console.error('Password reset request error:', error);
+    logger.error('Password reset request error:', error);
     return NextResponse.json(
       { error: 'Failed to process password reset request' },
       { status: 500 }

@@ -16,6 +16,7 @@ import * as Sentry from '@sentry/nextjs';
 import prisma from '@/lib/prisma';
 import { generateWeeklyDigest } from '@/lib/ai/project-manager';
 import emailQueue from '@/lib/email/queue';
+import { logger } from '@/lib/logger';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -99,11 +100,11 @@ export async function GET(request: NextRequest) {
             emailsSent++;
           }
         } catch (emailErr) {
-          console.error(`[Weekly Digest] Email failed for user ${user.userId}:`, emailErr);
+          logger.error(`[Weekly Digest] Email failed for user ${user.userId}:`, emailErr);
           // Email failure does not crash the batch — digest was already saved
         }
       } catch (err) {
-        console.error(`[Weekly Digest] Failed for user ${user.userId}:`, err);
+        logger.error(`[Weekly Digest] Failed for user ${user.userId}:`, err);
         errors++;
       }
     }
@@ -119,7 +120,7 @@ export async function GET(request: NextRequest) {
       durationMs: duration,
     });
   } catch (error) {
-    console.error('[Weekly Digest Cron] Fatal error:', error);
+    logger.error('[Weekly Digest Cron] Fatal error:', error);
     return NextResponse.json(
       { error: 'Weekly digest generation failed' },
       { status: 500 }

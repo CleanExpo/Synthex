@@ -73,6 +73,7 @@ const updatePostSchema = z.object({
 
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { getEffectiveOrganizationId } from '@/lib/multi-business/business-scope';
+import { logger } from '@/lib/logger';
 
 // Get user's campaign IDs for authorization
 async function getUserCampaignIds(userId: string): Promise<string[]> {
@@ -191,7 +192,7 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('Error fetching scheduled posts:', error);
+    logger.error('Error fetching scheduled posts:', error);
     return NextResponse.json(
       { error: 'Internal Server Error', message: 'Failed to fetch posts' },
       { status: 500 }
@@ -289,7 +290,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ data: post }, { status: 201 });
   } catch (error) {
-    console.error('Error scheduling post:', error);
+    logger.error('Error scheduling post:', error);
     return NextResponse.json(
       { error: 'Internal Server Error', message: 'Failed to schedule post' },
       { status: 500 }
@@ -372,7 +373,7 @@ export async function PATCH(request: NextRequest) {
 
     return NextResponse.json({ data: post });
   } catch (error) {
-    console.error('Error updating post:', error);
+    logger.error('Error updating post:', error);
     return NextResponse.json(
       { error: 'Internal Server Error', message: 'Failed to update post' },
       { status: 500 }
@@ -425,7 +426,7 @@ export async function DELETE(request: NextRequest) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Error deleting post:', error);
+    logger.error('Error deleting post:', error);
     return NextResponse.json(
       { error: 'Internal Server Error', message: 'Failed to delete post' },
       { status: 500 }

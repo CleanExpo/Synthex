@@ -14,6 +14,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { generateProactiveSuggestions } from '@/lib/ai/project-manager';
+import { logger } from '@/lib/logger';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -127,7 +128,7 @@ async function detectAnomalies(): Promise<DetectedAnomaly[]> {
         }
       }
     } catch (err) {
-      console.error(`[Proactive Insights] Error checking user ${user.userId}:`, err);
+      logger.error(`[Proactive Insights] Error checking user ${user.userId}:`, err);
     }
   }
 
@@ -186,7 +187,7 @@ export async function GET(request: NextRequest) {
 
         suggestionsGenerated += suggestions.length;
       } catch (err) {
-        console.error(`[Proactive Insights] Failed for user ${userId}:`, err);
+        logger.error(`[Proactive Insights] Failed for user ${userId}:`, err);
       }
     }
 
@@ -201,7 +202,7 @@ export async function GET(request: NextRequest) {
       durationMs: duration,
     });
   } catch (error) {
-    console.error('[Proactive Insights Cron] Fatal error:', error);
+    logger.error('[Proactive Insights Cron] Fatal error:', error);
     return NextResponse.json(
       { error: 'Proactive insights generation failed' },
       { status: 500 }

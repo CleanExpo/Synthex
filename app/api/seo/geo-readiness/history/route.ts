@@ -18,6 +18,7 @@ import { NextRequest } from 'next/server';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
 import { subscriptionService } from '@/lib/stripe/subscription-service';
 import { getAnalysisHistory } from '@/lib/seo/geo-readiness-service';
+import { logger } from '@/lib/logger';
 
 /**
  * GET /api/seo/geo-readiness/history
@@ -82,7 +83,7 @@ export async function GET(request: NextRequest) {
         : undefined,
     });
   } catch (error) {
-    console.error('GEO Readiness History API error:', error);
+    logger.error('GEO Readiness History API error:', error);
     return APISecurityChecker.createSecureResponse(
       { error: 'Failed to fetch GEO analysis history' },
       500

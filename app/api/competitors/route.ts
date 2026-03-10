@@ -12,6 +12,7 @@ import { NextRequest } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
+import { logger } from '@/lib/logger';
 
 // Validation schemas
 const createCompetitorSchema = z.object({
@@ -110,7 +111,7 @@ export async function GET(request: NextRequest) {
     );
 
   } catch (error) {
-    console.error('Competitors fetch error:', error);
+    logger.error('Competitors fetch error:', error);
 
     if (error instanceof z.ZodError) {
       return APISecurityChecker.createSecureResponse(
@@ -198,7 +199,7 @@ export async function POST(request: NextRequest) {
     );
 
   } catch (error) {
-    console.error('Competitor creation error:', error);
+    logger.error('Competitor creation error:', error);
 
     if (error instanceof z.ZodError) {
       return APISecurityChecker.createSecureResponse(

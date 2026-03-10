@@ -17,6 +17,7 @@ import { z } from 'zod';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
 import { subscriptionService } from '@/lib/stripe/subscription-service';
 import prisma from '@/lib/prisma';
+import { logger } from '@/lib/logger';
 
 // Allowed subscription plans for chat assistant
 const ALLOWED_PLANS = ['professional', 'business', 'custom'];
@@ -108,7 +109,7 @@ export async function GET(
       messages,
     });
   } catch (error) {
-    console.error('AI Chat conversation GET error:', error);
+    logger.error('AI Chat conversation GET error:', error);
     return APISecurityChecker.createSecureResponse(
       { error: 'Failed to fetch conversation' },
       500
@@ -214,7 +215,7 @@ export async function PATCH(
       conversation: updated,
     });
   } catch (error) {
-    console.error('AI Chat conversation PATCH error:', error);
+    logger.error('AI Chat conversation PATCH error:', error);
     return APISecurityChecker.createSecureResponse(
       { error: 'Failed to update conversation' },
       500
@@ -292,7 +293,7 @@ export async function DELETE(
       success: true,
     });
   } catch (error) {
-    console.error('AI Chat conversation DELETE error:', error);
+    logger.error('AI Chat conversation DELETE error:', error);
     return APISecurityChecker.createSecureResponse(
       { error: 'Failed to delete conversation' },
       500

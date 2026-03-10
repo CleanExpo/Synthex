@@ -17,6 +17,7 @@ import { z } from 'zod';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
 import { subscriptionService } from '@/lib/stripe/subscription-service';
 import { validateSchema } from '@/lib/seo/schema-markup-service';
+import { logger } from '@/lib/logger';
 
 const validateRequestSchema = z.object({
   schema: z.record(z.unknown()),
@@ -90,7 +91,7 @@ export async function POST(request: NextRequest) {
       validation: result,
     });
   } catch (error) {
-    console.error('Schema Markup Validate API error:', error);
+    logger.error('Schema Markup Validate API error:', error);
     return APISecurityChecker.createSecureResponse(
       { error: 'Failed to validate schema' },
       500

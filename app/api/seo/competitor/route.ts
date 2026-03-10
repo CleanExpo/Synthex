@@ -7,6 +7,7 @@
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
+import { logger } from '@/lib/logger';
 
 const RequestSchema = z.object({
   brandName: z.string().min(1).max(100),
@@ -158,7 +159,7 @@ export async function POST(request: NextRequest) {
     const pages = generateCompetitorPages(validation.data.brandName, validation.data.competitorName);
     return APISecurityChecker.createSecureResponse({ success: true, pages });
   } catch (error) {
-    console.error('Competitor pages error:', error);
+    logger.error('Competitor pages error:', error);
     return APISecurityChecker.createSecureResponse(
       { error: 'Failed to generate competitor pages' },
       500

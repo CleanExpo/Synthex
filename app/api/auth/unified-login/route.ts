@@ -6,6 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { signInFlow } from '@/lib/auth/signInFlow';
+import { logger } from '@/lib/logger';
 
 const unifiedLoginSchema = z.object({
   method: z.enum(['email', 'oauth']),
@@ -73,7 +74,7 @@ export async function POST(request: NextRequest) {
       { status: 401 }
     );
   } catch (error) {
-    console.error('[UNIFIED-LOGIN] Error:', error);
+    logger.error('[UNIFIED-LOGIN] Error:', error);
     return NextResponse.json(
       { 
         success: false,
@@ -112,7 +113,7 @@ export async function GET(request: NextRequest) {
       { status: 401 }
     );
   } catch (error) {
-    console.error('[VALIDATE-SESSION] Error:', error);
+    logger.error('[VALIDATE-SESSION] Error:', error);
     return NextResponse.json(
       { authenticated: false },
       { status: 500 }

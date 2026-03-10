@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { getUserIdFromCookies } from '@/lib/auth/jwt-utils';
+import { logger } from '@/lib/logger';
 
 /** Monitoring event structure */
 interface MonitoringEvent {
@@ -44,7 +45,7 @@ export async function POST(request: NextRequest) {
     // Process errors
     if (body.errors && body.errors.length > 0) {
       for (const error of body.errors) {
-        console.error('[Error Tracked]:', {
+        logger.error('[Error Tracked]:', {
           message: error instanceof Error ? error.message : String(error),
           url: error.context?.url,
           userId: verifiedUserId,
@@ -84,7 +85,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Error processing monitoring events:', error);
+    logger.error('Error processing monitoring events:', error);
     return NextResponse.json(
       { error: 'Failed to process events' },
       { status: 500 }

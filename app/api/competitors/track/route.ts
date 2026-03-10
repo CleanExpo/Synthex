@@ -16,6 +16,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
 import { z } from 'zod';
+import { logger } from '@/lib/logger';
 
 // ============================================================================
 // TYPE DEFINITIONS
@@ -158,7 +159,7 @@ export async function GET(request: NextRequest) {
       hasMore: (competitors?.length || 0) === limit,
     });
   } catch (error) {
-    console.error('List competitors error:', error);
+    logger.error('List competitors error:', error);
     return NextResponse.json(
       { error: 'Failed to fetch competitors' },
       { status: 500 }
@@ -255,7 +256,7 @@ export async function POST(request: NextRequest) {
         },
       });
     } catch (snapshotError) {
-      console.error('Failed to create initial snapshot:', snapshotError);
+      logger.error('Failed to create initial snapshot:', snapshotError);
       // Don't block competitor creation response -- cron will create snapshots on next cycle
     }
 
@@ -264,7 +265,7 @@ export async function POST(request: NextRequest) {
       message: 'Competitor added successfully. Tracking will begin shortly.',
     }, { status: 201 });
   } catch (error) {
-    console.error('Add competitor error:', error);
+    logger.error('Add competitor error:', error);
     return NextResponse.json(
       { error: 'Failed to add competitor' },
       { status: 500 }

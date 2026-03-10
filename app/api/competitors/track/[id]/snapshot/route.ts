@@ -15,6 +15,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
+import { logger } from '@/lib/logger';
 
 /** Tracked competitor record */
 interface TrackedCompetitorRecord {
@@ -163,7 +164,7 @@ export async function GET(
       period: { days, startDate: startDate.toISOString() },
     });
   } catch (error) {
-    console.error('Get snapshots error:', error);
+    logger.error('Get snapshots error:', error);
     return NextResponse.json(
       { error: 'Failed to fetch snapshots' },
       { status: 500 }
@@ -256,7 +257,7 @@ export async function POST(
           snapshots.push(latestSnapshot);
         }
       } catch (snapshotError) {
-        console.error(`Error fetching snapshot for competitor ${id} on ${platform}:`, snapshotError);
+        logger.error(`Error fetching snapshot for competitor ${id} on ${platform}:`, snapshotError);
       }
     }
 
@@ -274,7 +275,7 @@ export async function POST(
         snapshots.push(allSnapshot);
       }
     } catch (allSnapshotError) {
-      console.error(`Error fetching aggregated snapshot for competitor ${id}:`, allSnapshotError);
+      logger.error(`Error fetching aggregated snapshot for competitor ${id}:`, allSnapshotError);
     }
 
     if (snapshots.length === 0) {
@@ -300,7 +301,7 @@ export async function POST(
       platformsTracked: platforms,
     });
   } catch (error) {
-    console.error('Create snapshot error:', error);
+    logger.error('Create snapshot error:', error);
     return NextResponse.json(
       { error: 'Failed to create snapshot' },
       { status: 500 }
@@ -393,7 +394,7 @@ async function checkForAlerts(userId: string, competitor: TrackedCompetitorRecor
 
     return alerts;
   } catch (error) {
-    console.error('Alert check error:', error);
+    logger.error('Alert check error:', error);
     return [];
   }
 }

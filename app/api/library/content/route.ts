@@ -21,6 +21,7 @@ import { z } from 'zod';
 import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
+import { logger } from '@/lib/logger';
 
 // Validation schema for creating content
 const createContentSchema = z.object({
@@ -125,7 +126,7 @@ export async function GET(request: NextRequest) {
       security.context
     );
   } catch (error) {
-    console.error('Error fetching content library:', error);
+    logger.error('Error fetching content library:', error);
     return APISecurityChecker.createSecureResponse(
       { error: 'Failed to fetch content library' },
       500,
@@ -191,7 +192,7 @@ export async function POST(request: NextRequest) {
 
     return APISecurityChecker.createSecureResponse(item, 201, security.context);
   } catch (error) {
-    console.error('Error creating content library item:', error);
+    logger.error('Error creating content library item:', error);
     return APISecurityChecker.createSecureResponse(
       { error: 'Failed to create content library item' },
       500,

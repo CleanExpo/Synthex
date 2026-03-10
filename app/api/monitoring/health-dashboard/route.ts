@@ -12,6 +12,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getSystemHealth, getQuickHealth, getRecentErrors, getErrorStats } from '@/lib/observability';
+import { logger } from '@/lib/logger';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -142,7 +143,7 @@ export async function GET(request: NextRequest) {
       }
     }
   } catch (error: unknown) {
-    console.error('Health dashboard error:', error);
+    logger.error('Health dashboard error:', error);
 
     return NextResponse.json(
       {

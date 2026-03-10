@@ -16,6 +16,7 @@ import { z } from 'zod';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
 import { subscriptionService } from '@/lib/stripe/subscription-service';
 import { validateRobotsTxt } from '@/lib/seo/technical-seo-service';
+import { logger } from '@/lib/logger';
 
 // Request validation schema
 const RobotsTxtRequestSchema = z.object({
@@ -90,7 +91,7 @@ export async function POST(request: NextRequest) {
       robotsTxt,
     });
   } catch (error) {
-    console.error('Robots.txt Validation API error:', error);
+    logger.error('Robots.txt Validation API error:', error);
     return APISecurityChecker.createSecureResponse(
       { error: 'Failed to validate robots.txt' },
       500

@@ -22,6 +22,7 @@ import { aiGeneration } from '@/lib/rate-limit';
 import { createClient } from '@supabase/supabase-js';
 import { verifyTokenSafe } from '@/lib/auth/jwt-utils';
 import { requireApiKey } from '@/lib/middleware/require-api-key';
+import { logger } from '@/lib/logger';
 
 // Backward compatibility: stub for enhancedRateLimiters
 const enhancedRateLimiters = {
@@ -183,7 +184,7 @@ Respond ONLY with valid JSON.`,
     });
     
   } catch (error) {
-    console.error('Generation error:', error);
+    logger.error('Generation error:', error);
     return NextResponse.json(
       { error: 'Failed to generate content' },
       { status: 500 }

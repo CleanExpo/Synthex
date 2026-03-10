@@ -14,6 +14,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import performanceMonitor from '@/lib/monitoring/performance-monitor';
+import { logger } from '@/lib/logger';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -108,7 +109,7 @@ export async function GET(request: NextRequest) {
         );
     }
   } catch (error: unknown) {
-    console.error('Performance monitoring error:', error);
+    logger.error('Performance monitoring error:', error);
 
     return NextResponse.json(
       {
@@ -184,7 +185,7 @@ export async function POST(request: NextRequest) {
         );
     }
   } catch (error: unknown) {
-    console.error('Performance config error:', error);
+    logger.error('Performance config error:', error);
 
     return NextResponse.json(
       {

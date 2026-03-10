@@ -17,6 +17,7 @@ import crypto from 'crypto';
 import { z } from 'zod';
 import { sanitizeErrorForResponse } from '@/lib/utils/error-utils';
 import { getUserIdFromCookies } from '@/lib/auth/jwt-utils';
+import { logger } from '@/lib/logger';
 
 // =============================================================================
 // Schemas
@@ -177,7 +178,7 @@ export async function GET(request: NextRequest) {
       data: shares.map(transformShareForResponse),
     });
   } catch (error: unknown) {
-    console.error('List shares error:', error);
+    logger.error('List shares error:', error);
     return NextResponse.json(
       { error: 'Internal Server Error', message: sanitizeErrorForResponse(error, 'Failed to list shares') },
       { status: 500 }
@@ -247,7 +248,7 @@ export async function POST(request: NextRequest) {
       data: transformShareForResponse(share),
     });
   } catch (error: unknown) {
-    console.error('Create share error:', error);
+    logger.error('Create share error:', error);
     return NextResponse.json(
       { error: 'Internal Server Error', message: sanitizeErrorForResponse(error, 'Failed to create share') },
       { status: 500 }

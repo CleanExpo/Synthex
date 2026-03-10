@@ -6,6 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { stripe } from '@/lib/stripe/config';
+import { logger } from '@/lib/logger';
 
 // Cache stats for 5 minutes to reduce database load
 let statsCache: Record<string, unknown> | null = null;
@@ -128,7 +129,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(stats);
 
   } catch (error) {
-    console.error('Stats API error:', error);
+    logger.error('Stats API error:', error);
 
     // Return fallback stats if database is not available
     return NextResponse.json({

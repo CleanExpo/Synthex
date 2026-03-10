@@ -19,6 +19,7 @@ import {
   createChildBusiness
 } from '@/lib/multi-business';
 import { z } from 'zod';
+import { logger } from '@/lib/logger';
 
 /**
  * GET /api/businesses
@@ -74,7 +75,7 @@ export async function GET(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('[GET /api/businesses] Error:', error);
+    logger.error('[GET /api/businesses] Error:', error);
     return NextResponse.json(
       {
         error: 'Internal Server Error',
@@ -161,7 +162,7 @@ export async function POST(request: NextRequest) {
     );
 
   } catch (error) {
-    console.error('[POST /api/businesses] Error:', error);
+    logger.error('[POST /api/businesses] Error:', error);
     return NextResponse.json(
       {
         error: 'Internal Server Error',

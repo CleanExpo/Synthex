@@ -20,6 +20,7 @@ import { retrievePKCEState } from '@/lib/auth/pkce';
 import { accountService } from '@/lib/auth/account-service';
 import { signInFlow } from '@/lib/auth/signInFlow';
 import prisma from '@/lib/prisma';
+import { logger } from '@/lib/logger';
 
 // GitHub OAuth configuration
 const GITHUB_CONFIG = {
@@ -66,7 +67,7 @@ export async function GET(request: NextRequest) {
 
     // Handle OAuth errors from GitHub
     if (error) {
-      console.error('[GitHub OAuth] Error from GitHub:', error, errorDescription);
+      logger.error('[GitHub OAuth] Error from GitHub:', error, errorDescription);
       return redirectWithError(effectiveBaseUrl, errorDescription || error);
     }
 
@@ -201,7 +202,7 @@ export async function GET(request: NextRequest) {
 
     return redirectWithSession(effectiveBaseUrl, session);
   } catch (error) {
-    console.error('[GitHub OAuth] Callback error:', error);
+    logger.error('[GitHub OAuth] Callback error:', error);
     return redirectWithError(
       effectiveBaseUrl,
       error instanceof Error ? error.message : 'Authentication failed'
@@ -240,14 +241,14 @@ async function exchangeCodeForTokens(
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('[GitHub OAuth] Token exchange failed:', errorText);
+      logger.error('[GitHub OAuth] Token exchange failed:', errorText);
       return null;
     }
 
     const data = await response.json();
 
     if (data.error) {
-      console.error('[GitHub OAuth] Token exchange error:', data.error, data.error_description);
+      logger.error('[GitHub OAuth] Token exchange error:', data.error, data.error_description);
       return null;
     }
 
@@ -257,7 +258,7 @@ async function exchangeCodeForTokens(
       scope: data.scope,
     };
   } catch (error) {
-    console.error('[GitHub OAuth] Token exchange error:', error);
+    logger.error('[GitHub OAuth] Token exchange error:', error);
     return null;
   }
 }
@@ -273,13 +274,13 @@ async function getGitHubUserInfo(accessToken: string): Promise<GitHubUserInfo | 
     });
 
     if (!response.ok) {
-      console.error('[GitHub OAuth] User info request failed:', response.status);
+      logger.error('[GitHub OAuth] User info request failed:', response.status);
       return null;
     }
 
     return await response.json();
   } catch (error) {
-    console.error('[GitHub OAuth] User info error:', error);
+    logger.error('[GitHub OAuth] User info error:', error);
     return null;
   }
 }
@@ -295,13 +296,13 @@ async function getGitHubEmails(accessToken: string): Promise<GitHubEmail[] | nul
     });
 
     if (!response.ok) {
-      console.error('[GitHub OAuth] Emails request failed:', response.status);
+      logger.error('[GitHub OAuth] Emails request failed:', response.status);
       return null;
     }
 
     return await response.json();
   } catch (error) {
-    console.error('[GitHub OAuth] Emails error:', error);
+    logger.error('[GitHub OAuth] Emails error:', error);
     return null;
   }
 }

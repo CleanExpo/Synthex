@@ -15,6 +15,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { getEffectiveOrganizationId } from '@/lib/multi-business';
 import prisma from '@/lib/prisma';
+import { logger } from '@/lib/logger';
 
 export async function GET(request: NextRequest) {
   try {
@@ -77,7 +78,7 @@ export async function GET(request: NextRequest) {
       })),
     });
   } catch (error) {
-    console.error('[Teams Members Search] Error:', error);
+    logger.error('[Teams Members Search] Error:', error);
     return NextResponse.json({ error: 'Member search failed' }, { status: 500 });
   }
 }

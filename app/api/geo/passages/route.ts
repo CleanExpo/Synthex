@@ -17,6 +17,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { getUserIdFromRequest } from '@/lib/auth/jwt-utils';
 import { extractCitablePassages } from '@/lib/geo/passage-extractor';
+import { logger } from '@/lib/logger';
 
 const passageSchema = z.object({
   contentText: z.string().min(50, 'Content must be at least 50 characters'),
@@ -54,7 +55,7 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('Passage extraction error:', error);
+    logger.error('Passage extraction error:', error);
     return NextResponse.json(
       { error: 'Internal Server Error', message: 'Failed to extract passages' },
       { status: 500 }

@@ -17,6 +17,7 @@ import {
   setActiveOrganization
 } from '@/lib/multi-business';
 import { z } from 'zod';
+import { logger } from '@/lib/logger';
 
 /**
  * PATCH /api/businesses/switch
@@ -143,7 +144,7 @@ export async function PATCH(request: NextRequest) {
     }
 
   } catch (error) {
-    console.error('[PATCH /api/businesses/switch] Error:', error);
+    logger.error('[PATCH /api/businesses/switch] Error:', error);
     return NextResponse.json(
       {
         error: 'Internal Server Error',

@@ -22,6 +22,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
+import { logger } from '@/lib/logger';
 
 const DiagramRequestSchema = z.object({
   prompt: z.string().min(1).max(2000),
@@ -83,7 +84,7 @@ export async function POST(request: NextRequest) {
     if (error instanceof Error && error.name === 'TimeoutError') {
       return NextResponse.json({ error: 'Diagram generation timed out' }, { status: 504 });
     }
-    console.error('[Generate Diagram] Error:', error);
+    logger.error('[Generate Diagram] Error:', error);
     return NextResponse.json({ error: 'Diagram generation failed' }, { status: 500 });
   }
 }

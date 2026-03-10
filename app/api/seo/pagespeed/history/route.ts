@@ -15,6 +15,7 @@ import { NextRequest } from 'next/server';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
 import { subscriptionService } from '@/lib/stripe/subscription-service';
 import { getPageSpeedHistory } from '@/lib/seo/pagespeed-service';
+import { logger } from '@/lib/logger';
 
 /**
  * GET /api/seo/pagespeed/history
@@ -71,7 +72,7 @@ export async function GET(request: NextRequest) {
         : undefined,
     });
   } catch (error) {
-    console.error('PageSpeed History API error:', error);
+    logger.error('PageSpeed History API error:', error);
     return APISecurityChecker.createSecureResponse(
       { error: 'Failed to fetch PageSpeed history' },
       500

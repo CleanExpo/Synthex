@@ -14,6 +14,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { getUserIdFromRequest } from '@/lib/auth/jwt-utils';
+import { logger } from '@/lib/logger';
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -79,7 +80,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       jsonLd: `<script type="application/ld+json">${JSON.stringify(personSchema, null, 2)}</script>`,
     });
   } catch (error) {
-    console.error('Author schema error:', error);
+    logger.error('Author schema error:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }

@@ -11,6 +11,7 @@ import { NextRequest } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
+import { logger } from '@/lib/logger';
 
 // Validate notification ID
 const paramsSchema = z.object({
@@ -103,7 +104,7 @@ export async function PATCH(
     );
 
   } catch (error) {
-    console.error('Mark notification read error:', error);
+    logger.error('Mark notification read error:', error);
 
     if (error instanceof z.ZodError) {
       return APISecurityChecker.createSecureResponse(

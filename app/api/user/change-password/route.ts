@@ -13,6 +13,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase-client';
 import { z } from 'zod';
 import { mutation } from '@/lib/middleware/api-rate-limit';
+import { logger } from '@/lib/logger';
 
 // Validation schema for password change
 const changePasswordSchema = z.object({
@@ -97,7 +98,7 @@ export async function POST(request: NextRequest) {
     });
 
     if (updateError) {
-      console.error('Password update error:', updateError);
+      logger.error('Password update error:', updateError);
       return NextResponse.json(
         { error: 'Failed to update password' },
         { status: 500 }
@@ -109,7 +110,7 @@ export async function POST(request: NextRequest) {
       message: 'Password changed successfully',
     });
   } catch (error) {
-    console.error('Change password error:', error);
+    logger.error('Change password error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

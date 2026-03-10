@@ -13,6 +13,7 @@
 import { NextRequest } from 'next/server';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
 import { getSchemaTemplates } from '@/lib/seo/schema-markup-service';
+import { logger } from '@/lib/logger';
 
 /**
  * GET /api/seo/schema-markup/templates
@@ -44,7 +45,7 @@ export async function GET(request: NextRequest) {
       categories,
     });
   } catch (error) {
-    console.error('Schema Markup Templates API error:', error);
+    logger.error('Schema Markup Templates API error:', error);
     return APISecurityChecker.createSecureResponse(
       { error: 'Failed to load schema templates' },
       500

@@ -14,6 +14,7 @@ import { NextRequest } from 'next/server';
 import { z } from 'zod';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
 import prisma from '@/lib/prisma';
+import { logger } from '@/lib/logger';
 
 const FeedbackSchema = z.object({
   messageId: z.string().min(1),
@@ -85,7 +86,7 @@ export async function POST(request: NextRequest) {
       message: 'Feedback recorded',
     });
   } catch (error) {
-    console.error('AI PM feedback POST error:', error);
+    logger.error('AI PM feedback POST error:', error);
     return APISecurityChecker.createSecureResponse(
       { error: 'Failed to save feedback' },
       500

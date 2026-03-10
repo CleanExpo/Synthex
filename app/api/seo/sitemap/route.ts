@@ -7,6 +7,7 @@
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
+import { logger } from '@/lib/logger';
 
 const RequestSchema = z.object({
   url: z.string().url('Invalid sitemap URL'),
@@ -159,7 +160,7 @@ export async function POST(request: NextRequest) {
     const analysis = await analyzeSitemap(validation.data.url);
     return APISecurityChecker.createSecureResponse({ success: true, analysis });
   } catch (error) {
-    console.error('Sitemap analysis error:', error);
+    logger.error('Sitemap analysis error:', error);
     return APISecurityChecker.createSecureResponse(
       { error: 'Failed to analyze sitemap' },
       500

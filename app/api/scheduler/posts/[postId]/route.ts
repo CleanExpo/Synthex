@@ -13,6 +13,7 @@ import { NextRequest } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
+import { logger } from '@/lib/logger';
 
 // Validation schemas
 const paramsSchema = z.object({
@@ -102,7 +103,7 @@ export async function GET(
     );
 
   } catch (error) {
-    console.error('Get post error:', error);
+    logger.error('Get post error:', error);
 
     if (error instanceof z.ZodError) {
       return APISecurityChecker.createSecureResponse(
@@ -216,7 +217,7 @@ export async function PATCH(
     );
 
   } catch (error) {
-    console.error('Update post error:', error);
+    logger.error('Update post error:', error);
 
     if (error instanceof z.ZodError) {
       return APISecurityChecker.createSecureResponse(
@@ -300,7 +301,7 @@ export async function DELETE(
     );
 
   } catch (error) {
-    console.error('Delete post error:', error);
+    logger.error('Delete post error:', error);
 
     if (error instanceof z.ZodError) {
       return APISecurityChecker.createSecureResponse(

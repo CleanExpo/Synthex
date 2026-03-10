@@ -9,6 +9,7 @@
 import { NextRequest } from 'next/server';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
 import prisma from '@/lib/prisma';
+import { logger } from '@/lib/logger';
 
 export const dynamic = 'force-dynamic';
 
@@ -76,7 +77,7 @@ export async function GET(
       },
     });
   } catch (error) {
-    console.error('Video detail API error:', error);
+    logger.error('Video detail API error:', error);
     return APISecurityChecker.createSecureResponse(
       { error: 'Failed to fetch video details' },
       500

@@ -16,6 +16,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { generateState, storePKCEState } from '@/lib/auth/pkce';
+import { logger } from '@/lib/logger';
 
 const GITHUB_CONFIG = {
   authUrl: 'https://github.com/login/oauth/authorize',
@@ -68,7 +69,7 @@ export async function GET(request: NextRequest) {
       message: 'Redirecting to GitHub to link your account...',
     });
   } catch (error) {
-    console.error('[Link GitHub] Error:', error);
+    logger.error('[Link GitHub] Error:', error);
     return NextResponse.json(
       { error: 'Failed to initiate GitHub account linking' },
       { status: 500 }

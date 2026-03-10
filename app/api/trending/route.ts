@@ -12,6 +12,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { logger } from '@/lib/logger';
 
 // ============================================================================
 // TYPES
@@ -93,7 +94,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ data: sortedTopics });
   } catch (error) {
-    console.error('Trending topics error:', error);
+    logger.error('Trending topics error:', error);
     return NextResponse.json(
       { error: 'Failed to fetch trending topics', message: 'An error occurred while analyzing trending data.' },
       { status: 500 }

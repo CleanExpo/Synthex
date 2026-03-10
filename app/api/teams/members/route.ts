@@ -13,6 +13,7 @@ import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
 import { email as emailService } from '@/lib/email/index';
+import { logger } from '@/lib/logger';
 
 // Validation schemas
 const addMemberSchema = z.object({
@@ -154,7 +155,7 @@ export async function GET(request: NextRequest) {
     );
 
   } catch (error) {
-    console.error('Team members fetch error:', error);
+    logger.error('Team members fetch error:', error);
 
     if (error instanceof z.ZodError) {
       return APISecurityChecker.createSecureResponse(
@@ -290,7 +291,7 @@ export async function POST(request: NextRequest) {
       html: `<p>Hi there!</p><p>You've been invited to join <strong>${orgName}</strong> on SYNTHEX as a <strong>${data.role}</strong>.</p>${data.message ? `<p>"${data.message}"</p>` : ''}<p><a href="${acceptUrl}">Accept Invitation</a></p>`,
       text: `You've been invited to join ${orgName} on SYNTHEX as a ${data.role}. Accept here: ${acceptUrl}`,
       type: 'transactional',
-    }).catch((err: unknown) => console.error('[teams/members] Failed to send invite email:', err));
+    }).catch((err: unknown) => logger.error('[teams/members] Failed to send invite email:', err));
 
     return APISecurityChecker.createSecureResponse(
       {
@@ -309,7 +310,7 @@ export async function POST(request: NextRequest) {
     );
 
   } catch (error) {
-    console.error('Team member invitation error:', error);
+    logger.error('Team member invitation error:', error);
 
     if (error instanceof z.ZodError) {
       return APISecurityChecker.createSecureResponse(

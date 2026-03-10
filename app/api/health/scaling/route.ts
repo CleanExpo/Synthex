@@ -6,6 +6,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { logger } from '@/lib/logger';
 import {
   getAutoScalingConfig,
   getMonitoringThresholds,
@@ -239,7 +240,7 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error: unknown) {
-    console.error('Scaling health check error:', error);
+    logger.error('Scaling health check error:', error);
     metricsStore.errorCount++;
 
     return NextResponse.json(

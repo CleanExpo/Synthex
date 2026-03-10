@@ -14,6 +14,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { modelManager, getLatestModelForProvider } from '@/lib/ai/model-manager';
 import { getAllLatestModels } from '@/lib/ai/model-registry';
 import { getAuthUser } from '@/lib/supabase-server';
+import { logger } from '@/lib/logger';
 
 /**
  * GET - Return current model registry status
@@ -73,7 +74,7 @@ export async function GET(request: NextRequest) {
       { status: 200 }
     );
   } catch (error) {
-    console.error('[Model API] GET Error:', error);
+    logger.error('[Model API] GET Error:', error);
     return NextResponse.json(
       { error: 'Failed to fetch model registry' },
       { status: 500 }
@@ -119,7 +120,7 @@ export async function POST(request: NextRequest) {
       { status: 200 }
     );
   } catch (error) {
-    console.error('[Model API] POST Error:', error);
+    logger.error('[Model API] POST Error:', error);
     return NextResponse.json(
       { error: 'Failed to refresh models' },
       { status: 500 }

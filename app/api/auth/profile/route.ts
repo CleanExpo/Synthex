@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { getUserIdFromCookies } from '@/lib/auth/jwt-utils';
+import { logger } from '@/lib/logger';
 
 type ProfileBody = {
   name?: string;
@@ -50,7 +51,7 @@ export async function GET(req: NextRequest) {
       persisted: true,
     });
   } catch (err) {
-    console.error('GET /api/auth/profile error:', err);
+    logger.error('GET /api/auth/profile error:', err);
     return NextResponse.json(
       { success: false, error: 'Failed to fetch profile' },
       { status: 500 }
@@ -112,7 +113,7 @@ export async function PUT(req: NextRequest) {
       persisted: true,
     });
   } catch (err) {
-    console.error('PUT /api/auth/profile error:', err);
+    logger.error('PUT /api/auth/profile error:', err);
     return NextResponse.json(
       { success: false, error: 'Failed to update profile' },
       { status: 500 }

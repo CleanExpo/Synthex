@@ -32,6 +32,7 @@ import {
   encryptField,
 } from '@/lib/security/field-encryption';
 import { pushUniteHubEvent } from '@/lib/unite-hub-connector';
+import { logger } from '@/lib/logger';
 
 // ---------------------------------------------------------------------------
 // Vercel edge config
@@ -150,7 +151,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       // -- Guard: unsupported platform ---------------------------------------
       if (!isPlatformSupported(platform)) {
         const errorMessage = `Platform '${platform}' is not supported`;
-        console.error(`[publish-scheduled] Post ${post.id}: ${errorMessage}`);
+        logger.error(`[publish-scheduled] Post ${post.id}: ${errorMessage}`);
 
         await markPostFailed(post.id, errorMessage, {
           history: [
@@ -168,7 +169,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       // -- Guard: empty content ---------------------------------------------
       if (!post.content?.trim()) {
         const errorMessage = 'Post content is empty';
-        console.error(`[publish-scheduled] Post ${post.id}: ${errorMessage}`);
+        logger.error(`[publish-scheduled] Post ${post.id}: ${errorMessage}`);
 
         await markPostFailed(post.id, errorMessage, {
           history: [
@@ -227,7 +228,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
         const errorMessage = organizationId
           ? `No connected ${platform} account for organization ${organizationId}`
           : `No connected ${platform} account`;
-        console.error(`[publish-scheduled] Post ${post.id}: ${errorMessage} (userId=${userId}, orgId=${organizationId ?? 'none'})`);
+        logger.error(`[publish-scheduled] Post ${post.id}: ${errorMessage} (userId=${userId}, orgId=${organizationId ?? 'none'})`);
 
         // No connection is not retryable — fail permanently
         await markPostFailed(post.id, errorMessage, {
@@ -251,7 +252,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 
       if (!accessToken) {
         const errorMessage = 'Failed to decrypt access token for platform connection';
-        console.error(`[publish-scheduled] Post ${post.id}: ${errorMessage}`);
+        logger.error(`[publish-scheduled] Post ${post.id}: ${errorMessage}`);
 
         await markPostFailed(post.id, errorMessage, {
           history: [
@@ -294,7 +295,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
             },
           });
         } catch (persistError) {
-          console.error(
+          logger.error(
             `[publish-scheduled] Failed to persist refreshed tokens for connection ${connectionId}:`,
             persistError
           );
@@ -311,7 +312,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 
       if (!service) {
         const errorMessage = `Could not instantiate service for platform '${platform}'`;
-        console.error(`[publish-scheduled] Post ${post.id}: ${errorMessage}`);
+        logger.error(`[publish-scheduled] Post ${post.id}: ${errorMessage}`);
 
         await markPostFailed(post.id, errorMessage, {
           history: [
@@ -375,7 +376,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
             });
           } catch (platformPostError) {
             // Non-fatal — the post was published successfully; this is supplementary data
-            console.error(
+            logger.error(
               `[publish-scheduled] Failed to create PlatformPost record for post ${post.id}:`,
               platformPostError
             );
@@ -397,7 +398,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
         results.push({ id: post.id, platform, status: 'published' });
       } else {
         const errorMessage = postResult.error ?? 'Platform returned failure without error detail';
-        console.error(
+        logger.error(
           `[publish-scheduled] Post ${post.id} publish failed: ${errorMessage}`
         );
 
@@ -429,7 +430,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
             },
           });
 
-          console.log(
+          logger.info(
             `[publish-scheduled] Post ${post.id}: retry ${retryCount + 1}/${MAX_RETRIES} scheduled for ${retryAt.toISOString()} (${errorMessage})`
           );
 
@@ -468,7 +469,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : String(err);
-      console.error(`[publish-scheduled] Unexpected error for post ${post.id}:`, err);
+      logger.error(`[publish-scheduled] Unexpected error for post ${post.id}:`, err);
 
       const metadata = (post.metadata as Record<string, unknown>) || {};
       const existingHistory = (metadata.history as Record<string, unknown>[]) || [];
@@ -514,7 +515,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
           });
           continue;
         } catch (retryUpdateError) {
-          console.error(
+          logger.error(
             `[publish-scheduled] Failed to schedule retry for post ${post.id}:`,
             retryUpdateError
           );
@@ -541,7 +542,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
           { postId: post.id, platform, error: errorMessage, retryCount }
         );
       } catch (updateError) {
-        console.error(
+        logger.error(
           `[publish-scheduled] Also failed to mark post ${post.id} as failed:`,
           updateError
         );
@@ -638,7 +639,7 @@ async function createNotification(
       },
     });
   } catch (notifError) {
-    console.error(
+    logger.error(
       `[publish-scheduled] Failed to create notification for user ${userId}:`,
       notifError
     );

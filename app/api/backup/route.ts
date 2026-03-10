@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { sanitizeErrorForResponse } from '@/lib/utils/error-utils';
+import { logger } from '@/lib/logger';
 
 // Lazy-initialize Supabase admin client (avoids build-time errors)
 let supabaseAdmin: SupabaseClient | null = null;
@@ -120,7 +121,7 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Backup failed:', error);
+    logger.error('Backup failed:', error);
     return NextResponse.json(
       { error: 'Backup failed', message: sanitizeErrorForResponse(error, 'Backup operation failed') },
       { status: 500 }
@@ -168,7 +169,7 @@ export async function GET(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Failed to fetch backup history:', error);
+    logger.error('Failed to fetch backup history:', error);
     return NextResponse.json(
       { error: 'Failed to fetch backup history' },
       { status: 500 }

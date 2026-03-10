@@ -20,6 +20,7 @@ import { NextRequest } from 'next/server';
 import { z } from 'zod';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
 import { subscriptionService, PLAN_LIMITS } from '@/lib/stripe/subscription-service';
+import { logger } from '@/lib/logger';
 
 // Available workflow names (mirrors SYNTHEX_WORKFLOWS keys)
 const WORKFLOW_NAMES = [
@@ -127,7 +128,7 @@ export async function GET(request: NextRequest) {
       })),
     });
   } catch (error) {
-    console.error('Video API GET error:', error);
+    logger.error('Video API GET error:', error);
     return APISecurityChecker.createSecureResponse(
       { error: 'Failed to check video system status' },
       500
@@ -235,7 +236,7 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('Video production API error:', error);
+    logger.error('Video production API error:', error);
     return APISecurityChecker.createSecureResponse(
       { error: 'Failed to start video production' },
       500

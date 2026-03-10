@@ -23,6 +23,7 @@
 
 import { NextResponse } from 'next/server';
 import { prisma, checkDatabaseHealth } from '@/lib/prisma';
+import { logger } from '@/lib/logger';
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic';
@@ -261,7 +262,7 @@ export async function GET() {
       },
     });
   } catch (error: unknown) {
-    console.error('Readiness check error:', error);
+    logger.error('Readiness check error:', error);
 
     return NextResponse.json(
       {

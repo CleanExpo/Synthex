@@ -13,6 +13,7 @@ import { NextRequest } from 'next/server';
 import { z } from 'zod';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
 import { getIndexingStatus } from '@/lib/google/search-console';
+import { logger } from '@/lib/logger';
 
 // Request validation schema
 const IndexingStatusRequestSchema = z.object({
@@ -67,7 +68,7 @@ export async function POST(request: NextRequest) {
       inspection,
     });
   } catch (error) {
-    console.error('Indexing Status API error:', error);
+    logger.error('Indexing Status API error:', error);
     const message =
       error instanceof Error ? error.message : 'Failed to inspect URL indexing status';
     return APISecurityChecker.createSecureResponse(

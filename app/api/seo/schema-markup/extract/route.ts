@@ -18,6 +18,7 @@ import { z } from 'zod';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
 import { subscriptionService } from '@/lib/stripe/subscription-service';
 import { extractSchemaFromUrl } from '@/lib/seo/schema-markup-service';
+import { logger } from '@/lib/logger';
 
 const extractRequestSchema = z.object({
   url: z.string().url('A valid URL is required'),
@@ -91,7 +92,7 @@ export async function POST(request: NextRequest) {
       extraction,
     });
   } catch (error) {
-    console.error('Schema Markup Extract API error:', error);
+    logger.error('Schema Markup Extract API error:', error);
     return APISecurityChecker.createSecureResponse(
       { error: 'Failed to extract schema from URL' },
       500

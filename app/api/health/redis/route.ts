@@ -13,6 +13,7 @@ import {
   getImplementationType 
 } from '@/lib/redis-unified';
 import { withOptionalSession } from '@/src/middleware/session';
+import { logger } from '@/lib/logger';
 
 // Force dynamic rendering - prevent static generation
 export const dynamic = 'force-dynamic';
@@ -84,7 +85,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json(responseData, { status: statusCode });
       
     } catch (error: unknown) {
-      console.error('Redis health check error:', error);
+      logger.error('Redis health check error:', error);
       
       return NextResponse.json(
         {
@@ -157,7 +158,7 @@ export async function POST(request: NextRequest) {
           results.tests.write.times.push(Date.now() - start);
         } catch (error) {
           results.tests.write.errors++;
-          console.error('Write test error:', error);
+          logger.error('Write test error:', error);
         }
       }
       
@@ -169,7 +170,7 @@ export async function POST(request: NextRequest) {
           results.tests.read.times.push(Date.now() - start);
         } catch (error) {
           results.tests.read.errors++;
-          console.error('Read test error:', error);
+          logger.error('Read test error:', error);
         }
       }
       
@@ -181,7 +182,7 @@ export async function POST(request: NextRequest) {
           results.tests.delete.times.push(Date.now() - start);
         } catch (error) {
           results.tests.delete.errors++;
-          console.error('Delete test error:', error);
+          logger.error('Delete test error:', error);
         }
       }
       
@@ -239,7 +240,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(results);
       
     } catch (error: unknown) {
-      console.error('Redis performance test error:', error);
+      logger.error('Redis performance test error:', error);
       
       return NextResponse.json(
         {
@@ -311,7 +312,7 @@ export async function DELETE(request: NextRequest) {
       });
       
     } catch (error: unknown) {
-      console.error('Redis cache clear error:', error);
+      logger.error('Redis cache clear error:', error);
       
       return NextResponse.json(
         {

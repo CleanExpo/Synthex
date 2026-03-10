@@ -16,6 +16,7 @@ import { z } from 'zod';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
 import { subscriptionService } from '@/lib/stripe/subscription-service';
 import { prisma } from '@/lib/prisma';
+import { logger } from '@/lib/logger';
 
 // Request validation schemas
 const createTargetSchema = z.object({
@@ -122,7 +123,7 @@ export async function POST(request: NextRequest) {
       201
     );
   } catch (error) {
-    console.error('Create scheduled audit target error:', error);
+    logger.error('Create scheduled audit target error:', error);
     return APISecurityChecker.createSecureResponse(
       { error: 'Failed to create scheduled audit target' },
       500
@@ -207,7 +208,7 @@ export async function GET(request: NextRequest) {
       total: targets.length,
     });
   } catch (error) {
-    console.error('List scheduled audit targets error:', error);
+    logger.error('List scheduled audit targets error:', error);
     return APISecurityChecker.createSecureResponse(
       { error: 'Failed to fetch scheduled audit targets' },
       500

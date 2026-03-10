@@ -16,6 +16,7 @@ import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { isMultiBusinessOwner } from '@/lib/multi-business';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
+import { logger } from '@/lib/logger';
 
 /**
  * PATCH /api/businesses/[id]
@@ -145,7 +146,7 @@ export async function PATCH(
     });
 
   } catch (error) {
-    console.error('[PATCH /api/businesses/[id]] Error:', error);
+    logger.error('[PATCH /api/businesses/[id]] Error:', error);
     return NextResponse.json(
       {
         error: 'Internal Server Error',
@@ -242,7 +243,7 @@ export async function DELETE(
     return NextResponse.json({ success: true });
 
   } catch (error) {
-    console.error('[DELETE /api/businesses/[id]] Error:', error);
+    logger.error('[DELETE /api/businesses/[id]] Error:', error);
     return NextResponse.json(
       {
         error: 'Internal Server Error',

@@ -14,6 +14,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
 import { prisma } from '@/lib/prisma';
+import { logger } from '@/lib/logger';
 
 // Type for route params
 interface RouteParams {
@@ -89,7 +90,7 @@ export async function POST(
       security.context
     );
   } catch (error) {
-    console.error('Competitor analysis error:', error);
+    logger.error('Competitor analysis error:', error);
     return APISecurityChecker.createSecureResponse(
       { error: 'Failed to queue competitor analysis' },
       500,
@@ -163,7 +164,7 @@ export async function GET(
       security.context
     );
   } catch (error) {
-    console.error('Get competitor analysis error:', error);
+    logger.error('Get competitor analysis error:', error);
     return APISecurityChecker.createSecureResponse(
       { error: 'Failed to get competitor analysis' },
       500,

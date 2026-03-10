@@ -6,6 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getUserIdFromRequestOrCookies, verifyTokenSafe, unauthorizedResponse } from '@/lib/auth/jwt-utils';
 import { prisma } from '@/lib/prisma';
+import { logger } from '@/lib/logger';
 
 export async function POST(request: NextRequest) {
   try {
@@ -57,7 +58,7 @@ export async function POST(request: NextRequest) {
     return res;
 
   } catch (error) {
-    console.error('Logout error:', error);
+    logger.error('Logout error:', error);
     return NextResponse.json(
       { error: 'Logout failed. Please try again.' },
       { status: 500 }
@@ -111,7 +112,7 @@ export async function DELETE(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Logout all devices error:', error);
+    logger.error('Logout all devices error:', error);
     return NextResponse.json(
       { error: 'Failed to logout from all devices' },
       { status: 500 }

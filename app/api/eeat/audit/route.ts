@@ -27,6 +27,7 @@ import { getUserIdFromRequest } from '@/lib/auth/jwt-utils';
 import { scoreEEAT } from '@/lib/eeat/eeat-scorer';
 import { analyzeGEO } from '@/lib/geo/geo-analyzer';
 import type { ContentType } from '@/lib/eeat/types';
+import { logger } from '@/lib/logger';
 
 const auditSchema = z.object({
   content: z.string().min(100, 'Content must be at least 100 characters'),
@@ -120,7 +121,7 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('Full audit error:', error);
+    logger.error('Full audit error:', error);
     return NextResponse.json(
       { error: 'Internal Server Error', message: 'Failed to run audit' },
       { status: 500 }

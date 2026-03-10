@@ -20,6 +20,7 @@ import { z } from 'zod';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
 import { subscriptionService } from '@/lib/stripe/subscription-service';
 import prisma from '@/lib/prisma';
+import { logger } from '@/lib/logger';
 import {
   generatePMResponse,
   extractStructuredData,
@@ -194,7 +195,7 @@ export async function POST(
 
           controller.close();
         } catch (error) {
-          console.error('AI PM streaming error:', error);
+          logger.error('AI PM streaming error:', error);
           controller.enqueue(
             encoder.encode(
               `event: error\ndata: ${JSON.stringify({ error: 'Stream interrupted' })}\n\n`
@@ -214,7 +215,7 @@ export async function POST(
       },
     });
   } catch (error) {
-    console.error('AI PM message POST error:', error);
+    logger.error('AI PM message POST error:', error);
     return APISecurityChecker.createSecureResponse(
       { error: 'Failed to process message' },
       500

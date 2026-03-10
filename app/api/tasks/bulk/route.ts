@@ -42,6 +42,7 @@ const reorderSchema = z.object({
 // =============================================================================
 
 import { getUserIdFromRequest } from '@/lib/auth/jwt-utils';
+import { logger } from '@/lib/logger';
 
 // =============================================================================
 // PATCH - Bulk Update Tasks
@@ -142,7 +143,7 @@ export async function PATCH(request: NextRequest) {
 
     return NextResponse.json({ success: true, updated: result.count });
   } catch (error) {
-    console.error('Error bulk updating tasks:', error);
+    logger.error('Error bulk updating tasks:', error);
     return NextResponse.json(
       { error: 'Internal Server Error', message: 'Failed to bulk update tasks' },
       { status: 500 }
@@ -196,7 +197,7 @@ export async function DELETE(request: NextRequest) {
 
     return NextResponse.json({ success: true, deleted: result.count });
   } catch (error) {
-    console.error('Error bulk deleting tasks:', error);
+    logger.error('Error bulk deleting tasks:', error);
     return NextResponse.json(
       { error: 'Internal Server Error', message: 'Failed to bulk delete tasks' },
       { status: 500 }

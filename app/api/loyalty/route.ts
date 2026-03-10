@@ -23,6 +23,7 @@
 import { NextRequest } from 'next/server';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
 import prisma from '@/lib/prisma';
+import { logger } from '@/lib/logger';
 
 const TIER_THRESHOLDS = {
   bronze: 0,
@@ -130,7 +131,7 @@ export async function GET(request: NextRequest) {
       })),
     });
   } catch (error) {
-    console.error('Loyalty GET error:', error);
+    logger.error('Loyalty GET error:', error);
     return APISecurityChecker.createSecureResponse(
       { error: 'Failed to fetch loyalty data' },
       500

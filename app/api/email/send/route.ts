@@ -9,6 +9,7 @@ import { emailService } from '@/lib/email-service';
 import { createClient } from '@supabase/supabase-js';
 import { sanitizeErrorForResponse } from '@/lib/utils/error-utils';
 import { getUserIdFromCookies } from '@/lib/auth/jwt-utils';
+import { logger } from '@/lib/logger';
 
 const sendEmailSchema = z.object({
   to: z.string().email(),
@@ -104,7 +105,7 @@ export async function POST(request: NextRequest) {
         metadata: { template, variables }
       });
     } catch (err) {
-      console.error('Failed to log email:', err);
+      logger.error('Failed to log email:', err);
     }
 
     if (success) {
@@ -117,7 +118,7 @@ export async function POST(request: NextRequest) {
     }
 
   } catch (error) {
-    console.error('Email send error:', error);
+    logger.error('Email send error:', error);
     return NextResponse.json(
       { error: 'Failed to send email', message: sanitizeErrorForResponse(error, 'Email delivery failed') },
       { status: 500 }

@@ -16,6 +16,7 @@ import prisma from '@/lib/prisma';
 import { z } from 'zod';
 import { sanitizeErrorForResponse } from '@/lib/utils/error-utils';
 import { getUserIdFromCookies } from '@/lib/auth/jwt-utils';
+import { logger } from '@/lib/logger';
 
 // =============================================================================
 // Schemas
@@ -145,7 +146,7 @@ export async function GET(request: NextRequest) {
       data: comments.map(transformCommentForResponse),
     });
   } catch (error: unknown) {
-    console.error('List comments error:', error);
+    logger.error('List comments error:', error);
     return NextResponse.json(
       { error: 'Internal Server Error', message: sanitizeErrorForResponse(error, 'Failed to list comments') },
       { status: 500 }
@@ -217,7 +218,7 @@ export async function POST(request: NextRequest) {
       data: transformCommentForResponse(comment),
     });
   } catch (error: unknown) {
-    console.error('Create comment error:', error);
+    logger.error('Create comment error:', error);
     return NextResponse.json(
       { error: 'Internal Server Error', message: sanitizeErrorForResponse(error, 'Failed to create comment') },
       { status: 500 }

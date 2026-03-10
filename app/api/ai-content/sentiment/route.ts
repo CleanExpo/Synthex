@@ -21,6 +21,7 @@ import { aiGeneration } from '@/lib/middleware/api-rate-limit';
 import { resolveAIProvider, hasAIAccess } from '@/lib/ai/api-credential-injector';
 import { requireApiKey } from '@/lib/middleware/require-api-key';
 import type { AIProvider } from '@/lib/ai/providers';
+import { logger } from '@/lib/logger';
 
 // ============================================================================
 // VALIDATION SCHEMAS
@@ -112,7 +113,7 @@ Return ONLY valid JSON, no other text.`,
 
     throw new Error('Failed to parse AI response');
   } catch (error) {
-    console.error('AI sentiment analysis failed, using fallback:', error);
+    logger.error('AI sentiment analysis failed, using fallback:', error);
     return analyzeWithRules(text);
   }
 }
@@ -418,7 +419,7 @@ export async function POST(request: NextRequest) {
       analyzedAt: new Date().toISOString(),
     });
   } catch (error) {
-    console.error('Sentiment analysis error:', error);
+    logger.error('Sentiment analysis error:', error);
     return NextResponse.json(
       { error: 'Failed to analyze sentiment' },
       { status: 500 }
@@ -497,7 +498,7 @@ export async function GET(request: NextRequest) {
       hasMore: (analyses?.length || 0) === limit,
     });
   } catch (error) {
-    console.error('Get analyses error:', error);
+    logger.error('Get analyses error:', error);
     return NextResponse.json(
       { error: 'Failed to fetch analyses' },
       { status: 500 }

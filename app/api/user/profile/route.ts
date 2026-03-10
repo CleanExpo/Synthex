@@ -15,6 +15,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { z } from 'zod';
+import { logger } from '@/lib/logger';
 
 export const runtime = 'nodejs';
 
@@ -123,7 +124,7 @@ export async function GET(request: NextRequest) {
       }
     });
   } catch (error: unknown) {
-    console.error('Profile fetch error:', error);
+    logger.error('Profile fetch error:', error);
     // Return a minimal default profile instead of 500 error
     return NextResponse.json({
       profile: {
@@ -232,7 +233,7 @@ export async function PUT(request: NextRequest) {
       message: 'Profile updated successfully'
     });
   } catch (error: unknown) {
-    console.error('Profile update error:', error);
+    logger.error('Profile update error:', error);
     const message = error instanceof Error ? error.message : String(error);
     return NextResponse.json(
       { error: 'Failed to update profile', details: message },
@@ -282,7 +283,7 @@ export async function DELETE(request: NextRequest) {
       message: 'Account deleted successfully'
     });
   } catch (error: unknown) {
-    console.error('Account deletion error:', error);
+    logger.error('Account deletion error:', error);
     const message = error instanceof Error ? error.message : 'Unknown error';
     return NextResponse.json(
       { error: 'Failed to delete account', details: message },

@@ -13,6 +13,7 @@ import { NextRequest } from 'next/server';
 import { z } from 'zod';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
 import { subscriptionService } from '@/lib/stripe/subscription-service';
+import { logger } from '@/lib/logger';
 
 // Supported schema types
 const SCHEMA_TYPES = [
@@ -397,7 +398,7 @@ ${JSON.stringify(schema, null, 2)}
       },
     });
   } catch (error) {
-    console.error('Schema Generator API error:', error);
+    logger.error('Schema Generator API error:', error);
     return APISecurityChecker.createSecureResponse(
       { error: 'Failed to generate schema' },
       500

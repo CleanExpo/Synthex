@@ -18,6 +18,7 @@ import { NextRequest } from 'next/server';
 import { z } from 'zod';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
 import prisma from '@/lib/prisma';
+import { logger } from '@/lib/logger';
 
 // No body needed — all data fetched from DB
 const schema = z.object({});
@@ -125,7 +126,7 @@ export async function POST(
       title,
     });
   } catch (error) {
-    console.error('AI Chat auto-title POST error:', error);
+    logger.error('AI Chat auto-title POST error:', error);
     return APISecurityChecker.createSecureResponse(
       { error: 'Failed to generate title' },
       500

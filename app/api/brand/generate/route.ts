@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma';
 import { Prisma } from '@prisma/client';
 import BrandPsychologyOrchestrator, { BrandGenerationInput } from '@/lib/ai/agents/strategic-marketing/brand-orchestrator';
 import { getUserIdFromCookies, getUserIdFromRequest, unauthorizedResponse } from '@/lib/auth/jwt-utils';
+import { logger } from '@/lib/logger';
 
 const brandGenerateSchema = z.object({
   businessType: z.string().min(1),
@@ -114,7 +115,7 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Brand generation error:', error);
+    logger.error('Brand generation error:', error);
     return NextResponse.json(
       { error: 'Failed to generate brand' },
       { status: 500 }
@@ -143,7 +144,7 @@ export async function GET(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Failed to fetch brand generations:', error);
+    logger.error('Failed to fetch brand generations:', error);
     return NextResponse.json(
       { error: 'Failed to fetch brand generations' },
       { status: 500 }

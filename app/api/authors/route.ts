@@ -15,6 +15,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import prisma from '@/lib/prisma';
 import { getUserIdFromRequest } from '@/lib/auth/jwt-utils';
+import { logger } from '@/lib/logger';
 
 const createAuthorSchema = z.object({
   name: z.string().min(2).max(100),
@@ -56,7 +57,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ authors, total: authors.length });
   } catch (error) {
-    console.error('List authors error:', error);
+    logger.error('List authors error:', error);
     return NextResponse.json({ error: 'Internal Server Error', message: 'Failed to list authors' }, { status: 500 });
   }
 }
@@ -105,7 +106,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(author, { status: 201 });
   } catch (error) {
-    console.error('Create author error:', error);
+    logger.error('Create author error:', error);
     return NextResponse.json({ error: 'Internal Server Error', message: 'Failed to create author' }, { status: 500 });
   }
 }

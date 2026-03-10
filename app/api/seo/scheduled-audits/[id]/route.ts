@@ -17,6 +17,7 @@ import { z } from 'zod';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
 import { subscriptionService } from '@/lib/stripe/subscription-service';
 import { prisma } from '@/lib/prisma';
+import { logger } from '@/lib/logger';
 
 // Update validation schema
 const updateTargetSchema = z.object({
@@ -104,7 +105,7 @@ export async function GET(
       auditHistory,
     });
   } catch (error) {
-    console.error('Get scheduled audit target error:', error);
+    logger.error('Get scheduled audit target error:', error);
     return APISecurityChecker.createSecureResponse(
       { error: 'Failed to fetch scheduled audit target' },
       500
@@ -189,7 +190,7 @@ export async function PATCH(
       target: updatedTarget,
     });
   } catch (error) {
-    console.error('Update scheduled audit target error:', error);
+    logger.error('Update scheduled audit target error:', error);
     return APISecurityChecker.createSecureResponse(
       { error: 'Failed to update scheduled audit target' },
       500
@@ -258,7 +259,7 @@ export async function DELETE(
       message: 'Scheduled audit target deleted',
     });
   } catch (error) {
-    console.error('Delete scheduled audit target error:', error);
+    logger.error('Delete scheduled audit target error:', error);
     return APISecurityChecker.createSecureResponse(
       { error: 'Failed to delete scheduled audit target' },
       500

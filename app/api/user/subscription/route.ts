@@ -16,6 +16,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
 import { subscriptionService } from '@/lib/stripe/subscription-service';
+import { logger } from '@/lib/logger';
 
 export async function GET(request: NextRequest) {
   try {
@@ -97,7 +98,7 @@ export async function GET(request: NextRequest) {
       features: planFeatures[subscription.plan] || planFeatures.free,
     });
   } catch (error: unknown) {
-    console.error('Subscription fetch error:', error);
+    logger.error('Subscription fetch error:', error);
     const errorMessage = error instanceof Error ? error.message : String(error);
     return NextResponse.json(
       {

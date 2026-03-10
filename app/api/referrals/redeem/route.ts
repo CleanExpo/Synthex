@@ -12,6 +12,7 @@ import { NextRequest } from 'next/server';
 import { z } from 'zod';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
 import prisma from '@/lib/prisma';
+import { logger } from '@/lib/logger';
 
 const RedeemSchema = z.object({
   code: z.string().min(1),
@@ -95,7 +96,7 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('Referral redeem POST error:', error);
+    logger.error('Referral redeem POST error:', error);
     return APISecurityChecker.createSecureResponse(
       { error: 'Failed to redeem referral code' },
       500

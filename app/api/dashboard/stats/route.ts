@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { getEffectiveOrganizationId } from '@/lib/multi-business';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { getCache } from '@/lib/cache/cache-manager';
+import { logger } from '@/lib/logger';
 
 export async function GET(request: NextRequest) {
   try {
@@ -221,11 +222,11 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error);
-    console.error('Dashboard stats error:', msg);
+    logger.error('Dashboard stats error:', msg);
 
     // Surface actionable error for database auth failures
     if (msg.includes('SCRAM') || msg.includes('password') || msg.includes('authentication')) {
-      console.error('[dashboard] DATABASE_URL password is stale — update in Vercel env vars');
+      logger.error('[dashboard] DATABASE_URL password is stale — update in Vercel env vars');
       return NextResponse.json(
         { error: 'Database authentication failed', code: 'DB_AUTH_FAILED' },
         { status: 503 }

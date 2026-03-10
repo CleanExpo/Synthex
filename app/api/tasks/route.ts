@@ -65,6 +65,7 @@ const updateTaskSchema = z.object({
 // =============================================================================
 
 import { getUserIdFromRequest } from '@/lib/auth/jwt-utils';
+import { logger } from '@/lib/logger';
 
 // =============================================================================
 // GET - List Tasks
@@ -133,7 +134,7 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('Error fetching tasks:', error);
+    logger.error('Error fetching tasks:', error);
     return NextResponse.json(
       { error: 'Internal Server Error', message: 'Failed to fetch tasks' },
       { status: 500 }
@@ -184,7 +185,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ data: task }, { status: 201 });
   } catch (error) {
-    console.error('Error creating task:', error);
+    logger.error('Error creating task:', error);
     return NextResponse.json(
       { error: 'Internal Server Error', message: 'Failed to create task' },
       { status: 500 }
@@ -259,7 +260,7 @@ export async function PATCH(request: NextRequest) {
 
     return NextResponse.json({ data: task });
   } catch (error) {
-    console.error('Error updating task:', error);
+    logger.error('Error updating task:', error);
     return NextResponse.json(
       { error: 'Internal Server Error', message: 'Failed to update task' },
       { status: 500 }
@@ -308,7 +309,7 @@ export async function DELETE(request: NextRequest) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Error deleting task:', error);
+    logger.error('Error deleting task:', error);
     return NextResponse.json(
       { error: 'Internal Server Error', message: 'Failed to delete task' },
       { status: 500 }

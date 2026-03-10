@@ -17,6 +17,7 @@ import { Prisma } from '@prisma/client';
 import { z } from 'zod';
 import { sanitizeErrorForResponse } from '@/lib/utils/error-utils';
 import { getUserIdFromCookies } from '@/lib/auth/jwt-utils';
+import { logger } from '@/lib/logger';
 
 // =============================================================================
 // Types
@@ -284,7 +285,7 @@ export async function GET(request: NextRequest) {
       total: assignedToMe ? filteredApprovals.length : total,
     });
   } catch (error: unknown) {
-    console.error('List approvals error:', error);
+    logger.error('List approvals error:', error);
     return NextResponse.json(
       { error: 'Internal Server Error', message: sanitizeErrorForResponse(error, 'Failed to list approval requests') },
       { status: 500 }
@@ -396,7 +397,7 @@ export async function POST(request: NextRequest) {
       data: transformApprovalForResponse(approval),
     });
   } catch (error: unknown) {
-    console.error('Create approval error:', error);
+    logger.error('Create approval error:', error);
     return NextResponse.json(
       { error: 'Internal Server Error', message: sanitizeErrorForResponse(error, 'Failed to create approval request') },
       { status: 500 }

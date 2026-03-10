@@ -15,6 +15,7 @@ import { stripe } from '@/lib/stripe/config';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
 import { prisma } from '@/lib/prisma';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
+import { logger } from '@/lib/logger';
 
 export async function GET(request: NextRequest) {
   try {
@@ -102,7 +103,7 @@ export async function GET(request: NextRequest) {
       hasMore: invoices.has_more,
     });
   } catch (error) {
-    console.error('Invoice fetch error:', error);
+    logger.error('Invoice fetch error:', error);
     return NextResponse.json(
       { error: 'Failed to fetch invoices' },
       { status: 500 }

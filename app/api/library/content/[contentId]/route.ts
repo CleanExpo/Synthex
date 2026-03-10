@@ -21,6 +21,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
+import { logger } from '@/lib/logger';
 
 // Type for route params
 interface RouteParams {
@@ -94,7 +95,7 @@ export async function GET(
 
     return APISecurityChecker.createSecureResponse(item, 200, security.context);
   } catch (error) {
-    console.error('Error fetching content library item:', error);
+    logger.error('Error fetching content library item:', error);
     return APISecurityChecker.createSecureResponse(
       { error: 'Failed to fetch content library item' },
       500,
@@ -198,7 +199,7 @@ export async function PATCH(
 
     return APISecurityChecker.createSecureResponse(updated, 200, security.context);
   } catch (error) {
-    console.error('Error updating content library item:', error);
+    logger.error('Error updating content library item:', error);
     return APISecurityChecker.createSecureResponse(
       { error: 'Failed to update content library item' },
       500,
@@ -268,7 +269,7 @@ export async function DELETE(
     // Return 204 No Content
     return new NextResponse(null, { status: 204 });
   } catch (error) {
-    console.error('Error deleting content library item:', error);
+    logger.error('Error deleting content library item:', error);
     return APISecurityChecker.createSecureResponse(
       { error: 'Failed to delete content library item' },
       500,

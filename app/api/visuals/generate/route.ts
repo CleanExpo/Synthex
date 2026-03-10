@@ -19,6 +19,7 @@ import { z } from 'zod';
 import { getUserIdFromRequest } from '@/lib/auth/jwt-utils';
 import { createVisualAsset } from '@/lib/services/visual-asset-manager';
 import { isConfigured } from '@/lib/services/paper-banana-client';
+import { logger } from '@/lib/logger';
 
 const generateSchema = z.object({
   type: z.enum(['diagram', 'plot', 'infographic', 'before_after']),
@@ -65,7 +66,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(result, { status: 201 });
   } catch (error) {
-    console.error('Visual generation error:', error);
+    logger.error('Visual generation error:', error);
     return NextResponse.json({ error: 'Internal Server Error', message: 'Failed to generate visual' }, { status: 500 });
   }
 }

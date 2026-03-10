@@ -15,6 +15,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getUserIdFromRequest } from '@/lib/auth/jwt-utils';
 import { listVisualAssets } from '@/lib/services/visual-asset-manager';
 import type { VisualType } from '@/lib/services/paper-banana-client';
+import { logger } from '@/lib/logger';
 
 export async function GET(request: NextRequest) {
   try {
@@ -36,7 +37,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(result);
   } catch (error) {
-    console.error('List visuals error:', error);
+    logger.error('List visuals error:', error);
     return NextResponse.json({ error: 'Internal Server Error', message: 'Failed to list visuals' }, { status: 500 });
   }
 }

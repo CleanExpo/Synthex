@@ -21,6 +21,7 @@ import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-securit
 import { subscriptionService } from '@/lib/stripe/subscription-service';
 import prisma from '@/lib/prisma';
 import { generateChatResponse } from '@/lib/ai/chat-assistant';
+import { logger } from '@/lib/logger';
 
 // Required for SSE streaming on Vercel
 export const runtime = 'nodejs';
@@ -184,7 +185,7 @@ export async function POST(
 
           controller.close();
         } catch (error) {
-          console.error('AI Chat streaming error:', error);
+          logger.error('AI Chat streaming error:', error);
           controller.enqueue(
             encoder.encode(
               `event: error\ndata: ${JSON.stringify({ error: 'Stream interrupted' })}\n\n`
@@ -204,7 +205,7 @@ export async function POST(
       },
     });
   } catch (error) {
-    console.error('AI Chat message POST error:', error);
+    logger.error('AI Chat message POST error:', error);
     return APISecurityChecker.createSecureResponse(
       { error: 'Failed to process message' },
       500

@@ -6,6 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { emailService } from '@/lib/email/email-service';
+import { logger } from '@/lib/logger';
 
 const verifyEmailSchema = z.object({
   code: z.string().min(1),
@@ -39,7 +40,7 @@ export async function POST(request: NextRequest) {
       userId: result.userId
     });
   } catch (error: unknown) {
-    console.error('Email verification error:', error);
+    logger.error('Email verification error:', error);
     return NextResponse.json(
       { error: 'Failed to verify email' },
       { status: 500 }
@@ -74,7 +75,7 @@ export async function GET(request: NextRequest) {
       new URL('/auth/verify-email?success=true', request.url)
     );
   } catch (error: unknown) {
-    console.error('Email verification error:', error);
+    logger.error('Email verification error:', error);
     return NextResponse.redirect(
       new URL('/auth/verify-email?error=Verification failed', request.url)
     );

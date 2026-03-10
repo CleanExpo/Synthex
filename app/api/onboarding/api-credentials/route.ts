@@ -18,6 +18,7 @@ import { encryptApiKey, maskApiKey } from '@/lib/encryption/api-key-encryption';
 import { validateAPIKey, APIProvider } from '@/lib/encryption/api-key-validator';
 import { getAuthUser } from '@/lib/supabase-server';
 import { withRateLimit } from '@/lib/middleware/rate-limiter';
+import { logger } from '@/lib/logger';
 
 const CredentialsRequestSchema = z.object({
   provider: z.enum(['openai', 'anthropic', 'google', 'openrouter']),
@@ -123,7 +124,7 @@ export async function POST(request: NextRequest) {
     try {
       return await postHandler(request);
     } catch (error) {
-      console.error('[API Credentials] Error:', error);
+      logger.error('[API Credentials] Error:', error);
       return NextResponse.json(
         { error: 'Failed to save API credentials' },
         { status: 500 }
@@ -175,7 +176,7 @@ export async function GET(request: NextRequest) {
     try {
       return await getHandler(request);
     } catch (error) {
-      console.error('[API Credentials] Error:', error);
+      logger.error('[API Credentials] Error:', error);
       return NextResponse.json(
         { error: 'Failed to fetch API credentials' },
         { status: 500 }

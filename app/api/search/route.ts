@@ -16,6 +16,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { getEffectiveOrganizationId } from '@/lib/multi-business';
 import prisma from '@/lib/prisma';
+import { logger } from '@/lib/logger';
 
 interface SearchResult {
   id: string;
@@ -124,7 +125,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ results });
   } catch (error) {
-    console.error('[Search] Error:', error);
+    logger.error('[Search] Error:', error);
     return NextResponse.json({ error: 'Search failed' }, { status: 500 });
   }
 }

@@ -12,6 +12,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getRateLimitStatus, resetRateLimits } from '@/lib/rate-limit';
 import { createClient } from '@supabase/supabase-js';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
+import { logger } from '@/lib/logger';
 
 // Initialize Supabase
 const supabase = createClient(
@@ -51,7 +52,7 @@ export async function GET(req: NextRequest) {
     });
     
   } catch (error) {
-    console.error('Error getting rate limit status:', error);
+    logger.error('Error getting rate limit status:', error);
     return NextResponse.json(
       { error: 'Failed to get rate limit status' },
       { status: 500 }
@@ -115,7 +116,7 @@ export async function POST(req: NextRequest) {
     });
     
   } catch (error) {
-    console.error('Error resetting rate limits:', error);
+    logger.error('Error resetting rate limits:', error);
     return NextResponse.json(
       { error: 'Failed to reset rate limits' },
       { status: 500 }
@@ -189,7 +190,7 @@ export async function PATCH(req: NextRequest) {
     });
     
   } catch (error) {
-    console.error('Error updating rate limit:', error);
+    logger.error('Error updating rate limit:', error);
     return NextResponse.json(
       { error: 'Failed to update rate limit' },
       { status: 500 }

@@ -14,6 +14,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { z } from 'zod';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
+import { logger } from '@/lib/logger';
 
 export const dynamic = 'force-dynamic';
 
@@ -253,7 +254,7 @@ export async function POST(request: NextRequest) {
       results,
     });
   } catch (error) {
-    console.error('Error in bulk scheduler operation:', error);
+    logger.error('Error in bulk scheduler operation:', error);
     return NextResponse.json(
       { error: 'Internal Server Error', message: 'Failed to process bulk operation' },
       { status: 500 }

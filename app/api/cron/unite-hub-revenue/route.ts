@@ -17,6 +17,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { pushUniteHubEvent } from '@/lib/unite-hub-connector';
+import { logger } from '@/lib/logger';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -109,7 +110,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       durationMs,
     });
   } catch (error) {
-    console.error('[unite-hub-revenue] Fatal error:', error);
+    logger.error('[unite-hub-revenue] Fatal error:', error);
     return NextResponse.json(
       { error: 'Revenue cron failed' },
       { status: 500 }

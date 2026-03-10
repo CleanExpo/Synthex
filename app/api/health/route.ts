@@ -23,6 +23,7 @@ import { testConnection } from '@/lib/supabase-client';
 import { checkDatabaseHealth, getPoolMetrics } from '@/lib/prisma';
 import { EnvValidator } from '@/lib/security/env-validator';
 import { getEnvStatus, type EnvStatus } from '@/lib/env-check';
+import { logger } from '@/lib/logger';
 
 // Force dynamic rendering - prevent static generation
 export const dynamic = 'force-dynamic';
@@ -280,7 +281,7 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('Health check error:', error);
+    logger.error('Health check error:', error);
 
     return NextResponse.json(
       {

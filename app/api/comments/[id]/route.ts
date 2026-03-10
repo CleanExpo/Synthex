@@ -15,6 +15,7 @@ import prisma from '@/lib/prisma';
 import { z } from 'zod';
 import { sanitizeErrorForResponse } from '@/lib/utils/error-utils';
 import { getUserIdFromCookies } from '@/lib/auth/jwt-utils';
+import { logger } from '@/lib/logger';
 
 // =============================================================================
 // Schemas
@@ -108,7 +109,7 @@ export async function GET(
       data: transformCommentForResponse(comment),
     });
   } catch (error: unknown) {
-    console.error('Get comment error:', error);
+    logger.error('Get comment error:', error);
     return NextResponse.json(
       { error: 'Internal Server Error', message: sanitizeErrorForResponse(error, 'Failed to get comment') },
       { status: 500 }
@@ -204,7 +205,7 @@ export async function PATCH(
       data: transformCommentForResponse(updated),
     });
   } catch (error: unknown) {
-    console.error('Update comment error:', error);
+    logger.error('Update comment error:', error);
     return NextResponse.json(
       { error: 'Internal Server Error', message: sanitizeErrorForResponse(error, 'Failed to update comment') },
       { status: 500 }
@@ -259,7 +260,7 @@ export async function DELETE(
       message: 'Comment deleted',
     });
   } catch (error: unknown) {
-    console.error('Delete comment error:', error);
+    logger.error('Delete comment error:', error);
     return NextResponse.json(
       { error: 'Internal Server Error', message: sanitizeErrorForResponse(error, 'Failed to delete comment') },
       { status: 500 }

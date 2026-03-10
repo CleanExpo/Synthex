@@ -17,6 +17,7 @@ import { z } from 'zod';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
 import prisma from '@/lib/prisma';
 import { email as emailService } from '@/lib/email/index';
+import { logger } from '@/lib/logger';
 
 function generateReferralCode(): string {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // Excludes confusing chars I/O/0/1
@@ -102,7 +103,7 @@ export async function GET(request: NextRequest) {
       stats,
     });
   } catch (error) {
-    console.error('Referrals GET error:', error);
+    logger.error('Referrals GET error:', error);
     return APISecurityChecker.createSecureResponse(
       { error: 'Failed to fetch referrals' },
       500
@@ -192,7 +193,7 @@ export async function POST(request: NextRequest) {
       html: `<p>Hi there!</p><p>${referrerName} has invited you to join SYNTHEX. Sign up with your referral link to receive 500 bonus AI credits: <a href="${signupUrl}">${signupUrl}</a></p>`,
       text: `${referrerName} invited you to join SYNTHEX! Sign up here to get 500 bonus AI credits: ${signupUrl}`,
       type: 'transactional',
-    }).catch((err: unknown) => console.error('[referrals] Failed to send invite email:', err));
+    }).catch((err: unknown) => logger.error('[referrals] Failed to send invite email:', err));
 
     return APISecurityChecker.createSecureResponse({
       success: true,
@@ -204,7 +205,7 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('Referrals POST error:', error);
+    logger.error('Referrals POST error:', error);
     return APISecurityChecker.createSecureResponse(
       { error: 'Failed to create referral' },
       500

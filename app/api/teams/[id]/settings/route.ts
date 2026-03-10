@@ -38,6 +38,7 @@ const teamSettingsSchema = z.object({
 // =============================================================================
 
 import { getUserIdFromRequest } from '@/lib/auth/jwt-utils';
+import { logger } from '@/lib/logger';
 
 /**
  * Check if user has permission to manage team
@@ -145,7 +146,7 @@ export async function GET(
       },
     });
   } catch (error: unknown) {
-    console.error('GET team settings error:', error);
+    logger.error('GET team settings error:', error);
     return NextResponse.json(
       { error: 'Internal Server Error', message: sanitizeErrorForResponse(error, 'Failed to process team settings request') },
       { status: 500 }
@@ -241,7 +242,7 @@ export async function PATCH(
       data: team,
     });
   } catch (error: unknown) {
-    console.error('PATCH team settings error:', error);
+    logger.error('PATCH team settings error:', error);
     return NextResponse.json(
       { error: 'Internal Server Error', message: sanitizeErrorForResponse(error, 'Failed to process team settings request') },
       { status: 500 }
@@ -320,7 +321,7 @@ export async function DELETE(
       message: 'Team deleted successfully',
     });
   } catch (error: unknown) {
-    console.error('DELETE team error:', error);
+    logger.error('DELETE team error:', error);
     return NextResponse.json(
       { error: 'Internal Server Error', message: sanitizeErrorForResponse(error, 'Failed to process team settings request') },
       { status: 500 }

@@ -17,6 +17,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
 import { z } from 'zod';
+import { logger } from '@/lib/logger';
 
 // ============================================================================
 // TYPE DEFINITIONS
@@ -171,7 +172,7 @@ export async function GET(
       },
     });
   } catch (error) {
-    console.error('Get competitor error:', error);
+    logger.error('Get competitor error:', error);
     return NextResponse.json(
       { error: 'Failed to fetch competitor' },
       { status: 500 }
@@ -242,7 +243,7 @@ export async function PATCH(
       message: 'Competitor updated successfully',
     });
   } catch (error) {
-    console.error('Update competitor error:', error);
+    logger.error('Update competitor error:', error);
     return NextResponse.json(
       { error: 'Failed to update competitor' },
       { status: 500 }
@@ -299,7 +300,7 @@ export async function DELETE(
       deletedId: id,
     });
   } catch (error) {
-    console.error('Delete competitor error:', error);
+    logger.error('Delete competitor error:', error);
     return NextResponse.json(
       { error: 'Failed to delete competitor' },
       { status: 500 }

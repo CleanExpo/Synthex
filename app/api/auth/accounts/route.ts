@@ -16,6 +16,7 @@ import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { accountService } from '@/lib/auth/account-service';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
 import { auditLogger } from '@/lib/security/audit-logger';
+import { logger } from '@/lib/logger';
 
 export async function GET(request: NextRequest) {
   try {
@@ -76,7 +77,7 @@ export async function GET(request: NextRequest) {
       totalAccounts: accounts.length,
     });
   } catch (error) {
-    console.error('[Accounts API] Error:', error);
+    logger.error('[Accounts API] Error:', error);
     return NextResponse.json(
       { error: 'Failed to retrieve accounts' },
       { status: 500 }

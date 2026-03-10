@@ -7,6 +7,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { getUserIdFromRequestOrCookies, unauthorizedResponse } from '@/lib/auth/jwt-utils';
 import { z } from 'zod';
+import { logger } from '@/lib/logger';
 
 const projectUpdateSchema = z.object({
   name: z.string().min(1).max(100).optional(),
@@ -38,7 +39,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
 
     return NextResponse.json({ project });
   } catch (error: unknown) {
-    console.error('Get web-project error:', error);
+    logger.error('Get web-project error:', error);
     return NextResponse.json({ error: 'Failed to fetch project' }, { status: 500 });
   }
 }
@@ -86,7 +87,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 
     return NextResponse.json({ success: true, project });
   } catch (error: unknown) {
-    console.error('Update web-project error:', error);
+    logger.error('Update web-project error:', error);
     return NextResponse.json({ error: 'Failed to update project' }, { status: 500 });
   }
 }
@@ -111,7 +112,7 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
 
     return NextResponse.json({ success: true, message: 'Project deleted' });
   } catch (error: unknown) {
-    console.error('Delete web-project error:', error);
+    logger.error('Delete web-project error:', error);
     return NextResponse.json({ error: 'Failed to delete project' }, { status: 500 });
   }
 }

@@ -15,6 +15,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
+import { logger } from '@/lib/logger';
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic';
@@ -115,7 +116,7 @@ export async function GET(
       data: quote,
     });
   } catch (error: unknown) {
-    console.error('GET /api/quotes/[id] error:', error);
+    logger.error('GET /api/quotes/[id] error:', error);
     return NextResponse.json(
       {
         success: false,
@@ -242,7 +243,7 @@ export async function PUT(
       message: 'Quote updated successfully',
     });
   } catch (error: unknown) {
-    console.error('PUT /api/quotes/[id] error:', error);
+    logger.error('PUT /api/quotes/[id] error:', error);
     return NextResponse.json(
       {
         success: false,
@@ -311,7 +312,7 @@ export async function DELETE(
       message: 'Quote deleted successfully',
     });
   } catch (error: unknown) {
-    console.error('DELETE /api/quotes/[id] error:', error);
+    logger.error('DELETE /api/quotes/[id] error:', error);
     return NextResponse.json(
       {
         success: false,
@@ -422,7 +423,7 @@ export async function PATCH(
       message: `Quote ${action} recorded`,
     });
   } catch (error: unknown) {
-    console.error('PATCH /api/quotes/[id] error:', error);
+    logger.error('PATCH /api/quotes/[id] error:', error);
     return NextResponse.json(
       {
         success: false,

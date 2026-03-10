@@ -13,6 +13,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
 import { prisma } from '@/lib/prisma';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
+import { logger } from '@/lib/logger';
 
 export async function GET(request: NextRequest) {
   try {
@@ -82,7 +83,7 @@ export async function GET(request: NextRequest) {
       periodEnd: subscription?.currentPeriodEnd?.toISOString(),
     });
   } catch (error) {
-    console.error('Usage fetch error:', error);
+    logger.error('Usage fetch error:', error);
     return NextResponse.json(
       { error: 'Failed to fetch usage data' },
       { status: 500 }

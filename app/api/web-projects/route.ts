@@ -7,6 +7,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { getUserIdFromRequestOrCookies, unauthorizedResponse } from '@/lib/auth/jwt-utils';
 import { z } from 'zod';
+import { logger } from '@/lib/logger';
 
 const projectCreateSchema = z.object({
   name: z.string().min(1, 'Name is required').max(100, 'Name too long'),
@@ -29,7 +30,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ projects });
   } catch (error: unknown) {
-    console.error('Get web-projects error:', error);
+    logger.error('Get web-projects error:', error);
     return NextResponse.json({ error: 'Failed to fetch projects' }, { status: 500 });
   }
 }
@@ -68,7 +69,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true, project }, { status: 201 });
   } catch (error: unknown) {
-    console.error('Create web-project error:', error);
+    logger.error('Create web-project error:', error);
     return NextResponse.json({ error: 'Failed to create project' }, { status: 500 });
   }
 }

@@ -16,6 +16,7 @@ import { NextRequest } from 'next/server';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
 import { subscriptionService } from '@/lib/stripe/subscription-service';
 import { generateDashboardGreeting } from '@/lib/ai/project-manager';
+import { logger } from '@/lib/logger';
 
 export async function GET(request: NextRequest) {
   const security = await APISecurityChecker.check(
@@ -60,7 +61,7 @@ export async function GET(request: NextRequest) {
       suggestions,
     });
   } catch (error) {
-    console.error('AI PM suggestions GET error:', error);
+    logger.error('AI PM suggestions GET error:', error);
     return APISecurityChecker.createSecureResponse(
       { error: 'Failed to generate suggestions' },
       500

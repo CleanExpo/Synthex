@@ -18,6 +18,7 @@ import { NextRequest } from 'next/server';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
 import { subscriptionService } from '@/lib/stripe/subscription-service';
 import { getScoreTrends } from '@/lib/seo/geo-readiness-service';
+import { logger } from '@/lib/logger';
 
 /**
  * GET /api/seo/geo-readiness/trends
@@ -80,7 +81,7 @@ export async function GET(request: NextRequest) {
         : undefined,
     });
   } catch (error) {
-    console.error('GEO Readiness Trends API error:', error);
+    logger.error('GEO Readiness Trends API error:', error);
     return APISecurityChecker.createSecureResponse(
       { error: 'Failed to fetch GEO score trends' },
       500

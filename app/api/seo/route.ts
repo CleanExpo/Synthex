@@ -14,6 +14,7 @@ import { z } from 'zod';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
 import { subscriptionService, PLAN_LIMITS } from '@/lib/stripe/subscription-service';
 import prisma from '@/lib/prisma';
+import { logger } from '@/lib/logger';
 
 /**
  * GET /api/seo
@@ -90,7 +91,7 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('SEO API error:', error);
+    logger.error('SEO API error:', error);
     return APISecurityChecker.createSecureResponse(
       { error: 'Failed to fetch SEO status' },
       500
@@ -202,7 +203,7 @@ export async function POST(request: NextRequest) {
       feature,
     });
   } catch (error) {
-    console.error('SEO API error:', error);
+    logger.error('SEO API error:', error);
     return APISecurityChecker.createSecureResponse(
       { error: 'Failed to validate SEO access' },
       500

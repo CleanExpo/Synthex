@@ -16,6 +16,7 @@ import { z } from 'zod';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
 import prisma from '@/lib/prisma';
 import { getEffectiveOrganizationId } from '@/lib/multi-business/business-scope';
+import { logger } from '@/lib/logger';
 
 export const dynamic = 'force-dynamic';
 
@@ -177,7 +178,7 @@ export async function POST(
       },
     });
   } catch (error) {
-    console.error('Video publish API error:', error);
+    logger.error('Video publish API error:', error);
     return APISecurityChecker.createSecureResponse(
       { error: 'Failed to publish video' },
       500

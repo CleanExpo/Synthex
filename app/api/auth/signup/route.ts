@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma';
 import { generateToken } from '@/lib/auth/jwt-utils';
 import { z } from 'zod';
 import { authStrict } from '@/lib/middleware/api-rate-limit';
+import { logger } from '@/lib/logger';
 
 // Input validation schema
 const signupSchema = z.object({
@@ -54,7 +55,7 @@ export async function POST(request: NextRequest) {
     });
 
     if (authError) {
-      console.error('Signup error:', authError);
+      logger.error('Signup error:', authError);
       
       // Handle specific error cases
       if (authError.message.includes('already registered')) {
@@ -124,7 +125,7 @@ export async function POST(request: NextRequest) {
         }
       });
     } catch (dbError) {
-      console.error('[SIGNUP] Database error during signup:', dbError);
+      logger.error('[SIGNUP] Database error during signup:', dbError);
       // Don't fail signup if Prisma fails - user can still use Supabase Auth
       // But log the error for debugging
     }
@@ -194,7 +195,7 @@ export async function POST(request: NextRequest) {
 
     return response;
   } catch (error: unknown) {
-    console.error('Signup error:', error);
+    logger.error('Signup error:', error);
     
     // Log the error
     try {
@@ -210,7 +211,7 @@ export async function POST(request: NextRequest) {
         }
       });
     } catch (logError) {
-      console.error('Failed to log error:', logError);
+      logger.error('Failed to log error:', logError);
     }
 
     return NextResponse.json(

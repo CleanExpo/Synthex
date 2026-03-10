@@ -16,6 +16,7 @@ import { z } from 'zod';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
 import { subscriptionService } from '@/lib/stripe/subscription-service';
 import prisma from '@/lib/prisma';
+import { logger } from '@/lib/logger';
 
 /**
  * GET /api/ai/pm/conversations
@@ -95,7 +96,7 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('AI PM conversations GET error:', error);
+    logger.error('AI PM conversations GET error:', error);
     return APISecurityChecker.createSecureResponse(
       { error: 'Failed to fetch conversations' },
       500
@@ -172,7 +173,7 @@ export async function POST(request: NextRequest) {
       conversation,
     });
   } catch (error) {
-    console.error('AI PM conversations POST error:', error);
+    logger.error('AI PM conversations POST error:', error);
     return APISecurityChecker.createSecureResponse(
       { error: 'Failed to create conversation' },
       500

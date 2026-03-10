@@ -19,6 +19,7 @@ import { z } from 'zod';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
 import { subscriptionService } from '@/lib/stripe/subscription-service';
 import { runPageSpeedAnalysis } from '@/lib/seo/pagespeed-service';
+import { logger } from '@/lib/logger';
 
 const analyzeSchema = z.object({
   url: z.string().url('A valid URL is required'),
@@ -93,7 +94,7 @@ export async function POST(request: NextRequest) {
       analysis,
     });
   } catch (error) {
-    console.error('PageSpeed Analyze API error:', error);
+    logger.error('PageSpeed Analyze API error:', error);
     return APISecurityChecker.createSecureResponse(
       { error: 'Failed to run PageSpeed analysis' },
       500

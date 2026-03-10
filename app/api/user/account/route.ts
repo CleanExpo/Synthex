@@ -14,6 +14,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase-client';
 import { z } from 'zod';
+import { logger } from '@/lib/logger';
 
 // Validation schema for account deletion
 const deleteAccountSchema = z.object({
@@ -54,7 +55,7 @@ export async function GET(request: NextRequest) {
       mfaEnabled: user.factors?.length ? user.factors.length > 0 : false,
     });
   } catch (error) {
-    console.error('Account fetch error:', error);
+    logger.error('Account fetch error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -115,7 +116,7 @@ export async function DELETE(request: NextRequest) {
       .eq('id', user.id);
 
     if (profileError) {
-      console.error('Profile deletion error:', profileError);
+      logger.error('Profile deletion error:', profileError);
       // Continue with account deletion even if profile deletion fails
     }
 
@@ -126,7 +127,7 @@ export async function DELETE(request: NextRequest) {
       .eq('user_id', user.id);
 
     if (connectionsError) {
-      console.error('Platform connections deletion error:', connectionsError);
+      logger.error('Platform connections deletion error:', connectionsError);
     }
 
     // Delete campaigns and related data
@@ -136,7 +137,7 @@ export async function DELETE(request: NextRequest) {
       .eq('user_id', user.id);
 
     if (campaignsError) {
-      console.error('Campaigns deletion error:', campaignsError);
+      logger.error('Campaigns deletion error:', campaignsError);
     }
 
     // Note: Full account deletion from Supabase Auth requires admin privileges
@@ -148,7 +149,7 @@ export async function DELETE(request: NextRequest) {
       message: 'Account data deleted successfully. Please contact support to fully delete your authentication record.',
     });
   } catch (error) {
-    console.error('Account deletion error:', error);
+    logger.error('Account deletion error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

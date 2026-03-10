@@ -17,6 +17,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
 import { prisma } from '@/lib/prisma';
+import { logger } from '@/lib/logger';
 
 /**
  * GET /api/features
@@ -121,7 +122,7 @@ export async function GET(request: NextRequest) {
       security.context
     );
   } catch (error) {
-    console.error('Error fetching features:', error);
+    logger.error('Error fetching features:', error);
     return APISecurityChecker.createSecureResponse(
       { error: 'Failed to fetch features' },
       500,

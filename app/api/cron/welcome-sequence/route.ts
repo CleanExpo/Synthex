@@ -21,6 +21,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import * as Sentry from '@sentry/nextjs';
 import { prisma } from '@/lib/prisma';
+import { logger } from '@/lib/logger';
 import {
   sendWelcomeSequenceDay3,
   sendWelcomeSequenceDay7,
@@ -143,7 +144,7 @@ export async function GET(request: NextRequest) {
 
           day3Sent++;
         } catch (err) {
-          console.error(`[welcome-sequence] D+3 failed for user ${user.id}:`, err);
+          logger.error(`[welcome-sequence] D+3 failed for user ${user.id}:`, err);
           errors++;
         }
       }
@@ -179,7 +180,7 @@ export async function GET(request: NextRequest) {
             day7Sent++;
           }
         } catch (err) {
-          console.error(`[welcome-sequence] D+7 failed for user ${user.id}:`, err);
+          logger.error(`[welcome-sequence] D+7 failed for user ${user.id}:`, err);
           errors++;
         }
       }
@@ -196,7 +197,7 @@ export async function GET(request: NextRequest) {
       durationMs,
     });
   } catch (error) {
-    console.error('[welcome-sequence cron] Fatal error:', error);
+    logger.error('[welcome-sequence cron] Fatal error:', error);
     return NextResponse.json(
       { error: 'Welcome sequence cron failed' },
       { status: 500 }

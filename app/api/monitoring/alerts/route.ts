@@ -19,6 +19,7 @@ import {
   type Alert,
 } from '@/lib/alerts';
 import { getUserIdFromCookies } from '@/lib/auth/jwt-utils';
+import { logger } from '@/lib/logger';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -98,7 +99,7 @@ export async function GET(request: NextRequest) {
       }
     }
   } catch (error: unknown) {
-    console.error('Alerts API error:', error);
+    logger.error('Alerts API error:', error);
 
     return NextResponse.json(
       {
@@ -209,7 +210,7 @@ export async function POST(request: NextRequest) {
       { status: allSuccessful ? 200 : 207 } // 207 Multi-Status for partial success
     );
   } catch (error: unknown) {
-    console.error('Alerts API error:', error);
+    logger.error('Alerts API error:', error);
 
     return NextResponse.json(
       {

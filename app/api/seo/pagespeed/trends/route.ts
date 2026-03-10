@@ -18,6 +18,7 @@ import { NextRequest } from 'next/server';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
 import { subscriptionService } from '@/lib/stripe/subscription-service';
 import { getPerformanceTrends } from '@/lib/seo/pagespeed-service';
+import { logger } from '@/lib/logger';
 
 /**
  * GET /api/seo/pagespeed/trends
@@ -76,7 +77,7 @@ export async function GET(request: NextRequest) {
       days,
     });
   } catch (error) {
-    console.error('PageSpeed Trends API error:', error);
+    logger.error('PageSpeed Trends API error:', error);
     return APISecurityChecker.createSecureResponse(
       { error: 'Failed to fetch performance trends' },
       500

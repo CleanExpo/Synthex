@@ -19,6 +19,7 @@ import { subscriptionService } from '@/lib/stripe/subscription-service';
 import { analyzeReadiness } from '@/lib/seo/geo-readiness-service';
 import { prisma } from '@/lib/prisma';
 import type { GEOPlatform } from '@/lib/geo/types';
+import { logger } from '@/lib/logger';
 
 const analyzeRequestSchema = z.object({
   contentText: z.string().min(50, 'Content must be at least 50 characters'),
@@ -118,7 +119,7 @@ export async function POST(request: NextRequest) {
       ...result,
     });
   } catch (error) {
-    console.error('GEO Readiness Analyze API error:', error);
+    logger.error('GEO Readiness Analyze API error:', error);
     return APISecurityChecker.createSecureResponse(
       { error: 'Failed to analyze content for GEO readiness' },
       500

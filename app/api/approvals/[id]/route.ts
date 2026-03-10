@@ -17,6 +17,7 @@ import { Prisma } from '@prisma/client';
 import { z } from 'zod';
 import { sanitizeErrorForResponse } from '@/lib/utils/error-utils';
 import { getUserIdFromCookies } from '@/lib/auth/jwt-utils';
+import { logger } from '@/lib/logger';
 
 // =============================================================================
 // Types
@@ -230,7 +231,7 @@ export async function GET(
       data: transformApprovalForResponse(approval),
     });
   } catch (error: unknown) {
-    console.error('Get approval error:', error);
+    logger.error('Get approval error:', error);
     return NextResponse.json(
       { error: 'Internal Server Error', message: sanitizeErrorForResponse(error, 'Failed to get approval request') },
       { status: 500 }
@@ -569,7 +570,7 @@ export async function PATCH(
       data: transformApprovalForResponse(updated),
     });
   } catch (error: unknown) {
-    console.error('Update approval error:', error);
+    logger.error('Update approval error:', error);
     return NextResponse.json(
       { error: 'Internal Server Error', message: sanitizeErrorForResponse(error, 'Failed to update approval request') },
       { status: 500 }
@@ -639,7 +640,7 @@ export async function DELETE(
       message: 'Approval request deleted',
     });
   } catch (error: unknown) {
-    console.error('Delete approval error:', error);
+    logger.error('Delete approval error:', error);
     return NextResponse.json(
       { error: 'Internal Server Error', message: sanitizeErrorForResponse(error, 'Failed to delete approval request') },
       { status: 500 }

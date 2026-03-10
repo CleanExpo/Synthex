@@ -6,6 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cachedRoute } from '@/src/middleware/cache-middleware';
 import { createClient } from '@supabase/supabase-js';
+import { logger } from '@/lib/logger';
 
 /** Pattern record from viral patterns table */
 interface PatternRecord {
@@ -81,7 +82,7 @@ async function handler(req: NextRequest) {
     });
     
   } catch (error) {
-    console.error('Error fetching patterns:', error);
+    logger.error('Error fetching patterns:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

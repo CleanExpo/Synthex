@@ -13,6 +13,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { CacheFactory } from '@/src/infrastructure/caching/cache.factory';
 import { ConsoleLogger } from '@/src/infrastructure/logging/console-logger';
 import { invalidateCache, clearApiCache, getCacheStats } from '@/src/middleware/cache-middleware';
+import { logger } from '@/lib/logger';
 
 // Initialize cache service
 const logger = new ConsoleLogger();
@@ -41,7 +42,7 @@ export async function GET(req: NextRequest) {
     });
     
   } catch (error) {
-    console.error('Error getting cache stats:', error);
+    logger.error('Error getting cache stats:', error);
     return NextResponse.json(
       { error: 'Failed to get cache statistics' },
       { status: 500 }
@@ -109,7 +110,7 @@ export async function DELETE(req: NextRequest) {
     });
     
   } catch (error) {
-    console.error('Error clearing cache:', error);
+    logger.error('Error clearing cache:', error);
     return NextResponse.json(
       { error: 'Failed to clear cache' },
       { status: 500 }
@@ -164,7 +165,7 @@ export async function POST(req: NextRequest) {
     });
     
   } catch (error) {
-    console.error('Error warming cache:', error);
+    logger.error('Error warming cache:', error);
     return NextResponse.json(
       { error: 'Failed to warm cache' },
       { status: 500 }

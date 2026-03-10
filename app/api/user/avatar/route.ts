@@ -13,6 +13,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase-server';
 import { prisma } from '@/lib/prisma';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
+import { logger } from '@/lib/logger';
 
 export const runtime = 'nodejs';
 
@@ -67,7 +68,7 @@ export async function POST(request: NextRequest) {
       });
 
     if (uploadError) {
-      console.error('Upload error:', uploadError);
+      logger.error('Upload error:', uploadError);
       throw uploadError;
     }
 
@@ -83,7 +84,7 @@ export async function POST(request: NextRequest) {
         data: { avatar: publicUrl },
       });
     } catch (dbError) {
-      console.error('DB update error:', dbError);
+      logger.error('DB update error:', dbError);
       // Clean up uploaded file if DB update fails
       await supabase.storage.from('avatars').remove([filePath]);
       throw dbError;
@@ -97,7 +98,7 @@ export async function POST(request: NextRequest) {
       message: 'Avatar uploaded successfully'
     });
   } catch (error: unknown) {
-    console.error('Avatar upload error:', error);
+    logger.error('Avatar upload error:', error);
     return NextResponse.json(
       { error: 'Failed to upload avatar', details: error instanceof Error ? error.message : String(error) },
       { status: 500 }
@@ -140,7 +141,7 @@ export async function DELETE(request: NextRequest) {
       message: 'Avatar removed successfully'
     });
   } catch (error: unknown) {
-    console.error('Avatar deletion error:', error);
+    logger.error('Avatar deletion error:', error);
     return NextResponse.json(
       { error: 'Failed to delete avatar', details: error instanceof Error ? error.message : String(error) },
       { status: 500 }

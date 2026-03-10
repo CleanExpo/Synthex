@@ -14,6 +14,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { logger } from '@/lib/logger';
 import {
   generateState,
   storePKCEState,
@@ -85,7 +86,7 @@ export async function GET(request: NextRequest) {
     // Redirect to GitHub for authorization
     return NextResponse.redirect(authorizationUrl);
   } catch (error) {
-    console.error('[GitHub OAuth] Initiation error:', error);
+    logger.error('[GitHub OAuth] Initiation error:', error);
     return NextResponse.json(
       {
         error: 'Failed to initiate GitHub OAuth',

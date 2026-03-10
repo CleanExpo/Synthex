@@ -14,6 +14,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { logger } from '@/lib/logger';
 import {
   generatePKCEChallenge,
   generateState,
@@ -92,7 +93,7 @@ export async function GET(request: NextRequest) {
     // This avoids CORS issues when using fetch()
     return NextResponse.json({ authorizationUrl });
   } catch (error) {
-    console.error('[Google OAuth] Initiation error:', error);
+    logger.error('[Google OAuth] Initiation error:', error);
     return NextResponse.json(
       {
         error: 'Failed to initiate Google OAuth',

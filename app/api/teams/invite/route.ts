@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { sendTeamInviteEmail } from '@/lib/email';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
+import { logger } from '@/lib/logger';
 
 type InvitePayload = {
   email?: string;
@@ -101,7 +102,7 @@ export async function POST(req: NextRequest) {
           });
         }
       } catch (e) {
-        console.error('Prisma invitation create failed, falling back to non-persistent response:', e);
+        logger.error('Prisma invitation create failed, falling back to non-persistent response:', e);
       }
     }
 
@@ -128,7 +129,7 @@ export async function POST(req: NextRequest) {
         });
         emailQueued = true;
       } catch (e) {
-        console.error('Invite email send failed:', e);
+        logger.error('Invite email send failed:', e);
       }
     }
 
@@ -139,7 +140,7 @@ export async function POST(req: NextRequest) {
       message: persisted ? 'Invitation persisted' : 'Invitation sent',
     });
   } catch (err) {
-    console.error('Invite error:', err);
+    logger.error('Invite error:', err);
     return NextResponse.json(
       { success: false, error: 'Failed to process invitation' },
       { status: 500 }

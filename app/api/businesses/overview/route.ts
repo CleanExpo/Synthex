@@ -12,6 +12,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
+import { logger } from '@/lib/logger';
 import {
   isMultiBusinessOwner,
   getCrossBusinessStats
@@ -55,7 +56,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ overview });
 
   } catch (error) {
-    console.error('[GET /api/businesses/overview] Error:', error);
+    logger.error('[GET /api/businesses/overview] Error:', error);
     return NextResponse.json(
       {
         error: 'Internal Server Error',

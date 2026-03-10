@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { withAuth, AuthenticatedRequest } from '@/lib/middleware/withAuth';
 import { prisma } from '@/lib/prisma';
+import { logger } from '@/lib/logger';
 
 /**
  * POST /api/templates/[id]/use
@@ -72,7 +73,7 @@ async function handlePost(
       lastUsedAt: updatedTemplate.lastUsedAt,
     });
   } catch (error) {
-    console.error('Error tracking template usage:', error);
+    logger.error('Error tracking template usage:', error);
     return NextResponse.json(
       { success: false, error: 'Failed to track template usage' },
       { status: 500 }

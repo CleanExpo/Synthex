@@ -14,6 +14,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { accountService } from '@/lib/auth/account-service';
+import { logger } from '@/lib/logger';
 
 export async function POST(request: NextRequest) {
   try {
@@ -52,7 +53,7 @@ export async function POST(request: NextRequest) {
       remainingMethods: result.remainingMethods,
     });
   } catch (error) {
-    console.error('[Unlink GitHub] Error:', error);
+    logger.error('[Unlink GitHub] Error:', error);
     return NextResponse.json(
       { error: 'Failed to unlink GitHub account' },
       { status: 500 }

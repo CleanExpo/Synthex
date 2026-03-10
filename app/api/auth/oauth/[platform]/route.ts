@@ -7,6 +7,7 @@ import { sanitizeErrorForResponse } from '@/lib/utils/error-utils';
 import { getPlatformOAuthCredentials } from '@/lib/platform-credentials';
 import { generatePKCEChallenge, generateState, storePKCEState } from '@/lib/auth/pkce';
 import crypto from 'crypto';
+import { logger } from '@/lib/logger';
 
 // OAuth configuration for different platforms (credentials loaded dynamically from DB)
 const oauthConfig: Record<string, {
@@ -246,7 +247,7 @@ export async function GET(
       message: `Redirecting to ${platform} for authorization...`
     });
   } catch (error: unknown) {
-    console.error('OAuth initiation error:', error);
+    logger.error('OAuth initiation error:', error);
     return NextResponse.json(
       { error: 'Failed to initiate OAuth', message: sanitizeErrorForResponse(error, 'OAuth operation failed') },
       { status: 500 }

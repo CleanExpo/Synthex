@@ -16,6 +16,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { decryptApiKey } from '@/lib/encryption/api-key-encryption';
 import { validateAPIKey, type APIProvider } from '@/lib/encryption/api-key-validator';
+import { logger } from '@/lib/logger';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -110,7 +111,7 @@ export async function GET(request: NextRequest) {
 
             return { id: credential.id, isValid: result.isValid, wasValid: credential.isValid };
           } catch (err) {
-            console.error(
+            logger.error(
               `[Revalidate API Keys] Error validating key ${credential.id}:`,
               err instanceof Error ? err.message : String(err)
             );
@@ -161,7 +162,7 @@ export async function GET(request: NextRequest) {
       durationMs: duration,
     });
   } catch (error) {
-    console.error('[Revalidate API Keys] Fatal error:', error);
+    logger.error('[Revalidate API Keys] Fatal error:', error);
     return NextResponse.json(
       { error: 'API key re-validation failed' },
       { status: 500 }

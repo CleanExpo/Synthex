@@ -22,6 +22,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
+import { logger } from '@/lib/logger';
 
 const PlotRequestSchema = z.object({
   prompt: z.string().min(1).max(2000),
@@ -83,7 +84,7 @@ export async function POST(request: NextRequest) {
     if (error instanceof Error && error.name === 'TimeoutError') {
       return NextResponse.json({ error: 'Plot generation timed out' }, { status: 504 });
     }
-    console.error('[Generate Plot] Error:', error);
+    logger.error('[Generate Plot] Error:', error);
     return NextResponse.json({ error: 'Plot generation failed' }, { status: 500 });
   }
 }

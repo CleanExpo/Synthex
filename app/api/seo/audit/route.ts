@@ -14,6 +14,7 @@ import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
 import { subscriptionService, PLAN_LIMITS } from '@/lib/stripe/subscription-service';
+import { logger } from '@/lib/logger';
 
 // Request validation schema
 const AuditRequestSchema = z.object({
@@ -112,7 +113,7 @@ async function performSEOAudit(url: string, options: Omit<z.infer<typeof AuditRe
         }
       }
     } catch (error) {
-      console.warn('PageSpeed Insights API failed, using partial data:', error);
+      logger.warn('PageSpeed Insights API failed, using partial data:', error);
     }
   }
 
@@ -229,7 +230,7 @@ async function performSEOAudit(url: string, options: Omit<z.infer<typeof AuditRe
       }
     }
   } catch (error) {
-    console.warn('HTML fetch failed for SEO analysis:', error);
+    logger.warn('HTML fetch failed for SEO analysis:', error);
   }
 
   // Categorize issues
@@ -385,7 +386,7 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('SEO Audit API error:', error);
+    logger.error('SEO Audit API error:', error);
     return APISecurityChecker.createSecureResponse(
       { error: 'Failed to perform SEO audit' },
       500
@@ -463,7 +464,7 @@ export async function GET(request: NextRequest) {
       total: audits.length,
     });
   } catch (error) {
-    console.error('SEO Audit history error:', error);
+    logger.error('SEO Audit history error:', error);
     return APISecurityChecker.createSecureResponse(
       { error: 'Failed to fetch audit history' },
       500

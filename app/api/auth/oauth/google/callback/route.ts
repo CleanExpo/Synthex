@@ -20,6 +20,7 @@ import { randomUUID } from 'crypto';
 import { generateToken, isOwnerEmail } from '@/lib/auth/jwt-utils';
 import { retrievePKCEState } from '@/lib/auth/pkce';
 import { createClient } from '@supabase/supabase-js';
+import { logger } from '@/lib/logger';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type SupabaseAdmin = ReturnType<typeof createClient<any>>;
@@ -75,7 +76,7 @@ export async function GET(request: NextRequest) {
 
     // Handle OAuth errors from Google
     if (error) {
-      console.error('[Google OAuth] Error from Google:', error, errorDescription);
+      logger.error('[Google OAuth] Error from Google:', error, errorDescription);
       return redirectWithError(effectiveBaseUrl, errorDescription || error);
     }
 
@@ -133,7 +134,7 @@ export async function GET(request: NextRequest) {
 
         if (linkError) throw linkError;
       } catch (error) {
-        console.error('[Google OAuth] Link error:', error);
+        logger.error('[Google OAuth] Link error:', error);
         return redirectWithError(effectiveBaseUrl, 'Failed to link Google account');
       }
 
@@ -204,7 +205,7 @@ export async function GET(request: NextRequest) {
 
     return redirectWithSession(effectiveBaseUrl, session);
   } catch (error) {
-    console.error('[Google OAuth] Callback error:', error);
+    logger.error('[Google OAuth] Callback error:', error);
     return redirectWithError(
       effectiveBaseUrl,
       error instanceof Error ? error.message : 'Authentication failed'
@@ -246,11 +247,11 @@ async function ensureProfileExists(
       );
 
     if (error) {
-      console.warn('[Google OAuth] Failed to ensure profile exists:', error.message);
+      logger.warn('[Google OAuth] Failed to ensure profile exists:', error.message);
       // Non-fatal — user can still log in, onboarding check will be skipped
     }
   } catch (err) {
-    console.warn('[Google OAuth] Error ensuring profile:', err);
+    logger.warn('[Google OAuth] Error ensuring profile:', err);
   }
 }
 
@@ -286,7 +287,7 @@ async function exchangeCodeForTokens(
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('[Google OAuth] Token exchange failed:', errorText);
+      logger.error('[Google OAuth] Token exchange failed:', errorText);
       return null;
     }
 
@@ -303,7 +304,7 @@ async function exchangeCodeForTokens(
       idToken: data.id_token,
     };
   } catch (error) {
-    console.error('[Google OAuth] Token exchange error:', error);
+    logger.error('[Google OAuth] Token exchange error:', error);
     return null;
   }
 }
@@ -317,13 +318,13 @@ async function getGoogleUserInfo(accessToken: string): Promise<GoogleUserInfo | 
     });
 
     if (!response.ok) {
-      console.error('[Google OAuth] User info request failed:', response.status);
+      logger.error('[Google OAuth] User info request failed:', response.status);
       return null;
     }
 
     return await response.json();
   } catch (error) {
-    console.error('[Google OAuth] User info error:', error);
+    logger.error('[Google OAuth] User info error:', error);
     return null;
   }
 }
@@ -350,7 +351,7 @@ async function createNewGoogleUser(
     .single();
 
   if (error) {
-    console.error('[Google OAuth] Create user error:', error);
+    logger.error('[Google OAuth] Create user error:', error);
     throw new Error('Failed to create user account');
   }
 

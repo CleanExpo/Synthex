@@ -14,6 +14,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { fetchCompetitorMetrics } from '@/lib/social/competitor-fetcher';
+import { logger } from '@/lib/logger';
 
 /** Tracked competitor record from database */
 interface TrackedCompetitor {
@@ -274,7 +275,7 @@ export async function POST(request: NextRequest) {
               snapshotsCreated++;
             } else {
               // API call failed — log warning and create snapshot noting the failure
-              console.warn(
+              logger.warn(
                 `[competitor-cron] Fetch failed for ${competitor.name} on ${platform}: ${metrics.error}`
               );
               await (prisma as unknown as PrismaWithCompetitors).competitorSnapshot?.create({
@@ -302,7 +303,7 @@ export async function POST(request: NextRequest) {
               snapshotsFailed++;
             }
           } catch (snapshotError) {
-            console.error(`Error processing competitor ${competitor.id} on ${platform}:`, snapshotError);
+            logger.error(`Error processing competitor ${competitor.id} on ${platform}:`, snapshotError);
             snapshotsFailed++;
           }
         }
@@ -323,7 +324,7 @@ export async function POST(request: NextRequest) {
 
               totalPostsFound += existingPosts.length;
             } catch (postError) {
-              console.error(`Error fetching posts for competitor ${competitor.id} on ${platform}:`, postError);
+              logger.error(`Error fetching posts for competitor ${competitor.id} on ${platform}:`, postError);
             }
           }
         }
@@ -346,7 +347,7 @@ export async function POST(request: NextRequest) {
           postsFound: totalPostsFound,
         });
       } catch (error) {
-        console.error(`Error tracking competitor ${competitor.id}:`, error);
+        logger.error(`Error tracking competitor ${competitor.id}:`, error);
         errors.push({
           competitorId: competitor.id,
           error: error instanceof Error ? error.message : 'Unknown error',
@@ -363,7 +364,7 @@ export async function POST(request: NextRequest) {
       timestamp: now.toISOString(),
     });
   } catch (error) {
-    console.error('Tracking execution error:', error);
+    logger.error('Tracking execution error:', error);
     return NextResponse.json(
       { error: 'Failed to execute competitor tracking' },
       { status: 500 }
@@ -453,7 +454,7 @@ async function checkForAlerts(
       });
     }
   } catch (error) {
-    console.error('Alert check error:', error);
+    logger.error('Alert check error:', error);
   }
 }
 

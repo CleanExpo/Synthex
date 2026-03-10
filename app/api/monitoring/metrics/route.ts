@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { headers } from 'next/headers';
 import { createClient } from '@supabase/supabase-js';
+import { logger } from '@/lib/logger';
 
 // Initialize Supabase client for server-side operations
 const supabase = createClient(
@@ -59,7 +60,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(systemMetrics);
   } catch (error) {
-    console.error('Error fetching monitoring metrics:', error);
+    logger.error('Error fetching monitoring metrics:', error);
     return NextResponse.json(
       { error: 'Failed to fetch metrics' },
       { status: 500 }

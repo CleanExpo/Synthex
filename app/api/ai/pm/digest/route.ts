@@ -14,6 +14,7 @@ import { NextRequest } from 'next/server';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
 import { subscriptionService } from '@/lib/stripe/subscription-service';
 import prisma from '@/lib/prisma';
+import { logger } from '@/lib/logger';
 
 export async function GET(request: NextRequest) {
   const security = await APISecurityChecker.check(
@@ -89,7 +90,7 @@ export async function GET(request: NextRequest) {
       digest,
     });
   } catch (error) {
-    console.error('AI PM digest GET error:', error);
+    logger.error('AI PM digest GET error:', error);
     return APISecurityChecker.createSecureResponse(
       { error: 'Failed to fetch digest' },
       500

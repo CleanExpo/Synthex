@@ -17,6 +17,7 @@ import {
   BusinessMetricsPeriod,
 } from '@/lib/metrics';
 import { getUserIdFromCookies } from '@/lib/auth/jwt-utils';
+import { logger } from '@/lib/logger';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -96,7 +97,7 @@ export async function GET(request: NextRequest) {
       }
     }
   } catch (error: unknown) {
-    console.error('Business metrics error:', error);
+    logger.error('Business metrics error:', error);
 
     return NextResponse.json(
       {

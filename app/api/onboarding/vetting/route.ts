@@ -12,6 +12,7 @@ import { z } from 'zod';
 import { performBusinessVetting } from '@/lib/vetting/business-vetting';
 import { getAuthUser } from '@/lib/supabase-server';
 import { withRateLimit } from '@/lib/middleware/rate-limiter';
+import { logger } from '@/lib/logger';
 
 const VettingRequestSchema = z.object({
   businessName: z.string().min(1).max(255),
@@ -58,7 +59,7 @@ export async function POST(request: NextRequest) {
     try {
       return await vettingHandler(request);
     } catch (error) {
-      console.error('[Vetting API] Error:', error);
+      logger.error('[Vetting API] Error:', error);
       return NextResponse.json(
         { error: 'Failed to perform vetting' },
         { status: 500 }

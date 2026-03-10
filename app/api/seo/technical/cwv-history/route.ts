@@ -15,6 +15,7 @@ import { NextRequest } from 'next/server';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
 import { subscriptionService } from '@/lib/stripe/subscription-service';
 import { getCwvHistory } from '@/lib/seo/technical-seo-service';
+import { logger } from '@/lib/logger';
 
 /**
  * GET /api/seo/technical/cwv-history
@@ -71,7 +72,7 @@ export async function GET(request: NextRequest) {
         : undefined,
     });
   } catch (error) {
-    console.error('CWV History API error:', error);
+    logger.error('CWV History API error:', error);
     return APISecurityChecker.createSecureResponse(
       { error: 'Failed to fetch CWV history' },
       500

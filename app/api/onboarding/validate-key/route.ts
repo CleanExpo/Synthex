@@ -20,6 +20,7 @@ import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { sanitizeErrorForResponse } from '@/lib/utils/error-utils';
+import { logger } from '@/lib/logger';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -241,12 +242,12 @@ export async function POST(request: NextRequest) {
       });
     } catch (dbErr) {
       // Non-fatal: log and continue — validation still succeeded
-      console.error('[validate-key] Failed to update user.apiKeyConfigured:', dbErr);
+      logger.error('[validate-key] Failed to update user.apiKeyConfigured:', dbErr);
     }
 
     return NextResponse.json({ valid: true });
   } catch (error) {
-    console.error('[validate-key] Unexpected error:', error);
+    logger.error('[validate-key] Unexpected error:', error);
     return NextResponse.json(
       { error: sanitizeErrorForResponse(error, 'Validation failed') },
       { status: 500 }

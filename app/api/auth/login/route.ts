@@ -13,6 +13,7 @@ import { generateToken } from '@/lib/auth/jwt-utils';
 import { prisma } from '@/lib/prisma';
 import { supabase } from '@/lib/supabase-client';
 import { authStrict } from '@/lib/middleware/api-rate-limit';
+import { logger } from '@/lib/logger';
 
 const loginSchema = z.object({
   email: z.string().email(),
@@ -157,7 +158,7 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Login error:', error);
+    logger.error('Login error:', error);
     return NextResponse.json(
       { error: 'Login failed. Please try again.' },
       { status: 500 }

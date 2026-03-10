@@ -12,6 +12,7 @@
 import { NextRequest } from 'next/server';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
 import { getSitemapStatus } from '@/lib/google/search-console';
+import { logger } from '@/lib/logger';
 
 export async function GET(request: NextRequest) {
   // Security check
@@ -70,7 +71,7 @@ export async function GET(request: NextRequest) {
       sitemaps,
     });
   } catch (error) {
-    console.error('Sitemaps API error:', error);
+    logger.error('Sitemaps API error:', error);
     return APISecurityChecker.createSecureResponse(
       { error: 'Failed to fetch sitemap status' },
       500

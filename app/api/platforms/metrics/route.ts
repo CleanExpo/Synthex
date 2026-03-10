@@ -11,6 +11,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
+import { logger } from '@/lib/logger';
 
 // Platform colors
 const PLATFORM_COLORS: Record<string, string> = {
@@ -109,7 +110,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(metrics);
   } catch (error) {
-    console.error('Platform metrics error:', error);
+    logger.error('Platform metrics error:', error);
     return NextResponse.json(
       { error: 'Failed to fetch platform metrics' },
       { status: 500 }

@@ -15,6 +15,7 @@ import prisma from '@/lib/prisma';
 import { z } from 'zod';
 import { sanitizeErrorForResponse } from '@/lib/utils/error-utils';
 import { getUserIdFromCookies } from '@/lib/auth/jwt-utils';
+import { logger } from '@/lib/logger';
 
 // =============================================================================
 // Schemas
@@ -126,7 +127,7 @@ export async function GET(
       data: transformShareForResponse(share),
     });
   } catch (error: unknown) {
-    console.error('Get share error:', error);
+    logger.error('Get share error:', error);
     return NextResponse.json(
       { error: 'Internal Server Error', message: sanitizeErrorForResponse(error, 'Failed to get share') },
       { status: 500 }
@@ -215,7 +216,7 @@ export async function PATCH(
       data: transformShareForResponse(updated),
     });
   } catch (error: unknown) {
-    console.error('Update share error:', error);
+    logger.error('Update share error:', error);
     return NextResponse.json(
       { error: 'Internal Server Error', message: sanitizeErrorForResponse(error, 'Failed to update share') },
       { status: 500 }
@@ -279,7 +280,7 @@ export async function DELETE(
       message: reason ? `Share revoked: ${reason}` : 'Share revoked',
     });
   } catch (error: unknown) {
-    console.error('Revoke share error:', error);
+    logger.error('Revoke share error:', error);
     return NextResponse.json(
       { error: 'Internal Server Error', message: sanitizeErrorForResponse(error, 'Failed to revoke share') },
       { status: 500 }

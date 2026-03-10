@@ -4,6 +4,7 @@ import bcrypt from 'bcryptjs';
 import { z } from 'zod';
 import { rateLimiters } from '@/lib/rate-limit';
 import { generateToken, getUserIdFromRequestOrCookies, unauthorizedResponse, isOwnerEmail } from '@/lib/auth/jwt-utils';
+import { logger } from '@/lib/logger';
 
 // Validation schemas
 const loginSchema = z.object({
@@ -50,7 +51,7 @@ export async function POST(request: NextRequest) {
         );
     }
     } catch (error) {
-      console.error('Auth error:', error);
+      logger.error('Auth error:', error);
       return NextResponse.json(
         { error: 'Authentication failed' },
         { status: 500 }

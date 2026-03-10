@@ -16,6 +16,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
 import { z } from 'zod';
+import { logger } from '@/lib/logger';
 
 // ============================================================================
 // VALIDATION SCHEMAS
@@ -134,7 +135,7 @@ export async function GET(request: NextRequest) {
       hasMore: (alerts?.length || 0) === limit,
     });
   } catch (error) {
-    console.error('List alerts error:', error);
+    logger.error('List alerts error:', error);
     return NextResponse.json(
       { error: 'Failed to fetch alerts' },
       { status: 500 }
@@ -216,7 +217,7 @@ export async function PATCH(request: NextRequest) {
       updatedCount: result?.count || 0,
     });
   } catch (error) {
-    console.error('Update alerts error:', error);
+    logger.error('Update alerts error:', error);
     return NextResponse.json(
       { error: 'Failed to update alerts' },
       { status: 500 }

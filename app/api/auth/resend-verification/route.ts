@@ -12,6 +12,7 @@ import { createAuthClient } from '@/lib/supabase-server';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { prisma } from '@/lib/prisma';
 import { authStrict } from '@/lib/rate-limit';
+import { logger } from '@/lib/logger';
 
 export async function POST(request: NextRequest) {
   return authStrict(request, async () => {
@@ -54,7 +55,7 @@ export async function POST(request: NextRequest) {
       });
 
       if (error) {
-        console.error('[RESEND-VERIFICATION] Supabase error:', error.message);
+        logger.error('[RESEND-VERIFICATION] Supabase error:', error.message);
         return NextResponse.json(
           { error: error.message || 'Failed to resend verification email' },
           { status: 400 }
@@ -66,7 +67,7 @@ export async function POST(request: NextRequest) {
         message: 'Verification email sent. Please check your inbox.',
       });
     } catch (error: unknown) {
-      console.error('[RESEND-VERIFICATION] Error:', error);
+      logger.error('[RESEND-VERIFICATION] Error:', error);
       return NextResponse.json(
         { error: 'Failed to resend verification email. Please try again.' },
         { status: 500 }

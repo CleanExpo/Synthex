@@ -5,6 +5,7 @@
 
 import { NextResponse } from 'next/server';
 import { healthCheck, getStats, set, get, del } from '@/lib/redis-unified';
+import { logger } from '@/lib/logger';
 
 // Force dynamic rendering - prevent static generation
 export const dynamic = 'force-dynamic';
@@ -44,7 +45,7 @@ export async function GET(request) {
     return NextResponse.json(responseData, { status: statusCode });
     
   } catch (error) {
-    console.error('Redis health check error:', error);
+    logger.error('Redis health check error:', error);
     
     return NextResponse.json(
       {

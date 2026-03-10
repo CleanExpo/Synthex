@@ -13,6 +13,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { readDefault as withRateLimitWrapper } from '@/lib/rate-limit';
 import { set, get, del, exists } from '@/lib/redis-unified';
 import { sanitizeErrorForResponse } from '@/lib/utils/error-utils';
+import { logger } from '@/lib/logger';
 
 // Session type for the stub
 interface SessionData {
@@ -132,7 +133,7 @@ export async function GET(request: NextRequest) {
             );
         }
       } catch (error: unknown) {
-        console.error('Redis demo error:', error);
+        logger.error('Redis demo error:', error);
         return NextResponse.json(
           { error: 'Internal server error', message: sanitizeErrorForResponse(error, 'Redis operation failed') },
           { status: 500 }
@@ -235,7 +236,7 @@ export async function POST(request: NextRequest) {
             );
         }
       } catch (error: unknown) {
-        console.error('Redis demo write error:', error);
+        logger.error('Redis demo write error:', error);
         return NextResponse.json(
           { error: 'Internal server error', message: sanitizeErrorForResponse(error, 'Redis operation failed') },
           { status: 500 }
@@ -283,7 +284,7 @@ export async function DELETE(request: NextRequest) {
           key
         });
       } catch (error: unknown) {
-        console.error('Redis demo delete error:', error);
+        logger.error('Redis demo delete error:', error);
         return NextResponse.json(
           { error: 'Internal server error', message: sanitizeErrorForResponse(error, 'Redis operation failed') },
           { status: 500 }

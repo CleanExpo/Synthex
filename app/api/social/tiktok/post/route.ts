@@ -18,6 +18,7 @@ import { createClient } from '@supabase/supabase-js';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { auditLogger } from '@/lib/security/audit-logger';
 import { createPlatformService } from '@/lib/social';
+import { logger } from '@/lib/logger';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -237,7 +238,7 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error: unknown) {
-    console.error('TikTok post error:', error);
+    logger.error('TikTok post error:', error);
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     return NextResponse.json(
       { error: 'Failed to post to TikTok', message: errorMessage },
@@ -322,7 +323,7 @@ export async function GET(request: NextRequest) {
           }
         }
       } catch (syncError) {
-        console.error('TikTok sync error:', syncError);
+        logger.error('TikTok sync error:', syncError);
         // Fall through to database query
       }
     }
@@ -339,7 +340,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ success: true, data: posts });
   } catch (error: unknown) {
-    console.error('Get TikTok posts error:', error);
+    logger.error('Get TikTok posts error:', error);
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     return NextResponse.json(
       { error: 'Failed to get TikTok posts', message: errorMessage },

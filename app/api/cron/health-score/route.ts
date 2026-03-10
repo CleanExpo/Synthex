@@ -12,6 +12,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { calculateAllHealthScores } from '@/lib/retention/health-score-calculator';
+import { logger } from '@/lib/logger';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -39,7 +40,7 @@ export async function GET(request: NextRequest) {
       durationMs: duration,
     });
   } catch (error) {
-    console.error('[Health Score Cron] Fatal error:', error);
+    logger.error('[Health Score Cron] Fatal error:', error);
     return NextResponse.json(
       { error: 'Health score calculation failed' },
       { status: 500 }
