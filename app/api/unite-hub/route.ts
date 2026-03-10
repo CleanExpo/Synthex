@@ -38,12 +38,10 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 
   try {
     const [activeUsers, subscriptions, postsPublishedToday] = await Promise.all([
-      // Users who have an active subscription (active last 30 days approximation via sub status)
-      prisma.user.count({
+      // Users who have an active subscription
+      prisma.subscription.count({
         where: {
-          subscription: {
-            status: 'active',
-          },
+          status: 'active',
         },
       }),
 
