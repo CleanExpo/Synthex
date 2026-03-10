@@ -15,6 +15,7 @@ import {
   Trash2,
   RefreshCw,
   AlertCircle,
+  RotateCcw,
 } from '@/components/icons';
 import { getPlatformIconComponent } from '@/components/schedule/schedule-config';
 import { PLATFORM_COLORS } from '@/components/calendar';
@@ -62,6 +63,26 @@ function StatusBadge({ status }: { status: string }) {
       className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border ${cls}`}
     >
       {status.charAt(0).toUpperCase() + status.slice(1)}
+    </span>
+  );
+}
+
+// ============================================================================
+// RETRY BADGE
+// ============================================================================
+
+function RetryBadge({ metadata }: { metadata: Record<string, unknown> | null }) {
+  if (!metadata) return null;
+  const retryCount = metadata.retryCount as number | undefined;
+  if (!retryCount || retryCount <= 0) return null;
+
+  return (
+    <span
+      className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-amber-500/20 text-amber-300 border border-amber-500/30"
+      title={`${retryCount} retry attempt${retryCount > 1 ? 's' : ''}`}
+    >
+      <RotateCcw className="h-2.5 w-2.5" />
+      {retryCount}
     </span>
   );
 }
@@ -246,10 +267,11 @@ export function QueueTable({
 
               {/* Status */}
               <div
-                className="flex items-center"
+                className="flex items-center gap-1.5"
                 onClick={() => onPostClick(post)}
               >
                 <StatusBadge status={post.status} />
+                <RetryBadge metadata={post.metadata} />
               </div>
 
               {/* Scheduled For */}

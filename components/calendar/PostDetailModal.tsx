@@ -35,6 +35,7 @@ import {
   AlertTriangle,
   CheckCircle,
   Loader2,
+  RotateCcw,
 } from '@/components/icons';
 
 const platformIcons: Record<string, React.ComponentType<{ className?: string; style?: React.CSSProperties }>> = {
@@ -368,6 +369,9 @@ export function PostDetailModal({
               </div>
             </div>
           )}
+
+          {/* Post Lifecycle Timeline */}
+          <PostLifecycleTimeline metadata={editedPost.metadata} />
         </div>
 
         {/* Footer Actions */}
@@ -439,6 +443,123 @@ export function PostDetailModal({
             )}
           </div>
         </div>
+      </div>
+    </div>
+  );
+}
+
+// =============================================================================
+// Post Lifecycle Timeline Sub-Component
+// =============================================================================
+
+interface HistoryEntry {
+  event: string;
+  at: string;
+  reason?: string;
+  attempt?: number;
+  retryAt?: string;
+  platformPostId?: string;
+  attempts?: number;
+}
+
+const EVENT_CONFIG: Record<
+  string,
+  { label: string; dotClass: string; icon: React.ComponentType<{ className?: string }> }
+> = {
+  published: {
+    label: 'Published',
+    dotClass: 'bg-emerald-500',
+    icon: CheckCircle,
+  },
+  retry_scheduled: {
+    label: 'Retry Scheduled',
+    dotClass: 'bg-amber-500',
+    icon: RotateCcw,
+  },
+  failed_permanently: {
+    label: 'Failed Permanently',
+    dotClass: 'bg-red-500',
+    icon: AlertTriangle,
+  },
+  scheduled: {
+    label: 'Scheduled',
+    dotClass: 'bg-cyan-500',
+    icon: Clock,
+  },
+  created: {
+    label: 'Created',
+    dotClass: 'bg-gray-500',
+    icon: Calendar,
+  },
+};
+
+function formatTimelineDate(dateStr: string): string {
+  const d = new Date(dateStr);
+  return d.toLocaleDateString('en-AU', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  });
+}
+
+function PostLifecycleTimeline({ metadata }: { metadata?: Record<string, unknown> | null }) {
+  if (!metadata) return null;
+
+  const history = (metadata.history as HistoryEntry[]) || [];
+  if (history.length === 0) return null;
+
+  // Sort newest first
+  const sortedHistory = [...history].sort(
+    (a, b) => new Date(b.at).getTime() - new Date(a.at).getTime()
+  );
+
+  return (
+    <div>
+      <Label className="text-gray-400 mb-3 block">History</Label>
+      <div className="relative space-y-0">
+        {/* Vertical line */}
+        <div className="absolute left-[9px] top-2 bottom-2 w-px bg-white/10" />
+
+        {sortedHistory.map((entry, idx) => {
+          const config = EVENT_CONFIG[entry.event] ?? EVENT_CONFIG.created;
+          const Icon = config.icon;
+
+          return (
+            <div key={idx} className="relative flex items-start gap-3 py-2">
+              {/* Dot */}
+              <div
+                className={`relative z-10 mt-0.5 h-[18px] w-[18px] rounded-full ${config.dotClass} flex items-center justify-center flex-shrink-0`}
+              >
+                <Icon className="h-2.5 w-2.5 text-white" />
+              </div>
+
+              {/* Content */}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-baseline gap-2">
+                  <span className="text-sm font-medium text-white">
+                    {config.label}
+                    {entry.attempt !== undefined && (
+                      <span className="text-xs text-gray-400 ml-1">
+                        ({entry.attempt}/{metadata.maxRetries ?? 3})
+                      </span>
+                    )}
+                  </span>
+                  <span className="text-xs text-gray-500">
+                    {formatTimelineDate(entry.at)}
+                  </span>
+                </div>
+                {entry.reason && (
+                  <p className="text-xs text-gray-400 mt-0.5 truncate">
+                    {entry.reason}
+                  </p>
+                )}
+              </div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );

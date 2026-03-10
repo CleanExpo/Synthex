@@ -33,6 +33,7 @@ export interface ScheduledPost {
   conflict?: ConflictInfo;
   approvalStatus?: ApprovalStatus;
   approvalId?: string;
+  metadata?: Record<string, unknown> | null;
 }
 
 export interface ConflictInfo {
