@@ -9,6 +9,7 @@
 
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { TimeSlotPicker } from '@/components/scheduling';
 import {
   Calendar,
   Trash2,
@@ -47,20 +48,17 @@ export function QueueBulkActions({
   const [showReschedule, setShowReschedule] = useState(false);
   const [showDelete, setShowDelete] = useState(false);
   const [rescheduleMode, setRescheduleMode] = useState<'exact' | 'offset'>('exact');
-  const [exactDate, setExactDate] = useState('');
-  const [exactTime, setExactTime] = useState('');
+  const [pickerDate, setPickerDate] = useState<Date | null>(null);
   const [offsetHours, setOffsetHours] = useState(0);
 
   function handleRescheduleSubmit() {
-    if (rescheduleMode === 'exact' && exactDate && exactTime) {
-      const iso = new Date(`${exactDate}T${exactTime}`).toISOString();
-      onReschedule(iso, undefined);
+    if (rescheduleMode === 'exact' && pickerDate) {
+      onReschedule(pickerDate.toISOString(), undefined);
     } else if (rescheduleMode === 'offset' && offsetHours !== 0) {
       onReschedule(undefined, offsetHours);
     }
     setShowReschedule(false);
-    setExactDate('');
-    setExactTime('');
+    setPickerDate(null);
     setOffsetHours(0);
   }
 
@@ -77,7 +75,7 @@ export function QueueBulkActions({
       {showReschedule && (
         <div className="fixed inset-0 z-40" onClick={() => setShowReschedule(false)}>
           <div
-            className="fixed bottom-20 left-1/2 -translate-x-1/2 w-full max-w-md p-4 rounded-xl bg-gray-900 border border-white/10 shadow-2xl z-50"
+            className="fixed bottom-20 left-1/2 -translate-x-1/2 w-full max-w-xl p-4 rounded-xl bg-gray-900 border border-white/10 shadow-2xl z-50"
             onClick={(e) => e.stopPropagation()}
           >
             <h3 className="text-sm font-semibold text-white mb-3">
@@ -111,18 +109,14 @@ export function QueueBulkActions({
             </div>
 
             {rescheduleMode === 'exact' ? (
-              <div className="flex gap-2 mb-3">
-                <input
-                  type="date"
-                  value={exactDate}
-                  onChange={(e) => setExactDate(e.target.value)}
-                  className="flex-1 px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white text-sm focus:outline-none focus:ring-1 focus:ring-cyan-500"
-                />
-                <input
-                  type="time"
-                  value={exactTime}
-                  onChange={(e) => setExactTime(e.target.value)}
-                  className="w-32 px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white text-sm focus:outline-none focus:ring-1 focus:ring-cyan-500"
+              <div className="mb-3">
+                <TimeSlotPicker
+                  value={pickerDate}
+                  onChange={setPickerDate}
+                  platform="multi"
+                  minDate={new Date()}
+                  compact
+                  showConflicts={false}
                 />
               </div>
             ) : (
@@ -155,7 +149,7 @@ export function QueueBulkActions({
                 className="gradient-primary text-white"
                 disabled={
                   rescheduleMode === 'exact'
-                    ? !exactDate || !exactTime
+                    ? !pickerDate
                     : offsetHours === 0
                 }
               >
