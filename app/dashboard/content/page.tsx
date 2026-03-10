@@ -63,6 +63,15 @@ export default function ContentPage() {
   // Publish confirmation modal
   const [publishModalOpen, setPublishModalOpen] = useState(false);
 
+  // Multi-platform state
+  const [multiPlatformEnabled, setMultiPlatformEnabled] = useState(false);
+  const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>(['twitter']);
+  const [platformAdaptations, setPlatformAdaptations] = useState<Record<string, string>>({});
+  const [isAdapting, setIsAdapting] = useState(false);
+
+  // Post status tracking (populated after multi-platform schedule)
+  const [lastBatchId, setLastBatchId] = useState<string | null>(null);
+
   const handleGenerate = useCallback(async () => {
     if (!topic) {
       toast.error('Please enter a topic');
@@ -71,6 +80,7 @@ export default function ContentPage() {
 
     setIsGenerating(true);
     setPsychologyScore(null);
+    setPlatformAdaptations({});
     try {
       const response = await fetch('/api/ai/generate-content', {
         method: 'POST',
@@ -107,6 +117,44 @@ export default function ContentPage() {
         setEditedContent(transformedContent.primary);
         toast.success('Content generated successfully!');
 
+        // Multi-platform: adapt content for secondary platforms
+        const secondaryPlatforms = multiPlatformEnabled
+          ? selectedPlatforms.filter((p) => p !== platform)
+          : [];
+
+        if (secondaryPlatforms.length > 0) {
+          setIsAdapting(true);
+          try {
+            const crossPostRes = await fetch('/api/content/cross-post', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              credentials: 'include',
+              body: JSON.stringify({
+                content: transformedContent.primary,
+                platforms: secondaryPlatforms,
+                tone,
+                mode: 'preview',
+                personaId: personaId !== 'none' ? personaId : undefined,
+              }),
+            });
+            const crossPostData = await crossPostRes.json();
+            if (crossPostData.success && crossPostData.variants) {
+              const adaptations: Record<string, string> = {
+                [platform]: transformedContent.primary,
+              };
+              for (const variant of crossPostData.variants) {
+                adaptations[variant.platform] = variant.content;
+              }
+              setPlatformAdaptations(adaptations);
+              toast.success(`Content adapted for ${secondaryPlatforms.length} additional platform${secondaryPlatforms.length > 1 ? 's' : ''}`);
+            }
+          } catch {
+            toast.error('Failed to adapt content for other platforms');
+          } finally {
+            setIsAdapting(false);
+          }
+        }
+
         // Auto-analyze with psychology analyzer
         try {
           const psychRes = await fetch('/api/psychology/analyze', {
@@ -141,7 +189,7 @@ export default function ContentPage() {
     } finally {
       setIsGenerating(false);
     }
-  }, [topic, platform, tone, includeHashtags, includeEmojis, hookType, targetLength, personaId]);
+  }, [topic, platform, tone, includeHashtags, includeEmojis, hookType, targetLength, personaId, multiPlatformEnabled, selectedPlatforms]);
 
   const handleCopy = useCallback((content: string) => {
     navigator.clipboard.writeText(content);
@@ -337,6 +385,10 @@ export default function ContentPage() {
           onIncludeEmojisChange={setIncludeEmojis}
           isGenerating={isGenerating}
           onGenerate={handleGenerate}
+          multiPlatformEnabled={multiPlatformEnabled}
+          onMultiPlatformToggle={setMultiPlatformEnabled}
+          selectedPlatforms={selectedPlatforms}
+          onSelectedPlatformsChange={setSelectedPlatforms}
         />
 
         <GeneratedContent
@@ -354,16 +406,43 @@ export default function ContentPage() {
         />
       </div>
 
-      {/* Platform preview */}
+      {/* Platform preview(s) */}
       {generatedContent && (
-        <div className="glass-card p-4 rounded-xl border border-white/10">
-          <PlatformPreview
-            platform={platform}
-            content={editMode ? editedContent : generatedContent.primary}
-            mediaUrls={mediaUrls}
-            hashtags={generatedContent.metadata?.hashtags}
-          />
-        </div>
+        <>
+          {multiPlatformEnabled && Object.keys(platformAdaptations).length > 1 ? (
+            <div className="space-y-4">
+              <h3 className="text-sm font-medium text-slate-400">
+                Platform Previews ({Object.keys(platformAdaptations).length} platforms)
+                {isAdapting && <span className="ml-2 text-cyan-400 animate-pulse">Adapting...</span>}
+              </h3>
+              <div className="grid gap-4 lg:grid-cols-2">
+                {selectedPlatforms.map((p) => (
+                  <div key={p} className="glass-card p-4 rounded-xl border border-white/10">
+                    <PlatformPreview
+                      platform={p}
+                      content={
+                        p === platform
+                          ? (editMode ? editedContent : generatedContent.primary)
+                          : (platformAdaptations[p] || generatedContent.primary)
+                      }
+                      mediaUrls={mediaUrls}
+                      hashtags={generatedContent.metadata?.hashtags}
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <div className="glass-card p-4 rounded-xl border border-white/10">
+              <PlatformPreview
+                platform={platform}
+                content={editMode ? editedContent : generatedContent.primary}
+                mediaUrls={mediaUrls}
+                hashtags={generatedContent.metadata?.hashtags}
+              />
+            </div>
+          )}
+        </>
       )}
 
       {psychologyScore && generatedContent && (
