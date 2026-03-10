@@ -14,6 +14,7 @@ import {
   ContentStats,
   GenerationSettings,
   GeneratedContent,
+  MediaAttacher,
 } from '@/components/content';
 import { GenerateVideoCard, VideoGenerationModal } from '@/components/video';
 import { usePersonas } from '@/hooks/use-personas';
@@ -49,6 +50,9 @@ export default function ContentPage() {
   const [isLoading] = useState(false);
   const [error] = useState<string | null>(null);
   const [psychologyScore, setPsychologyScore] = useState<{overallScore: number, topPrinciples: {name: string, strength: number}[], predictedEngagement: {level: string}} | null>(null);
+
+  // Media attachments
+  const [mediaUrls, setMediaUrls] = useState<string[]>([]);
 
   // Video generation modal
   const [videoModalOpen, setVideoModalOpen] = useState(false);
@@ -162,6 +166,7 @@ export default function ContentPage() {
           tone,
           topic,
           targetLength,
+          ...(mediaUrls.length > 0 ? { images: mediaUrls } : {}),
         }),
       });
 
@@ -179,7 +184,7 @@ export default function ContentPage() {
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Failed to save content');
     }
-  }, [generatedContent, editMode, editedContent, selectedVariation, topic, platform, tone, hookType, targetLength]);
+  }, [generatedContent, editMode, editedContent, selectedVariation, topic, platform, tone, hookType, targetLength, mediaUrls]);
 
   const handleSchedule = useCallback(async () => {
     if (!generatedContent) {
@@ -210,6 +215,7 @@ export default function ContentPage() {
             hashtags: generatedContent.metadata?.hashtags || [],
             persona: personaId !== 'none' ? personaId : undefined,
             estimatedEngagement: psychologyScore?.predictedEngagement ? 8 : 5,
+            ...(mediaUrls.length > 0 ? { images: mediaUrls } : {}),
           },
         }),
       });
@@ -228,7 +234,7 @@ export default function ContentPage() {
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Failed to schedule post');
     }
-  }, [generatedContent, editMode, editedContent, selectedVariation, platform, personaId, psychologyScore]);
+  }, [generatedContent, editMode, editedContent, selectedVariation, platform, personaId, psychologyScore, mediaUrls]);
 
   const handleViewAnalytics = useCallback(() => {
     window.location.href = '/dashboard/analytics';
@@ -298,6 +304,15 @@ export default function ContentPage() {
         open={videoModalOpen}
         onOpenChange={setVideoModalOpen}
       />
+
+      {/* Media attachments */}
+      <div className="glass-card p-4 rounded-xl border border-white/10">
+        <MediaAttacher
+          mediaUrls={mediaUrls}
+          onMediaChange={setMediaUrls}
+          maxFiles={4}
+        />
+      </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
         <GenerationSettings
