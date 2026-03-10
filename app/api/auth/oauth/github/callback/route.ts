@@ -67,7 +67,7 @@ export async function GET(request: NextRequest) {
 
     // Handle OAuth errors from GitHub
     if (error) {
-      logger.error('[GitHub OAuth] Error from GitHub:', error, errorDescription);
+      logger.error('[GitHub OAuth] Error from GitHub:', error, errorDescription ? { description: errorDescription } : undefined);
       return redirectWithError(effectiveBaseUrl, errorDescription || error);
     }
 

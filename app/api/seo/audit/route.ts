@@ -113,7 +113,7 @@ async function performSEOAudit(url: string, options: Omit<z.infer<typeof AuditRe
         }
       }
     } catch (error) {
-      logger.warn('PageSpeed Insights API failed, using partial data:', error);
+      logger.warn('PageSpeed Insights API failed, using partial data:', { error });
     }
   }
 
@@ -230,7 +230,7 @@ async function performSEOAudit(url: string, options: Omit<z.infer<typeof AuditRe
       }
     }
   } catch (error) {
-    logger.warn('HTML fetch failed for SEO analysis:', error);
+    logger.warn('HTML fetch failed for SEO analysis:', { error });
   }
 
   // Categorize issues

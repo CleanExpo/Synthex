@@ -517,7 +517,7 @@ export async function GET(
     const error = searchParams.get('error');
     if (error) {
       const errorDescription = searchParams.get('error_description') || 'Authentication failed';
-      logger.error(`OAuth error for ${platform}:`, error, errorDescription);
+      logger.error(`OAuth error for ${platform}:`, error, { description: errorDescription });
 
       // Check if this was an integration flow by looking at state
       const state = searchParams.get('state');

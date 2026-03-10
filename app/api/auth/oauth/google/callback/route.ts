@@ -76,7 +76,7 @@ export async function GET(request: NextRequest) {
 
     // Handle OAuth errors from Google
     if (error) {
-      logger.error('[Google OAuth] Error from Google:', error, errorDescription);
+      logger.error('[Google OAuth] Error from Google:', error, errorDescription ? { description: errorDescription } : undefined);
       return redirectWithError(effectiveBaseUrl, errorDescription || error);
     }
 
@@ -247,11 +247,11 @@ async function ensureProfileExists(
       );
 
     if (error) {
-      logger.warn('[Google OAuth] Failed to ensure profile exists:', error.message);
+      logger.warn('[Google OAuth] Failed to ensure profile exists:', { message: error.message });
       // Non-fatal — user can still log in, onboarding check will be skipped
     }
   } catch (err) {
-    logger.warn('[Google OAuth] Error ensuring profile:', err);
+    logger.warn('[Google OAuth] Error ensuring profile:', { error: err });
   }
 }
 

@@ -13,7 +13,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { CacheFactory } from '@/src/infrastructure/caching/cache.factory';
 import { ConsoleLogger } from '@/src/infrastructure/logging/console-logger';
 import { invalidateCache, clearApiCache, getCacheStats } from '@/src/middleware/cache-middleware';
-import { logger } from '@/lib/logger';
 
 // Initialize cache service
 const logger = new ConsoleLogger();
