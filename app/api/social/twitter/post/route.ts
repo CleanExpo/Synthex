@@ -74,7 +74,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Handle media uploads if provided
-    let mediaIds: string[] = [];
+    const mediaIds: string[] = [];
     if (mediaUrls && mediaUrls.length > 0) {
       for (const url of mediaUrls) {
         try {

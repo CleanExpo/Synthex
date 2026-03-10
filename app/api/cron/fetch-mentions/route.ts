@@ -145,7 +145,7 @@ export async function GET(request: NextRequest) {
         }
 
         // Analyze sentiment for all fetched mentions
-        let sentimentResults: Map<number, { sentiment: string; score: number }> = new Map();
+        const sentimentResults: Map<number, { sentiment: string; score: number }> = new Map();
         if (allMentions.length > 0) {
           const texts = allMentions.map(m => m.content);
           const batchResult = await analyzeSentimentBatch(texts, 5);

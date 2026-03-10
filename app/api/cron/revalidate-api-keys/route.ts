@@ -81,7 +81,7 @@ export async function GET(request: NextRequest) {
     let validated = 0;
     let invalidated = 0;
     let errors = 0;
-    let unchanged = 0;
+    const unchanged = 0;
 
     // Process in batches to avoid hammering provider APIs
     for (let i = 0; i < credentials.length; i += BATCH_SIZE) {

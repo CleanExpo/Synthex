@@ -65,7 +65,7 @@ export interface CacheLayer {
 // ============================================================================
 
 class MemoryCacheLayer implements CacheLayer {
-  name: 'memory' = 'memory';
+  name = 'memory' as const;
   private cache: Map<string, CacheEntry<unknown>> = new Map();
   private maxSize: number;
   private cleanupInterval: NodeJS.Timeout | null = null;
@@ -135,7 +135,7 @@ class MemoryCacheLayer implements CacheLayer {
 // ============================================================================
 
 class RedisCacheLayer implements CacheLayer {
-  name: 'redis' = 'redis';
+  name = 'redis' as const;
   private prefix: string;
 
   constructor(prefix: string = 'cache:') {

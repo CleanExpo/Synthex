@@ -73,7 +73,7 @@ export interface RealtimePresence {
 class RealtimeService {
   private supabase: SupabaseClient | null = null;
   private channels: Map<string, RealtimeChannel> = new Map();
-  private listeners: Map<string, Set<Function>> = new Map();
+  private listeners: Map<string, Set<(...args: unknown[]) => void>> = new Map();
   private presenceData: Map<string, RealtimePresence> = new Map();
 
   constructor() {

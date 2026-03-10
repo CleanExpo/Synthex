@@ -132,7 +132,7 @@ class ABTestingService {
    */
   async getVariant(experimentId: string, userId: string): Promise<Variant | null> {
     // Check if user already assigned
-    let userExperiments = this.userAssignments.get(userId);
+    const userExperiments = this.userAssignments.get(userId);
     if (userExperiments?.has(experimentId)) {
       const variantId = userExperiments.get(experimentId)!;
       const experiment = await this.getExperiment(experimentId);
