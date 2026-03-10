@@ -15,6 +15,7 @@ import {
   GenerationSettings,
   GeneratedContent,
   MediaAttacher,
+  PlatformPreview,
 } from '@/components/content';
 import { GenerateVideoCard, VideoGenerationModal } from '@/components/video';
 import { usePersonas } from '@/hooks/use-personas';
@@ -351,6 +352,18 @@ export default function ContentPage() {
           onSchedule={handleSchedule}
         />
       </div>
+
+      {/* Platform preview */}
+      {generatedContent && (
+        <div className="glass-card p-4 rounded-xl border border-white/10">
+          <PlatformPreview
+            platform={platform}
+            content={editMode ? editedContent : generatedContent.primary}
+            mediaUrls={mediaUrls}
+            hashtags={generatedContent.metadata?.hashtags}
+          />
+        </div>
+      )}
 
       {psychologyScore && generatedContent && (
         <div className="glass-card p-4 rounded-xl border border-white/10">
