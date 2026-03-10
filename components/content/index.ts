@@ -9,3 +9,4 @@ export { ContentHeader } from './content-header';
 export { ContentStats } from './content-stats';
 export { GenerationSettings } from './generation-settings';
 export { GeneratedContent } from './generated-content';
+export { MediaAttacher } from './media-attacher';
