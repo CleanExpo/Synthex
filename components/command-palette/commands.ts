@@ -3,7 +3,7 @@ import {
   TrendingUp, LogOut, Home, File, Beaker, CreditCard, Users, Target, Brain,
   HelpCircle, Layers, Lightbulb, Layout, Zap, Link2,
   GitBranch as GitPullRequest, MessageSquare, Shield, Code, Image,
-  Repeat, Send, Bell, Grid, DollarSign, Calculator, Briefcase, Link,
+  Repeat, Send, Bell, Grid, DollarSign, Calculator, Briefcase, Link, List,
 } from '@/components/icons';
 import { notify } from '@/lib/notifications';
 import type { CommandItem } from './types';
@@ -23,6 +23,8 @@ export function buildCommands(
     { id: 'analytics', title: 'Analytics', icon: BarChart3, action: () => push('/dashboard/analytics'), category: 'navigation', keywords: ['analytics', 'stats', 'metrics', 'data'] },
     { id: 'predictions', title: 'Predictive Analytics', description: 'ML-powered engagement predictions and optimal posting times', icon: Lightbulb, action: () => push('/dashboard/predictions'), category: 'navigation', keywords: ['predict', 'forecast', 'engagement', 'optimal', 'best time', 'ml', 'ai', 'prediction'] },
     { id: 'schedule', title: 'Schedule', icon: Calendar, action: () => push('/dashboard/schedule'), category: 'navigation', keywords: ['schedule', 'calendar', 'plan'] },
+    { id: 'queue', title: 'Go to Queue', description: 'Manage and bulk-action pending posts', icon: List, action: () => push('/dashboard/schedule/queue'), category: 'navigation', keywords: ['queue', 'bulk', 'schedule', 'posts', 'pending', 'manage'] },
+    { id: 'bulk-schedule', title: 'Bulk Schedule Posts', description: 'Select and reschedule multiple posts at once', icon: List, action: () => push('/dashboard/schedule/queue'), category: 'actions', keywords: ['bulk', 'schedule', 'reschedule', 'batch', 'multiple', 'posts'] },
     { id: 'calendar', title: 'Go to Calendar', description: 'Visual content calendar with drag-drop scheduling', icon: Calendar, action: () => push('/dashboard/calendar'), category: 'navigation', keywords: ['calendar', 'week', 'month', 'schedule', 'drag', 'drop'] },
     { id: 'schedule-post', title: 'Schedule Post', description: 'Open quick scheduler to add a new post', icon: Plus, action: () => push('/dashboard/calendar?action=schedule'), category: 'actions', keywords: ['schedule', 'post', 'create', 'new', 'add', 'content'] },
     { id: 'reports', title: 'Reports', description: 'Generate performance reports', icon: File, action: () => push('/dashboard/reports'), category: 'navigation', keywords: ['reports', 'generate', 'export', 'pdf'] },

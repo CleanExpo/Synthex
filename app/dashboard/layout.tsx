@@ -26,6 +26,7 @@ import {
   Brain,
   Palette,
   Menu,
+  List,
   ListTodo,
   Target,
   Video,
@@ -119,6 +120,7 @@ const sidebarGroups: Array<{
     items: [
       { icon: Calendar, label: 'Calendar', href: '/dashboard/calendar' },
       { icon: Calendar, label: 'Schedule', href: '/dashboard/schedule' },
+      { icon: List, label: 'Queue', href: '/dashboard/schedule/queue' },
       { icon: ListTodo, label: 'Tasks', href: '/dashboard/tasks' },
     ],
   },

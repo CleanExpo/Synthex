@@ -5,8 +5,9 @@
  * Header with import/export/create actions
  */
 
+import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { Upload, Download, Plus, Loader2 } from '@/components/icons';
+import { Upload, Download, Plus, Loader2, List } from '@/components/icons';
 
 interface ScheduleHeaderProps {
   isCreating: boolean;
@@ -25,6 +26,15 @@ export function ScheduleHeader({ isCreating, onImport, onExport, onCreate }: Sch
         </p>
       </div>
       <div className="flex space-x-3 mt-4 sm:mt-0">
+        <Link href="/dashboard/schedule/queue">
+          <Button
+            variant="outline"
+            className="bg-white/5 border-white/10 text-white hover:bg-white/10"
+          >
+            <List className="mr-2 h-4 w-4" />
+            Queue
+          </Button>
+        </Link>
         <Button
           onClick={onImport}
           variant="outline"
