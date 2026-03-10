@@ -27,18 +27,13 @@ const GenerateRequestSchema = z.object({
   }).optional(),
 });
 
-// Helper to get user ID from auth (uses centralized JWT verification)
-async function getUserId(_request: NextRequest): Promise<string | null> {
-  return getUserIdFromCookies();
-}
-
 /**
  * POST /api/reporting/generate
  * Generate a new report
  */
 export async function POST(request: NextRequest) {
   try {
-    const userId = await getUserId(request);
+    const userId = await getUserIdFromCookies();
     if (!userId) {
       return NextResponse.json(
         { error: 'Authentication required' },

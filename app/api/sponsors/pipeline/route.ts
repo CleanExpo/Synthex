@@ -7,38 +7,10 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { verifyToken } from '@/lib/auth/jwt-utils';
+import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { logger } from '@/lib/logger';
 import { SponsorService } from '@/lib/sponsors/sponsor-service';
 
-// =============================================================================
-// Auth Helper
-// =============================================================================
-
-async function getUserFromRequest(request: NextRequest): Promise<{ id: string } | null> {
-  const authHeader = request.headers.get('authorization');
-  if (authHeader) {
-    try {
-      const token = authHeader.replace('Bearer ', '');
-      const decoded = verifyToken(token);
-      return { id: decoded.userId };
-    } catch {
-      // Fall through to cookie check
-    }
-  }
-
-  const authToken = request.cookies.get('auth-token')?.value;
-  if (authToken) {
-    try {
-      const decoded = verifyToken(authToken);
-      return { id: decoded.userId };
-    } catch {
-      return null;
-    }
-  }
-
-  return null;
-}
 
 // =============================================================================
 // GET - Pipeline Summary
@@ -46,13 +18,13 @@ async function getUserFromRequest(request: NextRequest): Promise<{ id: string } 
 
 export async function GET(request: NextRequest) {
   try {
-    const user = await getUserFromRequest(request);
-    if (!user) {
+    const userId = await getUserIdFromRequestOrCookies(request);
+    if (!userId) {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
     }
 
     const sponsorService = new SponsorService();
-    const pipeline = await sponsorService.getPipelineSummary(user.id);
+    const pipeline = await sponsorService.getPipelineSummary(userId);
 
     return NextResponse.json({
       success: true,

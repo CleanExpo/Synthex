@@ -10,7 +10,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { verifyToken } from '@/lib/auth/jwt-utils';
+import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { logger } from '@/lib/logger';
 
 // Platform colors and display names
@@ -30,42 +30,13 @@ const PLATFORM_CONFIG: Record<string, { name: string; color: string; icon: strin
 const ALL_PLATFORMS = Object.keys(PLATFORM_CONFIG);
 
 // =============================================================================
-// Auth Helper
-// =============================================================================
-
-async function getUserFromRequest(request: NextRequest): Promise<{ id: string } | null> {
-  const authHeader = request.headers.get('authorization');
-  if (authHeader) {
-    try {
-      const token = authHeader.replace('Bearer ', '');
-      const decoded = verifyToken(token);
-      return { id: decoded.userId };
-    } catch {
-      // Fall through to cookie check
-    }
-  }
-
-  const authToken = request.cookies.get('auth-token')?.value;
-  if (authToken) {
-    try {
-      const decoded = verifyToken(authToken);
-      return { id: decoded.userId };
-    } catch {
-      return null;
-    }
-  }
-
-  return null;
-}
-
-// =============================================================================
 // GET - Unified Metrics
 // =============================================================================
 
 export async function GET(request: NextRequest) {
   try {
-    const user = await getUserFromRequest(request);
-    if (!user) {
+    const userId = await getUserIdFromRequestOrCookies(request);
+    if (!userId) {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
     }
 
@@ -90,7 +61,7 @@ export async function GET(request: NextRequest) {
 
     // Fetch platform connections
     const connections = await prisma.platformConnection.findMany({
-      where: { userId: user.id, isActive: true },
+      where: { userId: userId, isActive: true },
       select: {
         platform: true,
         profileName: true,
@@ -104,7 +75,7 @@ export async function GET(request: NextRequest) {
     // Fetch posts with metrics
     const posts = await prisma.post.findMany({
       where: {
-        campaign: { userId: user.id },
+        campaign: { userId: userId },
         createdAt: { gte: startDate, lte: endDate },
         status: { in: ['published', 'scheduled'] },
       },
@@ -123,7 +94,7 @@ export async function GET(request: NextRequest) {
 
     const prevPosts = await prisma.post.findMany({
       where: {
-        campaign: { userId: user.id },
+        campaign: { userId: userId },
         createdAt: { gte: prevStartDate, lt: startDate },
         status: { in: ['published', 'scheduled'] },
       },

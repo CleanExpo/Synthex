@@ -74,10 +74,6 @@ const updatePostSchema = z.object({
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { getEffectiveOrganizationId } from '@/lib/multi-business/business-scope';
 
-async function getUserId(request: NextRequest): Promise<string | null> {
-  return getUserIdFromRequestOrCookies(request);
-}
-
 // Get user's campaign IDs for authorization
 async function getUserCampaignIds(userId: string): Promise<string[]> {
   const campaigns = await prisma.campaign.findMany({
@@ -93,7 +89,7 @@ async function getUserCampaignIds(userId: string): Promise<string[]> {
 
 export async function GET(request: NextRequest) {
   try {
-    const userId = await getUserId(request);
+    const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
       return NextResponse.json(
         { error: 'Unauthorized', message: 'Authentication required' },
@@ -209,7 +205,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const userId = await getUserId(request);
+    const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
       return NextResponse.json(
         { error: 'Unauthorized', message: 'Authentication required' },
@@ -307,7 +303,7 @@ export async function POST(request: NextRequest) {
 
 export async function PATCH(request: NextRequest) {
   try {
-    const userId = await getUserId(request);
+    const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
       return NextResponse.json(
         { error: 'Unauthorized', message: 'Authentication required' },
@@ -390,7 +386,7 @@ export async function PATCH(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
-    const userId = await getUserId(request);
+    const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
       return NextResponse.json(
         { error: 'Unauthorized', message: 'Authentication required' },

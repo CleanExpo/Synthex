@@ -12,37 +12,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
-import { verifyToken } from '@/lib/auth/jwt-utils';
+import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { logger } from '@/lib/logger';
 
-// =============================================================================
-// Auth Helper
-// =============================================================================
-
-async function getUserFromRequest(request: NextRequest): Promise<{ id: string; email: string } | null> {
-  const authHeader = request.headers.get('authorization');
-  if (authHeader) {
-    try {
-      const token = authHeader.replace('Bearer ', '');
-      const decoded = verifyToken(token);
-      return { id: decoded.userId, email: decoded.email || '' };
-    } catch {
-      // Fall through to cookie check
-    }
-  }
-
-  const authToken = request.cookies.get('auth-token')?.value;
-  if (authToken) {
-    try {
-      const decoded = verifyToken(authToken);
-      return { id: decoded.userId, email: decoded.email || '' };
-    } catch {
-      return null;
-    }
-  }
-
-  return null;
-}
 
 // =============================================================================
 // GET - List tracked keywords
@@ -50,13 +22,13 @@ async function getUserFromRequest(request: NextRequest): Promise<{ id: string; e
 
 export async function GET(request: NextRequest) {
   try {
-    const user = await getUserFromRequest(request);
-    if (!user) {
+    const userId = await getUserIdFromRequestOrCookies(request);
+    if (!userId) {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
     }
 
     const keywords = await prisma.trackedKeyword.findMany({
-      where: { userId: user.id },
+      where: { userId: userId },
       include: {
         _count: {
           select: { mentions: true },
@@ -69,7 +41,7 @@ export async function GET(request: NextRequest) {
     const unreadCounts = await prisma.socialMention.groupBy({
       by: ['keywordId'],
       where: {
-        userId: user.id,
+        userId: userId,
         isRead: false,
       },
       _count: true,
@@ -112,8 +84,8 @@ const addKeywordSchema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
-    const user = await getUserFromRequest(request);
-    if (!user) {
+    const userId = await getUserIdFromRequestOrCookies(request);
+    if (!userId) {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
     }
 
@@ -131,7 +103,7 @@ export async function POST(request: NextRequest) {
     // Check for duplicate
     const existing = await prisma.trackedKeyword.findFirst({
       where: {
-        userId: user.id,
+        userId: userId,
         keyword: keyword.toLowerCase(),
       },
     });
@@ -142,7 +114,7 @@ export async function POST(request: NextRequest) {
 
     const tracked = await prisma.trackedKeyword.create({
       data: {
-        userId: user.id,
+        userId: userId,
         organizationId,
         keyword: keyword.toLowerCase(),
         type,
@@ -150,7 +122,7 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    logger.info('Tracked keyword added', { keywordId: tracked.id, keyword, userId: user.id });
+    logger.info('Tracked keyword added', { keywordId: tracked.id, keyword, userId: userId });
 
     return NextResponse.json({
       success: true,
@@ -168,8 +140,8 @@ export async function POST(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
-    const user = await getUserFromRequest(request);
-    if (!user) {
+    const userId = await getUserIdFromRequestOrCookies(request);
+    if (!userId) {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
     }
 
@@ -184,7 +156,7 @@ export async function DELETE(request: NextRequest) {
     const keyword = await prisma.trackedKeyword.findFirst({
       where: {
         id: keywordId,
-        userId: user.id,
+        userId: userId,
       },
     });
 
@@ -197,7 +169,7 @@ export async function DELETE(request: NextRequest) {
       where: { id: keywordId },
     });
 
-    logger.info('Tracked keyword removed', { keywordId, userId: user.id });
+    logger.info('Tracked keyword removed', { keywordId, userId: userId });
 
     return NextResponse.json({ success: true });
   } catch (error) {

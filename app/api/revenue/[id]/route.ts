@@ -9,41 +9,13 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { verifyToken } from '@/lib/auth/jwt-utils';
+import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { logger } from '@/lib/logger';
 import {
   RevenueService,
   REVENUE_SOURCES,
 } from '@/lib/revenue/revenue-service';
 
-// =============================================================================
-// Auth Helper
-// =============================================================================
-
-async function getUserFromRequest(request: NextRequest): Promise<{ id: string } | null> {
-  const authHeader = request.headers.get('authorization');
-  if (authHeader) {
-    try {
-      const token = authHeader.replace('Bearer ', '');
-      const decoded = verifyToken(token);
-      return { id: decoded.userId };
-    } catch {
-      // Fall through to cookie check
-    }
-  }
-
-  const authToken = request.cookies.get('auth-token')?.value;
-  if (authToken) {
-    try {
-      const decoded = verifyToken(authToken);
-      return { id: decoded.userId };
-    } catch {
-      return null;
-    }
-  }
-
-  return null;
-}
 
 // =============================================================================
 // GET - Single Entry
@@ -54,14 +26,14 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const user = await getUserFromRequest(request);
-    if (!user) {
+    const userId = await getUserIdFromRequestOrCookies(request);
+    if (!userId) {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
     }
 
     const { id } = await params;
     const revenueService = new RevenueService();
-    const entry = await revenueService.getEntry(id, user.id);
+    const entry = await revenueService.getEntry(id, userId);
 
     if (!entry) {
       return NextResponse.json(
@@ -92,8 +64,8 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const user = await getUserFromRequest(request);
-    if (!user) {
+    const userId = await getUserIdFromRequestOrCookies(request);
+    if (!userId) {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
     }
 
@@ -119,7 +91,7 @@ export async function PUT(
     const revenueService = new RevenueService();
 
     try {
-      const entry = await revenueService.updateEntry(id, user.id, {
+      const entry = await revenueService.updateEntry(id, userId, {
         source: body.source,
         amount: body.amount,
         currency: body.currency,
@@ -168,8 +140,8 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const user = await getUserFromRequest(request);
-    if (!user) {
+    const userId = await getUserIdFromRequestOrCookies(request);
+    if (!userId) {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
     }
 
@@ -177,7 +149,7 @@ export async function DELETE(
     const revenueService = new RevenueService();
 
     try {
-      await revenueService.deleteEntry(id, user.id);
+      await revenueService.deleteEntry(id, userId);
 
       return NextResponse.json({
         success: true,

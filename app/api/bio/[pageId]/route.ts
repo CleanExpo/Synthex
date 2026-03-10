@@ -12,37 +12,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
-import { verifyToken } from '@/lib/auth/jwt-utils';
+import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { logger } from '@/lib/logger';
 
-// =============================================================================
-// Auth Helper
-// =============================================================================
-
-async function getUserFromRequest(request: NextRequest): Promise<{ id: string; email: string } | null> {
-  const authHeader = request.headers.get('authorization');
-  if (authHeader) {
-    try {
-      const token = authHeader.replace('Bearer ', '');
-      const decoded = verifyToken(token);
-      return { id: decoded.userId, email: decoded.email || '' };
-    } catch {
-      // Fall through to cookie check
-    }
-  }
-
-  const authToken = request.cookies.get('auth-token')?.value;
-  if (authToken) {
-    try {
-      const decoded = verifyToken(authToken);
-      return { id: decoded.userId, email: decoded.email || '' };
-    } catch {
-      return null;
-    }
-  }
-
-  return null;
-}
 
 // =============================================================================
 // GET - Get page details with links
@@ -53,8 +25,8 @@ export async function GET(
   { params }: { params: Promise<{ pageId: string }> }
 ) {
   try {
-    const user = await getUserFromRequest(request);
-    if (!user) {
+    const userId = await getUserIdFromRequestOrCookies(request);
+    if (!userId) {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
     }
 
@@ -63,7 +35,7 @@ export async function GET(
     const page = await prisma.linkBioPage.findFirst({
       where: {
         id: pageId,
-        userId: user.id,
+        userId: userId,
       },
       include: {
         links: {
@@ -115,8 +87,8 @@ export async function PATCH(
   { params }: { params: Promise<{ pageId: string }> }
 ) {
   try {
-    const user = await getUserFromRequest(request);
-    if (!user) {
+    const userId = await getUserIdFromRequestOrCookies(request);
+    if (!userId) {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
     }
 
@@ -126,7 +98,7 @@ export async function PATCH(
     const existing = await prisma.linkBioPage.findFirst({
       where: {
         id: pageId,
-        userId: user.id,
+        userId: userId,
       },
     });
 
@@ -189,8 +161,8 @@ export async function DELETE(
   { params }: { params: Promise<{ pageId: string }> }
 ) {
   try {
-    const user = await getUserFromRequest(request);
-    if (!user) {
+    const userId = await getUserIdFromRequestOrCookies(request);
+    if (!userId) {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
     }
 
@@ -200,7 +172,7 @@ export async function DELETE(
     const existing = await prisma.linkBioPage.findFirst({
       where: {
         id: pageId,
-        userId: user.id,
+        userId: userId,
       },
     });
 

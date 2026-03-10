@@ -10,7 +10,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { verifyToken } from '@/lib/auth/jwt-utils';
+import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { logger } from '@/lib/logger';
 import { getEffectiveOrganizationId } from '@/lib/multi-business';
 
@@ -33,34 +33,6 @@ const AGE_RANGES = ['13-17', '18-24', '25-34', '35-44', '45-54', '55+'];
 // Days of week
 const DAYS_OF_WEEK = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
-// =============================================================================
-// Auth Helper
-// =============================================================================
-
-async function getUserFromRequest(request: NextRequest): Promise<{ id: string } | null> {
-  const authHeader = request.headers.get('authorization');
-  if (authHeader) {
-    try {
-      const token = authHeader.replace('Bearer ', '');
-      const decoded = verifyToken(token);
-      return { id: decoded.userId };
-    } catch {
-      // Fall through to cookie check
-    }
-  }
-
-  const authToken = request.cookies.get('auth-token')?.value;
-  if (authToken) {
-    try {
-      const decoded = verifyToken(authToken);
-      return { id: decoded.userId };
-    } catch {
-      return null;
-    }
-  }
-
-  return null;
-}
 
 // =============================================================================
 // Mock Data Generators
@@ -267,8 +239,8 @@ function generateGrowthTrend(
 
 export async function GET(request: NextRequest) {
   try {
-    const user = await getUserFromRequest(request);
-    if (!user) {
+    const userId = await getUserIdFromRequestOrCookies(request);
+    if (!userId) {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
     }
 
@@ -280,11 +252,11 @@ export async function GET(request: NextRequest) {
     const days = period === '7d' ? 7 : period === '90d' ? 90 : 30;
 
     // Get org scope for multi-business support
-    const organizationId = await getEffectiveOrganizationId(user.id);
+    const organizationId = await getEffectiveOrganizationId(userId);
 
     // Fetch connected platforms
     const connections = await prisma.platformConnection.findMany({
-      where: { userId: user.id, organizationId: organizationId ?? null, isActive: true },
+      where: { userId: userId, organizationId: organizationId ?? null, isActive: true },
       select: {
         platform: true,
         profileName: true,

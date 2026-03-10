@@ -22,7 +22,7 @@ import { logger } from '@/lib/logger';
 import { ResponseOptimizer } from '@/lib/api/response-optimizer';
 import { getCache } from '@/lib/cache/cache-manager';
 import { PLAN_LIMITS, TenantPlan } from '@/lib/multi-tenant';
-import { verifyToken } from '@/lib/auth/jwt-utils';
+import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 
 const updateOrganizationSchema = z.object({
   name: z.string().min(1).optional(),
@@ -41,32 +41,6 @@ const updateOrganizationSchema = z.object({
 // Auth Helper - Verify user and organization membership
 // =============================================================================
 
-async function getUserFromRequest(request: NextRequest): Promise<{ id: string; email: string } | null> {
-  // Try Authorization header first
-  const authHeader = request.headers.get('authorization');
-  if (authHeader) {
-    try {
-      const token = authHeader.replace('Bearer ', '');
-      const decoded = verifyToken(token);
-      return { id: decoded.userId, email: decoded.email || '' };
-    } catch {
-      // Fall through to cookie check
-    }
-  }
-
-  // Try auth-token cookie
-  const authToken = request.cookies.get('auth-token')?.value;
-  if (authToken) {
-    try {
-      const decoded = verifyToken(authToken);
-      return { id: decoded.userId, email: decoded.email || '' };
-    } catch {
-      return null;
-    }
-  }
-
-  return null;
-}
 
 /**
  * Check if user is a member of the organization
@@ -115,13 +89,13 @@ export async function GET(
   const { orgId } = await params;
   try {
     // Authenticate user
-    const user = await getUserFromRequest(request);
-    if (!user) {
+    const userId = await getUserIdFromRequestOrCookies(request);
+    if (!userId) {
       return ResponseOptimizer.createErrorResponse('Authentication required', 401);
     }
 
     // Verify user is a member of the organization
-    const isMember = await isOrgMember(user.id, orgId);
+    const isMember = await isOrgMember(userId, orgId);
     if (!isMember) {
       return ResponseOptimizer.createErrorResponse('Organization not found or access denied', 404);
     }
@@ -129,7 +103,7 @@ export async function GET(
     const cache = getCache();
 
     // Try cache first (user-specific cache key)
-    const cacheKey = `org:${orgId}:user:${user.id}`;
+    const cacheKey = `org:${orgId}:user:${userId}`;
     const cached = await cache.get(cacheKey);
     if (cached) {
       return ResponseOptimizer.createResponse(cached, {
@@ -209,7 +183,7 @@ export async function GET(
     };
 
     // Cache the response (user-specific)
-    await cache.set(cacheKey, response, { ttl: 300, tags: [`org:${orgId}`, `user:${user.id}`] });
+    await cache.set(cacheKey, response, { ttl: 300, tags: [`org:${orgId}`, `user:${userId}`] });
 
     return ResponseOptimizer.createResponse(response, {
       cacheType: 'api',
@@ -232,16 +206,16 @@ export async function PATCH(
   const { orgId } = await params;
   try {
     // Authenticate user
-    const user = await getUserFromRequest(request);
-    if (!user) {
+    const userId = await getUserIdFromRequestOrCookies(request);
+    if (!userId) {
       return ResponseOptimizer.createErrorResponse('Authentication required', 401);
     }
 
     // Verify user is an admin of the organization
-    const isAdmin = await isOrgAdmin(user.id, orgId);
+    const isAdmin = await isOrgAdmin(userId, orgId);
     if (!isAdmin) {
       // Check if they're at least a member (for better error message)
-      const isMember = await isOrgMember(user.id, orgId);
+      const isMember = await isOrgMember(userId, orgId);
       if (!isMember) {
         return ResponseOptimizer.createErrorResponse('Organization not found or access denied', 404);
       }
@@ -344,7 +318,7 @@ export async function PATCH(
 
       await tx.auditLog.create({
         data: {
-          userId: user.id,
+          userId: userId,
           action: 'organization_updated',
           resource: 'organization',
           resourceId: orgId,
@@ -365,7 +339,7 @@ export async function PATCH(
     logger.info('Organization updated', {
       organizationId: organization.id,
       updatedFields: Object.keys(updateData),
-      userId: user.id,
+      userId: userId,
     });
 
     return ResponseOptimizer.createResponse(
@@ -401,16 +375,16 @@ export async function DELETE(
   const { orgId } = await params;
   try {
     // Authenticate user
-    const user = await getUserFromRequest(request);
-    if (!user) {
+    const userId = await getUserIdFromRequestOrCookies(request);
+    if (!userId) {
       return ResponseOptimizer.createErrorResponse('Authentication required', 401);
     }
 
     // Verify user is an admin of the organization
-    const isAdmin = await isOrgAdmin(user.id, orgId);
+    const isAdmin = await isOrgAdmin(userId, orgId);
     if (!isAdmin) {
       // Check if they're at least a member (for better error message)
-      const isMember = await isOrgMember(user.id, orgId);
+      const isMember = await isOrgMember(userId, orgId);
       if (!isMember) {
         return ResponseOptimizer.createErrorResponse('Organization not found or access denied', 404);
       }
@@ -450,7 +424,7 @@ export async function DELETE(
 
       await tx.auditLog.create({
         data: {
-          userId: user.id,
+          userId: userId,
           action: 'organization_deleted',
           resource: 'organization',
           resourceId: orgId,
@@ -469,7 +443,7 @@ export async function DELETE(
     logger.info('Organization deleted', {
       organizationId: orgId,
       userCount: existing._count.users,
-      userId: user.id,
+      userId: userId,
     });
 
     return ResponseOptimizer.createResponse(

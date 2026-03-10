@@ -17,11 +17,6 @@ const RecordResultSchema = z.object({
   conversions: z.number().min(0).optional(),
 });
 
-// Helper to get user ID from auth (uses centralized JWT verification)
-async function getUserId(_request: NextRequest): Promise<string | null> {
-  return getUserIdFromCookies();
-}
-
 // Statistical functions
 function calculatePValue(controlConversions: number, controlTotal: number, treatmentConversions: number, treatmentTotal: number): number {
   if (controlTotal === 0 || treatmentTotal === 0) return 1;
@@ -70,7 +65,7 @@ export async function GET(
   { params }: RouteParams
 ) {
   try {
-    const userId = await getUserId(request);
+    const userId = await getUserIdFromCookies();
     if (!userId) {
       return NextResponse.json(
         { error: 'Authentication required' },
@@ -183,7 +178,7 @@ export async function POST(
   { params }: RouteParams
 ) {
   try {
-    const userId = await getUserId(request);
+    const userId = await getUserIdFromCookies();
     if (!userId) {
       return NextResponse.json(
         { error: 'Authentication required' },

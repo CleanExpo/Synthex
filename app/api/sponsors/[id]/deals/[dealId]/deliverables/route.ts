@@ -8,7 +8,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { verifyToken } from '@/lib/auth/jwt-utils';
+import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { logger } from '@/lib/logger';
 import {
   SponsorService,
@@ -16,34 +16,6 @@ import {
   DELIVERABLE_STATUSES,
 } from '@/lib/sponsors/sponsor-service';
 
-// =============================================================================
-// Auth Helper
-// =============================================================================
-
-async function getUserFromRequest(request: NextRequest): Promise<{ id: string } | null> {
-  const authHeader = request.headers.get('authorization');
-  if (authHeader) {
-    try {
-      const token = authHeader.replace('Bearer ', '');
-      const decoded = verifyToken(token);
-      return { id: decoded.userId };
-    } catch {
-      // Fall through to cookie check
-    }
-  }
-
-  const authToken = request.cookies.get('auth-token')?.value;
-  if (authToken) {
-    try {
-      const decoded = verifyToken(authToken);
-      return { id: decoded.userId };
-    } catch {
-      return null;
-    }
-  }
-
-  return null;
-}
 
 // =============================================================================
 // GET - List Deliverables for Deal
@@ -54,14 +26,14 @@ export async function GET(
   { params }: { params: Promise<{ id: string; dealId: string }> }
 ) {
   try {
-    const user = await getUserFromRequest(request);
-    if (!user) {
+    const userId = await getUserIdFromRequestOrCookies(request);
+    if (!userId) {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
     }
 
     const { dealId } = await params;
     const sponsorService = new SponsorService();
-    const deliverables = await sponsorService.getDeliverables(dealId, user.id);
+    const deliverables = await sponsorService.getDeliverables(dealId, userId);
 
     return NextResponse.json({
       success: true,
@@ -92,8 +64,8 @@ export async function POST(
   { params }: { params: Promise<{ id: string; dealId: string }> }
 ) {
   try {
-    const user = await getUserFromRequest(request);
-    if (!user) {
+    const userId = await getUserIdFromRequestOrCookies(request);
+    if (!userId) {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
     }
 
@@ -123,7 +95,7 @@ export async function POST(
     }
 
     const sponsorService = new SponsorService();
-    const deliverable = await sponsorService.createDeliverable(dealId, user.id, {
+    const deliverable = await sponsorService.createDeliverable(dealId, userId, {
       title: body.title,
       description: body.description,
       type: body.type,

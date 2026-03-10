@@ -24,18 +24,13 @@ const UpdatePreferencesSchema = z.object({
   }).optional(),
 });
 
-// Helper to get user ID from auth (uses centralized JWT verification)
-async function getUserId(_request: NextRequest): Promise<string | null> {
-  return getUserIdFromCookies();
-}
-
 /**
  * GET /api/psychology/principles
  * Get all psychology principles with usage stats
  */
 export async function GET(request: NextRequest) {
   try {
-    const userId = await getUserId(request);
+    const userId = await getUserIdFromCookies();
     if (!userId) {
       return NextResponse.json(
         { error: 'Authentication required' },
@@ -110,7 +105,7 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   try {
-    const userId = await getUserId(request);
+    const userId = await getUserIdFromCookies();
     if (!userId) {
       return NextResponse.json(
         { error: 'Authentication required' },

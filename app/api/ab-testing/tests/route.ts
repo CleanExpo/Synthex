@@ -36,18 +36,13 @@ const UpdateTestSchema = z.object({
   duration: z.number().min(1).max(90).optional(),
 });
 
-// Helper to get user ID from auth (uses centralized JWT verification)
-async function getUserId(_request: NextRequest): Promise<string | null> {
-  return getUserIdFromCookies();
-}
-
 /**
  * GET /api/ab-testing/tests
  * List all A/B tests for the current user
  */
 export async function GET(request: NextRequest) {
   try {
-    const userId = await getUserId(request);
+    const userId = await getUserIdFromCookies();
     if (!userId) {
       return NextResponse.json(
         { error: 'Authentication required' },
@@ -132,7 +127,7 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   try {
-    const userId = await getUserId(request);
+    const userId = await getUserIdFromCookies();
     if (!userId) {
       return NextResponse.json(
         { error: 'Authentication required' },

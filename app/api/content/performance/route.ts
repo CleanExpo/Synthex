@@ -10,7 +10,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { verifyToken } from '@/lib/auth/jwt-utils';
+import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { logger } from '@/lib/logger';
 import { getEffectiveOrganizationId } from '@/lib/multi-business';
 import {
@@ -19,34 +19,6 @@ import {
   ContentPerformanceAnalysis,
 } from '@/lib/ai/content-performance-analyzer';
 
-// =============================================================================
-// Auth Helper
-// =============================================================================
-
-async function getUserFromRequest(request: NextRequest): Promise<{ id: string } | null> {
-  const authHeader = request.headers.get('authorization');
-  if (authHeader) {
-    try {
-      const token = authHeader.replace('Bearer ', '');
-      const decoded = verifyToken(token);
-      return { id: decoded.userId };
-    } catch {
-      // Fall through to cookie check
-    }
-  }
-
-  const authToken = request.cookies.get('auth-token')?.value;
-  if (authToken) {
-    try {
-      const decoded = verifyToken(authToken);
-      return { id: decoded.userId };
-    } catch {
-      return null;
-    }
-  }
-
-  return null;
-}
 
 // =============================================================================
 // GET - Content Performance Analysis
@@ -54,8 +26,8 @@ async function getUserFromRequest(request: NextRequest): Promise<{ id: string } 
 
 export async function GET(request: NextRequest) {
   try {
-    const user = await getUserFromRequest(request);
-    if (!user) {
+    const userId = await getUserIdFromRequestOrCookies(request);
+    if (!userId) {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
     }
 
@@ -70,12 +42,12 @@ export async function GET(request: NextRequest) {
     startDate.setDate(startDate.getDate() - days);
 
     // Get org scope for multi-business support
-    const organizationId = await getEffectiveOrganizationId(user.id);
+    const organizationId = await getEffectiveOrganizationId(userId);
 
     // Fetch user's connected platforms
     const connections = await prisma.platformConnection.findMany({
       where: {
-        userId: user.id,
+        userId: userId,
         organizationId: organizationId ?? null,
         isActive: true,
         ...(platformFilter !== 'all' && { platform: platformFilter }),

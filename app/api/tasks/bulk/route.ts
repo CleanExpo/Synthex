@@ -43,17 +43,13 @@ const reorderSchema = z.object({
 
 import { getUserIdFromRequest } from '@/lib/auth/jwt-utils';
 
-async function getUserId(request: NextRequest): Promise<string | null> {
-  return getUserIdFromRequest(request);
-}
-
 // =============================================================================
 // PATCH - Bulk Update Tasks
 // =============================================================================
 
 export async function PATCH(request: NextRequest) {
   try {
-    const userId = await getUserId(request);
+    const userId = await getUserIdFromRequest(request);
     if (!userId) {
       return NextResponse.json(
         { error: 'Unauthorized', message: 'Authentication required' },
@@ -160,7 +156,7 @@ export async function PATCH(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
-    const userId = await getUserId(request);
+    const userId = await getUserIdFromRequest(request);
     if (!userId) {
       return NextResponse.json(
         { error: 'Unauthorized', message: 'Authentication required' },

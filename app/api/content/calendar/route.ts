@@ -20,39 +20,13 @@ import { z } from 'zod';
 import { ResponseOptimizer } from '@/lib/api/response-optimizer';
 import { logger } from '@/lib/logger';
 import { CalendarService, type ScheduleOptions } from '@/src/services/content/calendar-service';
-import { verifyToken } from '@/lib/auth/jwt-utils';
+import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { prisma } from '@/lib/prisma';
 
 // =============================================================================
 // Auth Helpers - Verify user and organization membership
 // =============================================================================
 
-async function getUserFromRequest(request: NextRequest): Promise<{ id: string; email: string } | null> {
-  // Try Authorization header first
-  const authHeader = request.headers.get('authorization');
-  if (authHeader) {
-    try {
-      const token = authHeader.replace('Bearer ', '');
-      const decoded = verifyToken(token);
-      return { id: decoded.userId, email: decoded.email || '' };
-    } catch {
-      // Fall through to cookie check
-    }
-  }
-
-  // Try auth-token cookie
-  const authToken = request.cookies.get('auth-token')?.value;
-  if (authToken) {
-    try {
-      const decoded = verifyToken(authToken);
-      return { id: decoded.userId, email: decoded.email || '' };
-    } catch {
-      return null;
-    }
-  }
-
-  return null;
-}
 
 /**
  * Check if user is a member of the organization
@@ -74,8 +48,8 @@ async function isOrgMember(userId: string, orgId: string): Promise<boolean> {
 export async function GET(request: NextRequest) {
   try {
     // Authenticate user
-    const user = await getUserFromRequest(request);
-    if (!user) {
+    const userId = await getUserIdFromRequestOrCookies(request);
+    if (!userId) {
       return ResponseOptimizer.createErrorResponse('Authentication required', 401);
     }
 
@@ -90,7 +64,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Verify user is a member of the organization
-    const isMember = await isOrgMember(user.id, organizationId);
+    const isMember = await isOrgMember(userId, organizationId);
     if (!isMember) {
       return ResponseOptimizer.createErrorResponse('Organization not found or access denied', 404);
     }
@@ -193,8 +167,8 @@ const schedulePostSchema = z.object({
 export async function POST(request: NextRequest) {
   try {
     // Authenticate user
-    const user = await getUserFromRequest(request);
-    if (!user) {
+    const userId = await getUserIdFromRequestOrCookies(request);
+    if (!userId) {
       return ResponseOptimizer.createErrorResponse('Authentication required', 401);
     }
 
@@ -222,7 +196,7 @@ export async function POST(request: NextRequest) {
     } = validation.data;
 
     // Verify user is a member of the organization
-    const isMember = await isOrgMember(user.id, organizationId);
+    const isMember = await isOrgMember(userId, organizationId);
     if (!isMember) {
       return ResponseOptimizer.createErrorResponse('Organization not found or access denied', 404);
     }
@@ -239,7 +213,7 @@ export async function POST(request: NextRequest) {
         tags,
         campaignId,
         recurrence,
-        createdBy: user.id, // Use authenticated user ID, not from request body
+        createdBy: userId, // Use authenticated user ID, not from request body
       },
       autoOptimize,
       checkConflicts,
@@ -252,7 +226,7 @@ export async function POST(request: NextRequest) {
       postId: post.id,
       organizationId,
       platforms,
-      userId: user.id,
+      userId: userId,
     });
 
     return ResponseOptimizer.createResponse(
@@ -288,8 +262,8 @@ const reschedulePostSchema = z.object({
 export async function PATCH(request: NextRequest) {
   try {
     // Authenticate user
-    const user = await getUserFromRequest(request);
-    if (!user) {
+    const userId = await getUserIdFromRequestOrCookies(request);
+    if (!userId) {
       return ResponseOptimizer.createErrorResponse('Authentication required', 401);
     }
 
@@ -304,7 +278,7 @@ export async function PATCH(request: NextRequest) {
     const { organizationId, postId, newTime, updateRecurrences } = patchValidation.data;
 
     // Verify user is a member of the organization
-    const isMember = await isOrgMember(user.id, organizationId);
+    const isMember = await isOrgMember(userId, organizationId);
     if (!isMember) {
       return ResponseOptimizer.createErrorResponse('Organization not found or access denied', 404);
     }
@@ -321,7 +295,7 @@ export async function PATCH(request: NextRequest) {
       postId,
       newTime,
       organizationId,
-      userId: user.id,
+      userId: userId,
     });
 
     return ResponseOptimizer.createResponse(

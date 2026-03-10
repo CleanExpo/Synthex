@@ -50,20 +50,8 @@ const bulkCreateSchema = z.object({
 // Auth Helper - Uses centralized JWT utilities (no fallback secrets)
 // =============================================================================
 
-import { verifyToken } from '@/lib/auth/jwt-utils';
+import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 
-async function getUserFromRequest(request: NextRequest): Promise<{ id: string; email: string } | null> {
-  const authHeader = request.headers.get('authorization');
-  if (!authHeader) return null;
-
-  try {
-    const token = authHeader.replace('Bearer ', '');
-    const decoded = verifyToken(token);
-    return { id: decoded.userId, email: decoded.email || '' };
-  } catch {
-    return null;
-  }
-}
 
 // =============================================================================
 // POST - Bulk Operations
@@ -71,8 +59,8 @@ async function getUserFromRequest(request: NextRequest): Promise<{ id: string; e
 
 export async function POST(request: NextRequest) {
   try {
-    const user = await getUserFromRequest(request);
-    if (!user) {
+    const userId = await getUserIdFromRequestOrCookies(request);
+    if (!userId) {
       return NextResponse.json(
         { error: 'Unauthorized', message: 'Authentication required' },
         { status: 401 }
@@ -101,7 +89,7 @@ export async function POST(request: NextRequest) {
         });
 
         const unauthorized = posts.filter(
-          (p) => p.campaign?.userId && p.campaign.userId !== user.id
+          (p) => p.campaign?.userId && p.campaign.userId !== userId
         );
 
         if (unauthorized.length > 0) {
@@ -204,7 +192,7 @@ export async function POST(request: NextRequest) {
         // Verify user owns all campaigns
         const campaignIds = [...new Set(posts.map((p) => p.campaignId))];
         const campaigns = await prisma.campaign.findMany({
-          where: { id: { in: campaignIds }, userId: user.id },
+          where: { id: { in: campaignIds }, userId: userId },
         });
 
         if (campaigns.length !== campaignIds.length) {

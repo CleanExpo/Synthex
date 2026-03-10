@@ -19,20 +19,8 @@ import { sanitizeErrorForResponse } from '@/lib/utils/error-utils';
 // Auth Helper - Uses centralized JWT utilities (no fallback secrets)
 // =============================================================================
 
-import { verifyToken } from '@/lib/auth/jwt-utils';
+import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 
-async function getUserFromRequest(request: NextRequest): Promise<{ id: string; email: string } | null> {
-  const authHeader = request.headers.get('authorization');
-  if (!authHeader) return null;
-
-  try {
-    const token = authHeader.replace('Bearer ', '');
-    const decoded = verifyToken(token);
-    return { id: decoded.userId, email: decoded.email || '' };
-  } catch {
-    return null;
-  }
-}
 
 // =============================================================================
 // GET - Fetch single content item
@@ -43,8 +31,8 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const user = await getUserFromRequest(request);
-    if (!user) {
+    const userId = await getUserIdFromRequestOrCookies(request);
+    if (!userId) {
       return NextResponse.json(
         { error: 'Unauthorized', message: 'Authentication required' },
         { status: 401 }
@@ -77,7 +65,7 @@ export async function GET(
 
     // Ownership check: treat missing post and wrong owner identically (404)
     // to avoid leaking that a resource exists for a given ID.
-    if (!post || post.campaign?.userId !== user.id) {
+    if (!post || post.campaign?.userId !== userId) {
       return NextResponse.json(
         { error: 'Not Found', message: 'Content not found' },
         { status: 404 }
@@ -116,8 +104,8 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const user = await getUserFromRequest(request);
-    if (!user) {
+    const userId = await getUserIdFromRequestOrCookies(request);
+    if (!userId) {
       return NextResponse.json(
         { error: 'Unauthorized', message: 'Authentication required' },
         { status: 401 }
@@ -163,7 +151,7 @@ export async function PATCH(
     // to avoid leaking that a resource exists for a given ID.
     // The nullable guard `?.userId` is intentionally absent here — a post
     // without a campaign relation is treated as inaccessible (404) to be safe.
-    if (!existingPost || existingPost.campaign?.userId !== user.id) {
+    if (!existingPost || existingPost.campaign?.userId !== userId) {
       return NextResponse.json(
         { error: 'Not Found', message: 'Content not found' },
         { status: 404 }
@@ -239,8 +227,8 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const user = await getUserFromRequest(request);
-    if (!user) {
+    const userId = await getUserIdFromRequestOrCookies(request);
+    if (!userId) {
       return NextResponse.json(
         { error: 'Unauthorized', message: 'Authentication required' },
         { status: 401 }
@@ -269,7 +257,7 @@ export async function DELETE(
 
     // Ownership check: treat missing post and wrong owner identically (404)
     // to avoid leaking that a resource exists for a given ID.
-    if (!existingPost || existingPost.campaign?.userId !== user.id) {
+    if (!existingPost || existingPost.campaign?.userId !== userId) {
       return NextResponse.json(
         { error: 'Not Found', message: 'Content not found' },
         { status: 404 }

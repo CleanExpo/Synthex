@@ -11,11 +11,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { reportGenerator } from '@/lib/reports/report-generator';
 import { getUserIdFromCookies } from '@/lib/auth/jwt-utils';
 
-// Helper to get user ID from auth (uses centralized JWT verification)
-async function getUserId(_request: NextRequest): Promise<string | null> {
-  return getUserIdFromCookies();
-}
-
 /**
  * GET /api/reporting/reports/[reportId]
  * Get report details and status
@@ -25,7 +20,7 @@ export async function GET(
   { params }: { params: Promise<{ reportId: string }> }
 ) {
   try {
-    const userId = await getUserId(request);
+    const userId = await getUserIdFromCookies();
     if (!userId) {
       return NextResponse.json(
         { error: 'Authentication required' },
@@ -75,7 +70,7 @@ export async function DELETE(
   { params }: { params: Promise<{ reportId: string }> }
 ) {
   try {
-    const userId = await getUserId(request);
+    const userId = await getUserIdFromCookies();
     if (!userId) {
       return NextResponse.json(
         { error: 'Authentication required' },

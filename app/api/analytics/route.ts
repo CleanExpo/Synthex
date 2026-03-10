@@ -31,17 +31,13 @@ const analyticsQuerySchema = z.object({
 
 import { getUserIdFromRequest } from '@/lib/auth/jwt-utils';
 
-async function getUserId(request: NextRequest): Promise<string | null> {
-  return getUserIdFromRequest(request);
-}
-
 // =============================================================================
 // GET - Get Analytics Data
 // =============================================================================
 
 export async function GET(request: NextRequest) {
   try {
-    const userId = await getUserId(request);
+    const userId = await getUserIdFromRequest(request);
     if (!userId) {
       return NextResponse.json(
         { error: 'Unauthorized', message: 'Authentication required' },

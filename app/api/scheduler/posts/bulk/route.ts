@@ -33,20 +33,12 @@ const bulkActionSchema = z.object({
 });
 
 // =============================================================================
-// Auth Helper
-// =============================================================================
-
-async function getUserId(request: NextRequest): Promise<string | null> {
-  return getUserIdFromRequestOrCookies(request);
-}
-
-// =============================================================================
 // POST - Bulk Operations
 // =============================================================================
 
 export async function POST(request: NextRequest) {
   try {
-    const userId = await getUserId(request);
+    const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
       return NextResponse.json(
         { error: 'Unauthorized', message: 'Authentication required' },

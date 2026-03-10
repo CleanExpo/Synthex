@@ -18,22 +18,9 @@ import { exportQuerySchema, type ExportQueryInput, periodToDateRange } from '@/l
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
 import { auditLogger } from '@/lib/security/audit-logger';
 import { logger } from '@/lib/logger';
-import { verifyToken } from '@/lib/auth/jwt-utils';
+import { getUserIdFromRequest } from '@/lib/auth/jwt-utils';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
-
-async function getUserFromRequest(request: NextRequest): Promise<{ id: string; email: string } | null> {
-  const authHeader = request.headers.get('authorization');
-  if (!authHeader) return null;
-
-  try {
-    const token = authHeader.replace('Bearer ', '');
-    const decoded = verifyToken(token);
-    return { id: decoded.userId, email: decoded.email || '' };
-  } catch {
-    return null;
-  }
-}
 
 // =============================================================================
 // Data Fetching
@@ -409,8 +396,8 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const user = await getUserFromRequest(request);
-    if (!user) {
+    const userId = await getUserIdFromRequest(request);
+    if (!userId) {
       return NextResponse.json(
         { error: 'Unauthorized', message: 'Authentication required' },
         { status: 401 }
@@ -463,7 +450,7 @@ export async function GET(request: NextRequest) {
 
     // Fetch data
     const data = await fetchAnalyticsData(
-      user.id,
+      userId,
       new Date(dateRange.startDate),
       new Date(dateRange.endDate),
       platforms
@@ -507,10 +494,10 @@ export async function GET(request: NextRequest) {
 
     // Audit log the export
     await auditLogger.log({
-      userId: user.id,
+      userId: userId,
       action: 'analytics.export',
       resource: 'analytics',
-      resourceId: user.id,
+      resourceId: userId,
       category: 'api',
       severity: 'low',
       outcome: 'success',
@@ -524,7 +511,7 @@ export async function GET(request: NextRequest) {
     });
 
     logger.info('Analytics export generated', {
-      userId: user.id,
+      userId: userId,
       format,
       postCount: data.posts.length,
     });
@@ -568,8 +555,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const user = await getUserFromRequest(request);
-    if (!user) {
+    const userId = await getUserIdFromRequest(request);
+    if (!userId) {
       return NextResponse.json(
         { error: 'Unauthorized', message: 'Authentication required' },
         { status: 401 }
@@ -590,7 +577,7 @@ export async function POST(request: NextRequest) {
 
     // Fetch data
     const data = await fetchAnalyticsData(
-      user.id,
+      userId,
       new Date(dateRange.startDate),
       new Date(dateRange.endDate),
       platforms
@@ -599,10 +586,10 @@ export async function POST(request: NextRequest) {
     // If email delivery requested, queue the export
     if (emailDelivery?.enabled && emailDelivery.recipients?.length) {
       await auditLogger.log({
-        userId: user.id,
+        userId: userId,
         action: 'analytics.export_scheduled',
         resource: 'analytics',
-        resourceId: user.id,
+        resourceId: userId,
         category: 'api',
         severity: 'low',
         outcome: 'success',
@@ -614,7 +601,7 @@ export async function POST(request: NextRequest) {
       });
 
       logger.info('Analytics export queued for email', {
-        userId: user.id,
+        userId: userId,
         recipients: emailDelivery.recipients.length,
       });
 
@@ -627,10 +614,10 @@ export async function POST(request: NextRequest) {
     }
 
     await auditLogger.log({
-      userId: user.id,
+      userId: userId,
       action: 'analytics.export_requested',
       resource: 'analytics',
-      resourceId: user.id,
+      resourceId: userId,
       category: 'api',
       severity: 'low',
       outcome: 'success',

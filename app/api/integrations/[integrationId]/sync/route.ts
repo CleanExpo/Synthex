@@ -31,22 +31,8 @@ import {
 // Auth Helper - Uses centralized JWT utilities (no fallback secrets)
 // =============================================================================
 
-import { verifyToken } from '@/lib/auth/jwt-utils';
+import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 
-async function getUserFromRequest(request: NextRequest): Promise<{ id: string; email: string } | null> {
-  const authHeader = request.headers.get('authorization');
-  const cookieToken = request.cookies.get('auth-token')?.value;
-  const token = authHeader?.replace('Bearer ', '') || cookieToken;
-
-  if (!token) return null;
-
-  try {
-    const decoded = verifyToken(token);
-    return { id: decoded.userId, email: decoded.email || '' };
-  } catch {
-    return null;
-  }
-}
 
 // =============================================================================
 // Validation Schemas
@@ -67,8 +53,8 @@ export async function POST(
   { params }: { params: Promise<{ integrationId: string }> }
 ) {
   try {
-    const user = await getUserFromRequest(request);
-    if (!user) {
+    const userId = await getUserIdFromRequestOrCookies(request);
+    if (!userId) {
       return NextResponse.json(
         { error: 'Unauthorized', message: 'Authentication required' },
         { status: 401 }
@@ -89,7 +75,7 @@ export async function POST(
     const integration = await prisma.platformConnection.findFirst({
       where: {
         id: integrationId,
-        userId: user.id,
+        userId: userId,
       },
     });
 
@@ -264,7 +250,7 @@ export async function POST(
 
     // Audit log
     await auditLogger.log({
-      userId: user.id,
+      userId: userId,
       action: 'integration.synced',
       resource: 'platformConnection',
       resourceId: integrationId,
@@ -469,8 +455,8 @@ export async function GET(
   { params }: { params: Promise<{ integrationId: string }> }
 ) {
   try {
-    const user = await getUserFromRequest(request);
-    if (!user) {
+    const userId = await getUserIdFromRequestOrCookies(request);
+    if (!userId) {
       return NextResponse.json(
         { error: 'Unauthorized', message: 'Authentication required' },
         { status: 401 }
@@ -482,7 +468,7 @@ export async function GET(
     const integration = await prisma.platformConnection.findFirst({
       where: {
         id: integrationId,
-        userId: user.id,
+        userId: userId,
       },
       select: {
         id: true,

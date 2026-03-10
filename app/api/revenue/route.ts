@@ -8,7 +8,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { verifyToken } from '@/lib/auth/jwt-utils';
+import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { logger } from '@/lib/logger';
 import {
   RevenueService,
@@ -16,34 +16,6 @@ import {
   REVENUE_SOURCES,
 } from '@/lib/revenue/revenue-service';
 
-// =============================================================================
-// Auth Helper
-// =============================================================================
-
-async function getUserFromRequest(request: NextRequest): Promise<{ id: string } | null> {
-  const authHeader = request.headers.get('authorization');
-  if (authHeader) {
-    try {
-      const token = authHeader.replace('Bearer ', '');
-      const decoded = verifyToken(token);
-      return { id: decoded.userId };
-    } catch {
-      // Fall through to cookie check
-    }
-  }
-
-  const authToken = request.cookies.get('auth-token')?.value;
-  if (authToken) {
-    try {
-      const decoded = verifyToken(authToken);
-      return { id: decoded.userId };
-    } catch {
-      return null;
-    }
-  }
-
-  return null;
-}
 
 // =============================================================================
 // GET - List Revenue Entries with Summary
@@ -51,8 +23,8 @@ async function getUserFromRequest(request: NextRequest): Promise<{ id: string } 
 
 export async function GET(request: NextRequest) {
   try {
-    const user = await getUserFromRequest(request);
-    if (!user) {
+    const userId = await getUserIdFromRequestOrCookies(request);
+    if (!userId) {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
     }
 
@@ -85,8 +57,8 @@ export async function GET(request: NextRequest) {
 
     const revenueService = new RevenueService();
     const [entries, summary] = await Promise.all([
-      revenueService.getEntries(user.id, filters),
-      revenueService.getSummary(user.id, filters),
+      revenueService.getEntries(userId, filters),
+      revenueService.getSummary(userId, filters),
     ]);
 
     return NextResponse.json({
@@ -111,8 +83,8 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const user = await getUserFromRequest(request);
-    if (!user) {
+    const userId = await getUserIdFromRequestOrCookies(request);
+    if (!userId) {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
     }
 
@@ -139,7 +111,7 @@ export async function POST(request: NextRequest) {
     }
 
     const revenueService = new RevenueService();
-    const entry = await revenueService.createEntry(user.id, {
+    const entry = await revenueService.createEntry(userId, {
       source: body.source,
       amount: body.amount,
       currency: body.currency || 'USD',

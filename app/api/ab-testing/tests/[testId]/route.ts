@@ -17,11 +17,6 @@ const UpdateTestSchema = z.object({
   winner: z.enum(['A', 'B', 'inconclusive']).optional(),
 });
 
-// Helper to get user ID from auth (uses centralized JWT verification)
-async function getUserId(_request: NextRequest): Promise<string | null> {
-  return getUserIdFromCookies();
-}
-
 interface RouteParams {
   params: Promise<{ testId: string }>;
 }
@@ -35,7 +30,7 @@ export async function GET(
   { params }: RouteParams
 ) {
   try {
-    const userId = await getUserId(request);
+    const userId = await getUserIdFromCookies();
     if (!userId) {
       return NextResponse.json(
         { error: 'Authentication required' },
@@ -117,7 +112,7 @@ export async function PUT(
   { params }: RouteParams
 ) {
   try {
-    const userId = await getUserId(request);
+    const userId = await getUserIdFromCookies();
     if (!userId) {
       return NextResponse.json(
         { error: 'Authentication required' },
@@ -189,7 +184,7 @@ export async function DELETE(
   { params }: RouteParams
 ) {
   try {
-    const userId = await getUserId(request);
+    const userId = await getUserIdFromCookies();
     if (!userId) {
       return NextResponse.json(
         { error: 'Authentication required' },

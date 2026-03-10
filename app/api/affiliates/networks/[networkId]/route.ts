@@ -9,41 +9,13 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { verifyToken } from '@/lib/auth/jwt-utils';
+import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { logger } from '@/lib/logger';
 import {
   AffiliateLinkService,
   type UpdateNetworkInput,
 } from '@/lib/affiliates/affiliate-link-service';
 
-// =============================================================================
-// Auth Helper
-// =============================================================================
-
-async function getUserFromRequest(request: NextRequest): Promise<{ id: string } | null> {
-  const authHeader = request.headers.get('authorization');
-  if (authHeader) {
-    try {
-      const token = authHeader.replace('Bearer ', '');
-      const decoded = verifyToken(token);
-      return { id: decoded.userId };
-    } catch {
-      // Fall through to cookie check
-    }
-  }
-
-  const authToken = request.cookies.get('auth-token')?.value;
-  if (authToken) {
-    try {
-      const decoded = verifyToken(authToken);
-      return { id: decoded.userId };
-    } catch {
-      return null;
-    }
-  }
-
-  return null;
-}
 
 // =============================================================================
 // GET - Get Network
@@ -54,13 +26,13 @@ export async function GET(
   { params }: { params: Promise<{ networkId: string }> }
 ) {
   try {
-    const user = await getUserFromRequest(request);
-    if (!user) {
+    const userId = await getUserIdFromRequestOrCookies(request);
+    if (!userId) {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
     }
 
     const { networkId } = await params;
-    const network = await AffiliateLinkService.getNetwork(user.id, networkId);
+    const network = await AffiliateLinkService.getNetwork(userId, networkId);
 
     if (!network) {
       return NextResponse.json(
@@ -91,8 +63,8 @@ export async function PUT(
   { params }: { params: Promise<{ networkId: string }> }
 ) {
   try {
-    const user = await getUserFromRequest(request);
-    if (!user) {
+    const userId = await getUserIdFromRequestOrCookies(request);
+    if (!userId) {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
     }
 
@@ -100,7 +72,7 @@ export async function PUT(
     const body = await request.json();
 
     // Verify ownership
-    const existing = await AffiliateLinkService.getNetwork(user.id, networkId);
+    const existing = await AffiliateLinkService.getNetwork(userId, networkId);
     if (!existing) {
       return NextResponse.json(
         { success: false, error: 'Network not found' },
@@ -116,7 +88,7 @@ export async function PUT(
       commissionRate: body.commissionRate,
     };
 
-    const network = await AffiliateLinkService.updateNetwork(user.id, networkId, input);
+    const network = await AffiliateLinkService.updateNetwork(userId, networkId, input);
 
     return NextResponse.json({
       success: true,
@@ -140,15 +112,15 @@ export async function DELETE(
   { params }: { params: Promise<{ networkId: string }> }
 ) {
   try {
-    const user = await getUserFromRequest(request);
-    if (!user) {
+    const userId = await getUserIdFromRequestOrCookies(request);
+    if (!userId) {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
     }
 
     const { networkId } = await params;
 
     // Verify ownership
-    const existing = await AffiliateLinkService.getNetwork(user.id, networkId);
+    const existing = await AffiliateLinkService.getNetwork(userId, networkId);
     if (!existing) {
       return NextResponse.json(
         { success: false, error: 'Network not found' },
@@ -156,7 +128,7 @@ export async function DELETE(
       );
     }
 
-    await AffiliateLinkService.deleteNetwork(user.id, networkId);
+    await AffiliateLinkService.deleteNetwork(userId, networkId);
 
     return NextResponse.json({
       success: true,

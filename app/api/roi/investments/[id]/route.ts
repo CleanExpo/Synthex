@@ -9,7 +9,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { verifyToken } from '@/lib/auth/jwt-utils';
+import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { logger } from '@/lib/logger';
 import {
   ROIService,
@@ -17,34 +17,6 @@ import {
   INVESTMENT_CATEGORIES,
 } from '@/lib/roi/roi-service';
 
-// =============================================================================
-// Auth Helper
-// =============================================================================
-
-async function getUserFromRequest(request: NextRequest): Promise<{ id: string } | null> {
-  const authHeader = request.headers.get('authorization');
-  if (authHeader) {
-    try {
-      const token = authHeader.replace('Bearer ', '');
-      const decoded = verifyToken(token);
-      return { id: decoded.userId };
-    } catch {
-      // Fall through to cookie check
-    }
-  }
-
-  const authToken = request.cookies.get('auth-token')?.value;
-  if (authToken) {
-    try {
-      const decoded = verifyToken(authToken);
-      return { id: decoded.userId };
-    } catch {
-      return null;
-    }
-  }
-
-  return null;
-}
 
 // =============================================================================
 // GET - Single Investment
@@ -55,14 +27,14 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const user = await getUserFromRequest(request);
-    if (!user) {
+    const userId = await getUserIdFromRequestOrCookies(request);
+    if (!userId) {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
     }
 
     const { id } = await params;
     const roiService = new ROIService();
-    const investment = await roiService.getInvestment(id, user.id);
+    const investment = await roiService.getInvestment(id, userId);
 
     if (!investment) {
       return NextResponse.json(
@@ -93,8 +65,8 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const user = await getUserFromRequest(request);
-    if (!user) {
+    const userId = await getUserIdFromRequestOrCookies(request);
+    if (!userId) {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
     }
 
@@ -128,7 +100,7 @@ export async function PUT(
     const roiService = new ROIService();
 
     try {
-      const investment = await roiService.updateInvestment(id, user.id, {
+      const investment = await roiService.updateInvestment(id, userId, {
         type: body.type,
         category: body.category,
         amount: body.amount,
@@ -171,8 +143,8 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const user = await getUserFromRequest(request);
-    if (!user) {
+    const userId = await getUserIdFromRequestOrCookies(request);
+    if (!userId) {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
     }
 
@@ -180,7 +152,7 @@ export async function DELETE(
     const roiService = new ROIService();
 
     try {
-      await roiService.deleteInvestment(id, user.id);
+      await roiService.deleteInvestment(id, userId);
 
       return NextResponse.json({
         success: true,

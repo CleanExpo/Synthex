@@ -37,20 +37,7 @@ const teamSettingsSchema = z.object({
 // Auth Helper - Uses centralized JWT utilities (no fallback secrets)
 // =============================================================================
 
-import { verifyToken } from '@/lib/auth/jwt-utils';
-
-async function getUserFromRequest(request: NextRequest): Promise<{ id: string; email: string } | null> {
-  const authHeader = request.headers.get('authorization');
-  if (!authHeader) return null;
-
-  try {
-    const token = authHeader.replace('Bearer ', '');
-    const decoded = verifyToken(token);
-    return { id: decoded.userId, email: decoded.email || '' };
-  } catch {
-    return null;
-  }
-}
+import { getUserIdFromRequest } from '@/lib/auth/jwt-utils';
 
 /**
  * Check if user has permission to manage team
@@ -85,8 +72,8 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const user = await getUserFromRequest(request);
-    if (!user) {
+    const userId = await getUserIdFromRequest(request);
+    if (!userId) {
       return NextResponse.json(
         { error: 'Unauthorized', message: 'Authentication required' },
         { status: 401 }
@@ -98,7 +85,7 @@ export async function GET(
     // Check if user is a member of the team
     const membership = await prisma.user.findFirst({
       where: {
-        id: user.id,
+        id: userId,
         organizationId: teamId,
       },
     });
@@ -175,8 +162,8 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const user = await getUserFromRequest(request);
-    if (!user) {
+    const userId = await getUserIdFromRequest(request);
+    if (!userId) {
       return NextResponse.json(
         { error: 'Unauthorized', message: 'Authentication required' },
         { status: 401 }
@@ -186,7 +173,7 @@ export async function PATCH(
     const { id: teamId } = await params;
 
     // Check permission
-    const canManage = await canManageTeam(user.id, teamId);
+    const canManage = await canManageTeam(userId, teamId);
     if (!canManage) {
       return NextResponse.json(
         { error: 'Forbidden', message: 'You do not have permission to manage this team' },
@@ -234,7 +221,7 @@ export async function PATCH(
 
       await tx.auditLog.create({
         data: {
-          userId: user.id,
+          userId: userId,
           action: 'team_settings_updated',
           resource: 'organization',
           resourceId: teamId,
@@ -271,8 +258,8 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const user = await getUserFromRequest(request);
-    if (!user) {
+    const userId = await getUserIdFromRequest(request);
+    if (!userId) {
       return NextResponse.json(
         { error: 'Unauthorized', message: 'Authentication required' },
         { status: 401 }
@@ -282,7 +269,7 @@ export async function DELETE(
     const { id: teamId } = await params;
 
     // Only admins can delete team
-    const canManage = await canManageTeam(user.id, teamId);
+    const canManage = await canManageTeam(userId, teamId);
     if (!canManage) {
       return NextResponse.json(
         { error: 'Forbidden', message: 'Only team admins can delete the team' },
@@ -314,7 +301,7 @@ export async function DELETE(
       // Log audit event before deletion (the resource ID is still valid)
       await tx.auditLog.create({
         data: {
-          userId: user.id,
+          userId: userId,
           action: 'team_deleted',
           resource: 'organization',
           resourceId: teamId,

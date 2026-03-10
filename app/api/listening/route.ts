@@ -9,37 +9,9 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { verifyToken } from '@/lib/auth/jwt-utils';
+import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { logger } from '@/lib/logger';
 
-// =============================================================================
-// Auth Helper
-// =============================================================================
-
-async function getUserFromRequest(request: NextRequest): Promise<{ id: string; email: string } | null> {
-  const authHeader = request.headers.get('authorization');
-  if (authHeader) {
-    try {
-      const token = authHeader.replace('Bearer ', '');
-      const decoded = verifyToken(token);
-      return { id: decoded.userId, email: decoded.email || '' };
-    } catch {
-      // Fall through to cookie check
-    }
-  }
-
-  const authToken = request.cookies.get('auth-token')?.value;
-  if (authToken) {
-    try {
-      const decoded = verifyToken(authToken);
-      return { id: decoded.userId, email: decoded.email || '' };
-    } catch {
-      return null;
-    }
-  }
-
-  return null;
-}
 
 // =============================================================================
 // GET - Dashboard overview stats
@@ -47,8 +19,8 @@ async function getUserFromRequest(request: NextRequest): Promise<{ id: string; e
 
 export async function GET(request: NextRequest) {
   try {
-    const user = await getUserFromRequest(request);
-    if (!user) {
+    const userId = await getUserIdFromRequestOrCookies(request);
+    if (!userId) {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
     }
 
@@ -60,13 +32,13 @@ export async function GET(request: NextRequest) {
     // Get mention counts by time period
     const [total24h, total7d, total30d] = await Promise.all([
       prisma.socialMention.count({
-        where: { userId: user.id, postedAt: { gte: oneDayAgo } },
+        where: { userId: userId, postedAt: { gte: oneDayAgo } },
       }),
       prisma.socialMention.count({
-        where: { userId: user.id, postedAt: { gte: sevenDaysAgo } },
+        where: { userId: userId, postedAt: { gte: sevenDaysAgo } },
       }),
       prisma.socialMention.count({
-        where: { userId: user.id, postedAt: { gte: thirtyDaysAgo } },
+        where: { userId: userId, postedAt: { gte: thirtyDaysAgo } },
       }),
     ]);
 
@@ -74,7 +46,7 @@ export async function GET(request: NextRequest) {
     const sentimentCounts = await prisma.socialMention.groupBy({
       by: ['sentiment'],
       where: {
-        userId: user.id,
+        userId: userId,
         postedAt: { gte: sevenDaysAgo },
         sentiment: { not: null },
       },
@@ -96,7 +68,7 @@ export async function GET(request: NextRequest) {
     const topKeywordMentions = await prisma.socialMention.groupBy({
       by: ['keywordId'],
       where: {
-        userId: user.id,
+        userId: userId,
         postedAt: { gte: sevenDaysAgo },
       },
       _count: true,
@@ -120,7 +92,7 @@ export async function GET(request: NextRequest) {
     const platformCounts = await prisma.socialMention.groupBy({
       by: ['platform'],
       where: {
-        userId: user.id,
+        userId: userId,
         postedAt: { gte: sevenDaysAgo },
       },
       _count: true,
@@ -135,12 +107,12 @@ export async function GET(request: NextRequest) {
 
     // Unread count
     const unreadCount = await prisma.socialMention.count({
-      where: { userId: user.id, isRead: false, isArchived: false },
+      where: { userId: userId, isRead: false, isArchived: false },
     });
 
     // Recent mentions (last 10)
     const recentMentions = await prisma.socialMention.findMany({
-      where: { userId: user.id, isArchived: false },
+      where: { userId: userId, isArchived: false },
       include: {
         keyword: {
           select: { id: true, keyword: true, type: true },
@@ -152,7 +124,7 @@ export async function GET(request: NextRequest) {
 
     // Active keywords count
     const activeKeywordsCount = await prisma.trackedKeyword.count({
-      where: { userId: user.id, isActive: true },
+      where: { userId: userId, isActive: true },
     });
 
     return NextResponse.json({
