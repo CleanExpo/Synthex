@@ -2,7 +2,7 @@
 
 /**
  * Generation Settings Component
- * Content generation configuration form
+ * Content generation configuration form with multi-platform support
  */
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -16,7 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Wand2, Loader2, Hash, Smile } from '@/components/icons';
+import { Wand2, Loader2, Hash, Smile, Layers, Check } from '@/components/icons';
 import { platformIcons, hookTypes, toneOptions, lengthOptions } from './content-config';
 
 interface GenerationSettingsProps {
@@ -39,6 +39,11 @@ interface GenerationSettingsProps {
   onIncludeEmojisChange: (include: boolean) => void;
   isGenerating: boolean;
   onGenerate: () => void;
+  /** Multi-platform mode: selected platforms for cross-posting */
+  selectedPlatforms?: string[];
+  onSelectedPlatformsChange?: (platforms: string[]) => void;
+  multiPlatformEnabled?: boolean;
+  onMultiPlatformToggle?: (enabled: boolean) => void;
 }
 
 export function GenerationSettings({
@@ -61,7 +66,36 @@ export function GenerationSettings({
   onIncludeEmojisChange,
   isGenerating,
   onGenerate,
+  selectedPlatforms = [],
+  onSelectedPlatformsChange,
+  multiPlatformEnabled = false,
+  onMultiPlatformToggle,
 }: GenerationSettingsProps) {
+  const handlePlatformToggle = (key: string) => {
+    if (!multiPlatformEnabled) {
+      onPlatformChange(key);
+      return;
+    }
+
+    // Multi-platform mode: toggle checkbox
+    const isSelected = selectedPlatforms.includes(key);
+    let updated: string[];
+
+    if (isSelected) {
+      // Don't allow deselecting the last platform
+      if (selectedPlatforms.length <= 1) return;
+      updated = selectedPlatforms.filter((p) => p !== key);
+      // If removing the primary platform, promote the next one
+      if (platform === key) {
+        onPlatformChange(updated[0]);
+      }
+    } else {
+      updated = [...selectedPlatforms, key];
+    }
+
+    onSelectedPlatformsChange?.(updated);
+  };
+
   return (
     <Card variant="glass">
       <CardHeader>
@@ -71,25 +105,79 @@ export function GenerationSettings({
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
+        {/* Multi-platform toggle */}
+        <label className="flex items-center justify-between cursor-pointer group">
+          <span className="flex items-center gap-2 text-sm text-gray-400 group-hover:text-gray-300 transition-colors">
+            <Layers className="h-4 w-4" />
+            Post to multiple platforms
+          </span>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={multiPlatformEnabled}
+            onClick={() => {
+              const next = !multiPlatformEnabled;
+              onMultiPlatformToggle?.(next);
+              if (next && selectedPlatforms.length === 0) {
+                // Initialise with current platform
+                onSelectedPlatformsChange?.([platform]);
+              }
+            }}
+            className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
+              multiPlatformEnabled ? 'bg-cyan-500' : 'bg-white/10'
+            }`}
+          >
+            <span
+              className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${
+                multiPlatformEnabled ? 'translate-x-[18px]' : 'translate-x-[3px]'
+              }`}
+            />
+          </button>
+        </label>
+
         {/* Platform Selection */}
         <div>
-          <Label className="text-gray-400">Platform</Label>
+          <Label className="text-gray-400">
+            {multiPlatformEnabled ? 'Platforms (primary generates first)' : 'Platform'}
+          </Label>
           <div className="grid grid-cols-5 gap-2 mt-2">
-            {Object.entries(platformIcons).map(([key, Icon]) => (
-              <button
-                key={key}
-                onClick={() => onPlatformChange(key)}
-                className={`p-3 rounded-lg border transition-all ${
-                  platform === key
-                    ? 'bg-cyan-500/20 border-cyan-500'
-                    : 'bg-white/5 border-white/10 hover:bg-white/10'
-                }`}
-              >
-                <Icon className="h-5 w-5 mx-auto" />
-                <p className="text-xs mt-1 capitalize">{key}</p>
-              </button>
-            ))}
+            {Object.entries(platformIcons).map(([key, Icon]) => {
+              const isSelected = multiPlatformEnabled
+                ? selectedPlatforms.includes(key)
+                : platform === key;
+              const isPrimary = multiPlatformEnabled && selectedPlatforms[0] === key;
+
+              return (
+                <button
+                  key={key}
+                  onClick={() => handlePlatformToggle(key)}
+                  className={`relative p-3 rounded-lg border transition-all ${
+                    isSelected
+                      ? 'bg-cyan-500/20 border-cyan-500'
+                      : 'bg-white/5 border-white/10 hover:bg-white/10'
+                  }`}
+                >
+                  {multiPlatformEnabled && isSelected && (
+                    <span className="absolute top-1 right-1">
+                      <Check className="h-3 w-3 text-cyan-400" />
+                    </span>
+                  )}
+                  {isPrimary && (
+                    <span className="absolute top-1 left-1 text-[8px] font-bold text-cyan-400 leading-none">
+                      1st
+                    </span>
+                  )}
+                  <Icon className="h-5 w-5 mx-auto" />
+                  <p className="text-xs mt-1 capitalize">{key}</p>
+                </button>
+              );
+            })}
           </div>
+          {multiPlatformEnabled && selectedPlatforms.length > 1 && (
+            <p className="text-xs text-slate-500 mt-1.5">
+              {selectedPlatforms.length} platforms selected — content will be adapted for each
+            </p>
+          )}
         </div>
 
         {/* Topic Input */}
