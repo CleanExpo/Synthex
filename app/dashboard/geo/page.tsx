@@ -18,7 +18,7 @@ import {
   Zap,
 } from '@/components/icons';
 import { GEOFeatureGate } from '@/components/geo/GEOFeatureGate';
-import type { GEOAnalysisResult, GEOScore } from '@/lib/geo/types';
+import type { GEOAnalysisResult, GEOScore, EntityAnalysisResult } from '@/lib/geo/types';
 
 /** The API response extends GEOAnalysisResult with a persisted record id. */
 type GEOAnalysisResponse = GEOAnalysisResult & { id: string };
