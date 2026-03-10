@@ -8,6 +8,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
 import { getUserIdFromCookies } from '@/lib/auth/jwt-utils';
+import { logger } from '@/lib/logger';
 
 const RecordResultSchema = z.object({
   variantId: z.string(),
@@ -161,7 +162,7 @@ export async function GET(
       },
     });
   } catch (error) {
-    console.error('A/B Testing results GET error:', error);
+    logger.error('A/B Testing results GET error:', error);
     return NextResponse.json(
       { error: 'Failed to fetch results' },
       { status: 500 }
@@ -329,7 +330,7 @@ export async function POST(
       },
     });
   } catch (error) {
-    console.error('A/B Testing results POST error:', error);
+    logger.error('A/B Testing results POST error:', error);
     return NextResponse.json(
       { error: 'Failed to record result' },
       { status: 500 }

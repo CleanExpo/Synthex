@@ -11,6 +11,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
 import { getUserIdFromCookies, unauthorizedResponse } from '@/lib/auth/jwt-utils';
+import { logger } from '@/lib/logger';
 
 // Validation schemas
 const CreateTestSchema = z.object({
@@ -113,7 +114,7 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('A/B Testing GET error:', error);
+    logger.error('A/B Testing GET error:', error);
     return NextResponse.json(
       { error: 'Failed to fetch tests' },
       { status: 500 }
@@ -172,7 +173,7 @@ export async function POST(request: NextRequest) {
       data: test,
     }, { status: 201 });
   } catch (error) {
-    console.error('A/B Testing POST error:', error);
+    logger.error('A/B Testing POST error:', error);
     return NextResponse.json(
       { error: 'Failed to create test' },
       { status: 500 }

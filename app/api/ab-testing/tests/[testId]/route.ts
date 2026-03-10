@@ -8,6 +8,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
 import { getUserIdFromCookies } from '@/lib/auth/jwt-utils';
+import { logger } from '@/lib/logger';
 
 const UpdateTestSchema = z.object({
   name: z.string().optional(),
@@ -95,7 +96,7 @@ export async function GET(
       },
     });
   } catch (error) {
-    console.error('A/B Testing GET [testId] error:', error);
+    logger.error('A/B Testing GET [testId] error:', error);
     return NextResponse.json(
       { error: 'Failed to fetch test' },
       { status: 500 }
@@ -167,7 +168,7 @@ export async function PUT(
       data: test,
     });
   } catch (error) {
-    console.error('A/B Testing PUT error:', error);
+    logger.error('A/B Testing PUT error:', error);
     return NextResponse.json(
       { error: 'Failed to update test' },
       { status: 500 }
@@ -216,7 +217,7 @@ export async function DELETE(
       message: 'Test deleted successfully',
     });
   } catch (error) {
-    console.error('A/B Testing DELETE error:', error);
+    logger.error('A/B Testing DELETE error:', error);
     return NextResponse.json(
       { error: 'Failed to delete test' },
       { status: 500 }
