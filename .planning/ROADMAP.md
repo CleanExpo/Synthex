@@ -647,7 +647,10 @@ and social media presence established.
 
 **Goal**: Founder admin panel for managing users, orgs, and platform health
 **Linear**: SYN-18
-**Plans**: TBD
+**Plans**: 1 plan
+
+Plans:
+- [ ] 75-01: Owner route guard + real user management + platform health + audit log tabs
 
 #### Phase 76: NEXUS Branding & Unite-Hub Connector
 

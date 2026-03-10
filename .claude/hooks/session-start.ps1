@@ -48,4 +48,22 @@ if (Test-Path $progressFile) {
     }
 }
 
+# Check for interrupted continuous execution
+$continuousState = "D:\Synthex\.planning\continuous-state.json"
+if (Test-Path $continuousState) {
+    $state = Get-Content $continuousState -Raw | ConvertFrom-Json
+    if ($state.active -eq $true) {
+        Write-Output ""
+        Write-Output "--- CONTINUOUS EXECUTION INTERRUPTED ---"
+        Write-Output "State: $($state.state)"
+        Write-Output "Phase: $($state.currentPhase)"
+        Write-Output "Completed: $($state.phasesCompleted -join ', ')"
+        if ($state.pauseReason) {
+            Write-Output "Paused: $($state.pauseReason)"
+        }
+        Write-Output "Resume: /gsd:continuous-execute"
+        Write-Output "--- END ---"
+    }
+}
+
 exit 0
