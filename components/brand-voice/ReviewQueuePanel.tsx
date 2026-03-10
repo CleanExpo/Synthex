@@ -96,7 +96,7 @@ export function ReviewQueuePanel({ className }: { className?: string }) {
   if (isLoading) {
     return (
       <div className={cn('flex items-center justify-center py-12', className)}>
-        <Loader2 className="h-6 w-6 text-white/30 animate-spin" />
+        <Loader2 className="h-6 w-6 text-white/30 animate-spin" role="status" aria-label="Loading review queue" />
       </div>
     )
   }
@@ -157,12 +157,13 @@ export function ReviewQueuePanel({ className }: { className?: string }) {
             {/* Reject reason input */}
             {isRejectOpen && (
               <div className="space-y-2">
-                <label className="text-xs text-white/60">Rejection reason</label>
+                <label htmlFor={`reject-reason-${item.id}`} className="text-xs text-white/60">Rejection reason</label>
                 <textarea
+                  id={`reject-reason-${item.id}`}
                   value={rejectReason}
                   onChange={(e) => setRejectReason(e.target.value)}
                   placeholder="Describe why this content is being rejected…"
-                  className="w-full rounded-lg bg-white/5 border border-white/10 text-xs text-white/80 p-2 resize-none h-20 focus:outline-none focus:border-white/30"
+                  className="w-full rounded-lg bg-white/5 border border-white/10 text-xs text-white/80 p-2 resize-none h-20 focus:outline-none focus:border-white/30 focus-visible:ring-2 focus-visible:ring-white/30 focus-visible:ring-offset-0"
                 />
               </div>
             )}
