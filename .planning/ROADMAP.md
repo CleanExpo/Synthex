@@ -98,7 +98,7 @@ None (internal platform work)
 - [x] **Phase 75: God Mode Admin Panel** - Founder admin panel for managing users, orgs, platform health
 - [x] **Phase 76: NEXUS Branding & Unite-Hub** - NEXUS branding throughout app + Unite-Hub API connector
 - [x] **Phase 77: Content Creation Flow** - Upload/generate/preview UX for real content publishing
-- [ ] **Phase 78: Post Queue & Scheduling** - Scheduling engine UX, queue management, bulk scheduling
+- [x] **Phase 78: Post Queue & Scheduling** - Scheduling engine UX, queue management, bulk scheduling
 - [ ] **Phase 79: Admin Completion** - Role updates, password reset, MRR from Stripe, audit log detail
 - [ ] **Phase 80: Brand Profile Setup** - Multi-brand profile configuration in God Mode
 - [ ] **Phase 81: Social Account Onboarding** - Connect real social accounts, audit presence, content strategy
@@ -689,10 +689,13 @@ Plans:
 **Depends on**: Phase 77
 **Linear**: SYN-44
 **Research**: Unlikely (scheduling infrastructure exists from Phase 40-41)
-**Plans**: TBD
+**Plans**: 4 plans
 
 Plans:
-- [ ] 78-01: TBD
+- [x] 78-01: Queue management dashboard
+- [x] 78-02: Time-slot picker & conflict detection
+- [x] 78-03: Bulk scheduling wizard & CSV import
+- [x] 78-04: Publish cron hardening & schedule health
 
 #### Phase 79: Admin Completion
 
