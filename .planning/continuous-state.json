@@ -1,15 +1,16 @@
 {
   "version": "1.0",
-  "active": true,
-  "state": "PLANNING",
+  "active": false,
+  "state": "PAUSED",
   "milestone": "v4.0",
-  "currentPhase": 80,
-  "currentPlan": null,
+  "currentPhase": 84,
+  "currentPlan": "84-01",
   "phasesRequested": [77, 78, 79, 80, 81, 82, 83, 84],
-  "phasesCompleted": [77, 78, 79],
+  "phasesCompleted": [77, 78, 79, 80, 81, 82, 83],
   "baselineTestCount": 1496,
   "baselineFailedTests": 32,
-  "pauseReason": null,
+  "pauseReason": "User stopped — rate limit hit on 84-01 subagent",
   "startedAt": "2026-03-10T12:15:00+11:00",
-  "toolCallCount": 45
+  "toolCallCount": 90,
+  "resumeNote": "84-01, 84-02, 84-03 plans exist. Execute 84-01 first, then 84-02, then 84-03 to complete v4.0."
 }
