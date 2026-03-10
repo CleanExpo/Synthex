@@ -17,5 +17,6 @@ export { PrivacyTab } from './privacy-tab';
 export { BillingTab } from './billing-tab';
 export { AdvancedTab } from './advanced-tab';
 export { BrandingTab } from './branding-tab';
+export { BrandProfileTab } from './brand-profile-tab';
 export { AICredentialsManager } from './ai-credentials-manager';
 export { PlatformCredentialsManager } from './platform-credentials-manager';

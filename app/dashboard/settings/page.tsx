@@ -9,11 +9,14 @@
 
 import { useState } from 'react';
 import { useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 import { useSettingsData, isEnterprisePlan } from '@/hooks/use-settings-data';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import {
   Bell,
+  Building,
+  ChevronRight,
   CreditCard,
   Download,
   Link2,
@@ -131,13 +134,29 @@ export default function SettingsPage() {
         </TabsList>
 
         <TabsContent value="profile" className="mt-6">
-          <ProfileTab
-            profile={profile}
-            onProfileChange={handleProfileChange}
-            onAvatarUpload={handleAvatarUpload}
-            onSave={handleSave}
-            isSaving={isSaving}
-          />
+          <div className="space-y-6">
+            <ProfileTab
+              profile={profile}
+              onProfileChange={handleProfileChange}
+              onAvatarUpload={handleAvatarUpload}
+              onSave={handleSave}
+              isSaving={isSaving}
+            />
+            <Link href="/dashboard/settings/brand-profile">
+              <Card variant="glass" className="hover:border-white/20 transition-colors cursor-pointer">
+                <CardContent className="flex items-center justify-between py-4">
+                  <div className="flex items-center gap-3">
+                    <Building className="w-5 h-5 text-cyan-400" />
+                    <div>
+                      <p className="text-sm font-medium text-white">Brand Profile</p>
+                      <p className="text-xs text-slate-400">Logo, colours, website, and social handles</p>
+                    </div>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-slate-500" />
+                </CardContent>
+              </Card>
+            </Link>
+          </div>
         </TabsContent>
 
         <TabsContent value="notifications" className="mt-6">

@@ -1,3 +1,52 @@
+# Phase 80-02: Brand Profile UI — SUMMARY
+
+**Linear**: SYN-55
+**Date**: 10/03/2026
+**Status**: Complete
+
+## Tasks Completed
+
+### Task 1: `hooks/use-brand-profile.ts` (NEW)
+SWR hook for brand profile data. Uses `credentials: 'include'` fetcher for GET and a plain `async` `updateBrandProfile()` mutation calling `PATCH /api/brand-profile`, then re-validates with `mutate()`. Follows the project SWR pattern (read with SWR, write in callbacks).
+
+### Task 2: `components/settings/brand-profile-tab.tsx` (NEW)
+Full brand profile editor client component with four glassmorphic cards:
+1. **Brand Identity** — name, description, logo (URL + file upload via `POST /api/media/upload`), favicon, primary colour picker + hex input
+2. **Business Details** — website, industry (dropdown from constant list), team size (button group: Solo, 2-10, 11-50, 51-200, 200+), ABN
+3. **Social Handles** — 8 platforms (Twitter/X, Instagram, LinkedIn, YouTube, TikTok, Facebook, Pinterest, Reddit)
+4. **Live Preview** — brand card that updates live as the user types name, logo, colour, and description
+
+Validation: name required (max 100), hex colour format, URL format for website/logo/favicon, description max 500, ABN max 20.
+
+### Task 3: `app/dashboard/settings/brand-profile/page.tsx` (NEW)
+Server component page wrapper exporting Next.js `metadata` and rendering `<BrandProfileTab />`.
+
+### Task 4: `app/dashboard/settings/page.tsx` (UPDATED)
+Added `Link`, `Building`, and `ChevronRight` imports. Wrapped ProfileTab in a `div.space-y-6` and added a "Brand Profile" link card below it, linking to `/dashboard/settings/brand-profile`.
+
+### Task 5: `components/settings/index.ts` (UPDATED)
+Added `export { BrandProfileTab } from './brand-profile-tab'`.
+
+## Verification
+
+- `npm run type-check` — PASS (zero errors)
+- `npm run lint` — PASS (zero warnings/errors)
+
+## Success Criteria
+
+- [x] `/dashboard/settings/brand-profile` page renders without errors
+- [x] `useBrandProfile` hook fetches via `GET /api/brand-profile` with `credentials: 'include'`
+- [x] All org brand fields pre-populate from API on page load
+- [x] PATCH on save only sends changed fields
+- [x] Logo upload calls `POST /api/media/upload`, URL result populates logo field
+- [x] Primary colour validated as 6-digit hex before save
+- [x] Website validated as valid URL before save
+- [x] Live preview card updates as user types name and colour
+- [x] Settings page Profile tab has visible "Brand Profile" link card
+- [x] `npm run type-check` passes
+
+---
+
 # Phase 80-01: Brand Profile API — SUMMARY
 
 **Linear**: SYN-55
