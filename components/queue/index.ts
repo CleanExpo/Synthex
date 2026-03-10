@@ -9,3 +9,4 @@ export type { QueuePost } from './queue-table';
 export { QueueBulkActions } from './queue-bulk-actions';
 export { QueueFilters } from './queue-filters';
 export { QueueStats } from './queue-stats';
+export { ScheduleHealth } from './schedule-health';

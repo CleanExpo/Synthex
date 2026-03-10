@@ -14,7 +14,7 @@ import { useState, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import useSWR from 'swr';
 import { fetchWithCSRF } from '@/lib/csrf';
-import { QueueTable, QueueBulkActions, QueueFilters, QueueStats } from '@/components/queue';
+import { QueueTable, QueueBulkActions, QueueFilters, QueueStats, ScheduleHealth } from '@/components/queue';
 import type { QueuePost } from '@/components/queue';
 import { DashboardSkeleton } from '@/components/skeletons/DashboardSkeleton';
 import { APIErrorCard } from '@/components/error-states/api-error';
@@ -273,6 +273,9 @@ export default function QueuePage() {
         onOpenChange={setBulkWizardOpen}
         onComplete={() => mutate()}
       />
+
+      {/* Schedule Health */}
+      <ScheduleHealth />
 
       {/* Stats */}
       <QueueStats
