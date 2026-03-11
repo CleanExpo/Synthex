@@ -24,6 +24,69 @@ $subagentType = $parsed.subagent_type
 $description  = $parsed.description
 $prompt       = $parsed.prompt
 
+# ── DEDUP: Idempotency key generation + duplicate dispatch detection ──────────
+$dedupFile = "$scratchpadDir\dispatch-dedup.json"
+
+# Generate idempotency key: SHA256(subagent_type|first-200-chars-of-description)
+$descTrimmed = if ($description) { $description.Substring(0, [Math]::Min(200, $description.Length)) } else { "" }
+$keySource = (($subagentType + "|" + $descTrimmed).ToLower().Trim())
+$sha256 = [System.Security.Cryptography.SHA256]::Create()
+$bytes  = [System.Text.Encoding]::UTF8.GetBytes($keySource)
+$hash   = [System.BitConverter]::ToString($sha256.ComputeHash($bytes)).Replace("-","").ToLower()
+$idempotencyKey = $hash.Substring(0, 16)
+
+# Load or init dedup store
+$dedup = @{}
+if (Test-Path $dedupFile) {
+    try {
+        $raw    = Get-Content $dedupFile -Raw
+        $loaded = $raw | ConvertFrom-Json
+        $loaded.PSObject.Properties | ForEach-Object { $dedup[$_.Name] = $_.Value }
+    } catch { $dedup = @{} }
+}
+
+# Check for duplicate within 30-minute window
+$isDuplicate = $false
+$now = Get-Date
+if ($dedup.ContainsKey($idempotencyKey)) {
+    $firstSeen = [DateTime]::Parse($dedup[$idempotencyKey].firstSeen)
+    $ageMins   = ($now - $firstSeen).TotalMinutes
+    if ($ageMins -lt 30) {
+        $isDuplicate = $true
+        $count = $dedup[$idempotencyKey].count + 1
+        $dedup[$idempotencyKey].count = $count
+        Write-Error ("DUPLICATE_DISPATCH [key=$idempotencyKey count=$count age=" + [math]::Round($ageMins,1) + "min]: " +
+            "Agent '$subagentType' description '$description' was dispatched $count times in " + [math]::Round($ageMins,1) + "min. " +
+            "Check if a Linear issue was already created for this work before proceeding.")
+    }
+}
+
+# Register key if first time seen
+if (-not $dedup.ContainsKey($idempotencyKey)) {
+    $dedup[$idempotencyKey] = [PSCustomObject]@{
+        firstSeen = $now.ToString("o")
+        count     = 1
+        agent     = $subagentType
+        desc      = $descTrimmed.Substring(0, [Math]::Min(80, $descTrimmed.Length))
+    }
+}
+
+# Prune entries older than 60 minutes to keep store lean
+$pruned = @{}
+foreach ($k in $dedup.Keys) {
+    try {
+        $age = ($now - [DateTime]::Parse($dedup[$k].firstSeen)).TotalMinutes
+        if ($age -lt 60) { $pruned[$k] = $dedup[$k] }
+    } catch { }
+}
+$dedup = $pruned
+
+# Persist dedup store
+try {
+    $dedup | ConvertTo-Json -Depth 3 | Set-Content -Path $dedupFile -Encoding UTF8
+} catch { }  # non-fatal — hook must not crash
+# ── END DEDUP ─────────────────────────────────────────────────────────────────
+
 $warnings = @()
 $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm"
 
@@ -54,6 +117,7 @@ $logEntry += ("## Dispatch - " + $timestamp)
 $logEntry += ("Agent: " + $subagentType)
 $logEntry += ("Description: " + $description)
 $logEntry += ("Issue ID present: " + $hasIssue)
+$logEntry += ("Duplicate: " + $isDuplicate)
 if ($warnings.Count -gt 0) {
     foreach ($w in $warnings) { $logEntry += $w }
 }
