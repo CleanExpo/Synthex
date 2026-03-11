@@ -13,6 +13,7 @@ import { getAIProvider } from '@/lib/ai/providers';
 import type { AIProvider } from '@/lib/ai/providers';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
+import type { PsychologyLeverWeights } from '@/lib/bayesian/surfaces/psychology-levers';
 
 // Validation schemas
 const AnalysisRequestSchema = z.object({
@@ -165,6 +166,8 @@ export class PsychologyAnalyzer {
    * Analyze content for psychological persuasion principles.
    * If an AIProvider is passed, it will be used for the AI analysis step
    * (supports user API key injection). Otherwise falls back to callOpenRouter.
+   * When leverWeights are provided (via BO), they modulate per-principle contributions
+   * in calculateOverallScore().
    */
   async analyzeContent(
     content: string,
@@ -173,7 +176,8 @@ export class PsychologyAnalyzer {
       platform?: string;
       contentType?: string;
     } = {},
-    aiProvider?: AIProvider
+    aiProvider?: AIProvider,
+    leverWeights?: PsychologyLeverWeights,
   ): Promise<AnalysisResult> {
     // First, do rule-based detection
     const ruleBasedResults = this.detectPrinciplesRuleBased(content);
@@ -185,7 +189,7 @@ export class PsychologyAnalyzer {
     const mergedPrinciples = this.mergePrincipleResults(ruleBasedResults, aiAnalysis.principles);
 
     // Calculate overall psychology score
-    const overallScore = this.calculateOverallScore(mergedPrinciples, aiAnalysis);
+    const overallScore = this.calculateOverallScore(mergedPrinciples, aiAnalysis, leverWeights);
 
     // Generate actionable recommendations
     const recommendations = this.generateRecommendations(
@@ -355,17 +359,36 @@ Provide detailed analysis in JSON format.`;
     return merged.sort((a, b) => b.strength - a.strength);
   }
 
+  // Mapping from principle ID to PsychologyLeverWeights key
+  private static readonly PRINCIPLE_TO_WEIGHT: Record<string, keyof PsychologyLeverWeights> = {
+    'social-proof':  'socialProofWeight',
+    'scarcity':      'scarcityWeight',
+    'authority':     'authorityWeight',
+    'reciprocity':   'reciprocityWeight',
+    'loss-aversion': 'lossAversionWeight',
+    'commitment':    'commitmentWeight',
+    'liking':        'likingWeight',
+    'anchoring':     'anchoringWeight',
+  };
+
   /**
-   * Calculate overall psychology effectiveness score
+   * Calculate overall psychology effectiveness score.
+   * When leverWeights are provided (via BO), each principle's contribution
+   * is multiplied by its corresponding effectiveness multiplier.
    */
   private calculateOverallScore(
     principles: AnalysisResult['principlesDetected'],
-    aiAnalysis: { emotionalTone: { intensity: number } }
+    aiAnalysis: { emotionalTone: { intensity: number } },
+    leverWeights?: PsychologyLeverWeights,
   ): number {
     if (principles.length === 0) return 25;
 
-    // Weighted average of principle strengths
-    const principleScore = principles.reduce((sum, p) => sum + p.strength * (p.confidence / 100), 0) / principles.length;
+    // Weighted average of principle strengths, with optional BO lever multipliers
+    const principleScore = principles.reduce((sum, p) => {
+      const weightKey  = PsychologyAnalyzer.PRINCIPLE_TO_WEIGHT[p.id];
+      const multiplier = (weightKey && leverWeights) ? (leverWeights[weightKey] ?? 1.0) : 1.0;
+      return sum + p.strength * (p.confidence / 100) * multiplier;
+    }, 0) / principles.length;
 
     // Factor in emotional intensity
     const emotionBonus = aiAnalysis.emotionalTone.intensity * 0.1;

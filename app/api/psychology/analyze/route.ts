@@ -14,6 +14,10 @@ import { z } from 'zod';
 import { resolveAIProvider } from '@/lib/ai/api-credential-injector';
 import { requireApiKey } from '@/lib/middleware/require-api-key';
 import { logger } from '@/lib/logger';
+import { prisma } from '@/lib/prisma';
+import { isSurfaceAvailable } from '@/lib/bayesian/feature-limits';
+import { getPsychologyLeverWeights } from '@/lib/bayesian/surfaces/psychology-levers';
+import { registerObservationSilently } from '@/lib/bayesian/fallback';
 
 const AnalyzeRequestSchema = z.object({
   content: z.string().min(1, 'Content is required').max(5000, 'Content too long'),
@@ -44,12 +48,25 @@ export async function POST(request: NextRequest) {
     // Resolve AI provider (user key → platform key)
     const ai = await resolveAIProvider(userId);
 
-    // Perform analysis with user's AI provider
-    const rawAnalysis = await psychologyAnalyzer.analyzeContent(content, {
-      targetAudience,
-      platform,
-      contentType,
-    }, ai);
+    // Resolve plan for BO surface gating
+    const userRecord = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { organizationId: true, plan: true },
+    });
+    const orgIdForBO = userRecord?.organizationId ?? userId;
+    const plan       = (userRecord?.plan ?? 'free').toLowerCase();
+
+    const leverWeightsResult = isSurfaceAvailable(plan, 'psychology_levers')
+      ? await getPsychologyLeverWeights(orgIdForBO)
+      : undefined;
+
+    // Perform analysis with user's AI provider and optional BO lever weights
+    const rawAnalysis = await psychologyAnalyzer.analyzeContent(
+      content,
+      { targetAudience, platform, contentType },
+      ai,
+      leverWeightsResult?.weights,
+    );
 
     // Clamp all numeric scores to valid ranges (0–100) to guard against
     // out-of-bounds values from the AI model response.
@@ -70,6 +87,26 @@ export async function POST(request: NextRequest) {
         Object.entries(rawAnalysis.persuasionMetrics).map(([k, v]) => [k, clamp(v as number)])
       ) as typeof rawAnalysis.persuasionMetrics,
     };
+
+    // Register BO observation (fire-and-forget)
+    if (leverWeightsResult?.source === 'bo') {
+      void registerObservationSilently(
+        'psychology_levers',
+        orgIdForBO,
+        {
+          socialProofWeight:  leverWeightsResult.weights.socialProofWeight,
+          scarcityWeight:     leverWeightsResult.weights.scarcityWeight,
+          authorityWeight:    leverWeightsResult.weights.authorityWeight,
+          reciprocityWeight:  leverWeightsResult.weights.reciprocityWeight,
+          lossAversionWeight: leverWeightsResult.weights.lossAversionWeight,
+          commitmentWeight:   leverWeightsResult.weights.commitmentWeight,
+          likingWeight:       leverWeightsResult.weights.likingWeight,
+          anchoringWeight:    leverWeightsResult.weights.anchoringWeight,
+        },
+        analysis.overallScore / 100,
+        { platform, contentType },
+      );
+    }
 
     // Store analysis if generationId provided
     const generationId = body.generationId;
