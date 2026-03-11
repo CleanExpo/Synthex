@@ -192,6 +192,7 @@ const sidebarGroups: Array<{
       { icon: Newspaper, label: 'PR Manager', href: '/dashboard/pr' },
       { icon: Award, label: 'Awards & Directories', href: '/dashboard/awards' },
       { icon: LinkIcon, label: 'Link Prospector', href: '/dashboard/backlinks' },
+      { icon: Sparkles, label: 'Prompt Intelligence', href: '/dashboard/prompts' },
     ],
   },
   {
