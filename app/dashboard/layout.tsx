@@ -57,6 +57,7 @@ import {
   Briefcase,
   Link as LinkIcon,
   Mic,
+  Newspaper,
 } from '@/components/icons';
 import { Button } from '@/components/ui/button';
 import { AIPMFloatingButton } from '@/components/ai-pm';
@@ -181,6 +182,14 @@ const sidebarGroups: Array<{
       { icon: Users, label: 'Authors', href: '/dashboard/authors' },
       { icon: Database, label: 'Research', href: '/dashboard/research' },
       { icon: Link2, label: 'Link in Bio', href: '/dashboard/bio' },
+    ],
+  },
+  {
+    id: 'pr-manager',
+    icon: Newspaper,
+    label: 'PR MANAGER',
+    items: [
+      { icon: Newspaper, label: 'PR Manager', href: '/dashboard/pr' },
     ],
   },
   {

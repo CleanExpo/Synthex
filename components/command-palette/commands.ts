@@ -4,7 +4,7 @@ import {
   HelpCircle, Layers, Lightbulb, Layout, Zap, Link2,
   GitBranch as GitPullRequest, MessageSquare, Shield, Code, Image,
   Repeat, Send, Bell, Grid, DollarSign, Calculator, Briefcase, Link, List,
-  Mic, Award, Building2,
+  Mic, Award, Building2, Newspaper,
 } from '@/components/icons';
 import { notify } from '@/lib/notifications';
 import type { CommandItem } from './types';
@@ -65,6 +65,12 @@ export function buildCommands(
     { id: 'brand-identity', title: 'Brand Builder — Identity', description: 'Create and manage your brand entity profile', icon: Building2, action: () => push('/dashboard/brand'), category: 'navigation', keywords: ['brand', 'identity', 'entity', 'profile', 'knowledge panel', 'wikidata', 'nap', 'consistency'] },
     { id: 'brand-consistency', title: 'Brand Builder — Consistency Audit', description: 'Check NAP consistency across all brand platforms', icon: Building2, action: () => push('/dashboard/brand?tab=consistency'), category: 'navigation', keywords: ['brand', 'consistency', 'nap', 'audit', 'platforms', 'wikidata', 'knowledge graph'] },
     { id: 'brand-mentions', title: 'Brand Builder — Mentions', description: 'Monitor brand mentions across news and media', icon: Building2, action: () => push('/dashboard/brand?tab=mentions'), category: 'navigation', keywords: ['brand', 'mentions', 'monitor', 'news', 'media', 'sentiment', 'newsdata', 'gdelt'] },
+
+    // PR Manager (Phase 92)
+    { id: 'pr-journalists', title: 'PR Manager — Journalists', description: 'Manage journalist contacts and pitches', icon: Newspaper, action: () => push('/dashboard/pr'), category: 'navigation', keywords: ['pr', 'journalist', 'pitch', 'media', 'press', 'contact', 'crm', 'outreach'] },
+    { id: 'pr-pitches', title: 'PR Manager — Pitches', description: 'Track pitch lifecycle and status', icon: Newspaper, action: () => push('/dashboard/pr?tab=pitches'), category: 'navigation', keywords: ['pitch', 'outreach', 'journalist', 'sent', 'replied', 'covered', 'pr', 'kanban'] },
+    { id: 'pr-coverage', title: 'PR Manager — Coverage', description: 'Monitor editorial coverage and poll for mentions', icon: Newspaper, action: () => push('/dashboard/pr?tab=coverage'), category: 'navigation', keywords: ['coverage', 'editorial', 'mention', 'media', 'press', 'poll', 'gdelt', 'newsdata'] },
+    { id: 'pr-press-releases', title: 'PR Manager — Press Releases', description: 'Create AI-indexable press releases with schema.org JSON-LD', icon: Newspaper, action: () => push('/dashboard/pr?tab=press-releases'), category: 'navigation', keywords: ['press release', 'newsroom', 'schema', 'json-ld', 'publish', 'ai indexing'] },
     { id: 'authority-analysis', title: 'Authority Analysis', description: 'Validate claims and generate citations from authoritative sources', icon: Shield, action: () => push('/dashboard/authority'), category: 'navigation', keywords: ['authority', 'claims', 'validate', 'citations', 'sources', 'verify', 'credibility'] },
     { id: 'validate-claims', title: 'Validate Claims', description: 'Check content claims against government, academic, and industry sources', icon: Shield, action: () => push('/dashboard/authority'), category: 'actions', keywords: ['validate', 'claims', 'verify', 'authority', 'fact check', 'sources', 'academic', 'government'] },
     { id: 'generate-citations', title: 'Generate Citations', description: 'Auto-generate formatted footnotes and inline citations', icon: Shield, action: () => push('/dashboard/authority'), category: 'actions', keywords: ['citations', 'generate', 'footnotes', 'references', 'authority', 'apa', 'chicago'] },

@@ -250,6 +250,7 @@ export {
   BookmarkIcon as BookmarkPlus,
   Cog8ToothIcon as Settings2,
   CodeBracketIcon as Code2,
+  NewspaperIcon as Newspaper,
 } from '@heroicons/react/24/outline';
 
 // ============================================
