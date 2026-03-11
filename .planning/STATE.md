@@ -11,13 +11,13 @@ See: .planning/PROJECT.md (updated 2026-02-17)
 
 Milestone: v5.0 AI-Native GEO & Citation Engine
 Phase: 87 of 100 (GEO Content Optimiser v2) — IN PROGRESS
-Plan: 1 of 3 complete
-Status: Plan 01 executed — tactic scorer service live
-Last activity: 2026-03-11 — Executed 87-01-PLAN.md: GEOTactic/TacticScore/TacticScoreResult types, tacticOptimiserRewrites feature limits, 9-tactic pure TypeScript scorer (tactic-scorer.ts), POST /api/geo/tactic-score endpoint
+Plan: 2 of 3 complete
+Status: Plans 01+02 executed — tactic scorer + AI rewrite pipeline live
+Last activity: 2026-03-11 — Executed 87-02-PLAN.md: 9 tactic-specific rewrite prompts (tactic-prompts.ts), POST /api/geo/rewrite streaming SSE endpoint (pro+ gated, 20req/min, temperature 0.3)
 
-Progress: ██░░░░░░░░ ~7% (7/~49 plans)
+Progress: ██░░░░░░░░ ~8% (8/~49 plans)
 
-Next action: Execute 87-02-PLAN.md (AI Rewrite Pipeline)
+Next action: Execute 87-03-PLAN.md (Editor UI)
 
 ## Performance Metrics
 
