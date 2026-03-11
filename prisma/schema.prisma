@@ -3609,11 +3609,41 @@ model PressRelease {
   updatedAt       DateTime  @updatedAt
 
   // Relations
-  org             Organization @relation(fields: [orgId], references: [id])
-  user            User         @relation(fields: [userId], references: [id])
+  org             Organization   @relation(fields: [orgId], references: [id])
+  user            User           @relation(fields: [userId], references: [id])
+  distributions   PRDistribution[]
 
   @@unique([orgId, slug])
   @@index([orgId])
   @@index([status])
   @@index([datePublished])
+}
+
+// ---------------------------------------------------------------------------
+// PR Distribution Tracking (Phase 93)
+// ---------------------------------------------------------------------------
+
+model PRDistribution {
+  id          String    @id @default(cuid())
+  releaseId   String
+
+  /// 'self-hosted' | 'pr-com' | 'openpr' | 'prlog'
+  channel     String
+
+  /// URL where the release was submitted or published
+  channelUrl  String?
+
+  /// 'pending' | 'submitted' | 'published' | 'failed'
+  status      String    @default("pending")
+
+  submittedAt DateTime?
+  publishedAt DateTime?
+  notes       String?   @db.Text
+
+  createdAt   DateTime  @default(now())
+
+  // Relations
+  release     PressRelease @relation(fields: [releaseId], references: [id], onDelete: Cascade)
+
+  @@index([releaseId])
 }

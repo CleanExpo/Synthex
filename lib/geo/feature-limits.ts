@@ -32,6 +32,8 @@ export interface GEOFeatureLimits {
   journalistContacts: number;      // Total journalist contact records
   prPitches: number;               // Total PR pitch records
   pressReleases: number;           // Total press release records
+  // Press Release Distribution (Phase 93)
+  prDistributions: number;         // Total distribution submissions per press release
 }
 
 /**
@@ -57,6 +59,7 @@ export const PLAN_LIMITS: Record<string, GEOFeatureLimits> = {
     journalistContacts: 5,
     prPitches: 10,
     pressReleases: 3,
+    prDistributions: 2,
   },
   pro: {
     geoAnalyses: 50,
@@ -76,6 +79,7 @@ export const PLAN_LIMITS: Record<string, GEOFeatureLimits> = {
     journalistContacts: 50,
     prPitches: 100,
     pressReleases: 20,
+    prDistributions: 10,
   },
   growth: {
     geoAnalyses: -1,
@@ -95,6 +99,7 @@ export const PLAN_LIMITS: Record<string, GEOFeatureLimits> = {
     journalistContacts: -1,
     prPitches: -1,
     pressReleases: -1,
+    prDistributions: -1,
   },
   scale: {
     geoAnalyses: -1,
@@ -114,6 +119,7 @@ export const PLAN_LIMITS: Record<string, GEOFeatureLimits> = {
     journalistContacts: -1,
     prPitches: -1,
     pressReleases: -1,
+    prDistributions: -1,
   },
   // Backward-compat aliases for existing DB records
   professional: {
@@ -134,6 +140,7 @@ export const PLAN_LIMITS: Record<string, GEOFeatureLimits> = {
     journalistContacts: 50,
     prPitches: 100,
     pressReleases: 20,
+    prDistributions: 10,
   },
   business: {
     geoAnalyses: -1,
@@ -153,6 +160,7 @@ export const PLAN_LIMITS: Record<string, GEOFeatureLimits> = {
     journalistContacts: -1,
     prPitches: -1,
     pressReleases: -1,
+    prDistributions: -1,
   },
   custom: {
     geoAnalyses: -1,
@@ -172,6 +180,7 @@ export const PLAN_LIMITS: Record<string, GEOFeatureLimits> = {
     journalistContacts: -1,
     prPitches: -1,
     pressReleases: -1,
+    prDistributions: -1,
   },
 };
 
@@ -289,5 +298,9 @@ export const FEATURE_INFO: Record<GEOFeatureKey, { label: string; description: s
   pressReleases: {
     label: 'Press Releases',
     description: 'Create AI-indexable press releases with schema.org JSON-LD structured data for newsroom publication',
+  },
+  prDistributions: {
+    label: 'PR Distributions',
+    description: 'Track press release distribution across free channels including PR.com, OpenPR, and PRLog',
   },
 };
