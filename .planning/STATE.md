@@ -5,23 +5,21 @@
 See: .planning/PROJECT.md (updated 2026-02-17)
 
 **Core value:** Every endpoint returns real data, every platform works, every dashboard page connects to live APIs
-**Current focus:** v5.0 AI-Native GEO & Citation Engine — COMPLETE
+**Current focus:** v6.0 Adaptive Intelligence Engine (BO + Prophet + BayesNF) — IN PROGRESS
 
 ## Current Position
 
-Milestone: v5.0 AI-Native GEO & Citation Engine — **COMPLETE** ✅
-Phase: 100 of 100 — DONE
-Plan: 2 of 2 — DONE
-Status: Phase 100 complete — type-check 0 errors, lint 0 errors in v5.0 files, navigation audit
-  confirmed all 12 v5.0 pages in sidebar, command palette extended with 3 missing commands
-  (citation-dashboard, citation-opportunities, geo-optimiser), API route spot check passed
-  (auth on all routes, Zod validation, rate limiting where appropriate), v5.0 milestone summary
-  created, STATE + ROADMAP updated.
-Last activity: 2026-03-11 — Completed Phase 100: v5.0 Integration Testing & Polish
+Milestone: v6.0 Adaptive Intelligence Engine — **IN PROGRESS** 🚀
+Phase: 103 of 107 — IN PROGRESS
+Plan: 0 of 1 — PENDING
+Status: Phase 102 complete — BO wired into geo-analyzer.ts + tactic-scorer.ts with auto-observation,
+  6 API routes (spaces, observe, suggest, run, status, bo-callback), surface adapters for
+  geo_score_weights + tactic_weights. Type-check 0 errors, 1514 tests stable.
+Last activity: 2026-03-11 — Completed Phase 102: GEO Weight Optimisation Surfaces
 
-Progress: ██████████ 100% (40/40 plans — v5.0 complete)
+Progress: ███░░░░░░░ 29% (2/7 plans — v6.0 in progress)
 
-Next action: v5.0 milestone complete — consider v6.0 planning
+Next action: Phase 103 — BO Client-Facing Dashboard
 
 ## Performance Metrics
 

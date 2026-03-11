@@ -21,6 +21,7 @@ None (internal platform work)
 - ✅ [v3.1 First Users](milestones/v3.1-ROADMAP.md) (Phases 75-76) — SHIPPED 2026-03-10
 - ✅ **v4.0 Production Complete** — Phases 77-84 — SHIPPED 2026-03-10
 - ✅ **v5.0 AI-Native GEO & Citation Engine** — Phases 85-100 — SHIPPED 2026-03-11
+- 🚀 **v6.0 Adaptive Intelligence Engine** — Phases 101-107 — IN PROGRESS
 
 ## Phases
 
@@ -122,6 +123,13 @@ None (internal platform work)
 - [x] **Phase 98: Autonomous A/B Testing & Self-Healing Agent** - SEO experiments, recovery automation, dog-fooding enforcement — COMPLETE 2026-03-11
 - [x] **Phase 99: Citation Performance Dashboard** - Unified GEO + SEO + citation + agent activity command centre — COMPLETE 2026-03-11
 - [x] **Phase 100: v5.0 Integration Testing & Polish** - End-to-end verification, agent validation, documentation — COMPLETE 2026-03-11
+- [x] **Phase 101: Adaptive Intelligence Engine — Infrastructure** - FastAPI microservice (BO + Prophet + BayesNF), TypeScript client library, Prisma models, BullMQ queue — COMPLETE 2026-03-11
+- [x] **Phase 102: GEO Weight Optimisation Surfaces** - Wire BO into geo-analyzer.ts + tactic-scorer.ts, API routes, auto-observation, callback webhook — COMPLETE 2026-03-11
+- [ ] **Phase 103: BO Client-Facing Dashboard** - Optimisation spaces UI, learning indicators, run history, subscription gating
+- [ ] **Phase 104: Experiment + Prompt Surfaces** - A/B test sampling + prompt testing BO surfaces, Growth-tier gating
+- [ ] **Phase 105: Advanced Surfaces** - Scheduling, backlinks, psychology, self-healing, campaign ROI surfaces (Scale tier)
+- [ ] **Phase 106: Prophet Time-Series Forecasting** - Prophet dashboard, forecast charts with confidence bands, auto-training cron
+- [ ] **Phase 107: BayesNF Spatiotemporal Predictions** - Cross-platform heatmap, spatiotemporal model training, Scale-tier predictions
 
 ## Phase Details
 
