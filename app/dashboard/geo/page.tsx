@@ -17,12 +17,20 @@ import {
   Shield,
   Database,
   Zap,
+  Brain,
 } from '@/components/icons';
 import { GEOFeatureGate } from '@/components/geo/GEOFeatureGate';
 import type { GEOAnalysisResult, GEOScore, EntityAnalysisResult } from '@/lib/geo/types';
 
-/** The API response extends GEOAnalysisResult with a persisted record id. */
-type GEOAnalysisResponse = GEOAnalysisResult & { id: string };
+/**
+ * The API response extends GEOAnalysisResult with a persisted record id.
+ * weightSource is present when the geo/analyze route forwards the BO surface source.
+ * Currently absent from the API response — badge renders only when the field is 'bo'.
+ */
+type GEOAnalysisResponse = GEOAnalysisResult & {
+  id: string;
+  weightSource?: 'bo' | 'heuristic';
+};
 
 export default function GEOPage() {
   const [content, setContent] = useState('');
@@ -190,6 +198,17 @@ export default function GEOPage() {
                       {getTier(result.score.overall).label}
                     </Badge>
                     <p className="text-gray-400 text-sm mt-2">Overall GEO Score</p>
+                    {result.weightSource === 'bo' && (
+                      <div className="mt-2 inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-violet-500/20 border border-violet-500/30 text-violet-400 text-xs font-medium">
+                        <Brain className="h-3 w-3" />
+                        AI-Optimised
+                      </div>
+                    )}
+                    {result.weightSource === 'heuristic' && (
+                      <div className="mt-2 inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-gray-500/20 border border-gray-500/20 text-gray-400 text-xs">
+                        Heuristic weights
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
                 <div className="lg:col-span-2">
