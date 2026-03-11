@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Globe, Plus, ExternalLink, Edit, Trash2, Loader2 } from '@/components/icons';
+import { Globe, Plus, ExternalLink, Edit, Trash2, Loader2, AlertCircle } from '@/components/icons';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -37,6 +38,7 @@ const STATUS_COLOURS: Record<string, string> = {
 export default function WebProjectsPage() {
   const [projects, setProjects] = useState<WebProject[]>([]);
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState(false);
   const [creating, setCreating] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [form, setForm] = useState({ name: '', description: '', websiteUrl: '' });
@@ -48,7 +50,8 @@ export default function WebProjectsPage() {
       const data = await res.json();
       setProjects(data.projects ?? []);
     } catch {
-      // fail silently for now — show empty state
+      setFetchError(true);
+      toast.error('Failed to load web projects');
     } finally {
       setLoading(false);
     }
@@ -82,7 +85,7 @@ export default function WebProjectsPage() {
       setForm({ name: '', description: '', websiteUrl: '' });
       setDialogOpen(false);
     } catch {
-      // handle error
+      toast.error('Failed to create project');
     } finally {
       setCreating(false);
     }
@@ -94,7 +97,7 @@ export default function WebProjectsPage() {
       await fetch(`/api/web-projects/${id}`, { method: 'DELETE', credentials: 'include' });
       setProjects((prev) => prev.filter((p) => p.id !== id));
     } catch {
-      // handle error
+      toast.error('Failed to delete project');
     }
   }
 
@@ -178,7 +181,19 @@ export default function WebProjectsPage() {
       </div>
 
       {/* Project Grid */}
-      {loading ? (
+      {fetchError ? (
+        <div className="flex flex-col items-center justify-center py-24 text-center">
+          <AlertCircle className="w-12 h-12 text-red-400 mb-4" />
+          <h3 className="text-lg font-medium text-gray-300 mb-2">Failed to load projects</h3>
+          <p className="text-gray-500 text-sm mb-6">Something went wrong. Please try again.</p>
+          <button
+            onClick={() => { setFetchError(false); setLoading(true); fetchProjects(); }}
+            className="px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-white text-sm rounded-lg"
+          >
+            Retry
+          </button>
+        </div>
+      ) : loading ? (
         <div className="flex items-center justify-center py-24">
           <Loader2 className="w-8 h-8 animate-spin text-cyan-500" />
         </div>

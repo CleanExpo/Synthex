@@ -19,6 +19,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import Link from 'next/link';
+import { toast } from 'sonner';
 
 interface WebProject {
   id: string;
@@ -187,8 +188,9 @@ export default function WebProjectDetailPage({
       if (!res.ok) throw new Error('Save failed');
       const data = await res.json();
       setProject(data.project);
+      toast.success('Project saved');
     } catch {
-      // handle error
+      toast.error('Failed to save project changes');
     } finally {
       setSaving(false);
     }
