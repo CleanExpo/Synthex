@@ -20,6 +20,9 @@ export interface GEOFeatureLimits {
   authorProfiles: number;        // Total author profiles
   localCaseStudies: number;      // Local case studies per month
   tacticOptimiserRewrites: number; // AI-powered per-tactic content rewrites (Princeton 9-tactic)
+  voiceProfiles: number;           // Saved voice fingerprint profiles
+  capsuleFormats: number;          // Content capsule generations per month
+  slopScans: number;               // AI slop scans per month
 }
 
 /**
@@ -35,6 +38,9 @@ export const PLAN_LIMITS: Record<string, GEOFeatureLimits> = {
     authorProfiles: 0,
     localCaseStudies: 0,
     tacticOptimiserRewrites: 0,  // score only, no AI rewrites on free tier
+    voiceProfiles: 0,
+    capsuleFormats: 0,
+    slopScans: 3,
   },
   pro: {
     geoAnalyses: 50,
@@ -44,6 +50,9 @@ export const PLAN_LIMITS: Record<string, GEOFeatureLimits> = {
     authorProfiles: 3,
     localCaseStudies: 5,
     tacticOptimiserRewrites: 20,
+    voiceProfiles: 3,
+    capsuleFormats: 20,
+    slopScans: 50,
   },
   growth: {
     geoAnalyses: -1,
@@ -53,6 +62,9 @@ export const PLAN_LIMITS: Record<string, GEOFeatureLimits> = {
     authorProfiles: 10,
     localCaseStudies: -1,
     tacticOptimiserRewrites: -1, // unlimited
+    voiceProfiles: 10,
+    capsuleFormats: -1,
+    slopScans: -1,
   },
   scale: {
     geoAnalyses: -1,
@@ -62,6 +74,9 @@ export const PLAN_LIMITS: Record<string, GEOFeatureLimits> = {
     authorProfiles: -1,
     localCaseStudies: -1,
     tacticOptimiserRewrites: -1,
+    voiceProfiles: -1,
+    capsuleFormats: -1,
+    slopScans: -1,
   },
   // Backward-compat aliases for existing DB records
   professional: {
@@ -72,6 +87,9 @@ export const PLAN_LIMITS: Record<string, GEOFeatureLimits> = {
     authorProfiles: 3,
     localCaseStudies: 5,
     tacticOptimiserRewrites: 20,
+    voiceProfiles: 3,
+    capsuleFormats: 20,
+    slopScans: 50,
   },
   business: {
     geoAnalyses: -1,
@@ -81,6 +99,9 @@ export const PLAN_LIMITS: Record<string, GEOFeatureLimits> = {
     authorProfiles: 10,
     localCaseStudies: -1,
     tacticOptimiserRewrites: -1,
+    voiceProfiles: 10,
+    capsuleFormats: -1,
+    slopScans: -1,
   },
   custom: {
     geoAnalyses: -1,
@@ -90,6 +111,9 @@ export const PLAN_LIMITS: Record<string, GEOFeatureLimits> = {
     authorProfiles: -1,
     localCaseStudies: -1,
     tacticOptimiserRewrites: -1,
+    voiceProfiles: -1,
+    capsuleFormats: -1,
+    slopScans: -1,
   },
 };
 
@@ -167,5 +191,17 @@ export const FEATURE_INFO: Record<GEOFeatureKey, { label: string; description: s
   tacticOptimiserRewrites: {
     label: 'GEO Optimiser Rewrites',
     description: 'AI-powered per-tactic content rewrites using the Princeton 9-tactic framework',
+  },
+  voiceProfiles: {
+    label: 'Voice Profiles',
+    description: 'Save writing style fingerprints from your content samples',
+  },
+  capsuleFormats: {
+    label: 'Content Capsules',
+    description: 'Reformat content using the Content Capsule Technique for 40% higher AI citation rates',
+  },
+  slopScans: {
+    label: 'Slop Scan',
+    description: 'Detect AI tell-phrases and writing patterns that signal machine-generated content',
   },
 };
