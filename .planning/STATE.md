@@ -10,14 +10,14 @@ See: .planning/PROJECT.md (updated 2026-02-17)
 ## Current Position
 
 Milestone: v5.0 AI-Native GEO & Citation Engine
-Phase: 86 of 100 (Authority Engine & Design Audit) — COMPLETE
-Plan: 7 of 7 complete
-Status: All plans executed
-Last activity: 2026-03-11 — Executed 86-07-PLAN.md: Design audit API route, 3 score card components (DesignAuditCard, CROScoreCard, LLMCitationFitnessCard), Design Audit tab added to authority dashboard, GEO recommendations extended with 5 design-aware insights
+Phase: 87 of 100 (GEO Content Optimiser v2) — IN PROGRESS
+Plan: 1 of 3 complete
+Status: Plan 01 executed — tactic scorer service live
+Last activity: 2026-03-11 — Executed 87-01-PLAN.md: GEOTactic/TacticScore/TacticScoreResult types, tacticOptimiserRewrites feature limits, 9-tactic pure TypeScript scorer (tactic-scorer.ts), POST /api/geo/tactic-score endpoint
 
-Progress: ██░░░░░░░░ ~6% (6/~49 plans)
+Progress: ██░░░░░░░░ ~7% (7/~49 plans)
 
-Next action: Phase 86 complete — run `/gsd:progress` to plan Phase 87
+Next action: Execute 87-02-PLAN.md (AI Rewrite Pipeline)
 
 ## Performance Metrics
 
