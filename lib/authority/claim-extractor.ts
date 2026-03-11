@@ -7,6 +7,7 @@
  */
 
 import type { ExtractedClaim, ClaimType } from './types';
+import type { AuthorityValidationWeights } from '@/lib/bayesian/surfaces/authority-validation';
 
 // Sentence splitter that respects common abbreviations
 function splitIntoSentences(content: string): Array<{ text: string; start: number; end: number }> {
@@ -158,10 +159,41 @@ function assignConfidence(text: string, type: ClaimType): number {
   return Math.min(0.95, parseFloat(score.toFixed(2)));
 }
 
-function detectClaimType(text: string): ClaimType | null {
-  // Test each type in priority order
-  const priority: ClaimType[] = ['regulatory', 'statistical', 'temporal', 'causal', 'comparative', 'factual'];
+// Mapping from ClaimType to AuthorityValidationWeights key
+const TYPE_TO_WEIGHT_KEY: Record<string, keyof AuthorityValidationWeights> = {
+  regulatory:  'regulatoryPriority',
+  statistical: 'statisticalPriority',
+  temporal:    'temporalPriority',
+  causal:      'causalPriority',
+  comparative: 'comparativePriority',
+  factual:     'factualPriority',
+};
 
+function detectClaimType(text: string, priorityWeights?: AuthorityValidationWeights): ClaimType | null {
+  if (priorityWeights) {
+    // Weighted scoring: pick the claim type with the highest matchCount × priorityWeight
+    let bestType: ClaimType | null = null;
+    let bestScore = 0;
+
+    for (const [type, patterns] of Object.entries(CLAIM_PATTERNS) as [ClaimType, RegExp[]][]) {
+      const matchCount = patterns.filter(p => p.test(text)).length;
+      if (matchCount === 0) continue;
+
+      const weightKey = TYPE_TO_WEIGHT_KEY[type];
+      const w = weightKey ? (priorityWeights[weightKey] ?? 0.10) : 0.10;
+      const score = matchCount * w;
+
+      if (score > bestScore) {
+        bestScore = score;
+        bestType  = type;
+      }
+    }
+
+    return bestType;
+  }
+
+  // Fallback (no weights): original priority-order logic
+  const priority: ClaimType[] = ['regulatory', 'statistical', 'temporal', 'causal', 'comparative', 'factual'];
   for (const type of priority) {
     const patterns = CLAIM_PATTERNS[type];
     if (patterns.some(p => p.test(text))) {
@@ -174,14 +206,19 @@ function detectClaimType(text: string): ClaimType | null {
 
 /**
  * Extract verifiable claims from content text.
+ * When priorityWeights are provided (via BO), claim-type selection uses
+ * weighted scoring instead of the default priority-order logic.
  * Returns top 50 claims sorted by confidence descending.
  */
-export function extractClaims(content: string): ExtractedClaim[] {
+export function extractClaims(
+  content: string,
+  priorityWeights?: AuthorityValidationWeights,
+): ExtractedClaim[] {
   const sentences = splitIntoSentences(content);
   const claims: ExtractedClaim[] = [];
 
   for (const sentence of sentences) {
-    const type = detectClaimType(sentence.text);
+    const type = detectClaimType(sentence.text, priorityWeights);
     if (!type) continue;
 
     const entities = extractEntities(sentence.text);

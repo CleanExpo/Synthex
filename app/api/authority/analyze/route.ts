@@ -19,6 +19,10 @@ import { getUserIdFromRequest } from '@/lib/auth/jwt-utils';
 import { analyzeAuthority } from '@/lib/authority/authority-analyzer';
 import { hasAuthorityAddon } from '@/lib/stripe/subscription-service';
 import { logger } from '@/lib/logger';
+import { prisma } from '@/lib/prisma';
+import { isSurfaceAvailable } from '@/lib/bayesian/feature-limits';
+import { getAuthorityValidationWeights } from '@/lib/bayesian/surfaces/authority-validation';
+import { registerObservationSilently } from '@/lib/bayesian/fallback';
 
 const schema = z.object({
   content: z.string().min(50).max(50000),
@@ -51,11 +55,42 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    // Resolve plan for BO surface gating
+    const userRecord = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { organizationId: true, plan: true },
+    });
+    const orgIdForBO = userRecord?.organizationId ?? userId;
+    const plan       = (userRecord?.plan ?? 'free').toLowerCase();
+
+    const validationWeightsResult = isSurfaceAvailable(plan, 'authority_validation')
+      ? await getAuthorityValidationWeights(orgIdForBO)
+      : undefined;
+
     const result = await analyzeAuthority(content, {
       userId,
       orgId,
       deepValidation: deepValidation ?? false,
+      priorityWeights: validationWeightsResult?.weights,
     });
+
+    // Register BO observation (fire-and-forget)
+    if (validationWeightsResult?.source === 'bo') {
+      void registerObservationSilently(
+        'authority_validation',
+        orgIdForBO,
+        {
+          regulatoryPriority:  validationWeightsResult.weights.regulatoryPriority,
+          statisticalPriority: validationWeightsResult.weights.statisticalPriority,
+          temporalPriority:    validationWeightsResult.weights.temporalPriority,
+          causalPriority:      validationWeightsResult.weights.causalPriority,
+          comparativePriority: validationWeightsResult.weights.comparativePriority,
+          factualPriority:     validationWeightsResult.weights.factualPriority,
+        },
+        result.overallScore / 100,
+        { claimsFound: result.claimsFound, claimsVerified: result.claimsVerified },
+      );
+    }
 
     return NextResponse.json(result);
   } catch (error) {

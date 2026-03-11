@@ -11,6 +11,7 @@
 
 import type { AuthorityAnalysisResult, ValidatedClaim, SourceType, ExtractedClaim } from './types';
 import { extractClaims } from './claim-extractor';
+import type { AuthorityValidationWeights } from '@/lib/bayesian/surfaces/authority-validation';
 import { scoreAuthority } from './authority-scorer';
 import { generateCitations } from './citation-generator';
 import { searchAllConnectors } from './source-connectors/index';
@@ -21,6 +22,7 @@ interface AnalyzeAuthorityOptions {
   userId: string;
   orgId: string;
   deepValidation: boolean;
+  priorityWeights?: AuthorityValidationWeights;
 }
 
 /**
@@ -56,7 +58,7 @@ export async function analyzeAuthority(
   });
 
   // ── Step 1: Extract claims (always) ─────────────────────────────────────────
-  const extracted = extractClaims(content);
+  const extracted = extractClaims(content, options.priorityWeights);
 
   // ── Step 2: Free tier — no connector calls ───────────────────────────────────
   if (!options.deepValidation) {
