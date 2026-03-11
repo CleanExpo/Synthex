@@ -4,7 +4,7 @@ import {
   HelpCircle, Layers, Lightbulb, Layout, Zap, Link2,
   GitBranch as GitPullRequest, MessageSquare, Shield, Code, Image,
   Repeat, Send, Bell, Grid, DollarSign, Calculator, Briefcase, Link, List,
-  Mic, Award, Building2, Newspaper, ShieldExclamation,
+  Mic, Award, Building2, Newspaper, ShieldExclamation, CommandLine,
 } from '@/components/icons';
 import { notify } from '@/lib/notifications';
 import type { CommandItem } from './types';
@@ -88,6 +88,11 @@ export function buildCommands(
     { id: 'experiments-ab', title: 'Experiments — A/B Testing', description: 'Create and manage SEO A/B experiments (title tags, H1, schema, meta)', icon: Beaker, action: () => push('/dashboard/experiments'), category: 'navigation', keywords: ['experiments', 'ab testing', 'seo', 'title tag', 'h1', 'schema', 'meta description', 'geo score', 'test variant'] },
     { id: 'experiments-healing', title: 'Experiments — Self-Healing', description: 'Analyse any URL for SEO issues and get instant fix suggestions', icon: Beaker, action: () => push('/dashboard/experiments?tab=healing'), category: 'navigation', keywords: ['healing', 'self heal', 'seo issues', 'fix', 'missing meta', 'broken schema', 'geo score', 'quality score', 'url analysis'] },
     { id: 'experiments-dogfood', title: 'Experiments — Dog-food Check', description: 'Run all Synthex analysers against synthex.social to check our own scores', icon: Beaker, action: () => push('/dashboard/experiments?tab=dogfood'), category: 'navigation', keywords: ['dogfood', 'dog food', 'synthex', 'self check', 'geo score', 'eeat', 'authority', 'quality gate', 'own site'] },
+    // Citation Performance Dashboard (Phase 99)
+    { id: 'citation-dashboard', title: 'Citation Dashboard', description: 'Unified GEO + SEO + citation command centre with live agent activity', icon: CommandLine, action: () => push('/dashboard/citation'), category: 'navigation', keywords: ['citation', 'dashboard', 'command centre', 'geo', 'seo', 'agent activity', 'overview', 'performance', 'opportunities'] },
+    { id: 'citation-opportunities', title: 'Citation Opportunities', description: 'See unfulfilled citation opportunities across all GEO modules', icon: CommandLine, action: () => push('/dashboard/citation'), category: 'navigation', keywords: ['citation', 'opportunities', 'pipeline', 'actions', 'improve', 'geo'] },
+    // GEO Content Optimiser v2 (Phase 87)
+    { id: 'geo-optimiser', title: 'GEO Content Optimiser', description: 'Score content with Princeton 9-tactic GEO framework and get AI rewrites', icon: Zap, action: () => push('/dashboard/geo/optimiser'), category: 'navigation', keywords: ['geo', 'optimiser', 'content', 'score', 'princeton', 'tactic', 'rewrite', 'ai', 'citation', 'passage', 'statistics'] },
     { id: 'authority-analysis', title: 'Authority Analysis', description: 'Validate claims and generate citations from authoritative sources', icon: Shield, action: () => push('/dashboard/authority'), category: 'navigation', keywords: ['authority', 'claims', 'validate', 'citations', 'sources', 'verify', 'credibility'] },
     { id: 'validate-claims', title: 'Validate Claims', description: 'Check content claims against government, academic, and industry sources', icon: Shield, action: () => push('/dashboard/authority'), category: 'actions', keywords: ['validate', 'claims', 'verify', 'authority', 'fact check', 'sources', 'academic', 'government'] },
     { id: 'generate-citations', title: 'Generate Citations', description: 'Auto-generate formatted footnotes and inline citations', icon: Shield, action: () => push('/dashboard/authority'), category: 'actions', keywords: ['citations', 'generate', 'footnotes', 'references', 'authority', 'apa', 'chicago'] },
