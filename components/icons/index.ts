@@ -161,6 +161,7 @@ export {
   Cog6ToothIcon as Settings,
   ShareIcon as Share2,
   ShieldCheckIcon as Shield,
+  ShieldExclamationIcon as ShieldExclamation,
   DevicePhoneMobileIcon as Smartphone,
   ForwardIcon as SkipForward,
   FaceSmileIcon as Smile,
