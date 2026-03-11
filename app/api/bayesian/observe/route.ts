@@ -14,6 +14,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
+import { Prisma } from '@prisma/client';
 import prisma from '@/lib/prisma';
 import { getUserIdFromRequest } from '@/lib/auth/jwt-utils';
 import { getBayesianClient } from '@/lib/bayesian/client';
@@ -92,7 +93,7 @@ export async function POST(request: NextRequest) {
         spaceId,
         parameters,
         target,
-        metadata: metadata ?? null,
+        metadata: metadata as Prisma.InputJsonValue | undefined,
       },
     });
 

@@ -20,8 +20,9 @@ import type { GEOTactic } from '@/lib/geo/types';
 
 export type TacticWeights = Record<GEOTactic, number>;
 
-export interface TacticWeightResult extends WeightResult {
+export interface TacticWeightResult {
   weights: TacticWeights;
+  source: WeightResult['source'];
 }
 
 // ─── Constants ─────────────────────────────────────────────────────────────────

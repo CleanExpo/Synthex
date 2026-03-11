@@ -25,8 +25,9 @@ export interface GeoScoreWeights {
   technical: number;
 }
 
-export interface GeoScoreWeightResult extends WeightResult {
+export interface GeoScoreWeightResult {
   weights: GeoScoreWeights;
+  source: WeightResult['source'];
 }
 
 // ─── Constants ─────────────────────────────────────────────────────────────────
