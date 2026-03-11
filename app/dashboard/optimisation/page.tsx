@@ -94,7 +94,8 @@ export default function OptimisationPage() {
               <p className="text-sm font-medium">No optimisation spaces yet</p>
               <p className="text-xs mt-2 max-w-sm text-center">
                 Optimisation spaces are created automatically as your organisation runs GEO
-                analyses. Run a GEO analysis to start the AI learning process.
+                analyses, A/B experiments, and prompt tests. Run a GEO analysis to start
+                the AI learning process.
               </p>
             </div>
           ) : (
