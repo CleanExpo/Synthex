@@ -16,20 +16,12 @@
  */
 
 import type { GEOTactic, TacticScore, TacticScoreResult, TacticStatus } from './types';
+import { getTacticWeights, TACTIC_DEFAULTS } from '@/lib/bayesian/surfaces/tactic-weights';
 
 // ─── Constants ─────────────────────────────────────────────────────────────────
 
-const COMPOSITE_WEIGHTS: Record<GEOTactic, number> = {
-  'authoritative-citations': 0.20,
-  'statistics':              0.18,
-  'quotations':              0.15,
-  'fluency':                 0.12,
-  'readability':             0.10,
-  'technical-vocabulary':    0.09,
-  'uniqueness':              0.08,
-  'information-flow':        0.05,
-  'persuasion':              0.03,
-};
+// Retained as the fallback constant — used when no orgId is provided
+const COMPOSITE_WEIGHTS: Record<GEOTactic, number> = TACTIC_DEFAULTS;
 
 const TACTIC_LABELS: Record<GEOTactic, string> = {
   'authoritative-citations': 'Authoritative Citations',
@@ -593,15 +585,25 @@ const TACTIC_META: Record<GEOTactic, TacticMeta> = {
 /**
  * Score content against all 9 Princeton GEO tactics.
  *
- * @param text - Content to score (plain text)
+ * Accepts an optional orgId to enable BO-optimised weights per organisation.
+ * Falls back to heuristic weights when orgId is absent or the BO service is
+ * unavailable — no user-visible impact.
+ *
+ * @param text  - Content to score (plain text)
+ * @param orgId - Optional organisation ID for BO weight lookup
  * @returns TacticScoreResult with all 9 TacticScore objects and composite score
  */
-export function scoreTactics(text: string): TacticScoreResult {
+export async function scoreTactics(text: string, orgId?: string): Promise<TacticScoreResult> {
+  // Resolve weights: BO-optimised per org when available, heuristic otherwise
+  const weights = orgId
+    ? (await getTacticWeights(orgId)).weights
+    : COMPOSITE_WEIGHTS;
+
   const words = wordCount(text);
 
   // Guard: insufficient content
   if (text.trim().length < 50 || words < 10) {
-    const neutralScores: TacticScore[] = (Object.keys(COMPOSITE_WEIGHTS) as GEOTactic[]).map(tactic => ({
+    const neutralScores: TacticScore[] = (Object.keys(weights) as GEOTactic[]).map(tactic => ({
       tactic,
       label: TACTIC_LABELS[tactic],
       score: 50,
@@ -642,7 +644,7 @@ export function scoreTactics(text: string): TacticScoreResult {
   };
 
   // Build TacticScore objects
-  const tacticScores: TacticScore[] = (Object.keys(COMPOSITE_WEIGHTS) as GEOTactic[]).map(tactic => {
+  const tacticScores: TacticScore[] = (Object.keys(weights) as GEOTactic[]).map(tactic => {
     const { score, data } = rawScores[tactic];
     const status = toStatus(score);
     const meta = TACTIC_META[tactic];
@@ -656,9 +658,9 @@ export function scoreTactics(text: string): TacticScoreResult {
     };
   });
 
-  // Composite weighted score
+  // Composite weighted score using resolved weights
   const compositeGEOScore = clamp(
-    tacticScores.reduce((sum, ts) => sum + ts.score * COMPOSITE_WEIGHTS[ts.tactic], 0)
+    tacticScores.reduce((sum, ts) => sum + ts.score * weights[ts.tactic], 0)
   );
 
   return {

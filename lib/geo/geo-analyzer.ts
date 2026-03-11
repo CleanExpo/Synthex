@@ -2,7 +2,8 @@
  * GEO Analyzer — Core Orchestrator
  *
  * Analyzes content for AI search engine citability using 5 weighted criteria.
- * Weights: Citability(25%) + Structure(20%) + MultiModal(15%) + Authority(20%) + Technical(20%)
+ * Weights are BO-optimised per org when available; falls back to heuristics.
+ * Default heuristics: Citability(25%) + Structure(20%) + MultiModal(15%) + Authority(20%) + Technical(20%)
  *
  * ENVIRONMENT VARIABLES REQUIRED:
  * - DATABASE_URL (CRITICAL) — For storing analysis results
@@ -21,19 +22,17 @@ import { analyzeSchema } from './schema-enhancer';
 import { generateRecommendations } from './recommendations';
 import { analyzeAuthority as analyzeAuthorityDeep } from '@/lib/authority/authority-analyzer';
 import { hasAuthorityAddon } from '@/lib/stripe/subscription-service';
+import { getGeoScoreWeights, GEO_SCORE_DEFAULTS } from '@/lib/bayesian/surfaces/geo-weights';
 
-// Score weights
-const WEIGHTS = {
-  citability: 0.25,
-  structure: 0.20,
-  multiModal: 0.15,
-  authority: 0.20,
-  technical: 0.20,
-} as const;
-
-export async function analyzeGEO(input: GEOAnalysisInput): Promise<GEOAnalysisResult> {
+export async function analyzeGEO(input: GEOAnalysisInput, orgId?: string): Promise<GEOAnalysisResult> {
   const startTime = Date.now();
   logger.info('Starting GEO analysis', { contentLength: input.contentText.length, platform: input.platform || 'all' });
+
+  // Resolve weights: BO-optimised per org when available, heuristic otherwise
+  const effectiveOrgId = orgId ?? input.orgId;
+  const weights = effectiveOrgId
+    ? (await getGeoScoreWeights(effectiveOrgId)).weights
+    : GEO_SCORE_DEFAULTS;
 
   try {
     // Extract passages
@@ -101,11 +100,11 @@ export async function analyzeGEO(input: GEOAnalysisInput): Promise<GEOAnalysisRe
       technical: technicalScore,
       entityCoherence: entityAnalysis.score,    // Standalone diagnostic — not part of weighted overall
       overall: Math.round(
-        citabilityScore * WEIGHTS.citability +
-        structureAnalysis.readabilityScore * WEIGHTS.structure +
-        multiModalScore * WEIGHTS.multiModal +
-        authorityScore * WEIGHTS.authority +
-        technicalScore * WEIGHTS.technical
+        citabilityScore * weights.citability +
+        structureAnalysis.readabilityScore * weights.structure +
+        multiModalScore * weights.multiModal +
+        authorityScore * weights.authority +
+        technicalScore * weights.technical
         // Note: entityCoherence is NOT added to overall — preserves backward compatibility
       ),
     };
@@ -151,13 +150,13 @@ export async function analyzeGEO(input: GEOAnalysisInput): Promise<GEOAnalysisRe
           });
           // Blend: 30% heuristic score + 70% deep validation score
           result.score.authority = Math.round((result.score.authority * 0.3) + (deepAuthority.overallScore * 0.7));
-          // Recalculate overall with updated authority score
+          // Recalculate overall with updated authority score using the same resolved weights
           result.score.overall = Math.round(
-            result.score.citability * WEIGHTS.citability +
-            result.score.structure * WEIGHTS.structure +
-            result.score.multiModal * WEIGHTS.multiModal +
-            result.score.authority * WEIGHTS.authority +
-            result.score.technical * WEIGHTS.technical
+            result.score.citability * weights.citability +
+            result.score.structure * weights.structure +
+            result.score.multiModal * weights.multiModal +
+            result.score.authority * weights.authority +
+            result.score.technical * weights.technical
           );
           result.authorityAnalysis = deepAuthority;
         }

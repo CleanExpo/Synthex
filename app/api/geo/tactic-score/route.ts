@@ -51,8 +51,8 @@ export async function POST(request: NextRequest) {
 
     const { content } = validation.data;
 
-    // 3. Score — pure computation, no AI calls
-    const result = scoreTactics(content);
+    // 3. Score — now async to support BO-optimised weights (falls back to heuristics)
+    const result = await scoreTactics(content);
 
     return NextResponse.json(
       { data: result },
