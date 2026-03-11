@@ -171,6 +171,7 @@ const sidebarGroups: Array<{
       { icon: Globe, label: 'GEO Analysis', href: '/dashboard/geo' },
       { icon: Zap, label: 'GEO Optimiser', href: '/dashboard/geo/optimiser' },
       { icon: Mic, label: 'Voice Engine', href: '/dashboard/voice' },
+      { icon: Shield, label: 'Quality Gate', href: '/dashboard/quality' },
       { icon: Shield, label: 'Authority', href: '/dashboard/authority' },
       { icon: Map, label: 'Local SEO', href: '/dashboard/local' },
       { icon: Users, label: 'Authors', href: '/dashboard/authors' },
