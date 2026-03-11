@@ -68,62 +68,43 @@ export function getMetricRating(
   return 'poor';
 }
 
-// Web Vitals collection
+// Web Vitals collection — sends each metric individually via sendBeacon
 export function collectWebVitals(metric: WebVitalsMetric) {
-  const metrics: PerformanceMetrics = {
-    fcp: 0,
-    lcp: 0,
-    fid: 0,
-    inp: 0,
-    cls: 0,
-    ttfb: 0,
-  };
-
-  switch (metric.name) {
-    case 'FCP':
-      metrics.fcp = metric.value;
-      break;
-    case 'LCP':
-      metrics.lcp = metric.value;
-      break;
-    case 'FID':
-      metrics.fid = metric.value;
-      break;
-    case 'INP':
-      metrics.inp = metric.value;
-      break;
-    case 'CLS':
-      metrics.cls = metric.value;
-      break;
-    case 'TTFB':
-      metrics.ttfb = metric.value;
-      break;
-  }
-
-  // Send metrics to analytics endpoint
   if (process.env.NODE_ENV === 'production') {
-    sendMetricsToAnalytics(metrics);
+    sendMetricToAnalytics(metric);
   }
 }
 
-// Send metrics to your analytics service
-async function sendMetricsToAnalytics(metrics: PerformanceMetrics) {
+// Send a single metric to analytics (fire-and-forget via sendBeacon)
+async function sendMetricToAnalytics(metric: WebVitalsMetric) {
   try {
-    // Replace with your analytics endpoint
-    await fetch('/api/analytics/performance', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
+    const body = {
+      metrics: {
+        [metric.name.toLowerCase()]: metric.value,
       },
-      body: JSON.stringify({
-        metrics,
-        url: window.location.href,
-        timestamp: new Date().toISOString(),
-        userAgent: navigator.userAgent,
-      }),
-    });
-  } catch (error) {
-    console.error('Failed to send performance metrics:', error);
+      url: window.location.href,
+      timestamp: new Date().toISOString(),
+      userAgent: navigator.userAgent,
+      rating: metric.rating,
+      metricId: metric.id,
+    };
+
+    if (navigator.sendBeacon) {
+      // sendBeacon is fire-and-forget, works during page unload
+      navigator.sendBeacon(
+        '/api/analytics/performance',
+        new Blob([JSON.stringify(body)], { type: 'application/json' })
+      );
+    } else {
+      await fetch('/api/analytics/performance', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+        keepalive: true,
+      });
+    }
+  } catch {
+    // Never let vitals reporting throw — it's best-effort
   }
 }
 
