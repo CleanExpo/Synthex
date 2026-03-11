@@ -4,6 +4,24 @@
 
 $sep = "=" * 52
 
+# Prune dispatch dedup store from previous session (entries > 120 min are safe to clear)
+$dedupFile = "D:\Synthex\.claude\scratchpad\dispatch-dedup.json"
+if (Test-Path $dedupFile) {
+    try {
+        $raw    = Get-Content $dedupFile -Raw
+        $loaded = $raw | ConvertFrom-Json
+        $kept   = @{}
+        $now    = Get-Date
+        $loaded.PSObject.Properties | ForEach-Object {
+            try {
+                $age = ($now - [DateTime]::Parse($_.Value.firstSeen)).TotalMinutes
+                if ($age -lt 120) { $kept[$_.Name] = $_.Value }
+            } catch { }
+        }
+        $kept | ConvertTo-Json -Depth 3 | Set-Content -Path $dedupFile -Encoding UTF8
+    } catch { }  # non-fatal
+}
+
 Write-Output ""
 Write-Output $sep
 Write-Output ("  SYNTHEX SESSION START - " + (Get-Date -Format 'yyyy-MM-dd HH:mm'))
