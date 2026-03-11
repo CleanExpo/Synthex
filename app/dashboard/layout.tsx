@@ -191,6 +191,7 @@ const sidebarGroups: Array<{
     items: [
       { icon: Newspaper, label: 'PR Manager', href: '/dashboard/pr' },
       { icon: Award, label: 'Awards & Directories', href: '/dashboard/awards' },
+      { icon: LinkIcon, label: 'Link Prospector', href: '/dashboard/backlinks' },
     ],
   },
   {
