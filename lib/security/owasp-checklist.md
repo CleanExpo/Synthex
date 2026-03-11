@@ -1,6 +1,6 @@
 # OWASP Top 10 Security Checklist - SYNTHEX
 
-**Last Updated:** February 3, 2026
+**Last Updated:** 12 March 2026
 **Status:** Production Ready
 
 ---
@@ -90,15 +90,28 @@
 | Framework hardening | ✅ | Next.js production build |
 | Dependencies | ✅ | Regular `npm audit` |
 | Feature flags | ✅ | Environment-based feature control |
+| Dead security config | ✅ | `src/config/security.config.ts` archived 2026-03-12 — superseded by middleware.ts (Phase 73) |
+| NextAuth stubs | ✅ | Removed from `env-validator.ts` 2026-03-12 — Synthex uses Supabase Auth exclusively |
 
-**Security Headers:**
+**Security Headers (verified 2026-03-12):**
 - Content-Security-Policy
-- Strict-Transport-Security
-- X-Frame-Options: DENY
-- X-Content-Type-Options: nosniff
-- X-XSS-Protection
-- Referrer-Policy
-- Permissions-Policy
+  - script-src: 'self' 'unsafe-inline' (see A05 note below) + allowlist of CDN/Stripe/Tailwind origins
+  - frame-ancestors: 'none' ✅
+  - upgrade-insecure-requests: present ✅
+  - base-uri: 'self' ✅
+  - form-action: 'self' ✅
+- Strict-Transport-Security: max-age=31536000; includeSubDomains; preload ✅
+- X-Frame-Options: DENY ✅
+- X-Content-Type-Options: nosniff ✅
+- X-XSS-Protection: 1; mode=block ✅
+- Referrer-Policy: strict-origin-when-cross-origin ✅
+- Permissions-Policy: camera=(), microphone=(), geolocation=() ✅
+
+**A05 Note — CSP script-src 'unsafe-inline':**
+The current CSP includes `'unsafe-inline'` in script-src to support Tailwind CDN, Stripe.js,
+and inline scripts loaded by third-party embeds. This is a known trade-off. Next.js 15 nonce-based
+CSP is the recommended hardening path. Tracking as future improvement (not blocking for v7.0).
+`'unsafe-eval'` is NOT present — only `'unsafe-inline'`.
 
 **Files:**
 - `middleware.ts`
@@ -106,7 +119,7 @@
 
 ---
 
-## A06:2021 - Vulnerable Components ✅
+## A06:2021 - Vulnerable Components ⚠️
 
 | Control | Status | Implementation |
 |---------|--------|----------------|
@@ -115,12 +128,38 @@
 | License compliance | ✅ | All dependencies MIT/Apache |
 | Unused dependencies | ⚠️ | Regular cleanup needed |
 | Update policy | ✅ | Monthly security updates |
+| Known vulnerabilities | ⚠️ | 3 vulnerabilities found (see audit output below) |
+
+**npm audit --production output (2026-03-12):**
+
+```
+dompurify  3.1.3 - 3.3.1
+  Severity: MODERATE
+  DOMPurify contains a Cross-site Scripting vulnerability
+  Advisory: https://github.com/advisories/GHSA-v2wj-7wpq-c8vv
+  Fix: npm audit fix
+
+rollup  3.0.0 - 3.29.5
+  Severity: HIGH
+  Rollup 4 Arbitrary File Write via Path Traversal
+  Advisory: https://github.com/advisories/GHSA-mw96-cpmx-2vgc
+  Affects: @sentry/nextjs 8.0.0-alpha.2 - 9.4.0 (depends on vulnerable rollup)
+  Fix: npm audit fix --force (breaking change: upgrades @sentry/nextjs to 10.43.0)
+
+Total: 3 vulnerabilities (1 moderate, 2 high)
+```
+
+**Assessment:**
+- `dompurify` moderate: Low risk — DOMPurify is used for sanitising user HTML in templates.
+  Fix available without breaking changes. Addressed in next dependency update cycle.
+- `rollup` high (via @sentry/nextjs): rollup is a build-time dependency used during Sentry
+  bundling. Not exploitable at runtime on Vercel. The fix requires a major @sentry/nextjs upgrade
+  (v8→v10) — deferred to a dedicated dependency upgrade phase (not part of v7.0 scope).
 
 **Commands:**
 ```bash
-pnpm audit                    # Check vulnerabilities
-pnpm outdated                 # Check updates
-pnpm update --latest          # Update packages
+npm audit --production        # Check vulnerabilities
+npm outdated                  # Check updates
 ```
 
 ---
@@ -129,7 +168,7 @@ pnpm update --latest          # Update packages
 
 | Control | Status | Implementation |
 |---------|--------|----------------|
-| Multi-factor auth | ⚠️ | Planned (not implemented) |
+| Multi-factor auth | ⚠️ | Deferred — Supabase Auth handles MFA when enabled on Supabase project dashboard |
 | Password policy | ✅ | Minimum 8 chars, complexity rules |
 | Brute force protection | ✅ | Rate limiting on auth endpoints |
 | Session management | ✅ | JWT with refresh tokens |
@@ -186,6 +225,16 @@ pnpm update --latest          # Update packages
 - Rate limiting (blocked requests)
 - Data access (CRUD operations)
 - Security events (suspicious activity)
+
+**Error detail exposure audit (2026-03-12):**
+Grep for raw `error.message` in API route catch blocks returning client responses.
+- Most routes use `error instanceof Error ? error.message : String(error)` in logger calls only — safe.
+- One route exposes raw error.message to clients:
+  - `app/api/auth/resend-verification/route.ts:60` — returns `error.message` directly in 500 JSON.
+    Risk: LOW (auth endpoint, internal Supabase error text only). Remediation: replace with generic message.
+    Deferred — out of scope for v7.0.
+- Health/admin endpoints (e.g. `/api/health`, `/api/admin/*`) expose error.message but are
+  admin-only or internal-use. Acceptable for diagnostic purposes.
 
 **Files:**
 - `lib/security/audit-logger.ts`
@@ -257,5 +306,5 @@ pnpm run type-check
 
 ---
 
-*Last security audit: February 3, 2026*
-*Next scheduled review: March 3, 2026*
+*Last security audit: 12 March 2026 (Phase 113 — v7.0 pre-launch sweep)*
+*Next scheduled review: 12 April 2026*

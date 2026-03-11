@@ -112,28 +112,6 @@ export const ENV_VAR_DEFINITIONS: EnvVarDefinition[] = [
     errorMessage: 'OAuth flows will fail - generate with: openssl rand -base64 32'
   },
 
-  // TODO UNI-1183: Remove these entries — Synthex uses Supabase Auth exclusively, not NextAuth.
-  // next-auth package uninstalled. These optional definitions are harmless but stale.
-  {
-    key: 'NEXTAUTH_SECRET',
-    description: 'NextAuth.js secret for session encryption',
-    required: false,
-    securityLevel: SecurityLevel.CRITICAL,
-    validator: z.string().min(32).optional(),
-    example: 'generated-random-string-for-nextauth',
-    dependsOn: ['NEXTAUTH_URL']
-  },
-
-  {
-    key: 'NEXTAUTH_URL',
-    description: 'Canonical URL of the site for NextAuth',
-    required: false,
-    securityLevel: SecurityLevel.INTERNAL,
-    validator: z.string().url().optional(),
-    example: 'https://synthex.vercel.app',
-    defaultValue: process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : undefined
-  },
-
   // ========== SUPABASE ==========
   {
     key: 'NEXT_PUBLIC_SUPABASE_URL',
