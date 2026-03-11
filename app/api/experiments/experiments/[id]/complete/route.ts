@@ -4,6 +4,10 @@
  * POST /api/experiments/experiments/[id]/complete
  * Marks experiment as completed and determines the winner.
  *
+ * On Growth+ plans, registers a Bayesian Optimisation observation for the
+ * experiment_sampling surface using the improvement score as the target.
+ * This feeds the BO learning loop so future suggestions are better ordered.
+ *
  * ENVIRONMENT VARIABLES:
  * - JWT_SECRET: Token signing key (CRITICAL)
  */
@@ -13,6 +17,9 @@ import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-securit
 import { prisma } from '@/lib/prisma';
 import { logger } from '@/lib/logger';
 import { z } from 'zod';
+import { isSurfaceAvailable } from '@/lib/bayesian/feature-limits';
+import { EXPERIMENT_SAMPLING_DEFAULTS } from '@/lib/bayesian/surfaces/experiment-sampling';
+import { registerObservationSilently } from '@/lib/bayesian/fallback';
 
 const CompleteSchema = z.object({
   winnerVariant: z.enum(['original', 'variant', 'inconclusive']).optional(),
@@ -114,6 +121,43 @@ export async function POST(
       winner,
       improvement,
     });
+
+    // ── Register BO observation for experiment_sampling (fire-and-forget) ──
+    // Only register when improvement data is available — gives BO a real signal.
+    if (improvement !== null) {
+      // Resolve plan for BO gating (best-effort — fall through if lookup fails)
+      try {
+        const userRecord = await prisma.user.findUnique({
+          where: { id: userId },
+          select: { organizationId: true, organization: { select: { plan: true } } },
+        });
+        const orgId = userRecord?.organizationId ?? userId;
+        const plan  = userRecord?.organization?.plan ?? 'free';
+
+        if (isSurfaceAvailable(plan, 'experiment_sampling')) {
+          // Use the defaults as the parameter snapshot — the actual weights used
+          // at suggestion time are not stored on the experiment record. Using
+          // defaults here means BO will have a conservative prior until callers
+          // begin storing the weights they used. Safe and non-blocking.
+          void registerObservationSilently(
+            'experiment_sampling',
+            orgId,
+            {
+              titleTag:         EXPERIMENT_SAMPLING_DEFAULTS.titleTag,
+              metaDescription:  EXPERIMENT_SAMPLING_DEFAULTS.metaDescription,
+              h1:               EXPERIMENT_SAMPLING_DEFAULTS.h1,
+              schema:           EXPERIMENT_SAMPLING_DEFAULTS.schema,
+              contentStructure: EXPERIMENT_SAMPLING_DEFAULTS.contentStructure,
+              internalLinks:    EXPERIMENT_SAMPLING_DEFAULTS.internalLinks,
+            },
+            improvement,
+            { experimentType: existing.experimentType, winnerVariant: winner },
+          );
+        }
+      } catch {
+        // BO observation is best-effort — do not fail the completion response
+      }
+    }
 
     return APISecurityChecker.createSecureResponse({
       experiment,
