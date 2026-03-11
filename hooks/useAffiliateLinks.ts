@@ -8,6 +8,7 @@
 'use client';
 
 import { useState, useCallback, useEffect, useRef } from 'react';
+// Import types and constants from client-safe types file (no prisma/ioredis/crypto).
 import type {
   AffiliateNetwork,
   AffiliateLink,
@@ -18,7 +19,7 @@ import type {
   CreateLinkInput,
   UpdateLinkInput,
   LinkFilters,
-} from '@/lib/affiliates/affiliate-link-service';
+} from '@/lib/affiliates/affiliate-types';
 
 // Re-export types for consumers
 export type {
@@ -33,12 +34,12 @@ export type {
   LinkFilters,
 };
 
-// Re-export constants
+// Re-export constants from client-safe types file
 export {
   NETWORK_SLUGS,
   NETWORK_LABELS,
   NETWORK_COLORS,
-} from '@/lib/affiliates/affiliate-link-service';
+} from '@/lib/affiliates/affiliate-types';
 
 // ============================================================================
 // TYPES

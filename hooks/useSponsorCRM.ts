@@ -9,6 +9,7 @@
 
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { fetchWithCSRF } from '@/lib/csrf';
+// Import types and constants from client-safe types file (no prisma/ioredis).
 import type {
   Sponsor,
   SponsorDeal,
@@ -24,7 +25,7 @@ import type {
   UpdateDealInput,
   CreateDeliverableInput,
   UpdateDeliverableInput,
-} from '@/lib/sponsors/sponsor-service';
+} from '@/lib/sponsors/sponsor-types';
 
 // Re-export types for consumers
 export type {
@@ -44,7 +45,7 @@ export type {
   UpdateDeliverableInput,
 };
 
-// Re-export constants
+// Re-export constants from client-safe types file
 export {
   SPONSOR_STATUSES,
   DEAL_STAGES,
@@ -54,7 +55,7 @@ export {
   STAGE_LABELS,
   TYPE_LABELS,
   DELIVERABLE_STATUS_LABELS,
-} from '@/lib/sponsors/sponsor-service';
+} from '@/lib/sponsors/sponsor-types';
 
 // ============================================================================
 // TYPES

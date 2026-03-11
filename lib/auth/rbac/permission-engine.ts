@@ -17,80 +17,28 @@ import { prisma } from '@/lib/prisma';
 import { getCache } from '@/lib/cache/cache-manager';
 import { logger } from '@/lib/logger';
 
-// ============================================================================
-// TYPES
-// ============================================================================
+// Re-export types and constants from the client-safe types file.
+// Consumers that only need types/constants should import from
+// '@/lib/auth/rbac/permission-types' to avoid pulling in server-only deps.
+export type {
+  ResourceType,
+  ActionType,
+  Permission,
+  PermissionCheck,
+  PermissionResult,
+  UserPermissions,
+} from './permission-types';
+export { PERMISSIONS, ALL_PERMISSIONS } from './permission-types';
 
-export type ResourceType =
-  | 'posts'
-  | 'campaigns'
-  | 'analytics'
-  | 'personas'
-  | 'settings'
-  | 'users'
-  | 'roles'
-  | 'integrations'
-  | 'billing'
-  | 'organization';
-
-export type ActionType =
-  | 'create'
-  | 'read'
-  | 'update'
-  | 'delete'
-  | 'manage'
-  | 'export'
-  | 'invite'
-  | 'approve';
-
-export type Permission = `${ResourceType}:${ActionType}` | '*';
-
-export interface PermissionCheck {
-  resource: ResourceType;
-  action: ActionType;
-  resourceId?: string;
-  context?: Record<string, unknown>;
-}
-
-export interface PermissionResult {
-  allowed: boolean;
-  reason?: string;
-  matchedPermission?: string;
-}
-
-export interface UserPermissions {
-  userId: string;
-  organizationId: string;
-  permissions: string[];
-  roles: Array<{
-    id: string;
-    name: string;
-    permissions: string[];
-  }>;
-  cachedAt: Date;
-}
-
-// ============================================================================
-// PERMISSION DEFINITIONS
-// ============================================================================
-
-export const PERMISSIONS: Record<ResourceType, ActionType[]> = {
-  posts: ['create', 'read', 'update', 'delete', 'approve'],
-  campaigns: ['create', 'read', 'update', 'delete', 'manage'],
-  analytics: ['read', 'export'],
-  personas: ['create', 'read', 'update', 'delete'],
-  settings: ['read', 'update'],
-  users: ['read', 'update', 'delete', 'invite'],
-  roles: ['create', 'read', 'update', 'delete', 'manage'],
-  integrations: ['create', 'read', 'update', 'delete'],
-  billing: ['read', 'update', 'manage'],
-  organization: ['read', 'update', 'delete', 'manage'],
-};
-
-export const ALL_PERMISSIONS: Permission[] = Object.entries(PERMISSIONS).flatMap(
-  ([resource, actions]) =>
-    actions.map(action => `${resource}:${action}` as Permission)
-);
+import type {
+  ResourceType,
+  ActionType,
+  Permission,
+  PermissionCheck,
+  PermissionResult,
+  UserPermissions,
+} from './permission-types';
+import { PERMISSIONS, ALL_PERMISSIONS } from './permission-types';
 
 // ============================================================================
 // PERMISSION ENGINE

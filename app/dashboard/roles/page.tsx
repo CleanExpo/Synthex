@@ -38,7 +38,7 @@ import {
   type CreateRoleData,
   type UpdateRoleData,
 } from '@/hooks/use-roles';
-import { PERMISSIONS, type ResourceType } from '@/lib/auth/rbac/permission-engine';
+import { PERMISSIONS, type ResourceType } from '@/lib/auth/rbac/permission-types';
 import {
   Shield,
   Crown,
