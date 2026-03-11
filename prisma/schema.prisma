@@ -154,6 +154,9 @@ model User {
   // E-E-A-T Score Builder (Phase 90)
   eeatAudits            EEATAudit[]
 
+  // Brand Builder (Phase 91)
+  brandIdentities       BrandIdentity[]
+
   // Onboarding state (UNI-920)
   onboardingComplete      Boolean   @default(false) @map("onboarding_complete")
   onboardingStep          Int       @default(0)     @map("onboarding_step")       // 0=not started, 1=business, 2=api-key, 3=socials, 4=goals
@@ -3351,4 +3354,86 @@ model EEATAudit {
 
   @@index([userId])
   @@index([orgId])
+}
+// ==========================================
+// Brand Builder (Phase 91)
+// Personal & Business Brand Recognition Engine
+// ==========================================
+
+model BrandIdentity {
+  id              String   @id @default(cuid())
+  userId          String
+  orgId           String
+  entityType      String                   // 'organization' | 'person' | 'local-business'
+  canonicalName   String
+  canonicalUrl    String
+  description     String?  @db.Text
+  logoUrl         String?
+  foundingDate    String?
+  hasPhysicalLocation Boolean @default(false)
+  address         Json?                    // { street, suburb, state, postcode, country }
+  phone           String?
+  // sameAs profile URLs (prioritised)
+  wikidataUrl     String?
+  wikipediaUrl    String?
+  linkedinUrl     String?
+  crunchbaseUrl   String?
+  youtubeUrl      String?
+  twitterUrl      String?
+  facebookUrl     String?
+  instagramUrl    String?
+  // Knowledge Panel signals
+  wikidataQId     String?                  // e.g. "Q12345"
+  kgmid           String?                  // Google KG Machine ID
+  kgConfidence    Float?                   // 0.0-1.0 from Google KG API
+  // Generated schema
+  entityGraph     Json?                    // Full JSON-LD entity graph output
+  consistencyScore Float?                  // 0-100
+  consistencyReport Json?                  // Last ConsistencyReport
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  credentials     BrandCredential[]
+  mentions        BrandMention[]
+  user            User     @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([orgId])
+}
+
+model BrandCredential {
+  id              String   @id @default(cuid())
+  brandId         String
+  type            String                   // 'award' | 'certification' | 'publication' | 'speaking' | 'membership'
+  title           String
+  issuer          String
+  dateIssued      DateTime
+  expiresAt       DateTime?
+  url             String?
+  description     String?  @db.Text
+  verified        Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  brand           BrandIdentity @relation(fields: [brandId], references: [id], onDelete: Cascade)
+
+  @@index([brandId])
+}
+
+model BrandMention {
+  id              String   @id @default(cuid())
+  brandId         String
+  userId          String
+  url             String
+  urlHash         String                   // SHA-256 of normalised URL for dedup
+  title           String
+  description     String?  @db.Text
+  publishedAt     DateTime?
+  source          String                   // Domain of publisher
+  apiSource       String                   // 'newsdata' | 'gnews' | 'guardian' | 'gdelt' | 'rss'
+  sentiment       String   @default("neutral")  // 'positive' | 'neutral' | 'negative'
+  createdAt       DateTime @default(now())
+  brand           BrandIdentity @relation(fields: [brandId], references: [id], onDelete: Cascade)
+
+  @@unique([urlHash, brandId])
+  @@index([brandId])
+  @@index([userId])
+  @@index([publishedAt])
 }

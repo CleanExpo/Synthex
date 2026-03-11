@@ -24,6 +24,10 @@ export interface GEOFeatureLimits {
   capsuleFormats: number;          // Content capsule generations per month
   slopScans: number;               // AI slop scans per month
   qualityAudits: number;           // Full quality audits per month (includes DB save)
+  // Brand Builder (Phase 91)
+  brandIdentities: number;         // Total saved brand identity profiles
+  brandMentionPolls: number;       // Mention polling operations per month
+  consistencyAudits: number;       // NAP consistency audits per month
 }
 
 /**
@@ -43,6 +47,9 @@ export const PLAN_LIMITS: Record<string, GEOFeatureLimits> = {
     capsuleFormats: 0,
     slopScans: 3,
     qualityAudits: 3,
+    brandIdentities: 1,
+    brandMentionPolls: 5,
+    consistencyAudits: 3,
   },
   pro: {
     geoAnalyses: 50,
@@ -56,6 +63,9 @@ export const PLAN_LIMITS: Record<string, GEOFeatureLimits> = {
     capsuleFormats: 20,
     slopScans: 50,
     qualityAudits: 50,
+    brandIdentities: 3,
+    brandMentionPolls: 20,
+    consistencyAudits: 20,
   },
   growth: {
     geoAnalyses: -1,
@@ -69,6 +79,9 @@ export const PLAN_LIMITS: Record<string, GEOFeatureLimits> = {
     capsuleFormats: -1,
     slopScans: -1,
     qualityAudits: -1,
+    brandIdentities: 10,
+    brandMentionPolls: 100,
+    consistencyAudits: -1,
   },
   scale: {
     geoAnalyses: -1,
@@ -82,6 +95,9 @@ export const PLAN_LIMITS: Record<string, GEOFeatureLimits> = {
     capsuleFormats: -1,
     slopScans: -1,
     qualityAudits: -1,
+    brandIdentities: -1,
+    brandMentionPolls: -1,
+    consistencyAudits: -1,
   },
   // Backward-compat aliases for existing DB records
   professional: {
@@ -96,6 +112,9 @@ export const PLAN_LIMITS: Record<string, GEOFeatureLimits> = {
     capsuleFormats: 20,
     slopScans: 50,
     qualityAudits: 50,
+    brandIdentities: 10,
+    brandMentionPolls: 100,
+    consistencyAudits: -1,
   },
   business: {
     geoAnalyses: -1,
@@ -109,6 +128,9 @@ export const PLAN_LIMITS: Record<string, GEOFeatureLimits> = {
     capsuleFormats: -1,
     slopScans: -1,
     qualityAudits: -1,
+    brandIdentities: -1,
+    brandMentionPolls: -1,
+    consistencyAudits: -1,
   },
   custom: {
     geoAnalyses: -1,
@@ -122,6 +144,9 @@ export const PLAN_LIMITS: Record<string, GEOFeatureLimits> = {
     capsuleFormats: -1,
     slopScans: -1,
     qualityAudits: -1,
+    brandIdentities: -1,
+    brandMentionPolls: -1,
+    consistencyAudits: -1,
   },
 };
 
@@ -215,5 +240,17 @@ export const FEATURE_INFO: Record<GEOFeatureKey, { label: string; description: s
   qualityAudits: {
     label: 'Content Quality Audits',
     description: 'Full humanness scoring and AI slop detection with saved audit history',
+  },
+  brandIdentities: {
+    label: 'Brand Identity Profiles',
+    description: 'Create and manage brand entity profiles with JSON-LD entity graphs and sameAs linkage',
+  },
+  brandMentionPolls: {
+    label: 'Brand Mention Polls',
+    description: 'Poll NewsData.io and GDELT for brand mentions across global news sources',
+  },
+  consistencyAudits: {
+    label: 'Consistency Audits',
+    description: 'Audit NAP consistency across declared sameAs platforms for Knowledge Panel eligibility',
   },
 };
