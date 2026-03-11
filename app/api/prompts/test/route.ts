@@ -6,6 +6,10 @@
  * Rate limited: 10 tests per hour per user (keyed by userId).
  * Saves the result to PromptResult and updates the PromptTracker status.
  *
+ * Growth+ plan: Uses BO-optimised temperature, max tokens, and positivity
+ * bias from the prompt_testing surface. Registers observations after each
+ * test to feed the Bayesian learning loop.
+ *
  * @module app/api/prompts/test/route
  */
 
@@ -14,6 +18,10 @@ import { z } from 'zod';
 import prisma from '@/lib/prisma';
 import { getUserIdFromRequest } from '@/lib/auth/jwt-utils';
 import { testPrompt } from '@/lib/prompts/prompt-tester';
+import { isSurfaceAvailable } from '@/lib/bayesian/feature-limits';
+import { getPromptTestingParams } from '@/lib/bayesian/surfaces/prompt-testing';
+import { registerObservationSilently } from '@/lib/bayesian/fallback';
+import type { PromptTestingParams } from '@/lib/bayesian/surfaces/prompt-testing';
 
 // ─── In-memory rate store (10 tests/hour per userId) ─────────────────────────
 
@@ -100,8 +108,25 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Tracker not found' }, { status: 404 });
     }
 
-    // ── Run prompt test ──
-    const testResult = await testPrompt(tracker.promptText, tracker.entityName);
+    // ── Resolve orgId and plan for BO gating ──
+    const userRecord = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { organizationId: true, organization: { select: { plan: true } } },
+    });
+    const orgId = userRecord?.organizationId ?? userId;
+    const plan  = userRecord?.organization?.plan ?? 'free';
+
+    // ── Fetch BO params if surface is available on this plan ──
+    let boParams: PromptTestingParams | undefined;
+    let boParamsSource: 'bo' | 'heuristic' | undefined;
+    if (isSurfaceAvailable(plan, 'prompt_testing')) {
+      const boResult  = await getPromptTestingParams(orgId);
+      boParams        = boResult.params;
+      boParamsSource  = boResult.source;
+    }
+
+    // ── Run prompt test (boParams may be undefined for non-Growth plans) ──
+    const testResult = await testPrompt(tracker.promptText, tracker.entityName, boParams);
 
     // ── Save result + update tracker in a transaction ──
     const [result] = await prisma.$transaction([
@@ -127,6 +152,29 @@ export async function POST(request: NextRequest) {
         },
       }),
     ]);
+
+    // ── Register BO observation (fire-and-forget, non-blocking) ──
+    // Only register when BO actually provided the parameters (not heuristic fallback)
+    if (boParams && boParamsSource === 'bo') {
+      const observationTarget = testResult.brandMentioned
+        ? testResult.responseQuality
+        : testResult.responseQuality * 0.5;  // Penalise responses that miss the brand
+
+      void registerObservationSilently(
+        'prompt_testing',
+        orgId,
+        {
+          temperature:    boParams.temperature,
+          maxTokens:      boParams.maxTokens,
+          positivityBias: boParams.positivityBias,
+        },
+        observationTarget,
+        {
+          brandMentioned:  testResult.brandMentioned,
+          responseQuality: testResult.responseQuality,
+        },
+      );
+    }
 
     return NextResponse.json({
       result,
