@@ -151,6 +151,9 @@ model User {
   // Content Quality Gate (Phase 89)
   contentQualityAudits  ContentQualityAudit[]
 
+  // E-E-A-T Score Builder (Phase 90)
+  eeatAudits            EEATAudit[]
+
   // Onboarding state (UNI-920)
   onboardingComplete      Boolean   @default(false) @map("onboarding_complete")
   onboardingStep          Int       @default(0)     @map("onboarding_step")       // 0=not started, 1=business, 2=api-key, 3=socials, 4=goals
@@ -3314,6 +3317,34 @@ model ContentQualityAudit {
   passRate         Boolean
   slopMatchCount   Int
   auditResult      Json
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  user             User     @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([orgId])
+}
+
+// ==========================================
+// E-E-A-T Score Builder (Phase 90)
+// Granular 20-point automated E-E-A-T audit
+// ==========================================
+
+model EEATAudit {
+  id               String   @id @default(cuid())
+  userId           String
+  orgId            String
+  contentText      String   @db.Text
+  contentUrl       String?                  // Optional URL being audited
+  // 4 pillar scores (0-25 each, total 0-100)
+  experienceScore  Float
+  expertiseScore   Float
+  authorityScore   Float
+  trustScore       Float
+  overallScore     Float                    // Sum of 4 pillars
+  // Detail
+  auditResult      Json                     // Full EEATAuditResult object
+  assetPlan        Json?                    // Generated EEATAssetPlan
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
   user             User     @relation(fields: [userId], references: [id])
