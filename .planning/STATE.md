@@ -10,14 +10,14 @@ See: .planning/PROJECT.md (updated 2026-02-17)
 ## Current Position
 
 Milestone: v5.0 AI-Native GEO & Citation Engine
-Phase: 88 of 100 (Writing Context & Voice Fingerprinting) — COMPLETE
+Phase: 89 of 100 (AI Slop Detection & Content Quality Gate) — COMPLETE
 Plan: 3 of 3 complete
-Status: All plans executed — Voice Fingerprinting Engine, Content Capsule formatter, Slop Scanner, 4 API routes, /dashboard/voice page fully live
-Last activity: 2026-03-11 — Executed 88-01/02/03: VoiceProfile + ContentCapsule Prisma models; lib/voice/ (types, fingerprint-extractor, slop-scanner, capsule-formatter, context-builder, voice-analyzer); 4 API routes; Voice Engine dashboard with 3 tabs; sidebar + command palette navigation
+Status: All plans executed — HumannessScorer, ContentQualityAudit model, content-scorer 6th dimension, 2 API routes, /dashboard/quality page fully live
+Last activity: 2026-03-11 — Executed 89-01/02/03: ContentQualityAudit Prisma model; lib/quality/humanness-scorer.ts; extended lib/ai/content-scorer.ts with writingQuality dimension; /api/quality/audit + /api/quality/gate; HumannessScoreCard + QualityGateBadge components; Quality Gate dashboard
 
-Progress: ████░░░░░░ ~24% (12/~49 plans)
+Progress: █████░░░░░ ~30% (15/~49 plans)
 
-Next action: Phase 88 complete — beginning Phase 89: AI Slop Detection & Content Quality Gate
+Next action: Phase 89 complete — beginning Phase 90: E-E-A-T Score Builder
 
 ## Performance Metrics
 
