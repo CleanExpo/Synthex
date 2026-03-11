@@ -10,10 +10,6 @@ import { FloatingActionButton } from '@/components/FloatingActionButton';
 import { FloatingStreak } from '@/components/StreakCounter';
 import './globals.css';
 
-// Force dynamic rendering to prevent Prisma initialization during build
-export const dynamic = 'force-dynamic';
-export const revalidate = 0;
-
 const inter = Inter({
   subsets: ['latin'],
   variable: '--font-inter',

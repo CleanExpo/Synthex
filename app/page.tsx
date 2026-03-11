@@ -1,5 +1,8 @@
 import type { Metadata } from 'next';
 import { PAGE_METADATA } from '@/lib/seo/metadata';
+
+// Landing page is static — cache at CDN for 1 hour, revalidate in background
+export const revalidate = 3600;
 import { NavBar } from '@/components/landing/nav-bar';
 import { HeroSection } from '@/components/landing/hero-section';
 import { FeaturesSection } from '@/components/landing/features-section';
