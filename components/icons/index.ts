@@ -211,6 +211,7 @@ export {
   BriefcaseIcon as Briefcase,
   BugAntIcon as Bug,
   BuildingOfficeIcon as Building,
+  BuildingOffice2Icon as Building2,
   CalculatorIcon as Calculator,
   CurrencyDollarIcon as Coins,
   CreditCardIcon as CreditCard,
