@@ -37,6 +37,7 @@ import {
 import { toast } from 'sonner';
 import Link from 'next/link';
 import { useSocialConnections } from '@/hooks/use-social-connections';
+import { useActiveBusiness } from '@/hooks/useActiveBusiness';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -400,7 +401,8 @@ function PlatformSummary({
 // ---------------------------------------------------------------------------
 
 export default function PlatformsPage() {
-  const { connections, summary, isLoading, connect, disconnect, mutate } = useSocialConnections();
+  const { activeOrganizationId } = useActiveBusiness();
+  const { connections, summary, isLoading, connect, disconnect, mutate } = useSocialConnections(activeOrganizationId);
   const searchParams = useSearchParams();
   const [connectingId, setConnectingId] = useState<string | null>(null);
   const [disconnectingId, setDisconnectingId] = useState<string | null>(null);

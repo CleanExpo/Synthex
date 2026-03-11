@@ -3,23 +3,28 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useSocialConnections } from '@/hooks/use-social-connections';
+import { useActiveBusiness } from '@/hooks/useActiveBusiness';
 import { X, Zap } from '@/components/icons';
 
-const DISMISS_KEY = 'socialBannerDismissed';
+/** Per-business dismiss key so each business gets its own banner state */
+function getDismissKey(orgId: string | null): string {
+  return orgId ? `socialBannerDismissed_${orgId}` : 'socialBannerDismissed_default';
+}
 
 export function SocialConnectBanner() {
-  const { summary, isLoading } = useSocialConnections();
+  const { activeOrganizationId } = useActiveBusiness();
+  const { summary, isLoading } = useSocialConnections(activeOrganizationId);
   // Start dismissed=true to avoid hydration flash, then read localStorage on mount
   const [dismissed, setDismissed] = useState(true);
 
   useEffect(() => {
-    // Check localStorage only after mount to avoid SSR mismatch
-    const wasDismissed = localStorage.getItem(DISMISS_KEY) === 'true';
+    // Check localStorage only after mount; re-check when business changes
+    const wasDismissed = localStorage.getItem(getDismissKey(activeOrganizationId)) === 'true';
     setDismissed(wasDismissed);
-  }, []);
+  }, [activeOrganizationId]);
 
   const handleDismiss = () => {
-    localStorage.setItem(DISMISS_KEY, 'true');
+    localStorage.setItem(getDismissKey(activeOrganizationId), 'true');
     setDismissed(true);
   };
 

@@ -32,11 +32,23 @@ interface UseConnectionsResult {
   disconnect: (platform: string) => Promise<void>;
 }
 
-export function useSocialConnections(): UseConnectionsResult {
+/**
+ * Fetch social connections scoped to the active business.
+ *
+ * @param organizationId - Pass the active org ID so the SWR cache key
+ *   changes when the user switches business, triggering an automatic refetch.
+ *   When omitted the API falls back to `getEffectiveOrganizationId()` server-side.
+ */
+export function useSocialConnections(organizationId?: string | null): UseConnectionsResult {
+  // Build org-scoped SWR key so cache is per-business
+  const key = organizationId
+    ? `/api/auth/connections?organizationId=${organizationId}`
+    : '/api/auth/connections';
+
   const { data, error, isLoading, mutate } = useSWR<{
     connections: ConnectionStatus[];
     summary: ConnectionsSummary;
-  }>('/api/auth/connections', fetchJson, {
+  }>(key, fetchJson, {
     revalidateOnFocus: true,
     dedupingInterval: 10_000,
   });
@@ -46,6 +58,9 @@ export function useSocialConnections(): UseConnectionsResult {
   // The window.location.href redirect is intentional — OAuth requires full browser navigation.
   const connect = async (platform: string): Promise<void> => {
     const params = new URLSearchParams({ returnTo: '/dashboard/platforms' });
+    if (organizationId) {
+      params.set('organizationId', organizationId);
+    }
     const res = await fetch(`/api/auth/oauth/${platform}?${params.toString()}`, {
       credentials: 'include',
     });
@@ -58,9 +73,13 @@ export function useSocialConnections(): UseConnectionsResult {
     }
   };
 
-  // Disconnect a platform
+  // Disconnect a platform (scoped to org)
   const disconnect = async (platform: string): Promise<void> => {
-    const res = await fetch(`/api/auth/connections?platform=${encodeURIComponent(platform)}`, {
+    const params = new URLSearchParams({ platform });
+    if (organizationId) {
+      params.set('organizationId', organizationId);
+    }
+    const res = await fetch(`/api/auth/connections?${params.toString()}`, {
       method: 'DELETE',
       credentials: 'include',
     });
