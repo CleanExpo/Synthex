@@ -22,6 +22,7 @@ import { getUserIdFromRequest } from '@/lib/auth/jwt-utils';
 import { analyzeGEO } from '@/lib/geo/geo-analyzer';
 import type { GEOPlatform } from '@/lib/geo/types';
 import { logger } from '@/lib/logger';
+import { registerObservationSilently } from '@/lib/bayesian/fallback';
 
 const analyzeSchema = z.object({
   contentText: z.string().min(50, 'Content must be at least 50 characters'),
@@ -52,14 +53,23 @@ export async function POST(request: NextRequest) {
 
     const { contentText, contentUrl, contentId, authorId, platform } = validation.data;
 
-    // Run GEO analysis
+    // Resolve the user's organisation — used for BO weight lookup and observation
+    const userRecord = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { organizationId: true },
+    });
+    const orgId = userRecord?.organizationId ?? undefined;
+
+    // Run GEO analysis with org context (enables BO-optimised weights)
     const result = await analyzeGEO({
       contentText,
       contentUrl,
       contentId,
       authorId,
       platform: platform as GEOPlatform,
-    });
+      userId,
+      orgId,
+    }, orgId);
 
     // Store analysis in database
     const analysis = await prisma.gEOAnalysis.create({
@@ -96,6 +106,24 @@ export async function POST(request: NextRequest) {
         coherenceIssues: result.entityAnalysis.coherenceIssues as unknown as Prisma.InputJsonValue,
       },
     });
+
+    // Fire-and-forget: register BO observation for geo_score_weights surface.
+    // Uses void so the response is never blocked by BO service latency.
+    if (orgId) {
+      void registerObservationSilently(
+        'geo_score_weights',
+        orgId,
+        {
+          citability: result.score.citability / 100,
+          structure:  result.score.structure  / 100,
+          multiModal: result.score.multiModal / 100,
+          authority:  result.score.authority  / 100,
+          technical:  result.score.technical  / 100,
+        },
+        result.score.overall,
+        { contentLength: contentText.length, platform },
+      );
+    }
 
     return NextResponse.json({
       id: analysis.id,
