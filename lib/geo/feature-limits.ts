@@ -40,6 +40,8 @@ export interface GEOFeatureLimits {
   // AI Backlink Prospector (Phase 95)
   backlinkAnalyses: number;        // Monthly analysis runs
   backlinkProspects: number;       // Total stored prospect records
+  // Prompt Intelligence (Phase 96)
+  promptTests: number;             // AI prompt tests per hour
 }
 
 /**
@@ -70,6 +72,7 @@ export const PLAN_LIMITS: Record<string, GEOFeatureLimits> = {
     directoryListings: 10,
     backlinkAnalyses: 3,
     backlinkProspects: 20,
+    promptTests: 10,
   },
   pro: {
     geoAnalyses: 50,
@@ -94,6 +97,7 @@ export const PLAN_LIMITS: Record<string, GEOFeatureLimits> = {
     directoryListings: 50,
     backlinkAnalyses: 20,
     backlinkProspects: 200,
+    promptTests: 50,
   },
   growth: {
     geoAnalyses: -1,
@@ -118,6 +122,7 @@ export const PLAN_LIMITS: Record<string, GEOFeatureLimits> = {
     directoryListings: -1,
     backlinkAnalyses: -1,
     backlinkProspects: -1,
+    promptTests: 200,
   },
   scale: {
     geoAnalyses: -1,
@@ -142,6 +147,7 @@ export const PLAN_LIMITS: Record<string, GEOFeatureLimits> = {
     directoryListings: -1,
     backlinkAnalyses: -1,
     backlinkProspects: -1,
+    promptTests: -1,
   },
   // Backward-compat aliases for existing DB records
   professional: {
@@ -167,6 +173,7 @@ export const PLAN_LIMITS: Record<string, GEOFeatureLimits> = {
     directoryListings: 50,
     backlinkAnalyses: 20,
     backlinkProspects: 200,
+    promptTests: 200,
   },
   business: {
     geoAnalyses: -1,
@@ -191,6 +198,7 @@ export const PLAN_LIMITS: Record<string, GEOFeatureLimits> = {
     directoryListings: -1,
     backlinkAnalyses: -1,
     backlinkProspects: -1,
+    promptTests: -1,
   },
   custom: {
     geoAnalyses: -1,
@@ -215,6 +223,7 @@ export const PLAN_LIMITS: Record<string, GEOFeatureLimits> = {
     directoryListings: -1,
     backlinkAnalyses: -1,
     backlinkProspects: -1,
+    promptTests: -1,
   },
 };
 
@@ -353,5 +362,10 @@ export const FEATURE_INFO: Record<GEOFeatureKey, { label: string; description: s
   backlinkProspects: {
     label: 'Backlink Prospects',
     description: 'Total saved backlink prospect records across resource pages, guest posts, broken links, and competitor analysis',
+  },
+  // Prompt Intelligence (Phase 96)
+  promptTests: {
+    label: 'Prompt Tests',
+    description: 'AI prompt visibility tests — discover which prompts trigger brand mentions in Claude and other AI models',
   },
 };
