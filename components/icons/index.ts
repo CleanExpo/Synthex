@@ -59,6 +59,7 @@ export {
   CloudIcon as Cloud,
   CodeBracketIcon as Code,
   CommandLineIcon as Command,
+  CommandLineIcon as CommandLine,
   ComputerDesktopIcon as Monitor,
   DocumentDuplicateIcon as Copy,
   CpuChipIcon as Cpu,

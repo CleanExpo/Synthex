@@ -8,6 +8,7 @@ import MobileMenu from '@/components/MobileMenu';
 import { NotificationBell } from '@/components/NotificationBell';
 import {
   Sparkles,
+  CommandLine,
   Home,
   FileText,
   Users,
@@ -91,6 +92,15 @@ const sidebarGroups: Array<{
   items: SidebarItem[];
   defaultOpen?: boolean;
 }> = [
+  {
+    id: 'command-centre',
+    icon: CommandLine,
+    label: 'COMMAND CENTRE',
+    defaultOpen: true,
+    items: [
+      { icon: CommandLine, label: 'Citation Dashboard', href: '/dashboard/citation' },
+    ],
+  },
   {
     id: 'main',
     icon: Home,
@@ -245,7 +255,7 @@ const sidebarGroups: Array<{
 // PROGRESSIVE DISCLOSURE — New users see only starter groups to reduce overload.
 // After clicking "Show More" the full sidebar is revealed and persisted.
 // ============================================================================
-const STARTER_GROUP_IDS = new Set(['main', 'content-ai', 'planning']);
+const STARTER_GROUP_IDS = new Set(['command-centre', 'main', 'content-ai', 'planning']);
 const SIDEBAR_EXPANDED_KEY = 'sidebar-show-all-groups';
 
 export default function DashboardLayout({
