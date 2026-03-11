@@ -172,6 +172,9 @@ model User {
   backlinkProspects     BacklinkProspect[]
   backlinkAnalyses      BacklinkAnalysis[]
 
+  // Prompt Intelligence (Phase 96)
+  promptTrackers        PromptTracker[]
+
   // Onboarding state (UNI-920)
   onboardingComplete      Boolean   @default(false) @map("onboarding_complete")
   onboardingStep          Int       @default(0)     @map("onboarding_step")       // 0=not started, 1=business, 2=api-key, 3=socials, 4=goals
@@ -3781,4 +3784,52 @@ model BacklinkAnalysis {
 
   @@index([userId])
   @@index([orgId])
+}
+
+// ==========================================
+// Prompt Intelligence (Phase 96)
+// Track AI prompt visibility for brands/entities
+// ==========================================
+
+model PromptTracker {
+  id                   String        @id @default(cuid())
+  userId               String
+  orgId                String
+  entityName           String                        // "Synthex", "CleanCo Sydney"
+  entityType           String                        // brand/product/service/person/location
+  promptText           String        @db.Text        // "What is the best marketing automation tool for small businesses?"
+  promptCategory       String                        // brand-awareness/competitor-comparison/local-discovery/use-case/how-to/product-feature
+  targetModel          String        @default("claude-3-5-haiku-20241022")
+  status               String        @default("pending") // pending/tested/scheduled
+  brandMentioned       Boolean?                      // null=not tested, true/false=result
+  brandPosition        Int?                          // position in AI response (1=first mention)
+  competitorsMentioned Json?                         // array of competitor names found in response
+  lastTestedAt         DateTime?
+  createdAt            DateTime      @default(now())
+
+  // Relations
+  results              PromptResult[]
+  user                 User          @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([orgId])
+  @@index([status])
+  @@index([promptCategory])
+}
+
+model PromptResult {
+  id               String        @id @default(cuid())
+  trackerId        String
+  aiResponse       String        @db.Text
+  brandMentioned   Boolean
+  brandPosition    Int?
+  mentionContext   String?       @db.Text        // sentence containing brand mention
+  competitorsFound Json                          // array of strings
+  responseQuality  Float                         // 0-1 subjective quality score
+  testedAt         DateTime      @default(now())
+
+  // Relations
+  tracker          PromptTracker @relation(fields: [trackerId], references: [id], onDelete: Cascade)
+
+  @@index([trackerId])
 }
