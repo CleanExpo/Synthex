@@ -12,11 +12,13 @@
  * - clarity:       Jargon, passive voice, specificity
  * - emotional:     Sentiment strength, power words, urgency, storytelling
  *
- * Overall = weighted average (engagement 30%, readability 25%, platformFit 20%,
- *           clarity 15%, emotional 10%)
+ * Overall = weighted average (engagement 25%, readability 20%, platformFit 15%,
+ *           clarity 15%, emotional 10%, writingQuality 15%)
  *
  * @module lib/ai/content-scorer
  */
+
+import { scoreHumanness } from '../quality/humanness-scorer';
 
 // ============================================================================
 // TYPES
@@ -47,6 +49,7 @@ export interface ScoreResult {
     platformFit: DimensionScore;
     clarity: DimensionScore;
     emotional: DimensionScore;
+    writingQuality: DimensionScore;
   };
   /** Top 3 highest-impact suggestions across all dimensions */
   topSuggestions: string[];
@@ -71,11 +74,12 @@ const PLATFORM_LIMITS: Record<string, number> = {
 
 /** Scoring dimension weights — must sum to 1.0 */
 const DIMENSION_WEIGHTS = {
-  engagement: 0.30,
-  readability: 0.25,
-  platformFit: 0.20,
+  engagement: 0.25,
+  readability: 0.20,
+  platformFit: 0.15,
   clarity: 0.15,
   emotional: 0.10,
+  writingQuality: 0.15,
 } as const;
 
 /** Words that suggest vagueness or lack of specificity */
@@ -570,6 +574,19 @@ function scoreEmotional(content: string): DimensionScore {
   return { score: clamp(score), issues, suggestions };
 }
 
+/**
+ * Scores writing quality using the humanness scorer — detects AI-generated
+ * patterns, vocabulary diversity, and sentence rhythm.
+ */
+function scoreWritingQuality(content: string): DimensionScore {
+  const result = scoreHumanness(content);
+  return {
+    score: result.score,
+    issues: result.issues,
+    suggestions: result.suggestions,
+  };
+}
+
 // ============================================================================
 // CONTENT SCORER CLASS
 // ============================================================================
@@ -602,6 +619,7 @@ export class ContentScorer {
     const platformFit = scorePlatformFit(content, normalizedPlatform);
     const clarity = scoreClarity(content);
     const emotional = scoreEmotional(content);
+    const writingQuality = scoreWritingQuality(content);
 
     // Weighted overall score
     const overall = clamp(
@@ -609,7 +627,8 @@ export class ContentScorer {
       readability.score * DIMENSION_WEIGHTS.readability +
       platformFit.score * DIMENSION_WEIGHTS.platformFit +
       clarity.score * DIMENSION_WEIGHTS.clarity +
-      emotional.score * DIMENSION_WEIGHTS.emotional
+      emotional.score * DIMENSION_WEIGHTS.emotional +
+      writingQuality.score * DIMENSION_WEIGHTS.writingQuality
     );
 
     // Collect all suggestions with their dimension scores for prioritization
@@ -620,6 +639,7 @@ export class ContentScorer {
       ...platformFit.suggestions.map((text) => ({ text, dimensionScore: platformFit.score })),
       ...clarity.suggestions.map((text) => ({ text, dimensionScore: clarity.score })),
       ...emotional.suggestions.map((text) => ({ text, dimensionScore: emotional.score })),
+      ...writingQuality.suggestions.map((text) => ({ text, dimensionScore: writingQuality.score })),
     ];
 
     // Prioritize suggestions from lowest-scoring dimensions (most impact)
@@ -636,6 +656,7 @@ export class ContentScorer {
         platformFit,
         clarity,
         emotional,
+        writingQuality,
       },
       topSuggestions,
     };
