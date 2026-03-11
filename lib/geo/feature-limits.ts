@@ -28,6 +28,10 @@ export interface GEOFeatureLimits {
   brandIdentities: number;         // Total saved brand identity profiles
   brandMentionPolls: number;       // Mention polling operations per month
   consistencyAudits: number;       // NAP consistency audits per month
+  // PR Journalist CRM (Phase 92)
+  journalistContacts: number;      // Total journalist contact records
+  prPitches: number;               // Total PR pitch records
+  pressReleases: number;           // Total press release records
 }
 
 /**
@@ -50,6 +54,9 @@ export const PLAN_LIMITS: Record<string, GEOFeatureLimits> = {
     brandIdentities: 1,
     brandMentionPolls: 5,
     consistencyAudits: 3,
+    journalistContacts: 5,
+    prPitches: 10,
+    pressReleases: 3,
   },
   pro: {
     geoAnalyses: 50,
@@ -66,6 +73,9 @@ export const PLAN_LIMITS: Record<string, GEOFeatureLimits> = {
     brandIdentities: 3,
     brandMentionPolls: 20,
     consistencyAudits: 20,
+    journalistContacts: 50,
+    prPitches: 100,
+    pressReleases: 20,
   },
   growth: {
     geoAnalyses: -1,
@@ -82,6 +92,9 @@ export const PLAN_LIMITS: Record<string, GEOFeatureLimits> = {
     brandIdentities: 10,
     brandMentionPolls: 100,
     consistencyAudits: -1,
+    journalistContacts: -1,
+    prPitches: -1,
+    pressReleases: -1,
   },
   scale: {
     geoAnalyses: -1,
@@ -98,6 +111,9 @@ export const PLAN_LIMITS: Record<string, GEOFeatureLimits> = {
     brandIdentities: -1,
     brandMentionPolls: -1,
     consistencyAudits: -1,
+    journalistContacts: -1,
+    prPitches: -1,
+    pressReleases: -1,
   },
   // Backward-compat aliases for existing DB records
   professional: {
@@ -115,6 +131,9 @@ export const PLAN_LIMITS: Record<string, GEOFeatureLimits> = {
     brandIdentities: 10,
     brandMentionPolls: 100,
     consistencyAudits: -1,
+    journalistContacts: 50,
+    prPitches: 100,
+    pressReleases: 20,
   },
   business: {
     geoAnalyses: -1,
@@ -131,6 +150,9 @@ export const PLAN_LIMITS: Record<string, GEOFeatureLimits> = {
     brandIdentities: -1,
     brandMentionPolls: -1,
     consistencyAudits: -1,
+    journalistContacts: -1,
+    prPitches: -1,
+    pressReleases: -1,
   },
   custom: {
     geoAnalyses: -1,
@@ -147,6 +169,9 @@ export const PLAN_LIMITS: Record<string, GEOFeatureLimits> = {
     brandIdentities: -1,
     brandMentionPolls: -1,
     consistencyAudits: -1,
+    journalistContacts: -1,
+    prPitches: -1,
+    pressReleases: -1,
   },
 };
 
@@ -252,5 +277,17 @@ export const FEATURE_INFO: Record<GEOFeatureKey, { label: string; description: s
   consistencyAudits: {
     label: 'Consistency Audits',
     description: 'Audit NAP consistency across declared sameAs platforms for Knowledge Panel eligibility',
+  },
+  journalistContacts: {
+    label: 'Journalist Contacts',
+    description: 'Store and manage journalist CRM records with beat tags, tier ratings, and Hunter.io email enrichment',
+  },
+  prPitches: {
+    label: 'PR Pitches',
+    description: 'Track pitch outreach lifecycle from draft through to editorial coverage attribution',
+  },
+  pressReleases: {
+    label: 'Press Releases',
+    description: 'Create AI-indexable press releases with schema.org JSON-LD structured data for newsroom publication',
   },
 };

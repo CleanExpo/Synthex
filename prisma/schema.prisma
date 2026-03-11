@@ -157,6 +157,12 @@ model User {
   // Brand Builder (Phase 91)
   brandIdentities       BrandIdentity[]
 
+  // PR Journalist CRM (Phase 92)
+  journalistContacts    JournalistContact[]
+  prPitches             PRPitch[]
+  mediaCoverage         MediaCoverage[]
+  pressReleases         PressRelease[]
+
   // Onboarding state (UNI-920)
   onboardingComplete      Boolean   @default(false) @map("onboarding_complete")
   onboardingStep          Int       @default(0)     @map("onboarding_step")       // 0=not started, 1=business, 2=api-key, 3=socials, 4=goals
@@ -467,6 +473,12 @@ model Organization {
 
   // Workflow engine (Phase 62)
   workflowExecutions WorkflowExecution[]
+
+  // PR Journalist CRM (Phase 92)
+  journalistContacts JournalistContact[]
+  prPitches          PRPitch[]
+  mediaCoverage      MediaCoverage[]
+  pressReleases      PressRelease[]
 
   // Indices for multi-tenant queries
   @@index([slug])
@@ -3436,4 +3448,172 @@ model BrandMention {
   @@index([brandId])
   @@index([userId])
   @@index([publishedAt])
+}
+
+// ==========================================
+// PR Journalist CRM (Phase 92)
+// ==========================================
+
+model JournalistContact {
+  id              String    @id @default(cuid())
+  userId          String
+  orgId           String
+
+  // Identity
+  name            String
+  email           String?
+  emailVerified   Boolean   @default(false)
+  emailScore      Int?
+  outlet          String
+  outletDomain    String
+  title           String?
+  location        String?
+
+  // Beat & coverage data
+  beats           String[]
+  recentArticles  Json?
+  beatsUpdatedAt  DateTime?
+  twitterHandle   String?
+  linkedinUrl     String?
+
+  // Relationship tracking
+  notes           String?   @db.Text
+  tier            String    @default("cold")
+  lastContactedAt DateTime?
+  doNotContact    Boolean   @default(false)
+
+  // Timestamps
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  // Relations
+  pitches         PRPitch[]
+  coverage        MediaCoverage[]
+  org             Organization @relation(fields: [orgId], references: [id])
+  user            User         @relation(fields: [userId], references: [id])
+
+  @@index([orgId])
+  @@index([userId])
+  @@index([outletDomain])
+  @@index([tier])
+}
+
+model PRPitch {
+  id              String    @id @default(cuid())
+  userId          String
+  orgId           String
+  journalistId    String
+
+  // Content
+  subject         String
+  angle           String    @db.Text
+  bodyDraft       String?   @db.Text
+  personalisation String?   @db.Text
+
+  // Lifecycle status: draft | sent | opened | replied | covered | declined | archived
+  status          String    @default("draft")
+  sentAt          DateTime?
+  openedAt        DateTime?
+  repliedAt       DateTime?
+  followUpAt      DateTime?
+  followUpCount   Int       @default(0)
+
+  // Attribution
+  campaignId      String?
+  tags            String[]
+
+  // Timestamps
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  // Relations
+  journalist      JournalistContact @relation(fields: [journalistId], references: [id])
+  coverage        MediaCoverage[]
+  org             Organization @relation(fields: [orgId], references: [id])
+  user            User         @relation(fields: [userId], references: [id])
+
+  @@index([orgId])
+  @@index([userId])
+  @@index([journalistId])
+  @@index([status])
+  @@index([followUpAt])
+}
+
+model MediaCoverage {
+  id              String    @id @default(cuid())
+  userId          String
+  orgId           String
+  pitchId         String?
+  journalistId    String?
+
+  // Article data
+  url             String
+  urlHash         String
+  title           String
+  description     String?   @db.Text
+  outlet          String
+  outletDomain    String
+  publishedAt     DateTime?
+  apiSource       String    // 'gdelt' | 'newsdata' | 'manual' | 'rss'
+
+  // Quality signals
+  estimatedReach  Int?
+  sentiment       String    @default("neutral")
+  tier            String    @default("tier3")
+
+  // Timestamps
+  createdAt       DateTime  @default(now())
+
+  // Relations
+  pitch           PRPitch?           @relation(fields: [pitchId], references: [id])
+  journalist      JournalistContact? @relation(fields: [journalistId], references: [id])
+  org             Organization       @relation(fields: [orgId], references: [id])
+  user            User               @relation(fields: [userId], references: [id])
+
+  @@unique([urlHash, orgId])
+  @@index([orgId])
+  @@index([pitchId])
+  @@index([journalistId])
+  @@index([publishedAt])
+}
+
+model PressRelease {
+  id              String    @id @default(cuid())
+  userId          String
+  orgId           String
+
+  // Content
+  slug            String
+  headline        String
+  subheading      String?
+  body            String    @db.Text
+  boilerplate     String?   @db.Text
+  contactName     String?
+  contactEmail    String?
+  contactPhone    String?
+
+  // Metadata for structured data
+  datePublished   DateTime?
+  location        String?
+  category        String?
+  keywords        String[]
+  imageUrl        String?
+
+  // Distribution
+  status          String    @default("draft")
+  publishedAt     DateTime?
+  distributedTo   String[]
+
+  // Timestamps
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  // Relations
+  org             Organization @relation(fields: [orgId], references: [id])
+  user            User         @relation(fields: [userId], references: [id])
+
+  @@unique([orgId, slug])
+  @@index([orgId])
+  @@index([status])
+  @@index([datePublished])
 }
