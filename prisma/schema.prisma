@@ -168,6 +168,10 @@ model User {
   directoryListings     DirectoryListing[]
   submissionTrackers    SubmissionTracker[]
 
+  // AI Backlink Prospector (Phase 95)
+  backlinkProspects     BacklinkProspect[]
+  backlinkAnalyses      BacklinkAnalysis[]
+
   // Onboarding state (UNI-920)
   onboardingComplete      Boolean   @default(false) @map("onboarding_complete")
   onboardingStep          Int       @default(0)     @map("onboarding_step")       // 0=not started, 1=business, 2=api-key, 3=socials, 4=goals
@@ -3727,4 +3731,54 @@ model SubmissionTracker {
 
   @@index([userId])
   @@index([dueDate])
+}
+
+// ---------------------------------------------------------------------------
+// AI Backlink Prospector (Phase 95)
+// ---------------------------------------------------------------------------
+
+model BacklinkProspect {
+  id              String    @id @default(cuid())
+  userId          String
+  orgId           String
+  targetUrl       String
+  targetDomain    String
+  domainAuthority Int?                              // 0-100 DA score from OpenPageRank
+  pageRank        Float?                            // Raw PageRank float
+  opportunityType String                            // resource-page | guest-post | broken-link | competitor-link | journalist-mention
+  status          String    @default("identified") // identified | contacted | published | rejected
+  pitchSent       Boolean   @default(false)
+  pitchResponse   String?
+  outreachEmail   String?
+  notes           String?   @db.Text
+  discoveredAt    DateTime  @default(now())
+  contactedAt     DateTime?
+  publishedAt     DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  // Relations
+  user            User      @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([orgId])
+  @@index([opportunityType])
+  @@index([status])
+}
+
+model BacklinkAnalysis {
+  id             String   @id @default(cuid())
+  userId         String
+  orgId          String
+  sourceUrl      String                            // Topic/domain used as search seed
+  analysisResult Json                              // Full structured result
+  linksFound     Int      @default(0)             // Total opportunities discovered
+  highValueCount Int      @default(0)             // Prospects with DA >= 40
+  createdAt      DateTime @default(now())
+
+  // Relations
+  user           User     @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([orgId])
 }
