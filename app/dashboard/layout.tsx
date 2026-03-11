@@ -175,6 +175,7 @@ const sidebarGroups: Array<{
       { icon: Brain, label: 'Psychology', href: '/dashboard/psychology' },
       { icon: Beaker, label: 'Experiments', href: '/dashboard/experiments' },
       { icon: Brain, label: 'Optimisation', href: '/dashboard/optimisation' },
+      { icon: TrendingUp, label: 'Forecasting', href: '/dashboard/forecasting' },
     ],
   },
   {

@@ -120,6 +120,10 @@
     {
       "path": "/api/cron/unite-hub-revenue",
       "schedule": "0 6 * * *"
+    },
+    {
+      "path": "/api/cron/forecast-training",
+      "schedule": "0 3 * * 0"
     }
   ]
 }
