@@ -34,6 +34,9 @@ export interface GEOFeatureLimits {
   pressReleases: number;           // Total press release records
   // Press Release Distribution (Phase 93)
   prDistributions: number;         // Total distribution submissions per press release
+  // Award & Directory Orchestrator (Phase 94)
+  awardListings: number;           // Total award listing records
+  directoryListings: number;       // Total directory listing records
 }
 
 /**
@@ -60,6 +63,8 @@ export const PLAN_LIMITS: Record<string, GEOFeatureLimits> = {
     prPitches: 10,
     pressReleases: 3,
     prDistributions: 2,
+    awardListings: 5,
+    directoryListings: 10,
   },
   pro: {
     geoAnalyses: 50,
@@ -80,6 +85,8 @@ export const PLAN_LIMITS: Record<string, GEOFeatureLimits> = {
     prPitches: 100,
     pressReleases: 20,
     prDistributions: 10,
+    awardListings: 25,
+    directoryListings: 50,
   },
   growth: {
     geoAnalyses: -1,
@@ -100,6 +107,8 @@ export const PLAN_LIMITS: Record<string, GEOFeatureLimits> = {
     prPitches: -1,
     pressReleases: -1,
     prDistributions: -1,
+    awardListings: -1,
+    directoryListings: -1,
   },
   scale: {
     geoAnalyses: -1,
@@ -120,6 +129,8 @@ export const PLAN_LIMITS: Record<string, GEOFeatureLimits> = {
     prPitches: -1,
     pressReleases: -1,
     prDistributions: -1,
+    awardListings: -1,
+    directoryListings: -1,
   },
   // Backward-compat aliases for existing DB records
   professional: {
@@ -141,6 +152,8 @@ export const PLAN_LIMITS: Record<string, GEOFeatureLimits> = {
     prPitches: 100,
     pressReleases: 20,
     prDistributions: 10,
+    awardListings: 25,
+    directoryListings: 50,
   },
   business: {
     geoAnalyses: -1,
@@ -161,6 +174,8 @@ export const PLAN_LIMITS: Record<string, GEOFeatureLimits> = {
     prPitches: -1,
     pressReleases: -1,
     prDistributions: -1,
+    awardListings: -1,
+    directoryListings: -1,
   },
   custom: {
     geoAnalyses: -1,
@@ -181,6 +196,8 @@ export const PLAN_LIMITS: Record<string, GEOFeatureLimits> = {
     prPitches: -1,
     pressReleases: -1,
     prDistributions: -1,
+    awardListings: -1,
+    directoryListings: -1,
   },
 };
 
@@ -302,5 +319,13 @@ export const FEATURE_INFO: Record<GEOFeatureKey, { label: string; description: s
   prDistributions: {
     label: 'PR Distributions',
     description: 'Track press release distribution across free channels including PR.com, OpenPR, and PRLog',
+  },
+  awardListings: {
+    label: 'Award Listings',
+    description: 'Track industry award nominations with AI-generated nomination drafts and deadline reminders',
+  },
+  directoryListings: {
+    label: 'Directory Listings',
+    description: 'Track niche directory submissions for backlink building and AI search engine citation',
   },
 };

@@ -163,6 +163,11 @@ model User {
   mediaCoverage         MediaCoverage[]
   pressReleases         PressRelease[]
 
+  // Award & Directory Orchestrator (Phase 94)
+  awardListings         AwardListing[]
+  directoryListings     DirectoryListing[]
+  submissionTrackers    SubmissionTracker[]
+
   // Onboarding state (UNI-920)
   onboardingComplete      Boolean   @default(false) @map("onboarding_complete")
   onboardingStep          Int       @default(0)     @map("onboarding_step")       // 0=not started, 1=business, 2=api-key, 3=socials, 4=goals
@@ -3646,4 +3651,80 @@ model PRDistribution {
   release     PressRelease @relation(fields: [releaseId], references: [id], onDelete: Cascade)
 
   @@index([releaseId])
+}
+
+// ---------------------------------------------------------------------------
+// Award & Directory Orchestrator (Phase 94)
+// ---------------------------------------------------------------------------
+
+model AwardListing {
+  id              String    @id @default(cuid())
+  userId          String
+  orgId           String
+  name            String          // e.g. "Australian Business Award 2026"
+  organizer       String          // Who runs the award
+  category        String          // e.g. "Best Marketing Technology"
+  deadline        DateTime?
+  submissionUrl   String?
+  status          String    @default("researched") // researched | in-progress | submitted | won | shortlisted | not-selected
+  description     String?   @db.Text
+  nominationDraft String?   @db.Text   // AI-generated nomination text
+  entryFee        String?             // e.g. "Free" or "AUD $250"
+  isRecurring     Boolean   @default(false)
+  recurrenceNote  String?             // e.g. "Opens annually in January"
+  priority        String    @default("medium") // low | medium | high
+  notes           String?   @db.Text
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  // Relations
+  user            User      @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([deadline])
+}
+
+model DirectoryListing {
+  id              String    @id @default(cuid())
+  userId          String
+  orgId           String
+  directoryName   String          // e.g. "Clutch.co", "G2", "Crunchbase"
+  directoryUrl    String
+  listingUrl      String?         // URL of the actual listing once submitted
+  category        String?         // Category/niche within the directory
+  status          String    @default("identified") // identified | submitted | live | needs-update | rejected
+  domainAuthority Int?            // Estimated DA of the directory
+  isFree          Boolean   @default(true)
+  submittedAt     DateTime?
+  lastReviewedAt  DateTime?
+  notes           String?   @db.Text
+  isAiIndexed     Boolean   @default(false) // Known to be indexed by AI search engines
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  // Relations
+  user            User      @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([status])
+}
+
+model SubmissionTracker {
+  id              String    @id @default(cuid())
+  userId          String
+  orgId           String
+  type            String          // 'award' | 'directory'
+  referenceId     String          // AwardListing.id or DirectoryListing.id
+  action          String          // What needs to be done
+  dueDate         DateTime?
+  completedAt     DateTime?
+  status          String    @default("pending") // pending | in-progress | completed | skipped
+  notes           String?
+  createdAt       DateTime  @default(now())
+
+  // Relations
+  user            User      @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([dueDate])
 }
