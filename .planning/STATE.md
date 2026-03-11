@@ -10,16 +10,16 @@ See: .planning/PROJECT.md (updated 2026-02-17)
 ## Current Position
 
 Milestone: v6.0 Adaptive Intelligence Engine — **IN PROGRESS** 🚀
-Phase: 106 of 107 — IN PROGRESS
+Phase: 107 of 107 — IN PROGRESS
 Plan: 0 of 1 — PENDING
-Status: Phase 105 complete — 6 advanced BO surfaces (content-scheduling, backlink-scoring,
-  authority-validation, psychology-levers, self-healing-priority, campaign-roi) integrated into
-  6 API routes, Scale-tier gating, corrected Organization.plan nested Prisma select. Type-check 0 errors.
-Last activity: 2026-03-11 — Completed Phase 105: Advanced Surfaces
+Status: Phase 106 complete — Prophet forecasting dashboard, ForecastChart (Recharts + confidence bands),
+  MetricSelector, ForecastCard, ForecastFeatureGate, 4 API routes, weekly cron, sidebar + command palette.
+  Type-check 0 errors, 1514 tests stable.
+Last activity: 2026-03-11 — Completed Phase 106: Prophet Time-Series Forecasting
 
-Progress: ██████░░░░ 71% (5/7 plans — v6.0 in progress)
+Progress: ████████░░ 86% (6/7 plans — v6.0 in progress)
 
-Next action: Phase 106 — Prophet Time-Series Forecasting dashboard
+Next action: Phase 107 — BayesNF Spatiotemporal Predictions (Scale tier)
 
 ## Performance Metrics
 
