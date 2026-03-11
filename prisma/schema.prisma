@@ -179,6 +179,10 @@ model User {
   siteHealthSnapshots   SiteHealthSnapshot[]
   sentinelAlerts        SentinelAlert[]
 
+  // Autonomous A/B Testing & Self-Healing Agent (Phase 98)
+  seoExperiments        SEOExperiment[]
+  healingActions        HealingAction[]
+
   // Onboarding state (UNI-920)
   onboardingComplete      Boolean   @default(false) @map("onboarding_complete")
   onboardingStep          Int       @default(0)     @map("onboarding_step")       // 0=not started, 1=business, 2=api-key, 3=socials, 4=goals
@@ -3901,4 +3905,68 @@ model SentinelAlert {
   @@index([orgId])
   @@index([createdAt])
   @@map("sentinel_alerts")
+}
+
+// ==========================================
+// Autonomous A/B Testing & Self-Healing Agent (Phase 98)
+// ==========================================
+
+model SEOExperiment {
+  id              String   @id @default(cuid())
+  userId          String
+  orgId           String
+  name            String
+  description     String?  @db.Text
+  experimentType  String                   // title-tag/meta-description/h1/schema/content-structure/internal-links
+  targetUrl       String                   // URL being tested
+  hypothesis      String   @db.Text        // "Changing H1 to include entity name will improve GEO score"
+  metricToTrack   String                   // geo-score/eeat-score/quality-score/position/clicks
+  originalValue   String   @db.Text        // current value
+  variantValue    String   @db.Text        // proposed variant
+  status          String   @default("draft") // draft/running/paused/completed/cancelled
+  winnerVariant   String?                  // original/variant/inconclusive
+  startedAt       DateTime?
+  completedAt     DateTime?
+  baselineScore   Float?
+  variantScore    Float?
+  improvement     Float?                   // percent improvement
+  createdAt       DateTime @default(now())
+  observations    ExperimentObservation[]
+  user            User     @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([orgId])
+  @@map("seo_experiments")
+}
+
+model ExperimentObservation {
+  id              String   @id @default(cuid())
+  experimentId    String
+  variant         String                   // original/variant
+  metricValue     Float
+  recordedAt      DateTime @default(now())
+  experiment      SEOExperiment @relation(fields: [experimentId], references: [id], onDelete: Cascade)
+
+  @@index([experimentId])
+  @@map("experiment_observations")
+}
+
+model HealingAction {
+  id              String   @id @default(cuid())
+  userId          String
+  orgId           String
+  targetUrl       String
+  issueType       String                   // missing-meta/broken-schema/low-geo-score/low-quality-score/missing-entity
+  severity        String                   // critical/warning
+  description     String   @db.Text
+  suggestedFix    String   @db.Text        // what to change
+  fixApplied      Boolean  @default(false)
+  appliedAt       DateTime?
+  triggerAlertId  String?                  // SentinelAlert.id that triggered this
+  createdAt       DateTime @default(now())
+  user            User     @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([orgId])
+  @@map("healing_actions")
 }
