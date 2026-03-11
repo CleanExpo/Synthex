@@ -10,6 +10,7 @@
  */
 
 import type { PromptTestResult } from './types';
+import type { PromptTestingParams } from '@/lib/bayesian/surfaces/prompt-testing';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -27,13 +28,21 @@ const QUALITY_MARKERS = {
 /**
  * Test a prompt against the Claude AI and parse the response for brand signals.
  *
+ * When `boParams` are provided (Growth+ plan with BO enabled), uses
+ * BO-optimised temperature, max tokens, and positivity bias for the call.
+ * When `boParams` is undefined, falls back to hardcoded defaults
+ * (backward compatible — existing callers without the third argument
+ * behave identically to the previous implementation).
+ *
  * @param promptText  - The natural language prompt to test
  * @param entityName  - The brand/entity name to look for in the response
+ * @param boParams    - Optional BO-optimised parameters (Growth+ plan only)
  * @returns Parsed test result with visibility metrics
  */
 export async function testPrompt(
   promptText: string,
-  entityName: string
+  entityName: string,
+  boParams?: PromptTestingParams,
 ): Promise<PromptTestResult> {
   const apiKey = process.env.OPENROUTER_API_KEY;
   if (!apiKey) {
@@ -42,6 +51,10 @@ export async function testPrompt(
 
   const siteUrl = process.env.OPENROUTER_SITE_URL || process.env.NEXT_PUBLIC_APP_URL || 'https://synthex.app';
   const siteName = process.env.OPENROUTER_SITE_NAME || 'SYNTHEX';
+
+  // Resolve parameters: use BO-optimised values when available, otherwise fall back to defaults
+  const maxTokens   = boParams?.maxTokens    ?? MAX_TOKENS;
+  const temperature = boParams?.temperature  ?? 0.7;
 
   // ── Call the OpenRouter API ──
   const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
@@ -65,8 +78,8 @@ export async function testPrompt(
           content: promptText,
         },
       ],
-      max_tokens: MAX_TOKENS,
-      temperature: 0.7,
+      max_tokens: maxTokens,
+      temperature: temperature,
     }),
   });
 
@@ -81,8 +94,8 @@ export async function testPrompt(
 
   const aiResponse = data.choices?.[0]?.message?.content ?? '';
 
-  // ── Parse response ──
-  return parseResponse(aiResponse, entityName);
+  // ── Parse response — pass positivityBias through for quality scoring ──
+  return parseResponse(aiResponse, entityName, boParams?.positivityBias);
 }
 
 // ─── Response Parser ──────────────────────────────────────────────────────────
@@ -90,10 +103,15 @@ export async function testPrompt(
 /**
  * Parse an AI response for brand visibility signals.
  * Exported for testability.
+ *
+ * @param aiResponse      - The raw AI response text
+ * @param entityName      - The brand/entity name to look for
+ * @param positivityBias  - Optional BO-optimised positivity bias for quality scoring (default 0.5)
  */
 export function parseResponse(
   aiResponse: string,
-  entityName: string
+  entityName: string,
+  positivityBias?: number,
 ): PromptTestResult {
   const sentences = splitIntoSentences(aiResponse);
   const nameLower = entityName.toLowerCase();
@@ -117,7 +135,7 @@ export function parseResponse(
   const competitorsFound = extractProperNouns(aiResponse, entityName);
 
   // ── Response quality score ──
-  const responseQuality = scoreResponseQuality(aiResponse, sentences);
+  const responseQuality = scoreResponseQuality(aiResponse, sentences, positivityBias);
 
   return {
     response: aiResponse,
@@ -188,8 +206,18 @@ function extractProperNouns(text: string, entityName: string): string[] {
 
 /**
  * Compute a 0–1 quality score for the response based on heuristics.
+ *
+ * @param text            - The AI response text
+ * @param sentences       - Pre-split sentences array
+ * @param positivityBias  - Scalar applied to positive marker bonus (default 0.5).
+ *                          0.5 * 0.06 = 0.03 — preserves original behaviour at default.
+ *                          BO can increase this (up to 1.0 * 0.06 = 0.06) or decrease it.
  */
-function scoreResponseQuality(text: string, sentences: string[]): number {
+function scoreResponseQuality(
+  text: string,
+  sentences: string[],
+  positivityBias: number = 0.5,
+): number {
   let score = 0.5;  // Baseline
 
   // Length bonus (longer = more informative)
@@ -197,10 +225,11 @@ function scoreResponseQuality(text: string, sentences: string[]): number {
   if (wordCount > 100) score += 0.1;
   if (wordCount > 200) score += 0.1;
 
-  // Positive language bonus
+  // Positive language bonus — scaled by positivityBias
+  // At default bias (0.5): 0.06 * 0.5 = 0.03 per hit — matches original behaviour
   const textLower = text.toLowerCase();
   const positiveHits = QUALITY_MARKERS.positive.filter((m) => textLower.includes(m)).length;
-  score += positiveHits * 0.03;
+  score += positiveHits * 0.06 * positivityBias;
 
   // Negative language penalty
   const negativeHits = QUALITY_MARKERS.negative.filter((m) => textLower.includes(m)).length;
