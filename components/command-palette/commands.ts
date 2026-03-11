@@ -4,7 +4,7 @@ import {
   HelpCircle, Layers, Lightbulb, Layout, Zap, Link2,
   GitBranch as GitPullRequest, MessageSquare, Shield, Code, Image,
   Repeat, Send, Bell, Grid, DollarSign, Calculator, Briefcase, Link, List,
-  Mic, Award, Building2, Newspaper,
+  Mic, Award, Building2, Newspaper, ShieldExclamation,
 } from '@/components/icons';
 import { notify } from '@/lib/notifications';
 import type { CommandItem } from './types';
@@ -81,6 +81,9 @@ export function buildCommands(
     // Prompt Intelligence (Phase 96)
     { id: 'prompts-discovery', title: 'Prompt Intelligence — Discover Prompts', description: 'Generate AI prompt templates and discover which prompts trigger brand mentions', icon: Sparkles, action: () => push('/dashboard/prompts'), category: 'navigation', keywords: ['prompt', 'ai prompts', 'brand visibility', 'chatgpt', 'perplexity', 'discover', 'generate', 'prompt intelligence'] },
     { id: 'prompts-gaps', title: 'Prompt Intelligence — Gap Analysis', description: 'See which prompt categories your brand is missing and competitor visibility data', icon: Sparkles, action: () => push('/dashboard/prompts?tab=gaps'), category: 'navigation', keywords: ['prompt', 'gaps', 'analysis', 'competitors', 'visibility', 'missing', 'coverage', 'prompt intelligence', 'ai search'] },
+    // Algorithm Sentinel (Phase 97)
+    { id: 'sentinel-health', title: 'Algorithm Sentinel — Site Health', description: 'Monitor site health score, GSC metrics, and Core Web Vitals', icon: ShieldExclamation, action: () => push('/dashboard/sentinel'), category: 'navigation', keywords: ['sentinel', 'site health', 'algorithm', 'google update', 'ranking', 'traffic', 'cwv', 'core web vitals', 'gsc', 'search console', 'monitor'] },
+    { id: 'sentinel-alerts', title: 'Algorithm Sentinel — Alerts', description: 'View unacknowledged ranking drops, traffic drops, and algorithm correlations', icon: ShieldExclamation, action: () => push('/dashboard/sentinel?tab=alerts'), category: 'navigation', keywords: ['sentinel', 'alerts', 'ranking drop', 'traffic drop', 'crawl errors', 'algorithm update', 'critical', 'warning', 'regression', 'monitor'] },
     { id: 'authority-analysis', title: 'Authority Analysis', description: 'Validate claims and generate citations from authoritative sources', icon: Shield, action: () => push('/dashboard/authority'), category: 'navigation', keywords: ['authority', 'claims', 'validate', 'citations', 'sources', 'verify', 'credibility'] },
     { id: 'validate-claims', title: 'Validate Claims', description: 'Check content claims against government, academic, and industry sources', icon: Shield, action: () => push('/dashboard/authority'), category: 'actions', keywords: ['validate', 'claims', 'verify', 'authority', 'fact check', 'sources', 'academic', 'government'] },
     { id: 'generate-citations', title: 'Generate Citations', description: 'Auto-generate formatted footnotes and inline citations', icon: Shield, action: () => push('/dashboard/authority'), category: 'actions', keywords: ['citations', 'generate', 'footnotes', 'references', 'authority', 'apa', 'chicago'] },

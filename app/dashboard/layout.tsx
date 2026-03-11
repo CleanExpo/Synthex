@@ -58,6 +58,7 @@ import {
   Link as LinkIcon,
   Mic,
   Newspaper,
+  ShieldExclamation,
 } from '@/components/icons';
 import { Button } from '@/components/ui/button';
 import { AIPMFloatingButton } from '@/components/ai-pm';
@@ -179,6 +180,7 @@ const sidebarGroups: Array<{
       { icon: Building2, label: 'Brand Builder', href: '/dashboard/brand' },
       { icon: Shield, label: 'Authority', href: '/dashboard/authority' },
       { icon: Map, label: 'Local SEO', href: '/dashboard/local' },
+      { icon: ShieldExclamation, label: 'Sentinel', href: '/dashboard/sentinel' },
       { icon: Users, label: 'Authors', href: '/dashboard/authors' },
       { icon: Database, label: 'Research', href: '/dashboard/research' },
       { icon: Link2, label: 'Link in Bio', href: '/dashboard/bio' },
