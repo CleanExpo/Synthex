@@ -10,16 +10,16 @@ See: .planning/PROJECT.md (updated 2026-02-17)
 ## Current Position
 
 Milestone: v6.0 Adaptive Intelligence Engine — **IN PROGRESS** 🚀
-Phase: 103 of 107 — IN PROGRESS
-Plan: 0 of 1 — PENDING
-Status: Phase 102 complete — BO wired into geo-analyzer.ts + tactic-scorer.ts with auto-observation,
-  6 API routes (spaces, observe, suggest, run, status, bo-callback), surface adapters for
-  geo_score_weights + tactic_weights. Type-check 0 errors, 1514 tests stable.
-Last activity: 2026-03-11 — Completed Phase 102: GEO Weight Optimisation Surfaces
+Phase: 103 of 107 — COMPLETE
+Plan: 1 of 1 — COMPLETE
+Status: Phase 103 complete — BO client-facing dashboard: BOFeatureGate, LearningIndicator,
+  OptimisationSpaceCard, RunHistoryTable, /dashboard/optimisation page, sidebar nav,
+  command palette entries, AI-Optimised badge on GEO results. Type-check 0 errors, lint clean.
+Last activity: 2026-03-11 — Completed Phase 103: BO Client-Facing Dashboard
 
-Progress: ███░░░░░░░ 29% (2/7 plans — v6.0 in progress)
+Progress: ████░░░░░░ 43% (3/7 plans — v6.0 in progress)
 
-Next action: Phase 103 — BO Client-Facing Dashboard
+Next action: Phase 104 — Prophet Forecasting Engine
 
 ## Performance Metrics
 
@@ -244,9 +244,9 @@ None.
 ## Session Continuity
 
 Last session: 2026-03-11
-Stopped at: Completed Phase 100 Plans 01-02 — v5.0 milestone COMPLETE
+Stopped at: Completed Phase 103 Plan 01 — BO Client-Facing Dashboard COMPLETE
 Resume file: none
-Next action: Plan Phase 99 (Citation Performance Dashboard)
+Next action: Phase 104 — Prophet Forecasting Engine
 
 ## Linear Issues — v2.0 Phase 59-66 Tracking
 
