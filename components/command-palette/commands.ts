@@ -4,7 +4,7 @@ import {
   HelpCircle, Layers, Lightbulb, Layout, Zap, Link2,
   GitBranch as GitPullRequest, MessageSquare, Shield, Code, Image,
   Repeat, Send, Bell, Grid, DollarSign, Calculator, Briefcase, Link, List,
-  Mic, Award,
+  Mic, Award, Building2,
 } from '@/components/icons';
 import { notify } from '@/lib/notifications';
 import type { CommandItem } from './types';
@@ -62,6 +62,9 @@ export function buildCommands(
     { id: 'quality-history', title: 'Quality Gate — Audit History', description: 'View previously saved quality audits', icon: Shield, action: () => push('/dashboard/quality?tab=history'), category: 'navigation', keywords: ['quality', 'gate', 'history', 'saved', 'audits', 'previous'] },
     { id: 'eeat-audit', title: 'E-E-A-T — Run Audit', description: 'Score content across Experience, Expertise, Authority, and Trust', icon: Award, action: () => push('/dashboard/eeat'), category: 'navigation', keywords: ['eeat', 'e-e-a-t', 'experience', 'expertise', 'authority', 'trust', 'audit', 'score', 'google', 'content quality'] },
     { id: 'eeat-assets', title: 'E-E-A-T — Generate Assets', description: 'Generate templates to fill E-E-A-T signal gaps', icon: Award, action: () => push('/dashboard/eeat?tab=assets'), category: 'navigation', keywords: ['eeat', 'e-e-a-t', 'assets', 'templates', 'generate', 'author bio', 'schema', 'trust signal', 'citation'] },
+    { id: 'brand-identity', title: 'Brand Builder — Identity', description: 'Create and manage your brand entity profile', icon: Building2, action: () => push('/dashboard/brand'), category: 'navigation', keywords: ['brand', 'identity', 'entity', 'profile', 'knowledge panel', 'wikidata', 'nap', 'consistency'] },
+    { id: 'brand-consistency', title: 'Brand Builder — Consistency Audit', description: 'Check NAP consistency across all brand platforms', icon: Building2, action: () => push('/dashboard/brand?tab=consistency'), category: 'navigation', keywords: ['brand', 'consistency', 'nap', 'audit', 'platforms', 'wikidata', 'knowledge graph'] },
+    { id: 'brand-mentions', title: 'Brand Builder — Mentions', description: 'Monitor brand mentions across news and media', icon: Building2, action: () => push('/dashboard/brand?tab=mentions'), category: 'navigation', keywords: ['brand', 'mentions', 'monitor', 'news', 'media', 'sentiment', 'newsdata', 'gdelt'] },
     { id: 'authority-analysis', title: 'Authority Analysis', description: 'Validate claims and generate citations from authoritative sources', icon: Shield, action: () => push('/dashboard/authority'), category: 'navigation', keywords: ['authority', 'claims', 'validate', 'citations', 'sources', 'verify', 'credibility'] },
     { id: 'validate-claims', title: 'Validate Claims', description: 'Check content claims against government, academic, and industry sources', icon: Shield, action: () => push('/dashboard/authority'), category: 'actions', keywords: ['validate', 'claims', 'verify', 'authority', 'fact check', 'sources', 'academic', 'government'] },
     { id: 'generate-citations', title: 'Generate Citations', description: 'Auto-generate formatted footnotes and inline citations', icon: Shield, action: () => push('/dashboard/authority'), category: 'actions', keywords: ['citations', 'generate', 'footnotes', 'references', 'authority', 'apa', 'chicago'] },
