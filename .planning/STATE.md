@@ -5,7 +5,7 @@
 See: .planning/PROJECT.md (updated 2026-02-17)
 
 **Core value:** Every endpoint returns real data, every platform works, every dashboard page connects to live APIs
-**Current focus:** v6.0 Adaptive Intelligence Engine (BO + Prophet + BayesNF) — IN PROGRESS
+**Current focus:** v7.0 Production Hardening & Quality — COMPLETE. Ready for first users.
 
 ## Current Position
 
@@ -14,11 +14,11 @@ Phase: 113 of 113 — DONE
 Plan: 1 of 1 — COMPLETE
 Status: v7.0 SHIPPED. All 6 phases complete: E2E tests, UI audit, bundle optimisation, CWV,
   NEXUS dedup, security & accessibility sweep. Linear: SYN-374.
-Last activity: 2026-03-12 — Phase 113 complete: pre-launch security & accessibility sweep
+Last activity: 2026-03-12 — v7.0 milestone complete, archived
 
 Progress: ██████████ 100% (6/6 phases — v7.0 COMPLETE)
 
-Next action: /gsd:complete-milestone to archive v7.0
+Next action: /gsd:discuss-milestone to plan v8.0
 
 ## Performance Metrics
 
@@ -243,9 +243,9 @@ None.
 ## Session Continuity
 
 Last session: 2026-03-12
-Stopped at: Phase 113 complete — security & accessibility sweep
+Stopped at: v7.0 milestone archived
 Resume file: none
-Next action: /gsd:complete-milestone to archive v7.0
+Next action: /gsd:discuss-milestone to plan v8.0
 
 ## Linear Issues — v2.0 Phase 59-66 Tracking
 

@@ -1,5 +1,30 @@
 # Project Milestones: Synthex
 
+## v7.0 Production Hardening & Quality (Shipped: 2026-03-12)
+
+**Delivered:** Final production hardening pass covering E2E test expansion, UI loading/error state coverage for all 93 dashboard pages, bundle optimisation (~990KB saved), Core Web Vitals and CDN caching fixes, NEXUS agent dispatch deduplication with idempotency keys, and a full OWASP/WCAG 2.1 AA sweep.
+
+**Phases completed:** 108-113 (8 plans total)
+
+**Key accomplishments:**
+
+- E2E test coverage expanded to v5.0/v6.0 intelligence, platform, and workflow pages (Phase 108)
+- 44 new loading.tsx + error.tsx files created — 93/93 dashboard pages at 100% file-based state coverage (Phase 109)
+- ~990KB client bundle reduction from 3 server module leaks fixed; 8 unbounded Prisma queries resolved across 73 audited routes (Phase 110)
+- Removed incorrect `force-dynamic` from root layout unblocking CDN caching; landing page ISR + s-maxage=3600; fixed broken collectWebVitals accumulation bug (Phase 111)
+- SHA256-based idempotency keys + 30-min TTL dedup store in pre-agent-dispatch hook; session-start pruning at 120 min (Phase 112)
+- OWASP checklist audited and updated; 5 WCAG 1.1.1 image alt gaps fixed; colour-contrast rule re-enabled; aria-invalid/aria-describedby pattern on login form; heading hierarchy fixed (Phase 113)
+
+**Stats:**
+- 95 files created/modified
+- ~4,464 lines added, ~460 removed
+- 6 phases, 8 plans
+- Completed: 2026-03-12
+
+**Git range:** `79dc1c35` → `66048354`
+
+---
+
 ## v4.0 Production Complete (Shipped: 2026-03-10)
 
 **Delivered:** Content creation flow with media upload and multi-platform publishing, post queue and scheduling engine with bulk scheduling and CSV import, admin panel completion (role updates, password reset, MRR from Stripe, audit log detail drawer), multi-brand profile configuration, social account onboarding, code quality hardening (auth centralisation, structured logger migration, TypeScript `any` elimination), WCAG accessibility polish, and final UAT verification.

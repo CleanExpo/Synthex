@@ -22,7 +22,7 @@ None (internal platform work)
 - ✅ **v4.0 Production Complete** — Phases 77-84 — SHIPPED 2026-03-10
 - ✅ **v5.0 AI-Native GEO & Citation Engine** — Phases 85-100 — SHIPPED 2026-03-11
 - ✅ **v6.0 Adaptive Intelligence Engine** — Phases 101-107 — SHIPPED 2026-03-11
-- ✅ **v7.0 Production Hardening & Quality** — Phases 108-113 — SHIPPED 2026-03-12 (SYN-374)
+- ✅ [v7.0 Production Hardening & Quality](milestones/v7.0-ROADMAP.md) (Phases 108-113) — SHIPPED 2026-03-12
 
 ## Phases
 
