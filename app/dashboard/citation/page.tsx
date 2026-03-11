@@ -26,12 +26,11 @@ import type {
 
 // ─── SWR fetcher ──────────────────────────────────────────────────────────────
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const fetchJson = (url: string): Promise<any> =>
-  fetch(url, { credentials: 'include' }).then((r) => {
-    if (!r.ok) throw new Error('Fetch failed');
-    return r.json() as Promise<unknown>;
-  });
+async function fetchJson<T>(url: string): Promise<T> {
+  const r = await fetch(url, { credentials: 'include' });
+  if (!r.ok) throw new Error('Fetch failed');
+  return r.json() as Promise<T>;
+}
 
 // ─── Response envelopes ──────────────────────────────────────────────────────
 

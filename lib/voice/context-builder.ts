@@ -114,7 +114,6 @@ function computeFormalityScore(fingerprint: VoiceFingerprint): number {
  */
 export function buildWritingContext(
   fingerprint: VoiceFingerprint,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   compact = false
 ): WritingContextResult {
   return {

@@ -71,8 +71,8 @@ export async function checkSiteHealth(
   let avgPosition = 0;
   let totalClicks = 0;
   let totalImpressions = 0;
-  let coverageErrors = 0;
-  let coverageWarnings = 0;
+  const coverageErrors = 0;
+  const coverageWarnings = 0;
 
   try {
     const analytics = await getSearchAnalytics(siteUrl, {
