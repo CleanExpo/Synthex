@@ -168,6 +168,7 @@ const sidebarGroups: Array<{
     items: [
       { icon: Search, label: 'SEO Tools', href: '/dashboard/seo' },
       { icon: Globe, label: 'GEO Analysis', href: '/dashboard/geo' },
+      { icon: Zap, label: 'GEO Optimiser', href: '/dashboard/geo/optimiser' },
       { icon: Shield, label: 'Authority', href: '/dashboard/authority' },
       { icon: Map, label: 'Local SEO', href: '/dashboard/local' },
       { icon: Users, label: 'Authors', href: '/dashboard/authors' },
