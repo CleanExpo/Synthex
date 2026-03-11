@@ -10,14 +10,14 @@ See: .planning/PROJECT.md (updated 2026-02-17)
 ## Current Position
 
 Milestone: v5.0 AI-Native GEO & Citation Engine
-Phase: 87 of 100 (GEO Content Optimiser v2) — IN PROGRESS
-Plan: 2 of 3 complete
-Status: Plans 01+02 executed — tactic scorer + AI rewrite pipeline live
-Last activity: 2026-03-11 — Executed 87-02-PLAN.md: 9 tactic-specific rewrite prompts (tactic-prompts.ts), POST /api/geo/rewrite streaming SSE endpoint (pro+ gated, 20req/min, temperature 0.3)
+Phase: 87 of 100 (GEO Content Optimiser v2) — COMPLETE
+Plan: 3 of 3 complete
+Status: All plans executed — Princeton 9-tactic GEO Optimiser fully live
+Last activity: 2026-03-11 — Executed 87-03-PLAN.md: TacticScoreCard, GEOEditorPanel, RewriteModal components; /dashboard/geo/optimiser page (split layout); sidebar + GEO dashboard navigation links
 
-Progress: ██░░░░░░░░ ~8% (8/~49 plans)
+Progress: ██░░░░░░░░ ~9% (9/~49 plans)
 
-Next action: Execute 87-03-PLAN.md (Editor UI)
+Next action: Phase 87 complete — execute /gsd:progress to plan Phase 88
 
 ## Performance Metrics
 
