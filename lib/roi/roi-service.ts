@@ -10,6 +10,7 @@
 import { prisma } from '@/lib/prisma';
 import { RevenueService } from '@/lib/revenue/revenue-service';
 import { Decimal } from '@prisma/client/runtime/library';
+import type { CampaignROIWeights } from '@/lib/bayesian/surfaces/campaign-roi';
 
 // =============================================================================
 // TYPES
@@ -280,10 +281,29 @@ export class ROIService {
     });
   }
 
+  // Mapping from platform name (lowercase) to CampaignROIWeights key
+  private static readonly PLATFORM_TO_WEIGHT: Record<string, keyof CampaignROIWeights> = {
+    youtube:   'youtubeAllocation',
+    instagram: 'instagramAllocation',
+    tiktok:    'tiktokAllocation',
+    twitter:   'twitterAllocation',
+    facebook:  'facebookAllocation',
+    linkedin:  'linkedinAllocation',
+    pinterest: 'pinterestAllocation',
+    reddit:    'redditAllocation',
+  };
+
   /**
-   * Calculate ROI report
+   * Calculate ROI report.
+   * When allocationWeights are provided (via BO), platforms are sorted by
+   * roi × allocationWeight descending, surfacing platforms the BO has learned
+   * are the highest-value allocation targets.
    */
-  async calculateROI(userId: string, filters?: InvestmentFilters): Promise<ROIReport> {
+  async calculateROI(
+    userId: string,
+    filters?: InvestmentFilters,
+    allocationWeights?: CampaignROIWeights,
+  ): Promise<ROIReport> {
     // Get investments
     const investments = await this.getInvestments(userId, filters);
 
@@ -368,8 +388,14 @@ export class ROIService {
       });
     }
 
-    // Sort by ROI descending
-    byPlatform.sort((a, b) => b.roi - a.roi);
+    // Sort by ROI descending, weighted by BO allocation multipliers when available
+    byPlatform.sort((a, b) => {
+      const wKeyA = ROIService.PLATFORM_TO_WEIGHT[a.platform.toLowerCase()];
+      const wKeyB = ROIService.PLATFORM_TO_WEIGHT[b.platform.toLowerCase()];
+      const wA = (wKeyA && allocationWeights) ? (allocationWeights[wKeyA] ?? 1.0) : 1.0;
+      const wB = (wKeyB && allocationWeights) ? (allocationWeights[wKeyB] ?? 1.0) : 1.0;
+      return (b.roi * wB) - (a.roi * wA);
+    });
 
     return {
       overall: {
