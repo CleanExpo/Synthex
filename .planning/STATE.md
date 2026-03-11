@@ -10,16 +10,16 @@ See: .planning/PROJECT.md (updated 2026-02-17)
 ## Current Position
 
 Milestone: v6.0 Adaptive Intelligence Engine — **IN PROGRESS** 🚀
-Phase: 103 of 107 — COMPLETE
-Plan: 1 of 1 — COMPLETE
-Status: Phase 103 complete — BO client-facing dashboard: BOFeatureGate, LearningIndicator,
-  OptimisationSpaceCard, RunHistoryTable, /dashboard/optimisation page, sidebar nav,
-  command palette entries, AI-Optimised badge on GEO results. Type-check 0 errors, lint clean.
-Last activity: 2026-03-11 — Completed Phase 103: BO Client-Facing Dashboard
+Phase: 105 of 107 — IN PROGRESS
+Plan: 0 of 1 — PENDING
+Status: Phase 104 complete — experiment_sampling + prompt_testing BO surfaces, surface adapters,
+  experiment-designer.ts + prompt-tester.ts integration, API routes wired, Growth-tier gating,
+  BO observation registration on experiment completion. Type-check 0 errors, 1514 tests stable.
+Last activity: 2026-03-11 — Completed Phase 104: Experiment + Prompt Surfaces
 
-Progress: ████░░░░░░ 43% (3/7 plans — v6.0 in progress)
+Progress: █████░░░░░ 57% (4/7 plans — v6.0 in progress)
 
-Next action: Phase 104 — Prophet Forecasting Engine
+Next action: Phase 105 — Advanced Surfaces (Scheduling, Backlinks, Self-Healing, Scale tier)
 
 ## Performance Metrics
 
