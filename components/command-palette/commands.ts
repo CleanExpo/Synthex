@@ -4,6 +4,7 @@ import {
   HelpCircle, Layers, Lightbulb, Layout, Zap, Link2,
   GitBranch as GitPullRequest, MessageSquare, Shield, Code, Image,
   Repeat, Send, Bell, Grid, DollarSign, Calculator, Briefcase, Link, List,
+  Mic,
 } from '@/components/icons';
 import { notify } from '@/lib/notifications';
 import type { CommandItem } from './types';
@@ -54,6 +55,9 @@ export function buildCommands(
     { id: 'pagespeed-insights', title: 'PageSpeed Insights', description: 'Page performance analysis, CWV monitoring, Lighthouse scores', icon: Zap, action: () => push('/dashboard/seo/pagespeed'), category: 'navigation', keywords: ['pagespeed', 'page speed', 'lighthouse', 'cwv', 'core web vitals', 'performance', 'lcp', 'cls', 'inp', 'speed'] },
     { id: 'schema-markup-manager', title: 'Schema Markup Manager', description: 'Create, validate, and manage JSON-LD structured data', icon: Code, action: () => push('/dashboard/seo/schema'), category: 'navigation', keywords: ['schema', 'json-ld', 'structured data', 'markup', 'rich results', 'rich snippets', 'organization', 'product', 'article', 'faq', 'seo', 'validator', 'template'] },
     { id: 'geo-readiness', title: 'GEO Readiness Dashboard', description: 'AI search citability scores, passage analysis, platform optimization', icon: Search, action: () => push('/dashboard/seo/geo-readiness'), category: 'navigation', keywords: ['geo', 'generative engine', 'ai search', 'citability', 'passages', 'readiness', 'google aio', 'chatgpt', 'perplexity', 'bing copilot', 'ai visibility'] },
+    { id: 'voice-fingerprint', title: 'Voice Engine — Fingerprint', description: 'Analyse your writing style and generate a voice fingerprint', icon: Mic, action: () => push('/dashboard/voice?tab=fingerprint'), category: 'navigation', keywords: ['voice', 'fingerprint', 'writing style', 'stylometric', 'analyse'] },
+    { id: 'voice-capsule', title: 'Voice Engine — Content Capsule', description: 'Format content for AI citation and extractability', icon: FileText, action: () => push('/dashboard/voice?tab=capsule'), category: 'navigation', keywords: ['voice', 'capsule', 'content capsule', 'ai citation', 'extractability', 'format'] },
+    { id: 'voice-slop', title: 'Voice Engine — Slop Scan', description: 'Scan content for AI tell-phrases and overused language', icon: Search, action: () => push('/dashboard/voice?tab=slop'), category: 'navigation', keywords: ['voice', 'slop', 'slop scan', 'ai phrases', 'tell-phrases', 'overused', 'scan'] },
     { id: 'authority-analysis', title: 'Authority Analysis', description: 'Validate claims and generate citations from authoritative sources', icon: Shield, action: () => push('/dashboard/authority'), category: 'navigation', keywords: ['authority', 'claims', 'validate', 'citations', 'sources', 'verify', 'credibility'] },
     { id: 'validate-claims', title: 'Validate Claims', description: 'Check content claims against government, academic, and industry sources', icon: Shield, action: () => push('/dashboard/authority'), category: 'actions', keywords: ['validate', 'claims', 'verify', 'authority', 'fact check', 'sources', 'academic', 'government'] },
     { id: 'generate-citations', title: 'Generate Citations', description: 'Auto-generate formatted footnotes and inline citations', icon: Shield, action: () => push('/dashboard/authority'), category: 'actions', keywords: ['citations', 'generate', 'footnotes', 'references', 'authority', 'apa', 'chicago'] },
