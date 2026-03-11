@@ -15,6 +15,9 @@ import { z } from 'zod';
 import prisma from '@/lib/prisma';
 import { getUserIdFromRequest } from '@/lib/auth/jwt-utils';
 import { analyzeOpportunities } from '@/lib/backlinks/backlink-analyzer';
+import { isSurfaceAvailable } from '@/lib/bayesian/feature-limits';
+import { getBacklinkScoringWeights } from '@/lib/bayesian/surfaces/backlink-scoring';
+import { registerObservationSilently } from '@/lib/bayesian/fallback';
 
 // ─── Validation ─────────────────────────────────────────────────────────────
 
@@ -45,14 +48,43 @@ export async function POST(request: NextRequest) {
 
     const { orgId, topic, userDomain, competitorDomains } = parsed.data;
 
-    // Run analysis (may take 5–15 seconds depending on API response times)
-    const result = await analyzeOpportunities({
-      orgId,
-      userId,
-      topic,
-      userDomain,
-      competitorDomains,
+    // Resolve plan for BO surface gating
+    const userRecord = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { organizationId: true, plan: true },
     });
+    const orgIdForBO = userRecord?.organizationId ?? userId;
+    const plan       = (userRecord?.plan ?? 'free').toLowerCase();
+
+    const scoringWeightsResult = isSurfaceAvailable(plan, 'backlink_scoring')
+      ? await getBacklinkScoringWeights(orgIdForBO)
+      : undefined;
+
+    // Run analysis (may take 5–15 seconds depending on API response times)
+    const result = await analyzeOpportunities(
+      { orgId, userId, topic, userDomain, competitorDomains },
+      scoringWeightsResult?.weights,
+    );
+
+    // Register BO observation (fire-and-forget)
+    if (scoringWeightsResult?.source === 'bo') {
+      const target = result.linksFound > 0
+        ? result.highValueCount / result.linksFound
+        : 0;
+      void registerObservationSilently(
+        'backlink_scoring',
+        orgIdForBO,
+        {
+          resourcePageWeight:      scoringWeightsResult.weights.resourcePageWeight,
+          guestPostWeight:         scoringWeightsResult.weights.guestPostWeight,
+          brokenLinkWeight:        scoringWeightsResult.weights.brokenLinkWeight,
+          competitorLinkWeight:    scoringWeightsResult.weights.competitorLinkWeight,
+          journalistMentionWeight: scoringWeightsResult.weights.journalistMentionWeight,
+        },
+        target,
+        { linksFound: result.linksFound, highValueCount: result.highValueCount },
+      );
+    }
 
     // Persist BacklinkAnalysis record
     const analysis = await prisma.backlinkAnalysis.create({

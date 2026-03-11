@@ -15,9 +15,19 @@ import type {
   ScoredProspect,
   BacklinkOpportunityType,
 } from './types';
+import type { BacklinkScoringWeights } from '@/lib/bayesian/surfaces/backlink-scoring';
 
 const MIN_DOMAIN_AUTHORITY = 20;   // Filter out very low DA domains
 const MAX_PROSPECTS_RETURNED = 50; // Cap returned prospects
+
+// Mapping from BacklinkOpportunityType string values to BacklinkScoringWeights keys
+const TYPE_TO_WEIGHT: Record<string, keyof BacklinkScoringWeights> = {
+  'resource-page':      'resourcePageWeight',
+  'guest-post':         'guestPostWeight',
+  'broken-link':        'brokenLinkWeight',
+  'competitor-link':    'competitorLinkWeight',
+  'journalist-mention': 'journalistMentionWeight',
+};
 
 // ---------------------------------------------------------------------------
 // Main orchestrator
@@ -34,7 +44,10 @@ const MAX_PROSPECTS_RETURNED = 50; // Cap returned prospects
  * 5. Filter, deduplicate, sort by DA desc
  * 6. Return top 50
  */
-export async function analyzeOpportunities(params: AnalyzeParams): Promise<AnalysisResult> {
+export async function analyzeOpportunities(
+  params: AnalyzeParams,
+  scoringWeights?: BacklinkScoringWeights,
+): Promise<AnalysisResult> {
   const { topic, userDomain, competitorDomains } = params;
 
   // 1. Discover opportunities
@@ -82,9 +95,13 @@ export async function analyzeOpportunities(params: AnalyzeParams): Promise<Analy
     }
   }
 
-  // 6. Sort by DA desc and cap
+  // 6. Sort by DA desc (or BO-weighted DA × type multiplier) and cap
   const finalProspects = [...domainTypeMap.values()]
-    .sort((a, b) => b.domainAuthority - a.domainAuthority)
+    .sort((a, b) => {
+      const wA = scoringWeights?.[TYPE_TO_WEIGHT[a.opportunityType]] ?? 0.20;
+      const wB = scoringWeights?.[TYPE_TO_WEIGHT[b.opportunityType]] ?? 0.20;
+      return (b.domainAuthority * wB) - (a.domainAuthority * wA);
+    })
     .slice(0, MAX_PROSPECTS_RETURNED);
 
   // 7. Build stats
