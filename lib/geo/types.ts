@@ -71,6 +71,39 @@ export interface GEORecommendation {
   impact: number; // estimated score improvement 0-20
 }
 
+// ─── Princeton 9-Tactic GEO Scorer ────────────────────────────────────────────
+
+export type GEOTactic =
+  | 'authoritative-citations'
+  | 'statistics'
+  | 'quotations'
+  | 'fluency'
+  | 'readability'
+  | 'technical-vocabulary'
+  | 'uniqueness'
+  | 'information-flow'
+  | 'persuasion';
+
+export type TacticStatus = 'green' | 'amber' | 'red';
+
+export interface TacticScore {
+  tactic: GEOTactic;
+  label: string;          // Human-readable: "Authoritative Citations"
+  score: number;          // 0-100
+  status: TacticStatus;   // green ≥70, amber 40-69, red <40
+  explanation: string;    // One-line: "Add 2+ named citations per section"
+  suggestions: string[];  // 1-3 actionable suggestions
+}
+
+export interface TacticScoreResult {
+  tacticScores: TacticScore[];
+  compositeGEOScore: number; // Weighted average of 9 tactic scores
+  wordCount: number;
+  scoredAt: string;          // ISO timestamp
+}
+
+// ───────────────────────────────────────────────────────────────────────────────
+
 export interface SchemaIssue {
   type: string;
   severity: 'error' | 'warning' | 'info';

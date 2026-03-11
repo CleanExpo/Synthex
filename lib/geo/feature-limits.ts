@@ -13,12 +13,13 @@
  */
 
 export interface GEOFeatureLimits {
-  geoAnalyses: number;      // GEO score analyses per month
-  eeatAudits: number;       // E-E-A-T audits per month
-  paperBananaVisuals: number; // Paper Banana visual generations per month
-  researchReports: number;  // Research reports per month
-  authorProfiles: number;   // Total author profiles
-  localCaseStudies: number; // Local case studies per month
+  geoAnalyses: number;           // GEO score analyses per month
+  eeatAudits: number;            // E-E-A-T audits per month
+  paperBananaVisuals: number;    // Paper Banana visual generations per month
+  researchReports: number;       // Research reports per month
+  authorProfiles: number;        // Total author profiles
+  localCaseStudies: number;      // Local case studies per month
+  tacticOptimiserRewrites: number; // AI-powered per-tactic content rewrites (Princeton 9-tactic)
 }
 
 /**
@@ -33,6 +34,7 @@ export const PLAN_LIMITS: Record<string, GEOFeatureLimits> = {
     researchReports: 0,
     authorProfiles: 0,
     localCaseStudies: 0,
+    tacticOptimiserRewrites: 0,  // score only, no AI rewrites on free tier
   },
   pro: {
     geoAnalyses: 50,
@@ -41,6 +43,7 @@ export const PLAN_LIMITS: Record<string, GEOFeatureLimits> = {
     researchReports: 2,
     authorProfiles: 3,
     localCaseStudies: 5,
+    tacticOptimiserRewrites: 20,
   },
   growth: {
     geoAnalyses: -1,
@@ -49,6 +52,7 @@ export const PLAN_LIMITS: Record<string, GEOFeatureLimits> = {
     researchReports: -1,
     authorProfiles: 10,
     localCaseStudies: -1,
+    tacticOptimiserRewrites: -1, // unlimited
   },
   scale: {
     geoAnalyses: -1,
@@ -57,6 +61,7 @@ export const PLAN_LIMITS: Record<string, GEOFeatureLimits> = {
     researchReports: -1,
     authorProfiles: -1,
     localCaseStudies: -1,
+    tacticOptimiserRewrites: -1,
   },
   // Backward-compat aliases for existing DB records
   professional: {
@@ -66,6 +71,7 @@ export const PLAN_LIMITS: Record<string, GEOFeatureLimits> = {
     researchReports: 2,
     authorProfiles: 3,
     localCaseStudies: 5,
+    tacticOptimiserRewrites: 20,
   },
   business: {
     geoAnalyses: -1,
@@ -74,6 +80,7 @@ export const PLAN_LIMITS: Record<string, GEOFeatureLimits> = {
     researchReports: -1,
     authorProfiles: 10,
     localCaseStudies: -1,
+    tacticOptimiserRewrites: -1,
   },
   custom: {
     geoAnalyses: -1,
@@ -82,6 +89,7 @@ export const PLAN_LIMITS: Record<string, GEOFeatureLimits> = {
     researchReports: -1,
     authorProfiles: -1,
     localCaseStudies: -1,
+    tacticOptimiserRewrites: -1,
   },
 };
 
@@ -155,5 +163,9 @@ export const FEATURE_INFO: Record<GEOFeatureKey, { label: string; description: s
   localCaseStudies: {
     label: 'Local Case Studies',
     description: 'Generate hyper-local case studies with NAP consistency and location schema markup',
+  },
+  tacticOptimiserRewrites: {
+    label: 'GEO Optimiser Rewrites',
+    description: 'AI-powered per-tactic content rewrites using the Princeton 9-tactic framework',
   },
 };
