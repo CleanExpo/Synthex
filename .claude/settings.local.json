@@ -125,7 +125,10 @@
       "Bash(grep -l \"upgradeRequired\" hooks/*.ts)",
       "WebFetch(domain:www.youtube.com)",
       "Skill(gsd:plan-phase)",
-      "Skill(gsd:plan-phase:*)"
+      "Skill(gsd:plan-phase:*)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:google.github.io)",
+      "WebFetch(domain:www.nature.com)"
     ],
     "deny": [
       "Bash(git push --force*)",

@@ -186,6 +186,12 @@ model User {
   seoExperiments        SEOExperiment[]
   healingActions        HealingAction[]
 
+  // Adaptive Intelligence Engine (BO + Prophet + BayesNF)
+  boSpaces              BOSpace[]
+  boRuns                BOOptimisationRun[]
+  forecastModels        ForecastModel[]
+  spatiotemporalModels  SpatiotemporalModel[]
+
   // Onboarding state (UNI-920)
   onboardingComplete      Boolean   @default(false) @map("onboarding_complete")
   onboardingStep          Int       @default(0)     @map("onboarding_step")       // 0=not started, 1=business, 2=api-key, 3=socials, 4=goals
@@ -3994,4 +4000,138 @@ model HealingAction {
   @@index([userId])
   @@index([orgId])
   @@map("healing_actions")
+}
+
+// ==========================================
+// Adaptive Intelligence Engine
+// BO + Prophet + BayesNF
+// ==========================================
+
+// ─── Bayesian Optimisation (Engine 1) ──────────────────────────
+
+model BOSpace {
+  id                String   @id @default(cuid())
+  orgId             String   @map("org_id")
+  userId            String   @map("user_id")
+  surface           String                     // BOSurface enum value
+  name              String?                    // Human-readable label
+  parameters        Json                       // Record<string, { min, max }>
+  acquisitionFn     String   @default("ei") @map("acquisition_fn")
+  constraints       Json?                      // { sumEquals?: number }
+  status            String   @default("active")
+  bestParameters    Json?    @map("best_parameters")
+  bestTarget        Float?   @map("best_target")
+  totalObservations Int      @default(0) @map("total_observations")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+  observations      BOObservation[]
+  runs              BOOptimisationRun[]
+  user              User     @relation(fields: [userId], references: [id])
+
+  @@unique([orgId, surface])
+  @@index([orgId])
+  @@index([userId])
+  @@map("bo_spaces")
+}
+
+model BOObservation {
+  id            String   @id @default(cuid())
+  spaceId       String   @map("space_id")
+  parameters    Json                          // Record<string, number>
+  target        Float                         // Observed outcome
+  metadata      Json?                         // Source context
+  recordedAt    DateTime @default(now()) @map("recorded_at")
+  space         BOSpace  @relation(fields: [spaceId], references: [id], onDelete: Cascade)
+
+  @@index([spaceId])
+  @@index([recordedAt])
+  @@map("bo_observations")
+}
+
+model BOOptimisationRun {
+  id               String    @id @default(cuid())
+  spaceId          String    @map("space_id")
+  orgId            String    @map("org_id")
+  userId           String    @map("user_id")
+  externalJobId    String?   @map("external_job_id")
+  status           String    @default("pending")
+  initPoints       Int       @default(5) @map("init_points")
+  nIterations      Int       @default(25) @map("n_iterations")
+  currentIteration Int       @default(0) @map("current_iteration")
+  bestParameters   Json?     @map("best_parameters")
+  bestTarget       Float?    @map("best_target")
+  allResults       Json?     @map("all_results")
+  startedAt        DateTime? @map("started_at")
+  completedAt      DateTime? @map("completed_at")
+  error            String?   @db.Text
+  createdAt        DateTime  @default(now()) @map("created_at")
+  space            BOSpace   @relation(fields: [spaceId], references: [id], onDelete: Cascade)
+  user             User      @relation(fields: [userId], references: [id])
+
+  @@index([spaceId])
+  @@index([orgId])
+  @@index([status])
+  @@map("bo_optimisation_runs")
+}
+
+// ─── Prophet Forecasting (Engine 2) ─────────────────────────────
+
+model ForecastModel {
+  id              String    @id @default(cuid())
+  orgId           String    @map("org_id")
+  userId          String    @map("user_id")
+  metric          String                        // "engagement_rate", "impressions", etc.
+  platform        String?                       // null = aggregate, "instagram", etc.
+  status          String    @default("pending") // pending | training | ready | failed
+  modelData       Bytes?    @map("model_data")  // Serialised Prophet model (JSON bytes)
+  trainingPoints  Int       @default(0) @map("training_points")
+  lastTrainedAt   DateTime? @map("last_trained_at")
+  accuracy        Json?                         // { mape, rmse, mae }
+  seasonality     Json?                         // Detected seasonality config
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+  forecasts       Forecast[]
+  user            User      @relation(fields: [userId], references: [id])
+
+  @@unique([orgId, metric, platform])
+  @@index([orgId])
+  @@index([status])
+  @@map("forecast_models")
+}
+
+model Forecast {
+  id            String   @id @default(cuid())
+  modelId       String   @map("model_id")
+  orgId         String   @map("org_id")
+  horizonDays   Int      @map("horizon_days")
+  predictions   Json                               // Array of { ds, yhat, yhat_lower, yhat_upper }
+  generatedAt   DateTime @default(now()) @map("generated_at")
+  model         ForecastModel @relation(fields: [modelId], references: [id], onDelete: Cascade)
+
+  @@index([modelId])
+  @@index([orgId])
+  @@map("forecasts")
+}
+
+// ─── BayesNF Spatiotemporal (Engine 3) ──────────────────────────
+
+model SpatiotemporalModel {
+  id              String    @id @default(cuid())
+  orgId           String    @map("org_id")
+  userId          String    @map("user_id")
+  name            String                          // "cross_platform_engagement"
+  dimensions      Json                            // { spatial: ["platform"], temporal: ["date"] }
+  targetMetric    String    @map("target_metric") // "engagement_rate", "geo_score", etc.
+  status          String    @default("pending")
+  trainingPoints  Int       @default(0) @map("training_points")
+  lastTrainedAt   DateTime? @map("last_trained_at")
+  accuracy        Json?                           // Benchmark metrics
+  config          Json?                           // BayesNF hyperparameters
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+  user            User      @relation(fields: [userId], references: [id])
+
+  @@unique([orgId, name])
+  @@index([orgId])
+  @@map("spatiotemporal_models")
 }

@@ -1,0 +1,32 @@
+# Synthex Adaptive Intelligence Service
+# Three engines: BayesianOptimization, Prophet, BayesNF
+
+# Core engines
+bayesian-optimization>=1.5.1
+prophet>=1.1.6
+bayesnf>=0.3.0
+
+# Web framework
+fastapi>=0.115.0
+uvicorn[standard]>=0.30.0
+pydantic>=2.0
+pydantic-settings>=2.0
+
+# HTTP client (for callbacks to Synthex)
+httpx>=0.27.0
+
+# Scientific computing (shared across engines)
+numpy>=1.26
+pandas>=2.0
+scikit-learn>=1.4
+
+# JAX for BayesNF (CPU-only; switch to jax[cuda] for GPU)
+jax[cpu]>=0.4.30
+
+# Utilities
+python-dotenv>=1.0
+
+# Testing
+pytest>=8.0
+pytest-asyncio>=0.24
+httpx  # also used as test client

@@ -24,6 +24,7 @@ export const QUEUE_NAMES = {
   PLATFORM_SYNC: 'platform-sync',
   WORKFLOW_STEPS: 'workflow-steps',
   WORKFLOW_PARALLEL: 'workflow-parallel',
+  BAYESIAN_OPTIMISATION: 'bayesian-optimisation',
 } as const;
 
 // Job types
@@ -35,7 +36,10 @@ export type JobType =
   | 'generate-report'
   | 'optimize-content'
   | 'sync-platform'
-  | 'workflow:execute-step';
+  | 'workflow:execute-step'
+  | 'bo:run-optimisation'
+  | 'bo:train-forecast'
+  | 'bo:train-spatiotemporal';
 
 // Job data interfaces
 export interface ScheduledPostJobData {
@@ -104,6 +108,30 @@ export interface WorkflowStepJobData {
   retryCount: number;
 }
 
+export interface BOOptimisationJobData {
+  type: 'bo:run-optimisation';
+  spaceId: string;
+  orgId: string;
+  userId: string;
+  initPoints?: number;
+  nIterations?: number;
+}
+
+export interface BOTrainForecastJobData {
+  type: 'bo:train-forecast';
+  orgId: string;
+  userId: string;
+  metric: string;
+  platform?: string;
+}
+
+export interface BOTrainSpatiotemporalJobData {
+  type: 'bo:train-spatiotemporal';
+  orgId: string;
+  userId: string;
+  modelName: string;
+}
+
 export type QueueJobData =
   | ScheduledPostJobData
   | AnalyticsJobData
@@ -112,7 +140,10 @@ export type QueueJobData =
   | ReportJobData
   | ContentOptimizationJobData
   | PlatformSyncJobData
-  | WorkflowStepJobData;
+  | WorkflowStepJobData
+  | BOOptimisationJobData
+  | BOTrainForecastJobData
+  | BOTrainSpatiotemporalJobData;
 
 // Redis connection configuration
 function getRedisConnection(): ConnectionOptions {
