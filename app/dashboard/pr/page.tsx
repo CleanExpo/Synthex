@@ -1,16 +1,22 @@
 'use client';
 
 /**
- * PR Journalist CRM — Main Dashboard Page (Phase 92)
+ * PR Journalist CRM — Main Dashboard Page (Phase 92/93)
  *
  * 4 tabs: Journalists | Pitches | Coverage | Press Releases
  * Tab state synced to URL ?tab= query param for direct linking.
+ *
+ * Phase 93 enhancements to the Press Releases tab:
+ * - PRAnalyticsSummary at the top
+ * - PRGeneratorForm (AI generation) above the list
+ * - DistributionPanel below the editor when a release is selected
  *
  * @module app/dashboard/pr/page
  */
 
 import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import useSWR from 'swr';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Newspaper, Users, Send, Globe, FileText } from '@/components/icons';
 import { PROverviewStats } from '@/components/pr/PROverviewStats';
@@ -18,9 +24,12 @@ import { JournalistList } from '@/components/pr/JournalistList';
 import { PitchKanban } from '@/components/pr/PitchKanban';
 import { CoverageFeed } from '@/components/pr/CoverageFeed';
 import { PressReleaseEditor } from '@/components/pr/PressReleaseEditor';
+import { PRGeneratorForm } from '@/components/pr/PRGeneratorForm';
+import { DistributionPanel } from '@/components/pr/DistributionPanel';
+import { PRAnalyticsSummary } from '@/components/pr/PRAnalyticsSummary';
 
 // ---------------------------------------------------------------------------
-// Valid tab keys
+// Types
 // ---------------------------------------------------------------------------
 
 type PRTab = 'journalists' | 'pitches' | 'coverage' | 'press-releases';
@@ -30,6 +39,22 @@ const VALID_TABS: PRTab[] = ['journalists', 'pitches', 'coverage', 'press-releas
 function isValidTab(value: string | null): value is PRTab {
   return VALID_TABS.includes(value as PRTab);
 }
+
+interface SelectedRelease {
+  id: string;
+  slug: string;
+  headline: string;
+}
+
+// ---------------------------------------------------------------------------
+// SWR fetcher (for analytics summary list)
+// ---------------------------------------------------------------------------
+
+const fetchJson = async (url: string) => {
+  const res = await fetch(url, { credentials: 'include' });
+  if (!res.ok) throw new Error('Failed to fetch');
+  return res.json();
+};
 
 // ---------------------------------------------------------------------------
 // Page component
@@ -42,11 +67,23 @@ export default function PRManagerPage() {
   const tabParam = searchParams.get('tab');
   const initialTab: PRTab = isValidTab(tabParam) ? tabParam : 'journalists';
   const [activeTab, setActiveTab] = useState<PRTab>(initialTab);
+  const [selectedRelease, setSelectedRelease] = useState<SelectedRelease | null>(null);
+
+  // Releases list for PRAnalyticsSummary — SWR dedupes with PressReleaseEditor's fetch
+  const { data: releasesData, isLoading: releasesLoading, mutate: mutateReleases } = useSWR<{
+    releases: Array<{ id: string; status: string }>;
+  }>(
+    activeTab === 'press-releases' ? '/api/pr/press-releases' : null,
+    fetchJson,
+  );
+
+  const releases = releasesData?.releases ?? [];
 
   // Sync tab state to URL
   const handleTabChange = (value: string) => {
     const tab = value as PRTab;
     setActiveTab(tab);
+    setSelectedRelease(null);
     const params = new URLSearchParams(searchParams.toString());
     params.set('tab', tab);
     router.replace(`/dashboard/pr?${params.toString()}`, { scroll: false });
@@ -123,7 +160,26 @@ export default function PRManagerPage() {
         {/* Press Releases tab */}
         <TabsContent value="press-releases">
           <div className="bg-white/[0.02] backdrop-blur-xl border border-white/[0.08] rounded-2xl p-6">
-            <PressReleaseEditor />
+            {/* Analytics summary */}
+            <PRAnalyticsSummary releases={releases} isLoading={releasesLoading} />
+
+            {/* AI generator form */}
+            <PRGeneratorForm
+              onSaved={(release) => {
+                setSelectedRelease(release);
+                void mutateReleases();
+              }}
+            />
+
+            {/* Press release list + editor */}
+            <PressReleaseEditor
+              onSelectRelease={(release) => setSelectedRelease(release)}
+            />
+
+            {/* Distribution panel — shown when a release is selected */}
+            {selectedRelease && (
+              <DistributionPanel releaseId={selectedRelease.id} />
+            )}
           </div>
         </TabsContent>
       </Tabs>

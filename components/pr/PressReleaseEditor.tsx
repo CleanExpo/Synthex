@@ -305,7 +305,12 @@ function EditorPanel({ release, onSaved, onClose }: EditorPanelProps) {
 // Main component
 // ---------------------------------------------------------------------------
 
-export function PressReleaseEditor() {
+export interface PressReleaseEditorProps {
+  /** Called when the user selects a release row for distribution tracking */
+  onSelectRelease?: (release: { id: string; slug: string; headline: string }) => void;
+}
+
+export function PressReleaseEditor({ onSelectRelease }: PressReleaseEditorProps = {}) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [showNew, setShowNew] = useState(false);
 
@@ -367,7 +372,11 @@ export function PressReleaseEditor() {
             <div key={release.id}>
               <div
                 className="flex items-center justify-between bg-white/5 border border-white/10 rounded-xl px-4 py-3 hover:bg-white/[0.08] transition-colors cursor-pointer"
-                onClick={() => setSelectedId(selectedId === release.id ? null : release.id)}
+                onClick={() => {
+                  const newId = selectedId === release.id ? null : release.id;
+                  setSelectedId(newId);
+                  if (newId) onSelectRelease?.({ id: release.id, slug: release.slug, headline: release.headline });
+                }}
               >
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-0.5">
