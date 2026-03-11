@@ -127,7 +127,7 @@ None (internal platform work)
 - [x] **Phase 102: GEO Weight Optimisation Surfaces** - Wire BO into geo-analyzer.ts + tactic-scorer.ts, API routes, auto-observation, callback webhook — COMPLETE 2026-03-11
 - [x] **Phase 103: BO Client-Facing Dashboard** - Optimisation spaces UI, learning indicators, run history, subscription gating — COMPLETE 2026-03-11
 - [x] **Phase 104: Experiment + Prompt Surfaces** - A/B test sampling + prompt testing BO surfaces, Growth-tier gating — COMPLETE 2026-03-11
-- [ ] **Phase 105: Advanced Surfaces** - Scheduling, backlinks, psychology, self-healing, campaign ROI surfaces (Scale tier)
+- [x] **Phase 105: Advanced Surfaces** - Scheduling, backlinks, psychology, self-healing, campaign ROI surfaces (Scale tier) — COMPLETE 2026-03-11
 - [ ] **Phase 106: Prophet Time-Series Forecasting** - Prophet dashboard, forecast charts with confidence bands, auto-training cron
 - [ ] **Phase 107: BayesNF Spatiotemporal Predictions** - Cross-platform heatmap, spatiotemporal model training, Scale-tier predictions
 
