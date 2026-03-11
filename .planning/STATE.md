@@ -10,16 +10,16 @@ See: .planning/PROJECT.md (updated 2026-02-17)
 ## Current Position
 
 Milestone: v7.0 Production Hardening & Quality — **IN PROGRESS**
-Phase: 111 of 113 — NOT STARTED
+Phase: 112 of 113 — NOT STARTED
 Plan: 0 of ? — PENDING
 Status: v6.0 SHIPPED (Phases 101-107). v7.0 focuses on stability, test coverage,
   and performance. 6 phases: E2E tests, UI audit, bundle optimisation, CWV,
   NEXUS dedup, security sweep. Linear: SYN-374.
-Last activity: 2026-03-12 — Phase 110 complete: bundle analysis (~990KB savings), 73 API routes audited, 8 critical Prisma query fixes
+Last activity: 2026-03-12 — Phase 111 complete: CDN caching, ISR, web vitals fix, preconnect headers
 
-Progress: █████░░░░░ 50% (3/6 phases — v7.0 in progress)
+Progress: ██████░░░░ 67% (4/6 phases — v7.0 in progress)
 
-Next action: Phase 111 — Core Web Vitals & Caching
+Next action: Phase 112 — NEXUS Agent Dispatch Deduplication
 
 ## Performance Metrics
 
@@ -244,9 +244,9 @@ None.
 ## Session Continuity
 
 Last session: 2026-03-12
-Stopped at: Phase 110 complete — bundle + query perf
+Stopped at: Phase 111 complete — CWV & caching
 Resume file: none
-Next action: Phase 111 — Core Web Vitals & Caching
+Next action: Phase 112 — NEXUS Agent Dispatch Deduplication
 
 ## Linear Issues — v2.0 Phase 59-66 Tracking
 
