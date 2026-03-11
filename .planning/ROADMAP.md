@@ -21,7 +21,8 @@ None (internal platform work)
 - ✅ [v3.1 First Users](milestones/v3.1-ROADMAP.md) (Phases 75-76) — SHIPPED 2026-03-10
 - ✅ **v4.0 Production Complete** — Phases 77-84 — SHIPPED 2026-03-10
 - ✅ **v5.0 AI-Native GEO & Citation Engine** — Phases 85-100 — SHIPPED 2026-03-11
-- 🚀 **v6.0 Adaptive Intelligence Engine** — Phases 101-107 — IN PROGRESS
+- ✅ **v6.0 Adaptive Intelligence Engine** — Phases 101-107 — SHIPPED 2026-03-11
+- 🚀 **v7.0 Production Hardening & Quality** — Phases 108-113 — IN PROGRESS (SYN-374)
 
 ## Phases
 
@@ -130,6 +131,12 @@ None (internal platform work)
 - [x] **Phase 105: Advanced Surfaces** - Scheduling, backlinks, psychology, self-healing, campaign ROI surfaces (Scale tier) — COMPLETE 2026-03-11
 - [x] **Phase 106: Prophet Time-Series Forecasting** - Prophet dashboard, forecast charts with confidence bands, auto-training cron — COMPLETE 2026-03-11
 - [x] **Phase 107: BayesNF Spatiotemporal Predictions** - Cross-platform heatmap, spatiotemporal model training, Scale-tier predictions — COMPLETE 2026-03-11
+- [x] **Phase 108: E2E Test Coverage** - Dashboard & campaign flow Playwright tests (deferred Phase 53 remainder) — DONE 2026-03-12
+- [ ] **Phase 109: UI State Audit** - Loading/empty/error coverage across all pages (deferred Phases 55-56)
+- [ ] **Phase 110: Bundle Optimisation & Query Performance** - Webpack analysis, code splitting, Prisma query optimisation (deferred Phase 57)
+- [ ] **Phase 111: Core Web Vitals & Caching** - LCP/CLS/INP targets, CDN caching, service worker (deferred Phase 58)
+- [ ] **Phase 112: NEXUS Agent Dispatch Deduplication** - Idempotency keys, dedup logic to prevent duplicate issue creation
+- [ ] **Phase 113: Pre-launch Security & Accessibility Sweep** - OWASP top 10 audit, WCAG 2.1 AA re-verification, CSP hardening
 
 ## Phase Details
 
