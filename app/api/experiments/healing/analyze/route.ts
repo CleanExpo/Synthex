@@ -64,10 +64,10 @@ export async function POST(request: NextRequest) {
     // Resolve orgId and plan from user
     const user = await prisma.user.findUnique({
       where: { id: userId },
-      select: { organizationId: true, plan: true },
+      select: { organizationId: true, organization: { select: { plan: true } } },
     });
     const orgId = user?.organizationId ?? userId;
-    const plan  = (user?.plan ?? 'free').toLowerCase();
+    const plan  = (user?.organization?.plan ?? 'free').toLowerCase();
 
     const healingWeightsResult = isSurfaceAvailable(plan, 'self_healing_priority')
       ? await getSelfHealingPriorityWeights(orgId)

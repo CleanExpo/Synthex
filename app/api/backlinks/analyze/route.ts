@@ -51,10 +51,10 @@ export async function POST(request: NextRequest) {
     // Resolve plan for BO surface gating
     const userRecord = await prisma.user.findUnique({
       where: { id: userId },
-      select: { organizationId: true, plan: true },
+      select: { organizationId: true, organization: { select: { plan: true } } },
     });
     const orgIdForBO = userRecord?.organizationId ?? userId;
-    const plan       = (userRecord?.plan ?? 'free').toLowerCase();
+    const plan       = (userRecord?.organization?.plan ?? 'free').toLowerCase();
 
     const scoringWeightsResult = isSurfaceAvailable(plan, 'backlink_scoring')
       ? await getBacklinkScoringWeights(orgIdForBO)

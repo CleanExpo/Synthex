@@ -99,10 +99,10 @@ export async function GET(request: NextRequest) {
         // Resolve plan for BO surface gating
         const userRecord = await prisma.user.findUnique({
           where: { id: userId },
-          select: { organizationId: true, plan: true },
+          select: { organizationId: true, organization: { select: { plan: true } } },
         });
         const orgId = userRecord?.organizationId ?? userId;
-        const plan  = (userRecord?.plan ?? 'free').toLowerCase();
+        const plan  = (userRecord?.organization?.plan ?? 'free').toLowerCase();
 
         const schedulingWeightsResult = isSurfaceAvailable(plan, 'content_scheduling')
           ? await getContentSchedulingWeights(orgId)
