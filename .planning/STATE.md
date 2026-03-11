@@ -10,14 +10,14 @@ See: .planning/PROJECT.md (updated 2026-02-17)
 ## Current Position
 
 Milestone: v5.0 AI-Native GEO & Citation Engine
-Phase: 93 of 100 (Press Release Generator & Distribution) — COMPLETE
+Phase: 94 of 100 (Award & Directory Orchestrator) — COMPLETE
 Plan: 2 of 2 complete
-Status: All plans executed — PRDistribution Prisma model; lib/pr/ai-generator.ts (OpenRouter + template fallback); lib/pr/distribution-channels.ts (4 channels); 4 new API routes (/generate, /distribute, /distributions, /channels); PRGeneratorForm, DistributionPanel, PRAnalyticsSummary components; enhanced /dashboard/pr Press Releases tab; prDistributions feature limits added
-Last activity: 2026-03-11 — Executed 93-01/02: PRDistribution model, AI generator service, distribution API routes, distribution UI components, enhanced PR dashboard
+Status: All plans executed — 3 Prisma models (AwardListing, DirectoryListing, SubmissionTracker); lib/awards/ service layer (types, award-database 18 templates, directory-database 21 templates, nomination-writer AI+fallback); 8 API routes; 6 UI components; /dashboard/awards 4-tab page; sidebar + command palette entries; feature limits extended
+Last activity: 2026-03-11 — Executed 94-01/02: Prisma models, service layer, 8 API routes, 6 components, dashboard page, navigation
 
-Progress: ██████░░░░ ~43% (26/~49 plans)
+Progress: ██████░░░░ ~45% (28/~49 plans)
 
-Next action: Phase 93 complete — beginning Phase 94
+Next action: Phase 94 complete — beginning Phase 95
 
 ## Performance Metrics
 
