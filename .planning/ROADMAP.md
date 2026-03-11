@@ -23,6 +23,7 @@ None (internal platform work)
 - ✅ **v5.0 AI-Native GEO & Citation Engine** — Phases 85-100 — SHIPPED 2026-03-11
 - ✅ **v6.0 Adaptive Intelligence Engine** — Phases 101-107 — SHIPPED 2026-03-11
 - ✅ [v7.0 Production Hardening & Quality](milestones/v7.0-ROADMAP.md) (Phases 108-113) — SHIPPED 2026-03-12
+- 🚧 **v8.0 Production Go-Live** — Phases 114-117 (in progress)
 
 ## Phases
 
@@ -137,6 +138,10 @@ None (internal platform work)
 - [x] **Phase 111: Core Web Vitals & Caching** (1/1) - CDN caching, ISR, web vitals fix, preconnect headers — DONE 2026-03-12
 - [x] **Phase 112: NEXUS Agent Dispatch Deduplication** - Idempotency keys, dedup logic to prevent duplicate issue creation
 - [x] **Phase 113: Pre-launch Security & Accessibility Sweep** - OWASP top 10 audit, WCAG 2.1 AA re-verification, CSP hardening — DONE 2026-03-12
+- [ ] **Phase 114: Vercel Production Deployment** - Configure production env vars, deploy main branch, verify runtime health
+- [ ] **Phase 115: Stripe Live Mode** - Swap test→live keys, register live webhook, verify billing end-to-end
+- [ ] **Phase 116: Domain, DNS & Supabase Production** - synthex.social DNS, SSL, Supabase prod config, DB migrations
+- [ ] **Phase 117: Launch Runbook Execution** - LAUNCH-RUNBOOK.md checklist, smoke tests, go-live sign-off
 
 ## Phase Details
 
@@ -1067,4 +1072,48 @@ Plans:
 - [x] 74-01: Smoke test script (scripts/smoke-test.mjs), LAUNCH-RUNBOOK.md with go-live checklist + rollback procedure
 
 </details>
+
+### 🚧 v8.0 Production Go-Live (In Progress)
+
+**Milestone Goal:** Deploy the application to production, flip all services to live mode, and verify everything works end-to-end on real infrastructure.
+
+#### Phase 114: Vercel Production Deployment
+
+**Goal**: Configure all production environment variables in Vercel dashboard, deploy main branch to production, verify build succeeds and runtime is healthy
+**Depends on**: Phase 113 (v7.0 complete)
+**Research**: Unlikely (Vercel patterns established, env vars documented in .env.example)
+**Plans**: TBD
+
+Plans:
+- [ ] 114-01: TBD (run /gsd:plan-phase 114 to break down)
+
+#### Phase 115: Stripe Live Mode
+
+**Goal**: Replace sk_test_/pk_test_ with sk_live_/pk_live_ keys, register live-mode webhook in Stripe dashboard, update Vercel env vars, verify billing flows end-to-end with real cards
+**Depends on**: Phase 114
+**Research**: Unlikely (Stripe patterns established, test account acct_1SzE5KGib5mMf28d already configured)
+**Plans**: TBD
+
+Plans:
+- [ ] 115-01: TBD (run /gsd:plan-phase 115 to break down)
+
+#### Phase 116: Domain, DNS & Supabase Production
+
+**Goal**: Point synthex.social DNS to Vercel, configure SSL, set up www redirect; verify Supabase is on production project (not dev), run any pending DB migrations, configure auth site URL and redirect URLs for production domain
+**Depends on**: Phase 114
+**Research**: Unlikely (Vercel DNS + Supabase auth config patterns are standard)
+**Plans**: TBD
+
+Plans:
+- [ ] 116-01: TBD (run /gsd:plan-phase 116 to break down)
+
+#### Phase 117: Launch Runbook Execution
+
+**Goal**: Execute LAUNCH-RUNBOOK.md go-live checklist, run scripts/smoke-test.mjs against production URL, verify all critical paths (auth, dashboard, billing, social platforms), document any issues found
+**Depends on**: Phases 114, 115, 116
+**Research**: Unlikely (runbook already exists, smoke-test.mjs already written)
+**Plans**: TBD
+
+Plans:
+- [ ] 117-01: TBD (run /gsd:plan-phase 117 to break down)
 

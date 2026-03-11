@@ -9,16 +9,15 @@ See: .planning/PROJECT.md (updated 2026-02-17)
 
 ## Current Position
 
-Milestone: v7.0 Production Hardening & Quality — **COMPLETE**
-Phase: 113 of 113 — DONE
-Plan: 1 of 1 — COMPLETE
-Status: v7.0 SHIPPED. All 6 phases complete: E2E tests, UI audit, bundle optimisation, CWV,
-  NEXUS dedup, security & accessibility sweep. Linear: SYN-374.
-Last activity: 2026-03-12 — v7.0 milestone complete, archived
+Milestone: v8.0 Production Go-Live — **IN PROGRESS**
+Phase: 114 of 117 (Vercel Production Deployment)
+Plan: Not started
+Status: Ready to plan
+Last activity: 2026-03-12 — Milestone v8.0 created
 
-Progress: ██████████ 100% (6/6 phases — v7.0 COMPLETE)
+Progress: ░░░░░░░░░░ 0% (0/4 phases)
 
-Next action: /gsd:discuss-milestone to plan v8.0
+Next action: /gsd:plan-phase 114
 
 ## Performance Metrics
 
@@ -239,13 +238,14 @@ None.
 - v3.1 First Users: 2 phases (75-76), God Mode admin + NEXUS branding + Unite-Hub connector — SHIPPED 2026-03-10
 - v4.0 Production Complete: 8 phases (77-84), content creation + scheduling + admin + brand profiles + social onboarding + code quality + accessibility + UAT — SHIPPED 2026-03-10
 - v5.0 AI-Native GEO & Citation Engine: 16 phases (85-100), entity coherence + citation tracking + GEO optimiser v2 + writing methodology + AI slop detection + E-E-A-T + brand building + PR + awards + backlinks + prompt intelligence + algorithm sentinel + autonomous A/B testing + self-healing + citation dashboard — **SHIPPED 2026-03-11**
+- v8.0 Production Go-Live created: deployment milestone, 4 phases (Phase 114-117)
 
 ## Session Continuity
 
 Last session: 2026-03-12
-Stopped at: v7.0 milestone archived
-Resume file: none
-Next action: /gsd:discuss-milestone to plan v8.0
+Stopped at: Milestone v8.0 initialization
+Resume file: None
+Next action: /gsd:plan-phase 114
 
 ## Linear Issues — v2.0 Phase 59-66 Tracking
 
