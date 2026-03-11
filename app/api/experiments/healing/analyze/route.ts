@@ -14,6 +14,9 @@ import { analyzeForHealing } from '@/lib/experiments/self-healer';
 import { prisma } from '@/lib/prisma';
 import { logger } from '@/lib/logger';
 import { z } from 'zod';
+import { isSurfaceAvailable } from '@/lib/bayesian/feature-limits';
+import { getSelfHealingPriorityWeights } from '@/lib/bayesian/surfaces/self-healing-priority';
+import { registerObservationSilently } from '@/lib/bayesian/fallback';
 
 const AnalyzeSchema = z.object({
   url: z.string().url(),
@@ -58,14 +61,47 @@ export async function POST(request: NextRequest) {
 
     const { url, metadata } = parsed.data;
 
-    // Resolve orgId from user
+    // Resolve orgId and plan from user
     const user = await prisma.user.findUnique({
       where: { id: userId },
-      select: { organizationId: true },
+      select: { organizationId: true, plan: true },
     });
     const orgId = user?.organizationId ?? userId;
+    const plan  = (user?.plan ?? 'free').toLowerCase();
 
-    const issues = await analyzeForHealing(url, userId, orgId, metadata);
+    const healingWeightsResult = isSurfaceAvailable(plan, 'self_healing_priority')
+      ? await getSelfHealingPriorityWeights(orgId)
+      : undefined;
+
+    const issues = await analyzeForHealing(
+      url,
+      userId,
+      orgId,
+      metadata,
+      healingWeightsResult?.weights,
+    );
+
+    // Register BO observation (fire-and-forget)
+    if (healingWeightsResult?.source === 'bo') {
+      const criticalCount = issues.filter(i => i.severity === 'critical').length;
+      const target = issues.length > 0 ? 1 - (criticalCount / issues.length) : 1.0;
+      void registerObservationSilently(
+        'self_healing_priority',
+        orgId,
+        {
+          missingMetaPriority:     healingWeightsResult.weights.missingMetaPriority,
+          brokenSchemaPriority:    healingWeightsResult.weights.brokenSchemaPriority,
+          lowGeoScorePriority:     healingWeightsResult.weights.lowGeoScorePriority,
+          lowQualityScorePriority: healingWeightsResult.weights.lowQualityScorePriority,
+          missingEntityPriority:   healingWeightsResult.weights.missingEntityPriority,
+          shortTitlePriority:      healingWeightsResult.weights.shortTitlePriority,
+          missingH1Priority:       healingWeightsResult.weights.missingH1Priority,
+          weakMetaDescPriority:    healingWeightsResult.weights.weakMetaDescPriority,
+        },
+        target,
+        { issueCount: issues.length, criticalCount },
+      );
+    }
 
     logger.info('[healing] Analyzed URL', {
       userId,

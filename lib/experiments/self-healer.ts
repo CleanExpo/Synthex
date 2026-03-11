@@ -9,6 +9,7 @@
 
 import { prisma } from '@/lib/prisma';
 import type { HealingIssue, HealingIssueType, HealingSeverity } from './types';
+import type { SelfHealingPriorityWeights } from '@/lib/bayesian/surfaces/self-healing-priority';
 
 // ============================================================================
 // Issue Detection Rules
@@ -25,12 +26,26 @@ interface PageMetadata {
   wordCount?: number;
 }
 
+// Mapping from HealingIssueType string values to SelfHealingPriorityWeights keys
+const ISSUE_TO_WEIGHT: Record<string, keyof SelfHealingPriorityWeights> = {
+  'missing-meta':          'missingMetaPriority',
+  'broken-schema':         'brokenSchemaPriority',
+  'low-geo-score':         'lowGeoScorePriority',
+  'low-quality-score':     'lowQualityScorePriority',
+  'missing-entity':        'missingEntityPriority',
+  'short-title':           'shortTitlePriority',
+  'missing-h1':            'missingH1Priority',
+  'weak-meta-description': 'weakMetaDescPriority',
+};
+
 /**
  * Derive healing issues from page metadata.
  * In production, metadata comes from an external fetch/parse.
  * Here we use what's available and apply rule-based checks.
+ * When priorityWeights are provided (via BO), the issues list is sorted
+ * descending by the BO priority weight for each issue type.
  */
-function detectIssues(meta: PageMetadata): HealingIssue[] {
+function detectIssues(meta: PageMetadata, priorityWeights?: SelfHealingPriorityWeights): HealingIssue[] {
   const issues: HealingIssue[] = [];
 
   // Missing title
@@ -148,6 +163,17 @@ function detectIssues(meta: PageMetadata): HealingIssue[] {
     });
   }
 
+  // Apply BO priority ordering when weights are provided
+  if (priorityWeights) {
+    issues.sort((a, b) => {
+      const wKeyA = ISSUE_TO_WEIGHT[a.issueType];
+      const wKeyB = ISSUE_TO_WEIGHT[b.issueType];
+      const wA    = wKeyA ? (priorityWeights[wKeyA] ?? 0.10) : 0.10;
+      const wB    = wKeyB ? (priorityWeights[wKeyB] ?? 0.10) : 0.10;
+      return wB - wA; // descending — higher weight first
+    });
+  }
+
   return issues;
 }
 
@@ -158,13 +184,14 @@ function detectIssues(meta: PageMetadata): HealingIssue[] {
 /**
  * Analyse a URL for healing opportunities.
  * Persists each issue as a HealingAction in the database.
- * Returns the list of issues found.
+ * Returns the list of issues found, optionally sorted by BO priority weights.
  */
 export async function analyzeForHealing(
   url: string,
   userId: string,
   orgId: string,
-  pageMetadata?: PageMetadata
+  pageMetadata?: PageMetadata,
+  priorityWeights?: SelfHealingPriorityWeights,
 ): Promise<HealingIssue[]> {
   // Use provided metadata or fall back to minimal defaults for offline analysis
   const meta: PageMetadata = pageMetadata ?? {
@@ -176,7 +203,7 @@ export async function analyzeForHealing(
     qualityScore: undefined,
   };
 
-  const issues = detectIssues(meta);
+  const issues = detectIssues(meta, priorityWeights);
 
   // Persist each issue as a HealingAction
   if (issues.length > 0) {
