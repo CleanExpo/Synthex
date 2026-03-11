@@ -13,6 +13,7 @@ import type {
   ExperimentType,
   MetricToTrack,
 } from './types';
+import type { ExperimentSamplingWeights } from '@/lib/bayesian/surfaces/experiment-sampling';
 
 // ============================================================================
 // Suggestion Rules
@@ -138,12 +139,36 @@ const SUGGESTION_RULES: SuggestionRule[] = [
 // ============================================================================
 
 /**
+ * Maps experiment type string values to ExperimentSamplingWeights keys.
+ * Used for BO-informed tie-breaking within equal-priority tiers.
+ */
+const TYPE_TO_WEIGHT_KEY: Record<string, keyof ExperimentSamplingWeights> = {
+  'title-tag':        'titleTag',
+  'meta-description': 'metaDescription',
+  'h1':               'h1',
+  'schema':           'schema',
+  'content-structure': 'contentStructure',
+  'internal-links':   'internalLinks',
+};
+
+/**
  * Generate experiment suggestions for a URL based on its current metrics.
  * Returns suggestions sorted by priority (high first).
+ *
+ * When `samplingWeights` are provided (Growth+ plan with BO enabled),
+ * suggestions within the same priority tier are further ordered by
+ * BO-optimised weights — higher weight comes first.
+ * When `samplingWeights` is undefined, behaviour is identical to previous
+ * implementation (backward compatible).
+ *
+ * @param _url            — Target URL (reserved for future URL-specific rules)
+ * @param currentMetrics  — Current page metrics used to evaluate rules
+ * @param samplingWeights — Optional BO-optimised type priority weights
  */
 export function suggestExperiments(
   _url: string,
-  currentMetrics: CurrentMetrics
+  currentMetrics: CurrentMetrics,
+  samplingWeights?: ExperimentSamplingWeights,
 ): ExperimentSuggestion[] {
   const suggestions: ExperimentSuggestion[] = [];
 
@@ -153,11 +178,21 @@ export function suggestExperiments(
     }
   }
 
-  // Sort: high > medium > low
+  // Sort: high > medium > low, with BO tie-breaking within each tier
   const priorityOrder = { high: 0, medium: 1, low: 2 };
-  return suggestions.sort(
-    (a, b) => priorityOrder[a.priority] - priorityOrder[b.priority]
-  );
+  return suggestions.sort((a, b) => {
+    // Base sort: fixed priority order (high first)
+    const baseDiff = priorityOrder[a.priority] - priorityOrder[b.priority];
+    if (!samplingWeights) return baseDiff;
+
+    // BO tie-breaking: within the same priority tier, higher weight comes first
+    if (baseDiff !== 0) return baseDiff;
+    const weightKey = TYPE_TO_WEIGHT_KEY[a.experimentType];
+    const weightKeyB = TYPE_TO_WEIGHT_KEY[b.experimentType];
+    const weightA = weightKey  ? (samplingWeights[weightKey]  ?? 0) : 0;
+    const weightB = weightKeyB ? (samplingWeights[weightKeyB] ?? 0) : 0;
+    return weightB - weightA;  // descending weight = ascending sort position
+  });
 }
 
 /**
