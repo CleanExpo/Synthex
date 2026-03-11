@@ -40,6 +40,7 @@ export default function LoginPage() {
     password: '',
   });
   const [rateLimitSeconds, setRateLimitSeconds] = useState(0);
+  const [formError, setFormError] = useState<string | null>(null);
   const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Countdown timer for rate limit cooldown
@@ -113,6 +114,7 @@ export default function LoginPage() {
 
     setIsLoading(true);
     setOauthHint(null);
+    setFormError(null);
 
     try {
       // Use unified auth endpoint
@@ -161,7 +163,9 @@ export default function LoginPage() {
           setOauthHint(data.existingProvider as string);
           // No toast — the inline OAuth hint banner is more helpful
         } else {
-          toast.error(data.error || 'Invalid email or password');
+          const errorMessage = data.error || 'Invalid email or password';
+          setFormError(errorMessage);
+          toast.error(errorMessage);
         }
         return;
       }
@@ -180,7 +184,9 @@ export default function LoginPage() {
       toast.success('Welcome back!');
       router.push('/dashboard');
     } catch {
-      toast.error('Login failed. Please check your connection and try again.');
+      const msg = 'Login failed. Please check your connection and try again.';
+      setFormError(msg);
+      toast.error(msg);
     } finally {
       setIsLoading(false);
     }
@@ -302,6 +308,17 @@ export default function LoginPage() {
           )}
         </CardHeader>
         <CardContent className="space-y-4">
+          {/* aria-live region: announces login errors to screen readers */}
+          {formError && (
+            <p
+              id="login-form-error"
+              role="alert"
+              aria-live="assertive"
+              className="sr-only"
+            >
+              {formError}
+            </p>
+          )}
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email" className="text-gray-300">Email</Label>
@@ -312,11 +329,12 @@ export default function LoginPage() {
                   type="email"
                   placeholder="you@example.com"
                   value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  onChange={(e) => { setFormData({ ...formData, email: e.target.value }); setFormError(null); }}
                   className="pl-10 bg-white/5 border-cyan-500/20 text-white placeholder:text-gray-500 focus:border-cyan-500/50 focus:ring-cyan-500/20"
                   aria-label="Email address"
                   aria-required="true"
-                  aria-describedby="email-error"
+                  aria-invalid={!!formError}
+                  aria-describedby={formError ? 'login-form-error' : undefined}
                   required
                   disabled={isSubmitDisabled}
                 />
@@ -331,8 +349,9 @@ export default function LoginPage() {
                   type={showPassword ? 'text' : 'password'}
                   placeholder="••••••••"
                   value={formData.password}
-                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                  onChange={(e) => { setFormData({ ...formData, password: e.target.value }); setFormError(null); }}
                   className="pl-10 pr-10 bg-white/5 border-cyan-500/20 text-white placeholder:text-gray-500 focus:border-cyan-500/50 focus:ring-cyan-500/20"
+                  aria-invalid={!!formError}
                   required
                   disabled={isSubmitDisabled}
                 />

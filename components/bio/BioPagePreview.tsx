@@ -102,7 +102,7 @@ export function BioPagePreview({ page, links }: BioPagePreviewProps) {
             <div className="h-24 w-full overflow-hidden">
               <img
                 src={page.coverUrl}
-                alt=""
+                alt={page.title ? `Cover image for ${page.title}` : 'Bio page cover image'}
                 className="w-full h-full object-cover"
               />
             </div>

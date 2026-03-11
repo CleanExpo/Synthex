@@ -211,9 +211,9 @@ export default function SettingsPage() {
                 <div className="text-center space-y-4">
                   <Palette className="w-12 h-12 text-slate-500 mx-auto" />
                   <div>
-                    <h3 className="text-lg font-semibold text-white mb-1">
+                    <h2 className="text-lg font-semibold text-white mb-1">
                       White-Label Branding
-                    </h3>
+                    </h2>
                     <p className="text-slate-400 max-w-md mx-auto">
                       Customise your platform with your own logo, colours, domain, and more.
                       This feature is available on Enterprise plans.

@@ -288,7 +288,7 @@ export function UserCount({ count, label = 'users trust us', avatars, className 
             <img
               key={index}
               src={avatar}
-              alt=""
+              alt="Customer testimonial avatar"
               className="w-10 h-10 rounded-full border-2 border-slate-900 object-cover"
             />
           ))}

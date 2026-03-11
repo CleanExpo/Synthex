@@ -145,6 +145,7 @@ export function OptimizedImage({
               <img
                 src={blurDataURL}
                 alt=""
+                aria-hidden="true"
                 className="w-full h-full object-cover filter blur-lg"
               />
             ) : (
@@ -353,8 +354,9 @@ export function OptimizedBackground({
   
   return (
     <div className={`relative overflow-hidden ${className}`}>
-      {/* Background image */}
-      <div 
+      {/* Background image — decorative, hidden from assistive technology */}
+      <div
+        aria-hidden="true"
         className={`absolute inset-0 ${parallax ? 'fixed' : ''}`}
         style={{
           transform: parallax ? 'translateZ(-1px) scale(2)' : undefined

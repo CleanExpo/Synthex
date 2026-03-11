@@ -14,7 +14,10 @@ import AxeBuilder from '@axe-core/playwright';
 // Helper: run axe scan and assert no critical/serious violations
 async function expectNoA11yViolations(page: import('@playwright/test').Page, disableRules: string[] = []) {
   const results = await new AxeBuilder({ page })
-    .disableRules(['color-contrast', ...disableRules]) // Color contrast is unreliable in headless
+    // Note: color-contrast was previously disabled citing "unreliable in headless" (Phase 83).
+    // Re-enabled 2026-03-12 (Phase 113). If CI reports false positives in headless mode,
+    // investigate the specific violation rather than disabling the rule globally.
+    .disableRules([...disableRules])
     .analyze();
 
   const serious = results.violations.filter(v => v.impact === 'critical' || v.impact === 'serious');
