@@ -112,7 +112,20 @@
       "Bash(xargs grep -l \"api.key\\\\|api-key\\\\|apiKey\")",
       "Bash(wc -l D:/Synthex/lib/social/*.ts)",
       "Bash(grep -l \"getEffectiveOrganizationId\" /d/Synthex/lib/*.ts)",
-      "Bash(python3 -c \"import json,sys; data=json.load\\(sys.stdin\\); issues=[i for i in json.loads\\(data[0][''text'']\\)[''issues''] if i[''identifier''] in \\(''SYN-18'',''SYN-44'',''SYN-45'',''SYN-1'',''SYN-2''\\)]; [print\\(i[''identifier''],i[''id''],i[''status''],i[''title''][:60]\\) for i in issues]\")"
+      "Bash(python3 -c \"import json,sys; data=json.load\\(sys.stdin\\); issues=[i for i in json.loads\\(data[0][''text'']\\)[''issues''] if i[''identifier''] in \\(''SYN-18'',''SYN-44'',''SYN-45'',''SYN-1'',''SYN-2''\\)]; [print\\(i[''identifier''],i[''id''],i[''status''],i[''title''][:60]\\) for i in issues]\")",
+      "mcp__exa__web_search_exa",
+      "mcp__exa__crawling_exa",
+      "WebSearch",
+      "WebFetch(domain:api.semanticscholar.org)",
+      "WebFetch(domain:www.semanticscholar.org)",
+      "Bash(xargs grep -l \"subscription\")",
+      "WebFetch(domain:api.gov.au)",
+      "Bash(grep -l \"export.*getAIProvider\\\\|export.*AIProvider\" /d/Synthex/lib/ai/providers/*.ts)",
+      "Bash(xargs -I {} sh -c 'echo \"\"=== {} ===\"\" && head -50 {}')",
+      "Bash(grep -l \"upgradeRequired\" hooks/*.ts)",
+      "WebFetch(domain:www.youtube.com)",
+      "Skill(gsd:plan-phase)",
+      "Skill(gsd:plan-phase:*)"
     ],
     "deny": [
       "Bash(git push --force*)",
