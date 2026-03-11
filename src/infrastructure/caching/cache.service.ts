@@ -362,8 +362,8 @@ export class CacheService implements ICacheService {
     memoryCacheHits: number;
     memoryCacheMisses: number;
   }> {
-    let memoryCacheHits = 0;
-    let memoryCacheMisses = 0;
+    const memoryCacheHits = 0;
+    const memoryCacheMisses = 0;
 
     // Simple hit/miss tracking could be added here
     // For now, returning basic stats

@@ -102,6 +102,7 @@
     "src/presentation/**/*",
     "packages/**/*",
     "Synthex/**/*",
-    "with-turbopack-app/**/*"
+    "with-turbopack-app/**/*",
+    "templates/**/*"
   ]
 }

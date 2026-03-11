@@ -75,7 +75,9 @@ module.exports = {
     '^@/hooks/(.*)$': '<rootDir>/hooks/$1',
     '^@/utils/(.*)$': '<rootDir>/utils/$1',
     '^@/types/(.*)$': '<rootDir>/types/$1',
-    '^@/(.*)$': '<rootDir>/$1'
+    '^@/(.*)$': '<rootDir>/$1',
+    // Mock ESM modules that Jest can't transform
+    '^bullmq$': '<rootDir>/tests/__mocks__/bullmq.js'
   },
   
   // Ignore patterns

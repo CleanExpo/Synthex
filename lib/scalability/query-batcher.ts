@@ -173,7 +173,7 @@ export function createLoader<K, V>(
  * Use this to ensure loaders are reused within a single request
  */
 export class LoaderContext {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   private loaders: Map<string, DataLoader<any, any>> = new Map();
 
   /**

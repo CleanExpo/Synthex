@@ -99,7 +99,7 @@ function createMockRequest(opts: {
     ip: '127.0.0.1',
     geo: {},
     cookies: { get: () => undefined, getAll: () => [], has: () => false },
-  } as any // eslint-disable-line @typescript-eslint/no-explicit-any
+  } as any  
 }
 
 describe('GET /api/workflows/executions', () => {

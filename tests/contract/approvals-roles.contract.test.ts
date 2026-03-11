@@ -103,23 +103,23 @@ jest.mock('@/lib/logger', () => ({
 // Use jest.requireMock to access the mocked instances directly
 // This avoids the issue of static import references becoming stale after clearAllMocks
 function getMockedPrisma() {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   const mod = jest.requireMock('@/lib/prisma') as any;
   return mod.default || mod.prisma;
 }
 
 function getMockedJwt() {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   return jest.requireMock('@/lib/auth/jwt-utils') as any;
 }
 
 function getMockedRoleManager() {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   return (jest.requireMock('@/lib/auth/rbac/role-manager') as any).RoleManager;
 }
 
 function getMockedPermEngine() {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   return (jest.requireMock('@/lib/auth/rbac/permission-engine') as any).PermissionEngine;
 }
 
@@ -267,7 +267,7 @@ describe('Approvals API Contract Tests (/api/approvals/[id])', () => {
   const mockParams = { params: Promise.resolve({ id: 'approval-001' }) };
 
   // Import route handlers once; mocks are in place before this module loads
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
+   
   const approvalRoute = require('@/app/api/approvals/[id]/route');
 
   beforeEach(() => {
@@ -523,7 +523,7 @@ describe('Approvals API Contract Tests (/api/approvals/[id])', () => {
 // =============================================================================
 
 describe('Roles API Contract Tests (/api/roles)', () => {
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
+   
   const rolesRoute = require('@/app/api/roles/route');
 
   beforeEach(() => {

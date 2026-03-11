@@ -103,7 +103,7 @@ async function checkRateLimit(key: string): Promise<{ allowed: boolean; remainin
 }
 
 export async function middleware(request: NextRequest) {
-  let response = NextResponse.next({
+  const response = NextResponse.next({
     request: {
       headers: request.headers,
     },

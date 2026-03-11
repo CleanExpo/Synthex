@@ -13,9 +13,9 @@ import * as fs from 'fs';
 import { logger } from '@/lib/logger';
 
 // Puppeteer types - using any to avoid webpack resolving the module
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+ 
 type Browser = any;
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+ 
 type Page = any;
 
 // Dynamic imports for puppeteer (not available in serverless/production)

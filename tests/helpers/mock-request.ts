@@ -70,5 +70,5 @@ export function createMockNextRequest({
       getAll: () => [],
       has: () => false,
     },
-  } as any; // eslint-disable-line @typescript-eslint/no-explicit-any
+  } as any;  
 }

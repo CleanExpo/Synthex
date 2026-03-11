@@ -9,6 +9,11 @@ import { SubscriptionService, PLAN_LIMITS } from '@/lib/stripe/subscription-serv
 // Mock Prisma
 jest.mock('@/lib/prisma', () => ({
   prisma: {
+    user: {
+      findUnique: jest.fn(),
+      findFirst: jest.fn(),
+      update: jest.fn(),
+    },
     subscription: {
       findUnique: jest.fn(),
       findFirst: jest.fn(),
@@ -21,6 +26,10 @@ jest.mock('@/lib/prisma', () => ({
     },
     persona: {
       count: jest.fn(),
+    },
+    apiUsage: {
+      findUnique: jest.fn(),
+      upsert: jest.fn(),
     },
   },
 }));

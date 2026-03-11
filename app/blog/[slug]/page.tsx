@@ -376,26 +376,26 @@ export default function BlogPostPage() {
   const params = useParams();
   const router = useRouter();
   const [copied, setCopied] = useState(false);
-  
+  // Defer to useEffect to avoid hydration mismatch (server has no window.location).
+  const [shareUrl, setShareUrl] = useState('');
+
   // Get the blog post based on the slug
   const post = blogPosts[params.slug as keyof typeof blogPosts];
-  
+
   // If post not found, redirect to blog page
   useEffect(() => {
     if (!post) {
       router.push('/blog');
     }
   }, [post, router]);
-  
-  if (!post) {
-    return null;
-  }
-  
-  // Defer to useEffect to avoid hydration mismatch (server has no window.location).
-  const [shareUrl, setShareUrl] = useState('');
+
   useEffect(() => {
     setShareUrl(window.location.href);
   }, []);
+
+  if (!post) {
+    return null;
+  }
   
   const handleShare = (platform: string) => {
     const url = encodeURIComponent(shareUrl);
