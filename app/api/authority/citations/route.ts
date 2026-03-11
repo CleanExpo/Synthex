@@ -46,6 +46,20 @@ export async function GET(req: NextRequest) {
 
     const citations = await prisma.authorityCitation.findMany({
       where: { analysisId },
+      orderBy: { createdAt: 'desc' },
+      take: 200,
+      select: {
+        id: true,
+        analysisId: true,
+        claimText: true,
+        sourceUrl: true,
+        sourceType: true,
+        sourceName: true,
+        confidence: true,
+        citationText: true,
+        verified: true,
+        createdAt: true,
+      },
     });
 
     return NextResponse.json(citations);

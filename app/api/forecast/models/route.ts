@@ -80,6 +80,19 @@ export async function GET(request: NextRequest) {
     const models = await prisma.forecastModel.findMany({
       where: { orgId: user.organizationId },
       orderBy: { createdAt: 'desc' },
+      take: 50,
+      select: {
+        id: true,
+        orgId: true,
+        metric: true,
+        platform: true,
+        status: true,
+        trainingPoints: true,
+        lastTrainedAt: true,
+        accuracy: true,
+        seasonality: true,
+        createdAt: true,
+      },
     });
 
     return NextResponse.json({ data: models });

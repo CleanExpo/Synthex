@@ -40,6 +40,18 @@ export async function GET(
     const distributions = await prisma.pRDistribution.findMany({
       where: { releaseId: id },
       orderBy: { createdAt: 'asc' },
+      take: 50,
+      select: {
+        id: true,
+        releaseId: true,
+        channel: true,
+        channelUrl: true,
+        status: true,
+        submittedAt: true,
+        publishedAt: true,
+        notes: true,
+        createdAt: true,
+      },
     });
 
     return NextResponse.json({ distributions });

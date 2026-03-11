@@ -34,6 +34,7 @@ export async function GET(request: NextRequest) {
     // Fetch all tested trackers for this user
     const trackers = await prisma.promptTracker.findMany({
       where: { ...where, status: 'tested' },
+      take: 200,
       include: {
         results: {
           orderBy: { testedAt: 'desc' },

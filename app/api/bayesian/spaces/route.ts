@@ -76,6 +76,20 @@ export async function GET(request: NextRequest) {
     const spaces = await prisma.bOSpace.findMany({
       where: { orgId: user.organizationId },
       orderBy: { createdAt: 'desc' },
+      take: 50,
+      select: {
+        id: true,
+        orgId: true,
+        surface: true,
+        name: true,
+        acquisitionFn: true,
+        bestTarget: true,
+        bestParameters: true,
+        totalObservations: true,
+        status: true,
+        createdAt: true,
+        updatedAt: true,
+      },
     });
 
     return NextResponse.json({ data: spaces });

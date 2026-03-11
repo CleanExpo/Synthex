@@ -42,6 +42,7 @@ export async function GET(request: NextRequest) {
         ...(status ? { status } : {}),
       },
       orderBy: { createdAt: 'desc' },
+      take: 100,
       include: {
         journalist: {
           select: {

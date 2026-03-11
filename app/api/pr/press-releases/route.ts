@@ -45,6 +45,7 @@ export async function GET(request: NextRequest) {
     const releases = await prisma.pressRelease.findMany({
       where: { orgId: userId },
       orderBy: { createdAt: 'desc' },
+      take: 100,
       select: {
         id:           true,
         slug:         true,
