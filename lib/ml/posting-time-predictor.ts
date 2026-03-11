@@ -13,6 +13,7 @@
 
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { logger } from '@/lib/logger';
+import type { ContentSchedulingWeights } from '@/lib/bayesian/surfaces/content-scheduling';
 
 // Platform types
 export type Platform = 'twitter' | 'instagram' | 'linkedin' | 'facebook' | 'tiktok' | 'youtube';
@@ -106,12 +107,15 @@ class PostingTimePredictor {
   }
 
   /**
-   * Get optimal posting times for a user and platform
+   * Get optimal posting times for a user and platform.
+   * When schedulingWeights are provided (Scale/Growth plan via BO), they control
+   * the blend ratios and contextual multipliers for slot scoring.
    */
   async getOptimalTimes(
     userId: string,
     platform: Platform,
-    timezone: string = 'UTC'
+    timezone: string = 'UTC',
+    schedulingWeights?: ContentSchedulingWeights,
   ): Promise<OptimalTimeResult> {
     const cacheKey = `${userId}-${platform}-${timezone}`;
 
@@ -129,21 +133,45 @@ class PostingTimePredictor {
       let methodology: 'historical' | 'industry' | 'hybrid';
       let basedOnDataPoints = engagementData.length;
 
+      // BO blend weights — fall back to hardcoded defaults when not provided
+      const hw = schedulingWeights?.historicalWeight ?? 0.60;
+      const iw = schedulingWeights?.industryWeight   ?? 0.40;
+      // Clamp blend ratio to [0,1] for blendSlots (it uses historicalWeight as fraction)
+      const blendRatio = hw / (hw + iw);
+
       if (engagementData.length >= this.MIN_DATA_POINTS) {
         // Use ML prediction based on historical data
         slots = this.predictFromHistorical(engagementData);
         methodology = 'historical';
       } else if (engagementData.length > 0) {
-        // Hybrid: blend historical with industry data
+        // Hybrid: blend historical with industry data using BO-controlled ratio
         const historicalSlots = this.predictFromHistorical(engagementData);
         const industrySlots = this.getIndustrySlots(platform);
-        slots = this.blendSlots(historicalSlots, industrySlots, engagementData.length / this.MIN_DATA_POINTS);
+        const dataRatio = engagementData.length / this.MIN_DATA_POINTS;
+        // Apply BO blend ratio, weighted by the data availability fraction
+        slots = this.blendSlots(historicalSlots, industrySlots, blendRatio * dataRatio);
         methodology = 'hybrid';
       } else {
         // Fall back to industry standards
         slots = this.getIndustrySlots(platform);
         methodology = 'industry';
         basedOnDataPoints = 0;
+      }
+
+      // Apply BO contextual multipliers to slot scores
+      if (schedulingWeights) {
+        const PEAK_HOURS = new Set([9, 10, 11, 12, 13, 14, 17, 18, 19]);
+        const peakMult    = schedulingWeights.peakHourMultiplier;
+        const weekendDisc = schedulingWeights.weekendDiscount;
+
+        slots = slots.map(slot => {
+          const isPeak    = PEAK_HOURS.has(slot.hour);
+          const isWeekend = slot.day === 0 || slot.day === 6;
+          const adjusted  = slot.score
+            * (isPeak    ? peakMult    : 1.0)
+            * (isWeekend ? weekendDisc : 1.0);
+          return { ...slot, score: Math.min(100, adjusted) };
+        });
       }
 
       // Adjust for timezone

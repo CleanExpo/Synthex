@@ -17,6 +17,10 @@ import { auditLogger } from '@/lib/security/audit-logger';
 import { postingTimePredictor, Platform } from '@/lib/ml/posting-time-predictor';
 import { logger } from '@/lib/logger';
 import { createClient } from '@supabase/supabase-js';
+import { prisma } from '@/lib/prisma';
+import { isSurfaceAvailable } from '@/lib/bayesian/feature-limits';
+import { getContentSchedulingWeights } from '@/lib/bayesian/surfaces/content-scheduling';
+import { registerObservationSilently } from '@/lib/bayesian/fallback';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -92,7 +96,42 @@ export async function GET(request: NextRequest) {
           );
         }
 
-        const result = await postingTimePredictor.getOptimalTimes(userId, platform, timezone);
+        // Resolve plan for BO surface gating
+        const userRecord = await prisma.user.findUnique({
+          where: { id: userId },
+          select: { organizationId: true, plan: true },
+        });
+        const orgId = userRecord?.organizationId ?? userId;
+        const plan  = (userRecord?.plan ?? 'free').toLowerCase();
+
+        const schedulingWeightsResult = isSurfaceAvailable(plan, 'content_scheduling')
+          ? await getContentSchedulingWeights(orgId)
+          : undefined;
+
+        const result = await postingTimePredictor.getOptimalTimes(
+          userId,
+          platform,
+          timezone,
+          schedulingWeightsResult?.weights,
+        );
+
+        // Register BO observation (fire-and-forget)
+        if (schedulingWeightsResult?.source === 'bo') {
+          const topScore = result.topSlot?.score ?? 0;
+          void registerObservationSilently(
+            'content_scheduling',
+            orgId,
+            {
+              historicalWeight:   schedulingWeightsResult.weights.historicalWeight,
+              industryWeight:     schedulingWeightsResult.weights.industryWeight,
+              recencyBonus:       schedulingWeightsResult.weights.recencyBonus,
+              peakHourMultiplier: schedulingWeightsResult.weights.peakHourMultiplier,
+              weekendDiscount:    schedulingWeightsResult.weights.weekendDiscount,
+            },
+            topScore / 100,
+            { platform, methodology: result.methodology },
+          );
+        }
 
         return APISecurityChecker.createSecureResponse({
           platform: result.platform,
