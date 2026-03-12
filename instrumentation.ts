@@ -18,9 +18,42 @@ export async function register() {
     return;
   }
 
-  // DIAGNOSTIC (114-02): Skip all init to isolate Lambda cold-start hang.
-  // If routes respond after this, the hang is somewhere below this point.
-  return;
+  // Initialize Sentry here — NOT in sentry.server.config.ts — to prevent
+  // Lambda cold-start hangs. The Sentry webpack plugin auto-requires
+  // sentry.server.config.ts during the bundle-load phase (before the event
+  // loop is ready). OTel hooks (require-in-the-middle) hang the Lambda for
+  // 10+ seconds when called that early. Running init here (post-bundle-load,
+  // inside the Next.js instrumentation hook) is the recommended pattern.
+  try {
+    const Sentry = await import('@sentry/nextjs');
+    const SENTRY_DSN = process.env.SENTRY_DSN || process.env.NEXT_PUBLIC_SENTRY_DSN;
+    if (!SENTRY_DSN) {
+      console.warn('[Sentry] SENTRY_DSN not configured - server error tracking disabled');
+    }
+    Sentry.init({
+      dsn: SENTRY_DSN || undefined,
+      tracesSampleRate: process.env.NODE_ENV === 'production' ? 0.1 : 1.0,
+      environment: process.env.SENTRY_ENVIRONMENT || process.env.NODE_ENV,
+      release: process.env.SENTRY_RELEASE || process.env.NEXT_PUBLIC_VERCEL_GIT_COMMIT_SHA,
+      initialScope: {
+        tags: { component: 'backend', runtime: 'node' },
+      },
+      beforeSend(event) {
+        if (event.exception) {
+          event.extra = {
+            ...event.extra,
+            nodeVersion: process.version,
+            platform: process.platform,
+          };
+        }
+        return event;
+      },
+      ignoreErrors: ['ECONNREFUSED', 'ENOTFOUND', 'ETIMEDOUT', 'ECONNRESET'],
+    });
+    console.log('[sentry] Initialized successfully');
+  } catch (sentryErr) {
+    console.warn('[sentry] Init failed:', sentryErr instanceof Error ? sentryErr.message : String(sentryErr));
+  }
 
   // Derive OAUTH_STATE_SECRET from JWT_SECRET if not explicitly set.
   // This prevents startup crashes while maintaining cryptographic security.
