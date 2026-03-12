@@ -1,5 +1,3 @@
-import { withSentryConfig } from '@sentry/nextjs';
-
 // Conditionally load bundle analyzer only when ANALYZE=true
 let withBundleAnalyzer = (config) => config;
 if (process.env.ANALYZE === 'true') {
@@ -89,6 +87,19 @@ const nextConfig = {
     'ioredis',
     'puppeteer',
     'puppeteer-screen-recorder',
+    // Sentry + OpenTelemetry — must NOT land in shared webpack chunks.
+    // These packages register require-in-the-middle / import-in-the-middle module-patching
+    // hooks that hang ALL Lambda cold starts for 10+ seconds (confirmed in chunk 40767.js).
+    // Keeping them as external Node.js requires prevents them from ever entering shared chunks.
+    '@sentry/nextjs',
+    '@sentry/node',
+    '@sentry/opentelemetry',
+    '@sentry/core',
+    'require-in-the-middle',
+    'import-in-the-middle',
+    '@opentelemetry/api',
+    '@opentelemetry/sdk-node',
+    '@opentelemetry/instrumentation',
   ],
 
   // Experimental features
