@@ -47,6 +47,16 @@ export async function middleware(request: NextRequest) {
   });
   const pathname = request.nextUrl.pathname;
 
+  // Fast-path: health check endpoints must NEVER block on auth or Supabase I/O.
+  // These are called by Vercel/load-balancers with no session cookies, and any
+  // network latency in getSession() would make them appear unavailable.
+  if (pathname.startsWith('/api/health')) {
+    Object.entries(securityHeaders).forEach(([key, value]) => {
+      response.headers.set(key, value);
+    });
+    return response;
+  }
+
   // Create Supabase client for auth checks
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
