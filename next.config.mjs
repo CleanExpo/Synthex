@@ -88,19 +88,9 @@ const nextConfig = {
     'ioredis',
     'puppeteer',
     'puppeteer-screen-recorder',
-    // Sentry + OpenTelemetry — must NOT land in shared webpack chunks.
-    // These packages register require-in-the-middle / import-in-the-middle module-patching
-    // hooks that hang ALL Lambda cold starts for 10+ seconds (confirmed in chunk 40767.js).
-    // Keeping them as external Node.js requires prevents them from ever entering shared chunks.
-    '@sentry/nextjs',
-    '@sentry/node',
-    '@sentry/opentelemetry',
-    '@sentry/core',
-    'require-in-the-middle',
-    'import-in-the-middle',
-    '@opentelemetry/api',
-    '@opentelemetry/sdk-node',
-    '@opentelemetry/instrumentation',
+    // Phase 114-02: @sentry/nextjs + OTel packages REMOVED from dependencies.
+    // They registered require-in-the-middle / import-in-the-middle hooks that
+    // hung ALL Lambda cold starts for 10+ seconds. No longer needed here.
   ],
 
   // Experimental features
@@ -176,7 +166,6 @@ const nextConfig = {
       'monitoring',
       'logs',
       // Large unused packages
-      'node_modules/@sentry/cli',
       'node_modules/@next/bundle-analyzer',
       'node_modules/prisma/engines',
     ],
