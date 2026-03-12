@@ -264,6 +264,11 @@ const sentryConfig = {
   disableLogger: process.env.NODE_ENV === 'development',
   tunnelRoute: '/monitoring',
   autoInstrumentServerFunctions: false,
+  // Disable server-side webpack plugin to prevent Sentry bundle injection into Lambda routes.
+  // The health/stats/quotes routes were hanging (zero bytes, no logs) due to Sentry's
+  // require-in-the-middle/import-in-the-middle OTel hooks crashing during Lambda cold start.
+  // Client-side error capture is unaffected; server errors still reach Sentry via instrumentation.ts.
+  disableServerWebpackPlugin: true,
   // Disable source map upload during build — uploading 1424 files exceeds Vercel's 45-min timeout.
   // Sentry SDK still captures errors; stacktraces will show minified names until this is resolved.
   sourcemaps: {
