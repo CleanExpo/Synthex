@@ -93,6 +93,7 @@ node_modules/
 .next/
 .next-dev/
 .next-alt/
+.next-analyze/
 
 # Turbopack / Turborepo cache
 .turbo/
