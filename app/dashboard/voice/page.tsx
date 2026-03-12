@@ -1,5 +1,10 @@
+import { Suspense } from 'react';
 import { VoiceDashboardClient } from './VoiceDashboardClient';
 
 export default function VoiceDashboardPage() {
-  return <VoiceDashboardClient />;
+  return (
+    <Suspense>
+      <VoiceDashboardClient />
+    </Suspense>
+  );
 }

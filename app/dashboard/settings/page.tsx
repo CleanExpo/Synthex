@@ -7,7 +7,7 @@
  * @task UNI-416 - Settings Page Decomposition
  */
 
-import { useState } from 'react';
+import { useState , Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useSettingsData, isEnterprisePlan } from '@/hooks/use-settings-data';
@@ -39,7 +39,7 @@ import {
   type SettingsTab,
 } from '@/components/settings';
 
-export default function SettingsPage() {
+function SettingsPageContent() {
   const searchParams = useSearchParams();
   const initialTab = (searchParams.get('tab') as SettingsTab) || 'profile';
   const [activeTab, setActiveTab] = useState<SettingsTab>(initialTab);
@@ -239,5 +239,13 @@ export default function SettingsPage() {
         </TabsContent>
       </Tabs>
     </div>
+  );
+}
+
+export default function SettingsPage() {
+  return (
+    <Suspense>
+      <SettingsPageContent />
+    </Suspense>
   );
 }

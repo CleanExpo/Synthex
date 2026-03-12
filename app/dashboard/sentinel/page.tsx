@@ -13,7 +13,7 @@
  * @module app/dashboard/sentinel/page
  */
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback , Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import useSWR, { mutate } from 'swr';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -56,7 +56,7 @@ const DAY_RANGE_OPTIONS = [
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
-export default function SentinelPage() {
+function SentinelPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -306,5 +306,13 @@ export default function SentinelPage() {
         </Tabs>
       </div>
     </div>
+  );
+}
+
+export default function SentinelPage() {
+  return (
+    <Suspense>
+      <SentinelPageContent />
+    </Suspense>
   );
 }

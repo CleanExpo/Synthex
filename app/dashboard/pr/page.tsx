@@ -14,7 +14,7 @@
  * @module app/dashboard/pr/page
  */
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState , Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import useSWR from 'swr';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -60,7 +60,7 @@ const fetchJson = async (url: string) => {
 // Page component
 // ---------------------------------------------------------------------------
 
-export default function PRManagerPage() {
+function PRManagerPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -184,5 +184,13 @@ export default function PRManagerPage() {
         </TabsContent>
       </Tabs>
     </div>
+  );
+}
+
+export default function PRManagerPage() {
+  return (
+    <Suspense>
+      <PRManagerPageContent />
+    </Suspense>
   );
 }

@@ -7,7 +7,7 @@
  * and post detail modal. Uses useCalendar hook for data management.
  */
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect , Suspense } from 'react';
 import dynamic from 'next/dynamic';
 import { useSearchParams } from 'next/navigation';
 import { useCalendar, SchedulePostOptions } from '@/hooks/useCalendar';
@@ -70,7 +70,7 @@ interface TeamMember {
   image?: string;
 }
 
-export default function CalendarPage() {
+function CalendarPageContent() {
   const searchParams = useSearchParams();
   const { user } = useUser();
   const organizationId = user?.organizationId || '';
@@ -527,5 +527,13 @@ export default function CalendarPage() {
         </DialogContent>
       </Dialog>
     </div>
+  );
+}
+
+export default function CalendarPage() {
+  return (
+    <Suspense>
+      <CalendarPageContent />
+    </Suspense>
   );
 }

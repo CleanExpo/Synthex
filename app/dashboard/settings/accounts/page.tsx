@@ -1,6 +1,6 @@
 ﻿'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback , Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -57,7 +57,7 @@ const providerConfig = {
   },
 };
 
-export default function AccountsSettingsPage() {
+function AccountsSettingsPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [accounts, setAccounts] = useState<LinkedAccount[]>([]);
@@ -358,5 +358,13 @@ export default function AccountsSettingsPage() {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+export default function AccountsSettingsPage() {
+  return (
+    <Suspense>
+      <AccountsSettingsPageContent />
+    </Suspense>
   );
 }

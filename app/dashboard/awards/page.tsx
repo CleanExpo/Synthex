@@ -14,7 +14,7 @@
  * @module app/dashboard/awards/page
  */
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState , Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import useSWR, { mutate } from 'swr';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -203,7 +203,7 @@ function AddDirectoryForm({ orgId, prefill, onSaved, onCancel }: AddDirectoryFor
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
-export default function AwardsPage() {
+function AwardsPageContent() {
   const router       = useRouter();
   const searchParams = useSearchParams();
   const { user }     = useUser();
@@ -537,5 +537,13 @@ export default function AwardsPage() {
         </TabsContent>
       </Tabs>
     </div>
+  );
+}
+
+export default function AwardsPage() {
+  return (
+    <Suspense>
+      <AwardsPageContent />
+    </Suspense>
   );
 }

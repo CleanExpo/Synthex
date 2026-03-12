@@ -8,7 +8,7 @@
  * Uses useSocialConnections SWR hook for all connection state.
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback , Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { PageHeader } from '@/components/dashboard/page-header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -400,7 +400,7 @@ function PlatformSummary({
 // Main page
 // ---------------------------------------------------------------------------
 
-export default function PlatformsPage() {
+function PlatformsPageContent() {
   const { activeOrganizationId } = useActiveBusiness();
   const { connections, summary, isLoading, connect, disconnect, mutate } = useSocialConnections(activeOrganizationId);
   const searchParams = useSearchParams();
@@ -556,5 +556,13 @@ export default function PlatformsPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function PlatformsPage() {
+  return (
+    <Suspense>
+      <PlatformsPageContent />
+    </Suspense>
   );
 }

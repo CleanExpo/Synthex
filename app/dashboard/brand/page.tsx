@@ -12,7 +12,7 @@
  * @module app/dashboard/brand/page
  */
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback , Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import useSWR from 'swr';
 import { Building2, Plus, AlertCircle, Loader2 } from '@/components/icons';
@@ -246,7 +246,7 @@ function BrandIdentityForm({ onSuccess }: { onSuccess: () => void }) {
 // Main Page Component
 // ---------------------------------------------------------------------------
 
-export default function BrandBuilderPage() {
+function BrandBuilderPageContent() {
   const searchParams = useSearchParams();
   const tabParam = searchParams.get('tab') as TabId | null;
   const [activeTab, setActiveTab] = useState<TabId>(
@@ -523,5 +523,13 @@ export default function BrandBuilderPage() {
         </>
       )}
     </div>
+  );
+}
+
+export default function BrandBuilderPage() {
+  return (
+    <Suspense>
+      <BrandBuilderPageContent />
+    </Suspense>
   );
 }

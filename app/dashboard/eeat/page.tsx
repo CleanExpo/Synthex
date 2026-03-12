@@ -8,7 +8,7 @@
  * @module app/dashboard/eeat/page
  */
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback , Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import useSWR from 'swr';
 import { Award, AlertCircle } from '@/components/icons';
@@ -349,7 +349,7 @@ function HistoryTab() {
 // Page component
 // ---------------------------------------------------------------------------
 
-export default function EEATBuilderPage() {
+function EEATBuilderPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -404,5 +404,13 @@ export default function EEATBuilderPage() {
         {activeTab === 'history' && <HistoryTab />}
       </div>
     </div>
+  );
+}
+
+export default function EEATBuilderPage() {
+  return (
+    <Suspense>
+      <EEATBuilderPageContent />
+    </Suspense>
   );
 }

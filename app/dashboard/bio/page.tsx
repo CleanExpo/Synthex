@@ -7,7 +7,7 @@
  * Shows list of all bio pages with stats and actions.
  */
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect , Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useLinkBio, LinkBioPage } from '@/hooks/useLinkBio';
 import { PageHeader } from '@/components/dashboard/page-header';
@@ -46,7 +46,7 @@ function slugify(text: string): string {
     .replace(/(^-|-$)/g, '');
 }
 
-export default function BioPagesPage() {
+function BioPagesPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { pages, totals, isLoading, error, createPage, deletePage, refresh } = useLinkBio();
@@ -348,5 +348,13 @@ export default function BioPagesPage() {
         </DialogContent>
       </Dialog>
     </div>
+  );
+}
+
+export default function BioPagesPage() {
+  return (
+    <Suspense>
+      <BioPagesPageContent />
+    </Suspense>
   );
 }

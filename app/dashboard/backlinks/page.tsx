@@ -13,7 +13,7 @@
  * @module app/dashboard/backlinks/page
  */
 
-import { useState } from 'react';
+import { useState , Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import useSWR, { mutate } from 'swr';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -54,7 +54,7 @@ function StatCard({ label, value, sub }: { label: string; value: number; sub?: s
 
 // ─── Page Component ───────────────────────────────────────────────────────────
 
-export default function BacklinksPage() {
+function BacklinksPageContent() {
   const router       = useRouter();
   const searchParams = useSearchParams();
   const { user }     = useUser();
@@ -468,5 +468,13 @@ export default function BacklinksPage() {
         </TabsContent>
       </Tabs>
     </div>
+  );
+}
+
+export default function BacklinksPage() {
+  return (
+    <Suspense>
+      <BacklinksPageContent />
+    </Suspense>
   );
 }

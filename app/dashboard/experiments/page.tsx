@@ -7,7 +7,7 @@
  * 3 tabs: Experiments (SEO A/B tests) | Self-Healing | Dog-food
  */
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback , Suspense } from 'react';
 import useSWR from 'swr';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
@@ -271,7 +271,7 @@ function ExperimentsTab() {
 // Main Page
 // ============================================================================
 
-export default function ExperimentsPage() {
+function ExperimentsPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const tabParam = searchParams.get('tab') as TabId | null;
@@ -370,5 +370,13 @@ export default function ExperimentsPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function ExperimentsPage() {
+  return (
+    <Suspense>
+      <ExperimentsPageContent />
+    </Suspense>
   );
 }

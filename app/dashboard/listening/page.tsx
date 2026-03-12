@@ -7,7 +7,7 @@
  * Shows tracked keywords sidebar and scrollable mentions feed.
  */
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect , Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useSocialListening, TrackedKeyword, SocialMention } from '@/hooks/useSocialListening';
 import { PageHeader } from '@/components/dashboard/page-header';
@@ -251,7 +251,7 @@ function MentionCard({
   );
 }
 
-export default function ListeningPage() {
+function ListeningPageContent() {
   const searchParams = useSearchParams();
 
   // Filters
@@ -658,5 +658,13 @@ export default function ListeningPage() {
         </DialogContent>
       </Dialog>
     </div>
+  );
+}
+
+export default function ListeningPage() {
+  return (
+    <Suspense>
+      <ListeningPageContent />
+    </Suspense>
   );
 }

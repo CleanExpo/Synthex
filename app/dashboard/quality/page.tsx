@@ -10,7 +10,7 @@
  * @module app/dashboard/quality/page
  */
 
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef , Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import useSWR from 'swr';
 import { Shield, AlertCircle } from '@/components/icons';
@@ -374,7 +374,7 @@ function HistoryTab() {
 // Page component
 // ---------------------------------------------------------------------------
 
-export default function QualityDashboardPage() {
+function QualityDashboardPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const activeTab = searchParams.get('tab') === 'history' ? 'history' : 'audit';
@@ -414,5 +414,13 @@ export default function QualityDashboardPage() {
         {activeTab === 'history' && <HistoryTab />}
       </div>
     </div>
+  );
+}
+
+export default function QualityDashboardPage() {
+  return (
+    <Suspense>
+      <QualityDashboardPageContent />
+    </Suspense>
   );
 }

@@ -13,7 +13,7 @@
  * @module app/dashboard/prompts/page
  */
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback , Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import useSWR, { mutate } from 'swr';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -250,7 +250,7 @@ function GapsTab({ orgId }: { orgId: string }) {
 
 // ─── Page Component ───────────────────────────────────────────────────────────
 
-export default function PromptsPage() {
+function PromptsPageContent() {
   const router       = useRouter();
   const searchParams = useSearchParams();
   const { user }     = useUser();
@@ -325,5 +325,13 @@ export default function PromptsPage() {
         </TabsContent>
       </Tabs>
     </div>
+  );
+}
+
+export default function PromptsPage() {
+  return (
+    <Suspense>
+      <PromptsPageContent />
+    </Suspense>
   );
 }
