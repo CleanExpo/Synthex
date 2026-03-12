@@ -167,20 +167,30 @@ const getPrismaClient = (): PrismaClient | null => {
   return globalForPrisma.prisma;
 };
 
-// Create singleton instance with proper null handling
-const client = getPrismaClient();
-
-if (!client && process.env.NODE_ENV === 'production' && process.env.DATABASE_URL) {
-  throw new Error('[Prisma] Failed to initialize client - check DATABASE_URL configuration');
-}
-
-// Export prisma client (may be null during SSG/build without DATABASE_URL)
-export const prisma = client as PrismaClient;
-
-// Ensure singleton in development (hot reload protection)
-if (process.env.NODE_ENV !== 'production' && client) {
-  globalForPrisma.prisma = client;
-}
+// Lazy initialization — deferred until the first property access.
+//
+// WHY: Calling getPrismaClient() at module load time caused a 10 s Lambda cold-start
+// hang. Every Lambda route loads the shared webpack bundle (which contains lib/prisma.ts)
+// before its handler runs. new PrismaPg(pool) / new PrismaClient({ adapter }) initiates
+// a database connection during bundle-load, blocking for the full connectionTimeoutMillis
+// (10 000 ms) on cold start — even on routes like /api/health/live that never touch the DB.
+//
+// The Proxy forwards all accesses (prisma.user, prisma.$queryRaw, etc.) to the real
+// PrismaClient, initialising it only on the first actual query — not at bundle-load time.
+export const prisma = new Proxy({} as PrismaClient, {
+  get(_target, prop) {
+    const c = getPrismaClient();
+    if (!c) {
+      if (prop === 'then') return undefined; // Prevent unintended Promise treatment
+      throw new Error(
+        `[Prisma] Client not initialized (accessed: ${String(prop)}). ` +
+          `DATABASE_URL may not be set or client creation failed.`
+      );
+    }
+    const val = (c as any)[prop];
+    return typeof val === 'function' ? val.bind(c) : val;
+  },
+});
 
 /**
  * Health check function - verifies database connectivity
@@ -193,11 +203,12 @@ export async function checkDatabaseHealth(): Promise<{
   const startTime = Date.now();
 
   try {
-    if (!prisma) {
+    const c = getPrismaClient();
+    if (!c) {
       return { healthy: false, latency: 0, error: 'Prisma client not initialized' };
     }
 
-    await prisma.$queryRaw`SELECT 1`;
+    await c.$queryRaw`SELECT 1`;
 
     const latency = Date.now() - startTime;
 
@@ -229,8 +240,9 @@ export function getPoolMetrics(): ConnectionMetrics {
  * Graceful shutdown - close all connections
  */
 export async function disconnectPrisma(): Promise<void> {
-  if (prisma) {
-    await prisma.$disconnect();
+  const c = getPrismaClient();
+  if (c) {
+    await c.$disconnect();
     globalForPrisma.prisma = null;
   }
 }
@@ -240,8 +252,9 @@ export async function disconnectPrisma(): Promise<void> {
  */
 export async function reconnectPrisma(): Promise<boolean> {
   try {
-    if (prisma) {
-      await prisma.$disconnect();
+    const c = getPrismaClient();
+    if (c) {
+      await c.$disconnect();
     }
     globalForPrisma.prisma = createPrismaClient();
     const health = await checkDatabaseHealth();
@@ -299,11 +312,12 @@ export async function withTransaction<T>(
   fn: (tx: Prisma.TransactionClient) => Promise<T>,
   timeout: number = 5000
 ): Promise<T> {
-  if (!prisma) {
+  const c = getPrismaClient();
+  if (!c) {
     throw new Error('Prisma client not initialized');
   }
 
-  return prisma.$transaction(fn, {
+  return c.$transaction(fn, {
     maxWait: timeout,
     timeout: timeout,
   });
