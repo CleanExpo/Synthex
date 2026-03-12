@@ -4,7 +4,12 @@ import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { AlertTriangle, RefreshCw, Home } from '@/components/icons';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import * as Sentry from '@sentry/nextjs';
+// NOTE: @sentry/nextjs import REMOVED — Phase 114-02.
+// Even in a 'use client' component, Next.js SSR evaluates this server-side.
+// With @sentry/nextjs in serverExternalPackages, webpack emits require('@sentry/nextjs')
+// which loads OTel hooks (require-in-the-middle / import-in-the-middle) at module-eval
+// time in EVERY Lambda shared chunk — hanging ALL cold starts for 10+ seconds.
+// Error reporting now goes to /api/monitoring/events (already implemented below).
 
 interface ErrorBoundaryProps {
   children: ReactNode;
@@ -33,19 +38,8 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
       console.error('Error caught by boundary:', error, errorInfo);
     }
 
-    // Report to Sentry
-    Sentry.withScope((scope) => {
-      scope.setExtras({
-        componentStack: errorInfo.componentStack,
-        digest: (errorInfo as any).digest || undefined
-      });
-      scope.setTag('errorBoundary', true);
-      scope.setContext('errorInfo', {
-        componentStack: errorInfo.componentStack || 'No component stack available',
-        url: typeof window !== 'undefined' ? window.location.href : 'unknown'
-      });
-      Sentry.captureException(error);
-    });
+    // NOTE: Sentry.captureException() removed — Phase 114-02.
+    // Error reporting now goes exclusively to /api/monitoring/events below.
 
     // Send to monitoring endpoint
     if (typeof window !== 'undefined') {
