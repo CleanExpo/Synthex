@@ -23,7 +23,11 @@
  */
 
 import { logger } from '@/lib/logger';
-import * as Sentry from '@sentry/nextjs';
+// NOTE: Static Sentry import intentionally removed (2026-03-12, Phase 114-02).
+// @sentry/nextjs registers require-in-the-middle / import-in-the-middle OTel hooks
+// at module evaluation time, hanging ALL Lambda cold starts for 10+ seconds.
+// Sentry.init() is never called server-side, so captureException() was a no-op anyway.
+// Client-side Sentry remains active via sentry.client.config.ts.
 
 // ============================================================================
 // TYPES
@@ -232,12 +236,16 @@ export function trackError(
     ...trackedError.context,
   });
 
-  // Forward critical/high severity errors to Sentry
+  // NOTE: Sentry.captureException() removed — Sentry server-side is disabled
+  // (see import comment above). Log critical/high errors at console level so
+  // they are visible in Vercel function logs.
   if (severity === ErrorSeverity.CRITICAL || severity === ErrorSeverity.HIGH) {
-    Sentry.captureException(err, {
-      level: severity === ErrorSeverity.CRITICAL ? 'fatal' : 'error',
-      extra: trackedError.context,
-      tags: { category, severity },
+    logger.error('SENTRY_STUB captureException (server-side Sentry disabled)', {
+      errorId: trackedError.id,
+      message: err.message,
+      severity,
+      category,
+      ...trackedError.context,
     });
   }
 

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createClient } from '@supabase/supabase-js';
-import * as Sentry from '@sentry/nextjs';
+// NOTE: Static Sentry import removed (2026-03-12, Phase 114-02) — see next.config.mjs.
 import { logger } from '@/lib/logger';
 
 // Initialize Supabase client
@@ -83,16 +83,8 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Forward critical errors to Sentry for external monitoring
-    if (process.env.NEXT_PUBLIC_SENTRY_DSN && error.level === 'error') {
-      Sentry.captureException(
-        new Error(typeof error.message === 'string' ? error.message : String(error.message)),
-        {
-          tags: { source: 'error-tracking-api' },
-          extra: { context: error.context, errorId: error.id },
-        }
-      );
-    }
+    // NOTE: Sentry.captureException() removed — server-side Sentry disabled (Phase 114-02).
+    // Critical errors are already written to logger above; they appear in Vercel function logs.
 
     return NextResponse.json({ 
       success: true, 

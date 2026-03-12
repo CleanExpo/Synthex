@@ -19,7 +19,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import * as Sentry from '@sentry/nextjs';
+// NOTE: Static Sentry import removed (2026-03-12, Phase 114-02) — see next.config.mjs.
 import { prisma } from '@/lib/prisma';
 import { logger } from '@/lib/logger';
 import {
@@ -88,7 +88,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
   }
 
-  return Sentry.withMonitor('cron-welcome-sequence', async () => {
+  // NOTE: Sentry.withMonitor() removed — no-op without server-side Sentry.init().
   try {
     const startTime = Date.now();
 
@@ -203,5 +203,4 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     );
   }
-  }); // end Sentry.withMonitor
 }

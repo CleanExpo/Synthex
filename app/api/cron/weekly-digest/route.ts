@@ -12,7 +12,9 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import * as Sentry from '@sentry/nextjs';
+// NOTE: Static Sentry import removed (2026-03-12, Phase 114-02) — see next.config.mjs.
+// Sentry.withMonitor() stub replaces the call below; cron monitoring is a no-op until
+// server-side Sentry cold-start hang is resolved upstream.
 import { Prisma } from '@prisma/client';
 import prisma from '@/lib/prisma';
 import { generateWeeklyDigest } from '@/lib/ai/project-manager';
@@ -32,7 +34,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  return Sentry.withMonitor('cron-weekly-digest', async () => {
+  // NOTE: Sentry.withMonitor() removed — no-op without server-side Sentry.init().
   try {
     const startTime = Date.now();
 
@@ -127,7 +129,6 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     );
   }
-  }); // end Sentry.withMonitor
 }
 
 // ============================================================================

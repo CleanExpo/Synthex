@@ -19,7 +19,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import * as Sentry from '@sentry/nextjs';
+// NOTE: Static Sentry import removed (2026-03-12, Phase 114-02) — see next.config.mjs.
 import prisma from '@/lib/prisma';
 import {
   createPlatformService,
@@ -104,7 +104,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  return Sentry.withMonitor('cron-publish-scheduled', async () => {
+  // NOTE: Sentry.withMonitor() removed — no-op without server-side Sentry.init().
   // -- Setup -----------------------------------------------------------------
   const startTime = Date.now();
   const now = new Date();
@@ -570,7 +570,6 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     durationMs,
     results,
   });
-  }); // end Sentry.withMonitor
 }
 
 // ---------------------------------------------------------------------------
