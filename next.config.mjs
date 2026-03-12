@@ -255,7 +255,21 @@ const nextConfig = {
   },
 }
 
-const sentryConfig = {
+// Sentry webpack plugin config — kept for reference but NOT applied.
+//
+// WHY REMOVED: @sentry/nextjs v8.55.0 ignores both `disableServerWebpackPlugin: true`
+// and `autoInstrumentServerFunctions: false` (silently). The webpack plugin injects
+// `wrapRouteHandlerWithSentry` into EVERY route bundle (confirmed in .next/server/app/api/
+// health/live/route.js) plus `require-in-the-middle` / `import-in-the-middle` OTel hooks.
+// These hooks hang the Lambda for exactly 10 s on cold start (the TCP connection timeout).
+//
+// Server error capture still works via instrumentation.ts → Sentry.init() (lazy, post-bundle-load).
+// Client error capture still works via sentry.client.config.ts.
+// Source map upload was already disabled (1424 files exceed the 45-min Vercel build timeout).
+//
+// To re-enable when Sentry fixes the serverless hang, uncomment the export line below
+// and comment out the plain export.
+const _sentryConfig_DISABLED = {
   org: process.env.SENTRY_ORG,
   project: process.env.SENTRY_PROJECT,
   authToken: process.env.SENTRY_AUTH_TOKEN,
@@ -264,17 +278,10 @@ const sentryConfig = {
   disableLogger: process.env.NODE_ENV === 'development',
   tunnelRoute: '/monitoring',
   autoInstrumentServerFunctions: false,
-  // Disable server-side webpack plugin to prevent Sentry bundle injection into Lambda routes.
-  // The health/stats/quotes routes were hanging (zero bytes, no logs) due to Sentry's
-  // require-in-the-middle/import-in-the-middle OTel hooks crashing during Lambda cold start.
-  // Client-side error capture is unaffected; server errors still reach Sentry via instrumentation.ts.
   disableServerWebpackPlugin: true,
-  // Disable source map upload during build — uploading 1424 files exceeds Vercel's 45-min timeout.
-  // Sentry SDK still captures errors; stacktraces will show minified names until this is resolved.
-  sourcemaps: {
-    disable: true,
-  },
+  sourcemaps: { disable: true },
 };
 
-// Export with bundle analyzer wrapper
-export default withSentryConfig(withBundleAnalyzer(nextConfig), sentryConfig);
+// Export WITHOUT Sentry webpack plugin — prevents Lambda cold-start hang.
+// Re-enable with: export default withSentryConfig(withBundleAnalyzer(nextConfig), _sentryConfig_DISABLED);
+export default withBundleAnalyzer(nextConfig);
