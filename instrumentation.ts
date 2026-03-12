@@ -18,6 +18,10 @@ export async function register() {
     return;
   }
 
+  // DIAGNOSTIC (114-02): Skip all init to isolate Lambda cold-start hang.
+  // If routes respond after this, the hang is somewhere below this point.
+  return;
+
   // Derive OAUTH_STATE_SECRET from JWT_SECRET if not explicitly set.
   // This prevents startup crashes while maintaining cryptographic security.
   if (!process.env.OAUTH_STATE_SECRET && process.env.JWT_SECRET) {
