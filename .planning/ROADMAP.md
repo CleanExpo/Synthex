@@ -138,7 +138,7 @@ None (internal platform work)
 - [x] **Phase 111: Core Web Vitals & Caching** (1/1) - CDN caching, ISR, web vitals fix, preconnect headers — DONE 2026-03-12
 - [x] **Phase 112: NEXUS Agent Dispatch Deduplication** - Idempotency keys, dedup logic to prevent duplicate issue creation
 - [x] **Phase 113: Pre-launch Security & Accessibility Sweep** - OWASP top 10 audit, WCAG 2.1 AA re-verification, CSP hardening — DONE 2026-03-12
-- [ ] **Phase 114: Vercel Production Deployment** (0/2) - Configure production env vars, deploy main branch, verify runtime health
+- [ ] **Phase 114: Vercel Production Deployment** (1/2) - Configure production env vars, deploy main branch, verify runtime health
 - [ ] **Phase 115: Stripe Live Mode** - Swap test→live keys, register live webhook, verify billing end-to-end
 - [ ] **Phase 116: Domain, DNS & Supabase Production** - synthex.social DNS, SSL, Supabase prod config, DB migrations
 - [ ] **Phase 117: Launch Runbook Execution** - LAUNCH-RUNBOOK.md checklist, smoke tests, go-live sign-off
