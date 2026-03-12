@@ -27,6 +27,7 @@ import { logger } from '@/lib/logger';
 
 // Force dynamic rendering - prevent static generation
 export const dynamic = 'force-dynamic';
+export const maxDuration = 30;
 export const runtime = 'nodejs';
 
 // Track server start time

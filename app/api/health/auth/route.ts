@@ -9,6 +9,7 @@ import { authMonitor } from '@/lib/auth/monitoring';
 
 // Force dynamic rendering - prevent static generation
 export const dynamic = 'force-dynamic';
+export const maxDuration = 30;
 export const runtime = 'nodejs';
 
 export async function GET() {

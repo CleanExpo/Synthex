@@ -10,6 +10,7 @@ import { NextResponse } from 'next/server';
 import { checkDatabaseHealth, getPoolMetrics } from '@/lib/prisma';
 
 export const dynamic = 'force-dynamic';
+export const maxDuration = 30;
 export const revalidate = 0;
 
 export async function GET() {

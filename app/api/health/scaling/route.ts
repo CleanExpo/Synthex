@@ -14,6 +14,7 @@ import {
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic';
+export const maxDuration = 30;
 export const runtime = 'nodejs';
 
 interface ScalingMetrics {

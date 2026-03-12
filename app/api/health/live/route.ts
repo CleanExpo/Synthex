@@ -19,6 +19,7 @@ import { NextResponse } from 'next/server';
 // Force dynamic rendering
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
+export const maxDuration = 30;
 
 // Track process start time for uptime calculation
 const processStartTime = Date.now();
