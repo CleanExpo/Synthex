@@ -263,7 +263,7 @@ const sentryConfig = {
   hideSourceMaps: false,
   disableLogger: process.env.NODE_ENV === 'development',
   tunnelRoute: '/monitoring',
-  autoInstrumentServerFunctions: true,
+  autoInstrumentServerFunctions: false,
   // Disable source map upload during build — uploading 1424 files exceeds Vercel's 45-min timeout.
   // Sentry SDK still captures errors; stacktraces will show minified names until this is resolved.
   sourcemaps: {
