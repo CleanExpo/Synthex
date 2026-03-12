@@ -3,34 +3,19 @@
  * Tracks all auth events and sends alerts on failures
  */
 
-/** Sentry mock interface for when Sentry is not installed */
-interface SentryLike {
-  init: (options: Record<string, unknown>) => void;
-  captureException: (error: Error, context?: Record<string, unknown>) => void;
-  captureMessage: (message: string, context?: Record<string, unknown>) => void;
-  addBreadcrumb: () => void;
-  setUser: () => void;
-  setTag: () => void;
-  setContext: () => void;
-}
-
-// Optional Sentry import - only import if package is available
-let Sentry: SentryLike;
-try {
-   
-  Sentry = require('@sentry/nextjs');
-} catch {
-  // Sentry not installed, use mock
-  Sentry = {
-    init: () => {},
-    captureException: () => {},
-    captureMessage: () => {},
-    addBreadcrumb: () => {},
-    setUser: () => {},
-    setTag: () => {},
-    setContext: () => {}
-  };
-}
+// NOTE: Sentry removed (2026-03-12, Phase 114-02).
+// require('@sentry/nextjs') at module level registers OTel hooks that hang
+// ALL Lambda cold starts for 10+ seconds. Using permanent no-op stub.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const Sentry = {
+  init: (..._args: any[]) => {},
+  captureException: (..._args: any[]) => {},
+  captureMessage: (..._args: any[]) => {},
+  addBreadcrumb: (..._args: any[]) => {},
+  setUser: (..._args: any[]) => {},
+  setTag: (..._args: any[]) => {},
+  setContext: (..._args: any[]) => {},
+};
 
 export interface AuthEvent {
   type: 'attempt' | 'success' | 'failure' | 'error' | 'logout';
@@ -70,14 +55,7 @@ export class AuthMonitor {
   private recentFailures = new Map<string, number>();
   
   private constructor() {
-    // Initialize Sentry if configured
-    if (process.env.NEXT_PUBLIC_SENTRY_DSN) {
-      Sentry.init({
-        dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
-        environment: process.env.NODE_ENV || 'development',
-        tracesSampleRate: 1.0,
-      });
-    }
+    // NOTE: Sentry.init() removed — server-side Sentry is disabled (Phase 114-02).
   }
   
   static getInstance(): AuthMonitor {
