@@ -1,3 +1,4 @@
+// Phase 114-02: Force clean build — cache bust 2026-03-13
 // Conditionally load bundle analyzer only when ANALYZE=true
 let withBundleAnalyzer = (config) => config;
 if (process.env.ANALYZE === 'true') {
