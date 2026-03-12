@@ -89,19 +89,39 @@ export async function register() {
     );
   }
 
-  // Verify database connectivity at startup using Prisma's built-in engine
-  // (avoids node-postgres SCRAM failures with Supavisor)
+  // Verify database connectivity at startup — fire-and-forget with a 3 s cap.
+  //
+  // WHY fire-and-forget: register() blocks the Lambda cold start. An unbounded
+  // await here caused all Node.js Lambda functions to hang for 10 s+ (the full
+  // pg connectionTimeoutMillis) before responding to any request, making every
+  // cold-start smoke-test fail with a 10 s abort. Serverless Lambdas must start
+  // fast; move the DB check off the critical path.
+  //
+  // The 3 s timeout is a safety belt — if the pg pool connects quickly the log
+  // still fires; if it takes longer we log a warning and move on.
   if (process.env.DATABASE_URL) {
-    try {
-      const { prisma } = await import(/* webpackIgnore: true */ '@/lib/prisma');
-      if (prisma) {
-        await prisma.$queryRaw`SELECT 1`;
-        console.log('[db-check] Database connection verified successfully');
+    const dbCheckPromise = (async () => {
+      try {
+        const { prisma } = await import(/* webpackIgnore: true */ '@/lib/prisma');
+        if (prisma) {
+          await prisma.$queryRaw`SELECT 1`;
+          console.log('[db-check] Database connection verified successfully');
+        }
+      } catch (dbError) {
+        const msg = dbError instanceof Error ? dbError.message : String(dbError);
+        console.error(`[db-check] Database connection check failed: ${msg}`);
       }
-    } catch (dbError) {
-      const msg = dbError instanceof Error ? dbError.message : String(dbError);
-      console.error(`[db-check] Database connection failed: ${msg}`);
-      // Don't throw - let the app start so it can serve error pages instead of crashing
-    }
+    })();
+
+    // Race against a 3 s guard — startup must not block on DB latency.
+    await Promise.race([
+      dbCheckPromise,
+      new Promise<void>((resolve) =>
+        setTimeout(() => {
+          console.warn('[db-check] Database check exceeded 3 s — proceeding with startup');
+          resolve();
+        }, 3000)
+      ),
+    ]);
   }
 }
