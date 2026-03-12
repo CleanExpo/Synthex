@@ -1,28 +1,20 @@
 /**
- * Structured logger — wraps console methods and captures errors to Sentry.
+ * Structured logger — wraps console methods.
  * Use this instead of console.error/console.warn in API routes and services.
  *
- * Sentry is loaded via dynamic import (fire-and-forget) to keep it out of
- * the shared webpack bundle. A static top-level import would pull @sentry/nextjs
- * into every Lambda's shared chunk, triggering OTel module-load hooks on
- * cold start and causing 10+ second hangs.
+ * NOTE: Server-side Sentry capture intentionally removed (2026-03-12, Phase 114-02).
+ * The dynamic import('@sentry/nextjs') pattern — even fire-and-forget — causes
+ * webpack to emit Promise.resolve(require('@sentry/nextjs')) for externalised packages.
+ * When require('@sentry/nextjs') first runs it registers require-in-the-middle /
+ * import-in-the-middle OTel hooks synchronously, blocking the event loop for 10+ s
+ * and hanging ALL Lambda cold starts that call logger.warn/error during init.
+ * Client-side Sentry remains active via sentry.client.config.ts.
  */
 
 type LogContext = Record<string, unknown>;
-type SentryModule = typeof import('@sentry/nextjs');
 
 function formatMessage(prefix: string, message: string, context?: LogContext): string {
   return context ? `${prefix} ${message} ${JSON.stringify(context)}` : `${prefix} ${message}`;
-}
-
-/**
- * Fire-and-forget Sentry capture — does not block the caller.
- * Silently no-ops if Sentry is unavailable or not yet initialised.
- */
-function captureToSentry(fn: (sentry: SentryModule) => void): void {
-  import('@sentry/nextjs').then(fn).catch(() => {
-    // Sentry unavailable — swallow silently, logging already went to console
-  });
 }
 
 export const logger = {
@@ -38,21 +30,11 @@ export const logger = {
 
   warn(message: string, context?: LogContext): void {
     console.warn(formatMessage('[WARN]', message, context));
-    captureToSentry((Sentry) =>
-      Sentry.captureMessage(message, { level: 'warning', extra: context })
-    );
+    // NOTE: Sentry.captureMessage() removed — server-side Sentry disabled (Phase 114-02).
   },
 
   error(message: string, error?: unknown, context?: LogContext): void {
     console.error(formatMessage('[ERROR]', message, context), error ?? '');
-    if (error instanceof Error) {
-      captureToSentry((Sentry) =>
-        Sentry.captureException(error, { extra: { message, ...context } })
-      );
-    } else {
-      captureToSentry((Sentry) =>
-        Sentry.captureMessage(message, { level: 'error', extra: { error, ...context } })
-      );
-    }
+    // NOTE: Sentry.captureException() removed — server-side Sentry disabled (Phase 114-02).
   },
 };
