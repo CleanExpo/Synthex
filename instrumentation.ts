@@ -18,42 +18,13 @@ export async function register() {
     return;
   }
 
-  // Initialize Sentry here — NOT in sentry.server.config.ts — to prevent
-  // Lambda cold-start hangs. The Sentry webpack plugin auto-requires
-  // sentry.server.config.ts during the bundle-load phase (before the event
-  // loop is ready). OTel hooks (require-in-the-middle) hang the Lambda for
-  // 10+ seconds when called that early. Running init here (post-bundle-load,
-  // inside the Next.js instrumentation hook) is the recommended pattern.
-  try {
-    const Sentry = await import('@sentry/nextjs');
-    const SENTRY_DSN = process.env.SENTRY_DSN || process.env.NEXT_PUBLIC_SENTRY_DSN;
-    if (!SENTRY_DSN) {
-      console.warn('[Sentry] SENTRY_DSN not configured - server error tracking disabled');
-    }
-    Sentry.init({
-      dsn: SENTRY_DSN || undefined,
-      tracesSampleRate: process.env.NODE_ENV === 'production' ? 0.1 : 1.0,
-      environment: process.env.SENTRY_ENVIRONMENT || process.env.NODE_ENV,
-      release: process.env.SENTRY_RELEASE || process.env.NEXT_PUBLIC_VERCEL_GIT_COMMIT_SHA,
-      initialScope: {
-        tags: { component: 'backend', runtime: 'node' },
-      },
-      beforeSend(event) {
-        if (event.exception) {
-          event.extra = {
-            ...event.extra,
-            nodeVersion: process.version,
-            platform: process.platform,
-          };
-        }
-        return event;
-      },
-      ignoreErrors: ['ECONNREFUSED', 'ENOTFOUND', 'ETIMEDOUT', 'ECONNRESET'],
-    });
-    console.log('[sentry] Initialized successfully');
-  } catch (sentryErr) {
-    console.warn('[sentry] Init failed:', sentryErr instanceof Error ? sentryErr.message : String(sentryErr));
-  }
+  // NOTE: Sentry server-side init intentionally omitted here.
+  // @sentry/nextjs Sentry.init() loads require-in-the-middle / import-in-the-middle
+  // OTel hooks which hang the Node.js Lambda cold start for 10+ seconds even when
+  // called inside register() (post-bundle-load). The webpack plugin was removed from
+  // next.config.mjs for the same reason. Client-side Sentry remains active via
+  // sentry.client.config.ts. Server error capture can be re-enabled once the
+  // @sentry/nextjs OTel cold-start issue is resolved upstream.
 
   // Derive OAUTH_STATE_SECRET from JWT_SECRET if not explicitly set.
   // This prevents startup crashes while maintaining cryptographic security.
@@ -126,39 +97,23 @@ export async function register() {
     );
   }
 
-  // Verify database connectivity at startup — fire-and-forget with a 3 s cap.
-  //
-  // WHY fire-and-forget: register() blocks the Lambda cold start. An unbounded
-  // await here caused all Node.js Lambda functions to hang for 10 s+ (the full
-  // pg connectionTimeoutMillis) before responding to any request, making every
-  // cold-start smoke-test fail with a 10 s abort. Serverless Lambdas must start
-  // fast; move the DB check off the critical path.
-  //
-  // The 3 s timeout is a safety belt — if the pg pool connects quickly the log
-  // still fires; if it takes longer we log a warning and move on.
+  // Verify database connectivity at startup — truly fire-and-forget (no await).
+  // register() must return fast to avoid hanging the Lambda cold start.
+  // The db check runs in the background; its result is logged but never awaited.
   if (process.env.DATABASE_URL) {
-    const dbCheckPromise = (async () => {
+    (async () => {
       try {
-        const { prisma } = await import(/* webpackIgnore: true */ '@/lib/prisma');
-        if (prisma) {
-          await prisma.$queryRaw`SELECT 1`;
-          console.log('[db-check] Database connection verified successfully');
-        }
+        const { prisma } = await import('@/lib/prisma');
+        await Promise.race([
+          (prisma as any).$queryRaw`SELECT 1`,
+          new Promise<void>((resolve) => setTimeout(resolve, 3000)),
+        ]);
+        console.log('[db-check] Database connection verified successfully');
       } catch (dbError) {
         const msg = dbError instanceof Error ? dbError.message : String(dbError);
-        console.error(`[db-check] Database connection check failed: ${msg}`);
+        console.warn(`[db-check] Database connection check failed: ${msg}`);
       }
     })();
-
-    // Race against a 3 s guard — startup must not block on DB latency.
-    await Promise.race([
-      dbCheckPromise,
-      new Promise<void>((resolve) =>
-        setTimeout(() => {
-          console.warn('[db-check] Database check exceeded 3 s — proceeding with startup');
-          resolve();
-        }, 3000)
-      ),
-    ]);
+    // No await — register() returns immediately; db check runs in background.
   }
 }
