@@ -128,7 +128,10 @@
       "Skill(gsd:plan-phase:*)",
       "WebFetch(domain:github.com)",
       "WebFetch(domain:google.github.io)",
-      "WebFetch(domain:www.nature.com)"
+      "WebFetch(domain:www.nature.com)",
+      "mcp__mcp-registry__search_mcp_registry",
+      "Skill(gsd:execute-plan)",
+      "Skill(gsd:execute-plan:*)"
     ],
     "deny": [
       "Bash(git push --force*)",
