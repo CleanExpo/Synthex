@@ -88,6 +88,7 @@
     "playwright.config.ts",
     "playwright.config.js",
     ".next",
+    ".next-analyze",
     "out",
     "dist",
     "build",
