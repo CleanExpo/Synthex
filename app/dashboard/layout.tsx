@@ -354,7 +354,7 @@ export default function DashboardLayout({
           </div>
 
           {/* Navigation — progressive disclosure: show starter groups first */}
-          <nav className="flex-1 space-y-2 px-2 py-4 overflow-y-auto">
+          <nav className="flex-1 min-h-0 space-y-2 px-2 py-4 overflow-y-auto">
             {dynamicSidebarGroups
               .filter((g) => showAllGroups || STARTER_GROUP_IDS.has(g.id))
               .map((group) => (

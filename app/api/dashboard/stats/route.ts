@@ -90,10 +90,11 @@ export async function GET(request: NextRequest) {
           })
         : Promise.resolve([]),
 
-      // Get platform metrics for reach/followers (select only needed fields)
+      // Get platform metrics for reach/followers (scoped to this user)
       prisma.platformMetrics.findMany({
         where: {
           recordedAt: { gte: startDate },
+          post: { connection: { userId } },
         },
         orderBy: { recordedAt: 'desc' },
         take: 100,
@@ -241,3 +242,5 @@ export async function GET(request: NextRequest) {
 }
 // Node.js runtime required for Prisma
 export const runtime = 'nodejs';
+// Allow up to 30s for parallel DB queries before Vercel times out
+export const maxDuration = 30;
