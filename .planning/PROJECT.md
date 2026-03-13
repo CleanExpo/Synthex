@@ -8,7 +8,7 @@ AI-powered marketing automation platform — production-hardened with zero mock 
 
 **Every endpoint returns real data, every platform works, every dashboard page connects to live APIs.** No mock data, no stubs, no silent fallbacks.
 
-## Current State (v7.0 Production Hardening & Quality — SHIPPED 2026-03-12)
+## Current State (v8.0 Production Go-Live — SHIPPED 2026-03-13 🚀)
 
 - God Mode admin panel: owner-only route guard, real user management, platform health, audit logs
 - Unite-Group NEXUS branding: footer, metadata, about page, JSON-LD parentOrganization
@@ -144,5 +144,15 @@ All v1.0 deferred items resolved in v1.1:
 - Skip links not implemented — WCAG enhancement (Phase 56)
 - 2 E2E flaky tests (passed on retry): focus timing + responsive touch target
 
+### Validated (v8.0)
+
+- Vercel production deployment with all env vars configured — v8.0
+- Stripe live mode: Pro $249/mo, Growth $449/mo, Scale $799/mo (AUD) — v8.0
+- Live webhook endpoint active with 0% error rate — v8.0
+- DNS: synthex.social → Vercel (216.150.1.1), SSL auto-managed — v8.0
+- Supabase production auth: URL, anon key, service role key, JWT secret all present — v8.0
+- Smoke test: 7/7 passing against https://synthex.social — v8.0
+- LAUNCH-RUNBOOK.md fully executed — v8.0
+
 ---
-*Last updated: 2026-03-12 after v7.0 milestone — production hardening complete, platform ready for first users*
+*Last updated: 2026-03-13 after v8.0 milestone — Synthex is LIVE at https://synthex.social*

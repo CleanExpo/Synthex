@@ -5,19 +5,18 @@
 See: .planning/PROJECT.md (updated 2026-02-17)
 
 **Core value:** Every endpoint returns real data, every platform works, every dashboard page connects to live APIs
-**Current focus:** v7.0 Production Hardening & Quality — COMPLETE. Ready for first users.
+**Current focus:** v8.0 Production Go-Live — COMPLETE. Synthex is LIVE at https://synthex.social
 
 ## Current Position
 
-Milestone: v8.0 Production Go-Live — **IN PROGRESS**
-Phase: 114 of 117 (Vercel Production Deployment)
-Plan: 1 of 2 in current phase
-Status: In progress
-Last activity: 2026-03-12 — Completed 114-01-PLAN.md
+Milestone: v8.0 Production Go-Live — **SHIPPED 2026-03-13** 🚀
+Phase: 117 of 117 (Launch Runbook Execution)
+Status: Complete
+Last activity: 2026-03-13 — All 4 phases completed (114-117)
 
-Progress: ░░░░░░░░░░ 0% (0/4 phases)
+Progress: ██████████ 100% (4/4 phases)
 
-Next action: /gsd:execute-plan .planning/phases/114-vercel-production-deployment/114-02-PLAN.md
+Next action: None — platform is live. Consider /gsd:new-milestone for post-launch work.
 
 ## Performance Metrics
 
@@ -221,6 +220,17 @@ Decisions from v3.1 (Phase 75):
 - Subscription model has no `amount` field — MRR must come from Stripe API (deferred)
 - Admin handleSaveUser maps status choice to API action ('suspend'/'activate'/'delete') — role updates not yet persisted (no API action for role change)
 
+Decisions from v8.0 (Phase 114-117):
+
+- Stripe live account: `acct_1SSgvEBJ6dR6rf4P` (Unite-Hub) — separate from test account `acct_1SzE5KGib5mMf28d`
+- Live pricing: Pro $249/mo (`price_1TAJvpBJ6dR6rf4P9ESrr5Ym`), Growth $449/mo (`price_1TAJw4BJ6dR6rf4P9whS9Htz`), Scale $799/mo (`price_1TAJw5BJ6dR6rf4Pe4DnpG6w`)
+- Live webhook: `we_1TAJrdBJ6dR6rf4PVh6J30OL` → `https://synthex.social/api/webhooks/stripe`
+- DNS: synthex.social A record → `216.150.1.1` (Vercel's new IP range), SSL auto-managed
+- Vercel nameservers: `ns1.vercel-dns.com`, `ns2.vercel-dns.com`
+- Sentry removed from dependencies (caused build failures in Vercel serverless environment)
+- `instrumentation.ts` uses no-throw env validation pattern
+- Health/ping routes have `maxDuration=30` for cold-start survival
+
 ### Blockers/Concerns
 
 None.
@@ -238,14 +248,14 @@ None.
 - v3.1 First Users: 2 phases (75-76), God Mode admin + NEXUS branding + Unite-Hub connector — SHIPPED 2026-03-10
 - v4.0 Production Complete: 8 phases (77-84), content creation + scheduling + admin + brand profiles + social onboarding + code quality + accessibility + UAT — SHIPPED 2026-03-10
 - v5.0 AI-Native GEO & Citation Engine: 16 phases (85-100), entity coherence + citation tracking + GEO optimiser v2 + writing methodology + AI slop detection + E-E-A-T + brand building + PR + awards + backlinks + prompt intelligence + algorithm sentinel + autonomous A/B testing + self-healing + citation dashboard — **SHIPPED 2026-03-11**
-- v8.0 Production Go-Live created: deployment milestone, 4 phases (Phase 114-117)
+- v8.0 Production Go-Live: 4 phases (114-117), Vercel deploy + Stripe live + DNS + launch runbook — **SHIPPED 2026-03-13** 🚀
 
 ## Session Continuity
 
-Last session: 2026-03-12
-Stopped at: Completed 114-01-PLAN.md (env var audit + pre-deploy validation)
+Last session: 2026-03-13
+Stopped at: v8.0 milestone complete — Synthex is LIVE
 Resume file: None
-Next action: /gsd:execute-plan .planning/phases/114-vercel-production-deployment/114-02-PLAN.md
+Next action: None — all milestones shipped
 
 ## Linear Issues — v2.0 Phase 59-66 Tracking
 
