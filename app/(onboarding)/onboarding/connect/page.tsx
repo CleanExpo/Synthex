@@ -34,6 +34,13 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { StepProgressV2 } from '@/components/onboarding';
+import {
+  useExtensionHelper,
+  ExtensionStatusBanner,
+  ExtensionSocialHint,
+  ExtensionInstallPrompt,
+} from '@/components/onboarding/ChromeExtensionHelper';
+import { notifyOAuthStarting } from '@/lib/chrome-extension/bridge';
 import { toast } from 'sonner';
 import type { PipelineResult, SocialProfile } from '@/lib/ai/onboarding-pipeline';
 
@@ -82,6 +89,9 @@ interface ConnectionStatus {
 export default function ConnectPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
+
+  // Chrome Extension helper (social login detection)
+  const extensionState = useExtensionHelper();
 
   // Pipeline result (for detected platforms)
   const [detectedPlatforms, setDetectedPlatforms] = useState<string[]>([]);
@@ -156,6 +166,8 @@ export default function ConnectPage() {
   // ── Connect platform ──────────────────────────────────────────────
   const handleConnect = async (platformId: string) => {
     setConnectingId(platformId);
+    // Notify extension so it can pre-select the right account
+    notifyOAuthStarting(platformId);
     try {
       const params = new URLSearchParams({
         returnTo: '/onboarding/connect',
@@ -184,7 +196,7 @@ export default function ConnectPage() {
   const handleFinish = async () => {
     setFinishing(true);
     try {
-      // Call the onboarding completion endpoint
+      // 1. Complete onboarding (creates persona, sets onboardingComplete flag)
       const res = await fetch('/api/onboarding/complete', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -196,11 +208,19 @@ export default function ConnectPage() {
         console.warn('[connect] Completion endpoint failed:', await res.text());
       }
 
-      // Clear sessionStorage
+      // 2. Fire AI kickstart (fire-and-forget — generates first-week drafts)
+      fetch('/api/onboarding/kickstart', {
+        method: 'POST',
+        credentials: 'include',
+      }).catch((err) => {
+        console.warn('[connect] Kickstart failed (non-blocking):', err);
+      });
+
+      // 3. Clear sessionStorage
       sessionStorage.removeItem(SESSION_KEY);
       sessionStorage.removeItem('synthex_onboarding_socials');
 
-      // Mark onboarding as complete in localStorage for middleware
+      // 4. Mark onboarding as complete in localStorage for middleware
       localStorage.setItem('onboardingComplete', 'true');
 
       router.push('/dashboard');
@@ -252,6 +272,14 @@ export default function ConnectPage() {
         )}
       </div>
 
+      {/* Chrome Extension — active sessions banner */}
+      <ExtensionStatusBanner state={extensionState} />
+
+      {/* Chrome Extension — install prompt (only when not installed) */}
+      {!extensionState.loading && !extensionState.available && (
+        <ExtensionInstallPrompt className="max-w-2xl mx-auto" />
+      )}
+
       {/* Platform cards */}
       <div className="max-w-2xl mx-auto grid grid-cols-1 sm:grid-cols-2 gap-3">
         {sortedPlatforms.map((platform) => {
@@ -290,6 +318,13 @@ export default function ConnectPage() {
                       </p>
                     ) : (
                       <p className="text-xs text-gray-500">{platform.description}</p>
+                    )}
+                    {/* Extension hint — "already logged in" */}
+                    {!connected && (
+                      <ExtensionSocialHint
+                        platformId={platform.id}
+                        loggedInPlatforms={extensionState.loggedInPlatforms}
+                      />
                     )}
                   </div>
                 </div>

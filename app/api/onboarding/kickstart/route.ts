@@ -1,0 +1,145 @@
+/**
+ * Onboarding AI Kickstart API
+ *
+ * POST /api/onboarding/kickstart
+ *
+ * Called immediately after onboarding completes (fire-and-forget from the
+ * connect page). Generates 5-7 first-week content drafts using the
+ * AI pipeline data collected during onboarding.
+ *
+ * Safe to call multiple times — idempotent via a check on existing kickstart
+ * posts in the organisation. If drafts already exist from a kickstart,
+ * returns early rather than generating duplicates.
+ *
+ * @module app/api/onboarding/kickstart/route
+ */
+
+import { type NextRequest, NextResponse } from 'next/server';
+import { getAuthUser } from '@/lib/supabase-server';
+import { prisma } from '@/lib/prisma';
+import { logger } from '@/lib/logger';
+import { generateKickstartContent } from '@/lib/ai/content-kickstart';
+import type { KickstartInput } from '@/lib/ai/content-kickstart';
+
+// ============================================================================
+// POST — Generate First-Week Content
+// ============================================================================
+
+export async function POST(_request: NextRequest) {
+  try {
+    const authUser = await getAuthUser();
+    if (!authUser) {
+      return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { id: authUser.id },
+      select: {
+        id: true,
+        activeOrganizationId: true,
+        onboardingComplete: true,
+      },
+    });
+
+    if (!user || !user.onboardingComplete) {
+      return NextResponse.json(
+        { error: 'Onboarding must be complete before kickstart' },
+        { status: 400 },
+      );
+    }
+
+    const orgId = user.activeOrganizationId;
+    if (!orgId) {
+      return NextResponse.json(
+        { error: 'No active organisation found' },
+        { status: 400 },
+      );
+    }
+
+    // Idempotency check — if kickstart drafts already exist, skip
+    // Posts are org-scoped via Campaign, not directly
+    const existingKickstartPost = await prisma.post.findFirst({
+      where: {
+        campaign: { userId: user.id, organizationId: orgId },
+        metadata: { path: ['source'], equals: 'kickstart' },
+      },
+      select: { id: true },
+    });
+
+    if (existingKickstartPost) {
+      logger.info('[kickstart] Kickstart posts already exist — skipping', {
+        userId: user.id,
+        orgId,
+      });
+      return NextResponse.json({ success: true, alreadyRun: true, draftsCreated: 0 });
+    }
+
+    // Load onboarding pipeline data
+    const progress = await prisma.onboardingProgress.findFirst({
+      where: { userId: user.id, organizationId: orgId },
+      select: {
+        auditData: true,
+        postingMode: true,
+        businessName: true,
+        selectedPlatforms: true,
+      },
+    });
+
+    const auditData = (progress?.auditData ?? {}) as Record<string, unknown>;
+
+    // Load connected OAuth platforms
+    const connections = await prisma.platformConnection.findMany({
+      where: { userId: user.id, organizationId: orgId, isActive: true },
+      select: { platform: true },
+    });
+
+    const connectedPlatforms =
+      connections.length > 0
+        ? connections.map((c) => c.platform.toLowerCase())
+        : ((progress?.selectedPlatforms ?? []) as string[]);
+
+    const kickstartInput: KickstartInput = {
+      userId: user.id,
+      organizationId: orgId,
+      businessName:
+        (auditData.businessName as string | undefined) ??
+        progress?.businessName ??
+        'Your Business',
+      industry: auditData.industry as string | undefined,
+      description: auditData.description as string | undefined,
+      keyTopics: auditData.keyTopics as string[] | undefined,
+      targetAudience: auditData.targetAudience as string | undefined,
+      suggestedTone: auditData.suggestedTone as string | undefined,
+      suggestedPersonaName: auditData.suggestedPersonaName as string | undefined,
+      connectedPlatforms,
+      postingMode: (progress?.postingMode as KickstartInput['postingMode']) ?? 'assisted',
+    };
+
+    logger.info('[kickstart] Starting AI content generation', {
+      userId: user.id,
+      orgId,
+      platforms: connectedPlatforms,
+    });
+
+    const result = await generateKickstartContent(kickstartInput);
+
+    return NextResponse.json({
+      success: true,
+      draftsCreated: result.draftsCreated,
+      platforms: result.platforms,
+      postIds: result.postIds,
+    });
+  } catch (error) {
+    const msg = error instanceof Error ? error.message : String(error);
+    logger.error('[kickstart] Kickstart failed', error instanceof Error ? error : undefined, {
+      message: msg,
+    });
+    return NextResponse.json(
+      { error: 'Kickstart failed. Content drafts can be generated from the dashboard.' },
+      { status: 500 },
+    );
+  }
+}
+
+export const maxDuration = 60;
+export const runtime = 'nodejs';
