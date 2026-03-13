@@ -11,21 +11,19 @@
  */
 
 import { type NextRequest, NextResponse } from 'next/server';
-import { getAuthUser } from '@/lib/supabase-server';
+import { getUserIdFromRequestOrCookies, unauthorizedResponse } from '@/lib/auth/jwt-utils';
 import { prisma } from '@/lib/prisma';
 
 // ─── GET /api/onboarding/progress ─────────────────────────────────────────────
 
-export async function GET(_request: NextRequest) {
+export async function GET(request: NextRequest) {
   try {
-    const user = await getAuthUser();
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
-    }
+    const userId = await getUserIdFromRequestOrCookies(request);
+    if (!userId) return unauthorizedResponse();
 
     // Find the user's org
     const org = await prisma.organization.findFirst({
-      where: { users: { some: { id: user.id } } },
+      where: { users: { some: { id: userId } } },
       select: { id: true },
     });
 
@@ -37,7 +35,7 @@ export async function GET(_request: NextRequest) {
     const progress = await prisma.onboardingProgress.findUnique({
       where: {
         userId_organizationId: {
-          userId: user.id,
+          userId: userId,
           organizationId: org.id,
         },
       },

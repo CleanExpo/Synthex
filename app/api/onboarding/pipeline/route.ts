@@ -15,7 +15,7 @@
 
 import { type NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { getAuthUser } from '@/lib/supabase-server';
+import { getUserIdFromRequestOrCookies, unauthorizedResponse } from '@/lib/auth/jwt-utils';
 import { runOnboardingPipeline, type PipelineResult } from '@/lib/ai/onboarding-pipeline';
 import { prisma } from '@/lib/prisma';
 import { logger } from '@/lib/logger';
@@ -59,12 +59,10 @@ function checkRateLimit(userId: string): boolean {
 
 export async function POST(request: NextRequest) {
   try {
-    const user = await getAuthUser();
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
-    }
+    const userId = await getUserIdFromRequestOrCookies(request);
+    if (!userId) return unauthorizedResponse();
 
-    if (!checkRateLimit(user.id)) {
+    if (!checkRateLimit(userId)) {
       return NextResponse.json(
         { error: 'Rate limit exceeded. Please try again later.' },
         { status: 429 }
@@ -82,7 +80,7 @@ export async function POST(request: NextRequest) {
 
     const { url, businessName } = validation.data;
 
-    logger.info('[pipeline] Running pipeline', { userId: user.id, url });
+    logger.info('[pipeline] Running pipeline', { userId: userId, url });
 
     // Run the full pipeline (~15-20 seconds)
     const result: PipelineResult = await runOnboardingPipeline({ url, businessName });
@@ -91,7 +89,7 @@ export async function POST(request: NextRequest) {
     // OnboardingProgress requires organizationId — find or skip if org doesn't exist yet
     try {
       const org = await prisma.organization.findFirst({
-        where: { users: { some: { id: user.id } } },
+        where: { users: { some: { id: userId } } },
         select: { id: true },
       });
 
@@ -99,12 +97,12 @@ export async function POST(request: NextRequest) {
         await prisma.onboardingProgress.upsert({
           where: {
             userId_organizationId: {
-              userId: user.id,
+              userId: userId,
               organizationId: org.id,
             },
           },
           create: {
-            userId: user.id,
+            userId: userId,
             organizationId: org.id,
             currentStage: 'vetting',
             businessName,
@@ -122,7 +120,7 @@ export async function POST(request: NextRequest) {
           },
         });
       } else {
-        logger.info('[pipeline] No org found — skipping OnboardingProgress write', { userId: user.id });
+        logger.info('[pipeline] No org found — skipping OnboardingProgress write', { userId: userId });
       }
     } catch (dbError) {
       // Non-fatal — pipeline result is still returned to the client

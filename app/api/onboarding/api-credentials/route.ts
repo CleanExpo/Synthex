@@ -16,7 +16,7 @@ import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
 import { encryptApiKey, maskApiKey } from '@/lib/encryption/api-key-encryption';
 import { validateAPIKey, APIProvider } from '@/lib/encryption/api-key-validator';
-import { getAuthUser } from '@/lib/supabase-server';
+import { getUserIdFromRequestOrCookies, unauthorizedResponse } from '@/lib/auth/jwt-utils';
 import { withRateLimit } from '@/lib/middleware/rate-limiter';
 import { logger } from '@/lib/logger';
 
@@ -28,10 +28,8 @@ const CredentialsRequestSchema = z.object({
 
 async function postHandler(request: NextRequest) {
   // Auth check
-  const user = await getAuthUser();
-  if (!user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const userId = await getUserIdFromRequestOrCookies(request);
+  if (!userId) return unauthorizedResponse();
 
   // Parse and validate request
   const body = await request.json();
@@ -63,7 +61,7 @@ async function postHandler(request: NextRequest) {
   // Check if credential already exists for this provider
   const existingCredential = await prisma.aPICredential.findFirst({
     where: {
-      userId: user.id,
+      userId: userId,
       provider,
       organizationId: organizationId || null,
     },
@@ -89,7 +87,7 @@ async function postHandler(request: NextRequest) {
     // Create new credential
     credential = await prisma.aPICredential.create({
       data: {
-        userId: user.id,
+        userId: userId,
         organizationId: organizationId || null,
         provider,
         encryptedKey,
@@ -140,10 +138,8 @@ export async function POST(request: NextRequest) {
  */
 async function getHandler(request: NextRequest) {
   // Auth check
-  const user = await getAuthUser();
-  if (!user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const userId = await getUserIdFromRequestOrCookies(request);
+  if (!userId) return unauthorizedResponse();
 
   // Get organization ID from query params
   const { searchParams } = new URL(request.url);
@@ -152,7 +148,7 @@ async function getHandler(request: NextRequest) {
   // Fetch credentials
   const credentials = await prisma.aPICredential.findMany({
     where: {
-      userId: user.id,
+      userId: userId,
       organizationId: organizationId || null,
     },
     select: {

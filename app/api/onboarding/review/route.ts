@@ -14,7 +14,7 @@
 
 import { type NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { getAuthUser } from '@/lib/supabase-server';
+import { getUserIdFromRequestOrCookies, unauthorizedResponse } from '@/lib/auth/jwt-utils';
 import { prisma } from '@/lib/prisma';
 import { logger } from '@/lib/logger';
 import type { Prisma } from '@prisma/client';
@@ -61,10 +61,8 @@ const reviewSchema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
-    const user = await getAuthUser();
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
-    }
+    const userId = await getUserIdFromRequestOrCookies(request);
+    if (!userId) return unauthorizedResponse();
 
     const rawBody = await request.json();
     const validation = reviewSchema.safeParse(rawBody);
@@ -77,11 +75,11 @@ export async function POST(request: NextRequest) {
 
     const data = validation.data;
 
-    logger.info('[review] Saving reviewed data', { userId: user.id });
+    logger.info('[review] Saving reviewed data', { userId: userId });
 
     // Find or create organisation
     let org = await prisma.organization.findFirst({
-      where: { users: { some: { id: user.id } } },
+      where: { users: { some: { id: userId } } },
       select: { id: true },
     });
 
@@ -97,12 +95,12 @@ export async function POST(request: NextRequest) {
         data: {
           name: data.businessName,
           slug: `${slug}-${Date.now().toString(36)}`,
-          users: { connect: { id: user.id } },
+          users: { connect: { id: userId } },
         },
         select: { id: true },
       });
 
-      logger.info('[review] Created organisation', { orgId: org.id, userId: user.id });
+      logger.info('[review] Created organisation', { orgId: org.id, userId: userId });
     }
 
     // Build the audit data payload (merge reviewed edits with pipeline data)
@@ -143,12 +141,12 @@ export async function POST(request: NextRequest) {
     await prisma.onboardingProgress.upsert({
       where: {
         userId_organizationId: {
-          userId: user.id,
+          userId: userId,
           organizationId: org.id,
         },
       },
       create: {
-        userId: user.id,
+        userId: userId,
         organizationId: org.id,
         currentStage: 'platforms',
         businessName: data.businessName,

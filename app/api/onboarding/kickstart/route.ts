@@ -15,7 +15,7 @@
  */
 
 import { type NextRequest, NextResponse } from 'next/server';
-import { getAuthUser } from '@/lib/supabase-server';
+import { getUserIdFromRequestOrCookies, unauthorizedResponse } from '@/lib/auth/jwt-utils';
 import { prisma } from '@/lib/prisma';
 import { logger } from '@/lib/logger';
 import { generateKickstartContent } from '@/lib/ai/content-kickstart';
@@ -25,15 +25,13 @@ import type { KickstartInput } from '@/lib/ai/content-kickstart';
 // GET — Return kickstart status (for FirstWeekWidget)
 // ============================================================================
 
-export async function GET(_request: NextRequest) {
+export async function GET(request: NextRequest) {
   try {
-    const authUser = await getAuthUser();
-    if (!authUser) {
-      return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
-    }
+    const userId = await getUserIdFromRequestOrCookies(request);
+    if (!userId) return unauthorizedResponse();
 
     const user = await prisma.user.findUnique({
-      where: { id: authUser.id },
+      where: { id: userId },
       select: { id: true, activeOrganizationId: true },
     });
 
@@ -46,7 +44,7 @@ export async function GET(_request: NextRequest) {
     // Find all kickstart posts for this org
     const kickstartPosts = await prisma.post.findMany({
       where: {
-        campaign: { userId: user.id, organizationId: orgId },
+        campaign: { userId: userId, organizationId: orgId },
         metadata: { path: ['source'], equals: 'kickstart' },
       },
       select: {
@@ -88,15 +86,13 @@ export async function GET(_request: NextRequest) {
 // POST — Generate First-Week Content
 // ============================================================================
 
-export async function POST(_request: NextRequest) {
+export async function POST(request: NextRequest) {
   try {
-    const authUser = await getAuthUser();
-    if (!authUser) {
-      return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
-    }
+    const userId = await getUserIdFromRequestOrCookies(request);
+    if (!userId) return unauthorizedResponse();
 
     const user = await prisma.user.findUnique({
-      where: { id: authUser.id },
+      where: { id: userId },
       select: {
         id: true,
         activeOrganizationId: true,
@@ -123,7 +119,7 @@ export async function POST(_request: NextRequest) {
     // Posts are org-scoped via Campaign, not directly
     const existingKickstartPost = await prisma.post.findFirst({
       where: {
-        campaign: { userId: user.id, organizationId: orgId },
+        campaign: { userId: userId, organizationId: orgId },
         metadata: { path: ['source'], equals: 'kickstart' },
       },
       select: { id: true },
@@ -131,7 +127,7 @@ export async function POST(_request: NextRequest) {
 
     if (existingKickstartPost) {
       logger.info('[kickstart] Kickstart posts already exist — skipping', {
-        userId: user.id,
+        userId: userId,
         orgId,
       });
       return NextResponse.json({ success: true, alreadyRun: true, draftsCreated: 0 });
@@ -139,7 +135,7 @@ export async function POST(_request: NextRequest) {
 
     // Load onboarding pipeline data
     const progress = await prisma.onboardingProgress.findFirst({
-      where: { userId: user.id, organizationId: orgId },
+      where: { userId: userId, organizationId: orgId },
       select: {
         auditData: true,
         postingMode: true,
@@ -152,7 +148,7 @@ export async function POST(_request: NextRequest) {
 
     // Load connected OAuth platforms
     const connections = await prisma.platformConnection.findMany({
-      where: { userId: user.id, organizationId: orgId, isActive: true },
+      where: { userId: userId, organizationId: orgId, isActive: true },
       select: { platform: true },
     });
 
@@ -162,7 +158,7 @@ export async function POST(_request: NextRequest) {
         : ((progress?.selectedPlatforms ?? []) as string[]);
 
     const kickstartInput: KickstartInput = {
-      userId: user.id,
+      userId: userId,
       organizationId: orgId,
       businessName:
         (auditData.businessName as string | undefined) ??
@@ -179,7 +175,7 @@ export async function POST(_request: NextRequest) {
     };
 
     logger.info('[kickstart] Starting AI content generation', {
-      userId: user.id,
+      userId: userId,
       orgId,
       platforms: connectedPlatforms,
     });

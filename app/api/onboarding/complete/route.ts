@@ -21,7 +21,7 @@
  */
 
 import { type NextRequest, NextResponse } from 'next/server';
-import { getAuthUser } from '@/lib/supabase-server';
+import { getUserIdFromRequestOrCookies, unauthorizedResponse } from '@/lib/auth/jwt-utils';
 import { prisma } from '@/lib/prisma';
 import { logger } from '@/lib/logger';
 import { generateToken } from '@/lib/auth/jwt-utils';
@@ -31,15 +31,13 @@ import { sendWelcomeSequenceDay0 } from '@/lib/email/billing-emails';
 // POST — Complete Onboarding
 // ============================================================================
 
-export async function POST(_request: NextRequest) {
+export async function POST(request: NextRequest) {
   try {
-    const authUser = await getAuthUser();
-    if (!authUser) {
-      return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
-    }
+    const userId = await getUserIdFromRequestOrCookies(request);
+    if (!userId) return unauthorizedResponse();
 
     const user = await prisma.user.findUnique({
-      where: { id: authUser.id },
+      where: { id: userId },
       select: {
         id: true,
         email: true,
