@@ -11,10 +11,9 @@ import React from 'react';
 import { cn } from '@/lib/utils';
 
 export const ONBOARDING_STEPS_V2 = [
-  { id: 1, name: 'API Keys' },
-  { id: 2, name: 'Website Audit' },
-  { id: 3, name: 'Your Goals' },
-  { id: 4, name: 'Social Profiles' },
+  { id: 1, name: 'Your Website' },
+  { id: 2, name: 'Review' },
+  { id: 3, name: 'Connect' },
 ] as const;
 
 export function StepProgressV2({ currentStep }: { currentStep: number }) {
