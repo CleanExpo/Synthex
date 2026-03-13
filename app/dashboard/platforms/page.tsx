@@ -28,6 +28,7 @@ import {
   BarChart3,
   CheckCircle,
   AlertCircle,
+  AlertTriangle,
   Loader2,
   TrendingUp,
   Users,
@@ -57,10 +58,13 @@ interface PlatformInfo {
 interface PlatformStatus {
   connected: boolean;
   profileName?: string;
+  avatar?: string;
   lastPostDate?: string;
   followers?: number;
   postsThisWeek?: number;
   engagementRate?: number;
+  isExpired?: boolean;
+  needsRefresh?: boolean;
 }
 
 // ---------------------------------------------------------------------------
@@ -203,19 +207,38 @@ interface PlatformCardProps {
   status: PlatformStatus;
   onConnect: (id: string) => void;
   onDisconnect: (id: string) => void;
+  onRefresh: (id: string) => void;
   connecting: boolean;
   disconnecting: boolean;
+  refreshing: boolean;
 }
 
-function PlatformCard({ platform, status, onConnect, onDisconnect, connecting, disconnecting }: PlatformCardProps) {
+function PlatformCard({ platform, status, onConnect, onDisconnect, onRefresh, connecting, disconnecting, refreshing }: PlatformCardProps) {
   const Icon = platform.icon;
+  const tokenAlert = status.connected && (status.isExpired || status.needsRefresh);
 
   return (
-    <Card className={`border ${platform.borderColor} bg-zinc-900/50 hover:bg-zinc-900/70 transition-colors`}>
+    <Card className={`border ${tokenAlert ? 'border-amber-500/30' : platform.borderColor} bg-zinc-900/50 hover:bg-zinc-900/70 transition-colors`}>
       <CardHeader className="pb-3 pt-4 px-4">
         <div className="flex items-start justify-between gap-2">
           <div className="flex items-center gap-3 min-w-0">
-            <div className={`p-2.5 rounded-lg ${platform.bgColor}`}>
+            {/* Avatar when connected, platform icon otherwise */}
+            {status.connected && status.avatar ? (
+              <img
+                src={status.avatar}
+                alt={status.profileName || platform.name}
+                className="h-10 w-10 rounded-full object-cover ring-2 ring-white/10"
+                onError={(e) => {
+                  // Fall back to platform icon on broken avatar URL
+                  e.currentTarget.style.display = 'none';
+                  e.currentTarget.nextElementSibling?.removeAttribute('style');
+                }}
+              />
+            ) : null}
+            <div
+              className={`p-2.5 rounded-lg ${platform.bgColor}`}
+              style={status.connected && status.avatar ? { display: 'none' } : undefined}
+            >
               <Icon className={`h-5 w-5 ${platform.color}`} />
             </div>
             <div className="min-w-0">
@@ -234,18 +257,53 @@ function PlatformCard({ platform, status, onConnect, onDisconnect, connecting, d
             </div>
           </div>
 
-          {/* Status badge */}
-          <span
-            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium flex-shrink-0 ${
-              status.connected
-                ? 'bg-green-500/10 text-green-400 border border-green-500/20'
-                : 'bg-zinc-800/50 text-zinc-500 border border-zinc-700/30'
-            }`}
-          >
-            <span className={`h-1.5 w-1.5 rounded-full ${status.connected ? 'bg-green-400' : 'bg-zinc-600'}`} />
-            {status.connected ? 'Connected' : 'Not connected'}
-          </span>
+          {/* Status badge — shows token warning when applicable */}
+          {status.connected && status.isExpired ? (
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium flex-shrink-0 bg-red-500/10 text-red-400 border border-red-500/20">
+              <AlertTriangle className="h-3 w-3" />
+              Expired
+            </span>
+          ) : status.connected && status.needsRefresh ? (
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium flex-shrink-0 bg-amber-500/10 text-amber-400 border border-amber-500/20">
+              <AlertCircle className="h-3 w-3" />
+              Needs refresh
+            </span>
+          ) : (
+            <span
+              className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium flex-shrink-0 ${
+                status.connected
+                  ? 'bg-green-500/10 text-green-400 border border-green-500/20'
+                  : 'bg-zinc-800/50 text-zinc-500 border border-zinc-700/30'
+              }`}
+            >
+              <span className={`h-1.5 w-1.5 rounded-full ${status.connected ? 'bg-green-400' : 'bg-zinc-600'}`} />
+              {status.connected ? 'Connected' : 'Not connected'}
+            </span>
+          )}
         </div>
+
+        {/* Token refresh prompt */}
+        {tokenAlert && (
+          <div className="mt-2 flex items-center justify-between gap-2 px-2 py-1.5 rounded-lg bg-amber-500/5 border border-amber-500/15">
+            <p className="text-[11px] text-amber-400/80">
+              {status.isExpired
+                ? 'Access token expired — reconnect to continue publishing.'
+                : 'Token will expire soon. Refresh now to avoid interruptions.'}
+            </p>
+            <button
+              onClick={() => onRefresh(platform.id)}
+              disabled={refreshing}
+              className="shrink-0 inline-flex items-center gap-1 px-2 py-1 rounded text-[11px] font-medium text-amber-400 hover:text-white bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/20 transition-colors disabled:opacity-50"
+            >
+              {refreshing ? (
+                <Loader2 className="h-3 w-3 animate-spin" />
+              ) : (
+                <RefreshCw className="h-3 w-3" />
+              )}
+              {refreshing ? 'Refreshing…' : 'Refresh'}
+            </button>
+          </div>
+        )}
       </CardHeader>
 
       <CardContent className="px-4 pb-4 space-y-3">
@@ -339,10 +397,12 @@ function PlatformSummary({
   connectedCount,
   totalFollowers,
   avgEngagement,
+  needsAttention,
 }: {
   connectedCount: number;
   totalFollowers: number;
   avgEngagement: number;
+  needsAttention?: number;
 }) {
   return (
     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -368,14 +428,27 @@ function PlatformSummary({
           </div>
         </CardContent>
       </Card>
-      <Card className="bg-zinc-900/50 border border-zinc-800/50">
+      <Card className={`border ${needsAttention ? 'border-amber-500/20 bg-amber-500/5' : 'bg-zinc-900/50 border-zinc-800/50'}`}>
         <CardContent className="p-4 flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-blue-500/10">
-            <Users className="h-5 w-5 text-blue-400" />
+          <div className={`p-2 rounded-lg ${needsAttention ? 'bg-amber-500/10' : 'bg-blue-500/10'}`}>
+            {needsAttention ? (
+              <AlertTriangle className="h-5 w-5 text-amber-400" />
+            ) : (
+              <Users className="h-5 w-5 text-blue-400" />
+            )}
           </div>
           <div>
-            <p className="text-2xl font-bold text-white">{formatNumber(totalFollowers)}</p>
-            <p className="text-xs text-zinc-500">Total Reach</p>
+            {needsAttention ? (
+              <>
+                <p className="text-2xl font-bold text-amber-400">{needsAttention}</p>
+                <p className="text-xs text-zinc-500">Need attention</p>
+              </>
+            ) : (
+              <>
+                <p className="text-2xl font-bold text-white">{formatNumber(totalFollowers)}</p>
+                <p className="text-xs text-zinc-500">Total Reach</p>
+              </>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -406,6 +479,7 @@ function PlatformsPageContent() {
   const searchParams = useSearchParams();
   const [connectingId, setConnectingId] = useState<string | null>(null);
   const [disconnectingId, setDisconnectingId] = useState<string | null>(null);
+  const [refreshingId, setRefreshingId] = useState<string | null>(null);
 
   // Map hook connections to a lookup by platform id
   const connectionMap = new Map(connections.map((c) => [c.platform, c]));
@@ -448,6 +522,29 @@ function PlatformsPageContent() {
     }
   }, [disconnect]);
 
+  const handleRefresh = useCallback(async (platformId: string) => {
+    setRefreshingId(platformId);
+    try {
+      const res = await fetch('/api/auth/connections', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ platform: platformId }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || `Failed to refresh ${platformId} token`);
+      }
+      toast.success(`${platformId} token refreshed`);
+      await mutate();
+    } catch (err) {
+      const message = err instanceof Error ? err.message : `Refresh failed for ${platformId}`;
+      toast.error(message);
+    } finally {
+      setRefreshingId(null);
+    }
+  }, [mutate]);
+
   // Build platform status for each known platform
   const buildStatus = (platformId: string): PlatformStatus => {
     const conn = connectionMap.get(platformId);
@@ -455,6 +552,9 @@ function PlatformsPageContent() {
     return {
       connected: true,
       profileName: conn.username,
+      avatar: conn.avatar,
+      isExpired: conn.isExpired,
+      needsRefresh: conn.needsRefresh,
     };
   };
 
@@ -500,6 +600,7 @@ function PlatformsPageContent() {
         connectedCount={connectedCount}
         totalFollowers={0}
         avgEngagement={0}
+        needsAttention={summary?.needsAttention ?? 0}
       />
 
       {/* Empty state — no platforms connected */}
@@ -526,8 +627,10 @@ function PlatformsPageContent() {
                 status={buildStatus(platform.id)}
                 onConnect={handleConnect}
                 onDisconnect={handleDisconnect}
+                onRefresh={handleRefresh}
                 connecting={connectingId === platform.id}
                 disconnecting={disconnectingId === platform.id}
+                refreshing={refreshingId === platform.id}
               />
             ))}
           </div>
@@ -548,8 +651,10 @@ function PlatformsPageContent() {
                 status={buildStatus(platform.id)}
                 onConnect={handleConnect}
                 onDisconnect={handleDisconnect}
+                onRefresh={handleRefresh}
                 connecting={connectingId === platform.id}
                 disconnecting={disconnectingId === platform.id}
+                refreshing={refreshingId === platform.id}
               />
             ))}
           </div>

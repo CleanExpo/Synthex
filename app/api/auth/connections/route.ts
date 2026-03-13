@@ -138,13 +138,19 @@ export async function GET(request: NextRequest) {
           })
         : false;
 
-      const metadata = connection.metadata as { avatar?: string } | null;
+      // Avatar can be stored at metadata.avatar (top-level) or metadata.userInfo.avatar
+      // (the structure written by the OAuth callback). Check both for backwards compatibility.
+      const metadata = connection.metadata as {
+        avatar?: string;
+        userInfo?: { avatar?: string };
+      } | null;
+      const avatar = metadata?.avatar || metadata?.userInfo?.avatar || undefined;
 
       return {
         platform,
         connected: connection.isActive,
         username: connection.profileName || undefined,
-        avatar: metadata?.avatar || undefined,
+        avatar,
         connectedAt: connection.createdAt,
         expiresAt: connection.expiresAt || undefined,
         isExpired,

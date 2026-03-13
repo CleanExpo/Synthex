@@ -22,6 +22,69 @@ import { generateKickstartContent } from '@/lib/ai/content-kickstart';
 import type { KickstartInput } from '@/lib/ai/content-kickstart';
 
 // ============================================================================
+// GET — Return kickstart status (for FirstWeekWidget)
+// ============================================================================
+
+export async function GET(_request: NextRequest) {
+  try {
+    const authUser = await getAuthUser();
+    if (!authUser) {
+      return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { id: authUser.id },
+      select: { id: true, activeOrganizationId: true },
+    });
+
+    if (!user?.activeOrganizationId) {
+      return NextResponse.json({ hasKickstart: false, draftsCount: 0, scheduledCount: 0, platforms: [] });
+    }
+
+    const orgId = user.activeOrganizationId;
+
+    // Find all kickstart posts for this org
+    const kickstartPosts = await prisma.post.findMany({
+      where: {
+        campaign: { userId: user.id, organizationId: orgId },
+        metadata: { path: ['source'], equals: 'kickstart' },
+      },
+      select: {
+        id: true,
+        platform: true,
+        status: true,
+        scheduledAt: true,
+        campaign: { select: { name: true } },
+      },
+      orderBy: { scheduledAt: 'asc' },
+    });
+
+    const platforms = [...new Set(kickstartPosts.map((p) => p.platform))];
+    const scheduledCount = kickstartPosts.filter((p) => p.status === 'scheduled').length;
+    const draftCount = kickstartPosts.filter((p) => p.status === 'draft').length;
+
+    return NextResponse.json({
+      hasKickstart: kickstartPosts.length > 0,
+      draftsCount: draftCount,
+      scheduledCount,
+      totalCount: kickstartPosts.length,
+      platforms,
+      posts: kickstartPosts.slice(0, 5).map((p) => ({
+        id: p.id,
+        platform: p.platform,
+        status: p.status,
+        scheduledAt: p.scheduledAt,
+        campaignName: p.campaign?.name,
+      })),
+    });
+  } catch (error) {
+    const msg = error instanceof Error ? error.message : String(error);
+    logger.error('[kickstart] GET status failed', undefined, { message: msg });
+    return NextResponse.json({ hasKickstart: false, draftsCount: 0, scheduledCount: 0, platforms: [] });
+  }
+}
+
+// ============================================================================
 // POST — Generate First-Week Content
 // ============================================================================
 

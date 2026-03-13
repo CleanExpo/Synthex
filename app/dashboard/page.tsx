@@ -25,6 +25,7 @@ import {
   GetStartedChecklist,
   GamificationWidget,
   ContentSuggestionsWidget,
+  FirstWeekWidget,
 } from '@/components/dashboard';
 import { InsightsWidget } from '@/components/insights/InsightsWidget';
 
@@ -210,6 +211,10 @@ export default function DashboardPage() {
     && stats.followers === 0
     && stats.scheduledPosts === 0;
 
+  // Show onboarding card whenever no platforms are connected OR user is new
+  // (replaces the global SocialConnectBanner that used to show on every page)
+  const showOnboarding = stats !== null && (stats.connectedPlatforms === 0 || isNewUser);
+
   return (
     <ErrorBoundary
       fallbackTitle="Dashboard Error"
@@ -231,8 +236,8 @@ export default function DashboardPage() {
         <main className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-6">
           <QuickStats stats={stats} />
 
-          {/* Get Started checklist for new users */}
-          {isNewUser && (
+          {/* Smart onboarding card — shown when no platforms connected OR user is new */}
+          {showOnboarding && (
             <AnimatedCard delay={0.1}>
               <GetStartedChecklist
                 hasConnections={stats.connectedPlatforms > 0}
@@ -241,6 +246,9 @@ export default function DashboardPage() {
               />
             </AnimatedCard>
           )}
+
+          {/* First week AI-generated content (only when kickstart drafts exist) */}
+          <FirstWeekWidget />
 
           {/* Dashboard Overview -- single clean view */}
           <div className="space-y-4 sm:space-y-6">

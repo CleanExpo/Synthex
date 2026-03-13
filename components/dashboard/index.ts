@@ -40,3 +40,6 @@ export { KeyboardHints } from './keyboard-hints';
 // Sprint 3 widgets
 export { GamificationWidget } from './GamificationWidget';
 export { ContentSuggestionsWidget } from './ContentSuggestionsWidget';
+
+// Phase 6 — Post-onboarding kickstart widget
+export { FirstWeekWidget } from './FirstWeekWidget';
