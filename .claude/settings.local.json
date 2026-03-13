@@ -131,7 +131,11 @@
       "WebFetch(domain:www.nature.com)",
       "mcp__mcp-registry__search_mcp_registry",
       "Skill(gsd:execute-plan)",
-      "Skill(gsd:execute-plan:*)"
+      "Skill(gsd:execute-plan:*)",
+      "Read(//d/NodeJS-Starter-V1/**)",
+      "Bash(grep -r '\"\"reactflow\"\"' apps/web/components/workflow/)",
+      "Bash(xargs grep:*)",
+      "Bash(grep '\"\"eslint-config-next\"\"' apps/web/package.json)"
     ],
     "deny": [
       "Bash(git push --force*)",

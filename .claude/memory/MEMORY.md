@@ -25,13 +25,14 @@
 - **Team**: Unite-Hub (key: UNI)
 - **Status**: All backlog issues Done. 5 strategic issues (UNI-1180–1184) tracked separately.
 
-## Current State (2026-03-12 — v7.0 IN PROGRESS)
-- **Branch**: main at `e7673a7e` (pushed to origin)
+## Current State (2026-03-13 — v8.0 SHIPPED 🚀)
+- **Branch**: main at `0d86c070` (pushed to origin)
 - **DB**: 91 Prisma models, schema unchanged since v1.4
 - **Test suite**: 1514 passing, type-check 0 errors
-- **Milestone**: v7.0 Production Hardening & Quality — Phases 108-113 (SYN-374)
-- **Deploy status**: Codebase production-ready; public launch is human-gated
-- **Previous milestones**: v1.0-v6.0 all SHIPPED (107 phases complete)
+- **Milestone**: v8.0 Production Go-Live — Phases 114-117 — SHIPPED 2026-03-13
+- **Deploy status**: LIVE at https://synthex.social
+- **Previous milestones**: v1.0-v7.0 all SHIPPED (113 phases complete)
+- **All milestones**: 117 phases total — ALL SHIPPED
 
 ### v4.0 Phases (all Done)
 | Phase | Focus | Linear |
