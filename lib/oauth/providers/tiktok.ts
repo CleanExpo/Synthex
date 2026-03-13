@@ -14,6 +14,7 @@
 import { BaseOAuthProvider, OAuthError } from '../base-provider';
 import { OAuthConfig, OAuthUserInfo, OAuthTokens } from '../types';
 import { logger } from '@/lib/logger';
+import crypto from 'crypto';
 
 // ============================================================================
 // CONFIGURATION
@@ -45,11 +46,20 @@ export class TikTokOAuthProvider extends BaseOAuthProvider {
   }
 
   /**
-   * Generate authorization URL with PKCE
+   * Stores the PKCE code verifier between getAuthorizationUrl() and exchangeCodeForTokens().
+   */
+  private _pkceVerifier: string | null = null;
+
+  /**
+   * Generate authorization URL with PKCE (S256 method — TikTok requires SHA-256 challenge)
+   * Scope is comma-separated per TikTok API requirements.
    */
   override getAuthorizationUrl(state: string): string {
     this.validateCredentials();
     const codeVerifier = this.generateCodeVerifier();
+    // S256: code_challenge = BASE64URL(SHA256(codeVerifier))
+    const codeChallenge = crypto.createHash('sha256').update(codeVerifier).digest('base64url');
+    this._pkceVerifier = codeVerifier;
 
     const params = new URLSearchParams({
       client_key: this.config.clientId,
@@ -57,7 +67,7 @@ export class TikTokOAuthProvider extends BaseOAuthProvider {
       response_type: 'code',
       scope: this.config.scope.join(','),
       state,
-      code_challenge: codeVerifier, // TikTok uses plain code challenge
+      code_challenge: codeChallenge,
       code_challenge_method: 'S256',
     });
 
@@ -210,12 +220,11 @@ export class TikTokOAuthProvider extends BaseOAuthProvider {
   }
 
   /**
-   * Generate PKCE code verifier
+   * Generate a cryptographically random RFC 7636 PKCE code verifier.
+   * 32 random bytes base64url-encoded = 43 characters from the allowed set.
    */
   private generateCodeVerifier(): string {
-    const array = new Uint8Array(32);
-    crypto.getRandomValues(array);
-    return Array.from(array, (byte) => byte.toString(16).padStart(2, '0')).join('');
+    return crypto.randomBytes(32).toString('base64url');
   }
 }
 

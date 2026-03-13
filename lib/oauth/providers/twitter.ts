@@ -14,6 +14,7 @@
 import { BaseOAuthProvider, OAuthError } from '../base-provider';
 import { OAuthConfig, OAuthUserInfo, OAuthTokens } from '../types';
 import { logger } from '@/lib/logger';
+import crypto from 'crypto';
 
 // ============================================================================
 // CONFIGURATION
@@ -40,16 +41,39 @@ const getConfig = (): OAuthConfig => {
 // ============================================================================
 
 export class TwitterOAuthProvider extends BaseOAuthProvider {
+  /**
+   * Stores the PKCE code verifier between getAuthorizationUrl() and exchangeCodeForTokens().
+   *
+   * NOTE: This singleton approach is safe only for sequential single-user flows.
+   * The main Synthex OAuth flow (app/api/auth/oauth + app/api/auth/callback) stores
+   * PKCE state server-side (OAuthPKCEState table) and does NOT use this class at all.
+   * This provider is used only when constructing auth URLs outside the main flow.
+   */
+  private _pkceVerifier: string | null = null;
+
   constructor() {
     super('twitter', getConfig());
   }
 
   /**
-   * Generate authorization URL with PKCE
+   * Generate a cryptographically secure PKCE code verifier and challenge pair.
+   * Per RFC 7636: verifier = 32 random bytes base64url-encoded (43 chars).
+   * Challenge = BASE64URL(SHA256(verifier)), method = S256.
+   */
+  private generatePKCEPair(): { codeVerifier: string; codeChallenge: string } {
+    const codeVerifier = crypto.randomBytes(32).toString('base64url');
+    const codeChallenge = crypto.createHash('sha256').update(codeVerifier).digest('base64url');
+    return { codeVerifier, codeChallenge };
+  }
+
+  /**
+   * Generate authorization URL with PKCE (S256 method per RFC 7636)
    */
   override getAuthorizationUrl(state: string): string {
     this.validateCredentials();
-    const codeChallenge = this.generateCodeChallenge();
+    const { codeVerifier, codeChallenge } = this.generatePKCEPair();
+    // Store verifier for use in exchangeCodeForTokens()
+    this._pkceVerifier = codeVerifier;
 
     const params = new URLSearchParams({
       client_id: this.config.clientId,
@@ -58,17 +82,24 @@ export class TwitterOAuthProvider extends BaseOAuthProvider {
       scope: this.config.scope.join(' '),
       state,
       code_challenge: codeChallenge,
-      code_challenge_method: 'plain', // Use 'S256' in production with proper PKCE
+      code_challenge_method: 'S256',
     });
 
     return `${this.config.authorizationUrl}?${params.toString()}`;
   }
 
   /**
-   * Exchange code for tokens (Twitter requires Basic auth)
+   * Exchange code for tokens (Twitter requires Basic auth + PKCE code verifier)
    */
   override async exchangeCodeForTokens(code: string): Promise<OAuthTokens> {
     this.validateCredentials();
+    const codeVerifier = this._pkceVerifier;
+    this._pkceVerifier = null; // clear after use — one-shot
+
+    if (!codeVerifier) {
+      throw new OAuthError('twitter', 'PKCE_MISSING', 'Call getAuthorizationUrl() before exchangeCodeForTokens()');
+    }
+
     try {
       const credentials = Buffer.from(`${this.config.clientId}:${this.config.clientSecret}`).toString('base64');
 
@@ -82,7 +113,7 @@ export class TwitterOAuthProvider extends BaseOAuthProvider {
           grant_type: 'authorization_code',
           code,
           redirect_uri: this.config.redirectUri,
-          code_verifier: this.generateCodeChallenge(), // Must match code_challenge
+          code_verifier: codeVerifier,
         }),
       });
 
@@ -191,12 +222,6 @@ export class TwitterOAuthProvider extends BaseOAuthProvider {
     }
   }
 
-  /**
-   * Generate PKCE code challenge using cryptographic randomness
-   */
-  private generateCodeChallenge(): string {
-    return crypto.randomUUID() + crypto.randomUUID();
-  }
 }
 
 // ============================================================================

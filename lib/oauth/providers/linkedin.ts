@@ -66,7 +66,9 @@ export class LinkedInOAuthProvider extends BaseOAuthProvider {
         displayName: data.name,
         email: data.email,
         avatar: data.picture,
-        profileUrl: `https://www.linkedin.com/in/${data.sub}`,
+        // LinkedIn OIDC `sub` is a numeric internal ID, not the public vanity handle.
+        // The vanity URL requires a separate REST API call; omit to avoid broken links.
+        profileUrl: undefined,
         raw: data,
       };
     } catch (error) {

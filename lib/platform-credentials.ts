@@ -57,12 +57,14 @@ const ENV_VAR_MAP: Record<string, { clientIdVars: string[]; clientSecretVars: st
     clientSecretVars: ['LINKEDIN_CLIENT_SECRET'],
   },
   instagram: {
-    clientIdVars: ['INSTAGRAM_CLIENT_ID'],
-    clientSecretVars: ['INSTAGRAM_CLIENT_SECRET'],
+    // META_CLIENT_ID is the canonical env var name for Meta apps — alias INSTAGRAM for backward compat
+    clientIdVars: ['INSTAGRAM_CLIENT_ID', 'META_CLIENT_ID'],
+    clientSecretVars: ['INSTAGRAM_CLIENT_SECRET', 'META_CLIENT_SECRET'],
   },
   facebook: {
-    clientIdVars: ['FACEBOOK_CLIENT_ID'],
-    clientSecretVars: ['FACEBOOK_CLIENT_SECRET'],
+    // META_CLIENT_ID is the canonical env var name for Meta apps — alias FACEBOOK for backward compat
+    clientIdVars: ['FACEBOOK_CLIENT_ID', 'META_CLIENT_ID'],
+    clientSecretVars: ['FACEBOOK_CLIENT_SECRET', 'META_CLIENT_SECRET'],
   },
   tiktok: {
     clientIdVars: ['TIKTOK_CLIENT_KEY'],

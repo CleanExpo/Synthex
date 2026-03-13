@@ -552,8 +552,7 @@ export async function GET(
       if (state) {
         const stateData = verifyAndDecodeState(state);
         if (stateData?.flow === 'integration') {
-          const html = buildPostMessageHtml('oauth-error', platform, { error: errorDescription }, `OAuth error: ${errorDescription}`);
-          return new NextResponse(html, { status: 200, headers: { 'Content-Type': 'text/html' } });
+          return integrationErrorResponse(platform, errorDescription, stateData.returnTo as string | undefined);
         }
       }
 
