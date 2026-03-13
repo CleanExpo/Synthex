@@ -5,18 +5,28 @@
 See: .planning/PROJECT.md (updated 2026-02-17)
 
 **Core value:** Every endpoint returns real data, every platform works, every dashboard page connects to live APIs
-**Current focus:** v8.0 Production Go-Live — COMPLETE. Synthex is LIVE at https://synthex.social
+**Current focus:** AI-First Onboarding — COMPLETE. All 7 phases shipped.
 
 ## Current Position
 
-Milestone: v8.0 Production Go-Live — **SHIPPED 2026-03-13** 🚀
-Phase: 117 of 117 (Launch Runbook Execution)
+Milestone: AI-First Onboarding Automation — **SHIPPED 2026-03-13** ✅
+Phases: 1-7 of 7 (URL-first → AI pipeline → Review → OAuth → Extension → Kickstart → Cleanup)
 Status: Complete
-Last activity: 2026-03-13 — All 4 phases completed (114-117)
+Last activity: 2026-03-13 — All 7 phases completed + Social Connection Polish milestone
 
-Progress: ██████████ 100% (4/4 phases)
+Progress: ██████████ 100% (7/7 phases)
 
-Next action: None — platform is live. Consider /gsd:new-milestone for post-launch work.
+### What was shipped (2026-03-13)
+- Phase 1: URL-first onboarding entry (replaces 6-step manual flow)
+- Phase 2: Unified AI analysis pipeline (website scrape + SEO + AI in ~15s)
+- Phase 3: AI-populated review screen (editable, pre-filled from pipeline)
+- Phase 4: OAuth platform connection during onboarding
+- Phase 5: Chrome Extension bridge (auto-detects logged-in accounts)
+- Phase 6: AI kickstart content (5-7 first-week drafts auto-generated)
+- Phase 7: Legacy flow cleanup (6 API routes + OnboardingContext archived)
+- Social Connection Polish: smart onboarding card, FirstWeekWidget, token refresh UI, avatar fix
+
+Next action: Consider /gsd:new-milestone for post-launch feature work.
 
 ## Performance Metrics
 
