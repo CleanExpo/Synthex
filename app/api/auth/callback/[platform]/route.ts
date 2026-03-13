@@ -179,6 +179,34 @@ if (window.opener) {
 }
 
 // =============================================================================
+// Integration Flow Error Helper
+// =============================================================================
+
+/**
+ * Build an error response for integration OAuth flows.
+ * When returnTo is set (full-page redirect flow), redirects there with ?error=.
+ * Otherwise falls back to postMessage HTML for popup-based flows.
+ */
+function integrationErrorResponse(
+  platform: string,
+  errorMsg: string,
+  returnTo?: string,
+): NextResponse {
+  if (returnTo) {
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+    try {
+      const url = new URL(returnTo, appUrl);
+      url.searchParams.set('error', errorMsg);
+      return NextResponse.redirect(url.toString());
+    } catch {
+      // returnTo was invalid — fall through to postMessage
+    }
+  }
+  const html = buildPostMessageHtml('oauth-error', platform, { error: errorMsg }, `OAuth error: ${errorMsg}`);
+  return new NextResponse(html, { status: 200, headers: { 'Content-Type': 'text/html' } });
+}
+
+// =============================================================================
 // State Verification
 // =============================================================================
 
@@ -558,13 +586,16 @@ export async function GET(
       );
     }
 
+    // Extract returnTo early — used by integrationErrorResponse to redirect back to
+    // the correct page (e.g. /onboarding/connect) rather than the popup fallback.
+    const earlyReturnTo = stateData.returnTo as string | undefined;
+
     // Validate state timestamp (10 minute expiry -- generous for slow users)
     const stateTimestamp = stateData.timestamp as number;
     if (stateTimestamp && Date.now() - stateTimestamp > 10 * 60 * 1000) {
       const expiredMsg = 'Authentication session expired. Please try connecting again.';
       if (stateData.flow === 'integration') {
-        const html = buildPostMessageHtml('oauth-error', platform, { error: expiredMsg }, expiredMsg);
-        return new NextResponse(html, { status: 200, headers: { 'Content-Type': 'text/html' } });
+        return integrationErrorResponse(platform, expiredMsg, earlyReturnTo);
       }
       return NextResponse.redirect(
         new URL(`/login?error=${encodeURIComponent(expiredMsg)}`, request.url)
@@ -574,8 +605,7 @@ export async function GET(
     // Check if platform is supported
     if (!oauthConfigs[platform]) {
       if (stateData.flow === 'integration') {
-        const html = buildPostMessageHtml('oauth-error', platform, { error: 'Unsupported platform' }, `Unsupported platform: ${platform}`);
-        return new NextResponse(html, { status: 200, headers: { 'Content-Type': 'text/html' } });
+        return integrationErrorResponse(platform, `Unsupported platform: ${platform}`, earlyReturnTo);
       }
       return NextResponse.redirect(
         new URL(`/login?error=Unsupported OAuth provider: ${platform}`, request.url)
@@ -586,8 +616,7 @@ export async function GET(
     const creds = await getPlatformOAuthCredentials(platform);
     if (!creds) {
       if (stateData.flow === 'integration') {
-        const html = buildPostMessageHtml('oauth-error', platform, { error: 'Platform not configured' }, 'This platform connection has not been set up yet. Please contact your administrator.');
-        return new NextResponse(html, { status: 200, headers: { 'Content-Type': 'text/html' } });
+        return integrationErrorResponse(platform, 'Platform not configured. Please contact your administrator.', earlyReturnTo);
       }
       return NextResponse.redirect(
         new URL('/login?error=This platform connection has not been set up yet. Please contact your administrator.', request.url)
@@ -626,6 +655,9 @@ export async function GET(
       // cannot match NULL values, so we store '' as the "no org" sentinel.
       const rawOrgId = (stateData.organizationId as string) || null;
       const orgIdForDb = rawOrgId ?? '';
+
+      // Extract returnTo before try/catch so it is available in both error and success paths.
+      const returnTo = stateData.returnTo as string | undefined;
 
       try {
         const expiresAt = tokenData.expiresIn
@@ -676,13 +708,15 @@ export async function GET(
           },
         });
       } catch (dbError) {
+        // Surface the error to the user — do NOT silently swallow and fake success.
         logger.error('Failed to store platform connection:', dbError);
+        const errMsg = dbError instanceof Error ? dbError.message : 'Failed to store platform connection';
+        return integrationErrorResponse(platform, errMsg, returnTo);
       }
 
       // Determine where to redirect after successful connection.
-      // If returnTo is set in state (e.g. from platforms page), do a full-page redirect.
-      // Otherwise close popup and notify parent window.
-      const returnTo = stateData.returnTo as string | undefined;
+      // If returnTo is set in state (e.g. from onboarding/connect or platforms page),
+      // do a full-page redirect back there. Otherwise close popup.
       if (returnTo) {
         const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
         const redirectUrl = new URL(returnTo, appUrl);
@@ -852,15 +886,17 @@ export async function GET(
   } catch (error: unknown) {
     logger.error('OAuth callback error:', error);
 
-    // Try to determine if this was an integration flow to show popup error
+    // Try to determine if this was an integration flow to show a contextual error
     try {
       const state = new URL(request.url).searchParams.get('state');
       if (state) {
         const stateData = verifyAndDecodeState(state);
         if (stateData?.flow === 'integration') {
           const errorMsg = error instanceof Error ? error.message : 'Authentication failed';
-          const html = buildPostMessageHtml('oauth-error', 'unknown', { error: errorMsg }, `OAuth error: ${errorMsg}`);
-          return new NextResponse(html, { status: 200, headers: { 'Content-Type': 'text/html' } });
+          const returnTo = stateData.returnTo as string | undefined;
+          // Use the platform from state if available, else fall back to URL segment
+          const errPlatform = (stateData.platform as string | undefined) ?? 'unknown';
+          return integrationErrorResponse(errPlatform, errorMsg, returnTo);
         }
       }
     } catch {
