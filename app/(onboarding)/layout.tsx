@@ -57,7 +57,7 @@ export default function OnboardingLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen bg-surface-dark text-white overflow-hidden">
+    <div className="min-h-screen bg-surface-dark text-white">
         {/* Deep Navy Gradient Background */}
         <div className="fixed inset-0 bg-gradient-to-br from-[#0a1628] via-[#0f172a] to-[#0a1628]" />
 
