@@ -51,6 +51,16 @@ export function LinkForm({
   const [keywordInput, setKeywordInput] = useState('');
   const [isActive, setIsActive] = useState(true);
 
+  // QA-AUDIT-2026-03-14 (M11): Handle Escape key to close modal
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [isOpen, onClose]);
+
   // Reset form when link changes
   useEffect(() => {
     if (link) {
@@ -132,7 +142,7 @@ export function LinkForm({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
+    <div className="fixed inset-0 z-50 flex items-center justify-center" role="dialog" aria-modal="true" aria-label={isEditing ? 'Edit affiliate link' : 'Add affiliate link'}>
       {/* Backdrop */}
       <div
         className="absolute inset-0 bg-black/60 backdrop-blur-sm"

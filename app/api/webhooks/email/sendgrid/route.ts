@@ -69,20 +69,34 @@ function verifySignature(
   timestamp: string
 ): boolean {
   if (!VERIFICATION_KEY) {
-    logger.warn('SendGrid webhook verification key not configured');
-    return true; // Allow in development
+    if (process.env.NODE_ENV === 'production') {
+      logger.error('SendGrid webhook verification key not configured in production — rejecting request');
+      return false;
+    }
+    logger.warn('SendGrid webhook verification key not configured — allowing in development');
+    return true;
   }
 
-  const timestampPayload = timestamp + payload;
-  const expectedSignature = crypto
-    .createHmac('sha256', VERIFICATION_KEY)
-    .update(timestampPayload)
-    .digest('base64');
+  if (!signature || !timestamp) {
+    logger.warn('SendGrid webhook missing signature or timestamp header');
+    return false;
+  }
 
-  return crypto.timingSafeEqual(
-    Buffer.from(signature),
-    Buffer.from(expectedSignature)
-  );
+  try {
+    const timestampPayload = timestamp + payload;
+    const expectedSignature = crypto
+      .createHmac('sha256', VERIFICATION_KEY)
+      .update(timestampPayload)
+      .digest('base64');
+
+    return crypto.timingSafeEqual(
+      Buffer.from(signature),
+      Buffer.from(expectedSignature)
+    );
+  } catch (err) {
+    logger.error('SendGrid signature verification error', { error: err });
+    return false;
+  }
 }
 
 // ============================================================================
@@ -295,9 +309,9 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     const signature = request.headers.get('x-twilio-email-event-webhook-signature') || '';
     const timestamp = request.headers.get('x-twilio-email-event-webhook-timestamp') || '';
 
-    // Verify signature in production
-    if (VERIFICATION_KEY && !verifySignature(body, signature, timestamp)) {
-      logger.warn('Invalid SendGrid webhook signature');
+    // Verify webhook signature (rejects in production if key not configured)
+    if (!verifySignature(body, signature, timestamp)) {
+      logger.warn('SendGrid webhook signature verification failed');
       return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
     }
 

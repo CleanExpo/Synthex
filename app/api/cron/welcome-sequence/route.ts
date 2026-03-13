@@ -91,6 +91,7 @@ export async function GET(request: NextRequest) {
   // NOTE: Sentry.withMonitor() removed — no-op without server-side Sentry.init().
   try {
     const startTime = Date.now();
+    logger.info('cron:welcome-sequence:start', { timestamp: new Date().toISOString() });
 
     // Fetch all users whose preferences contain emailSequenceStartedAt.
     // Prisma does not support dot-path JSON filtering in `where`, so we use
@@ -128,10 +129,9 @@ export async function GET(request: NextRequest) {
       // ---- D+3 ----
       if (elapsedMs >= THREE_DAYS_MS && !prefs.emailSequenceDay3Sent) {
         try {
-          sendWelcomeSequenceDay3(user.email, user.name ?? undefined);
+          await sendWelcomeSequenceDay3(user.email, user.name ?? undefined);
+          logger.info('[welcome-sequence] D+3 email sent', { userId: user.id });
 
-          // Mark as sent immediately — fire-and-forget means we can't confirm
-          // delivery, but we must prevent duplicate sends on the next cron run.
           await prisma.user.update({
             where: { id: user.id },
             data: {
@@ -144,7 +144,8 @@ export async function GET(request: NextRequest) {
 
           day3Sent++;
         } catch (err) {
-          logger.error(`[welcome-sequence] D+3 failed for user ${user.id}:`, err);
+          logger.error('[welcome-sequence] D+3 email failed', { userId: user.id, error: err });
+          // Don't throw — mark failure and continue processing other users
           errors++;
         }
       }
@@ -165,7 +166,15 @@ export async function GET(request: NextRequest) {
             !['free', 'starter'].includes(subscription.plan);
 
           if (!isPaidAndActive) {
-            sendWelcomeSequenceDay7(user.email, user.name ?? undefined);
+            try {
+              await sendWelcomeSequenceDay7(user.email, user.name ?? undefined);
+              logger.info('[welcome-sequence] D+7 email sent', { userId: user.id });
+            } catch (emailError) {
+              logger.error('[welcome-sequence] D+7 email failed', { userId: user.id, error: emailError });
+              // Don't throw — mark failure and continue processing other users
+              errors++;
+              continue;
+            }
 
             await prisma.user.update({
               where: { id: user.id },
@@ -180,13 +189,14 @@ export async function GET(request: NextRequest) {
             day7Sent++;
           }
         } catch (err) {
-          logger.error(`[welcome-sequence] D+7 failed for user ${user.id}:`, err);
+          logger.error('[welcome-sequence] D+7 failed for user ' + user.id, err);
           errors++;
         }
       }
     }
 
     const durationMs = Date.now() - startTime;
+    logger.info('cron:welcome-sequence:end', { timestamp: new Date().toISOString(), durationMs, day3Sent, day7Sent, errors });
 
     return NextResponse.json({
       success: true,

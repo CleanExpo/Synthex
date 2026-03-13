@@ -108,6 +108,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   // -- Setup -----------------------------------------------------------------
   const startTime = Date.now();
   const now = new Date();
+  logger.info('cron:publish-scheduled:start', { timestamp: now.toISOString() });
 
   let processed = 0;
   let published = 0;
@@ -120,6 +121,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     where: {
       status: 'scheduled',
       scheduledAt: { lte: now },
+      publishedAt: null, // Idempotency guard: skip already-published posts
     },
     select: {
       id: true,
@@ -143,6 +145,16 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     processed++;
 
     try {
+      // Idempotency guard: re-check status in case another instance published it
+      const freshPost = await prisma.post.findUnique({
+        where: { id: post.id },
+        select: { status: true, publishedAt: true },
+      });
+      if (freshPost?.publishedAt || freshPost?.status === 'published') {
+        logger.warn('[publish-scheduled] Skipping already-published post', { postId: post.id });
+        continue;
+      }
+
       const platform = (post.platform || post.campaign.platform).toLowerCase();
       const userId = post.campaign.userId;
       const metadata = (post.metadata as Record<string, unknown>) || {};
@@ -560,6 +572,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   }
 
   const durationMs = Date.now() - startTime;
+  logger.info('cron:publish-scheduled:end', { timestamp: new Date().toISOString(), durationMs, processed, published, failed, retried });
 
   return NextResponse.json({
     success: true,

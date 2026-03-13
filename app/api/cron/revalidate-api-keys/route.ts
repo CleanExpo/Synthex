@@ -44,6 +44,7 @@ export async function GET(request: NextRequest) {
 
   try {
     const startTime = Date.now();
+    logger.info('cron:revalidate-api-keys:start', { timestamp: new Date().toISOString() });
 
     // Calculate the cutoff time (24 hours ago)
     const cutoffDate = new Date(Date.now() - REVALIDATION_INTERVAL_HOURS * 60 * 60 * 1000);
@@ -152,6 +153,7 @@ export async function GET(request: NextRequest) {
     }
 
     const duration = Date.now() - startTime;
+    logger.info('cron:revalidate-api-keys:end', { timestamp: new Date().toISOString(), durationMs: duration, total: credentials.length, validated, invalidated, errors });
 
     return NextResponse.json({
       success: true,

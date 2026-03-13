@@ -34,6 +34,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 
   // -- Gather revenue data ---------------------------------------------------
   const startTime = Date.now();
+  logger.info('cron:unite-hub-revenue:start', { timestamp: new Date().toISOString() });
 
   // Window: last 30 days for new/churned detection
   const thirtyDaysAgo = new Date();
@@ -41,10 +42,10 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 
   try {
     const [activeSubscriptions, newSubscriptions, churnedSubscriptions] = await Promise.all([
-      // All currently active subscriptions
+      // All currently active subscriptions (past_due still count — Stripe retries payment)
       prisma.subscription.findMany({
         where: {
-          status: { in: ['active', 'trialing'] },
+          status: { in: ['active', 'trialing', 'past_due'] }, // QA-AUDIT-2026-03-14 (M7)
         },
         select: {
           plan: true,
@@ -54,7 +55,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       // New subscriptions in last 30 days
       prisma.subscription.count({
         where: {
-          status: { in: ['active', 'trialing'] },
+          status: { in: ['active', 'trialing', 'past_due'] }, // QA-AUDIT-2026-03-14 (M7)
           createdAt: { gte: thirtyDaysAgo },
         },
       }),
@@ -99,6 +100,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     });
 
     const durationMs = Date.now() - startTime;
+    logger.info('cron:unite-hub-revenue:end', { timestamp: new Date().toISOString(), durationMs, mrr, customers });
 
     return NextResponse.json({
       success: true,

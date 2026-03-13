@@ -37,11 +37,12 @@ export async function GET(request: NextRequest) {
   // NOTE: Sentry.withMonitor() removed — no-op without server-side Sentry.init().
   try {
     const startTime = Date.now();
+    logger.info('cron:weekly-digest:start', { timestamp: new Date().toISOString() });
 
     // Get all Business/Custom plan users
     const users = await prisma.subscription.findMany({
       where: {
-        status: { in: ['active', 'trialing'] },
+        status: { in: ['active', 'trialing', 'past_due'] }, // QA-AUDIT-2026-03-14 (M7): include past_due for grace period
         plan: { in: ['business', 'custom'] },
       },
       select: { userId: true },
@@ -113,6 +114,7 @@ export async function GET(request: NextRequest) {
     }
 
     const duration = Date.now() - startTime;
+    logger.info('cron:weekly-digest:end', { timestamp: new Date().toISOString(), durationMs: duration, generated, emailsSent, errors });
 
     return NextResponse.json({
       success: true,

@@ -9,7 +9,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { logger } from '@/lib/logger';
 import { AffiliateLinkService } from '@/lib/affiliates/affiliate-link-service';
+import { RateLimiter } from '@/lib/rate-limit';
 import crypto from 'crypto';
+
+// ─── Rate limiter — 120 req/min ─────────────────────────────────────────────
+
+const rateLimiter = new RateLimiter({
+  windowMs: 60_000,
+  maxRequests: 120,
+  identifier: (req: NextRequest) => {
+    const ip = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown';
+    return `affiliate-track:${ip}`;
+  },
+});
 
 // =============================================================================
 // Helpers
@@ -54,6 +66,15 @@ export async function GET(
   { params }: { params: Promise<{ shortCode: string }> }
 ) {
   try {
+    // Rate limit check
+    const rateResult = await rateLimiter.check(request);
+    if (!rateResult.allowed) {
+      return NextResponse.json(
+        { error: 'Too many requests', retryAfter: new Date(rateResult.resetTime).toISOString() },
+        { status: 429, headers: { ...RateLimiter.createHeaders(rateResult) } }
+      );
+    }
+
     const { shortCode } = await params;
 
     // Find the link

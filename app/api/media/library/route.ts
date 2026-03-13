@@ -44,7 +44,7 @@ const FilterSchema = z.object({
 const CreateAssetSchema = z.object({
   type: z.enum(['image', 'video', 'audio']),
   provider: z.enum(['stability', 'dalle', 'gemini', 'runway', 'synthesia', 'd-id', 'elevenlabs']),
-  base64Data: z.string().optional(),
+  base64Data: z.string().max(50 * 1024 * 1024, 'Base64 data exceeds 50MB limit').optional(),
   url: z.string().url().optional(),
   externalId: z.string().optional(),
   prompt: z.string().optional(),

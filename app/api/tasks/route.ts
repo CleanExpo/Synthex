@@ -43,7 +43,7 @@ const createTaskSchema = z.object({
   campaignId: z.string().optional(),
 });
 
-const updateTaskSchema = z.object({
+const updateTaskFieldsSchema = z.object({
   title: z.string().min(1).max(200).optional(),
   description: z.string().max(5000).optional().nullable(),
   status: z.enum(['todo', 'in-progress', 'review', 'done']).optional(),
@@ -58,6 +58,10 @@ const updateTaskSchema = z.object({
   order: z.number().optional(),
   assigneeId: z.string().optional().nullable(),
   completedAt: z.string().datetime().optional().nullable(),
+});
+
+const updateTaskSchema = updateTaskFieldsSchema.extend({
+  id: z.string().min(1, 'Task ID is required'),
 });
 
 // =============================================================================
@@ -208,22 +212,16 @@ export async function PATCH(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { id, ...updateData } = body;
 
-    if (!id) {
-      return NextResponse.json(
-        { error: 'Validation Error', message: 'Task ID is required' },
-        { status: 400 }
-      );
-    }
-
-    const validation = updateTaskSchema.safeParse(updateData);
+    const validation = updateTaskSchema.safeParse(body);
     if (!validation.success) {
       return NextResponse.json(
         { error: 'Validation Error', details: validation.error.issues },
         { status: 400 }
       );
     }
+
+    const { id, ...updateData } = validation.data;
 
     // Verify ownership
     const existingTask = await prisma.task.findUnique({
@@ -238,17 +236,15 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
-    const data = validation.data;
-
     // Handle status change to 'done'
-    const updatePayload: Record<string, unknown> = { ...data };
-    if (data.dueDate !== undefined) {
-      updatePayload.dueDate = data.dueDate ? new Date(data.dueDate) : null;
+    const updatePayload: Record<string, unknown> = { ...updateData };
+    if (updateData.dueDate !== undefined) {
+      updatePayload.dueDate = updateData.dueDate ? new Date(updateData.dueDate) : null;
     }
-    if (data.completedAt !== undefined) {
-      updatePayload.completedAt = data.completedAt ? new Date(data.completedAt) : null;
+    if (updateData.completedAt !== undefined) {
+      updatePayload.completedAt = updateData.completedAt ? new Date(updateData.completedAt) : null;
     }
-    if (data.status === 'done' && !data.completedAt) {
+    if (updateData.status === 'done' && !updateData.completedAt) {
       updatePayload.completedAt = new Date();
       updatePayload.progress = 100;
     }

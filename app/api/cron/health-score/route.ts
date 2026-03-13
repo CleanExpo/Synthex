@@ -29,10 +29,12 @@ export async function GET(request: NextRequest) {
 
   try {
     const startTime = Date.now();
+    logger.info('cron:health-score:start', { timestamp: new Date().toISOString() });
 
     const result = await calculateAllHealthScores();
 
     const duration = Date.now() - startTime;
+    logger.info('cron:health-score:end', { timestamp: new Date().toISOString(), durationMs: duration });
 
     return NextResponse.json({
       success: true,

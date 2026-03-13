@@ -130,6 +130,8 @@ export async function POST(request: NextRequest) {
     }
 
     const now = new Date();
+    const startTime = Date.now();
+    logger.info('cron:competitors-track-execute:start', { timestamp: now.toISOString() });
 
     // Get tracking thresholds
     const hourlyThreshold = new Date(now.getTime() - 3600000);      // 1 hour ago
@@ -354,6 +356,9 @@ export async function POST(request: NextRequest) {
         });
       }
     }
+
+    const durationMs = Date.now() - startTime;
+    logger.info('cron:competitors-track-execute:end', { timestamp: new Date().toISOString(), durationMs, processed: results.length, failed: errors.length });
 
     return NextResponse.json({
       message: 'Competitor tracking execution completed',

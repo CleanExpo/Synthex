@@ -35,8 +35,8 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    logger.info('[Fetch Mentions Cron] Starting...');
     const startTime = Date.now();
+    logger.info('cron:fetch-mentions:start', { timestamp: new Date().toISOString() });
 
     // Get all active tracked keywords (limited)
     const keywords = await prisma.trackedKeyword.findMany({
@@ -233,9 +233,7 @@ export async function GET(request: NextRequest) {
     }
 
     const duration = Date.now() - startTime;
-    logger.info(
-      `[Fetch Mentions Cron] Complete: ${keywordsProcessed} keywords, ${mentionsFetched} fetched, ${mentionsSaved} saved, ${errors} errors in ${duration}ms`
-    );
+    logger.info('cron:fetch-mentions:end', { timestamp: new Date().toISOString(), durationMs: duration, keywordsProcessed, mentionsFetched, mentionsSaved, errors });
 
     return NextResponse.json({
       success: true,

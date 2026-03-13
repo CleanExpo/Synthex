@@ -33,6 +33,9 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
     }
 
+    const startTime = Date.now();
+    logger.info('cron:forecast-training:start', { timestamp: new Date().toISOString() });
+
     // 2. Get client — skip gracefully if not configured
     const client = getForecastingClient();
     if (!client) {
@@ -97,17 +100,35 @@ export async function GET(request: NextRequest) {
       } catch (err) {
         logger.error(`forecast-training cron: failed to retrain model ${model.id}`, { err });
 
-        // Mark model as failed
-        await prisma.forecastModel.update({
-          where: { id: model.id },
-          data: { status: 'failed' },
-        }).catch((updateErr) => {
-          logger.error(`forecast-training cron: failed to mark model ${model.id} as failed`, { updateErr });
-        });
+        // QA-AUDIT-2026-03-14 (C7): Retry up to 3 times before marking permanently failed.
+        // Increment retryCount and keep status as 'pending' so the next cron run re-attempts.
+        const currentRetry = (model as { retryCount?: number }).retryCount ?? 0;
+        const maxRetries = 3;
+
+        if (currentRetry < maxRetries) {
+          await prisma.forecastModel.update({
+            where: { id: model.id },
+            data: { retryCount: currentRetry + 1 },
+          }).catch((updateErr) => {
+            logger.error(`forecast-training cron: failed to increment retryCount for model ${model.id}`, { updateErr });
+          });
+          logger.warn(`forecast-training cron: model ${model.id} retry ${currentRetry + 1}/${maxRetries} — will re-attempt next run`);
+        } else {
+          await prisma.forecastModel.update({
+            where: { id: model.id },
+            data: { status: 'failed' },
+          }).catch((updateErr) => {
+            logger.error(`forecast-training cron: failed to mark model ${model.id} as failed`, { updateErr });
+          });
+          logger.error(`forecast-training cron: model ${model.id} permanently failed after ${maxRetries} retries`);
+        }
 
         results.failed++;
       }
     }
+
+    const durationMs = Date.now() - startTime;
+    logger.info('cron:forecast-training:end', { timestamp: new Date().toISOString(), durationMs, ...results });
 
     return NextResponse.json({
       success: true,

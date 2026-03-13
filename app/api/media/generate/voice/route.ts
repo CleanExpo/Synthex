@@ -33,9 +33,16 @@ const supabase = createClient(
 );
 
 // Request validation schemas
+const VoiceConfigSchema = z.object({
+  stability: z.number().min(0).max(1).optional(),
+  similarityBoost: z.number().min(0).max(1).optional(),
+  style: z.number().min(0).max(1).optional(),
+  useSpeakerBoost: z.boolean().optional(),
+}).strict().optional();
+
 const SpeechGenerationSchema = z.object({
   text: z.string().min(1).max(5000),
-  voiceId: z.string().optional(),
+  voiceId: z.string().max(200).optional(),
   voiceName: z.enum(['rachel', 'adam', 'bella', 'josh', 'elli', 'sam', 'charlotte', 'clyde', 'grace']).optional(),
   modelId: z.enum(['eleven_multilingual_v2', 'eleven_turbo_v2', 'eleven_monolingual_v1']).optional(),
   stability: z.number().min(0).max(1).optional(),
@@ -44,6 +51,8 @@ const SpeechGenerationSchema = z.object({
   useSpeakerBoost: z.boolean().optional(),
   outputFormat: z.enum(['mp3_44100_128', 'mp3_44100_192', 'pcm_16000', 'pcm_22050', 'pcm_24000']).optional(),
   saveToLibrary: z.boolean().default(true),
+  voiceConfig: VoiceConfigSchema,
+  metadata: z.record(z.string(), z.union([z.string(), z.number(), z.boolean()])).optional(),
 });
 
 const VoiceCloneSchema = z.object({
@@ -171,6 +180,12 @@ export async function POST(request: NextRequest) {
         // Standard speech generation
         const validated = SpeechGenerationSchema.parse(body);
 
+        // Merge voiceConfig fields (voiceConfig overrides top-level if both provided)
+        const effectiveStability = validated.voiceConfig?.stability ?? validated.stability;
+        const effectiveSimilarityBoost = validated.voiceConfig?.similarityBoost ?? validated.similarityBoost;
+        const effectiveStyle = validated.voiceConfig?.style ?? validated.style;
+        const effectiveUseSpeakerBoost = validated.voiceConfig?.useSpeakerBoost ?? validated.useSpeakerBoost;
+
         // Resolve voice ID from name if provided
         let voiceId = validated.voiceId;
         if (!voiceId && validated.voiceName) {
@@ -181,10 +196,10 @@ export async function POST(request: NextRequest) {
           text: validated.text,
           voiceId,
           modelId: validated.modelId,
-          stability: validated.stability,
-          similarityBoost: validated.similarityBoost,
-          style: validated.style,
-          useSpeakerBoost: validated.useSpeakerBoost,
+          stability: effectiveStability,
+          similarityBoost: effectiveSimilarityBoost,
+          style: effectiveStyle,
+          useSpeakerBoost: effectiveUseSpeakerBoost,
           outputFormat: validated.outputFormat,
         });
 

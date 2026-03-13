@@ -362,10 +362,10 @@ export function sendWelcomeSequenceDay0(email: string, name?: string): void {
 
 /**
  * Send the Day 3 tips email to users who have started the welcome sequence.
- * Fire-and-forget — does not throw.
+ * Returns a Promise so callers can await delivery and handle errors.
  */
-export function sendWelcomeSequenceDay3(email: string, name?: string): void {
-  getResend().emails.send({
+export async function sendWelcomeSequenceDay3(email: string, name?: string): Promise<void> {
+  await getResend().emails.send({
     from: FROM,
     to: email,
     subject: '3 things our best users do in their first week',
@@ -438,7 +438,7 @@ export function sendWelcomeSequenceDay3(email: string, name?: string): void {
   </table>
 </body>
 </html>`,
-  }).catch((err: unknown) => console.error('[welcome-email] day-3 send failed:', err));
+  });
 }
 
 // ============================================================================
@@ -447,10 +447,10 @@ export function sendWelcomeSequenceDay3(email: string, name?: string): void {
 
 /**
  * Send the Day 7 check-in and upgrade nudge email (free/starter users only).
- * Fire-and-forget — does not throw.
+ * Returns a Promise so callers can await delivery and handle errors.
  */
-export function sendWelcomeSequenceDay7(email: string, name?: string): void {
-  getResend().emails.send({
+export async function sendWelcomeSequenceDay7(email: string, name?: string): Promise<void> {
+  await getResend().emails.send({
     from: FROM,
     to: email,
     subject: 'How\'s your first week with Synthex going?',
@@ -537,5 +537,5 @@ export function sendWelcomeSequenceDay7(email: string, name?: string): void {
   </table>
 </body>
 </html>`,
-  }).catch((err: unknown) => console.error('[welcome-email] day-7 send failed:', err));
+  });
 }

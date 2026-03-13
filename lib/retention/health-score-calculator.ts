@@ -230,7 +230,7 @@ export async function calculateAllHealthScores(): Promise<{
   // Get all users with active subscriptions
   const users = await prisma.subscription.findMany({
     where: {
-      status: { in: ['active', 'trialing'] },
+      status: { in: ['active', 'trialing', 'past_due'] }, // QA-AUDIT-2026-03-14 (M7): include past_due for grace period
       plan: { not: 'free' },
     },
     select: { userId: true },

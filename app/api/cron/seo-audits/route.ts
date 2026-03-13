@@ -39,6 +39,7 @@ export async function GET(request: NextRequest) {
 
   try {
     const startTime = Date.now();
+    logger.info('cron:seo-audits:start', { timestamp: new Date().toISOString() });
 
     // Get all targets due for audit
     const targets = await getAllTargetsDueForAudit();
@@ -124,6 +125,7 @@ export async function GET(request: NextRequest) {
     }
 
     const duration = Date.now() - startTime;
+    logger.info('cron:seo-audits:end', { timestamp: new Date().toISOString(), durationMs: duration, auditsRun, regressionsDetected, errors });
 
     return NextResponse.json({
       success: true,

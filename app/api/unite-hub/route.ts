@@ -39,17 +39,17 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 
   try {
     const [activeUsers, subscriptions, postsPublishedToday] = await Promise.all([
-      // Users who have an active subscription
+      // Users who have an active subscription (past_due still count during grace period)
       prisma.subscription.count({
         where: {
-          status: 'active',
+          status: { in: ['active', 'past_due'] }, // QA-AUDIT-2026-03-14 (M7)
         },
       }),
 
       // All active subscriptions for MRR calculation
       prisma.subscription.findMany({
         where: {
-          status: { in: ['active', 'trialing'] },
+          status: { in: ['active', 'trialing', 'past_due'] }, // QA-AUDIT-2026-03-14 (M7)
         },
         select: {
           plan: true,

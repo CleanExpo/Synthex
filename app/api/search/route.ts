@@ -13,10 +13,30 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { getEffectiveOrganizationId } from '@/lib/multi-business';
 import prisma from '@/lib/prisma';
 import { logger } from '@/lib/logger';
+import { RateLimiter } from '@/lib/rate-limit';
+
+// ─── Zod schema ─────────────────────────────────────────────────────────────
+
+const searchBodySchema = z.object({
+  type: z.array(z.enum(['campaign', 'content'])).optional(),
+  tags: z.array(z.string().max(100)).max(20).optional(),
+});
+
+// ─── Rate limiter — 30 req/min ──────────────────────────────────────────────
+
+const rateLimiter = new RateLimiter({
+  windowMs: 60_000,
+  maxRequests: 30,
+  identifier: (req: NextRequest) => {
+    const ip = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown';
+    return `search:${ip}`;
+  },
+});
 
 interface SearchResult {
   id: string;
@@ -30,6 +50,15 @@ interface SearchResult {
 
 export async function POST(request: NextRequest) {
   try {
+    // Rate limit check
+    const rateResult = await rateLimiter.check(request);
+    if (!rateResult.allowed) {
+      return NextResponse.json(
+        { error: 'Too many requests', retryAfter: new Date(rateResult.resetTime).toISOString() },
+        { status: 429, headers: { ...RateLimiter.createHeaders(rateResult) } }
+      );
+    }
+
     const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
@@ -45,13 +74,20 @@ export async function POST(request: NextRequest) {
     const organizationId = await getEffectiveOrganizationId(userId);
     const orgFilter = organizationId ? { organizationId } : { userId };
 
-    // Parse optional filters from body
+    // Parse and validate optional filters from body
     let typeFilter: string[] = [];
     try {
       const body = await request.json();
-      if (Array.isArray(body?.type)) typeFilter = body.type;
+      const parsed = searchBodySchema.safeParse(body);
+      if (!parsed.success) {
+        return NextResponse.json(
+          { error: 'Validation error', details: parsed.error.issues },
+          { status: 400 }
+        );
+      }
+      if (parsed.data.type) typeFilter = parsed.data.type;
     } catch {
-      // Body is optional
+      // Body is optional — empty body is fine
     }
 
     const results: SearchResult[] = [];

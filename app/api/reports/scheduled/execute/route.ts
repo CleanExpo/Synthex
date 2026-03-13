@@ -471,6 +471,8 @@ export async function POST(request: NextRequest) {
 
   const results: ExecutionResult[] = [];
   const now = new Date();
+  const startTime = Date.now();
+  logger.info('cron:reports-scheduled-execute:start', { timestamp: now.toISOString() });
 
   try {
     // Find all due scheduled reports
@@ -615,6 +617,9 @@ export async function POST(request: NextRequest) {
 
       results.push(result);
     }
+
+    const durationMs = Date.now() - startTime;
+    logger.info('cron:reports-scheduled-execute:end', { timestamp: new Date().toISOString(), durationMs, executed: results.length });
 
     return NextResponse.json({
       executed: results.length,
