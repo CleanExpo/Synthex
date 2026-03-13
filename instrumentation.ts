@@ -118,23 +118,13 @@ export async function register() {
     console.error('[env-validator] Skipping env validation — server will start but may be misconfigured.');
   }
 
-  // Verify database connectivity at startup — truly fire-and-forget (no await).
-  // register() must return fast to avoid hanging the Lambda cold start.
-  // The db check runs in the background; its result is logged but never awaited.
-  if (process.env.DATABASE_URL) {
-    (async () => {
-      try {
-        const { prisma } = await import('@/lib/prisma');
-        await Promise.race([
-          (prisma as any).$queryRaw`SELECT 1`,
-          new Promise<void>((resolve) => setTimeout(resolve, 3000)),
-        ]);
-        console.log('[db-check] Database connection verified successfully');
-      } catch (dbError) {
-        const msg = dbError instanceof Error ? dbError.message : String(dbError);
-        console.warn(`[db-check] Database connection check failed: ${msg}`);
-      }
-    })();
-    // No await — register() returns immediately; db check runs in background.
-  }
+  // NOTE: Database connectivity check intentionally omitted from instrumentation.ts.
+  //
+  // WHY: instrumentation.ts is compiled for ALL runtimes (Node.js + Edge). Importing
+  // @/lib/prisma triggers the pg → pg-connection-string → pgpass → split2 chain which
+  // requires Node.js built-ins (fs, path, stream, net, crypto, dns) unavailable in the
+  // Edge runtime webpack compilation context, causing a build failure.
+  //
+  // The startup DB check was fire-and-forget with no effect on app behaviour.
+  // Use GET /api/health/live (which includes a real db ping) for liveness monitoring.
 }

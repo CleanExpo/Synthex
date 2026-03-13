@@ -18,7 +18,7 @@
  * @module app/(onboarding)/onboarding/connect/page
  */
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
   Globe,
@@ -86,7 +86,7 @@ interface ConnectionStatus {
 // COMPONENT
 // ============================================================================
 
-export default function ConnectPage() {
+function ConnectPageInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -417,5 +417,20 @@ export default function ConnectPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+// useSearchParams() requires a Suspense boundary — wrap inner component
+export default function ConnectPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex items-center justify-center min-h-[50vh]">
+          <Loader2 className="w-6 h-6 text-cyan-400 animate-spin" />
+        </div>
+      }
+    >
+      <ConnectPageInner />
+    </Suspense>
   );
 }
