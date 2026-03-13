@@ -124,7 +124,7 @@ export async function register() {
   if (process.env.DATABASE_URL) {
     (async () => {
       try {
-        const { prisma } = await import(/* webpackIgnore: true */ '@/lib/prisma');
+        const { prisma } = await import('@/lib/prisma');
         await Promise.race([
           (prisma as any).$queryRaw`SELECT 1`,
           new Promise<void>((resolve) => setTimeout(resolve, 3000)),
