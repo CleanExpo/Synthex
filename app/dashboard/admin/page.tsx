@@ -16,7 +16,8 @@
  *   - Tabs: Users | Platform Health | Audit Log
  */
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 import useSWR from 'swr';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
@@ -87,6 +88,21 @@ export default function AdminPanel() {
 
   // Active business context (for vault org scoping)
   const { activeOrganizationId } = useActiveBusiness();
+
+  // URL-driven tab selection: ?tab=vault|platform-health|audit-log|users
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const VALID_TABS = ['users', 'platform-health', 'audit-log', 'vault'] as const;
+  type TabValue = typeof VALID_TABS[number];
+  const tabParam = searchParams.get('tab') as TabValue | null;
+  const [activeTab, setActiveTab] = useState<TabValue>(
+    VALID_TABS.includes(tabParam as TabValue) ? (tabParam as TabValue) : 'users'
+  );
+
+  const handleTabChange = useCallback((value: string) => {
+    setActiveTab(value as TabValue);
+    router.replace(`/dashboard/admin?tab=${value}`, { scroll: false });
+  }, [router]);
 
   // ---------------------------------------------------------------------------
   // SWR — fetch users from Prisma API
@@ -349,7 +365,7 @@ export default function AdminPanel() {
 
       <AdminStats stats={stats} />
 
-      <Tabs defaultValue="users">
+      <Tabs value={activeTab} onValueChange={handleTabChange}>
         <TabsList variant="glass">
           <TabsTrigger value="users">Users</TabsTrigger>
           <TabsTrigger value="platform-health">Platform Health</TabsTrigger>
