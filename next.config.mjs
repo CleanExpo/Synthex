@@ -254,7 +254,7 @@ const nextConfig = {
   },
   // Ensure environment variables are available
   env: {
-    NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL || 'https://synthex.vercel.app',
+    NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL || 'https://synthex.social',
   },
 }
 

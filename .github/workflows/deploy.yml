@@ -19,7 +19,7 @@ jobs:
     if: github.ref == 'refs/heads/develop'
     environment:
       name: staging
-      url: https://staging.synthex.ai
+      url: https://staging.synthex.social
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -57,7 +57,7 @@ jobs:
     if: github.ref == 'refs/heads/main'
     environment:
       name: production
-      url: https://synthex.ai
+      url: https://synthex.social
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -96,7 +96,7 @@ jobs:
         uses: treosh/lighthouse-ci-action@v10
         with:
           urls: |
-            https://synthex.ai
-            https://synthex.ai/features
+            https://synthex.social
+            https://synthex.social/features
           uploadArtifacts: true
           temporaryPublicStorage: true

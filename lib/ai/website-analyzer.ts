@@ -136,7 +136,7 @@ async function scrapeWithFetch(url: string): Promise<ScrapeResult> {
     const response = await fetch(url, {
       signal: controller.signal,
       headers: {
-        'User-Agent': 'SynthexBot/1.0 (https://synthex.vercel.app)',
+        'User-Agent': 'SynthexBot/1.0 (https://synthex.social)',
         'Accept': 'text/html',
       },
     });

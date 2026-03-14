@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Mail, Lock, User, Chrome, Loader2, CheckCircle, Eye, EyeOff, Clock, ArrowRight, RefreshCw } from '@/components/icons';
+import { Mail, Lock, User, Chrome, Loader2, CheckCircle, Eye, EyeOff, Clock, ArrowRight, RefreshCw, Key } from '@/components/icons';
 import { SynthexLogo } from '@/components/marketing/MarketingLayout';
 import { toast } from 'sonner';
 
@@ -20,7 +20,9 @@ interface ValidationDetail {
 export default function SignupPage() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
+  const inviteOnly = process.env.NEXT_PUBLIC_INVITE_ONLY_MODE === 'true';
   const [formData, setFormData] = useState({
+    inviteCode: '',
     name: '',
     email: '',
     password: '',
@@ -115,6 +117,7 @@ export default function SignupPage() {
           email: formData.email,
           password: formData.password,
           timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+          ...(inviteOnly && formData.inviteCode && { inviteCode: formData.inviteCode }),
         }),
       });
 
@@ -386,7 +389,9 @@ export default function SignupPage() {
             Create your account
           </CardTitle>
           <CardDescription className="text-center text-gray-400">
-            Start automating your social media in minutes
+            {inviteOnly
+              ? 'Enter your invite code to create an account'
+              : 'Start automating your social media in minutes'}
           </CardDescription>
           {/* Rate limit cooldown banner */}
           {rateLimitSeconds > 0 && (
@@ -411,6 +416,37 @@ export default function SignupPage() {
         </CardHeader>
         <CardContent className="space-y-4">
           <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Invite code field — shown only during invite-only soft launch */}
+            {inviteOnly && (
+              <div className="space-y-2">
+                <Label htmlFor="inviteCode" className="text-gray-300">Invite Code</Label>
+                <div className="relative">
+                  <Key className="absolute left-3 top-3 w-4 h-4 text-gray-500" />
+                  <Input
+                    id="inviteCode"
+                    type="text"
+                    placeholder="SX-XXXXXX"
+                    value={formData.inviteCode}
+                    onChange={(e) => setFormData({ ...formData, inviteCode: e.target.value.toUpperCase() })}
+                    className={`pl-10 bg-white/5 border-cyan-500/20 text-white placeholder:text-gray-500 focus:border-cyan-500/50 focus:ring-cyan-500/20 uppercase tracking-wider font-mono ${fieldErrors.inviteCode ? 'border-red-500/60' : ''}`}
+                    required
+                    disabled={isSubmitDisabled}
+                    maxLength={20}
+                    autoComplete="off"
+                  />
+                </div>
+                {fieldErrors.inviteCode && (
+                  <p className="text-xs text-red-400">{fieldErrors.inviteCode}</p>
+                )}
+                <p className="text-xs text-gray-500">
+                  Don&apos;t have an invite code?{' '}
+                  <Link href="/" className="text-cyan-400 hover:text-cyan-300 transition-colors">
+                    Request access
+                  </Link>
+                </p>
+              </div>
+            )}
+
             <div className="space-y-2">
               <Label htmlFor="name" className="text-gray-300">Full Name</Label>
               <div className="relative">
@@ -570,27 +606,33 @@ export default function SignupPage() {
             </Button>
           </form>
 
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t border-cyan-500/10" />
-            </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-surface-base px-2 text-gray-500">Or continue with</span>
-            </div>
-          </div>
+          {/* Google OAuth — hidden during invite-only mode to avoid threading
+              invite codes through the OAuth flow. Re-enable for public launch. */}
+          {!inviteOnly && (
+            <>
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t border-cyan-500/10" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-surface-base px-2 text-gray-500">Or continue with</span>
+                </div>
+              </div>
 
-          <div className="w-full">
-            <Button
-              type="button"
-              variant="outline"
-              className="w-full bg-white/5 border-cyan-500/20 text-white hover:bg-cyan-500/10 hover:border-cyan-500/40 transition-all"
-              onClick={handleGoogleSignup}
-              disabled={isLoading}
-            >
-              <Chrome className="mr-2 h-4 w-4" />
-              Continue with Google
-            </Button>
-          </div>
+              <div className="w-full">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full bg-white/5 border-cyan-500/20 text-white hover:bg-cyan-500/10 hover:border-cyan-500/40 transition-all"
+                  onClick={handleGoogleSignup}
+                  disabled={isLoading}
+                >
+                  <Chrome className="mr-2 h-4 w-4" />
+                  Continue with Google
+                </Button>
+              </div>
+            </>
+          )}
         </CardContent>
         <CardFooter>
           <p className="text-center text-sm text-gray-400 w-full">

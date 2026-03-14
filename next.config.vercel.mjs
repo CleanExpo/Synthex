@@ -87,8 +87,8 @@ const nextConfig = {
   images: {
     domains: [
       'localhost',
-      'synthex.ai',
-      'synthex.vercel.app',
+      'synthex.social',
+      'synthex.social',
       'images.unsplash.com',
       'avatars.githubusercontent.com',
       'lh3.googleusercontent.com',
@@ -106,7 +106,7 @@ const nextConfig = {
   // Headers configuration
   async headers() {
     const allowedOrigin = process.env.NODE_ENV === 'production' 
-      ? 'https://synthex.vercel.app'
+      ? 'https://synthex.social'
       : 'http://localhost:3000';
     
     return [

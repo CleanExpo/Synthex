@@ -471,7 +471,7 @@ export const ENV_VAR_DEFINITIONS: EnvVarDefinition[] = [
     required: false,
     securityLevel: SecurityLevel.PUBLIC,
     validator: z.string().url().optional(),
-    example: 'https://synthex.vercel.app',
+    example: 'https://synthex.social',
     defaultValue: process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000'
   },
 

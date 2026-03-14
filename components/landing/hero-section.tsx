@@ -81,7 +81,9 @@ export function HeroSection() {
                   size="lg"
                   className="bg-gradient-to-r from-cyan-500 to-cyan-600 hover:from-cyan-400 hover:to-cyan-500 text-white font-semibold shadow-xl shadow-cyan-500/30 px-8 py-6 text-base rounded-xl transition-all hover:shadow-cyan-500/50 hover:scale-105"
                 >
-                  Start Free Trial
+                  {process.env.NEXT_PUBLIC_INVITE_ONLY_MODE === 'true'
+                    ? 'Join with Invite Code'
+                    : 'Start Free Trial'}
                   <ArrowRight className="ml-2 w-5 h-5" />
                 </Button>
               </Link>
@@ -104,7 +106,9 @@ export function HeroSection() {
               </div>
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4 text-cyan-500" />
-                <span>14-day free trial</span>
+                <span>{process.env.NEXT_PUBLIC_INVITE_ONLY_MODE === 'true'
+                  ? 'Invite-only early access'
+                  : '14-day free trial'}</span>
               </div>
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4 text-cyan-500" />

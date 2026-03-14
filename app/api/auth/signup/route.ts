@@ -15,7 +15,10 @@ const signupSchema = z.object({
     .max(128, 'Password too long')
     .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, 'Password must contain at least one lowercase letter, one uppercase letter, and one number'),
   timezone: z.string().max(100).optional(),
+  inviteCode: z.string().min(1).max(20).trim().toUpperCase().optional(),
 });
+
+const isInviteOnly = process.env.NEXT_PUBLIC_INVITE_ONLY_MODE === 'true';
 
 export async function POST(request: NextRequest) {
   // Distributed rate limiting via Upstash Redis (replaces in-memory Map)
@@ -38,7 +41,63 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { name, email, password, timezone } = validationResult.data;
+    const { name, email, password, timezone, inviteCode } = validationResult.data;
+
+    // ── Invite-only gate ──────────────────────────────────────────────
+    // When NEXT_PUBLIC_INVITE_ONLY_MODE=true, require a valid invite code.
+    // Validates: exists, active, not expired, not maxed out, email match.
+    let validatedInvite: { id: string; code: string } | null = null;
+
+    if (isInviteOnly) {
+      if (!inviteCode) {
+        return NextResponse.json(
+          { error: 'An invite code is required to sign up during early access.' },
+          { status: 400 }
+        );
+      }
+
+      const invite = await prisma.inviteCode.findUnique({
+        where: { code: inviteCode },
+      });
+
+      if (!invite) {
+        return NextResponse.json(
+          { error: 'Invalid invite code.' },
+          { status: 400 }
+        );
+      }
+
+      if (!invite.isActive) {
+        return NextResponse.json(
+          { error: 'This invite code has been deactivated.' },
+          { status: 400 }
+        );
+      }
+
+      if (invite.expiresAt && invite.expiresAt < new Date()) {
+        return NextResponse.json(
+          { error: 'This invite code has expired.' },
+          { status: 400 }
+        );
+      }
+
+      if (invite.useCount >= invite.maxUses) {
+        return NextResponse.json(
+          { error: 'This invite code has already been used.' },
+          { status: 400 }
+        );
+      }
+
+      // If invite is locked to a specific email, enforce the match
+      if (invite.email && invite.email.toLowerCase() !== email.toLowerCase()) {
+        return NextResponse.json(
+          { error: 'This invite code is reserved for a different email address.' },
+          { status: 400 }
+        );
+      }
+
+      validatedInvite = { id: invite.id, code: invite.code };
+    }
 
     const supabase = createAuthClient();
 
@@ -110,6 +169,23 @@ export async function POST(request: NextRequest) {
         }
       }
 
+      // Mark invite code as used (if invite-only mode)
+      if (validatedInvite) {
+        try {
+          await prisma.inviteCode.update({
+            where: { id: validatedInvite.id },
+            data: {
+              useCount: { increment: 1 },
+              usedBy: authData.user.id,
+              usedAt: new Date(),
+            },
+          });
+        } catch (inviteError) {
+          logger.error('[SIGNUP] Failed to mark invite code as used:', inviteError);
+          // Non-blocking — user already created, don't fail the signup
+        }
+      }
+
       // Log signup action to audit
       await serverDb.audit.log({
         user_id: authData.user.id,
@@ -121,6 +197,7 @@ export async function POST(request: NextRequest) {
         details: {
           email,
           provider: 'email',
+          inviteCode: validatedInvite?.code || undefined,
           timestamp: new Date().toISOString()
         }
       });
