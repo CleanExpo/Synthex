@@ -5,13 +5,148 @@
  * Platform connections and API key management
  */
 
+import { useState } from 'react';
+import useSWR from 'swr';
+import { toast } from 'sonner';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Check, Key, Plus, Trash2 } from '@/components/icons';
+import { Check, Key, Plus, Trash2, Building2, Copy, ExternalLink } from '@/components/icons';
+import { ConnectionStatusBadge, type ConnectionState } from '@/components/realtime/ConnectionStatus';
+import { Skeleton } from '@/components/ui/skeleton';
 import { AICredentialsManager } from './ai-credentials-manager';
 import { PlatformCredentialsManager } from './platform-credentials-manager';
 import type { PlatformConnection, ApiKey } from './types';
+
+// ── Unite-Hub Integration Card ─────────────────────────────────────────────────
+// Self-contained, owner-only card. Self-gates: returns null for non-owners
+// because the /api/unite-hub/status endpoint returns 403 for non-owners.
+
+interface UniteHubStatus {
+  configured: boolean;
+  reachable: boolean;
+  domain: string | null;
+  pullEndpoint: string;
+  eventTypes: string[];
+  error?: string;
+}
+
+const fetchJson = (url: string) =>
+  fetch(url, { credentials: 'include' }).then((r) => r.json());
+
+function UniteHubIntegrationCard() {
+  const [copying, setCopying] = useState(false);
+
+  const { data, isLoading } = useSWR<UniteHubStatus>(
+    '/api/unite-hub/status',
+    fetchJson,
+    { revalidateOnFocus: false }
+  );
+
+  // Non-owners receive 403 — API returns { error: 'Access denied' }
+  if (!isLoading && (data?.error || !data)) return null;
+
+  const connectionState: ConnectionState = !data?.configured
+    ? 'disconnected'
+    : data.reachable
+    ? 'connected'
+    : 'reconnecting';
+
+  const handleCopy = async () => {
+    if (!data?.pullEndpoint) return;
+    setCopying(true);
+    try {
+      await navigator.clipboard.writeText(data.pullEndpoint);
+      toast.success('Copied to clipboard', {
+        description: 'Paste this URL into your Unite-Group Nexus settings.',
+      });
+    } catch {
+      toast.error('Could not copy — please select and copy manually.');
+    } finally {
+      setCopying(false);
+    }
+  };
+
+  return (
+    <Card variant="glass">
+      <CardHeader className="pb-3">
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-cyan-500/10 shrink-0">
+              <Building2 className="h-5 w-5 text-cyan-400" />
+            </div>
+            <div>
+              <CardTitle className="text-base">Unite-Group Nexus</CardTitle>
+              <CardDescription className="text-xs mt-0.5">
+                Real-time event stream to the Unite-Group operations dashboard
+              </CardDescription>
+            </div>
+          </div>
+          {!isLoading && <ConnectionStatusBadge state={connectionState} />}
+        </div>
+      </CardHeader>
+
+      <CardContent className="space-y-4">
+        {isLoading ? (
+          <div className="space-y-2">
+            <Skeleton className="h-8 w-full" />
+            <Skeleton className="h-6 w-3/4" />
+          </div>
+        ) : (
+          <>
+            {/* Pull endpoint */}
+            <div className="space-y-1.5">
+              <p className="text-xs font-medium text-gray-400">
+                Pull Endpoint{' '}
+                <span className="text-gray-600 font-normal">(configure in Unite-Group)</span>
+              </p>
+              <div className="flex items-center gap-2">
+                <code className="flex-1 min-w-0 font-mono text-[11px] text-cyan-300 bg-white/[0.04] border border-white/[0.08] rounded-md px-2.5 py-1.5 truncate">
+                  {data?.pullEndpoint ?? '—'}
+                </code>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-8 w-8 shrink-0 border-white/[0.12] bg-white/[0.04] hover:bg-white/[0.08]"
+                  onClick={handleCopy}
+                  disabled={copying}
+                  aria-label="Copy pull endpoint URL"
+                >
+                  <Copy className="h-3.5 w-3.5 text-gray-400" />
+                </Button>
+              </div>
+            </div>
+
+            {/* Event count + link row */}
+            <div className="flex items-center justify-between">
+              <Badge className="bg-cyan-500/10 text-cyan-400 border-cyan-500/20 text-xs">
+                {data?.eventTypes?.length ?? 8} event types active
+              </Badge>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 text-xs text-gray-400 hover:text-white hover:bg-white/[0.06] gap-1.5"
+                onClick={() =>
+                  window.open('https://unite-hub.unite-group.com.au', '_blank', 'noopener,noreferrer')
+                }
+              >
+                <ExternalLink className="h-3.5 w-3.5" />
+                Open Unite-Group
+              </Button>
+            </div>
+
+            {!data?.configured && (
+              <p className="text-xs text-amber-400/80 bg-amber-500/10 border border-amber-500/20 rounded-md px-3 py-2">
+                Configure <code className="font-mono">UNITE_HUB_API_URL</code> and{' '}
+                <code className="font-mono">UNITE_HUB_API_KEY</code> to activate this integration.
+              </p>
+            )}
+          </>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
 
 interface IntegrationsTabProps {
   platforms: PlatformConnection[];
@@ -34,6 +169,9 @@ export function IntegrationsTab({
 }: IntegrationsTabProps) {
   return (
     <div className="space-y-6">
+      {/* Unite-Group Nexus — owner-only, self-gates for non-owners */}
+      <UniteHubIntegrationCard />
+
       {/* Platform Connections */}
       <Card variant="glass">
         <CardHeader>

@@ -43,3 +43,7 @@ export { ContentSuggestionsWidget } from './ContentSuggestionsWidget';
 
 // Phase 6 — Post-onboarding kickstart widget
 export { FirstWeekWidget } from './FirstWeekWidget';
+
+// Unite-Group integration + system health
+export { UniteHubWidget } from './UniteHubWidget';
+export { SystemPulsePanel } from './SystemPulsePanel';

@@ -31,6 +31,8 @@ import {
 import { WelcomeCard } from '@/components/dashboard/WelcomeCard';
 import { InsightsWidget } from '@/components/insights/InsightsWidget';
 import { AllBusinessesDashboard } from '@/components/business/AllBusinessesDashboard';
+import { SystemPulsePanel } from '@/components/dashboard/SystemPulsePanel';
+import { UniteHubWidget } from '@/components/dashboard/UniteHubWidget';
 
 export default function DashboardPage() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
@@ -297,6 +299,12 @@ export default function DashboardPage() {
 
               {/* AI Insights widget */}
               <InsightsWidget />
+
+              {/* Live system health — all returning users */}
+              <SystemPulsePanel />
+
+              {/* Unite-Group connection — owner-only (self-gates internally) */}
+              <UniteHubWidget />
 
               {/* Gamification + Content Suggestions */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
