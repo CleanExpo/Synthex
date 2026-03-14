@@ -43,10 +43,20 @@ interface QueueStat {
   dead: number;
 }
 
+interface JobsStatsObject {
+  total?: number;
+  pending?: number;
+  processing?: number;
+  completed?: number;
+  failed?: number;
+  dead?: number;
+}
+
 interface JobsApiResponse {
   success: boolean;
   data?: {
-    stats?: QueueStat[];
+    // API may return stats as a flat object or an array of per-queue stats
+    stats?: QueueStat[] | JobsStatsObject;
     recentDeadLetterJobs?: unknown[];
     recentPendingJobs?: unknown[];
   };
@@ -99,7 +109,22 @@ export function PlatformHealth() {
       refreshInterval: 60_000,
     });
 
-  const queueStats: QueueStat[] = jobsData?.data?.stats ?? [];
+  // API may return stats as an array (per-queue) or a flat object (aggregate)
+  const rawStats = jobsData?.data?.stats;
+  const queueStats: QueueStat[] = Array.isArray(rawStats)
+    ? rawStats
+    : rawStats && typeof rawStats === 'object'
+      ? [
+          {
+            name: 'All Queues',
+            pending: (rawStats as JobsStatsObject).pending ?? 0,
+            active: (rawStats as JobsStatsObject).processing ?? 0,
+            completed: (rawStats as JobsStatsObject).completed ?? 0,
+            failed: (rawStats as JobsStatsObject).failed ?? 0,
+            dead: (rawStats as JobsStatsObject).dead ?? 0,
+          },
+        ]
+      : [];
   const deadJobCount = jobsData?.data?.recentDeadLetterJobs?.length ?? 0;
   const platform = platformData?.data;
 
