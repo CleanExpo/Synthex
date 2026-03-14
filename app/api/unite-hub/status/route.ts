@@ -61,7 +61,13 @@ async function verifyOwner(request: NextRequest): Promise<
     select: { email: true },
   });
 
-  if (!isOwnerEmail(user?.email)) return forbiddenResponse();
+  if (!user) {
+    // Valid JWT but no matching DB row — possible data integrity issue, log it
+    logger.warn('[unite-hub/status] JWT userId has no matching DB user', { userId });
+    return forbiddenResponse();
+  }
+
+  if (!isOwnerEmail(user.email)) return forbiddenResponse();
 
   return { userId };
 }
@@ -170,11 +176,16 @@ export async function POST(request: NextRequest) {
   } catch (err) {
     const latencyMs = Date.now() - startTime;
     const isTimeout = err instanceof Error && err.name === 'AbortError';
-    const message = isTimeout ? 'Connection timed out after 5s' :
-      err instanceof Error ? err.message : 'Network error';
 
-    logger.warn('[unite-hub/status] Ping failed', { error: message });
+    // Log raw error server-side only — never expose internal network details to the client
+    logger.warn('[unite-hub/status] Ping failed', {
+      error: err instanceof Error ? err.message : String(err),
+    });
 
-    return NextResponse.json({ success: false, latencyMs, error: message });
+    const userMessage = isTimeout
+      ? 'Connection timed out after 5s'
+      : 'Network error — check Unite-Hub configuration';
+
+    return NextResponse.json({ success: false, latencyMs, error: userMessage });
   }
 }

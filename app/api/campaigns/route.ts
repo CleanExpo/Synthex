@@ -8,12 +8,15 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import prisma from '@/lib/prisma';
+import { prisma } from '@/lib/prisma';
 import { getUserIdFromRequestOrCookies, unauthorizedResponse } from '@/lib/auth/jwt-utils';
 import { getEffectiveOrganizationId, getEffectiveQueryFilter } from '@/lib/multi-business/business-scope';
 import { z } from 'zod';
 import { pushUniteHubEvent } from '@/lib/unite-hub-connector';
 import { logger } from '@/lib/logger';
+
+// Node.js runtime required for Prisma
+export const runtime = 'nodejs';
 
 // Validation schemas
 const campaignCreateSchema = z.object({
@@ -52,6 +55,15 @@ export async function GET(request: NextRequest) {
 
     // Scope query to the user's active org (handles multi-business context automatically)
     const queryFilter = await getEffectiveQueryFilter(userId);
+
+    // Guard: getEffectiveQueryFilter returns {} on invalid org context — an unscoped query
+    // would return every campaign in the database. Deny rather than leak cross-tenant data.
+    if (Object.keys(queryFilter).length === 0) {
+      return NextResponse.json(
+        { error: 'No organisation context found' },
+        { status: 403 }
+      );
+    }
 
     const campaigns = await prisma.campaign.findMany({
       where: queryFilter,
@@ -278,5 +290,3 @@ export async function DELETE(request: NextRequest) {
     );
   }
 }
-// Node.js runtime required for Prisma
-export const runtime = 'nodejs';
