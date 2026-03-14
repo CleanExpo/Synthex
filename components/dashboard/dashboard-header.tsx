@@ -14,9 +14,10 @@ import { cn } from '@/lib/utils';
 interface DashboardHeaderProps {
   showNotifications: boolean;
   onToggleNotifications: () => void;
+  isNewUser?: boolean;
 }
 
-export function DashboardHeader({ showNotifications, onToggleNotifications }: DashboardHeaderProps) {
+export function DashboardHeader({ showNotifications, onToggleNotifications, isNewUser }: DashboardHeaderProps) {
   const router = useRouter();
 
   return (
@@ -31,7 +32,9 @@ export function DashboardHeader({ showNotifications, onToggleNotifications }: Da
               Dashboard
             </h1>
             <p className="text-xs sm:text-sm text-muted-foreground line-clamp-1 sm:line-clamp-none">
-              Welcome back! Here&apos;s what&apos;s happening with your social media.
+              {isNewUser
+                ? 'Welcome to Synthex! Let\u2019s get your first content published.'
+                : 'Welcome back! Here\u2019s what\u2019s happening with your social media.'}
             </p>
           </div>
           <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0">

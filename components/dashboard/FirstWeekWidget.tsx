@@ -4,17 +4,20 @@
  * First Week Widget
  *
  * Shows the AI-generated kickstart content drafts created after onboarding.
- * Only visible when kickstart drafts exist (disappears once all posts are published).
+ * When no kickstart drafts exist yet, shows a fallback CTA to generate them.
+ * Disappears once all posts are published.
  *
  * Fetches from GET /api/onboarding/kickstart which returns status + post previews.
  */
 
-import useSWR from 'swr';
+import { useState } from 'react';
+import useSWR, { useSWRConfig } from 'swr';
 import Link from 'next/link';
-import { Sparkles, Calendar, FileText, ArrowRight, CheckCircle } from '@/components/icons';
+import { Sparkles, Calendar, FileText, ArrowRight, Loader2 } from '@/components/icons';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -62,12 +65,86 @@ export function FirstWeekWidget() {
     fetchJson,
     { revalidateOnFocus: false, dedupingInterval: 60_000 }
   );
+  const { mutate } = useSWRConfig();
+  const [generating, setGenerating] = useState(false);
 
-  // Don't render if loading or no kickstart drafts
-  if (isLoading || !data?.hasKickstart || data.totalCount === 0) {
+  // Don't render while loading
+  if (isLoading) {
     return null;
   }
 
+  // ── Fallback CTA: No kickstart drafts yet ─────────────────────────────────
+  if (!data?.hasKickstart || data.totalCount === 0) {
+    const handleGenerateKickstart = async () => {
+      setGenerating(true);
+      try {
+        const res = await fetch('/api/onboarding/kickstart', {
+          method: 'POST',
+          credentials: 'include',
+        });
+
+        if (!res.ok) {
+          const body = await res.json().catch(() => ({}));
+          throw new Error(body.error || 'Failed to generate content');
+        }
+
+        toast.success('Your first week of content has been generated!', {
+          description: 'Review and publish your AI-drafted posts.',
+          action: {
+            label: 'View Drafts',
+            onClick: () => window.location.assign('/dashboard/content/drafts'),
+          },
+          duration: 6000,
+        });
+
+        // Revalidate so the widget shows the newly created drafts
+        await mutate('/api/onboarding/kickstart');
+      } catch (err) {
+        const message = err instanceof Error ? err.message : 'Something went wrong';
+        toast.error('Could not generate content', { description: message });
+      } finally {
+        setGenerating(false);
+      }
+    };
+
+    return (
+      <div className="rounded-xl border border-cyan-500/20 bg-gradient-to-br from-cyan-500/5 to-blue-500/5 p-5 space-y-3">
+        <div className="flex items-center gap-3">
+          <div className="p-2 rounded-lg bg-cyan-500/10">
+            <Sparkles className="h-5 w-5 text-cyan-400" />
+          </div>
+          <div>
+            <h3 className="text-sm font-semibold text-white">
+              Generate Your First Week of Content
+            </h3>
+            <p className="text-xs text-gray-400 mt-0.5">
+              Let AI create 7 days of platform-specific posts based on your business analysis
+            </p>
+          </div>
+        </div>
+        <Button
+          onClick={handleGenerateKickstart}
+          disabled={generating}
+          size="sm"
+          className="w-full bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 border border-cyan-500/20 hover:border-cyan-500/30 transition-all"
+        >
+          {generating ? (
+            <>
+              <Loader2 className="h-3.5 w-3.5 mr-2 animate-spin" />
+              Generating posts…
+            </>
+          ) : (
+            <>
+              <Sparkles className="h-3.5 w-3.5 mr-2" />
+              Generate Content Week
+            </>
+          )}
+        </Button>
+      </div>
+    );
+  }
+
+  // ── Main view: Show kickstart drafts ──────────────────────────────────────
   const { draftsCount, scheduledCount, totalCount, platforms, posts } = data;
   const publishedCount = totalCount - draftsCount - scheduledCount;
   const allDone = publishedCount === totalCount;

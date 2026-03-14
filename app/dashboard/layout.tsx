@@ -397,7 +397,7 @@ export default function DashboardLayout({
                 />
                 {showAllGroups
                   ? 'Show Less'
-                  : `Show More (${dynamicSidebarGroups.filter((g) => !STARTER_GROUP_IDS.has(g.id) && g.id !== 'businesses').length} more)`
+                  : `Explore more features (${dynamicSidebarGroups.filter((g) => !STARTER_GROUP_IDS.has(g.id) && g.id !== 'businesses').length} more)`
                 }
               </button>
             )}

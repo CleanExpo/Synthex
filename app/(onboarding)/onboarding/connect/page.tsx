@@ -223,6 +223,9 @@ function ConnectPageInner() {
       // 4. Mark onboarding as complete in localStorage for middleware
       localStorage.setItem('onboardingComplete', 'true');
 
+      // 5. Trigger the ProductTour on first dashboard visit
+      localStorage.setItem('showTourOnDashboard', 'true');
+
       router.push('/dashboard');
     } catch (err) {
       console.error('[connect] Finish error:', err);

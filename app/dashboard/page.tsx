@@ -27,6 +27,7 @@ import {
   ContentSuggestionsWidget,
   FirstWeekWidget,
 } from '@/components/dashboard';
+import { WelcomeCard } from '@/components/dashboard/WelcomeCard';
 import { InsightsWidget } from '@/components/insights/InsightsWidget';
 
 export default function DashboardPage() {
@@ -231,38 +232,70 @@ export default function DashboardPage() {
         <DashboardHeader
           showNotifications={showNotifications}
           onToggleNotifications={() => setShowNotifications(!showNotifications)}
+          isNewUser={isNewUser}
         />
 
-        <main className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-6">
-          <QuickStats stats={stats} />
+        <main data-tour="dashboard" className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-6">
 
-          {/* Smart onboarding card — shown when no platforms connected OR user is new */}
-          {showOnboarding && (
-            <AnimatedCard delay={0.1}>
-              <GetStartedChecklist
-                hasConnections={stats.connectedPlatforms > 0}
-                hasCampaigns={stats.scheduledPosts > 0}
-                hasContent={stats.totalPosts > 0}
+          {isNewUser ? (
+            <>
+              {/* ── New User Dashboard ──────────────────────────────────── */}
+              {/* Welcome card with onboarding analysis summary */}
+              <WelcomeCard
+                connectedPlatforms={stats.connectedPlatforms}
+                totalPosts={stats.totalPosts}
+                scheduledPosts={stats.scheduledPosts}
               />
-            </AnimatedCard>
+
+              {/* Get started checklist — non-dismissible until first task done */}
+              <AnimatedCard delay={0.1}>
+                <GetStartedChecklist
+                  hasConnections={stats.connectedPlatforms > 0}
+                  hasCampaigns={stats.scheduledPosts > 0}
+                  hasContent={stats.totalPosts > 0}
+                />
+              </AnimatedCard>
+
+              {/* First week AI content — shows fallback CTA if no drafts yet */}
+              <FirstWeekWidget />
+
+              {/* Content suggestions — may show onboarding-based topics */}
+              <ContentSuggestionsWidget />
+            </>
+          ) : (
+            <>
+              {/* ── Returning User Dashboard ────────────────────────────── */}
+              <QuickStats stats={stats} />
+
+              {/* Get started checklist — shown until all tasks done or dismissed */}
+              {showOnboarding && (
+                <AnimatedCard delay={0.1}>
+                  <GetStartedChecklist
+                    hasConnections={stats.connectedPlatforms > 0}
+                    hasCampaigns={stats.scheduledPosts > 0}
+                    hasContent={stats.totalPosts > 0}
+                  />
+                </AnimatedCard>
+              )}
+
+              {/* First week AI-generated content */}
+              <FirstWeekWidget />
+
+              {/* Dashboard Overview — single clean view */}
+              <div className="space-y-4 sm:space-y-6">
+                <OverviewTab stats={stats} />
+              </div>
+
+              {/* AI Insights widget */}
+              <InsightsWidget />
+
+              {/* Gamification + Content Suggestions */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+                <GamificationWidget />
+                <ContentSuggestionsWidget />
+              </div>
+            </>
           )}
-
-          {/* First week AI-generated content (only when kickstart drafts exist) */}
-          <FirstWeekWidget />
-
-          {/* Dashboard Overview -- single clean view */}
-          <div className="space-y-4 sm:space-y-6">
-            <OverviewTab stats={stats} />
-          </div>
-
-          {/* AI Insights widget — Phase 66 */}
-          <InsightsWidget />
-
-          {/* Gamification + Content Suggestions — Sprint 3 */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-            <GamificationWidget />
-            <ContentSuggestionsWidget />
-          </div>
 
           {/* Other dashboard features are now accessible from the sidebar navigation:
               - Analytics: /dashboard/analytics

@@ -3,18 +3,21 @@
 /**
  * Get Started Checklist Component
  * Guides new users through essential onboarding steps.
- * Dismissible via localStorage. Progress bar tracks completion.
+ * Non-dismissible until at least one task is completed.
+ * Fires celebration toasts when users complete actions.
  *
  * @see UNI-628 Dashboard has no empty state for new users
  * @see UNI-681 New user empty state — build "Get Started" onboarding flow
  */
 
-import { useEffect, useState, useCallback, useMemo } from 'react';
+import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
 import { glassStyles } from '@/components/ui/index';
+import { toast } from 'sonner';
 import {
   Rocket,
   Link2,
@@ -67,6 +70,13 @@ export function GetStartedChecklist({
   className,
 }: GetStartedChecklistProps) {
   const [dismissed, setDismissed] = useState<boolean>(true); // default hidden until hydrated
+  const router = useRouter();
+
+  // Track previous values for transition detection (celebration toasts)
+  const prevConnections = useRef(hasConnections);
+  const prevCampaigns = useRef(hasCampaigns);
+  const prevContent = useRef(hasContent);
+  const hasMounted = useRef(false);
 
   // Hydrate dismissal state from localStorage after mount
   useEffect(() => {
@@ -77,16 +87,71 @@ export function GetStartedChecklist({
       // localStorage unavailable (SSR / incognito edge-case)
       setDismissed(false);
     }
+    // Mark as mounted after first render to avoid false-positive toasts
+    hasMounted.current = true;
   }, []);
 
+  // ── Celebration toasts on state transitions ──────────────────────────
+  useEffect(() => {
+    if (!hasMounted.current) return;
+
+    // Platform connected (false → true)
+    if (hasConnections && !prevConnections.current) {
+      toast.success('Platform connected! Now let\'s create your first post.', {
+        description: 'Use our AI Studio to generate content in seconds.',
+        action: {
+          label: 'Generate Post',
+          onClick: () => router.push('/dashboard/content'),
+        },
+        duration: 6000,
+      });
+    }
+
+    // Content generated (false → true)
+    if (hasContent && !prevContent.current) {
+      toast.success('First post created! Schedule it for the perfect time.', {
+        description: 'Pick the optimal time to reach your audience.',
+        action: {
+          label: 'Schedule Post',
+          onClick: () => router.push('/dashboard/schedule'),
+        },
+        duration: 6000,
+      });
+    }
+
+    // Post scheduled (false → true)
+    if (hasCampaigns && !prevCampaigns.current) {
+      toast.success('You\'re all set! Your first post is scheduled.', {
+        description: 'It will publish automatically at the scheduled time.',
+        duration: 8000,
+        icon: <Sparkles className="h-5 w-5 text-yellow-400" />,
+      });
+    }
+
+    // Update refs
+    prevConnections.current = hasConnections;
+    prevCampaigns.current = hasCampaigns;
+    prevContent.current = hasContent;
+  }, [hasConnections, hasCampaigns, hasContent, router]);
+
   const handleDismiss = useCallback(() => {
+    // Only allow dismissal when at least one task is completed
+    const currentCompleted = [hasConnections, hasCampaigns, hasContent].filter(Boolean).length;
+    if (currentCompleted === 0) {
+      toast.info('Complete at least one step before dismissing.', {
+        description: 'These steps help you get the most out of Synthex.',
+        duration: 3000,
+      });
+      return;
+    }
+
     setDismissed(true);
     try {
       localStorage.setItem(STORAGE_KEY, 'true');
     } catch {
       // Silently fail — dismissal is a convenience, not critical
     }
-  }, []);
+  }, [hasConnections, hasCampaigns, hasContent]);
 
   // Build steps with live completion status
   const steps: ChecklistStep[] = useMemo(
@@ -100,20 +165,20 @@ export function GetStartedChecklist({
         completed: hasConnections,
       },
       {
-        id: 'campaign',
-        title: 'Schedule your first post',
-        description: 'Plan and schedule content so it publishes at the perfect time.',
-        href: '/dashboard/schedule',
-        icon: Rocket,
-        completed: hasCampaigns,
-      },
-      {
         id: 'content',
         title: 'Generate your first AI post',
         description: 'Use the AI Studio to draft, optimise, and publish content in seconds.',
         href: '/dashboard/content',
         icon: Sparkles,
         completed: hasContent,
+      },
+      {
+        id: 'campaign',
+        title: 'Schedule your first post',
+        description: 'Plan and schedule content so it publishes at the perfect time.',
+        href: '/dashboard/schedule',
+        icon: Rocket,
+        completed: hasCampaigns,
       },
     ],
     [hasConnections, hasCampaigns, hasContent],
@@ -123,8 +188,11 @@ export function GetStartedChecklist({
   const progressPercent = Math.round((completedCount / steps.length) * 100);
   const allComplete = completedCount === steps.length;
 
-  // Don't render if dismissed or fully complete
-  if (dismissed || allComplete) {
+  // Don't render if all complete; respect dismissal only if at least one task done
+  if (allComplete) {
+    return null;
+  }
+  if (dismissed && completedCount >= 1) {
     return null;
   }
 
@@ -143,14 +211,17 @@ export function GetStartedChecklist({
               </CardDescription>
             </div>
           </div>
-          <button
-            type="button"
-            onClick={handleDismiss}
-            aria-label="Dismiss get started checklist"
-            className="p-1 rounded-md text-slate-500 hover:text-slate-300 hover:bg-white/[0.05] transition-colors flex-shrink-0"
-          >
-            <X className="h-4 w-4" />
-          </button>
+          {/* Only show dismiss button when at least one task is completed */}
+          {completedCount > 0 && (
+            <button
+              type="button"
+              onClick={handleDismiss}
+              aria-label="Dismiss get started checklist"
+              className="p-1 rounded-md text-slate-500 hover:text-slate-300 hover:bg-white/[0.05] transition-colors flex-shrink-0"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          )}
         </div>
 
         {/* Progress bar */}
@@ -223,16 +294,18 @@ export function GetStartedChecklist({
           ))}
         </ul>
 
-        {/* Dismiss link at bottom */}
-        <div className="mt-4 text-center">
-          <button
-            type="button"
-            onClick={handleDismiss}
-            className="text-xs text-slate-500 hover:text-slate-300 transition-colors"
-          >
-            I know my way around -- hide this
-          </button>
-        </div>
+        {/* Dismiss link — only when at least one task is done */}
+        {completedCount > 0 && (
+          <div className="mt-4 text-center">
+            <button
+              type="button"
+              onClick={handleDismiss}
+              className="text-xs text-slate-500 hover:text-slate-300 transition-colors"
+            >
+              I know my way around — hide this
+            </button>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
