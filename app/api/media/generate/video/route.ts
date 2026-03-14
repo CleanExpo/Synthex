@@ -105,6 +105,21 @@ export async function POST(request: NextRequest) {
       case 'script': {
         // Generate avatar video from script
         validated = ScriptVideoSchema.parse(body);
+
+        // God Mode gate: HeyGen is owner-only
+        if (validated.provider === 'heygen') {
+          const user = await prisma.user.findUnique({
+            where: { id: userId },
+            select: { email: true },
+          });
+          if (!user || !isOwnerEmail(user.email)) {
+            return APISecurityChecker.createSecureResponse(
+              { error: 'HeyGen provider requires God Mode access' },
+              403
+            );
+          }
+        }
+
         result = await generateScriptVideo(validated.script, {
           avatarId: validated.avatarId,
           voiceId: validated.voiceId,
@@ -291,9 +306,9 @@ export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
 
   const videoId = searchParams.get('videoId');
-  const provider = searchParams.get('provider') as 'runway' | 'synthesia' | 'd-id' | 'heygen';
+  const providerParam = searchParams.get('provider');
 
-  if (!videoId || !provider) {
+  if (!videoId || !providerParam) {
     // Return available options
     return APISecurityChecker.createSecureResponse({
       providers: {
@@ -332,7 +347,22 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const validated = StatusCheckSchema.parse({ videoId, provider });
+    const validated = StatusCheckSchema.parse({ videoId, provider: providerParam });
+
+    // God Mode gate: HeyGen status polling is owner-only
+    if (validated.provider === 'heygen') {
+      const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { email: true },
+      });
+      if (!user || !isOwnerEmail(user.email)) {
+        return APISecurityChecker.createSecureResponse(
+          { error: 'HeyGen status check requires God Mode access' },
+          403
+        );
+      }
+    }
+
     const result = await checkVideoStatus(validated.videoId, validated.provider);
 
     // Update media asset if status changed
@@ -355,7 +385,7 @@ export async function GET(request: NextRequest) {
       videoUrl: result.videoUrl,
       error: result.error,
       ...(result.status === 'processing' && {
-        pollUrl: `/api/media/generate/video?videoId=${videoId}&provider=${provider}`,
+        pollUrl: `/api/media/generate/video?videoId=${videoId}&provider=${validated.provider}`,
         pollInterval: 5000,
       }),
     });

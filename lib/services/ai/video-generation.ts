@@ -296,7 +296,7 @@ async function generateWithHeyGen(
 
     if (options.type === 'template' && options.templateId) {
       // Template-based video generation
-      endpoint = `${HEYGEN_API_BASE}/v2/template/${options.templateId}/generate`;
+      endpoint = `${HEYGEN_API_BASE}/v2/template/${encodeURIComponent(options.templateId)}/generate`;
       payload = {
         test: process.env.NODE_ENV !== 'production',
         caption: false,
@@ -452,9 +452,12 @@ export async function checkVideoStatus(
 
       case 'heygen': {
         const heygenKey = process.env.HEYGEN_API_KEY;
+        if (!heygenKey) {
+          return { success: false, provider: 'heygen', videoId, status: 'failed' as const, error: 'HEYGEN_API_KEY not configured' };
+        }
         const response = await fetch(
-          `${HEYGEN_API_BASE}/v1/video_status.get?video_id=${videoId}`,
-          { headers: { 'x-api-key': heygenKey! } }
+          `${HEYGEN_API_BASE}/v1/video_status.get?video_id=${encodeURIComponent(videoId)}`,
+          { headers: { 'x-api-key': heygenKey } }
         );
         const data = await response.json() as {
           data?: { status?: string; video_url?: string; error?: { message?: string } };
