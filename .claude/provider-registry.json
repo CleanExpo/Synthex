@@ -39,5 +39,37 @@
     "professional": ["openrouter", "anthropic", "openai"],
     "business": ["openrouter", "anthropic", "openai", "google"],
     "custom": ["openrouter", "anthropic", "openai", "google"]
+  },
+  "videoProviders": {
+    "runway": {
+      "name": "Runway ML",
+      "types": ["text-to-video", "image-to-video", "motion"],
+      "access": "all",
+      "apiBase": "https://api.runwayml.com/v1"
+    },
+    "synthesia": {
+      "name": "Synthesia",
+      "types": ["avatar"],
+      "access": "all",
+      "apiBase": "https://api.synthesia.io/v2"
+    },
+    "d-id": {
+      "name": "D-ID",
+      "types": ["avatar"],
+      "access": "all",
+      "apiBase": "https://api.d-id.com"
+    },
+    "heygen": {
+      "name": "HeyGen",
+      "types": ["avatar", "template"],
+      "access": "god-mode",
+      "apiBase": "https://api.heygen.com/v2"
+    },
+    "remotion": {
+      "name": "Remotion",
+      "types": ["programmatic"],
+      "access": "god-mode",
+      "rendering": "client-side"
+    }
   }
 }

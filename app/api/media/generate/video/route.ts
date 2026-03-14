@@ -1,12 +1,13 @@
 /**
  * AI Video Generation API
  *
- * @description Generate videos using AI (Runway ML, Synthesia, D-ID)
+ * @description Generate videos using AI (Runway ML, Synthesia, D-ID, HeyGen)
  *
  * ENVIRONMENT VARIABLES REQUIRED:
  * - RUNWAY_API_KEY: Runway ML API key (SECRET)
  * - SYNTHESIA_API_KEY: Synthesia API key (SECRET)
  * - DID_API_KEY: D-ID API key (SECRET)
+ * - HEYGEN_API_KEY: HeyGen API key (SECRET, GOD MODE ONLY)
  *
  * FAILURE MODE: Returns error response with provider details
  */
@@ -23,6 +24,8 @@ import {
   VideoGenerationOptions,
 } from '@/lib/services/ai/video-generation';
 import { logger } from '@/lib/logger';
+import { isOwnerEmail } from '@/lib/auth/jwt-utils';
+import { prisma } from '@/lib/prisma';
 import { createClient } from '@supabase/supabase-js';
 
 const supabase = createClient(
@@ -32,18 +35,19 @@ const supabase = createClient(
 
 // Request validation schemas
 const VideoGenerationSchema = z.object({
-  type: z.enum(['text-to-video', 'image-to-video', 'avatar', 'motion']),
+  type: z.enum(['text-to-video', 'image-to-video', 'avatar', 'motion', 'template']),
   prompt: z.string().max(2000).optional(),
   imageUrl: z.string().url().optional(),
   script: z.string().max(5000).optional(),
   duration: z.number().min(1).max(60).optional(),
   aspectRatio: z.enum(['16:9', '9:16', '1:1']).optional(),
   resolution: z.enum(['720p', '1080p', '4k']).optional(),
-  provider: z.enum(['runway', 'synthesia', 'd-id']).optional(),
+  provider: z.enum(['runway', 'synthesia', 'd-id', 'heygen']).optional(),
   avatarId: z.string().optional(),
   voiceId: z.string().optional(),
   style: z.enum(['cinematic', 'animation', 'realistic', 'artistic']).optional(),
   motionAmount: z.enum(['subtle', 'moderate', 'dynamic']).optional(),
+  templateId: z.string().optional(),
   saveToLibrary: z.boolean().default(true),
 });
 
@@ -52,7 +56,7 @@ const ScriptVideoSchema = z.object({
   avatarId: z.string().optional(),
   voiceId: z.string().optional(),
   aspectRatio: z.enum(['16:9', '9:16', '1:1']).optional(),
-  provider: z.enum(['synthesia', 'd-id']).optional(),
+  provider: z.enum(['synthesia', 'd-id', 'heygen']).optional(),
   saveToLibrary: z.boolean().default(true),
 });
 
@@ -66,7 +70,7 @@ const AnimateImageSchema = z.object({
 
 const StatusCheckSchema = z.object({
   videoId: z.string(),
-  provider: z.enum(['runway', 'synthesia', 'd-id']),
+  provider: z.enum(['runway', 'synthesia', 'd-id', 'heygen']),
 });
 
 /**
@@ -126,6 +130,20 @@ export async function POST(request: NextRequest) {
         // Full video generation
         validated = VideoGenerationSchema.parse(body);
 
+        // God Mode gate: HeyGen is owner-only
+        if (validated.provider === 'heygen' || validated.type === 'template') {
+          const user = await prisma.user.findUnique({
+            where: { id: userId },
+            select: { email: true },
+          });
+          if (!user || !isOwnerEmail(user.email)) {
+            return APISecurityChecker.createSecureResponse(
+              { error: 'HeyGen provider requires God Mode access' },
+              403
+            );
+          }
+        }
+
         // Validate required fields based on type
         if (validated.type === 'text-to-video' && !validated.prompt) {
           return APISecurityChecker.createSecureResponse(
@@ -161,6 +179,7 @@ export async function POST(request: NextRequest) {
           voiceId: validated.voiceId,
           style: validated.style,
           motionAmount: validated.motionAmount,
+          templateId: validated.templateId,
         };
 
         result = await generateVideo(options);
@@ -272,7 +291,7 @@ export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
 
   const videoId = searchParams.get('videoId');
-  const provider = searchParams.get('provider') as 'runway' | 'synthesia' | 'd-id';
+  const provider = searchParams.get('provider') as 'runway' | 'synthesia' | 'd-id' | 'heygen';
 
   if (!videoId || !provider) {
     // Return available options
@@ -296,8 +315,15 @@ export async function GET(request: NextRequest) {
           requiresScript: true,
           supportsCustomImage: true,
         },
+        heygen: {
+          name: 'HeyGen',
+          types: ['avatar', 'template'],
+          maxDuration: 300,
+          requiresScript: true,
+          godModeOnly: true,
+        },
       },
-      videoTypes: ['text-to-video', 'image-to-video', 'avatar', 'motion'],
+      videoTypes: ['text-to-video', 'image-to-video', 'avatar', 'motion', 'template'],
       aspectRatios: ['16:9', '9:16', '1:1'],
       resolutions: ['720p', '1080p', '4k'],
       styles: ['cinematic', 'animation', 'realistic', 'artistic'],

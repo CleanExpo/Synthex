@@ -1,12 +1,13 @@
 /**
  * AI Video Generation Service
  *
- * @description Multi-provider video generation using Runway ML, Synthesia, and D-ID
+ * @description Multi-provider video generation using Runway ML, Synthesia, D-ID, and HeyGen
  *
  * ENVIRONMENT VARIABLES REQUIRED:
  * - RUNWAY_API_KEY: Runway ML API key (SECRET)
  * - SYNTHESIA_API_KEY: Synthesia API key (SECRET)
  * - DID_API_KEY: D-ID API key (SECRET)
+ * - HEYGEN_API_KEY: HeyGen API key (SECRET, GOD MODE ONLY)
  *
  * FAILURE MODE: Falls back to alternative providers, returns error if all fail
  */
@@ -14,10 +15,10 @@
 import { logger } from '@/lib/logger';
 
 // Provider types
-export type VideoProvider = 'runway' | 'synthesia' | 'd-id';
+export type VideoProvider = 'runway' | 'synthesia' | 'd-id' | 'heygen';
 
 // Video generation types
-export type VideoType = 'text-to-video' | 'image-to-video' | 'avatar' | 'motion';
+export type VideoType = 'text-to-video' | 'image-to-video' | 'avatar' | 'motion' | 'template';
 
 // Video generation options
 export interface VideoGenerationOptions {
@@ -33,6 +34,7 @@ export interface VideoGenerationOptions {
   voiceId?: string;
   style?: 'cinematic' | 'animation' | 'realistic' | 'artistic';
   motionAmount?: 'subtle' | 'moderate' | 'dynamic';
+  templateId?: string;
 }
 
 // Generation result
@@ -56,6 +58,7 @@ export interface VideoGenerationResult {
 const RUNWAY_API_BASE = 'https://api.runwayml.com/v1';
 const SYNTHESIA_API_BASE = 'https://api.synthesia.io/v2';
 const DID_API_BASE = 'https://api.d-id.com';
+const HEYGEN_API_BASE = 'https://api.heygen.com';
 
 /**
  * Generate video using Runway ML Gen-3
@@ -271,6 +274,120 @@ async function generateWithDID(
 }
 
 /**
+ * Generate video using HeyGen (God Mode only)
+ *
+ * Supports two modes:
+ * - Avatar video: script + avatarId → AI-generated presenter video
+ * - Template video: templateId + variables → template-based video
+ *
+ * Auth gate is enforced at the API route level, NOT here.
+ */
+async function generateWithHeyGen(
+  options: VideoGenerationOptions
+): Promise<VideoGenerationResult> {
+  const apiKey = process.env.HEYGEN_API_KEY;
+  if (!apiKey) {
+    return { success: false, provider: 'heygen', status: 'failed', error: 'HEYGEN_API_KEY not configured' };
+  }
+
+  try {
+    let endpoint: string;
+    let payload: Record<string, unknown>;
+
+    if (options.type === 'template' && options.templateId) {
+      // Template-based video generation
+      endpoint = `${HEYGEN_API_BASE}/v2/template/${options.templateId}/generate`;
+      payload = {
+        test: process.env.NODE_ENV !== 'production',
+        caption: false,
+        title: options.prompt || 'Synthex generated video',
+      };
+    } else {
+      // Avatar-based video generation (script required)
+      if (!options.script) {
+        return { success: false, provider: 'heygen', status: 'failed', error: 'Script required for HeyGen avatar video' };
+      }
+
+      endpoint = `${HEYGEN_API_BASE}/v2/video/generate`;
+      payload = {
+        test: process.env.NODE_ENV !== 'production',
+        caption: false,
+        title: options.prompt || 'Synthex generated video',
+        video_inputs: [{
+          character: {
+            type: 'avatar',
+            avatar_id: options.avatarId || 'Angela-inblackskirt-20220820',
+            avatar_style: 'normal',
+          },
+          voice: {
+            type: 'text',
+            input_text: options.script,
+            voice_id: options.voiceId || '1bd001e7e50f421d891986aad5c21024',
+            speed: 1.0,
+          },
+          background: {
+            type: 'color',
+            value: '#FFFFFF',
+          },
+        }],
+        dimension: {
+          width: options.aspectRatio === '9:16' ? 720 : 1920,
+          height: options.aspectRatio === '9:16' ? 1280 : 1080,
+        },
+      };
+    }
+
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 30_000);
+
+    let response: Response;
+    try {
+      response = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'x-api-key': apiKey,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+        signal: controller.signal,
+      });
+    } finally {
+      clearTimeout(timeout);
+    }
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      const errorMsg = (errorData as Record<string, unknown>).message || `HeyGen API error: ${response.status}`;
+      throw new Error(String(errorMsg));
+    }
+
+    const data = await response.json() as { data?: { video_id?: string } };
+
+    return {
+      success: true,
+      provider: 'heygen',
+      videoId: data.data?.video_id,
+      status: 'processing',
+      metadata: {
+        model: 'heygen-avatar',
+        duration: options.duration,
+      },
+    };
+  } catch (error: unknown) {
+    const isTimeout = error instanceof Error && error.name === 'AbortError';
+    logger.error('HeyGen generation failed:', { error });
+    return {
+      success: false,
+      provider: 'heygen',
+      status: 'failed',
+      error: isTimeout
+        ? 'HeyGen request timed out after 30s'
+        : (error instanceof Error ? error.message : String(error)),
+    };
+  }
+}
+
+/**
  * Check video generation status
  */
 export async function checkVideoStatus(
@@ -333,6 +450,28 @@ export async function checkVideoStatus(
         };
       }
 
+      case 'heygen': {
+        const heygenKey = process.env.HEYGEN_API_KEY;
+        const response = await fetch(
+          `${HEYGEN_API_BASE}/v1/video_status.get?video_id=${videoId}`,
+          { headers: { 'x-api-key': heygenKey! } }
+        );
+        const data = await response.json() as {
+          data?: { status?: string; video_url?: string; error?: { message?: string } };
+        };
+
+        const heygenStatus = data.data?.status;
+        return {
+          success: heygenStatus === 'completed',
+          provider: 'heygen',
+          videoId,
+          videoUrl: data.data?.video_url,
+          status: heygenStatus === 'completed' ? 'completed'
+            : heygenStatus === 'failed' ? 'failed' : 'processing',
+          error: data.data?.error?.message,
+        };
+      }
+
       default:
         return { success: false, provider, videoId, status: 'failed', error: 'Unknown provider' };
     }
@@ -361,6 +500,9 @@ export async function generateVideo(
       case 'avatar':
         provider = options.imageUrl ? 'd-id' : 'synthesia';
         break;
+      case 'template':
+        provider = 'heygen'; // Templates are HeyGen-only (God Mode)
+        break;
       default:
         provider = 'runway';
     }
@@ -382,6 +524,9 @@ export async function generateVideo(
       break;
     case 'd-id':
       result = await generateWithDID(options);
+      break;
+    case 'heygen':
+      result = await generateWithHeyGen(options);
       break;
     default:
       result = { success: false, provider: provider!, status: 'failed', error: 'Unknown provider' };

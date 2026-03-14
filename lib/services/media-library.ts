@@ -16,7 +16,7 @@ import { logger } from '@/lib/logger';
 // Media asset types
 export type MediaType = 'image' | 'video' | 'audio';
 export type MediaStatus = 'pending' | 'processing' | 'completed' | 'failed';
-export type MediaProvider = 'stability' | 'dalle' | 'gemini' | 'runway' | 'synthesia' | 'd-id' | 'elevenlabs';
+export type MediaProvider = 'stability' | 'dalle' | 'gemini' | 'runway' | 'synthesia' | 'd-id' | 'elevenlabs' | 'heygen' | 'remotion';
 
 // Media asset interface
 export interface MediaAsset {
