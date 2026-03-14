@@ -2,7 +2,7 @@ module.exports = {
   preset: 'ts-jest',
   testEnvironment: 'jsdom',
   setupFiles: ['<rootDir>/tests/jest.setup.js'],
-  
+
   // Test file patterns
   testMatch: [
     '<rootDir>/tests/unit/**/*.test.{ts,js}',
@@ -15,9 +15,11 @@ module.exports = {
     '<rootDir>/tests/strategic-marketing/**/*.spec.{ts,js}',
     '<rootDir>/src/**/*.test.{ts,js}',
     '<rootDir>/src/**/*.spec.{ts,js}',
-    '<rootDir>/src/**/__tests__/**/*.{ts,js}'
+    '<rootDir>/src/**/__tests__/**/*.{ts,js}',
+    '<rootDir>/__tests__/**/*.test.{ts,js}',
+    '<rootDir>/__tests__/**/*.spec.{ts,js}'
   ],
-  
+
   // Coverage configuration
   collectCoverageFrom: [
     'src/**/*.{ts,js}',
@@ -28,7 +30,7 @@ module.exports = {
     '!**/node_modules/**',
     '!**/dist/**'
   ],
-  
+
   coverageDirectory: 'coverage',
   coverageReporters: [
     'text',
@@ -36,7 +38,7 @@ module.exports = {
     'html',
     'json'
   ],
-  
+
   // Coverage thresholds
   // Current: ~4% | Target: 30% by end of Phase 2
   // These values are set to current levels + small buffer to prevent regression
@@ -48,25 +50,25 @@ module.exports = {
       statements: 4
     }
   },
-  
+
   // Module resolution
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json'],
   transform: {
     '^.+\\.(ts|tsx)$': ['ts-jest', { tsconfig: 'tsconfig.json' }],
     '^.+\\.(js|jsx)$': 'babel-jest'
   },
-  
+
   // Test timeout
   testTimeout: 30000,
-  
+
   // Verbose output
   verbose: true,
-  
+
   // Clear mocks between tests
   clearMocks: true,
   resetMocks: true,
   restoreMocks: true,
-  
+
   // Module path mapping (must match tsconfig.json paths)
   moduleNameMapper: {
     '^@/components/(.*)$': '<rootDir>/components/$1',
@@ -79,7 +81,7 @@ module.exports = {
     // Mock ESM modules that Jest can't transform
     '^bullmq$': '<rootDir>/tests/__mocks__/bullmq.js'
   },
-  
+
   // Ignore patterns
   testPathIgnorePatterns: [
     '/node_modules/',
@@ -90,7 +92,7 @@ module.exports = {
     // Temporarily ignore ESM test files that need migration
     'src/tests/optimizers.test.js'
   ],
-  
+
   // Reporter configuration
   reporters: [
     'default',
@@ -107,16 +109,16 @@ module.exports = {
       }
     ]
   ],
-  
+
   // Watch plugins
   watchPlugins: [
     'jest-watch-typeahead/filename',
     'jest-watch-typeahead/testname'
   ],
-  
+
   // Force exit after tests complete
   forceExit: true,
-  
+
   // Detect open handles
   detectOpenHandles: true
 };
