@@ -26,6 +26,7 @@ import { prisma } from '@/lib/prisma';
 import { logger } from '@/lib/logger';
 import { generateToken } from '@/lib/auth/jwt-utils';
 import { sendWelcomeSequenceDay0 } from '@/lib/email/billing-emails';
+import { seedVaultFromOnboarding } from '@/lib/vault/onboarding-seeder';
 
 // ============================================================================
 // POST — Complete Onboarding
@@ -194,6 +195,15 @@ export async function POST(request: NextRequest) {
       path: '/',
       maxAge: 60 * 60 * 24 * 7, // 7 days
     });
+
+    // Seed vault with credentials (non-fatal, best-effort)
+    try {
+      await seedVaultFromOnboarding(user.id, org.id);
+    } catch (vaultErr) {
+      logger.warn('[complete] Vault seeding failed (non-fatal)', {
+        error: vaultErr instanceof Error ? vaultErr.message : String(vaultErr),
+      });
+    }
 
     logger.info('[complete] Onboarding completed', { userId: user.id, orgId: org.id });
 

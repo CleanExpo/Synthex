@@ -19,6 +19,7 @@ import { validateAPIKey, APIProvider } from '@/lib/encryption/api-key-validator'
 import { getUserIdFromRequestOrCookies, unauthorizedResponse } from '@/lib/auth/jwt-utils';
 import { withRateLimit } from '@/lib/middleware/rate-limiter';
 import { logger } from '@/lib/logger';
+import { seedSingleCredential } from '@/lib/vault/onboarding-seeder';
 
 const CredentialsRequestSchema = z.object({
   provider: z.enum(['openai', 'anthropic', 'google', 'openrouter']),
@@ -96,6 +97,20 @@ async function postHandler(request: NextRequest) {
         lastValidatedAt: new Date(),
         isActive: true,
       },
+    });
+  }
+
+  // Mirror to vault (non-fatal, best-effort)
+  if (organizationId) {
+    seedSingleCredential({
+      userId,
+      organizationId,
+      provider,
+      rawApiKey: apiKey,
+    }).catch((err) => {
+      logger.warn('[API Credentials] Vault mirror failed (non-fatal)', {
+        error: err instanceof Error ? err.message : String(err),
+      });
     });
   }
 

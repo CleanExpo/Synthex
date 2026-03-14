@@ -39,6 +39,8 @@ import {
 
 import { PlatformHealth } from '@/components/admin/platform-health';
 import { AuditLogViewer } from '@/components/admin/audit-log-viewer';
+import { VaultManager } from '@/components/admin/vault-manager';
+import { useActiveBusiness } from '@/hooks/useActiveBusiness';
 
 // =============================================================================
 // SWR Fetcher — always sends httpOnly auth-token cookie
@@ -82,6 +84,9 @@ export default function AdminPanel() {
   const [isSaving, setIsSaving] = useState(false);
   const [selectedUserIds, setSelectedUserIds] = useState<Set<string>>(new Set());
   const [isBulkProcessing, setIsBulkProcessing] = useState(false);
+
+  // Active business context (for vault org scoping)
+  const { activeOrganizationId } = useActiveBusiness();
 
   // ---------------------------------------------------------------------------
   // SWR — fetch users from Prisma API
@@ -349,6 +354,7 @@ export default function AdminPanel() {
           <TabsTrigger value="users">Users</TabsTrigger>
           <TabsTrigger value="platform-health">Platform Health</TabsTrigger>
           <TabsTrigger value="audit-log">Audit Log</TabsTrigger>
+          <TabsTrigger value="vault">Vault</TabsTrigger>
         </TabsList>
 
         {/* ------------------------------------------------------------------ */}
@@ -400,6 +406,13 @@ export default function AdminPanel() {
         {/* ------------------------------------------------------------------ */}
         <TabsContent value="audit-log">
           <AuditLogViewer />
+        </TabsContent>
+
+        {/* ------------------------------------------------------------------ */}
+        {/* Vault Tab                                                           */}
+        {/* ------------------------------------------------------------------ */}
+        <TabsContent value="vault">
+          <VaultManager organizationId={activeOrganizationId ?? ''} />
         </TabsContent>
       </Tabs>
 

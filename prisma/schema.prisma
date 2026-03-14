@@ -192,6 +192,9 @@ model User {
   forecastModels       ForecastModel[]
   spatiotemporalModels SpatiotemporalModel[]
 
+  // Vault — secrets created by this user
+  createdVaultSecrets VaultSecret[] @relation("VaultSecretCreator")
+
   // Onboarding state (UNI-920)
   onboardingComplete      Boolean   @default(false) @map("onboarding_complete")
   onboardingStep          Int       @default(0) @map("onboarding_step") // 0=not started, 1=business, 2=api-key, 3=socials, 4=goals
@@ -523,6 +526,10 @@ model Organization {
   prPitches          PRPitch[]
   mediaCoverage      MediaCoverage[]
   pressReleases      PressRelease[]
+
+  // Vault — centralised secrets management
+  vaultSecrets    VaultSecret[]
+  vaultAccessLogs VaultAccessLog[]
 
   // Indices for multi-tenant queries
   @@index([slug])
@@ -4171,4 +4178,81 @@ model InviteCode {
   @@index([email])
   @@index([isActive])
   @@map("invite_codes")
+}
+
+// =============================================================================
+// Vault — Centralised Secrets Management
+// =============================================================================
+
+model VaultSecret {
+  id             String   @id @default(cuid())
+  organizationId String   @map("organization_id")
+  name           String // Human-readable label (e.g., "OpenRouter API Key")
+  slug           String // URL-safe unique key per org (e.g., "openrouter-api-key")
+  description    String?
+
+  // Secret classification
+  secretType String @map("secret_type") // api_key | oauth_token | oauth_refresh_token | env_var | custom
+  provider   String? // openrouter | anthropic | openai | google | twitter | linkedin | ...
+
+  // Encrypted storage (AES-256-GCM via lib/security/field-encryption.ts)
+  encryptedValue       String @map("encrypted_value") @db.Text
+  encryptionKeyVersion Int    @default(1) @map("encryption_key_version")
+  maskedValue          String @map("masked_value") // Display-safe masked value (e.g., "sk-...4f2a")
+
+  // Lifecycle
+  isActive      Boolean   @default(true) @map("is_active")
+  isRotatable   Boolean   @default(false) @map("is_rotatable")
+  expiresAt     DateTime? @map("expires_at")
+  lastUsedAt    DateTime? @map("last_used_at")
+  usageCount    Int       @default(0) @map("usage_count")
+  lastRotatedAt DateTime? @map("last_rotated_at")
+
+  // Provenance
+  source    String  @default("manual") // manual | onboarding | oauth_flow | migration
+  createdBy String? @map("created_by")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  creator      User?        @relation("VaultSecretCreator", fields: [createdBy], references: [id], onDelete: SetNull)
+  accessLogs   VaultAccessLog[]
+
+  @@unique([organizationId, slug])
+  @@index([organizationId, secretType])
+  @@index([organizationId, provider])
+  @@index([organizationId, isActive])
+  @@index([expiresAt])
+  @@map("vault_secrets")
+}
+
+model VaultAccessLog {
+  id             String  @id @default(cuid())
+  vaultSecretId  String? @map("vault_secret_id") // Nullable for bulk/org-level actions
+  organizationId String  @map("organization_id")
+
+  // Action audit
+  action    String // read | create | update | rotate | delete | decrypt | list
+  actor     String // userId or "system" or "workflow:<executionId>"
+  actorType String @map("actor_type") // user | system | workflow
+  outcome   String @default("success") // success | failure | denied
+
+  // Request context
+  ipAddress String? @map("ip_address")
+  userAgent String? @map("user_agent")
+  details   Json? // Additional context (e.g., { reason: "workflow execution" })
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // Relations
+  vaultSecret  VaultSecret?  @relation(fields: [vaultSecretId], references: [id], onDelete: SetNull)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([vaultSecretId])
+  @@index([organizationId, createdAt])
+  @@index([actor])
+  @@index([action])
+  @@map("vault_access_logs")
 }

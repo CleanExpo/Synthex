@@ -15,6 +15,7 @@ import { execute as executeHumanApproval } from './step-types/human-approval'
 import { execute as executeActionPublish } from './step-types/action-publish'
 import { execute as executeActionSchedule } from './step-types/action-schedule'
 import { execute as executeActionNotify } from './step-types/action-notify'
+import { execute as executeCredentialInject } from './step-types/credential-inject'
 
 /** Default step execution timeout in milliseconds */
 const DEFAULT_TIMEOUT_MS = 30_000
@@ -73,6 +74,8 @@ async function executeStepByType(
       return executeActionStep(stepDef, context)
     case 'validation':
       return executeValidationStep(stepDef, context)
+    case 'credential-inject':
+      return executeCredentialInject(stepDef, context)
     default: {
       const exhaustive: never = stepDef.type
       return {

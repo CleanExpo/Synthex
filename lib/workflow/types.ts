@@ -7,7 +7,7 @@
 // Step Definitions (the blueprint for what a step should do)
 // ---------------------------------------------------------------------------
 
-export type StepType = 'ai' | 'approval' | 'action' | 'validation'
+export type StepType = 'ai' | 'approval' | 'action' | 'validation' | 'credential-inject'
 
 export interface WorkflowStepDefinition {
   name: string
@@ -52,6 +52,14 @@ export interface StepContext {
   stepIndex: number
   /** Total steps in the workflow */
   totalSteps: number
+  /** Organisation ID for vault credential access */
+  organizationId?: string
+  /**
+   * Decrypted credentials from credential-inject steps.
+   * SECURITY: Never included in priorOutputs — separate channel to prevent
+   * credential leakage into AI prompts.
+   */
+  credentials?: Record<string, string>
 }
 
 // ---------------------------------------------------------------------------

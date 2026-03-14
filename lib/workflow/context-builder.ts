@@ -29,12 +29,13 @@ export async function buildStepContext(
   stepIndex: number,
   stepDefinition: WorkflowStepDefinition
 ): Promise<StepContext> {
-  // Load the workflow execution for initial input and total steps
+  // Load the workflow execution for initial input, total steps, and org context
   const execution = await prisma.workflowExecution.findUniqueOrThrow({
     where: { id: workflowExecutionId },
     select: {
       inputData: true,
       totalSteps: true,
+      organizationId: true,
     },
   })
 
@@ -59,20 +60,24 @@ export async function buildStepContext(
   const budgetedSteps = priorStepExecutions.slice(-MAX_PRIOR_STEPS)
 
   // Map to PriorStepOutput, truncating verbose outputs
-  const priorOutputs: PriorStepOutput[] = budgetedSteps.map((step) => {
-    let output: unknown = step.outputData
-    // Truncate if string output exceeds budget
-    if (typeof output === 'string' && output.length > MAX_OUTPUT_CHARS) {
-      output = output.slice(0, MAX_OUTPUT_CHARS) + '... [truncated for token budget]'
-    }
-    return {
-      stepIndex: step.stepIndex,
-      stepName: step.stepName,
-      stepType: step.stepType as StepType,
-      output,
-      confidenceScore: step.confidenceScore ?? undefined,
-    }
-  })
+  // SECURITY: Exclude credential-inject steps from priorOutputs to prevent
+  // decrypted credentials from leaking into AI prompts
+  const priorOutputs: PriorStepOutput[] = budgetedSteps
+    .filter((step) => step.stepType !== 'credential-inject')
+    .map((step) => {
+      let output: unknown = step.outputData
+      // Truncate if string output exceeds budget
+      if (typeof output === 'string' && output.length > MAX_OUTPUT_CHARS) {
+        output = output.slice(0, MAX_OUTPUT_CHARS) + '... [truncated for token budget]'
+      }
+      return {
+        stepIndex: step.stepIndex,
+        stepName: step.stepName,
+        stepType: step.stepType as StepType,
+        output,
+        confidenceScore: step.confidenceScore ?? undefined,
+      }
+    })
 
   return {
     stepDefinition,
@@ -80,5 +85,6 @@ export async function buildStepContext(
     workflowInput: execution.inputData,
     stepIndex,
     totalSteps: execution.totalSteps,
+    organizationId: execution.organizationId,
   }
 }
