@@ -10,6 +10,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { getUserIdFromRequestOrCookies, unauthorizedResponse } from '@/lib/auth/jwt-utils';
+import { getEffectiveOrganizationId, getEffectiveQueryFilter } from '@/lib/multi-business/business-scope';
 import { z } from 'zod';
 import { pushUniteHubEvent } from '@/lib/unite-hub-connector';
 import { logger } from '@/lib/logger';
@@ -49,8 +50,11 @@ export async function GET(request: NextRequest) {
     const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) return unauthorizedResponse();
 
+    // Scope query to the user's active org (handles multi-business context automatically)
+    const queryFilter = await getEffectiveQueryFilter(userId);
+
     const campaigns = await prisma.campaign.findMany({
-      where: { userId },
+      where: queryFilter,
       include: {
         posts: {
           select: {
@@ -97,6 +101,9 @@ export async function POST(request: NextRequest) {
 
     const { name, description, platform, content, settings } = validationResult.data;
 
+    // Resolve org ID for scoping (null = no active org context)
+    const organizationId = await getEffectiveOrganizationId(userId);
+
     // Create campaign and audit log in a transaction
     const campaign = await prisma.$transaction(async (tx) => {
       const created = await tx.campaign.create({
@@ -107,6 +114,7 @@ export async function POST(request: NextRequest) {
           content,
           settings: settings as object | undefined,
           userId,
+          organizationId: organizationId ?? undefined,
           status: 'draft',
         }
       });

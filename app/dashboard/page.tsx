@@ -7,6 +7,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { toast } from 'sonner';
+import { useActiveBusiness } from '@/hooks/useActiveBusiness';
 import { AlertTriangle, MessageSquare, RefreshCw } from '@/components/icons';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -29,6 +30,7 @@ import {
 } from '@/components/dashboard';
 import { WelcomeCard } from '@/components/dashboard/WelcomeCard';
 import { InsightsWidget } from '@/components/insights/InsightsWidget';
+import { AllBusinessesDashboard } from '@/components/business/AllBusinessesDashboard';
 
 export default function DashboardPage() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
@@ -36,6 +38,10 @@ export default function DashboardPage() {
   const [error, setError] = useState<FetchError | null>(null);
   const [isRetrying, setIsRetrying] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
+
+  // Multi-business: detect if we're in "All Businesses" mode
+  const { isOwner, activeOrganizationId, isLoading: businessLoading } = useActiveBusiness();
+  const isAllBusinessesMode = isOwner && activeOrganizationId === null && !businessLoading;
 
   const fetchDashboardData = useCallback(async () => {
     try {
@@ -237,7 +243,10 @@ export default function DashboardPage() {
 
         <main data-tour="dashboard" className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-6">
 
-          {isNewUser ? (
+          {/* ── Scale Enterprise: All Businesses Mode ─────────────────────── */}
+          {isAllBusinessesMode ? (
+            <AllBusinessesDashboard />
+          ) : isNewUser ? (
             <>
               {/* ── New User Dashboard ──────────────────────────────────── */}
               {/* Welcome card with onboarding analysis summary */}
