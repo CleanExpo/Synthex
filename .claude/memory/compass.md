@@ -2,8 +2,8 @@
 
 **Project**: Synthex — AI marketing automation (synthex.social, not yet public)
 **Stack**: Next.js 15, Supabase Auth ONLY, TypeScript 5, Prisma 6, Vercel
-**Milestone**: v2.0 Reliable AI Agents (Phases 59-66)
-**Current phase**: 62 — Multi-step Workflow Engine (UNI-TBD) | 3 plans planned (0/3 executed)
+**Milestone**: v9.0 Autonomous Operation (Phases 118+) — PLANNING
+**Current phase**: None — All 117 phases shipped, next milestone needed
 
 ## 3 Architectural Rules
 1. No mock data — every endpoint returns real database data
@@ -11,9 +11,16 @@
 3. Auth: Supabase ONLY — never Clerk, NextAuth, or any other system
 
 ## Active Issues
-- UNI-1237: Phase 59 Context Resilience Infrastructure (Done)
-- UNI-1238: Phase 60 Agent Orchestration Hardening (Done)
-- Phase 61: AI Session Memory & Persistence (Done — UNI-TBD)
+- UNI-1180: Linear MCP hook configuration (Todo)
+- UNI-1181: Build autonomous headless task-runner (Todo)
+- UNI-1182: E2E verification on live Vercel (Todo, human)
+- SYN-378: Vault System — Centralised Secrets Management (Done 2026-03-15)
+
+## Autonomy Foundation (shipped 2026-03-15)
+- Vault: 30 AI keys seeded across 10 businesses (AES-256-GCM, org-scoped)
+- Workflow Engine: lib/workflow/ (orchestrator, step-executor, context-builder)
+- Credential-inject step type: vault → workflow context (no leakage to AI prompts)
+- Parallel Agents (Phase 63), Quality Gates (Phase 64), Campaign Intelligence (Phase 65), Autonomous Agent (Phase 66) — all shipped
 
 ## Key Paths
 - Planning: .planning/STATE.md · ROADMAP.md · MILESTONES.md
