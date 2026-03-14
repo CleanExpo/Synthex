@@ -41,6 +41,7 @@ import {
   Filter,
   Eye,
   Copy,
+  Zap,
 } from '@/components/icons';
 import { VaultSecretDialog, type SecretFormData } from './vault-secret-dialog';
 
@@ -172,6 +173,7 @@ export function VaultManager({ organizationId }: VaultManagerProps) {
   const [rotateSlug, setRotateSlug] = useState('');
   const [rotateName, setRotateName] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+  const [isSeeding, setIsSeeding] = useState(false);
   const [filterType, setFilterType] = useState<string>('all');
   const [filterProvider, setFilterProvider] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState('');
@@ -288,6 +290,29 @@ export function VaultManager({ organizationId }: VaultManagerProps) {
     toast.success('Masked value copied');
   }, []);
 
+  const handleSeedAll = useCallback(async () => {
+    if (!confirm('Seed platform AI keys (OpenRouter, OpenAI, etc.) into ALL businesses? Existing secrets will not be overwritten.')) return;
+    setIsSeeding(true);
+    try {
+      const res = await fetch('/api/admin/vault/seed-all', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error ?? 'Seed failed');
+      const { summary } = json;
+      toast.success(
+        `Seeded ${summary.totalSeeded} keys across ${summary.organisations} businesses (${summary.totalSkipped} already existed)`
+      );
+      mutate();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Seed all failed');
+    } finally {
+      setIsSeeding(false);
+    }
+  }, [mutate]);
+
   // ---------------------------------------------------------------------------
   // Render
   // ---------------------------------------------------------------------------
@@ -326,6 +351,16 @@ export function VaultManager({ organizationId }: VaultManagerProps) {
               >
                 <RefreshCw className={`h-4 w-4 mr-1 ${isLoading ? 'animate-spin' : ''}`} />
                 Refresh
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleSeedAll}
+                disabled={isSeeding}
+                title="Seed platform AI keys into all businesses"
+              >
+                <Zap className={`h-4 w-4 mr-1 ${isSeeding ? 'animate-pulse' : ''}`} />
+                {isSeeding ? 'Seeding...' : 'Seed All'}
               </Button>
               <Button size="sm" onClick={handleOpenCreate}>
                 <Plus className="h-4 w-4 mr-1" />

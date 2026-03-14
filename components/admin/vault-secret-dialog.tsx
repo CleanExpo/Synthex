@@ -131,7 +131,7 @@ export function VaultSecretDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} autoComplete="off">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               {mode === 'create' ? <Key className="h-5 w-5" /> : <Lock className="h-5 w-5" />}
@@ -150,6 +150,7 @@ export function VaultSecretDialog({
                   placeholder="e.g., OpenRouter API Key"
                   value={form.name}
                   onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+                  autoComplete="off"
                   required
                 />
               </div>
@@ -211,6 +212,7 @@ export function VaultSecretDialog({
                   placeholder="Paste your secret here..."
                   value={form.value}
                   onChange={(e) => setForm((f) => ({ ...f, value: e.target.value }))}
+                  autoComplete="new-password"
                   required
                   className="pr-10"
                 />
@@ -233,6 +235,7 @@ export function VaultSecretDialog({
                   placeholder="What is this key used for?"
                   value={form.description}
                   onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
+                  autoComplete="off"
                 />
               </div>
             )}
