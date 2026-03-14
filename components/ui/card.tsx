@@ -11,31 +11,31 @@ const cardVariants = cva(
           'border bg-card shadow-sm dark:bg-slate-900/50 dark:border-slate-800 dark:shadow-lg',
         // Premium Glassmorphism variants (2026 Design System)
         glass:
-          'bg-white/[0.06] backdrop-blur-xl border border-white/[0.12] shadow-[0_0_0_1px_rgba(255,255,255,0.05)_inset,0_8px_32px_rgba(0,0,0,0.2)] hover:bg-white/[0.10] hover:border-white/[0.18] dark:bg-white/[0.06] dark:border-white/[0.12] dark:hover:bg-white/[0.10] dark:hover:border-white/[0.18]',
+          'bg-white/[0.08] border border-white/[0.12] shadow-[0_0_0_1px_rgba(255,255,255,0.05)_inset,0_8px_32px_rgba(0,0,0,0.2)] hover:bg-white/[0.12] hover:border-white/[0.18] dark:bg-white/[0.08] dark:border-white/[0.12] dark:hover:bg-white/[0.12] dark:hover:border-white/[0.18]',
         'glass-solid':
-          'bg-slate-900/85 backdrop-blur-xl border border-white/[0.12] shadow-[0_0_0_1px_rgba(255,255,255,0.04)_inset,0_8px_32px_rgba(0,0,0,0.3)] dark:bg-slate-950/92 dark:border-slate-700',
+          'bg-slate-900/92 border border-white/[0.12] shadow-[0_0_0_1px_rgba(255,255,255,0.04)_inset,0_8px_32px_rgba(0,0,0,0.3)] dark:bg-slate-950/95 dark:border-slate-700',
         'glass-gradient':
-          'bg-gradient-to-br from-white/[0.08] to-white/[0.03] backdrop-blur-xl border border-white/[0.12] shadow-[0_0_0_1px_rgba(255,255,255,0.05)_inset,0_8px_32px_rgba(0,0,0,0.2)]',
+          'bg-gradient-to-br from-white/[0.10] to-white/[0.05] border border-white/[0.12] shadow-[0_0_0_1px_rgba(255,255,255,0.05)_inset,0_8px_32px_rgba(0,0,0,0.2)]',
         'glass-primary':
-          'bg-gradient-to-br from-cyan-500/10 to-cyan-600/10 backdrop-blur-xl border border-cyan-500/20 shadow-[0_0_0_1px_rgba(6,182,212,0.05)_inset,0_4px_24px_rgba(6,182,212,0.1)] hover:border-cyan-500/30 hover:shadow-[0_0_30px_rgba(6,182,212,0.15)]',
+          'bg-gradient-to-br from-cyan-500/12 to-cyan-600/12 border border-cyan-500/20 shadow-[0_0_0_1px_rgba(6,182,212,0.05)_inset,0_4px_24px_rgba(6,182,212,0.1)] hover:border-cyan-500/30 hover:shadow-[0_0_30px_rgba(6,182,212,0.15)]',
         'glass-secondary':
-          'bg-gradient-to-br from-cyan-500/10 to-blue-500/10 backdrop-blur-xl border border-cyan-500/20 shadow-[0_0_0_1px_rgba(6,182,212,0.05)_inset,0_4px_24px_rgba(6,182,212,0.1)] hover:border-cyan-500/30 hover:shadow-[0_0_30px_rgba(6,182,212,0.15)]',
+          'bg-gradient-to-br from-cyan-500/12 to-blue-500/12 border border-cyan-500/20 shadow-[0_0_0_1px_rgba(6,182,212,0.05)_inset,0_4px_24px_rgba(6,182,212,0.1)] hover:border-cyan-500/30 hover:shadow-[0_0_30px_rgba(6,182,212,0.15)]',
         'glass-success':
-          'bg-gradient-to-br from-emerald-500/10 to-green-500/10 backdrop-blur-xl border border-emerald-500/20 shadow-[0_0_0_1px_rgba(16,185,129,0.05)_inset,0_4px_24px_rgba(16,185,129,0.1)] hover:border-emerald-500/30 hover:shadow-[0_0_30px_rgba(16,185,129,0.15)]',
+          'bg-gradient-to-br from-emerald-500/12 to-green-500/12 border border-emerald-500/20 shadow-[0_0_0_1px_rgba(16,185,129,0.05)_inset,0_4px_24px_rgba(16,185,129,0.1)] hover:border-emerald-500/30 hover:shadow-[0_0_30px_rgba(16,185,129,0.15)]',
         'glass-warning':
-          'bg-gradient-to-br from-amber-500/10 to-orange-500/10 backdrop-blur-xl border border-amber-500/20 shadow-[0_0_0_1px_rgba(245,158,11,0.05)_inset,0_4px_24px_rgba(245,158,11,0.1)] hover:border-amber-500/30 hover:shadow-[0_0_30px_rgba(245,158,11,0.15)]',
+          'bg-gradient-to-br from-amber-500/12 to-orange-500/12 border border-amber-500/20 shadow-[0_0_0_1px_rgba(245,158,11,0.05)_inset,0_4px_24px_rgba(245,158,11,0.1)] hover:border-amber-500/30 hover:shadow-[0_0_30px_rgba(245,158,11,0.15)]',
         'glass-destructive':
-          'bg-gradient-to-br from-red-500/10 to-rose-500/10 backdrop-blur-xl border border-red-500/20 shadow-[0_0_0_1px_rgba(239,68,68,0.05)_inset,0_4px_24px_rgba(239,68,68,0.1)] hover:border-red-500/30 hover:shadow-[0_0_30px_rgba(239,68,68,0.15)]',
+          'bg-gradient-to-br from-red-500/12 to-rose-500/12 border border-red-500/20 shadow-[0_0_0_1px_rgba(239,68,68,0.05)_inset,0_4px_24px_rgba(239,68,68,0.1)] hover:border-red-500/30 hover:shadow-[0_0_30px_rgba(239,68,68,0.15)]',
         // Gradient variants for premium sections
         'gradient-primary':
-          'bg-gradient-to-r from-cyan-900/50 to-blue-900/50 backdrop-blur-xl border border-white/[0.08] shadow-[0_0_0_1px_rgba(255,255,255,0.02)_inset,0_8px_32px_rgba(6,182,212,0.15)]',
+          'bg-gradient-to-r from-cyan-900/60 to-blue-900/60 border border-white/[0.08] shadow-[0_0_0_1px_rgba(255,255,255,0.02)_inset,0_8px_32px_rgba(6,182,212,0.15)]',
         'gradient-secondary':
-          'bg-gradient-to-r from-cyan-900/50 to-teal-900/50 backdrop-blur-xl border border-white/[0.08] shadow-[0_0_0_1px_rgba(255,255,255,0.02)_inset,0_8px_32px_rgba(6,182,212,0.15)]',
+          'bg-gradient-to-r from-cyan-900/60 to-teal-900/60 border border-white/[0.08] shadow-[0_0_0_1px_rgba(255,255,255,0.02)_inset,0_8px_32px_rgba(6,182,212,0.15)]',
         // Interactive variants with hover lift
         interactive:
           'border bg-card shadow-sm hover:shadow-lg hover:-translate-y-1 cursor-pointer dark:bg-slate-900/50 dark:border-slate-800 dark:hover:bg-slate-800/70',
         'glass-interactive':
-          'bg-white/[0.06] backdrop-blur-xl border border-white/[0.12] shadow-[0_8px_32px_rgba(0,0,0,0.2)] hover:bg-white/[0.10] hover:border-white/[0.18] hover:-translate-y-1 hover:shadow-[0_12px_40px_rgba(0,0,0,0.25)] cursor-pointer dark:bg-white/[0.06] dark:hover:bg-white/[0.10]',
+          'bg-white/[0.08] border border-white/[0.12] shadow-[0_8px_32px_rgba(0,0,0,0.2)] hover:bg-white/[0.12] hover:border-white/[0.18] hover:-translate-y-1 hover:shadow-[0_12px_40px_rgba(0,0,0,0.25)] cursor-pointer dark:bg-white/[0.08] dark:hover:bg-white/[0.12]',
       },
     },
     defaultVariants: {

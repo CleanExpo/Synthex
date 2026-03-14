@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+/* Font loaded via next/font in layout.tsx — no CSS @import needed */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -227,7 +227,7 @@ html.lenis,html.lenis body{height:auto}
   100% { transform: translate(-100px, -50px) scale(0); opacity: 0; }
 }
 .animate-disperse {
-  animation: disperse 4s ease-out infinite;
+  animation: disperse 4s ease-out forwards;
 }
 
 /* Shimmer */
@@ -340,7 +340,7 @@ html.lenis,html.lenis body{height:auto}
    ANIMATION UTILITY CLASSES
    ============================================================================= */
 .animate-blob {
-  animation: blob 20s ease-in-out infinite;
+  animation: none; /* Disabled: 20s infinite blob animation thrashes GPU */
 }
 
 .animate-slide-up {
@@ -352,7 +352,7 @@ html.lenis,html.lenis body{height:auto}
 }
 
 .animate-pulse-glow {
-  animation: pulse-glow 2s ease-in-out infinite;
+  animation: none; /* Disabled: infinite box-shadow animation is GPU-expensive */
 }
 
 .animate-float {
@@ -459,20 +459,16 @@ html.lenis,html.lenis body{height:auto}
    Three-tier glass system: base, elevated, premium
    ============================================================================= */
 
-/* Base Glass - Subtle, minimal */
+/* Base Glass - Subtle, minimal (blur removed for GPU performance) */
 .glass-base {
   background: var(--glass-bg-base);
-  backdrop-filter: blur(var(--glass-blur-md));
-  -webkit-backdrop-filter: blur(var(--glass-blur-md));
   border: 1px solid var(--glass-border-subtle);
 }
 
-/* Elevated Glass - Standard components */
+/* Elevated Glass - Standard components (blur removed for GPU performance) */
 .glass-card,
 .glass-elevated {
   background: var(--glass-bg-elevated);
-  backdrop-filter: blur(var(--glass-blur-xl));
-  -webkit-backdrop-filter: blur(var(--glass-blur-xl));
   border: 1px solid var(--glass-border-default);
   box-shadow: var(--glass-inset), var(--glass-shadow);
   transition: all var(--duration-slow) var(--ease-smooth);
@@ -484,11 +480,9 @@ html.lenis,html.lenis body{height:auto}
   border-color: var(--glass-border-hover);
 }
 
-/* Premium Glass - Hero sections, featured content */
+/* Premium Glass - Hero sections, featured content (blur removed for GPU performance) */
 .glass-premium {
   background: var(--glass-bg-base);
-  backdrop-filter: blur(var(--glass-blur-xl));
-  -webkit-backdrop-filter: blur(var(--glass-blur-xl));
   border: 1px solid var(--glass-border-subtle);
   box-shadow: var(--glass-inset), var(--glass-shadow);
   transition: all var(--duration-slow) var(--ease-smooth);
@@ -500,30 +494,24 @@ html.lenis,html.lenis body{height:auto}
   box-shadow: var(--glass-inset), var(--glass-shadow-lg);
 }
 
-/* Solid Glass - Dark background variant */
+/* Solid Glass - Dark background variant (blur removed for GPU performance) */
 .glass-premium-solid,
 .glass-solid {
   background: var(--glass-bg-solid);
-  backdrop-filter: blur(var(--glass-blur-xl));
-  -webkit-backdrop-filter: blur(var(--glass-blur-xl));
   border: 1px solid var(--glass-border-default);
   box-shadow: var(--glass-inset), 0 4px 24px rgba(0, 0, 0, 0.2);
 }
 
-/* Gradient Glass */
+/* Gradient Glass (blur removed for GPU performance) */
 .glass-premium-gradient {
   background: linear-gradient(to bottom right, var(--glass-bg-elevated), var(--glass-bg-base));
-  backdrop-filter: blur(var(--glass-blur-xl));
-  -webkit-backdrop-filter: blur(var(--glass-blur-xl));
   border: 1px solid var(--glass-border-default);
   box-shadow: var(--glass-inset), var(--glass-shadow);
 }
 
-/* Glass Buttons */
+/* Glass Buttons (blur removed for GPU performance) */
 .glass-btn {
   background: var(--glass-bg-elevated);
-  backdrop-filter: blur(var(--glass-blur-md));
-  -webkit-backdrop-filter: blur(var(--glass-blur-md));
   border: 1px solid var(--glass-border-default);
   transition: all var(--duration-normal) ease;
 }
@@ -540,8 +528,6 @@ html.lenis,html.lenis body{height:auto}
 
 .glass-btn-primary {
   background: linear-gradient(to right, rgba(6, 182, 212, 0.2), rgba(8, 145, 178, 0.2));
-  backdrop-filter: blur(var(--glass-blur-md));
-  -webkit-backdrop-filter: blur(var(--glass-blur-md));
   border: 1px solid rgba(6, 182, 212, 0.3);
 }
 
@@ -566,11 +552,9 @@ html.lenis,html.lenis body{height:auto}
   border: 1px solid var(--glass-border-default);
 }
 
-/* Liquid Glass Effect (animated) */
+/* Liquid Glass Effect (blur + animation removed for GPU performance) */
 .liquid-glass {
   background: var(--glass-bg-base);
-  backdrop-filter: blur(var(--glass-blur-xl));
-  -webkit-backdrop-filter: blur(var(--glass-blur-xl));
   border: 1px solid var(--glass-border-default);
   box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
   position: relative;
@@ -585,7 +569,7 @@ html.lenis,html.lenis body{height:auto}
   width: 200%;
   height: 200%;
   background: radial-gradient(circle, rgba(6, 182, 212, 0.1) 0%, transparent 70%);
-  animation: liquid-move 20s ease-in-out infinite;
+  /* animation removed: 20s infinite gradient was GPU-expensive */
 }
 
 /* =============================================================================
@@ -899,8 +883,6 @@ html.lenis,html.lenis body{height:auto}
 /* Card Frame */
 .card-frame {
   background: var(--glass-bg-base);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
   border: 1px solid var(--glass-border-default);
   border-radius: 24px;
   padding: 2rem;
@@ -950,19 +932,15 @@ html.lenis,html.lenis body{height:auto}
   border-radius: 50%;
   opacity: 0.1;
   filter: blur(40px);
-  animation: blob-float 20s ease-in-out infinite;
+  /* animation removed: 20s infinite float on 400px blurred elements thrashes GPU */
 }
 
 .blob:nth-child(2) {
   background: radial-gradient(circle, rgb(var(--color-amber)) 0%, transparent 70%);
-  animation-delay: -5s;
-  animation-duration: 25s;
 }
 
 .blob:nth-child(3) {
   background: radial-gradient(circle, #0891b2 0%, transparent 70%);
-  animation-delay: -10s;
-  animation-duration: 30s;
 }
 
 /* =============================================================================
@@ -1231,12 +1209,10 @@ textarea:focus-visible,
   z-index: 0;
 }
 
-/* Glass Card with Glow Effect */
+/* Glass Card with Glow Effect (blur removed for GPU performance) */
 .glass-card-glow {
   position: relative;
   background: var(--glass-bg-elevated);
-  backdrop-filter: blur(var(--glass-blur-xl));
-  -webkit-backdrop-filter: blur(var(--glass-blur-xl));
   border: 1px solid var(--glass-border-default);
   box-shadow:
     var(--glass-inset),
@@ -1266,7 +1242,7 @@ textarea:focus-visible,
     #0f0720
   );
   background-size: 400% 400%;
-  animation: gradient-shift 15s ease infinite;
+  /* animation removed: infinite gradient-shift on 400% background is GPU-expensive */
 }
 
 /* Premium Shimmer Effect for CTAs */
@@ -1288,7 +1264,7 @@ textarea:focus-visible,
     rgba(255, 255, 255, 0.1) 50%,
     transparent 100%
   );
-  animation: shimmer 3s ease-in-out infinite;
+  animation: shimmer 3s ease-in-out forwards;
 }
 
 /* Pulsing Dot for Live Indicators */

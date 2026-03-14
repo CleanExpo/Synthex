@@ -36,15 +36,13 @@ export function FloatingActionButton() {
   const [isMobile, setIsMobile] = useState(false);
   const router = useRouter();
   
-  // Detect mobile device
+  // Detect mobile device — uses matchMedia instead of resize listener for performance
   useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-    
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
+    const mq = window.matchMedia('(max-width: 767px)');
+    setIsMobile(mq.matches);
+    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
   }, []);
   
   // FAB Actions

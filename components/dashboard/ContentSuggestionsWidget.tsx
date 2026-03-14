@@ -36,7 +36,7 @@ export function ContentSuggestionsWidget({ className }: { className?: string }) 
   const { data, isLoading } = useSWR<RecommendationsResponse>(
     '/api/recommendations?limit=3',
     fetchJson,
-    { revalidateOnFocus: false }
+    { revalidateOnFocus: false, dedupingInterval: 60000 }
   )
 
   const recommendations = data?.recommendations ?? []

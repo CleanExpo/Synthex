@@ -59,19 +59,26 @@ export function InfiniteScrollFeed<T extends FeedItem>({
     rootMargin: '200px'
   });
   
-  // Show/hide scroll to top button
+  // Show/hide scroll to top button — rAF-throttled for performance
   useEffect(() => {
+    let rafId: number | null = null;
     const handleScroll = () => {
-      if (containerRef.current) {
-        setShowScrollButton(containerRef.current.scrollTop > 500);
+      if (!rafId) {
+        rafId = requestAnimationFrame(() => {
+          if (containerRef.current) {
+            setShowScrollButton(containerRef.current.scrollTop > 500);
+          }
+          rafId = null;
+        });
       }
     };
-    
+
     const container = containerRef.current;
-    container?.addEventListener('scroll', handleScroll);
-    
+    container?.addEventListener('scroll', handleScroll, { passive: true });
+
     return () => {
       container?.removeEventListener('scroll', handleScroll);
+      if (rafId) cancelAnimationFrame(rafId);
     };
   }, []);
   

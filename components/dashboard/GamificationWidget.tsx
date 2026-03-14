@@ -55,13 +55,13 @@ export function GamificationWidget({ className }: { className?: string }) {
   const { data: streakData, isLoading: streakLoading } = useSWR<StreakResponse>(
     '/api/gamification/streak',
     fetchJson,
-    { revalidateOnFocus: false }
+    { revalidateOnFocus: false, dedupingInterval: 60000 }
   )
 
   const { data: achievementsData, isLoading: achievementsLoading } = useSWR<AchievementsResponse>(
     '/api/gamification/achievements',
     fetchJson,
-    { revalidateOnFocus: false }
+    { revalidateOnFocus: false, dedupingInterval: 60000 }
   )
 
   const isLoading = streakLoading || achievementsLoading

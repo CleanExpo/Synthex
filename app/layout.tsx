@@ -2,12 +2,8 @@ import type { Metadata, Viewport } from 'next';
 import { Inter } from 'next/font/google';
 import { Providers } from './providers';
 import { Toaster } from '@/components/ui/toast';
-import { PerformanceMonitor } from '@/components/PerformanceMonitor';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
-import { CommandPalette } from '@/components/CommandPalette';
-import { ProductTour } from '@/components/ProductTour';
-import { FloatingActionButton } from '@/components/FloatingActionButton';
-import { FloatingStreak } from '@/components/StreakCounter';
+import { LazyClientComponents } from './LazyClientComponents';
 import './globals.css';
 
 const inter = Inter({
@@ -352,11 +348,7 @@ export default function RootLayout({
         </a>
         <ErrorBoundary>
           <Providers>
-            <PerformanceMonitor />
-            <CommandPalette />
-            <ProductTour />
-            <FloatingActionButton />
-            <FloatingStreak />
+            <LazyClientComponents />
             <main id="main-content" role="main">
               {children}
             </main>

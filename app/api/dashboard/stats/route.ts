@@ -90,17 +90,14 @@ export async function GET(request: NextRequest) {
           })
         : Promise.resolve([]),
 
-      // Get platform metrics for reach/followers (scoped to this user)
-      prisma.platformMetrics.findMany({
+      // Get platform metrics reach aggregate (scoped to this user)
+      // Uses aggregate instead of findMany(take: 100) — returns 1 row vs 100
+      prisma.platformMetrics.aggregate({
         where: {
           recordedAt: { gte: startDate },
           post: { connection: { userId } },
         },
-        orderBy: { recordedAt: 'desc' },
-        take: 100,
-        select: {
-          reach: true,
-        },
+        _sum: { reach: true },
       }),
 
       // Recent posts for activity feed
@@ -184,8 +181,8 @@ export async function GET(request: NextRequest) {
       return sum + (metadata?.followers || 0);
     }, 0);
 
-    // Also check platform metrics for reach
-    const totalReach = platformMetrics.reduce((sum, m) => sum + m.reach, 0);
+    // Platform metrics reach (now returns aggregate instead of array)
+    const totalReach = platformMetrics._sum?.reach ?? 0;
 
     // Format recent activity
     const recentActivity = recentPostsData.map((post) => ({

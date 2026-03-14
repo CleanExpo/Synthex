@@ -324,7 +324,7 @@ export default function DashboardLayout({
       {/* Desktop Sidebar - Hidden on mobile */}
       <aside
         className={cn(
-          'hidden md:block fixed left-0 top-0 z-40 h-screen transition-all duration-300 bg-white/[0.02] backdrop-blur-xl border-r border-white/[0.08]',
+          'hidden md:block fixed left-0 top-0 z-40 h-screen transition-all duration-300 bg-gray-950/95 border-r border-white/[0.08]',
           sidebarCollapsed ? 'w-16' : 'w-64'
         )}
       >
@@ -422,7 +422,7 @@ export default function DashboardLayout({
         sidebarCollapsed ? 'lg:pl-16' : 'lg:pl-64'
       )}>
         {/* Top Navigation */}
-        <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-white/[0.08] bg-white/[0.02] backdrop-blur-xl px-3 sm:px-4 md:px-6">
+        <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-white/[0.08] bg-gray-950/95 px-3 sm:px-4 md:px-6">
           <div className="flex items-center space-x-2 sm:space-x-4">
             <Button
               variant="ghost"

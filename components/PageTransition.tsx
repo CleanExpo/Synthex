@@ -204,21 +204,34 @@ export function StaggerChildren({
 }
 
 // Parallax scrolling wrapper
-export function ParallaxSection({ 
+export function ParallaxSection({
   children,
   offset = 50
-}: { 
+}: {
   children: ReactNode;
   offset?: number;
 }) {
+  const scrollRef = useRef(0);
+  const rafRef = useRef<number | null>(null);
   const [scrollY, setScrollY] = useState(0);
-  
+
   useEffect(() => {
-    const handleScroll = () => setScrollY(window.scrollY);
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    const handleScroll = () => {
+      scrollRef.current = window.scrollY;
+      if (!rafRef.current) {
+        rafRef.current = requestAnimationFrame(() => {
+          setScrollY(scrollRef.current);
+          rafRef.current = null;
+        });
+      }
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    };
   }, []);
-  
+
   return (
     <motion.div
       style={{
@@ -296,34 +309,48 @@ export function MorphTransition({
   );
 }
 
-// Custom cursor follower
+// Custom cursor follower — uses event delegation + rAF throttle for performance
 export function CursorFollower() {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [isHovering, setIsHovering] = useState(false);
-  
+  const mouseRef = useRef({ x: 0, y: 0 });
+  const rafRef = useRef<number | null>(null);
+
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
-      setMousePosition({ x: e.clientX, y: e.clientY });
+      mouseRef.current = { x: e.clientX, y: e.clientY };
+      if (!rafRef.current) {
+        rafRef.current = requestAnimationFrame(() => {
+          setMousePosition(mouseRef.current);
+          rafRef.current = null;
+        });
+      }
     };
-    
-    const handleMouseEnter = () => setIsHovering(true);
-    const handleMouseLeave = () => setIsHovering(false);
-    
-    window.addEventListener('mousemove', handleMouseMove);
-    
-    // Add hover detection for interactive elements
-    const interactiveElements = document.querySelectorAll('a, button, [role="button"]');
-    interactiveElements.forEach(el => {
-      el.addEventListener('mouseenter', handleMouseEnter);
-      el.addEventListener('mouseleave', handleMouseLeave);
-    });
-    
+
+    // Event delegation instead of attaching to 500+ elements
+    const handleMouseOver = (e: MouseEvent) => {
+      const target = e.target as Element;
+      if (target.closest('a, button, [role="button"]')) {
+        setIsHovering(true);
+      }
+    };
+
+    const handleMouseOut = (e: MouseEvent) => {
+      const target = e.target as Element;
+      if (target.closest('a, button, [role="button"]')) {
+        setIsHovering(false);
+      }
+    };
+
+    window.addEventListener('mousemove', handleMouseMove, { passive: true });
+    document.body.addEventListener('mouseover', handleMouseOver, { passive: true });
+    document.body.addEventListener('mouseout', handleMouseOut, { passive: true });
+
     return () => {
       window.removeEventListener('mousemove', handleMouseMove);
-      interactiveElements.forEach(el => {
-        el.removeEventListener('mouseenter', handleMouseEnter);
-        el.removeEventListener('mouseleave', handleMouseLeave);
-      });
+      document.body.removeEventListener('mouseover', handleMouseOver);
+      document.body.removeEventListener('mouseout', handleMouseOut);
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
     };
   }, []);
   
