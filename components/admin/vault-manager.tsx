@@ -42,8 +42,10 @@ import {
   Eye,
   Copy,
   Zap,
+  FileText,
 } from '@/components/icons';
 import { VaultSecretDialog, type SecretFormData } from './vault-secret-dialog';
+import { VaultImportDialog } from './vault-import-dialog';
 
 // =============================================================================
 // Types
@@ -174,6 +176,7 @@ export function VaultManager({ organizationId }: VaultManagerProps) {
   const [rotateName, setRotateName] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [isSeeding, setIsSeeding] = useState(false);
+  const [importDialogOpen, setImportDialogOpen] = useState(false);
   const [filterType, setFilterType] = useState<string>('all');
   const [filterProvider, setFilterProvider] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState('');
@@ -362,6 +365,15 @@ export function VaultManager({ organizationId }: VaultManagerProps) {
                 <Zap className={`h-4 w-4 mr-1 ${isSeeding ? 'animate-pulse' : ''}`} />
                 {isSeeding ? 'Seeding...' : 'Seed All'}
               </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setImportDialogOpen(true)}
+                title="Import credentials from a Word document"
+              >
+                <FileText className="h-4 w-4 mr-1" />
+                Import from Doc
+              </Button>
               <Button size="sm" onClick={handleOpenCreate}>
                 <Plus className="h-4 w-4 mr-1" />
                 Add Secret
@@ -544,6 +556,13 @@ export function VaultManager({ organizationId }: VaultManagerProps) {
         organizationId={organizationId}
         onSubmit={handleSubmit}
         isSaving={isSaving}
+      />
+
+      <VaultImportDialog
+        open={importDialogOpen}
+        onOpenChange={setImportDialogOpen}
+        organizationId={organizationId}
+        onImported={() => mutate()}
       />
     </>
   );
