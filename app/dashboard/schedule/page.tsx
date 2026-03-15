@@ -22,12 +22,14 @@ import {
   type ViewMode,
   type ScheduledPost,
   type ScheduleStats,
+  type ReviewPost,
   ScheduleHeader,
   ScheduleStatsGrid,
   ScheduleFilters,
   MonthView,
   ListView,
   OptimalTimes,
+  ReviewQueue,
 } from '@/components/schedule';
 import { EmptyState } from '@/components/error-states';
 import { BulkScheduleWizard } from '@/components/scheduling';
@@ -63,7 +65,7 @@ export default function SchedulePage() {
   const router = useRouter();
   const [posts, setPosts] = useState<ScheduledPost[]>([]);
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [viewMode, setViewMode] = useState<ViewMode>('week');
+  const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [filterPlatform, setFilterPlatform] = useState('all');
   const [filterStatus, setFilterStatus] = useState('all');
   const [isCreating, setIsCreating] = useState(false);
@@ -404,6 +406,32 @@ export default function SchedulePage() {
     }
   }, [fetchPosts]);
 
+  // ── ReviewQueue edit handler — maps API shape → ScheduledPost for modal ──
+  const handleReviewEdit = useCallback((reviewPost: ReviewPost) => {
+    const asScheduledPost: ScheduledPost = {
+      id: reviewPost.id,
+      content: reviewPost.content,
+      platforms: [reviewPost.platform],
+      scheduledFor: reviewPost.scheduledAt ? new Date(reviewPost.scheduledAt) : new Date(),
+      status: 'draft' as const,
+      engagement: { estimated: 5 },
+      persona: 'Default',
+      hashtags: [],
+      mediaUrls: [],
+    };
+    setSelectedPost(asScheduledPost);
+  }, []);
+
+  // ── After ReviewQueue approve/reject, refresh scheduled posts ─────────────
+  const handleReviewMutate = useCallback(async () => {
+    try {
+      const refreshed = await fetchPosts();
+      if (mountedRef.current) setPosts(refreshed);
+    } catch {
+      // Silently ignore — ReviewQueue will still update itself via its own SWR
+    }
+  }, [fetchPosts]);
+
   if (isLoading) {
     return <DashboardSkeleton />;
   }
@@ -414,17 +442,31 @@ export default function SchedulePage() {
 
   if (posts.length === 0) {
     return (
-      <EmptyState
-        title="No posts scheduled yet"
-        message="Generate content, then click Schedule to add posts to your calendar."
-        actionLabel="Create Content"
-        onAction={() => router.push('/dashboard/content')}
-      />
+      <div className="space-y-6">
+        <ReviewQueue onEdit={handleReviewEdit} onMutate={handleReviewMutate} />
+        <EmptyState
+          title="No posts scheduled yet"
+          message="Generate content, then click Schedule to add posts to your calendar."
+          actionLabel="Create Content"
+          onAction={() => router.push('/dashboard/content')}
+        />
+        <PostDetailModal
+          post={selectedPost}
+          isOpen={!!selectedPost}
+          onClose={() => setSelectedPost(null)}
+          onSave={handleSavePost}
+          onDelete={handleDeletePost}
+          onPublishNow={handlePublishNow}
+          onDuplicate={handleDuplicatePost}
+        />
+      </div>
     );
   }
 
   return (
     <div className="space-y-6">
+      <ReviewQueue onEdit={handleReviewEdit} onMutate={handleReviewMutate} />
+
       <ScheduleHeader
         isCreating={isCreating}
         onImport={handleImportSchedule}

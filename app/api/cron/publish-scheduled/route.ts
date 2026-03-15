@@ -121,7 +121,8 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     where: {
       status: 'scheduled',
       scheduledAt: { lte: now },
-      publishedAt: null, // Idempotency guard: skip already-published posts
+      publishedAt: null,  // Idempotency guard: skip already-published posts
+      deletedAt: null,    // Never publish soft-deleted posts
     },
     select: {
       id: true,

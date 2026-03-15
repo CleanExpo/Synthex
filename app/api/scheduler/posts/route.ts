@@ -118,9 +118,10 @@ export async function GET(request: NextRequest) {
     // Get user's campaign IDs
     const campaignIds = await getUserCampaignIds(userId);
 
-    // Build where clause
+    // Build where clause — always exclude soft-deleted posts
     const where: Record<string, unknown> = {
       campaignId: { in: campaignIds },
+      deletedAt: null,
     };
 
     if (status !== 'all') {
