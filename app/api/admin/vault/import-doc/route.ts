@@ -3,11 +3,19 @@
  *
  * POST /api/admin/vault/import-doc
  *
- * Accepts a .docx file upload, extracts text using mammoth, then applies
- * heuristic parsing to identify credential pairs (service, username, password, URL).
- * Returns a structured preview for user review — NOTHING is stored at this stage.
+ * Accepts a .docx file upload, extracts text via mammoth, then runs a
+ * multi-strategy extraction engine to find ALL credential pairs regardless
+ * of document format (tables, labelled fields, delimited lines, section blocks).
  *
- * OWNER-ONLY. Passwords are returned over HTTPS for review and NEVER logged.
+ * Strategies (in priority order):
+ *   1. Word table — tab-separated rows with detected column headers
+ *   2. Section header + field blocks — "FACEBOOK\nUser: x\nPass: y"
+ *   3. Single-line delimited — "Service | user@email.com | password"
+ *   4. Consecutive labelled lines — consecutive Username:/Password: pairs
+ *   5. Free-form context-aware — service header above username/password lines
+ *
+ * Returns structured preview for user review — NOTHING stored at this stage.
+ * OWNER-ONLY. Passwords never logged.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -39,18 +47,20 @@ export type CredentialCategory =
   | 'other';
 
 export interface ExtractedCredential {
-  id: string;                        // Temp UUID for review table key
-  service: string;                   // Normalised service name
-  url: string | null;                // URL if detected
-  username: string | null;           // Email or username
-  password: string;                  // Raw password (for review only — never stored as-is)
+  id: string;
+  service: string;
+  url: string | null;
+  username: string | null;
+  password: string;
   category: CredentialCategory;
   confidence: 'high' | 'medium' | 'low';
-  rawLine: string;                   // Original text for debugging
+  rawLine: string;
 }
 
+type RawCred = Omit<ExtractedCredential, 'id'>;
+
 // =============================================================================
-// Owner Auth Helper (matches pattern in app/api/admin/vault/route.ts)
+// Owner Auth
 // =============================================================================
 
 async function requireOwner(
@@ -76,56 +86,43 @@ async function requireOwner(
 }
 
 // =============================================================================
+// Helpers
+// =============================================================================
+
+function isEmail(s: string): boolean {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(s.trim());
+}
+
+function clean(s: string): string {
+  return s.trim().replace(/^["'`«»]|["'`«»]$/g, '').trim();
+}
+
+function extractUrl(text: string): string | null {
+  const m = text.match(/https?:\/\/[^\s,;)]+|www\.[a-zA-Z0-9-]+\.[a-z]{2,}[^\s,;)]*/);
+  return m ? m[0].replace(/[.,;)]+$/, '') : null;
+}
+
+// =============================================================================
 // Category Detector
 // =============================================================================
 
-const CATEGORY_KEYWORDS: Array<{ patterns: RegExp[]; category: CredentialCategory }> = [
-  {
-    patterns: [/facebook|instagram|twitter|linkedin|tiktok|youtube|reddit|threads|pinterest|snapchat|x\.com/i],
-    category: 'social_media',
-  },
-  {
-    patterns: [/gmail|outlook|hotmail|yahoo|mail|email|imap|smtp|webmail/i],
-    category: 'email',
-  },
-  {
-    patterns: [/cpanel|plesk|whm|ftp|sftp|ssh|server|hosting|aws|azure|gcp|digitalocean|cloudflare|namecheap|godaddy|bluehost|siteground|wpengine/i],
-    category: 'hosting',
-  },
-  {
-    patterns: [/domain|dns|registrar|enom|net sol|netsol|crazydomains|netregistry/i],
-    category: 'domain',
-  },
-  {
-    patterns: [/bank|nab|anz|commonwealth|westpac|paypal|stripe|square|eftpos|bpay|xero|myob/i],
-    category: 'banking',
-  },
-  {
-    patterns: [/shopify|woocommerce|magento|ebay|amazon|etsy|bigcommerce/i],
-    category: 'ecommerce',
-  },
-  {
-    patterns: [/hubspot|salesforce|zoho|pipedrive|crm|freshdesk|zendesk/i],
-    category: 'crm',
-  },
-  {
-    patterns: [/google analytics|ga4|gtm|tag manager|search console|semrush|ahrefs|moz|analytics/i],
-    category: 'analytics',
-  },
-  {
-    patterns: [/api[_ -]?key|token|secret|bearer|apikey/i],
-    category: 'api_key',
-  },
-  {
-    patterns: [/vpn|nordvpn|expressvpn|surfshark|tunnelbear/i],
-    category: 'vpn',
-  },
+const CATEGORY_MAP: Array<{ re: RegExp; cat: CredentialCategory }> = [
+  { re: /facebook|instagram|twitter|tiktok|linkedin|youtube|reddit|threads|pinterest|snapchat|x\.com|social/i, cat: 'social_media' },
+  { re: /gmail|outlook|hotmail|yahoo\.com|icloud|mail\.|email|imap|smtp|webmail|proton/i, cat: 'email' },
+  { re: /cpanel|plesk|whm|ftp|sftp|ssh|server|hosting|aws|azure|gcp|digitalocean|cloudflare|namecheap|godaddy|bluehost|siteground|wpengine|kinsta|linode|vultr/i, cat: 'hosting' },
+  { re: /domain|dns|registrar|enom|netsol|crazydomains|netregistry|iwantmyname/i, cat: 'domain' },
+  { re: /bank|nab|anz|commonwealth|westpac|paypal|stripe|square|xero|myob|quickbooks|eftpos|bpay/i, cat: 'banking' },
+  { re: /shopify|woocommerce|magento|ebay|amazon|etsy|bigcommerce|wix store/i, cat: 'ecommerce' },
+  { re: /hubspot|salesforce|zoho|pipedrive|freshdesk|zendesk|monday|asana/i, cat: 'crm' },
+  { re: /analytics|semrush|ahrefs|moz|gtm|tag manager|search console|ga4/i, cat: 'analytics' },
+  { re: /api[_ -]?key|api[_ -]?secret|bearer|token|webhook/i, cat: 'api_key' },
+  { re: /vpn|nordvpn|expressvpn|surfshark|tunnelbear|openvpn/i, cat: 'vpn' },
 ];
 
-function detectCategory(service: string, url: string | null): CredentialCategory {
+function detectCategory(service: string, url: string | null = null): CredentialCategory {
   const text = `${service} ${url ?? ''}`.toLowerCase();
-  for (const { patterns, category } of CATEGORY_KEYWORDS) {
-    if (patterns.some((p) => p.test(text))) return category;
+  for (const { re, cat } of CATEGORY_MAP) {
+    if (re.test(text)) return cat;
   }
   return 'other';
 }
@@ -134,189 +131,381 @@ function detectCategory(service: string, url: string | null): CredentialCategory
 // Service Name Normaliser
 // =============================================================================
 
-const SERVICE_ALIASES: Record<string, string> = {
-  fb: 'Facebook',
-  ig: 'Instagram',
-  tw: 'Twitter / X',
-  yt: 'YouTube',
-  li: 'LinkedIn',
-  tt: 'TikTok',
-  'google analytics': 'Google Analytics',
-  ga: 'Google Analytics',
-  ga4: 'Google Analytics 4',
-  gtm: 'Google Tag Manager',
-  gsc: 'Google Search Console',
-  wp: 'WordPress',
-  woo: 'WooCommerce',
+const ALIASES: Record<string, string> = {
+  fb: 'Facebook', ig: 'Instagram', tw: 'Twitter / X',
+  yt: 'YouTube', li: 'LinkedIn', tt: 'TikTok',
+  ga: 'Google Analytics', ga4: 'Google Analytics 4',
+  gtm: 'Google Tag Manager', gsc: 'Google Search Console',
+  wp: 'WordPress', woo: 'WooCommerce', gh: 'GitHub',
+  gs: 'Google Search Console', sc: 'Search Console',
 };
 
 function normaliseService(raw: string): string {
   const lower = raw.trim().toLowerCase();
-  for (const [alias, normalised] of Object.entries(SERVICE_ALIASES)) {
-    if (lower === alias) return normalised;
-  }
-  // Title-case the raw string
+  if (ALIASES[lower]) return ALIASES[lower];
   return raw.trim().replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
 // =============================================================================
-// URL Extractor
+// Label patterns
 // =============================================================================
 
-const URL_REGEX = /https?:\/\/[^\s,)]+|www\.[^\s,)]+/gi;
-const DOMAIN_ONLY = /^(?:www\.)?([a-z0-9-]+\.(?:com|com\.au|net|org|io|co))/i;
+const USER_LABEL  = /^(?:user(?:name)?|email|login|user\s*id|u\/n|usr|account|handle)\s*[=:]\s*/i;
+const PASS_LABEL  = /^(?:pass(?:word)?|pwd|p\/w|pw|secret|pin)\s*[=:]\s*/i;
+const URL_LABEL   = /^(?:url|website|link|site|address|web)\s*[=:]\s*/i;
+const SVC_LABEL   = /^(?:site|service|platform|account|name|app|for|login\s*for)\s*[=:]\s*/i;
 
-function extractUrl(text: string): string | null {
-  const match = text.match(URL_REGEX);
-  if (match) return match[0].replace(/[,;).\s]+$/, '');
-  const domainMatch = text.match(DOMAIN_ONLY);
-  return domainMatch ? domainMatch[0] : null;
+function stripLabel(line: string, re: RegExp): string {
+  return clean(line.replace(re, ''));
+}
+
+function isHeaderLine(line: string): boolean {
+  const t = line.trim();
+  if (t.length < 2 || t.length > 80) return false;
+  // All-caps words (e.g. "FACEBOOK", "SOCIAL MEDIA")
+  if (/^[A-Z][A-Z\s\-/_&()]{1,50}$/.test(t)) return true;
+  // Title with trailing colon and no value (e.g. "Facebook:")
+  if (/^[A-Za-z][A-Za-z\s\-/_&().]{0,50}:$/.test(t)) return true;
+  // Heading-style line ending with dash or equals separator
+  if (/^[-=*#]{3,}$/.test(t)) return true;
+  return false;
+}
+
+function isDatalessLine(line: string): boolean {
+  const t = line.trim();
+  return !t || t.length < 3 || /^[-=*#]{3,}$/.test(t);
 }
 
 // =============================================================================
-// Core Credential Parser
-//
-// Handles common real-world document formats:
-//   1. Labelled pairs:  "Username: foo  Password: bar"
-//   2. Slash-separated: "Facebook - user@email.com / mypass"
-//   3. Table rows:      "Facebook | user@email.com | mypass"
-//   4. Colon blocks:    "Service: Facebook\nUser: foo\nPass: bar"
-//   5. Equals signs:    "user=foo pass=bar"
+// Strategy 1: Word table (tab-separated with column header detection)
 // =============================================================================
 
-const USERNAME_LABELS = /(?:user(?:name)?|email|login|user id|u\/n|usr|account)\s*[=:]\s*/i;
-const PASSWORD_LABELS = /(?:pass(?:word)?|pwd|p\/w|pw|secret)\s*[=:]\s*/i;
-const SERVICE_LABELS  = /(?:site|service|platform|account|name|for)\s*[=:]\s*/i;
-const URL_LABELS      = /(?:url|website|link|site url|web|address)\s*[=:]\s*/i;
+function extractFromTable(lines: string[]): RawCred[] {
+  const results: RawCred[] = [];
+  let colService = -1, colUser = -1, colPass = -1, colUrl = -1;
+  let inTable = false;
 
-function isEmail(val: string): boolean {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val.trim());
-}
-
-function cleanValue(val: string): string {
-  return val.trim().replace(/^["']|["']$/g, '').trim();
-}
-
-/**
- * Parse a block of text (single line or multi-line group) into a credential.
- * Returns null if we can't confidently extract at least a username AND password.
- */
-function parseCredentialBlock(block: string): Omit<ExtractedCredential, 'id'> | null {
-  const lines = block.split('\n').map((l) => l.trim()).filter(Boolean);
-  const combined = lines.join(' ');
-
-  let service: string | null = null;
-  let username: string | null = null;
-  let password: string | null = null;
-  let url: string | null = null;
-  let confidence: 'high' | 'medium' | 'low' = 'medium';
-
-  // ── Strategy 1: Labelled key-value pairs ──────────────────────────────────
-  const usernameMatch = combined.match(new RegExp(`${USERNAME_LABELS.source}([^\\s,|;]+)`, 'i'));
-  const passwordMatch = combined.match(new RegExp(`${PASSWORD_LABELS.source}([^\\s,|;]+)`, 'i'));
-  const serviceMatch  = combined.match(new RegExp(`${SERVICE_LABELS.source}([^\\s,|;:\\n]+)`, 'i'));
-  const urlMatch      = combined.match(new RegExp(`${URL_LABELS.source}([^\\s,|;\\n]+)`, 'i'));
-
-  if (usernameMatch) username = cleanValue(usernameMatch[1]);
-  if (passwordMatch) password = cleanValue(passwordMatch[1]);
-  if (serviceMatch)  service  = cleanValue(serviceMatch[1]);
-  if (urlMatch)      url      = cleanValue(urlMatch[1]);
-
-  // ── Strategy 2: Table / slash-delimited single line ────────────────────────
-  // e.g.  "Facebook | john@gmail.com | mypassword123"
-  // e.g.  "Facebook - john@gmail.com / mypassword123"
-  if (!username || !password) {
-    const delimMatch = combined.match(
-      /^([^|/\-–—]+?)\s*[|/\-–—]+\s*([^|/\-–—@\s]+@[^|/\-–—\s]+)\s*[|/\-–—]+\s*(\S+)/
-    );
-    if (delimMatch) {
-      if (!service)   service  = cleanValue(delimMatch[1]);
-      if (!username)  username = cleanValue(delimMatch[2]);
-      if (!password)  password = cleanValue(delimMatch[3]);
-      confidence = 'high';
+  for (const line of lines) {
+    if (!line.includes('\t')) {
+      // Tab-free line breaks the table context
+      if (inTable && (colUser >= 0 || colPass >= 0)) inTable = false;
+      continue;
     }
+
+    const cols = line.split('\t').map((c) => c.trim());
+    const lower = cols.map((c) => c.toLowerCase());
+
+    // Detect header row
+    const hasUserHeader = lower.findIndex((c) => /^(?:user(?:name)?|email|login)$/.test(c));
+    const hasPassHeader = lower.findIndex((c) => /^(?:pass(?:word)?|pwd|password)$/.test(c));
+
+    if (hasUserHeader >= 0 && hasPassHeader >= 0) {
+      colService = lower.findIndex((c) => /^(?:service|platform|site|name|account|app)$/.test(c));
+      colUrl    = lower.findIndex((c) => /^(?:url|website|link|address)$/.test(c));
+      colUser   = hasUserHeader;
+      colPass   = hasPassHeader;
+      inTable   = true;
+      continue;
+    }
+
+    // Also detect header row where columns are positional (3-4 columns, first is service)
+    if (!inTable && cols.length >= 3 && cols.length <= 6) {
+      const looksLikeHeader = lower.some((c) => /user|pass|email|login/.test(c));
+      if (looksLikeHeader) {
+        colService = 0;
+        colUser    = lower.findIndex((c) => /user|email|login/.test(c));
+        colPass    = lower.findIndex((c) => /pass|pwd/.test(c));
+        colUrl     = lower.findIndex((c) => /url|website|link/.test(c));
+        inTable    = true;
+        continue;
+      }
+    }
+
+    if (!inTable) continue;
+
+    // Data row
+    const getCol = (idx: number) => (idx >= 0 && idx < cols.length ? clean(cols[idx]) : null);
+    const password = getCol(colPass);
+    const username = getCol(colUser);
+
+    if (!password || password.length < 2) continue;
+
+    const svcRaw = getCol(colService);
+    const url = getCol(colUrl) || extractUrl(line);
+
+    results.push({
+      service: svcRaw ? normaliseService(svcRaw) : (username ?? 'Unknown'),
+      url,
+      username,
+      password,
+      category: detectCategory(svcRaw ?? '', url),
+      confidence: 'high',
+      rawLine: line.slice(0, 200),
+    });
   }
 
-  // ── Strategy 3: Email on one line, password on next ───────────────────────
-  if (!password && lines.length >= 2) {
-    const emailLine = lines.find((l) => isEmail(l.split(/[\s|:/\-–—]/)[0] ?? l));
-    const passLineIdx = emailLine ? lines.indexOf(emailLine) + 1 : -1;
-    if (emailLine && passLineIdx < lines.length) {
-      if (!username) username = cleanValue(emailLine.split(/[\s|:/\-–—]/)[0]);
-      const potentialPass = lines[passLineIdx];
-      // Make sure it doesn't look like another label
-      if (potentialPass && !USERNAME_LABELS.test(potentialPass) && !SERVICE_LABELS.test(potentialPass)) {
-        if (!password) password = cleanValue(potentialPass.replace(PASSWORD_LABELS, ''));
+  return results;
+}
+
+// =============================================================================
+// Strategy 2: Section header + field blocks
+// "FACEBOOK\nUsername: john\nPassword: pass"
+// =============================================================================
+
+function extractFromSectionBlocks(lines: string[]): RawCred[] {
+  const results: RawCred[] = [];
+  let context = { service: '', url: null as string | null };
+  let username: string | null = null;
+  let password: string | null = null;
+  let urlFromField: string | null = null;
+
+  const flush = () => {
+    if (password && (username || context.service)) {
+      results.push({
+        service: context.service || (username ? `Account (${username})` : 'Unknown'),
+        url: urlFromField || context.url,
+        username,
+        password,
+        category: detectCategory(context.service, urlFromField || context.url),
+        confidence: context.service && username ? 'high' : 'medium',
+        rawLine: `${context.service} ${username ?? ''} ${password ?? ''}`.slice(0, 200),
+      });
+    }
+    username = null;
+    password = null;
+    urlFromField = null;
+  };
+
+  for (const line of lines) {
+    const t = line.trim();
+    if (!t) continue;
+
+    if (isHeaderLine(t)) {
+      flush();
+      context = {
+        service: normaliseService(t.replace(/:$/, '').trim()),
+        url: extractUrl(t),
+      };
+      continue;
+    }
+
+    if (USER_LABEL.test(t)) {
+      if (username && password) flush(); // new entry within same section
+      username = stripLabel(t, USER_LABEL);
+      continue;
+    }
+    if (PASS_LABEL.test(t)) {
+      password = stripLabel(t, PASS_LABEL);
+      continue;
+    }
+    if (URL_LABEL.test(t)) {
+      urlFromField = stripLabel(t, URL_LABEL);
+      // URL can also give us service name if not set
+      if (!context.service && urlFromField) {
+        const domain = urlFromField.replace(/https?:\/\//, '').split('/')[0].replace(/^www\./, '');
+        context.service = normaliseService(domain.split('.')[0] ?? domain);
+      }
+      continue;
+    }
+    if (SVC_LABEL.test(t)) {
+      if (username && password) flush();
+      context.service = normaliseService(stripLabel(t, SVC_LABEL));
+      continue;
+    }
+
+    // If we have an in-progress entry and hit an unrecognised line, maybe flush
+    if (username && password) flush();
+  }
+  flush();
+
+  return results;
+}
+
+// =============================================================================
+// Strategy 3: Single-line delimited entries
+// "Facebook | john@email.com | password123"
+// "Gmail - john@email.com / pass123"
+// "Twitter: @john Pass: twitterpass"
+// =============================================================================
+
+const SINGLE_LINE_PATTERNS: RegExp[] = [
+  // service | username | password (with any non-word delimiter)
+  /^(.+?)\s*[|/–—]\s*([^\s|/–—]+@[^\s|/–—]+)\s*[|/–—]\s*(\S+)\s*$/,
+  // service - username - password (dash-separated, email clearly in middle)
+  /^(.+?)\s*[-–—]\s*([^\s-–—]+@[^\s-–—]+)\s*[-–—]\s*(\S+)\s*$/,
+  // service | username | password (no email, but 3 clear tokens)
+  /^([A-Za-z][A-Za-z0-9 ._-]{1,40})\s*[|]\s*([^\s|]{3,60})\s*[|]\s*(\S{4,})\s*$/,
+  // service: username / password
+  /^([A-Za-z][A-Za-z0-9 ._-]{1,40}):\s*([^\s/]{3,60})\s*\/\s*(\S{4,})\s*$/,
+];
+
+function extractSingleLineEntries(lines: string[]): RawCred[] {
+  const results: RawCred[] = [];
+
+  for (const line of lines) {
+    const t = line.trim();
+    if (t.length < 8 || isHeaderLine(t)) continue;
+
+    for (const pattern of SINGLE_LINE_PATTERNS) {
+      const m = t.match(pattern);
+      if (m) {
+        const svc = clean(m[1]);
+        const user = clean(m[2]);
+        const pass = clean(m[3]);
+        if (!pass || pass.length < 2) continue;
+
+        results.push({
+          service: normaliseService(svc),
+          url: extractUrl(t),
+          username: user || null,
+          password: pass,
+          category: detectCategory(svc),
+          confidence: isEmail(user) ? 'high' : 'medium',
+          rawLine: t.slice(0, 200),
+        });
+        break;
       }
     }
   }
 
-  // ── Strategy 4: equals-sign pairs ─────────────────────────────────────────
-  // e.g. "user=john@email.com password=secret"
-  if (!username || !password) {
-    const eqUser = combined.match(/(?:user|email|login)\s*=\s*([^\s,;]+)/i);
-    const eqPass = combined.match(/(?:pass(?:word)?|pwd)\s*=\s*([^\s,;]+)/i);
-    if (eqUser && !username) username = cleanValue(eqUser[1]);
-    if (eqPass && !password) password = cleanValue(eqPass[1]);
-  }
-
-  // ── No valid credential found ──────────────────────────────────────────────
-  if (!password || password.length < 2) return null;
-  if (!username && !service) return null;
-
-  // Infer service from URL if not found
-  if (!service && url) {
-    const domain = url.replace(/^https?:\/\//, '').split('/')[0].replace(/^www\./, '');
-    service = normaliseService(domain.split('.')[0] ?? domain);
-  }
-
-  // Infer URL from service name if not found
-  if (!url) url = extractUrl(combined);
-
-  // Set confidence
-  if (usernameMatch && passwordMatch && serviceMatch) confidence = 'high';
-  else if (!service || !username) confidence = 'low';
-
-  return {
-    service: service ? normaliseService(service) : (username ? `Account (${username})` : 'Unknown'),
-    url,
-    username,
-    password,
-    category: detectCategory(service ?? '', url),
-    confidence,
-    rawLine: block.slice(0, 200),
-  };
+  return results;
 }
 
 // =============================================================================
-// Document Text Segmenter
-// Splits raw text into logical blocks (one block = one credential entry)
+// Strategy 4: Consecutive labelled lines without a section header
+// When Username: and Password: appear on adjacent lines with no header above
 // =============================================================================
 
-function segmentText(text: string): string[] {
-  const blocks: string[] = [];
+function extractOrphanLabelPairs(lines: string[]): RawCred[] {
+  const results: RawCred[] = [];
+  let i = 0;
 
-  // Split on blank lines first (paragraph-style docs)
-  const paragraphs = text.split(/\n{2,}/);
+  while (i < lines.length) {
+    const t = lines[i].trim();
 
-  for (const para of paragraphs) {
-    const trimmed = para.trim();
-    if (!trimmed || trimmed.length < 5) continue;
-
-    // If the paragraph has multiple lines and looks like a labelled block, keep together
-    const lineCount = trimmed.split('\n').length;
-    if (lineCount <= 6) {
-      blocks.push(trimmed);
-      continue;
+    if (USER_LABEL.test(t)) {
+      const username = stripLabel(t, USER_LABEL);
+      // Look ahead for password within the next 3 lines
+      let pass: string | null = null;
+      let url: string | null = null;
+      let j = i + 1;
+      while (j < Math.min(i + 4, lines.length)) {
+        const next = lines[j].trim();
+        if (PASS_LABEL.test(next)) {
+          pass = stripLabel(next, PASS_LABEL);
+          j++;
+          break;
+        }
+        if (URL_LABEL.test(next)) {
+          url = stripLabel(next, URL_LABEL);
+        }
+        j++;
+      }
+      if (pass && pass.length >= 2) {
+        results.push({
+          service: `Account (${username || 'unknown'})`,
+          url,
+          username: username || null,
+          password: pass,
+          category: detectCategory(''),
+          confidence: 'medium',
+          rawLine: t.slice(0, 200),
+        });
+        i = j;
+        continue;
+      }
     }
-
-    // Long paragraphs — try line-by-line
-    for (const line of trimmed.split('\n')) {
-      if (line.trim().length > 5) blocks.push(line.trim());
-    }
+    i++;
   }
 
-  return blocks;
+  return results;
+}
+
+// =============================================================================
+// Strategy 5: Context-aware free-form
+// Infer password from lines like: "password123" following a known-format username
+// =============================================================================
+
+function extractContextAware(lines: string[]): RawCred[] {
+  const results: RawCred[] = [];
+
+  for (let i = 0; i < lines.length; i++) {
+    const t = lines[i].trim();
+    if (!isEmail(t)) continue;
+
+    // Email found as a standalone line — look for password on next line
+    const next = lines[i + 1]?.trim();
+    if (!next || isEmail(next) || isHeaderLine(next) || USER_LABEL.test(next) || PASS_LABEL.test(next)) continue;
+    if (next.length < 3 || next.length > 100) continue;
+    // Next line should look like a password (no spaces, no labels)
+    if (next.includes(' ') && !next.includes('\t')) continue;
+
+    // Look back for a service name
+    let service = '';
+    for (let k = i - 1; k >= Math.max(0, i - 4); k--) {
+      const prev = lines[k].trim();
+      if (!prev || isDatalessLine(prev)) continue;
+      if (isHeaderLine(prev) || SVC_LABEL.test(prev)) {
+        service = prev.replace(/:$/, '').trim();
+        break;
+      }
+    }
+
+    results.push({
+      service: service ? normaliseService(service) : `Account (${t})`,
+      url: null,
+      username: t,
+      password: next,
+      category: detectCategory(service),
+      confidence: service ? 'medium' : 'low',
+      rawLine: `${t} ${next}`.slice(0, 200),
+    });
+    i++; // skip the password line
+  }
+
+  return results;
+}
+
+// =============================================================================
+// Deduplication
+// Remove entries that are clearly duplicates (same service + username + password)
+// =============================================================================
+
+function dedup(entries: RawCred[]): RawCred[] {
+  const seen = new Set<string>();
+  return entries.filter((e) => {
+    const key = `${e.service.toLowerCase()}|${(e.username ?? '').toLowerCase()}|${e.password}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+// =============================================================================
+// Main Extraction Pipeline
+// =============================================================================
+
+function extractAllCredentials(text: string): RawCred[] {
+  const lines = text.split('\n');
+
+  // Run all strategies in parallel, then merge + dedup
+  const tableResults    = extractFromTable(lines);
+  const sectionResults  = extractFromSectionBlocks(lines);
+  const singleResults   = extractSingleLineEntries(lines);
+  const orphanResults   = extractOrphanLabelPairs(lines);
+  const contextResults  = extractContextAware(lines);
+
+  // Priority merge: table > section > single-line > orphan > context-aware
+  // Any entry already covered by a higher-priority strategy is dropped
+  const all = [
+    ...tableResults,
+    ...sectionResults,
+    ...singleResults,
+    ...orphanResults,
+    ...contextResults,
+  ];
+
+  return dedup(all);
 }
 
 // =============================================================================
@@ -337,7 +526,6 @@ export async function POST(request: NextRequest) {
 
     const blob = file as File;
 
-    // Validate file type
     const isDocx =
       blob.name?.endsWith('.docx') ||
       blob.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
@@ -346,58 +534,49 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Only .docx files are supported' }, { status: 400 });
     }
 
-    // Size limit: 10MB
-    if (blob.size > 10 * 1024 * 1024) {
-      return NextResponse.json({ error: 'File too large. Maximum size is 10MB' }, { status: 413 });
+    if (blob.size > 25 * 1024 * 1024) {
+      return NextResponse.json({ error: 'File too large. Maximum size is 25MB' }, { status: 413 });
     }
 
-    // Convert File → Buffer
     const arrayBuffer = await blob.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
-    // Parse .docx → plain text using mammoth
     const mammoth = await import('mammoth');
     const result = await mammoth.extractRawText({ buffer });
     const rawText = result.value;
 
     if (!rawText || rawText.trim().length < 10) {
-      return NextResponse.json(
-        { error: 'No text content found in document' },
-        { status: 422 }
-      );
+      return NextResponse.json({ error: 'No text content found in document' }, { status: 422 });
     }
 
-    // Segment and parse
-    const blocks = segmentText(rawText);
-    const entries: ExtractedCredential[] = [];
+    const rawCredentials = extractAllCredentials(rawText);
 
-    for (const block of blocks) {
-      const parsed = parseCredentialBlock(block);
-      if (parsed) {
-        entries.push({ id: randomUUID(), ...parsed });
-      }
-    }
-
-    if (entries.length === 0) {
+    if (rawCredentials.length === 0) {
       return NextResponse.json(
         {
-          error: 'No credentials detected. The document format may not be supported.',
-          hint: 'Try formatting as: Service | username@email.com | password (one per line)',
+          error: 'No credentials detected. Check the format tip below.',
+          hint: 'Supported formats: tables (Service | Username | Password), labelled fields (Username: / Password:), or one-line entries (Service - email@x.com / password)',
+          rawLineCount: rawText.split('\n').filter(Boolean).length,
         },
         { status: 422 }
       );
     }
 
-    logger.info('[Vault Import] Extracted credentials from document', {
+    const entries: ExtractedCredential[] = rawCredentials.map((c) => ({
+      id: randomUUID(),
+      ...c,
+    }));
+
+    logger.info('[Vault Import] Document parsed', {
       userId: auth.userId,
       fileName: blob.name,
-      rawLines: blocks.length,
+      rawLines: rawText.split('\n').length,
       extracted: entries.length,
     });
 
     return NextResponse.json({
       entries,
-      rawLineCount: blocks.length,
+      rawLineCount: rawText.split('\n').filter(Boolean).length,
       extractedCount: entries.length,
     });
   } catch (error: unknown) {
