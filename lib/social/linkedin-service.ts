@@ -594,9 +594,21 @@ export class LinkedInService extends BasePlatformService {
         return { success: false, error: 'Service not configured' };
       }
 
-      // Get author URN
-      const profile = await this.makeRequest<LinkedInProfileResponse>('/me');
-      const authorUrn = `urn:li:person:${profile.id}`;
+      // Determine author URN:
+      // - If platformUserId is a purely numeric string it is a LinkedIn organisation page ID
+      //   (e.g. "112760720") and we post as that company page (requires w_organization_social).
+      // - Otherwise we post as the authenticated member's personal profile.
+      let authorUrn: string;
+      const storedUserId = this.credentials?.platformUserId;
+      if (storedUserId && /^\d+$/.test(storedUserId)) {
+        // Company page posting — use organisation URN
+        authorUrn = `urn:li:organization:${storedUserId}`;
+        logger.info('[linkedin] Posting as organisation', { organizationUrn: authorUrn });
+      } else {
+        // Personal profile posting — fetch current member ID
+        const profile = await this.makeRequest<LinkedInProfileResponse>('/me');
+        authorUrn = `urn:li:person:${profile.id}`;
+      }
 
       // Build post payload
       const postPayload: UgcPostPayload = {

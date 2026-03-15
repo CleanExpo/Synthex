@@ -33,7 +33,9 @@ const oauthConfig: Record<string, {
     authUrl: 'https://www.linkedin.com/oauth/v2/authorization',
     tokenUrl: 'https://www.linkedin.com/oauth/v2/accessToken',
     userInfoUrl: 'https://api.linkedin.com/v2/userinfo',
-    scope: 'openid profile email w_member_social',
+    // w_organization_social enables posting as a company page (requires numeric
+    // profileId stored on the PlatformConnection to target the correct page URN)
+    scope: 'openid profile email w_member_social w_organization_social',
   },
   instagram: {
     authUrl: 'https://www.facebook.com/v18.0/dialog/oauth',
