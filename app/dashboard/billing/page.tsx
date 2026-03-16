@@ -10,9 +10,6 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import {
   CreditCard,
   Package,
@@ -25,6 +22,7 @@ import {
 } from '@/components/icons';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
+import { cn } from '@/lib/utils';
 
 interface Subscription {
   plan: string;
@@ -52,7 +50,6 @@ interface UsageData {
   };
 }
 
-/** Type-safe key for usage resources */
 type UsageResource = 'aiPosts' | 'socialAccounts' | 'personas';
 
 export default function BillingPage() {
@@ -83,7 +80,6 @@ export default function BillingPage() {
         const data = await subResponse.json();
         setSubscription(data);
       } else if (subResponse.status === 404) {
-        // No subscription record — user is on the free plan (valid state, not an error)
         setSubscription({ plan: 'free', status: 'inactive' });
       } else {
         setError('Failed to load subscription details');
@@ -118,7 +114,6 @@ export default function BillingPage() {
       const data = await response.json();
 
       if (!response.ok) {
-        // Check if it's a bypass response (Stripe not configured)
         if (data.bypass) {
           toast.error(data.message || 'Billing portal not available');
           return;
@@ -126,8 +121,7 @@ export default function BillingPage() {
         throw new Error('Failed to open billing portal');
       }
 
-      const { url } = data;
-      window.location.href = url;
+      window.location.href = data.url;
     } catch (error) {
       console.error('Billing portal error:', error);
       toast.error('Failed to open billing portal');
@@ -136,18 +130,18 @@ export default function BillingPage() {
     }
   };
 
-  const getStatusColor = (status: string) => {
+  const getStatusColour = (status: string) => {
     switch (status) {
       case 'active':
       case 'trialing':
-        return 'bg-green-500';
+        return '#00FF88';
       case 'past_due':
-        return 'bg-yellow-500';
+        return '#FFB800';
       case 'canceled':
       case 'unpaid':
-        return 'bg-red-500';
+        return '#FF4444';
       default:
-        return 'bg-gray-500';
+        return '#6B7280';
     }
   };
 
@@ -164,42 +158,30 @@ export default function BillingPage() {
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
+    return new Date(dateString).toLocaleDateString('en-AU', {
       year: 'numeric',
       month: 'long',
       day: 'numeric',
     });
   };
 
-  /** Check if the current plan is free tier */
   const isFreePlan = !subscription || subscription.plan === 'free';
 
-  /** Check if a given usage resource has an unlimited limit (-1) */
   const isUnlimited = (resource: UsageResource): boolean => {
     return usageData?.limits[resource] === -1;
   };
 
-  /**
-   * Render a usage row with progress bar or "Unlimited" indicator.
-   * Handles the case where usageData is null (shows a placeholder)
-   * and where limits are -1 (shows "Unlimited" instead of a 0% bar).
-   */
-  const renderUsageRow = (
-    label: string,
-    resource: UsageResource,
-    fallbackLimit: number,
-  ) => {
+  const renderUsageRow = (label: string, resource: UsageResource, fallbackLimit: number) => {
     const currentUsage = usageData?.usage[resource] ?? 0;
     const limit = usageData?.limits[resource] ?? fallbackLimit;
-    // Treat -1 (explicit unlimited) and 0 (uninitialised/unlimited) as unlimited
     const unlimited = !limit || limit <= 0;
     const percentage = unlimited ? 100 : Math.min((usageData?.percentages[resource] ?? 0), 100);
 
     return (
-      <div>
+      <div key={resource}>
         <div className="flex justify-between mb-2">
-          <span className="text-gray-400">{label}</span>
-          <span className="text-white">
+          <span className="text-xs text-white/40">{label}</span>
+          <span className="font-mono text-xs text-white/60 tabular-nums">
             {unlimited ? (
               <>{currentUsage} / <span className="text-cyan-400">Unlimited</span></>
             ) : (
@@ -208,11 +190,11 @@ export default function BillingPage() {
           </span>
         </div>
         {unlimited ? (
-          <span className="text-sm text-cyan-400">Unlimited</span>
+          <span className="text-[10px] text-cyan-400 uppercase tracking-[0.15em]">Unlimited</span>
         ) : (
-          <div className="w-full bg-white/10 rounded-full h-2">
+          <div className="h-px bg-white/[0.06] overflow-hidden">
             <div
-              className="bg-gradient-to-r from-cyan-500 to-teal-500 h-2 rounded-full transition-all duration-300"
+              className="h-full bg-cyan-500 transition-all duration-300"
               style={{ width: `${percentage}%` }}
             />
           </div>
@@ -221,205 +203,205 @@ export default function BillingPage() {
     );
   };
 
+  // ── Loading ───────────────────────────────────────────────────────────────
   if (loading) {
     return (
+      <div className="max-w-4xl mx-auto space-y-6 animate-pulse">
+        <div className="h-9 w-48 bg-white/[0.04] rounded-sm" />
+        <div className="space-y-4">
+          <div className="h-36 bg-white/[0.03] border-[0.5px] border-white/[0.04] rounded-sm" />
+          <div className="h-36 bg-white/[0.03] border-[0.5px] border-white/[0.04] rounded-sm" />
+        </div>
+      </div>
+    );
+  }
+
+  // ── Error ─────────────────────────────────────────────────────────────────
+  if (error) {
+    return (
       <div className="max-w-4xl mx-auto space-y-6">
-        <div className="animate-pulse">
-          <div className="h-8 bg-white/10 rounded w-1/4 mb-8"></div>
-          <div className="space-y-4">
-            <div className="h-32 bg-white/10 rounded"></div>
-            <div className="h-32 bg-white/10 rounded"></div>
+        <div className="border-[0.5px] border-red-500/20 bg-red-500/[0.03] rounded-sm p-8">
+          <div className="flex flex-col items-center justify-center text-center">
+            <div className="w-12 h-12 border-[0.5px] border-red-500/20 bg-red-500/[0.08] rounded-sm flex items-center justify-center mb-5">
+              <AlertCircle className="w-5 h-5 text-red-400" />
+            </div>
+            <h3 className="text-base font-light text-white mb-2">Billing Error</h3>
+            <p className="text-sm text-white/40 mb-6 max-w-md">{error}</p>
+            <button
+              onClick={fetchSubscription}
+              className="flex items-center gap-2 px-4 py-2.5 border-[0.5px] border-white/[0.08] bg-white/[0.02] hover:bg-white/[0.05] rounded-sm text-xs text-white/50 hover:text-white/70 transition-colors"
+            >
+              <RefreshCw className="w-3.5 h-3.5" />
+              Try Again
+            </button>
           </div>
         </div>
       </div>
     );
   }
 
-  if (error) {
-    return (
-      <div className="max-w-4xl mx-auto space-y-6">
-        <Card variant="glass" className="p-6 border-red-500/20">
-          <div className="flex flex-col items-center justify-center py-12 text-center">
-            <div className="p-4 rounded-full bg-red-500/10 mb-4">
-              <AlertCircle className="w-8 h-8 text-red-400" />
-            </div>
-            <h3 className="text-lg font-semibold text-white mb-2">Billing Error</h3>
-            <p className="text-gray-400 mb-6 max-w-md">{error}</p>
-            <Button onClick={fetchSubscription} variant="outline" className="gap-2">
-              <RefreshCw className="w-4 h-4" />
-              Try Again
-            </Button>
-          </div>
-        </Card>
-      </div>
-    );
-  }
-
+  // ── Main ──────────────────────────────────────────────────────────────────
   return (
     <div className="max-w-4xl mx-auto space-y-6">
-        <h1 className="text-3xl font-bold text-white">Billing & Subscription</h1>
+      {/* Page title */}
+      <div className="mb-6">
+        <span className="text-[10px] uppercase tracking-[0.3em] text-white/25 mb-2 block">Account</span>
+        <h1 className="text-3xl font-extralight tracking-tight text-white">Billing &amp; Subscription</h1>
+        <div className="mt-5 h-px bg-white/[0.06]" />
+      </div>
 
-        {/* Current Plan */}
-        <Card variant="glass" className="p-6">
-          <div className="flex items-start justify-between mb-4">
-            <div className="flex items-center space-x-3">
-              <Package className="w-6 h-6 text-cyan-400" />
-              <h2 className="text-xl font-semibold text-white">Current Plan</h2>
-            </div>
-            {isFreePlan ? (
-              <Badge className="bg-cyan-500/20 text-cyan-400 border-cyan-500/30">
-                Free Plan
-              </Badge>
-            ) : (
-              <Badge className={`${getStatusColor(subscription?.status || 'inactive')} text-white`}>
-                {getStatusLabel(subscription?.status)}
-              </Badge>
-            )}
+      {/* Current Plan */}
+      <div className="border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm overflow-hidden">
+        <div className="px-6 pt-5 pb-4 border-b-[0.5px] border-white/[0.06] flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Package className="w-3.5 h-3.5 text-white/25" />
+            <span className="text-[10px] uppercase tracking-[0.25em] text-white/40">Current Plan</span>
           </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <p className="text-gray-400 mb-1">Plan Type</p>
-              <p className="text-2xl font-bold gradient-text capitalize">
-                {subscription?.plan || 'Free'}
-              </p>
-            </div>
-
-            {isFreePlan ? (
-              <div>
-                <p className="text-gray-400 mb-1">Status</p>
-                <p className="text-xl text-white">Active -- no billing required</p>
-              </div>
-            ) : subscription?.currentPeriodEnd ? (
-              <div>
-                <p className="text-gray-400 mb-1">
-                  {subscription.cancelAtPeriodEnd ? 'Expires On' : 'Next Billing Date'}
-                </p>
-                <p className="text-xl text-white">
-                  {formatDate(subscription.currentPeriodEnd)}
-                </p>
-              </div>
-            ) : null}
-          </div>
-
-          {/* Free plan upgrade prompt */}
-          {isFreePlan && (
-            <div className="mt-4 p-4 bg-cyan-500/10 border border-cyan-500/30 rounded-lg">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-3">
-                  <Zap className="w-5 h-5 text-cyan-400" />
-                  <p className="text-cyan-200">
-                    Upgrade to unlock more social accounts, unlimited AI posts, and advanced analytics.
-                  </p>
-                </div>
-                <Button
-                  onClick={() => router.push('/pricing')}
-                  size="sm"
-                  className="gradient-primary ml-4 shrink-0"
-                >
-                  View Plans
-                </Button>
-              </div>
-            </div>
+          {isFreePlan ? (
+            <span className="inline-flex items-center px-2 py-0.5 rounded-sm text-[9px] uppercase tracking-[0.15em] bg-cyan-500/[0.08] text-cyan-400 border-[0.5px] border-cyan-500/20">
+              Free Plan
+            </span>
+          ) : (
+            <span
+              className="inline-flex items-center px-2 py-0.5 rounded-sm text-[9px] uppercase tracking-[0.15em] border-[0.5px]"
+              style={{
+                color: getStatusColour(subscription?.status || 'inactive'),
+                borderColor: `${getStatusColour(subscription?.status || 'inactive')}40`,
+                backgroundColor: `${getStatusColour(subscription?.status || 'inactive')}08`,
+              }}
+            >
+              {getStatusLabel(subscription?.status)}
+            </span>
           )}
+        </div>
 
-          {subscription?.cancelAtPeriodEnd && (
-            <div className="mt-4 p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
-              <div className="flex items-center space-x-2">
-                <AlertCircle className="w-5 h-5 text-yellow-500" />
-                <p className="text-yellow-200">
-                  Your subscription will end on {formatDate(subscription.currentPeriodEnd!)}
-                </p>
-              </div>
-            </div>
-          )}
-        </Card>
-
-        {/* Billing Management - adapted for free vs paid */}
-        <Card variant="glass" className="p-6">
-          <div className="flex items-center space-x-3 mb-4">
-            <CreditCard className="w-6 h-6 text-cyan-400" />
-            <h2 className="text-xl font-semibold text-white">Billing Management</h2>
+        <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <p className="text-[9px] uppercase tracking-[0.2em] text-white/25 mb-1">Plan Type</p>
+            <p className="font-mono text-2xl font-medium text-cyan-400 tabular-nums capitalize">
+              {subscription?.plan || 'Free'}
+            </p>
           </div>
 
           {isFreePlan ? (
-            /* Free plan: simplified billing section */
             <div>
-              <p className="text-gray-400 mb-6">
+              <p className="text-[9px] uppercase tracking-[0.2em] text-white/25 mb-1">Status</p>
+              <p className="text-sm text-white/60">Active — no billing required</p>
+            </div>
+          ) : subscription?.currentPeriodEnd ? (
+            <div>
+              <p className="text-[9px] uppercase tracking-[0.2em] text-white/25 mb-1">
+                {subscription.cancelAtPeriodEnd ? 'Expires On' : 'Next Billing Date'}
+              </p>
+              <p className="text-sm text-white/60">{formatDate(subscription.currentPeriodEnd)}</p>
+            </div>
+          ) : null}
+        </div>
+
+        {/* Free plan upgrade prompt */}
+        {isFreePlan && (
+          <div className="mx-6 mb-6 flex items-center justify-between gap-3 p-4 bg-cyan-500/[0.05] border-[0.5px] border-cyan-500/20 rounded-sm">
+            <div className="flex items-center gap-3">
+              <Zap className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+              <p className="text-xs text-cyan-200/70">
+                Upgrade to unlock more social accounts, unlimited AI posts, and advanced analytics.
+              </p>
+            </div>
+            <button
+              onClick={() => router.push('/pricing')}
+              className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 bg-cyan-500 hover:bg-cyan-400 text-[#0a1628] text-xs font-semibold rounded-sm transition-colors"
+            >
+              View Plans
+            </button>
+          </div>
+        )}
+
+        {/* Cancellation warning */}
+        {subscription?.cancelAtPeriodEnd && (
+          <div className="mx-6 mb-6 flex items-center gap-2 p-3 bg-amber-500/[0.05] border-[0.5px] border-amber-500/20 rounded-sm">
+            <AlertCircle className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+            <p className="text-xs text-amber-200/70">
+              Your subscription will end on {formatDate(subscription.currentPeriodEnd!)}
+            </p>
+          </div>
+        )}
+      </div>
+
+      {/* Billing Management */}
+      <div className="border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm overflow-hidden">
+        <div className="px-6 pt-5 pb-4 border-b-[0.5px] border-white/[0.06] flex items-center gap-2">
+          <CreditCard className="w-3.5 h-3.5 text-white/25" />
+          <span className="text-[10px] uppercase tracking-[0.25em] text-white/40">Billing Management</span>
+        </div>
+
+        <div className="p-6">
+          {isFreePlan ? (
+            <div>
+              <p className="text-sm text-white/40 mb-6 leading-relaxed">
                 You are on the free plan. No payment method is required. Upgrade anytime to access premium features.
               </p>
-              <Button
+              <button
                 onClick={() => router.push('/pricing')}
-                className="w-full gradient-primary text-white"
-                size="lg"
+                className="w-full flex items-center justify-center gap-2 py-3 bg-cyan-500 hover:bg-cyan-400 text-[#0a1628] text-xs font-semibold tracking-wide rounded-sm transition-colors"
               >
-                <Zap className="w-4 h-4 mr-2" />
-                Explore Plans & Pricing
-                <ArrowUpRight className="w-4 h-4 ml-2" />
-              </Button>
+                <Zap className="w-3.5 h-3.5" />
+                Explore Plans &amp; Pricing
+                <ArrowUpRight className="w-3.5 h-3.5" />
+              </button>
             </div>
           ) : (
-            /* Paid plan: full billing portal access */
             <div>
-              <p className="text-gray-400 mb-6">
+              <p className="text-sm text-white/40 mb-6 leading-relaxed">
                 Manage your subscription, payment methods, and download invoices through the Stripe billing portal.
               </p>
-
-              <div className="space-y-4">
-                <Button
+              <div className="space-y-3">
+                <button
                   onClick={openBillingPortal}
                   disabled={portalLoading}
-                  className="w-full gradient-primary text-white"
-                  size="lg"
+                  className="w-full flex items-center justify-center gap-2 py-3 bg-cyan-500 hover:bg-cyan-400 text-[#0a1628] text-xs font-semibold tracking-wide rounded-sm transition-colors disabled:opacity-60"
                 >
                   {portalLoading ? (
-                    'Opening Portal...'
+                    'Opening Portal…'
                   ) : (
-                    <>
-                      Open Billing Portal
-                      <ArrowUpRight className="w-4 h-4 ml-2" />
-                    </>
+                    <><span>Open Billing Portal</span><ArrowUpRight className="w-3.5 h-3.5" /></>
                   )}
-                </Button>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <Button
-                    variant="outline"
-                    className="w-full border-white/20 text-white hover:bg-white/10"
+                </button>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <button
                     onClick={() => router.push('/pricing')}
+                    className="flex items-center justify-center gap-2 py-2.5 border-[0.5px] border-white/[0.08] bg-white/[0.02] hover:bg-white/[0.05] rounded-sm text-xs text-white/50 hover:text-white/70 transition-colors"
                   >
                     View Plans
-                  </Button>
-                  <Button
-                    variant="outline"
-                    className="w-full border-white/20 text-white hover:bg-white/10"
+                  </button>
+                  <button
                     onClick={openBillingPortal}
                     disabled={portalLoading}
+                    className="flex items-center justify-center gap-2 py-2.5 border-[0.5px] border-white/[0.08] bg-white/[0.02] hover:bg-white/[0.05] rounded-sm text-xs text-white/50 hover:text-white/70 transition-colors disabled:opacity-50"
                   >
-                    <Download className="w-4 h-4 mr-2" />
+                    <Download className="w-3.5 h-3.5" />
                     View Invoices
-                  </Button>
+                  </button>
                 </div>
               </div>
             </div>
           )}
-        </Card>
+        </div>
+      </div>
 
-        {/* Usage & Limits */}
-        <Card variant="glass" className="p-6">
-          <div className="flex items-center space-x-3 mb-4">
-            <Calendar className="w-6 h-6 text-cyan-400" />
-            <h2 className="text-xl font-semibold text-white">Usage & Limits</h2>
-          </div>
+      {/* Usage & Limits */}
+      <div className="border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm overflow-hidden">
+        <div className="px-6 pt-5 pb-4 border-b-[0.5px] border-white/[0.06] flex items-center gap-2">
+          <Calendar className="w-3.5 h-3.5 text-white/25" />
+          <span className="text-[10px] uppercase tracking-[0.25em] text-white/40">Usage &amp; Limits</span>
+        </div>
 
-          <div className="space-y-4">
-            {renderUsageRow('AI Posts Generated', 'aiPosts', 10)}
-            {renderUsageRow('Social Accounts', 'socialAccounts', 2)}
-            {renderUsageRow('AI Personas', 'personas', 1)}
-          </div>
+        <div className="p-6 space-y-5">
+          {renderUsageRow('AI Posts Generated', 'aiPosts', 10)}
+          {renderUsageRow('Social Accounts', 'socialAccounts', 2)}
+          {renderUsageRow('AI Personas', 'personas', 1)}
 
-          <div className="mt-6 p-4 bg-cyan-500/10 border border-cyan-500/30 rounded-lg">
-            <p className="text-cyan-200 text-sm">
+          <div className="pt-2 px-4 py-3 bg-cyan-500/[0.05] border-[0.5px] border-cyan-500/20 rounded-sm">
+            <p className="text-xs text-cyan-200/70">
               {isFreePlan ? (
                 <>Want more? <a href="/pricing" className="underline hover:text-cyan-100">Upgrade your plan</a> to unlock higher limits and advanced features.</>
               ) : isUnlimited('aiPosts') ? (
@@ -429,7 +411,8 @@ export default function BillingPage() {
               )}
             </p>
           </div>
-        </Card>
+        </div>
+      </div>
     </div>
   );
 }

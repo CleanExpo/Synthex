@@ -7,12 +7,10 @@
  * @task UNI-416 - Settings Page Decomposition
  */
 
-import { useState , Suspense } from 'react';
+import { useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useSettingsData, isEnterprisePlan } from '@/hooks/use-settings-data';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Button } from '@/components/ui/button';
 import {
   Bell,
   Building,
@@ -27,7 +25,6 @@ import {
   User,
   Zap,
 } from '@/components/icons';
-import { Card, CardContent } from '@/components/ui/card';
 import {
   ProfileTab,
   NotificationsTab,
@@ -38,6 +35,19 @@ import {
   AdvancedTab,
   type SettingsTab,
 } from '@/components/settings';
+import { cn } from '@/lib/utils';
+
+// ── Tab definitions ───────────────────────────────────────────────────────────
+
+const TABS: { id: SettingsTab; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
+  { id: 'profile',       label: 'Profile',       icon: User       },
+  { id: 'notifications', label: 'Notifications', icon: Bell       },
+  { id: 'integrations',  label: 'Integrations',  icon: Link2      },
+  { id: 'privacy',       label: 'Privacy',        icon: Shield     },
+  { id: 'billing',       label: 'Billing',        icon: CreditCard },
+  { id: 'branding',      label: 'Branding',       icon: Palette    },
+  { id: 'advanced',      label: 'Advanced',       icon: Settings2  },
+];
 
 function SettingsPageContent() {
   const searchParams = useSearchParams();
@@ -76,64 +86,63 @@ function SettingsPageContent() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-3xl font-bold gradient-text">Settings</h1>
-          <p className="text-slate-400 mt-1">
-            Manage your account preferences and integrations
-          </p>
+      <div className="mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+          <div>
+            <span className="text-[10px] uppercase tracking-[0.3em] text-white/25 mb-2 block">
+              Account
+            </span>
+            <h1 className="text-3xl sm:text-4xl font-extralight tracking-tight text-white">
+              Settings
+            </h1>
+            <p className="mt-1.5 text-sm text-white/40 leading-relaxed">
+              Manage your account preferences and integrations
+            </p>
+          </div>
+          <div className="flex gap-2 flex-shrink-0">
+            <button
+              onClick={handleExportData}
+              disabled={isExporting}
+              className="flex items-center gap-2 px-4 py-2 border-[0.5px] border-white/[0.08] bg-white/[0.02] hover:bg-white/[0.05] rounded-sm text-xs text-white/50 hover:text-white/70 transition-colors disabled:opacity-50"
+            >
+              <Download className="h-3.5 w-3.5" />
+              Export Data
+            </button>
+            <button
+              onClick={handleSave}
+              disabled={isSaving}
+              className="flex items-center gap-2 px-4 py-2 bg-cyan-500 hover:bg-cyan-400 text-[#0a1628] text-xs font-semibold tracking-wide rounded-sm transition-colors disabled:opacity-60"
+            >
+              <Save className="h-3.5 w-3.5" />
+              {isSaving ? 'Saving…' : 'Save Changes'}
+            </button>
+          </div>
         </div>
-        <div className="flex space-x-3 mt-4 sm:mt-0">
-          <Button
-            onClick={handleExportData}
-            disabled={isExporting}
-            variant="outline"
-            className="bg-white/5 border-white/10"
-          >
-            <Download className="mr-2 h-4 w-4" />
-            Export Data
-          </Button>
-          <Button onClick={handleSave} disabled={isSaving} className="gradient-primary">
-            <Save className="mr-2 h-4 w-4" />
-            Save All Changes
-          </Button>
-        </div>
+        <div className="mt-5 h-px bg-white/[0.06]" />
       </div>
 
-      {/* Tabs */}
-      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as SettingsTab)}>
-        <TabsList className="bg-white/5 border border-white/10 p-1">
-          <TabsTrigger value="profile" className="data-[state=active]:bg-white/10">
-            <User className="w-4 h-4 mr-2" />
-            Profile
-          </TabsTrigger>
-          <TabsTrigger value="notifications" className="data-[state=active]:bg-white/10">
-            <Bell className="w-4 h-4 mr-2" />
-            Notifications
-          </TabsTrigger>
-          <TabsTrigger value="integrations" className="data-[state=active]:bg-white/10">
-            <Link2 className="w-4 h-4 mr-2" />
-            Integrations
-          </TabsTrigger>
-          <TabsTrigger value="privacy" className="data-[state=active]:bg-white/10">
-            <Shield className="w-4 h-4 mr-2" />
-            Privacy
-          </TabsTrigger>
-          <TabsTrigger value="billing" className="data-[state=active]:bg-white/10">
-            <CreditCard className="w-4 h-4 mr-2" />
-            Billing
-          </TabsTrigger>
-          <TabsTrigger value="branding" className="data-[state=active]:bg-white/10">
-            <Palette className="w-4 h-4 mr-2" />
-            Branding
-          </TabsTrigger>
-          <TabsTrigger value="advanced" className="data-[state=active]:bg-white/10">
-            <Settings2 className="w-4 h-4 mr-2" />
-            Advanced
-          </TabsTrigger>
-        </TabsList>
+      {/* Tab bar */}
+      <div className="border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm p-1 flex flex-wrap gap-0.5 overflow-x-auto">
+        {TABS.map(({ id, label, icon: Icon }) => (
+          <button
+            key={id}
+            onClick={() => setActiveTab(id)}
+            className={cn(
+              'flex items-center gap-1.5 px-3 py-2 text-xs rounded-sm transition-colors whitespace-nowrap',
+              activeTab === id
+                ? 'bg-white/[0.08] text-white border-[0.5px] border-white/[0.1]'
+                : 'text-white/40 hover:text-white/60 hover:bg-white/[0.03]'
+            )}
+          >
+            <Icon className="h-3 w-3" />
+            {label}
+          </button>
+        ))}
+      </div>
 
-        <TabsContent value="profile" className="mt-6">
+      {/* Tab content */}
+      <div className="mt-6">
+        {activeTab === 'profile' && (
           <div className="space-y-6">
             <ProfileTab
               profile={profile}
@@ -143,32 +152,30 @@ function SettingsPageContent() {
               isSaving={isSaving}
             />
             <Link href="/dashboard/settings/brand-profile">
-              <Card variant="glass" className="hover:border-white/20 transition-colors cursor-pointer">
-                <CardContent className="flex items-center justify-between py-4">
-                  <div className="flex items-center gap-3">
-                    <Building className="w-5 h-5 text-cyan-400" />
-                    <div>
-                      <p className="text-sm font-medium text-white">Brand Profile</p>
-                      <p className="text-xs text-slate-400">Logo, colours, website, and social handles</p>
-                    </div>
+              <div className="flex items-center justify-between py-4 px-5 border-[0.5px] border-white/[0.06] bg-white/[0.01] hover:bg-white/[0.03] hover:border-white/[0.12] rounded-sm transition-colors cursor-pointer">
+                <div className="flex items-center gap-3">
+                  <Building className="w-4 h-4 text-cyan-400" />
+                  <div>
+                    <p className="text-sm font-light text-white">Brand Profile</p>
+                    <p className="text-xs text-white/40 mt-0.5">Logo, colours, website, and social handles</p>
                   </div>
-                  <ChevronRight className="w-4 h-4 text-slate-500" />
-                </CardContent>
-              </Card>
+                </div>
+                <ChevronRight className="w-4 h-4 text-white/25" />
+              </div>
             </Link>
           </div>
-        </TabsContent>
+        )}
 
-        <TabsContent value="notifications" className="mt-6">
+        {activeTab === 'notifications' && (
           <NotificationsTab
             settings={notifications}
             onSettingChange={handleNotificationChange}
             onSave={handleSave}
             isSaving={isSaving}
           />
-        </TabsContent>
+        )}
 
-        <TabsContent value="integrations" className="mt-6">
+        {activeTab === 'integrations' && (
           <IntegrationsTab
             platforms={platforms}
             apiKeys={apiKeys}
@@ -178,9 +185,9 @@ function SettingsPageContent() {
             onCreateApiKey={handleCreateApiKey}
             onDeleteApiKey={handleDeleteApiKey}
           />
-        </TabsContent>
+        )}
 
-        <TabsContent value="privacy" className="mt-6">
+        {activeTab === 'privacy' && (
           <PrivacyTab
             settings={privacy}
             onSettingChange={handlePrivacyChange}
@@ -190,9 +197,9 @@ function SettingsPageContent() {
             isSaving={isSaving}
             isExporting={isExporting}
           />
-        </TabsContent>
+        )}
 
-        <TabsContent value="billing" className="mt-6">
+        {activeTab === 'billing' && (
           <BillingTab
             billing={billing}
             invoices={invoices}
@@ -200,44 +207,45 @@ function SettingsPageContent() {
             onManagePayment={handleManagePayment}
             onDownloadInvoice={handleDownloadInvoice}
           />
-        </TabsContent>
+        )}
 
-        <TabsContent value="branding" className="mt-6">
-          {isEnterprisePlan(billing.plan) ? (
+        {activeTab === 'branding' && (
+          isEnterprisePlan(billing.plan) ? (
             <BrandingTab onSave={handleSave} isSaving={isSaving} />
           ) : (
-            <Card variant="glass">
-              <CardContent className="py-12">
-                <div className="text-center space-y-4">
-                  <Palette className="w-12 h-12 text-slate-500 mx-auto" />
-                  <div>
-                    <h2 className="text-lg font-semibold text-white mb-1">
-                      White-Label Branding
-                    </h2>
-                    <p className="text-slate-400 max-w-md mx-auto">
-                      Customise your platform with your own logo, colours, domain, and more.
-                      This feature is available on Enterprise plans.
-                    </p>
-                  </div>
-                  <Button onClick={handleUpgrade} className="gradient-primary">
-                    <Zap className="w-4 h-4 mr-2" />
-                    Upgrade to Enterprise
-                  </Button>
+            <div className="border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm">
+              <div className="py-16 px-8 text-center space-y-5">
+                <div className="w-12 h-12 border-[0.5px] border-white/[0.08] bg-white/[0.02] rounded-sm flex items-center justify-center mx-auto">
+                  <Palette className="w-5 h-5 text-white/25" />
                 </div>
-              </CardContent>
-            </Card>
-          )}
-        </TabsContent>
+                <div>
+                  <h2 className="text-lg font-light text-white mb-1">White-Label Branding</h2>
+                  <p className="text-sm text-white/40 max-w-md mx-auto leading-relaxed">
+                    Customise your platform with your own logo, colours, domain, and more.
+                    This feature is available on Enterprise plans.
+                  </p>
+                </div>
+                <button
+                  onClick={handleUpgrade}
+                  className="inline-flex items-center gap-2 px-5 py-2.5 bg-cyan-500 hover:bg-cyan-400 text-[#0a1628] text-xs font-semibold tracking-wide rounded-sm transition-colors"
+                >
+                  <Zap className="w-3.5 h-3.5" />
+                  Upgrade to Enterprise
+                </button>
+              </div>
+            </div>
+          )
+        )}
 
-        <TabsContent value="advanced" className="mt-6">
+        {activeTab === 'advanced' && (
           <AdvancedTab
             settings={advanced}
             onSettingChange={handleAdvancedChange}
             onSave={handleSave}
             isSaving={isSaving}
           />
-        </TabsContent>
-      </Tabs>
+        )}
+      </div>
     </div>
   );
 }
