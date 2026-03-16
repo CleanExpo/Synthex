@@ -74,7 +74,11 @@
     "backup:verify-all": "node scripts/backup-verification.js verify-all",
     "backup:run-verification": "node scripts/run-backup-verification.js",
     "backup:checksum": "node scripts/generate-backup-checksum.js",
-    "backup:checksum-all": "node scripts/generate-backup-checksum.js generate-all"
+    "backup:checksum-all": "node scripts/generate-backup-checksum.js generate-all",
+    "setup": "bash scripts/setup.sh",
+    "setup:windows": "powershell -ExecutionPolicy Bypass -File scripts/setup.ps1",
+    "verify": "bash scripts/verify.sh",
+    "verify:windows": "powershell -ExecutionPolicy Bypass -File scripts/verify.ps1"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^3.0.14",
@@ -254,5 +258,18 @@
         }
       ]
     }
+  },
+  "lint-staged": {
+    "*.{ts,tsx}": [
+      "eslint --fix --max-warnings=0",
+      "prettier --write"
+    ],
+    "*.{js,jsx,mjs,cjs}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{json,md,yml,yaml,css}": [
+      "prettier --write"
+    ]
   }
 }
