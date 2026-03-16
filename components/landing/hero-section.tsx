@@ -2,120 +2,109 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { Button } from '@/components/ui/button';
-import { ArrowRight, CheckCircle2 } from '@/components/icons';
 
-/** Landing page hero section with image and CTA */
+const TRUST_ITEMS = [
+  { value: '14-day', label: 'free trial' },
+  { value: 'BYOK', label: 'your API keys' },
+  { value: '9', label: 'platforms' },
+  { value: '24 / 7', label: 'autonomous' },
+];
+
+/** Hero section — asymmetric 60/40 layout, Scientific Luxury typography */
 export function HeroSection() {
   return (
-    <section className="relative min-h-screen flex items-center pt-20">
+    <section className="relative min-h-screen flex items-center pt-24 pb-16">
       <div className="container mx-auto px-6 relative z-10">
-        <div className="grid lg:grid-cols-2 gap-12 items-center">
+        <div className="flex flex-col lg:flex-row gap-12 xl:gap-20 items-center">
 
-          {/* Left Side - AI Robot Hero Image */}
-          <div className="relative order-2 lg:order-1 flex justify-center lg:justify-start">
-            <div className="relative">
-              {/* Hero Image Container */}
-              <div className="relative w-full max-w-[600px]">
-                {/* Glow behind image */}
-                <div className="absolute inset-0 bg-gradient-to-t from-cyan-500/30 via-cyan-400/10 to-transparent rounded-3xl blur-3xl scale-110" />
+          {/* Left — Content (60%) */}
+          <div className="flex-[6] order-1 text-center lg:text-left">
 
-                {/* Main Hero Image */}
-                <div data-hero-image className="relative z-10 rounded-2xl overflow-hidden shadow-2xl shadow-cyan-500/20">
-                  <Image
-                    src="/images/hero-robot.png"
-                    alt="AI Marketing Automation Robot"
-                    width={2048}
-                    height={1152}
-                    priority
-                    className="w-full h-auto object-cover"
-                  />
-                </div>
-
-                {/* Floating accent elements */}
-                <div className="absolute -top-4 -right-4 w-20 h-20 bg-gradient-to-br from-cyan-400 to-cyan-600 rounded-full blur-2xl opacity-40 animate-pulse" />
-                <div className="absolute -bottom-4 -left-4 w-16 h-16 bg-gradient-to-br from-cyan-500 to-teal-500 rounded-full blur-xl opacity-30 animate-pulse" style={{ animationDelay: '1s' }} />
-              </div>
-            </div>
-          </div>
-
-          {/* Right Side - Content */}
-          <div className="order-1 lg:order-2 text-center lg:text-left">
-            {/* Pill-style Headlines */}
-            <div className="flex flex-col items-center lg:items-start gap-4 mb-8">
-              <div className="inline-flex overflow-hidden">
-                <span data-hero-pill className="px-8 py-5 bg-white text-slate-950 text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-black uppercase rounded-2xl tracking-tight shadow-2xl shadow-white/10">
-                  AI Marketing
-                </span>
-              </div>
-              <div className="inline-flex overflow-hidden">
-                <span data-hero-pill className="px-8 py-5 bg-gradient-to-r from-cyan-500 to-cyan-400 text-slate-950 text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-black uppercase rounded-2xl tracking-tight shadow-2xl shadow-cyan-500/30">
-                  Agency
-                </span>
-              </div>
-            </div>
-
-            {/* Brand Domain */}
-            <div className="mb-8">
-              <span data-hero-content className="text-2xl sm:text-3xl font-light tracking-wide text-cyan-400">
-                synthex.social
+            {/* Eyebrow */}
+            <div className="inline-flex items-center gap-2.5 mb-10">
+              <div className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
+              <span className="text-[10px] uppercase tracking-[0.35em] text-white/40">
+                AI Marketing Automation Platform
               </span>
             </div>
 
-            {/* Tagline */}
-            <p data-hero-content className="text-lg sm:text-xl text-gray-400 mb-6 max-w-lg mx-auto lg:mx-0 leading-relaxed">
-              The world's first <span className="text-white font-medium">fully autonomous AI marketing agency</span>.
-              Powered by advanced AI that creates, optimizes, and scales your social media presence 24/7.
+            {/* Headline */}
+            <h1 className="text-5xl sm:text-6xl lg:text-[5.5rem] font-extralight tracking-tight text-white leading-[1.02] mb-6">
+              Your marketing,<br />
+              <span className="text-cyan-400">fully autonomous.</span>
+            </h1>
+
+            {/* Subheadline */}
+            <p className="text-lg text-white/50 max-w-xl mx-auto lg:mx-0 leading-relaxed mb-8">
+              Synthex replaces your entire social media operation with autonomous AI agents. Create, schedule, optimise, and publish across 9 platforms — without lifting a finger.
             </p>
 
-            {/* Key Differentiator */}
-            <div data-hero-content className="mb-10 p-4 bg-gradient-to-r from-cyan-500/10 to-transparent border-l-2 border-cyan-400 rounded-r-lg max-w-lg mx-auto lg:mx-0">
-              <p className="text-white font-medium mb-1">From just $249/month</p>
-              <p className="text-gray-400 text-sm">Use your own API keys to dramatically reduce costs. Custom enterprise rates available.</p>
+            {/* Pricing callout */}
+            <div className="inline-flex items-center gap-3 mb-10 px-4 py-2.5 border-l-2 border-cyan-400/60 bg-cyan-500/[0.04]">
+              <span className="text-sm text-white/60">
+                From{' '}
+                <span className="font-mono text-white font-medium">$249</span>
+                {' '}/month — or use your own API keys to cut costs further
+              </span>
             </div>
 
-            {/* CTA Buttons */}
-            <div data-hero-content className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start mb-10">
-              <Link href="/signup">
-                <Button
-                  size="lg"
-                  className="bg-gradient-to-r from-cyan-500 to-cyan-600 hover:from-cyan-400 hover:to-cyan-500 text-white font-semibold shadow-xl shadow-cyan-500/30 px-8 py-6 text-base rounded-xl transition-all hover:shadow-cyan-500/50 hover:scale-105"
-                >
-                  {process.env.NEXT_PUBLIC_INVITE_ONLY_MODE === 'true'
-                    ? 'Join with Invite Code'
-                    : 'Start Free Trial'}
-                  <ArrowRight className="ml-2 w-5 h-5" />
-                </Button>
+            {/* CTAs */}
+            <div className="flex flex-col sm:flex-row gap-3 justify-center lg:justify-start mb-12">
+              <Link
+                href="/auth/signup"
+                className="inline-flex items-center justify-center gap-2 px-8 py-3.5 bg-cyan-500 hover:bg-cyan-400 text-[#0a1628] font-semibold text-sm tracking-wide rounded-sm transition-colors duration-200"
+              >
+                Start Free Trial
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
+                </svg>
               </Link>
-              <Link href="/demo">
-                <Button
-                  size="lg"
-                  variant="outline"
-                  className="border-cyan-500/30 hover:border-cyan-400/50 bg-cyan-500/5 hover:bg-cyan-500/10 text-cyan-400 px-8 py-6 text-base rounded-xl backdrop-blur-sm"
-                >
-                  Watch Demo
-                </Button>
+              <Link
+                href="/demo"
+                className="inline-flex items-center justify-center gap-2 px-8 py-3.5 border-[0.5px] border-white/[0.15] hover:border-white/30 text-white/60 hover:text-white text-sm tracking-wide rounded-sm transition-all duration-200 bg-white/[0.02] hover:bg-white/[0.04]"
+              >
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M8 5v14l11-7z" />
+                </svg>
+                Watch Demo
               </Link>
             </div>
 
-            {/* Trust Indicators */}
-            <div data-hero-content className="flex flex-wrap gap-6 justify-center lg:justify-start text-sm text-gray-500">
-              <div className="flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-cyan-500" />
-                <span>Use your own API keys</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-cyan-500" />
-                <span>{process.env.NEXT_PUBLIC_INVITE_ONLY_MODE === 'true'
-                  ? 'Invite-only early access'
-                  : '14-day free trial'}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-cyan-500" />
-                <span>Cancel anytime</span>
-              </div>
+            {/* Trust data strip */}
+            <div className="flex flex-wrap gap-x-8 gap-y-3 justify-center lg:justify-start border-t border-[0.5px] border-white/[0.06] pt-8">
+              {TRUST_ITEMS.map((item) => (
+                <div key={item.label} className="flex items-baseline gap-1.5">
+                  <span className="font-mono text-sm font-medium text-white">{item.value}</span>
+                  <span className="text-[10px] uppercase tracking-[0.2em] text-white/30">{item.label}</span>
+                </div>
+              ))}
             </div>
           </div>
+
+          {/* Right — Image (40%) */}
+          <div className="flex-[4] order-2 relative w-full max-w-lg lg:max-w-none">
+            <div className="relative">
+              {/* Ambient glow */}
+              <div className="absolute -inset-8 bg-gradient-to-t from-cyan-500/15 via-transparent to-transparent blur-3xl -z-10 rounded-full" />
+
+              {/* Image frame */}
+              <div className="border-[0.5px] border-white/[0.06] rounded-sm overflow-hidden shadow-2xl shadow-black/50">
+                <Image
+                  src="/images/hero-robot.png"
+                  alt="Synthex — Autonomous AI Marketing Platform"
+                  width={2048}
+                  height={1152}
+                  priority
+                  className="w-full h-auto object-cover"
+                />
+              </div>
+
+              {/* Corner accent */}
+              <div className="absolute -bottom-3 -right-3 w-24 h-24 border-r border-b border-cyan-400/20 rounded-sm pointer-events-none" />
+              <div className="absolute -top-3 -left-3 w-24 h-24 border-l border-t border-white/[0.06] rounded-sm pointer-events-none" />
+            </div>
+          </div>
+
         </div>
       </div>
     </section>

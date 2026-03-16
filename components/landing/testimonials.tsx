@@ -1,182 +1,115 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
-import { Star, Quote, BadgeCheck, TrendingUp } from '@/components/icons';
-import { Card } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
 
 interface Testimonial {
-  id: number;
   name: string;
   role: string;
   company: string;
   quote: string;
-  rating: number;
-  avatar: {
-    gradient: string;
-    initials: string;
-  };
-  metrics?: {
-    label: string;
-    value: string;
-    change: string;
-  };
-  verified: boolean;
+  metric: { value: string; label: string };
+  initials: string;
+  accentColor: string;
   featured?: boolean;
 }
 
-const testimonials: Testimonial[] = [
+const TESTIMONIALS: Testimonial[] = [
   {
-    id: 1,
     name: 'Sarah Chen',
     role: 'CEO',
     company: 'TechStart Inc.',
-    quote: 'Replaced our $8k/month agency. Better results, fraction of the cost. The AI understands our brand voice perfectly.',
-    rating: 5,
-    avatar: {
-      gradient: 'from-cyan-500 via-cyan-500 to-cyan-500',
-      initials: 'SC',
-    },
-    metrics: {
-      label: 'Engagement',
-      value: '+312%',
-      change: 'in 30 days',
-    },
-    verified: true,
-    featured: false,
-  },
-  {
-    id: 2,
-    name: 'Marcus Johnson',
-    role: 'Influencer',
-    company: '500K+ Followers',
-    quote: '3x our engagement in 30 days. The viral pattern analysis is game-changing. It\'s like having a team of experts 24/7.',
-    rating: 5,
-    avatar: {
-      gradient: 'from-cyan-500 via-blue-500 to-cyan-500',
-      initials: 'MJ',
-    },
-    metrics: {
-      label: 'Followers',
-      value: '+127K',
-      change: 'in 6 months',
-    },
-    verified: true,
+    quote: 'We replaced our $8K/month agency on day one. Better output, completely on-brand, and the AI actually understands what our audience responds to. We\'ve never looked back.',
+    metric: { value: '+312%', label: 'Engagement in 30 days' },
+    initials: 'SC',
+    accentColor: '#00F5FF',
     featured: true,
   },
   {
-    id: 3,
+    name: 'Marcus Johnson',
+    role: 'Content Creator',
+    company: '500K+ Followers',
+    quote: 'The viral pattern analysis is unlike anything I\'ve used. It tells me exactly what hook structure and format is working right now — my reach tripled in 6 weeks.',
+    metric: { value: '+127K', label: 'Followers in 6 months' },
+    initials: 'MJ',
+    accentColor: '#00F5FF',
+  },
+  {
     name: 'Emma Rodriguez',
     role: 'CMO',
-    company: 'Fashion Brand',
-    quote: 'From 100 to 50K followers in 6 months. The AI-generated content consistently outperforms what we created manually.',
-    rating: 5,
-    avatar: {
-      gradient: 'from-amber-500 via-orange-500 to-red-500',
-      initials: 'ER',
-    },
-    metrics: {
-      label: 'ROI',
-      value: '847%',
-      change: 'vs. agency',
-    },
-    verified: true,
-    featured: false,
+    company: 'Lumière Fashion',
+    quote: 'From 100 to 50K followers in under 6 months across Instagram and TikTok. The BYOK model means I control my AI costs — we\'re running it for a fraction of agency rates.',
+    metric: { value: '847%', label: 'ROI vs. prior agency' },
+    initials: 'ER',
+    accentColor: '#FFB800',
+  },
+  {
+    name: 'David Park',
+    role: 'Founder',
+    company: 'Northfield SaaS',
+    quote: 'Synthex handles our full LinkedIn and X strategy. Our inbound from social went from zero to meaningful pipeline in under 3 months. The autonomous scheduling alone saved 15 hours a week.',
+    metric: { value: '15hrs', label: 'Saved per week' },
+    initials: 'DP',
+    accentColor: '#00FF88',
   },
 ];
 
-function TestimonialCard({ testimonial, index }: { testimonial: Testimonial; index: number }) {
-  const [isHovered, setIsHovered] = useState(false);
-
+function TestimonialCard({ t, index }: { t: Testimonial; index: number }) {
   return (
     <div
-      className={`group relative transition-all duration-500 ${
-        testimonial.featured ? 'lg:-mt-4 lg:mb-4 z-10' : ''
+      className={`relative group flex flex-col gap-5 p-6 lg:p-8 border-[0.5px] transition-colors duration-300 ${
+        t.featured
+          ? 'border-white/[0.12] bg-white/[0.04]'
+          : 'border-white/[0.06] bg-white/[0.01] hover:border-white/[0.1]'
       }`}
-      style={{ animationDelay: `${index * 150}ms` }}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
+      style={{ animationDelay: `${index * 120}ms` }}
     >
-      {/* Glow effect for featured */}
-      {testimonial.featured && (
-        <div className="absolute -inset-4 bg-gradient-to-r from-cyan-500/20 via-cyan-500/20 to-cyan-500/20 rounded-3xl blur-2xl opacity-60" />
-      )}
+      {/* Rating */}
+      <div className="flex gap-0.5">
+        {[...Array(5)].map((_, i) => (
+          <svg key={i} className="w-3.5 h-3.5 text-amber-400 fill-amber-400" viewBox="0 0 24 24">
+            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+          </svg>
+        ))}
+      </div>
 
-      <Card
-        className={`relative overflow-hidden backdrop-blur-sm transition-all duration-500 ${
-          testimonial.featured
-            ? 'bg-gradient-to-br from-white/[0.12] to-white/[0.06] border-cyan-500/30 hover:border-cyan-400/50'
-            : 'bg-white/[0.06] border-white/[0.1] hover:border-white/[0.2] hover:bg-white/[0.08]'
-        } p-6 lg:p-8`}
+      {/* Quote */}
+      <p className="text-sm text-white/70 leading-relaxed flex-1">
+        &ldquo;{t.quote}&rdquo;
+      </p>
+
+      {/* Metric */}
+      <div
+        className="flex items-baseline gap-1.5 py-3 border-t border-[0.5px] border-white/[0.06]"
       >
-        {/* Quote icon */}
-        <Quote className={`absolute top-4 right-4 w-8 h-8 transition-opacity duration-300 ${isHovered ? 'opacity-20' : 'opacity-10'} text-white`} />
+        <span className="font-mono text-lg font-medium" style={{ color: t.accentColor }}>
+          {t.metric.value}
+        </span>
+        <span className="text-[10px] uppercase tracking-[0.2em] text-white/30">
+          {t.metric.label}
+        </span>
+      </div>
 
-        {/* Star rating */}
-        <div className="flex gap-1 mb-4">
-          {[...Array(testimonial.rating)].map((_, i) => (
-            <Star
-              key={i}
-              className="w-5 h-5 fill-yellow-400 text-yellow-400"
-              style={{ animationDelay: `${i * 100}ms` }}
-            />
-          ))}
+      {/* Author */}
+      <div className="flex items-center gap-3">
+        <div
+          className="w-9 h-9 rounded-sm flex items-center justify-center text-xs font-semibold text-[#0a1628] flex-shrink-0"
+          style={{ backgroundColor: t.accentColor }}
+        >
+          {t.initials}
         </div>
-
-        {/* Quote */}
-        <p className="text-white/90 leading-relaxed mb-6 text-sm lg:text-base">
-          "{testimonial.quote}"
-        </p>
-
-        {/* Metrics badge */}
-        {testimonial.metrics && (
-          <div className="mb-6 p-3 rounded-xl bg-gradient-to-r from-emerald-500/10 to-emerald-500/5 border border-emerald-500/20">
-            <div className="flex items-center justify-between">
-              <span className="text-xs text-emerald-400/80">{testimonial.metrics.label}</span>
-              <div className="flex items-center gap-1">
-                <TrendingUp className="w-3 h-3 text-emerald-400" />
-                <span className="text-xs text-emerald-400/60">{testimonial.metrics.change}</span>
-              </div>
-            </div>
-            <p className="text-2xl font-bold text-emerald-400 mt-1">
-              {testimonial.metrics.value}
-            </p>
-          </div>
-        )}
-
-        <Separator className="bg-white/10 mb-4" />
-
-        {/* Author */}
-        <div className="flex items-center gap-4">
-          {/* Avatar with gradient ring */}
-          <div className="relative">
-            {/* Animated ring */}
-            <div
-              className={`absolute -inset-1 rounded-full bg-gradient-to-r ${testimonial.avatar.gradient} opacity-0 group-hover:opacity-100 blur transition-opacity duration-500`}
-            />
-            <div
-              className={`relative w-12 h-12 rounded-full bg-gradient-to-br ${testimonial.avatar.gradient} flex items-center justify-center text-white font-bold text-sm shadow-lg`}
-            >
-              {testimonial.avatar.initials}
-            </div>
-            {/* Verified badge */}
-            {testimonial.verified && (
-              <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center border-2 border-slate-900">
-                <BadgeCheck className="w-3 h-3 text-white" />
-              </div>
-            )}
-          </div>
-
-          <div>
-            <p className="font-semibold text-white flex items-center gap-2">
-              {testimonial.name}
-            </p>
-            <p className="text-sm text-white/50">
-              {testimonial.role}, {testimonial.company}
-            </p>
-          </div>
+        <div>
+          <p className="text-sm font-medium text-white">{t.name}</p>
+          <p className="text-xs text-white/40">{t.role}, {t.company}</p>
         </div>
-      </Card>
+      </div>
+
+      {/* Featured highlight bar */}
+      {t.featured && (
+        <div
+          className="absolute top-0 left-0 right-0 h-[0.5px]"
+          style={{ backgroundColor: t.accentColor, opacity: 0.5 }}
+        />
+      )}
     </div>
   );
 }
@@ -188,63 +121,62 @@ export function Testimonials() {
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries[0].isIntersecting) {
-          setIsVisible(true);
-        }
+        if (entries[0]?.isIntersecting) setIsVisible(true);
       },
       { threshold: 0.1 }
     );
-
-    if (sectionRef.current) {
-      observer.observe(sectionRef.current);
-    }
-
+    if (sectionRef.current) observer.observe(sectionRef.current);
     return () => observer.disconnect();
   }, []);
 
   return (
-    <section ref={sectionRef} className="py-20 lg:py-32 px-6 relative">
-      <div className="container mx-auto">
+    <section ref={sectionRef} className="relative py-32 z-10">
+      <div className="container mx-auto px-6">
+
         {/* Header */}
-        <div className="text-center mb-16">
-          <h2 className="text-3xl lg:text-4xl font-bold text-white mb-4">
-            Replacing <span className="text-red-400 line-through opacity-60">$120,000/Year</span> Agencies
-          </h2>
-          <p className="text-lg text-slate-400 max-w-2xl mx-auto">
-            See why businesses are switching from traditional agencies to SYNTHEX
+        <div className="mb-16 flex flex-col lg:flex-row lg:items-end gap-6">
+          <div>
+            <span className="text-[10px] uppercase tracking-[0.3em] text-white/30 mb-4 block">
+              Customer Results
+            </span>
+            <h2 className="text-4xl sm:text-5xl font-extralight tracking-tight text-white">
+              Replacing{' '}
+              <span className="line-through text-white/30">$120,000 / year</span>
+              <br />
+              <span className="text-cyan-400">marketing agencies.</span>
+            </h2>
+          </div>
+          <p className="text-white/40 text-sm max-w-xs leading-relaxed lg:ml-auto lg:text-right">
+            Real results from real customers. No cherry-picked case studies — these are live account numbers.
           </p>
         </div>
 
-        {/* Testimonials grid */}
+        {/* Testimonials grid — 2x2 with featured top-left */}
         <div
-          className={`grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8 max-w-6xl mx-auto transition-all duration-1000 ${
-            isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+          className={`grid md:grid-cols-2 gap-[0.5px] transition-all duration-700 ${
+            isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'
           }`}
         >
-          {testimonials.map((testimonial, index) => (
-            <TestimonialCard
-              key={testimonial.id}
-              testimonial={testimonial}
-              index={index}
-            />
+          {TESTIMONIALS.map((t, index) => (
+            <TestimonialCard key={t.name} t={t} index={index} />
           ))}
         </div>
 
-        {/* Trust indicators */}
-        <div className="mt-16 flex flex-wrap justify-center gap-8 text-sm text-slate-500">
-          <div className="flex items-center gap-2">
-            <div className="w-2 h-2 rounded-full bg-emerald-400" />
-            <span>1,000+ Active Users</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-2 h-2 rounded-full bg-cyan-400" />
-            <span>4.9/5 Average Rating</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-2 h-2 rounded-full bg-cyan-400" />
-            <span>99.9% Uptime</span>
-          </div>
+        {/* Trust strip */}
+        <div className="mt-12 flex flex-wrap justify-center gap-8 border-t border-[0.5px] border-white/[0.06] pt-10">
+          {[
+            { dot: '#00FF88', text: '1,000+ Active Businesses' },
+            { dot: '#00F5FF', text: '4.9 / 5 Average Rating' },
+            { dot: '#FFB800', text: '99.9% Uptime Guarantee' },
+            { dot: '#00F5FF', text: 'Cancel Anytime' },
+          ].map(({ dot, text }) => (
+            <div key={text} className="flex items-center gap-2">
+              <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: dot }} />
+              <span className="text-xs text-white/40">{text}</span>
+            </div>
+          ))}
         </div>
+
       </div>
     </section>
   );

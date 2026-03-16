@@ -1,51 +1,108 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
-import { Button } from '@/components/ui/button';
 import { SynthexLogo } from './synthex-logo';
 
-/** Fixed top navigation bar for the landing page */
+const NAV_LINKS = [
+  { href: '/features', label: 'Features' },
+  { href: '/pricing', label: 'Pricing' },
+  { href: '/integrations', label: 'Integrations' },
+  { href: '/blog', label: 'Blog' },
+  { href: '/docs', label: 'Docs' },
+];
+
+/** Fixed top navigation — Scientific Luxury: single-pixel border, sharp corners, opacity text */
 export function NavBar() {
+  const [mobileOpen, setMobileOpen] = useState(false);
+
   return (
-    <nav className="fixed top-0 w-full z-50 bg-surface-dark/80 backdrop-blur-md border-b border-cyan-500/10">
+    <nav className="fixed top-0 w-full z-50 bg-[#0a1628]/90 backdrop-blur-md border-b border-[0.5px] border-white/[0.06]">
       <div className="container mx-auto px-6 py-4">
         <div className="flex items-center justify-between">
+
           {/* Logo */}
-          <Link href="/" className="flex items-center space-x-3 group">
-            <SynthexLogo className="w-10 h-10 transition-transform group-hover:scale-110" />
-            <span className="text-2xl font-bold tracking-tight">
-              <span className="text-white">SYNTHEX</span>
-            </span>
+          <Link href="/" className="flex items-center gap-3 group">
+            <SynthexLogo className="w-8 h-8 transition-opacity group-hover:opacity-80" />
+            <span className="text-sm font-light tracking-[0.25em] text-white uppercase">Synthex</span>
           </Link>
 
-          {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-8">
-            <Link href="/features" className="text-gray-400 hover:text-cyan-400 transition-colors text-sm font-medium">
-              Features
+          {/* Desktop nav */}
+          <div className="hidden md:flex items-center gap-8">
+            {NAV_LINKS.map(({ href, label }) => (
+              <Link
+                key={href}
+                href={href}
+                className="text-white/50 hover:text-white text-sm tracking-wide transition-colors duration-200"
+              >
+                {label}
+              </Link>
+            ))}
+          </div>
+
+          {/* Desktop CTA */}
+          <div className="hidden md:flex items-center gap-4">
+            <Link
+              href="/auth/login"
+              className="text-white/50 hover:text-white text-sm tracking-wide transition-colors duration-200"
+            >
+              Sign In
             </Link>
-            <Link href="/pricing" className="text-gray-400 hover:text-cyan-400 transition-colors text-sm font-medium">
-              Pricing
-            </Link>
-            <Link href="/about" className="text-gray-400 hover:text-cyan-400 transition-colors text-sm font-medium">
-              About
-            </Link>
-            <Link href="/login" className="text-gray-400 hover:text-cyan-400 transition-colors text-sm font-medium">
-              Login
-            </Link>
-            <Link href="/signup">
-              <Button className="bg-gradient-to-r from-cyan-500 to-cyan-600 hover:from-cyan-400 hover:to-cyan-500 text-white text-sm px-6 py-2 rounded-lg font-medium shadow-lg shadow-cyan-500/25 transition-all hover:shadow-cyan-500/40">
-                Get Started
-              </Button>
+            <Link
+              href="/auth/signup"
+              className="px-5 py-2 bg-cyan-500 hover:bg-cyan-400 text-[#0a1628] text-sm font-semibold tracking-wide transition-colors duration-200 rounded-sm"
+            >
+              Get Started
             </Link>
           </div>
 
-          {/* Mobile menu button */}
-          <button className="md:hidden p-2 text-gray-400 hover:text-white">
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+          {/* Mobile toggle */}
+          <button
+            onClick={() => setMobileOpen(!mobileOpen)}
+            className="md:hidden p-2 text-white/50 hover:text-white transition-colors"
+            aria-label="Toggle navigation"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              {mobileOpen ? (
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" />
+              ) : (
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 6h16M4 12h16M4 18h16" />
+              )}
             </svg>
           </button>
         </div>
+
+        {/* Mobile menu */}
+        {mobileOpen && (
+          <div className="md:hidden pt-4 pb-2 border-t border-[0.5px] border-white/[0.06] mt-4 space-y-0.5">
+            {NAV_LINKS.map(({ href, label }) => (
+              <Link
+                key={href}
+                href={href}
+                onClick={() => setMobileOpen(false)}
+                className="block py-2.5 text-white/50 hover:text-white text-sm tracking-wide transition-colors"
+              >
+                {label}
+              </Link>
+            ))}
+            <div className="pt-3 flex flex-col gap-2">
+              <Link
+                href="/auth/login"
+                onClick={() => setMobileOpen(false)}
+                className="block py-2.5 text-white/50 hover:text-white text-sm tracking-wide text-center border-[0.5px] border-white/[0.06] rounded-sm transition-colors"
+              >
+                Sign In
+              </Link>
+              <Link
+                href="/auth/signup"
+                onClick={() => setMobileOpen(false)}
+                className="block py-3 bg-cyan-500 hover:bg-cyan-400 text-[#0a1628] text-sm font-semibold tracking-wide text-center rounded-sm transition-colors"
+              >
+                Get Started Free
+              </Link>
+            </div>
+          </div>
+        )}
       </div>
     </nav>
   );
