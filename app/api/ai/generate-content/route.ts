@@ -42,7 +42,7 @@ const generateContentSchema = z.object({
   type: z.enum(['post', 'caption', 'thread', 'story', 'reel', 'article']).optional().default('post'),
   platform: z.enum(['twitter', 'instagram', 'linkedin', 'tiktok', 'facebook', 'youtube']),
   topic: z.string().optional(),
-  tone: z.enum(['professional', 'casual', 'humorous', 'inspirational', 'educational']).optional(),
+  tone: z.enum(['professional', 'casual', 'friendly', 'authoritative', 'humorous', 'inspirational', 'educational']).optional(),
   keywords: z.array(z.string()).optional(),
   targetAudience: z.string().optional(),
   length: z.enum(['short', 'medium', 'long']).optional(),

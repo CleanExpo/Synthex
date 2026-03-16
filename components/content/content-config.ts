@@ -38,6 +38,7 @@ export const toneOptions: ToneOption[] = [
   { value: 'authoritative', label: 'Authoritative' },
   { value: 'inspirational', label: 'Inspirational' },
   { value: 'humorous', label: 'Humorous' },
+  { value: 'educational', label: 'Educational' },
 ];
 
 export const lengthOptions = ['short', 'medium', 'long'] as const;

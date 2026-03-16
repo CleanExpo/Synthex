@@ -105,6 +105,14 @@ export default function ContentPage() {
         }),
       });
 
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        if (errorData.code === 'API_KEY_REQUIRED' || errorData.code === 'API_KEY_NOT_CONFIGURED') {
+          toast.error('Please configure an AI API key in Settings → AI Credentials');
+          return;
+        }
+        throw new Error(errorData.error || errorData.message || `Request failed (${response.status})`);
+      }
       const data = await response.json();
       if (data.success && data.data) {
         const aiData = data.data;
@@ -143,6 +151,10 @@ export default function ContentPage() {
                 personaId: personaId !== 'none' ? personaId : undefined,
               }),
             });
+            if (!crossPostRes.ok) {
+              const errData = await crossPostRes.json().catch(() => ({}));
+              throw new Error(errData.error || `Cross-post failed (${crossPostRes.status})`);
+            }
             const crossPostData = await crossPostRes.json();
             if (crossPostData.success && crossPostData.variants) {
               const adaptations: Record<string, string> = {
@@ -173,6 +185,10 @@ export default function ContentPage() {
               contentType: 'post',
             }),
           });
+          if (!psychRes.ok) {
+            const errData = await psychRes.json().catch(() => ({}));
+            throw new Error(errData.error || `Psychology analysis failed (${psychRes.status})`);
+          }
           const psychData = await psychRes.json();
           if (psychData.success && psychData.data?.analysis) {
             setPsychologyScore({
