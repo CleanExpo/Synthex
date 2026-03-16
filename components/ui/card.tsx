@@ -3,39 +3,37 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '@/lib/utils';
 
 const cardVariants = cva(
-  'rounded-lg text-card-foreground transition-all duration-300',
+  'rounded-sm text-card-foreground transition-colors',
   {
     variants: {
       variant: {
         default:
-          'border bg-card shadow-sm dark:bg-slate-900/50 dark:border-slate-800 dark:shadow-lg',
-        // Premium Glassmorphism variants (2026 Design System)
+          'border-[0.5px] border-white/[0.06] bg-white/[0.01]',
+        // Scientific Luxury glass — single pixel borders, no heavy shadows
         glass:
-          'bg-white/[0.08] border border-white/[0.12] shadow-[0_0_0_1px_rgba(255,255,255,0.05)_inset,0_8px_32px_rgba(0,0,0,0.2)] hover:bg-white/[0.12] hover:border-white/[0.18] dark:bg-white/[0.08] dark:border-white/[0.12] dark:hover:bg-white/[0.12] dark:hover:border-white/[0.18]',
+          'border-[0.5px] border-white/[0.06] bg-white/[0.01] hover:bg-white/[0.03]',
         'glass-solid':
-          'bg-slate-900/92 border border-white/[0.12] shadow-[0_0_0_1px_rgba(255,255,255,0.04)_inset,0_8px_32px_rgba(0,0,0,0.3)] dark:bg-slate-950/95 dark:border-slate-700',
+          'border-[0.5px] border-white/[0.06] bg-[#080e1a]',
         'glass-gradient':
-          'bg-gradient-to-br from-white/[0.10] to-white/[0.05] border border-white/[0.12] shadow-[0_0_0_1px_rgba(255,255,255,0.05)_inset,0_8px_32px_rgba(0,0,0,0.2)]',
+          'border-[0.5px] border-white/[0.06] bg-white/[0.02]',
         'glass-primary':
-          'bg-gradient-to-br from-cyan-500/12 to-cyan-600/12 border border-cyan-500/20 shadow-[0_0_0_1px_rgba(6,182,212,0.05)_inset,0_4px_24px_rgba(6,182,212,0.1)] hover:border-cyan-500/30 hover:shadow-[0_0_30px_rgba(6,182,212,0.15)]',
+          'border-[0.5px] border-cyan-500/20 bg-cyan-500/[0.02] hover:border-cyan-500/30',
         'glass-secondary':
-          'bg-gradient-to-br from-cyan-500/12 to-blue-500/12 border border-cyan-500/20 shadow-[0_0_0_1px_rgba(6,182,212,0.05)_inset,0_4px_24px_rgba(6,182,212,0.1)] hover:border-cyan-500/30 hover:shadow-[0_0_30px_rgba(6,182,212,0.15)]',
+          'border-[0.5px] border-cyan-500/20 bg-cyan-500/[0.02] hover:border-cyan-500/30',
         'glass-success':
-          'bg-gradient-to-br from-emerald-500/12 to-green-500/12 border border-emerald-500/20 shadow-[0_0_0_1px_rgba(16,185,129,0.05)_inset,0_4px_24px_rgba(16,185,129,0.1)] hover:border-emerald-500/30 hover:shadow-[0_0_30px_rgba(16,185,129,0.15)]',
+          'border-[0.5px] border-emerald-500/20 bg-emerald-500/[0.02] hover:border-emerald-500/30',
         'glass-warning':
-          'bg-gradient-to-br from-amber-500/12 to-orange-500/12 border border-amber-500/20 shadow-[0_0_0_1px_rgba(245,158,11,0.05)_inset,0_4px_24px_rgba(245,158,11,0.1)] hover:border-amber-500/30 hover:shadow-[0_0_30px_rgba(245,158,11,0.15)]',
+          'border-[0.5px] border-amber-500/20 bg-amber-500/[0.02] hover:border-amber-500/30',
         'glass-destructive':
-          'bg-gradient-to-br from-red-500/12 to-rose-500/12 border border-red-500/20 shadow-[0_0_0_1px_rgba(239,68,68,0.05)_inset,0_4px_24px_rgba(239,68,68,0.1)] hover:border-red-500/30 hover:shadow-[0_0_30px_rgba(239,68,68,0.15)]',
-        // Gradient variants for premium sections
+          'border-[0.5px] border-red-500/20 bg-red-500/[0.02] hover:border-red-500/30',
         'gradient-primary':
-          'bg-gradient-to-r from-cyan-900/60 to-blue-900/60 border border-white/[0.08] shadow-[0_0_0_1px_rgba(255,255,255,0.02)_inset,0_8px_32px_rgba(6,182,212,0.15)]',
+          'border-[0.5px] border-cyan-500/20 bg-cyan-500/[0.03]',
         'gradient-secondary':
-          'bg-gradient-to-r from-cyan-900/60 to-teal-900/60 border border-white/[0.08] shadow-[0_0_0_1px_rgba(255,255,255,0.02)_inset,0_8px_32px_rgba(6,182,212,0.15)]',
-        // Interactive variants with hover lift
+          'border-[0.5px] border-cyan-500/20 bg-cyan-500/[0.02]',
         interactive:
-          'border bg-card shadow-sm hover:shadow-lg hover:-translate-y-1 cursor-pointer dark:bg-slate-900/50 dark:border-slate-800 dark:hover:bg-slate-800/70',
+          'border-[0.5px] border-white/[0.06] bg-white/[0.01] hover:bg-white/[0.03] hover:border-white/[0.1] cursor-pointer',
         'glass-interactive':
-          'bg-white/[0.08] border border-white/[0.12] shadow-[0_8px_32px_rgba(0,0,0,0.2)] hover:bg-white/[0.12] hover:border-white/[0.18] hover:-translate-y-1 hover:shadow-[0_12px_40px_rgba(0,0,0,0.25)] cursor-pointer dark:bg-white/[0.08] dark:hover:bg-white/[0.12]',
+          'border-[0.5px] border-white/[0.06] bg-white/[0.01] hover:bg-white/[0.03] hover:border-white/[0.1] cursor-pointer',
       },
     },
     defaultVariants: {
@@ -65,7 +63,7 @@ const CardHeader = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <div
     ref={ref}
-    className={cn('flex flex-col space-y-1.5 p-6', className)}
+    className={cn('flex flex-col space-y-1 p-5', className)}
     {...props}
   />
 ));
@@ -78,7 +76,7 @@ const CardTitle = React.forwardRef<
   <h3
     ref={ref}
     className={cn(
-      'text-2xl font-semibold leading-none tracking-tight',
+      'text-base font-light text-white tracking-tight leading-none',
       className
     )}
     {...props}
@@ -92,7 +90,7 @@ const CardDescription = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <p
     ref={ref}
-    className={cn('text-sm text-muted-foreground', className)}
+    className={cn('text-xs text-white/40 leading-relaxed', className)}
     {...props}
   />
 ));
@@ -102,7 +100,7 @@ const CardContent = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement>
 >(({ className, ...props }, ref) => (
-  <div ref={ref} className={cn('p-6 pt-0', className)} {...props} />
+  <div ref={ref} className={cn('p-5 pt-0', className)} {...props} />
 ));
 CardContent.displayName = 'CardContent';
 
@@ -112,7 +110,7 @@ const CardFooter = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <div
     ref={ref}
-    className={cn('flex items-center p-6 pt-0', className)}
+    className={cn('flex items-center p-5 pt-0', className)}
     {...props}
   />
 ));
