@@ -163,3 +163,47 @@ install:
 # Reinstall all dependencies from scratch
 reinstall:
     npm run reinstall
+
+# ─── Autonomous Dev Loop (Ralph Wiggum Technique) ────────────────────────────
+
+# Initialise Ralph loop (creates .planning/phases/prd.json template)
+ralph-init:
+    bash scripts/ralph.sh --init
+
+# Run Ralph autonomous loop (Unix/WSL) — default 50 iterations
+ralph max="50":
+    bash scripts/ralph.sh {{max}}
+
+# Run Ralph autonomous loop (Windows PowerShell)
+ralph-windows max="50":
+    powershell -ExecutionPolicy Bypass -File scripts/ralph.ps1 -MaxIterations {{max}}
+
+# ─── Dependency Checks ───────────────────────────────────────────────────────
+
+# Run dependency verification checks (Unix/WSL)
+deps-check:
+    bash scripts/dependency-checks.sh
+
+# Run dependency verification checks (Windows PowerShell)
+deps-check-windows:
+    powershell -ExecutionPolicy Bypass -Command ". scripts/dependency-checks.ps1; Test-LockfileIntegrity; Test-DependencySync -Workspace .; Test-EnvVars"
+
+# ─── Health Check ────────────────────────────────────────────────────────────
+
+# Run full system health check (Windows)
+health-check:
+    powershell -ExecutionPolicy Bypass -File scripts/health-check.ps1
+
+# Run quick health check — skips build and E2E (Windows)
+health-check-quick:
+    powershell -ExecutionPolicy Bypass -File scripts/health-check.ps1 -Quick
+
+# Run health check with verbose output (Windows)
+health-check-verbose:
+    powershell -ExecutionPolicy Bypass -File scripts/health-check.ps1 -Verbose
+
+# ─── Lighthouse ─────────────────────────────────────────────────────────────
+
+# Run Lighthouse CI audit against synthex.social
+lighthouse:
+    npx lhci autorun
