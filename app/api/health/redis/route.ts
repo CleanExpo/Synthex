@@ -266,7 +266,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           error: 'Failed to run performance tests',
-          message: error instanceof Error ? error.message : String(error),
+          message: 'An unexpected error occurred. Please try again.',
           timestamp: new Date().toISOString()
         },
         { status: 500 }
@@ -338,7 +338,7 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json(
         {
           error: 'Failed to clear cache',
-          message: error instanceof Error ? error.message : String(error),
+          message: 'An unexpected error occurred. Please try again.',
           timestamp: new Date().toISOString()
         },
         { status: 500 }
