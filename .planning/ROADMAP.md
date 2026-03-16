@@ -1134,3 +1134,72 @@ Completed:
 - [x] Stripe webhook: Active, 0% error rate
 - [x] Supabase auth config: all env vars present for production
 
+
+<details>
+<summary>✅ v9.0 Autonomous Operation (Phase 118) — SHIPPED 2026-03-17</summary>
+
+See [milestones/v9.0-ROADMAP.md](milestones/v9.0-ROADMAP.md) for full details.
+
+**Key accomplishments:**
+- Post-launch security hardening: 54 routes sanitised, CRON_SECRET bypass fixed, IDOR fix
+- $99 AUD Starter plan + 6 Pomelli-inspired Skills + Scientific Luxury design system rollout
+- LinearClient singleton + HMAC webhook verifier (fail-closed) + SDK installs
+- POST /api/webhooks/linear: HMAC-verified, Zod-validated, autonomous label filter
+- BullMQ autonomous task worker: concurrency:1, maxTurns:50, Linear Done state on success
+
+</details>
+
+### 🚧 v10.0 Full Platform Quality Loop (Phases 119-123)
+
+**Milestone Goal:** A complete build → catalog → distribute → use → repeat cycle that hardens every layer of Synthex: framework foundations, security posture, dependency health, design consistency, API completeness, then iterates until production quality is verified and sustained.
+
+#### Phase 119: Deep Audit
+
+**Goal**: Comprehensive codebase health check across all layers — framework, security, packages, connections, frontend design, backend routes, endpoint completeness. Produces a full findings report.
+**Depends on**: v9.0 complete
+**Research**: Unlikely (internal codebase scan + existing tooling)
+**Plans**: TBD (run /gsd:plan-phase 119)
+
+Plans:
+- [ ] 119-01: TBD
+
+#### Phase 120: Linear Catalog
+
+**Goal**: Convert all Phase 119 audit findings into Linear issues with proper labels, priorities, and assignees. Establish the v10.0 work queue.
+**Depends on**: Phase 119
+**Research**: Unlikely (Linear MCP, existing patterns)
+**Plans**: TBD (run /gsd:plan-phase 120)
+
+Plans:
+- [ ] 120-01: TBD
+
+#### Phase 121: Priority Execution
+
+**Goal**: Execute highest-priority Linear issues first — security → performance → UX → features. Work through the catalogued queue systematically.
+**Depends on**: Phase 120
+**Research**: Likely (issues may span new integrations or architectural decisions)
+**Research topics**: Determined by audit findings in Phase 119
+**Plans**: TBD — scope depends on Phase 119 findings
+
+Plans:
+- [ ] 121-01: TBD
+
+#### Phase 122: Production Validation Loop
+
+**Goal**: Test every change made in Phase 121. Retest until all pass. Apply verified fixes to production.
+**Depends on**: Phase 121
+**Research**: Unlikely (existing test tooling: Jest, Playwright, type-check, lint)
+**Plans**: TBD
+
+Plans:
+- [ ] 122-01: TBD
+
+#### Phase 123: Diagnostic Repeat
+
+**Goal**: Full diagnostic loop — remove dead code and bloat, strengthen TypeScript types, find remaining weaknesses, clean and strengthen all .md files (CLAUDE.md, skills, rules, memory, README). Self-learning cycle: apply lessons from Phases 119-122 back into the project foundations.
+**Depends on**: Phase 122
+**Research**: Unlikely (internal refactor + documentation work)
+**Plans**: TBD
+
+Plans:
+- [ ] 123-01: TBD
