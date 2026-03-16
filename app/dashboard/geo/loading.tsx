@@ -1,42 +1,27 @@
-'use client';
-
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
-
-export default function GEOLoading() {
+export default function GeoLoading() {
   return (
     <div className="space-y-6 animate-pulse">
-      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-        <div>
-          <div className="h-9 w-48 bg-white/5 rounded" />
-          <div className="h-5 w-72 bg-white/5 rounded mt-2" />
-        </div>
-        <div className="flex items-center gap-3">
-          <div className="h-10 w-28 bg-white/5 rounded" />
-          <div className="h-10 w-28 bg-cyan-500/10 rounded" />
-        </div>
+      <div className="mb-6">
+        <div className="h-3 w-24 bg-white/[0.05] rounded-sm mb-3" />
+        <div className="h-8 w-48 bg-white/[0.05] rounded-sm" />
+        <div className="h-px bg-white/[0.06] mt-5" />
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {[...Array(3)].map((_, i) => (
-          <Card key={i} className="bg-surface-base/80 border border-cyan-500/10">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className="w-10 h-10 bg-white/5 rounded-lg" />
-                <div className="w-16 h-5 bg-white/5 rounded" />
-              </div>
-              <div className="h-7 w-20 bg-white/5 rounded mb-2" />
-              <div className="h-4 w-32 bg-white/5 rounded" />
-            </CardContent>
-          </Card>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        {[...Array(4)].map((_, i) => (
+          <div key={i} className="border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm p-4">
+            <div className="h-3 w-16 bg-white/[0.05] rounded-sm mb-2" />
+            <div className="h-6 w-24 bg-white/[0.05] rounded-sm" />
+          </div>
         ))}
       </div>
-      <Card className="bg-surface-base/80 border border-cyan-500/10">
-        <CardHeader className="pb-2">
-          <div className="h-6 w-40 bg-white/5 rounded" />
-        </CardHeader>
-        <CardContent>
-          <div className="h-64 w-full bg-white/5 rounded" />
-        </CardContent>
-      </Card>
+      <div className="border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm p-5">
+        <div className="h-4 w-32 bg-white/[0.05] rounded-sm mb-4" />
+        <div className="space-y-3">
+          {[...Array(5)].map((_, i) => (
+            <div key={i} className="h-12 bg-white/[0.03] rounded-sm" />
+          ))}
+        </div>
+      </div>
     </div>
   );
 }

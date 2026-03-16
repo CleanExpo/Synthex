@@ -1,48 +1,25 @@
-/**
- * AI Chat Loading State
- *
- * @description Skeleton loading state with glassmorphic styling.
- */
-
-export default function AIChatLoading() {
+export default function AiChatLoading() {
   return (
-    <div className="h-[calc(100vh-8rem)] flex flex-col">
-      {/* Header skeleton */}
-      <div className="flex items-center justify-between px-6 py-4 border-b border-white/10">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-white/5 animate-pulse" />
-          <div>
-            <div className="h-5 w-40 bg-white/5 rounded animate-pulse" />
-            <div className="h-3 w-64 bg-white/5 rounded animate-pulse mt-2" />
-          </div>
-        </div>
-        <div className="h-6 w-24 bg-white/5 rounded-full animate-pulse" />
+    <div className="space-y-6 animate-pulse">
+      <div className="mb-6">
+        <div className="h-3 w-24 bg-white/[0.05] rounded-sm mb-3" />
+        <div className="h-8 w-48 bg-white/[0.05] rounded-sm" />
+        <div className="h-px bg-white/[0.06] mt-5" />
       </div>
-
-      <div className="flex-1 flex overflow-hidden">
-        {/* Sidebar skeleton */}
-        <div className="w-80 border-r border-white/10 flex flex-col bg-surface-base/30">
-          <div className="p-4 border-b border-white/10">
-            <div className="h-10 w-full bg-white/5 rounded-lg animate-pulse" />
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        {[...Array(4)].map((_, i) => (
+          <div key={i} className="border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm p-4">
+            <div className="h-3 w-16 bg-white/[0.05] rounded-sm mb-2" />
+            <div className="h-6 w-24 bg-white/[0.05] rounded-sm" />
           </div>
-          <div className="flex-1 p-2 space-y-2">
-            {[...Array(5)].map((_, i) => (
-              <div
-                key={i}
-                className="h-16 w-full bg-white/5 rounded-lg animate-pulse"
-                style={{ animationDelay: `${i * 100}ms` }}
-              />
-            ))}
-          </div>
-        </div>
-
-        {/* Chat area skeleton */}
-        <div className="flex-1 flex items-center justify-center bg-surface-darker">
-          <div className="text-center">
-            <div className="w-16 h-16 rounded-full bg-white/5 animate-pulse mx-auto mb-4" />
-            <div className="h-5 w-48 bg-white/5 rounded animate-pulse mx-auto mb-2" />
-            <div className="h-4 w-64 bg-white/5 rounded animate-pulse mx-auto" />
-          </div>
+        ))}
+      </div>
+      <div className="border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm p-5">
+        <div className="h-4 w-32 bg-white/[0.05] rounded-sm mb-4" />
+        <div className="space-y-3">
+          {[...Array(5)].map((_, i) => (
+            <div key={i} className="h-12 bg-white/[0.03] rounded-sm" />
+          ))}
         </div>
       </div>
     </div>

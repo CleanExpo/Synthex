@@ -1,50 +1,27 @@
-'use client';
-
-import { Card, CardContent } from '@/components/ui/card';
-
-export default function ProjectDetailLoading() {
+export default function WebProjectLoading() {
   return (
-    <div className="space-y-6 max-w-5xl animate-pulse">
-      {/* Back + Header */}
-      <div className="flex items-start gap-4">
-        <div className="h-10 w-10 bg-white/5 rounded" />
-        <div className="flex-1">
-          <div className="h-8 w-56 bg-white/5 rounded" />
-          <div className="h-4 w-80 bg-white/5 rounded mt-2" />
-        </div>
+    <div className="space-y-6 animate-pulse">
+      <div className="mb-6">
+        <div className="h-3 w-24 bg-white/[0.05] rounded-sm mb-3" />
+        <div className="h-8 w-48 bg-white/[0.05] rounded-sm" />
+        <div className="h-px bg-white/[0.06] mt-5" />
       </div>
-
-      {/* Tab bar */}
-      <div className="flex items-center gap-1 border-b border-white/[0.08]">
-        <div className="h-10 w-24 bg-white/5 rounded" />
-        <div className="h-10 w-28 bg-white/5 rounded" />
-        <div className="h-10 w-36 bg-white/5 rounded" />
-        <div className="h-10 w-24 bg-white/5 rounded" />
-      </div>
-
-      {/* Overview stats */}
-      <div className="grid grid-cols-3 gap-4">
-        {[1, 2, 3].map((i) => (
-          <div
-            key={i}
-            className="h-20 bg-white/5 rounded-xl border border-white/[0.05]"
-          />
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        {[...Array(4)].map((_, i) => (
+          <div key={i} className="border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm p-4">
+            <div className="h-3 w-16 bg-white/[0.05] rounded-sm mb-2" />
+            <div className="h-6 w-24 bg-white/[0.05] rounded-sm" />
+          </div>
         ))}
       </div>
-
-      {/* Detail card */}
-      <Card className="bg-surface-base/80 border border-cyan-500/10">
-        <CardContent className="pt-6 space-y-4">
-          <div className="h-6 w-36 bg-white/5 rounded" />
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="h-10 w-full bg-white/5 rounded" />
-            <div className="h-10 w-full bg-white/5 rounded" />
-            <div className="h-20 w-full bg-white/5 rounded sm:col-span-2" />
-            <div className="h-10 w-full bg-white/5 rounded" />
-            <div className="h-10 w-full bg-white/5 rounded" />
-          </div>
-        </CardContent>
-      </Card>
+      <div className="border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm p-5">
+        <div className="h-4 w-32 bg-white/[0.05] rounded-sm mb-4" />
+        <div className="space-y-3">
+          {[...Array(5)].map((_, i) => (
+            <div key={i} className="h-12 bg-white/[0.03] rounded-sm" />
+          ))}
+        </div>
+      </div>
     </div>
   );
 }

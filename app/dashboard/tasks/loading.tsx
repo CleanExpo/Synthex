@@ -1,140 +1,25 @@
-'use client';
-
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
-
 export default function TasksLoading() {
   return (
     <div className="space-y-6 animate-pulse">
-      {/* Header */}
-      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-        <div>
-          <div className="h-9 w-28 bg-white/5 rounded" />
-          <div className="h-5 w-64 bg-white/5 rounded mt-2" />
-        </div>
-        <div className="flex items-center gap-3">
-          <div className="h-10 w-24 bg-white/5 rounded" />
-          <div className="h-10 w-24 bg-white/5 rounded" />
-          <div className="h-10 w-32 bg-cyan-500/10 rounded" />
-        </div>
+      <div className="mb-6">
+        <div className="h-3 w-24 bg-white/[0.05] rounded-sm mb-3" />
+        <div className="h-8 w-48 bg-white/[0.05] rounded-sm" />
+        <div className="h-px bg-white/[0.06] mt-5" />
       </div>
-
-      {/* Kanban Board */}
-      <div className="flex gap-4 overflow-x-auto pb-4">
-        {/* To Do Column */}
-        <div className="flex-shrink-0 w-80">
-          <Card className="bg-surface-base/80 border border-cyan-500/10">
-            <CardHeader className="pb-2">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <div className="h-5 w-16 bg-white/5 rounded" />
-                  <div className="h-5 w-6 bg-white/5 rounded-full" />
-                </div>
-                <div className="h-6 w-6 bg-white/5 rounded" />
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {[...Array(3)].map((_, i) => (
-                <div key={i} className="p-3 bg-white/5 rounded-lg">
-                  <div className="h-4 w-3/4 bg-white/10 rounded mb-2" />
-                  <div className="h-3 w-full bg-white/10 rounded mb-3" />
-                  <div className="flex items-center justify-between">
-                    <div className="flex gap-1">
-                      <div className="h-5 w-14 bg-cyan-500/10 rounded-full" />
-                      <div className="h-5 w-14 bg-purple-500/10 rounded-full" />
-                    </div>
-                    <div className="w-6 h-6 bg-white/10 rounded-full" />
-                  </div>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* In Progress Column */}
-        <div className="flex-shrink-0 w-80">
-          <Card className="bg-surface-base/80 border border-cyan-500/10">
-            <CardHeader className="pb-2">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <div className="h-5 w-24 bg-white/5 rounded" />
-                  <div className="h-5 w-6 bg-white/5 rounded-full" />
-                </div>
-                <div className="h-6 w-6 bg-white/5 rounded" />
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {[...Array(2)].map((_, i) => (
-                <div key={i} className="p-3 bg-white/5 rounded-lg">
-                  <div className="h-4 w-3/4 bg-white/10 rounded mb-2" />
-                  <div className="h-3 w-full bg-white/10 rounded mb-3" />
-                  <div className="flex items-center justify-between">
-                    <div className="flex gap-1">
-                      <div className="h-5 w-14 bg-yellow-500/10 rounded-full" />
-                    </div>
-                    <div className="w-6 h-6 bg-white/10 rounded-full" />
-                  </div>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Review Column */}
-        <div className="flex-shrink-0 w-80">
-          <Card className="bg-surface-base/80 border border-cyan-500/10">
-            <CardHeader className="pb-2">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <div className="h-5 w-16 bg-white/5 rounded" />
-                  <div className="h-5 w-6 bg-white/5 rounded-full" />
-                </div>
-                <div className="h-6 w-6 bg-white/5 rounded" />
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {[...Array(2)].map((_, i) => (
-                <div key={i} className="p-3 bg-white/5 rounded-lg">
-                  <div className="h-4 w-3/4 bg-white/10 rounded mb-2" />
-                  <div className="h-3 w-full bg-white/10 rounded mb-3" />
-                  <div className="flex items-center justify-between">
-                    <div className="flex gap-1">
-                      <div className="h-5 w-14 bg-blue-500/10 rounded-full" />
-                    </div>
-                    <div className="w-6 h-6 bg-white/10 rounded-full" />
-                  </div>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Done Column */}
-        <div className="flex-shrink-0 w-80">
-          <Card className="bg-surface-base/80 border border-cyan-500/10">
-            <CardHeader className="pb-2">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <div className="h-5 w-12 bg-white/5 rounded" />
-                  <div className="h-5 w-6 bg-white/5 rounded-full" />
-                </div>
-                <div className="h-6 w-6 bg-white/5 rounded" />
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {[...Array(4)].map((_, i) => (
-                <div key={i} className="p-3 bg-white/5 rounded-lg">
-                  <div className="h-4 w-3/4 bg-white/10 rounded mb-2" />
-                  <div className="h-3 w-full bg-white/10 rounded mb-3" />
-                  <div className="flex items-center justify-between">
-                    <div className="flex gap-1">
-                      <div className="h-5 w-14 bg-green-500/10 rounded-full" />
-                    </div>
-                    <div className="w-6 h-6 bg-white/10 rounded-full" />
-                  </div>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        {[...Array(4)].map((_, i) => (
+          <div key={i} className="border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm p-4">
+            <div className="h-3 w-16 bg-white/[0.05] rounded-sm mb-2" />
+            <div className="h-6 w-24 bg-white/[0.05] rounded-sm" />
+          </div>
+        ))}
+      </div>
+      <div className="border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm p-5">
+        <div className="h-4 w-32 bg-white/[0.05] rounded-sm mb-4" />
+        <div className="space-y-3">
+          {[...Array(5)].map((_, i) => (
+            <div key={i} className="h-12 bg-white/[0.03] rounded-sm" />
+          ))}
         </div>
       </div>
     </div>

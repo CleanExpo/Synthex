@@ -1,61 +1,25 @@
-import { Skeleton } from '@/components/ui/skeleton';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
-
-export default function RemotionStudioLoading() {
+export default function AdminRemotionStudioLoading() {
   return (
-    <div className="space-y-6 p-6">
-      {/* Header skeleton */}
-      <div className="flex items-center gap-3">
-        <Skeleton className="h-10 w-10 rounded-lg" />
-        <div>
-          <Skeleton className="h-5 w-40 mb-1" />
-          <Skeleton className="h-3 w-64" />
-        </div>
+    <div className="space-y-6 animate-pulse">
+      <div className="mb-6">
+        <div className="h-3 w-24 bg-white/[0.05] rounded-sm mb-3" />
+        <div className="h-8 w-48 bg-white/[0.05] rounded-sm" />
+        <div className="h-px bg-white/[0.06] mt-5" />
       </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Left: Editor skeleton */}
-        <div className="space-y-4">
-          <Card variant="glass">
-            <CardHeader className="pb-3">
-              <Skeleton className="h-4 w-24" />
-            </CardHeader>
-            <CardContent>
-              <Skeleton className="h-10 w-full" />
-            </CardContent>
-          </Card>
-
-          <Card variant="glass">
-            <CardHeader className="pb-3">
-              <Skeleton className="h-4 w-20" />
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <Skeleton className="h-10 w-full" />
-              <Skeleton className="h-10 w-full" />
-            </CardContent>
-          </Card>
-
-          <Card variant="glass">
-            <CardHeader className="pb-3">
-              <Skeleton className="h-4 w-16" />
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <Skeleton className="h-24 w-full" />
-              <Skeleton className="h-24 w-full" />
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Right: Preview skeleton */}
-        <div className="space-y-4">
-          <Card variant="glass">
-            <CardHeader className="pb-3">
-              <Skeleton className="h-4 w-20" />
-            </CardHeader>
-            <CardContent>
-              <Skeleton className="aspect-video w-full rounded-lg" />
-            </CardContent>
-          </Card>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        {[...Array(4)].map((_, i) => (
+          <div key={i} className="border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm p-4">
+            <div className="h-3 w-16 bg-white/[0.05] rounded-sm mb-2" />
+            <div className="h-6 w-24 bg-white/[0.05] rounded-sm" />
+          </div>
+        ))}
+      </div>
+      <div className="border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm p-5">
+        <div className="h-4 w-32 bg-white/[0.05] rounded-sm mb-4" />
+        <div className="space-y-3">
+          {[...Array(5)].map((_, i) => (
+            <div key={i} className="h-12 bg-white/[0.03] rounded-sm" />
+          ))}
         </div>
       </div>
     </div>

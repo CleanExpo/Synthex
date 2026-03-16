@@ -1,41 +1,25 @@
-'use client';
-
-export default function ChatLoading() {
+export default function AiChatConversationLoading() {
   return (
-    <div className="h-[calc(100vh-8rem)] flex flex-col animate-pulse">
-      {/* Page header */}
-      <div className="flex items-center justify-between px-6 py-4 border-b border-white/10">
-        <div className="flex items-center gap-3">
-          <div className="h-10 w-10 bg-white/5 rounded-lg" />
-          <div>
-            <div className="h-6 w-40 bg-white/5 rounded" />
-            <div className="h-4 w-56 bg-white/5 rounded mt-1" />
-          </div>
-        </div>
-        <div className="h-6 w-24 bg-white/5 rounded-full" />
+    <div className="space-y-6 animate-pulse">
+      <div className="mb-6">
+        <div className="h-3 w-24 bg-white/[0.05] rounded-sm mb-3" />
+        <div className="h-8 w-48 bg-white/[0.05] rounded-sm" />
+        <div className="h-px bg-white/[0.06] mt-5" />
       </div>
-
-      {/* Two column layout */}
-      <div className="flex-1 flex overflow-hidden">
-        {/* Sidebar */}
-        <div className="w-80 border-r border-white/10 p-4 space-y-3">
-          <div className="h-10 w-full bg-cyan-500/10 rounded" />
-          <div className="h-10 w-full bg-white/5 rounded" />
-          <div className="space-y-2 mt-4">
-            {[1, 2, 3].map((i) => (
-              <div
-                key={i}
-                className="h-16 bg-white/5 rounded-lg border border-white/[0.05]"
-              />
-            ))}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        {[...Array(4)].map((_, i) => (
+          <div key={i} className="border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm p-4">
+            <div className="h-3 w-16 bg-white/[0.05] rounded-sm mb-2" />
+            <div className="h-6 w-24 bg-white/[0.05] rounded-sm" />
           </div>
-        </div>
-
-        {/* Chat area */}
-        <div className="flex-1 bg-surface-darker p-6 space-y-4">
-          <div className="h-12 w-3/4 bg-white/5 rounded" />
-          <div className="h-12 w-1/2 bg-white/5 rounded ml-auto" />
-          <div className="h-12 w-2/3 bg-white/5 rounded" />
+        ))}
+      </div>
+      <div className="border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm p-5">
+        <div className="h-4 w-32 bg-white/[0.05] rounded-sm mb-4" />
+        <div className="space-y-3">
+          {[...Array(5)].map((_, i) => (
+            <div key={i} className="h-12 bg-white/[0.03] rounded-sm" />
+          ))}
         </div>
       </div>
     </div>
