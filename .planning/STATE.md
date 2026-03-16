@@ -9,24 +9,20 @@ See: .planning/PROJECT.md (updated 2026-02-17)
 
 ## Current Position
 
-Milestone: AI-First Onboarding Automation — **SHIPPED 2026-03-13** ✅
-Phases: 1-7 of 7 (URL-first → AI pipeline → Review → OAuth → Extension → Kickstart → Cleanup)
-Status: Complete
-Last activity: 2026-03-13 — All 7 phases completed + Social Connection Polish milestone
+Milestone: v8.0 Production Go-Live — **ARCHIVED 2026-03-16** ✅
+Last milestone shipped: 2026-03-13
+Status: All 117 phases complete. Ready for v9.0 planning.
+Last activity: 2026-03-16 — Security hardening session (17 commits: auth gates, error sanitisation, Starter plan, 6 Skills)
 
-Progress: ██████████ 100% (7/7 phases)
+Progress: ██████████ 100% (117/117 phases)
 
-### What was shipped (2026-03-13)
-- Phase 1: URL-first onboarding entry (replaces 6-step manual flow)
-- Phase 2: Unified AI analysis pipeline (website scrape + SEO + AI in ~15s)
-- Phase 3: AI-populated review screen (editable, pre-filled from pipeline)
-- Phase 4: OAuth platform connection during onboarding
-- Phase 5: Chrome Extension bridge (auto-detects logged-in accounts)
-- Phase 6: AI kickstart content (5-7 first-week drafts auto-generated)
-- Phase 7: Legacy flow cleanup (6 API routes + OnboardingContext archived)
-- Social Connection Polish: smart onboarding card, FirstWeekWidget, token refresh UI, avatar fix
+### Post-launch work shipped (2026-03-16, not yet a formal phase)
+- $99 AUD Starter plan (BYOK entry tier) — Stripe config, feature limits, billing UI
+- 6 Pomelli-inspired Skills: Business DNA, Brand Campaign Generator, Visual Content Brief, Platform Adaptor, Brand Consistency Checker, Campaign Planner
+- Scientific Luxury design system applied to all dashboard page headers, loading skeletons, Card/Button components
+- Security hardening: 54 routes sanitised (error.message leaks), CRON_SECRET bypass fixed (13 crons), auth gates on system/models + health/scaling, IDOR fix in content generation
 
-Next action: Consider /gsd:new-milestone for post-launch feature work.
+Next action: /gsd:new-milestone → v9.0 Autonomous Operation (UNI-1181: headless task-runner, UNI-1180: Linear MCP hooks)
 
 ## Performance Metrics
 

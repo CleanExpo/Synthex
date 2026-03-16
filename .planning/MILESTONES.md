@@ -1,5 +1,32 @@
 # Project Milestones: Synthex
 
+## v8.0 Production Go-Live (Shipped: 2026-03-13) 🚀
+
+**Delivered:** Synthex went live at synthex.social — Vercel production deployment, Stripe live billing (AUD), DNS configuration, invite-only soft launch gate, and AI-First Onboarding Automation (URL → Business DNA → AI content pipeline in ~15s).
+
+**Phases completed:** 114-117 (4 phases)
+
+**Key accomplishments:**
+
+- Pre-deploy validation: type-check 0 errors, lint 0 errors, 1514 tests at baseline (Phase 114)
+- Vercel production deployment — synthex.social live with auto-managed SSL
+- Stripe live mode: AUD pricing activated (Pro $249/mo, Growth $449/mo, Scale $799/mo), webhook registered
+- DNS configured: synthex.social A record → Vercel IP, nameservers delegated
+- Invite-only soft launch gate deployed with OAuth token refresh cron (every 6h)
+- AI-First Onboarding: URL → scrape → AI analysis → pre-filled review → OAuth → kickstart content (7 sub-phases)
+- Social Connection Polish: smart onboarding card, FirstWeekWidget, token refresh UI
+
+**Stats:**
+- 181 files changed
+- ~14,266 lines added, ~8,049 removed
+- 80 commits
+- Timeline: 2026-03-12 → 2026-03-13
+- Git range: `d35cd1bc` → `0d86c070`
+
+**What's next:** v9.0 Autonomous Operation — headless task-runner, Linear MCP integration, autonomous workflow scheduling
+
+---
+
 ## v7.0 Production Hardening & Quality (Shipped: 2026-03-12)
 
 **Delivered:** Final production hardening pass covering E2E test expansion, UI loading/error state coverage for all 93 dashboard pages, bundle optimisation (~990KB saved), Core Web Vitals and CDN caching fixes, NEXUS agent dispatch deduplication with idempotency keys, and a full OWASP/WCAG 2.1 AA sweep.
