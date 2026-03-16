@@ -8,6 +8,7 @@ import { Worker } from 'bullmq';
 import { createScheduledPostsWorker } from './scheduled-posts-worker';
 import { createAnalyticsWorker } from './analytics-worker';
 import { createWorkflowStepWorker } from './workflow-step.worker';
+import { createAutonomousTaskWorker } from './autonomous-task-worker';
 import { logger } from '@/lib/logger';
 
 // Store worker instances for graceful shutdown
@@ -30,6 +31,10 @@ export function startAllWorkers(): Worker[] {
   // Start workflow step worker
   const workflowStepWorker = createWorkflowStepWorker();
   workers.push(workflowStepWorker);
+
+  // Start autonomous task worker (Phase 118 — Headless Task-Runner)
+  const autonomousWorker = createAutonomousTaskWorker();
+  workers.push(autonomousWorker);
 
   logger.info(`Started ${workers.length} workers`);
 
@@ -67,3 +72,4 @@ export function getWorkersStatus(): Array<{
 export { createScheduledPostsWorker } from './scheduled-posts-worker';
 export { createAnalyticsWorker } from './analytics-worker';
 export { createWorkflowStepWorker } from './workflow-step.worker';
+export { createAutonomousTaskWorker } from './autonomous-task-worker';
