@@ -113,6 +113,9 @@ with-turbopack-app/
 test-results/
 playwright-report/
 playwright/.cache/
+
+# UI Review story results and screenshots (generated, not source-controlled)
+.claude/skills/ui-review/results/
 coverage/
 *.coverage
 .nyc_output/

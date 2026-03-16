@@ -70,6 +70,10 @@ e2e:
 e2e-ui:
     npm run e2e:ui
 
+# Run UI story validation (agent-driven Playwright stories)
+ui-review:
+    npx playwright install chromium --with-deps 2>/dev/null; echo "Run: /ui-review run in Claude to execute stories"
+
 # ─── Database ────────────────────────────────────────────────────────────────
 
 # Push schema to database

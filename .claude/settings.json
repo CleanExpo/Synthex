@@ -1,16 +1,16 @@
 {
-  "name": "Node.js Foundation Starter",
+  "name": "Synthex",
   "version": "1.0.0",
-  "description": "Foundation-first architecture - prevents problems before they exist",
+  "description": "AI-powered marketing automation platform — Next.js 15 + Supabase + Prisma + Vercel",
 
-  "model": "claude-opus-4-5-20251101",
+  "model": "claude-sonnet-4-6",
   "maxTokens": 64000,
 
   "permissions": {
     "allow": [
       "Read", "Write", "Edit", "Bash(npm *)", "Bash(npx *)", "Bash(mkdir *)",
       "Bash(cat *)", "Bash(echo *)", "Bash(chmod *)", "Bash(touch *)",
-      "Bash(git *)", "Bash(supabase *)"
+      "Bash(git *)", "Bash(gh *)", "Bash(supabase *)"
     ],
     "deny": ["Bash(rm -rf /)", "Bash(sudo *)"]
   },
@@ -206,7 +206,18 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash .superpowers/hooks/session-start",
+            "command": "powershell -ExecutionPolicy Bypass -File \".claude/hooks/session-start.ps1\"",
+            "timeout": 30
+          }
+        ]
+      }
+    ],
+    "PreCompact": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell -ExecutionPolicy Bypass -Command \"$root = git rev-parse --show-toplevel; Set-Location $root; python '.claude/hooks/pre-compact-context.py'\"",
             "timeout": 30
           }
         ]
@@ -214,11 +225,23 @@
     ],
     "Stop": [
       {
-        "matcher": "",
         "hooks": [
           {
             "type": "command",
-            "command": "echo '[SYNTHEX SESSION END] Check Linear for any In Progress issues and update status before closing.'"
+            "command": "powershell -ExecutionPolicy Bypass -Command \"$root = git rev-parse --show-toplevel; Set-Location $root; python '.claude/hooks/stop-verify-git.py'\"",
+            "timeout": 15
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell -ExecutionPolicy Bypass -Command \"$root = git rev-parse --show-toplevel; Set-Location $root; python '.claude/hooks/pre-bash-validate.py'\"",
+            "timeout": 10
           }
         ]
       }

@@ -101,3 +101,57 @@ Read `.claude/memory/MEMORY.md` at session start. Update when priorities change.
 - Commits: `<type>(<scope>): <description>` — e.g., `fix(api): resolve auth timeout`
 - React: `PascalCase.tsx` | Utils: `kebab-case.ts` | Skills: `SKILL.md`
 - Pre-PR: `npm run type-check && npm run lint && npm test`
+
+---
+
+## Context Drift Prevention
+
+Context drift occurs when project rules are lost during automatic context compaction.
+This project has a 3-pillar defence:
+
+| Pillar | Mechanism | File |
+|--------|-----------|------|
+| PreCompact hook | Saves state + injects additionalContext guidance | `.claude/hooks/pre-compact-context.py` |
+| Session scratchpad | Manual progress notes every 10 tool calls | `.claude/scratchpad/current-session.md` |
+| Memory file | Cross-session project state | `.claude/memory/MEMORY.md` |
+
+If you notice drift (wrong patterns, ignored rules), re-read this file and `.claude/memory/MEMORY.md`.
+
+## Verification Discipline
+
+**Banned phrases** — run the command instead of saying it:
+- "should work" / "probably passes" / "seems correct" / "likely fixed"
+
+**Before any "Done" or completion claim:**
+1. Run the relevant check command (`npm run type-check`, `npm test`, `npm run lint`)
+2. Read the full output
+3. Report actual pass/fail count — no assumptions
+
+## Architectural Decisions Log
+
+All significant architectural choices are recorded at `.claude/memory/MEMORY.md`.
+Format: `[DD/MM/YYYY] DECISION: X | REASON: Y | ALTERNATIVES REJECTED: Z`
+Agents append entries — never delete existing ones.
+
+## Multi-Agent Harness (Phase-Gated Work)
+
+For complex features, use the 8-phase convergence loop:
+
+| Phase | Owner | Purpose |
+|-------|-------|---------|
+| 1. Intake | orchestrator | Classify intent, scope, risk |
+| 2. Discovery | product-strategist | Create PRD |
+| 3. Decomposition | technical-architect + senior-engineer | Architecture delta + plan |
+| 4. Execution | specialists | Parallel implementation (TDD enforced) |
+| 5. Aggregation | orchestrator | Merge results, resolve conflicts |
+| 6. Verification | verification + qa-validator | Code (PASS/FAIL) + acceptance (0-100) |
+| 7. Iteration | orchestrator | Remediate failures (max 2 cycles) |
+| 8. Production | delivery-manager | PR creation — human review gate |
+
+**Scope routing:**
+- Trivial (copy, config): Phases 4 → 6 → 8
+- Standard (new component, endpoint): Full phases 1–8
+- Complex (migration, new system): Full phases with extended Phase 2
+
+**Escalation rule:** If Phase 7 exceeds 2 cycles, or any rubric scores below 50 — stop and escalate to the human.
+Never merge PRs automatically — Phase 8 always ends at a human review gate.
