@@ -72,8 +72,9 @@ export async function POST(request: NextRequest) {
       // Only trigger when moved to "started" state type
       if (issue.state?.type === 'started') {
         // Only trigger for issues labelled "autonomous"
-        const hasAutonomousLabel = issue.labels?.nodes.some(
-          (label) => label.name.toLowerCase() === 'autonomous'
+        const hasAutonomousLabel = issue.labels?.nodes?.some(
+          (label: z.infer<typeof LinearIssueLabelSchema>) =>
+            label.name.toLowerCase() === 'autonomous'
         );
 
         if (hasAutonomousLabel) {
