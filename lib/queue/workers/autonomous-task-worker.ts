@@ -71,7 +71,7 @@ async function getCompletedStateId(teamId: string): Promise<string | null> {
       return completed.id;
     }
   } catch (err) {
-    logger.warn('[autonomous-worker] Could not fetch workflow states:', err);
+    logger.warn('[autonomous-worker] Could not fetch workflow states:', { error: err });
   }
   return null;
 }
@@ -91,7 +91,7 @@ async function processAutonomousTask(job: Job<AutonomousTaskJobData>): Promise<v
         body: `## ❌ Agent SDK Unavailable\n\nThe \`@anthropic-ai/claude-agent-sdk\` could not be loaded in this environment. The \`claude\` CLI must be installed and available in PATH.\n\nThis task needs to be run in a persistent worker environment (not Vercel Lambda).`,
       });
     } catch (commentErr) {
-      logger.warn('[autonomous-worker] Failed to post SDK unavailable comment:', commentErr);
+      logger.warn('[autonomous-worker] Failed to post SDK unavailable comment:', { error: commentErr });
     }
     // Don't retry — this is an environment config issue
     return;
@@ -104,7 +104,7 @@ async function processAutonomousTask(job: Job<AutonomousTaskJobData>): Promise<v
         body: `## ❌ Missing Configuration\n\n\`ANTHROPIC_API_KEY\` is not set. Configure it in the worker environment.`,
       });
     } catch (commentErr) {
-      logger.warn('[autonomous-worker] Failed to post missing API key comment:', commentErr);
+      logger.warn('[autonomous-worker] Failed to post missing API key comment:', { error: commentErr });
     }
     return;
   }
@@ -125,7 +125,7 @@ async function processAutonomousTask(job: Job<AutonomousTaskJobData>): Promise<v
       body: `## 🤖 Autonomous Agent Started\n\nWorking on: **${title}**\n\nI'll post updates as I progress.`,
     });
   } catch (commentErr) {
-    logger.warn('[autonomous-worker] Failed to post start comment:', commentErr);
+    logger.warn('[autonomous-worker] Failed to post start comment:', { error: commentErr });
   }
 
   let turnCount = 0;
@@ -152,7 +152,7 @@ async function processAutonomousTask(job: Job<AutonomousTaskJobData>): Promise<v
               body: `⏳ Agent working... (${turnCount} turns completed)`,
             });
           } catch (commentErr) {
-            logger.warn('[autonomous-worker] Failed to post progress comment:', commentErr);
+            logger.warn('[autonomous-worker] Failed to post progress comment:', { error: commentErr });
           }
         }
       }
@@ -169,7 +169,7 @@ async function processAutonomousTask(job: Job<AutonomousTaskJobData>): Promise<v
               body: `## ✅ Task Complete\n\n${message.result ?? 'No summary provided.'}\n\n---\n*Turns: ${turnCount} | Cost: ${costStr}*`,
             });
           } catch (commentErr) {
-            logger.warn('[autonomous-worker] Failed to post completion comment:', commentErr);
+            logger.warn('[autonomous-worker] Failed to post completion comment:', { error: commentErr });
           }
 
           // Mark issue as Done
@@ -184,7 +184,7 @@ async function processAutonomousTask(job: Job<AutonomousTaskJobData>): Promise<v
               }
             }
           } catch (stateErr) {
-            logger.warn(`[autonomous-worker] Could not update state for ${identifier}:`, stateErr);
+            logger.warn(`[autonomous-worker] Could not update state for ${identifier}:`, { error: stateErr });
           }
         } else if (message.subtype === 'error_max_turns') {
           maxTurnsExceeded = true;
@@ -194,7 +194,7 @@ async function processAutonomousTask(job: Job<AutonomousTaskJobData>): Promise<v
               body: `## ⚠️ Task Too Complex\n\nThe agent reached the turn limit (50 turns) without completing the task.\n\nPlease break this issue into smaller sub-tasks and re-assign them with the \`autonomous\` label.`,
             });
           } catch (commentErr) {
-            logger.warn('[autonomous-worker] Failed to post max-turns comment:', commentErr);
+            logger.warn('[autonomous-worker] Failed to post max-turns comment:', { error: commentErr });
           }
         } else {
           try {
@@ -203,7 +203,7 @@ async function processAutonomousTask(job: Job<AutonomousTaskJobData>): Promise<v
               body: `## ⚠️ Task Ended\n\nResult type: \`${message.subtype ?? 'unknown'}\`. Human review needed.`,
             });
           } catch (commentErr) {
-            logger.warn('[autonomous-worker] Failed to post ended comment:', commentErr);
+            logger.warn('[autonomous-worker] Failed to post ended comment:', { error: commentErr });
           }
         }
       }
@@ -219,7 +219,7 @@ async function processAutonomousTask(job: Job<AutonomousTaskJobData>): Promise<v
           body: `## ❌ Claude CLI Not Found\n\nThe \`claude\` binary is not available in this environment. Ensure the Claude Code CLI is installed.\n\nError: \`${errorMsg}\``,
         });
       } catch (commentErr) {
-        logger.warn('[autonomous-worker] Failed to post CLI not found comment:', commentErr);
+        logger.warn('[autonomous-worker] Failed to post CLI not found comment:', { error: commentErr });
       }
       return; // Don't retry for missing CLI
     }
@@ -230,7 +230,7 @@ async function processAutonomousTask(job: Job<AutonomousTaskJobData>): Promise<v
         body: `## ❌ Worker Error\n\nAn error occurred during task execution. Check server logs.\n\nError: \`${errorMsg}\``,
       });
     } catch (commentErr) {
-      logger.warn('[autonomous-worker] Failed to post error comment:', commentErr);
+      logger.warn('[autonomous-worker] Failed to post error comment:', { error: commentErr });
     }
 
     logger.error(`[autonomous-worker] Error on ${identifier}:`, err);
