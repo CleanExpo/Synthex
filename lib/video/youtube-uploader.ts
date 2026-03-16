@@ -53,16 +53,18 @@ export const YOUTUBE_CATEGORIES = {
 export class YouTubeUploader {
   private oauth2Client: InstanceType<typeof google.auth.OAuth2>;
   private youtube: ReturnType<typeof google.youtube>;
+  private _configured: boolean;
 
-  constructor() {
-    const clientId = process.env.YOUTUBE_CLIENT_ID;
-    const clientSecret = process.env.YOUTUBE_CLIENT_SECRET;
-    const refreshToken = process.env.YOUTUBE_REFRESH_TOKEN;
+  constructor(credentials?: { clientId: string; clientSecret: string; refreshToken: string }) {
+    const clientId = credentials?.clientId ?? process.env.YOUTUBE_CLIENT_ID;
+    const clientSecret = credentials?.clientSecret ?? process.env.YOUTUBE_CLIENT_SECRET;
+    const refreshToken = credentials?.refreshToken ?? process.env.YOUTUBE_REFRESH_TOKEN;
 
     if (!clientId || !clientSecret) {
       console.warn('[YouTubeUploader] Missing YouTube API credentials');
     }
 
+    this._configured = !!(clientId && clientSecret && refreshToken);
     this.oauth2Client = new google.auth.OAuth2(clientId, clientSecret);
 
     if (refreshToken) {
@@ -78,14 +80,17 @@ export class YouTubeUploader {
   }
 
   /**
+   * Create an uploader from explicit credentials (e.g. decrypted DB tokens)
+   */
+  static fromCredentials(clientId: string, clientSecret: string, refreshToken: string): YouTubeUploader {
+    return new YouTubeUploader({ clientId, clientSecret, refreshToken });
+  }
+
+  /**
    * Check if credentials are configured
    */
   isConfigured(): boolean {
-    return !!(
-      process.env.YOUTUBE_CLIENT_ID &&
-      process.env.YOUTUBE_CLIENT_SECRET &&
-      process.env.YOUTUBE_REFRESH_TOKEN
-    );
+    return this._configured;
   }
 
   /**
@@ -136,9 +141,16 @@ export class YouTubeUploader {
 
     logger.info('YouTubeUploader upload complete', { videoId });
 
-    // Upload thumbnail if provided
+    // Upload thumbnail if provided (non-fatal — requires 1000+ subscribers for custom thumbnails)
     if (metadata.thumbnailPath && fs.existsSync(metadata.thumbnailPath)) {
-      await this.uploadThumbnail(videoId, metadata.thumbnailPath);
+      try {
+        await this.uploadThumbnail(videoId, metadata.thumbnailPath);
+      } catch (thumbErr) {
+        logger.warn('YouTubeUploader thumbnail upload skipped', {
+          videoId,
+          reason: thumbErr instanceof Error ? thumbErr.message : String(thumbErr),
+        });
+      }
     }
 
     // Add to playlist if specified
