@@ -18,6 +18,9 @@
 
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
+
+export const runtime = 'nodejs';
+export const maxDuration = 300; // Video production is a long-running operation
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
 import { subscriptionService, PLAN_LIMITS } from '@/lib/stripe/subscription-service';
 import { logger } from '@/lib/logger';

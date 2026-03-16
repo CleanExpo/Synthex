@@ -22,6 +22,8 @@ function getSupabaseAdmin(): SupabaseClient {
 
 // Verify cron secret for security
 function verifyCronSecret(request: NextRequest): boolean {
+  // Guard: reject immediately if CRON_SECRET is not configured — prevents 'Bearer undefined' bypass
+  if (!process.env.CRON_SECRET) return false;
   const authHeader = request.headers.get('authorization');
   return authHeader === `Bearer ${process.env.CRON_SECRET}`;
 }
@@ -134,7 +136,7 @@ export async function GET(request: NextRequest) {
   const authHeader = request.headers.get('authorization');
   const adminApiKey = request.headers.get('x-admin-api-key');
 
-  const isCronAuth = authHeader === `Bearer ${process.env.CRON_SECRET}`;
+  const isCronAuth = !!process.env.CRON_SECRET && authHeader === `Bearer ${process.env.CRON_SECRET}`;
   const isAdminAuth = adminApiKey && adminApiKey === process.env.ADMIN_API_KEY;
 
   if (!isCronAuth && !isAdminAuth) {

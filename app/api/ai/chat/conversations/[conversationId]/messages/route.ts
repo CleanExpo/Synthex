@@ -25,6 +25,7 @@ import { logger } from '@/lib/logger';
 
 // Required for SSE streaming on Vercel
 export const runtime = 'nodejs';
+export const maxDuration = 60; // Prevent 504s on long-running LLM streaming responses
 export const dynamic = 'force-dynamic';
 
 // Allowed subscription plans for chat assistant

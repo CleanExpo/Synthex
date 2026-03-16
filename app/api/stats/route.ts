@@ -7,6 +7,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { stripe } from '@/lib/stripe/config';
 import { logger } from '@/lib/logger';
+import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 
 // Cache stats for 5 minutes to reduce database load
 let statsCache: Record<string, unknown> | null = null;
@@ -14,6 +15,12 @@ let cacheTimestamp = 0;
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
 export async function GET(request: NextRequest) {
+  // Require authentication — this endpoint exposes live business metrics including Stripe subscriber counts
+  const userId = await getUserIdFromRequestOrCookies(request);
+  if (!userId) {
+    return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+  }
+
   try {
     // Check cache
     const now = Date.now();

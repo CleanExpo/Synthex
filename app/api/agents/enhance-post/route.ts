@@ -20,6 +20,7 @@ import { SocialMediaOrchestrator } from '@/lib/agents/social-media-orchestrator'
 import type { SocialPlatform } from '@/lib/agents/platform-specialist'
 
 export const runtime = 'nodejs'
+export const maxDuration = 60 // Prevent 504s on long-running agent operations
 export const dynamic = 'force-dynamic'
 
 // ============================================================================

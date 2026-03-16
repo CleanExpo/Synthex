@@ -12,6 +12,10 @@ import { getUserAICredentials } from '@/lib/ai/api-credential-injector';
 import { requireApiKey } from '@/lib/middleware/require-api-key';
 
 import { withRateLimit, UsageTracker } from '@/lib/middleware/rate-limiter';
+import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
+
+export const runtime = 'nodejs';
+export const maxDuration = 60; // Prevent 504s on long-running LLM calls
 
 // Zod schema to validate and sanitise the AI-generated content response
 const generatedContentSchema = z.object({
@@ -167,9 +171,9 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
-    // Verify authentication
-    const authToken = request.cookies.get('auth-token')?.value;
-    if (!authToken) {
+    // Verify authentication via JWT — cookie existence alone is insufficient
+    const userId = await getUserIdFromRequestOrCookies(request);
+    if (!userId) {
       return NextResponse.json(
         { error: 'Authentication required' },
         { status: 401 }

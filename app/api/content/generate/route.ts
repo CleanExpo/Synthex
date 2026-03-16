@@ -54,7 +54,7 @@ async function handlePost(request: AuthenticatedRequest) {
     let persona: { id: string; name: string; attributes: Record<string, string> } | null = null;
     if (personaId) {
       const dbPersona = await prisma.persona.findUnique({
-        where: { id: personaId },
+        where: { id: personaId, userId: userId }, // Scope to authenticated user to prevent IDOR
         select: {
           id: true,
           name: true,

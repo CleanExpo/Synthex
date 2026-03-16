@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { createClient } from '@supabase/supabase-js';
 // NOTE: Static Sentry import removed (2026-03-12, Phase 114-02) — see next.config.mjs.
 import { logger } from '@/lib/logger';
+import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 
 // Initialize Supabase client
 const supabase = createClient(
@@ -100,6 +101,12 @@ export async function POST(request: NextRequest) {
 }
 
 export async function GET(request: NextRequest) {
+  // Require authentication — this endpoint exposes userId, userEmail, and stack traces
+  const userId = await getUserIdFromRequestOrCookies(request);
+  if (!userId) {
+    return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+  }
+
   try {
     // Get query parameters
     const { searchParams } = new URL(request.url);
