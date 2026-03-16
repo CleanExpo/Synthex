@@ -6,6 +6,7 @@
  * - NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: Stripe publishable key for client-side
  * - STRIPE_WEBHOOK_SECRET: Webhook endpoint secret for verification
  * - NEXT_PUBLIC_APP_URL: Application URL for redirects
+ * - STRIPE_STARTER_PRICE_ID: Stripe price ID for Starter plan ($99 AUD/mo)
  * - STRIPE_PRO_PRICE_ID: Stripe price ID for Pro plan ($249 AUD/mo)
  * - STRIPE_GROWTH_PRICE_ID: Stripe price ID for Growth plan ($449 AUD/mo)
  * - STRIPE_SCALE_PRICE_ID: Stripe price ID for Scale plan ($799 AUD/mo)
@@ -30,6 +31,20 @@ export const stripe = STRIPE_ENABLED
 // Product/Price IDs - These MUST match your Stripe dashboard
 // Placeholder IDs are rejected at checkout time (see app/api/stripe/checkout/route.ts)
 export const PRODUCTS = {
+  starter: {
+    name: 'Starter',
+    priceId: process.env.STRIPE_STARTER_PRICE_ID || 'price_starter_placeholder',
+    price: 99,
+    features: {
+      socialAccounts: 3,
+      aiPosts: 50,
+      personas: 1,
+      analytics: 'basic',
+      support: 'email',
+      scheduling: true,
+      byok: true,
+    },
+  },
   pro: {
     name: 'Pro',
     priceId: process.env.STRIPE_PRO_PRICE_ID || process.env.STRIPE_PROFESSIONAL_PRICE_ID || 'price_pro_placeholder',
@@ -85,8 +100,8 @@ export const PRODUCTS = {
  */
 export function isStripeBillingReady(): boolean {
   if (!STRIPE_ENABLED) return false;
-  // At minimum, the Pro plan price ID must be a real Stripe ID
-  return !PRODUCTS.pro.priceId.includes('placeholder');
+  // At minimum, the Starter plan price ID must be a real Stripe ID
+  return !PRODUCTS.starter.priceId.includes('placeholder');
 }
 
 export function getProductByPriceId(priceId: string) {

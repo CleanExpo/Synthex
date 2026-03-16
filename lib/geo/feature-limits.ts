@@ -5,6 +5,7 @@
  * These limits are enforced at the API route level.
  *
  * PRICING (from CLAUDE.md — DO NOT CHANGE WITHOUT APPROVAL):
+ * - Starter: $99/month
  * - Pro: $249/month
  * - Growth: $449/month
  * - Scale: $799/month
@@ -73,6 +74,31 @@ export const PLAN_LIMITS: Record<string, GEOFeatureLimits> = {
     backlinkAnalyses: 3,
     backlinkProspects: 20,
     promptTests: 10,
+  },
+  starter: {
+    geoAnalyses: 15,
+    eeatAudits: 5,
+    paperBananaVisuals: 5,
+    researchReports: 0,
+    authorProfiles: 1,
+    localCaseStudies: 2,
+    tacticOptimiserRewrites: 5,
+    voiceProfiles: 1,
+    capsuleFormats: 5,
+    slopScans: 20,
+    qualityAudits: 20,
+    brandIdentities: 1,
+    brandMentionPolls: 10,
+    consistencyAudits: 5,
+    journalistContacts: 20,
+    prPitches: 30,
+    pressReleases: 5,
+    prDistributions: 3,
+    awardListings: 10,
+    directoryListings: 20,
+    backlinkAnalyses: 8,
+    backlinkProspects: 50,
+    promptTests: 15,
   },
   pro: {
     geoAnalyses: 50,

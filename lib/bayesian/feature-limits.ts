@@ -5,6 +5,7 @@
  * Follows the pattern from lib/geo/feature-limits.ts.
  *
  * PRICING (from CLAUDE.md — DO NOT CHANGE WITHOUT APPROVAL):
+ * - Starter: $99/month
  * - Pro: $249/month
  * - Growth: $449/month
  * - Scale: $799/month
@@ -27,6 +28,12 @@ export interface BOFeatureLimits {
  */
 export const BO_PLAN_LIMITS: Record<string, BOFeatureLimits> = {
   free: {
+    optimisationSpaces: 0,
+    monthlyOptimisations: 0,
+    monthlySuggestions: 0,
+    surfaces: [],
+  },
+  starter: {
     optimisationSpaces: 0,
     monthlyOptimisations: 0,
     monthlySuggestions: 0,

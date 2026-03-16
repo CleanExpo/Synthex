@@ -5,7 +5,7 @@ import { useUser } from './use-user';
 
 export interface SubscriptionData {
   id: string;
-  plan: 'free' | 'pro' | 'growth' | 'scale' | 'professional' | 'business' | 'custom';
+  plan: 'free' | 'starter' | 'pro' | 'growth' | 'scale' | 'professional' | 'business' | 'custom';
   status: string;
   limits: {
     socialAccounts: number;
@@ -28,10 +28,10 @@ interface UseSubscriptionReturn {
   isLoading: boolean;
   error: Error | null;
   refetch: () => Promise<void>;
-  hasAccess: (requiredPlan: 'free' | 'pro' | 'growth' | 'scale' | 'professional' | 'business' | 'custom') => boolean;
+  hasAccess: (requiredPlan: 'free' | 'starter' | 'pro' | 'growth' | 'scale' | 'professional' | 'business' | 'custom') => boolean;
 }
 
-const PLAN_HIERARCHY = ['free', 'pro', 'growth', 'scale', 'professional', 'business', 'custom'];
+const PLAN_HIERARCHY = ['free', 'starter', 'pro', 'growth', 'scale', 'professional', 'business', 'custom'];
 
 /**
  * Custom hook to get the current user's subscription
@@ -104,7 +104,7 @@ export function useSubscription(): UseSubscriptionReturn {
   }, [userLoading, fetchSubscription]);
 
   const hasAccess = useCallback(
-    (requiredPlan: 'free' | 'pro' | 'growth' | 'scale' | 'professional' | 'business' | 'custom') => {
+    (requiredPlan: 'free' | 'starter' | 'pro' | 'growth' | 'scale' | 'professional' | 'business' | 'custom') => {
       if (!subscription) return false;
       const userPlanIndex = PLAN_HIERARCHY.indexOf(subscription.plan);
       const requiredPlanIndex = PLAN_HIERARCHY.indexOf(requiredPlan);

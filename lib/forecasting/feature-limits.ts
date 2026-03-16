@@ -5,6 +5,7 @@
  * Follows the pattern from lib/bayesian/feature-limits.ts.
  *
  * PRICING (from CLAUDE.md — DO NOT CHANGE WITHOUT APPROVAL):
+ * - Starter: $99/month
  * - Pro: $249/month
  * - Growth: $449/month
  * - Scale: $799/month
@@ -29,6 +30,14 @@ export interface ForecastFeatureLimits {
  */
 export const FORECAST_PLAN_LIMITS: Record<string, ForecastFeatureLimits> = {
   free: {
+    forecastModels: 0,
+    monthlyForecasts: 0,
+    maxHorizonDays: 7,
+    spatiotemporalModels: 0,
+    monthlyPredictions: 0,
+    crossPlatformHeatmap: false,
+  },
+  starter: {
     forecastModels: 0,
     monthlyForecasts: 0,
     maxHorizonDays: 7,
