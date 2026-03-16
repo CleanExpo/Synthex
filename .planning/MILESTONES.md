@@ -1,5 +1,32 @@
 # Project Milestones: Synthex
 
+## v9.0 Autonomous Operation (Shipped: 2026-03-17)
+
+**Delivered:** Linear → BullMQ → Claude Agent SDK autonomous task pipeline; HMAC-verified webhook receiver; post-launch security hardening (54 routes); Starter $99 AUD plan; 6 Pomelli skills; Scientific Luxury design system rollout.
+
+**Phases completed:** 118 (1 formal phase, 3 plans) + post-launch informal work
+
+**Key accomplishments:**
+
+- Post-launch security hardening: 54 API routes sanitised for error.message leakage, CRON_SECRET bypass fixed on 13 crons, IDOR fix in content generation
+- $99 AUD Starter plan (BYOK entry tier) — Stripe config, feature limits, billing UI
+- 6 Pomelli-inspired Skills shipped (Business DNA, Brand Campaign Generator, Visual Content Brief, Platform Adaptor, Brand Consistency Checker, Campaign Planner)
+- Scientific Luxury design system applied across all dashboard headers, loading skeletons, Card/Button components
+- LinearClient singleton + HMAC webhook verifier (fail-closed) + `@anthropic-ai/claude-agent-sdk` + `@linear/sdk` installed
+- `POST /api/webhooks/linear` — HMAC-verified, Zod-validated, `autonomous` label filter, returns 200 in <100ms
+- BullMQ autonomous task worker: concurrency:1, maxTurns:50, progress comments every 10 turns, marks Linear issue Done on success
+
+**Stats:**
+
+- 70 files changed, ~1,503 lines added, ~129 removed
+- 1 phase, 3 plans
+- Git range: `3bfec107` → `24b0c162`
+- Timeline: 2026-03-16 → 2026-03-17
+
+**What's next:** v10.0 Full Platform Quality Loop — deep audit, Linear catalog, priority execution, production testing, diagnostic repeat
+
+---
+
 ## v8.0 Production Go-Live (Shipped: 2026-03-13) 🚀
 
 **Delivered:** Synthex went live at synthex.social — Vercel production deployment, Stripe live billing (AUD), DNS configuration, invite-only soft launch gate, and AI-First Onboarding Automation (URL → Business DNA → AI content pipeline in ~15s).
