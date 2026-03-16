@@ -25,6 +25,7 @@ export const QUEUE_NAMES = {
   WORKFLOW_STEPS: 'workflow-steps',
   WORKFLOW_PARALLEL: 'workflow-parallel',
   BAYESIAN_OPTIMISATION: 'bayesian-optimisation',
+  AUTONOMOUS_TASKS: 'autonomous-tasks',
 } as const;
 
 // Job types
@@ -39,7 +40,8 @@ export type JobType =
   | 'workflow:execute-step'
   | 'bo:run-optimisation'
   | 'bo:train-forecast'
-  | 'bo:train-spatiotemporal';
+  | 'bo:train-spatiotemporal'
+  | 'autonomous:execute-task';
 
 // Job data interfaces
 export interface ScheduledPostJobData {
@@ -132,6 +134,14 @@ export interface BOTrainSpatiotemporalJobData {
   modelName: string;
 }
 
+export interface AutonomousTaskJobData {
+  type: 'autonomous:execute-task';
+  issueId: string;
+  identifier: string;  // e.g. "UNI-1181"
+  title: string;
+  description: string | null;
+}
+
 export type QueueJobData =
   | ScheduledPostJobData
   | AnalyticsJobData
@@ -143,7 +153,8 @@ export type QueueJobData =
   | WorkflowStepJobData
   | BOOptimisationJobData
   | BOTrainForecastJobData
-  | BOTrainSpatiotemporalJobData;
+  | BOTrainSpatiotemporalJobData
+  | AutonomousTaskJobData;
 
 // Redis connection configuration
 function getRedisConnection(): ConnectionOptions {
