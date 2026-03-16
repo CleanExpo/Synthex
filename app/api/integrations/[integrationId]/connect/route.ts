@@ -109,7 +109,7 @@ export async function POST(
   } catch (error: unknown) {
     logger.error('Error connecting integration:', error);
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : String(error) || 'Failed to connect integration' },
+      { error: 'Failed to connect integration' },
       { status: 500 }
     );
   }

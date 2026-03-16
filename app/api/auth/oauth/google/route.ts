@@ -97,7 +97,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(
       {
         error: 'Failed to initiate Google OAuth',
-        message: error instanceof Error ? error instanceof Error ? error.message : String(error) : 'Unknown error',
+        message: 'An unexpected error occurred. Please try again.',
       },
       { status: 500 }
     );

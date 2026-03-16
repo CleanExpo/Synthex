@@ -176,7 +176,7 @@ async function handlePost(request: AuthenticatedRequest): Promise<NextResponse> 
       {
         success: false,
         error: 'Failed to process cross-post request',
-        message: error instanceof Error ? error.message : 'Unknown error',
+        message: 'An unexpected error occurred. Please try again.',
       },
       { status: 500 }
     );

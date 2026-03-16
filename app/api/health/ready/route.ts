@@ -80,7 +80,7 @@ async function checkDatabase(): Promise<DependencyCheck> {
       name: 'database',
       status: 'unhealthy',
       latency: Date.now() - startTime,
-      message: error instanceof Error ? error.message : String(error) || 'Connection failed',
+      message: 'Database connection failed',
       critical: true,
     };
   }
@@ -126,7 +126,7 @@ async function checkCache(): Promise<DependencyCheck> {
       name: 'cache',
       status: 'degraded',
       latency: Date.now() - startTime,
-      message: error instanceof Error ? error.message : String(error) || 'Cache unavailable, using memory fallback',
+      message: 'Cache unavailable, using memory fallback',
       critical: false,
     };
   }
@@ -270,7 +270,7 @@ export async function GET() {
         status: 'not_ready',
         timestamp: new Date().toISOString(),
         responseTime: Date.now() - startTime,
-        error: error instanceof Error ? error.message : String(error) || 'Health check failed',
+        error: 'Health check failed',
       },
       {
         status: 503,

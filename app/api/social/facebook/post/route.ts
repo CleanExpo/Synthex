@@ -388,9 +388,8 @@ export async function POST(request: NextRequest) {
     });
   } catch (error: unknown) {
     logger.error('Facebook post error:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     return NextResponse.json(
-      { error: 'Failed to post to Facebook', message: errorMessage },
+      { error: 'Failed to post to Facebook', message: 'An unexpected error occurred. Please try again.' },
       { status: 500 }
     );
   }
@@ -480,9 +479,8 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ success: true, data: posts });
   } catch (error: unknown) {
     logger.error('Get Facebook posts error:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     return NextResponse.json(
-      { error: 'Failed to get Facebook posts', message: errorMessage },
+      { error: 'Failed to get Facebook posts', message: 'An unexpected error occurred. Please try again.' },
       { status: 500 }
     );
   }

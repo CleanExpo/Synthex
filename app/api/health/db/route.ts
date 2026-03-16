@@ -47,8 +47,6 @@ export async function GET() {
       },
     });
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-
     return NextResponse.json(
       {
         status: 'error',
@@ -56,7 +54,7 @@ export async function GET() {
         database: {
           connected: false,
           latency: null,
-          error: errorMessage,
+          error: 'Database check failed',
         },
         pool: null,
         responseTime: `${Date.now() - startTime}ms`,

@@ -243,7 +243,7 @@ export async function POST(request: NextRequest) {
     });
   } catch (error: unknown) {
     logger.error('Pinterest post error:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    const errorMessage = 'An unexpected error occurred. Please try again.';
     return NextResponse.json(
       {
         error: 'Failed to post to Pinterest',
@@ -386,7 +386,7 @@ export async function GET(request: NextRequest) {
     });
   } catch (error: unknown) {
     logger.error('Get Pinterest posts error:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    const errorMessage = 'An unexpected error occurred. Please try again.';
     return NextResponse.json(
       { error: 'Failed to get Pinterest posts', message: errorMessage },
       { status: 500 }

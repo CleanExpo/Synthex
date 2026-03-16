@@ -148,7 +148,7 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json(
       {
         error: 'Internal Server Error',
-        message: error instanceof Error ? error.message : 'Failed to switch business'
+        message: 'Failed to switch business'
       },
       { status: 500 }
     );

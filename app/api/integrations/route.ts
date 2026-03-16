@@ -151,7 +151,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     logger.error('Integration connection error:', error);
     return NextResponse.json(
-      { error: 'Failed to connect integration', details: error instanceof Error ? error.message : String(error) },
+      { error: 'Failed to connect integration' },
       { status: 500 }
     );
   }
@@ -193,7 +193,7 @@ export async function DELETE(request: NextRequest) {
   } catch (error) {
     logger.error('Integration disconnection error:', error);
     return NextResponse.json(
-      { error: 'Failed to disconnect integration', details: error instanceof Error ? error.message : String(error) },
+      { error: 'Failed to disconnect integration' },
       { status: 500 }
     );
   }

@@ -46,7 +46,7 @@ export async function GET(request: NextRequest) {
     logger.error('BayesNF health check failed:', error);
     return NextResponse.json({
       status: 'unreachable',
-      error: error instanceof Error ? error.message : 'Connection failed',
+      error: 'Connection failed',
     });
   }
 }

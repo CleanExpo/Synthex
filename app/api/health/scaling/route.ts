@@ -248,7 +248,7 @@ export async function GET(request: NextRequest) {
       {
         status: 'error',
         message: 'Failed to get scaling metrics',
-        error: error instanceof Error ? error.message : String(error),
+        error: 'An unexpected error occurred. Please try again.',
         timestamp: new Date().toISOString(),
       },
       { status: 500 }
@@ -315,7 +315,7 @@ export async function POST(request: NextRequest) {
     });
   } catch (error: unknown) {
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : String(error) },
+      { error: 'An unexpected error occurred. Please try again.' },
       { status: 500 }
     );
   }

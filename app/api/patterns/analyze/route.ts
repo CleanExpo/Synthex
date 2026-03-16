@@ -174,7 +174,7 @@ export async function GET(request: NextRequest) {
   } catch (error: unknown) {
     logger.error('Pattern analysis error:', error);
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : String(error) || 'Failed to analyze patterns' },
+      { error: 'Failed to analyse patterns' },
       { status: 500 }
     );
   }
@@ -260,7 +260,7 @@ export async function POST(request: NextRequest) {
   } catch (error: unknown) {
     logger.error('Pattern creation error:', error);
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : String(error) || 'Failed to create pattern' },
+      { error: 'Failed to create pattern' },
       { status: 500 }
     );
   }

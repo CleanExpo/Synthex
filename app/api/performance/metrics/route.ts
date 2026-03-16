@@ -124,7 +124,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(
       {
         success: false,
-        error: error instanceof Error ? error.message : String(error) || 'Failed to get metrics',
+        error: 'Failed to get metrics',
         responseTime: Date.now() - startTime,
       },
       { status: 500 }
@@ -170,7 +170,7 @@ export async function POST(request: NextRequest) {
     logger.error('Failed to record metrics:', error);
 
     return NextResponse.json(
-      { success: false, error: error instanceof Error ? error.message : String(error) || 'Failed to record metrics' },
+      { success: false, error: 'Failed to record metrics' },
       { status: 500 }
     );
   }

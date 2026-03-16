@@ -304,10 +304,9 @@ export async function POST(
       },
     });
   } catch (error: unknown) {
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     logger.error('Integration sync error:', { error });
     return NextResponse.json(
-      { error: 'Internal Server Error', message: errorMessage },
+      { error: 'Internal Server Error', message: 'An unexpected error occurred. Please try again.' },
       { status: 500 }
     );
   }
@@ -534,10 +533,9 @@ export async function GET(
       },
     });
   } catch (error: unknown) {
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     logger.error('Integration sync status error:', { error });
     return NextResponse.json(
-      { error: 'Internal Server Error', message: errorMessage },
+      { error: 'Internal Server Error', message: 'An unexpected error occurred. Please try again.' },
       { status: 500 }
     );
   }

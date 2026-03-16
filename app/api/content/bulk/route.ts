@@ -238,7 +238,7 @@ export async function POST(request: NextRequest) {
   } catch (error: unknown) {
     logger.error('Bulk operation error:', error);
     return NextResponse.json(
-      { error: 'Internal Server Error', message: error instanceof Error ? error instanceof Error ? error.message : String(error) : String(error) },
+      { error: 'Internal Server Error', message: 'An unexpected error occurred. Please try again.' },
       { status: 500 }
     );
   }

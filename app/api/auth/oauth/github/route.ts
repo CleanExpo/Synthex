@@ -90,7 +90,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(
       {
         error: 'Failed to initiate GitHub OAuth',
-        message: error instanceof Error ? error.message : 'Unknown error',
+        message: 'An unexpected error occurred. Please try again.',
       },
       { status: 500 }
     );

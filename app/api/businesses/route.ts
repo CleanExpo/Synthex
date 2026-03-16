@@ -79,7 +79,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(
       {
         error: 'Internal Server Error',
-        message: error instanceof Error ? error.message : 'Failed to fetch businesses'
+        message: 'Failed to fetch businesses'
       },
       { status: 500 }
     );
@@ -166,7 +166,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       {
         error: 'Internal Server Error',
-        message: error instanceof Error ? error.message : 'Failed to create business'
+        message: 'Failed to create business'
       },
       { status: 500 }
     );

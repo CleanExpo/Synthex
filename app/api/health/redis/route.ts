@@ -112,7 +112,7 @@ export async function GET(request: NextRequest) {
         {
           status: 'error',
           message: 'Failed to check Redis health',
-          error: error instanceof Error ? error.message : String(error),
+          error: 'An unexpected error occurred. Please try again.',
           timestamp: new Date().toISOString()
         },
         { status: 500 }

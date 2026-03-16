@@ -169,7 +169,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       { 
         error: 'Failed to post to Twitter',
-        message: error instanceof Error ? error.message : String(error),
+        message: 'An unexpected error occurred. Please try again.',
       },
       { status: 500 }
     );

@@ -60,7 +60,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(
       {
         error: 'Internal Server Error',
-        message: error instanceof Error ? error.message : 'Failed to fetch overview'
+        message: 'Failed to fetch overview'
       },
       { status: 500 }
     );

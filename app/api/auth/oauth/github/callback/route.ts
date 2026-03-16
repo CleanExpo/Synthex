@@ -205,7 +205,7 @@ export async function GET(request: NextRequest) {
     logger.error('[GitHub OAuth] Callback error:', error);
     return redirectWithError(
       effectiveBaseUrl,
-      error instanceof Error ? error.message : 'Authentication failed'
+      'authentication_failed'
     );
   }
 }

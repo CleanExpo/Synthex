@@ -709,8 +709,7 @@ export async function GET(
       } catch (dbError) {
         // Surface the error to the user — do NOT silently swallow and fake success.
         logger.error('Failed to store platform connection:', dbError);
-        const errMsg = dbError instanceof Error ? dbError.message : 'Failed to store platform connection';
-        return integrationErrorResponse(platform, errMsg, returnTo);
+        return integrationErrorResponse(platform, 'Failed to store platform connection. Please try again.', returnTo);
       }
 
       // Determine where to redirect after successful connection.
@@ -891,11 +890,10 @@ export async function GET(
       if (state) {
         const stateData = verifyAndDecodeState(state);
         if (stateData?.flow === 'integration') {
-          const errorMsg = error instanceof Error ? error.message : 'Authentication failed';
           const returnTo = stateData.returnTo as string | undefined;
           // Use the platform from state if available, else fall back to URL segment
           const errPlatform = (stateData.platform as string | undefined) ?? 'unknown';
-          return integrationErrorResponse(errPlatform, errorMsg, returnTo);
+          return integrationErrorResponse(errPlatform, 'Authentication failed. Please try again.', returnTo);
         }
       }
     } catch {
@@ -903,7 +901,7 @@ export async function GET(
     }
 
     return NextResponse.redirect(
-      new URL(`/login?error=${encodeURIComponent(error instanceof Error ? error.message : 'Authentication failed')}`, request.url)
+      new URL('/login?error=authentication_failed', request.url)
     );
   }
 }

@@ -104,7 +104,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(
       {
         success: false,
-        error: error instanceof Error ? error.message : String(error) || 'Failed to get alerts',
+        error: 'Failed to get alerts',
         responseTime: Date.now() - startTime,
       },
       { status: 500 }
@@ -215,7 +215,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       {
         success: false,
-        error: error instanceof Error ? error.message : String(error) || 'Failed to send alert',
+        error: 'Failed to send alert',
         responseTime: Date.now() - startTime,
       },
       { status: 500 }

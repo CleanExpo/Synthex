@@ -178,7 +178,7 @@ export async function GET(request: NextRequest) {
       {
         success: false,
         error: 'Failed to fetch quotes',
-        message: error instanceof Error ? error.message : 'An error occurred',
+        message: 'An unexpected error occurred. Please try again.',
       },
       { status: 500 }
     );
@@ -264,7 +264,7 @@ export async function POST(request: NextRequest) {
       {
         success: false,
         error: 'Failed to create quote',
-        message: error instanceof Error ? error.message : 'An error occurred',
+        message: 'An unexpected error occurred. Please try again.',
       },
       { status: 500 }
     );
@@ -317,7 +317,7 @@ export async function DELETE(request: NextRequest) {
       {
         success: false,
         error: 'Failed to delete quotes',
-        message: error instanceof Error ? error.message : 'An error occurred',
+        message: 'An unexpected error occurred. Please try again.',
       },
       { status: 500 }
     );

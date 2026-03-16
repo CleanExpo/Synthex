@@ -121,7 +121,7 @@ export async function GET(
       {
         success: false,
         error: 'Failed to fetch quote',
-        message: error instanceof Error ? error.message : String(error),
+        message: 'An unexpected error occurred. Please try again.',
       },
       { status: 500 }
     );
@@ -248,7 +248,7 @@ export async function PUT(
       {
         success: false,
         error: 'Failed to update quote',
-        message: error instanceof Error ? error.message : String(error),
+        message: 'An unexpected error occurred. Please try again.',
       },
       { status: 500 }
     );
@@ -317,7 +317,7 @@ export async function DELETE(
       {
         success: false,
         error: 'Failed to delete quote',
-        message: error instanceof Error ? error.message : String(error),
+        message: 'An unexpected error occurred. Please try again.',
       },
       { status: 500 }
     );
@@ -428,7 +428,7 @@ export async function PATCH(
       {
         success: false,
         error: 'Failed to update quote engagement',
-        message: error instanceof Error ? error.message : String(error),
+        message: 'An unexpected error occurred. Please try again.',
       },
       { status: 500 }
     );

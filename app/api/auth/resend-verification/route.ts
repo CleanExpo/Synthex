@@ -57,8 +57,8 @@ export async function POST(request: NextRequest) {
       if (error) {
         logger.error('[RESEND-VERIFICATION] Supabase error:', error.message);
         return NextResponse.json(
-          { error: error.message || 'Failed to resend verification email' },
-          { status: 400 }
+          { message: 'If this address is registered, a verification email has been sent.' },
+          { status: 200 }
         );
       }
 

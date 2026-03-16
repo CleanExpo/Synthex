@@ -250,7 +250,7 @@ export async function POST(request: NextRequest) {
     });
   } catch (error: unknown) {
     logger.error('Reddit post error:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    const errorMessage = 'An unexpected error occurred. Please try again.';
     return NextResponse.json(
       {
         error: 'Failed to post to Reddit',
@@ -392,7 +392,7 @@ export async function GET(request: NextRequest) {
     });
   } catch (error: unknown) {
     logger.error('Get Reddit posts error:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    const errorMessage = 'An unexpected error occurred. Please try again.';
     return NextResponse.json(
       { error: 'Failed to get Reddit posts', message: errorMessage },
       { status: 500 }

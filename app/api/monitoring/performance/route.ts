@@ -114,7 +114,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(
       {
         success: false,
-        error: error instanceof Error ? error.message : String(error) || 'Failed to generate performance report',
+        error: 'Failed to generate performance report',
         responseTime: Date.now() - startTime,
       },
       { status: 500 }
@@ -190,7 +190,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       {
         success: false,
-        error: error instanceof Error ? error.message : String(error) || 'Failed to update configuration',
+        error: 'Failed to update configuration',
       },
       { status: 500 }
     );

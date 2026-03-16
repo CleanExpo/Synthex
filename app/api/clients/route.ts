@@ -496,7 +496,7 @@ export async function DELETE(request: NextRequest) {
   } catch (error: unknown) {
     logger.error('Client DELETE error:', { error });
     return APISecurityChecker.createSecureResponse(
-      { error: error instanceof Error ? error.message : String(error) || 'Internal server error' },
+      { error: 'Internal server error' },
       500
     );
   }

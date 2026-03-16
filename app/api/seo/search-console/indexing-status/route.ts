@@ -69,10 +69,8 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     logger.error('Indexing Status API error:', error);
-    const message =
-      error instanceof Error ? error.message : 'Failed to inspect URL indexing status';
     return APISecurityChecker.createSecureResponse(
-      { error: message },
+      { error: 'Failed to inspect URL indexing status' },
       500
     );
   }

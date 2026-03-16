@@ -352,7 +352,7 @@ export async function POST(request: NextRequest) {
         logger.error(`Error tracking competitor ${competitor.id}:`, error);
         errors.push({
           competitorId: competitor.id,
-          error: error instanceof Error ? error.message : 'Unknown error',
+          error: 'Tracking failed',
         });
       }
     }

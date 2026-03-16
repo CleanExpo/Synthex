@@ -149,7 +149,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(
       {
         success: false,
-        error: error instanceof Error ? error.message : String(error) || 'Failed to get health status',
+        error: 'Failed to get health status',
         responseTime: Date.now() - startTime,
       },
       { status: 500 }

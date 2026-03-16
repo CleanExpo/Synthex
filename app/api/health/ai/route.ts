@@ -82,14 +82,13 @@ export async function GET() {
     );
   } catch (error) {
     const latencyMs = Date.now() - startTime;
-    const message = error instanceof Error ? error.message : 'Unknown error';
-    logger.error('AI health check failed:', { error: message, latencyMs });
+    logger.error('AI health check failed:', { error: error instanceof Error ? error.message : String(error), latencyMs });
 
     return NextResponse.json(
       {
         status: 'unhealthy' as const,
         latencyMs,
-        error: message,
+        error: 'AI service check failed',
         timestamp: new Date().toISOString(),
       },
       {

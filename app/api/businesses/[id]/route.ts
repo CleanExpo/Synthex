@@ -150,7 +150,7 @@ export async function PATCH(
     return NextResponse.json(
       {
         error: 'Internal Server Error',
-        message: error instanceof Error ? error.message : 'Failed to update business'
+        message: 'Failed to update business'
       },
       { status: 500 }
     );
@@ -247,7 +247,7 @@ export async function DELETE(
     return NextResponse.json(
       {
         error: 'Internal Server Error',
-        message: error instanceof Error ? error.message : 'Failed to delete business'
+        message: 'Failed to delete business'
       },
       { status: 500 }
     );

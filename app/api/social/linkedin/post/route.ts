@@ -200,7 +200,7 @@ export async function POST(request: NextRequest) {
     });
   } catch (error: unknown) {
     logger.error('LinkedIn post error:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    const errorMessage = 'An unexpected error occurred. Please try again.';
     return NextResponse.json(
       { error: 'Failed to post to LinkedIn', message: errorMessage },
       { status: 500 }
@@ -280,7 +280,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ success: true, data: posts });
   } catch (error: unknown) {
     logger.error('Get LinkedIn posts error:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    const errorMessage = 'An unexpected error occurred. Please try again.';
     return NextResponse.json(
       { error: 'Failed to get LinkedIn posts', message: errorMessage },
       { status: 500 }

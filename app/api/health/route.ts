@@ -72,7 +72,7 @@ async function checkDatabase(): Promise<HealthCheckResult> {
     return {
       status: 'unhealthy',
       latency: Date.now() - startTime,
-      message: error instanceof Error ? error.message : 'Connection failed',
+      message: 'Database connection failed',
     };
   }
 }
@@ -292,7 +292,7 @@ export async function GET(request: NextRequest) {
         buildId: BUILD_ID,
         environment: process.env.NODE_ENV || 'development',
         responseTime: Date.now() - startTime,
-        error: error instanceof Error ? error.message : 'Health check failed',
+        error: 'Health check failed',
       },
       {
         status: 503,

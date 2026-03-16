@@ -100,15 +100,14 @@ export async function GET() {
     );
   } catch (error) {
     const latencyMs = Date.now() - startTime;
-    const message = error instanceof Error ? error.message : 'Unknown error';
-    logger.error('Email health check failed:', { error: message, provider, latencyMs });
+    logger.error('Email health check failed:', { error: error instanceof Error ? error.message : String(error), provider, latencyMs });
 
     return NextResponse.json(
       {
         status: 'unhealthy' as const,
         latencyMs,
         provider,
-        error: message,
+        error: 'Email service check failed',
         timestamp: new Date().toISOString(),
       },
       {

@@ -39,7 +39,7 @@ export async function GET(request: Request) {
   } catch (error: unknown) {
     logger.error('Pattern analysis cron error:', error);
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : String(error) || 'Failed to analyze patterns' },
+      { error: 'Failed to analyze patterns' },
       { status: 500 }
     );
   }
@@ -81,7 +81,7 @@ export async function POST(request: Request) {
   } catch (error: unknown) {
     logger.error('Manual pattern analysis error:', error);
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : String(error) || 'Failed to analyze patterns' },
+      { error: 'Failed to analyze patterns' },
       { status: 500 }
     );
   }

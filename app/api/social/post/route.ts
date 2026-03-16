@@ -143,7 +143,7 @@ export async function POST(request: NextRequest) {
         errors.push({
           platform,
           success: false,
-          error: error instanceof Error ? error.message : String(error) || `Failed to post to ${platform}`
+          error: `Failed to post to ${platform}`
         });
       }
     }
@@ -231,7 +231,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       { 
         error: 'Failed to post to social media',
-        message: error instanceof Error ? error.message : String(error) 
+        message: 'An unexpected error occurred. Please try again.'
       },
       { status: 500 }
     );

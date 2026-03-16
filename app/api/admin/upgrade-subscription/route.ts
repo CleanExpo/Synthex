@@ -249,7 +249,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       {
         error: 'Internal Server Error',
-        message: error instanceof Error ? error.message : 'Failed to upgrade subscription',
+        message: 'Failed to upgrade subscription. Please try again.',
       },
       { status: 500 }
     );
