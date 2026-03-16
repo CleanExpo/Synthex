@@ -21,8 +21,11 @@ import { logger } from '@/lib/logger';
  */
 export async function GET(request: NextRequest) {
   try {
-    // Get current user (for audit logging)
+    // Require authentication — model registry is internal tooling
     const user = await getAuthUser();
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
 
     // Get health report
     const healthReport = modelManager.getHealthReport();
@@ -34,7 +37,7 @@ export async function GET(request: NextRequest) {
       {
         status: 'ok',
         timestamp: new Date().toISOString(),
-        user: user?.id || 'anonymous',
+
         models: {
           openai: {
             model: latestModels.openai.id,

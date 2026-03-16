@@ -7,6 +7,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { logger } from '@/lib/logger';
+import { getAuthUser } from '@/lib/supabase-server';
 import {
   getAutoScalingConfig,
   getMonitoringThresholds,
@@ -167,6 +168,12 @@ function getRequestMetrics(): ScalingMetrics['requests'] {
  */
 export async function GET(request: NextRequest) {
   try {
+    // Require authentication — exposes internal operational metrics
+    const user = await getAuthUser();
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const startTime = Date.now();
     const config = getAutoScalingConfig();
     const thresholds = getMonitoringThresholds();
@@ -262,6 +269,12 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   try {
+    // Require authentication — prevents external manipulation of in-memory metrics
+    const user = await getAuthUser();
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const body = await request.json();
     const { action, value } = body;
 

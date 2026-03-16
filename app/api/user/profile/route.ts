@@ -234,9 +234,8 @@ export async function PUT(request: NextRequest) {
     });
   } catch (error: unknown) {
     logger.error('Profile update error:', error);
-    const message = error instanceof Error ? error.message : String(error);
     return NextResponse.json(
-      { error: 'Failed to update profile', details: message },
+      { error: 'Failed to update profile' },
       { status: 500 }
     );
   }
@@ -284,9 +283,8 @@ export async function DELETE(request: NextRequest) {
     });
   } catch (error: unknown) {
     logger.error('Account deletion error:', error);
-    const message = error instanceof Error ? error.message : 'Unknown error';
     return NextResponse.json(
-      { error: 'Failed to delete account', details: message },
+      { error: 'Failed to delete account' },
       { status: 500 }
     );
   }

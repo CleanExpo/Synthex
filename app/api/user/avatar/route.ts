@@ -100,7 +100,7 @@ export async function POST(request: NextRequest) {
   } catch (error: unknown) {
     logger.error('Avatar upload error:', error);
     return NextResponse.json(
-      { error: 'Failed to upload avatar', details: error instanceof Error ? error.message : String(error) },
+      { error: 'Failed to upload avatar' },
       { status: 500 }
     );
   }
@@ -143,7 +143,7 @@ export async function DELETE(request: NextRequest) {
   } catch (error: unknown) {
     logger.error('Avatar deletion error:', error);
     return NextResponse.json(
-      { error: 'Failed to delete avatar', details: error instanceof Error ? error.message : String(error) },
+      { error: 'Failed to delete avatar' },
       { status: 500 }
     );
   }
