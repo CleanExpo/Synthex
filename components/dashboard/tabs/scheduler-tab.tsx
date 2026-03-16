@@ -1,46 +1,46 @@
 'use client';
 
-/**
- * Scheduler Tab Component
- * Post scheduling and management
- */
-
 import { Calendar, Plus } from '@/components/icons';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { glassStyles } from '@/components/ui/index';
-import { cn } from '@/lib/utils';
 import { AnimatedCard } from '../animated-card';
+import { useRouter } from 'next/navigation';
 
 export function SchedulerTab() {
+  const router = useRouter();
+
   return (
     <AnimatedCard delay={0.1}>
-      <Card className={cn(glassStyles.base, glassStyles.hover)}>
-        <CardHeader className="pb-2 sm:pb-4">
-          <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
-            <Calendar className="h-4 w-4 sm:h-5 sm:w-5 text-cyan-500" />
-            Post Scheduler
-          </CardTitle>
-          <CardDescription className="text-xs sm:text-sm">
-            Schedule and manage your upcoming posts
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4 sm:space-y-6">
+      <div className="border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm overflow-hidden">
+        {/* Header */}
+        <div className="px-5 py-4 border-b-[0.5px] border-white/[0.06]">
+          <div className="flex items-center gap-2 mb-0.5">
+            <Calendar className="h-3.5 w-3.5 text-cyan-400" />
+            <span className="text-[10px] uppercase tracking-[0.25em] text-white/40">Post Scheduler</span>
+          </div>
+          <p className="text-xs text-white/25 mt-1">Schedule and manage your upcoming posts</p>
+        </div>
+
+        {/* Content */}
+        <div className="p-5 space-y-5">
           {/* Upcoming Posts */}
-          <div>
-            <h4 className="font-medium mb-3 sm:mb-4 text-sm sm:text-base">Upcoming Posts</h4>
-            <div className="flex items-center justify-center p-4 sm:p-6 rounded-lg bg-white/5">
-              <p className="text-xs sm:text-sm text-muted-foreground">No scheduled posts yet. Create your first post to get started.</p>
+          <div className="space-y-2">
+            <span className="text-[9px] uppercase tracking-[0.2em] text-white/25">Upcoming Posts</span>
+            <div className="border-[0.5px] border-white/[0.04] bg-white/[0.01] rounded-sm p-5 flex items-center justify-center">
+              <p className="text-[10px] text-white/25 text-center">
+                No scheduled posts yet. Create your first post to get started.
+              </p>
             </div>
           </div>
 
-          {/* Schedule New Post Button */}
-          <Button className={cn(glassStyles.buttonPrimary, "w-full text-sm sm:text-base py-2.5 sm:py-3")}>
-            <Plus className="h-4 w-4 mr-2" />
+          {/* CTA */}
+          <button
+            onClick={() => router.push('/dashboard/content')}
+            className="w-full flex items-center justify-center gap-2 py-2.5 text-xs font-medium tracking-wide rounded-sm transition-colors bg-cyan-500 hover:bg-cyan-400 text-[#0a1628]"
+          >
+            <Plus className="h-3.5 w-3.5" />
             Schedule New Post
-          </Button>
-        </CardContent>
-      </Card>
+          </button>
+        </div>
+      </div>
     </AnimatedCard>
   );
 }

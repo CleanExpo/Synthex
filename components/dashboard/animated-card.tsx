@@ -1,12 +1,6 @@
 'use client';
 
-/**
- * Animated Card Component
- * Motion wrapper for dashboard cards
- */
-
 import { motion } from 'framer-motion';
-import { animationVariants } from '@/components/ui/index';
 
 interface AnimatedCardProps {
   children: React.ReactNode;
@@ -17,9 +11,9 @@ interface AnimatedCardProps {
 export function AnimatedCard({ children, className, delay = 0 }: AnimatedCardProps) {
   return (
     <motion.div
-      initial={animationVariants.cardEntrance.initial}
-      animate={animationVariants.cardEntrance.animate}
-      transition={{ ...animationVariants.cardEntrance.transition, delay }}
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, delay, ease: [0.19, 1, 0.22, 1] }}
       className={className}
     >
       {children}

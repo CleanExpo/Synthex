@@ -5,17 +5,6 @@
  *
  * Aggregated live health view of all external services used by Synthex.
  * Auto-refreshes every 30 seconds. Manual refresh available.
- *
- * Services monitored:
- *  - Database (PostgreSQL via Prisma)
- *  - Cache (Redis)
- *  - Stripe (billing)
- *  - AI Engine (OpenRouter)
- *  - Email (Resend / SendGrid)
- *  - Unite-Group (Nexus dashboard integration)
- *
- * Data: single SWR key using Promise.allSettled across all health endpoints.
- * Each service pill is clickable to expand detail.
  */
 
 import { useState, useEffect, useCallback } from 'react';
@@ -29,8 +18,6 @@ import {
   Building2,
   RefreshCw,
 } from '@/components/icons';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
 // ── Service definitions ───────────────────────────────────────────────────────
@@ -70,14 +57,10 @@ interface ServiceResult {
 
 function deriveStatus(key: ServiceKey, data: Record<string, unknown> | null): ServiceStatus {
   if (!data || data.error) return 'unknown';
-
-  // Unite-Hub uses configured/reachable shape
   if (key === 'unitehub') {
     if (!data.configured) return 'unknown';
     return data.reachable ? 'ok' : 'warn';
   }
-
-  // Standard health endpoints return { status: 'healthy' | 'degraded' | 'unhealthy' | 'error' }
   const s = data.status as string | undefined;
   if (!s) return 'unknown';
   if (s === 'healthy') return 'ok';
@@ -91,20 +74,20 @@ function extractLatency(data: Record<string, unknown> | null): number | null {
   return typeof v === 'number' ? v : null;
 }
 
-// ── Status dot ────────────────────────────────────────────────────────────────
+// ── Status colours ────────────────────────────────────────────────────────────
 
 const STATUS_DOT: Record<ServiceStatus, string> = {
   ok:      'bg-emerald-400',
   warn:    'bg-amber-400',
   error:   'bg-red-400',
-  unknown: 'bg-gray-500',
+  unknown: 'bg-white/20',
 };
 
 const STATUS_TEXT: Record<ServiceStatus, string> = {
   ok:      'text-emerald-400',
   warn:    'text-amber-400',
   error:   'text-red-400',
-  unknown: 'text-gray-500',
+  unknown: 'text-white/30',
 };
 
 // ── SWR fetcher ───────────────────────────────────────────────────────────────
@@ -144,7 +127,6 @@ export function SystemPulsePanel({ className }: { className?: string }) {
     { revalidateOnFocus: false, refreshInterval: 30_000 }
   );
 
-  // Update "last refreshed" timestamp each time data resolves
   useEffect(() => {
     if (data) setLastRefreshed(new Date());
   }, [data]);
@@ -157,30 +139,26 @@ export function SystemPulsePanel({ className }: { className?: string }) {
     void mutate();
   }, [mutate]);
 
-  // ── Loading skeleton ─────────────────────────────────────────────────────
+  // ── Loading skeleton ──────────────────────────────────────────────────────
   if (isLoading && !data) {
     return (
-      <Card variant="glass" className={className}>
-        <CardHeader className="pb-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Server className="h-4 w-4 text-gray-400" />
-              <CardTitle className="text-sm">System Pulse</CardTitle>
-            </div>
-            <div className="h-3 w-24 rounded bg-white/[0.06] animate-pulse" />
+      <div className={cn('border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm', className)}>
+        <div className="px-5 py-4 border-b-[0.5px] border-white/[0.06] flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Server className="h-3.5 w-3.5 text-white/25" />
+            <span className="text-[10px] uppercase tracking-[0.25em] text-white/30">System Pulse</span>
           </div>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-            {SERVICES.map((s) => (
-              <div
-                key={s.key}
-                className="h-10 rounded-lg bg-white/[0.04] border border-white/[0.06] animate-pulse"
-              />
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+          <div className="h-2 w-20 bg-white/[0.04] rounded-sm animate-pulse" />
+        </div>
+        <div className="p-5 grid grid-cols-2 sm:grid-cols-3 gap-2">
+          {SERVICES.map((s) => (
+            <div
+              key={s.key}
+              className="h-10 rounded-sm bg-white/[0.02] border-[0.5px] border-white/[0.04] animate-pulse"
+            />
+          ))}
+        </div>
+      </div>
     );
   }
 
@@ -188,35 +166,31 @@ export function SystemPulsePanel({ className }: { className?: string }) {
   const expandedService = services.find((s) => s.key === expandedKey);
 
   return (
-    <Card variant="glass" className={cn(className)}>
-      <CardHeader className="pb-3">
-        <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
-            <Server className="h-4 w-4 text-gray-400 shrink-0" />
-            <CardTitle className="text-sm">System Pulse</CardTitle>
-          </div>
-          <div className="flex items-center gap-3">
-            {lastRefreshed && (
-              <span className="text-[11px] text-gray-500 hidden sm:block">
-                Updated {lastRefreshed.toLocaleTimeString()}
-              </span>
-            )}
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-7 w-7 text-gray-500 hover:text-white hover:bg-white/[0.06]"
-              onClick={handleRefresh}
-              aria-label="Refresh system health"
-            >
-              <RefreshCw className={cn('h-3.5 w-3.5', isLoading && 'animate-spin')} />
-            </Button>
-          </div>
+    <div className={cn('border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm', className)}>
+      {/* Header */}
+      <div className="px-5 py-4 border-b-[0.5px] border-white/[0.06] flex items-center justify-between gap-3">
+        <div className="flex items-center gap-2">
+          <Server className="h-3.5 w-3.5 text-white/25 shrink-0" />
+          <span className="text-[10px] uppercase tracking-[0.25em] text-white/40">System Pulse</span>
         </div>
-      </CardHeader>
+        <div className="flex items-center gap-3">
+          {lastRefreshed && (
+            <span className="text-[10px] font-mono text-white/20 hidden sm:block">
+              {lastRefreshed.toLocaleTimeString('en-AU', { hour: '2-digit', minute: '2-digit' })}
+            </span>
+          )}
+          <button
+            onClick={handleRefresh}
+            aria-label="Refresh system health"
+            className="h-6 w-6 flex items-center justify-center rounded-sm border-[0.5px] border-white/[0.06] text-white/25 hover:text-white/60 hover:bg-white/[0.04] transition-colors"
+          >
+            <RefreshCw className={cn('h-3 w-3', isLoading && 'animate-spin')} />
+          </button>
+        </div>
+      </div>
 
-      <CardContent className="space-y-3">
-
-        {/* Service pills grid */}
+      {/* Service pills */}
+      <div className="p-5 space-y-3">
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
           {services.map((svc) => {
             const Icon = svc.icon;
@@ -227,22 +201,17 @@ export function SystemPulsePanel({ className }: { className?: string }) {
                 key={svc.key}
                 onClick={() => toggleExpand(svc.key)}
                 className={cn(
-                  'flex items-center gap-2 px-3 py-2 rounded-lg text-left w-full transition-colors',
-                  'bg-white/[0.04] border border-white/[0.08]',
-                  'hover:bg-white/[0.07] hover:border-white/[0.14]',
-                  isExpanded && 'border-white/[0.18] bg-white/[0.07]'
+                  'flex items-center gap-2 px-3 py-2.5 rounded-sm text-left w-full transition-colors',
+                  'border-[0.5px] border-white/[0.06] bg-white/[0.01]',
+                  'hover:bg-white/[0.04] hover:border-white/[0.1]',
+                  isExpanded && 'border-white/[0.12] bg-white/[0.04]'
                 )}
               >
-                <Icon className="h-3.5 w-3.5 text-gray-400 shrink-0" />
-                <span className="text-xs text-white/70 flex-1 truncate">{svc.label}</span>
-                <span
-                  className={cn(
-                    'h-2 w-2 rounded-full shrink-0',
-                    STATUS_DOT[svc.status]
-                  )}
-                />
+                <Icon className="h-3 w-3 text-white/25 shrink-0" />
+                <span className="text-[10px] text-white/50 flex-1 truncate">{svc.label}</span>
+                <span className={cn('h-1.5 w-1.5 rounded-full shrink-0', STATUS_DOT[svc.status])} />
                 {svc.latencyMs !== null && (
-                  <span className="text-[10px] text-gray-500 hidden sm:block">
+                  <span className="font-mono text-[9px] text-white/20 hidden sm:block tabular-nums">
                     {svc.latencyMs}ms
                   </span>
                 )}
@@ -251,23 +220,22 @@ export function SystemPulsePanel({ className }: { className?: string }) {
           })}
         </div>
 
-        {/* Expanded service detail */}
+        {/* Expanded detail */}
         {expandedService && (
-          <div className="rounded-lg bg-white/[0.03] border border-white/[0.08] p-3 space-y-1.5">
+          <div className="border-[0.5px] border-white/[0.06] rounded-sm p-3 space-y-1.5">
             <div className="flex items-center justify-between">
-              <p className={cn('text-xs font-medium', STATUS_TEXT[expandedService.status])}>
+              <p className={cn('text-[10px] uppercase tracking-[0.15em]', STATUS_TEXT[expandedService.status])}>
                 {expandedService.label} — {expandedService.status.toUpperCase()}
               </p>
               {expandedService.latencyMs !== null && (
-                <span className="text-[11px] text-gray-500">
+                <span className="font-mono text-[10px] text-white/25 tabular-nums">
                   {expandedService.latencyMs}ms
                 </span>
               )}
             </div>
             {expandedService.detail && (
-              <pre className="text-[10px] text-gray-500 overflow-auto max-h-28 leading-relaxed">
+              <pre className="text-[10px] text-white/25 overflow-auto max-h-28 leading-relaxed font-mono">
                 {JSON.stringify(
-                  // Strip sensitive fields before display
                   Object.fromEntries(
                     Object.entries(expandedService.detail).filter(
                       ([k]) => !['apiKey', 'key', 'secret', 'password', 'token'].includes(k)
@@ -281,38 +249,37 @@ export function SystemPulsePanel({ className }: { className?: string }) {
           </div>
         )}
 
-        {/* Overall summary */}
+        {/* Summary footer */}
         {services.length > 0 && (
           <div className="flex items-center justify-between pt-1">
-            <div className="flex items-center gap-3 text-[11px] text-gray-500">
+            <div className="flex items-center gap-4 text-[10px]">
               <span>
-                <span className="text-emerald-400 font-medium">
+                <span className="text-emerald-400 font-mono font-medium tabular-nums">
                   {services.filter((s) => s.status === 'ok').length}
-                </span>{' '}
-                healthy
+                </span>
+                <span className="text-white/25 ml-1">healthy</span>
               </span>
               {services.some((s) => s.status === 'warn') && (
                 <span>
-                  <span className="text-amber-400 font-medium">
+                  <span className="text-amber-400 font-mono font-medium tabular-nums">
                     {services.filter((s) => s.status === 'warn').length}
-                  </span>{' '}
-                  degraded
+                  </span>
+                  <span className="text-white/25 ml-1">degraded</span>
                 </span>
               )}
               {services.some((s) => s.status === 'error') && (
                 <span>
-                  <span className="text-red-400 font-medium">
+                  <span className="text-red-400 font-mono font-medium tabular-nums">
                     {services.filter((s) => s.status === 'error').length}
-                  </span>{' '}
-                  down
+                  </span>
+                  <span className="text-white/25 ml-1">down</span>
                 </span>
               )}
             </div>
-            <span className="text-[10px] text-gray-600">auto-refreshes every 30s</span>
+            <span className="text-[9px] text-white/15">auto-refreshes every 30s</span>
           </div>
         )}
-
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }

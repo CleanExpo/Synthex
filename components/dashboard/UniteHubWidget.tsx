@@ -3,27 +3,14 @@
 /**
  * Unite-Group Connection Widget
  *
- * Dashboard glass card showing the real-time health of the Unite-Group Nexus
+ * Dashboard card showing the real-time health of the Unite-Group Nexus
  * API connection. Owner-only — returns null for non-owners.
- *
- * Features:
- * - Live connection status indicator (green / amber / gray)
- * - Pull endpoint URL with one-click copy (for Unite-Group config)
- * - Event type badges (8 types Synthex pushes)
- * - "Test Connection" button — fires a live ping and shows latency
- * - "Open Unite-Group" external link
- *
- * Data: SWR → GET /api/unite-hub/status (60s dedup, no focus revalidate)
  */
 
 import { useState } from 'react';
 import useSWR from 'swr';
 import { toast } from 'sonner';
 import { Building2, Copy, Zap, Loader2, ExternalLink } from '@/components/icons';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
 import { ConnectionStatusBadge, type ConnectionState } from '@/components/realtime/ConnectionStatus';
 import { cn } from '@/lib/utils';
 import { useUser } from '@/hooks/use-user';
@@ -62,18 +49,13 @@ export function UniteHubWidget({ className }: { className?: string }) {
     { revalidateOnFocus: false, dedupingInterval: 60_000 }
   );
 
-  // ── Owner gate ─────────────────────────────────────────────────────────────
-  // isMultiBusinessOwner is used as the owner flag across the dashboard
   if (!user?.isMultiBusinessOwner) return null;
 
-  // ── Derive connection state ────────────────────────────────────────────────
   const connectionState: ConnectionState = !data?.configured
     ? 'disconnected'
     : data.reachable
     ? 'connected'
-    : 'reconnecting'; // amber — configured but server unreachable
-
-  // ── Handlers ───────────────────────────────────────────────────────────────
+    : 'reconnecting';
 
   const handleCopy = async () => {
     if (!data?.pullEndpoint) return;
@@ -97,7 +79,6 @@ export function UniteHubWidget({ className }: { className?: string }) {
       });
       const json = await res.json() as TestResult;
       setTestResult(json);
-      // Revalidate so the status dot reflects the latest reachability
       await mutate();
     } catch (err) {
       setTestResult({
@@ -109,118 +90,104 @@ export function UniteHubWidget({ className }: { className?: string }) {
     }
   };
 
-  // ── Loading skeleton ───────────────────────────────────────────────────────
+  // ── Loading skeleton ──────────────────────────────────────────────────────
   if (isLoading) {
     return (
-      <Card variant="glass" className={className}>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-cyan-500/10">
-                <Building2 className="h-5 w-5 text-cyan-400" />
-              </div>
-              <div>
-                <Skeleton className="h-4 w-32 mb-1" />
-                <Skeleton className="h-3 w-48" />
-              </div>
-            </div>
+      <div className={cn('border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm', className)}>
+        <div className="px-5 py-4 border-b-[0.5px] border-white/[0.06] flex items-center gap-3">
+          <div className="h-8 w-8 border-[0.5px] border-white/[0.06] rounded-sm bg-white/[0.02] animate-pulse" />
+          <div className="space-y-1.5 flex-1">
+            <div className="h-3 w-32 bg-white/[0.04] rounded-sm animate-pulse" />
+            <div className="h-2 w-48 bg-white/[0.03] rounded-sm animate-pulse" />
           </div>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <Skeleton className="h-10 w-full" />
-          <Skeleton className="h-16 w-full" />
-          <Skeleton className="h-9 w-full" />
-        </CardContent>
-      </Card>
+        </div>
+        <div className="p-5 space-y-3">
+          <div className="h-9 bg-white/[0.02] border-[0.5px] border-white/[0.04] rounded-sm animate-pulse" />
+          <div className="h-16 bg-white/[0.02] border-[0.5px] border-white/[0.04] rounded-sm animate-pulse" />
+          <div className="h-9 bg-white/[0.02] border-[0.5px] border-white/[0.04] rounded-sm animate-pulse" />
+        </div>
+      </div>
     );
   }
 
-  // ── Main render ────────────────────────────────────────────────────────────
+  // ── Main render ───────────────────────────────────────────────────────────
   return (
-    <Card variant="glass" className={cn(className)}>
-      <CardHeader className="pb-3">
-        <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-cyan-500/10 shrink-0">
-              <Building2 className="h-5 w-5 text-cyan-400" />
-            </div>
-            <div>
-              <CardTitle className="text-base">Unite-Group</CardTitle>
-              <CardDescription className="text-xs mt-0.5">
-                Nexus Dashboard Integration
-              </CardDescription>
-            </div>
+    <div className={cn('border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm', className)}>
+      {/* Header */}
+      <div className="px-5 py-4 border-b-[0.5px] border-white/[0.06] flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <div className="h-8 w-8 border-[0.5px] border-white/[0.08] bg-white/[0.02] rounded-sm flex items-center justify-center flex-shrink-0">
+            <Building2 className="h-4 w-4 text-cyan-400" />
           </div>
-          <ConnectionStatusBadge state={connectionState} />
+          <div>
+            <p className="text-sm font-light text-white tracking-tight">Unite-Group</p>
+            <p className="text-[10px] text-white/30 mt-0.5">Nexus Dashboard Integration</p>
+          </div>
         </div>
-      </CardHeader>
+        <ConnectionStatusBadge state={connectionState} />
+      </div>
 
-      <CardContent className="space-y-5">
+      <div className="p-5 space-y-5">
 
         {/* Pull Endpoint */}
-        <div className="space-y-1.5">
-          <p className="text-xs font-medium text-gray-400">
-            Pull Endpoint{' '}
-            <span className="text-gray-600 font-normal">(configure in Unite-Group)</span>
+        <div className="space-y-2">
+          <p className="text-[9px] uppercase tracking-[0.2em] text-white/25">
+            Pull Endpoint
+            <span className="text-white/15 ml-1 normal-case tracking-normal">(configure in Unite-Group)</span>
           </p>
           <div className="flex items-center gap-2">
-            <code className="flex-1 min-w-0 font-mono text-[11px] text-cyan-300 bg-white/[0.04] border border-white/[0.08] rounded-md px-2.5 py-1.5 truncate">
+            <code className="flex-1 min-w-0 font-mono text-[11px] text-cyan-300 bg-white/[0.02] border-[0.5px] border-white/[0.06] rounded-sm px-3 py-2 truncate">
               {data?.pullEndpoint ?? '—'}
             </code>
-            <Button
-              variant="outline"
-              size="icon"
-              className="h-8 w-8 shrink-0 border-white/[0.12] bg-white/[0.04] hover:bg-white/[0.08]"
+            <button
               onClick={handleCopy}
               aria-label="Copy pull endpoint"
+              className="h-8 w-8 flex items-center justify-center border-[0.5px] border-white/[0.08] bg-white/[0.02] hover:bg-white/[0.06] rounded-sm transition-colors flex-shrink-0"
             >
-              <Copy className="h-3.5 w-3.5 text-gray-400" />
-            </Button>
+              <Copy className="h-3.5 w-3.5 text-white/30" />
+            </button>
           </div>
         </div>
 
         {/* Event Types */}
-        <div className="space-y-1.5">
-          <p className="text-xs font-medium text-gray-400">Events sent to Unite-Group</p>
+        <div className="space-y-2">
+          <p className="text-[9px] uppercase tracking-[0.2em] text-white/25">Events sent to Unite-Group</p>
           <div className="flex flex-wrap gap-1.5">
             {(data?.eventTypes ?? []).map((type) => (
-              <Badge
+              <span
                 key={type}
-                variant="glass"
-                className="text-[10px] px-1.5 py-0 font-mono"
+                className="inline-flex items-center px-2 py-0.5 rounded-sm bg-white/[0.03] border-[0.5px] border-white/[0.08] font-mono text-[9px] text-white/40"
               >
                 {type}
-              </Badge>
+              </span>
             ))}
           </div>
         </div>
 
         {/* Actions */}
         <div className="space-y-2">
-          <Button
-            size="sm"
-            className="w-full bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 border border-cyan-500/20 hover:border-cyan-500/30 transition-all"
+          <button
             onClick={handleTest}
             disabled={isTesting || !data?.configured}
+            className="w-full flex items-center justify-center gap-2 py-2.5 text-xs font-medium tracking-wide rounded-sm transition-colors bg-cyan-500/[0.08] hover:bg-cyan-500/[0.15] text-cyan-300 border-[0.5px] border-cyan-500/20 disabled:opacity-40 disabled:cursor-not-allowed"
           >
             {isTesting ? (
               <>
-                <Loader2 className="h-3.5 w-3.5 mr-2 animate-spin" />
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
                 Testing connection…
               </>
             ) : (
               <>
-                <Zap className="h-3.5 w-3.5 mr-2" />
+                <Zap className="h-3.5 w-3.5" />
                 Test Connection
               </>
             )}
-          </Button>
+          </button>
 
-          {/* Test result */}
           {testResult && (
             <p className={cn(
-              'text-[11px] text-center',
-              testResult.success ? 'text-green-400' : 'text-red-400'
+              'text-[11px] text-center font-mono',
+              testResult.success ? 'text-emerald-400' : 'text-red-400'
             )}>
               {testResult.success
                 ? `✓ Connected · ${testResult.latencyMs}ms`
@@ -229,23 +196,21 @@ export function UniteHubWidget({ className }: { className?: string }) {
           )}
 
           {!data?.configured && (
-            <p className="text-[11px] text-center text-gray-500">
+            <p className="text-[10px] text-center text-white/20">
               Configure UNITE_HUB_API_URL + UNITE_HUB_API_KEY to enable
             </p>
           )}
 
-          <Button
-            variant="ghost"
-            size="sm"
-            className="w-full text-gray-400 hover:text-white hover:bg-white/[0.06] text-xs h-8"
+          <button
             onClick={() => window.open('https://unite-hub.unite-group.com.au', '_blank', 'noopener,noreferrer')}
+            className="w-full flex items-center justify-center gap-2 py-2 text-xs text-white/30 hover:text-white/60 border-[0.5px] border-white/[0.06] hover:border-white/[0.12] rounded-sm transition-colors"
           >
-            <ExternalLink className="h-3.5 w-3.5 mr-2" />
+            <ExternalLink className="h-3.5 w-3.5" />
             Open Unite-Group
-          </Button>
+          </button>
         </div>
 
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }
