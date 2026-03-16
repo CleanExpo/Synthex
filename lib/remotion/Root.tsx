@@ -13,7 +13,17 @@ import React from 'react';
 import { Composition } from 'remotion';
 import { SocialReel } from './compositions/SocialReel';
 import { ExplainerVideo } from './compositions/ExplainerVideo';
-import type { SocialReelProps, ExplainerVideoProps, CompositionMeta } from './types';
+import { BrandShowcase } from './compositions/BrandShowcase';
+import { BrandReel } from './compositions/BrandReel';
+import { BrandSquare } from './compositions/BrandSquare';
+import type {
+  SocialReelProps,
+  ExplainerVideoProps,
+  BrandShowcaseProps,
+  BrandReelProps,
+  BrandSquareProps,
+  CompositionMeta,
+} from './types';
 
 // ── Default Props ────────────────────────────────────────────────────────────
 
@@ -39,6 +49,34 @@ const DEFAULT_EXPLAINER_PROPS: ExplainerVideoProps = {
   transition: 'fade',
 };
 
+const DEFAULT_BRAND_SHOWCASE_PROPS: BrandShowcaseProps = {
+  title: 'Your Brand',
+  tagline: 'Your tagline goes here',
+  valueProps: ['Value proposition 1', 'Value proposition 2', 'Value proposition 3'],
+  scenes: [],
+  brandColour: '#06B6D4',
+  websiteUrl: 'yourbrand.com',
+  industry: 'Your Industry',
+};
+
+const DEFAULT_BRAND_REEL_PROPS: BrandReelProps = {
+  title: 'Your Brand',
+  hookText: 'Did you know?',
+  benefit: 'We solve your biggest challenge',
+  scenes: [],
+  brandColour: '#06B6D4',
+  ctaText: 'Learn More',
+};
+
+const DEFAULT_BRAND_SQUARE_PROPS: BrandSquareProps = {
+  title: 'Your Brand',
+  problem: 'The challenge your audience faces',
+  solution: 'How your brand solves it',
+  scenes: [],
+  brandColour: '#06B6D4',
+  ctaText: 'Get Started',
+};
+
 // ── Composition Registry ─────────────────────────────────────────────────────
 
 export const COMPOSITION_REGISTRY: CompositionMeta[] = [
@@ -61,6 +99,36 @@ export const COMPOSITION_REGISTRY: CompositionMeta[] = [
     height: 1080,
     fps: 30,
     durationInFrames: 330, // 11 seconds
+  },
+  {
+    id: 'BrandShowcase',
+    name: 'Brand Showcase',
+    description: 'Landscape brand introduction for YouTube (16:9)',
+    defaultProps: DEFAULT_BRAND_SHOWCASE_PROPS,
+    width: 1920,
+    height: 1080,
+    fps: 30,
+    durationInFrames: 1350, // 45 seconds
+  },
+  {
+    id: 'BrandReel',
+    name: 'Brand Reel',
+    description: 'Portrait brand reel for YouTube Shorts, X, Instagram (9:16)',
+    defaultProps: DEFAULT_BRAND_REEL_PROPS,
+    width: 1080,
+    height: 1920,
+    fps: 30,
+    durationInFrames: 450, // 15 seconds
+  },
+  {
+    id: 'BrandSquare',
+    name: 'Brand Square',
+    description: 'Square brand video for LinkedIn, Facebook (1:1)',
+    defaultProps: DEFAULT_BRAND_SQUARE_PROPS,
+    width: 1080,
+    height: 1080,
+    fps: 30,
+    durationInFrames: 600, // 20 seconds
   },
 ];
 
@@ -86,6 +154,33 @@ export function RemotionRoot() {
         width={1920}
         height={1080}
         defaultProps={DEFAULT_EXPLAINER_PROPS as unknown as Record<string, unknown>}
+      />
+      <Composition
+        id="BrandShowcase"
+        component={BrandShowcase as React.ComponentType<any>}
+        durationInFrames={1350}
+        fps={30}
+        width={1920}
+        height={1080}
+        defaultProps={DEFAULT_BRAND_SHOWCASE_PROPS as unknown as Record<string, unknown>}
+      />
+      <Composition
+        id="BrandReel"
+        component={BrandReel as React.ComponentType<any>}
+        durationInFrames={450}
+        fps={30}
+        width={1080}
+        height={1920}
+        defaultProps={DEFAULT_BRAND_REEL_PROPS as unknown as Record<string, unknown>}
+      />
+      <Composition
+        id="BrandSquare"
+        component={BrandSquare as React.ComponentType<any>}
+        durationInFrames={600}
+        fps={30}
+        width={1080}
+        height={1080}
+        defaultProps={DEFAULT_BRAND_SQUARE_PROPS as unknown as Record<string, unknown>}
       />
     </>
   );

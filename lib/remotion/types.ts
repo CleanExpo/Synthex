@@ -39,6 +39,30 @@ export interface ExplainerVideoProps extends BaseCompositionProps {
   transition?: 'fade' | 'slide' | 'zoom';
 }
 
+/** Props for the BrandShowcase composition (16:9 landscape). */
+export interface BrandShowcaseProps extends BaseCompositionProps {
+  tagline: string;
+  valueProps: string[];
+  websiteUrl?: string;
+  industry?: string;
+  /** Transition style between scenes. */
+  transition?: 'fade' | 'slide' | 'zoom';
+}
+
+/** Props for the BrandReel composition (9:16 portrait). */
+export interface BrandReelProps extends BaseCompositionProps {
+  hookText: string;
+  benefit: string;
+  ctaText?: string;
+}
+
+/** Props for the BrandSquare composition (1:1 square). */
+export interface BrandSquareProps extends BaseCompositionProps {
+  problem: string;
+  solution: string;
+  ctaText?: string;
+}
+
 /** Registry entry describing a composition. */
 export interface CompositionMeta {
   id: string;
