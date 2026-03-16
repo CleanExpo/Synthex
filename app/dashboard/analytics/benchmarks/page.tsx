@@ -48,11 +48,11 @@ export default function BenchmarkReportsPage() {
           title="Benchmark Reports"
           description="Compare your performance to industry standards"
         />
-        <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-6">
+        <div className="border-[0.5px] border-red-500/20 bg-red-500/[0.05] rounded-sm p-6">
           <div className="flex items-center gap-3">
             <AlertTriangle className="w-6 h-6 text-red-400" />
             <div>
-              <h3 className="text-lg font-semibold text-white">Failed to load benchmark data</h3>
+              <h3 className="text-base font-light text-white">Failed to load benchmark data</h3>
               <p className="text-red-400">{error}</p>
             </div>
           </div>
@@ -77,7 +77,7 @@ export default function BenchmarkReportsPage() {
         />
         <div className="flex items-center gap-3">
           <Select value={platform} onValueChange={setPlatform}>
-            <SelectTrigger className="w-[140px] bg-gray-900/50 border-white/10">
+            <SelectTrigger className="w-[140px] bg-white/[0.02] border-white/[0.06]">
               <SelectValue placeholder="Platform" />
             </SelectTrigger>
             <SelectContent>
@@ -94,7 +94,7 @@ export default function BenchmarkReportsPage() {
             </SelectContent>
           </Select>
           <Select value={period} onValueChange={(v) => setPeriod(v as '7d' | '30d' | '90d')}>
-            <SelectTrigger className="w-[100px] bg-gray-900/50 border-white/10">
+            <SelectTrigger className="w-[100px] bg-white/[0.02] border-white/[0.06]">
               <SelectValue placeholder="Period" />
             </SelectTrigger>
             <SelectContent>
@@ -121,10 +121,10 @@ export default function BenchmarkReportsPage() {
 
       {/* Empty State */}
       {emptyData && !isLoading && (
-        <div className="bg-gray-900/30 border border-white/10 rounded-xl p-12 text-center">
+        <div className="border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm p-12 text-center">
           <Target className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-          <h3 className="text-xl font-semibold text-white mb-2">No Benchmark Data Yet</h3>
-          <p className="text-gray-400 max-w-md mx-auto">
+          <h3 className="text-xl font-light text-white mb-2">No Benchmark Data Yet</h3>
+          <p className="text-white/40 max-w-md mx-auto">
             Connect your social platforms and publish some posts to see how your
             performance compares to industry benchmarks.
           </p>
@@ -144,7 +144,7 @@ export default function BenchmarkReportsPage() {
       {/* Platform Cards Grid */}
       {(!emptyData || isLoading) && (
         <div>
-          <h3 className="text-lg font-semibold text-white mb-4">Platform Breakdown</h3>
+          <h3 className="text-sm uppercase tracking-[0.2em] text-white/40 mb-4">Platform Breakdown</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
             {isLoading ? (
               Array.from({ length: 3 }).map((_, i) => (
@@ -165,7 +165,7 @@ export default function BenchmarkReportsPage() {
       {/* Recommendations Section */}
       {(!emptyData || isLoading) && (
         <div>
-          <h3 className="text-lg font-semibold text-white mb-4">Insights & Actions</h3>
+          <h3 className="text-sm uppercase tracking-[0.2em] text-white/40 mb-4">Insights & Actions</h3>
           <BenchmarkRecommendations
             insights={data?.insights || []}
             recommendations={data?.recommendations || []}
@@ -176,8 +176,8 @@ export default function BenchmarkReportsPage() {
 
       {/* Info footer */}
       {!isLoading && !emptyData && (
-        <div className="bg-white/5 rounded-lg p-4 border border-white/10">
-          <p className="text-xs text-gray-500">
+        <div className="border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm p-4">
+          <p className="text-xs text-white/25">
             Benchmarks are based on industry averages across millions of social media accounts.
             Data is updated periodically to reflect current standards.
             {data?.generatedAt && (

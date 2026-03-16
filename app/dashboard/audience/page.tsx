@@ -63,15 +63,15 @@ interface StatCardProps {
 
 function StatCard({ icon: Icon, label, value, subValue, color, trend }: StatCardProps) {
   return (
-    <div className="bg-gray-900/50 border border-white/10 rounded-xl p-4">
+    <div className="border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm p-4">
       <div className="flex items-center gap-3">
-        <div className={cn('p-2 rounded-lg', `bg-${color}-500/10`)}>
+        <div className={cn('p-2 rounded-sm', `bg-${color}-500/10`)}>
           <Icon className={cn('w-5 h-5', `text-${color}-400`)} />
         </div>
         <div className="flex-1">
-          <p className="text-sm text-gray-400">{label}</p>
+          <p className="text-sm text-white/40">{label}</p>
           <div className="flex items-baseline gap-2">
-            <p className="text-2xl font-bold text-white">{value}</p>
+            <p className="text-2xl font-light font-mono tabular-nums text-white">{value}</p>
             {trend !== undefined && (
               <span
                 className={cn(
@@ -84,7 +84,7 @@ function StatCard({ icon: Icon, label, value, subValue, color, trend }: StatCard
               </span>
             )}
           </div>
-          {subValue && <p className="text-xs text-gray-500">{subValue}</p>}
+          {subValue && <p className="text-xs text-white/25">{subValue}</p>}
         </div>
       </div>
     </div>
@@ -93,27 +93,20 @@ function StatCard({ icon: Icon, label, value, subValue, color, trend }: StatCard
 
 function LoadingSkeleton() {
   return (
-    <div className="space-y-6">
-      {/* Stats skeleton */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="space-y-6 animate-pulse">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="bg-gray-900/50 border border-white/10 rounded-xl p-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-white/5 rounded-lg animate-pulse" />
-              <div className="space-y-2">
-                <div className="w-20 h-3 bg-white/5 rounded animate-pulse" />
-                <div className="w-16 h-6 bg-white/5 rounded animate-pulse" />
-              </div>
-            </div>
+          <div key={i} className="border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm p-4">
+            <div className="h-3 w-16 bg-white/[0.05] rounded-sm mb-2" />
+            <div className="h-6 w-24 bg-white/[0.05] rounded-sm" />
           </div>
         ))}
       </div>
-      {/* Charts skeleton */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {Array.from({ length: 3 }).map((_, i) => (
-          <div key={i} className="bg-gray-900/30 border border-white/10 rounded-xl p-4 h-[280px]">
-            <div className="w-32 h-4 bg-white/5 rounded animate-pulse mb-4" />
-            <div className="h-[200px] bg-white/5 rounded animate-pulse" />
+          <div key={i} className="border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm p-4 h-[280px]">
+            <div className="w-32 h-4 bg-white/[0.05] rounded-sm mb-4" />
+            <div className="h-[200px] bg-white/[0.03] rounded-sm" />
           </div>
         ))}
       </div>
@@ -187,11 +180,11 @@ export default function AudienceInsightsPage() {
     return (
       <div className="p-6 space-y-6">
         <PageHeader title="Audience Insights" description="Understand your followers" />
-        <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-6">
+        <div className="border-[0.5px] border-red-500/20 bg-red-500/[0.05] rounded-sm p-6">
           <div className="flex items-center gap-3">
             <AlertTriangle className="w-6 h-6 text-red-400" />
             <div>
-              <h3 className="text-lg font-semibold text-white">Failed to load audience data</h3>
+              <h3 className="text-base font-light text-white">Failed to load audience data</h3>
               <p className="text-red-400">{error}</p>
             </div>
           </div>
@@ -214,7 +207,7 @@ export default function AudienceInsightsPage() {
         />
         <div className="flex items-center gap-3">
           <Select value={platform} onValueChange={setPlatform}>
-            <SelectTrigger className="w-[140px] bg-gray-900/50 border-white/10">
+            <SelectTrigger className="w-[140px] bg-white/[0.02] border-white/[0.06]">
               <SelectValue placeholder="Platform" />
             </SelectTrigger>
             <SelectContent>
@@ -227,7 +220,7 @@ export default function AudienceInsightsPage() {
             </SelectContent>
           </Select>
           <Select value={period} onValueChange={(v) => setPeriod(v as '7d' | '30d' | '90d')}>
-            <SelectTrigger className="w-[100px] bg-gray-900/50 border-white/10">
+            <SelectTrigger className="w-[100px] bg-white/[0.02] border-white/[0.06]">
               <SelectValue placeholder="Period" />
             </SelectTrigger>
             <SelectContent>
@@ -290,7 +283,7 @@ export default function AudienceInsightsPage() {
 
           {/* Demographics Section */}
           <div>
-            <h3 className="text-lg font-semibold text-white mb-4">Demographics</h3>
+            <h3 className="text-sm uppercase tracking-[0.2em] text-white/40 mb-4">Demographics</h3>
             <DemographicsCharts
               demographics={data?.demographics || { ageRanges: [], genderSplit: [], topLocations: [], topLanguages: [] }}
               totalAudience={data?.growth?.current}
@@ -301,15 +294,15 @@ export default function AudienceInsightsPage() {
           {/* Behavior Section */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <div>
-              <h3 className="text-lg font-semibold text-white mb-4">Best Posting Times</h3>
+              <h3 className="text-sm uppercase tracking-[0.2em] text-white/40 mb-4">Best Posting Times</h3>
               <BestTimesHeatmap
                 data={data?.behavior?.bestPostingTimes || []}
                 isLoading={isLoading}
               />
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-white mb-4">Active Hours</h3>
-              <div className="bg-gray-900/30 border border-white/10 rounded-xl p-4">
+              <h3 className="text-sm uppercase tracking-[0.2em] text-white/40 mb-4">Active Hours</h3>
+              <div className="border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm p-4">
                 <div className="h-[280px]">
                   {data?.behavior?.activeHours?.length ? (
                     <ResponsiveContainer width="100%" height="100%">
@@ -342,8 +335,8 @@ export default function AudienceInsightsPage() {
                             if (!active || !payload?.length) return null;
                             const d = payload[0].payload as { hour: number; activity: number };
                             return (
-                              <div className="bg-gray-900 border border-white/10 rounded-lg p-2 shadow-xl">
-                                <p className="text-xs text-gray-400">{d.hour}:00</p>
+                              <div className="border-[0.5px] border-white/[0.06] bg-[#080e1a] rounded-sm p-2 shadow-xl">
+                                <p className="text-xs text-white/40">{d.hour}:00</p>
                                 <p className="text-sm font-medium text-white">{d.activity}% activity</p>
                               </div>
                             );
@@ -359,7 +352,7 @@ export default function AudienceInsightsPage() {
                       </AreaChart>
                     </ResponsiveContainer>
                   ) : (
-                    <div className="flex items-center justify-center h-full text-gray-500">
+                    <div className="flex items-center justify-center h-full text-white/25">
                       No active hours data
                     </div>
                   )}
@@ -370,8 +363,8 @@ export default function AudienceInsightsPage() {
 
           {/* Growth Section */}
           <div>
-            <h3 className="text-lg font-semibold text-white mb-4">Follower Growth</h3>
-            <div className="bg-gray-900/30 border border-white/10 rounded-xl p-4">
+            <h3 className="text-sm uppercase tracking-[0.2em] text-white/40 mb-4">Follower Growth</h3>
+            <div className="border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm p-4">
               <div className="h-[300px]">
                 {growthData?.length ? (
                   <ResponsiveContainer width="100%" height="100%">
@@ -410,7 +403,7 @@ export default function AudienceInsightsPage() {
                     </AreaChart>
                   </ResponsiveContainer>
                 ) : (
-                  <div className="flex items-center justify-center h-full text-gray-500">
+                  <div className="flex items-center justify-center h-full text-white/25">
                     No growth data available
                   </div>
                 )}

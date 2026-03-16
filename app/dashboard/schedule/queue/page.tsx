@@ -246,20 +246,21 @@ export default function QueuePage() {
           <Button
             variant="ghost"
             size="sm"
-            className="text-gray-400 hover:text-white"
+            className="text-white/40 hover:text-white"
             onClick={() => router.push('/dashboard/schedule')}
           >
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <div>
-            <h1 className="text-3xl font-bold gradient-text">Post Queue</h1>
-            <p className="text-slate-400 mt-1">
+            <span className="text-[10px] uppercase tracking-[0.3em] text-white/25 mb-2 block">Schedule</span>
+            <h1 className="text-3xl sm:text-4xl font-extralight tracking-tight text-white">Post Queue</h1>
+            <p className="mt-1.5 text-sm text-white/40 leading-relaxed">
               Manage, filter, and bulk-action your scheduled posts
             </p>
           </div>
         </div>
         <Button
-          className="gradient-primary text-white"
+          className="bg-cyan-500/20 border-[0.5px] border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/30"
           onClick={() => setBulkWizardOpen(true)}
         >
           <Layers className="h-4 w-4 mr-2" />
@@ -327,14 +328,14 @@ export default function QueuePage() {
       {/* Pagination */}
       {pagination.totalPages > 1 && (
         <div className="flex items-center justify-between">
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-white/25">
             Page {pagination.page} of {pagination.totalPages} ({pagination.total} posts)
           </p>
           <div className="flex gap-2">
             <Button
               size="sm"
               variant="outline"
-              className="bg-white/5 border-white/10 text-white hover:bg-white/10"
+              className="bg-white/[0.03] border-[0.5px] border-white/[0.06] text-white hover:bg-white/[0.06]"
               disabled={page <= 1}
               onClick={() => setPage((p) => Math.max(1, p - 1))}
             >
@@ -344,7 +345,7 @@ export default function QueuePage() {
             <Button
               size="sm"
               variant="outline"
-              className="bg-white/5 border-white/10 text-white hover:bg-white/10"
+              className="bg-white/[0.03] border-[0.5px] border-white/[0.06] text-white hover:bg-white/[0.06]"
               disabled={page >= pagination.totalPages}
               onClick={() => setPage((p) => p + 1)}
             >

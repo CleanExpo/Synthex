@@ -402,10 +402,10 @@ export default function ContentPage() {
 
       {/* Business context selector for multi-business owners */}
       {isOwner && businesses.length > 0 && (
-        <div className="glass-card p-3 rounded-xl border border-white/10 flex items-center justify-between">
+        <div className="border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm p-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Building className="h-4 w-4 text-cyan-400" />
-            <span className="text-sm text-slate-400">Creating for:</span>
+            <span className="text-sm text-white/40">Creating for:</span>
             <select
               value={activeBusiness?.organizationId ?? ''}
               onChange={async (e) => {
@@ -416,7 +416,7 @@ export default function ContentPage() {
                   toast.error('Failed to switch business');
                 }
               }}
-              className="bg-surface-base border border-cyan-500/20 rounded-lg px-3 py-1.5 text-sm text-white focus:ring-1 focus:ring-cyan-500/30 focus:outline-none appearance-none cursor-pointer"
+              className="bg-white/[0.02] border-[0.5px] border-cyan-500/20 rounded-sm px-3 py-1.5 text-sm text-white focus:ring-1 focus:ring-cyan-500/30 focus:outline-none appearance-none cursor-pointer"
             >
               {businesses.map((b) => (
                 <option key={b.organizationId} value={b.organizationId}>
@@ -426,7 +426,7 @@ export default function ContentPage() {
             </select>
           </div>
           {activeBusiness && (
-            <span className="text-xs text-slate-500">
+            <span className="text-xs text-white/25">
               {activeBusiness.stats?.activePlatforms ?? 0} platforms connected
             </span>
           )}
@@ -446,7 +446,7 @@ export default function ContentPage() {
       />
 
       {/* Media attachments */}
-      <div className="glass-card p-4 rounded-xl border border-white/10">
+      <div className="border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm p-4">
         <MediaAttacher
           mediaUrls={mediaUrls}
           onMediaChange={setMediaUrls}
@@ -525,13 +525,13 @@ export default function ContentPage() {
         <>
           {multiPlatformEnabled && Object.keys(platformAdaptations).length > 1 ? (
             <div className="space-y-4">
-              <h3 className="text-sm font-medium text-slate-400">
+              <h3 className="text-sm font-medium text-white/40">
                 Platform Previews ({Object.keys(platformAdaptations).length} platforms)
                 {isAdapting && <span className="ml-2 text-cyan-400 animate-pulse">Adapting...</span>}
               </h3>
               <div className="grid gap-4 lg:grid-cols-2">
                 {selectedPlatforms.map((p) => (
-                  <div key={p} className="glass-card p-4 rounded-xl border border-white/10">
+                  <div key={p} className="border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm p-4">
                     <PlatformPreview
                       platform={p}
                       content={
@@ -547,7 +547,7 @@ export default function ContentPage() {
               </div>
             </div>
           ) : (
-            <div className="glass-card p-4 rounded-xl border border-white/10">
+            <div className="border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm p-4">
               <PlatformPreview
                 platform={platform}
                 content={editMode ? editedContent : generatedContent.primary}
@@ -560,9 +560,9 @@ export default function ContentPage() {
       )}
 
       {psychologyScore && generatedContent && (
-        <div className="glass-card p-4 rounded-xl border border-white/10">
+        <div className="border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm p-4">
           <div className="flex items-center justify-between mb-3">
-            <h3 className="text-sm font-semibold text-white flex items-center gap-2">
+            <h3 className="text-sm font-light text-white flex items-center gap-2">
               <Brain className="h-4 w-4 text-purple-400" />
               Psychology Analysis
             </h3>
@@ -578,16 +578,16 @@ export default function ContentPage() {
               }`}>
                 {psychologyScore.overallScore}
               </div>
-              <div className="text-xs text-slate-400">Score</div>
+              <div className="text-xs text-white/40">Score</div>
             </div>
             <div className="flex-1 flex flex-wrap gap-2">
               {psychologyScore.topPrinciples.map((p) => (
-                <span key={p.name} className="text-xs bg-purple-500/10 text-purple-300 px-2 py-1 rounded-full border border-purple-500/20">
+                <span key={p.name} className="text-xs bg-purple-500/10 text-purple-300 px-2 py-1 rounded-sm border-[0.5px] border-purple-500/20">
                   {p.name} ({p.strength}%)
                 </span>
               ))}
             </div>
-            <div className={`text-xs px-2 py-1 rounded-full ${
+            <div className={`text-xs px-2 py-1 rounded-sm ${
               psychologyScore.predictedEngagement.level === 'viral' ? 'bg-green-500/20 text-green-400' :
               psychologyScore.predictedEngagement.level === 'high' ? 'bg-cyan-500/20 text-cyan-400' :
               psychologyScore.predictedEngagement.level === 'medium' ? 'bg-yellow-500/20 text-yellow-400' :

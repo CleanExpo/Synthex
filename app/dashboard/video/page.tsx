@@ -117,16 +117,15 @@ export default function VideoProductionPage() {
 
   if (loading) {
     return (
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-white">Video Production</h1>
-            <p className="text-gray-400 mt-1">Loading video system...</p>
-          </div>
+      <div className="space-y-6 animate-pulse">
+        <div className="mb-6">
+          <div className="h-3 w-24 bg-white/[0.05] rounded-sm mb-3" />
+          <div className="h-8 w-48 bg-white/[0.05] rounded-sm" />
+          <div className="h-px bg-white/[0.06] mt-5" />
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="h-48 rounded-xl bg-white/5 animate-pulse" />
+            <div key={i} className="h-48 border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm" />
           ))}
         </div>
       </div>
@@ -138,17 +137,18 @@ export default function VideoProductionPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-white flex items-center gap-2">
-            <Video className="w-6 h-6 text-cyan-400" />
+          <span className="text-[10px] uppercase tracking-[0.3em] text-white/25 mb-2 block">Production</span>
+          <h1 className="text-3xl sm:text-4xl font-extralight tracking-tight text-white flex items-center gap-2">
+            <Video className="w-7 h-7 text-cyan-400" />
             Video Production
           </h1>
-          <p className="text-gray-400 mt-1">
+          <p className="mt-1.5 text-sm text-white/40 leading-relaxed">
             Produce marketing videos from real dashboard workflows
           </p>
         </div>
         <button
           onClick={fetchStatus}
-          className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-gray-300 hover:bg-white/10 hover:text-white transition-colors"
+          className="flex items-center gap-2 px-4 py-2 rounded-sm border-[0.5px] border-white/[0.06] bg-white/[0.02] text-white/40 hover:bg-white/[0.04] hover:text-white transition-colors"
         >
           <RefreshCw className="w-4 h-4" />
           Refresh
@@ -157,7 +157,7 @@ export default function VideoProductionPage() {
 
       {/* Error Banner */}
       {error && (
-        <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 flex items-start gap-3">
+        <div className="p-4 rounded-sm border-[0.5px] border-red-500/20 bg-red-500/[0.05] flex items-start gap-3">
           <AlertTriangle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
           <div>
             <p className="text-red-400 font-medium">Error</p>
@@ -169,10 +169,10 @@ export default function VideoProductionPage() {
       {/* Readiness Status */}
       {readiness && (
         <div
-          className={`p-4 rounded-xl border flex items-start gap-3 ${
+          className={`p-4 rounded-sm border-[0.5px] flex items-start gap-3 ${
             readiness.ready
-              ? 'bg-emerald-500/10 border-emerald-500/20'
-              : 'bg-amber-500/10 border-amber-500/20'
+              ? 'bg-emerald-500/[0.06] border-emerald-500/20'
+              : 'bg-amber-500/[0.06] border-amber-500/20'
           }`}
         >
           {readiness.ready ? (
@@ -205,7 +205,7 @@ export default function VideoProductionPage() {
 
       {/* Workflows Grid */}
       <div>
-        <h2 className="text-lg font-semibold text-white mb-4">Available Workflows</h2>
+        <h2 className="text-sm uppercase tracking-[0.2em] text-white/40 mb-4">Available Workflows</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {workflows.map((workflow) => {
             const IconComponent = WORKFLOW_ICONS[workflow.id] || Video;
@@ -214,20 +214,20 @@ export default function VideoProductionPage() {
             return (
               <div
                 key={workflow.id}
-                className="p-5 rounded-xl bg-white/[0.03] border border-white/10 hover:border-cyan-500/30 transition-all group"
+                className="p-5 rounded-sm border-[0.5px] border-white/[0.06] bg-white/[0.02] hover:border-cyan-500/30 transition-all group"
               >
                 <div className="flex items-start justify-between mb-3">
-                  <div className="w-10 h-10 rounded-lg bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-sm bg-cyan-500/10 border-[0.5px] border-cyan-500/20 flex items-center justify-center">
                     <IconComponent className="w-5 h-5 text-cyan-400" />
                   </div>
-                  <div className="flex items-center gap-1 text-xs text-gray-500">
+                  <div className="flex items-center gap-1 text-xs text-white/25">
                     <Clock className="w-3 h-3" />
                     ~{workflow.duration}s
                   </div>
                 </div>
 
                 <h3 className="text-white font-medium mb-1">{workflow.name}</h3>
-                <p className="text-gray-400 text-sm mb-4 line-clamp-2">
+                <p className="text-white/40 text-sm mb-4 line-clamp-2">
                   {workflow.description}
                 </p>
 
@@ -235,7 +235,7 @@ export default function VideoProductionPage() {
                   <button
                     onClick={() => startProduction(workflow.id, false)}
                     disabled={isProducing || !!producing}
-                    className="flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-cyan-500/20 border border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
+                    className="flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-sm bg-cyan-500/20 border-[0.5px] border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
                   >
                     {isProducing ? (
                       <>
@@ -253,7 +253,7 @@ export default function VideoProductionPage() {
                     <button
                       onClick={() => startProduction(workflow.id, true)}
                       disabled={isProducing || !!producing}
-                      className="flex items-center justify-center gap-1 px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-gray-400 hover:bg-white/10 hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-xs"
+                      className="flex items-center justify-center gap-1 px-3 py-2 rounded-sm bg-white/[0.02] border-[0.5px] border-white/[0.06] text-white/40 hover:bg-white/[0.04] hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-xs"
                       title="Produce locally without uploading to YouTube"
                     >
                       Local Only
@@ -269,7 +269,7 @@ export default function VideoProductionPage() {
       {/* Production Results */}
       {results.length > 0 && (
         <div>
-          <h2 className="text-lg font-semibold text-white mb-4">Production History</h2>
+          <h2 className="text-sm uppercase tracking-[0.2em] text-white/40 mb-4">Production History</h2>
           <div className="space-y-3">
             {results.map((result, i) => (
               <div
