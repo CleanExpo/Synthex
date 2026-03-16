@@ -78,7 +78,15 @@
     "setup": "bash scripts/setup.sh",
     "setup:windows": "powershell -ExecutionPolicy Bypass -File scripts/setup.ps1",
     "verify": "bash scripts/verify.sh",
-    "verify:windows": "powershell -ExecutionPolicy Bypass -File scripts/verify.ps1"
+    "verify:windows": "powershell -ExecutionPolicy Bypass -File scripts/verify.ps1",
+    "ralph": "bash scripts/ralph.sh",
+    "ralph:init": "bash scripts/ralph.sh --init",
+    "ralph:windows": "powershell -ExecutionPolicy Bypass -File scripts/ralph.ps1",
+    "ralph:windows:init": "powershell -ExecutionPolicy Bypass -File scripts/ralph.ps1 -Init",
+    "deps:check": "bash scripts/dependency-checks.sh",
+    "deps:check:windows": "powershell -ExecutionPolicy Bypass -Command \". scripts/dependency-checks.ps1; Test-LockfileIntegrity; Test-DependencySync -Workspace .; Test-EnvVars\"",
+    "health:check": "powershell -ExecutionPolicy Bypass -File scripts/health-check.ps1",
+    "health:check:quick": "powershell -ExecutionPolicy Bypass -File scripts/health-check.ps1 -Quick"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^3.0.14",
