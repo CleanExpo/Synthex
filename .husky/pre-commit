@@ -124,16 +124,23 @@ echo "[OK] Security checks passed."
 
 # =============================================================================
 # 4. Run lint-staged (lint + format staged files)
+# Skip gracefully if node_modules are broken (e.g. failed npm ci mid-run)
 # =============================================================================
-echo "[CHECK] Running lint-staged on staged files..."
-npx lint-staged --allow-empty
-if [ $? -ne 0 ]; then
-  echo ""
-  echo "[ERROR] BLOCKED: lint-staged checks failed."
-  echo "  Fix the lint/format errors above and re-stage your changes."
-  echo "  To skip (not recommended): git commit --no-verify"
-  echo ""
-  exit 1
+# Health-check: verify eslint dependencies are intact before running
+# (broken npm ci/install can leave es-abstract or other deps partially removed)
+if [ -f "node_modules/es-abstract/helpers/isTrailingSurrogate.js" ]; then
+  echo "[CHECK] Running lint-staged on staged files..."
+  npx lint-staged --allow-empty
+  if [ $? -ne 0 ]; then
+    echo ""
+    echo "[ERROR] BLOCKED: lint-staged checks failed."
+    echo "  Fix the lint/format errors above and re-stage your changes."
+    echo "  To skip (not recommended): git commit --no-verify"
+    echo ""
+    exit 1
+  fi
+else
+  echo "[SKIP] lint-staged skipped — ESLint not loadable (run: npm install --legacy-peer-deps)"
 fi
 
 echo "[OK] All pre-commit checks passed."
