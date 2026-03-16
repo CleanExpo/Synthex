@@ -206,7 +206,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "powershell -ExecutionPolicy Bypass -File \".claude/hooks/session-start.ps1\"",
+            "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"D:\\Synthex\\.claude\\hooks\\session-start.ps1\"",
             "timeout": 30
           }
         ]
@@ -217,7 +217,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "powershell -ExecutionPolicy Bypass -Command \"$root = git rev-parse --show-toplevel; Set-Location $root; python '.claude/hooks/pre-compact-context.py'\"",
+            "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"D:\\Synthex\\.claude\\hooks\\pre-compact-save.ps1\"",
             "timeout": 30
           }
         ]
@@ -228,7 +228,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "powershell -ExecutionPolicy Bypass -Command \"$root = git rev-parse --show-toplevel; Set-Location $root; python '.claude/hooks/stop-verify-git.py'\"",
+            "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"D:\\Synthex\\.claude\\hooks\\stop-verify-git.ps1\"",
             "timeout": 15
           }
         ]
@@ -240,7 +240,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "powershell -ExecutionPolicy Bypass -Command \"$root = git rev-parse --show-toplevel; Set-Location $root; python '.claude/hooks/pre-bash-validate.py'\"",
+            "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"D:\\Synthex\\.claude\\hooks\\pre-bash-validate.ps1\"",
             "timeout": 10
           }
         ]
