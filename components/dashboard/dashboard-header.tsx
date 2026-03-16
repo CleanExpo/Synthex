@@ -1,14 +1,7 @@
 'use client';
 
-/**
- * Dashboard Header Component
- * Main header with notifications and actions
- */
-
 import { useRouter } from 'next/navigation';
-import { Bell, Plus } from '@/components/icons';
-import { Button } from '@/components/ui/button';
-import { glassStyles } from '@/components/ui/index';
+import { Plus } from '@/components/icons';
 import { cn } from '@/lib/utils';
 
 interface DashboardHeaderProps {
@@ -17,48 +10,42 @@ interface DashboardHeaderProps {
   isNewUser?: boolean;
 }
 
-export function DashboardHeader({ showNotifications, onToggleNotifications, isNewUser }: DashboardHeaderProps) {
+/** Dashboard page header — Scientific Luxury: extralight heading, sharp CTA */
+export function DashboardHeader({ isNewUser }: DashboardHeaderProps) {
   const router = useRouter();
 
   return (
-    <header className={cn(
-      "sticky top-0 z-40 border-b border-white/10",
-      glassStyles.solid
-    )}>
-      <div className="container mx-auto px-3 sm:px-4 py-3 sm:py-4">
-        <div className="flex items-center justify-between gap-2">
-          <div className="min-w-0 flex-1">
-            <h1 className="text-xl sm:text-2xl font-bold gradient-text-premium truncate">
-              Dashboard
-            </h1>
-            <p className="text-xs sm:text-sm text-muted-foreground line-clamp-1 sm:line-clamp-none">
-              {isNewUser
-                ? 'Welcome to Synthex! Let\u2019s get your first content published.'
-                : 'Welcome back! Here\u2019s what\u2019s happening with your social media.'}
-            </p>
-          </div>
-          <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0">
-            <Button
-              variant="outline"
-              size="icon"
-              className={cn(glassStyles.button, "relative h-9 w-9 sm:h-10 sm:w-10")}
-              onClick={onToggleNotifications}
-              aria-label="Toggle notifications"
-            >
-              <Bell className="h-4 w-4" />
-              <span className="absolute -top-1 -right-1 h-2.5 w-2.5 sm:h-3 sm:w-3 rounded-full bg-cyan-500 animate-pulse" />
-            </Button>
-            <Button
-              className={cn(glassStyles.buttonPrimary, "gap-1 sm:gap-2 text-sm sm:text-base px-3 sm:px-4")}
-              onClick={() => router.push('/dashboard/content')}
-            >
-              <Plus className="h-4 w-4" />
-              <span className="hidden xs:inline sm:inline">New Post</span>
-              <span className="xs:hidden sm:hidden">Post</span>
-            </Button>
-          </div>
+    <div className="mb-6">
+      <div className="flex items-end justify-between gap-4">
+        <div>
+          <span className="text-[10px] uppercase tracking-[0.3em] text-white/25 mb-2 block">
+            Overview
+          </span>
+          <h1 className="text-3xl sm:text-4xl font-extralight tracking-tight text-white">
+            {isNewUser ? 'Welcome to Synthex.' : 'Command Centre'}
+          </h1>
+          <p className="mt-1.5 text-sm text-white/40 leading-relaxed">
+            {isNewUser
+              ? "Let's get your first content published and platforms connected."
+              : "Your marketing, running autonomously."}
+          </p>
         </div>
+
+        <button
+          onClick={() => router.push('/dashboard/content')}
+          className={cn(
+            'flex items-center gap-2 px-4 py-2 bg-cyan-500 hover:bg-cyan-400',
+            'text-[#0a1628] text-xs font-semibold tracking-wide rounded-sm',
+            'transition-colors duration-200 flex-shrink-0'
+          )}
+        >
+          <Plus className="h-3.5 w-3.5" />
+          New Post
+        </button>
       </div>
-    </header>
+
+      {/* Divider */}
+      <div className="mt-5 h-px bg-white/[0.06]" />
+    </div>
   );
 }

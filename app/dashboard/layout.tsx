@@ -61,10 +61,8 @@ import {
   Newspaper,
   ShieldExclamation,
 } from '@/components/icons';
-import { Button } from '@/components/ui/button';
 import { AIPMFloatingButton } from '@/components/ai-pm';
 import { KeyboardHints } from '@/components/dashboard/keyboard-hints';
-import { Input } from '@/components/ui/input';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -79,9 +77,10 @@ import { WebSocketProvider } from '@/components/WebSocketProvider';
 import { BusinessSwitcher } from '@/components/business';
 import { useUser } from '@/hooks/use-user';
 import { SidebarGroup, type SidebarItem } from '@/components/dashboard/SidebarGroup';
+import { SynthexLogo } from '@/components/landing/synthex-logo';
 
 // ============================================================================
-// SIDEBAR GROUPS - Organized by semantic categories
+// SIDEBAR GROUPS
 // ============================================================================
 
 const sidebarGroups: Array<{
@@ -253,26 +252,18 @@ const sidebarGroups: Array<{
   },
 ];
 
-// ============================================================================
-// PROGRESSIVE DISCLOSURE — New users see only starter groups to reduce overload.
-// After clicking "Show More" the full sidebar is revealed and persisted.
-// ============================================================================
 const STARTER_GROUP_IDS = new Set(['command-centre', 'main', 'content-ai', 'planning']);
 const SIDEBAR_EXPANDED_KEY = 'sidebar-show-all-groups';
 
-export default function DashboardLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showAllGroups, setShowAllGroups] = useState(false);
+  const [searchValue, setSearchValue] = useState('');
   const { user } = useUser();
   useTokenRefresh();
 
-  // Hydrate showAllGroups from localStorage once on mount
   useEffect(() => {
     const stored = localStorage.getItem(SIDEBAR_EXPANDED_KEY);
     if (stored === 'true') setShowAllGroups(true);
@@ -284,8 +275,6 @@ export default function DashboardLayout({
     localStorage.setItem(SIDEBAR_EXPANDED_KEY, next.toString());
   };
 
-  // Auto-expand sidebar when the user navigates to a page inside a hidden group
-  // (e.g. direct-linking /dashboard/analytics while groups are collapsed)
   useEffect(() => {
     if (showAllGroups) return;
     const isInHiddenGroup = sidebarGroups.some(
@@ -299,78 +288,96 @@ export default function DashboardLayout({
     }
   }, [pathname, showAllGroups]);
 
-  // Insert Businesses group for multi-business owners (after MAIN group)
   const dynamicSidebarGroups = user?.isMultiBusinessOwner
     ? [
-        sidebarGroups[0], // MAIN
+        sidebarGroups[0]!,
         {
           id: 'businesses',
           icon: Building,
           label: 'BUSINESSES',
           defaultOpen: false,
-          items: [
-            { icon: Building, label: 'Businesses', href: '/dashboard/businesses' },
-          ],
+          items: [{ icon: Building, label: 'Businesses', href: '/dashboard/businesses' }],
         },
-        ...sidebarGroups.slice(1), // All other groups
+        ...sidebarGroups.slice(1),
       ]
     : sidebarGroups;
 
+  const visibleGroups = dynamicSidebarGroups.filter(
+    (g) => showAllGroups || STARTER_GROUP_IDS.has(g.id)
+  );
+
+  const hiddenGroupCount = dynamicSidebarGroups.filter(
+    (g) => !STARTER_GROUP_IDS.has(g.id) && g.id !== 'businesses'
+  ).length;
+
   return (
     <WebSocketProvider autoConnect showConnectionStatus={false}>
-    <div className="min-h-screen bg-gray-950">
-      {/* Mobile Menu Component */}
-      <MobileMenu />
+      <div className="min-h-screen bg-[#0a1628]">
+        {/* Mobile Menu */}
+        <MobileMenu />
 
-      {/* Desktop Sidebar - Hidden on mobile */}
-      <aside
-        className={cn(
-          'hidden md:block fixed left-0 top-0 z-40 h-screen transition-all duration-300 bg-gray-950/95 border-r border-white/[0.08]',
-          sidebarCollapsed ? 'w-16' : 'w-64'
-        )}
-      >
-        <div className="flex h-full flex-col">
+        {/* Desktop Sidebar */}
+        <aside
+          className={cn(
+            'hidden md:flex fixed left-0 top-0 z-40 h-screen flex-col transition-all duration-300',
+            'bg-[#080e1a] border-r border-[0.5px] border-white/[0.06]',
+            sidebarCollapsed ? 'w-14' : 'w-60'
+          )}
+        >
           {/* Logo */}
-          <div className="flex h-16 items-center justify-between px-4 border-b border-white/10">
-            <Link href="/dashboard" className="flex items-center space-x-2">
-              <Sparkles className="w-8 h-8 text-cyan-500" />
+          <div className={cn(
+            'flex h-14 items-center border-b border-[0.5px] border-white/[0.06] flex-shrink-0',
+            sidebarCollapsed ? 'justify-center px-0' : 'justify-between px-4'
+          )}>
+            <Link href="/dashboard" className="flex items-center gap-2.5 group">
+              <SynthexLogo className="w-7 h-7 flex-shrink-0 opacity-90 group-hover:opacity-100 transition-opacity" />
               {!sidebarCollapsed && (
-                <span className="text-xl font-bold gradient-text">Synthex</span>
+                <span className="text-xs font-light tracking-[0.2em] text-white uppercase">
+                  Synthex
+                </span>
               )}
             </Link>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-              className="hidden lg:flex"
-              aria-label={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-            >
-              {sidebarCollapsed ? (
-                <ChevronRight className="h-4 w-4" />
-              ) : (
-                <ChevronLeft className="h-4 w-4" />
-              )}
-            </Button>
+            {!sidebarCollapsed && (
+              <button
+                onClick={() => setSidebarCollapsed(true)}
+                className="hidden lg:flex p-1 text-white/25 hover:text-white/60 transition-colors rounded-sm"
+                aria-label="Collapse sidebar"
+              >
+                <ChevronLeft className="h-3.5 w-3.5" />
+              </button>
+            )}
+            {sidebarCollapsed && (
+              <button
+                onClick={() => setSidebarCollapsed(false)}
+                className="absolute -right-3 top-5 flex items-center justify-center w-6 h-6 bg-[#080e1a] border border-[0.5px] border-white/[0.1] rounded-sm text-white/40 hover:text-white/70 transition-colors"
+                aria-label="Expand sidebar"
+              >
+                <ChevronRight className="h-3 w-3" />
+              </button>
+            )}
           </div>
 
-          {/* Navigation — progressive disclosure: show starter groups first */}
-          <nav className="flex-1 min-h-0 space-y-2 px-2 py-4 overflow-y-auto">
-            {dynamicSidebarGroups
-              .filter((g) => showAllGroups || STARTER_GROUP_IDS.has(g.id))
-              .map((group) => (
-                sidebarCollapsed ? (
-                  // Collapsed mode: icon link navigates to first item in group
+          {/* Navigation */}
+          <nav className="flex-1 min-h-0 overflow-y-auto py-3 scrollbar-thin">
+            {sidebarCollapsed ? (
+              // Collapsed: icon-only links per group
+              <div className="flex flex-col items-center gap-1 px-2">
+                {visibleGroups.map((group) => (
                   <Link
                     key={group.id}
                     href={group.items[0]?.href ?? '/dashboard'}
-                    className="flex items-center justify-center px-2 py-2 text-gray-400 hover:text-white rounded-lg hover:bg-white/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 focus-visible:ring-inset"
+                    className="flex items-center justify-center w-9 h-9 text-white/30 hover:text-white/70 hover:bg-white/[0.04] rounded-sm transition-all"
                     aria-label={group.label}
                     title={group.label}
                   >
-                    <group.icon className="h-5 w-5" />
+                    <group.icon className="h-4 w-4" />
                   </Link>
-                ) : (
-                  // Expanded mode: show full sidebar groups
+                ))}
+              </div>
+            ) : (
+              // Expanded: full sidebar groups
+              <div className="px-2 space-y-0.5">
+                {visibleGroups.map((group) => (
                   <SidebarGroup
                     key={group.id}
                     id={group.id}
@@ -379,165 +386,171 @@ export default function DashboardLayout({
                     items={group.items}
                     defaultOpen={group.defaultOpen}
                   />
-                )
-              ))}
+                ))}
 
-            {/* Show More / Show Less toggle (only in expanded sidebar) */}
-            {!sidebarCollapsed && (
-              <button
-                onClick={toggleShowAllGroups}
-                aria-expanded={showAllGroups}
-                aria-label={showAllGroups ? 'Show fewer navigation sections' : 'Show all navigation sections'}
-                className="w-full flex items-center gap-2 px-4 py-2 text-xs font-medium text-gray-500 hover:text-gray-300 hover:bg-white/5 rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500/50 focus-visible:ring-inset"
-              >
-                <ChevronDown
-                  className={cn(
-                    'w-3.5 h-3.5 transition-transform',
-                    showAllGroups && 'rotate-180'
-                  )}
-                />
-                {showAllGroups
-                  ? 'Show Less'
-                  : `Explore more features (${dynamicSidebarGroups.filter((g) => !STARTER_GROUP_IDS.has(g.id) && g.id !== 'businesses').length} more)`
-                }
-              </button>
+                {/* Show More / Less */}
+                <button
+                  onClick={toggleShowAllGroups}
+                  aria-expanded={showAllGroups}
+                  className="w-full flex items-center gap-2 px-3 py-2 mt-2 text-[10px] tracking-[0.2em] uppercase text-white/25 hover:text-white/50 hover:bg-white/[0.02] rounded-sm transition-colors"
+                >
+                  <ChevronDown
+                    className={cn('w-3 h-3 transition-transform flex-shrink-0', showAllGroups && 'rotate-180')}
+                  />
+                  {showAllGroups ? 'Show Less' : `${hiddenGroupCount} More Sections`}
+                </button>
+              </div>
             )}
           </nav>
 
-          {/* Help Section */}
-          <div className="border-t border-white/10 p-4">
+          {/* Help */}
+          <div className="border-t border-[0.5px] border-white/[0.06] p-3 flex-shrink-0">
             <Link
               href="/dashboard/help"
-              className="flex items-center space-x-3 rounded-lg px-3 py-2 text-sm font-medium text-gray-400 hover:bg-white/5 hover:text-white"
+              className={cn(
+                'flex items-center gap-2.5 text-white/30 hover:text-white/60 hover:bg-white/[0.03] rounded-sm px-2 py-2 transition-all text-xs',
+                sidebarCollapsed && 'justify-center px-0'
+              )}
             >
-              <HelpCircle className="h-5 w-5" />
-              {!sidebarCollapsed && <span>Help & Support</span>}
+              <HelpCircle className="h-4 w-4 flex-shrink-0" />
+              {!sidebarCollapsed && <span className="tracking-wide">Help & Support</span>}
             </Link>
           </div>
-        </div>
-      </aside>
+        </aside>
 
-      {/* Main Content */}
-      <div className={cn(
-        'transition-all duration-300',
-        sidebarCollapsed ? 'lg:pl-16' : 'lg:pl-64'
-      )}>
-        {/* Top Navigation */}
-        <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-white/[0.08] bg-gray-950/95 px-3 sm:px-4 md:px-6">
-          <div className="flex items-center space-x-2 sm:space-x-4">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="lg:hidden"
-              aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
-              aria-expanded={mobileMenuOpen}
-            >
-              <Menu className="h-5 w-5" />
-            </Button>
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500" />
-              <Input
-                type="search"
-                placeholder="Search..."
-                aria-label="Search"
-                className="w-40 sm:w-48 md:w-64 pl-10 bg-white/5 border-white/10 text-white placeholder:text-gray-500"
-              />
+        {/* Main Content */}
+        <div className={cn(
+          'transition-all duration-300',
+          sidebarCollapsed ? 'lg:pl-14' : 'lg:pl-60'
+        )}>
+          {/* Top Header */}
+          <header className="sticky top-0 z-30 flex h-14 items-center justify-between bg-[#080e1a]/95 backdrop-blur-md border-b border-[0.5px] border-white/[0.06] px-4 md:px-6">
+
+            {/* Left: mobile toggle + search */}
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                className="lg:hidden p-1.5 text-white/40 hover:text-white transition-colors rounded-sm"
+                aria-label="Open menu"
+              >
+                <Menu className="h-5 w-5" />
+              </button>
+
+              {/* Search */}
+              <div className="relative">
+                <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-white/25 pointer-events-none" />
+                <input
+                  type="search"
+                  placeholder="Search..."
+                  value={searchValue}
+                  onChange={(e) => setSearchValue(e.target.value)}
+                  aria-label="Search"
+                  className="w-40 sm:w-52 md:w-64 pl-8 pr-3 py-1.5 text-xs bg-white/[0.02] border-[0.5px] border-white/[0.06] text-white/70 placeholder:text-white/20 rounded-sm focus:outline-none focus:border-white/20 focus:bg-white/[0.04] transition-all"
+                />
+              </div>
             </div>
-          </div>
 
-          <div className="flex items-center space-x-2 sm:space-x-4">
-            {/* Business Switcher (multi-business owners only) */}
-            {user?.isMultiBusinessOwner && <BusinessSwitcher />}
+            {/* Right: business switcher, notifications, user */}
+            <div className="flex items-center gap-3">
+              {user?.isMultiBusinessOwner && <BusinessSwitcher />}
 
-            {/* Notifications */}
-            <NotificationBell />
+              <NotificationBell />
 
-            {/* User Menu */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="relative h-10 w-10 rounded-full" aria-label="User menu">
-                  <Avatar className="h-10 w-10">
-                    {user?.avatar && <AvatarImage src={user.avatar} alt={user.name || 'User'} />}
-                    <AvatarFallback>{user?.name?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || 'U'}</AvatarFallback>
-                  </Avatar>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-56 bg-white/[0.02] backdrop-blur-xl border-white/[0.08]" align="end">
-                <DropdownMenuLabel className="font-normal">
-                  <div className="flex flex-col space-y-1">
-                    <p className="text-sm font-medium leading-none">{user?.name || 'User'}</p>
-                    <p className="text-xs leading-none text-muted-foreground">
-                      {user?.email || ''}
-                    </p>
-                  </div>
-                </DropdownMenuLabel>
-                <DropdownMenuSeparator className="bg-white/10" />
-                <DropdownMenuItem asChild>
-                  <Link href="/dashboard/settings?tab=profile" className="flex items-center cursor-pointer">
-                    <User className="mr-2 h-4 w-4" />
-                    <span>Profile</span>
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href="/dashboard/settings" className="flex items-center cursor-pointer">
-                    <Settings className="mr-2 h-4 w-4" />
-                    <span>Settings</span>
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href="/dashboard/settings/accounts" className="flex items-center cursor-pointer">
-                    <CreditCard className="mr-2 h-4 w-4" />
-                    <span>Billing</span>
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator className="bg-white/10" />
-                <DropdownMenuItem asChild>
+              {/* User dropdown */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
                   <button
-                    onClick={async () => {
-                      // Call logout API to destroy server session, then clear client state
-                      try {
-                        await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
-                      } catch {
-                        // Best effort — proceed with client-side cleanup regardless
-                      }
-                      document.cookie = 'auth-token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;';
-                      document.cookie = 'user-info=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;';
-                      localStorage.removeItem('user');
-                      localStorage.removeItem('token-expires-at');
-                      window.location.href = '/login';
-                    }}
-                    className="flex items-center w-full text-left text-red-400 cursor-pointer hover:text-red-500"
+                    className="flex items-center gap-2 p-1 rounded-sm hover:bg-white/[0.04] transition-colors"
+                    aria-label="User menu"
                   >
-                    <LogOut className="mr-2 h-4 w-4" />
-                    <span>Log out</span>
+                    <Avatar className="h-7 w-7 rounded-sm">
+                      {user?.avatar && <AvatarImage src={user.avatar} alt={user.name || 'User'} />}
+                      <AvatarFallback className="rounded-sm bg-cyan-500/20 text-cyan-400 text-xs font-mono">
+                        {user?.name?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || 'U'}
+                      </AvatarFallback>
+                    </Avatar>
+                    {user?.name && (
+                      <span className="hidden md:block text-xs text-white/50 max-w-[100px] truncate">
+                        {user.name}
+                      </span>
+                    )}
                   </button>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        </header>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
+                  className="w-52 bg-[#080e1a] border-[0.5px] border-white/[0.1] rounded-sm shadow-xl shadow-black/40"
+                  align="end"
+                >
+                  <DropdownMenuLabel className="font-normal px-3 py-2">
+                    <div className="flex flex-col gap-0.5">
+                      <p className="text-xs font-medium text-white">{user?.name || 'User'}</p>
+                      <p className="text-[10px] text-white/40 truncate">{user?.email || ''}</p>
+                    </div>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator className="bg-white/[0.06]" />
+                  <DropdownMenuItem asChild>
+                    <Link href="/dashboard/settings?tab=profile" className="flex items-center gap-2.5 px-3 py-2 text-xs text-white/60 hover:text-white cursor-pointer rounded-sm">
+                      <User className="h-3.5 w-3.5" />
+                      Profile
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/dashboard/settings" className="flex items-center gap-2.5 px-3 py-2 text-xs text-white/60 hover:text-white cursor-pointer rounded-sm">
+                      <Settings className="h-3.5 w-3.5" />
+                      Settings
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/dashboard/billing" className="flex items-center gap-2.5 px-3 py-2 text-xs text-white/60 hover:text-white cursor-pointer rounded-sm">
+                      <CreditCard className="h-3.5 w-3.5" />
+                      Billing
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator className="bg-white/[0.06]" />
+                  <DropdownMenuItem asChild>
+                    <button
+                      onClick={async () => {
+                        try {
+                          await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
+                        } catch {
+                          // best effort
+                        }
+                        document.cookie = 'auth-token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;';
+                        document.cookie = 'user-info=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;';
+                        localStorage.removeItem('user');
+                        localStorage.removeItem('token-expires-at');
+                        window.location.href = '/login';
+                      }}
+                      className="flex items-center gap-2.5 px-3 py-2 text-xs text-red-400/80 hover:text-red-400 w-full cursor-pointer rounded-sm"
+                    >
+                      <LogOut className="h-3.5 w-3.5" />
+                      Sign Out
+                    </button>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          </header>
 
-        {/* Page Content */}
-        <main className="p-3 sm:p-4 md:p-6">
-          {children}
-        </main>
+          {/* Page Content */}
+          <main className="p-4 md:p-6">
+            {children}
+          </main>
+        </div>
+
+        {/* Mobile overlay */}
+        {mobileMenuOpen && (
+          <div
+            className="fixed inset-0 z-30 bg-black/60 lg:hidden"
+            onClick={() => setMobileMenuOpen(false)}
+          />
+        )}
+
+        {/* AI Project Manager */}
+        <AIPMFloatingButton />
+
+        {/* Keyboard Hints */}
+        <KeyboardHints />
       </div>
-
-      {/* Mobile Menu Overlay */}
-      {mobileMenuOpen && (
-        <div
-          className="fixed inset-0 z-30 bg-black/50 lg:hidden"
-          onClick={() => setMobileMenuOpen(false)}
-        />
-      )}
-
-      {/* AI Project Manager — Floating Action Button */}
-      <AIPMFloatingButton />
-
-      {/* Keyboard Hints — Shows on first visit */}
-      <KeyboardHints />
-    </div>
     </WebSocketProvider>
   );
 }

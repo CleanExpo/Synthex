@@ -1,17 +1,9 @@
 'use client';
 
-/**
- * Dashboard Page
- * Main dashboard with overview, quick stats, and onboarding guidance for new users.
- */
-
 import { useEffect, useState, useCallback } from 'react';
 import { toast } from 'sonner';
 import { useActiveBusiness } from '@/hooks/useActiveBusiness';
 import { AlertTriangle, MessageSquare, RefreshCw } from '@/components/icons';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
 import { ErrorBoundary } from '@/components/ui/error-boundary';
 import { cn } from '@/lib/utils';
 
@@ -41,7 +33,6 @@ export default function DashboardPage() {
   const [isRetrying, setIsRetrying] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
 
-  // Multi-business: detect if we're in "All Businesses" mode
   const { isOwner, activeOrganizationId, isLoading: businessLoading } = useActiveBusiness();
   const isAllBusinessesMode = isOwner && activeOrganizationId === null && !businessLoading;
 
@@ -50,15 +41,12 @@ export default function DashboardPage() {
       setError(null);
       setLoading(true);
 
-      // Auth token is stored as httpOnly cookie 'auth-token' (set by OAuth callback
-      // and unified-login). We MUST use credentials: 'include' so the browser sends it.
-      // Legacy: also check localStorage for backward compatibility with older sessions.
       const legacyToken = typeof window !== 'undefined'
         ? localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token') || localStorage.getItem('token')
         : null;
 
       const response = await fetch('/api/dashboard/stats', {
-        credentials: 'include', // CRITICAL: sends httpOnly auth-token cookie
+        credentials: 'include',
         headers: legacyToken ? { 'Authorization': `Bearer ${legacyToken}` } : {},
       });
 
@@ -90,13 +78,11 @@ export default function DashboardPage() {
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred';
       console.error('[Dashboard] Error fetching data:', err);
-
       setError({
         message: errorMessage,
         code: err instanceof Error && 'code' in err ? String((err as Error & { code?: string }).code) : undefined,
         timestamp: new Date(),
       });
-
       setStats(null);
     } finally {
       setLoading(false);
@@ -118,20 +104,14 @@ export default function DashboardPage() {
     ].join('\n');
     try {
       await navigator.clipboard.writeText(details);
-      toast.info('Error details copied to clipboard. If this persists, contact support@synthex.social or visit the Help Center.', {
+      toast.info('Error details copied. Contact support@synthex.social if this persists.', {
         duration: 6000,
-        action: {
-          label: 'Help Center',
-          onClick: () => { window.location.href = '/dashboard/help'; },
-        },
+        action: { label: 'Help Centre', onClick: () => { window.location.href = '/dashboard/help'; } },
       });
     } catch {
-      toast.info('If this persists, contact support@synthex.social or visit the Help Center.', {
+      toast.info('Contact support@synthex.social if this persists.', {
         duration: 6000,
-        action: {
-          label: 'Help Center',
-          onClick: () => { window.location.href = '/dashboard/help'; },
-        },
+        action: { label: 'Help Centre', onClick: () => { window.location.href = '/dashboard/help'; } },
       });
     }
   }, [error]);
@@ -140,125 +120,148 @@ export default function DashboardPage() {
     fetchDashboardData();
   }, [fetchDashboardData]);
 
-  // Loading state
+  // ── Loading state ──────────────────────────────────────────────────────────
   if (loading) {
     return (
-      <div className="min-h-screen bg-background p-3 sm:p-6 space-y-4 sm:space-y-6">
-        <div className="flex items-center justify-between gap-2">
-          <Skeleton className="h-8 sm:h-10 w-40 sm:w-64" />
-          <Skeleton className="h-8 sm:h-10 w-20 sm:w-32" />
+      <div className="space-y-5 animate-pulse">
+        {/* Header skeleton */}
+        <div className="space-y-2 mb-6">
+          <div className="h-2 w-24 bg-white/[0.04] rounded-sm" />
+          <div className="h-9 w-56 bg-white/[0.06] rounded-sm" />
+          <div className="h-3 w-72 bg-white/[0.03] rounded-sm mt-2" />
+          <div className="h-px bg-white/[0.06] mt-5" />
         </div>
-        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-6">
-          {[...Array(4)].map((_, i) => (
-            <Skeleton key={i} className="h-20 sm:h-32" />
+        {/* Stats strip skeleton */}
+        <div className="border-[0.5px] border-white/[0.06] rounded-sm grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 divide-x divide-white/[0.06]">
+          {[...Array(6)].map((_, i) => (
+            <div key={i} className="px-5 py-4 space-y-2">
+              <div className="h-7 w-16 bg-white/[0.05] rounded-sm" />
+              <div className="h-2 w-20 bg-white/[0.03] rounded-sm" />
+            </div>
           ))}
         </div>
-        <Skeleton className="h-64 sm:h-96" />
+        {/* Content skeletons */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <div className="lg:col-span-2 h-64 bg-white/[0.03] border-[0.5px] border-white/[0.06] rounded-sm" />
+          <div className="h-64 bg-white/[0.03] border-[0.5px] border-white/[0.06] rounded-sm" />
+        </div>
       </div>
     );
   }
 
-  // Error state
+  // ── Error state ────────────────────────────────────────────────────────────
   if (error) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-4">
-        <Card className="max-w-lg w-full bg-gradient-to-br from-red-500/10 to-rose-500/10 backdrop-blur-xl border border-red-500/20 shadow-[0_0_0_1px_rgba(239,68,68,0.05)_inset,0_4px_24px_rgba(239,68,68,0.1)]">
-          <CardHeader className="text-center pb-4">
-            <div className="mx-auto mb-4 h-12 w-12 sm:h-16 sm:w-16 rounded-full bg-red-500/20 flex items-center justify-center">
-              <AlertTriangle className="h-6 w-6 sm:h-8 sm:w-8 text-red-400" />
+      <div className="flex items-center justify-center min-h-[60vh] p-4">
+        <div className="max-w-md w-full border-[0.5px] border-red-500/20 bg-red-500/[0.04] rounded-sm p-8">
+          {/* Error icon */}
+          <div className="w-12 h-12 flex items-center justify-center border-[0.5px] border-red-500/20 bg-red-500/10 rounded-sm mb-6 mx-auto">
+            <AlertTriangle className="h-5 w-5 text-red-400" />
+          </div>
+
+          <h2 className="text-lg font-light text-white text-center mb-2">
+            Dashboard unavailable
+          </h2>
+          <p className="text-sm text-white/40 text-center mb-6 leading-relaxed">
+            We couldn&apos;t load your dashboard data. This is usually temporary.
+          </p>
+
+          {/* Error detail */}
+          <details className="mb-6">
+            <summary className="cursor-pointer text-xs text-white/30 hover:text-white/50 transition-colors">
+              Show error detail
+            </summary>
+            <div className="mt-3 p-3 bg-black/20 border-[0.5px] border-white/[0.06] rounded-sm overflow-auto max-h-28">
+              <code className="text-[10px] text-red-300/70 font-mono whitespace-pre-wrap break-all">
+                {error.message}
+                {error.code && `\nCode: ${error.code}`}
+                {`\nTime: ${error.timestamp.toLocaleString('en-AU')}`}
+              </code>
             </div>
-            <CardTitle className="text-lg sm:text-xl text-red-100">
-              Unable to Load Dashboard
-            </CardTitle>
-            <CardDescription className="text-sm text-red-200/70 mt-2">
-              We couldn&apos;t fetch your dashboard data. This might be a temporary issue.
-            </CardDescription>
-          </CardHeader>
+          </details>
 
-          <CardContent className="space-y-4">
-            <details className="group">
-              <summary className="cursor-pointer text-xs sm:text-sm text-red-200/60 hover:text-red-200/80 transition-colors">
-                Show technical details
-              </summary>
-              <div className="mt-3 p-3 rounded-lg bg-black/20 overflow-auto max-h-32">
-                <code className="text-xs text-red-200/80 whitespace-pre-wrap break-all">
-                  {error.message}
-                  {error.code && `\nCode: ${error.code}`}
-                  {`\nTime: ${error.timestamp.toLocaleString()}`}
-                </code>
-              </div>
-            </details>
-          </CardContent>
-
-          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 p-6 pt-2">
-            <Button
+          {/* Actions */}
+          <div className="flex gap-2">
+            <button
               onClick={handleRetry}
               disabled={isRetrying}
-              className="w-full sm:flex-1 bg-red-500/30 hover:bg-red-500/40 text-red-100 border border-red-500/40 hover:border-red-500/60"
+              className={cn(
+                'flex-1 flex items-center justify-center gap-2 py-2.5 text-xs font-medium tracking-wide rounded-sm transition-colors',
+                'bg-red-500/20 hover:bg-red-500/30 text-red-300 border-[0.5px] border-red-500/20',
+                isRetrying && 'opacity-60 cursor-not-allowed'
+              )}
             >
-              <RefreshCw className={cn('h-4 w-4 mr-2', isRetrying && 'animate-spin')} />
-              {isRetrying ? 'Retrying...' : 'Try Again'}
-            </Button>
-
-            <Button
-              variant="outline"
+              <RefreshCw className={cn('h-3.5 w-3.5', isRetrying && 'animate-spin')} />
+              {isRetrying ? 'Retrying…' : 'Try Again'}
+            </button>
+            <button
               onClick={handleReportError}
-              className="w-full sm:w-auto bg-white/[0.05] backdrop-blur-md border border-white/[0.1] hover:bg-white/[0.1] text-red-200/80"
+              className="flex items-center gap-2 px-4 py-2.5 text-xs text-white/40 hover:text-white/60 border-[0.5px] border-white/[0.08] hover:border-white/[0.15] rounded-sm transition-colors bg-white/[0.02]"
             >
-              <MessageSquare className="h-4 w-4 mr-2" />
-              Report Issue
-            </Button>
+              <MessageSquare className="h-3.5 w-3.5" />
+              Report
+            </button>
           </div>
-        </Card>
+        </div>
       </div>
     );
   }
 
-  // Detect "new user" state: all key metrics are zero
   const isNewUser = stats !== null
     && stats.totalPosts === 0
     && stats.followers === 0
     && stats.scheduledPosts === 0;
 
-  // Show onboarding card whenever no platforms are connected OR user is new
-  // (replaces the global SocialConnectBanner that used to show on every page)
   const showOnboarding = stats !== null && (stats.connectedPlatforms === 0 || isNewUser);
 
   return (
     <ErrorBoundary
       fallbackTitle="Dashboard Error"
-      fallbackDescription="Something went wrong while rendering the dashboard. Please try refreshing the page."
+      fallbackDescription="Something went wrong rendering the dashboard. Please refresh."
       onError={(err, errorInfo) => {
-        console.error('[Dashboard ErrorBoundary] Caught error:', err);
-        console.error('[Dashboard ErrorBoundary] Component stack:', errorInfo.componentStack);
+        console.error('[Dashboard ErrorBoundary]', err);
+        console.error('[Dashboard ErrorBoundary] Stack:', errorInfo.componentStack);
       }}
-      showReportButton={true}
-      showHomeButton={true}
+      showReportButton
+      showHomeButton
       homeUrl="/"
     >
-      <div className="min-h-screen bg-background">
+      <div className="space-y-6">
         <DashboardHeader
           showNotifications={showNotifications}
           onToggleNotifications={() => setShowNotifications(!showNotifications)}
           isNewUser={isNewUser}
         />
 
-        <main data-tour="dashboard" className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-6">
-
-          {/* ── Scale Enterprise: All Businesses Mode ─────────────────────── */}
-          {isAllBusinessesMode ? (
-            <AllBusinessesDashboard />
-          ) : isNewUser ? (
-            <>
-              {/* ── New User Dashboard ──────────────────────────────────── */}
-              {/* Welcome card with onboarding analysis summary */}
-              <WelcomeCard
-                connectedPlatforms={stats.connectedPlatforms}
-                totalPosts={stats.totalPosts}
-                scheduledPosts={stats.scheduledPosts}
+        {/* All-businesses mode */}
+        {isAllBusinessesMode ? (
+          <AllBusinessesDashboard />
+        ) : isNewUser ? (
+          /* ── New user flow ──────────────────────────────────────────────── */
+          <div className="space-y-4">
+            <WelcomeCard
+              connectedPlatforms={stats.connectedPlatforms}
+              totalPosts={stats.totalPosts}
+              scheduledPosts={stats.scheduledPosts}
+            />
+            <AnimatedCard delay={0.1}>
+              <GetStartedChecklist
+                hasConnections={stats.connectedPlatforms > 0}
+                hasCampaigns={stats.scheduledPosts > 0}
+                hasContent={stats.totalPosts > 0}
               />
+            </AnimatedCard>
+            <FirstWeekWidget />
+            <ContentSuggestionsWidget />
+          </div>
+        ) : (
+          /* ── Returning user flow ────────────────────────────────────────── */
+          <div className="space-y-4">
+            {/* Stats data strip */}
+            <QuickStats stats={stats} />
 
-              {/* Get started checklist — non-dismissible until first task done */}
+            {/* Onboarding checklist (if incomplete) */}
+            {showOnboarding && (
               <AnimatedCard delay={0.1}>
                 <GetStartedChecklist
                   hasConnections={stats.connectedPlatforms > 0}
@@ -266,62 +269,30 @@ export default function DashboardPage() {
                   hasContent={stats.totalPosts > 0}
                 />
               </AnimatedCard>
+            )}
 
-              {/* First week AI content — shows fallback CTA if no drafts yet */}
-              <FirstWeekWidget />
+            {/* First week content */}
+            <FirstWeekWidget />
 
-              {/* Content suggestions — may show onboarding-based topics */}
+            {/* Main overview */}
+            <OverviewTab stats={stats} />
+
+            {/* AI Insights */}
+            <InsightsWidget />
+
+            {/* System health */}
+            <SystemPulsePanel />
+
+            {/* Unite-Group hub */}
+            <UniteHubWidget />
+
+            {/* Gamification + content suggestions */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <GamificationWidget />
               <ContentSuggestionsWidget />
-            </>
-          ) : (
-            <>
-              {/* ── Returning User Dashboard ────────────────────────────── */}
-              <QuickStats stats={stats} />
-
-              {/* Get started checklist — shown until all tasks done or dismissed */}
-              {showOnboarding && (
-                <AnimatedCard delay={0.1}>
-                  <GetStartedChecklist
-                    hasConnections={stats.connectedPlatforms > 0}
-                    hasCampaigns={stats.scheduledPosts > 0}
-                    hasContent={stats.totalPosts > 0}
-                  />
-                </AnimatedCard>
-              )}
-
-              {/* First week AI-generated content */}
-              <FirstWeekWidget />
-
-              {/* Dashboard Overview — single clean view */}
-              <div className="space-y-4 sm:space-y-6">
-                <OverviewTab stats={stats} />
-              </div>
-
-              {/* AI Insights widget */}
-              <InsightsWidget />
-
-              {/* Live system health — all returning users */}
-              <SystemPulsePanel />
-
-              {/* Unite-Group connection — owner-only (self-gates internally) */}
-              <UniteHubWidget />
-
-              {/* Gamification + Content Suggestions */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-                <GamificationWidget />
-                <ContentSuggestionsWidget />
-              </div>
-            </>
-          )}
-
-          {/* Other dashboard features are now accessible from the sidebar navigation:
-              - Analytics: /dashboard/analytics
-              - AI Studio: /dashboard/ai-chat
-              - Team: /dashboard/team
-              - Scheduler: /dashboard/schedule
-          */}
-
-        </main>
+            </div>
+          </div>
+        )}
       </div>
     </ErrorBoundary>
   );
