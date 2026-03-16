@@ -4,6 +4,8 @@
  * Wire when a /dashboard/clients page is built.
  */
 
+export const runtime = 'nodejs';
+
 /**
  * Client Management API
  *

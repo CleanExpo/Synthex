@@ -27,11 +27,11 @@ const nextConfig = {
   poweredByHeader: false,
 
   // TypeScript configuration
-  // INTENTIONAL: Type checking runs in CI/locally via `npm run type-check`.
-  // Skipped during Vercel build to avoid OOM on 8GB build machines (1400+ files).
-  // QA-AUDIT-2026-03-14: Confirmed 0 real TS errors — CI enforcement is sufficient.
+  // Type checking runs via `npm run type-check` in CI and locally.
+  // Vercel build skips type checking via NEXT_PRIVATE_SKIP_TYPECHECK=1 in vercel.json
+  // (avoids OOM on 8GB build machines with 1400+ files) — ignoreBuildErrors is NOT needed.
   typescript: {
-    ignoreBuildErrors: true,
+    ignoreBuildErrors: false,
   },
 
   // ESLint configuration

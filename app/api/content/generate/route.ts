@@ -6,6 +6,8 @@ import { withAuth, AuthenticatedRequest } from '@/lib/middleware/withAuth';
 import { z } from 'zod';
 import { logger } from '@/lib/logger';
 
+export const runtime = 'nodejs';
+
 // Input validation schema
 const generateContentSchema = z.object({
   platform: z.enum(['twitter', 'linkedin', 'instagram', 'facebook', 'tiktok', 'threads']),
