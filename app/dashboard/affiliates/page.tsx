@@ -135,11 +135,11 @@ export default function AffiliatesPage() {
   if (error) {
     return (
       <div className="p-6">
-        <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-6 text-center">
+        <div className="border-[0.5px] border-red-500/20 bg-red-500/[0.05] rounded-sm p-6 text-center">
           <p className="text-red-400 mb-4">Failed to load affiliate data: {error}</p>
           <button
             onClick={refetch}
-            className="flex items-center gap-2 mx-auto px-4 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-lg transition-colors"
+            className="flex items-center gap-2 mx-auto px-4 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-sm transition-colors"
           >
             <RefreshCw className="h-4 w-4" />
             Retry
@@ -163,7 +163,7 @@ export default function AffiliatesPage() {
               setEditingNetwork(null);
               setShowNetworkForm(true);
             }}
-            className="flex items-center gap-2 px-4 py-2.5 bg-white/10 hover:bg-white/15 text-white rounded-lg font-medium transition-colors"
+            className="flex items-center gap-2 px-4 py-2.5 bg-white/[0.05] hover:bg-white/[0.08] text-white rounded-sm transition-colors"
           >
             <Globe className="h-4 w-4" />
             Add Network
@@ -173,7 +173,7 @@ export default function AffiliatesPage() {
               setEditingLink(null);
               setShowLinkForm(true);
             }}
-            className="flex items-center gap-2 px-4 py-2.5 bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg font-medium transition-colors"
+            className="flex items-center gap-2 px-4 py-2.5 bg-cyan-500/20 border-[0.5px] border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/30 rounded-sm transition-colors"
           >
             <Plus className="h-4 w-4" />
             Add Link
@@ -185,7 +185,7 @@ export default function AffiliatesPage() {
       <StatsOverview stats={stats} isLoading={isLoading} />
 
       {/* Networks Section */}
-      <div className="bg-gray-900/30 border border-white/10 rounded-xl">
+      <div className="border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm">
         <button
           onClick={() => setShowNetworks(!showNetworks)}
           className="w-full flex items-center justify-between p-4 hover:bg-white/5 transition-colors"
@@ -222,7 +222,7 @@ export default function AffiliatesPage() {
         {networks.length > 0 && (
           <div className="flex items-center gap-2">
             <span className="text-sm text-white/50">Filter:</span>
-            <div className="flex items-center gap-1 bg-gray-900/50 border border-white/10 rounded-lg p-1">
+            <div className="flex items-center gap-1 bg-white/[0.02] border-[0.5px] border-white/[0.06] rounded-sm p-1">
               <button
                 onClick={() => setNetworkFilter(null)}
                 className={cn(
@@ -286,12 +286,12 @@ export default function AffiliatesPage() {
           {/* Selected Link Panel */}
           {selectedLink && (
             <div className="lg:col-span-1">
-              <div className="bg-gray-900/50 border border-white/10 rounded-xl p-5 sticky top-6">
+              <div className="border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm p-5 sticky top-6">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="font-semibold text-white">{selectedLink.name}</h3>
+                  <h3 className="font-light text-white">{selectedLink.name}</h3>
                   <button
                     onClick={() => setSelectedLink(null)}
-                    className="p-1.5 text-white/40 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+                    className="p-1.5 text-white/40 hover:text-white hover:bg-white/[0.06] rounded-sm transition-colors"
                   >
                     <X className="h-4 w-4" />
                   </button>
@@ -299,12 +299,12 @@ export default function AffiliatesPage() {
 
                 {/* Quick Stats */}
                 <div className="grid grid-cols-2 gap-3 mb-4">
-                  <div className="bg-white/5 rounded-lg p-3">
-                    <div className="text-lg font-bold text-white">{selectedLink.clickCount}</div>
+                  <div className="border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm p-3">
+                    <div className="text-lg font-mono tabular-nums font-light text-white">{selectedLink.clickCount}</div>
                     <div className="text-xs text-white/50">Clicks</div>
                   </div>
-                  <div className="bg-white/5 rounded-lg p-3">
-                    <div className="text-lg font-bold text-emerald-400">
+                  <div className="border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm p-3">
+                    <div className="text-lg font-mono tabular-nums font-light text-emerald-400">
                       ${selectedLink.totalRevenue.toFixed(0)}
                     </div>
                     <div className="text-xs text-white/50">Revenue</div>
@@ -347,7 +347,7 @@ export default function AffiliatesPage() {
                       {selectedLink.keywords.map((kw) => (
                         <span
                           key={kw}
-                          className="px-2 py-0.5 bg-amber-500/20 text-amber-400 text-xs rounded"
+                          className="px-2 py-0.5 bg-amber-500/20 text-amber-400 text-xs rounded-sm"
                         >
                           {kw}
                         </span>
@@ -363,13 +363,13 @@ export default function AffiliatesPage() {
                       setEditingLink(selectedLink);
                       setShowLinkForm(true);
                     }}
-                    className="flex-1 px-3 py-2 text-sm text-white/70 hover:text-white bg-white/5 hover:bg-white/10 rounded-lg transition-colors text-center"
+                    className="flex-1 px-3 py-2 text-sm text-white/40 hover:text-white bg-white/[0.02] hover:bg-white/[0.04] rounded-sm transition-colors text-center"
                   >
                     Edit
                   </button>
                   <button
                     onClick={() => window.open(selectedLink.affiliateUrl, '_blank')}
-                    className="flex-1 px-3 py-2 text-sm text-cyan-400 hover:text-cyan-300 bg-cyan-500/10 hover:bg-cyan-500/20 rounded-lg transition-colors text-center"
+                    className="flex-1 px-3 py-2 text-sm text-cyan-400 hover:text-cyan-300 bg-cyan-500/10 hover:bg-cyan-500/20 rounded-sm transition-colors text-center"
                   >
                     Open URL
                   </button>

@@ -358,16 +358,17 @@ export default function SEOAuditPage() {
       {/* Header */}
       <div className="flex items-center gap-4">
         <Link href="/dashboard/seo">
-          <Button variant="ghost" size="icon" className="text-gray-400 hover:text-white">
+          <Button variant="ghost" size="icon" className="text-white/40 hover:text-white">
             <ArrowLeft className="w-5 h-5" />
           </Button>
         </Link>
         <div>
-          <h1 className="text-3xl font-bold text-white flex items-center gap-3">
-            <FileSearch className="w-8 h-8 text-cyan-400" />
+          <span className="text-[10px] uppercase tracking-[0.3em] text-white/25 mb-2 block">SEO</span>
+          <h1 className="text-3xl sm:text-4xl font-extralight tracking-tight text-white flex items-center gap-3">
+            <FileSearch className="w-7 h-7 text-cyan-400" />
             Site Audit
           </h1>
-          <p className="text-gray-400 mt-1">
+          <p className="mt-1.5 text-sm text-white/40 leading-relaxed">
             Comprehensive SEO health check for your website
           </p>
         </div>
@@ -379,24 +380,24 @@ export default function SEOAuditPage() {
         description="Run comprehensive SEO audits to identify technical issues, on-page problems, and optimization opportunities."
       >
         {/* URL Input */}
-        <Card className="bg-surface-base/80 backdrop-blur-xl border border-cyan-500/10">
-          <CardContent className="p-6">
+        <div className="border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm">
+          <div className="p-6">
             <div className="flex flex-col md:flex-row gap-4">
               <div className="flex-1 relative">
-                <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
+                <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/25" />
                 <Input
                   type="url"
                   placeholder="Enter website URL (e.g., https://example.com)"
                   value={url}
                   onChange={(e) => setUrl(e.target.value)}
-                  className="pl-10 bg-white/5 border-white/10 text-white placeholder:text-gray-500"
+                  className="pl-10 bg-white/[0.03] border-[0.5px] border-white/[0.06] text-white placeholder:text-white/25"
                   onKeyDown={(e) => e.key === 'Enter' && handleAudit()}
                 />
               </div>
               <Button
                 onClick={handleAudit}
                 disabled={isLoading}
-                className="bg-gradient-to-r from-cyan-500 to-cyan-600 hover:from-cyan-400 hover:to-cyan-500 text-white shadow-lg shadow-cyan-500/25"
+                className="bg-cyan-500/20 border-[0.5px] border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/30"
               >
                 {isLoading ? (
                   <>
@@ -411,8 +412,8 @@ export default function SEOAuditPage() {
                 )}
               </Button>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
         {/* Results */}
         {auditResult && (
@@ -420,17 +421,17 @@ export default function SEOAuditPage() {
             {/* Overview */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {/* Score */}
-              <Card className="bg-surface-base/80 backdrop-blur-xl border border-cyan-500/10 lg:col-span-1">
-                <CardContent className="p-6 flex flex-col items-center">
+              <div className="border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm lg:col-span-1">
+                <div className="p-6 flex flex-col items-center">
                   <ScoreGauge score={auditResult.score} />
-                  <h3 className="text-lg font-semibold text-white mt-4">SEO Health Score</h3>
-                  <p className="text-gray-400 text-sm mt-1">{auditResult.domain}</p>
-                  <div className="flex items-center gap-2 mt-4 text-gray-500 text-sm">
+                  <h3 className="text-base font-light text-white mt-4">SEO Health Score</h3>
+                  <p className="text-white/40 text-sm mt-1">{auditResult.domain}</p>
+                  <div className="flex items-center gap-2 mt-4 text-white/25 text-sm">
                     <Clock className="w-4 h-4" />
                     {new Date(auditResult.timestamp).toLocaleString()}
                   </div>
-                </CardContent>
-              </Card>
+                </div>
+              </div>
 
               {/* Issue Summary */}
               <IssueSummary issues={auditResult.issues} crawledPages={auditResult.crawledPages} />
@@ -442,9 +443,9 @@ export default function SEOAuditPage() {
             )}
 
             {/* Detailed Issues */}
-            <Card className="bg-surface-base/80 backdrop-blur-xl border border-cyan-500/10">
-              <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle className="text-white">Detailed Issues</CardTitle>
+            <div className="border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm">
+              <div className="flex flex-row items-center justify-between p-6 pb-0">
+                <h3 className="text-sm uppercase tracking-[0.2em] text-white/40">Detailed Issues</h3>
                 <Button
                   variant="outline"
                   size="sm"
@@ -459,8 +460,8 @@ export default function SEOAuditPage() {
                   )}
                   {isExporting ? 'Exporting...' : 'Export Report'}
                 </Button>
-              </CardHeader>
-              <CardContent className="space-y-4">
+              </div>
+              <div className="p-6 space-y-4">
                 <IssueCategory
                   title="Technical SEO"
                   category={auditResult.categories.technical}
@@ -484,13 +485,13 @@ export default function SEOAuditPage() {
                   expandedIssues={expandedIssues}
                   onToggleIssue={toggleIssue}
                 />
-              </CardContent>
-            </Card>
+              </div>
+            </div>
 
             {/* Quick Wins Action Bar */}
-            <Card className="bg-white/[0.03] backdrop-blur-xl border border-white/[0.08]">
-              <CardContent className="p-6">
-                <p className="text-gray-300 text-sm font-medium mb-4">
+            <div className="border-[0.5px] border-white/[0.06] bg-white/[0.02] rounded-sm">
+              <div className="p-6">
+                <p className="text-white/60 text-sm mb-4">
                   What do you want to do with these results?
                 </p>
                 <div className="flex flex-wrap gap-3">
@@ -510,7 +511,7 @@ export default function SEOAuditPage() {
 
                   {contentIssues.length > 0 && (
                     <Button
-                      className="bg-gradient-to-r from-cyan-500 to-cyan-600 hover:from-cyan-400 hover:to-cyan-500 text-white shadow-lg shadow-cyan-500/25"
+                      className="bg-cyan-500/20 border-[0.5px] border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/30"
                       onClick={() => setIsSheetOpen(true)}
                     >
                       <Sparkles className="w-4 h-4 mr-2" />
@@ -521,15 +522,15 @@ export default function SEOAuditPage() {
                   <Link href="/dashboard/seo/scheduled-audits">
                     <Button
                       variant="outline"
-                      className="border-white/10 text-gray-300 hover:bg-white/5 hover:text-white"
+                      className="border-[0.5px] border-white/[0.06] text-white/60 hover:bg-white/[0.04] hover:text-white"
                     >
                       <Calendar className="w-4 h-4 mr-2" />
                       Schedule Recurring Audit
                     </Button>
                   </Link>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
 
             {/* Actions */}
             <div className="flex justify-center gap-4">
@@ -543,7 +544,7 @@ export default function SEOAuditPage() {
                 Re-run Audit
               </Button>
               <Link href="/dashboard/seo">
-                <Button variant="ghost" className="text-gray-400 hover:text-white">
+                <Button variant="ghost" className="text-white/40 hover:text-white">
                   Back to SEO Dashboard
                 </Button>
               </Link>

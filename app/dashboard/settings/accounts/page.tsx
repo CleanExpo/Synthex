@@ -179,7 +179,7 @@ function AccountsSettingsPageContent() {
       {/* Header */}
       <div className="flex items-center space-x-4">
         <Link href="/dashboard/settings">
-          <Button variant="ghost" size="sm" className="text-gray-400 hover:text-white">
+          <Button variant="ghost" size="sm" className="text-white/40 hover:text-white">
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Settings
           </Button>
@@ -187,8 +187,9 @@ function AccountsSettingsPageContent() {
       </div>
 
       <div>
-        <h1 className="text-3xl font-bold gradient-text">Linked Accounts</h1>
-        <p className="text-gray-400 mt-1">
+        <span className="text-[10px] uppercase tracking-[0.3em] text-white/25 mb-2 block">Settings</span>
+        <h1 className="text-3xl sm:text-4xl font-extralight tracking-tight text-white">Linked Accounts</h1>
+        <p className="mt-1.5 text-sm text-white/40 leading-relaxed">
           Manage how you sign in to your account
         </p>
       </div>
@@ -200,7 +201,7 @@ function AccountsSettingsPageContent() {
             <Shield className="h-5 w-5 mr-2 text-cyan-400" />
             Your Authentication Methods
           </CardTitle>
-          <CardDescription className="text-gray-400">
+          <CardDescription className="text-white/40">
             These are the ways you can sign in to your account
           </CardDescription>
         </CardHeader>
@@ -208,10 +209,10 @@ function AccountsSettingsPageContent() {
           {isLoading ? (
             <div className="flex items-center justify-center py-8">
               <Loader2 className="h-6 w-6 animate-spin text-cyan-400" />
-              <span className="ml-2 text-gray-400">Loading accounts...</span>
+              <span className="ml-2 text-white/40">Loading accounts...</span>
             </div>
           ) : accounts.length === 0 ? (
-            <div className="text-center py-8 text-gray-400">
+            <div className="text-center py-8 text-white/40">
               No linked accounts found. This is unusual - please contact support.
             </div>
           ) : (
@@ -222,25 +223,25 @@ function AccountsSettingsPageContent() {
               return (
                 <div
                   key={account.id}
-                  className="flex items-center justify-between p-4 bg-white/5 rounded-lg border border-white/10"
+                  className="flex items-center justify-between p-4 bg-white/[0.02] rounded-sm border-[0.5px] border-white/[0.06]"
                 >
                   <div className="flex items-center space-x-4">
-                    <div className={`p-2 rounded-full bg-white/10 ${config?.color || 'text-gray-400'}`}>
+                    <div className={`p-2 rounded-sm bg-white/[0.05] ${config?.color || 'text-white/40'}`}>
                       <Icon className="h-5 w-5" />
                     </div>
                     <div>
                       <p className="text-white font-medium flex items-center">
                         {config?.name || account.provider}
                         {account.isPrimary && (
-                          <span className="ml-2 text-xs bg-cyan-500/20 text-cyan-400 px-2 py-0.5 rounded">
+                          <span className="ml-2 text-xs bg-cyan-500/20 text-cyan-400 px-2 py-0.5 rounded-sm">
                             Primary
                           </span>
                         )}
                       </p>
-                      <p className="text-sm text-gray-400">
+                      <p className="text-sm text-white/40">
                         {account.providerAccountId}
                       </p>
-                      <p className="text-xs text-gray-500">
+                      <p className="text-xs text-white/25">
                         Linked {new Date(account.createdAt).toLocaleDateString()}
                       </p>
                     </div>
@@ -269,7 +270,7 @@ function AccountsSettingsPageContent() {
                       </Button>
                     ) : (
                       <span
-                        className="text-xs text-gray-500 cursor-help"
+                        className="text-xs text-white/25 cursor-help"
                         title={account.unlinkReason}
                       >
                         <AlertCircle className="h-4 w-4 inline mr-1" />
@@ -292,7 +293,7 @@ function AccountsSettingsPageContent() {
               <Link2 className="h-5 w-5 mr-2 text-cyan-400" />
               Link Additional Accounts
             </CardTitle>
-            <CardDescription className="text-gray-400">
+            <CardDescription className="text-white/40">
               Add more ways to sign in to your account
             </CardDescription>
           </CardHeader>
@@ -304,15 +305,15 @@ function AccountsSettingsPageContent() {
               return (
                 <div
                   key={provider}
-                  className="flex items-center justify-between p-4 bg-white/5 rounded-lg border border-white/10"
+                  className="flex items-center justify-between p-4 bg-white/[0.02] rounded-sm border-[0.5px] border-white/[0.06]"
                 >
                   <div className="flex items-center space-x-4">
-                    <div className={`p-2 rounded-full bg-white/10 ${config.color}`}>
+                    <div className={`p-2 rounded-sm bg-white/[0.05] ${config.color}`}>
                       <Icon className="h-5 w-5" />
                     </div>
                     <div>
                       <p className="text-white font-medium">{config.name}</p>
-                      <p className="text-sm text-gray-400">{config.description}</p>
+                      <p className="text-sm text-white/40">{config.description}</p>
                     </div>
                   </div>
                   <Button
@@ -346,11 +347,11 @@ function AccountsSettingsPageContent() {
             <AlertCircle className="h-5 w-5 text-amber-400 flex-shrink-0 mt-0.5" />
             <div>
               <p className="text-amber-300 font-medium">Security Notice</p>
-              <p className="text-sm text-gray-400 mt-1">
+              <p className="text-sm text-white/40 mt-1">
                 Make sure to keep at least one authentication method active at all times.
                 If you unlink all methods, you may lose access to your account.
               </p>
-              <p className="text-sm text-gray-400 mt-2">
+              <p className="text-sm text-white/40 mt-2">
                 We recommend linking multiple authentication methods for backup access.
               </p>
             </div>

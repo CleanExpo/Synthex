@@ -61,7 +61,7 @@ function getStatusColor(status: string): string {
     case 'pending': return 'text-yellow-400 bg-yellow-500/20 border-yellow-500/30';
     case 'in_review': return 'text-cyan-400 bg-cyan-500/20 border-cyan-500/30';
     case 'revision_requested': return 'text-orange-400 bg-orange-500/20 border-orange-500/30';
-    default: return 'text-gray-400 bg-gray-500/20 border-gray-500/30';
+    default: return 'text-white/40 bg-white/[0.04] border-white/[0.06]';
   }
 }
 
@@ -79,7 +79,7 @@ function getPriorityColor(priority: string): string {
     case 'high': return 'bg-orange-500';
     case 'normal': return 'bg-yellow-500';
     case 'low': return 'bg-green-500';
-    default: return 'bg-gray-500';
+    default: return 'bg-white/[0.15]';
   }
 }
 
@@ -105,10 +105,10 @@ function RequestCard({ request, onSelect, onQuickApprove, isApproving }: Request
       <CardContent className="p-4">
         <div className="flex items-start justify-between mb-3">
           <div className="flex-1 min-w-0">
-            <h3 className="font-semibold text-white line-clamp-1">
+            <h3 className="font-light text-white line-clamp-1">
               {request.title}
             </h3>
-            <p className="text-xs text-gray-400 mt-1">
+            <p className="text-xs text-white/40 mt-1">
               by {request.submitterName || request.submitterEmail || 'Unknown'}
             </p>
           </div>
@@ -116,7 +116,7 @@ function RequestCard({ request, onSelect, onQuickApprove, isApproving }: Request
         </div>
 
         {request.description && (
-          <p className="text-sm text-gray-300 line-clamp-2 mb-3">
+          <p className="text-sm text-white/60 line-clamp-2 mb-3">
             {request.description}
           </p>
         )}
@@ -125,7 +125,7 @@ function RequestCard({ request, onSelect, onQuickApprove, isApproving }: Request
         {request.totalSteps > 1 && (
           <div className="mb-3">
             <div className="flex justify-between text-xs mb-1">
-              <span className="text-gray-400">Step {request.currentStep + 1} of {request.totalSteps}</span>
+              <span className="text-white/40">Step {request.currentStep + 1} of {request.totalSteps}</span>
               <span className="text-white">{Math.round(progress)}%</span>
             </div>
             <Progress value={progress} className="h-2" />
@@ -138,7 +138,7 @@ function RequestCard({ request, onSelect, onQuickApprove, isApproving }: Request
             {request.contentType}
           </Badge>
           {request.dueDate && (
-            <span className="text-xs text-gray-400 flex items-center gap-1">
+            <span className="text-xs text-white/40 flex items-center gap-1">
               <Clock className="w-3 h-3" />
               Due {formatRelativeTime(request.dueDate)}
             </span>
@@ -252,12 +252,12 @@ function RequestDetailDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-surface-base/95 border-cyan-500/20 backdrop-blur-xl max-w-full sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="bg-[#080e1a] border-cyan-500/20 backdrop-blur-xl max-w-full sm:max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <div className="flex items-start justify-between">
             <div>
               <DialogTitle className="text-white">{request.title}</DialogTitle>
-              <DialogDescription className="text-gray-400">
+              <DialogDescription className="text-white/40">
                 Submitted by {request.submitterName || request.submitterEmail} • {formatRelativeTime(request.createdAt)}
               </DialogDescription>
             </div>
@@ -272,7 +272,7 @@ function RequestDetailDialog({
           {request.description && (
             <div>
               <h4 className="font-medium text-white mb-2">Description</h4>
-              <p className="text-gray-300">{request.description}</p>
+              <p className="text-white/60">{request.description}</p>
             </div>
           )}
 
@@ -283,7 +283,7 @@ function RequestDetailDialog({
               {request.steps.map((step, index) => (
                 <div
                   key={step.id}
-                  className={`flex items-center gap-3 p-3 rounded-lg ${
+                  className={`flex items-center gap-3 p-3 rounded-sm ${
                     step.status === 'approved' ? 'bg-green-500/10' :
                     step.status === 'rejected' ? 'bg-red-500/10' :
                     index === request.currentStep ? 'bg-cyan-500/10' :
@@ -294,7 +294,7 @@ function RequestDetailDialog({
                     step.status === 'approved' ? 'bg-green-500/20' :
                     step.status === 'rejected' ? 'bg-red-500/20' :
                     index === request.currentStep ? 'bg-cyan-500/20' :
-                    'bg-gray-500/20'
+                    'bg-white/[0.04]'
                   }`}>
                     {step.status === 'approved' ? (
                       <CheckCircle className="h-4 w-4 text-green-400" />
@@ -303,20 +303,20 @@ function RequestDetailDialog({
                     ) : index === request.currentStep ? (
                       <Clock className="h-4 w-4 text-cyan-400" />
                     ) : (
-                      <Clock className="h-4 w-4 text-gray-400" />
+                      <Clock className="h-4 w-4 text-white/40" />
                     )}
                   </div>
                   <div className="flex-1">
                     <p className="text-sm font-medium text-white">
                       Step {index + 1}: {step.name}
                     </p>
-                    <p className="text-xs text-gray-400">
+                    <p className="text-xs text-white/40">
                       {step.currentApprovals}/{step.requiredApprovals} approvals
                       {step.isOptional && ' • Optional'}
                     </p>
                   </div>
                   {index < request.steps.length - 1 && (
-                    <ChevronRight className="h-4 w-4 text-gray-400" />
+                    <ChevronRight className="h-4 w-4 text-white/40" />
                   )}
                 </div>
               ))}
@@ -329,7 +329,7 @@ function RequestDetailDialog({
               <h4 className="font-medium text-white mb-3">Comments</h4>
               <div className="space-y-2">
                 {currentStep.comments.map((comment) => (
-                  <div key={comment.id} className="p-3 bg-white/5 rounded-lg">
+                  <div key={comment.id} className="p-3 border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm">
                     <div className="flex items-center justify-between mb-1">
                       <div className="flex items-center gap-2">
                         <Avatar className="h-6 w-6">
@@ -342,11 +342,11 @@ function RequestDetailDialog({
                           {comment.type}
                         </Badge>
                       </div>
-                      <span className="text-xs text-gray-400">
+                      <span className="text-xs text-white/40">
                         {formatRelativeTime(comment.createdAt)}
                       </span>
                     </div>
-                    <p className="text-sm text-gray-300 mt-1">{comment.content}</p>
+                    <p className="text-sm text-white/60 mt-1">{comment.content}</p>
                   </div>
                 ))}
               </div>
@@ -415,7 +415,7 @@ function RequestDetailDialog({
                       onClick={() => handleAction('comment')}
                       disabled={isSubmitting || !feedback.trim()}
                       variant="outline"
-                      className="bg-white/5 hover:bg-white/10 text-gray-300 border-white/10"
+                      className="bg-white/[0.02] hover:bg-white/[0.04] text-white/60 border-[0.5px] border-white/[0.06]"
                     >
                       <MessageSquare className="h-4 w-4 mr-2" />
                       Comment Only
@@ -446,7 +446,7 @@ function EmptyState({ filter }: { filter: string }) {
           <h3 className="text-lg font-medium text-white mb-2">
             {filter === 'all' ? 'No approval requests' : `No ${filter} requests`}
           </h3>
-          <p className="text-gray-400 mb-6 max-w-sm mx-auto">
+          <p className="text-white/40 mb-6 max-w-sm mx-auto">
             {filter === 'all'
               ? 'When content needs review, approval requests will appear here.'
               : `There are no ${filter} approval requests at the moment.`}
@@ -509,12 +509,13 @@ export default function ApprovalsPage() {
       {/* Page Header */}
       <div className="flex items-start justify-between mb-8">
         <div className="flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-gradient-to-br from-cyan-500/20 to-cyan-500/20">
+          <div className="p-2 rounded-sm bg-cyan-500/10 border-[0.5px] border-cyan-500/20">
             <GitBranch className="h-6 w-6 text-cyan-400" />
           </div>
           <div>
-            <h1 className="text-3xl font-bold text-white">Approvals</h1>
-            <p className="text-gray-400">Content review workflows</p>
+            <span className="text-[10px] uppercase tracking-[0.3em] text-white/25 mb-1 block">Workflow</span>
+            <h1 className="text-3xl font-extralight tracking-tight text-white">Approvals</h1>
+            <p className="text-white/40 text-sm">Content review workflows</p>
           </div>
         </div>
         <Button

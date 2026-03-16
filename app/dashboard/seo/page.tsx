@@ -46,42 +46,42 @@ function SEOToolCard({
   const { toast } = useToast();
 
   const cardContent = (
-    <Card className="group bg-surface-base/80 backdrop-blur-xl border border-cyan-500/10 hover:border-cyan-500/30 transition-all duration-300 h-full">
-      <CardContent className="p-6">
+    <div className="group border-[0.5px] border-white/[0.06] hover:border-cyan-500/30 bg-white/[0.01] rounded-sm transition-all duration-300 h-full">
+      <div className="p-6">
         <div className="flex items-start justify-between mb-4">
-          <div className="p-3 rounded-xl bg-cyan-500/10 group-hover:bg-cyan-500/20 transition-colors">
+          <div className="p-3 rounded-sm bg-cyan-500/10 group-hover:bg-cyan-500/20 transition-colors">
             <Icon className="w-6 h-6 text-cyan-400" />
           </div>
           {status === 'beta' && (
-            <span className="px-2 py-1 text-xs font-medium bg-cyan-500/10 text-cyan-400 rounded-full border border-cyan-500/20">
+            <span className="px-2 py-1 text-xs bg-cyan-500/10 text-cyan-400 rounded-sm border-[0.5px] border-cyan-500/20">
               Beta
             </span>
           )}
           {status === 'new' && (
-            <span className="px-2 py-1 text-xs font-medium bg-green-500/10 text-green-400 rounded-full border border-green-500/20">
+            <span className="px-2 py-1 text-xs bg-green-500/10 text-emerald-400 rounded-sm border-[0.5px] border-green-500/20">
               New
             </span>
           )}
           {comingSoon && (
-            <span className="px-2 py-1 text-xs font-medium bg-gray-500/10 text-gray-400 rounded-full border border-gray-500/20">
+            <span className="px-2 py-1 text-xs bg-white/[0.04] text-white/40 rounded-sm border-[0.5px] border-white/[0.06]">
               Coming Soon
             </span>
           )}
         </div>
-        <h3 className="text-lg font-semibold text-white mb-2 group-hover:text-cyan-400 transition-colors">
+        <h3 className="text-base font-light text-white mb-2 group-hover:text-cyan-400 transition-colors">
           {title}
         </h3>
-        <p className="text-gray-400 text-sm leading-relaxed">
+        <p className="text-white/40 text-sm leading-relaxed">
           {description}
         </p>
         {!comingSoon && (
-          <div className="mt-4 flex items-center text-cyan-400 text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity">
+          <div className="mt-4 flex items-center text-cyan-400 text-sm opacity-0 group-hover:opacity-100 transition-opacity">
             Open Tool
             <ArrowRight className="w-4 h-4 ml-1" />
           </div>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 
   if (comingSoon) {
@@ -120,23 +120,23 @@ function QuickStatCard({
   trend: 'up' | 'down' | 'neutral';
 }) {
   return (
-    <Card className="bg-surface-base/80 backdrop-blur-xl border border-cyan-500/10">
-      <CardContent className="p-6">
+    <div className="border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm">
+      <div className="p-6">
         <div className="flex items-center justify-between mb-4">
-          <div className="p-2 rounded-lg bg-cyan-500/10">
+          <div className="p-2 rounded-sm bg-cyan-500/10">
             <Icon className="w-5 h-5 text-cyan-400" />
           </div>
           <span className={`text-sm font-medium flex items-center gap-1 ${
-            trend === 'up' ? 'text-green-400' : trend === 'down' ? 'text-red-400' : 'text-gray-400'
+            trend === 'up' ? 'text-emerald-400' : trend === 'down' ? 'text-red-400' : 'text-white/40'
           }`}>
             {trend === 'up' ? <TrendingUp className="w-4 h-4" /> : trend === 'down' ? <TrendingUp className="w-4 h-4 rotate-180" /> : null}
             {change}
           </span>
         </div>
-        <p className="text-2xl font-bold text-white mb-1">{value}</p>
-        <p className="text-gray-400 text-sm">{title}</p>
-      </CardContent>
-    </Card>
+        <p className="text-2xl font-mono tabular-nums font-light text-white mb-1">{value}</p>
+        <p className="text-white/40 text-sm">{title}</p>
+      </div>
+    </div>
   );
 }
 
@@ -148,12 +148,13 @@ export default function SEODashboardPage() {
       {/* Header */}
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-white flex items-center gap-3">
-            <Search className="w-8 h-8 text-cyan-400" />
+          <span className="text-[10px] uppercase tracking-[0.3em] text-white/25 mb-2 block">Optimisation</span>
+          <h1 className="text-3xl sm:text-4xl font-extralight tracking-tight text-white flex items-center gap-3">
+            <Search className="w-7 h-7 text-cyan-400" />
             SEO Tools
           </h1>
-          <p className="text-gray-400 mt-2">
-            Optimize your content for search engines and AI visibility
+          <p className="mt-1.5 text-sm text-white/40 leading-relaxed">
+            Optimise your content for search engines and AI visibility
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -162,7 +163,7 @@ export default function SEODashboardPage() {
             View Reports
           </Button>
           <Link href="/dashboard/seo/audit">
-            <Button className="bg-gradient-to-r from-cyan-500 to-cyan-600 hover:from-cyan-400 hover:to-cyan-500 text-white shadow-lg shadow-cyan-500/25">
+            <Button className="bg-cyan-500/20 border-[0.5px] border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/30">
               <Zap className="w-4 h-4 mr-2" />
               New Audit
             </Button>
@@ -210,7 +211,7 @@ export default function SEODashboardPage() {
 
         {/* SEO Tools Grid */}
         <div>
-          <h2 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
+          <h2 className="text-sm uppercase tracking-[0.2em] text-white/40 mb-4 flex items-center gap-2">
             <Sparkles className="w-5 h-5 text-cyan-400" />
             Available Tools
           </h2>
@@ -308,12 +309,12 @@ export default function SEODashboardPage() {
 
         {/* Recent Activity */}
         <div>
-          <h2 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
+          <h2 className="text-sm uppercase tracking-[0.2em] text-white/40 mb-4 flex items-center gap-2">
             <BarChart3 className="w-5 h-5 text-cyan-400" />
             Recent Audits
           </h2>
-          <Card className="bg-surface-base/80 backdrop-blur-xl border border-cyan-500/10">
-            <CardContent className="p-6">
+          <div className="border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm">
+            <div className="p-6">
               <div className="space-y-4">
                 {[
                   { url: 'synthex.social', score: 92, issues: 3, date: 'Today' },
@@ -322,24 +323,24 @@ export default function SEODashboardPage() {
                 ].map((audit, index) => (
                   <div
                     key={index}
-                    className="flex items-center justify-between p-4 bg-white/5 rounded-lg hover:bg-white/10 transition-colors cursor-pointer"
+                    className="flex items-center justify-between p-4 bg-white/[0.02] rounded-sm hover:bg-white/[0.04] transition-colors cursor-pointer"
                   >
                     <div className="flex items-center gap-4">
-                      <div className={`w-12 h-12 rounded-lg flex items-center justify-center font-bold text-lg ${
-                        audit.score >= 90 ? 'bg-green-500/20 text-green-400' :
-                        audit.score >= 70 ? 'bg-yellow-500/20 text-yellow-400' :
-                        'bg-red-500/20 text-red-400'
+                      <div className={`w-12 h-12 rounded-sm flex items-center justify-center font-mono tabular-nums font-light text-lg ${
+                        audit.score >= 90 ? 'bg-emerald-500/10 text-emerald-400' :
+                        audit.score >= 70 ? 'bg-amber-500/10 text-amber-400' :
+                        'bg-red-500/10 text-red-400'
                       }`}>
                         {audit.score}
                       </div>
                       <div>
-                        <p className="font-medium text-white">{audit.url}</p>
-                        <p className="text-sm text-gray-400">{audit.issues} issues found</p>
+                        <p className="font-light text-white">{audit.url}</p>
+                        <p className="text-sm text-white/40">{audit.issues} issues found</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-4">
-                      <span className="text-sm text-gray-500">{audit.date}</span>
-                      <ArrowRight className="w-4 h-4 text-gray-500" />
+                      <span className="text-sm text-white/25">{audit.date}</span>
+                      <ArrowRight className="w-4 h-4 text-white/25" />
                     </div>
                   </div>
                 ))}
@@ -348,18 +349,18 @@ export default function SEODashboardPage() {
               {/* Empty state */}
               {false && (
                 <div className="text-center py-12">
-                  <Search className="w-12 h-12 text-gray-600 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-white mb-2">No audits yet</h3>
-                  <p className="text-gray-400 mb-6">Run your first SEO audit to see results here</p>
+                  <Search className="w-12 h-12 text-white/25 mx-auto mb-4" />
+                  <h3 className="text-base font-light text-white mb-2">No audits yet</h3>
+                  <p className="text-white/40 mb-6">Run your first SEO audit to see results here</p>
                   <Link href="/dashboard/seo/audit">
-                    <Button className="bg-gradient-to-r from-cyan-500 to-cyan-600 hover:from-cyan-400 hover:to-cyan-500">
+                    <Button className="bg-cyan-500/20 border-[0.5px] border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/30">
                       Start First Audit
                     </Button>
                   </Link>
                 </div>
               )}
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </div>
       </SEOFeatureGate>
     </div>

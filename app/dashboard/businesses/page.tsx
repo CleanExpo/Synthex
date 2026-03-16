@@ -63,10 +63,10 @@ export default function BusinessesPage() {
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="h-32 bg-surface-base/80 border border-cyan-500/10 rounded-xl animate-pulse" />
+            <div key={i} className="h-32 border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm animate-pulse" />
           ))}
         </div>
-        <div className="h-96 bg-surface-base/80 border border-cyan-500/10 rounded-xl animate-pulse" />
+        <div className="h-96 border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm animate-pulse" />
       </div>
     );
   }
@@ -77,19 +77,19 @@ export default function BusinessesPage() {
       <div className="flex items-center justify-center min-h-[60vh]">
         <Card className="max-w-md bg-surface-base/80 border border-cyan-500/10">
           <CardContent className="p-8 text-center space-y-4">
-            <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mx-auto">
+            <div className="w-16 h-16 bg-red-500/10 rounded-sm flex items-center justify-center mx-auto border-[0.5px] border-red-500/20">
               <Building className="w-8 h-8 text-red-400" />
             </div>
             <div>
-              <h2 className="text-xl font-semibold text-white mb-2">Access Denied</h2>
-              <p className="text-gray-400">
+              <h2 className="text-xl font-light text-white mb-2">Access Denied</h2>
+              <p className="text-white/40">
                 This page is only accessible to multi-business owners.
                 Please contact support if you believe this is an error.
               </p>
             </div>
             <Button
               onClick={() => router.push('/dashboard')}
-              className="bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 border border-cyan-500/30"
+              className="bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 border-[0.5px] border-cyan-500/30"
             >
               Return to Dashboard
             </Button>
@@ -104,17 +104,18 @@ export default function BusinessesPage() {
       {/* Page Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-cyan-500/10 rounded-lg flex items-center justify-center border border-cyan-500/20">
+          <div className="w-10 h-10 bg-cyan-500/10 rounded-sm flex items-center justify-center border-[0.5px] border-cyan-500/20">
             <Building className="w-5 h-5 text-cyan-400" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-white">Business Management</h1>
-            <p className="text-sm text-gray-400">Manage and monitor all your businesses</p>
+            <span className="text-[10px] uppercase tracking-[0.3em] text-white/25 mb-1 block">Workspace</span>
+            <h1 className="text-3xl font-extralight tracking-tight text-white">Business Management</h1>
+            <p className="text-sm text-white/40">Manage and monitor all your businesses</p>
           </div>
         </div>
         <Button
           onClick={() => setCreateDialogOpen(true)}
-          className="bg-cyan-600 hover:bg-cyan-700"
+          className="bg-cyan-500/20 border-[0.5px] border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/30"
         >
           <Plus className="w-4 h-4 mr-2" />
           Create Business
@@ -125,7 +126,7 @@ export default function BusinessesPage() {
       {overviewLoading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="h-32 bg-surface-base/80 border border-cyan-500/10 rounded-xl animate-pulse" />
+            <div key={i} className="h-32 border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm animate-pulse" />
           ))}
         </div>
       ) : overview ? (
@@ -133,7 +134,7 @@ export default function BusinessesPage() {
       ) : (
         <Card className="bg-surface-base/80 border border-cyan-500/10">
           <CardContent className="p-8 text-center">
-            <p className="text-gray-400">No overview data available</p>
+            <p className="text-white/40">No overview data available</p>
           </CardContent>
         </Card>
       )}

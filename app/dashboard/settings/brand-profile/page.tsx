@@ -19,8 +19,9 @@ export default function BrandProfilePage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold gradient-text">Brand Profile</h1>
-        <p className="text-slate-400 mt-1">
+        <span className="text-[10px] uppercase tracking-[0.3em] text-white/25 mb-2 block">Settings</span>
+        <h1 className="text-3xl sm:text-4xl font-extralight tracking-tight text-white">Brand Profile</h1>
+        <p className="mt-1.5 text-sm text-white/40 leading-relaxed">
           Manage your organisation&apos;s brand identity, colours, and social presence
         </p>
       </div>
