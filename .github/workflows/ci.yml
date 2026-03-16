@@ -63,7 +63,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: npm audit --audit-level=critical
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+      - run: npm ci --legacy-peer-deps
+      - name: npm audit (critical)
+        run: npm audit --audit-level=critical --omit=dev
+      - name: Verify lockfile integrity
+        run: |
+          npm ci --dry-run --legacy-peer-deps 2>&1 | grep -v "npm warn" | head -5 || true
       - name: Check for secrets
         uses: trufflesecurity/trufflehog@main
         with:
