@@ -33,7 +33,7 @@ export interface ContentRequest {
   type: 'post' | 'caption' | 'thread' | 'story' | 'reel' | 'article';
   platform: 'twitter' | 'instagram' | 'linkedin' | 'tiktok' | 'facebook' | 'youtube';
   topic?: string;
-  tone?: 'professional' | 'casual' | 'humorous' | 'inspirational' | 'educational';
+  tone?: 'professional' | 'casual' | 'humorous' | 'inspirational' | 'educational' | 'friendly' | 'authoritative';
   keywords?: string[];
   targetAudience?: string;
   length?: 'short' | 'medium' | 'long';
