@@ -21,6 +21,8 @@ import {
   interpolate,
   spring,
   Sequence,
+  Audio,
+  staticFile,
 } from 'remotion';
 import type { BrandShowcaseProps } from '../types';
 
@@ -364,6 +366,7 @@ export function BrandShowcase({
   valueProps,
   websiteUrl,
   industry,
+  audioConfig,
 }: BrandShowcaseProps) {
   // Scene timing (30fps): total ~45s = 1350 frames
   const logoFrames = 150;      // 5s
@@ -373,6 +376,20 @@ export function BrandShowcase({
 
   return (
     <AbsoluteFill style={{ backgroundColor: '#0F172A' }}>
+      {/* Background music — looped, subtle volume */}
+      {audioConfig?.musicStaticFile && (
+        <Audio
+          src={staticFile(audioConfig.musicStaticFile)}
+          volume={audioConfig.musicVolume ?? 0.12}
+          loop
+        />
+      )}
+
+      {/* ElevenLabs voiceover — plays from start, aligned to scene flow */}
+      {audioConfig?.voiceoverStaticFile && (
+        <Audio src={staticFile(audioConfig.voiceoverStaticFile)} />
+      )}
+
       {/* Scene 1: Logo reveal */}
       <Sequence from={0} durationInFrames={logoFrames}>
         <LogoReveal

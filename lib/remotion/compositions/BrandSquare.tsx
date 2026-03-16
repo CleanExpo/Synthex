@@ -20,6 +20,8 @@ import {
   interpolate,
   spring,
   Sequence,
+  Audio,
+  staticFile,
 } from 'remotion';
 import type { BrandSquareProps } from '../types';
 
@@ -277,6 +279,7 @@ export function BrandSquare({
   problem,
   solution,
   ctaText = 'Learn More',
+  audioConfig,
 }: BrandSquareProps) {
   // Scene timing (30fps): total ~20s = 600 frames
   const problemFrames = 150;   // 5s
@@ -286,6 +289,20 @@ export function BrandSquare({
 
   return (
     <AbsoluteFill style={{ backgroundColor: '#0F172A' }}>
+      {/* Background music */}
+      {audioConfig?.musicStaticFile && (
+        <Audio
+          src={staticFile(audioConfig.musicStaticFile)}
+          volume={audioConfig.musicVolume ?? 0.12}
+          loop
+        />
+      )}
+
+      {/* ElevenLabs voiceover */}
+      {audioConfig?.voiceoverStaticFile && (
+        <Audio src={staticFile(audioConfig.voiceoverStaticFile)} />
+      )}
+
       {/* Scene 1: Problem statement */}
       <Sequence from={0} durationInFrames={problemFrames}>
         <ProblemScene problem={problem} />

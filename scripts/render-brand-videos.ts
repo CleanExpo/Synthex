@@ -29,6 +29,7 @@ import {
   toBrandSquareProps,
   type BrandContent,
 } from '../lib/remotion/brand-content';
+import type { AudioConfig } from '../lib/remotion/types';
 
 // ── Configuration ────────────────────────────────────────────────────────────
 
@@ -38,6 +39,38 @@ const ROOT_DIR = path.resolve(__dirname, '..');
 const OUTPUT_BASE = path.join(ROOT_DIR, 'output', 'videos');
 const REMOTION_ENTRY = path.join(ROOT_DIR, 'lib', 'remotion', 'index.tsx');
 
+// ── Audio Manifest ────────────────────────────────────────────────────────────
+
+interface AudioManifest {
+  brandId: string;
+  showcaseVoice: string | null;
+  reelVoice: string | null;
+  squareVoice: string | null;
+  musicStyle: string;
+  musicFile: string | null;
+}
+
+function loadAudioManifest(brandId: string): AudioManifest | null {
+  const manifestPath = path.join(OUTPUT_BASE, brandId, 'audio-manifest.json');
+  if (!fs.existsSync(manifestPath)) return null;
+  try {
+    return JSON.parse(fs.readFileSync(manifestPath, 'utf-8')) as AudioManifest;
+  } catch {
+    return null;
+  }
+}
+
+function buildAudioConfig(
+  manifest: AudioManifest | null,
+  voiceKey: 'showcaseVoice' | 'reelVoice' | 'squareVoice',
+): AudioConfig | undefined {
+  if (!manifest) return undefined;
+  const voiceoverStaticFile = manifest[voiceKey] ?? undefined;
+  const musicStaticFile = manifest.musicFile ?? undefined;
+  if (!voiceoverStaticFile && !musicStaticFile) return undefined;
+  return { voiceoverStaticFile, musicStaticFile };
+}
+
 interface CompositionConfig {
   id: string;
   filename: string;
@@ -45,7 +78,8 @@ interface CompositionConfig {
   height: number;
   fps: number;
   durationInFrames: number;
-  getProps: (brand: BrandContent) => Record<string, unknown>;
+  audioKey: 'showcaseVoice' | 'reelVoice' | 'squareVoice';
+  getProps: (brand: BrandContent, audioConfig?: AudioConfig) => Record<string, unknown>;
 }
 
 const COMPOSITIONS: CompositionConfig[] = [
@@ -56,7 +90,9 @@ const COMPOSITIONS: CompositionConfig[] = [
     height: 1080,
     fps: 30,
     durationInFrames: 1350,
-    getProps: (brand) => toBrandShowcaseProps(brand) as unknown as Record<string, unknown>,
+    audioKey: 'showcaseVoice',
+    getProps: (brand, audioConfig) =>
+      ({ ...toBrandShowcaseProps(brand), audioConfig }) as unknown as Record<string, unknown>,
   },
   {
     id: 'BrandReel',
@@ -65,7 +101,9 @@ const COMPOSITIONS: CompositionConfig[] = [
     height: 1920,
     fps: 30,
     durationInFrames: 450,
-    getProps: (brand) => toBrandReelProps(brand) as unknown as Record<string, unknown>,
+    audioKey: 'reelVoice',
+    getProps: (brand, audioConfig) =>
+      ({ ...toBrandReelProps(brand), audioConfig }) as unknown as Record<string, unknown>,
   },
   {
     id: 'BrandSquare',
@@ -74,7 +112,9 @@ const COMPOSITIONS: CompositionConfig[] = [
     height: 1080,
     fps: 30,
     durationInFrames: 600,
-    getProps: (brand) => toBrandSquareProps(brand) as unknown as Record<string, unknown>,
+    audioKey: 'squareVoice',
+    getProps: (brand, audioConfig) =>
+      ({ ...toBrandSquareProps(brand), audioConfig }) as unknown as Record<string, unknown>,
   },
 ];
 
@@ -107,26 +147,29 @@ async function generateThumbnail(videoPath: string, outputPath: string): Promise
 
 // ── CLI Args ─────────────────────────────────────────────────────────────────
 
-function parseArgs(): { brandFilter?: string; compositionFilter?: string } {
+function parseArgs(): { brandFilter?: string; compositionFilter?: string; force: boolean } {
   const args = process.argv.slice(2);
   let brandFilter: string | undefined;
   let compositionFilter: string | undefined;
+  let force = false;
 
   for (let i = 0; i < args.length; i++) {
     if (args[i] === '--brand' && args[i + 1]) {
       brandFilter = args[++i];
     } else if (args[i] === '--composition' && args[i + 1]) {
       compositionFilter = args[++i];
+    } else if (args[i] === '--force') {
+      force = true;
     }
   }
 
-  return { brandFilter, compositionFilter };
+  return { brandFilter, compositionFilter, force };
 }
 
 // ── Main ─────────────────────────────────────────────────────────────────────
 
 async function main(): Promise<void> {
-  const { brandFilter, compositionFilter } = parseArgs();
+  const { brandFilter, compositionFilter, force } = parseArgs();
 
   // Get brands
   let brands = getActiveBrands();
@@ -163,6 +206,7 @@ async function main(): Promise<void> {
   log(`Brands:       ${brands.map((b) => b.brandName).join(', ')}`);
   log(`Compositions: ${compositions.map((c) => c.id).join(', ')}`);
   log(`Total videos: ${totalVideos}`);
+  log(`Mode:         ${force ? 'FORCE (re-render all)' : 'INCREMENTAL (skip existing)'}`);
   log(`Output:       ${OUTPUT_BASE}`);
   log(`============================\n`);
 
@@ -178,23 +222,35 @@ async function main(): Promise<void> {
     const brandDir = path.join(OUTPUT_BASE, brand.id);
     ensureDir(brandDir);
 
-    log(`--- ${brand.brandName} ---`);
+    // Load audio manifest once per brand
+    const audioManifest = loadAudioManifest(brand.id);
+    if (audioManifest) {
+      const voiceCount = [audioManifest.showcaseVoice, audioManifest.reelVoice, audioManifest.squareVoice].filter(Boolean).length;
+      log(`--- ${brand.brandName} --- (audio: ${voiceCount}/3 voices, music: ${audioManifest.musicFile ? '✓' : '✗'})`);
+    } else {
+      log(`--- ${brand.brandName} --- (no audio manifest — rendering without audio)`);
+    }
 
     for (const comp of compositions) {
       const videoPath = path.join(brandDir, comp.filename);
       const thumbPath = path.join(brandDir, comp.filename.replace('.mp4', '-thumb.jpg'));
 
-      // Skip if already rendered (allow re-run without re-rendering)
-      if (fs.existsSync(videoPath)) {
-        log(`  Skipping ${comp.id} (already exists)`);
+      // Skip if already rendered (unless --force)
+      if (!force && fs.existsSync(videoPath)) {
+        log(`  Skipping ${comp.id} (already exists — use --force to re-render)`);
         rendered++;
         continue;
       }
 
-      log(`  Rendering ${comp.id} (${comp.width}x${comp.height}, ${comp.durationInFrames / comp.fps}s)...`);
+      const audioConfig = buildAudioConfig(audioManifest, comp.audioKey);
+      const audioNote = audioConfig
+        ? `voice=${audioConfig.voiceoverStaticFile ? '✓' : '✗'} music=${audioConfig.musicStaticFile ? '✓' : '✗'}`
+        : 'no audio';
+
+      log(`  Rendering ${comp.id} (${comp.width}x${comp.height}, ${comp.durationInFrames / comp.fps}s, ${audioNote})...`);
 
       try {
-        const inputProps = comp.getProps(brand);
+        const inputProps = comp.getProps(brand, audioConfig);
 
         const composition = await selectComposition({
           serveUrl: bundleLocation,

@@ -21,6 +21,8 @@ import {
   interpolate,
   spring,
   Sequence,
+  Audio,
+  staticFile,
 } from 'remotion';
 import type { BrandReelProps } from '../types';
 
@@ -285,6 +287,7 @@ export function BrandReel({
   hookText,
   benefit,
   ctaText = 'Learn More',
+  audioConfig,
 }: BrandReelProps) {
   // Scene timing (30fps): total ~15s = 450 frames
   const hookFrames = 105;     // 3.5s
@@ -294,6 +297,20 @@ export function BrandReel({
 
   return (
     <AbsoluteFill style={{ backgroundColor: '#000000' }}>
+      {/* Background music — looped, energetic for short-form */}
+      {audioConfig?.musicStaticFile && (
+        <Audio
+          src={staticFile(audioConfig.musicStaticFile)}
+          volume={audioConfig.musicVolume ?? 0.15}
+          loop
+        />
+      )}
+
+      {/* ElevenLabs voiceover */}
+      {audioConfig?.voiceoverStaticFile && (
+        <Audio src={staticFile(audioConfig.voiceoverStaticFile)} />
+      )}
+
       {/* Scene 1: Hook text */}
       <Sequence from={0} durationInFrames={hookFrames}>
         <HookScene hookText={hookText} />
