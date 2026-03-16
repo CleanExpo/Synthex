@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { toast } from 'sonner';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -47,6 +48,7 @@ export default function AuthorsPage() {
       }
     } catch (err) {
       console.error('Failed to fetch authors:', err);
+      toast.error('Failed to load authors');
     } finally {
       setLoading(false);
     }

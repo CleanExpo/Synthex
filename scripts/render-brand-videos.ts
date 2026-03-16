@@ -215,6 +215,7 @@ async function main(): Promise<void> {
   const bundleLocation = await bundle({
     entryPoint: REMOTION_ENTRY,
     webpackOverride: (config) => config,
+    publicDir: path.join(ROOT_DIR, 'public'),
   });
   log(`Bundle ready: ${bundleLocation}\n`);
 

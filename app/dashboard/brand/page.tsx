@@ -13,6 +13,7 @@
  */
 
 import { useState, useCallback , Suspense } from 'react';
+import { toast } from 'sonner';
 import { useSearchParams } from 'next/navigation';
 import useSWR from 'swr';
 import { Building2, Plus, AlertCircle, Loader2 } from '@/components/icons';
@@ -294,7 +295,7 @@ function BrandBuilderPageContent() {
         setConsistencyReport(report);
       }
     } catch {
-      // Silently handle
+      toast.error('Failed to check brand consistency');
     } finally {
       setConsistencyLoading(false);
     }
@@ -312,7 +313,7 @@ function BrandBuilderPageContent() {
         setWikidataResult(result);
       }
     } catch {
-      // Silently handle
+      toast.error('Failed to check Wikidata');
     } finally {
       setWikidataLoading(false);
     }
@@ -330,7 +331,7 @@ function BrandBuilderPageContent() {
         setKgResult(result);
       }
     } catch {
-      // Silently handle
+      toast.error('Failed to check Knowledge Graph');
     } finally {
       setKgLoading(false);
     }

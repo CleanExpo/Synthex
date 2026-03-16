@@ -121,6 +121,7 @@ export const BRAND_CONTENT: BrandContent[] = [
     benefit: '24/7 emergency response with certified technicians on-site within hours',
     problem: 'When flood, fire, or storm damage hits, every hour of delay costs thousands',
     solution: 'Disaster Recovery provides immediate 24/7 response with IICRC-certified technicians and direct insurance liaison',
+    logoUrl: '/brands/disaster-recovery/logo.jpg',
     ctaText: 'Call Now — 24/7 Response',
     youtubeDescription: `Disaster Recovery — Australia's trusted emergency restoration service. When flood, fire, storm, or mould damage strikes your property, our IICRC-certified technicians respond 24/7 to minimise damage and restore your home or business.
 
