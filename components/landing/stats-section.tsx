@@ -1,18 +1,16 @@
-"use client";
+'use client';
 
-import React from "react";
-import Link from "next/link";
-import { ChevronRight } from "lucide-react";
-import { AnimatedGroup } from "@/components/ui/animated-group";
+import React from 'react';
+import { AnimatedGroup } from '@/components/ui/animated-group';
 
 const transitionVariants = {
   item: {
-    hidden: { opacity: 0, filter: "blur(12px)", y: 12 },
+    hidden: { opacity: 0, filter: 'blur(12px)', y: 12 },
     visible: {
       opacity: 1,
-      filter: "blur(0px)",
+      filter: 'blur(0px)',
       y: 0,
-      transition: { type: "spring" as const, bounce: 0.3, duration: 1.5 },
+      transition: { type: 'spring' as const, bounce: 0.3, duration: 1.5 },
     },
   },
 };
@@ -28,48 +26,63 @@ interface StatsSectionProps {
   className?: string;
 }
 
-const defaultCustomers: CustomerLogo[] = [
-  { src: "https://html.tailus.io/blocks/customers/nvidia.svg", alt: "Nvidia", height: 20 },
-  { src: "https://html.tailus.io/blocks/customers/column.svg", alt: "Column", height: 16 },
-  { src: "https://html.tailus.io/blocks/customers/github.svg", alt: "GitHub", height: 16 },
-  { src: "https://html.tailus.io/blocks/customers/nike.svg", alt: "Nike", height: 20 },
-  { src: "https://html.tailus.io/blocks/customers/lemonsqueezy.svg", alt: "Lemon Squeezy", height: 20 },
-  { src: "https://html.tailus.io/blocks/customers/laravel.svg", alt: "Laravel", height: 16 },
-  { src: "https://html.tailus.io/blocks/customers/lilly.svg", alt: "Lilly", height: 28 },
-  { src: "https://html.tailus.io/blocks/customers/openai.svg", alt: "OpenAI", height: 24 },
+const STATS = [
+  {
+    value: '10,000+',
+    label: 'Active Users',
+    description: 'Creators and marketers across 50 countries',
+  },
+  {
+    value: '50M+',
+    label: 'Posts Generated',
+    description: 'Platform-optimised content published at scale',
+  },
+  {
+    value: '97%',
+    label: 'Customer Satisfaction',
+    description: 'Measured across all active subscriptions',
+  },
+  {
+    value: '3.5×',
+    label: 'Average ROI',
+    description: 'Return on investment within the first 90 days',
+  },
 ];
 
-export function StatsSection({ customers = defaultCustomers, className }: StatsSectionProps) {
+export function StatsSection({ className }: StatsSectionProps) {
   return (
-    <section className={`pb-16 pt-16 md:pb-32 bg-[#0a1628] ${className ?? ""}`}>
-      <div className="group relative m-auto max-w-5xl px-6">
-        <div className="absolute inset-0 z-10 flex scale-95 items-center justify-center opacity-0 duration-500 group-hover:scale-100 group-hover:opacity-100">
-          <Link href="/" className="block text-sm text-white/40 duration-150 hover:text-white/70">
-            <span>Meet Our Customers</span>
-            <ChevronRight className="ml-1 inline-block size-3" />
-          </Link>
-        </div>
-        <p className="text-center text-white/40 text-sm mb-8">Trusted by teams at</p>
+    <section className={`py-20 md:py-28 bg-[#0a1628] ${className ?? ''}`}>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Section label */}
+        <p className="text-center text-white/40 text-xs uppercase tracking-widest mb-12">
+          Trusted by 10,000+ creators and marketing teams
+        </p>
+
         <AnimatedGroup
           variants={{
             container: {
               visible: {
-                transition: { staggerChildren: 0.05, delayChildren: 0.75 },
+                transition: { staggerChildren: 0.1, delayChildren: 0.3 },
               },
             },
             ...transitionVariants,
           }}
-          className="group-hover:blur-xs mx-auto mt-6 grid max-w-2xl grid-cols-4 gap-x-12 gap-y-8 transition-all duration-500 group-hover:opacity-50 sm:gap-x-16 sm:gap-y-14"
+          className="grid grid-cols-2 lg:grid-cols-4 gap-px bg-white/[0.06] border border-white/[0.06] rounded-2xl overflow-hidden"
         >
-          {customers.map((logo, index) => (
-            <div key={index} className="flex">
-              <img
-                className="mx-auto h-auto w-fit opacity-40 hover:opacity-70 transition-opacity duration-300 dark:invert"
-                src={logo.src}
-                alt={logo.alt}
-                height={logo.height}
-                width="auto"
-              />
+          {STATS.map(stat => (
+            <div
+              key={stat.label}
+              className="flex flex-col items-center justify-center text-center px-6 py-10 bg-[#0a1628] hover:bg-white/[0.03] transition-colors duration-300"
+            >
+              <span className="font-mono text-4xl md:text-5xl font-bold text-white mb-2 tracking-tight">
+                {stat.value}
+              </span>
+              <span className="text-sm font-semibold text-cyan-400 mb-2">
+                {stat.label}
+              </span>
+              <span className="text-xs text-gray-400 leading-relaxed max-w-[14ch]">
+                {stat.description}
+              </span>
             </div>
           ))}
         </AnimatedGroup>

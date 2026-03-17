@@ -2,54 +2,39 @@
 
 export const HOMEPAGE_FAQS = [
   {
-    question: 'What is Synthex?',
+    question: 'How does Synthex learn my writing style?',
     answer:
-      'Synthex is a fully autonomous AI marketing platform that creates, schedules, optimises, and publishes content across 9 social media platforms without manual involvement. Think of it as replacing your entire social media agency — available 24/7, at a fraction of the cost.',
+      'You upload 20–30 of your best-performing posts during onboarding. Our AI analyses patterns in your tone, vocabulary, sentence structure, and what content resonates with your audience. The more you use it, the smarter it gets.',
   },
   {
-    question: 'What social media platforms does Synthex support?',
+    question: 'Which platforms does Synthex support?',
     answer:
-      'Synthex supports all 9 major platforms: LinkedIn, Instagram, TikTok, YouTube, X (Twitter), Facebook, Pinterest, Reddit, and Threads. Every platform receives content tailored to its unique algorithm, format requirements, and audience behaviour — not generic reposts.',
-  },
-  {
-    question: 'What is BYOK and how does it work?',
-    answer:
-      'BYOK stands for Bring Your Own Keys. You connect your own API keys from OpenAI, Anthropic, or Google AI directly to Synthex. The AI generation runs through your accounts, so you pay provider rates (typically cents per post) rather than a markup. This can reduce your AI costs by up to 80% compared to platforms that bundle API costs into their pricing.',
+      'Synthex supports Instagram, TikTok, Twitter/X, LinkedIn, Facebook, YouTube, Pinterest, Reddit, and Threads — all from one dashboard.',
   },
   {
     question: 'Is there a free trial?',
     answer:
-      'Yes. Synthex offers a 14-day free trial with full access to all features — including AI content generation, multi-platform scheduling, analytics, and competitor analysis. No credit card required to get started. You can cancel at any time, for any reason.',
+      'Yes — every plan includes a 14-day free trial, no credit card required. You get full access to all features in your chosen plan.',
   },
   {
-    question: 'How is Synthex different from Buffer, Hootsuite, or Later?',
+    question: 'Can I cancel anytime?',
     answer:
-      'Scheduling tools like Buffer and Hootsuite require you to create content yourself — they just help you post it. Synthex is an autonomous marketing platform: it generates the content, runs A/B tests, determines optimal posting times, tracks competitors, and continuously refines your strategy. It\'s the difference between a calendar app and a full marketing team.',
+      'Absolutely. Cancel from your dashboard at any time with no lock-in contracts or cancellation fees. Your data remains accessible for 30 days after cancellation.',
   },
   {
-    question: 'How does the AI learn my brand voice?',
+    question: "What's the difference between Starter, Pro, and Agency?",
     answer:
-      'Synthex builds a brand voice profile by analysing your existing content, top-performing posts, and audience responses. You can also provide direct brand guidelines, tone preferences, and content examples during onboarding. The AI improves its understanding the more you use the platform — every published post and engagement signal feeds back into your profile.',
+      'Starter ($49/mo) covers 1 user, 3 platforms, and 50 posts/month — perfect for solo creators. Pro ($99/mo) adds unlimited posts, all 9 platforms, and up to 5 team members. Agency ($249/mo) unlocks unlimited seats, white-label reports, and priority support.',
   },
   {
-    question: 'Can I review content before it publishes?',
+    question: 'Does Synthex post automatically or do I review content first?',
     answer:
-      'Yes. Synthex includes a full approval workflow — you can configure it to require human review for all posts, specific content types, or above certain confidence thresholds. You can also run in fully autonomous mode where the AI publishes based on your pre-set rules. The choice is yours.',
+      'Both options are available. You can set fully automatic scheduling or use the review-before-publish flow. Most users review content initially, then switch to auto-post once they trust their trained AI voice.',
   },
   {
-    question: 'What analytics does Synthex provide?',
+    question: 'Is my data secure?',
     answer:
-      'Synthex includes real-time analytics across all connected platforms: engagement rates, follower growth, reach, impressions, click-throughs, and platform distribution. Advanced features include predictive ROI modelling, competitor benchmarking, viral pattern detection, and optimal posting time forecasting based on your specific audience behaviour.',
-  },
-  {
-    question: 'Is Synthex secure?',
-    answer:
-      'All OAuth tokens and API keys are encrypted using AES-256-GCM. Your credentials are never stored in plaintext, never included in AI prompts, and are organisation-scoped — meaning no data crosses between different accounts. Synthex is built on enterprise-grade infrastructure (Supabase, Vercel) with full audit logging.',
-  },
-  {
-    question: 'What does Synthex cost?',
-    answer:
-      'Plans start from $249 per month. If you bring your own API keys (BYOK), your effective cost per post is dramatically lower. Custom enterprise pricing is available for agencies and multi-brand operations. All plans include a 14-day free trial — no credit card required.',
+      'Yes. We use AES-256 encryption for stored credentials, never store your social media passwords (OAuth only), and are fully GDPR compliant. Your content and brand data are never used to train models for other customers.',
   },
 ];
 
@@ -61,7 +46,7 @@ export function buildFaqSchemaJson(): string {
   return JSON.stringify({
     '@context': 'https://schema.org',
     '@type': 'FAQPage',
-    mainEntity: HOMEPAGE_FAQS.map((faq) => ({
+    mainEntity: HOMEPAGE_FAQS.map(faq => ({
       '@type': 'Question',
       name: faq.question,
       acceptedAnswer: {

@@ -6,48 +6,98 @@ import { Card } from '@/components/ui/card';
 
 export const metadata: Metadata = PAGE_METADATA.features;
 import {
-  Sparkles, TrendingUp, Users, Calendar, BarChart3, Zap,
-  Brain, Target, Palette, Shield, Globe,
-  ArrowRight, CheckCircle2
+  Sparkles,
+  TrendingUp,
+  Users,
+  Calendar,
+  BarChart3,
+  Brain,
+  Globe,
+  Share2,
+  Clock,
+  ArrowRight,
+  CheckCircle2,
 } from '@/components/icons';
 import {
-  TwitterXIcon, LinkedInIcon, InstagramIcon, TikTokIcon,
-  FacebookIcon, YouTubeIcon, PinterestIcon, ThreadsIcon, RedditIcon
+  TwitterXIcon,
+  LinkedInIcon,
+  InstagramIcon,
+  TikTokIcon,
+  FacebookIcon,
+  YouTubeIcon,
+  PinterestIcon,
+  ThreadsIcon,
+  RedditIcon,
 } from '@/components/icons/platform-icons';
 import MarketingLayout from '@/components/marketing/MarketingLayout';
 import GlowCard from '@/components/landing/glow-card';
-import { ContainerStagger, ContainerAnimated } from '@/components/landing/hero-video';
+import {
+  ContainerStagger,
+  ContainerAnimated,
+} from '@/components/landing/hero-video';
 
 export default function FeaturesPage() {
   return (
     <MarketingLayout currentPage="features">
       {/* Hero Section */}
       <section className="pt-32 pb-20 px-6">
-        <div className="container mx-auto text-center">
-          <h1 className="text-5xl font-bold text-white mb-6">
-            Powerful Features for <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-cyan-300">Social Media Success</span>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <p className="text-sm font-semibold text-cyan-400 uppercase tracking-widest mb-4">
+            Platform Features
+          </p>
+          <h1 className="text-5xl md:text-6xl font-bold text-white mb-6">
+            Every Feature You Need to{' '}
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-cyan-300">
+              Grow Faster
+            </span>
           </h1>
-          <p className="text-xl text-gray-300 mb-10 max-w-3xl mx-auto">
-            Everything you need to create viral content, grow your audience, and automate your social media presence.
+          <p className="text-xl text-gray-400 mb-10 max-w-3xl mx-auto">
+            Synthex gives you the AI tools, analytics, and automation to build a
+            powerful social media presence — without burning out.
           </p>
         </div>
       </section>
 
       {/* Video Demos Section */}
       <section className="pb-20 px-6">
-        <div className="container mx-auto">
-          <h2 className="text-3xl font-bold text-center text-white mb-4">See Features In Action</h2>
-          <p className="text-gray-400 text-center mb-12 max-w-2xl mx-auto">
-            Watch quick demos of each feature to see how Synthex can transform your social media workflow.
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <p className="text-sm font-semibold text-cyan-400 uppercase tracking-widest text-center mb-3">
+            See It in Action
           </p>
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto">
+          <h2 className="text-3xl font-bold text-center text-white mb-4">
+            Watch the Features Work
+          </h2>
+          <p className="text-gray-400 text-center mb-12 max-w-2xl mx-auto">
+            Quick demos of each core feature — see how Synthex transforms your
+            social media workflow in minutes, not months.
+          </p>
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
             {[
-              { title: 'Content Generator', description: 'AI-powered post creation', videoId: 'HbBBX0zYug4' },
-              { title: 'Analytics Dashboard', description: 'Real-time metrics', videoId: 'zS2cnmYxpf8' },
-              { title: 'Smart Scheduler', description: 'Optimal posting times', videoId: 'r6ybAyj50qs' },
-              { title: 'Viral Pattern Analytics', description: 'Discover what works', videoId: 'vCf79xJPbdI' },
+              {
+                title: 'Content Generator',
+                description: 'AI-powered post creation in your voice',
+                videoId: 'HbBBX0zYug4',
+              },
+              {
+                title: 'Analytics Dashboard',
+                description: 'Real-time metrics across all platforms',
+                videoId: 'zS2cnmYxpf8',
+              },
+              {
+                title: 'Smart Scheduler',
+                description: 'Optimal posting times per platform',
+                videoId: 'r6ybAyj50qs',
+              },
+              {
+                title: 'Viral Pattern Analytics',
+                description: 'Discover what drives engagement',
+                videoId: 'vCf79xJPbdI',
+              },
             ].map((video, i) => (
-              <div key={i} className="rounded-2xl overflow-hidden border border-cyan-500/10 bg-[#0d1f35]/60 hover:border-cyan-500/30 transition-all">
+              <div
+                key={i}
+                className="rounded-xl overflow-hidden border border-white/10 bg-white/5 hover:border-cyan-500/30 transition-colors"
+              >
                 <div className="aspect-video">
                   <iframe
                     src={`https://www.youtube.com/embed/${video.videoId}`}
@@ -59,8 +109,10 @@ export default function FeaturesPage() {
                   />
                 </div>
                 <div className="p-4">
-                  <h4 className="font-semibold text-white mb-1">{video.title}</h4>
-                  <p className="text-gray-500 text-sm">{video.description}</p>
+                  <h4 className="font-semibold text-white mb-1">
+                    {video.title}
+                  </h4>
+                  <p className="text-gray-400 text-sm">{video.description}</p>
                 </div>
               </div>
             ))}
@@ -69,149 +121,232 @@ export default function FeaturesPage() {
       </section>
 
       {/* Core Features */}
-      <section className="pb-20 px-6">
-        <div className="container mx-auto">
-          <h2 className="text-3xl font-bold text-center text-white mb-12">Core Features</h2>
+      <section className="py-20 md:py-28 px-6">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <p className="text-sm font-semibold text-cyan-400 uppercase tracking-widest text-center mb-3">
+            Core Features
+          </p>
+          <h2 className="text-3xl md:text-4xl font-bold text-center text-white mb-4">
+            Built for Serious Content Creators
+          </h2>
+          <p className="text-gray-400 text-center mb-12 max-w-2xl mx-auto">
+            Six powerful capabilities that work together to take your content
+            from idea to impact.
+          </p>
           <ContainerStagger className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {/* 1. AI Persona Learning */}
             <ContainerAnimated animation="bottom">
               <GlowCard className="p-6 h-full">
-                <Brain className="w-12 h-12 text-cyan-500 mb-4" />
-                <h3 className="text-xl font-semibold text-white mb-3">AI Persona Learning</h3>
+                <div className="bg-cyan-500/10 rounded-lg p-3 w-12 h-12 flex items-center justify-center mb-4">
+                  <Brain className="w-6 h-6 text-cyan-400" />
+                </div>
+                <h3 className="text-xl font-semibold text-white mb-3">
+                  AI That Sounds Like You
+                </h3>
                 <p className="text-gray-400 mb-4">
-                  Upload 20-30 of your best posts and watch as our AI learns your unique voice, tone, and style.
+                  Upload 20–30 of your best posts. Our AI analyses your unique
+                  voice, tone, and style — then writes content that&apos;s
+                  indistinguishable from your best work.
                 </p>
                 <ul className="space-y-2">
-                  <li className="flex items-center text-sm text-gray-300">
-                    <CheckCircle2 className="w-4 h-4 text-cyan-400 mr-2" />
-                    Voice & tone matching
+                  <li className="flex items-start text-sm text-gray-300">
+                    <CheckCircle2 className="w-4 h-4 text-cyan-400 mr-2 mt-0.5 shrink-0" />
+                    Learns from real examples — not templates
                   </li>
-                  <li className="flex items-center text-sm text-gray-300">
-                    <CheckCircle2 className="w-4 h-4 text-cyan-400 mr-2" />
-                    Style replication
+                  <li className="flex items-start text-sm text-gray-300">
+                    <CheckCircle2 className="w-4 h-4 text-cyan-400 mr-2 mt-0.5 shrink-0" />
+                    Analyses sentence structure, vocabulary, emoji usage, and
+                    formatting
                   </li>
-                  <li className="flex items-center text-sm text-gray-300">
-                    <CheckCircle2 className="w-4 h-4 text-cyan-400 mr-2" />
-                    Brand consistency
+                  <li className="flex items-start text-sm text-gray-300">
+                    <CheckCircle2 className="w-4 h-4 text-cyan-400 mr-2 mt-0.5 shrink-0" />
+                    Improves accuracy with every post you approve or edit
+                  </li>
+                  <li className="flex items-start text-sm text-gray-300">
+                    <CheckCircle2 className="w-4 h-4 text-cyan-400 mr-2 mt-0.5 shrink-0" />
+                    Supports multiple personas (one per brand or client)
                   </li>
                 </ul>
               </GlowCard>
             </ContainerAnimated>
 
+            {/* 2. Viral Pattern Analysis */}
             <ContainerAnimated animation="bottom">
               <GlowCard className="p-6 h-full">
-                <TrendingUp className="w-12 h-12 text-cyan-500 mb-4" />
-                <h3 className="text-xl font-semibold text-white mb-3">Viral Pattern Analysis</h3>
+                <div className="bg-cyan-500/10 rounded-lg p-3 w-12 h-12 flex items-center justify-center mb-4">
+                  <TrendingUp className="w-6 h-6 text-cyan-400" />
+                </div>
+                <h3 className="text-xl font-semibold text-white mb-3">
+                  Know What Works Before You Post
+                </h3>
                 <p className="text-gray-400 mb-4">
-                  Real-time analysis of trending content to identify what makes posts go viral.
+                  Real-time analysis of trending topics, hashtags, and content
+                  formats across all platforms — so you&apos;re always ahead of
+                  the curve.
                 </p>
                 <ul className="space-y-2">
-                  <li className="flex items-center text-sm text-gray-300">
-                    <CheckCircle2 className="w-4 h-4 text-cyan-400 mr-2" />
-                    Hashtag optimisation
+                  <li className="flex items-start text-sm text-gray-300">
+                    <CheckCircle2 className="w-4 h-4 text-cyan-400 mr-2 mt-0.5 shrink-0" />
+                    Tracks trending hashtags and topics per platform in
+                    real-time
                   </li>
-                  <li className="flex items-center text-sm text-gray-300">
-                    <CheckCircle2 className="w-4 h-4 text-cyan-400 mr-2" />
-                    Engagement triggers
+                  <li className="flex items-start text-sm text-gray-300">
+                    <CheckCircle2 className="w-4 h-4 text-cyan-400 mr-2 mt-0.5 shrink-0" />
+                    Identifies which content formats are driving the highest
+                    engagement right now
                   </li>
-                  <li className="flex items-center text-sm text-gray-300">
-                    <CheckCircle2 className="w-4 h-4 text-cyan-400 mr-2" />
-                    Timing insights
+                  <li className="flex items-start text-sm text-gray-300">
+                    <CheckCircle2 className="w-4 h-4 text-cyan-400 mr-2 mt-0.5 shrink-0" />
+                    Optimal posting time recommendations based on your
+                    audience&apos;s behaviour
+                  </li>
+                  <li className="flex items-start text-sm text-gray-300">
+                    <CheckCircle2 className="w-4 h-4 text-cyan-400 mr-2 mt-0.5 shrink-0" />
+                    Competitor content tracking — see what&apos;s performing in
+                    your space
                   </li>
                 </ul>
               </GlowCard>
             </ContainerAnimated>
 
+            {/* 3. Smart Content Generation */}
             <ContainerAnimated animation="bottom">
               <GlowCard className="p-6 h-full">
-                <Zap className="w-12 h-12 text-cyan-500 mb-4" />
-                <h3 className="text-xl font-semibold text-white mb-3">Smart Content Generation</h3>
+                <div className="bg-cyan-500/10 rounded-lg p-3 w-12 h-12 flex items-center justify-center mb-4">
+                  <Sparkles className="w-6 h-6 text-cyan-400" />
+                </div>
+                <h3 className="text-xl font-semibold text-white mb-3">
+                  10–15 On-Brand Variations in Seconds
+                </h3>
                 <p className="text-gray-400 mb-4">
-                  Generate 10-15 variations of viral-optimised content in seconds.
+                  Describe what you want to say, and Synthex generates multiple
+                  polished, platform-optimised variations — all in your voice.
                 </p>
                 <ul className="space-y-2">
-                  <li className="flex items-center text-sm text-gray-300">
-                    <CheckCircle2 className="w-4 h-4 text-cyan-400 mr-2" />
-                    Multiple variations
+                  <li className="flex items-start text-sm text-gray-300">
+                    <CheckCircle2 className="w-4 h-4 text-cyan-400 mr-2 mt-0.5 shrink-0" />
+                    Platform-specific formatting (TikTok captions vs LinkedIn
+                    articles vs Twitter threads)
                   </li>
-                  <li className="flex items-center text-sm text-gray-300">
-                    <CheckCircle2 className="w-4 h-4 text-cyan-400 mr-2" />
-                    Platform-specific
+                  <li className="flex items-start text-sm text-gray-300">
+                    <CheckCircle2 className="w-4 h-4 text-cyan-400 mr-2 mt-0.5 shrink-0" />
+                    Hook optimisation — AI tests multiple opening lines for
+                    maximum stop-scroll impact
                   </li>
-                  <li className="flex items-center text-sm text-gray-300">
-                    <CheckCircle2 className="w-4 h-4 text-cyan-400 mr-2" />
-                    Hook optimisation
+                  <li className="flex items-start text-sm text-gray-300">
+                    <CheckCircle2 className="w-4 h-4 text-cyan-400 mr-2 mt-0.5 shrink-0" />
+                    Hashtag suggestions drawn from your viral pattern data
+                  </li>
+                  <li className="flex items-start text-sm text-gray-300">
+                    <CheckCircle2 className="w-4 h-4 text-cyan-400 mr-2 mt-0.5 shrink-0" />
+                    Image prompt generation for visual content
                   </li>
                 </ul>
               </GlowCard>
             </ContainerAnimated>
 
+            {/* 4. Intelligent Scheduling */}
             <ContainerAnimated animation="bottom">
               <GlowCard className="p-6 h-full">
-                <Calendar className="w-12 h-12 text-cyan-500 mb-4" />
-                <h3 className="text-xl font-semibold text-white mb-3">Intelligent Scheduling</h3>
+                <div className="bg-cyan-500/10 rounded-lg p-3 w-12 h-12 flex items-center justify-center mb-4">
+                  <Calendar className="w-6 h-6 text-cyan-400" />
+                </div>
+                <h3 className="text-xl font-semibold text-white mb-3">
+                  Post at the Perfect Moment
+                </h3>
                 <p className="text-gray-400 mb-4">
-                  Post at the perfect time for maximum engagement on each platform.
+                  AI-optimised scheduling based on when your specific audience
+                  is most active. Bulk schedule weeks of content in minutes.
                 </p>
                 <ul className="space-y-2">
-                  <li className="flex items-center text-sm text-gray-300">
-                    <CheckCircle2 className="w-4 h-4 text-cyan-400 mr-2" />
-                    Optimal timing AI
+                  <li className="flex items-start text-sm text-gray-300">
+                    <CheckCircle2 className="w-4 h-4 text-cyan-400 mr-2 mt-0.5 shrink-0" />
+                    Audience activity analysis per platform
                   </li>
-                  <li className="flex items-center text-sm text-gray-300">
-                    <CheckCircle2 className="w-4 h-4 text-cyan-400 mr-2" />
-                    Bulk scheduling
+                  <li className="flex items-start text-sm text-gray-300">
+                    <CheckCircle2 className="w-4 h-4 text-cyan-400 mr-2 mt-0.5 shrink-0" />
+                    Drag-and-drop content calendar
                   </li>
-                  <li className="flex items-center text-sm text-gray-300">
-                    <CheckCircle2 className="w-4 h-4 text-cyan-400 mr-2" />
-                    Calendar view
+                  <li className="flex items-start text-sm text-gray-300">
+                    <CheckCircle2 className="w-4 h-4 text-cyan-400 mr-2 mt-0.5 shrink-0" />
+                    Bulk import and schedule via CSV or paste
+                  </li>
+                  <li className="flex items-start text-sm text-gray-300">
+                    <CheckCircle2 className="w-4 h-4 text-cyan-400 mr-2 mt-0.5 shrink-0" />
+                    Auto-requeue evergreen content + cross-platform simultaneous
+                    publishing
                   </li>
                 </ul>
               </GlowCard>
             </ContainerAnimated>
 
+            {/* 5. Advanced Analytics */}
             <ContainerAnimated animation="bottom">
               <GlowCard className="p-6 h-full">
-                <BarChart3 className="w-12 h-12 text-cyan-500 mb-4" />
-                <h3 className="text-xl font-semibold text-white mb-3">Advanced Analytics</h3>
+                <div className="bg-cyan-500/10 rounded-lg p-3 w-12 h-12 flex items-center justify-center mb-4">
+                  <BarChart3 className="w-6 h-6 text-cyan-400" />
+                </div>
+                <h3 className="text-xl font-semibold text-white mb-3">
+                  See What&apos;s Actually Working
+                </h3>
                 <p className="text-gray-400 mb-4">
-                  Track performance and ROI across all your social media channels.
+                  Real-time performance metrics across all platforms in one
+                  dashboard. Track reach, engagement, follower growth, and
+                  content ROI.
                 </p>
                 <ul className="space-y-2">
-                  <li className="flex items-center text-sm text-gray-300">
-                    <CheckCircle2 className="w-4 h-4 text-cyan-400 mr-2" />
-                    Real-time metrics
+                  <li className="flex items-start text-sm text-gray-300">
+                    <CheckCircle2 className="w-4 h-4 text-cyan-400 mr-2 mt-0.5 shrink-0" />
+                    Unified analytics across all 9 platforms
                   </li>
-                  <li className="flex items-center text-sm text-gray-300">
-                    <CheckCircle2 className="w-4 h-4 text-cyan-400 mr-2" />
-                    Growth tracking
+                  <li className="flex items-start text-sm text-gray-300">
+                    <CheckCircle2 className="w-4 h-4 text-cyan-400 mr-2 mt-0.5 shrink-0" />
+                    Post-level performance breakdown
                   </li>
-                  <li className="flex items-center text-sm text-gray-300">
-                    <CheckCircle2 className="w-4 h-4 text-cyan-400 mr-2" />
-                    ROI analysis
+                  <li className="flex items-start text-sm text-gray-300">
+                    <CheckCircle2 className="w-4 h-4 text-cyan-400 mr-2 mt-0.5 shrink-0" />
+                    Follower growth tracking and attribution
+                  </li>
+                  <li className="flex items-start text-sm text-gray-300">
+                    <CheckCircle2 className="w-4 h-4 text-cyan-400 mr-2 mt-0.5 shrink-0" />
+                    Content ROI calculator + exportable PDF reports (white-label
+                    on Agency plan)
                   </li>
                 </ul>
               </GlowCard>
             </ContainerAnimated>
 
+            {/* 6. Multi-Platform Publishing */}
             <ContainerAnimated animation="bottom">
               <GlowCard className="p-6 h-full">
-                <Globe className="w-12 h-12 text-cyan-500 mb-4" />
-                <h3 className="text-xl font-semibold text-white mb-3">Multi-Platform Support</h3>
+                <div className="bg-cyan-500/10 rounded-lg p-3 w-12 h-12 flex items-center justify-center mb-4">
+                  <Globe className="w-6 h-6 text-cyan-400" />
+                </div>
+                <h3 className="text-xl font-semibold text-white mb-3">
+                  One Dashboard, 9 Platforms
+                </h3>
                 <p className="text-gray-400 mb-4">
-                  Manage all your social media accounts from one powerful dashboard.
+                  Manage Instagram, TikTok, Twitter/X, LinkedIn, Facebook,
+                  YouTube, Pinterest, Reddit, and Threads — all without
+                  switching tabs.
                 </p>
                 <ul className="space-y-2">
-                  <li className="flex items-center text-sm text-gray-300">
-                    <CheckCircle2 className="w-4 h-4 text-cyan-400 mr-2" />
-                    9+ platforms
+                  <li className="flex items-start text-sm text-gray-300">
+                    <CheckCircle2 className="w-4 h-4 text-cyan-400 mr-2 mt-0.5 shrink-0" />
+                    Platform-native formatting (images, video specs, character
+                    limits auto-applied)
                   </li>
-                  <li className="flex items-center text-sm text-gray-300">
-                    <CheckCircle2 className="w-4 h-4 text-cyan-400 mr-2" />
-                    Cross-posting
+                  <li className="flex items-start text-sm text-gray-300">
+                    <CheckCircle2 className="w-4 h-4 text-cyan-400 mr-2 mt-0.5 shrink-0" />
+                    Unified content inbox — all comments and DMs in one place
                   </li>
-                  <li className="flex items-center text-sm text-gray-300">
-                    <CheckCircle2 className="w-4 h-4 text-cyan-400 mr-2" />
-                    Unified inbox
+                  <li className="flex items-start text-sm text-gray-300">
+                    <CheckCircle2 className="w-4 h-4 text-cyan-400 mr-2 mt-0.5 shrink-0" />
+                    Team collaboration with role-based permissions
+                  </li>
+                  <li className="flex items-start text-sm text-gray-300">
+                    <CheckCircle2 className="w-4 h-4 text-cyan-400 mr-2 mt-0.5 shrink-0" />
+                    Client workspace isolation (Agency plan)
                   </li>
                 </ul>
               </GlowCard>
@@ -220,72 +355,169 @@ export default function FeaturesPage() {
         </div>
       </section>
 
-      {/* Platform Specific */}
-      <section className="py-20 px-6 bg-white/[0.02] backdrop-blur-xl border-y border-white/[0.08]">
-        <div className="container mx-auto">
-          <h2 className="text-3xl font-bold text-center text-white mb-12">Platform-Specific Optimisation</h2>
+      {/* Platform Grid */}
+      <section className="py-20 md:py-28 px-6 bg-white/[0.02] backdrop-blur-xl border-y border-white/[0.08]">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <p className="text-sm font-semibold text-cyan-400 uppercase tracking-widest text-center mb-3">
+            Supported Platforms
+          </p>
+          <h2 className="text-3xl md:text-4xl font-bold text-center text-white mb-4">
+            9 Platforms. One Workflow.
+          </h2>
+          <p className="text-gray-400 text-center mb-12 max-w-2xl mx-auto">
+            Synthex handles the platform-specific nuances so you don&apos;t have
+            to. Every post is optimised for the platform it lands on.
+          </p>
           <div className="grid grid-cols-3 md:grid-cols-3 lg:grid-cols-5 gap-6 max-w-5xl mx-auto">
             {[
-              { name: 'Twitter/X', features: '280 chars, threads, hashtags', Icon: TwitterXIcon, color: '#1DA1F2' },
-              { name: 'LinkedIn', features: 'Professional tone, articles', Icon: LinkedInIcon, color: '#0A66C2' },
-              { name: 'Instagram', features: 'Captions, hashtags, stories', Icon: InstagramIcon, color: '#E4405F' },
-              { name: 'TikTok', features: 'Trends, sounds, hooks', Icon: TikTokIcon, color: '#FF0050' },
-              { name: 'Facebook', features: 'Long-form, groups, pages', Icon: FacebookIcon, color: '#1877F2' },
-              { name: 'YouTube', features: 'Titles, descriptions, tags', Icon: YouTubeIcon, color: '#FF0000' },
-              { name: 'Pinterest', features: 'SEO, boards, rich pins', Icon: PinterestIcon, color: '#E60023' },
-              { name: 'Reddit', features: 'Subreddits, discussions', Icon: RedditIcon, color: '#FF4500' },
-              { name: 'Threads', features: 'Text posts, conversations', Icon: ThreadsIcon, color: '#FFFFFF' },
-            ].map((platform) => (
+              {
+                name: 'Instagram',
+                description: 'Photo posts, Reels, Stories, carousels',
+                Icon: InstagramIcon,
+                color: '#E4405F',
+              },
+              {
+                name: 'TikTok',
+                description:
+                  'Video scripts, trending sounds, caption optimisation',
+                Icon: TikTokIcon,
+                color: '#FF0050',
+              },
+              {
+                name: 'Twitter / X',
+                description: 'Threads, single tweets, engagement timing',
+                Icon: TwitterXIcon,
+                color: '#1DA1F2',
+              },
+              {
+                name: 'LinkedIn',
+                description:
+                  'Professional articles, thought leadership, B2B reach',
+                Icon: LinkedInIcon,
+                color: '#0A66C2',
+              },
+              {
+                name: 'Facebook',
+                description: 'Posts, groups, event promotion',
+                Icon: FacebookIcon,
+                color: '#1877F2',
+              },
+              {
+                name: 'YouTube',
+                description:
+                  'Video descriptions, titles, chapters, community posts',
+                Icon: YouTubeIcon,
+                color: '#FF0000',
+              },
+              {
+                name: 'Pinterest',
+                description:
+                  'Pin descriptions, board strategy, seasonal content',
+                Icon: PinterestIcon,
+                color: '#E60023',
+              },
+              {
+                name: 'Reddit',
+                description: 'Community-native posts, discussion starters',
+                Icon: RedditIcon,
+                color: '#FF4500',
+              },
+              {
+                name: 'Threads',
+                description:
+                  'Short-form conversational content, Meta integration',
+                Icon: ThreadsIcon,
+                color: '#FFFFFF',
+              },
+            ].map(platform => (
               <div key={platform.name} className="text-center group">
-                <GlowCard className="bg-[#0d1f35]/80 backdrop-blur-xl p-4 mb-2 hover:scale-105 transition-transform duration-200">
-                  <platform.Icon size={32} color={platform.color} className="mx-auto mb-2" />
-                  <h4 className="text-white font-semibold text-sm">{platform.name}</h4>
+                <GlowCard className="bg-white/5 border border-white/10 rounded-xl p-4 mb-3 hover:border-cyan-500/30 transition-colors hover:scale-105 duration-200">
+                  <platform.Icon
+                    size={32}
+                    color={platform.color}
+                    className="mx-auto mb-2"
+                  />
+                  <h4 className="text-white font-semibold text-sm">
+                    {platform.name}
+                  </h4>
                 </GlowCard>
-                <p className="text-xs text-gray-400">{platform.features}</p>
+                <p className="text-xs text-gray-400 leading-relaxed">
+                  {platform.description}
+                </p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Advanced Features */}
-      <section className="py-20 px-6">
-        <div className="container mx-auto">
-          <h2 className="text-3xl font-bold text-center text-white mb-12">Advanced Capabilities</h2>
+      {/* Advanced Capabilities */}
+      <section className="py-20 md:py-28 px-6">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <p className="text-sm font-semibold text-cyan-400 uppercase tracking-widest text-center mb-3">
+            Advanced Capabilities
+          </p>
+          <h2 className="text-3xl md:text-4xl font-bold text-center text-white mb-4">
+            Power Tools for Teams and Agencies
+          </h2>
+          <p className="text-gray-400 text-center mb-12 max-w-2xl mx-auto">
+            Go beyond posting. A/B test your content, enforce brand consistency,
+            and collaborate with your team — all in one place.
+          </p>
           <ContainerStagger className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
             <ContainerAnimated animation="bottom">
               <GlowCard className="p-6 h-full">
-                <Target className="w-10 h-10 text-cyan-500 mb-3" />
-                <h3 className="text-lg font-semibold text-white mb-2">A/B Testing</h3>
+                <div className="bg-cyan-500/10 rounded-lg p-3 w-12 h-12 flex items-center justify-center mb-4">
+                  <TrendingUp className="w-6 h-6 text-cyan-400" />
+                </div>
+                <h3 className="text-lg font-semibold text-white mb-2">
+                  A/B Testing
+                </h3>
                 <p className="text-gray-400 text-sm">
-                  Test different content variations to find what resonates best with your audience.
+                  Test different content variations to find what resonates best
+                  with your audience. Let the data pick your winners.
                 </p>
               </GlowCard>
             </ContainerAnimated>
             <ContainerAnimated animation="bottom">
               <GlowCard className="p-6 h-full">
-                <Palette className="w-10 h-10 text-cyan-500 mb-3" />
-                <h3 className="text-lg font-semibold text-white mb-2">Brand Kit</h3>
+                <div className="bg-cyan-500/10 rounded-lg p-3 w-12 h-12 flex items-center justify-center mb-4">
+                  <Sparkles className="w-6 h-6 text-cyan-400" />
+                </div>
+                <h3 className="text-lg font-semibold text-white mb-2">
+                  Brand Kit
+                </h3>
                 <p className="text-gray-400 text-sm">
-                  Maintain consistent branding with saved colours, fonts, and templates.
+                  Maintain consistent branding with saved colours, fonts, and
+                  templates. Every piece of content stays on-brand
+                  automatically.
                 </p>
               </GlowCard>
             </ContainerAnimated>
             <ContainerAnimated animation="bottom">
               <GlowCard className="p-6 h-full">
-                <Shield className="w-10 h-10 text-cyan-500 mb-3" />
-                <h3 className="text-lg font-semibold text-white mb-2">Content Moderation</h3>
+                <div className="bg-cyan-500/10 rounded-lg p-3 w-12 h-12 flex items-center justify-center mb-4">
+                  <Globe className="w-6 h-6 text-cyan-400" />
+                </div>
+                <h3 className="text-lg font-semibold text-white mb-2">
+                  Content Moderation
+                </h3>
                 <p className="text-gray-400 text-sm">
-                  AI-powered content review to ensure brand safety and compliance.
+                  AI-powered content review to ensure brand safety and
+                  compliance before anything goes live.
                 </p>
               </GlowCard>
             </ContainerAnimated>
             <ContainerAnimated animation="bottom">
               <GlowCard className="p-6 h-full">
-                <Users className="w-10 h-10 text-cyan-500 mb-3" />
-                <h3 className="text-lg font-semibold text-white mb-2">Team Collaboration</h3>
+                <div className="bg-cyan-500/10 rounded-lg p-3 w-12 h-12 flex items-center justify-center mb-4">
+                  <Users className="w-6 h-6 text-cyan-400" />
+                </div>
+                <h3 className="text-lg font-semibold text-white mb-2">
+                  Team Collaboration
+                </h3>
                 <p className="text-gray-400 text-sm">
-                  Work together with approval workflows and role-based permissions.
+                  Work together with approval workflows and role-based
+                  permissions. Keep clients separate with isolated workspaces.
                 </p>
               </GlowCard>
             </ContainerAnimated>
@@ -294,17 +526,21 @@ export default function FeaturesPage() {
       </section>
 
       {/* CTA */}
-      <section className="py-20 px-6">
-        <div className="container mx-auto">
+      <section className="py-20 md:py-28 px-6">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <Card className="p-12 text-center bg-gradient-to-r from-cyan-500/10 to-cyan-600/10 border-cyan-500/20 backdrop-blur-xl">
-            <h2 className="text-3xl font-bold text-white mb-4">
+            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
               Experience the Power of AI-Driven Social Media
             </h2>
-            <p className="text-xl text-gray-300 mb-8">
-              Start your free trial and see results in days, not months.
+            <p className="text-xl text-gray-400 mb-8 max-w-2xl mx-auto">
+              Start your free trial and see results in days, not months. No
+              credit card required.
             </p>
             <Link href="/signup">
-              <Button size="lg" className="bg-gradient-to-r from-cyan-500 to-cyan-600 text-white px-10 py-6 text-lg hover:from-cyan-600 hover:to-cyan-700">
+              <Button
+                size="lg"
+                className="bg-gradient-to-r from-cyan-500 to-cyan-600 text-white px-10 py-6 text-lg hover:from-cyan-600 hover:to-cyan-700"
+              >
                 Start Free Trial
                 <ArrowRight className="ml-2" />
               </Button>

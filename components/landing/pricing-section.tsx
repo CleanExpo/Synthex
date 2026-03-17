@@ -13,14 +13,15 @@ import { buttonVariants } from '@/components/ui/button';
 
 interface PricingPlan {
   name: string;
-  price: number;
-  yearlyPrice: number;
+  price: number | null;
+  yearlyPrice: number | null;
   period: string;
   features: string[];
   description: string;
   buttonText: string;
   href: string;
   isPopular: boolean;
+  isEnterprise?: boolean;
 }
 
 const PLANS: PricingPlan[] = [
@@ -28,14 +29,18 @@ const PLANS: PricingPlan[] = [
     name: 'Starter',
     price: 49,
     yearlyPrice: 39,
-    period: 'per month',
+    period: 'mo',
     features: [
-      '5 social accounts',
-      '100 AI posts/month',
-      'Basic analytics',
+      '1 user seat',
+      'Connect up to 3 social platforms',
+      '50 AI-generated posts per month',
+      'AI voice training (up to 30 samples)',
+      'Basic analytics dashboard',
+      'Content calendar & scheduling',
       'Email support',
     ],
-    description: 'Perfect for individuals',
+    description:
+      'Solo creators and freelancers just getting started with AI content',
     buttonText: 'Start Free Trial',
     href: '/signup',
     isPopular: false,
@@ -44,17 +49,19 @@ const PLANS: PricingPlan[] = [
     name: 'Pro',
     price: 99,
     yearlyPrice: 79,
-    period: 'per month',
+    period: 'mo',
     features: [
-      '25 social accounts',
-      'Unlimited AI posts',
-      'Advanced analytics',
-      'Priority support',
-      'BYOK API keys',
-      'Team collaboration',
+      'Up to 5 user seats',
+      'All 9 social platforms',
+      'Unlimited AI-generated posts',
+      'Advanced analytics & competitor insights',
+      'A/B testing for content variations',
+      'Hashtag intelligence & trending topics',
+      'Priority email & chat support',
+      'Team collaboration tools',
     ],
-    description: 'Ideal for growing teams',
-    buttonText: 'Get Started',
+    description: 'Growing brands and small teams managing multiple platforms',
+    buttonText: 'Start Free Trial',
     href: '/signup',
     isPopular: true,
   },
@@ -62,19 +69,41 @@ const PLANS: PricingPlan[] = [
     name: 'Agency',
     price: 249,
     yearlyPrice: 199,
-    period: 'per month',
+    period: 'mo',
     features: [
-      'Unlimited accounts',
-      'Unlimited AI posts',
-      'White-label reports',
-      'Dedicated support',
-      'Custom integrations',
-      'SLA agreement',
+      'Unlimited user seats',
+      'Unlimited client workspaces',
+      'Separate brand voices per client',
+      'White-label PDF reports',
+      'Custom branding on client dashboards',
+      'API access',
+      'Dedicated account manager',
+      'SLA-backed support (4-hour response)',
     ],
-    description: 'For agencies and enterprises',
-    buttonText: 'Contact Sales',
-    href: '/contact',
+    description: 'Agencies managing multiple client brands',
+    buttonText: 'Start Free Trial',
+    href: '/signup',
     isPopular: false,
+  },
+  {
+    name: 'Enterprise',
+    price: null,
+    yearlyPrice: null,
+    period: 'mo',
+    features: [
+      'Custom seat limits',
+      'On-premise deployment options',
+      'SSO / SAML integration',
+      'Custom data retention & GDPR DPA',
+      'Dedicated infrastructure',
+      'Custom onboarding & training',
+    ],
+    description:
+      'Large organisations with complex compliance or integration requirements',
+    buttonText: 'Contact Sales',
+    href: '/contact?subject=enterprise',
+    isPopular: false,
+    isEnterprise: true,
   },
 ];
 
@@ -118,14 +147,17 @@ export function PricingSection({
   };
 
   return (
-    <div className="container py-20">
+    <div className="container py-20 md:py-28">
       <div className="text-center space-y-4 mb-12">
         <h2 className="text-4xl font-bold tracking-tight sm:text-5xl text-white">
           {title}
         </h2>
-        <p className="text-white/60 text-lg whitespace-pre-line">{description}</p>
+        <p className="text-white/60 text-lg whitespace-pre-line">
+          {description}
+        </p>
       </div>
 
+      {/* Billing toggle */}
       <div className="flex justify-center items-center gap-3 mb-10">
         <Label className="text-white/60 text-sm font-medium">Monthly</Label>
         <Switch
@@ -136,11 +168,13 @@ export function PricingSection({
         />
         <span className="text-sm font-medium text-white/60">
           Annual{' '}
-          <span className="text-cyan-400 font-semibold">(Save 20%)</span>
+          <span className="inline-flex items-center bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 rounded-full text-xs px-2.5 py-0.5 font-semibold ml-1">
+            Save 20%
+          </span>
         </span>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
         {PLANS.map((plan, index) => (
           <motion.div
             key={index}
@@ -148,10 +182,9 @@ export function PricingSection({
             whileInView={
               isDesktop
                 ? {
-                    y: plan.isPopular ? -20 : 0,
+                    y: plan.isPopular ? -12 : 0,
                     opacity: 1,
-                    x: index === 2 ? -30 : index === 0 ? 30 : 0,
-                    scale: index === 0 || index === 2 ? 0.94 : 1.0,
+                    scale: plan.isPopular ? 1.02 : 1.0,
                   }
                 : { opacity: 1, y: 0 }
             }
@@ -161,63 +194,83 @@ export function PricingSection({
               type: 'spring',
               stiffness: 100,
               damping: 30,
-              delay: 0.4,
+              delay: 0.1 + index * 0.1,
               opacity: { duration: 0.5 },
             }}
             className={cn(
-              'rounded-sm border-[0.5px] p-6 text-center flex flex-col relative',
+              'rounded-2xl border p-6 text-center flex flex-col relative',
               plan.isPopular
-                ? 'border-cyan-500/30 bg-cyan-500/[0.04]'
-                : 'border-white/[0.06] bg-[#0a1628]',
-              !plan.isPopular && 'mt-5',
-              index === 0 && 'origin-right',
-              index === 2 && 'origin-left'
+                ? 'border-cyan-500/50 bg-cyan-500/5'
+                : 'border-white/10 bg-white/5',
+              !plan.isPopular && 'mt-5'
             )}
           >
+            {/* Most Popular badge */}
             {plan.isPopular && (
-              <div className="absolute top-0 right-0 bg-cyan-500 py-0.5 px-2 rounded-bl-sm rounded-tr-sm flex items-center">
-                <Star className="text-[#080e1a] h-4 w-4 fill-current" />
-                <span className="text-[#080e1a] ml-1 font-sans font-semibold text-sm">
-                  Popular
+              <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
+                <span className="inline-flex items-center gap-1 bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 rounded-full text-xs px-3 py-1 font-semibold whitespace-nowrap">
+                  <Star className="h-3 w-3 fill-current" />
+                  Most Popular
                 </span>
               </div>
             )}
 
             <div className="flex-1 flex flex-col">
-              <p className="text-base font-semibold text-white/60">{plan.name}</p>
+              <p className="text-base font-semibold text-white/60 mt-2">
+                {plan.name}
+              </p>
 
-              <div className="mt-6 flex items-center justify-center gap-x-2">
-                <span className="text-5xl font-bold tracking-tight text-white">
-                  <NumberFlow
-                    value={isMonthly ? plan.price : plan.yearlyPrice}
-                    format={{
-                      style: 'currency',
-                      currency: 'AUD',
-                      minimumFractionDigits: 0,
-                      maximumFractionDigits: 0,
-                    }}
-                    transformTiming={{
-                      duration: 500,
-                      easing: 'ease-out',
-                    }}
-                    willChange
-                    className="tabular-nums"
-                  />
-                </span>
-                <span className="text-sm font-semibold leading-6 tracking-wide text-white/40">
-                  / {plan.period}
-                </span>
+              <div className="mt-6 flex items-end justify-center gap-x-1">
+                {plan.isEnterprise ? (
+                  <span className="text-4xl font-bold tracking-tight text-white">
+                    Custom
+                  </span>
+                ) : (
+                  <>
+                    <span className="text-5xl font-bold tracking-tight text-white">
+                      <NumberFlow
+                        value={
+                          isMonthly
+                            ? (plan.price ?? 0)
+                            : (plan.yearlyPrice ?? 0)
+                        }
+                        format={{
+                          style: 'currency',
+                          currency: 'AUD',
+                          minimumFractionDigits: 0,
+                          maximumFractionDigits: 0,
+                        }}
+                        transformTiming={{
+                          duration: 500,
+                          easing: 'ease-out',
+                        }}
+                        willChange
+                        className="tabular-nums"
+                      />
+                    </span>
+                    <span className="text-sm font-semibold leading-6 tracking-wide text-white/40 mb-1.5">
+                      /{plan.period}
+                    </span>
+                  </>
+                )}
               </div>
 
-              <p className="text-xs leading-5 text-white/40 mt-1">
-                {isMonthly ? 'billed monthly' : 'billed annually'}
-              </p>
+              {!plan.isEnterprise && (
+                <p className="text-xs leading-5 text-white/40 mt-1">
+                  {isMonthly ? 'billed monthly' : 'billed annually'}
+                </p>
+              )}
+              {plan.isEnterprise && (
+                <p className="text-xs leading-5 text-white/40 mt-1">
+                  contact us for pricing
+                </p>
+              )}
 
               <ul className="mt-5 gap-2 flex flex-col text-left">
                 {plan.features.map((feature, idx) => (
                   <li key={idx} className="flex items-start gap-2">
-                    <Check className="h-4 w-4 text-cyan-400 mt-1 flex-shrink-0" />
-                    <span className="text-white/70 text-sm">{feature}</span>
+                    <Check className="h-4 w-4 text-cyan-400 mt-0.5 flex-shrink-0" />
+                    <span className="text-gray-300 text-sm">{feature}</span>
                   </li>
                 ))}
               </ul>
@@ -228,17 +281,19 @@ export function PricingSection({
                 href={plan.href}
                 className={cn(
                   buttonVariants({ variant: 'outline' }),
-                  'group relative w-full gap-2 overflow-hidden text-sm font-semibold tracking-tight',
+                  'group relative w-full gap-2 overflow-hidden text-sm font-semibold tracking-tight rounded-full py-3',
                   'transition-all duration-300',
                   plan.isPopular
-                    ? 'bg-cyan-500 text-[#080e1a] border-cyan-500 hover:bg-cyan-400 hover:border-cyan-400'
-                    : 'bg-transparent text-white border-white/[0.06] hover:border-cyan-500/30 hover:bg-cyan-500/[0.08] hover:text-cyan-300'
+                    ? 'bg-cyan-500 text-white border-cyan-500 hover:bg-cyan-400 hover:border-cyan-400'
+                    : 'bg-transparent text-white border-white/20 hover:border-cyan-500/50 hover:bg-cyan-500/[0.08] hover:text-cyan-300'
                 )}
               >
                 {plan.buttonText}
               </Link>
 
-              <p className="mt-4 text-xs leading-5 text-white/40">{plan.description}</p>
+              <p className="mt-4 text-xs leading-5 text-white/40">
+                {plan.description}
+              </p>
             </div>
           </motion.div>
         ))}

@@ -1,7 +1,14 @@
 'use client';
 
 import * as React from 'react';
-import { Activity, ArrowRight, Files, Flower, GalleryVerticalEnd, MapPin } from 'lucide-react';
+import {
+  Activity,
+  ArrowRight,
+  Files,
+  Flower,
+  GalleryVerticalEnd,
+  MapPin,
+} from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid } from 'recharts';
 import * as RechartsPrimitive from 'recharts';
 import { cn } from '@/lib/utils';
@@ -24,12 +31,15 @@ const ChartContext = React.createContext<ChartContextProps | null>(null);
 
 function useChart() {
   const context = React.useContext(ChartContext);
-  if (!context) throw new Error('useChart must be used within a <ChartContainer />');
+  if (!context)
+    throw new Error('useChart must be used within a <ChartContainer />');
   return context;
 }
 
 const ChartStyle = ({ id, config }: { id: string; config: ChartConfig }) => {
-  const colorConfig = Object.entries(config).filter(([, c]) => c.theme || c.color);
+  const colorConfig = Object.entries(config).filter(
+    ([, c]) => c.theme || c.color
+  );
   if (!colorConfig.length) return null;
   return (
     <style
@@ -40,8 +50,9 @@ const ChartStyle = ({ id, config }: { id: string; config: ChartConfig }) => {
               `${prefix} [data-chart=${id}] {\n${colorConfig
                 .map(([key, itemConfig]) => {
                   const color =
-                    itemConfig.theme?.[theme as keyof typeof itemConfig.theme] ||
-                    itemConfig.color;
+                    itemConfig.theme?.[
+                      theme as keyof typeof itemConfig.theme
+                    ] || itemConfig.color;
                   return color ? `  --color-${key}: ${color};` : null;
                 })
                 .filter(Boolean)
@@ -57,7 +68,9 @@ const ChartContainer = React.forwardRef<
   HTMLDivElement,
   React.ComponentProps<'div'> & {
     config: ChartConfig;
-    children: React.ComponentProps<typeof RechartsPrimitive.ResponsiveContainer>['children'];
+    children: React.ComponentProps<
+      typeof RechartsPrimitive.ResponsiveContainer
+    >['children'];
   }
 >(({ id, className, children, config, ...props }, ref) => {
   const uniqueId = React.useId();
@@ -77,19 +90,24 @@ const ChartContainer = React.forwardRef<
         {...props}
       >
         <ChartStyle id={chartId} config={config} />
-        <RechartsPrimitive.ResponsiveContainer>{children}</RechartsPrimitive.ResponsiveContainer>
+        <RechartsPrimitive.ResponsiveContainer>
+          {children}
+        </RechartsPrimitive.ResponsiveContainer>
       </div>
     </ChartContext.Provider>
   );
 });
 ChartContainer.displayName = 'Chart';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const ChartTooltip = RechartsPrimitive.Tooltip as unknown as React.FC<
   RechartsPrimitive.TooltipProps<number, string>
 >;
 
-function getPayloadConfigFromPayload(config: ChartConfig, payload: unknown, key: string) {
+function getPayloadConfigFromPayload(
+  config: ChartConfig,
+  payload: unknown,
+  key: string
+) {
   if (typeof payload !== 'object' || payload === null) return undefined;
   const payloadObj = payload as Record<string, unknown>;
   const payloadPayload =
@@ -101,12 +119,18 @@ function getPayloadConfigFromPayload(config: ChartConfig, payload: unknown, key:
   let configLabelKey = key;
   if (key in payloadObj && typeof payloadObj[key] === 'string') {
     configLabelKey = payloadObj[key] as string;
-  } else if (payloadPayload && key in payloadPayload && typeof payloadPayload[key] === 'string') {
+  } else if (
+    payloadPayload &&
+    key in payloadPayload &&
+    typeof payloadPayload[key] === 'string'
+  ) {
     configLabelKey = payloadPayload[key] as string;
   }
   return configLabelKey in config
     ? config[configLabelKey]
-    : (config[key] as unknown as (typeof config)[keyof typeof config] | undefined);
+    : (config[key] as unknown as
+        | (typeof config)[keyof typeof config]
+        | undefined);
 }
 
 const ChartTooltipContent = React.forwardRef<
@@ -115,7 +139,10 @@ const ChartTooltipContent = React.forwardRef<
     active?: boolean;
     payload?: Array<Record<string, unknown>>;
     label?: React.ReactNode;
-    labelFormatter?: (label: unknown, payload: Array<unknown>) => React.ReactNode;
+    labelFormatter?: (
+      label: unknown,
+      payload: Array<unknown>
+    ) => React.ReactNode;
     labelClassName?: string;
     formatter?: (
       value: unknown,
@@ -170,9 +197,19 @@ const ChartTooltipContent = React.forwardRef<
       }
       if (!value) return null;
       return (
-        <div className={cn('font-medium', labelClassName)}>{value as React.ReactNode}</div>
+        <div className={cn('font-medium', labelClassName)}>
+          {value as React.ReactNode}
+        </div>
       );
-    }, [label, labelFormatter, payload, hideLabel, labelClassName, config, labelKey]);
+    }, [
+      label,
+      labelFormatter,
+      payload,
+      hideLabel,
+      labelClassName,
+      config,
+      labelKey,
+    ]);
 
     if (!active || !payload?.length) return null;
 
@@ -239,7 +276,8 @@ const ChartTooltipContent = React.forwardRef<
                       <div className="grid gap-1.5">
                         {nestLabel ? tooltipLabel : null}
                         <span className="text-white/40">
-                          {(itemConfig?.label as React.ReactNode) || (item.name as React.ReactNode)}
+                          {(itemConfig?.label as React.ReactNode) ||
+                            (item.name as React.ReactNode)}
                         </span>
                       </div>
                       {item.value != null && (
@@ -309,12 +347,28 @@ function MonitoringChart() {
       <AreaChart data={chartData}>
         <defs>
           <linearGradient id="fillCampaigns" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="var(--color-campaigns)" stopOpacity={0.6} />
-            <stop offset="55%" stopColor="var(--color-campaigns)" stopOpacity={0.05} />
+            <stop
+              offset="0%"
+              stopColor="var(--color-campaigns)"
+              stopOpacity={0.6}
+            />
+            <stop
+              offset="55%"
+              stopColor="var(--color-campaigns)"
+              stopOpacity={0.05}
+            />
           </linearGradient>
           <linearGradient id="fillPosts" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="var(--color-posts)" stopOpacity={0.6} />
-            <stop offset="55%" stopColor="var(--color-posts)" stopOpacity={0.05} />
+            <stop
+              offset="0%"
+              stopColor="var(--color-posts)"
+              stopOpacity={0.6}
+            />
+            <stop
+              offset="55%"
+              stopColor="var(--color-posts)"
+              stopOpacity={0.05}
+            />
           </linearGradient>
         </defs>
         <XAxis hide />
@@ -365,7 +419,7 @@ const feedMessages: FeedMessage[] = [
     title: 'Billing Updated',
     time: '6m ago',
     content: 'Your Pro subscription renewed successfully.',
-    gradient: 'from-yellow-400 to-orange-500',
+    gradient: 'from-cyan-500 to-blue-600',
   },
   {
     title: 'Integration Connected',
@@ -377,13 +431,13 @@ const feedMessages: FeedMessage[] = [
     title: 'Analytics Report',
     time: '12m ago',
     content: 'Dashboard insights updated with latest metrics.',
-    gradient: 'from-orange-300 to-fuchsia-500',
+    gradient: 'from-cyan-400 to-violet-500',
   },
   {
     title: 'Weekly Recap',
     time: '15m ago',
     content: "Here's what your team accomplished this week.",
-    gradient: 'from-green-400 to-teal-500',
+    gradient: 'from-teal-400 to-cyan-500',
   },
 ];
 
@@ -419,7 +473,9 @@ const ActivityFeed = () => {
                   {msg.time}
                 </span>
               </div>
-              <p className="text-xs text-white/60 mt-0.5 line-clamp-1">{msg.content}</p>
+              <p className="text-xs text-white/60 mt-0.5 line-clamp-1">
+                {msg.content}
+              </p>
             </div>
           </div>
         ))}
@@ -494,8 +550,21 @@ export function FeaturesSection() {
 
   return (
     <section className="py-24 bg-[#080e1a]">
+      <div className="max-w-7xl mx-auto px-6">
+        <div className="text-center mb-12">
+          <p className="text-sm font-semibold text-cyan-400 uppercase tracking-widest mb-3">
+            Platform Highlights
+          </p>
+          <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+            Everything Running in Real-Time
+          </h2>
+          <p className="text-gray-400 max-w-2xl mx-auto">
+            From audience analytics to AI-generated content — see the platform
+            working for you, live.
+          </p>
+        </div>
+      </div>
       <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-2 md:grid-rows-2">
-
         {/* 1. MAP — Top Left */}
         <div
           className={cn(
@@ -542,7 +611,9 @@ export function FeaturesSection() {
             </span>
             <h3 className="text-xl font-normal text-white mt-2">
               {featuredCasestudy.title}{' '}
-              <span className="text-white/60">{featuredCasestudy.subtitle}</span>
+              <span className="text-white/60">
+                {featuredCasestudy.subtitle}
+              </span>
             </h3>
           </div>
           <div className="flex justify-center items-center w-full">
