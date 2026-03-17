@@ -17,14 +17,15 @@ export function NavBar() {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
-    <nav className="fixed top-0 w-full z-50 bg-[#0a1628]/90 backdrop-blur-md border-b border-[0.5px] border-white/[0.06]">
+    <nav className="fixed top-0 w-full z-50 bg-[#0a1628]/90 backdrop-blur-md border-b border-white/5">
       <div className="container mx-auto px-6 py-4">
         <div className="flex items-center justify-between">
-
           {/* Logo */}
           <Link href="/" className="flex items-center gap-3 group">
             <SynthexLogo className="w-8 h-8 transition-opacity group-hover:opacity-80" />
-            <span className="text-sm font-light tracking-[0.25em] text-white uppercase">Synthex</span>
+            <span className="text-white font-semibold tracking-[0.2em] text-sm uppercase">
+              SYNTHEX
+            </span>
           </Link>
 
           {/* Desktop nav */}
@@ -33,7 +34,7 @@ export function NavBar() {
               <Link
                 key={href}
                 href={href}
-                className="text-white/50 hover:text-white text-sm tracking-wide transition-colors duration-200"
+                className="text-white/60 hover:text-white text-sm font-medium transition-colors"
               >
                 {label}
               </Link>
@@ -41,16 +42,16 @@ export function NavBar() {
           </div>
 
           {/* Desktop CTA */}
-          <div className="hidden md:flex items-center gap-4">
+          <div className="hidden md:flex items-center gap-3">
             <Link
               href="/login"
-              className="text-white/50 hover:text-white text-sm tracking-wide transition-colors duration-200"
+              className="border border-white/20 text-white/70 hover:border-white/40 hover:text-white rounded-full px-4 py-2 text-sm transition-all"
             >
               Sign In
             </Link>
             <Link
               href="/signup"
-              className="px-5 py-2 bg-cyan-500 hover:bg-cyan-400 text-[#0a1628] text-sm font-semibold tracking-wide transition-colors duration-200 rounded-sm"
+              className="bg-cyan-500 hover:bg-cyan-400 text-white rounded-full px-5 py-2 text-sm font-semibold transition-colors"
             >
               Get Started
             </Link>
@@ -59,14 +60,29 @@ export function NavBar() {
           {/* Mobile toggle */}
           <button
             onClick={() => setMobileOpen(!mobileOpen)}
-            className="md:hidden p-2 text-white/50 hover:text-white transition-colors"
+            className="md:hidden p-2 text-white/60 hover:text-white transition-colors"
             aria-label="Toggle navigation"
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
               {mobileOpen ? (
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={1.5}
+                  d="M6 18L18 6M6 6l12 12"
+                />
               ) : (
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 6h16M4 12h16M4 18h16" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={1.5}
+                  d="M4 6h16M4 12h16M4 18h16"
+                />
               )}
             </svg>
           </button>
@@ -74,13 +90,13 @@ export function NavBar() {
 
         {/* Mobile menu */}
         {mobileOpen && (
-          <div className="md:hidden pt-4 pb-2 border-t border-[0.5px] border-white/[0.06] mt-4 space-y-0.5">
+          <div className="md:hidden pt-4 pb-2 border-t border-white/5 mt-4 space-y-0.5">
             {NAV_LINKS.map(({ href, label }) => (
               <Link
                 key={href}
                 href={href}
                 onClick={() => setMobileOpen(false)}
-                className="block py-2.5 text-white/50 hover:text-white text-sm tracking-wide transition-colors"
+                className="block py-2.5 text-white/60 hover:text-white text-sm font-medium transition-colors"
               >
                 {label}
               </Link>
@@ -89,16 +105,16 @@ export function NavBar() {
               <Link
                 href="/login"
                 onClick={() => setMobileOpen(false)}
-                className="block py-2.5 text-white/50 hover:text-white text-sm tracking-wide text-center border-[0.5px] border-white/[0.06] rounded-sm transition-colors"
+                className="block py-2.5 text-center border border-white/20 text-white/70 hover:border-white/40 hover:text-white rounded-full text-sm transition-all"
               >
                 Sign In
               </Link>
               <Link
                 href="/signup"
                 onClick={() => setMobileOpen(false)}
-                className="block py-3 bg-cyan-500 hover:bg-cyan-400 text-[#0a1628] text-sm font-semibold tracking-wide text-center rounded-sm transition-colors"
+                className="block py-2.5 text-center bg-cyan-500 hover:bg-cyan-400 text-white rounded-full text-sm font-semibold transition-colors"
               >
-                Get Started Free
+                Get Started
               </Link>
             </div>
           </div>

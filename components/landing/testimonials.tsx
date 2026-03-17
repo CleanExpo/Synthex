@@ -1,10 +1,10 @@
-"use client";
+'use client';
 
-import { ChevronLeft, ChevronRight } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
-import Image from "next/image";
-import { useEffect, useState } from "react";
-import { cn } from "@/lib/utils";
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import Image from 'next/image';
+import { useCallback, useEffect, useState } from 'react';
+import { cn } from '@/lib/utils';
 
 type Testimonial = {
   quote: string;
@@ -24,13 +24,13 @@ export const AnimatedTestimonials = ({
 }) => {
   const [active, setActive] = useState(0);
 
-  const handleNext = () => {
-    setActive((prev) => (prev + 1) % testimonials.length);
-  };
+  const handleNext = useCallback(() => {
+    setActive(prev => (prev + 1) % testimonials.length);
+  }, [testimonials.length]);
 
-  const handlePrev = () => {
-    setActive((prev) => (prev - 1 + testimonials.length) % testimonials.length);
-  };
+  const handlePrev = useCallback(() => {
+    setActive(prev => (prev - 1 + testimonials.length) % testimonials.length);
+  }, [testimonials.length]);
 
   const isActive = (index: number) => index === active;
 
@@ -39,12 +39,17 @@ export const AnimatedTestimonials = ({
       const interval = setInterval(handleNext, 5000);
       return () => clearInterval(interval);
     }
-  }, [autoplay]);
+  }, [autoplay, handleNext]);
 
   const randomRotateY = () => Math.floor(Math.random() * 21) - 10;
 
   return (
-    <div className={cn("max-w-sm md:max-w-4xl mx-auto px-4 md:px-8 lg:px-12 py-20", className)}>
+    <div
+      className={cn(
+        'max-w-sm md:max-w-4xl mx-auto px-4 md:px-8 lg:px-12 py-20',
+        className
+      )}
+    >
       <div className="relative grid grid-cols-1 md:grid-cols-2 gap-20">
         <div>
           <div className="relative h-80 w-full">
@@ -52,17 +57,29 @@ export const AnimatedTestimonials = ({
               {testimonials.map((testimonial, index) => (
                 <motion.div
                   key={testimonial.src}
-                  initial={{ opacity: 0, scale: 0.9, z: -100, rotate: randomRotateY() }}
+                  initial={{
+                    opacity: 0,
+                    scale: 0.9,
+                    z: -100,
+                    rotate: randomRotateY(),
+                  }}
                   animate={{
                     opacity: isActive(index) ? 1 : 0.7,
                     scale: isActive(index) ? 1 : 0.95,
                     z: isActive(index) ? 0 : -100,
                     rotate: isActive(index) ? 0 : randomRotateY(),
-                    zIndex: isActive(index) ? 999 : testimonials.length + 2 - index,
+                    zIndex: isActive(index)
+                      ? 999
+                      : testimonials.length + 2 - index,
                     y: isActive(index) ? [0, -80, 0] : 0,
                   }}
-                  exit={{ opacity: 0, scale: 0.9, z: 100, rotate: randomRotateY() }}
-                  transition={{ duration: 0.4, ease: "easeInOut" }}
+                  exit={{
+                    opacity: 0,
+                    scale: 0.9,
+                    z: 100,
+                    rotate: randomRotateY(),
+                  }}
+                  transition={{ duration: 0.4, ease: 'easeInOut' }}
                   className="absolute inset-0 origin-bottom"
                 >
                   <Image
@@ -84,7 +101,7 @@ export const AnimatedTestimonials = ({
             initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: -20, opacity: 0 }}
-            transition={{ duration: 0.2, ease: "easeInOut" }}
+            transition={{ duration: 0.2, ease: 'easeInOut' }}
           >
             <h3 className="text-2xl font-bold text-white">
               {testimonials[active].name}
@@ -93,12 +110,16 @@ export const AnimatedTestimonials = ({
               {testimonials[active].designation}
             </p>
             <motion.p className="text-lg text-white/60 mt-8">
-              {testimonials[active].quote.split(" ").map((word, index) => (
+              {testimonials[active].quote.split(' ').map((word, index) => (
                 <motion.span
                   key={index}
-                  initial={{ filter: "blur(10px)", opacity: 0, y: 5 }}
-                  animate={{ filter: "blur(0px)", opacity: 1, y: 0 }}
-                  transition={{ duration: 0.2, ease: "easeInOut", delay: 0.02 * index }}
+                  initial={{ filter: 'blur(10px)', opacity: 0, y: 5 }}
+                  animate={{ filter: 'blur(0px)', opacity: 1, y: 0 }}
+                  transition={{
+                    duration: 0.2,
+                    ease: 'easeInOut',
+                    delay: 0.02 * index,
+                  }}
                   className="inline-block"
                 >
                   {word}&nbsp;
@@ -129,35 +150,59 @@ export const AnimatedTestimonials = ({
 // Default export with Synthex testimonials data
 const synthexTestimonials: Testimonial[] = [
   {
-    quote: "Synthex transformed our social media strategy. We went from spending 20 hours a week on content to 2. The AI just understands our brand voice.",
-    name: "Sarah Chen",
-    designation: "Marketing Director at TechFlow",
-    src: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=500&auto=format&fit=crop",
+    quote:
+      'Synthex cut our content creation time by 80%. The AI actually sounds like us — our engagement went up 340% in the first month.',
+    name: 'Maya Chen',
+    designation: 'Social Media Manager, Bloom & Co.',
+    src: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=500&auto=format&fit=crop',
   },
   {
-    quote: "The multi-platform scheduling and analytics have given us insights we never had before. Our engagement rates have doubled since switching to Synthex.",
-    name: "Michael Rodriguez",
-    designation: "CEO at InnovateSphere",
-    src: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?q=80&w=500&auto=format&fit=crop",
+    quote:
+      'I was sceptical about AI content, but Synthex learned my voice from day one. My TikTok following went from 12K to 87K in 6 months.',
+    name: 'Jake Morrison',
+    designation: 'Founder, The Fitness Blueprint',
+    src: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=500&auto=format&fit=crop',
   },
   {
-    quote: "Finally, an AI tool that actually understands context. Synthex generates content that sounds like us, not like a robot wrote it.",
-    name: "Emily Watson",
-    designation: "Head of Growth at CloudScale",
-    src: "https://images.unsplash.com/photo-1623582854588-d60de57fa33f?q=80&w=500&auto=format&fit=crop",
+    quote:
+      'We manage 8 brand accounts across every major platform. Synthex is the only tool that actually scales with us without losing brand consistency.',
+    name: 'Priya Nair',
+    designation: 'Marketing Director, Nexora Tech',
+    src: 'https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?q=80&w=500&auto=format&fit=crop',
+  },
+  {
+    quote:
+      "The ROI is insane. I'm spending $99/month and saving 20+ hours of work. That's worth more than any employee I could hire.",
+    name: 'Tom Gallagher',
+    designation: 'E-commerce Entrepreneur',
+    src: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?q=80&w=500&auto=format&fit=crop',
+  },
+  {
+    quote:
+      'I post daily on LinkedIn, Twitter, and Instagram. Synthex keeps my voice consistent across all three without me having to think about it.',
+    name: 'Aisha Williams',
+    designation: 'Content Creator · LinkedIn Top Voice',
+    src: 'https://images.unsplash.com/photo-1531123897727-8f129e1688ce?q=80&w=500&auto=format&fit=crop',
+  },
+  {
+    quote:
+      'We onboarded 15 clients onto the Agency plan in 3 weeks. The white-label feature alone is worth every dollar.',
+    name: 'Carlos Rivera',
+    designation: 'Agency Owner, Elevate Digital',
+    src: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=500&auto=format&fit=crop',
   },
 ];
 
 export function TestimonialsSection({ className }: { className?: string }) {
   return (
-    <section className={cn("py-20 bg-[#0a1628]", className)}>
-      <div className="max-w-6xl mx-auto px-6">
+    <section className={cn('py-20 md:py-28 bg-[#0a1628]', className)}>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12">
-          <h2 className="text-3xl font-light text-white tracking-tight">
-            Trusted by marketing teams worldwide
+          <h2 className="text-3xl sm:text-4xl font-bold text-white tracking-tight">
+            10,000+ creators trust Synthex
           </h2>
-          <p className="text-white/40 mt-3 text-sm">
-            Join thousands of businesses automating their social media with Synthex
+          <p className="text-gray-400 mt-4 text-base max-w-xl mx-auto">
+            Real results from real users — not generic AI content.
           </p>
         </div>
         <AnimatedTestimonials testimonials={synthexTestimonials} autoplay />
