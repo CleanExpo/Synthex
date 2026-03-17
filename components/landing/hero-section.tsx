@@ -4,9 +4,9 @@ import Link from 'next/link';
 import Image from 'next/image';
 
 const TRUST_SIGNALS = [
-  { value: '10,000+', label: 'businesses using Synthex' },
+  { value: '10,000+', label: 'local businesses' },
   { value: '14-day', label: 'free trial, no card needed' },
-  { value: '97%', label: 'of customers recommend us' },
+  { value: '$49/mo', label: 'less than a social media post' },
 ];
 
 /** Hero section — asymmetric 60/40 layout */
@@ -21,7 +21,7 @@ export function HeroSection() {
             <div className="inline-flex items-center gap-2.5 mb-8">
               <div className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
               <span className="text-[10px] uppercase tracking-[0.35em] text-white/40">
-                Trusted by 10,000+ small businesses
+                Trusted by 10,000+ cafés, tradies, salons and gyms
               </span>
             </div>
 
@@ -32,11 +32,11 @@ export function HeroSection() {
 
             {/* Subheadline */}
             <p className="text-xl text-gray-300 max-w-xl mx-auto lg:mx-0 leading-relaxed mb-4">
-              Synthex writes and schedules your social media posts for you — so
-              you can focus on running your business.
+              Synthex writes and posts for your café, salon, gym, or trade
+              business — so you can focus on running it.
             </p>
             <p className="text-base text-gray-500 max-w-lg mx-auto lg:mx-0 leading-relaxed mb-10">
-              No experience needed. No agency fees. Set up in 10 minutes.
+              No experience needed. No agency fees. No credit card required. Set up in 10 minutes.
             </p>
 
             {/* CTAs */}
@@ -45,7 +45,7 @@ export function HeroSection() {
                 href="/signup"
                 className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-cyan-500 hover:bg-cyan-400 text-white font-semibold text-sm rounded-full transition-colors duration-200"
               >
-                Start Free Trial
+                Start Free — No Card Needed
                 <svg
                   className="w-4 h-4"
                   fill="none"

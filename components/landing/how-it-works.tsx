@@ -7,11 +7,11 @@ const STEPS = [
     number: '01',
     title: 'Tell us about your business',
     description:
-      'Answer a few simple questions about what you do, who your customers are, and what makes you different. Takes about 5 minutes. No technical knowledge needed.',
+      'Tell us about your business and how you talk. Synthex learns your voice — so every post sounds like you, not like generic AI. Takes about 5 minutes. No tech knowledge needed.',
     details: [
-      'Works for any type of local business',
+      'Works for cafés, tradies, salons, gyms and more',
       'Connect your social accounts in seconds',
-      'Your information is private and secure',
+      'Your voice, your tone — AI learns it fast',
     ],
     accentColor: '#06b6d4',
   },
@@ -85,7 +85,8 @@ export function HowItWorks() {
           </h2>
           <p className="text-gray-400 text-sm leading-relaxed">
             No tech skills. No long setup. No waiting. Most business owners have
-            their first posts ready before they finish their morning coffee.
+            their first week of posts ready before they finish their morning
+            coffee — and they actually sound like themselves.
           </p>
         </div>
 
@@ -223,7 +224,7 @@ export function HowItWorks() {
                 href="/signup"
                 className="inline-flex items-center gap-2 px-6 py-3 bg-cyan-500 hover:bg-cyan-400 text-white font-semibold text-sm rounded-full transition-colors duration-200"
               >
-                Get Started Free
+                Start Free — No Card Needed
                 <svg
                   className="w-4 h-4"
                   fill="none"
