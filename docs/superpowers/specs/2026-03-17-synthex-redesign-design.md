@@ -189,7 +189,7 @@ components/landing/live-demo-widget.tsx ('use client')
 3. `fetch('/api/demo/image')` → replaces shimmer with image; set `state = 'done'`
 4. Framer Motion spring animates card in on step 2 → populates image on step 3
 
-**Rate limit:** Use the existing `aiGeneration` rate limiter preset (20 req/min per IP). Because one full demo interaction consumes 2 requests (caption + image), the effective throughput is **10 demo completions/minute per IP**. Use separate rate limit keys per route: `demo-caption:<ip>` and `demo-image:<ip>` — each sharing the same 20-req/min budget via the `aiGeneration` preset.
+**Rate limit:** Use the existing `aiGeneration` rate limiter preset (20 req/min per IP). Both routes share the single `ai-generation:<ip>` key that the preset hardcodes — they are not keyed separately. Because one full demo interaction consumes 2 slots (caption + image), the effective throughput is **10 demo completions/minute per IP**.
 
 **No auth required** — both `/api/demo/caption` and `/api/demo/image` are fully public. Do NOT call `getUserIdFromRequestOrCookies` in these routes. The Technical Constraints section's auth rule is explicitly excepted for these two routes.
 
@@ -211,13 +211,13 @@ Component: `components/landing/bento-features.tsx` (new)
 
 Asymmetric `grid-cols-3` at `lg:`, single column mobile. 5 tiles:
 
-| Tile           | Size        | Content                                                          |
-| -------------- | ----------- | ---------------------------------------------------------------- |
-| Platform orbit | 2 cols wide | Existing `OrbitIntegrations`, copy "Write once, post everywhere" |
-| Voice          | 1 col       | Typewriter cycling real business examples                        |
-| Live counter   | 1 col       | `font-mono` post count ticking up, ambient pulse                 |
-| Setup time     | 1 col       | "Ready in 10 minutes" 3-step mini-timeline                       |
-| Video          | 2 cols wide | Remotion video embed, autoplay muted loop                        |
+| Tile           | Size        | Content                                                                                                                                      |
+| -------------- | ----------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| Platform orbit | 2 cols wide | Existing `OrbitIntegrations`, copy "Write once, post everywhere"                                                                             |
+| Voice          | 1 col       | Typewriter cycling real business examples                                                                                                    |
+| Live counter   | 1 col       | `font-mono` post count ticking up, ambient pulse                                                                                             |
+| Setup time     | 1 col       | "Ready in 10 minutes" 3-step mini-timeline                                                                                                   |
+| Video          | 2 cols wide | Pre-rendered `.mp4` embed (`public/videos/demo-loop.mp4`), autoplay muted loop. If asset is not available, replace with static illustration. |
 
 Cards: `bg-[#211e18] border border-white/[0.06] rounded-2xl p-8` with amber tinted shadow.
 Stagger reveal on scroll entry using `IntersectionObserver` + CSS animation delay.
@@ -249,7 +249,15 @@ Component: `components/landing/testimonials.tsx` — rewrite
 
 Component: `components/landing/pricing-section.tsx` — replace existing PricingGrid
 
-3 tiers (Starter/Pro/Agency). Pro highlighted:
+3 tiers (Starter/Pro/Agency). Pro highlighted.
+
+**UI label → `Subscription.plan` mapping** (do not use UI labels as plan values in code):
+
+| UI Label | `plan` value     | Price AUD |
+| -------- | ---------------- | --------- |
+| Starter  | `'free'`         | $49/mo    |
+| Pro      | `'professional'` | $99/mo    |
+| Agency   | `'business'`     | $249/mo   |
 
 - `bg-amber-500/[0.08] border border-amber-500/30` — glows warmer, not just taller
 - Annual/monthly toggle: Framer Motion spring between price states
@@ -438,7 +446,12 @@ if (!userId)
   return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
 const sub = await prisma.subscription.findUnique({ where: { userId } });
 // Actual Subscription.plan values: 'free' | 'professional' | 'business' | 'custom'
-if (!sub || !['professional', 'business', 'custom'].includes(sub.plan)) {
+// Also check status — cancelled subscriptions must not pass the gate
+if (
+  !sub ||
+  !['professional', 'business', 'custom'].includes(sub.plan) ||
+  !['active', 'trialing'].includes(sub.status)
+) {
   return NextResponse.json(
     { error: 'Pro subscription required' },
     { status: 403 }
@@ -494,7 +507,7 @@ if (!sub || !['professional', 'business', 'custom'].includes(sub.plan)) {
 3. Dashboard page + BrandExtractor component
 4. TasteSkillDials + SectionSelector components
 5. Code generator lib + API route (output: `{ files: Array<{ filename, content }> }`)
-6. Gemini images route (base64 → Supabase Storage → signed URL)
+6. Gemini images route (base64 → Supabase Storage public bucket → permanent public URL)
 7. CodePanel + PreviewFrame components + zip download (`jszip`)
 8. Remotion video route + VideoRenderer component (optional, defer if schedule is tight)
 
@@ -503,15 +516,12 @@ if (!sub || !['professional', 'business', 'custom'].includes(sub.plan)) {
 **PreviewFrame iframe security:** The `PreviewFrame` component renders LLM-generated React code in a preview iframe. Rendering strategy: the generated code is compiled server-side via the `/api/website-builder/generate` route and the resulting HTML is passed as an `srcdoc` attribute. The iframe MUST include:
 
 ```tsx
-<iframe
-  srcDoc={previewHtml}
-  sandbox="allow-scripts allow-same-origin"
-  csp="default-src 'self'; style-src 'unsafe-inline'; script-src 'unsafe-inline'"
-  title="Website preview"
-/>
+<iframe srcDoc={previewHtml} sandbox="allow-scripts" title="Website preview" />
 ```
 
-Do not use `eval()` or dynamic `import()` client-side. The preview is display-only — no form submissions, no navigation.
+**Sandbox rule:** `allow-scripts` only — do NOT add `allow-same-origin`. The combination of both flags allows the iframe to escape the sandbox and access the parent's cookies/localStorage via `document.domain`. With `allow-scripts` only, the iframe runs in an opaque unique origin, fully isolated from the parent.
+
+**No `csp` attribute** — the `csp` attribute on `<iframe>` is non-standard HTML with no effect in Firefox or Safari. CSP for preview content is enforced by the sandbox origin isolation above. Do not use `eval()` or dynamic `import()` client-side. The preview is display-only — no form submissions, no navigation.
 
 ---
 
@@ -520,7 +530,7 @@ Do not use `eval()` or dynamic `import()` client-side. The preview is display-on
 - Stack: Next.js 15 App Router, TypeScript 5, Tailwind CSS v3, Prisma 6, Supabase Auth
 - No new auth systems — Supabase only
 - No `git add .` or `git add -A` — stage files individually
-- All API routes: Zod validation + `getUserIdFromRequestOrCookies` auth (except `/api/demo/generate` which is public + rate-limited)
+- All API routes: Zod validation + `getUserIdFromRequestOrCookies` auth (except `/api/demo/caption` and `/api/demo/image` which are public + rate-limited — do NOT call getUserIdFromRequestOrCookies in these two routes)
 - Australian English throughout: colour, organise, licence
 - No emojis in code or UI (taste-skill ANTI-EMOJI POLICY)
 - Use Phosphor icons — not Lucide, not Heroicons
@@ -533,7 +543,7 @@ Do not use `eval()` or dynamic `import()` client-side. The preview is display-on
 npm install @fontsource/satoshi      # Satoshi display font
 npm install geist                    # Geist Mono font (import via geist/font/mono)
 npm install @phosphor-icons/react    # Icon library (replaces Lucide/Heroicons in marketing)
-npm install jszip @types/jszip       # Website Builder zip download
+npm install jszip                    # Website Builder zip download (jszip 3.10+ ships own TS types — do NOT install @types/jszip)
 ```
 
 Already installed — **do not reinstall:**
