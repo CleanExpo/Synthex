@@ -1,6 +1,10 @@
 // Phase 114-02: Force clean build — cache bust 2026-03-13
+// createRequire: used to resolve heroicons to CJS paths (avoids ESM .js sibling import bug in v2.2.0)
+import { createRequire } from 'module';
+const _require = createRequire(import.meta.url);
+
 // Conditionally load bundle analyzer only when ANALYZE=true
-let withBundleAnalyzer = (config) => config;
+let withBundleAnalyzer = config => config;
 if (process.env.ANALYZE === 'true') {
   try {
     const analyzer = await import('@next/bundle-analyzer');
@@ -12,6 +16,25 @@ if (process.env.ANALYZE === 'true') {
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Turbopack fix: heroicons ESM uses .js extension imports that Turbopack can't resolve natively
+  transpilePackages: ['@heroicons/react'],
+
+  // Turbopack config (top-level in Next.js 15 — NOT inside experimental)
+  // Force heroicons to CJS paths so Turbopack doesn't try to resolve ESM
+  // sibling .js extension imports (known Turbopack limitation with ESM packages)
+  turbopack: {
+    resolveAlias: {
+      '@heroicons/react/24/outline':
+        './node_modules/@heroicons/react/24/outline/index.js',
+      '@heroicons/react/24/solid':
+        './node_modules/@heroicons/react/24/solid/index.js',
+      '@heroicons/react/20/solid':
+        './node_modules/@heroicons/react/20/solid/index.js',
+      '@heroicons/react/16/solid':
+        './node_modules/@heroicons/react/16/solid/index.js',
+    },
+  },
+
   // Use alternate build dir when NEXT_ALT_BUILD is set (avoids .next/trace lock conflicts)
   distDir: process.env.NEXT_ALT_BUILD || '.next',
 
@@ -55,7 +78,8 @@ const nextConfig = {
           },
           {
             key: 'Link',
-            value: '<https://fonts.googleapis.com>; rel=preconnect, <https://fonts.gstatic.com>; rel=preconnect; crossorigin',
+            value:
+              '<https://fonts.googleapis.com>; rel=preconnect, <https://fonts.gstatic.com>; rel=preconnect; crossorigin',
           },
         ],
       },
@@ -102,7 +126,6 @@ const nextConfig = {
 
     // Optimize package imports for smaller bundles
     optimizePackageImports: [
-      '@heroicons/react',
       '@radix-ui/react-dialog',
       '@radix-ui/react-dropdown-menu',
       '@radix-ui/react-popover',
@@ -230,11 +253,31 @@ const nextConfig = {
           '**/coverage',
           '**/.cache',
           '**/tmp',
-          '**/*.log'
-        ]
+          '**/*.log',
+        ],
       };
     }
-    
+
+    // Force heroicons to CJS entry points — their ESM build (v2.2.0) is missing
+    // CalendarDaysIcon.js and other files, causing "Module not found" errors in
+    // both webpack and Turbopack. _require.resolve() uses the 'require' condition
+    // from package exports, which points to the complete CJS build.
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      '@heroicons/react/24/outline': _require.resolve(
+        '@heroicons/react/24/outline'
+      ),
+      '@heroicons/react/24/solid': _require.resolve(
+        '@heroicons/react/24/solid'
+      ),
+      '@heroicons/react/20/solid': _require.resolve(
+        '@heroicons/react/20/solid'
+      ),
+      '@heroicons/react/16/solid': _require.resolve(
+        '@heroicons/react/16/solid'
+      ),
+    };
+
     // Existing fallback configuration
     if (!isServer) {
       config.resolve.fallback = {
@@ -249,14 +292,15 @@ const nextConfig = {
         'pg-native': false,
       };
     }
-    
+
     return config;
   },
   // Ensure environment variables are available
   env: {
-    NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL || 'https://synthex.social',
+    NEXT_PUBLIC_APP_URL:
+      process.env.NEXT_PUBLIC_APP_URL || 'https://synthex.social',
   },
-}
+};
 
 // Sentry webpack plugin config — kept for reference but NOT applied.
 //

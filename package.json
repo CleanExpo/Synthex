@@ -101,7 +101,7 @@
     "@dnd-kit/utilities": "^3.2.2",
     "@ffmpeg-installer/ffmpeg": "^1.1.0",
     "@ffprobe-installer/ffprobe": "^2.1.2",
-    "@heroicons/react": "^2.2.0",
+    "@heroicons/react": "^2.1.5",
     "@linear/sdk": "^77.0.0",
     "@mendable/firecrawl-js": "^4.11.0",
     "@number-flow/react": "^0.6.0",
