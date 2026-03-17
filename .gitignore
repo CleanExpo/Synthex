@@ -95,6 +95,7 @@ node_modules/
 .next-alt/
 .next_alt/
 .next-analyze/
+.next-turbo/
 
 # Turbopack / Turborepo cache
 .turbo/
@@ -171,6 +172,11 @@ templates/
 supabase/.branches/
 
 # Test screenshots
+# Debug/QA screenshots (root-level)
+*.png
+!public/**/*.png
+!components/**/*.png
+!app/**/*.png
 *-test.png
 *-current.png
 *-updated.png
