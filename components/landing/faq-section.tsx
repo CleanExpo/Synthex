@@ -8,23 +8,26 @@ export function FAQSection() {
   const [expanded, setExpanded] = useState<number | null>(null);
 
   return (
-    <section className="relative py-32 z-10">
-      <div className="container mx-auto px-6">
-
+    <section className="relative py-16 md:py-20 z-10">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section header */}
-        <div className="mb-16 flex flex-col lg:flex-row lg:items-end gap-8">
+        <div className="mb-10 flex flex-col lg:flex-row lg:items-end gap-8">
           <div>
             <span className="text-[10px] uppercase tracking-[0.3em] text-white/30 mb-4 block">
               Common Questions
             </span>
             <h2 className="text-4xl sm:text-5xl font-extralight tracking-tight text-white">
-              Everything you need<br />
+              Everything you need
+              <br />
               <span className="text-cyan-400">to know.</span>
             </h2>
           </div>
           <p className="text-white/40 text-sm max-w-xs leading-relaxed lg:ml-auto lg:text-right">
             Still have questions? Email us at{' '}
-            <a href="mailto:hello@synthex.social" className="text-cyan-400 hover:text-cyan-300 transition-colors">
+            <a
+              href="mailto:hello@synthex.social"
+              className="text-cyan-400 hover:text-cyan-300 transition-colors"
+            >
               hello@synthex.social
             </a>
           </p>
@@ -38,7 +41,9 @@ export function FAQSection() {
               <div
                 key={index}
                 className={`border-[0.5px] overflow-hidden transition-colors duration-200 ${
-                  isOpen ? 'border-white/[0.12] bg-white/[0.03]' : 'border-white/[0.06] bg-white/[0.01] hover:border-white/[0.1]'
+                  isOpen
+                    ? 'border-white/[0.12] bg-white/[0.03]'
+                    : 'border-white/[0.06] bg-white/[0.01] hover:border-white/[0.1]'
                 }`}
               >
                 <button
@@ -46,14 +51,18 @@ export function FAQSection() {
                   className="w-full px-6 py-5 flex items-center justify-between text-left gap-4"
                   aria-expanded={isOpen}
                 >
-                  <h3 className={`text-sm font-medium leading-relaxed transition-colors duration-200 ${
-                    isOpen ? 'text-white' : 'text-white/70'
-                  }`}>
+                  <h3
+                    className={`text-sm font-medium leading-relaxed transition-colors duration-200 ${
+                      isOpen ? 'text-white' : 'text-white/70'
+                    }`}
+                  >
                     {faq.question}
                   </h3>
                   <div
                     className={`flex-shrink-0 w-5 h-5 flex items-center justify-center border-[0.5px] rounded-sm transition-all duration-300 ${
-                      isOpen ? 'border-cyan-400/40 bg-cyan-400/10' : 'border-white/[0.1]'
+                      isOpen
+                        ? 'border-cyan-400/40 bg-cyan-400/10'
+                        : 'border-white/[0.1]'
                     }`}
                   >
                     <svg
@@ -62,7 +71,12 @@ export function FAQSection() {
                       stroke="currentColor"
                       viewBox="0 0 24 24"
                     >
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M19 9l-7 7-7-7"
+                      />
                     </svg>
                   </div>
                 </button>
@@ -80,7 +94,6 @@ export function FAQSection() {
             );
           })}
         </div>
-
       </div>
     </section>
   );

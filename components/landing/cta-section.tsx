@@ -6,8 +6,8 @@ import { SynthexLogo } from './synthex-logo';
 /** Bottom CTA banner — Scientific Luxury: sharp corners, single-pixel border */
 export function CTASection() {
   return (
-    <section className="relative py-32 z-10">
-      <div className="container mx-auto px-6">
+    <section className="relative py-16 md:py-20 z-10">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="relative border-[0.5px] border-white/[0.1] bg-white/[0.02] p-12 sm:p-16 overflow-hidden">
           {/* Background ambient */}
           <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/[0.04] via-transparent to-cyan-500/[0.02] pointer-events-none" />

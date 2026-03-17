@@ -6,12 +6,9 @@ export const revalidate = 3600;
 
 import { NavBar } from '@/components/landing/nav-bar';
 import { HeroSection } from '@/components/landing/hero-section';
-import { TextRevealByWord } from '@/components/landing/text-reveal';
 import { FeaturesSection } from '@/components/landing/features-section';
 import { HowItWorks } from '@/components/landing/how-it-works';
 import { OrbitIntegrations } from '@/components/landing/orbit-integrations';
-import { VideoSection } from '@/components/landing/video-section';
-import InteractiveBentoGallery from '@/components/landing/bento-gallery';
 import { StatsSection } from '@/components/landing/stats-section';
 import { Testimonials } from '@/components/landing/testimonials';
 import { FAQSection } from '@/components/landing/faq-section';
@@ -54,89 +51,22 @@ export default function HomePage() {
       {/* Hero */}
       <HeroSection />
 
-      {/* Tagline reveal — scroll-driven word-by-word animation */}
-      <TextRevealByWord
-        text="The AI platform that creates, schedules, and grows your social presence — automatically."
-        className="relative z-10"
-      />
-
-      {/* Features */}
-      <FeaturesSection />
-
-      {/* Stats */}
+      {/* Social proof strip — trust signals immediately after hero */}
       <StatsSection />
 
-      {/* How It Works */}
+      {/* How It Works — explain the value before showing features */}
       <HowItWorks />
 
-      {/* Platform Integrations — animated orbit */}
+      {/* Features — now the visitor understands why they need it */}
+      <FeaturesSection />
+
+      {/* Platform Integrations — which platforms are supported */}
       <OrbitIntegrations />
 
-      {/* Video Explainer */}
-      <VideoSection />
-
-      {/* See It In Action — interactive bento gallery */}
-      <section className="relative z-10 py-16">
-        <InteractiveBentoGallery
-          title="See It In Action"
-          description="Explore how Synthex handles every part of your social media operation."
-          mediaItems={[
-            {
-              id: 1,
-              type: 'image',
-              title: 'Content Calendar',
-              desc: 'Visualise and manage every scheduled post across all your platforms in one unified calendar.',
-              url: 'https://images.unsplash.com/photo-1611532736597-de2d4265fba3?w=800&q=80',
-              span: 'col-span-1 sm:col-span-2 row-span-2',
-            },
-            {
-              id: 2,
-              type: 'image',
-              title: 'AI Writing Assistant',
-              desc: 'Generate platform-optimised captions, hooks, and hashtags in seconds.',
-              url: 'https://images.unsplash.com/photo-1677442135703-1787eea5ce01?w=800&q=80',
-              span: 'col-span-1 sm:col-span-1 row-span-2',
-            },
-            {
-              id: 3,
-              type: 'image',
-              title: 'Analytics Dashboard',
-              desc: 'Track engagement, reach, and ROI across all connected platforms in real time.',
-              url: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&q=80',
-              span: 'col-span-1 sm:col-span-1 row-span-2',
-            },
-            {
-              id: 4,
-              type: 'image',
-              title: 'Post Scheduling',
-              desc: 'Queue posts at optimal times determined by AI analysis of your audience behaviour.',
-              url: 'https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?w=800&q=80',
-              span: 'col-span-1 sm:col-span-2 row-span-2',
-            },
-            {
-              id: 5,
-              type: 'image',
-              title: 'Team Collaboration',
-              desc: 'Invite your team, assign roles, and review content with built-in approval workflows.',
-              url: 'https://images.unsplash.com/photo-1552664730-d307ca884978?w=800&q=80',
-              span: 'col-span-1 sm:col-span-1 row-span-2',
-            },
-            {
-              id: 6,
-              type: 'image',
-              title: 'Platform Connections',
-              desc: 'Connect Instagram, LinkedIn, X, TikTok, and 5 more platforms with a single click.',
-              url: 'https://images.unsplash.com/photo-1432888498266-38ffec3eaf0a?w=800&q=80',
-              span: 'col-span-1 sm:col-span-1 row-span-2',
-            },
-          ]}
-        />
-      </section>
-
-      {/* Testimonials */}
+      {/* Testimonials — social proof before the ask */}
       <Testimonials />
 
-      {/* FAQ */}
+      {/* FAQ — answer objections */}
       <FAQSection />
 
       {/* Final CTA */}

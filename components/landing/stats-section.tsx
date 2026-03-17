@@ -51,10 +51,10 @@ const STATS = [
 
 export function StatsSection({ className }: StatsSectionProps) {
   return (
-    <section className={`py-20 md:py-28 bg-[#0a1628] ${className ?? ''}`}>
+    <section className={`py-10 md:py-14 bg-[#0a1628] ${className ?? ''}`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section label */}
-        <p className="text-center text-white/40 text-xs uppercase tracking-widest mb-12">
+        <p className="text-center text-white/40 text-xs uppercase tracking-widest mb-8">
           Trusted by 10,000+ creators and marketing teams
         </p>
 
@@ -72,7 +72,7 @@ export function StatsSection({ className }: StatsSectionProps) {
           {STATS.map(stat => (
             <div
               key={stat.label}
-              className="flex flex-col items-center justify-center text-center px-6 py-10 bg-[#0a1628] hover:bg-white/[0.03] transition-colors duration-300"
+              className="flex flex-col items-center justify-center text-center px-6 py-6 bg-[#0a1628] hover:bg-white/[0.03] transition-colors duration-300"
             >
               <span className="font-mono text-4xl md:text-5xl font-bold text-white mb-2 tracking-tight">
                 {stat.value}
