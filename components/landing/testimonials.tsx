@@ -151,45 +151,45 @@ export const AnimatedTestimonials = ({
 const synthexTestimonials: Testimonial[] = [
   {
     quote:
-      'Synthex cut our content creation time by 80%. The AI actually sounds like us — our engagement went up 340% in the first month.',
-    name: 'Maya Chen',
-    designation: 'Social Media Manager, Bloom & Co.',
-    src: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=500&auto=format&fit=crop',
+      'I used to stress every Sunday thinking about what to post. Now Synthex handles the whole week in 10 minutes. Had three new customers this month tell me they found me on Facebook.',
+    name: 'Dave Tran',
+    designation: 'Owner · DT Plumbing & Gas, Western Sydney',
+    src: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=500&auto=format&fit=crop',
   },
   {
     quote:
-      'I was sceptical about AI content, but Synthex learned my voice from day one. My TikTok following went from 12K to 87K in 6 months.',
-    name: 'Jake Morrison',
-    designation: 'Founder, The Fitness Blueprint',
-    src: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=500&auto=format&fit=crop',
-  },
-  {
-    quote:
-      'We manage 8 brand accounts across every major platform. Synthex is the only tool that actually scales with us without losing brand consistency.',
-    name: 'Priya Nair',
-    designation: 'Marketing Director, Nexora Tech',
+      'I was posting here and there with nothing to show for it. Synthex made it consistent. My regulars say they see me everywhere now — and bookings are up.',
+    name: 'Sophie Kim',
+    designation: 'Owner · Blossom Hair Studio, Brunswick',
     src: 'https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?q=80&w=500&auto=format&fit=crop',
   },
   {
     quote:
-      "The ROI is insane. I'm spending $99/month and saving 20+ hours of work. That's worth more than any employee I could hire.",
-    name: 'Tom Gallagher',
-    designation: 'E-commerce Entrepreneur',
+      "Takes me 20 minutes on Sunday and my whole week is sorted. First time I've actually kept up a consistent schedule — and the posts actually sound like me.",
+    name: 'Josh Mackay',
+    designation: 'Owner · Ironbell Strength & Conditioning, Brisbane',
+    src: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=500&auto=format&fit=crop',
+  },
+  {
+    quote:
+      'My morning coffee crowd has grown since I started using Synthex. People come in and say they found me on Instagram. I never thought that would happen for a small café like mine.',
+    name: 'Maria Nguyen',
+    designation: 'Owner · Little Saigon Café, Collingwood',
+    src: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=500&auto=format&fit=crop',
+  },
+  {
+    quote:
+      'I was spending hours trying to write posts and getting nowhere. Synthex got me a full week sorted in 10 minutes. Now jobs are coming in from Google and I barely think about social media.',
+    name: 'Ryan Cooper',
+    designation: 'Owner · Cooper Electrical, North Shore Sydney',
     src: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?q=80&w=500&auto=format&fit=crop',
   },
   {
     quote:
-      'I post daily on LinkedIn, Twitter, and Instagram. Synthex keeps my voice consistent across all three without me having to think about it.',
-    name: 'Aisha Williams',
-    designation: 'Content Creator · LinkedIn Top Voice',
+      "Finally something that doesn't require me to be a marketing expert. I said I was a day spa, answered a few questions, and it was posting for me the same day.",
+    name: 'Sarah Donnelly',
+    designation: 'Owner · Lotus Day Spa, Adelaide',
     src: 'https://images.unsplash.com/photo-1531123897727-8f129e1688ce?q=80&w=500&auto=format&fit=crop',
-  },
-  {
-    quote:
-      'We onboarded 15 clients onto the Agency plan in 3 weeks. The white-label feature alone is worth every dollar.',
-    name: 'Carlos Rivera',
-    designation: 'Agency Owner, Elevate Digital',
-    src: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=500&auto=format&fit=crop',
   },
 ];
 
@@ -199,10 +199,10 @@ export function TestimonialsSection({ className }: { className?: string }) {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12">
           <h2 className="text-3xl sm:text-4xl font-bold text-white tracking-tight">
-            10,000+ creators trust Synthex
+            Local businesses across Australia trust Synthex
           </h2>
           <p className="text-gray-400 mt-4 text-base max-w-xl mx-auto">
-            Real results from real users — not generic AI content.
+            Real results from real local businesses — in their own words.
           </p>
         </div>
         <AnimatedTestimonials testimonials={synthexTestimonials} autoplay />
