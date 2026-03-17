@@ -29,23 +29,23 @@ interface StatsSectionProps {
 const STATS = [
   {
     value: '10,000+',
-    label: 'Active Users',
-    description: 'Creators and marketers across 50 countries',
+    label: 'Businesses',
+    description: 'Small businesses and creators using Synthex every day',
   },
   {
     value: '50M+',
-    label: 'Posts Generated',
-    description: 'Platform-optimised content published at scale',
+    label: 'Posts Published',
+    description: 'Real posts sent to real audiences — not just drafts',
   },
   {
     value: '97%',
-    label: 'Customer Satisfaction',
-    description: 'Measured across all active subscriptions',
+    label: 'Would Recommend',
+    description: "Of customers say they'd recommend us to a friend",
   },
   {
-    value: '3.5×',
-    label: 'Average ROI',
-    description: 'Return on investment within the first 90 days',
+    value: '10 min',
+    label: 'To Get Started',
+    description: 'Average time from signup to first post ready to go',
   },
 ];
 
@@ -55,7 +55,7 @@ export function StatsSection({ className }: StatsSectionProps) {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section label */}
         <p className="text-center text-white/40 text-xs uppercase tracking-widest mb-8">
-          Trusted by 10,000+ creators and marketing teams
+          Businesses like yours, already saving time with Synthex
         </p>
 
         <AnimatedGroup

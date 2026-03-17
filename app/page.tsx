@@ -6,7 +6,6 @@ export const revalidate = 3600;
 
 import { NavBar } from '@/components/landing/nav-bar';
 import { HeroSection } from '@/components/landing/hero-section';
-import { FeaturesSection } from '@/components/landing/features-section';
 import { HowItWorks } from '@/components/landing/how-it-works';
 import { OrbitIntegrations } from '@/components/landing/orbit-integrations';
 import { StatsSection } from '@/components/landing/stats-section';
@@ -54,11 +53,8 @@ export default function HomePage() {
       {/* Social proof strip — trust signals immediately after hero */}
       <StatsSection />
 
-      {/* How It Works — explain the value before showing features */}
+      {/* How It Works — explain the value */}
       <HowItWorks />
-
-      {/* Features — now the visitor understands why they need it */}
-      <FeaturesSection />
 
       {/* Platform Integrations — which platforms are supported */}
       <OrbitIntegrations />

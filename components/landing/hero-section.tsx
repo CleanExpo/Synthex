@@ -3,23 +3,10 @@
 import Link from 'next/link';
 import Image from 'next/image';
 
-const STATS = [
-  { value: '10,000+', label: 'Active Users' },
-  { value: '50M+', label: 'Posts Generated' },
-  { value: '97%', label: 'Satisfaction' },
-  { value: '3.5×', label: 'Average ROI' },
-];
-
-const PLATFORMS = [
-  'Instagram',
-  'TikTok',
-  'Twitter/X',
-  'LinkedIn',
-  'Facebook',
-  'YouTube',
-  'Pinterest',
-  'Reddit',
-  'Threads',
+const TRUST_SIGNALS = [
+  { value: '10,000+', label: 'businesses using Synthex' },
+  { value: '14-day', label: 'free trial, no card needed' },
+  { value: '97%', label: 'of customers recommend us' },
 ];
 
 /** Hero section — asymmetric 60/40 layout */
@@ -31,24 +18,25 @@ export function HeroSection() {
           {/* Left — Content (60%) */}
           <div className="flex-[6] order-1 text-center lg:text-left">
             {/* Eyebrow */}
-            <div className="inline-flex items-center gap-2.5 mb-10">
+            <div className="inline-flex items-center gap-2.5 mb-8">
               <div className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
               <span className="text-[10px] uppercase tracking-[0.35em] text-white/40">
-                AI Marketing Automation Platform
+                Trusted by 10,000+ small businesses
               </span>
             </div>
 
             {/* Headline */}
-            <h1 className="text-5xl sm:text-6xl lg:text-[5.5rem] font-bold tracking-tight text-white leading-[1.02] mb-6">
-              Your AI Social Media Team,{' '}
-              <span className="text-cyan-400">Always On.</span>
+            <h1 className="text-5xl sm:text-6xl lg:text-[5rem] font-bold tracking-tight text-white leading-[1.05] mb-6">
+              Your social media, <span className="text-cyan-400">handled.</span>
             </h1>
 
             {/* Subheadline */}
-            <p className="text-lg text-gray-400 max-w-xl mx-auto lg:mx-0 leading-relaxed mb-10">
-              Synthex learns your exact writing style from your existing posts,
-              then generates platform-optimised content across all 9 of your
-              social channels — at scale, on brand, without the grind.
+            <p className="text-xl text-gray-300 max-w-xl mx-auto lg:mx-0 leading-relaxed mb-4">
+              Synthex writes and schedules your social media posts for you — so
+              you can focus on running your business.
+            </p>
+            <p className="text-base text-gray-500 max-w-lg mx-auto lg:mx-0 leading-relaxed mb-10">
+              No experience needed. No agency fees. Set up in 10 minutes.
             </p>
 
             {/* CTAs */}
@@ -87,35 +75,18 @@ export function HeroSection() {
               </Link>
             </div>
 
-            {/* Social proof strip */}
-            <div className="border-t border-white/[0.06] pt-8 mb-8">
-              <p className="text-xs text-white/40 uppercase tracking-widest mb-6 text-center lg:text-left">
-                10,000+ creators trust Synthex
-              </p>
-              <div className="flex flex-wrap gap-x-8 gap-y-3 justify-center lg:justify-start">
-                {STATS.map(stat => (
-                  <div key={stat.label} className="flex items-baseline gap-1.5">
-                    <span className="font-mono text-sm font-semibold text-white">
-                      {stat.value}
+            {/* Trust signals */}
+            <div className="border-t border-white/[0.06] pt-6">
+              <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+                {TRUST_SIGNALS.map(item => (
+                  <div key={item.label} className="flex items-center gap-2">
+                    <span className="text-sm font-bold text-cyan-400">
+                      {item.value}
                     </span>
-                    <span className="text-[10px] uppercase tracking-[0.2em] text-white/30">
-                      {stat.label}
-                    </span>
+                    <span className="text-sm text-white/40">{item.label}</span>
                   </div>
                 ))}
               </div>
-            </div>
-
-            {/* Platform row */}
-            <div className="flex flex-wrap gap-2 justify-center lg:justify-start">
-              {PLATFORMS.map(platform => (
-                <span
-                  key={platform}
-                  className="text-[10px] uppercase tracking-wider text-white/30 px-2.5 py-1 border border-white/[0.06] rounded-full bg-white/[0.02]"
-                >
-                  {platform}
-                </span>
-              ))}
             </div>
           </div>
 

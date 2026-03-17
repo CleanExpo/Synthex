@@ -5,37 +5,37 @@ import { useEffect, useRef, useState } from 'react';
 const STEPS = [
   {
     number: '01',
-    title: 'Connect Your Profiles',
+    title: 'Tell us about your business',
     description:
-      'Link your social accounts in seconds. Synthex securely connects to all 9 platforms — Instagram, TikTok, Twitter/X, LinkedIn, Facebook, YouTube, Pinterest, Reddit, and Threads — with one-click OAuth. No passwords stored, ever.',
+      'Answer a few simple questions about what you do, who your customers are, and what makes you different. Takes about 5 minutes. No technical knowledge needed.',
     details: [
-      'One-click OAuth for all 9 platforms',
-      'AES-256-GCM token encryption',
-      'Instant account health checks',
+      'Works for any type of local business',
+      'Connect your social accounts in seconds',
+      'Your information is private and secure',
     ],
     accentColor: '#06b6d4',
   },
   {
     number: '02',
-    title: 'Train Your AI Voice',
+    title: 'We write your posts',
     description:
-      'Upload 20–30 of your best posts and our AI analyses your tone, vocabulary, sentence structure, and what makes your audience engage. The result is a brand voice fingerprint that is uniquely yours — not a generic template.',
+      'Synthex creates social media posts that sound like you — not a robot. Every post is written for your specific business and audience. Review them before they go out, or let them publish automatically.',
     details: [
-      'Brand voice fingerprinting from your existing posts',
-      'Audience engagement pattern analysis',
-      'Continuous learning as you publish more',
+      'Posts written in your tone and style',
+      'Works across Instagram, Facebook, TikTok and more',
+      'You approve or let it run on autopilot',
     ],
     accentColor: '#06b6d4',
   },
   {
     number: '03',
-    title: 'Generate & Schedule',
+    title: 'Your social media stays active',
     description:
-      'Get 10–15 on-brand content variations in seconds. Review, refine, and schedule across all platforms from one dashboard. Posts go live at AI-determined optimal times — your results compound week over week.',
+      'Synthex keeps your pages consistently active — posting at the right times, engaging your audience, and helping new customers find you. You focus on running your business.',
     details: [
-      '10–15 on-brand variations per content brief',
-      'Platform-native format optimisation',
-      'Predictive optimal posting windows',
+      'Posts published at the best time for your audience',
+      'Consistent presence without lifting a finger',
+      'Watch your following and enquiries grow',
     ],
     accentColor: '#06b6d4',
   },
@@ -79,14 +79,13 @@ export function HowItWorks() {
             How It Works
           </span>
           <h2 className="text-4xl md:text-5xl font-bold tracking-tight text-white mb-4">
-            From zero to on-brand content
+            Up and running
             <br />
-            <span className="text-cyan-400">in under 10 minutes.</span>
+            <span className="text-cyan-400">in 10 minutes.</span>
           </h2>
           <p className="text-gray-400 text-sm leading-relaxed">
-            No learning curve. No agency onboarding call. No waiting weeks for
-            results. Synthex is configured and generating content the same day
-            you sign up.
+            No tech skills. No long setup. No waiting. Most business owners have
+            their first posts ready before they finish their morning coffee.
           </p>
         </div>
 
