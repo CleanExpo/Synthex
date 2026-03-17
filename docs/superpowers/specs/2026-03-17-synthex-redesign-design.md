@@ -35,7 +35,7 @@ VISUAL_DENSITY:   4  (generous whitespace — marketing page, not a dashboard)
 | Body                | Satoshi    | `text-base leading-relaxed text-stone-400 max-w-[65ch]`             |
 | Monospace / Numbers | Geist Mono | `font-mono tabular-nums`                                            |
 
-**Install:** `npm install @fontsource/satoshi` + register in `app/layout.tsx`. Geist Mono via `next/font/google`.
+**Install:** `npm install @fontsource/satoshi` + register in `app/layout.tsx`. Geist Mono: `npm install geist`, then import via `import { GeistMono } from 'geist/font/mono'` in `app/layout.tsx` — do NOT use `next/font/google` (Geist is not a Google Font).
 
 **Banned fonts:** Inter, Roboto, Arial, Open Sans.
 
@@ -75,7 +75,7 @@ VISUAL_DENSITY:   4  (generous whitespace — marketing page, not a dashboard)
 - Stagger: CSS `animation-delay: calc(var(--i, 0) * 80ms)` on list/grid items
 - Spring physics: Framer Motion `{ type: "spring", stiffness: 120, damping: 20 }` on demo widget
 - Only animate `transform` and `opacity` — never `top/left/width/height`
-- New dependency: `npm install framer-motion`
+- Framer Motion is already installed at `^12.23.12` — no new install needed
 
 ### Icons
 
@@ -96,9 +96,9 @@ VISUAL_DENSITY:   4  (generous whitespace — marketing page, not a dashboard)
 | `/pricing`  | Exists — old PricingGrid | Replace with new PricingSection    |
 | `/about`    | Exists — inline only     | GlowCard components, animation     |
 | `/demo`     | Stub                     | Full demo page                     |
-| `/blog`     | Missing                  | Professional stub + email capture  |
-| `/support`  | Missing                  | Warm stub + email capture          |
-| `/careers`  | Missing                  | Warm stub, mailto CTA              |
+| `/blog`     | Exists — reskin needed   | Warm redesign + email capture      |
+| `/support`  | Exists — reskin needed   | Warm redesign + email capture      |
+| `/careers`  | Exists — reskin needed   | Warm redesign, mailto CTA          |
 
 ### Navigation
 
@@ -145,21 +145,53 @@ components/landing/live-demo-widget.tsx ('use client')
 - Card: `bg-[#211e18] border border-white/[0.06] rounded-2xl shadow-[0_20px_60px_-20px_rgba(245,158,11,0.12)]`
 - Preset buttons below input: "☕ Café" · "🔧 Tradie" · "💇 Salon" · "💪 Gym" — one click populates and triggers
 
-**API:** `POST /api/demo/generate`
+**API:** Two-step sequential fetch (not SSE — simpler to implement and test in Next.js App Router):
+
+**Step 1 — Caption** `POST /api/demo/caption`
 
 ```typescript
 // Request
-{ businessName: string, businessType: 'cafe' | 'tradie' | 'salon' | 'gym' | 'other' }
-
-// Response (SSE stream)
-{ caption: string, imageUrl: string, imagePrompt: string }
+{
+  businessName: string;
+  businessType: 'cafe' | 'tradie' | 'salon' | 'gym' | 'other';
+}
+// Response
+{
+  caption: string;
+}
 ```
 
-- Caption: OpenRouter → `claude-haiku-4-5-20251001`, ~300ms
-- Image: Gemini 2.0 Flash `generateContent` with `responseModalities: ['IMAGE']`, ~2–3s
-- Stream caption first, then image URL — user sees text while image loads
-- Rate limit: 10 requests/hour per IP (no auth required for demo)
-- No auth required — public endpoint, rate limited
+- Model: OpenRouter → `claude-haiku-4-5-20251001`, ~300ms
+- Called immediately on submit; caption renders first
+
+**Step 2 — Image** `POST /api/demo/image`
+
+```typescript
+// Request
+{
+  businessName: string;
+  businessType: 'cafe' | 'tradie' | 'salon' | 'gym' | 'other';
+}
+// Response
+{
+  imageDataUrl: string;
+} // base64 data URI — e.g. "data:image/jpeg;base64,..."
+```
+
+- Gemini 2.0 Flash `generateContent` with `responseModalities: ['IMAGE']` via raw `fetch` against the Gemini REST API using `GEMINI_API_KEY` env var — **no `@google/generative-ai` SDK needed**
+- Response is Gemini's base64 inline image, returned directly as a `data:image/jpeg;base64,...` URI (ephemeral — no Supabase Storage upload needed for the public demo)
+- ~2–3s; skeleton shimmer shown until resolved
+
+**LiveDemoWidget client flow:**
+
+1. User submits → set `state = 'loading-caption'`
+2. `fetch('/api/demo/caption')` → renders caption; set `state = 'loading-image'`
+3. `fetch('/api/demo/image')` → replaces shimmer with image; set `state = 'done'`
+4. Framer Motion spring animates card in on step 2 → populates image on step 3
+
+**Rate limit:** 20 requests/minute per IP — use the existing `aiGeneration` rate limiter preset (aligns with the existing per-minute window in `lib/rate-limit.ts`)
+
+**No auth required** — both endpoints are public and rate-limited only
 
 **Background:**
 
@@ -244,9 +276,22 @@ Bottom bar: `Privacy · Terms · © 2026 Synthex` on `border-t border-white/[0.0
 
 ### Sub-pages
 
+**`ContainerStagger` component** (new — `components/landing/container-stagger.tsx`):
+
+Simple utility that applies CSS `animation-delay: calc(var(--i) * 80ms)` stagger to its children via a wrapper `div`. Children receive an index via CSS custom property. No Framer Motion — pure CSS animation, server-renderable.
+
+```tsx
+// Usage: wraps any list/grid of items
+<ContainerStagger>
+  {items.map((item, i) => (
+    <div key={i} style={{ '--i': i } as React.CSSProperties}>{...}</div>
+  ))}
+</ContainerStagger>
+```
+
 **`/features`**
 
-- Hero: left-aligned headline, `HandWrittenTitle` for accent word
+- Hero: left-aligned headline, `HandWrittenTitle` for accent word (`components/landing/handwriting-text.tsx`, exports `HandWrittenTitle`)
 - Platform grid: `OrbitIntegrations`
 - Feature cards: `GlowCard` components with amber glow variant
 - Entry animations: `ContainerStagger`
@@ -267,7 +312,8 @@ Bottom bar: `Privacy · Terms · © 2026 Synthex` on `border-t border-white/[0.0
 
 **`/demo`**
 
-- Full-page `LiveDemoWidget` (hero-sized)
+- Full-page `LiveDemoWidget` (hero-sized — `max-w-2xl mx-auto` centred, not constrained to a 45% column)
+- The widget accepts a `size` prop: `'hero'` (column-constrained, 45%) and `'full'` (centred, `max-w-2xl`)
 - Feature list below showing what Synthex does after the demo
 - CTA to signup
 
@@ -337,15 +383,66 @@ Bottom bar: `Privacy · Terms · © 2026 Synthex` on `border-t border-white/[0.0
 - System prompt includes the full taste-skill SKILL.md content
 - User prompt: brand tokens + dial settings + section list
 - Model: `claude-sonnet-4-6` (highest quality code generation)
-- Output: complete React/Next.js component files, Tailwind-only styling, no external deps beyond framer-motion + phosphor-icons
+- **Output contract:** LLM returns a JSON object:
+  ```typescript
+  {
+    files: Array<{ filename: string; content: string }>;
+    // e.g. [{ filename: "HeroSection.tsx", content: "..." }, ...]
+  }
+  ```
+- Each file is a complete, self-contained React component — Tailwind-only styling, no external deps beyond `framer-motion` and `@phosphor-icons/react`
+- `CodePanel` renders each file as a syntax-highlighted tab; "Download as zip" uses `jszip` to package the `files` array
 
 **Image generation:**
 
-- Gemini 2.0 Flash `generateContent` with `responseModalities: ['IMAGE']`
+- Gemini 2.0 Flash `generateContent` with `responseModalities: ['IMAGE']` via raw `fetch` (no SDK)
 - Prompt constructed from brand niche + colour palette
 - 3–5 images: hero background, feature section, team/lifestyle photos
+- Base64 response from Gemini is uploaded to **Supabase Storage** (`website-builder` bucket, `{orgId}/{generationId}/{index}.jpg`) and the signed URL is returned to the client and persisted in the `GeneratedWebsite` record
 
-**Gating:** `requireSubscriptionTier('pro')` guard on all `/api/website-builder/*` routes.
+### Prisma Model
+
+Add to `prisma/schema.prisma`:
+
+```prisma
+model GeneratedWebsite {
+  id            String   @id @default(cuid())
+  userId        String
+  orgId         String
+  clientUrl     String
+  brandTokens   Json     // { name, colours, logo, tagline, niche }
+  dialSettings  Json     // { designVariance, motionIntensity, visualDensity }
+  sections      String[] // ["hero", "features", "pricing", ...]
+  generatedFiles Json    // Array<{ filename, content }>
+  imageUrls     String[] // Supabase Storage signed URLs
+  status        String   @default("draft") // "draft" | "complete"
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  user          User         @relation(fields: [userId], references: [id])
+  organisation  Organisation @relation(fields: [orgId], references: [id])
+
+  @@index([userId])
+  @@index([orgId])
+}
+```
+
+Add `generatedWebsites GeneratedWebsite[]` to both `User` and `Organisation` models.
+
+**Gating:** All `/api/website-builder/*` routes use the standard auth pattern — `getUserIdFromRequestOrCookies` from `lib/auth/jwt-utils.ts`, then a Prisma lookup to verify `subscription.tier` is `'pro'` or `'agency'`. There is no pre-built `requireSubscriptionTier` helper — the check is written inline per route:
+
+```typescript
+const userId = await getUserIdFromRequestOrCookies(req);
+if (!userId)
+  return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
+const sub = await prisma.subscription.findUnique({ where: { userId } });
+if (!sub || !['pro', 'agency'].includes(sub.tier)) {
+  return NextResponse.json(
+    { error: 'Pro subscription required' },
+    { status: 403 }
+  );
+}
+```
 
 ---
 
@@ -366,9 +463,10 @@ Bottom bar: `Privacy · Terms · © 2026 Synthex` on `border-t border-white/[0.0
 
 ### Phase A3 — Hero + Demo Widget
 
-1. Build `LiveDemoWidget` component
-2. Build `POST /api/demo/generate` route (OpenRouter caption + Gemini image)
-3. Rewrite `HeroSection` with asymmetric layout + new widget
+1. Build `LiveDemoWidget` component (two-step fetch: caption then image)
+2. Build `POST /api/demo/caption` route (OpenRouter `claude-haiku-4-5-20251001`)
+3. Build `POST /api/demo/image` route (Gemini 2.0 Flash raw fetch → base64 data URI)
+4. Rewrite `HeroSection` with asymmetric layout + new widget
 
 ### Phase A4 — Body Sections
 
@@ -389,13 +487,16 @@ Bottom bar: `Privacy · Terms · © 2026 Synthex` on `border-t border-white/[0.0
 
 ### Phase B — Website Builder
 
-1. Brand extractor lib + API route
-2. Dashboard page + BrandExtractor component
-3. TasteSkillDials component
-4. Code generator lib + API route
-5. Gemini images route
-6. CodePanel + PreviewFrame components
-7. Remotion video route + VideoRenderer component
+1. Add `GeneratedWebsite` Prisma model → `npx prisma db push`
+2. Brand extractor lib + API route
+3. Dashboard page + BrandExtractor component
+4. TasteSkillDials + SectionSelector components
+5. Code generator lib + API route (output: `{ files: Array<{ filename, content }> }`)
+6. Gemini images route (base64 → Supabase Storage → signed URL)
+7. CodePanel + PreviewFrame components + zip download (`jszip`)
+8. Remotion video route + VideoRenderer component (optional, defer if schedule is tight)
+
+Note: Remotion video (`step 8`) is optional. Remotion is already in `package.json` — check if `@remotion/renderer` is also present before enabling the video route. For Phase A's "Bento Features" video tile, use a **pre-rendered `.mp4` file** — do not render at runtime on a marketing page.
 
 ---
 
@@ -414,24 +515,32 @@ Bottom bar: `Privacy · Terms · © 2026 Synthex` on `border-t border-white/[0.0
 ## New Dependencies Required
 
 ```bash
-npm install @fontsource/satoshi
-npm install framer-motion
-npm install @phosphor-icons/react
+npm install @fontsource/satoshi      # Satoshi display font
+npm install geist                    # Geist Mono font (import via geist/font/mono)
+npm install @phosphor-icons/react    # Icon library (replaces Lucide/Heroicons in marketing)
+npm install jszip                    # Website Builder zip download
 ```
 
-(All others — Gemini SDK, Cheerio — check package.json first before installing)
+Already installed — **do not reinstall:**
+
+- `framer-motion` — already at `^12.23.12`
+
+**No Gemini SDK needed** — use raw `fetch` against the Gemini REST API with `GEMINI_API_KEY` (matches the existing integration pattern in the codebase)
 
 ---
 
 ## Success Criteria
 
-- [ ] Synthex landing page scores ≥ 90 on taste-skill pre-flight checklist
-- [ ] Hero demo widget returns result in < 4 seconds P95
-- [ ] All 8 marketing pages render without HTTP 500
-- [ ] Mobile layout collapses correctly on 375px viewport
-- [ ] No Inter font anywhere in the codebase
-- [ ] No cyan colour tokens remaining in marketing components
-- [ ] Website Builder extracts brand from a real URL
-- [ ] Website Builder generates copy-paste-ready React component code
-- [ ] All new API routes have Zod validation
+- [ ] Hero demo widget: caption appears in < 1s, full card (caption + image) renders in < 4s P95
+- [ ] All 8 marketing pages render without HTTP 500 (verify with `npm run build`)
+- [ ] Mobile layout collapses correctly at 375px — navbar pill → BottomMenu, no horizontal overflow
+- [ ] No Inter font anywhere in marketing components (`grep -r "Inter" components/landing app/`)
+- [ ] No cyan colour tokens remaining in marketing components (`grep -r "cyan" components/landing app/`)
+- [ ] Warm amber glow present in hero (visual check — `bg-amber-500/[0.06] blur-[200px]`)
+- [ ] Website Builder: brand extraction succeeds for a real local business URL
+- [ ] Website Builder: generated files JSON contains at least 3 named `.tsx` component files
+- [ ] Website Builder: download zip contains all generated files
+- [ ] Website Builder: gated behind Pro tier (403 returned for free-tier users)
+- [ ] All new API routes have Zod request body validation
 - [ ] `npm run type-check` passes (0 errors) after all changes
+- [ ] `npm run lint` passes after all changes
