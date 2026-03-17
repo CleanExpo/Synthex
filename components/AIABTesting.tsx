@@ -81,7 +81,7 @@ export function AIABTesting() {
   // Load tests from API
   const loadTests = useCallback(async () => {
     try {
-      const response = await fetch('/api/ab-testing/tests');
+      const response = await fetch('/api/ab-testing/tests', { credentials: 'include' });
       if (!response.ok) {
         if (response.status === 401) {
           setTests([]);
@@ -202,6 +202,7 @@ export function AIABTesting() {
     try {
       const response = await fetch('/api/ab-testing/tests', {
         method: 'POST',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: testName,
@@ -237,6 +238,7 @@ export function AIABTesting() {
     try {
       const response = await fetch(`/api/ab-testing/tests/${test.id}`, {
         method: 'PUT',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: 'running' })
       });
@@ -258,6 +260,7 @@ export function AIABTesting() {
     try {
       const response = await fetch(`/api/ab-testing/tests/${test.id}`, {
         method: 'PUT',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: 'paused' })
       });

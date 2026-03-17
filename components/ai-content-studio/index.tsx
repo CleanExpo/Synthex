@@ -41,7 +41,7 @@ export function AIContentStudio() {
   useEffect(() => {
     async function fetchBusinesses() {
       try {
-        const res = await fetch('/api/businesses');
+        const res = await fetch('/api/businesses', { credentials: 'include' });
         if (res.ok) {
           const data = await res.json();
           const biz: Business[] = (data.businesses || []).map((b: Record<string, unknown>) => ({
@@ -75,7 +75,7 @@ export function AIContentStudio() {
     async function fetchConnections() {
       setLoadingConnections(true);
       try {
-        const res = await fetch(`/api/auth/connections?organizationId=${selectedBusinessId}`);
+        const res = await fetch(`/api/auth/connections?organizationId=${selectedBusinessId}`, { credentials: 'include' });
         if (res.ok) {
           const data = await res.json();
           const connected = new Set<string>(

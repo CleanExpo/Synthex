@@ -5,10 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 
 export const metadata: Metadata = PAGE_METADATA.pricing;
-import { Check, X } from '@/components/icons';
-import { CheckoutButton } from '@/components/stripe/checkout-button';
 import MarketingLayout from '@/components/marketing/MarketingLayout';
-import { PricingGrid } from '@/components/pricing/pricing-grid';
+import { PricingSection } from '@/components/landing/pricing-section';
 
 const pricingFaqs = [
   {
@@ -55,23 +53,13 @@ export default function PricingPage() {
   return (
     <MarketingLayout currentPage="pricing">
       <PricingFAQSchema />
-      {/* Hero Section */}
+      {/* Pricing Cards — includes billing toggle and hero (client component) */}
       <section className="pt-16 pb-20 px-6">
-        <div className="container mx-auto text-center">
-          <h1 className="text-5xl font-bold text-white mb-6">
-            Simple, Transparent Pricing
-          </h1>
-          <p className="text-xl text-gray-400 mb-10 max-w-2xl mx-auto">
-            Choose the perfect plan for your social media growth. All plans include our core AI features.
-          </p>
-        </div>
-      </section>
-
-      {/* Pricing Cards — includes billing toggle (client component) */}
-      <section className="pb-20 px-6">
-        <div className="container mx-auto">
-          <PricingGrid />
-        </div>
+        <PricingSection
+          description={
+            'Choose the perfect plan for your social media growth.\nAll plans include a 14-day free trial.'
+          }
+        />
       </section>
 
       {/* FAQ Section */}

@@ -23,32 +23,32 @@ const STAT_ITEMS = (stats: DashboardStats | null) => [
     icon: Share2,
     label: 'Total Posts',
     value: (stats?.totalPosts || 0).toLocaleString(),
-    trend: '+12%',
-    trendUp: true,
+    trend: '—',
+    trendUp: false,
     colour: '#00F5FF',
   },
   {
     icon: Calendar,
     label: 'Scheduled',
     value: String(stats?.scheduledPosts || 0),
-    trend: '+5',
-    trendUp: true,
+    trend: '—',
+    trendUp: false,
     colour: '#00F5FF',
   },
   {
     icon: TrendingUp,
     label: 'Engagement',
     value: `${(stats?.engagementRate || 0).toFixed(1)}%`,
-    trend: '+0.8%',
-    trendUp: true,
+    trend: '—',
+    trendUp: false,
     colour: '#00FF88',
   },
   {
     icon: Users,
     label: 'Followers',
     value: (stats?.followers || 0).toLocaleString(),
-    trend: '+2.4%',
-    trendUp: true,
+    trend: '—',
+    trendUp: false,
     colour: '#FFB800',
   },
 ];
@@ -86,9 +86,9 @@ export function OverviewTab({ stats }: OverviewTabProps) {
                     </span>
                     <span className={cn(
                       'text-[9px] font-mono tabular-nums mt-1.5 block',
-                      item.trendUp ? 'text-emerald-400' : 'text-red-400'
+                      item.trend === '—' ? 'text-white/25' : item.trendUp ? 'text-emerald-400' : 'text-red-400'
                     )}>
-                      {item.trendUp ? '↑' : '↓'} {item.trend}
+                      {item.trend === '—' ? '—' : `${item.trendUp ? '↑' : '↓'} ${item.trend}`}
                     </span>
                   </div>
                 );

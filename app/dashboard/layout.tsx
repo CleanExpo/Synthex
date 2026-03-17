@@ -78,6 +78,9 @@ import { BusinessSwitcher } from '@/components/business';
 import { useUser } from '@/hooks/use-user';
 import { SidebarGroup, type SidebarItem } from '@/components/dashboard/SidebarGroup';
 import { SynthexLogo } from '@/components/landing/synthex-logo';
+import { BottomMenu } from '@/components/landing/bottom-menu';
+import type { NavItem } from '@/components/landing/bottom-menu';
+import { useRouter } from 'next/navigation';
 
 // ============================================================================
 // SIDEBAR GROUPS
@@ -255,8 +258,23 @@ const sidebarGroups: Array<{
 const STARTER_GROUP_IDS = new Set(['command-centre', 'main', 'content-ai', 'planning']);
 const SIDEBAR_EXPANDED_KEY = 'sidebar-show-all-groups';
 
+const MOBILE_NAV_ITEMS: NavItem[] = [
+  { id: 'home', label: 'Home', icon: <Home className="w-5 h-5" />, href: '/dashboard' },
+  { id: 'content', label: 'Content', icon: <FileText className="w-5 h-5" />, href: '/dashboard/content' },
+  { id: 'analytics', label: 'Analytics', icon: <BarChart3 className="w-5 h-5" />, href: '/dashboard/analytics' },
+  { id: 'settings', label: 'Settings', icon: <Settings className="w-5 h-5" />, href: '/dashboard/settings' },
+];
+
+function getMobileActiveId(pathname: string): string {
+  if (pathname.startsWith('/dashboard/settings')) return 'settings';
+  if (pathname.startsWith('/dashboard/analytics')) return 'analytics';
+  if (pathname.startsWith('/dashboard/content')) return 'content';
+  return 'home';
+}
+
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const router = useRouter();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showAllGroups, setShowAllGroups] = useState(false);
@@ -544,6 +562,17 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             onClick={() => setMobileMenuOpen(false)}
           />
         )}
+
+        {/* Mobile Bottom Navigation */}
+        <BottomMenu
+          className="md:hidden"
+          items={MOBILE_NAV_ITEMS}
+          activeId={getMobileActiveId(pathname)}
+          onSelect={(id) => {
+            const item = MOBILE_NAV_ITEMS.find((i) => i.id === id);
+            if (item?.href) router.push(item.href);
+          }}
+        />
 
         {/* AI Project Manager */}
         <AIPMFloatingButton />

@@ -37,7 +37,7 @@ const PLANS: PricingPlan[] = [
     ],
     description: 'Perfect for individuals',
     buttonText: 'Start Free Trial',
-    href: '/register',
+    href: '/signup',
     isPopular: false,
   },
   {
@@ -55,7 +55,7 @@ const PLANS: PricingPlan[] = [
     ],
     description: 'Ideal for growing teams',
     buttonText: 'Get Started',
-    href: '/register',
+    href: '/signup',
     isPopular: true,
   },
   {
@@ -192,7 +192,7 @@ export function PricingSection({
                     value={isMonthly ? plan.price : plan.yearlyPrice}
                     format={{
                       style: 'currency',
-                      currency: 'USD',
+                      currency: 'AUD',
                       minimumFractionDigits: 0,
                       maximumFractionDigits: 0,
                     }}

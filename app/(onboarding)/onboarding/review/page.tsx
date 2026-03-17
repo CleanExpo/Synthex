@@ -44,6 +44,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
 import { StepProgressV2 } from '@/components/onboarding';
 import type { PipelineResult, SocialProfile } from '@/lib/ai/onboarding-pipeline';
 
@@ -419,8 +420,9 @@ export default function ReviewPage() {
 
       router.push('/onboarding/connect');
     } catch (err) {
-      console.error('[review] Save failed:', err);
-      // Non-blocking — still navigate. Server-side OnboardingProgress already has the pipeline data.
+      console.error('Failed to save review:', err);
+      // Show error to user but still navigate (non-blocking by design)
+      toast.error("Some settings couldn't be saved. You can update them in Settings later.");
       router.push('/onboarding/connect');
     } finally {
       setSaving(false);

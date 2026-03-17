@@ -10,11 +10,30 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { logger } from '@/lib/logger';
+import { z } from 'zod';
 import {
   RevenueService,
   RevenueSource,
   REVENUE_SOURCES,
 } from '@/lib/revenue/revenue-service';
+
+// =============================================================================
+// VALIDATION SCHEMA
+// =============================================================================
+
+const createRevenueSchema = z.object({
+  source: z.enum(REVENUE_SOURCES as [RevenueSource, ...RevenueSource[]]),
+  amount: z.number().nonnegative('Amount must be non-negative'),
+  paidAt: z.string().min(1, 'Missing paidAt date'),
+  currency: z.string().optional(),
+  description: z.string().optional(),
+  platform: z.string().optional(),
+  postId: z.string().optional(),
+  brandName: z.string().optional(),
+  periodStart: z.string().optional(),
+  periodEnd: z.string().optional(),
+  metadata: z.record(z.unknown()).optional(),
+});
 
 
 // =============================================================================
@@ -90,39 +109,29 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json();
 
-    // Validate required fields
-    if (!body.source || !REVENUE_SOURCES.includes(body.source)) {
+    // Validate request body with Zod
+    const parsed = createRevenueSchema.safeParse(body);
+    if (!parsed.success) {
       return NextResponse.json(
-        { success: false, error: 'Invalid or missing source' },
+        { success: false, error: parsed.error.errors[0]?.message ?? 'Invalid request body' },
         { status: 400 }
       );
     }
-    if (typeof body.amount !== 'number' || body.amount < 0) {
-      return NextResponse.json(
-        { success: false, error: 'Invalid amount' },
-        { status: 400 }
-      );
-    }
-    if (!body.paidAt) {
-      return NextResponse.json(
-        { success: false, error: 'Missing paidAt date' },
-        { status: 400 }
-      );
-    }
+    const data = parsed.data;
 
     const revenueService = new RevenueService();
     const entry = await revenueService.createEntry(userId, {
-      source: body.source,
-      amount: body.amount,
-      currency: body.currency || 'USD',
-      description: body.description,
-      platform: body.platform,
-      postId: body.postId,
-      brandName: body.brandName,
-      paidAt: new Date(body.paidAt),
-      periodStart: body.periodStart ? new Date(body.periodStart) : undefined,
-      periodEnd: body.periodEnd ? new Date(body.periodEnd) : undefined,
-      metadata: body.metadata,
+      source: data.source,
+      amount: data.amount,
+      currency: data.currency || 'USD',
+      description: data.description,
+      platform: data.platform,
+      postId: data.postId,
+      brandName: data.brandName,
+      paidAt: new Date(data.paidAt),
+      periodStart: data.periodStart ? new Date(data.periodStart) : undefined,
+      periodEnd: data.periodEnd ? new Date(data.periodEnd) : undefined,
+      metadata: data.metadata,
     });
 
     return NextResponse.json({

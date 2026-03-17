@@ -58,6 +58,8 @@ export default function OnboardingPage() {
   const [extensionUrl, setExtensionUrl] = useState<string | null>(null);
 
   const timersRef = useRef<NodeJS.Timeout[]>([]);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   // Check for Chrome Extension
   useEffect(() => {
@@ -77,10 +79,12 @@ export default function OnboardingPage() {
     return () => window.removeEventListener('message', handleMessage);
   }, []);
 
-  // Cleanup timers on unmount
+  // Cleanup timers and abort controller on unmount
   useEffect(() => {
     return () => {
       timersRef.current.forEach(clearTimeout);
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      if (abortControllerRef.current) abortControllerRef.current.abort();
     };
   }, []);
 
@@ -136,17 +140,28 @@ export default function OnboardingPage() {
     });
     timersRef.current = newTimers;
 
+    // Set up 45s client-side timeout
+    const abortController = new AbortController();
+    abortControllerRef.current = abortController;
+    const clientTimeout = setTimeout(() => {
+      abortController.abort();
+    }, 45000);
+    timeoutRef.current = clientTimeout;
+
     try {
       const res = await fetch('/api/onboarding/pipeline', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify({ url: finalUrl, businessName: trimmedName }),
+        signal: abortController.signal,
       });
 
-      // Clear stagger timers
+      // Clear stagger timers and client timeout
       newTimers.forEach(clearTimeout);
       timersRef.current = [];
+      clearTimeout(clientTimeout);
+      timeoutRef.current = null;
 
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
@@ -169,7 +184,17 @@ export default function OnboardingPage() {
     } catch (err) {
       newTimers.forEach(clearTimeout);
       timersRef.current = [];
-      setError(err instanceof Error ? err.message : 'Something went wrong. Please try again.');
+      clearTimeout(clientTimeout);
+      timeoutRef.current = null;
+
+      const isTimeout = err instanceof DOMException && err.name === 'AbortError';
+      setError(
+        isTimeout
+          ? 'Analysis is taking longer than usual. This can happen with complex websites. Try again, or skip this step.'
+          : err instanceof Error
+          ? err.message
+          : 'Something went wrong. Please try again.',
+      );
       setRunning(false);
     }
   };
@@ -252,9 +277,30 @@ export default function OnboardingPage() {
 
           {/* Error */}
           {error && (
-            <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 flex items-start gap-2">
-              <AlertCircle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
-              <p className="text-sm text-red-400">{error}</p>
+            <div className="p-4 rounded-lg bg-red-500/10 border border-red-500/20 space-y-3">
+              <div className="flex items-start gap-2">
+                <AlertCircle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
+                <p className="text-sm text-red-400">{error}</p>
+              </div>
+              <div className="flex items-center gap-3 pl-6">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    setError(null);
+                    runPipeline();
+                  }}
+                  className="text-xs border-red-500/30 text-red-400 hover:bg-red-500/10 hover:border-red-500/50"
+                >
+                  Try again
+                </Button>
+                <button
+                  onClick={() => router.push('/onboarding/review')}
+                  className="text-xs text-gray-500 hover:text-gray-300 underline underline-offset-2 transition-colors"
+                >
+                  Skip analysis
+                </button>
+              </div>
             </div>
           )}
 

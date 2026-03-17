@@ -8,6 +8,7 @@ import {
   Shield
 } from '@/components/icons';
 import MarketingLayout from '@/components/marketing/MarketingLayout';
+import GlowCard from '@/components/landing/glow-card';
 
 const stats = [
   { value: '10,000+', label: 'Active Users' },
@@ -94,10 +95,10 @@ export default function AboutPage() {
           {/* Stats */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-4xl mx-auto">
             {stats.map((stat, index) => (
-              <div key={index} className="bg-[#0d1f35]/80 border border-cyan-500/10 backdrop-blur-sm rounded-xl p-6 text-center">
+              <GlowCard key={index} className="p-6 text-center">
                 <div className="text-3xl font-bold bg-gradient-to-r from-cyan-400 to-cyan-500 bg-clip-text text-transparent mb-2">{stat.value}</div>
                 <div className="text-gray-400">{stat.label}</div>
-              </div>
+              </GlowCard>
             ))}
           </div>
         </div>
@@ -209,7 +210,7 @@ export default function AboutPage() {
           </p>
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
             {teamMembers.map((member, index) => (
-              <div key={index} className="bg-[#0d1f35]/80 border border-cyan-500/10 backdrop-blur-sm rounded-xl p-6 hover:transform hover:scale-105 hover:border-cyan-500/30 transition-all duration-300">
+              <GlowCard key={index} className="p-6">
                 <div className="w-20 h-20 bg-gradient-to-br from-cyan-500/20 to-cyan-400/10 rounded-full mx-auto mb-4 flex items-center justify-center">
                   <Users className="w-10 h-10 text-cyan-400" />
                 </div>
@@ -221,7 +222,7 @@ export default function AboutPage() {
                     {member.expertise}
                   </span>
                 </div>
-              </div>
+              </GlowCard>
             ))}
           </div>
         </div>
@@ -275,7 +276,7 @@ export default function AboutPage() {
                     <ArrowRight className="ml-2 w-4 h-4" />
                   </Button>
                 </Link>
-                <Link href="/careers">
+                <Link href="/contact?subject=careers">
                   <Button variant="outline" className="border-cyan-500/50 text-cyan-400 hover:bg-cyan-500/10 hover:border-cyan-400 px-8 py-3 transition-all">
                     Join Our Team
                   </Button>

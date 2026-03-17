@@ -29,7 +29,7 @@ const footerLinks: FooterSection[] = [
   {
     label: 'Company',
     links: [
-      { title: 'FAQs', href: '/faqs' },
+      { title: 'FAQs', href: '/pricing#faq' },
       { title: 'About Us', href: '/about' },
       { title: 'Privacy Policy', href: '/privacy' },
       { title: 'Terms of Services', href: '/terms' },
@@ -40,7 +40,7 @@ const footerLinks: FooterSection[] = [
     links: [
       { title: 'Blog', href: '/blog' },
       { title: 'Changelog', href: '/changelog' },
-      { title: 'Brand', href: '/brand' },
+      { title: 'Brand', href: '/about' },
       { title: 'Help', href: '/support' },
     ],
   },

@@ -42,7 +42,25 @@ export function ContentSuggestionsWidget({ className }: { className?: string }) 
   const recommendations = data?.recommendations ?? []
 
   if (!isLoading && recommendations.length === 0) {
-    return null
+    return (
+      <div className={`border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm p-5 space-y-4 ${className ?? ''}`}>
+        <div className="flex items-center gap-2">
+          <Sparkles className="h-3.5 w-3.5 text-cyan-400" />
+          <span className="text-[10px] uppercase tracking-[0.25em] text-white/40">Content Suggestions</span>
+        </div>
+        <div className="border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm p-3 space-y-2">
+          <p className="text-xs text-white/70 leading-relaxed">
+            AI-powered content suggestions will appear here once you&apos;ve connected a social platform.
+          </p>
+          <a
+            href="/dashboard/settings/connections"
+            className="inline-block mt-1 text-[10px] uppercase tracking-[0.15em] px-2.5 py-1 rounded-sm border-[0.5px] border-cyan-500/30 bg-cyan-500/[0.08] text-cyan-400 hover:bg-cyan-500/[0.12] transition-colors"
+          >
+            Connect Platform
+          </a>
+        </div>
+      </div>
+    )
   }
 
   function handleCopy(text: string) {

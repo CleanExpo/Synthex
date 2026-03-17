@@ -154,6 +154,17 @@ function ResetPasswordForm() {
               </Alert>
             )}
 
+            {error && error.includes('Invalid or expired') && (
+              <div className="mb-4 text-center">
+                <a
+                  href="/forgot-password"
+                  className="text-sm text-cyan-400 hover:text-cyan-300 font-medium transition-colors underline underline-offset-2"
+                >
+                  Request a new reset link
+                </a>
+              </div>
+            )}
+
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
                 <Label variant="glass" htmlFor="password">New Password</Label>

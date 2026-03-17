@@ -102,6 +102,10 @@ export async function middleware(request: NextRequest) {
 
   // Authentication check for protected routes
   const protectedPaths = ['/dashboard', '/onboarding', '/api/protected', '/api/user', '/api/integrations'];
+  // Auth URL structure:
+  // Canonical: /login, /signup, /forgot-password, /auth/reset-password
+  // Legacy redirects (still work): /auth/login → /login, /auth/register → /signup
+  // Both canonical and legacy paths are listed here to redirect authenticated users to dashboard
   // CRITICAL: Both /login and /auth/login exist — /login is the active PKCE flow page,
   // /auth/login is the legacy Supabase page. Treat BOTH as auth paths to prevent loops.
   const authPaths = ['/login', '/auth/login', '/auth/register', '/signup'];

@@ -218,7 +218,6 @@ function ConnectPageInner() {
 
       // 3. Clear sessionStorage
       sessionStorage.removeItem(SESSION_KEY);
-      sessionStorage.removeItem('synthex_onboarding_socials');
 
       // 4. Mark onboarding as complete in localStorage for middleware
       localStorage.setItem('onboardingComplete', 'true');
@@ -388,16 +387,14 @@ function ConnectPageInner() {
         </Button>
 
         <div className="flex items-center gap-3">
-          {connectedCount === 0 && (
-            <Button
-              variant="ghost"
-              onClick={handleFinish}
-              disabled={finishing}
-              className="text-gray-400 hover:text-white"
-            >
-              Skip for now
-            </Button>
-          )}
+          <Button
+            variant="ghost"
+            onClick={handleFinish}
+            disabled={finishing}
+            className="text-gray-400 hover:text-white"
+          >
+            {connectedCount === 0 ? 'Skip for now' : "I'll connect more later"}
+          </Button>
 
           <Button
             size="lg"

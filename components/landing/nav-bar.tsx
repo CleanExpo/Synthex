@@ -43,13 +43,13 @@ export function NavBar() {
           {/* Desktop CTA */}
           <div className="hidden md:flex items-center gap-4">
             <Link
-              href="/auth/login"
+              href="/login"
               className="text-white/50 hover:text-white text-sm tracking-wide transition-colors duration-200"
             >
               Sign In
             </Link>
             <Link
-              href="/auth/signup"
+              href="/signup"
               className="px-5 py-2 bg-cyan-500 hover:bg-cyan-400 text-[#0a1628] text-sm font-semibold tracking-wide transition-colors duration-200 rounded-sm"
             >
               Get Started
@@ -87,14 +87,14 @@ export function NavBar() {
             ))}
             <div className="pt-3 flex flex-col gap-2">
               <Link
-                href="/auth/login"
+                href="/login"
                 onClick={() => setMobileOpen(false)}
                 className="block py-2.5 text-white/50 hover:text-white text-sm tracking-wide text-center border-[0.5px] border-white/[0.06] rounded-sm transition-colors"
               >
                 Sign In
               </Link>
               <Link
-                href="/auth/signup"
+                href="/signup"
                 onClick={() => setMobileOpen(false)}
                 className="block py-3 bg-cyan-500 hover:bg-cyan-400 text-[#0a1628] text-sm font-semibold tracking-wide text-center rounded-sm transition-colors"
               >

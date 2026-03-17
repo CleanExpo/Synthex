@@ -57,7 +57,7 @@ function OAuthCallbackContent() {
           router.replace('/dashboard');
         } else {
           // No auth and no error — this was likely a stale navigation
-          // Wait a moment in case cookies are still being set, then redirect
+          // Wait for cookies to be set by the API callback, then redirect
           setTimeout(() => {
             const hasUserInfoNow = document.cookie.includes('user-info');
             if (hasUserInfoNow) {
@@ -65,7 +65,7 @@ function OAuthCallbackContent() {
             } else {
               router.replace('/login');
             }
-          }, 2000);
+          }, 5000);
         }
       }
     };
@@ -78,9 +78,9 @@ function OAuthCallbackContent() {
       <Card className="liquid-glass p-8 max-w-md w-full mx-4">
         <div className="flex flex-col items-center space-y-4">
           <Loader2 className="w-12 h-12 text-cyan-400 animate-spin" />
-          <h2 className="text-2xl font-semibold text-white">Completing Sign In...</h2>
+          <h2 className="text-2xl font-semibold text-white">Completing sign-in, please wait...</h2>
           <p className="text-gray-400 text-center">
-            Please wait while we complete your authentication.
+            We're verifying your credentials and setting up your session.
           </p>
         </div>
       </Card>

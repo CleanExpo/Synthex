@@ -113,8 +113,38 @@ export function WelcomeCard({
     }
   }, []);
 
-  if (isLoading || dismissed || !data?.exists) {
+  if (isLoading || dismissed) {
     return null;
+  }
+
+  if (!data?.exists) {
+    return (
+      <div className={cn('border-[0.5px] border-cyan-500/20 bg-cyan-500/[0.02] rounded-sm overflow-hidden', className)}>
+        {/* Top accent line */}
+        <div className="h-px bg-gradient-to-r from-cyan-500/60 via-cyan-400/30 to-transparent" />
+        <div className="px-6 pt-5 pb-4">
+          <span className="text-[10px] uppercase tracking-[0.3em] text-white/25 block mb-1">
+            Getting Started
+          </span>
+          <h2 className="text-xl font-light text-white tracking-tight">
+            Welcome to Synthex!
+          </h2>
+          <p className="text-sm text-white/40 mt-1">
+            Complete your setup to get personalised AI recommendations.
+          </p>
+        </div>
+        <div className="border-t-[0.5px] border-white/[0.06] px-6 py-4">
+          <Link
+            href="/onboarding"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-sm bg-cyan-500/[0.12] border-[0.5px] border-cyan-500/30 text-sm text-cyan-300 hover:bg-cyan-500/[0.2] hover:border-cyan-500/50 transition-all"
+          >
+            <Sparkles className="h-3.5 w-3.5" />
+            Complete Setup
+            <ArrowRight className="h-3.5 w-3.5" />
+          </Link>
+        </div>
+      </div>
+    );
   }
 
   const canDismiss = viewCount >= MIN_VIEWS_BEFORE_DISMISS;

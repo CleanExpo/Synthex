@@ -50,7 +50,7 @@ export function AIPersonaManager() {
   // Load personas from API
   const loadPersonas = useCallback(async () => {
     try {
-      const response = await fetch('/api/personas');
+      const response = await fetch('/api/personas', { credentials: 'include' });
       if (!response.ok) {
         if (response.status === 401) {
           // Not authenticated - clear local state
@@ -135,6 +135,7 @@ export function AIPersonaManager() {
     try {
       const response = await fetch('/api/personas', {
         method: 'POST',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: newPersonaName,
@@ -165,7 +166,8 @@ export function AIPersonaManager() {
   const deletePersona = async (id: string) => {
     try {
       const response = await fetch(`/api/personas?id=${id}`, {
-        method: 'DELETE'
+        method: 'DELETE',
+        credentials: 'include'
       });
 
       if (!response.ok) {
@@ -196,6 +198,7 @@ export function AIPersonaManager() {
     try {
       const response = await fetch(`/api/personas/${selectedPersona.id}/train`, {
         method: 'POST',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           sources: [

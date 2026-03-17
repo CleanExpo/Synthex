@@ -126,9 +126,9 @@ export function PredictiveAnalytics() {
     try {
       // Fetch real data from multiple endpoints in parallel
       const [insightsRes, predictionsRes, trendsRes] = await Promise.all([
-        fetch(`/api/analytics/insights?period=${selectedTimeframe}`),
-        fetch('/api/analytics/predict-engagement?withActuals=true&limit=20'),
-        fetch(`/api/predict/trends?action=trending&platform=instagram&limit=10`)
+        fetch(`/api/analytics/insights?period=${selectedTimeframe}`, { credentials: 'include' }),
+        fetch('/api/analytics/predict-engagement?withActuals=true&limit=20', { credentials: 'include' }),
+        fetch(`/api/predict/trends?action=trending&platform=instagram&limit=10`, { credentials: 'include' })
       ]);
 
       // Process insights for anomalies and time series

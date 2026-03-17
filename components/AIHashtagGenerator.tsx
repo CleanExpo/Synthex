@@ -65,6 +65,7 @@ export function AIHashtagGenerator({
     try {
       const response = await fetch('/api/ai-content/hashtags', {
         method: 'POST',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           content: input,

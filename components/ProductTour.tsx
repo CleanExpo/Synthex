@@ -141,7 +141,20 @@ export function ProductTour() {
   // Filter steps based on showIf condition (evaluated client-side)
   const activeSteps = tourSteps.filter(s => !s.showIf || s.showIf());
   const step = activeSteps[currentStep];
-  
+
+  // Validate that each step's target element exists in the DOM before starting.
+  // Steps targeting 'body' are always valid. Steps whose target is absent are
+  // silently dropped so the tour never highlights a missing element.
+  const startTourIfValid = useCallback(() => {
+    const validSteps = activeSteps.filter(s => {
+      if (!s.target || s.target === 'body') return true;
+      return document.querySelector(s.target) !== null;
+    });
+    if (validSteps.length > 0) {
+      setIsActive(true);
+    }
+  }, [activeSteps]);
+
   // Check if should show tour
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -156,12 +169,12 @@ export function ProductTour() {
     if (showTourOnDashboard === 'true') {
       // Clear the flag and start tour immediately
       localStorage.removeItem('showTourOnDashboard');
-      setTimeout(() => setIsActive(true), 500);
+      setTimeout(() => startTourIfValid(), 500);
     } else if (!hasSeenTour && onboardingComplete) {
       // Returning user who hasn't seen tour
-      setTimeout(() => setIsActive(true), 1000);
+      setTimeout(() => startTourIfValid(), 1000);
     }
-  }, []);
+  }, [startTourIfValid]);
   
   // Update highlight position
   useEffect(() => {

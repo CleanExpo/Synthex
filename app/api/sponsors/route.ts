@@ -10,11 +10,28 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { logger } from '@/lib/logger';
+import { z } from 'zod';
 import {
   SponsorService,
   SponsorStatus,
   SPONSOR_STATUSES,
 } from '@/lib/sponsors/sponsor-service';
+
+// =============================================================================
+// VALIDATION SCHEMA
+// =============================================================================
+
+const createSponsorSchema = z.object({
+  name: z.string().min(1, 'Missing or invalid name'),
+  company: z.string().optional(),
+  email: z.string().email('Invalid email address').optional().or(z.literal('')),
+  phone: z.string().optional(),
+  website: z.string().optional(),
+  logo: z.string().optional(),
+  status: z.enum(SPONSOR_STATUSES as [SponsorStatus, ...SponsorStatus[]]).optional(),
+  notes: z.string().optional(),
+  metadata: z.record(z.unknown()).optional(),
+});
 
 
 // =============================================================================
@@ -66,32 +83,27 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json();
 
-    // Validate required fields
-    if (!body.name || typeof body.name !== 'string') {
+    // Validate request body with Zod
+    const parsed = createSponsorSchema.safeParse(body);
+    if (!parsed.success) {
       return NextResponse.json(
-        { success: false, error: 'Missing or invalid name' },
+        { success: false, error: parsed.error.errors[0]?.message ?? 'Invalid request body' },
         { status: 400 }
       );
     }
-
-    if (body.status && !SPONSOR_STATUSES.includes(body.status)) {
-      return NextResponse.json(
-        { success: false, error: 'Invalid status' },
-        { status: 400 }
-      );
-    }
+    const data = parsed.data;
 
     const sponsorService = new SponsorService();
     const sponsor = await sponsorService.createSponsor(userId, {
-      name: body.name,
-      company: body.company,
-      email: body.email,
-      phone: body.phone,
-      website: body.website,
-      logo: body.logo,
-      status: body.status,
-      notes: body.notes,
-      metadata: body.metadata,
+      name: data.name,
+      company: data.company,
+      email: data.email,
+      phone: data.phone,
+      website: data.website,
+      logo: data.logo,
+      status: data.status,
+      notes: data.notes,
+      metadata: data.metadata,
     });
 
     return NextResponse.json({

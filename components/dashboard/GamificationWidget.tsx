@@ -72,7 +72,31 @@ export function GamificationWidget({ className }: { className?: string }) {
     .slice(0, 3) ?? []
 
   if (!isLoading && (!streak || streak.currentStreak === 0) && recentAchievements.length === 0) {
-    return null
+    return (
+      <div className={`border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm p-5 space-y-4 ${className ?? ''}`}>
+        <div className="flex items-center gap-2">
+          <Trophy className="h-3.5 w-3.5 text-amber-400" />
+          <span className="text-[10px] uppercase tracking-[0.25em] text-white/40">Your Progress</span>
+        </div>
+        <div className="space-y-3">
+          <div className="flex items-start gap-3 border-[0.5px] border-amber-500/20 bg-amber-500/[0.04] rounded-sm p-3">
+            <Flame className="h-4 w-4 text-orange-400 shrink-0 mt-0.5" />
+            <div className="min-w-0">
+              <div className="text-xs text-white/70">Start your streak</div>
+              <p className="text-[10px] text-white/30 mt-0.5 leading-relaxed">
+                Create and publish your first post to start your streak and earn achievements.
+              </p>
+              <a
+                href="/dashboard/content"
+                className="inline-block mt-3 text-[10px] uppercase tracking-[0.15em] px-2.5 py-1 rounded-sm border-[0.5px] border-amber-500/30 bg-amber-500/[0.08] text-amber-400 hover:bg-amber-500/[0.12] transition-colors"
+              >
+                Create Post
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (
