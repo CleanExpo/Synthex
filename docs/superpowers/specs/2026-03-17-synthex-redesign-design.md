@@ -143,7 +143,7 @@ components/landing/live-demo-widget.tsx ('use client')
 - Image: Gemini 2.0 Flash generated, matching business type
 - Caption: OpenRouter claude-haiku-4-5 generated, 2–3 sentences, platform-appropriate
 - Card: `bg-[#211e18] border border-white/[0.06] rounded-2xl shadow-[0_20px_60px_-20px_rgba(245,158,11,0.12)]`
-- Preset buttons below input: "☕ Café" · "🔧 Tradie" · "💇 Salon" · "💪 Gym" — one click populates and triggers
+- Preset buttons below input: "Cafe" · "Tradie" · "Salon" · "Gym" — one click populates and triggers (no emoji — complies with ANTI-EMOJI POLICY)
 
 **API:** Two-step sequential fetch (not SSE — simpler to implement and test in Next.js App Router):
 
@@ -189,9 +189,9 @@ components/landing/live-demo-widget.tsx ('use client')
 3. `fetch('/api/demo/image')` → replaces shimmer with image; set `state = 'done'`
 4. Framer Motion spring animates card in on step 2 → populates image on step 3
 
-**Rate limit:** 20 requests/minute per IP — use the existing `aiGeneration` rate limiter preset (aligns with the existing per-minute window in `lib/rate-limit.ts`)
+**Rate limit:** Use the existing `aiGeneration` rate limiter preset (20 req/min per IP). Because one full demo interaction consumes 2 requests (caption + image), the effective throughput is **10 demo completions/minute per IP**. Use separate rate limit keys per route: `demo-caption:<ip>` and `demo-image:<ip>` — each sharing the same 20-req/min budget via the `aiGeneration` preset.
 
-**No auth required** — both endpoints are public and rate-limited only
+**No auth required** — both `/api/demo/caption` and `/api/demo/image` are fully public. Do NOT call `getUserIdFromRequestOrCookies` in these routes. The Technical Constraints section's auth rule is explicitly excepted for these two routes.
 
 **Background:**
 
@@ -398,7 +398,7 @@ Simple utility that applies CSS `animation-delay: calc(var(--i) * 80ms)` stagger
 - Gemini 2.0 Flash `generateContent` with `responseModalities: ['IMAGE']` via raw `fetch` (no SDK)
 - Prompt constructed from brand niche + colour palette
 - 3–5 images: hero background, feature section, team/lifestyle photos
-- Base64 response from Gemini is uploaded to **Supabase Storage** (`website-builder` bucket, `{orgId}/{generationId}/{index}.jpg`) and the signed URL is returned to the client and persisted in the `GeneratedWebsite` record
+- Base64 response from Gemini is uploaded to **Supabase Storage** (`website-builder` public bucket, `{organizationId}/{generationId}/{index}.jpg`) and the **permanent public URL** is returned to the client and persisted in `GeneratedWebsite.imageUrls`. Use a public bucket — signed URLs expire and are unsuitable for persisted records.
 
 ### Prisma Model
 
@@ -408,35 +408,37 @@ Add to `prisma/schema.prisma`:
 model GeneratedWebsite {
   id            String   @id @default(cuid())
   userId        String
-  orgId         String
-  clientUrl     String
-  brandTokens   Json     // { name, colours, logo, tagline, niche }
-  dialSettings  Json     // { designVariance, motionIntensity, visualDensity }
-  sections      String[] // ["hero", "features", "pricing", ...]
-  generatedFiles Json    // Array<{ filename, content }>
-  imageUrls     String[] // Supabase Storage signed URLs
-  status        String   @default("draft") // "draft" | "complete"
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  organizationId String
+  clientUrl      String
+  brandTokens    Json     // { name, colours, logo, tagline, niche }
+  dialSettings   Json     // { designVariance, motionIntensity, visualDensity }
+  sections       String[] // ["hero", "features", "pricing", ...]
+  generatedFiles Json     // Array<{ filename: string, content: string }>
+  imageUrls      String[] // Supabase Storage permanent public URLs
+  status         String   @default("draft") // "draft" | "complete"
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
-  user          User         @relation(fields: [userId], references: [id])
-  organisation  Organisation @relation(fields: [orgId], references: [id])
+  user         User         @relation(fields: [userId], references: [id])
+  organization Organization @relation(fields: [organizationId], references: [id])
+  // Note: schema uses American spelling 'Organization' throughout — must match exactly
 
   @@index([userId])
-  @@index([orgId])
+  @@index([organizationId])
 }
 ```
 
-Add `generatedWebsites GeneratedWebsite[]` to both `User` and `Organisation` models.
+Add `generatedWebsites GeneratedWebsite[]` to both `User` and `Organization` models.
 
-**Gating:** All `/api/website-builder/*` routes use the standard auth pattern — `getUserIdFromRequestOrCookies` from `lib/auth/jwt-utils.ts`, then a Prisma lookup to verify `subscription.tier` is `'pro'` or `'agency'`. There is no pre-built `requireSubscriptionTier` helper — the check is written inline per route:
+**Gating:** All `/api/website-builder/*` routes use the standard auth pattern — `getUserIdFromRequestOrCookies` from `lib/auth/jwt-utils.ts`, then a Prisma lookup on `Subscription.plan` (actual values: `'free' | 'professional' | 'business' | 'custom'`). There is no pre-built `requireSubscriptionTier` helper — the check is written inline per route:
 
 ```typescript
 const userId = await getUserIdFromRequestOrCookies(req);
 if (!userId)
   return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
 const sub = await prisma.subscription.findUnique({ where: { userId } });
-if (!sub || !['pro', 'agency'].includes(sub.tier)) {
+// Actual Subscription.plan values: 'free' | 'professional' | 'business' | 'custom'
+if (!sub || !['professional', 'business', 'custom'].includes(sub.plan)) {
   return NextResponse.json(
     { error: 'Pro subscription required' },
     { status: 403 }
@@ -496,7 +498,20 @@ if (!sub || !['pro', 'agency'].includes(sub.tier)) {
 7. CodePanel + PreviewFrame components + zip download (`jszip`)
 8. Remotion video route + VideoRenderer component (optional, defer if schedule is tight)
 
-Note: Remotion video (`step 8`) is optional. Remotion is already in `package.json` — check if `@remotion/renderer` is also present before enabling the video route. For Phase A's "Bento Features" video tile, use a **pre-rendered `.mp4` file** — do not render at runtime on a marketing page.
+**Remotion note:** `@remotion/renderer` (the server-side rendering package) is NOT in `package.json`. The video route (`step 8`) is **deferred** until it is explicitly installed. The `VideoRenderer` component may be scaffolded but the API route must not be enabled. For Phase A's "Bento Features" video tile, use a **pre-rendered `.mp4` file** at `public/videos/demo-loop.mp4` — do not render at runtime on a marketing page.
+
+**PreviewFrame iframe security:** The `PreviewFrame` component renders LLM-generated React code in a preview iframe. Rendering strategy: the generated code is compiled server-side via the `/api/website-builder/generate` route and the resulting HTML is passed as an `srcdoc` attribute. The iframe MUST include:
+
+```tsx
+<iframe
+  srcDoc={previewHtml}
+  sandbox="allow-scripts allow-same-origin"
+  csp="default-src 'self'; style-src 'unsafe-inline'; script-src 'unsafe-inline'"
+  title="Website preview"
+/>
+```
+
+Do not use `eval()` or dynamic `import()` client-side. The preview is display-only — no form submissions, no navigation.
 
 ---
 
@@ -518,7 +533,7 @@ Note: Remotion video (`step 8`) is optional. Remotion is already in `package.jso
 npm install @fontsource/satoshi      # Satoshi display font
 npm install geist                    # Geist Mono font (import via geist/font/mono)
 npm install @phosphor-icons/react    # Icon library (replaces Lucide/Heroicons in marketing)
-npm install jszip                    # Website Builder zip download
+npm install jszip @types/jszip       # Website Builder zip download
 ```
 
 Already installed — **do not reinstall:**
