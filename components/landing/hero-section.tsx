@@ -81,7 +81,7 @@ export function HeroSection() {
               <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
                 {TRUST_SIGNALS.map(item => (
                   <div key={item.label} className="flex items-center gap-2">
-                    <span className="text-sm font-bold text-cyan-400">
+                    <span className="text-sm font-bold text-cyan-400 whitespace-nowrap">
                       {item.value}
                     </span>
                     <span className="text-sm text-white/40">{item.label}</span>
