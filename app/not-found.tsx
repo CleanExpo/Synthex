@@ -1,3 +1,5 @@
+'use client';
+
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, Home } from 'lucide-react';
@@ -34,7 +36,8 @@ function MessageDisplay() {
           404
         </div>
         <div className="text-[14px] w-1/2 min-w-[280px] text-center text-white/40 m-[1%]">
-          The page you are looking for might have been removed, had its name changed, or is temporarily unavailable.
+          The page you are looking for might have been removed, had its name
+          changed, or is temporarily unavailable.
         </div>
 
         <div className="flex gap-4 mt-8">
@@ -58,19 +61,31 @@ function MessageDisplay() {
         <div className="mt-10 pt-6 border-t border-white/[0.06] w-64 text-center">
           <p className="text-xs text-white/40 mb-3">Helpful links</p>
           <div className="flex flex-wrap gap-2 justify-center">
-            <Link href="/dashboard/content" className="text-cyan-400 hover:text-cyan-300 text-xs transition-colors">
+            <Link
+              href="/dashboard/content"
+              className="text-cyan-400 hover:text-cyan-300 text-xs transition-colors"
+            >
               Content
             </Link>
             <span className="text-white/20">•</span>
-            <Link href="/dashboard/analytics" className="text-cyan-400 hover:text-cyan-300 text-xs transition-colors">
+            <Link
+              href="/dashboard/analytics"
+              className="text-cyan-400 hover:text-cyan-300 text-xs transition-colors"
+            >
               Analytics
             </Link>
             <span className="text-white/20">•</span>
-            <Link href="/dashboard/schedule" className="text-cyan-400 hover:text-cyan-300 text-xs transition-colors">
+            <Link
+              href="/dashboard/schedule"
+              className="text-cyan-400 hover:text-cyan-300 text-xs transition-colors"
+            >
               Schedule
             </Link>
             <span className="text-white/20">•</span>
-            <Link href="/dashboard/settings" className="text-cyan-400 hover:text-cyan-300 text-xs transition-colors">
+            <Link
+              href="/dashboard/settings"
+              className="text-cyan-400 hover:text-cyan-300 text-xs transition-colors"
+            >
               Settings
             </Link>
           </div>
@@ -99,12 +114,18 @@ function CircleAnimation() {
     particlesRef.current = [];
     for (let i = 0; i < 300; i++) {
       const randomX =
-        Math.floor(Math.random() * (canvas.width * 3 - canvas.width * 1.2 + 1)) +
+        Math.floor(
+          Math.random() * (canvas.width * 3 - canvas.width * 1.2 + 1)
+        ) +
         canvas.width * 1.2;
       const randomY =
         Math.floor(Math.random() * (canvas.height - canvas.height * -0.2 + 1)) +
         canvas.height * -0.2;
-      particlesRef.current.push({ x: randomX, y: randomY, size: canvas.width / 1000 });
+      particlesRef.current.push({
+        x: randomX,
+        y: randomY,
+        size: canvas.width / 1000,
+      });
     }
   };
 
@@ -124,7 +145,7 @@ function CircleAnimation() {
     ctx.fillStyle = 'rgba(34, 211, 238, 0.45)';
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    particlesRef.current.forEach((p) => {
+    particlesRef.current.forEach(p => {
       ctx.beginPath();
       if (timerRef.current < 65) {
         p.x -= distanceX;
@@ -173,6 +194,8 @@ function CircleAnimation() {
       window.removeEventListener('resize', handleResize);
       if (requestIdRef.current) cancelAnimationFrame(requestIdRef.current);
     };
+    // draw and initParticles use only refs — safe to omit from deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return <canvas ref={canvasRef} className="w-full h-full opacity-30" />;
