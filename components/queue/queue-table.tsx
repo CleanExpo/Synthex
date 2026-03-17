@@ -205,7 +205,6 @@ export function QueueTable({
             checked={allSelected}
             // Radix uses data-state so indeterminate is not directly supported; use checked
             onCheckedChange={toggleAll}
-            variant="glass"
             aria-label={allSelected ? 'Deselect all' : 'Select all'}
             className={someSelected ? 'opacity-60' : ''}
           />
@@ -240,7 +239,6 @@ export function QueueTable({
                 <Checkbox
                   checked={selectedIds.has(post.id)}
                   onCheckedChange={() => toggleOne(post.id)}
-                  variant="glass"
                   aria-label={`Select post ${post.id}`}
                 />
               </div>

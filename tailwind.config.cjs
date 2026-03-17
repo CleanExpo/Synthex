@@ -164,6 +164,14 @@ module.exports = {
           from: { opacity: '0' },
           to: { opacity: '1' },
         },
+        marquee: {
+          from: { transform: 'translateX(0)' },
+          to: { transform: 'translateX(calc(-100% - var(--gap)))' },
+        },
+        'marquee-vertical': {
+          from: { transform: 'translateY(0)' },
+          to: { transform: 'translateY(calc(-100% - var(--gap)))' },
+        },
       },
       animation: {
         'accordion-down': 'accordion-down 0.2s ease-out',
@@ -173,6 +181,8 @@ module.exports = {
         float: 'float 3s ease-in-out infinite',
         'slide-up': 'slide-up 0.6s var(--ease-smooth)',
         'fade-in': 'fade-in 0.8s var(--ease-smooth)',
+        marquee: 'marquee var(--duration) infinite linear',
+        'marquee-vertical': 'marquee-vertical var(--duration) linear infinite',
       },
     },
   },

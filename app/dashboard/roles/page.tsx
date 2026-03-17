@@ -369,7 +369,6 @@ function RoleDialog({
               id="role-default"
               checked={isDefault}
               onCheckedChange={checked => setIsDefault(checked === true)}
-              variant="glass-primary"
             />
             <Label htmlFor="role-default" className="text-gray-300 cursor-pointer">
               Set as default role for new members
@@ -394,8 +393,7 @@ function RoleDialog({
                           onCheckedChange={() =>
                             toggleResourcePermissions(resource, permissions)
                           }
-                          variant="glass-primary"
-                          className={someSelected && !allSelected ? 'opacity-60' : ''}
+                                      className={someSelected && !allSelected ? 'opacity-60' : ''}
                         />
                         <Label
                           htmlFor={`resource-${resource}`}
