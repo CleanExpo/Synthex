@@ -36,7 +36,8 @@ export function HeroSection() {
               business — so you can focus on running it.
             </p>
             <p className="text-base text-gray-500 max-w-lg mx-auto lg:mx-0 leading-relaxed mb-10">
-              No experience needed. No agency fees. No credit card required. Set up in 10 minutes.
+              No experience needed. No agency fees. No credit card required. Set
+              up in 10 minutes.
             </p>
 
             {/* CTAs */}
