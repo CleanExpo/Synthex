@@ -30,22 +30,25 @@ const STATS = [
   {
     value: '10,000+',
     label: 'Businesses',
-    description: 'Small businesses and creators using Synthex every day',
+    description:
+      'Local businesses using Synthex every day — cafés, tradies, salons, gyms',
   },
   {
     value: '50M+',
     label: 'Posts Published',
-    description: 'Real posts sent to real audiences — not just drafts',
+    description:
+      'Real posts sent to real local audiences — not just drafts sitting in a folder',
   },
   {
     value: '97%',
     label: 'Would Recommend',
-    description: "Of customers say they'd recommend us to a friend",
+    description:
+      "Of business owners say they'd recommend Synthex to a fellow local business",
   },
   {
     value: '10 min',
     label: 'To Get Started',
-    description: 'Average time from signup to first post ready to go',
+    description: 'From signup to your first week of posts drafted and ready',
   },
 ];
 
@@ -55,7 +58,7 @@ export function StatsSection({ className }: StatsSectionProps) {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section label */}
         <p className="text-center text-white/40 text-xs uppercase tracking-widest mb-8">
-          Businesses like yours, already saving time with Synthex
+          Real local businesses. Real results. No marketing degree required.
         </p>
 
         <AnimatedGroup
