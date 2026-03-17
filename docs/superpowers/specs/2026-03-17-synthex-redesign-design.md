@@ -161,7 +161,7 @@ components/landing/live-demo-widget.tsx ('use client')
 }
 ```
 
-- Model: OpenRouter → `claude-haiku-4-5-20251001`, ~300ms
+- Model: OpenRouter → `anthropic/claude-haiku-4-5` (verify exact slug in OpenRouter dashboard before shipping — no date suffix in the registered provider registry), ~300ms
 - Called immediately on submit; caption renders first
 
 **Step 2 — Image** `POST /api/demo/image`
@@ -390,7 +390,7 @@ Simple utility that applies CSS `animation-delay: calc(var(--i) * 80ms)` stagger
 
 - System prompt includes the full taste-skill SKILL.md content
 - User prompt: brand tokens + dial settings + section list
-- Model: `claude-sonnet-4-6` (highest quality code generation)
+- Model: `claude-sonnet-4-6` — verify this exact slug is available on OpenRouter before shipping (registry lists `claude-sonnet-4-5` as the current balanced model; confirm with OpenRouter if 4-6 is listed)
 - **Output contract:** LLM returns a JSON object:
   ```typescript
   {
@@ -466,7 +466,7 @@ if (
 ### Phase A1 — Design System Foundation
 
 1. Install Satoshi font (`@fontsource/satoshi`) + update `app/layout.tsx`
-2. Install Framer Motion + Phosphor icons
+2. Install Phosphor icons (`framer-motion` already installed — skip)
 3. Update `tailwind.config.ts`: add warm colour tokens, Satoshi/Geist Mono font families
 4. Add grain texture overlay to root layout
 5. Remove cyan global styles, replace with amber
