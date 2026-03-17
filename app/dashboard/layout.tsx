@@ -63,6 +63,7 @@ import {
 } from '@/components/icons';
 import { AIPMFloatingButton } from '@/components/ai-pm';
 import { KeyboardHints } from '@/components/dashboard/keyboard-hints';
+import { ProductTour } from '@/components/ProductTour';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -76,7 +77,10 @@ import { cn } from '@/lib/utils';
 import { WebSocketProvider } from '@/components/WebSocketProvider';
 import { BusinessSwitcher } from '@/components/business';
 import { useUser } from '@/hooks/use-user';
-import { SidebarGroup, type SidebarItem } from '@/components/dashboard/SidebarGroup';
+import {
+  SidebarGroup,
+  type SidebarItem,
+} from '@/components/dashboard/SidebarGroup';
 import { SynthexLogo } from '@/components/landing/synthex-logo';
 import { BottomMenu } from '@/components/landing/bottom-menu';
 import type { NavItem } from '@/components/landing/bottom-menu';
@@ -99,7 +103,11 @@ const sidebarGroups: Array<{
     label: 'COMMAND CENTRE',
     defaultOpen: true,
     items: [
-      { icon: CommandLine, label: 'Citation Dashboard', href: '/dashboard/citation' },
+      {
+        icon: CommandLine,
+        label: 'Citation Dashboard',
+        href: '/dashboard/citation',
+      },
     ],
   },
   {
@@ -122,10 +130,26 @@ const sidebarGroups: Array<{
       { icon: File, label: 'Drafts', href: '/dashboard/content/drafts' },
       { icon: MessageSquare, label: 'AI Chat', href: '/dashboard/ai-chat' },
       { icon: Image, label: 'AI Images', href: '/dashboard/ai-images' },
-      { icon: Sparkles, label: 'Optimizer', href: '/dashboard/content/optimize' },
-      { icon: Layers, label: 'Multi-format', href: '/dashboard/content/multi-format' },
-      { icon: Repeat, label: 'Repurposer', href: '/dashboard/content/repurpose' },
-      { icon: Send, label: 'Cross-Post', href: '/dashboard/content/cross-post' },
+      {
+        icon: Sparkles,
+        label: 'Optimizer',
+        href: '/dashboard/content/optimize',
+      },
+      {
+        icon: Layers,
+        label: 'Multi-format',
+        href: '/dashboard/content/multi-format',
+      },
+      {
+        icon: Repeat,
+        label: 'Repurposer',
+        href: '/dashboard/content/repurpose',
+      },
+      {
+        icon: Send,
+        label: 'Cross-Post',
+        href: '/dashboard/content/cross-post',
+      },
       { icon: BookOpen, label: 'Library', href: '/dashboard/content/library' },
       { icon: Palette, label: 'Sandbox', href: '/dashboard/sandbox' },
     ],
@@ -148,9 +172,17 @@ const sidebarGroups: Array<{
     items: [
       { icon: BarChart3, label: 'Analytics', href: '/dashboard/analytics' },
       { icon: Lightbulb, label: 'Predictions', href: '/dashboard/predictions' },
-      { icon: Target, label: 'Benchmarks', href: '/dashboard/analytics/benchmarks' },
+      {
+        icon: Target,
+        label: 'Benchmarks',
+        href: '/dashboard/analytics/benchmarks',
+      },
       { icon: File, label: 'Reports', href: '/dashboard/reports' },
-      { icon: Layout, label: 'Report Builder', href: '/dashboard/reports/builder' },
+      {
+        icon: Layout,
+        label: 'Report Builder',
+        href: '/dashboard/reports/builder',
+      },
     ],
   },
   {
@@ -170,13 +202,21 @@ const sidebarGroups: Array<{
     label: 'BUSINESS INTEL',
     items: [
       { icon: Users, label: 'Audience', href: '/dashboard/audience' },
-      { icon: TrendingUp, label: 'Viral Patterns', href: '/dashboard/patterns' },
+      {
+        icon: TrendingUp,
+        label: 'Viral Patterns',
+        href: '/dashboard/patterns',
+      },
       { icon: Target, label: 'Competitors', href: '/dashboard/competitors' },
       { icon: Bell, label: 'Listening', href: '/dashboard/listening' },
       { icon: Brain, label: 'Psychology', href: '/dashboard/psychology' },
       { icon: Beaker, label: 'Experiments', href: '/dashboard/experiments' },
       { icon: Brain, label: 'Optimisation', href: '/dashboard/optimisation' },
-      { icon: TrendingUp, label: 'Forecasting', href: '/dashboard/forecasting' },
+      {
+        icon: TrendingUp,
+        label: 'Forecasting',
+        href: '/dashboard/forecasting',
+      },
     ],
   },
   {
@@ -193,7 +233,11 @@ const sidebarGroups: Array<{
       { icon: Building2, label: 'Brand Builder', href: '/dashboard/brand' },
       { icon: Shield, label: 'Authority', href: '/dashboard/authority' },
       { icon: Map, label: 'Local SEO', href: '/dashboard/local' },
-      { icon: ShieldExclamation, label: 'Sentinel', href: '/dashboard/sentinel' },
+      {
+        icon: ShieldExclamation,
+        label: 'Sentinel',
+        href: '/dashboard/sentinel',
+      },
       { icon: Users, label: 'Authors', href: '/dashboard/authors' },
       { icon: Database, label: 'Research', href: '/dashboard/research' },
       { icon: Link2, label: 'Link in Bio', href: '/dashboard/bio' },
@@ -206,8 +250,16 @@ const sidebarGroups: Array<{
     items: [
       { icon: Newspaper, label: 'PR Manager', href: '/dashboard/pr' },
       { icon: Award, label: 'Awards & Directories', href: '/dashboard/awards' },
-      { icon: LinkIcon, label: 'Link Prospector', href: '/dashboard/backlinks' },
-      { icon: Sparkles, label: 'Prompt Intelligence', href: '/dashboard/prompts' },
+      {
+        icon: LinkIcon,
+        label: 'Link Prospector',
+        href: '/dashboard/backlinks',
+      },
+      {
+        icon: Sparkles,
+        label: 'Prompt Intelligence',
+        href: '/dashboard/prompts',
+      },
     ],
   },
   {
@@ -234,7 +286,11 @@ const sidebarGroups: Array<{
     label: 'AI AGENTS',
     items: [
       { icon: Sparkles, label: 'Autonomous', href: '/dashboard/autonomous' },
-      { icon: GitPullRequest, label: 'Workflows', href: '/dashboard/workflows' },
+      {
+        icon: GitPullRequest,
+        label: 'Workflows',
+        href: '/dashboard/workflows',
+      },
       { icon: Shield, label: 'Brand Voice', href: '/dashboard/brand-voice' },
       { icon: Lightbulb, label: 'AI Insights', href: '/dashboard/insights' },
     ],
@@ -246,23 +302,56 @@ const sidebarGroups: Array<{
     items: [
       { icon: Users, label: 'Team', href: '/dashboard/team' },
       { icon: Shield, label: 'Roles', href: '/dashboard/roles' },
-      { icon: MessageSquare, label: 'Collaboration', href: '/dashboard/collaboration' },
+      {
+        icon: MessageSquare,
+        label: 'Collaboration',
+        href: '/dashboard/collaboration',
+      },
       { icon: Zap, label: 'Integrations', href: '/dashboard/integrations' },
       { icon: Link2, label: 'Webhooks', href: '/dashboard/webhooks' },
-      { icon: GitPullRequest, label: 'Approvals', href: '/dashboard/approvals' },
+      {
+        icon: GitPullRequest,
+        label: 'Approvals',
+        href: '/dashboard/approvals',
+      },
       { icon: Settings, label: 'Settings', href: '/dashboard/settings' },
     ],
   },
 ];
 
-const STARTER_GROUP_IDS = new Set(['command-centre', 'main', 'content-ai', 'planning']);
+const STARTER_GROUP_IDS = new Set([
+  'command-centre',
+  'main',
+  'content-ai',
+  'planning',
+]);
 const SIDEBAR_EXPANDED_KEY = 'sidebar-show-all-groups';
 
 const MOBILE_NAV_ITEMS: NavItem[] = [
-  { id: 'home', label: 'Home', icon: <Home className="w-5 h-5" />, href: '/dashboard' },
-  { id: 'content', label: 'Content', icon: <FileText className="w-5 h-5" />, href: '/dashboard/content' },
-  { id: 'analytics', label: 'Analytics', icon: <BarChart3 className="w-5 h-5" />, href: '/dashboard/analytics' },
-  { id: 'settings', label: 'Settings', icon: <Settings className="w-5 h-5" />, href: '/dashboard/settings' },
+  {
+    id: 'home',
+    label: 'Home',
+    icon: <Home className="w-5 h-5" />,
+    href: '/dashboard',
+  },
+  {
+    id: 'content',
+    label: 'Content',
+    icon: <FileText className="w-5 h-5" />,
+    href: '/dashboard/content',
+  },
+  {
+    id: 'analytics',
+    label: 'Analytics',
+    icon: <BarChart3 className="w-5 h-5" />,
+    href: '/dashboard/analytics',
+  },
+  {
+    id: 'settings',
+    label: 'Settings',
+    icon: <Settings className="w-5 h-5" />,
+    href: '/dashboard/settings',
+  },
 ];
 
 function getMobileActiveId(pathname: string): string {
@@ -272,7 +361,11 @@ function getMobileActiveId(pathname: string): string {
   return 'home';
 }
 
-export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+export default function DashboardLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const pathname = usePathname();
   const router = useRouter();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -296,9 +389,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   useEffect(() => {
     if (showAllGroups) return;
     const isInHiddenGroup = sidebarGroups.some(
-      (g) =>
+      g =>
         !STARTER_GROUP_IDS.has(g.id) &&
-        g.items.some((item) => pathname === item.href || pathname.startsWith(item.href + '/'))
+        g.items.some(
+          item => pathname === item.href || pathname.startsWith(item.href + '/')
+        )
     );
     if (isInHiddenGroup) {
       setShowAllGroups(true);
@@ -314,18 +409,24 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           icon: Building,
           label: 'BUSINESSES',
           defaultOpen: false,
-          items: [{ icon: Building, label: 'Businesses', href: '/dashboard/businesses' }],
+          items: [
+            {
+              icon: Building,
+              label: 'Businesses',
+              href: '/dashboard/businesses',
+            },
+          ],
         },
         ...sidebarGroups.slice(1),
       ]
     : sidebarGroups;
 
   const visibleGroups = dynamicSidebarGroups.filter(
-    (g) => showAllGroups || STARTER_GROUP_IDS.has(g.id)
+    g => showAllGroups || STARTER_GROUP_IDS.has(g.id)
   );
 
   const hiddenGroupCount = dynamicSidebarGroups.filter(
-    (g) => !STARTER_GROUP_IDS.has(g.id) && g.id !== 'businesses'
+    g => !STARTER_GROUP_IDS.has(g.id) && g.id !== 'businesses'
   ).length;
 
   return (
@@ -343,10 +444,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           )}
         >
           {/* Logo */}
-          <div className={cn(
-            'flex h-14 items-center border-b border-[0.5px] border-white/[0.06] flex-shrink-0',
-            sidebarCollapsed ? 'justify-center px-0' : 'justify-between px-4'
-          )}>
+          <div
+            className={cn(
+              'flex h-14 items-center border-b border-[0.5px] border-white/[0.06] flex-shrink-0',
+              sidebarCollapsed ? 'justify-center px-0' : 'justify-between px-4'
+            )}
+          >
             <Link href="/dashboard" className="flex items-center gap-2.5 group">
               <SynthexLogo className="w-7 h-7 flex-shrink-0 opacity-90 group-hover:opacity-100 transition-opacity" />
               {!sidebarCollapsed && (
@@ -380,7 +483,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             {sidebarCollapsed ? (
               // Collapsed: icon-only links per group
               <div className="flex flex-col items-center gap-1 px-2">
-                {visibleGroups.map((group) => (
+                {visibleGroups.map(group => (
                   <Link
                     key={group.id}
                     href={group.items[0]?.href ?? '/dashboard'}
@@ -395,7 +498,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             ) : (
               // Expanded: full sidebar groups
               <div className="px-2 space-y-0.5">
-                {visibleGroups.map((group) => (
+                {visibleGroups.map(group => (
                   <SidebarGroup
                     key={group.id}
                     id={group.id}
@@ -413,9 +516,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   className="w-full flex items-center gap-2 px-3 py-2 mt-2 text-[10px] tracking-[0.2em] uppercase text-white/25 hover:text-white/50 hover:bg-white/[0.02] rounded-sm transition-colors"
                 >
                   <ChevronDown
-                    className={cn('w-3 h-3 transition-transform flex-shrink-0', showAllGroups && 'rotate-180')}
+                    className={cn(
+                      'w-3 h-3 transition-transform flex-shrink-0',
+                      showAllGroups && 'rotate-180'
+                    )}
                   />
-                  {showAllGroups ? 'Show Less' : `${hiddenGroupCount} More Sections`}
+                  {showAllGroups
+                    ? 'Show Less'
+                    : `${hiddenGroupCount} More Sections`}
                 </button>
               </div>
             )}
@@ -431,19 +539,22 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               )}
             >
               <HelpCircle className="h-4 w-4 flex-shrink-0" />
-              {!sidebarCollapsed && <span className="tracking-wide">Help & Support</span>}
+              {!sidebarCollapsed && (
+                <span className="tracking-wide">Help & Support</span>
+              )}
             </Link>
           </div>
         </aside>
 
         {/* Main Content */}
-        <div className={cn(
-          'transition-all duration-300',
-          sidebarCollapsed ? 'lg:pl-14' : 'lg:pl-60'
-        )}>
+        <div
+          className={cn(
+            'transition-all duration-300',
+            sidebarCollapsed ? 'lg:pl-14' : 'lg:pl-60'
+          )}
+        >
           {/* Top Header */}
           <header className="sticky top-0 z-30 flex h-14 items-center justify-between bg-[#080e1a]/95 backdrop-blur-md border-b border-[0.5px] border-white/[0.06] px-4 md:px-6">
-
             {/* Left: mobile toggle + search */}
             <div className="flex items-center gap-3">
               <button
@@ -461,7 +572,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   type="search"
                   placeholder="Search..."
                   value={searchValue}
-                  onChange={(e) => setSearchValue(e.target.value)}
+                  onChange={e => setSearchValue(e.target.value)}
                   aria-label="Search"
                   className="w-40 sm:w-52 md:w-64 pl-8 pr-3 py-1.5 text-xs bg-white/[0.02] border-[0.5px] border-white/[0.06] text-white/70 placeholder:text-white/20 rounded-sm focus:outline-none focus:border-white/20 focus:bg-white/[0.04] transition-all"
                 />
@@ -482,9 +593,16 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     aria-label="User menu"
                   >
                     <Avatar className="h-7 w-7 rounded-sm">
-                      {user?.avatar && <AvatarImage src={user.avatar} alt={user.name || 'User'} />}
+                      {user?.avatar && (
+                        <AvatarImage
+                          src={user.avatar}
+                          alt={user.name || 'User'}
+                        />
+                      )}
                       <AvatarFallback className="rounded-sm bg-cyan-500/20 text-cyan-400 text-xs font-mono">
-                        {user?.name?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || 'U'}
+                        {user?.name?.[0]?.toUpperCase() ||
+                          user?.email?.[0]?.toUpperCase() ||
+                          'U'}
                       </AvatarFallback>
                     </Avatar>
                     {user?.name && (
@@ -500,25 +618,38 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 >
                   <DropdownMenuLabel className="font-normal px-3 py-2">
                     <div className="flex flex-col gap-0.5">
-                      <p className="text-xs font-medium text-white">{user?.name || 'User'}</p>
-                      <p className="text-[10px] text-white/40 truncate">{user?.email || ''}</p>
+                      <p className="text-xs font-medium text-white">
+                        {user?.name || 'User'}
+                      </p>
+                      <p className="text-[10px] text-white/40 truncate">
+                        {user?.email || ''}
+                      </p>
                     </div>
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator className="bg-white/[0.06]" />
                   <DropdownMenuItem asChild>
-                    <Link href="/dashboard/settings?tab=profile" className="flex items-center gap-2.5 px-3 py-2 text-xs text-white/60 hover:text-white cursor-pointer rounded-sm">
+                    <Link
+                      href="/dashboard/settings?tab=profile"
+                      className="flex items-center gap-2.5 px-3 py-2 text-xs text-white/60 hover:text-white cursor-pointer rounded-sm"
+                    >
                       <User className="h-3.5 w-3.5" />
                       Profile
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
-                    <Link href="/dashboard/settings" className="flex items-center gap-2.5 px-3 py-2 text-xs text-white/60 hover:text-white cursor-pointer rounded-sm">
+                    <Link
+                      href="/dashboard/settings"
+                      className="flex items-center gap-2.5 px-3 py-2 text-xs text-white/60 hover:text-white cursor-pointer rounded-sm"
+                    >
                       <Settings className="h-3.5 w-3.5" />
                       Settings
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
-                    <Link href="/dashboard/billing" className="flex items-center gap-2.5 px-3 py-2 text-xs text-white/60 hover:text-white cursor-pointer rounded-sm">
+                    <Link
+                      href="/dashboard/billing"
+                      className="flex items-center gap-2.5 px-3 py-2 text-xs text-white/60 hover:text-white cursor-pointer rounded-sm"
+                    >
                       <CreditCard className="h-3.5 w-3.5" />
                       Billing
                     </Link>
@@ -528,12 +659,17 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     <button
                       onClick={async () => {
                         try {
-                          await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
+                          await fetch('/api/auth/logout', {
+                            method: 'POST',
+                            credentials: 'include',
+                          });
                         } catch {
                           // best effort
                         }
-                        document.cookie = 'auth-token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;';
-                        document.cookie = 'user-info=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;';
+                        document.cookie =
+                          'auth-token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;';
+                        document.cookie =
+                          'user-info=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;';
                         localStorage.removeItem('user');
                         localStorage.removeItem('token-expires-at');
                         window.location.href = '/login';
@@ -550,9 +686,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </header>
 
           {/* Page Content */}
-          <main className="p-4 md:p-6">
-            {children}
-          </main>
+          <main className="p-4 md:p-6">{children}</main>
         </div>
 
         {/* Mobile overlay */}
@@ -568,8 +702,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           className="md:hidden"
           items={MOBILE_NAV_ITEMS}
           activeId={getMobileActiveId(pathname)}
-          onSelect={(id) => {
-            const item = MOBILE_NAV_ITEMS.find((i) => i.id === id);
+          onSelect={id => {
+            const item = MOBILE_NAV_ITEMS.find(i => i.id === id);
             if (item?.href) router.push(item.href);
           }}
         />
@@ -579,6 +713,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
         {/* Keyboard Hints */}
         <KeyboardHints />
+
+        {/* Product Tour — triggers on first dashboard visit after onboarding */}
+        <ProductTour />
       </div>
     </WebSocketProvider>
   );

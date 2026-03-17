@@ -16,7 +16,15 @@
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { Globe, ArrowRight, Loader2, Sparkles, CheckCircle, AlertCircle, Zap } from '@/components/icons';
+import {
+  Globe,
+  ArrowRight,
+  Loader2,
+  Sparkles,
+  CheckCircle,
+  AlertCircle,
+  Zap,
+} from '@/components/icons';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -31,9 +39,24 @@ const PIPELINE_STAGES = [
   { id: 'scraping', label: 'Scanning your website…', icon: Globe, delay: 0 },
   { id: 'seo', label: 'Analysing SEO signals…', icon: Zap, delay: 3000 },
   { id: 'speed', label: 'Running page speed tests…', icon: Zap, delay: 7000 },
-  { id: 'ai', label: 'Extracting brand identity…', icon: Sparkles, delay: 12000 },
-  { id: 'social', label: 'Detecting social profiles…', icon: Globe, delay: 16000 },
-  { id: 'plan', label: 'Generating your marketing plan…', icon: Sparkles, delay: 19000 },
+  {
+    id: 'ai',
+    label: 'Extracting brand identity…',
+    icon: Sparkles,
+    delay: 12000,
+  },
+  {
+    id: 'social',
+    label: 'Detecting social profiles…',
+    icon: Globe,
+    delay: 16000,
+  },
+  {
+    id: 'plan',
+    label: 'Generating your marketing plan…',
+    icon: Sparkles,
+    delay: 19000,
+  },
 ] as const;
 
 // ============================================================================
@@ -128,7 +151,7 @@ export default function OnboardingPage() {
       const timer = setTimeout(() => {
         setCurrentStage(idx);
         // Mark previous stages as complete
-        setCompletedStages((prev) => {
+        setCompletedStages(prev => {
           const newCompleted = [...prev];
           for (let i = 0; i < idx; i++) {
             if (!newCompleted.includes(i)) newCompleted.push(i);
@@ -173,6 +196,16 @@ export default function OnboardingPage() {
       // Store result in sessionStorage for the review page
       sessionStorage.setItem('synthex_pipeline_result', JSON.stringify(result));
 
+      // Persist to server (fire-and-forget) so data survives sessionStorage loss
+      fetch('/api/onboarding/progress', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(result),
+      }).catch(() => {
+        // Non-blocking — review page will fall back to server or redirect to entry
+      });
+
       // Mark all stages complete, then navigate
       setCompletedStages(PIPELINE_STAGES.map((_, i) => i));
       setCurrentStage(PIPELINE_STAGES.length);
@@ -187,19 +220,21 @@ export default function OnboardingPage() {
       clearTimeout(clientTimeout);
       timeoutRef.current = null;
 
-      const isTimeout = err instanceof DOMException && err.name === 'AbortError';
+      const isTimeout =
+        err instanceof DOMException && err.name === 'AbortError';
       setError(
         isTimeout
           ? 'Analysis is taking longer than usual. This can happen with complex websites. Try again, or skip this step.'
           : err instanceof Error
-          ? err.message
-          : 'Something went wrong. Please try again.',
+            ? err.message
+            : 'Something went wrong. Please try again.'
       );
       setRunning(false);
     }
   };
 
-  const isValid = businessName.trim().length > 0 && websiteUrl.trim().length > 0;
+  const isValid =
+    businessName.trim().length > 0 && websiteUrl.trim().length > 0;
 
   return (
     <div className="space-y-8">
@@ -212,9 +247,7 @@ export default function OnboardingPage() {
           <Globe className="w-10 h-10 text-white" />
         </div>
 
-        <h1 className="text-3xl font-bold text-white">
-          Welcome to SYNTHEX
-        </h1>
+        <h1 className="text-3xl font-bold text-white">Welcome to SYNTHEX</h1>
         <p className="text-gray-400 text-lg max-w-md mx-auto">
           Enter your website URL and we&apos;ll set up everything automatically.
           Our AI analyses your business in about 20 seconds.
@@ -233,7 +266,7 @@ export default function OnboardingPage() {
               <Input
                 id="businessName"
                 value={businessName}
-                onChange={(e) => setBusinessName(e.target.value)}
+                onChange={e => setBusinessName(e.target.value)}
                 placeholder="e.g. Acme Marketing Co"
                 className="bg-surface-dark/50 border-cyan-500/20 text-white placeholder:text-gray-500 focus:border-cyan-500/50 focus:ring-cyan-500/20"
                 autoFocus
@@ -249,8 +282,8 @@ export default function OnboardingPage() {
                 id="websiteUrl"
                 type="url"
                 value={websiteUrl}
-                onChange={(e) => setWebsiteUrl(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && isValid && runPipeline()}
+                onChange={e => setWebsiteUrl(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && isValid && runPipeline()}
                 placeholder="https://yoursite.com.au"
                 className="bg-surface-dark/50 border-cyan-500/20 text-white placeholder:text-gray-500 focus:border-cyan-500/50 focus:ring-cyan-500/20"
               />
@@ -266,7 +299,9 @@ export default function OnboardingPage() {
                   <Zap className="w-4 h-4 text-cyan-400" />
                 </div>
                 <div>
-                  <p className="text-sm text-cyan-400 font-medium">Chrome Extension detected</p>
+                  <p className="text-sm text-cyan-400 font-medium">
+                    Chrome Extension detected
+                  </p>
                   <p className="text-xs text-gray-500 truncate max-w-[300px]">
                     Use current tab: {extensionUrl}
                   </p>
@@ -327,7 +362,8 @@ export default function OnboardingPage() {
           <div className="p-6 rounded-xl bg-surface-base/80 border border-cyan-500/10 backdrop-blur-sm space-y-4">
             <div className="text-center mb-2">
               <p className="text-sm text-gray-400">
-                Analysing <span className="text-cyan-400 font-medium">{websiteUrl}</span>
+                Analysing{' '}
+                <span className="text-cyan-400 font-medium">{websiteUrl}</span>
               </p>
             </div>
 
@@ -346,8 +382,8 @@ export default function OnboardingPage() {
                       isCompleted
                         ? 'bg-cyan-500/5'
                         : isCurrent
-                        ? 'bg-cyan-500/10 border border-cyan-500/20'
-                        : 'opacity-40',
+                          ? 'bg-cyan-500/10 border border-cyan-500/20'
+                          : 'opacity-40'
                     )}
                   >
                     <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0">
@@ -356,16 +392,27 @@ export default function OnboardingPage() {
                       ) : isCurrent ? (
                         <Loader2 className="w-5 h-5 text-cyan-400 animate-spin" />
                       ) : (
-                        <Icon className={cn('w-5 h-5', isPending ? 'text-gray-600' : 'text-gray-400')} />
+                        <Icon
+                          className={cn(
+                            'w-5 h-5',
+                            isPending ? 'text-gray-600' : 'text-gray-400'
+                          )}
+                        />
                       )}
                     </div>
                     <span
                       className={cn(
                         'text-sm font-medium',
-                        isCompleted ? 'text-cyan-400' : isCurrent ? 'text-white' : 'text-gray-500',
+                        isCompleted
+                          ? 'text-cyan-400'
+                          : isCurrent
+                            ? 'text-white'
+                            : 'text-gray-500'
                       )}
                     >
-                      {isCompleted ? stage.label.replace('…', ' ✓') : stage.label}
+                      {isCompleted
+                        ? stage.label.replace('…', ' ✓')
+                        : stage.label}
                     </span>
                   </div>
                 );

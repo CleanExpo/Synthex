@@ -42,7 +42,10 @@ import {
 } from '@/components/onboarding/ChromeExtensionHelper';
 import { notifyOAuthStarting } from '@/lib/chrome-extension/bridge';
 import { toast } from 'sonner';
-import type { PipelineResult, SocialProfile } from '@/lib/ai/onboarding-pipeline';
+import type {
+  PipelineResult,
+  SocialProfile,
+} from '@/lib/ai/onboarding-pipeline';
 
 // ============================================================================
 // PLATFORM CONFIG
@@ -57,15 +60,69 @@ interface PlatformConfig {
 }
 
 const PLATFORM_LIST: PlatformConfig[] = [
-  { id: 'instagram', label: 'Instagram', icon: '📸', description: 'Photos, Reels, Stories', colour: 'from-pink-500 to-purple-600' },
-  { id: 'facebook', label: 'Facebook', icon: '📘', description: 'Pages, Groups, Events', colour: 'from-blue-600 to-blue-700' },
-  { id: 'linkedin', label: 'LinkedIn', icon: '💼', description: 'Professional content', colour: 'from-blue-500 to-blue-600' },
-  { id: 'twitter', label: 'X (Twitter)', icon: '🐦', description: 'Tweets, Threads', colour: 'from-sky-400 to-sky-500' },
-  { id: 'tiktok', label: 'TikTok', icon: '🎵', description: 'Short-form video', colour: 'from-gray-800 to-gray-900' },
-  { id: 'youtube', label: 'YouTube', icon: '▶️', description: 'Videos, Shorts', colour: 'from-red-500 to-red-600' },
-  { id: 'pinterest', label: 'Pinterest', icon: '📌', description: 'Pins, Boards', colour: 'from-red-600 to-red-700' },
-  { id: 'reddit', label: 'Reddit', icon: '🤖', description: 'Posts, Comments', colour: 'from-orange-500 to-orange-600' },
-  { id: 'threads', label: 'Threads', icon: '🧵', description: 'Text-based social', colour: 'from-gray-700 to-gray-800' },
+  {
+    id: 'instagram',
+    label: 'Instagram',
+    icon: '📸',
+    description: 'Photos, Reels, Stories',
+    colour: 'from-pink-500 to-purple-600',
+  },
+  {
+    id: 'facebook',
+    label: 'Facebook',
+    icon: '📘',
+    description: 'Pages, Groups, Events',
+    colour: 'from-blue-600 to-blue-700',
+  },
+  {
+    id: 'linkedin',
+    label: 'LinkedIn',
+    icon: '💼',
+    description: 'Professional content',
+    colour: 'from-blue-500 to-blue-600',
+  },
+  {
+    id: 'twitter',
+    label: 'X (Twitter)',
+    icon: '🐦',
+    description: 'Tweets, Threads',
+    colour: 'from-sky-400 to-sky-500',
+  },
+  {
+    id: 'tiktok',
+    label: 'TikTok',
+    icon: '🎵',
+    description: 'Short-form video',
+    colour: 'from-gray-800 to-gray-900',
+  },
+  {
+    id: 'youtube',
+    label: 'YouTube',
+    icon: '▶️',
+    description: 'Videos, Shorts',
+    colour: 'from-red-500 to-red-600',
+  },
+  {
+    id: 'pinterest',
+    label: 'Pinterest',
+    icon: '📌',
+    description: 'Pins, Boards',
+    colour: 'from-red-600 to-red-700',
+  },
+  {
+    id: 'reddit',
+    label: 'Reddit',
+    icon: '🤖',
+    description: 'Posts, Comments',
+    colour: 'from-orange-500 to-orange-600',
+  },
+  {
+    id: 'threads',
+    label: 'Threads',
+    icon: '🧵',
+    description: 'Text-based social',
+    colour: 'from-gray-700 to-gray-800',
+  },
 ];
 
 const SESSION_KEY = 'synthex_pipeline_result';
@@ -110,7 +167,9 @@ function ConnectPageInner() {
       const cached = sessionStorage.getItem(SESSION_KEY);
       if (cached) {
         const result: PipelineResult = JSON.parse(cached);
-        const detected = (result.socialProfiles ?? []).map((p) => p.platform.toLowerCase());
+        const detected = (result.socialProfiles ?? []).map(p =>
+          p.platform.toLowerCase()
+        );
         setDetectedPlatforms(detected);
       }
     } catch {
@@ -173,20 +232,26 @@ function ConnectPageInner() {
         returnTo: '/onboarding/connect',
       });
 
-      const res = await fetch(`/api/auth/oauth/${platformId}?${params.toString()}`, {
-        credentials: 'include',
-      });
+      const res = await fetch(
+        `/api/auth/oauth/${platformId}?${params.toString()}`,
+        {
+          credentials: 'include',
+        }
+      );
 
       const json = await res.json();
       if (!res.ok) {
-        throw new Error(json.error || json.message || `Failed to initiate ${platformId} OAuth`);
+        throw new Error(
+          json.error || json.message || `Failed to initiate ${platformId} OAuth`
+        );
       }
 
       if (json.authorizationUrl) {
         window.location.href = json.authorizationUrl;
       }
     } catch (err) {
-      const message = err instanceof Error ? err.message : `Failed to connect ${platformId}`;
+      const message =
+        err instanceof Error ? err.message : `Failed to connect ${platformId}`;
       toast.error(message);
       setConnectingId(null);
     }
@@ -212,7 +277,7 @@ function ConnectPageInner() {
       fetch('/api/onboarding/kickstart', {
         method: 'POST',
         credentials: 'include',
-      }).catch((err) => {
+      }).catch(err => {
         console.warn('[connect] Kickstart failed (non-blocking):', err);
       });
 
@@ -237,12 +302,12 @@ function ConnectPageInner() {
 
   // ── Helpers ───────────────────────────────────────────────────────
   const isConnected = (platformId: string) =>
-    connections.some((c) => c.platform === platformId && c.connected);
+    connections.some(c => c.platform === platformId && c.connected);
 
   const getConnection = (platformId: string) =>
-    connections.find((c) => c.platform === platformId);
+    connections.find(c => c.platform === platformId);
 
-  const connectedCount = connections.filter((c) => c.connected).length;
+  const connectedCount = connections.filter(c => c.connected).length;
 
   // Sort: detected first, then connected, then rest
   const sortedPlatforms = [...PLATFORM_LIST].sort((a, b) => {
@@ -250,7 +315,7 @@ function ConnectPageInner() {
     const bDetected = detectedPlatforms.includes(b.id) ? 1 : 0;
     const aConnected = isConnected(a.id) ? 1 : 0;
     const bConnected = isConnected(b.id) ? 1 : 0;
-    return (bDetected + bConnected) - (aDetected + aConnected);
+    return bDetected + bConnected - (aDetected + aConnected);
   });
 
   return (
@@ -284,7 +349,7 @@ function ConnectPageInner() {
 
       {/* Platform cards */}
       <div className="max-w-2xl mx-auto grid grid-cols-1 sm:grid-cols-2 gap-3">
-        {sortedPlatforms.map((platform) => {
+        {sortedPlatforms.map(platform => {
           const connected = isConnected(platform.id);
           const connection = getConnection(platform.id);
           const detected = detectedPlatforms.includes(platform.id);
@@ -298,8 +363,8 @@ function ConnectPageInner() {
                 connected
                   ? 'bg-green-500/5 border-green-500/20'
                   : detected
-                  ? 'bg-cyan-500/5 border-cyan-500/20'
-                  : 'bg-surface-base/80 border-white/5 hover:border-white/10',
+                    ? 'bg-cyan-500/5 border-cyan-500/20'
+                    : 'bg-surface-base/80 border-white/5 hover:border-white/10'
               )}
             >
               <div className="flex items-start justify-between gap-3">
@@ -307,9 +372,14 @@ function ConnectPageInner() {
                   <span className="text-2xl shrink-0">{platform.icon}</span>
                   <div className="min-w-0">
                     <div className="flex items-center gap-2">
-                      <h3 className="text-sm font-medium text-white">{platform.label}</h3>
+                      <h3 className="text-sm font-medium text-white">
+                        {platform.label}
+                      </h3>
                       {detected && !connected && (
-                        <Badge variant="outline" className="text-[10px] px-1 py-0 bg-cyan-500/10 text-cyan-400 border-cyan-500/20">
+                        <Badge
+                          variant="outline"
+                          className="text-[10px] px-1 py-0 bg-cyan-500/10 text-cyan-400 border-cyan-500/20"
+                        >
                           Detected
                         </Badge>
                       )}
@@ -319,7 +389,9 @@ function ConnectPageInner() {
                         ✓ {connection.profileName}
                       </p>
                     ) : (
-                      <p className="text-xs text-gray-500">{platform.description}</p>
+                      <p className="text-xs text-gray-500">
+                        {platform.description}
+                      </p>
                     )}
                     {/* Extension hint — "already logged in" */}
                     {!connected && (
@@ -346,7 +418,7 @@ function ConnectPageInner() {
                       disabled={connecting || connectingId !== null}
                       className={cn(
                         'text-xs h-8 border-cyan-500/20 hover:bg-cyan-500/10 hover:border-cyan-500/30',
-                        connecting && 'opacity-70',
+                        connecting && 'opacity-70'
                       )}
                     >
                       {connecting ? (
@@ -391,9 +463,12 @@ function ConnectPageInner() {
             variant="ghost"
             onClick={handleFinish}
             disabled={finishing}
+            title="You can connect any time from Settings → Platforms"
             className="text-gray-400 hover:text-white"
           >
-            {connectedCount === 0 ? 'Skip for now' : "I'll connect more later"}
+            {connectedCount === 0
+              ? "I'll connect later"
+              : "I'll connect more later"}
           </Button>
 
           <Button
