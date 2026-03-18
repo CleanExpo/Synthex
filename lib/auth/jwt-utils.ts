@@ -43,10 +43,12 @@ export interface AuthResult {
  * These users receive `onboardingComplete: true` and `apiKeyConfigured: true` in
  * their JWT regardless of DB state — and the DB is auto-updated on login.
  */
-const OWNER_EMAILS: ReadonlySet<string> = new Set([
-  'phill.mcgurk@gmail.com',
-  'phill.mcgurk+test1@gmail.com', // Test account with full access
-]);
+const OWNER_EMAILS: ReadonlySet<string> = new Set(
+  (process.env.OWNER_EMAILS ?? '')
+    .split(',')
+    .map(e => e.trim().toLowerCase())
+    .filter(Boolean)
+);
 
 /**
  * Check if an email belongs to a platform owner.
@@ -71,8 +73,8 @@ function getJWTSecret(): string {
   if (!secret) {
     throw new Error(
       'JWT_SECRET environment variable is required but not set. ' +
-      'Please set JWT_SECRET in your environment variables. ' +
-      'This is a critical security requirement.'
+        'Please set JWT_SECRET in your environment variables. ' +
+        'This is a critical security requirement.'
     );
   }
 
@@ -80,7 +82,8 @@ function getJWTSecret(): string {
   if (secret.length < 32) {
     console.warn(
       '[SECURITY WARNING] JWT_SECRET should be at least 32 characters long. ' +
-      'Current length: ' + secret.length
+        'Current length: ' +
+        secret.length
     );
   }
 
@@ -128,10 +131,15 @@ export function verifyTokenSafe(token: string): JWTPayload | null {
  * Generate a new JWT token.
  * @throws Error if JWT_SECRET is not set
  */
-export function generateToken(payload: Omit<JWTPayload, 'iat' | 'exp'>, expiresIn: string | number = '7d'): string {
+export function generateToken(
+  payload: Omit<JWTPayload, 'iat' | 'exp'>,
+  expiresIn: string | number = '7d'
+): string {
   const secret = getJWTSecret();
 
-  const options: SignOptions = { expiresIn: expiresIn as SignOptions['expiresIn'] };
+  const options: SignOptions = {
+    expiresIn: expiresIn as SignOptions['expiresIn'],
+  };
 
   return jwt.sign(
     {
@@ -151,7 +159,9 @@ export function generateToken(payload: Omit<JWTPayload, 'iat' | 'exp'>, expiresI
  * Extract and verify user ID from request authorization header.
  * Returns null if not authenticated.
  */
-export async function getUserIdFromRequest(request: NextRequest): Promise<string | null> {
+export async function getUserIdFromRequest(
+  request: NextRequest
+): Promise<string | null> {
   const authHeader = request.headers.get('authorization');
 
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -165,7 +175,10 @@ export async function getUserIdFromRequest(request: NextRequest): Promise<string
     return payload.userId || null;
   } catch (error) {
     // Log for debugging but don't expose details
-    console.error('[AUTH] Token verification failed:', error instanceof Error ? error.message : 'Unknown error');
+    console.error(
+      '[AUTH] Token verification failed:',
+      error instanceof Error ? error.message : 'Unknown error'
+    );
     return null;
   }
 }
@@ -173,7 +186,9 @@ export async function getUserIdFromRequest(request: NextRequest): Promise<string
 /**
  * Authenticate a request and return full auth result.
  */
-export async function authenticateRequest(request: NextRequest): Promise<AuthResult> {
+export async function authenticateRequest(
+  request: NextRequest
+): Promise<AuthResult> {
   try {
     const userId = await getUserIdFromRequest(request);
 
@@ -199,21 +214,19 @@ export async function authenticateRequest(request: NextRequest): Promise<AuthRes
 /**
  * Create a standard unauthorized response.
  */
-export function unauthorizedResponse(message: string = 'Authentication required'): NextResponse {
-  return NextResponse.json(
-    { error: 'Unauthorized', message },
-    { status: 401 }
-  );
+export function unauthorizedResponse(
+  message: string = 'Authentication required'
+): NextResponse {
+  return NextResponse.json({ error: 'Unauthorized', message }, { status: 401 });
 }
 
 /**
  * Create a standard forbidden response.
  */
-export function forbiddenResponse(message: string = 'Access denied'): NextResponse {
-  return NextResponse.json(
-    { error: 'Forbidden', message },
-    { status: 403 }
-  );
+export function forbiddenResponse(
+  message: string = 'Access denied'
+): NextResponse {
+  return NextResponse.json({ error: 'Forbidden', message }, { status: 403 });
 }
 
 // =============================================================================
@@ -267,7 +280,10 @@ export async function getUserIdFromCookies(): Promise<string | null> {
     return payload?.userId || null;
   } catch (error) {
     // Cookie access may fail in certain contexts
-    console.error('[AUTH] Cookie access failed:', error instanceof Error ? error.message : 'Unknown error');
+    console.error(
+      '[AUTH] Cookie access failed:',
+      error instanceof Error ? error.message : 'Unknown error'
+    );
     return null;
   }
 }
@@ -276,7 +292,9 @@ export async function getUserIdFromCookies(): Promise<string | null> {
  * Combined auth check: tries cookies first, then Authorization header.
  * Use this for maximum compatibility across different client implementations.
  */
-export async function getUserIdFromRequestOrCookies(request: NextRequest): Promise<string | null> {
+export async function getUserIdFromRequestOrCookies(
+  request: NextRequest
+): Promise<string | null> {
   // First try cookies (preferred for httpOnly security)
   const cookieUserId = await getUserIdFromCookies();
   if (cookieUserId) {
@@ -291,7 +309,9 @@ export async function getUserIdFromRequestOrCookies(request: NextRequest): Promi
  * Require authentication - throws/returns early if not authenticated.
  * Convenience wrapper that returns an error response if not authenticated.
  */
-export async function requireAuth(request: NextRequest): Promise<{ userId: string } | NextResponse> {
+export async function requireAuth(
+  request: NextRequest
+): Promise<{ userId: string } | NextResponse> {
   const userId = await getUserIdFromRequestOrCookies(request);
 
   if (!userId) {
