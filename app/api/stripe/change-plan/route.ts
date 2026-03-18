@@ -13,7 +13,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { stripe, PRODUCTS } from '@/lib/stripe/config';
-import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
+import {
+  APISecurityChecker,
+  DEFAULT_POLICIES,
+} from '@/lib/security/api-security-checker';
 import { prisma } from '@/lib/prisma';
 import { auditLogger } from '@/lib/security/audit-logger';
 import { logger } from '@/lib/logger';
@@ -21,8 +24,17 @@ import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import Stripe from 'stripe';
 
 const changePlanSchema = z.object({
-  newPlan: z.enum(['pro', 'growth', 'scale', 'professional', 'business', 'custom']),
-  prorationBehavior: z.enum(['create_prorations', 'none', 'always_invoice']).optional(),
+  newPlan: z.enum([
+    'pro',
+    'growth',
+    'scale',
+    'professional',
+    'business',
+    'custom',
+  ]),
+  prorationBehavior: z
+    .enum(['create_prorations', 'none', 'always_invoice'])
+    .optional(),
 });
 
 export async function POST(request: NextRequest) {
@@ -68,7 +80,8 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-    const { newPlan, prorationBehavior = 'create_prorations' } = validation.data;
+    const { newPlan, prorationBehavior = 'create_prorations' } =
+      validation.data;
 
     // Validate new plan
     const newProduct = PRODUCTS[newPlan as keyof typeof PRODUCTS];
@@ -79,85 +92,110 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get current subscription
-    const subscription = await prisma.subscription.findUnique({
-      where: { userId },
-    });
-
-    if (!subscription?.stripeSubscriptionId) {
-      return NextResponse.json(
-        {
-          error: 'No active subscription',
-          message: 'You need an active subscription to change plans. Please subscribe first.',
-        },
-        { status: 400 }
-      );
-    }
-
-    // Get current Stripe subscription
-    const stripeSubscription = await stripe.subscriptions.retrieve(
-      subscription.stripeSubscriptionId
-    );
-
-    // Check if already on this plan
-    const currentPriceId = stripeSubscription.items.data[0]?.price.id;
-    if (currentPriceId === newProduct.priceId) {
-      return NextResponse.json(
-        { error: 'Already on this plan' },
-        { status: 400 }
-      );
-    }
-
-    // Determine if upgrade or downgrade
-    const planOrder = ['free', 'pro', 'growth', 'scale', 'professional', 'business', 'custom'];
-    const currentPlanIndex = planOrder.indexOf(subscription.plan);
-    const newPlanIndex = planOrder.indexOf(newPlan);
-    const isUpgrade = newPlanIndex > currentPlanIndex;
-
-    logger.info('Processing plan change', {
-      userId,
-      currentPlan: subscription.plan,
-      newPlan,
+    // Read + write in a transaction to prevent concurrent plan-change races.
+    // Two simultaneous requests could both read the same plan state and both
+    // fire Stripe updates. The transaction re-reads with a consistency check
+    // so the second writer detects the stale read and aborts.
+    const {
+      subscription,
+      stripeSubscription,
+      updatedStripeSubscription,
+      firstItem,
       isUpgrade,
-    });
+    } = await prisma
+      .$transaction(async tx => {
+        // Authoritative read inside the transaction
+        const sub = await tx.subscription.findUnique({ where: { userId } });
 
-    // Update subscription in Stripe
-    const updatedStripeSubscription = await stripe.subscriptions.update(
-      subscription.stripeSubscriptionId,
-      {
-        items: [
-          {
-            id: stripeSubscription.items.data[0].id,
-            price: newProduct.priceId,
-          },
-        ],
-        proration_behavior: prorationBehavior,
-        // If downgrading, apply at end of period
-        ...(isUpgrade ? {} : { proration_behavior: 'none' }),
-        metadata: {
+        if (!sub?.stripeSubscriptionId) {
+          throw Object.assign(new Error('No active subscription'), {
+            statusCode: 400,
+          });
+        }
+
+        // Get current Stripe subscription (external call — best-effort inside tx)
+        // stripe is guaranteed non-null by the outer guard above
+        const stripeSub = await stripe!.subscriptions.retrieve(
+          sub.stripeSubscriptionId
+        );
+
+        // Check if already on this plan
+        const currentPriceId = stripeSub.items.data[0]?.price.id;
+        if (currentPriceId === newProduct.priceId) {
+          throw Object.assign(new Error('Already on this plan'), {
+            statusCode: 400,
+          });
+        }
+
+        const planOrder = [
+          'free',
+          'pro',
+          'growth',
+          'scale',
+          'professional',
+          'business',
+          'custom',
+        ];
+        const isUp = planOrder.indexOf(newPlan) > planOrder.indexOf(sub.plan);
+
+        logger.info('Processing plan change', {
           userId,
-          previousPlan: subscription.plan,
+          currentPlan: sub.plan,
           newPlan,
-          changedAt: new Date().toISOString(),
-        },
-      }
-    );
+          isUpgrade: isUp,
+        });
 
-    // Get period from first item
-    const firstItem = updatedStripeSubscription.items.data[0];
+        // Update subscription in Stripe
+        const updatedSub = await stripe!.subscriptions.update(
+          sub.stripeSubscriptionId,
+          {
+            items: [
+              { id: stripeSub.items.data[0].id, price: newProduct.priceId },
+            ],
+            proration_behavior: isUp ? prorationBehavior : 'none',
+            metadata: {
+              userId,
+              previousPlan: sub.plan,
+              newPlan,
+              changedAt: new Date().toISOString(),
+            },
+          }
+        );
 
-    // Update local subscription record
-    await prisma.subscription.update({
-      where: { id: subscription.id },
-      data: {
-        plan: newPlan,
-        stripePriceId: newProduct.priceId,
-        // Update limits based on new plan
-        maxSocialAccounts: newProduct.features.socialAccounts as number,
-        maxAiPosts: newProduct.features.aiPosts as number,
-        maxPersonas: newProduct.features.personas as number,
-      },
-    });
+        const item = updatedSub.items.data[0];
+
+        // Atomic write — will conflict if another transaction already updated this row
+        await tx.subscription.update({
+          where: { id: sub.id, plan: sub.plan }, // optimistic check: plan must still match
+          data: {
+            plan: newPlan,
+            stripePriceId: newProduct.priceId,
+            maxSocialAccounts: newProduct.features.socialAccounts as number,
+            maxAiPosts: newProduct.features.aiPosts as number,
+            maxPersonas: newProduct.features.personas as number,
+          },
+        });
+
+        return {
+          subscription: sub,
+          stripeSubscription: stripeSub,
+          updatedStripeSubscription: updatedSub,
+          firstItem: item,
+          isUpgrade: isUp,
+        };
+      })
+      .catch((err: Error & { statusCode?: number }) => {
+        if (err.statusCode === 400) throw err;
+        if (err.message?.includes('Record to update not found')) {
+          throw Object.assign(
+            new Error(
+              'Plan was changed by a concurrent request — please retry'
+            ),
+            { statusCode: 409 }
+          );
+        }
+        throw err;
+      });
 
     // Log the plan change
     await auditLogger.log({
@@ -177,7 +215,11 @@ export async function POST(request: NextRequest) {
     });
 
     // Calculate proration preview if upgrading
-    let prorationPreview: { amount: number; currency: string; periodEnd?: number } | null = null;
+    let prorationPreview: {
+      amount: number;
+      currency: string;
+      periodEnd?: number;
+    } | null = null;
     if (isUpgrade && prorationBehavior === 'create_prorations') {
       try {
         // Create invoice preview using the upcoming invoices endpoint
@@ -185,7 +227,8 @@ export async function POST(request: NextRequest) {
           customer: subscription.stripeCustomerId!,
           subscription: subscription.stripeSubscriptionId!,
         };
-        const upcomingInvoice = await stripe.invoices.createPreview(previewParams);
+        const upcomingInvoice =
+          await stripe.invoices.createPreview(previewParams);
         prorationPreview = {
           amount: upcomingInvoice.amount_due,
           currency: upcomingInvoice.currency,
@@ -212,6 +255,13 @@ export async function POST(request: NextRequest) {
         : 'Plan will be changed at the end of your current billing period.',
     });
   } catch (error) {
+    const err = error as Error & { statusCode?: number };
+    if (err.statusCode === 400) {
+      return NextResponse.json({ error: err.message }, { status: 400 });
+    }
+    if (err.statusCode === 409) {
+      return NextResponse.json({ error: err.message }, { status: 409 });
+    }
     logger.error('Plan change error', { error });
     return NextResponse.json(
       { error: 'Failed to change plan' },
@@ -301,9 +351,11 @@ export async function GET(request: NextRequest) {
 
     // Find proration line items
     // Note: Stripe API types vary across versions
-    type LineItemWithProration = Stripe.InvoiceLineItem & { proration?: boolean };
+    type LineItemWithProration = Stripe.InvoiceLineItem & {
+      proration?: boolean;
+    };
     const prorationLines = preview.lines.data.filter(
-      (line) => (line as unknown as LineItemWithProration).proration === true
+      line => (line as unknown as LineItemWithProration).proration === true
     );
 
     const prorationAmount = prorationLines.reduce(
@@ -320,10 +372,11 @@ export async function GET(request: NextRequest) {
         prorationAmount,
         currency: preview.currency,
         billingDate: preview.period_end,
-        lines: preview.lines.data.map((line) => ({
+        lines: preview.lines.data.map(line => ({
           description: line.description,
           amount: line.amount,
-          isProration: (line as unknown as LineItemWithProration).proration === true,
+          isProration:
+            (line as unknown as LineItemWithProration).proration === true,
         })),
       },
     });
