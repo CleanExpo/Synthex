@@ -66,10 +66,7 @@ export async function generateInstantPostPreview(
       FALLBACK_TEMPLATES[0](businessName)
     );
   } catch (error) {
-    logger.warn(
-      '[post-preview] AI generation failed, using fallback',
-      error instanceof Error ? error : undefined
-    );
+    logger.error('[post-preview] AI generation failed, using fallback', error);
     return FALLBACK_TEMPLATES[0](businessName);
   }
 }

@@ -112,19 +112,26 @@ export async function extractAndPersistBrandDNA(
     const pipelineResult = await runOnboardingPipeline({ url, businessName });
     const payload = mapPipelineResultToBrandDNA(pipelineResult, organizationId);
 
+    // Cast JSON fields to satisfy Prisma's InputJsonValue type
+    const prismaPayload = {
+      ...payload,
+      brandVoice: payload.brandVoice as unknown as object,
+      persona: payload.persona as unknown as object,
+      offerings: payload.offerings as unknown as object,
+      socialProfiles: payload.socialProfiles as unknown as object,
+      lastRefreshedAt: new Date(),
+    };
+
     await prisma.brandDNA.upsert({
       where: { organizationId },
-      create: { ...payload, lastRefreshedAt: new Date() },
-      update: { ...payload, lastRefreshedAt: new Date() },
+      create: prismaPayload,
+      update: prismaPayload,
     });
 
     logger.info(
       `[brand-dna] Extracted and persisted for org ${organizationId}`
     );
   } catch (error) {
-    logger.error(
-      '[brand-dna] Full extraction failed',
-      error instanceof Error ? error : undefined
-    );
+    logger.error('[brand-dna] Full extraction failed', error);
   }
 }
