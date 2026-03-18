@@ -19,7 +19,7 @@ const securityHeaders = {
     "frame-ancestors 'none'",
     "base-uri 'self'",
     "form-action 'self'",
-    "upgrade-insecure-requests"
+    'upgrade-insecure-requests',
   ].join('; '),
 
   // Strict Transport Security
@@ -34,9 +34,11 @@ const securityHeaders = {
 
   // CORS headers for API routes
   'Access-Control-Allow-Credentials': 'true',
-  'Access-Control-Allow-Origin': process.env.NEXT_PUBLIC_APP_URL || 'https://synthex.social',
+  'Access-Control-Allow-Origin':
+    process.env.NEXT_PUBLIC_APP_URL || 'https://synthex.social',
   'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-  'Access-Control-Allow-Headers': 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, Authorization, sentry-trace, baggage'
+  'Access-Control-Allow-Headers':
+    'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, Authorization, sentry-trace, baggage',
 };
 
 export async function middleware(request: NextRequest) {
@@ -85,7 +87,9 @@ export async function middleware(request: NextRequest) {
   );
 
   // Refresh session if expired
-  const { data: { session } } = await supabase.auth.getSession();
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
 
   // Check for custom auth-token cookie (used by unified-login for demo/fallback auth)
   const authToken = request.cookies.get('auth-token')?.value;
@@ -101,7 +105,13 @@ export async function middleware(request: NextRequest) {
   // The middleware matcher below excludes /api/ routes.
 
   // Authentication check for protected routes
-  const protectedPaths = ['/dashboard', '/onboarding', '/api/protected', '/api/user', '/api/integrations'];
+  const protectedPaths = [
+    '/dashboard',
+    '/onboarding',
+    '/api/protected',
+    '/api/user',
+    '/api/integrations',
+  ];
   // Auth URL structure:
   // Canonical: /login, /signup, /forgot-password, /auth/reset-password
   // Legacy redirects (still work): /auth/login → /login, /auth/register → /signup
@@ -109,8 +119,12 @@ export async function middleware(request: NextRequest) {
   // CRITICAL: Both /login and /auth/login exist — /login is the active PKCE flow page,
   // /auth/login is the legacy Supabase page. Treat BOTH as auth paths to prevent loops.
   const authPaths = ['/login', '/auth/login', '/auth/register', '/signup'];
-  const isProtectedPath = protectedPaths.some(path => pathname.startsWith(path));
-  const isAuthPath = authPaths.some(path => pathname === path || pathname.startsWith(path + '/'));
+  const isProtectedPath = protectedPaths.some(path =>
+    pathname.startsWith(path)
+  );
+  const isAuthPath = authPaths.some(
+    path => pathname === path || pathname.startsWith(path + '/')
+  );
 
   // Skip auth checks for ALL OAuth-related paths — cookies are being SET during these redirects,
   // so they won't exist yet. Without this, users loop back to login after Google sign-in.
@@ -162,7 +176,9 @@ export async function middleware(request: NextRequest) {
       }
     } catch {
       // Token parse failed — allow access to dashboard rather than blocking
-      console.warn('[Middleware] Could not parse auth token for onboarding check');
+      console.warn(
+        '[Middleware] Could not parse auth token for onboarding check'
+      );
     }
   }
 
@@ -176,12 +192,17 @@ export async function middleware(request: NextRequest) {
     if (blocked) return blocked;
   }
 
-  // CSRF protection for mutations
-  if (['POST', 'PUT', 'DELETE', 'PATCH'].includes(request.method)) {
+  // CSRF protection for mutations — block requests with no or foreign Origin.
+  // Webhook paths are excluded: they arrive server-to-server with no Origin
+  // and are authenticated by their own signature/secret mechanisms.
+  const WEBHOOK_PATHS = ['/api/webhooks/', '/api/affiliates/webhook'];
+  const isWebhookPath = WEBHOOK_PATHS.some(p => pathname.startsWith(p));
+  if (
+    !isWebhookPath &&
+    ['POST', 'PUT', 'DELETE', 'PATCH'].includes(request.method)
+  ) {
     const origin = request.headers.get('origin');
-
-    // Verify origin/referer for CSRF protection
-    if (origin && !origin.includes(request.nextUrl.hostname)) {
+    if (!origin || !origin.includes(request.nextUrl.hostname)) {
       return new NextResponse('Forbidden', { status: 403 });
     }
   }
@@ -191,7 +212,9 @@ export async function middleware(request: NextRequest) {
   // This cookie provides an additional layer: frontend can read it (non-httpOnly)
   // and send it as X-CSRF-Token header on mutations.
   if (!request.cookies.get('csrf-token')?.value) {
-    const csrfToken = crypto.randomUUID().replace(/-/g, '') + crypto.randomUUID().replace(/-/g, '');
+    const csrfToken =
+      crypto.randomUUID().replace(/-/g, '') +
+      crypto.randomUUID().replace(/-/g, '');
     response.cookies.set({
       name: 'csrf-token',
       value: csrfToken,
