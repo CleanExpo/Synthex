@@ -11,7 +11,13 @@
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -28,8 +34,11 @@ import {
   AlertCircle,
 } from '@/components/icons';
 import { toast } from 'sonner';
+import useSWR from 'swr';
 import { useBrandProfile } from '@/hooks/use-brand-profile';
+import { useActiveBusiness } from '@/hooks/useActiveBusiness';
 import type { BrandProfileUpdatePayload } from '@/app/api/brand-profile/types';
+import type { BrandDNARecord } from '@/lib/brand-dna/types';
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -120,8 +129,21 @@ export interface BrandProfileTabProps {
   isSaving?: boolean;
 }
 
-export function BrandProfileTab({ isSaving: _externalSaving }: BrandProfileTabProps) {
+export function BrandProfileTab({
+  isSaving: _externalSaving,
+}: BrandProfileTabProps) {
   const { profile, isLoading, error, updateBrandProfile } = useBrandProfile();
+  const { activeOrganizationId } = useActiveBusiness();
+
+  // BrandDNA — AI-extracted brand profile (source of truth for AI fields)
+  const { data: brandDnaData } = useSWR<{
+    brandDna: BrandDNARecord;
+    status: string;
+  }>(
+    activeOrganizationId ? `/api/brand-dna/${activeOrganizationId}` : null,
+    (url: string) => fetch(url, { credentials: 'include' }).then(r => r.json())
+  );
+  const brandDna = brandDnaData?.brandDna;
 
   const [local, setLocal] = useState<LocalProfile>({
     name: '',
@@ -144,31 +166,46 @@ export function BrandProfileTab({ isSaving: _externalSaving }: BrandProfileTabPr
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Populate form once SWR data arrives
+  // BrandDNA fields are used as fallbacks when the org profile doesn't have them yet
   useEffect(() => {
     if (profile) {
       setLocal({
         name: profile.name ?? '',
         description: profile.description ?? '',
-        logo: profile.logo ?? '',
+        // Use BrandDNA logo/colour as fallback if org profile doesn't have one
+        logo: profile.logo ?? brandDna?.logoUrl ?? '',
         favicon: profile.favicon ?? '',
-        primaryColor: profile.primaryColor ?? DEFAULT_COLOR,
-        website: profile.website ?? '',
-        industry: profile.industry ?? '',
+        primaryColor:
+          profile.primaryColor ?? brandDna?.primaryColour ?? DEFAULT_COLOR,
+        website: profile.website ?? brandDna?.sourceUrl ?? '',
+        industry: profile.industry ?? brandDna?.industry ?? '',
         teamSize: profile.teamSize ?? '',
         abn: profile.abn ?? '',
         socialHandles: profile.socialHandles ?? {},
       });
       setIsDirty(false);
     }
-  }, [profile]);
+  }, [profile, brandDna]);
 
   // ---------------------------------------------------------------------------
   // Handlers
   // ---------------------------------------------------------------------------
 
+  const handleRefresh = useCallback(async () => {
+    try {
+      await fetch('/api/brand-dna/refresh', {
+        method: 'POST',
+        credentials: 'include',
+      });
+      toast.success('Brand profile refresh started — check back in 30 seconds');
+    } catch {
+      toast.error('Failed to start brand profile refresh');
+    }
+  }, []);
+
   const handleChange = useCallback((field: ProfileField, value: string) => {
-    setLocal((prev) => ({ ...prev, [field]: value }));
-    setErrors((prev) => {
+    setLocal(prev => ({ ...prev, [field]: value }));
+    setErrors(prev => {
       const next = { ...prev };
       delete next[field as keyof ValidationErrors];
       return next;
@@ -177,7 +214,7 @@ export function BrandProfileTab({ isSaving: _externalSaving }: BrandProfileTabPr
   }, []);
 
   const handleSocialChange = useCallback((platform: string, value: string) => {
-    setLocal((prev) => ({
+    setLocal(prev => ({
       ...prev,
       socialHandles: { ...prev.socialHandles, [platform]: value },
     }));
@@ -233,7 +270,8 @@ export function BrandProfileTab({ isSaving: _externalSaving }: BrandProfileTabPr
       const payload: BrandProfileUpdatePayload = {};
 
       if (local.name) payload.name = local.name;
-      if (local.description !== undefined) payload.description = local.description;
+      if (local.description !== undefined)
+        payload.description = local.description;
       if (local.logo !== undefined) payload.logo = local.logo;
       if (local.favicon !== undefined) payload.favicon = local.favicon;
       if (local.primaryColor) payload.primaryColor = local.primaryColor;
@@ -253,32 +291,39 @@ export function BrandProfileTab({ isSaving: _externalSaving }: BrandProfileTabPr
       toast.success('Brand profile saved');
       setIsDirty(false);
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Failed to save brand profile');
+      toast.error(
+        err instanceof Error ? err.message : 'Failed to save brand profile'
+      );
     } finally {
       setIsSaving(false);
     }
   }, [local, validate, updateBrandProfile]);
 
-  const handleLogoUpload = useCallback(async (file: File) => {
-    setIsUploadingLogo(true);
-    try {
-      const formData = new FormData();
-      formData.append('file', file);
-      const res = await fetch('/api/media/upload', {
-        method: 'POST',
-        credentials: 'include',
-        body: formData,
-      });
-      const json = await res.json();
-      if (!res.ok) throw new Error(json.error || 'Upload failed');
-      handleChange('logo', json.data.url);
-      toast.success('Logo uploaded successfully');
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Failed to upload logo');
-    } finally {
-      setIsUploadingLogo(false);
-    }
-  }, [handleChange]);
+  const handleLogoUpload = useCallback(
+    async (file: File) => {
+      setIsUploadingLogo(true);
+      try {
+        const formData = new FormData();
+        formData.append('file', file);
+        const res = await fetch('/api/media/upload', {
+          method: 'POST',
+          credentials: 'include',
+          body: formData,
+        });
+        const json = await res.json();
+        if (!res.ok) throw new Error(json.error || 'Upload failed');
+        handleChange('logo', json.data.url);
+        toast.success('Logo uploaded successfully');
+      } catch (err) {
+        toast.error(
+          err instanceof Error ? err.message : 'Failed to upload logo'
+        );
+      } finally {
+        setIsUploadingLogo(false);
+      }
+    },
+    [handleChange]
+  );
 
   // ---------------------------------------------------------------------------
   // Loading / error states
@@ -303,7 +348,9 @@ export function BrandProfileTab({ isSaving: _externalSaving }: BrandProfileTabPr
         <CardContent className="py-12">
           <div className="flex flex-col items-center justify-center gap-3 text-center">
             <AlertCircle className="w-8 h-8 text-red-400" />
-            <p className="text-slate-400">Failed to load brand profile. Please refresh and try again.</p>
+            <p className="text-slate-400">
+              Failed to load brand profile. Please refresh and try again.
+            </p>
           </div>
         </CardContent>
       </Card>
@@ -341,7 +388,7 @@ export function BrandProfileTab({ isSaving: _externalSaving }: BrandProfileTabPr
             <Input
               id="bp-name"
               value={local.name}
-              onChange={(e) => handleChange('name', e.target.value)}
+              onChange={e => handleChange('name', e.target.value)}
               placeholder="Acme Corporation"
               maxLength={100}
               className="bg-white/5 border-white/10"
@@ -357,7 +404,7 @@ export function BrandProfileTab({ isSaving: _externalSaving }: BrandProfileTabPr
             <Textarea
               id="bp-description"
               value={local.description}
-              onChange={(e) => handleChange('description', e.target.value)}
+              onChange={e => handleChange('description', e.target.value)}
               placeholder="A short description of your organisation..."
               maxLength={500}
               className="bg-white/5 border-white/10 min-h-[80px]"
@@ -379,7 +426,7 @@ export function BrandProfileTab({ isSaving: _externalSaving }: BrandProfileTabPr
               <Input
                 id="bp-logo"
                 value={local.logo}
-                onChange={(e) => handleChange('logo', e.target.value)}
+                onChange={e => handleChange('logo', e.target.value)}
                 placeholder="https://example.com/logo.png"
                 className="bg-white/5 border-white/10 flex-1"
               />
@@ -412,7 +459,8 @@ export function BrandProfileTab({ isSaving: _externalSaving }: BrandProfileTabPr
               <p className="text-sm text-red-400">{errors.logo}</p>
             )}
             <p className="text-xs text-slate-500">
-              Paste a URL or click Upload to select a file (PNG, SVG recommended, max 10 MB).
+              Paste a URL or click Upload to select a file (PNG, SVG
+              recommended, max 10 MB).
             </p>
             {/* Hidden file input */}
             <input
@@ -420,7 +468,7 @@ export function BrandProfileTab({ isSaving: _externalSaving }: BrandProfileTabPr
               type="file"
               accept="image/*"
               className="sr-only"
-              onChange={(e) => {
+              onChange={e => {
                 const file = e.target.files?.[0];
                 if (file) handleLogoUpload(file);
                 // Reset so the same file can be selected again
@@ -436,7 +484,7 @@ export function BrandProfileTab({ isSaving: _externalSaving }: BrandProfileTabPr
               <Input
                 id="bp-favicon"
                 value={local.favicon}
-                onChange={(e) => handleChange('favicon', e.target.value)}
+                onChange={e => handleChange('favicon', e.target.value)}
                 placeholder="https://example.com/favicon.ico"
                 className="bg-white/5 border-white/10 flex-1"
               />
@@ -465,15 +513,19 @@ export function BrandProfileTab({ isSaving: _externalSaving }: BrandProfileTabPr
             <div className="flex gap-3 items-center">
               <input
                 type="color"
-                value={HEX_COLOR_REGEX.test(local.primaryColor) ? local.primaryColor : DEFAULT_COLOR}
-                onChange={(e) => handleChange('primaryColor', e.target.value)}
+                value={
+                  HEX_COLOR_REGEX.test(local.primaryColor)
+                    ? local.primaryColor
+                    : DEFAULT_COLOR
+                }
+                onChange={e => handleChange('primaryColor', e.target.value)}
                 className="w-10 h-10 rounded-md border border-white/10 bg-transparent cursor-pointer shrink-0"
                 aria-label="Pick primary colour"
               />
               <Input
                 id="bp-primaryColor"
                 value={local.primaryColor}
-                onChange={(e) => handleChange('primaryColor', e.target.value)}
+                onChange={e => handleChange('primaryColor', e.target.value)}
                 placeholder="#6366f1"
                 className="bg-white/5 border-white/10 font-mono"
               />
@@ -507,7 +559,7 @@ export function BrandProfileTab({ isSaving: _externalSaving }: BrandProfileTabPr
               <Input
                 id="bp-website"
                 value={local.website}
-                onChange={(e) => handleChange('website', e.target.value)}
+                onChange={e => handleChange('website', e.target.value)}
                 placeholder="https://yourcompany.com"
                 className="bg-white/5 border-white/10"
               />
@@ -523,11 +575,11 @@ export function BrandProfileTab({ isSaving: _externalSaving }: BrandProfileTabPr
             <select
               id="bp-industry"
               value={local.industry}
-              onChange={(e) => handleChange('industry', e.target.value)}
+              onChange={e => handleChange('industry', e.target.value)}
               className="w-full rounded-md border border-white/10 bg-white/5 px-3 py-2 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500"
             >
               <option value="">Select an industry...</option>
-              {INDUSTRY_OPTIONS.map((opt) => (
+              {INDUSTRY_OPTIONS.map(opt => (
                 <option key={opt} value={opt} className="bg-slate-900">
                   {opt}
                 </option>
@@ -539,7 +591,7 @@ export function BrandProfileTab({ isSaving: _externalSaving }: BrandProfileTabPr
           <div className="space-y-2">
             <Label htmlFor="bp-teamSize">Team Size</Label>
             <div className="flex gap-2 flex-wrap">
-              {TEAM_SIZE_OPTIONS.map((size) => (
+              {TEAM_SIZE_OPTIONS.map(size => (
                 <button
                   key={size}
                   type="button"
@@ -563,14 +615,12 @@ export function BrandProfileTab({ isSaving: _externalSaving }: BrandProfileTabPr
             <Input
               id="bp-abn"
               value={local.abn}
-              onChange={(e) => handleChange('abn', e.target.value)}
+              onChange={e => handleChange('abn', e.target.value)}
               placeholder="12 345 678 901"
               maxLength={20}
               className="bg-white/5 border-white/10"
             />
-            {errors.abn && (
-              <p className="text-sm text-red-400">{errors.abn}</p>
-            )}
+            {errors.abn && <p className="text-sm text-red-400">{errors.abn}</p>}
           </div>
         </CardContent>
       </Card>
@@ -596,7 +646,7 @@ export function BrandProfileTab({ isSaving: _externalSaving }: BrandProfileTabPr
                 <Input
                   id={`bp-social-${key}`}
                   value={local.socialHandles[key] ?? ''}
-                  onChange={(e) => handleSocialChange(key, e.target.value)}
+                  onChange={e => handleSocialChange(key, e.target.value)}
                   placeholder={placeholder}
                   className="bg-white/5 border-white/10"
                 />
@@ -628,12 +678,11 @@ export function BrandProfileTab({ isSaving: _externalSaving }: BrandProfileTabPr
             >
               <div className="flex items-center gap-3">
                 {local.logo ? (
-                  /* eslint-disable-next-line @next/next/no-img-element */
                   <img
                     src={local.logo}
                     alt="Logo preview"
                     className="h-8 w-auto max-w-[120px] object-contain"
-                    onError={(e) => {
+                    onError={e => {
                       (e.target as HTMLImageElement).style.display = 'none';
                     }}
                   />
@@ -688,11 +737,20 @@ export function BrandProfileTab({ isSaving: _externalSaving }: BrandProfileTabPr
       {/* ------------------------------------------------------------------ */}
       {/* Save Button                                                         */}
       {/* ------------------------------------------------------------------ */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-3">
         {isDirty && (
           <p className="text-xs text-amber-400">You have unsaved changes</p>
         )}
-        <div className="ml-auto">
+        <div className="ml-auto flex items-center gap-3">
+          {brandDna && (
+            <Button
+              variant="outline"
+              onClick={handleRefresh}
+              className="text-sm"
+            >
+              Refresh Brand Profile
+            </Button>
+          )}
           <Button
             onClick={handleSave}
             disabled={saving || Object.keys(errors).length > 0}
