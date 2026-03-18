@@ -1,10 +1,10 @@
 {
   "mcpServers": {
     "linear": {
-      "command": "cmd",
-      "args": ["/c", "npx", "-y", "@modelcontextprotocol/server-linear"],
-      "env": {
-        "LINEAR_API_KEY": "lin_api_O7z4euhySYplLW4KEh3WYirmzvKXFLG4GKWHj8Zn"
+      "type": "http",
+      "url": "https://mcp.linear.app/mcp",
+      "headers": {
+        "Authorization": "Bearer lin_api_O7z4euhySYplLW4KEh3WYirmzvKXFLG4GKWHj8Zn"
       }
     }
   }
