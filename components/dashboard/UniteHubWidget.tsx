@@ -10,8 +10,17 @@
 import { useState } from 'react';
 import useSWR from 'swr';
 import { toast } from 'sonner';
-import { Building2, Copy, Zap, Loader2, ExternalLink } from '@/components/icons';
-import { ConnectionStatusBadge, type ConnectionState } from '@/components/realtime/ConnectionStatus';
+import {
+  Building2,
+  Copy,
+  Zap,
+  Loader2,
+  ExternalLink,
+} from '@/components/icons';
+import {
+  ConnectionStatusBadge,
+  type ConnectionState,
+} from '@/components/realtime/ConnectionStatus';
 import { cn } from '@/lib/utils';
 import { useUser } from '@/hooks/use-user';
 
@@ -34,7 +43,7 @@ interface TestResult {
 // ── Fetcher ───────────────────────────────────────────────────────────────────
 
 const fetchJson = (url: string) =>
-  fetch(url, { credentials: 'include' }).then((r) => r.json());
+  fetch(url, { credentials: 'include' }).then(r => r.json());
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
@@ -54,8 +63,8 @@ export function UniteHubWidget({ className }: { className?: string }) {
   const connectionState: ConnectionState = !data?.configured
     ? 'disconnected'
     : data.reachable
-    ? 'connected'
-    : 'reconnecting';
+      ? 'connected'
+      : 'reconnecting';
 
   const handleCopy = async () => {
     if (!data?.pullEndpoint) return;
@@ -77,7 +86,7 @@ export function UniteHubWidget({ className }: { className?: string }) {
         method: 'POST',
         credentials: 'include',
       });
-      const json = await res.json() as TestResult;
+      const json = (await res.json()) as TestResult;
       setTestResult(json);
       await mutate();
     } catch (err) {
@@ -93,7 +102,12 @@ export function UniteHubWidget({ className }: { className?: string }) {
   // ── Loading skeleton ──────────────────────────────────────────────────────
   if (isLoading) {
     return (
-      <div className={cn('border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm', className)}>
+      <div
+        className={cn(
+          'border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm',
+          className
+        )}
+      >
         <div className="px-5 py-4 border-b-[0.5px] border-white/[0.06] flex items-center gap-3">
           <div className="h-8 w-8 border-[0.5px] border-white/[0.06] rounded-sm bg-white/[0.02] animate-pulse" />
           <div className="space-y-1.5 flex-1">
@@ -112,7 +126,12 @@ export function UniteHubWidget({ className }: { className?: string }) {
 
   // ── Main render ───────────────────────────────────────────────────────────
   return (
-    <div className={cn('border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm', className)}>
+    <div
+      className={cn(
+        'border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm',
+        className
+      )}
+    >
       {/* Header */}
       <div className="px-5 py-4 border-b-[0.5px] border-white/[0.06] flex items-center justify-between gap-3">
         <div className="flex items-center gap-3">
@@ -120,20 +139,25 @@ export function UniteHubWidget({ className }: { className?: string }) {
             <Building2 className="h-4 w-4 text-cyan-400" />
           </div>
           <div>
-            <p className="text-sm font-light text-white tracking-tight">Unite-Group</p>
-            <p className="text-[10px] text-white/30 mt-0.5">Nexus Dashboard Integration</p>
+            <p className="text-sm font-light text-white tracking-tight">
+              Unite-Group
+            </p>
+            <p className="text-[10px] text-white/30 mt-0.5">
+              Nexus Dashboard Integration
+            </p>
           </div>
         </div>
         <ConnectionStatusBadge state={connectionState} />
       </div>
 
       <div className="p-5 space-y-5">
-
         {/* Pull Endpoint */}
         <div className="space-y-2">
           <p className="text-[9px] uppercase tracking-[0.2em] text-white/25">
             Pull Endpoint
-            <span className="text-white/15 ml-1 normal-case tracking-normal">(configure in Unite-Group)</span>
+            <span className="text-white/70 ml-1 normal-case tracking-normal">
+              (configure in Unite-Group)
+            </span>
           </p>
           <div className="flex items-center gap-2">
             <code className="flex-1 min-w-0 font-mono text-[11px] text-cyan-300 bg-white/[0.02] border-[0.5px] border-white/[0.06] rounded-sm px-3 py-2 truncate">
@@ -151,9 +175,11 @@ export function UniteHubWidget({ className }: { className?: string }) {
 
         {/* Event Types */}
         <div className="space-y-2">
-          <p className="text-[9px] uppercase tracking-[0.2em] text-white/25">Events sent to Unite-Group</p>
+          <p className="text-[9px] uppercase tracking-[0.2em] text-white/25">
+            Events sent to Unite-Group
+          </p>
           <div className="flex flex-wrap gap-1.5">
-            {(data?.eventTypes ?? []).map((type) => (
+            {(data?.eventTypes ?? []).map(type => (
               <span
                 key={type}
                 className="inline-flex items-center px-2 py-0.5 rounded-sm bg-white/[0.03] border-[0.5px] border-white/[0.08] font-mono text-[9px] text-white/40"
@@ -185,10 +211,12 @@ export function UniteHubWidget({ className }: { className?: string }) {
           </button>
 
           {testResult && (
-            <p className={cn(
-              'text-[11px] text-center font-mono',
-              testResult.success ? 'text-emerald-400' : 'text-red-400'
-            )}>
+            <p
+              className={cn(
+                'text-[11px] text-center font-mono',
+                testResult.success ? 'text-emerald-400' : 'text-red-400'
+              )}
+            >
               {testResult.success
                 ? `✓ Connected · ${testResult.latencyMs}ms`
                 : `✗ ${testResult.error ?? 'Connection failed'}`}
@@ -202,14 +230,19 @@ export function UniteHubWidget({ className }: { className?: string }) {
           )}
 
           <button
-            onClick={() => window.open('https://unite-hub.unite-group.com.au', '_blank', 'noopener,noreferrer')}
+            onClick={() =>
+              window.open(
+                'https://unite-hub.unite-group.com.au',
+                '_blank',
+                'noopener,noreferrer'
+              )
+            }
             className="w-full flex items-center justify-center gap-2 py-2 text-xs text-white/30 hover:text-white/60 border-[0.5px] border-white/[0.06] hover:border-white/[0.12] rounded-sm transition-colors"
           >
             <ExternalLink className="h-3.5 w-3.5" />
             Open Unite-Group
           </button>
         </div>
-
       </div>
     </div>
   );

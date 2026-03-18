@@ -129,7 +129,7 @@ export function PromptInput({
         rows={1}
         className={cn(
           'w-full resize-none bg-transparent px-4 pt-3.5 pb-2 text-sm text-white',
-          'placeholder:text-white/50 outline-none',
+          'placeholder:text-white/70 outline-none',
           'scrollbar-thin scrollbar-track-transparent scrollbar-thumb-white/10',
           textareaClassName
         )}

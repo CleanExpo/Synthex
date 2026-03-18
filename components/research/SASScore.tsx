@@ -46,15 +46,32 @@ export interface SASScoreProps {
   size?: 'sm' | 'md' | 'lg';
 }
 
-const getBadgeInfo = (score: number): { label: string; color: string; bgColor: string } | null => {
+const getBadgeInfo = (
+  score: number
+): { label: string; color: string; bgColor: string } | null => {
   if (score >= 9.0) {
-    return { label: 'Exceptional', color: 'text-amber-400', bgColor: 'bg-gradient-to-r from-amber-500/20 to-yellow-500/20 border-amber-500/40' };
+    return {
+      label: 'Exceptional',
+      color: 'text-amber-400',
+      bgColor:
+        'bg-gradient-to-r from-amber-500/20 to-yellow-500/20 border-amber-500/40',
+    };
   }
   if (score >= 8.0) {
-    return { label: 'Highly Reliable', color: 'text-gray-300', bgColor: 'bg-gradient-to-r from-gray-400/20 to-gray-500/20 border-gray-400/40' };
+    return {
+      label: 'Highly Reliable',
+      color: 'text-gray-300',
+      bgColor:
+        'bg-gradient-to-r from-gray-400/20 to-gray-500/20 border-gray-400/40',
+    };
   }
   if (score >= 7.0) {
-    return { label: 'Reliable', color: 'text-orange-400', bgColor: 'bg-gradient-to-r from-orange-600/20 to-orange-700/20 border-orange-500/40' };
+    return {
+      label: 'Reliable',
+      color: 'text-orange-400',
+      bgColor:
+        'bg-gradient-to-r from-orange-600/20 to-orange-700/20 border-orange-500/40',
+    };
   }
   return null; // No badge for scores below 7.0
 };
@@ -91,7 +108,9 @@ export function SASScore({
       <CardHeader className="pb-2">
         <CardTitle className="text-sm font-semibold uppercase tracking-wider text-cyan-400 flex items-center justify-between">
           <span>Synthex Authority Score</span>
-          <span className="text-xs text-gray-500 font-normal">{methodologyVersion}</span>
+          <span className="text-xs text-gray-500 font-normal">
+            {methodologyVersion}
+          </span>
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -107,7 +126,7 @@ export function SASScore({
                 fill="none"
                 stroke="currentColor"
                 strokeWidth="6"
-                className="text-white/10"
+                className="text-white/70"
               />
               {/* Progress circle */}
               <circle
@@ -123,7 +142,13 @@ export function SASScore({
                 className="transition-all duration-1000 ease-out"
               />
               <defs>
-                <linearGradient id="scoreGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                <linearGradient
+                  id="scoreGradient"
+                  x1="0%"
+                  y1="0%"
+                  x2="100%"
+                  y2="0%"
+                >
                   <stop offset="0%" stopColor="#06b6d4" />
                   <stop offset="100%" stopColor="#0891b2" />
                 </linearGradient>
@@ -131,7 +156,9 @@ export function SASScore({
             </svg>
             {/* Score text */}
             <div className="absolute inset-0 flex items-center justify-center">
-              <span className={cn('font-bold text-white', sizeClasses[size].text)}>
+              <span
+                className={cn('font-bold text-white', sizeClasses[size].text)}
+              >
                 {totalScore.toFixed(1)}
               </span>
             </div>
@@ -139,10 +166,12 @@ export function SASScore({
 
           {/* Badge */}
           {badgeInfo && (
-            <div className={cn(
-              'mt-4 px-4 py-1.5 rounded-full border',
-              badgeInfo.bgColor
-            )}>
+            <div
+              className={cn(
+                'mt-4 px-4 py-1.5 rounded-full border',
+                badgeInfo.bgColor
+              )}
+            >
               <span className={cn('text-sm font-medium', badgeInfo.color)}>
                 {badgeInfo.label}
               </span>
@@ -166,7 +195,9 @@ export function SASScore({
               <div className="flex justify-between text-sm">
                 <span className="text-gray-300">
                   {factor.name}
-                  <span className="ml-1 text-xs text-gray-500">({factor.weight}%)</span>
+                  <span className="ml-1 text-xs text-gray-500">
+                    ({factor.weight}%)
+                  </span>
                 </span>
                 <span className="text-white font-medium">
                   {factor.score}/{factor.weight}
@@ -196,11 +227,22 @@ export function SASScore({
               View scoring methodology
             </summary>
             <div className="mt-2 text-xs text-gray-500 space-y-1">
-              <p><strong>Data Recency (20%):</strong> Data published within 12 months</p>
-              <p><strong>Source Quality (25%):</strong> % from .gov/.edu sources</p>
-              <p><strong>Sample Size (20%):</strong> Statistical significance</p>
-              <p><strong>Verification (20%):</strong> Independent fact-checking</p>
-              <p><strong>Actionability (15%):</strong> Practical recommendations</p>
+              <p>
+                <strong>Data Recency (20%):</strong> Data published within 12
+                months
+              </p>
+              <p>
+                <strong>Source Quality (25%):</strong> % from .gov/.edu sources
+              </p>
+              <p>
+                <strong>Sample Size (20%):</strong> Statistical significance
+              </p>
+              <p>
+                <strong>Verification (20%):</strong> Independent fact-checking
+              </p>
+              <p>
+                <strong>Actionability (15%):</strong> Practical recommendations
+              </p>
             </div>
           </details>
         </div>
@@ -226,7 +268,9 @@ export function SASScoreInline({
     <div className={cn('inline-flex items-center gap-2', className)}>
       <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 border border-white/20">
         <span className="text-xs font-medium text-gray-400">SAS</span>
-        <span className="text-sm font-bold text-cyan-400">{score.toFixed(1)}</span>
+        <span className="text-sm font-bold text-cyan-400">
+          {score.toFixed(1)}
+        </span>
       </div>
       {badgeInfo && (
         <span className={cn('text-xs font-medium', badgeInfo.color)}>

@@ -12,9 +12,13 @@ export function AnalyticsTab() {
           <div>
             <div className="flex items-center gap-2 mb-0.5">
               <TrendingUp className="h-3.5 w-3.5 text-cyan-400" />
-              <span className="text-[10px] uppercase tracking-[0.25em] text-white/40">Real-Time Analytics</span>
+              <span className="text-[10px] uppercase tracking-[0.25em] text-white/40">
+                Real-Time Analytics
+              </span>
             </div>
-            <p className="text-xs text-white/25 mt-1">Live performance metrics across all platforms</p>
+            <p className="text-xs text-white/25 mt-1">
+              Live performance metrics across all platforms
+            </p>
           </div>
           <button
             onClick={() => window.location.reload()}
@@ -34,14 +38,18 @@ export function AnalyticsTab() {
                 <div className="text-center px-4">
                   <BarChart3 className="h-8 w-8 mx-auto mb-3 text-white/10" />
                   <p className="text-xs text-white/30">Engagement Over Time</p>
-                  <p className="text-[10px] text-white/15 mt-1">Chart visualisation connected to backend</p>
+                  <p className="text-[10px] text-white/70 mt-1">
+                    Chart visualisation connected to backend
+                  </p>
                 </div>
               </div>
             </div>
 
             {/* Platform Breakdown */}
             <div className="order-1 md:order-2 space-y-3">
-              <span className="text-[9px] uppercase tracking-[0.2em] text-white/25">Platform Breakdown</span>
+              <span className="text-[9px] uppercase tracking-[0.2em] text-white/25">
+                Platform Breakdown
+              </span>
               <div className="border-[0.5px] border-white/[0.04] bg-white/[0.01] rounded-sm p-4 flex items-center justify-center min-h-[80px]">
                 <p className="text-[10px] text-white/25 text-center">
                   No platform data yet. Connect your accounts to see analytics.
