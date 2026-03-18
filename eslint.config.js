@@ -18,6 +18,8 @@ const eslintConfig = [
       '.next-alt/**',
       '.next-analyze/**',
       '.next-dev/**',
+      '.next-turbo/**',
+      '.next_alt /**',
       'packages/**/dist/**',
       'out/**',
       'dist/**',

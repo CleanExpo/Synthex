@@ -49,21 +49,16 @@ const nextConfig = {
   // Power by header removal for security
   poweredByHeader: false,
 
-  // TypeScript configuration
-  // ignoreBuildErrors: true — type checking runs in CI (GitHub Actions) and locally via
-  // `npm run type-check`. Disabled during Vercel build to prevent OOM on 8GB machines
-  // (1400+ files exhausted all RAM at the `Checking validity of types...` step).
+  // TypeScript configuration — type errors will fail Vercel builds (SYN-402)
   typescript: {
-    ignoreBuildErrors: true,
+    ignoreBuildErrors: false,
   },
 
-  // ESLint configuration
-  // INTENTIONAL: Next.js 15's internal ESLint runner passes deprecated options
-  // (useEslintrc, extensions) incompatible with flat config (eslint.config.mjs).
-  // Run ESLint separately via `npm run lint` or in CI.
-  // QA-AUDIT-2026-03-14: Confirmed this is a known Next.js 15 incompatibility.
+  // ESLint configuration — lint errors will fail Vercel builds (SYN-402)
+  // Note: .next-turbo/** and .next_alt /** are now in eslint.config.js ignores so
+  // the flat-config runner no longer picks up build artefacts.
   eslint: {
-    ignoreDuringBuilds: true,
+    ignoreDuringBuilds: false,
   },
 
   // HTTP headers for performance and security
