@@ -4,7 +4,7 @@
 const nextConfig = {
   reactStrictMode: true,
   swcMinify: true,
-  
+
   // TypeScript handling - critical for Vercel builds
   typescript: {
     // Use our custom build config for more lenient type checking
@@ -12,19 +12,19 @@ const nextConfig = {
     // Allow builds to proceed with type errors as a last resort
     ignoreBuildErrors: process.env.VERCEL ? true : false,
   },
-  
+
   eslint: {
     // Skip ESLint during builds to avoid failures
     ignoreDuringBuilds: true,
   },
-  
+
   experimental: {
     serverComponentsExternalPackages: [
-      '@prisma/client', 
+      '@prisma/client',
       'bcryptjs',
       'ioredis',
       'stripe',
-      '@supabase/supabase-js'
+      '@supabase/supabase-js',
     ],
     // Note: forceSwcTransforms removed — deprecated in Next.js 15 and causes
     // Turbopack warnings. SWC is the default transformer.
@@ -43,33 +43,36 @@ const nextConfig = {
       ],
     },
   },
-  
+
   // Output standalone for better Vercel compatibility
   output: 'standalone',
-  
+
   // Disable source maps to reduce memory usage
   productionBrowserSourceMaps: false,
-  
+
   // Enable compression
   compress: true,
-  
+
   // Disable powered by header
   poweredByHeader: false,
-  
+
   // Generate ETags
   generateEtags: true,
-  
+
   // Clean dist directory
   cleanDistDir: true,
-  
+
   // Compiler optimizations
   compiler: {
     // Remove console in production except errors
-    removeConsole: process.env.NODE_ENV === 'production' ? { 
-      exclude: ['error', 'warn'] 
-    } : false,
+    removeConsole:
+      process.env.NODE_ENV === 'production'
+        ? {
+            exclude: ['error', 'warn'],
+          }
+        : false,
   },
-  
+
   // Module optimizations
   modularizeImports: {
     '@heroicons/react': {
@@ -82,7 +85,7 @@ const nextConfig = {
       transform: '@radix-ui/react-{{kebabCase member}}',
     },
   },
-  
+
   // Image configuration
   images: {
     domains: [
@@ -102,30 +105,41 @@ const nextConfig = {
     contentDispositionType: 'attachment',
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
   },
-  
+
   // Headers configuration
   async headers() {
-    const allowedOrigin = process.env.NODE_ENV === 'production' 
-      ? 'https://synthex.social'
-      : 'http://localhost:3000';
-    
+    const allowedOrigin =
+      process.env.NODE_ENV === 'production'
+        ? 'https://synthex.social'
+        : 'http://localhost:3000';
+
     return [
       {
         source: '/api/:path*',
         headers: [
           { key: 'Access-Control-Allow-Credentials', value: 'true' },
           { key: 'Access-Control-Allow-Origin', value: allowedOrigin },
-          { key: 'Access-Control-Allow-Methods', value: 'GET,OPTIONS,PATCH,DELETE,POST,PUT' },
-          { key: 'Access-Control-Allow-Headers', value: 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version' },
+          {
+            key: 'Access-Control-Allow-Methods',
+            value: 'GET,OPTIONS,PATCH,DELETE,POST,PUT',
+          },
+          {
+            key: 'Access-Control-Allow-Headers',
+            value:
+              'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version',
+          },
           { key: 'X-Frame-Options', value: 'DENY' },
           { key: 'X-Content-Type-Options', value: 'nosniff' },
           { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
-          { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
+          {
+            key: 'Permissions-Policy',
+            value: 'camera=(), microphone=(), geolocation=()',
+          },
         ],
       },
     ];
   },
-  
+
   // Rewrites for API versioning
   async rewrites() {
     return [
@@ -147,18 +161,20 @@ const nextConfig = {
       },
     ];
   },
-  
+
   // Webpack configuration with extensive optimizations
   webpack: (config, { buildId, dev, isServer, defaultLoaders, webpack }) => {
     // Memory optimization - increase Node memory
     if (process.env.VERCEL) {
       config.plugins.push(
         new webpack.DefinePlugin({
-          'process.env.NODE_OPTIONS': JSON.stringify('--max-old-space-size=7680'),
+          'process.env.NODE_OPTIONS': JSON.stringify(
+            '--max-old-space-size=7680'
+          ),
         })
       );
     }
-    
+
     // Add fallbacks for Node.js modules
     if (!isServer) {
       config.resolve.fallback = {
@@ -188,19 +204,19 @@ const nextConfig = {
         vm: false,
       };
     }
-    
+
     // Ignore optional dependencies that might cause issues
     config.externals = config.externals || [];
     if (isServer) {
       config.externals.push({
         'utf-8-validate': 'commonjs utf-8-validate',
-        'bufferutil': 'commonjs bufferutil',
-        'encoding': 'commonjs encoding',
+        bufferutil: 'commonjs bufferutil',
+        encoding: 'commonjs encoding',
         'node-gyp-build': 'commonjs node-gyp-build',
-        'fsevents': 'commonjs fsevents',
+        fsevents: 'commonjs fsevents',
       });
     }
-    
+
     // Optimize chunks for better build performance
     config.optimization = {
       ...config.optimization,
@@ -243,22 +259,23 @@ const nextConfig = {
         },
       },
     };
-    
+
     // Add custom aliases to prevent case sensitivity issues
     config.resolve.alias = {
       ...config.resolve.alias,
       '@': require('path').resolve('./'),
     };
-    
+
     // Ensure consistent module resolution
     config.resolve.extensions = ['.ts', '.tsx', '.js', '.jsx', '.json'];
-    
+
     return config;
   },
-  
+
   // Environment variables
   env: {
-    NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
+    NEXT_PUBLIC_APP_URL:
+      process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
     NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
     NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
     // Increase Node memory for build
