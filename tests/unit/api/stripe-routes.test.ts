@@ -390,7 +390,7 @@ describe('Stripe API Routes - Contract Tests', () => {
       const product = getProductByPriceId(proPriceId);
 
       expect(product).toBeDefined();
-      expect(product?.name).toBe('Pro');
+      expect(product?.name).toBe('Professional');
       expect(product?.priceId).toBe(proPriceId);
     });
 
@@ -410,7 +410,7 @@ describe('Stripe API Routes - Contract Tests', () => {
       const product3 = getProductByName('PRO');
 
       expect(product1).toBeDefined();
-      expect(product1?.name).toBe('Pro');
+      expect(product1?.name).toBe('Professional');
       expect(product2).toEqual(product1);
       expect(product3).toEqual(product1);
     });
@@ -424,7 +424,7 @@ describe('Stripe API Routes - Contract Tests', () => {
       const scale = getProductByName('scale');
 
       expect(starter?.name).toBe('Starter');
-      expect(pro?.name).toBe('Pro');
+      expect(pro?.name).toBe('Professional');
       expect(growth?.name).toBe('Growth');
       expect(scale?.name).toBe('Scale');
     });

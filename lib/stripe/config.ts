@@ -6,10 +6,16 @@
  * - NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: Stripe publishable key for client-side
  * - STRIPE_WEBHOOK_SECRET: Webhook endpoint secret for verification
  * - NEXT_PUBLIC_APP_URL: Application URL for redirects
- * - STRIPE_STARTER_PRICE_ID: Stripe price ID for Starter plan ($99 AUD/mo)
- * - STRIPE_PRO_PRICE_ID: Stripe price ID for Pro plan ($249 AUD/mo)
- * - STRIPE_GROWTH_PRICE_ID: Stripe price ID for Growth plan ($449 AUD/mo)
- * - STRIPE_SCALE_PRICE_ID: Stripe price ID for Scale plan ($799 AUD/mo)
+ *
+ * Active plans (prod_* = Stripe product ID):
+ * - STRIPE_STARTER_PRICE_ID:          $49 AUD/mo   — prod_Tx8gdIuaNqDMVS
+ * - STRIPE_INTRODUCTORY_PRICE_ID:     $99 AUD/mo   — prod_Tx8cWpkBV5RP5X (2 months, then transitions to Pro)
+ * - STRIPE_PRO_PRICE_ID:              $249 AUD/mo  — prod_Tx8cWpkBV5RP5X
+ * - STRIPE_ENTERPRISE_PRICE_ID:       $249 AUD/mo  — prod_Tx8jZd59rVws68 (base, 1 business)
+ * - STRIPE_ENTERPRISE_TIER_PRICE_ID:  $99 AUD/mo   — prod_Tx8jZd59rVws68 (per additional business)
+ *
+ * Legacy (kept for existing subscribers — do not remove):
+ * - STRIPE_GROWTH_PRICE_ID, STRIPE_SCALE_PRICE_ID
  *
  * FAILURE MODE: Stripe features disabled if not configured.
  * Placeholder price IDs are kept so the app compiles, but the checkout route
@@ -31,14 +37,34 @@ export const stripe = STRIPE_ENABLED
 // Product/Price IDs - These MUST match your Stripe dashboard
 // Placeholder IDs are rejected at checkout time (see app/api/stripe/checkout/route.ts)
 export const PRODUCTS = {
+  // ── STARTER ────────────────────────────────────────────────────────────────
+  // prod_Tx8gdIuaNqDMVS | $49/mo AUD
+  starter: {
+    name: 'Starter',
+    productId: 'prod_Tx8gdIuaNqDMVS',
+    priceId: process.env.STRIPE_STARTER_PRICE_ID || 'price_starter_placeholder',
+    price: 49,
+    features: {
+      socialAccounts: 3,
+      aiPosts: 50,
+      personas: 1,
+      analytics: 'basic',
+      support: 'email',
+      scheduling: true,
+      aiVoiceSamples: 30,
+    },
+  },
+
+  // ── PROFESSIONAL — INTRODUCTORY ────────────────────────────────────────────
+  // prod_Tx8cWpkBV5RP5X | $99/mo AUD (first 2 months via Subscription Schedule,
+  // then auto-transitions to STRIPE_PRO_PRICE_ID at $249/mo)
   introductory: {
     name: 'Introductory',
+    productId: 'prod_Tx8cWpkBV5RP5X',
     priceId:
       process.env.STRIPE_INTRODUCTORY_PRICE_ID ||
       'price_introductory_placeholder',
     price: 99,
-    // Transitions to pro ($249) after 2 billing cycles via Stripe Subscription Schedules.
-    // Features mirror the pro plan exactly.
     transitionToPriceId:
       process.env.STRIPE_PRO_PRICE_ID || 'price_pro_placeholder',
     transitionAfterCycles: 2,
@@ -50,27 +76,16 @@ export const PRODUCTS = {
       support: 'email',
       scheduling: true,
       contentLibrary: true,
+      basicAutomation: true,
     },
   },
-  starter: {
-    name: 'Starter',
-    priceId: process.env.STRIPE_STARTER_PRICE_ID || 'price_starter_placeholder',
-    price: 49,
-    features: {
-      socialAccounts: 2,
-      aiPosts: 30,
-      personas: 1,
-      analytics: 'basic',
-      support: 'email',
-      scheduling: true,
-    },
-  },
+
+  // ── PROFESSIONAL ───────────────────────────────────────────────────────────
+  // prod_Tx8cWpkBV5RP5X | $249/mo AUD (default price on product)
   pro: {
-    name: 'Pro',
-    priceId:
-      process.env.STRIPE_PRO_PRICE_ID ||
-      process.env.STRIPE_PROFESSIONAL_PRICE_ID ||
-      'price_pro_placeholder',
+    name: 'Professional',
+    productId: 'prod_Tx8cWpkBV5RP5X',
+    priceId: process.env.STRIPE_PRO_PRICE_ID || 'price_pro_placeholder',
     price: 249,
     features: {
       socialAccounts: 5,
@@ -80,10 +95,42 @@ export const PRODUCTS = {
       support: 'email',
       scheduling: true,
       contentLibrary: true,
+      basicAutomation: true,
     },
   },
+
+  // ── ENTERPRISE ─────────────────────────────────────────────────────────────
+  // prod_Tx8jZd59rVws68 | $249/mo base + $99/mo per additional business
+  // Checkout: two line items — priceId × 1, tierPriceId × (additional locations)
+  enterprise: {
+    name: 'Enterprise',
+    productId: 'prod_Tx8jZd59rVws68',
+    priceId:
+      process.env.STRIPE_ENTERPRISE_PRICE_ID || 'price_enterprise_placeholder',
+    price: 249,
+    // Per-location add-on ($99/mo each additional business)
+    tierPriceId:
+      process.env.STRIPE_ENTERPRISE_TIER_PRICE_ID ||
+      'price_enterprise_tier_placeholder',
+    tierPrice: 99,
+    features: {
+      socialAccounts: -1, // unlimited
+      aiPosts: -1, // unlimited
+      personas: -1, // unlimited
+      analytics: 'enterprise',
+      support: 'dedicated',
+      apiAccess: true,
+      whiteLabel: true,
+      customIntegrations: true,
+      sla: true,
+      multiBusiness: true,
+    },
+  },
+
+  // ── LEGACY (kept for existing subscribers — do not remove or break) ─────────
   growth: {
     name: 'Growth',
+    productId: '',
     priceId:
       process.env.STRIPE_GROWTH_PRICE_ID ||
       process.env.STRIPE_BUSINESS_PRICE_ID ||
@@ -91,7 +138,7 @@ export const PRODUCTS = {
     price: 449,
     features: {
       socialAccounts: 10,
-      aiPosts: -1, // unlimited
+      aiPosts: -1,
       personas: 10,
       analytics: 'advanced',
       support: 'priority',
@@ -104,15 +151,16 @@ export const PRODUCTS = {
   },
   scale: {
     name: 'Scale',
+    productId: '',
     priceId:
       process.env.STRIPE_SCALE_PRICE_ID ||
       process.env.STRIPE_CUSTOM_PRICE_ID ||
       'price_scale_placeholder',
     price: 799,
     features: {
-      socialAccounts: -1, // unlimited
-      aiPosts: -1, // unlimited
-      personas: -1, // unlimited
+      socialAccounts: -1,
+      aiPosts: -1,
+      personas: -1,
       analytics: 'enterprise',
       support: 'dedicated',
       apiAccess: true,
@@ -120,24 +168,6 @@ export const PRODUCTS = {
       customIntegrations: true,
       sla: true,
       onPremise: true,
-    },
-  },
-  // Custom plan — $249 base + $99 per additional business. Contact sales flow.
-  custom: {
-    name: 'Custom',
-    priceId: '', // Contact sales — no direct Stripe checkout
-    price: 249,
-    features: {
-      socialAccounts: -1, // unlimited across businesses
-      aiPosts: -1, // unlimited
-      personas: -1, // unlimited
-      analytics: 'enterprise',
-      support: 'dedicated',
-      apiAccess: true,
-      whiteLabel: true,
-      customIntegrations: true,
-      sla: true,
-      multiBusiness: true,
     },
   },
 };
@@ -152,7 +182,10 @@ export function isStripeBillingReady(): boolean {
 }
 
 export function getProductByPriceId(priceId: string) {
-  return Object.values(PRODUCTS).find(product => product.priceId === priceId);
+  return Object.values(PRODUCTS).find(
+    p =>
+      p.priceId === priceId || ('tierPriceId' in p && p.tierPriceId === priceId)
+  );
 }
 
 export function getProductByName(name: string) {

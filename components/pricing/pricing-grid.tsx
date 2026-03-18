@@ -27,31 +27,37 @@ interface Plan {
 
 const plans: Plan[] = [
   {
+    // prod_Tx8gdIuaNqDMVS — price_1TCO8GGib5mMf28d0W7pYdtY — $49/mo AUD
     name: 'Starter',
     monthlyPrice: '$49',
-    annualPrice: '$39',
-    description: 'Perfect for solo entrepreneurs and small businesses',
+    description:
+      'Everything you need to get started with AI-powered social media marketing',
     features: [
-      '2 social accounts',
-      '30 AI-generated posts/month',
-      'Basic analytics',
-      '1 persona profile',
+      '1 user seat',
+      'Connect up to 3 social platforms',
+      '50 AI-generated posts/month',
+      'AI voice training (up to 30 samples)',
+      'Basic analytics dashboard',
+      'Content calendar & scheduling',
       'Email support',
-      'Smart scheduling',
     ],
     notIncluded: [
       'Content library access',
+      'Persona profiles',
       'Advanced analytics',
       'Team collaboration',
     ],
     ctaLabel: 'Start Free Trial',
   },
   {
+    // prod_Tx8cWpkBV5RP5X — price_1TCNtQGib5mMf28d0AD1agWQ — $99/mo for 2 months
+    // then auto-transitions to price_1SzEKxGib5mMf28dZt4YEcYC ($249/mo)
     // Internal name must stay 'Introductory' for Stripe checkout routing
     name: 'Introductory',
-    displayName: 'Pro (Starter Pack)',
+    displayName: 'Professional (Starter Pack)',
     monthlyPrice: '$99',
-    description: 'Launch offer — full Pro features, then $249/mo',
+    description:
+      'Launch offer — full Professional features for 2 months, then $249/mo',
     features: [
       '5 social media accounts',
       '100 AI-generated posts/month',
@@ -60,7 +66,8 @@ const plans: Plan[] = [
       '3 persona profiles',
       'Smart scheduling',
       'Content library access',
-      'Auto-transitions to Pro after 2 months',
+      'Basic automation',
+      'Auto-transitions to Professional after 2 months',
     ],
     notIncluded: [],
     popular: true,
@@ -68,22 +75,22 @@ const plans: Plan[] = [
     ctaLabel: 'Claim Intro Offer',
   },
   {
+    // prod_Tx8cWpkBV5RP5X — price_1SzEKxGib5mMf28dZt4YEcYC — $249/mo AUD (default)
     name: 'Pro',
+    displayName: 'Professional',
     monthlyPrice: '$249',
     annualPrice: '$199',
-    description: 'Full-featured for professionals and growing teams',
+    description:
+      'The complete AI marketing toolkit for professionals and growing teams',
     features: [
       '5 social media accounts',
       '100 AI-generated posts/month',
       'Professional analytics',
-      'Priority email & chat support',
+      'Email support',
       '3 persona profiles',
-      'Smart scheduling with AI optimisation',
+      'Smart scheduling',
       'Content library access',
-      'Viral pattern analysis',
-      'Custom AI training',
-      'Team collaboration tools',
-      'Brand voice customisation',
+      'Basic automation',
     ],
     notIncluded: [
       'Multiple business locations',
@@ -94,11 +101,13 @@ const plans: Plan[] = [
     ctaLabel: 'Start Free Trial',
   },
   {
-    name: 'Custom',
+    // prod_Tx8jZd59rVws68 — price_1TCOOYGib5mMf28dszIDjxan ($249 base)
+    //                      + price_1TCOOYGib5mMf28dWMxRfEFo ($99/additional business)
+    name: 'Enterprise',
     monthlyPrice: '$249',
-    description: '$249/mo + $99 per additional business location',
+    description: '$249/mo base + $99/mo per additional business location',
     features: [
-      'Everything in Pro',
+      'Everything in Professional',
       'Multiple business locations',
       'Unlimited social accounts',
       'Unlimited AI-generated posts',
