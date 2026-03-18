@@ -109,20 +109,59 @@ export class WebhookHandler {
     }
 
     // Verify signature
-    const verification = signatureVerifier.verify(platform, payload, signature, timestamp);
+    const verification = signatureVerifier.verify(
+      platform,
+      payload,
+      signature,
+      timestamp
+    );
 
     if (!verification.valid) {
-      logger.warn('Invalid webhook signature', { platform, error: verification.error });
-      return { success: false, error: verification.error || 'Invalid signature' };
+      logger.warn('Invalid webhook signature', {
+        platform,
+        error: verification.error,
+      });
+      return {
+        success: false,
+        error: verification.error || 'Invalid signature',
+      };
     }
 
     // Parse payload
     let data: Record<string, unknown>;
     try {
-      data = typeof payload === 'string' ? JSON.parse(payload) : JSON.parse(payload.toString());
+      data =
+        typeof payload === 'string'
+          ? JSON.parse(payload)
+          : JSON.parse(payload.toString());
     } catch {
       logger.error('Invalid webhook payload', { platform });
       return { success: false, error: 'Invalid JSON payload' };
+    }
+
+    // Idempotency check: same as receive() — prevents duplicate processing on
+    // Stripe retries in serverless environments (Vercel re-invokes on timeout).
+    const payloadStr =
+      typeof payload === 'string' ? payload : payload.toString();
+    const payloadHash = createHash('sha256').update(payloadStr).digest('hex');
+    const idempotencyKey = `webhook:idem:${platform}:${payloadHash}`;
+    try {
+      const redis = getRedisClient();
+      if (redis.isConnected) {
+        const existing = await redis.get(idempotencyKey);
+        if (existing) {
+          logger.info('Duplicate webhook delivery detected, skipping', {
+            platform,
+            existingEventId: existing,
+          });
+          return { success: true, eventId: existing };
+        }
+      }
+    } catch (idempotencyError) {
+      // Non-fatal: if Redis is down, proceed without idempotency check
+      logger.warn('Idempotency check failed, proceeding anyway', {
+        idempotencyError,
+      });
     }
 
     // Determine event type from payload
@@ -169,6 +208,16 @@ export class WebhookHandler {
       // The error is already logged above.
     }
 
+    // Store idempotency key after processing so Stripe retries are deduplicated
+    try {
+      const redis = getRedisClient();
+      if (redis.isConnected) {
+        await redis.set(idempotencyKey, eventId, 86400); // 24h TTL
+      }
+    } catch (idempotencyError) {
+      logger.warn('Failed to store idempotency key', { idempotencyError });
+    }
+
     return { success: true, eventId };
   }
 
@@ -193,10 +242,18 @@ export class WebhookHandler {
     }
 
     // Verify signature
-    const verification = signatureVerifier.verify(platform, payload, signature, timestamp);
+    const verification = signatureVerifier.verify(
+      platform,
+      payload,
+      signature,
+      timestamp
+    );
 
     if (!verification.valid) {
-      logger.warn('Invalid webhook signature', { platform, error: verification.error });
+      logger.warn('Invalid webhook signature', {
+        platform,
+        error: verification.error,
+      });
 
       // Log signature failure as security audit event
       try {
@@ -219,12 +276,16 @@ export class WebhookHandler {
         logger.error('Failed to log webhook signature failure', { auditError });
       }
 
-      return { success: false, error: verification.error || 'Invalid signature' };
+      return {
+        success: false,
+        error: verification.error || 'Invalid signature',
+      };
     }
 
     // Parse payload
     let data: Record<string, unknown>;
-    const payloadStr = typeof payload === 'string' ? payload : payload.toString();
+    const payloadStr =
+      typeof payload === 'string' ? payload : payload.toString();
     try {
       data = JSON.parse(payloadStr);
     } catch {
@@ -250,7 +311,9 @@ export class WebhookHandler {
       }
     } catch (idempotencyError) {
       // Non-fatal: if Redis is down, proceed without idempotency check
-      logger.warn('Idempotency check failed, proceeding anyway', { idempotencyError });
+      logger.warn('Idempotency check failed, proceeding anyway', {
+        idempotencyError,
+      });
     }
 
     // Determine event type from payload
@@ -350,19 +413,26 @@ export class WebhookHandler {
 
       for (const chunk of chunks) {
         await Promise.all(
-          chunk.map(async (queuedEvent) => {
+          chunk.map(async queuedEvent => {
             try {
               await this.processEvent(queuedEvent.event);
               await eventQueue.acknowledge(queuedEvent);
             } catch (error) {
-              const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+              const errorMessage =
+                error instanceof Error ? error.message : 'Unknown error';
 
               if (retryManager.shouldRetry(queuedEvent.event.id)) {
                 const delay = retryManager.getRetryDelay(queuedEvent.event.id);
-                await retryManager.recordFailure(queuedEvent.event.id, errorMessage);
+                await retryManager.recordFailure(
+                  queuedEvent.event.id,
+                  errorMessage
+                );
                 await eventQueue.requeue(queuedEvent, delay);
               } else {
-                await retryManager.moveToDeadLetter(queuedEvent.event, errorMessage);
+                await retryManager.moveToDeadLetter(
+                  queuedEvent.event,
+                  errorMessage
+                );
                 await eventQueue.acknowledge(queuedEvent);
               }
             }
@@ -395,14 +465,14 @@ export class WebhookHandler {
 
     // Run all handlers
     const results = await Promise.allSettled(
-      handlers.map((handler) => handler(event))
+      handlers.map(handler => handler(event))
     );
 
     // Check for failures
-    const failures = results.filter((r) => r.status === 'rejected');
+    const failures = results.filter(r => r.status === 'rejected');
 
     if (failures.length > 0) {
-      const errors = failures.map((f) => (f as PromiseRejectedResult).reason);
+      const errors = failures.map(f => (f as PromiseRejectedResult).reason);
       logger.error('Some handlers failed', { eventId: event.id, errors });
       throw new Error(`${failures.length} handlers failed`);
     }
@@ -445,7 +515,10 @@ export class WebhookHandler {
       });
     } catch (error) {
       // Non-fatal: don't fail the webhook if audit logging fails
-      logger.error('Failed to log webhook event to audit trail', { error, eventId });
+      logger.error('Failed to log webhook event to audit trail', {
+        error,
+        eventId,
+      });
     }
   }
 
@@ -530,13 +603,15 @@ export class WebhookHandler {
       case 'stripe':
         return this.parseStripeEventType(data);
       case 'internal':
-        return data.type as WebhookEventType || null;
+        return (data.type as WebhookEventType) || null;
       default:
         return null;
     }
   }
 
-  private parseTwitterEventType(data: Record<string, unknown>): WebhookEventType | null {
+  private parseTwitterEventType(
+    data: Record<string, unknown>
+  ): WebhookEventType | null {
     if (data.tweet_create_events) return 'post.created';
     if (data.favorite_events) return 'engagement.like';
     if (data.follow_events) return 'follower.gained';
@@ -545,8 +620,12 @@ export class WebhookHandler {
     return null;
   }
 
-  private parseMetaEventType(data: Record<string, unknown>): WebhookEventType | null {
-    const entry = (data.entry as Array<{ changes?: Array<{ field: string }> }>)?.[0];
+  private parseMetaEventType(
+    data: Record<string, unknown>
+  ): WebhookEventType | null {
+    const entry = (
+      data.entry as Array<{ changes?: Array<{ field: string }> }>
+    )?.[0];
     const change = entry?.changes?.[0];
 
     if (!change) return null;
@@ -572,7 +651,9 @@ export class WebhookHandler {
     }
   }
 
-  private parseTikTokEventType(data: Record<string, unknown>): WebhookEventType | null {
+  private parseTikTokEventType(
+    data: Record<string, unknown>
+  ): WebhookEventType | null {
     const eventType = data.event as string;
 
     switch (eventType) {
@@ -597,7 +678,9 @@ export class WebhookHandler {
     }
   }
 
-  private parseLinkedInEventType(data: Record<string, unknown>): WebhookEventType | null {
+  private parseLinkedInEventType(
+    data: Record<string, unknown>
+  ): WebhookEventType | null {
     // LinkedIn sends eventType at the top level
     const eventType = data.eventType as string;
 
@@ -632,8 +715,10 @@ export class WebhookHandler {
     return null;
   }
 
-  private parsePinterestEventType(data: Record<string, unknown>): WebhookEventType | null {
-    const eventType = data.event_type as string || data.type as string;
+  private parsePinterestEventType(
+    data: Record<string, unknown>
+  ): WebhookEventType | null {
+    const eventType = (data.event_type as string) || (data.type as string);
 
     switch (eventType) {
       case 'pin.created':
@@ -661,9 +746,11 @@ export class WebhookHandler {
     }
   }
 
-  private parseYouTubeEventType(data: Record<string, unknown>): WebhookEventType | null {
+  private parseYouTubeEventType(
+    data: Record<string, unknown>
+  ): WebhookEventType | null {
     // YouTube PubSubHubbub / Push notifications
-    const eventType = data.eventType as string || data.type as string;
+    const eventType = (data.eventType as string) || (data.type as string);
 
     // YouTube Data API push notifications
     if (data.feed) {
@@ -697,8 +784,10 @@ export class WebhookHandler {
     }
   }
 
-  private parseRedditEventType(data: Record<string, unknown>): WebhookEventType | null {
-    const eventType = data.event_type as string || data.type as string;
+  private parseRedditEventType(
+    data: Record<string, unknown>
+  ): WebhookEventType | null {
+    const eventType = (data.event_type as string) || (data.type as string);
 
     switch (eventType) {
       case 'post.created':
@@ -724,7 +813,9 @@ export class WebhookHandler {
     }
   }
 
-  private parseStripeEventType(data: Record<string, unknown>): WebhookEventType | null {
+  private parseStripeEventType(
+    data: Record<string, unknown>
+  ): WebhookEventType | null {
     const type = data.type as string;
 
     if (type?.startsWith('customer.subscription')) {
@@ -758,7 +849,8 @@ export class WebhookHandler {
       case 'internal':
         return data.userId as string | undefined;
       case 'stripe':
-        return (data.data as { object?: { customer?: string } })?.object?.customer;
+        return (data.data as { object?: { customer?: string } })?.object
+          ?.customer;
       case 'twitter':
         return (data.for_user_id as string) || undefined;
       case 'facebook':
@@ -770,9 +862,15 @@ export class WebhookHandler {
       case 'linkedin':
         return (data.organizationUrn as string)?.split(':').pop() || undefined;
       case 'tiktok':
-        return (data.user_id as string) || (data.open_id as string) || undefined;
+        return (
+          (data.user_id as string) || (data.open_id as string) || undefined
+        );
       case 'pinterest':
-        return (data.user_id as string) || (data.advertiser_id as string) || undefined;
+        return (
+          (data.user_id as string) ||
+          (data.advertiser_id as string) ||
+          undefined
+        );
       case 'youtube':
         return (data.channel_id as string) || undefined;
       case 'reddit':
