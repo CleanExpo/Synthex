@@ -64,9 +64,9 @@ export async function POST(req: NextRequest) {
     industry = partial?.industry || industry;
     heroCopy = (partialAny?.['heroCopy'] as string) || '';
   } catch (err) {
-    logger.warn(
+    logger.error(
       '[brand-dna/extract] Partial scrape failed, using defaults',
-      err instanceof Error ? err : undefined
+      err
     );
   }
 

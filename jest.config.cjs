@@ -2,6 +2,7 @@ module.exports = {
   preset: 'ts-jest',
   testEnvironment: 'jsdom',
   setupFiles: ['<rootDir>/tests/jest.setup.js'],
+  setupFilesAfterEnv: ['@testing-library/jest-dom'],
 
   // Test file patterns
   testMatch: [
