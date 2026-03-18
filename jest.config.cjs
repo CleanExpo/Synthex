@@ -5,19 +5,19 @@ module.exports = {
 
   // Test file patterns
   testMatch: [
-    '<rootDir>/tests/unit/**/*.test.{ts,js}',
-    '<rootDir>/tests/unit/**/*.spec.{ts,js}',
-    '<rootDir>/tests/integration/**/*.test.{ts,js}',
-    '<rootDir>/tests/integration/**/*.spec.{ts,js}',
-    '<rootDir>/tests/contract/**/*.test.{ts,js}',
-    '<rootDir>/tests/contract/**/*.spec.{ts,js}',
-    '<rootDir>/tests/strategic-marketing/**/*.test.{ts,js}',
-    '<rootDir>/tests/strategic-marketing/**/*.spec.{ts,js}',
-    '<rootDir>/src/**/*.test.{ts,js}',
-    '<rootDir>/src/**/*.spec.{ts,js}',
-    '<rootDir>/src/**/__tests__/**/*.{ts,js}',
-    '<rootDir>/__tests__/**/*.test.{ts,js}',
-    '<rootDir>/__tests__/**/*.spec.{ts,js}'
+    '<rootDir>/tests/unit/**/*.test.{ts,tsx,js}',
+    '<rootDir>/tests/unit/**/*.spec.{ts,tsx,js}',
+    '<rootDir>/tests/integration/**/*.test.{ts,tsx,js}',
+    '<rootDir>/tests/integration/**/*.spec.{ts,tsx,js}',
+    '<rootDir>/tests/contract/**/*.test.{ts,tsx,js}',
+    '<rootDir>/tests/contract/**/*.spec.{ts,tsx,js}',
+    '<rootDir>/tests/strategic-marketing/**/*.test.{ts,tsx,js}',
+    '<rootDir>/tests/strategic-marketing/**/*.spec.{ts,tsx,js}',
+    '<rootDir>/src/**/*.test.{ts,tsx,js}',
+    '<rootDir>/src/**/*.spec.{ts,tsx,js}',
+    '<rootDir>/src/**/__tests__/**/*.{ts,tsx,js}',
+    '<rootDir>/__tests__/**/*.test.{ts,tsx,js}',
+    '<rootDir>/__tests__/**/*.spec.{ts,tsx,js}',
   ],
 
   // Coverage configuration
@@ -28,16 +28,11 @@ module.exports = {
     '!src/index-legacy.ts',
     '!src/testing/**',
     '!**/node_modules/**',
-    '!**/dist/**'
+    '!**/dist/**',
   ],
 
   coverageDirectory: 'coverage',
-  coverageReporters: [
-    'text',
-    'lcov',
-    'html',
-    'json'
-  ],
+  coverageReporters: ['text', 'lcov', 'html', 'json'],
 
   // Coverage thresholds
   // Current: ~4% | Target: 30% by end of Phase 2
@@ -47,15 +42,15 @@ module.exports = {
       branches: 3,
       functions: 4,
       lines: 4,
-      statements: 4
-    }
+      statements: 4,
+    },
   },
 
   // Module resolution
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json'],
   transform: {
-    '^.+\\.(ts|tsx)$': ['ts-jest', { tsconfig: 'tsconfig.json' }],
-    '^.+\\.(js|jsx)$': 'babel-jest'
+    '^.+\\.(ts|tsx)$': ['ts-jest', { tsconfig: { jsx: 'react-jsx' } }],
+    '^.+\\.(js|jsx)$': 'babel-jest',
   },
 
   // Test timeout
@@ -79,7 +74,7 @@ module.exports = {
     '^@/types/(.*)$': '<rootDir>/types/$1',
     '^@/(.*)$': '<rootDir>/$1',
     // Mock ESM modules that Jest can't transform
-    '^bullmq$': '<rootDir>/tests/__mocks__/bullmq.js'
+    '^bullmq$': '<rootDir>/tests/__mocks__/bullmq.js',
   },
 
   // Ignore patterns
@@ -90,7 +85,7 @@ module.exports = {
     '/tests/e2e/',
     '/tests/playwright/',
     // Temporarily ignore ESM test files that need migration
-    'src/tests/optimizers.test.js'
+    'src/tests/optimizers.test.js',
   ],
 
   // Reporter configuration
@@ -105,20 +100,20 @@ module.exports = {
         uniqueOutputName: 'false',
         suiteNameTemplate: '{filepath}',
         classNameTemplate: '{classname}',
-        titleTemplate: '{title}'
-      }
-    ]
+        titleTemplate: '{title}',
+      },
+    ],
   ],
 
   // Watch plugins
   watchPlugins: [
     'jest-watch-typeahead/filename',
-    'jest-watch-typeahead/testname'
+    'jest-watch-typeahead/testname',
   ],
 
   // Force exit after tests complete
   forceExit: true,
 
   // Detect open handles
-  detectOpenHandles: true
+  detectOpenHandles: true,
 };
