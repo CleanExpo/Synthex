@@ -534,6 +534,12 @@ model Organization {
   // Brand DNA relation
   brandDna        BrandDNA?
 
+  // Tasks (org-scoped)
+  tasks Task[] @relation("OrganizationTasks")
+
+  // GEO Research Reports (org-scoped)
+  geoResearchReports GEOResearchReport[] @relation("OrganizationGEOReports")
+
   // Stickiness — streak tracking
   streakCount     Int      @default(0)
   lastApprovedAt  DateTime?
@@ -1203,12 +1209,17 @@ model Task {
   assigneeId String? @map("assignee_id")
   campaignId String? @map("campaign_id")
 
+  // Organisation (multi-tenant)
+  organizationId String?       @map("organization_id")
+  organization   Organization? @relation("OrganizationTasks", fields: [organizationId], references: [id], onDelete: SetNull)
+
   createdAt   DateTime  @default(now()) @map("created_at")
   updatedAt   DateTime  @updatedAt @map("updated_at")
   completedAt DateTime? @map("completed_at")
 
   // Performance indices for common queries
   @@index([userId])
+  @@index([organizationId])
   @@index([status])
   @@index([priority])
   @@index([dueDate])
@@ -2641,10 +2652,15 @@ model GEOResearchReport {
   createdAt   DateTime  @default(now()) @map("created_at")
   updatedAt   DateTime  @updatedAt @map("updated_at")
 
+  // Organisation (multi-tenant)
+  organizationId String?       @map("organization_id")
+  organization   Organization? @relation("OrganizationGEOReports", fields: [organizationId], references: [id], onDelete: SetNull)
+
   // Relations
   visuals VisualAsset[]
 
   @@index([userId])
+  @@index([organizationId])
   @@index([status])
   @@map("geo_research_reports")
 }

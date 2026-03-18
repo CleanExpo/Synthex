@@ -17,12 +17,10 @@ import { Prisma } from '@prisma/client';
 import prisma from '@/lib/prisma';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { logger } from '@/lib/logger';
-
-// NOTE (SYN-392): The GEOResearchReport model has no organisationId column —
-// org-scoped queries require a schema migration to add that column to the
-// geo_research_reports table. All queries are scoped to userId, which correctly
-// prevents cross-user data access. The slug uniqueness check (findUnique by slug)
-// is index-only and poses no cross-tenant risk.
+import {
+  getEffectiveQueryFilter,
+  getEffectiveOrganizationId,
+} from '@/lib/multi-business/business-scope';
 
 const createReportSchema = z.object({
   title: z.string().min(5).max(200),
@@ -69,7 +67,9 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const status = searchParams.get('status');
 
-    const where: Prisma.GEOResearchReportWhereInput = { userId };
+    // Org-scoped for multi-business owners (SYN-392)
+    const scopeFilter = await getEffectiveQueryFilter(userId);
+    const where: Prisma.GEOResearchReportWhereInput = { ...scopeFilter };
     if (status) where.status = status;
 
     const reports = await prisma.gEOResearchReport.findMany({
@@ -117,9 +117,13 @@ export async function POST(request: NextRequest) {
       slug = `${slug}-${Date.now().toString(36)}`;
     }
 
+    // Capture org context when creating (SYN-392)
+    const organizationId = await getEffectiveOrganizationId(userId);
+
     const report = await prisma.gEOResearchReport.create({
       data: {
         userId,
+        organizationId: organizationId ?? undefined,
         title: data.title,
         slug,
         status: 'draft',

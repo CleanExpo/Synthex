@@ -85,12 +85,10 @@ const updateTaskSchema = updateTaskFieldsSchema.extend({
 
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { logger } from '@/lib/logger';
-
-// NOTE (SYN-391): The Task model has no organisationId column — org-scoped
-// queries require a schema migration to add that column to the tasks table.
-// All queries here are scoped to userId, which correctly prevents cross-user
-// data access. The analytics and campaign routes (which do have organisationId)
-// use getEffectiveQueryFilter for full org scoping.
+import {
+  getEffectiveQueryFilter,
+  getEffectiveOrganizationId,
+} from '@/lib/multi-business/business-scope';
 
 // =============================================================================
 // GET - List Tasks
@@ -124,8 +122,9 @@ export async function GET(request: NextRequest) {
       validation.data;
     const skip = (page - 1) * limit;
 
-    // Build where clause
-    const where: Record<string, unknown> = { userId };
+    // Build where clause — org-scoped for multi-business owners (SYN-391)
+    const scopeFilter = await getEffectiveQueryFilter(userId);
+    const where: Record<string, unknown> = { ...scopeFilter };
 
     if (status !== 'all') {
       where.status = status;
@@ -194,9 +193,13 @@ export async function POST(request: NextRequest) {
 
     const data = validation.data;
 
-    // Get max order for positioning
+    // Get org context for new task (SYN-391)
+    const organizationId = await getEffectiveOrganizationId(userId);
+
+    // Get max order for positioning within the same scope
+    const scopeFilter = await getEffectiveQueryFilter(userId);
     const maxOrder = await prisma.task.aggregate({
-      where: { userId, status: data.status },
+      where: { ...scopeFilter, status: data.status },
       _max: { order: true },
     });
 
@@ -204,6 +207,7 @@ export async function POST(request: NextRequest) {
       data: {
         ...data,
         userId,
+        organizationId: organizationId ?? undefined,
         dueDate: data.dueDate ? new Date(data.dueDate) : null,
         order: data.order ?? (maxOrder._max.order ?? 0) + 1,
       },
