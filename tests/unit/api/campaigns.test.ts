@@ -39,6 +39,16 @@ jest.mock('@/lib/multi-business/business-scope', () => ({
     mockGetEffectiveOrganizationId(...args),
 }));
 
+// Mock Redis — prevent in-memory cache from bleeding between tests
+jest.mock('@/lib/redis-client', () => ({
+  getRedisClient: () => ({
+    get: jest.fn().mockResolvedValue(null),
+    set: jest.fn().mockResolvedValue(undefined),
+    del: jest.fn().mockResolvedValue(0),
+    keys: jest.fn().mockResolvedValue([]),
+  }),
+}));
+
 // Mock auth
 const mockGetUserIdFromRequestOrCookies = jest.fn();
 jest.mock('@/lib/auth/jwt-utils', () => ({

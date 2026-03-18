@@ -32,12 +32,23 @@ const mockCreateSecureResponse = jest.fn((body: unknown, status: number) => {
 jest.mock('@/lib/security/api-security-checker', () => ({
   APISecurityChecker: {
     check: (...args: unknown[]) => mockSecurityCheck(...args),
-    createSecureResponse: (...args: unknown[]) => mockCreateSecureResponse(...args),
+    createSecureResponse: (...args: unknown[]) =>
+      mockCreateSecureResponse(...args),
   },
   DEFAULT_POLICIES: {
     AUTHENTICATED_READ: { requireAuth: true, allowRead: true },
     AUTHENTICATED_WRITE: { requireAuth: true, allowWrite: true },
   },
+}));
+
+// Mock Redis — prevent in-memory cache from bleeding between tests
+jest.mock('@/lib/redis-client', () => ({
+  getRedisClient: () => ({
+    get: jest.fn().mockResolvedValue(null),
+    set: jest.fn().mockResolvedValue(undefined),
+    del: jest.fn().mockResolvedValue(0),
+    keys: jest.fn().mockResolvedValue([]),
+  }),
 }));
 
 // Mock WebSocket notification channel
@@ -90,8 +101,24 @@ describe('Notifications API - /api/notifications', () => {
       });
 
       const mockNotifications = [
-        { id: 'n1', type: 'info', title: 'Welcome', message: 'Hello!', read: false, data: null, createdAt: new Date() },
-        { id: 'n2', type: 'success', title: 'Posted', message: 'Content published', read: true, data: null, createdAt: new Date() },
+        {
+          id: 'n1',
+          type: 'info',
+          title: 'Welcome',
+          message: 'Hello!',
+          read: false,
+          data: null,
+          createdAt: new Date(),
+        },
+        {
+          id: 'n2',
+          type: 'success',
+          title: 'Posted',
+          message: 'Content published',
+          read: true,
+          data: null,
+          createdAt: new Date(),
+        },
       ];
 
       mockPrisma.notification.findMany.mockResolvedValue(mockNotifications);
@@ -135,7 +162,10 @@ describe('Notifications API - /api/notifications', () => {
       mockPrisma.notification.findMany.mockResolvedValue([]);
       mockPrisma.notification.count.mockResolvedValue(0);
 
-      const req = createRequest('GET', 'http://localhost:3000/api/notifications?unreadOnly=true');
+      const req = createRequest(
+        'GET',
+        'http://localhost:3000/api/notifications?unreadOnly=true'
+      );
       await GET(req);
 
       expect(mockPrisma.notification.findMany).toHaveBeenCalledWith(
@@ -154,7 +184,10 @@ describe('Notifications API - /api/notifications', () => {
       mockPrisma.notification.findMany.mockResolvedValue([]);
       mockPrisma.notification.count.mockResolvedValue(0);
 
-      const req = createRequest('GET', 'http://localhost:3000/api/notifications?limit=10&offset=20');
+      const req = createRequest(
+        'GET',
+        'http://localhost:3000/api/notifications?limit=10&offset=20'
+      );
       await GET(req);
 
       expect(mockPrisma.notification.findMany).toHaveBeenCalledWith(
@@ -174,7 +207,10 @@ describe('Notifications API - /api/notifications', () => {
       mockPrisma.notification.findMany.mockResolvedValue([]);
       mockPrisma.notification.count.mockResolvedValue(0);
 
-      const req = createRequest('GET', 'http://localhost:3000/api/notifications?limit=500');
+      const req = createRequest(
+        'GET',
+        'http://localhost:3000/api/notifications?limit=500'
+      );
       await GET(req);
 
       expect(mockPrisma.notification.findMany).toHaveBeenCalledWith(
@@ -190,7 +226,9 @@ describe('Notifications API - /api/notifications', () => {
         context: { userId: 'user-123' },
       });
 
-      mockPrisma.notification.findMany.mockRejectedValue(new Error('DB failure'));
+      mockPrisma.notification.findMany.mockRejectedValue(
+        new Error('DB failure')
+      );
 
       const req = createRequest('GET');
       await GET(req);
@@ -214,11 +252,15 @@ describe('Notifications API - /api/notifications', () => {
         context: {},
       });
 
-      const req = createRequest('POST', 'http://localhost:3000/api/notifications', {
-        type: 'info',
-        title: 'Test',
-        message: 'Test message',
-      });
+      const req = createRequest(
+        'POST',
+        'http://localhost:3000/api/notifications',
+        {
+          type: 'info',
+          title: 'Test',
+          message: 'Test message',
+        }
+      );
       await POST(req);
 
       expect(mockCreateSecureResponse).toHaveBeenCalledWith(
@@ -245,11 +287,15 @@ describe('Notifications API - /api/notifications', () => {
       };
       mockPrisma.notification.create.mockResolvedValue(mockNotification);
 
-      const req = createRequest('POST', 'http://localhost:3000/api/notifications', {
-        type: 'info',
-        title: 'Test',
-        message: 'Test message',
-      });
+      const req = createRequest(
+        'POST',
+        'http://localhost:3000/api/notifications',
+        {
+          type: 'info',
+          title: 'Test',
+          message: 'Test message',
+        }
+      );
       await POST(req);
 
       expect(mockPrisma.notification.create).toHaveBeenCalledWith(
@@ -279,12 +325,16 @@ describe('Notifications API - /api/notifications', () => {
         context: { userId: 'user-123', userRole: 'user' },
       });
 
-      const req = createRequest('POST', 'http://localhost:3000/api/notifications', {
-        type: 'info',
-        title: 'Test',
-        message: 'Test',
-        userId: otherUserCuid,
-      });
+      const req = createRequest(
+        'POST',
+        'http://localhost:3000/api/notifications',
+        {
+          type: 'info',
+          title: 'Test',
+          message: 'Test',
+          userId: otherUserCuid,
+        }
+      );
       await POST(req);
 
       expect(mockCreateSecureResponse).toHaveBeenCalledWith(
@@ -312,12 +362,16 @@ describe('Notifications API - /api/notifications', () => {
         createdAt: new Date(),
       });
 
-      const req = createRequest('POST', 'http://localhost:3000/api/notifications', {
-        type: 'warning',
-        title: 'Admin Notice',
-        message: 'System update',
-        userId: otherUserCuid,
-      });
+      const req = createRequest(
+        'POST',
+        'http://localhost:3000/api/notifications',
+        {
+          type: 'warning',
+          title: 'Admin Notice',
+          message: 'System update',
+          userId: otherUserCuid,
+        }
+      );
       await POST(req);
 
       expect(mockPrisma.notification.create).toHaveBeenCalledWith(
@@ -335,11 +389,15 @@ describe('Notifications API - /api/notifications', () => {
         context: { userId: 'user-123', userRole: 'user' },
       });
 
-      const req = createRequest('POST', 'http://localhost:3000/api/notifications', {
-        type: 'invalid-type',
-        title: 'Test',
-        message: 'Test',
-      });
+      const req = createRequest(
+        'POST',
+        'http://localhost:3000/api/notifications',
+        {
+          type: 'invalid-type',
+          title: 'Test',
+          message: 'Test',
+        }
+      );
       await POST(req);
 
       expect(mockCreateSecureResponse).toHaveBeenCalledWith(
@@ -355,11 +413,15 @@ describe('Notifications API - /api/notifications', () => {
         context: { userId: 'user-123', userRole: 'user' },
       });
 
-      const req = createRequest('POST', 'http://localhost:3000/api/notifications', {
-        type: 'info',
-        title: '',
-        message: 'Test',
-      });
+      const req = createRequest(
+        'POST',
+        'http://localhost:3000/api/notifications',
+        {
+          type: 'info',
+          title: '',
+          message: 'Test',
+        }
+      );
       await POST(req);
 
       expect(mockCreateSecureResponse).toHaveBeenCalledWith(
@@ -375,13 +437,19 @@ describe('Notifications API - /api/notifications', () => {
         context: { userId: 'user-123', userRole: 'user' },
       });
 
-      mockPrisma.notification.create.mockRejectedValue(new Error('DB write error'));
+      mockPrisma.notification.create.mockRejectedValue(
+        new Error('DB write error')
+      );
 
-      const req = createRequest('POST', 'http://localhost:3000/api/notifications', {
-        type: 'info',
-        title: 'Test',
-        message: 'Test message',
-      });
+      const req = createRequest(
+        'POST',
+        'http://localhost:3000/api/notifications',
+        {
+          type: 'info',
+          title: 'Test',
+          message: 'Test message',
+        }
+      );
       await POST(req);
 
       expect(mockCreateSecureResponse).toHaveBeenCalledWith(
