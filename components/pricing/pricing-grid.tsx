@@ -11,6 +11,7 @@ type BillingCycle = 'monthly' | 'annual';
 
 interface Plan {
   name: string;
+  displayName?: string;
   monthlyPrice: string;
   annualPrice?: string;
   description: string;
@@ -27,23 +28,30 @@ interface Plan {
 const plans: Plan[] = [
   {
     name: 'Starter',
-    monthlyPrice: 'Free',
-    description: '14-day trial — no credit card required',
+    monthlyPrice: '$49',
+    annualPrice: '$39',
+    description: 'Perfect for solo entrepreneurs and small businesses',
     features: [
       '2 social accounts',
-      '10 AI posts/month',
+      '30 AI-generated posts/month',
       'Basic analytics',
       '1 persona profile',
+      'Email support',
+      'Smart scheduling',
     ],
-    notIncluded: [],
-    isFree: true,
+    notIncluded: [
+      'Content library access',
+      'Advanced analytics',
+      'Team collaboration',
+    ],
     ctaLabel: 'Start Free Trial',
-    ctaHref: '/signup',
   },
   {
+    // Internal name must stay 'Introductory' for Stripe checkout routing
     name: 'Introductory',
+    displayName: 'Pro (Starter Pack)',
     monthlyPrice: '$99',
-    description: 'Launch offer — full Agency features, then $249/mo',
+    description: 'Launch offer — full Pro features, then $249/mo',
     features: [
       '5 social media accounts',
       '100 AI-generated posts/month',
@@ -52,7 +60,7 @@ const plans: Plan[] = [
       '3 persona profiles',
       'Smart scheduling',
       'Content library access',
-      'Auto-transitions to Agency after 2 months',
+      'Auto-transitions to Pro after 2 months',
     ],
     notIncluded: [],
     popular: true,
@@ -63,75 +71,50 @@ const plans: Plan[] = [
     name: 'Pro',
     monthlyPrice: '$249',
     annualPrice: '$199',
-    description: 'Perfect for professionals and content creators',
+    description: 'Full-featured for professionals and growing teams',
     features: [
       '5 social media accounts',
       '100 AI-generated posts/month',
       'Professional analytics',
-      'Email support',
-      '3 persona profiles',
-      'Smart scheduling',
-      'Content library access',
-      'Basic automation',
-    ],
-    notIncluded: [
-      'Advanced pattern analysis',
-      'Custom AI training',
-      'Team collaboration',
-      'Priority support',
-    ],
-    ctaLabel: 'Start Free Trial',
-  },
-  {
-    name: 'Growth',
-    monthlyPrice: '$449',
-    annualPrice: '$359',
-    description: 'For businesses and marketing teams',
-    features: [
-      '10 social media accounts',
-      'Unlimited AI-generated posts',
-      'Advanced analytics & insights',
       'Priority email & chat support',
-      '10 persona profiles',
+      '3 persona profiles',
       'Smart scheduling with AI optimisation',
+      'Content library access',
       'Viral pattern analysis',
       'Custom AI training',
-      'Competitor analysis',
-      'A/B testing tools',
       'Team collaboration tools',
       'Brand voice customisation',
     ],
     notIncluded: [
+      'Multiple business locations',
       'White-label solution',
       'Dedicated account manager',
       'API access',
     ],
-    popular: true,
     ctaLabel: 'Start Free Trial',
   },
   {
-    name: 'Scale',
-    monthlyPrice: '$799',
-    annualPrice: '$639',
-    description: 'Enterprise solutions tailored to your needs',
+    name: 'Custom',
+    monthlyPrice: '$249',
+    description: '$249/mo + $99 per additional business location',
     features: [
-      'Unlimited social media accounts',
+      'Everything in Pro',
+      'Multiple business locations',
+      'Unlimited social accounts',
       'Unlimited AI-generated posts',
       'Enterprise analytics suite',
       'Dedicated account manager',
       'Unlimited persona profiles',
-      'Custom AI model training',
       'Full API access',
       'White-label solution',
       'SLA guarantee',
       'Custom integrations',
-      'On-premise deployment option',
-      'Advanced security features',
       'Custom workflows',
-      'Priority development',
     ],
     notIncluded: [],
-    ctaLabel: 'Start Free Trial',
+    isCustom: true,
+    ctaLabel: 'Contact Sales',
+    ctaHref: '/contact',
   },
 ];
 
@@ -172,7 +155,9 @@ function PlanCard({ plan, billing }: { plan: Plan; billing: BillingCycle }) {
       )}
 
       <div className="text-center mb-6">
-        <h3 className="text-2xl font-bold text-white mb-2">{plan.name}</h3>
+        <h3 className="text-2xl font-bold text-white mb-2">
+          {plan.displayName ?? plan.name}
+        </h3>
         <div className="mb-2 flex items-baseline justify-center gap-1">
           <span className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-cyan-300">
             {displayPrice}
@@ -286,8 +271,8 @@ export function PricingGrid() {
         </span>
       </div>
 
-      {/* Cards grid — 5 columns */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+      {/* Cards grid — 4 columns */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {plans.map(plan => (
           <PlanCard key={plan.name} plan={plan} billing={billing} />
         ))}

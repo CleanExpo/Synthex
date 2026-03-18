@@ -55,15 +55,14 @@ export const PRODUCTS = {
   starter: {
     name: 'Starter',
     priceId: process.env.STRIPE_STARTER_PRICE_ID || 'price_starter_placeholder',
-    price: 99,
+    price: 49,
     features: {
-      socialAccounts: 3,
-      aiPosts: 50,
+      socialAccounts: 2,
+      aiPosts: 30,
       personas: 1,
       analytics: 'basic',
       support: 'email',
       scheduling: true,
-      byok: true,
     },
   },
   pro: {
@@ -121,6 +120,24 @@ export const PRODUCTS = {
       customIntegrations: true,
       sla: true,
       onPremise: true,
+    },
+  },
+  // Custom plan — $249 base + $99 per additional business. Contact sales flow.
+  custom: {
+    name: 'Custom',
+    priceId: '', // Contact sales — no direct Stripe checkout
+    price: 249,
+    features: {
+      socialAccounts: -1, // unlimited across businesses
+      aiPosts: -1, // unlimited
+      personas: -1, // unlimited
+      analytics: 'enterprise',
+      support: 'dedicated',
+      apiAccess: true,
+      whiteLabel: true,
+      customIntegrations: true,
+      sla: true,
+      multiBusiness: true,
     },
   },
 };
