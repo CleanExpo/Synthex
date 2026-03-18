@@ -3,7 +3,7 @@
  * Comprehensive design system with accessibility-first approach
  * WCAG 2.1 AA compliant color contrasts
  * Professional, non-AI aesthetic
- * 
+ *
  * @version 1.0.0
  * @author Synthex Design Team
  */
@@ -19,17 +19,17 @@
 export const colors = {
   // Primary brand colors - Professional deep navy
   primary: {
-    50: '#EEF2FF',   // Lightest - for backgrounds
-    100: '#E0E7FF',  // Very light
-    200: '#C7D2FE',  // Light
-    300: '#A5B4FC',  // Medium light
-    400: '#818CF8',  // Medium
-    500: '#6366F1',  // Base primary (Indigo 500)
-    600: '#4F46E5',  // Dark - AA compliant on white
-    700: '#4338CA',  // Darker - AAA compliant on white
-    800: '#3730A3',  // Very dark
-    900: '#312E81',  // Darkest - for text on light
-    950: '#1E1B4B',  // Deepest
+    50: '#EEF2FF', // Lightest - for backgrounds
+    100: '#E0E7FF', // Very light
+    200: '#C7D2FE', // Light
+    300: '#A5B4FC', // Medium light
+    400: '#818CF8', // Medium
+    500: '#6366F1', // Base primary (Indigo 500)
+    600: '#4F46E5', // Dark - AA compliant on white
+    700: '#4338CA', // Darker - AAA compliant on white
+    800: '#3730A3', // Very dark
+    900: '#312E81', // Darkest - for text on light
+    950: '#1E1B4B', // Deepest
   },
 
   // Secondary - Warm coral/salmon accent (human, approachable)
@@ -39,9 +39,9 @@ export const colors = {
     200: '#FFC7C7',
     300: '#FFA5A5',
     400: '#FF8181',
-    500: '#F87171',  // Coral red
-    600: '#EF4444',  // Red 500
-    700: '#DC2626',  // AA compliant on white
+    500: '#F87171', // Coral red
+    600: '#EF4444', // Red 500
+    700: '#DC2626', // AA compliant on white
     800: '#B91C1C',
     900: '#991B1B',
     950: '#7F1D1D',
@@ -53,10 +53,10 @@ export const colors = {
     100: '#F5F5F5',
     200: '#E5E5E5',
     300: '#D4D4D4',
-    400: '#A3A3A3',  // Light text on dark
+    400: '#A3A3A3', // Light text on dark
     500: '#737373',
-    600: '#525252',  // Dark text on light - AA compliant
-    700: '#404040',  // Darker text - AAA compliant
+    600: '#525252', // Dark text on light - AA compliant
+    700: '#404040', // Darker text - AAA compliant
     800: '#262626',
     900: '#171717',
     950: '#0A0A0A',
@@ -70,8 +70,8 @@ export const colors = {
     300: '#86EFAC',
     400: '#4ADE80',
     500: '#22C55E',
-    600: '#16A34A',  // AA compliant on white
-    700: '#15803D',  // AAA compliant on white
+    600: '#16A34A', // AA compliant on white
+    700: '#15803D', // AAA compliant on white
     800: '#166534',
     900: '#14532D',
     950: '#052E16',
@@ -85,8 +85,8 @@ export const colors = {
     300: '#FCD34D',
     400: '#FBBF24',
     500: '#F59E0B',
-    600: '#D97706',  // AA compliant on white
-    700: '#B45309',  // AAA compliant on white
+    600: '#D97706', // AA compliant on white
+    700: '#B45309', // AAA compliant on white
     800: '#92400E',
     900: '#78350F',
     950: '#451A03',
@@ -100,8 +100,8 @@ export const colors = {
     300: '#FCA5A5',
     400: '#F87171',
     500: '#EF4444',
-    600: '#DC2626',  // AA compliant on white
-    700: '#B91C1C',  // AAA compliant on white
+    600: '#DC2626', // AA compliant on white
+    700: '#B91C1C', // AAA compliant on white
     800: '#991B1B',
     900: '#7F1D1D',
     950: '#450A0A',
@@ -115,8 +115,8 @@ export const colors = {
     300: '#5EEAD4',
     400: '#2DD4BF',
     500: '#14B8A6',
-    600: '#0D9488',  // AA compliant on white
-    700: '#0F766E',  // AAA compliant on white
+    600: '#0D9488', // AA compliant on white
+    700: '#0F766E', // AAA compliant on white
     800: '#115E59',
     900: '#134E4A',
     950: '#042F2E',
@@ -130,8 +130,8 @@ export const colors = {
     300: '#D8B4FE',
     400: '#C084FC',
     500: '#A855F7',
-    600: '#9333EA',  // AA compliant on white
-    700: '#7C3AED',  // AAA compliant on white
+    600: '#9333EA', // AA compliant on white
+    700: '#7C3AED', // AAA compliant on white
     800: '#6B21A8',
     900: '#581C87',
     950: '#3B0764',
@@ -173,12 +173,12 @@ export const semantic = {
 
   // Text colors with guaranteed contrast ratios
   text: {
-    primary: colors.gray[900],      // #171717 on white = 16.1:1 (AAA)
-    secondary: colors.gray[600],    // #525252 on white = 7.5:1 (AAA)
-    tertiary: colors.gray[500],     // #737373 on white = 4.6:1 (AA)
-    inverse: '#FFFFFF',             // White on dark
-    muted: colors.gray[400],        // #A3A3A3
-    link: colors.primary[600],      // #4F46E5
+    primary: colors.gray[900], // #171717 on white = 16.1:1 (AAA)
+    secondary: colors.gray[600], // #525252 on white = 7.5:1 (AAA)
+    tertiary: colors.gray[500], // #737373 on white = 4.6:1 (AA)
+    inverse: '#FFFFFF', // White on dark
+    muted: colors.gray[400], // #A3A3A3
+    link: colors.primary[600], // #4F46E5
     linkHover: colors.primary[700], // #4338CA
   },
 
@@ -218,7 +218,15 @@ export const semantic = {
 export const typography = {
   // Font families - Professional, readable
   fontFamily: {
-    sans: ['Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+    sans: [
+      'Inter',
+      'system-ui',
+      '-apple-system',
+      'BlinkMacSystemFont',
+      'Segoe UI',
+      'Roboto',
+      'sans-serif',
+    ],
     serif: ['Georgia', 'Cambria', 'Times New Roman', 'serif'],
     mono: ['JetBrains Mono', 'Fira Code', 'Source Code Pro', 'monospace'],
     display: ['Inter', 'system-ui', 'sans-serif'],
@@ -226,16 +234,16 @@ export const typography = {
 
   // Font sizes with responsive scaling
   fontSize: {
-    xs: '0.75rem',      // 12px
-    sm: '0.875rem',     // 14px
-    base: '1rem',       // 16px - base
-    lg: '1.125rem',     // 18px
-    xl: '1.25rem',      // 20px
-    '2xl': '1.5rem',    // 24px
-    '3xl': '1.875rem',  // 30px
-    '4xl': '2.25rem',   // 36px
-    '5xl': '3rem',      // 48px
-    '6xl': '3.75rem',   // 60px
+    xs: '0.75rem', // 12px
+    sm: '0.875rem', // 14px
+    base: '1rem', // 16px - base
+    lg: '1.125rem', // 18px
+    xl: '1.25rem', // 20px
+    '2xl': '1.5rem', // 24px
+    '3xl': '1.875rem', // 30px
+    '4xl': '2.25rem', // 36px
+    '5xl': '3rem', // 48px
+    '6xl': '3.75rem', // 60px
   },
 
   // Line heights
@@ -276,39 +284,39 @@ export const typography = {
 export const spacing = {
   0: '0',
   px: '1px',
-  0.5: '0.125rem',  // 2px
-  1: '0.25rem',     // 4px
-  1.5: '0.375rem',  // 6px
-  2: '0.5rem',      // 8px
-  2.5: '0.625rem',  // 10px
-  3: '0.75rem',     // 12px
-  3.5: '0.875rem',  // 14px
-  4: '1rem',        // 16px
-  5: '1.25rem',     // 20px
-  6: '1.5rem',      // 24px
-  7: '1.75rem',     // 28px
-  8: '2rem',        // 32px
-  9: '2.25rem',     // 36px
-  10: '2.5rem',     // 40px
-  11: '2.75rem',    // 44px
-  12: '3rem',       // 48px
-  14: '3.5rem',     // 56px
-  16: '4rem',       // 64px
-  20: '5rem',       // 80px
-  24: '6rem',       // 96px
-  28: '7rem',       // 112px
-  32: '8rem',       // 128px
-  36: '9rem',       // 144px
-  40: '10rem',      // 160px
-  44: '11rem',      // 176px
-  48: '12rem',      // 192px
-  52: '13rem',      // 208px
-  56: '14rem',      // 224px
-  60: '15rem',      // 240px
-  64: '16rem',      // 256px
-  72: '18rem',      // 288px
-  80: '20rem',      // 320px
-  96: '24rem',      // 384px
+  0.5: '0.125rem', // 2px
+  1: '0.25rem', // 4px
+  1.5: '0.375rem', // 6px
+  2: '0.5rem', // 8px
+  2.5: '0.625rem', // 10px
+  3: '0.75rem', // 12px
+  3.5: '0.875rem', // 14px
+  4: '1rem', // 16px
+  5: '1.25rem', // 20px
+  6: '1.5rem', // 24px
+  7: '1.75rem', // 28px
+  8: '2rem', // 32px
+  9: '2.25rem', // 36px
+  10: '2.5rem', // 40px
+  11: '2.75rem', // 44px
+  12: '3rem', // 48px
+  14: '3.5rem', // 56px
+  16: '4rem', // 64px
+  20: '5rem', // 80px
+  24: '6rem', // 96px
+  28: '7rem', // 112px
+  32: '8rem', // 128px
+  36: '9rem', // 144px
+  40: '10rem', // 160px
+  44: '11rem', // 176px
+  48: '12rem', // 192px
+  52: '13rem', // 208px
+  56: '14rem', // 224px
+  60: '15rem', // 240px
+  64: '16rem', // 256px
+  72: '18rem', // 288px
+  80: '20rem', // 320px
+  96: '24rem', // 384px
 } as const;
 
 // ============================================================================
@@ -317,13 +325,13 @@ export const spacing = {
 
 export const borderRadius = {
   none: '0',
-  sm: '0.125rem',   // 2px
+  sm: '0.125rem', // 2px
   DEFAULT: '0.25rem', // 4px
-  md: '0.375rem',   // 6px
-  lg: '0.5rem',     // 8px
-  xl: '0.75rem',    // 12px
-  '2xl': '1rem',    // 16px
-  '3xl': '1.5rem',  // 24px
+  md: '0.375rem', // 6px
+  lg: '0.5rem', // 8px
+  xl: '0.75rem', // 12px
+  '2xl': '1rem', // 16px
+  '3xl': '1.5rem', // 24px
   full: '9999px',
 } as const;
 
@@ -506,3 +514,39 @@ export const designTokens = {
 } as const;
 
 export default designTokens;
+
+// ============================================================================
+// V11 SURFACE MODE TOKENS
+// Spec: docs/superpowers/specs/2026-03-18-v11-dual-surface-design.md §3–4
+// ============================================================================
+
+/**
+ * Simple Mode — Gunmetal + Champagne Bronze
+ * Target user: SMB owner (café, tradie, salon, gym). Starter plan.
+ */
+export const simpleModeTokens = {
+  background: '#202124',
+  surface: '#2b2d31',
+  accent: '#a8845c',
+  accentSubtle: 'rgba(168,132,92,0.15)',
+  accentBorder: 'rgba(168,132,92,0.35)',
+  textPrimary: '#e8e0d4',
+  textSecondary: 'rgba(232,224,212,0.4)',
+} as const;
+
+/**
+ * Pro Mode — Deep Gunmetal + Amber Gold
+ * Target user: Agency, growth-stage, power user. Pro/Agency plan.
+ */
+export const proModeTokens = {
+  background: '#1c1b1e',
+  surface: '#252428',
+  accent: '#f59e0b',
+  accentSubtle: 'rgba(245,158,11,0.1)',
+  accentBorder: 'rgba(245,158,11,0.2)',
+  textPrimary: 'rgba(255,255,255,0.85)',
+  textSecondary: 'rgba(255,255,255,0.35)',
+  dataHighlight: '#f59e0b',
+} as const;
+
+export type SurfaceMode = 'simple' | 'pro';
