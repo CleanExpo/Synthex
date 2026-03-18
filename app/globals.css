@@ -4,11 +4,26 @@
 @tailwind utilities;
 
 /* Lenis smooth scroll — required classes */
-html.lenis,html.lenis body{height:auto}
-.lenis:not(.lenis-autoToggle).lenis-stopped{overflow:clip}
-.lenis [data-lenis-prevent],.lenis [data-lenis-prevent-wheel],.lenis [data-lenis-prevent-touch]{overscroll-behavior:contain}
-.lenis.lenis-smooth iframe{pointer-events:none}
-.lenis.lenis-autoToggle{transition-property:overflow;transition-duration:1ms;transition-behavior:allow-discrete}
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+.lenis:not(.lenis-autoToggle).lenis-stopped {
+  overflow: clip;
+}
+.lenis [data-lenis-prevent],
+.lenis [data-lenis-prevent-wheel],
+.lenis [data-lenis-prevent-touch] {
+  overscroll-behavior: contain;
+}
+.lenis.lenis-smooth iframe {
+  pointer-events: none;
+}
+.lenis.lenis-autoToggle {
+  transition-property: overflow;
+  transition-duration: 1ms;
+  transition-behavior: allow-discrete;
+}
 
 /* =============================================================================
    SYNTHEX UNIFIED DESIGN SYSTEM v3.0
@@ -76,15 +91,15 @@ html.lenis,html.lenis body{height:auto}
        ========================================================================= */
     /* Glass Background Opacities - INCREASED for visibility */
     --glass-bg-base: rgba(255, 255, 255, 0.06);
-    --glass-bg-elevated: rgba(255, 255, 255, 0.10);
+    --glass-bg-elevated: rgba(255, 255, 255, 0.1);
     --glass-bg-premium: rgba(255, 255, 255, 0.14);
     --glass-bg-solid: rgba(15, 23, 42, 0.85);
 
     /* Glass Border Opacities - INCREASED for definition */
-    --glass-border-subtle: rgba(255, 255, 255, 0.10);
+    --glass-border-subtle: rgba(255, 255, 255, 0.1);
     --glass-border-default: rgba(255, 255, 255, 0.15);
     --glass-border-prominent: rgba(255, 255, 255, 0.25);
-    --glass-border-hover: rgba(255, 255, 255, 0.30);
+    --glass-border-hover: rgba(255, 255, 255, 0.3);
 
     /* Glass Blur Values */
     --glass-blur-sm: 8px;
@@ -100,10 +115,14 @@ html.lenis,html.lenis body{height:auto}
     /* =========================================================================
        GLOW EFFECTS (Using design tokens)
        ========================================================================= */
-    --glow-primary: 0 0 20px rgba(6, 182, 212, 0.3), 0 0 40px rgba(6, 182, 212, 0.1);
-    --glow-primary-lg: 0 0 30px rgba(6, 182, 212, 0.5), 0 0 60px rgba(6, 182, 212, 0.2);
-    --glow-cyan: 0 0 20px rgba(6, 182, 212, 0.3), 0 0 40px rgba(6, 182, 212, 0.1);
-    --glow-amber: 0 0 20px rgba(245, 158, 11, 0.3), 0 0 40px rgba(245, 158, 11, 0.1);
+    --glow-primary:
+      0 0 20px rgba(6, 182, 212, 0.3), 0 0 40px rgba(6, 182, 212, 0.1);
+    --glow-primary-lg:
+      0 0 30px rgba(6, 182, 212, 0.5), 0 0 60px rgba(6, 182, 212, 0.2);
+    --glow-cyan:
+      0 0 20px rgba(6, 182, 212, 0.3), 0 0 40px rgba(6, 182, 212, 0.1);
+    --glow-amber:
+      0 0 20px rgba(245, 158, 11, 0.3), 0 0 40px rgba(245, 158, 11, 0.1);
 
     /* =========================================================================
        TYPOGRAPHY TOKENS
@@ -131,10 +150,42 @@ html.lenis,html.lenis body{height:auto}
        SHADOW SCALE
        ========================================================================= */
     --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-    --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+    --shadow-md:
+      0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    --shadow-lg:
+      0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+    --shadow-xl:
+      0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
     --shadow-2xl: 0 25px 50px -12px rgb(0 0 0 / 0.25);
+  }
+
+  /* =============================================================================
+     V11 SURFACE MODE TOKENS
+     Applied to <body> by ModeProvider — overrides --mode-* custom properties.
+     Spec: docs/superpowers/specs/2026-03-18-v11-dual-surface-design.md §3-4
+     ============================================================================= */
+
+  /* Simple Mode — Gunmetal + Champagne Bronze (Starter plan) */
+  .mode-simple {
+    --mode-bg: #202124;
+    --mode-surface: #2b2d31;
+    --mode-accent: #a8845c;
+    --mode-accent-subtle: rgba(168, 132, 92, 0.15);
+    --mode-accent-border: rgba(168, 132, 92, 0.35);
+    --mode-text-primary: #e8e0d4;
+    --mode-text-secondary: rgba(232, 224, 212, 0.4);
+  }
+
+  /* Pro Mode — Deep Gunmetal + Amber Gold (Pro/Agency plan) */
+  .mode-pro {
+    --mode-bg: #1c1b1e;
+    --mode-surface: #252428;
+    --mode-accent: #f59e0b;
+    --mode-accent-subtle: rgba(245, 158, 11, 0.1);
+    --mode-accent-border: rgba(245, 158, 11, 0.2);
+    --mode-text-primary: rgba(255, 255, 255, 0.85);
+    --mode-text-secondary: rgba(255, 255, 255, 0.35);
+    --mode-data-highlight: #f59e0b;
   }
 
   /* ===========================================================================
@@ -163,7 +214,7 @@ html.lenis,html.lenis body{height:auto}
 
     /* Dark mode glass adjustments - INCREASED for visibility */
     --glass-bg-base: rgba(255, 255, 255, 0.06);
-    --glass-bg-elevated: rgba(255, 255, 255, 0.10);
+    --glass-bg-elevated: rgba(255, 255, 255, 0.1);
     --glass-bg-premium: rgba(255, 255, 255, 0.14);
     --glass-bg-solid: rgba(15, 23, 42, 0.92);
   }
@@ -191,40 +242,75 @@ html.lenis,html.lenis body{height:auto}
 
 /* Blob Animation */
 @keyframes blob {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  25% { transform: translate(20px, -30px) scale(1.1); }
-  50% { transform: translate(-20px, 20px) scale(0.9); }
-  75% { transform: translate(30px, 10px) scale(1.05); }
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  25% {
+    transform: translate(20px, -30px) scale(1.1);
+  }
+  50% {
+    transform: translate(-20px, 20px) scale(0.9);
+  }
+  75% {
+    transform: translate(30px, 10px) scale(1.05);
+  }
 }
 
 /* Slide Up */
 @keyframes slide-up {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* Fade In */
 @keyframes fade-in {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 /* Pulse Glow - Using CSS variable */
 @keyframes pulse-glow {
-  0%, 100% { box-shadow: var(--glow-primary); }
-  50% { box-shadow: var(--glow-primary-lg); }
+  0%,
+  100% {
+    box-shadow: var(--glow-primary);
+  }
+  50% {
+    box-shadow: var(--glow-primary-lg);
+  }
 }
 
 /* Float */
 @keyframes float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-10px); }
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
 }
 
 /* Disperse */
 @keyframes disperse {
-  0% { transform: translate(0, 0) scale(1); opacity: 0.6; }
-  100% { transform: translate(-100px, -50px) scale(0); opacity: 0; }
+  0% {
+    transform: translate(0, 0) scale(1);
+    opacity: 0.6;
+  }
+  100% {
+    transform: translate(-100px, -50px) scale(0);
+    opacity: 0;
+  }
 }
 .animate-disperse {
   animation: disperse 4s ease-out forwards;
@@ -232,108 +318,196 @@ html.lenis,html.lenis body{height:auto}
 
 /* Shimmer */
 @keyframes shimmer {
-  0% { background-position: -1000px 0; }
-  100% { background-position: 1000px 0; }
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
 }
 
 /* Spin */
 @keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* Ripple */
 @keyframes ripple {
-  to { transform: scale(4); opacity: 0; }
+  to {
+    transform: scale(4);
+    opacity: 0;
+  }
 }
 
 /* Gradient Shift */
 @keyframes gradient-shift {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
 }
 
 /* Text Reveal */
 @keyframes text-reveal {
-  from { clip-path: inset(0 100% 0 0); }
-  to { clip-path: inset(0 0 0 0); }
+  from {
+    clip-path: inset(0 100% 0 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
 }
 
 /* Grid Fade */
 @keyframes grid-fade {
-  from { opacity: 0; transform: scale(0.9); }
-  to { opacity: 1; transform: scale(1); }
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 /* Typing */
 @keyframes typing {
-  from { width: 0; }
-  to { width: 100%; }
+  from {
+    width: 0;
+  }
+  to {
+    width: 100%;
+  }
 }
 
 @keyframes blink {
-  50% { border-color: transparent; }
+  50% {
+    border-color: transparent;
+  }
 }
 
 /* Card Entrance */
 @keyframes card-entrance {
-  from { opacity: 0; transform: translateY(20px) scale(0.95); }
-  to { opacity: 1; transform: translateY(0) scale(1); }
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 /* Page Fade In */
 @keyframes page-fade-in {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 /* Success Pulse */
 @keyframes success-pulse {
-  0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4); }
-  70% { box-shadow: 0 0 0 10px rgba(34, 197, 94, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+  0% {
+    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(34, 197, 94, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0);
+  }
 }
 
 /* Error Shake */
 @keyframes error-shake {
-  0%, 100% { transform: translateX(0); }
-  10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
-  20%, 40%, 60%, 80% { transform: translateX(5px); }
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  10%,
+  30%,
+  50%,
+  70%,
+  90% {
+    transform: translateX(-5px);
+  }
+  20%,
+  40%,
+  60%,
+  80% {
+    transform: translateX(5px);
+  }
 }
 
 /* Liquid Move (from design-system) */
 @keyframes liquid-move {
-  0%, 100% { transform: translate(0, 0) rotate(0deg); }
-  33% { transform: translate(30px, -30px) rotate(120deg); }
-  66% { transform: translate(-20px, 20px) rotate(240deg); }
+  0%,
+  100% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+  33% {
+    transform: translate(30px, -30px) rotate(120deg);
+  }
+  66% {
+    transform: translate(-20px, 20px) rotate(240deg);
+  }
 }
 
 /* Blob Float (from design-system) */
 @keyframes blob-float {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  33% { transform: translate(100px, -100px) scale(1.1); }
-  66% { transform: translate(-100px, 100px) scale(0.9); }
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  33% {
+    transform: translate(100px, -100px) scale(1.1);
+  }
+  66% {
+    transform: translate(-100px, 100px) scale(0.9);
+  }
 }
 
 /* Sequence Fade In */
 @keyframes sequence-fade-in {
-  to { opacity: 1; }
+  to {
+    opacity: 1;
+  }
 }
 
 /* Sequence Slide Up */
 @keyframes sequence-slide-up {
-  to { opacity: 1; transform: translateY(0); }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* Sequence Blur In */
 @keyframes sequence-blur-in {
-  to { opacity: 1; filter: blur(0); }
+  to {
+    opacity: 1;
+    filter: blur(0);
+  }
 }
 
 /* Stagger In */
 @keyframes stagger-in {
-  to { opacity: 1; transform: translateY(0); }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* =============================================================================
@@ -384,19 +558,33 @@ html.lenis,html.lenis body{height:auto}
   overflow: hidden;
   border-right: 2px solid white;
   white-space: nowrap;
-  animation: typing 3s steps(30, end), blink 0.5s step-end infinite;
+  animation:
+    typing 3s steps(30, end),
+    blink 0.5s step-end infinite;
 }
 
 .card-entrance {
   animation: card-entrance 0.4s var(--ease-smooth) forwards;
 }
 
-.card-entrance:nth-child(1) { animation-delay: 0.05s; }
-.card-entrance:nth-child(2) { animation-delay: 0.1s; }
-.card-entrance:nth-child(3) { animation-delay: 0.15s; }
-.card-entrance:nth-child(4) { animation-delay: 0.2s; }
-.card-entrance:nth-child(5) { animation-delay: 0.25s; }
-.card-entrance:nth-child(6) { animation-delay: 0.3s; }
+.card-entrance:nth-child(1) {
+  animation-delay: 0.05s;
+}
+.card-entrance:nth-child(2) {
+  animation-delay: 0.1s;
+}
+.card-entrance:nth-child(3) {
+  animation-delay: 0.15s;
+}
+.card-entrance:nth-child(4) {
+  animation-delay: 0.2s;
+}
+.card-entrance:nth-child(5) {
+  animation-delay: 0.25s;
+}
+.card-entrance:nth-child(6) {
+  animation-delay: 0.3s;
+}
 
 .page-enter {
   animation: page-fade-in 0.3s var(--ease-smooth);
@@ -416,12 +604,24 @@ html.lenis,html.lenis body{height:auto}
   animation-fill-mode: both;
 }
 
-.grid-item:nth-child(1) { animation-delay: 0.1s; }
-.grid-item:nth-child(2) { animation-delay: 0.2s; }
-.grid-item:nth-child(3) { animation-delay: 0.3s; }
-.grid-item:nth-child(4) { animation-delay: 0.4s; }
-.grid-item:nth-child(5) { animation-delay: 0.5s; }
-.grid-item:nth-child(6) { animation-delay: 0.6s; }
+.grid-item:nth-child(1) {
+  animation-delay: 0.1s;
+}
+.grid-item:nth-child(2) {
+  animation-delay: 0.2s;
+}
+.grid-item:nth-child(3) {
+  animation-delay: 0.3s;
+}
+.grid-item:nth-child(4) {
+  animation-delay: 0.4s;
+}
+.grid-item:nth-child(5) {
+  animation-delay: 0.5s;
+}
+.grid-item:nth-child(6) {
+  animation-delay: 0.6s;
+}
 
 /* Sequence Animations */
 .sequence-fade-in {
@@ -432,7 +632,8 @@ html.lenis,html.lenis body{height:auto}
 .sequence-slide-up {
   opacity: 0;
   transform: translateY(30px);
-  animation: sequence-slide-up var(--duration-slower) var(--ease-smooth) forwards;
+  animation: sequence-slide-up var(--duration-slower) var(--ease-smooth)
+    forwards;
 }
 
 .sequence-blur-in {
@@ -447,12 +648,24 @@ html.lenis,html.lenis body{height:auto}
   animation: stagger-in var(--duration-slower) var(--ease-smooth) forwards;
 }
 
-.stagger-children > *:nth-child(1) { animation-delay: 0ms; }
-.stagger-children > *:nth-child(2) { animation-delay: 100ms; }
-.stagger-children > *:nth-child(3) { animation-delay: 200ms; }
-.stagger-children > *:nth-child(4) { animation-delay: 300ms; }
-.stagger-children > *:nth-child(5) { animation-delay: 400ms; }
-.stagger-children > *:nth-child(6) { animation-delay: 500ms; }
+.stagger-children > *:nth-child(1) {
+  animation-delay: 0ms;
+}
+.stagger-children > *:nth-child(2) {
+  animation-delay: 100ms;
+}
+.stagger-children > *:nth-child(3) {
+  animation-delay: 200ms;
+}
+.stagger-children > *:nth-child(4) {
+  animation-delay: 300ms;
+}
+.stagger-children > *:nth-child(5) {
+  animation-delay: 400ms;
+}
+.stagger-children > *:nth-child(6) {
+  animation-delay: 500ms;
+}
 
 /* =============================================================================
    GLASS MORPHISM SYSTEM (Unified)
@@ -499,12 +712,18 @@ html.lenis,html.lenis body{height:auto}
 .glass-solid {
   background: var(--glass-bg-solid);
   border: 1px solid var(--glass-border-default);
-  box-shadow: var(--glass-inset), 0 4px 24px rgba(0, 0, 0, 0.2);
+  box-shadow:
+    var(--glass-inset),
+    0 4px 24px rgba(0, 0, 0, 0.2);
 }
 
 /* Gradient Glass (blur removed for GPU performance) */
 .glass-premium-gradient {
-  background: linear-gradient(to bottom right, var(--glass-bg-elevated), var(--glass-bg-base));
+  background: linear-gradient(
+    to bottom right,
+    var(--glass-bg-elevated),
+    var(--glass-bg-base)
+  );
   border: 1px solid var(--glass-border-default);
   box-shadow: var(--glass-inset), var(--glass-shadow);
 }
@@ -527,12 +746,20 @@ html.lenis,html.lenis body{height:auto}
 }
 
 .glass-btn-primary {
-  background: linear-gradient(to right, rgba(6, 182, 212, 0.2), rgba(8, 145, 178, 0.2));
+  background: linear-gradient(
+    to right,
+    rgba(6, 182, 212, 0.2),
+    rgba(8, 145, 178, 0.2)
+  );
   border: 1px solid rgba(6, 182, 212, 0.3);
 }
 
 .glass-btn-primary:hover {
-  background: linear-gradient(to right, rgba(6, 182, 212, 0.3), rgba(8, 145, 178, 0.3));
+  background: linear-gradient(
+    to right,
+    rgba(6, 182, 212, 0.3),
+    rgba(8, 145, 178, 0.3)
+  );
   border-color: rgba(6, 182, 212, 0.5);
   box-shadow: var(--glow-primary);
 }
@@ -568,7 +795,11 @@ html.lenis,html.lenis body{height:auto}
   left: -50%;
   width: 200%;
   height: 200%;
-  background: radial-gradient(circle, rgba(6, 182, 212, 0.1) 0%, transparent 70%);
+  background: radial-gradient(
+    circle,
+    rgba(6, 182, 212, 0.1) 0%,
+    transparent 70%
+  );
   /* animation removed: 20s infinite gradient was GPU-expensive */
 }
 
@@ -585,7 +816,12 @@ html.lenis,html.lenis body{height:auto}
 }
 
 .gradient-text-premium {
-  background: linear-gradient(to right, rgb(var(--color-cyan)), rgb(6 182 212), rgb(34 211 238));
+  background: linear-gradient(
+    to right,
+    rgb(var(--color-cyan)),
+    rgb(6 182 212),
+    rgb(34 211 238)
+  );
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -661,8 +897,9 @@ html.lenis,html.lenis body{height:auto}
 }
 
 .shadow-hover-lift {
-  transition: box-shadow var(--duration-slow) var(--ease-smooth),
-              transform var(--duration-slow) var(--ease-smooth);
+  transition:
+    box-shadow var(--duration-slow) var(--ease-smooth),
+    transform var(--duration-slow) var(--ease-smooth);
 }
 
 .shadow-hover-lift:hover {
@@ -751,7 +988,11 @@ html.lenis,html.lenis body{height:auto}
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(to bottom, rgb(var(--color-primary-dark)), #2563eb);
+  background: linear-gradient(
+    to bottom,
+    rgb(var(--color-primary-dark)),
+    #2563eb
+  );
 }
 
 /* =============================================================================
@@ -897,15 +1138,21 @@ html.lenis,html.lenis body{height:auto}
   left: 0;
   right: 0;
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2) 50%, transparent);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.2) 50%,
+    transparent
+  );
 }
 
 /* Scroll Reveal */
 .scroll-reveal {
   opacity: 0;
   transform: translateY(30px);
-  transition: opacity var(--duration-slower) var(--ease-smooth),
-              transform var(--duration-slower) var(--ease-smooth);
+  transition:
+    opacity var(--duration-slower) var(--ease-smooth),
+    transform var(--duration-slower) var(--ease-smooth);
 }
 
 .scroll-reveal.revealed {
@@ -928,7 +1175,11 @@ html.lenis,html.lenis body{height:auto}
   position: absolute;
   width: 400px;
   height: 400px;
-  background: radial-gradient(circle, rgb(var(--color-cyan)) 0%, transparent 70%);
+  background: radial-gradient(
+    circle,
+    rgb(var(--color-cyan)) 0%,
+    transparent 70%
+  );
   border-radius: 50%;
   opacity: 0.1;
   filter: blur(40px);
@@ -936,7 +1187,11 @@ html.lenis,html.lenis body{height:auto}
 }
 
 .blob:nth-child(2) {
-  background: radial-gradient(circle, rgb(var(--color-amber)) 0%, transparent 70%);
+  background: radial-gradient(
+    circle,
+    rgb(var(--color-amber)) 0%,
+    transparent 70%
+  );
 }
 
 .blob:nth-child(3) {
@@ -956,7 +1211,10 @@ html.lenis,html.lenis body{height:auto}
 }
 
 .transition-colors-smooth {
-  transition: color var(--duration-normal) ease, background-color var(--duration-normal) ease, border-color var(--duration-normal) ease;
+  transition:
+    color var(--duration-normal) ease,
+    background-color var(--duration-normal) ease,
+    border-color var(--duration-normal) ease;
 }
 
 /* =============================================================================
@@ -1000,8 +1258,8 @@ a:focus-visible,
 input:focus-visible,
 select:focus-visible,
 textarea:focus-visible,
-[role="button"]:focus-visible,
-[tabindex="0"]:focus-visible {
+[role='button']:focus-visible,
+[tabindex='0']:focus-visible {
   outline: 2px solid rgba(var(--color-primary), 0.8);
   outline-offset: 2px;
 }
@@ -1015,9 +1273,9 @@ textarea:focus-visible,
 @media (pointer: coarse) {
   button,
   a,
-  input[type="checkbox"],
-  input[type="radio"],
-  [role="button"] {
+  input[type='checkbox'],
+  input[type='radio'],
+  [role='button'] {
     min-height: 48px;
     min-width: 48px;
   }
@@ -1204,7 +1462,11 @@ textarea:focus-visible,
   transform: translateX(-50%);
   width: 150%;
   height: 100%;
-  background: radial-gradient(ellipse 80% 50% at 50% 0%, rgba(6, 182, 212, 0.25), transparent 70%);
+  background: radial-gradient(
+    ellipse 80% 50% at 50% 0%,
+    rgba(6, 182, 212, 0.25),
+    transparent 70%
+  );
   pointer-events: none;
   z-index: 0;
 }
@@ -1283,7 +1545,8 @@ textarea:focus-visible,
 }
 
 @keyframes pulse {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 1;
     transform: scale(1);
   }
@@ -1302,7 +1565,11 @@ textarea:focus-visible,
   content: '';
   position: absolute;
   inset: -2px;
-  background: linear-gradient(135deg, rgba(6, 182, 212, 0.4), rgba(8, 145, 178, 0.4));
+  background: linear-gradient(
+    135deg,
+    rgba(6, 182, 212, 0.4),
+    rgba(8, 145, 178, 0.4)
+  );
   border-radius: inherit;
   filter: blur(20px);
   opacity: 0.6;
@@ -1311,16 +1578,32 @@ textarea:focus-visible,
 
 /* Animated Bar Chart Gradient */
 @keyframes bar-grow {
-  0% { height: 20%; }
-  50% { height: 100%; }
-  100% { height: 20%; }
+  0% {
+    height: 20%;
+  }
+  50% {
+    height: 100%;
+  }
+  100% {
+    height: 20%;
+  }
 }
 
-.animate-bar-1 { animation: bar-grow 2s ease-in-out infinite; }
-.animate-bar-2 { animation: bar-grow 2s ease-in-out infinite 0.2s; }
-.animate-bar-3 { animation: bar-grow 2s ease-in-out infinite 0.4s; }
-.animate-bar-4 { animation: bar-grow 2s ease-in-out infinite 0.6s; }
-.animate-bar-5 { animation: bar-grow 2s ease-in-out infinite 0.8s; }
+.animate-bar-1 {
+  animation: bar-grow 2s ease-in-out infinite;
+}
+.animate-bar-2 {
+  animation: bar-grow 2s ease-in-out infinite 0.2s;
+}
+.animate-bar-3 {
+  animation: bar-grow 2s ease-in-out infinite 0.4s;
+}
+.animate-bar-4 {
+  animation: bar-grow 2s ease-in-out infinite 0.6s;
+}
+.animate-bar-5 {
+  animation: bar-grow 2s ease-in-out infinite 0.8s;
+}
 
 /* 3D Fallback Styles */
 .fallback-3d {
@@ -1336,7 +1619,12 @@ textarea:focus-visible,
   width: 120px;
   height: 120px;
   border-radius: 50%;
-  background: radial-gradient(circle at 30% 30%, rgba(6, 182, 212, 0.4), rgba(8, 145, 178, 0.2) 50%, transparent 70%);
+  background: radial-gradient(
+    circle at 30% 30%,
+    rgba(6, 182, 212, 0.4),
+    rgba(8, 145, 178, 0.2) 50%,
+    transparent 70%
+  );
   box-shadow:
     0 0 40px rgba(6, 182, 212, 0.3),
     0 0 80px rgba(6, 182, 212, 0.2),
