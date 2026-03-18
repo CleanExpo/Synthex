@@ -9,7 +9,14 @@ import { URL } from 'url';
 import jwt from 'jsonwebtoken';
 
 export interface WebSocketMessage {
-  type: 'notification' | 'update' | 'error' | 'ping' | 'pong' | 'subscribe' | 'unsubscribe';
+  type:
+    | 'notification'
+    | 'update'
+    | 'error'
+    | 'ping'
+    | 'pong'
+    | 'subscribe'
+    | 'unsubscribe';
   data?: Record<string, unknown>;
   id?: string;
   timestamp?: string;
@@ -38,26 +45,33 @@ class SynthexWebSocketServer {
 
     this.wss.on('connection', this.handleConnection.bind(this));
     this.startHeartbeat();
-    
   }
 
   /**
    * Verify client connection (authentication)
    */
-  private verifyClient(info: { origin: string; secure: boolean; req: IncomingMessage }): boolean {
+  private verifyClient(info: {
+    origin: string;
+    secure: boolean;
+    req: IncomingMessage;
+  }): boolean {
     try {
-      const url = new URL(info.req.url || '', `http://${info.req.headers.host}`);
+      const url = new URL(
+        info.req.url || '',
+        `http://${info.req.headers.host}`
+      );
       const token = url.searchParams.get('token');
-      
+
       if (!token) {
         // Allow unauthenticated connections for now
         return true;
       }
 
       // Verify JWT token
-      const secret = process.env.JWT_SECRET || 'your-secret-key';
+      const secret = process.env.JWT_SECRET;
+      if (!secret) throw new Error('JWT_SECRET not configured');
       jwt.verify(token, secret);
-      
+
       return true;
     } catch (error) {
       console.error('WebSocket authentication failed:', error);
@@ -69,15 +83,15 @@ class SynthexWebSocketServer {
    * Handle new WebSocket connection
    */
   private handleConnection(ws: WebSocket, req: IncomingMessage): void {
-    
     // Extract user ID from token if provided
     let userId: string | undefined;
     try {
       const url = new URL(req.url || '', `http://${req.headers.host}`);
       const token = url.searchParams.get('token');
-      
+
       if (token) {
-        const secret = process.env.JWT_SECRET || 'your-secret-key';
+        const secret = process.env.JWT_SECRET;
+        if (!secret) throw new Error('JWT_SECRET not configured');
         const decoded = jwt.verify(token, secret) as any;
         userId = decoded.userId || decoded.id;
       }
@@ -92,13 +106,13 @@ class SynthexWebSocketServer {
       subscriptions: new Set(),
       lastPing: new Date(),
     };
-    
+
     this.clients.set(ws, client);
 
     // Set up event handlers
     ws.on('message', (data: Buffer) => this.handleMessage(ws, data));
     ws.on('close', () => this.handleClose(ws));
-    ws.on('error', (error) => this.handleError(ws, error));
+    ws.on('error', error => this.handleError(ws, error));
     ws.on('pong', () => this.handlePong(ws));
 
     // Send welcome message
@@ -119,7 +133,7 @@ class SynthexWebSocketServer {
     try {
       const message: WebSocketMessage = JSON.parse(data.toString());
       const client = this.clients.get(ws);
-      
+
       if (!client) return;
 
       switch (message.type) {
@@ -157,13 +171,12 @@ class SynthexWebSocketServer {
     if (!client) return;
 
     client.subscriptions.add(channel);
-    
+
     if (!this.channels.has(channel)) {
       this.channels.set(channel, new Set());
     }
-    
+
     this.channels.get(channel)!.add(ws);
-    
   }
 
   /**
@@ -177,7 +190,6 @@ class SynthexWebSocketServer {
 
     client.subscriptions.delete(channel);
     this.channels.get(channel)?.delete(ws);
-    
   }
 
   /**
@@ -185,14 +197,14 @@ class SynthexWebSocketServer {
    */
   private handleClose(ws: WebSocket): void {
     const client = this.clients.get(ws);
-    
+
     if (client) {
       // Remove from all channels
       client.subscriptions.forEach(channel => {
         this.channels.get(channel)?.delete(ws);
       });
     }
-    
+
     this.clients.delete(ws);
   }
 
@@ -219,10 +231,12 @@ class SynthexWebSocketServer {
    */
   private sendToClient(ws: WebSocket, message: WebSocketMessage): void {
     if (ws.readyState === WebSocket.OPEN) {
-      ws.send(JSON.stringify({
-        ...message,
-        timestamp: new Date().toISOString(),
-      }));
+      ws.send(
+        JSON.stringify({
+          ...message,
+          timestamp: new Date().toISOString(),
+        })
+      );
     }
   }
 
@@ -335,11 +349,11 @@ class SynthexWebSocketServer {
     if (this.heartbeatInterval) {
       clearInterval(this.heartbeatInterval);
     }
-    
+
     this.clients.forEach((client, ws) => {
       ws.close(1000, 'Server shutting down');
     });
-    
+
     this.wss.close();
   }
 }
