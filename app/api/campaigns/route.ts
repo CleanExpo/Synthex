@@ -103,7 +103,11 @@ export async function GET(request: NextRequest) {
     }
 
     // ── Cache read ──────────────────────────────────────────────────────────
-    const orgId = await getEffectiveOrganizationId(userId);
+    // Derive orgId from the filter already resolved above — avoids a second DB call.
+    const orgId =
+      'organizationId' in queryFilter
+        ? (queryFilter as { organizationId: string }).organizationId
+        : null;
     const cacheKey = `synthex:cache:campaigns:${orgId ?? userId}:all`;
     try {
       const redis = getRedisClient();
@@ -210,11 +214,11 @@ export async function POST(request: NextRequest) {
     });
 
     // ── Cache invalidation ──────────────────────────────────────────────────
+    // organizationId already resolved above — no second DB call needed.
     try {
       const redis = getRedisClient();
-      const bustOrgId = await getEffectiveOrganizationId(userId);
-      const pattern = bustOrgId
-        ? `synthex:cache:campaigns:${bustOrgId}:*`
+      const pattern = organizationId
+        ? `synthex:cache:campaigns:${organizationId}:*`
         : `synthex:cache:campaigns:${userId}:*`;
       const cacheKeys = await redis.keys(pattern);
       if (cacheKeys.length > 0) await redis.del(cacheKeys);
@@ -298,9 +302,10 @@ export async function PUT(request: NextRequest) {
     }
 
     // ── Cache invalidation ──────────────────────────────────────────────────
+    // existingCampaign already has organizationId — no extra DB call needed.
     try {
       const redis = getRedisClient();
-      const bustOrgId = await getEffectiveOrganizationId(userId);
+      const bustOrgId = existingCampaign.organizationId;
       const pattern = bustOrgId
         ? `synthex:cache:campaigns:${bustOrgId}:*`
         : `synthex:cache:campaigns:${userId}:*`;
@@ -371,9 +376,10 @@ export async function DELETE(request: NextRequest) {
     });
 
     // ── Cache invalidation ──────────────────────────────────────────────────
+    // campaign.organizationId is already resolved from the ownership check above.
     try {
       const redis = getRedisClient();
-      const bustOrgId = await getEffectiveOrganizationId(userId);
+      const bustOrgId = campaign.organizationId;
       const pattern = bustOrgId
         ? `synthex:cache:campaigns:${bustOrgId}:*`
         : `synthex:cache:campaigns:${userId}:*`;

@@ -10,12 +10,15 @@
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
-import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
+import {
+  APISecurityChecker,
+  DEFAULT_POLICIES,
+} from '@/lib/security/api-security-checker';
 import { logger } from '@/lib/logger';
 
 // Validate notification ID
 const paramsSchema = z.object({
-  notificationId: z.string().cuid()
+  notificationId: z.string().cuid(),
 });
 
 interface RouteParams {
@@ -26,10 +29,7 @@ interface RouteParams {
  * PATCH /api/notifications/[notificationId]/read
  * Marks a specific notification as read
  */
-export async function PATCH(
-  request: NextRequest,
-  { params }: RouteParams
-) {
+export async function PATCH(request: NextRequest, { params }: RouteParams) {
   // Security check - requires authentication
   const security = await APISecurityChecker.check(
     request,
@@ -52,7 +52,7 @@ export async function PATCH(
     // Find notification and verify ownership
     const notification = await prisma.notification.findUnique({
       where: { id: notificationId },
-      select: { id: true, userId: true, read: true }
+      select: { id: true, userId: true, read: true },
     });
 
     if (!notification) {
@@ -90,19 +90,31 @@ export async function PATCH(
         type: true,
         title: true,
         read: true,
-        createdAt: true
-      }
+        createdAt: true,
+      },
     });
+
+    // Invalidate the notifications GET cache so the unread badge reflects the
+    // change immediately rather than waiting for the 60 s TTL to expire.
+    try {
+      const { getRedisClient } = await import('@/lib/redis-client');
+      const redis = getRedisClient();
+      const cacheKeys = await redis.keys(
+        `synthex:cache:notifications:${security.context.userId}:*`
+      );
+      if (cacheKeys.length > 0) await redis.del(cacheKeys);
+    } catch {
+      /* non-fatal */
+    }
 
     return APISecurityChecker.createSecureResponse(
       {
         success: true,
-        data: updated
+        data: updated,
       },
       200,
       security.context
     );
-
   } catch (error) {
     logger.error('Mark notification read error:', error);
 

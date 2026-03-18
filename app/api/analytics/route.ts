@@ -93,7 +93,13 @@ export async function GET(request: NextRequest) {
       const redis = getRedisClient();
       const cached = await redis.get(cacheKey);
       if (cached) {
-        return NextResponse.json(JSON.parse(cached));
+        // Re-inject generatedAt so consumers always see the serve-time timestamp,
+        // not the frozen value that was stored when the cache was populated.
+        const parsed = JSON.parse(cached);
+        return NextResponse.json({
+          ...parsed,
+          data: { ...parsed.data, generatedAt: new Date().toISOString() },
+        });
       }
     } catch {
       // Redis unavailable — fall through to DB
@@ -240,11 +246,14 @@ export async function GET(request: NextRequest) {
     };
 
     // ── Cache write ─────────────────────────────────────────────────────────
+    // Strip generatedAt before storing so the cached payload never freezes it.
+    // It is re-injected at serve-time on cache hits (see cache read block above).
     try {
       const redis = getRedisClient();
+      const { generatedAt: _g, ...dataToCache } = responseData.data;
       await redis.set(
         cacheKey,
-        JSON.stringify(responseData),
+        JSON.stringify({ data: dataToCache }),
         ANALYTICS_CACHE_TTL
       );
     } catch {
