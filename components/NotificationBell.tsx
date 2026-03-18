@@ -50,12 +50,12 @@ export function NotificationBell() {
 
   const checkForNewNotifications = useCallback(async () => {
     try {
-      const response = await fetch('/api/notifications?unread=true', {
+      const response = await fetch('/api/notifications?unreadOnly=true', {
         credentials: 'include',
       });
       if (!response.ok) return; // Silently skip auth errors
       const data = await response.json();
-      if (data.hasNew) {
+      if (data.unreadCount > 0) {
         setIsAnimating(true);
         setTimeout(() => setIsAnimating(false), 1000);
         await loadNotifications();
@@ -68,19 +68,22 @@ export function NotificationBell() {
   // Load initial notifications
   useEffect(() => {
     loadNotifications();
-    
+
     // Set up polling for new notifications
     const interval = setInterval(checkForNewNotifications, 30000);
-    
+
     // Click outside handler
     const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
         setIsOpen(false);
       }
     };
-    
+
     document.addEventListener('mousedown', handleClickOutside);
-    
+
     return () => {
       clearInterval(interval);
       document.removeEventListener('mousedown', handleClickOutside);
@@ -91,7 +94,7 @@ export function NotificationBell() {
     try {
       await fetchWithCSRF(`/api/notifications/${id}/read`, { method: 'PATCH' });
       setNotifications(prev => {
-        const updated = prev.map(n => n.id === id ? { ...n, read: true } : n);
+        const updated = prev.map(n => (n.id === id ? { ...n, read: true } : n));
         updateUnreadCount(updated);
         return updated;
       });
@@ -119,16 +122,18 @@ export function NotificationBell() {
         variant="ghost"
         size="icon"
         className={cn(
-          "relative transition-all duration-300",
-          isAnimating && "animate-pulse scale-110"
+          'relative transition-all duration-300',
+          isAnimating && 'animate-pulse scale-110'
         )}
         aria-label={`Notifications${unreadCount > 0 ? ` (${unreadCount} unread)` : ''}`}
         onClick={() => setIsOpen(!isOpen)}
       >
-        <Bell className={cn(
-          "h-5 w-5 transition-all duration-300",
-          isAnimating && "animate-bounce"
-        )} />
+        <Bell
+          className={cn(
+            'h-5 w-5 transition-all duration-300',
+            isAnimating && 'animate-bounce'
+          )}
+        />
         {unreadCount > 0 && (
           <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-cyan-500 text-[10px] font-medium text-white flex items-center justify-center animate-in zoom-in duration-300">
             {unreadCount}
@@ -141,10 +146,12 @@ export function NotificationBell() {
           <div className="flex items-center justify-between p-4 border-b border-white/10">
             <h3 className="text-sm font-semibold text-white">Notifications</h3>
             {unreadCount > 0 && (
-              <span className="text-xs text-gray-400">{unreadCount} unread</span>
+              <span className="text-xs text-gray-400">
+                {unreadCount} unread
+              </span>
             )}
           </div>
-          
+
           <div className="max-h-80 overflow-y-auto">
             {notifications.length === 0 ? (
               <div className="p-8 text-center text-gray-500">
@@ -152,25 +159,29 @@ export function NotificationBell() {
                 <p className="text-sm">No notifications yet</p>
               </div>
             ) : (
-              notifications.map((notification) => (
+              notifications.map(notification => (
                 <div
                   key={notification.id}
                   className={cn(
-                    "p-4 border-b border-white/5 hover:bg-white/5 transition-all duration-200 cursor-pointer",
-                    !notification.read && "bg-cyan-500/5",
+                    'p-4 border-b border-white/5 hover:bg-white/5 transition-all duration-200 cursor-pointer',
+                    !notification.read && 'bg-cyan-500/5',
                     getTypeStyles(notification.type)
                   )}
-                  onClick={() => !notification.read && markAsRead(notification.id)}
+                  onClick={() =>
+                    !notification.read && markAsRead(notification.id)
+                  }
                 >
                   <div className="flex items-start space-x-3">
                     {notification.icon && (
                       <span className="text-2xl">{notification.icon}</span>
                     )}
                     <div className="flex-1">
-                      <p className={cn(
-                        "text-sm",
-                        notification.read ? "text-gray-400" : "text-white"
-                      )}>
+                      <p
+                        className={cn(
+                          'text-sm',
+                          notification.read ? 'text-gray-400' : 'text-white'
+                        )}
+                      >
                         {notification.message}
                       </p>
                       <p className="text-xs text-gray-500 mt-1">
@@ -193,11 +204,11 @@ export function NotificationBell() {
               ))
             )}
           </div>
-          
+
           {notifications.length > 0 && (
             <div className="p-3 border-t border-white/10">
-              <Button 
-                variant="ghost" 
+              <Button
+                variant="ghost"
                 className="w-full text-xs text-gray-400 hover:text-white"
                 onClick={() => setNotifications([])}
               >

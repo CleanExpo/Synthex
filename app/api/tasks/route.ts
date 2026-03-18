@@ -84,6 +84,7 @@ const updateTaskSchema = updateTaskFieldsSchema.extend({
 // =============================================================================
 
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
+import { getEffectiveOrganizationId } from '@/lib/multi-business/business-scope';
 import { logger } from '@/lib/logger';
 
 // =============================================================================
