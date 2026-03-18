@@ -220,3 +220,6 @@ ship-audit/
 
 # Generated audio assets (ElevenLabs TTS + FFmpeg synthesis)
 public/audio/
+
+# MCP config — contains API keys, never commit
+.mcp.json
