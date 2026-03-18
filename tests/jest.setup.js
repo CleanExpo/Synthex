@@ -1,3 +1,8 @@
+// Test environment variables — must be set before any module imports
+process.env.JWT_SECRET =
+  process.env.JWT_SECRET || 'test-secret-at-least-32-chars-long!!';
+process.env.OWNER_EMAILS = process.env.OWNER_EMAILS || 'test@synthex.app';
+
 const { TextDecoder, TextEncoder } = require('util');
 
 if (typeof global.TextEncoder === 'undefined') {
@@ -29,7 +34,9 @@ if (typeof global.Response === 'undefined') {
       this.headers = new Map(Object.entries(init.headers || {}));
     }
     json() {
-      return Promise.resolve(typeof this.body === 'string' ? JSON.parse(this.body) : this.body);
+      return Promise.resolve(
+        typeof this.body === 'string' ? JSON.parse(this.body) : this.body
+      );
     }
     text() {
       return Promise.resolve(String(this.body));
@@ -39,7 +46,10 @@ if (typeof global.Response === 'undefined') {
       const body = JSON.stringify(data);
       return new Response(body, {
         ...init,
-        headers: { 'content-type': 'application/json', ...(init.headers || {}) },
+        headers: {
+          'content-type': 'application/json',
+          ...(init.headers || {}),
+        },
       });
     }
   };

@@ -59,7 +59,10 @@ describe('JWT Utilities', () => {
   // =========================================================================
   describe('generateToken + verifyToken', () => {
     it('should generate and verify a token', () => {
-      const token = generateToken({ userId: 'user-123', email: 'test@example.com' });
+      const token = generateToken({
+        userId: 'user-123',
+        email: 'test@example.com',
+      });
 
       expect(token).toBeDefined();
       expect(typeof token).toBe('string');
@@ -316,9 +319,9 @@ describe('JWT Utilities', () => {
   describe('withAuth', () => {
     it('should call handler with userId for authenticated requests', async () => {
       const { NextResponse } = require('next/server');
-      const handler = jest.fn().mockResolvedValue(
-        NextResponse.json({ ok: true })
-      );
+      const handler = jest
+        .fn()
+        .mockResolvedValue(NextResponse.json({ ok: true }));
 
       const wrapped = withAuth(handler);
 
@@ -350,13 +353,16 @@ describe('JWT Utilities', () => {
   // isOwnerEmail
   // =========================================================================
   describe('isOwnerEmail', () => {
-    it('should return true for owner email', () => {
-      expect(isOwnerEmail('phill.mcgurk@gmail.com')).toBe(true);
+    // isOwnerEmail reads OWNER_EMAILS env var at module load time.
+    // These tests verify the function's contract: env var controls the set.
+    it('should return true for owner email when OWNER_EMAILS contains it', () => {
+      // OWNER_EMAILS is set to 'test@synthex.app' in jest.setup.ts
+      expect(isOwnerEmail('test@synthex.app')).toBe(true);
     });
 
     it('should be case-insensitive', () => {
-      expect(isOwnerEmail('Phill.McGurk@Gmail.com')).toBe(true);
-      expect(isOwnerEmail('PHILL.MCGURK@GMAIL.COM')).toBe(true);
+      expect(isOwnerEmail('Test@Synthex.App')).toBe(true);
+      expect(isOwnerEmail('TEST@SYNTHEX.APP')).toBe(true);
     });
 
     it('should return false for non-owner email', () => {
