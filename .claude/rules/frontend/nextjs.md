@@ -1,78 +1,72 @@
 ---
-paths: apps/web/**/*.{ts,tsx}
+paths: app/**/*.{ts,tsx}, components/**/*.{ts,tsx}
 ---
 
 # Next.js Frontend Rules
 
-## Framework Configuration
+## Framework
 
 - **Framework**: Next.js 15 (App Router)
-- **UI Library**: React 19, shadcn/ui (new-york style)
-- **Styling**: Tailwind CSS v4, CSS Variables
-- **State**: React hooks, Server Components
+- **UI Library**: React 19 + Radix UI primitives
+- **Component library**: shadcn/ui components in `components/ui/`
+- **Styling**: Tailwind CSS + CSS Variables
+- **State**: React hooks + Server Components (no Redux/Zustand)
+- **Package manager**: npm (not pnpm — use `npm run ...` for all commands)
 
 ## Component Patterns
 
-### ✅ DO: Component Structure
+### Server vs Client split
 
 ```tsx
-export interface ComponentProps
-  extends React.HTMLAttributes<HTMLDivElement>,
-    VariantProps<typeof componentVariants> {
-  asChild?: boolean;
+// Default: Server Component (no directive needed)
+export default function DashboardPage() {
+  return <DashboardClient />;
+}
+
+// Only add 'use client' when you need: hooks, event handlers, browser APIs
+'use client';
+export function DashboardClient() { ... }
+```
+
+- Server Components by default — add `'use client'` only when genuinely needed
+- Pass server-fetched data as props into client subtrees
+- Every async component needs loading/error/empty states
+
+### Component structure
+
+```tsx
+export interface ComponentProps extends React.HTMLAttributes<HTMLDivElement> {
   loading?: boolean;
 }
 
 const Component = React.forwardRef<HTMLDivElement, ComponentProps>(
-  ({ className, variant, ...props }, ref) => {
-    // Implementation
+  ({ className, ...props }, ref) => {
+    return <div ref={ref} className={cn('...', className)} {...props} />;
   }
 );
-Component.displayName = "Component";
+Component.displayName = 'Component';
 
-export { Component, componentVariants };
-```
-
-### ✅ DO: Custom Hook Pattern
-
-```tsx
-export function useExample() {
-  const [state, setState] = useState<ExampleState | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
-
-  const fetchData = useCallback(async () => {
-    setLoading(true);
-    try {
-      const data = await api.getData();
-      setState(data);
-    } catch (e) {
-      setError(e as Error);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  return { state, loading, error, fetchData };
-}
+export { Component };
 ```
 
 ## Design System Rules
 
-- Use semantic colors: `bg-brand-primary` not `bg-blue-500`
-- Use CVA variants for component variants
-- Import with `@/` prefix: `import { Button } from "@/components/ui/button"`
-- Server Components by default, add `"use client"` only when needed
-- Every async component needs loading/error/empty states
-
-## Anti-Patterns
-
-❌ No explicit types, using `any`, inline styles, raw colors instead of design tokens
+- Import components with `@/` alias: `import { Button } from "@/components/ui/button"`
+- Use Tailwind utilities directly — no inline styles
+- Use design tokens (`text-cyan-400`, `bg-surface-dark`) over raw colours
 
 ## Key Commands
 
 ```bash
-pnpm dev --filter=web              # Development server
-pnpm turbo run type-check --filter=web  # Type checking
-pnpm turbo run lint --filter=web   # Linting
-pnpm build --filter=web           # Build for production
+npm run dev              # Start dev server (Turbopack, port 3000)
+npm run type-check       # TypeScript check
+npm run lint             # ESLint
+npm run build            # Production build
+```
+
+## Anti-Patterns
+
+- ❌ `any` types — use proper TypeScript
+- ❌ Inline styles (`style={{...}}`) — use Tailwind
+- ❌ Raw `fetch()` in client components — use SWR (see CLAUDE.md data fetching rules)
+- ❌ `'use client'` without a reason — check if Server Component works first

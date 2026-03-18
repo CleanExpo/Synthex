@@ -1,157 +1,184 @@
 # SESSION PROTOCOL — READ FIRST, EVERY SESSION
 
 ## START OF SESSION
-1. Check `.claude/scratchpad/current-session.md` — if it exists, read it and resume interrupted work before starting anything new
-2. Run Linear MCP: list top 5 issues with status "In Progress" for the Synthex project — these are your active priorities
-3. Check `.tasks/active/` for any active task files
-4. Do not start new work until steps 1-3 are complete
+
+1. Read `CONSTITUTION.md` — immutable rules that override all other guidance
+2. Check `.claude/scratchpad/current-session.md` — read it and resume interrupted work before starting anything new
+3. Read `.claude/memory/MEMORY.md` — cross-session state and architectural decisions
+4. Run Linear MCP: list top 5 issues with status "In Progress" for the Synthex project — these are your active priorities
+5. Do not start new work until steps 1–4 are complete
 
 ## DURING SESSION
+
 - Every 10 tool calls, write a brief progress note to `.claude/scratchpad/current-session.md`
-- Format: `## [timestamp] Progress\n- What was just done\n- What's next\n- Current issue: UNI-XXXX`
+- Format: `## [HH:MM] Progress\n- Done: ...\n- Next: ...\n- Issue: UNI-XXXX`
 - If context window warning appears, write full state to scratchpad immediately before stopping
 
 ## END OF SESSION
+
 - Update every Linear issue touched: add a comment with files changed and what was done, set status to Done if complete
-- Clear `.claude/scratchpad/current-session.md` (delete its contents, leave the file)
+- Clear `.claude/scratchpad/current-session.md` (empty the file, leave the file)
 - Run `git status` — commit any uncommitted changes with issue identifier in message
 - Never leave uncommitted changes
 
-## TOOL CONSTRAINTS (NON-NEGOTIABLE)
-- Never run `git push` without explicit human confirmation in the chat
-- Never modify `.env`, `.env.local`, or `.env.production` without explicit human confirmation
-- Never delete files — move to `.claude/archived/YYYY-MM-DD/` instead
-- Never install new npm packages without stating the package name and reason first
-- All work must be traceable to a Linear issue — no changes without an issue identifier
+---
 
-## PROJECT STANDARDS
-- Australian English: colour, mould, organise, recognise, licence (noun)
-- Currency: AUD
-- Date format: DD/MM/YYYY
-- Stack: Next.js 15, Supabase Auth (ONLY — no Clerk, no NextAuth), TypeScript, Tailwind, Radix UI, OpenRouter
+# HARD LIMITS (NON-NEGOTIABLE)
 
-## Data Fetching Pattern
-
-Three patterns exist — use the right one for the context:
-
-| Context | Pattern | Package |
-|---------|---------|---------|
-| Hook in `hooks/` | `useApi()` / `useMutation()` | `hooks/use-api.ts` (internal) |
-| Standalone widget/component | `useSWR(url, fetchJson, opts)` | `swr` |
-| Server-side (API route, server action) | `fetch()` directly | native |
-
-**SWR rule:** Always use `credentials: 'include'` fetcher. Reference: `components/dashboard/GamificationWidget.tsx`
-
-**Never add** new raw `fetch()` calls inside `'use client'` components — use SWR instead.
-**Never add** new custom fetch abstractions — use the existing patterns above.
+- **Never `git push`** without explicit human confirmation in chat
+- **Never modify** `.env`, `.env.local`, or `.env.production` without explicit human confirmation
+- **Never delete files** — move to `.claude/archived/YYYY-MM-DD/` instead
+- **Never install npm packages** without stating: package name + reason + bundle size impact
+- **Never skip pre-commit hooks** (`--no-verify`)
+- **Never use Clerk, NextAuth, Auth.js, or any auth system other than Supabase** — this is absolute
+- **All work must trace to a Linear issue (UNI-XXXX)** — no code changes without one
 
 ---
 
-# Synthex
+# PROJECT IDENTITY
 
-AI-powered marketing automation platform. Next.js 15 full-stack app deployed on Vercel.
+**Synthex** — AI-powered marketing automation platform
+Live at `synthex.social` · Repo: `CleanExpo/Synthex` · Local: `D:\Synthex`
 
-## Stack
+**Stack:** Next.js 15 (App Router) · TypeScript 5 · Prisma 6 · PostgreSQL (Supabase) · Vercel · Node 22 · Windows 11
 
-Next.js 15 (App Router) | TypeScript 5 | Prisma 6 | PostgreSQL (Supabase) | Vercel | Node 22 | Windows 11
+**Auth:** Supabase session → JWT → RBAC permissions → owner bypass
+Auth code lives in `lib/auth/` — always check there first before touching anything auth-related.
 
-## Commands
+---
+
+# COMMANDS
 
 ```bash
-npm run dev              # Dev server (Turbo)
-npm run build            # Production build
+npm run dev              # Dev server (Turbopack) — uses port 3000 by default
+npm run build            # Production build (webpack)
 npm test                 # Jest unit tests
 npm run type-check       # tsc --noEmit
 npm run lint             # ESLint
-npx prisma db push       # Push schema to DB
 npm run release:check    # Full pre-release validation
+npx prisma validate      # Validate schema (run before any db push)
+npx prisma db push       # Push schema to DB
 ```
 
-## Key Directories
-
-| Path | Purpose |
-|------|---------|
-| `app/` | Pages + API routes (App Router) |
-| `lib/` | Services, utilities, integrations |
-| `components/` | React components (Radix UI + Tailwind) |
-| `prisma/` | Schema (91 models) + migrations |
-| `.claude/skills/` | 21 domain skills (auto-triggered) |
-| `.claude/rules/` | 6 context rule domains |
-| `.claude/memory/` | Project state + cross-session context |
-| `.claude/scratchpad/` | Ephemeral working space |
-| `.planning/` | GSD roadmap + phase plans |
-| `.env.example` | Required env vars (source of truth) |
-
-## Architecture (Detail in Skills)
-
-- **Auth**: `auth-patterns` skill — JWT, Supabase session, RBAC, owner bypass, PKCE
-- **AI**: `content-pipeline` skill — Model registry, provider abstraction, BYOK, scoring
-- **Social**: `social-integrations` skill — 9 platforms, OAuth, webhooks, token encryption
-- **API**: `route-auditor` skill — APISecurityChecker, Zod validation, org scoping
-- **DB**: `database-prisma` skill — 91 models, migrations, query patterns
-- **Security**: `security-hardener` skill — CSP, CORS, rate limiting, audit logging
-- **Deploy**: `build-orchestrator` skill — Vercel, crons, env management
-
-## Memory
-
-Read `.claude/memory/MEMORY.md` at session start. Update when priorities change.
-
-## Conventions
-
-- Commits: `<type>(<scope>): <description>` — e.g., `fix(api): resolve auth timeout`
-- React: `PascalCase.tsx` | Utils: `kebab-case.ts` | Skills: `SKILL.md`
-- Pre-PR: `npm run type-check && npm run lint && npm test`
+**Pre-PR gate (run all three):** `npm run type-check && npm run lint && npm test`
 
 ---
 
-## Context Drift Prevention
+# KEY DIRECTORIES
 
-Context drift occurs when project rules are lost during automatic context compaction.
-This project has a 3-pillar defence:
+| Path                       | Purpose                                         |
+| -------------------------- | ----------------------------------------------- |
+| `app/`                     | Pages + API routes (App Router)                 |
+| `lib/`                     | Services, utilities, integrations               |
+| `components/`              | React components (Radix UI + Tailwind)          |
+| `lib/auth/`                | Auth — check here first, always                 |
+| `prisma/schema.prisma`     | Prisma schema (source of truth)                 |
+| `.claude/skills/`          | Domain skills (invoke via Skill tool)           |
+| `.claude/rules/`           | Context rule domains (auto-loaded by Claude)    |
+| `.claude/memory/MEMORY.md` | Cross-session project state + decisions         |
+| `.claude/scratchpad/`      | Ephemeral working space                         |
+| `.planning/STATE.md`       | Current phase + active priorities               |
+| `.planning/ROADMAP.md`     | Full milestone roadmap                          |
+| `.env.example`             | Required env vars (source of truth for secrets) |
 
-| Pillar | Mechanism | File |
-|--------|-----------|------|
-| PreCompact hook | Saves state + injects additionalContext guidance | `.claude/hooks/pre-compact-context.py` |
-| Session scratchpad | Manual progress notes every 10 tool calls | `.claude/scratchpad/current-session.md` |
-| Memory file | Cross-session project state | `.claude/memory/MEMORY.md` |
+---
 
-If you notice drift (wrong patterns, ignored rules), re-read this file and `.claude/memory/MEMORY.md`.
+# ARCHITECTURE
 
-## Verification Discipline
+**Auth:** `auth-patterns` skill — JWT, Supabase session, RBAC, owner bypass, PKCE
+**AI/Content:** `content-pipeline` skill — model registry, provider abstraction, BYOK, scoring
+**Social:** `social-integrations` skill — 9 platforms, OAuth, webhooks, token encryption
+**API security:** `route-auditor` skill — Zod validation, org scoping, APISecurityChecker
+**Database:** `database-prisma` skill — schema patterns, migrations, query conventions
+**Security:** `security-hardener` skill — CSP, CORS, rate limiting, audit logging
+**Deploy:** `build-orchestrator` skill — Vercel, crons, env management
 
-**Banned phrases** — run the command instead of saying it:
-- "should work" / "probably passes" / "seems correct" / "likely fixed"
+**Layer rule (no skipping):** Pages → Components → Hooks → `lib/` services → Database
+
+**Database safety:**
+
+- Never drop columns, rename columns, or change column types without explicit human approval
+- New columns must have defaults or be nullable (backward-compatible migrations only)
+- All queries must be org-scoped — never expose cross-organisation data
+- `npx prisma validate` must pass before any `db push`
+
+---
+
+# DATA FETCHING PATTERN
+
+Three patterns — use the right one for the context:
+
+| Context                                | Pattern                        | Package                       |
+| -------------------------------------- | ------------------------------ | ----------------------------- |
+| Hook in `hooks/`                       | `useApi()` / `useMutation()`   | `hooks/use-api.ts` (internal) |
+| Standalone widget/component            | `useSWR(url, fetchJson, opts)` | `swr`                         |
+| Server-side (API route, server action) | `fetch()` directly             | native                        |
+
+**SWR rule:** Always use `credentials: 'include'` fetcher.
+Reference implementation: `components/dashboard/GamificationWidget.tsx`
+
+**Never:** raw `fetch()` inside `'use client'` components — use SWR instead
+**Never:** add new custom fetch abstractions — use the three patterns above only
+
+---
+
+# CODE CONVENTIONS
+
+- **Language:** Australian English — colour, organise, recognise, licence (noun), authorise
+- **Currency:** AUD · **Dates:** DD/MM/YYYY
+- **Files:** React `PascalCase.tsx` · Utils `kebab-case.ts` · Skills `SKILL.md`
+- **Commits:** `type(scope): description` — e.g. `fix(api): resolve auth timeout`
+- **API mutations:** Zod validation required on all POST/PUT/PATCH/DELETE routes
+
+**Known Turbopack quirk:** `@heroicons/react` ESM build has missing files. The `resolveAlias` in `next.config.mjs` (turbopack section) fixes this — do not remove or modify those alias entries.
+
+---
+
+# VERIFICATION DISCIPLINE
+
+**Banned phrases** — run the command and report actual output instead:
+
+- "should work" · "probably passes" · "seems correct" · "likely fixed"
 
 **Before any "Done" or completion claim:**
-1. Run the relevant check command (`npm run type-check`, `npm test`, `npm run lint`)
+
+1. Run the relevant check (`npm run type-check`, `npm test`, `npm run lint`)
 2. Read the full output
 3. Report actual pass/fail count — no assumptions
 
-## Architectural Decisions Log
+---
 
-All significant architectural choices are recorded at `.claude/memory/MEMORY.md`.
+# CONTEXT DRIFT PREVENTION
+
+Context drift occurs when project rules are lost during automatic context compaction.
+
+| Pillar             | Mechanism                               | File                                    |
+| ------------------ | --------------------------------------- | --------------------------------------- |
+| PreCompact hook    | Saves state + injects additionalContext | `.claude/hooks/pre-compact-context.py`  |
+| Session scratchpad | Progress notes every 10 tool calls      | `.claude/scratchpad/current-session.md` |
+| Memory file        | Cross-session project state             | `.claude/memory/MEMORY.md`              |
+
+If you notice drift (wrong patterns, ignored rules): re-read `CONSTITUTION.md` and this file.
+
+**Architectural Decisions:** Significant architectural choices are recorded in `.claude/memory/MEMORY.md`.
 Format: `[DD/MM/YYYY] DECISION: X | REASON: Y | ALTERNATIVES REJECTED: Z`
-Agents append entries — never delete existing ones.
+Append entries — never delete existing ones.
 
-## Multi-Agent Harness (Phase-Gated Work)
+---
 
-For complex features, use the 8-phase convergence loop:
+# MULTI-AGENT WORK
 
-| Phase | Owner | Purpose |
-|-------|-------|---------|
-| 1. Intake | orchestrator | Classify intent, scope, risk |
-| 2. Discovery | product-strategist | Create PRD |
-| 3. Decomposition | technical-architect + senior-engineer | Architecture delta + plan |
-| 4. Execution | specialists | Parallel implementation (TDD enforced) |
-| 5. Aggregation | orchestrator | Merge results, resolve conflicts |
-| 6. Verification | verification + qa-validator | Code (PASS/FAIL) + acceptance (0-100) |
-| 7. Iteration | orchestrator | Remediate failures (max 2 cycles) |
-| 8. Production | delivery-manager | PR creation — human review gate |
+See `CONSTITUTION.md` → "Agent Execution Rules" for the full authoritative ruleset.
+
+**Quick reference:**
+
+- Max 2 automatic retries per failing step → escalate to human
+- Every subagent dispatch requires a Linear issue ID (UNI-XXXX)
+- Parallelise independent subagents; sequential only when there is a true data dependency
+- Phase 8 (production) always ends at a **human review gate** — never auto-merge PRs
 
 **Scope routing:**
-- Trivial (copy, config): Phases 4 → 6 → 8
-- Standard (new component, endpoint): Full phases 1–8
-- Complex (migration, new system): Full phases with extended Phase 2
 
-**Escalation rule:** If Phase 7 exceeds 2 cycles, or any rubric scores below 50 — stop and escalate to the human.
-Never merge PRs automatically — Phase 8 always ends at a human review gate.
+- Trivial (copy, config): direct execution → verify → commit
+- Standard (new component, endpoint): plan → execute → verify → PR
+- Complex (migration, new system): full multi-agent harness with extended discovery phase
