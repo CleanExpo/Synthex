@@ -136,7 +136,10 @@
       "Bash(grep -r '\"\"reactflow\"\"' apps/web/components/workflow/)",
       "Bash(xargs grep:*)",
       "Bash(grep '\"\"eslint-config-next\"\"' apps/web/package.json)",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "Bash(find /d/Synthex -type f -name *.sql)",
+      "Bash(head -20 /d/Synthex/database/migrations/*.sql)",
+      "Bash(grep -l \"RLS\\\\|ROW LEVEL SECURITY\\\\|CREATE POLICY\" /d/Synthex/supabase/*.sql /d/Synthex/database/migrations/*.sql)"
     ],
     "deny": [
       "Bash(git push --force*)",
