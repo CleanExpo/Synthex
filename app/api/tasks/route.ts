@@ -84,8 +84,13 @@ const updateTaskSchema = updateTaskFieldsSchema.extend({
 // =============================================================================
 
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
-import { getEffectiveOrganizationId } from '@/lib/multi-business/business-scope';
 import { logger } from '@/lib/logger';
+
+// NOTE (SYN-391): The Task model has no organisationId column — org-scoped
+// queries require a schema migration to add that column to the tasks table.
+// All queries here are scoped to userId, which correctly prevents cross-user
+// data access. The analytics and campaign routes (which do have organisationId)
+// use getEffectiveQueryFilter for full org scoping.
 
 // =============================================================================
 // GET - List Tasks

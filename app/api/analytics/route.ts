@@ -13,6 +13,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { z } from 'zod';
+import { getEffectiveQueryFilter } from '@/lib/multi-business/business-scope';
 
 // =============================================================================
 // Schemas
@@ -65,6 +66,19 @@ export async function GET(request: NextRequest) {
 
     const { timeRange, platform } = validation.data;
 
+    // Resolve org-scoped query filter from the JWT — never trust the request
+    // body for the organisation context (SYN-406).
+    const campaignFilter = await getEffectiveQueryFilter(userId);
+
+    // Guard: an empty filter means no valid org context was found. Returning
+    // data without a scope would expose every campaign in the database.
+    if (Object.keys(campaignFilter).length === 0) {
+      return NextResponse.json(
+        { error: 'No organisation context found' },
+        { status: 403 }
+      );
+    }
+
     // Calculate date range
     const now = new Date();
     let startDate: Date;
@@ -85,9 +99,9 @@ export async function GET(request: NextRequest) {
         startDate = new Date(0);
     }
 
-    // Get user's campaign IDs
+    // Get campaign IDs scoped to the user's active organisation context
     const campaigns = await prisma.campaign.findMany({
-      where: { userId },
+      where: campaignFilter,
       select: { id: true },
     });
     const campaignIds = campaigns.map(c => c.id);

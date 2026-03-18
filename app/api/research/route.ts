@@ -18,6 +18,12 @@ import prisma from '@/lib/prisma';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { logger } from '@/lib/logger';
 
+// NOTE (SYN-392): The GEOResearchReport model has no organisationId column —
+// org-scoped queries require a schema migration to add that column to the
+// geo_research_reports table. All queries are scoped to userId, which correctly
+// prevents cross-user data access. The slug uniqueness check (findUnique by slug)
+// is index-only and poses no cross-tenant risk.
+
 const createReportSchema = z.object({
   title: z.string().min(5).max(200),
   executiveSummary: z.string().optional(),
