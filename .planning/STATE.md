@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-02-17)
 ## Current Position
 
 Phase: 121 (performance-caching-residual-fixes) — **IN PROGRESS**
-Plan: 0 of 3 sub-plans — active
-Status: Swarm audit complete (5 agents). Linear sync complete. Phase 121 blocked fixes being resolved.
-Last activity: 2026-03-18 — Phase 121 swarm audit + Linear sync complete (SYN-387–408 created)
+Plan: 1 of 3 sub-plans DONE (121-02 complete)
+Status: Phase 121-02 all 7 blocking issues resolved and committed.
+Last activity: 2026-03-18 — Phase 121-02 complete (SYN-389/390/391/392/393/394/395/396/397/402/406 all Done)
 Linear: SYN-387 (Phase 121, In Progress), UNI-1180 (human action pending)
 
 Milestone: v10.0 Full Platform Quality Loop — **IN PROGRESS**
 Last milestone shipped: v9.0 — 2026-03-17
-Status: Phase 119 Done (SYN-384). Phase 120 Done (SYN-385). Phase 121 active (SYN-387).
+Status: Phase 119 Done (SYN-384). Phase 120 Done (SYN-385). Phase 121 active (SYN-387) — 121-02 done.
 
-Progress: ██████░░░░ 60% v10.0 (3/5 phases in flight)
+Progress: ███████░░░ 70% v10.0
 
-Next action: Phase 121-02 — Resolve all blocking issues (SYN-389–397, SYN-406)
+Next action: Phase 121-03 — BullMQ Worker Boot (UNI-1181) OR Phase 122 — E2E Production Validation (human-gated)
 
 ## Phase 121 Swarm Audit Summary (2026-03-18)
 
@@ -62,24 +62,24 @@ Phase 119 → 107 findings. Phase 120 closed ~15 (~14%).
 | SYN-385 | [Phase 120] Quality Sweep           | Medium   | Done        |
 | SYN-387 | [Phase 121] Performance & Caching   | High     | In Progress |
 | SYN-388 | [Phase 123] Diagnostic Repeat       | Medium   | Backlog     |
-| SYN-389 | BUG: billing/subscription missing   | Urgent   | Todo        |
-| SYN-390 | BUG: notification filter mismatch   | High     | Todo        |
-| SYN-391 | SECURITY: tasks org scoping         | Urgent   | Todo        |
-| SYN-392 | SECURITY: research org scoping      | Urgent   | Todo        |
-| SYN-393 | A11Y: 5 CRITICAL WCAG violations    | Urgent   | Todo        |
-| SYN-394 | REGRESSION: capture-service crash   | Urgent   | Todo        |
-| SYN-395 | SECURITY: bypass token in .env      | High     | Todo        |
-| SYN-396 | CLEANUP: remove demo/test routes    | High     | Todo        |
-| SYN-397 | SECURITY: login httpOnly cookie     | High     | Todo        |
+| SYN-389 | BUG: billing/subscription missing   | Urgent   | **Done**    |
+| SYN-390 | BUG: notification filter mismatch   | High     | **Done**    |
+| SYN-391 | SECURITY: tasks org scoping         | Urgent   | **Done**    |
+| SYN-392 | SECURITY: research org scoping      | Urgent   | **Done**    |
+| SYN-393 | A11Y: 5 CRITICAL WCAG violations    | Urgent   | **Done**    |
+| SYN-394 | REGRESSION: capture-service crash   | Urgent   | **Done**    |
+| SYN-395 | SECURITY: bypass token in .env      | High     | **Done**    |
+| SYN-396 | CLEANUP: remove demo/test routes    | High     | **Done**    |
+| SYN-397 | SECURITY: login httpOnly cookie     | High     | **Done**    |
 | SYN-398 | SECURITY: RLS 16/131 models         | High     | Backlog     |
 | SYN-399 | A11Y: 7 HIGH contrast violations    | Medium   | Backlog     |
 | SYN-400 | DEPS: openai 4.x behind             | High     | Backlog     |
 | SYN-401 | DEPS: @auth/prisma-adapter unused   | Medium   | Backlog     |
-| SYN-402 | BUILD: TS+ESLint disabled on deploy | High     | Backlog     |
+| SYN-402 | BUILD: TS+ESLint disabled on deploy | High     | **Done**    |
 | SYN-403 | DEPS: gsap license ambiguity        | Medium   | Backlog     |
 | SYN-404 | CODE: anonymous exports             | Low      | Backlog     |
 | SYN-405 | CODE: admin/layout Prisma direct    | Medium   | Backlog     |
-| SYN-406 | SECURITY: analytics org scoping     | Urgent   | Todo        |
+| SYN-406 | SECURITY: analytics org scoping     | Urgent   | **Done**    |
 | SYN-407 | [v11.0] Tech Foundation Upgrades    | Medium   | Backlog     |
 | SYN-408 | [v11.0] Voice + Industry Modes      | Medium   | Backlog     |
 
