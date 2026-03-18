@@ -531,6 +531,15 @@ model Organization {
   vaultSecrets    VaultSecret[]
   vaultAccessLogs VaultAccessLog[]
 
+  // Brand DNA relation
+  brandDna        BrandDNA?
+
+  // Stickiness — streak tracking
+  streakCount     Int      @default(0)
+  lastApprovedAt  DateTime?
+  longestStreak   Int      @default(0)
+  timezone        String   @default("Australia/Sydney")
+
   // Indices for multi-tenant queries
   @@index([slug])
   @@index([status])
@@ -4255,4 +4264,51 @@ model VaultAccessLog {
   @@index([actor])
   @@index([action])
   @@map("vault_access_logs")
+}
+
+// Brand DNA Engine (Phase A v11.0) — SYN-411
+
+/// Persistent brand profile extracted from a client's website URL.
+/// 1:1 with Organisation — one BrandDNA per org.
+/// Populated by the onboarding pipeline and refreshed on demand.
+model BrandDNA {
+  id              String   @id @default(cuid())
+  organizationId  String   @unique
+  organization    Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  // Identity
+  businessName    String
+  vertical        String   @default("other") // café | tradie | salon | gym | other
+  industry        String   @default("")
+
+  // Brand assets
+  logoUrl         String?
+  primaryColour   String?
+  secondaryColour String?
+  neutralColour   String?
+
+  // Voice & persona (stored as JSON)
+  brandVoice      Json     @default("{}")
+  // Shape: { formality: 1-5, boldness: 1-5, tone: string, samplePhrases: string[] }
+
+  persona         Json     @default("{}")
+  // Shape: { ageRange: string, values: string[], painPoints: string[], description: string }
+
+  offerings       Json     @default("[]")
+  // Shape: string[]
+
+  socialProfiles  Json     @default("[]")
+  // Shape: { platform: string, url: string, verified: boolean }[]
+
+  seoScore        Int?
+
+  // Pipeline metadata
+  sourceUrl       String
+  extractedAt     DateTime @default(now())
+  lastRefreshedAt DateTime @default(now())
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([organizationId])
+  @@map("brand_dna")
 }
