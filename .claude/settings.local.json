@@ -135,7 +135,8 @@
       "Read(//d/NodeJS-Starter-V1/**)",
       "Bash(grep -r '\"\"reactflow\"\"' apps/web/components/workflow/)",
       "Bash(xargs grep:*)",
-      "Bash(grep '\"\"eslint-config-next\"\"' apps/web/package.json)"
+      "Bash(grep '\"\"eslint-config-next\"\"' apps/web/package.json)",
+      "Bash(ls:*)"
     ],
     "deny": [
       "Bash(git push --force*)",
@@ -150,9 +151,7 @@
     ]
   },
   "enableAllProjectMcpServers": true,
-  "enabledMcpjsonServers": [
-    "linear"
-  ],
+  "enabledMcpjsonServers": ["linear"],
   "hooks": {
     "PreCompact": [
       {
