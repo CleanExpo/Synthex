@@ -36,24 +36,45 @@ import { StepProgressV2 } from '@/components/onboarding';
 // ============================================================================
 
 const PIPELINE_STAGES = [
-  { id: 'scraping', label: 'Scanning your website…', icon: Globe, delay: 0 },
-  { id: 'seo', label: 'Analysing SEO signals…', icon: Zap, delay: 3000 },
-  { id: 'speed', label: 'Running page speed tests…', icon: Zap, delay: 7000 },
+  {
+    id: 'scraping',
+    label: 'Scanning your website…',
+    subLabel: 'Reading your pages, copy, and structure',
+    icon: Globe,
+    delay: 0,
+  },
+  {
+    id: 'seo',
+    label: 'Analysing SEO signals…',
+    subLabel: 'Checking your search visibility score',
+    icon: Zap,
+    delay: 3000,
+  },
+  {
+    id: 'speed',
+    label: 'Running page speed tests…',
+    subLabel: 'Measuring load times and performance metrics',
+    icon: Zap,
+    delay: 7000,
+  },
   {
     id: 'ai',
     label: 'Extracting brand identity…',
+    subLabel: 'Identifying colours, tone of voice, and USP',
     icon: Sparkles,
     delay: 12000,
   },
   {
     id: 'social',
     label: 'Detecting social profiles…',
+    subLabel: 'Finding your existing audience across platforms',
     icon: Globe,
     delay: 16000,
   },
   {
     id: 'plan',
     label: 'Generating your marketing plan…',
+    subLabel: 'Building a 30-day content strategy just for you',
     icon: Sparkles,
     delay: 19000,
   },
@@ -400,20 +421,27 @@ export default function OnboardingPage() {
                         />
                       )}
                     </div>
-                    <span
-                      className={cn(
-                        'text-sm font-medium',
-                        isCompleted
-                          ? 'text-cyan-400'
-                          : isCurrent
-                            ? 'text-white'
-                            : 'text-gray-500'
+                    <div className="flex-1 min-w-0">
+                      <span
+                        className={cn(
+                          'text-sm font-medium',
+                          isCompleted
+                            ? 'text-cyan-400'
+                            : isCurrent
+                              ? 'text-white'
+                              : 'text-gray-500'
+                        )}
+                      >
+                        {isCompleted
+                          ? stage.label.replace('…', ' ✓')
+                          : stage.label}
+                      </span>
+                      {(isCurrent || isCompleted) && (
+                        <p className="text-[11px] text-gray-500 mt-0.5">
+                          {stage.subLabel}
+                        </p>
                       )}
-                    >
-                      {isCompleted
-                        ? stage.label.replace('…', ' ✓')
-                        : stage.label}
-                    </span>
+                    </div>
                   </div>
                 );
               })}

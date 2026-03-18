@@ -18,37 +18,39 @@ export async function GET(request: NextRequest) {
   // Require authentication — this endpoint exposes live business metrics including Stripe subscriber counts
   const userId = await getUserIdFromRequestOrCookies(request);
   if (!userId) {
-    return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+    return NextResponse.json(
+      { error: 'Authentication required' },
+      { status: 401 }
+    );
   }
 
   try {
     // Check cache
     const now = Date.now();
-    if (statsCache && (now - cacheTimestamp) < CACHE_DURATION) {
+    if (statsCache && now - cacheTimestamp < CACHE_DURATION) {
       return NextResponse.json(statsCache);
     }
 
     // Get real stats from database
-    const [
-      userCount,
-      campaignCount,
-      postCount,
-      publishedPostCount
-    ] = await Promise.all([
-      prisma.user.count(),
-      prisma.campaign.count(),
-      prisma.post.count(),
-      prisma.post.count({
-        where: { status: 'published' }
-      })
-    ]);
+    const [userCount, campaignCount, postCount, publishedPostCount] =
+      await Promise.all([
+        prisma.user.count(),
+        prisma.campaign.count(),
+        prisma.post.count(),
+        prisma.post.count({
+          where: { status: 'published' },
+        }),
+      ]);
 
     // Determine paid user count from Stripe or fall back to database
     let paidUserCount = 0;
     if (stripe) {
       try {
         // Get active subscription count from Stripe
-        const subscriptions = await stripe.subscriptions.list({ status: 'active', limit: 100 });
+        const subscriptions = await stripe.subscriptions.list({
+          status: 'active',
+          limit: 100,
+        });
         paidUserCount = subscriptions.data.length;
       } catch {
         // Stripe query failed, fall back to database user count
@@ -58,30 +60,36 @@ export async function GET(request: NextRequest) {
       paidUserCount = userCount;
     }
 
-    // Calculate engagement multiplier (mock for now, will be real when we have analytics)
-    // In production, this would be calculated from actual engagement metrics
-    const baseEngagement = 1.0;
-    const aiBoost = 2.2; // AI typically provides 2.2x boost
-    const engagementMultiplier = userCount > 0 ? aiBoost : baseEngagement;
+    // Calculate real average engagement rate from PlatformMetrics
+    const engagementAgg = await prisma.platformMetrics.aggregate({
+      _avg: { engagementRate: true },
+      where: { engagementRate: { not: null } },
+    });
+    // engagementRate is stored as a decimal (e.g. 0.035 = 3.5%)
+    // Multiply by 100 to get a percentage; default to null when no data
+    const avgEngagementRate = engagementAgg._avg.engagementRate;
+    const engagementMultiplier =
+      avgEngagementRate != null ? avgEngagementRate * 100 : null;
 
     // Calculate growth rate (new users in last 30 days)
     const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
     const recentUsers = await prisma.user.count({
       where: {
         createdAt: {
-          gte: thirtyDaysAgo
-        }
-      }
+          gte: thirtyDaysAgo,
+        },
+      },
     });
 
-    const growthRate = userCount > 0 ? Math.round((recentUsers / userCount) * 100) : 0;
+    const growthRate =
+      userCount > 0 ? Math.round((recentUsers / userCount) * 100) : 0;
 
     // Get platform distribution
     const platformStats = await prisma.post.groupBy({
       by: ['platform'],
       _count: {
-        platform: true
-      }
+        platform: true,
+      },
     });
 
     const stats = {
@@ -92,25 +100,31 @@ export async function GET(request: NextRequest) {
         growth: growthRate,
       },
       engagement: {
-        multiplier: engagementMultiplier.toFixed(1),
-        formatted: `${engagementMultiplier.toFixed(1)}x`,
+        multiplier:
+          engagementMultiplier != null
+            ? parseFloat(engagementMultiplier.toFixed(1))
+            : null,
+        formatted:
+          engagementMultiplier != null
+            ? `${engagementMultiplier.toFixed(1)}%`
+            : null,
         label: 'Engagement',
-        description: 'Average engagement boost with AI'
+        description: 'Average engagement rate across published posts',
       },
       campaigns: {
         total: campaignCount,
         formatted: formatNumber(campaignCount),
-        label: campaignCount === 1 ? 'Campaign' : 'Campaigns'
+        label: campaignCount === 1 ? 'Campaign' : 'Campaigns',
       },
       posts: {
         total: postCount,
         published: publishedPostCount,
         formatted: formatNumber(postCount),
-        label: postCount === 1 ? 'Post' : 'Posts Created'
+        label: postCount === 1 ? 'Post' : 'Posts Created',
       },
       platforms: platformStats.map(p => ({
         name: p.platform,
-        count: p._count.platform
+        count: p._count.platform,
       })),
       aiPowered: {
         enabled: true,
@@ -118,15 +132,15 @@ export async function GET(request: NextRequest) {
           'Content Generation',
           'Persona Learning',
           'Viral Pattern Analysis',
-          'Smart Scheduling'
-        ]
+          'Smart Scheduling',
+        ],
       },
       lastUpdated: new Date().toISOString(),
       dataSource: {
         users: stripe ? 'stripe' : 'database',
         campaigns: 'database',
-        posts: 'database'
-      }
+        posts: 'database',
+      },
     };
 
     // Update cache
@@ -134,7 +148,6 @@ export async function GET(request: NextRequest) {
     cacheTimestamp = now;
 
     return NextResponse.json(stats);
-
   } catch (error) {
     logger.error('Stats API error:', error);
 
@@ -144,31 +157,31 @@ export async function GET(request: NextRequest) {
         total: 0,
         formatted: '0',
         label: 'Users',
-        growth: 0
+        growth: 0,
       },
       engagement: {
         multiplier: 1.0,
         formatted: '1.0x',
         label: 'Engagement',
-        description: 'Setting up AI boost'
+        description: 'Setting up AI boost',
       },
       campaigns: {
         total: 0,
         formatted: '0',
-        label: 'Campaigns'
+        label: 'Campaigns',
       },
       posts: {
         total: 0,
         published: 0,
         formatted: '0',
-        label: 'Posts'
+        label: 'Posts',
       },
       platforms: [],
       aiPowered: {
         enabled: false,
-        features: []
+        features: [],
       },
-      lastUpdated: new Date().toISOString()
+      lastUpdated: new Date().toISOString(),
     });
   }
 }

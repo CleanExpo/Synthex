@@ -16,7 +16,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { getUserIdFromRequest } from '@/lib/auth/jwt-utils';
+import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { createVisualAsset } from '@/lib/services/visual-asset-manager';
 import { isConfigured } from '@/lib/services/paper-banana-client';
 import { logger } from '@/lib/logger';
@@ -33,22 +33,32 @@ const generateSchema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
-    const userId = await getUserIdFromRequest(request);
+    const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized', message: 'Authentication required' }, { status: 401 });
+      return NextResponse.json(
+        { error: 'Unauthorized', message: 'Authentication required' },
+        { status: 401 }
+      );
     }
 
     if (!isConfigured()) {
-      return NextResponse.json({
-        error: 'Service Unavailable',
-        message: 'Paper Banana service is not configured. Set PAPER_BANANA_SERVICE_URL and PAPER_BANANA_API_KEY.',
-      }, { status: 503 });
+      return NextResponse.json(
+        {
+          error: 'Service Unavailable',
+          message:
+            'Paper Banana service is not configured. Set PAPER_BANANA_SERVICE_URL and PAPER_BANANA_API_KEY.',
+        },
+        { status: 503 }
+      );
     }
 
     const body = await request.json();
     const validation = generateSchema.safeParse(body);
     if (!validation.success) {
-      return NextResponse.json({ error: 'Validation Error', details: validation.error.issues }, { status: 400 });
+      return NextResponse.json(
+        { error: 'Validation Error', details: validation.error.issues },
+        { status: 400 }
+      );
     }
 
     const data = validation.data;
@@ -67,6 +77,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(result, { status: 201 });
   } catch (error) {
     logger.error('Visual generation error:', error);
-    return NextResponse.json({ error: 'Internal Server Error', message: 'Failed to generate visual' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Internal Server Error', message: 'Failed to generate visual' },
+      { status: 500 }
+    );
   }
 }

@@ -16,7 +16,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { Prisma } from '@prisma/client';
 import prisma from '@/lib/prisma';
-import { getUserIdFromRequest } from '@/lib/auth/jwt-utils';
+import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { RateLimiter } from '@/lib/rate-limit';
 import { subscriptionService } from '@/lib/stripe/subscription-service';
 import { isFeatureAvailable } from '@/lib/geo/feature-limits';
@@ -54,7 +54,7 @@ function countWords(text: string): number {
 export async function POST(request: NextRequest) {
   try {
     // 1. Auth
-    const userId = await getUserIdFromRequest(request);
+    const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
       return NextResponse.json(
         { error: 'Unauthorised', message: 'Authentication required' },
@@ -74,7 +74,10 @@ export async function POST(request: NextRequest) {
     // 3. Validate body
     const body = await request.json().catch(() => null);
     if (!body) {
-      return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'Invalid request body' },
+        { status: 400 }
+      );
     }
 
     const parsed = analyzeSchema.safeParse(body);
@@ -91,7 +94,10 @@ export async function POST(request: NextRequest) {
     const wordCount = countWords(text);
     if (wordCount < 200) {
       return NextResponse.json(
-        { error: 'Minimum 200 words required for fingerprint analysis', wordCount },
+        {
+          error: 'Minimum 200 words required for fingerprint analysis',
+          wordCount,
+        },
         { status: 400 }
       );
     }
@@ -121,15 +127,18 @@ export async function POST(request: NextRequest) {
     if (save && result.fingerprint.valid && result.fingerprint.fingerprint) {
       // Get orgId from subscription record (may be null for solo users)
       const subscription = await subscriptionService.getSubscription(userId);
-      const orgId = (subscription as unknown as { orgId?: string } | null)?.orgId ?? userId;
+      const orgId =
+        (subscription as unknown as { orgId?: string } | null)?.orgId ?? userId;
 
       const profile = await prisma.voiceProfile.create({
         data: {
           userId,
           orgId,
-          name: name ?? `Voice Profile ${new Date().toLocaleDateString('en-AU')}`,
+          name:
+            name ?? `Voice Profile ${new Date().toLocaleDateString('en-AU')}`,
           sampleText: text,
-          fingerprint: result.fingerprint.fingerprint as unknown as Prisma.InputJsonValue,
+          fingerprint: result.fingerprint
+            .fingerprint as unknown as Prisma.InputJsonValue,
           wordCount,
         },
       });

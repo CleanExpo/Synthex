@@ -9,14 +9,19 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import { getUserIdFromRequest } from '@/lib/auth/jwt-utils';
-import type { SubmissionSummary, UpcomingDeadline, AwardStatus, AwardPriority } from '@/lib/awards/types';
+import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
+import type {
+  SubmissionSummary,
+  UpcomingDeadline,
+  AwardStatus,
+  AwardPriority,
+} from '@/lib/awards/types';
 
 // ─── GET /api/submissions ─────────────────────────────────────────────────────
 
 export async function GET(request: NextRequest) {
   try {
-    const userId = await getUserIdFromRequest(request);
+    const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
     }
@@ -25,8 +30,11 @@ export async function GET(request: NextRequest) {
     const orgId = searchParams.get('orgId');
 
     const awardWhere: Record<string, unknown> = { userId };
-    const dirWhere:   Record<string, unknown> = { userId };
-    if (orgId) { awardWhere.orgId = orgId; dirWhere.orgId = orgId; }
+    const dirWhere: Record<string, unknown> = { userId };
+    if (orgId) {
+      awardWhere.orgId = orgId;
+      dirWhere.orgId = orgId;
+    }
 
     // Run all queries in parallel
     const ninetyDaysFromNow = new Date();
@@ -41,8 +49,12 @@ export async function GET(request: NextRequest) {
       upcomingAwards,
     ] = await Promise.all([
       prisma.awardListing.count({ where: awardWhere }),
-      prisma.awardListing.count({ where: { ...awardWhere, status: 'submitted' } }),
-      prisma.awardListing.count({ where: { ...awardWhere, status: { in: ['won', 'shortlisted'] } } }),
+      prisma.awardListing.count({
+        where: { ...awardWhere, status: 'submitted' },
+      }),
+      prisma.awardListing.count({
+        where: { ...awardWhere, status: { in: ['won', 'shortlisted'] } },
+      }),
       prisma.directoryListing.count({ where: dirWhere }),
       prisma.directoryListing.count({ where: { ...dirWhere, status: 'live' } }),
       prisma.awardListing.findMany({
@@ -53,24 +65,32 @@ export async function GET(request: NextRequest) {
         },
         orderBy: { deadline: 'asc' },
         take: 20,
-        select: { id: true, name: true, deadline: true, priority: true, status: true },
+        select: {
+          id: true,
+          name: true,
+          deadline: true,
+          priority: true,
+          status: true,
+        },
       }),
     ]);
 
     const now = new Date();
     const upcomingDeadlines: UpcomingDeadline[] = upcomingAwards
-      .filter((a) => a.deadline !== null)
-      .map((a) => {
+      .filter(a => a.deadline !== null)
+      .map(a => {
         const dl = a.deadline as Date;
-        const daysUntil = Math.ceil((dl.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+        const daysUntil = Math.ceil(
+          (dl.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
+        );
         return {
-          id:         a.id,
-          name:       a.name,
-          type:       'award' as const,
-          deadline:   dl.toISOString(),
+          id: a.id,
+          name: a.name,
+          type: 'award' as const,
+          deadline: dl.toISOString(),
           daysUntil,
-          priority:   a.priority as AwardPriority,
-          status:     a.status   as AwardStatus,
+          priority: a.priority as AwardPriority,
+          status: a.status as AwardStatus,
         };
       });
 
@@ -86,6 +106,9 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ summary });
   } catch (err) {
     console.error('[GET /api/submissions]', err);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
   }
 }

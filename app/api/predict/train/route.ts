@@ -20,28 +20,44 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import prisma from '@/lib/prisma';
-import { getUserIdFromRequest } from '@/lib/auth/jwt-utils';
+import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { getForecastingClient } from '@/lib/forecasting/client';
-import { isSpatiotemporalAvailable, isWithinForecastLimit } from '@/lib/forecasting/feature-limits';
+import {
+  isSpatiotemporalAvailable,
+  isWithinForecastLimit,
+} from '@/lib/forecasting/feature-limits';
 import { logger } from '@/lib/logger';
 
 // ─── Zod Schema ───────────────────────────────────────────────────────────────
 
 const trainSchema = z.object({
-  name: z.string().min(1).max(100).optional().default('cross_platform_engagement'),
-  targetMetric: z.enum(['engagement_rate', 'impressions', 'reach', 'clicks', 'conversions']),
-  config: z.object({
-    numIterations: z.number().int().min(100).max(2000).optional(),
-    learningRate: z.number().min(0.0001).max(0.1).optional(),
-    numParticles: z.number().int().min(10).max(100).optional(),
-  }).optional(),
+  name: z
+    .string()
+    .min(1)
+    .max(100)
+    .optional()
+    .default('cross_platform_engagement'),
+  targetMetric: z.enum([
+    'engagement_rate',
+    'impressions',
+    'reach',
+    'clicks',
+    'conversions',
+  ]),
+  config: z
+    .object({
+      numIterations: z.number().int().min(100).max(2000).optional(),
+      learningRate: z.number().min(0.0001).max(0.1).optional(),
+      numParticles: z.number().int().min(10).max(100).optional(),
+    })
+    .optional(),
 });
 
 // ─── Training Data Collector ──────────────────────────────────────────────────
 
 async function collectSpatiotemporalData(
   orgId: string,
-  targetMetric: string,
+  targetMetric: string
 ): Promise<Array<Record<string, string | number>>> {
   const connections = await prisma.platformConnection.findMany({
     where: { organizationId: orgId, isActive: true },
@@ -53,13 +69,17 @@ async function collectSpatiotemporalData(
 
   for (const conn of connections) {
     const posts = await prisma.platformPost.findMany({
-      where: { connectionId: conn.id, status: 'published', publishedAt: { not: null } },
+      where: {
+        connectionId: conn.id,
+        status: 'published',
+        publishedAt: { not: null },
+      },
       select: { id: true },
     });
     if (posts.length === 0) continue;
 
     const metrics = await prisma.platformMetrics.findMany({
-      where: { postId: { in: posts.map((p) => p.id) } },
+      where: { postId: { in: posts.map(p => p.id) } },
       select: {
         engagementRate: true,
         impressions: true,
@@ -89,7 +109,11 @@ async function collectSpatiotemporalData(
     }
 
     for (const [date, { sum, count }] of Object.entries(byDate)) {
-      results.push({ platform: conn.platform, date, [targetMetric]: sum / count });
+      results.push({
+        platform: conn.platform,
+        date,
+        [targetMetric]: sum / count,
+      });
     }
   }
 
@@ -101,25 +125,28 @@ async function collectSpatiotemporalData(
 export async function POST(request: NextRequest) {
   try {
     // 1. Auth
-    const userId = await getUserIdFromRequest(request);
+    const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
       return NextResponse.json(
         { error: 'Unauthorised', message: 'Authentication required' },
-        { status: 401 },
+        { status: 401 }
       );
     }
 
     // Parse body
     const body = await request.json().catch(() => null);
     if (!body) {
-      return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'Invalid request body' },
+        { status: 400 }
+      );
     }
 
     const validation = trainSchema.safeParse(body);
     if (!validation.success) {
       return NextResponse.json(
         { error: 'Validation error', details: validation.error.issues },
-        { status: 400 },
+        { status: 400 }
       );
     }
 
@@ -128,12 +155,18 @@ export async function POST(request: NextRequest) {
     // 2. Org + plan resolve (plan is on Organisation, NOT User)
     const user = await prisma.user.findUnique({
       where: { id: userId },
-      select: { organizationId: true, organization: { select: { plan: true } } },
+      select: {
+        organizationId: true,
+        organization: { select: { plan: true } },
+      },
     });
     if (!user?.organizationId) {
       return NextResponse.json(
-        { error: 'Forbidden', message: 'Organisation required to train a model' },
-        { status: 403 },
+        {
+          error: 'Forbidden',
+          message: 'Organisation required to train a model',
+        },
+        { status: 403 }
       );
     }
     const orgId = user.organizationId;
@@ -144,10 +177,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           error: 'Upgrade required',
-          message: 'Upgrade to Growth or Scale to unlock BayesNF spatiotemporal models',
+          message:
+            'Upgrade to Growth or Scale to unlock BayesNF spatiotemporal models',
           upgrade: true,
         },
-        { status: 403 },
+        { status: 403 }
       );
     }
 
@@ -159,7 +193,7 @@ export async function POST(request: NextRequest) {
           error: 'Forbidden',
           message: `Spatiotemporal model limit reached for ${plan} plan`,
         },
-        { status: 403 },
+        { status: 403 }
       );
     }
 
@@ -171,9 +205,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           error: 'Unprocessable Entity',
-          message: 'Need at least 14 cross-platform data points to train a BayesNF model',
+          message:
+            'Need at least 14 cross-platform data points to train a BayesNF model',
         },
-        { status: 422 },
+        { status: 422 }
       );
     }
 
@@ -218,7 +253,9 @@ export async function POST(request: NextRequest) {
     const accuracyJson = result.accuracy
       ? (JSON.parse(JSON.stringify(result.accuracy)) as object)
       : {};
-    const configJson = config ? (JSON.parse(JSON.stringify(config)) as object) : {};
+    const configJson = config
+      ? (JSON.parse(JSON.stringify(config)) as object)
+      : {};
 
     const model = await prisma.spatiotemporalModel.upsert({
       where: { orgId_name: { orgId, name } },
@@ -230,14 +267,18 @@ export async function POST(request: NextRequest) {
         dimensions: { spatial: ['platform'], temporal: ['date'] },
         status: result.status,
         trainingPoints: result.trainingPoints ?? dataPoints.length,
-        lastTrainedAt: result.lastTrainedAt ? new Date(result.lastTrainedAt) : new Date(),
+        lastTrainedAt: result.lastTrainedAt
+          ? new Date(result.lastTrainedAt)
+          : new Date(),
         accuracy: accuracyJson,
         config: configJson,
       },
       update: {
         status: result.status,
         trainingPoints: result.trainingPoints ?? dataPoints.length,
-        lastTrainedAt: result.lastTrainedAt ? new Date(result.lastTrainedAt) : new Date(),
+        lastTrainedAt: result.lastTrainedAt
+          ? new Date(result.lastTrainedAt)
+          : new Date(),
         accuracy: accuracyJson,
         config: configJson,
       },
@@ -248,8 +289,11 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     logger.error('POST /api/predict/train error:', error);
     return NextResponse.json(
-      { error: 'Internal Server Error', message: 'Failed to train spatiotemporal model' },
-      { status: 500 },
+      {
+        error: 'Internal Server Error',
+        message: 'Failed to train spatiotemporal model',
+      },
+      { status: 500 }
     );
   }
 }

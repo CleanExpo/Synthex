@@ -12,13 +12,13 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getUserIdFromRequest } from '@/lib/auth/jwt-utils';
+import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { prisma } from '@/lib/prisma';
 import { logger } from '@/lib/logger';
 
 export async function GET(req: NextRequest) {
   try {
-    const userId = await getUserIdFromRequest(req);
+    const userId = await getUserIdFromRequestOrCookies(req);
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
     }
@@ -27,7 +27,10 @@ export async function GET(req: NextRequest) {
     const analysisId = searchParams.get('analysisId');
 
     if (!analysisId) {
-      return NextResponse.json({ error: 'analysisId query parameter is required' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'analysisId query parameter is required' },
+        { status: 400 }
+      );
     }
 
     // Verify the analysis belongs to the requesting user
@@ -37,7 +40,10 @@ export async function GET(req: NextRequest) {
     });
 
     if (!analysis) {
-      return NextResponse.json({ error: 'Analysis not found' }, { status: 404 });
+      return NextResponse.json(
+        { error: 'Analysis not found' },
+        { status: 404 }
+      );
     }
 
     if (analysis.userId !== userId) {
@@ -65,7 +71,10 @@ export async function GET(req: NextRequest) {
     return NextResponse.json(citations);
   } catch (error) {
     logger.error('Authority citations fetch error', error);
-    return NextResponse.json({ error: 'Failed to fetch citations' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Failed to fetch citations' },
+      { status: 500 }
+    );
   }
 }
 

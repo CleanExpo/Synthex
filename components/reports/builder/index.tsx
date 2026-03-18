@@ -4,10 +4,29 @@ import { useState, useCallback } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
-  FileText, Plus, Calendar, Save, Layout, Loader2,
+  FileText,
+  Plus,
+  Calendar,
+  Save,
+  Layout,
+  Loader2,
 } from '@/components/icons';
-import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
-import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { DashboardEmptyState } from '@/components/dashboard/empty-state';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
 import { notify } from '@/lib/notifications';
 import { useReportTemplates } from '@/hooks/use-report-templates';
 import { useReportExport } from '@/hooks/use-report-export';
@@ -27,11 +46,7 @@ export function ReportBuilder() {
     saveTemplate,
   } = useReportTemplates();
 
-  const {
-    generateReport,
-    isGenerating,
-    exportStatus,
-  } = useReportExport();
+  const { generateReport, isGenerating, exportStatus } = useReportExport();
 
   // Local state
   const [widgets, setWidgets] = useState<ReportWidget[]>([]);
@@ -65,9 +80,9 @@ export function ReportBuilder() {
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     if (over && active.id !== over.id) {
-      setWidgets((items) => {
-        const oldIndex = items.findIndex((item) => item.id === active.id);
-        const newIndex = items.findIndex((item) => item.id === over.id);
+      setWidgets(items => {
+        const oldIndex = items.findIndex(item => item.id === active.id);
+        const newIndex = items.findIndex(item => item.id === over.id);
         return arrayMove(items, oldIndex, newIndex);
       });
     }
@@ -87,7 +102,7 @@ export function ReportBuilder() {
       dataSource: widgetDataSource,
       config: {},
       size: widgetSize as ReportWidget['size'],
-      visible: true
+      visible: true,
     };
 
     setWidgets([...widgets, newWidget]);
@@ -99,11 +114,18 @@ export function ReportBuilder() {
   const updateWidget = () => {
     if (!editingWidget) return;
 
-    setWidgets(widgets.map(w =>
-      w.id === editingWidget.id
-        ? { ...editingWidget, title: widgetTitle, dataSource: widgetDataSource, size: widgetSize as ReportWidget['size'] }
-        : w
-    ));
+    setWidgets(
+      widgets.map(w =>
+        w.id === editingWidget.id
+          ? {
+              ...editingWidget,
+              title: widgetTitle,
+              dataSource: widgetDataSource,
+              size: widgetSize as ReportWidget['size'],
+            }
+          : w
+      )
+    );
 
     setEditingWidget(null);
     resetWidgetForm();
@@ -145,51 +167,67 @@ export function ReportBuilder() {
         visualizations: widgetsToVisualizations(widgets),
         layout: {
           columns: 4,
-          sections: [{
-            title: 'Main',
-            components: widgets.map(w => w.id),
-          }],
+          sections: [
+            {
+              title: 'Main',
+              components: widgets.map(w => w.id),
+            },
+          ],
         },
       });
 
       notify.success('Report saved successfully!');
     } catch (err) {
-      notify.error(err instanceof Error ? err.message : 'Failed to save report');
+      notify.error(
+        err instanceof Error ? err.message : 'Failed to save report'
+      );
     } finally {
       setIsSaving(false);
     }
   }, [reportName, reportDescription, widgets, saveTemplate]);
 
   // Export Report (wired to real API)
-  const exportReport = useCallback(async (format: string) => {
-    if (!reportName) {
-      notify.error('Please enter a report name before exporting');
-      return;
-    }
-
-    const formatMap: Record<string, 'pdf' | 'csv' | 'json'> = {
-      PDF: 'pdf', pdf: 'pdf', CSV: 'csv', csv: 'csv', JSON: 'json', json: 'json',
-    };
-    const apiFormat = formatMap[format] || 'pdf';
-
-    notify.info(`Generating report as ${format}...`);
-    try {
-      const result = await generateReport({
-        name: reportName,
-        type: 'comprehensive',
-        format: apiFormat,
-      });
-
-      if (result?.downloadUrl) {
-        window.open(result.downloadUrl, '_blank');
-        notify.success(`Report exported as ${format}`);
-      } else {
-        notify.success('Report generated successfully');
+  const exportReport = useCallback(
+    async (format: string) => {
+      if (!reportName) {
+        notify.error('Please enter a report name before exporting');
+        return;
       }
-    } catch (err) {
-      notify.error(err instanceof Error ? err.message : `Failed to export report as ${format}`);
-    }
-  }, [reportName, generateReport]);
+
+      const formatMap: Record<string, 'pdf' | 'csv' | 'json'> = {
+        PDF: 'pdf',
+        pdf: 'pdf',
+        CSV: 'csv',
+        csv: 'csv',
+        JSON: 'json',
+        json: 'json',
+      };
+      const apiFormat = formatMap[format] || 'pdf';
+
+      notify.info(`Generating report as ${format}...`);
+      try {
+        const result = await generateReport({
+          name: reportName,
+          type: 'comprehensive',
+          format: apiFormat,
+        });
+
+        if (result?.downloadUrl) {
+          window.open(result.downloadUrl, '_blank');
+          notify.success(`Report exported as ${format}`);
+        } else {
+          notify.success('Report generated successfully');
+        }
+      } catch (err) {
+        notify.error(
+          err instanceof Error
+            ? err.message
+            : `Failed to export report as ${format}`
+        );
+      }
+    },
+    [reportName, generateReport]
+  );
 
   // Load Template (from API data)
   const loadTemplate = useCallback((template: ReportTemplate) => {
@@ -208,8 +246,12 @@ export function ReportBuilder() {
             <FileText className="h-6 w-6 text-cyan-400" />
           </div>
           <div>
-            <h2 className="text-2xl font-bold text-white">Custom Report Builder</h2>
-            <p className="text-gray-400">Create personalized reports and dashboards</p>
+            <h2 className="text-2xl font-bold text-white">
+              Custom Report Builder
+            </h2>
+            <p className="text-gray-400">
+              Create personalized reports and dashboards
+            </p>
           </div>
         </div>
 
@@ -267,14 +309,21 @@ export function ReportBuilder() {
           </Card>
 
           {/* Widgets Grid */}
-          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-            <SortableContext items={widgets.map(w => w.id)} strategy={verticalListSortingStrategy}>
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleDragEnd}
+          >
+            <SortableContext
+              items={widgets.map(w => w.id)}
+              strategy={verticalListSortingStrategy}
+            >
               <div className="grid grid-cols-4 gap-4">
-                {widgets.map((widget) => (
+                {widgets.map(widget => (
                   <SortableWidget
                     key={widget.id}
                     widget={widget}
-                    onEdit={(w) => {
+                    onEdit={w => {
                       setEditingWidget(w);
                       setWidgetTitle(w.title);
                       setWidgetDataSource(w.dataSource);
@@ -290,11 +339,16 @@ export function ReportBuilder() {
           </DndContext>
 
           {widgets.length === 0 && (
-            <Card variant="glass" className="p-12 text-center">
-              <Layout className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-400">No widgets added yet</p>
-              <p className="text-sm text-gray-500 mt-1">Click &quot;Add Widget&quot; to get started</p>
-            </Card>
+            <DashboardEmptyState
+              icon={Layout}
+              title="Build your first report"
+              description="Reports pull live data from your connected platforms. Add widgets to visualise performance."
+              action={{
+                label: 'Add Widget',
+                onClick: () => setShowAddWidget(true),
+                icon: Plus,
+              }}
+            />
           )}
         </div>
       </div>

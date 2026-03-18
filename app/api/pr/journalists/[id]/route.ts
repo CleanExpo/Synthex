@@ -11,26 +11,26 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import prisma from '@/lib/prisma';
-import { getUserIdFromRequest } from '@/lib/auth/jwt-utils';
+import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 
 // ─── Validation ────────────────────────────────────────────────────────────────
 
 const UpdateJournalistSchema = z.object({
-  name:            z.string().min(1).max(200).optional(),
-  outlet:          z.string().min(1).max(200).optional(),
-  outletDomain:    z.string().min(1).max(200).optional(),
-  email:           z.string().email().optional(),
-  emailVerified:   z.boolean().optional(),
-  emailScore:      z.number().int().min(0).max(100).optional(),
-  title:           z.string().max(200).optional(),
-  location:        z.string().max(200).optional(),
-  beats:           z.array(z.string()).optional(),
-  twitterHandle:   z.string().max(100).optional(),
-  linkedinUrl:     z.string().url().optional(),
-  notes:           z.string().max(5000).optional(),
-  tier:            z.enum(['cold', 'warm', 'hot', 'advocate']).optional(),
+  name: z.string().min(1).max(200).optional(),
+  outlet: z.string().min(1).max(200).optional(),
+  outletDomain: z.string().min(1).max(200).optional(),
+  email: z.string().email().optional(),
+  emailVerified: z.boolean().optional(),
+  emailScore: z.number().int().min(0).max(100).optional(),
+  title: z.string().max(200).optional(),
+  location: z.string().max(200).optional(),
+  beats: z.array(z.string()).optional(),
+  twitterHandle: z.string().max(100).optional(),
+  linkedinUrl: z.string().url().optional(),
+  notes: z.string().max(5000).optional(),
+  tier: z.enum(['cold', 'warm', 'hot', 'advocate']).optional(),
   lastContactedAt: z.string().datetime().optional(),
-  doNotContact:    z.boolean().optional(),
+  doNotContact: z.boolean().optional(),
 });
 
 // ─── Route params type ─────────────────────────────────────────────────────────
@@ -43,7 +43,7 @@ interface RouteParams {
 
 export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
-    const userId = await getUserIdFromRequest(request);
+    const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
     }
@@ -67,7 +67,10 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     return NextResponse.json({ contact });
   } catch (error) {
     console.error('[PR journalists/[id] GET]', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
   }
 }
 
@@ -75,7 +78,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
 export async function PATCH(request: NextRequest, { params }: RouteParams) {
   try {
-    const userId = await getUserIdFromRequest(request);
+    const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
     }
@@ -105,14 +108,19 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
       where: { id },
       data: {
         ...data,
-        lastContactedAt: data.lastContactedAt ? new Date(data.lastContactedAt) : undefined,
+        lastContactedAt: data.lastContactedAt
+          ? new Date(data.lastContactedAt)
+          : undefined,
       },
     });
 
     return NextResponse.json({ contact });
   } catch (error) {
     console.error('[PR journalists/[id] PATCH]', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
   }
 }
 
@@ -120,7 +128,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
 
 export async function DELETE(request: NextRequest, { params }: RouteParams) {
   try {
-    const userId = await getUserIdFromRequest(request);
+    const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
     }
@@ -144,6 +152,9 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error('[PR journalists/[id] DELETE]', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
   }
 }

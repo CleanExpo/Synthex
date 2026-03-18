@@ -8,21 +8,21 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import { getUserIdFromRequest } from '@/lib/auth/jwt-utils';
+import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { logger } from '@/lib/logger';
 
 // ─── GET — Model status ───────────────────────────────────────────────────────
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ modelId: string }> },
+  { params }: { params: Promise<{ modelId: string }> }
 ) {
   try {
-    const userId = await getUserIdFromRequest(request);
+    const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
       return NextResponse.json(
         { error: 'Unauthorised', message: 'Authentication required' },
-        { status: 401 },
+        { status: 401 }
       );
     }
 
@@ -33,7 +33,7 @@ export async function GET(
     if (!user?.organizationId) {
       return NextResponse.json(
         { error: 'Not Found', message: 'Forecast model not found' },
-        { status: 404 },
+        { status: 404 }
       );
     }
 
@@ -53,7 +53,7 @@ export async function GET(
     if (!model) {
       return NextResponse.json(
         { error: 'Not Found', message: 'Forecast model not found' },
-        { status: 404 },
+        { status: 404 }
       );
     }
 
@@ -68,8 +68,11 @@ export async function GET(
   } catch (error) {
     logger.error('GET /api/forecast/[modelId] error:', error);
     return NextResponse.json(
-      { error: 'Internal Server Error', message: 'Failed to fetch forecast model' },
-      { status: 500 },
+      {
+        error: 'Internal Server Error',
+        message: 'Failed to fetch forecast model',
+      },
+      { status: 500 }
     );
   }
 }

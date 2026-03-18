@@ -113,7 +113,6 @@ const nextConfig = {
     'bullmq',
     'ioredis',
     'puppeteer',
-    'puppeteer-screen-recorder',
     // Phase 114-02: @sentry/nextjs + OTel packages REMOVED from dependencies.
     // They registered require-in-the-middle / import-in-the-middle hooks that
     // hung ALL Lambda cold starts for 10+ seconds. No longer needed here.

@@ -320,10 +320,10 @@ const sidebarGroups: Array<{
 ];
 
 const STARTER_GROUP_IDS = new Set([
-  'command-centre',
   'main',
   'content-ai',
   'planning',
+  'analytics',
 ]);
 const SIDEBAR_EXPANDED_KEY = 'sidebar-show-all-groups';
 

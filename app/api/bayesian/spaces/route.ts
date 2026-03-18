@@ -16,9 +16,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import prisma from '@/lib/prisma';
-import { getUserIdFromRequest } from '@/lib/auth/jwt-utils';
+import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { getBayesianClient } from '@/lib/bayesian/client';
-import { isSurfaceAvailable, isWithinBOLimit, getBOFeatureLimits } from '@/lib/bayesian/feature-limits';
+import {
+  isSurfaceAvailable,
+  isWithinBOLimit,
+  getBOFeatureLimits,
+} from '@/lib/bayesian/feature-limits';
 import { GEO_SCORE_BOUNDS } from '@/lib/bayesian/surfaces/geo-weights';
 import { TACTIC_BOUNDS } from '@/lib/bayesian/surfaces/tactic-weights';
 import type { BOSurface } from '@/lib/bayesian/types';
@@ -46,7 +50,9 @@ const createSpaceSchema = z.object({
 
 // ─── Parameter bounds per surface ──────────────────────────────────────────────
 
-function getBoundsForSurface(surface: BOSurface): Record<string, { min: number; max: number }> {
+function getBoundsForSurface(
+  surface: BOSurface
+): Record<string, { min: number; max: number }> {
   if (surface === 'geo_score_weights') return GEO_SCORE_BOUNDS;
   if (surface === 'tactic_weights') return TACTIC_BOUNDS;
   // Generic bounds for other surfaces — 0.0 to 1.0
@@ -57,11 +63,11 @@ function getBoundsForSurface(surface: BOSurface): Record<string, { min: number; 
 
 export async function GET(request: NextRequest) {
   try {
-    const userId = await getUserIdFromRequest(request);
+    const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
       return NextResponse.json(
         { error: 'Unauthorised', message: 'Authentication required' },
-        { status: 401 },
+        { status: 401 }
       );
     }
 
@@ -97,7 +103,7 @@ export async function GET(request: NextRequest) {
     logger.error('GET /api/bayesian/spaces error:', error);
     return NextResponse.json(
       { error: 'Internal Server Error', message: 'Failed to list spaces' },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }
@@ -106,24 +112,27 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const userId = await getUserIdFromRequest(request);
+    const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
       return NextResponse.json(
         { error: 'Unauthorised', message: 'Authentication required' },
-        { status: 401 },
+        { status: 401 }
       );
     }
 
     const body = await request.json().catch(() => null);
     if (!body) {
-      return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'Invalid request body' },
+        { status: 400 }
+      );
     }
 
     const validation = createSpaceSchema.safeParse(body);
     if (!validation.success) {
       return NextResponse.json(
         { error: 'Validation error', details: validation.error.issues },
-        { status: 400 },
+        { status: 400 }
       );
     }
 
@@ -132,12 +141,18 @@ export async function POST(request: NextRequest) {
     // Resolve org and plan
     const user = await prisma.user.findUnique({
       where: { id: userId },
-      select: { organizationId: true, organization: { select: { plan: true } } },
+      select: {
+        organizationId: true,
+        organization: { select: { plan: true } },
+      },
     });
     if (!user?.organizationId) {
       return NextResponse.json(
-        { error: 'Forbidden', message: 'Organisation required to create a BO space' },
-        { status: 403 },
+        {
+          error: 'Forbidden',
+          message: 'Organisation required to create a BO space',
+        },
+        { status: 403 }
       );
     }
     const orgId = user.organizationId;
@@ -146,8 +161,11 @@ export async function POST(request: NextRequest) {
     // Feature-limit checks
     if (!isSurfaceAvailable(plan, surface)) {
       return NextResponse.json(
-        { error: 'Forbidden', message: `Surface '${surface}' is not available on the ${plan} plan` },
-        { status: 403 },
+        {
+          error: 'Forbidden',
+          message: `Surface '${surface}' is not available on the ${plan} plan`,
+        },
+        { status: 403 }
       );
     }
 
@@ -159,7 +177,7 @@ export async function POST(request: NextRequest) {
           error: 'Forbidden',
           message: `Optimisation space limit reached (${limits.optimisationSpaces} spaces on ${plan} plan)`,
         },
-        { status: 403 },
+        { status: 403 }
       );
     }
 
@@ -182,7 +200,11 @@ export async function POST(request: NextRequest) {
         });
         externalStatus = 'active';
       } catch (err) {
-        logger.warn('BO service createSpace failed — persisting as pending', { surface, orgId, err });
+        logger.warn('BO service createSpace failed — persisting as pending', {
+          surface,
+          orgId,
+          err,
+        });
       }
     }
 
@@ -210,7 +232,7 @@ export async function POST(request: NextRequest) {
     logger.error('POST /api/bayesian/spaces error:', error);
     return NextResponse.json(
       { error: 'Internal Server Error', message: 'Failed to create space' },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }

@@ -15,7 +15,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { Prisma } from '@prisma/client';
 import prisma from '@/lib/prisma';
-import { getUserIdFromRequest } from '@/lib/auth/jwt-utils';
+import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { logger } from '@/lib/logger';
 
 const createCaseStudySchema = z.object({
@@ -30,22 +30,32 @@ const createCaseStudySchema = z.object({
   results: z.string().optional(),
   testimonial: z.string().optional(),
   coordinates: z.object({ lat: z.number(), lng: z.number() }).optional(),
-  napData: z.object({
-    businessName: z.string(),
-    address: z.string(),
-    phone: z.string(),
-    website: z.string().url().optional(),
-  }).optional(),
+  napData: z
+    .object({
+      businessName: z.string(),
+      address: z.string(),
+      phone: z.string(),
+      website: z.string().url().optional(),
+    })
+    .optional(),
 });
 
 function generateSlug(title: string, suburb: string): string {
-  return `${title}-${suburb}`.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').substring(0, 100);
+  return `${title}-${suburb}`
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '')
+    .substring(0, 100);
 }
 
 export async function GET(request: NextRequest) {
   try {
-    const userId = await getUserIdFromRequest(request);
-    if (!userId) return NextResponse.json({ error: 'Unauthorized', message: 'Authentication required' }, { status: 401 });
+    const userId = await getUserIdFromRequestOrCookies(request);
+    if (!userId)
+      return NextResponse.json(
+        { error: 'Unauthorized', message: 'Authentication required' },
+        { status: 401 }
+      );
 
     const { searchParams } = new URL(request.url);
     const city = searchParams.get('city');
@@ -63,23 +73,36 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ caseStudies, total: caseStudies.length });
   } catch (error) {
     logger.error('List case studies error:', error);
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Internal Server Error' },
+      { status: 500 }
+    );
   }
 }
 
 export async function POST(request: NextRequest) {
   try {
-    const userId = await getUserIdFromRequest(request);
-    if (!userId) return NextResponse.json({ error: 'Unauthorized', message: 'Authentication required' }, { status: 401 });
+    const userId = await getUserIdFromRequestOrCookies(request);
+    if (!userId)
+      return NextResponse.json(
+        { error: 'Unauthorized', message: 'Authentication required' },
+        { status: 401 }
+      );
 
     const body = await request.json();
     const validation = createCaseStudySchema.safeParse(body);
-    if (!validation.success) return NextResponse.json({ error: 'Validation Error', details: validation.error.issues }, { status: 400 });
+    if (!validation.success)
+      return NextResponse.json(
+        { error: 'Validation Error', details: validation.error.issues },
+        { status: 400 }
+      );
 
     const data = validation.data;
     let slug = generateSlug(data.title, data.suburb);
 
-    const existing = await prisma.localCaseStudy.findUnique({ where: { slug } });
+    const existing = await prisma.localCaseStudy.findUnique({
+      where: { slug },
+    });
     if (existing) slug = `${slug}-${Date.now().toString(36)}`;
 
     const caseStudy = await prisma.localCaseStudy.create({
@@ -96,8 +119,14 @@ export async function POST(request: NextRequest) {
         solution: data.solution || null,
         results: data.results || null,
         testimonial: data.testimonial || null,
-        coordinates: data.coordinates != null ? data.coordinates as Prisma.InputJsonValue : Prisma.JsonNull,
-        napData: data.napData != null ? data.napData as Prisma.InputJsonValue : Prisma.JsonNull,
+        coordinates:
+          data.coordinates != null
+            ? (data.coordinates as Prisma.InputJsonValue)
+            : Prisma.JsonNull,
+        napData:
+          data.napData != null
+            ? (data.napData as Prisma.InputJsonValue)
+            : Prisma.JsonNull,
         beforeImages: [],
         afterImages: [],
         diagrams: [],
@@ -107,7 +136,10 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(caseStudy, { status: 201 });
   } catch (error) {
     logger.error('Create case study error:', error);
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Internal Server Error' },
+      { status: 500 }
+    );
   }
 }
 

@@ -23,7 +23,9 @@ const checkoutSchema = z.object({
 
 const changePlanSchema = z.object({
   newPlan: z.enum(['professional', 'business', 'custom']),
-  prorationBehavior: z.enum(['create_prorations', 'none', 'always_invoice']).optional(),
+  prorationBehavior: z
+    .enum(['create_prorations', 'none', 'always_invoice'])
+    .optional(),
 });
 
 // ============================================================================
@@ -97,7 +99,8 @@ describe('Stripe API Routes - Contract Tests', () => {
     it('should define error response for Stripe not configured', () => {
       const errorResponse = {
         error: 'Payment processing not configured',
-        message: 'Stripe is not set up yet. Contact support for manual subscription.',
+        message:
+          'Stripe is not set up yet. Contact support for manual subscription.',
         bypass: true,
       };
 
@@ -162,7 +165,8 @@ describe('Stripe API Routes - Contract Tests', () => {
     it('should define error response for not configured', () => {
       const errorResponse = {
         error: 'Billing portal not available',
-        message: 'Payment processing is not configured yet. Contact support for billing inquiries.',
+        message:
+          'Payment processing is not configured yet. Contact support for billing inquiries.',
         bypass: true,
       };
 
@@ -213,8 +217,12 @@ describe('Stripe API Routes - Contract Tests', () => {
     });
 
     it('should accept all valid plan names', () => {
-      const plans: Array<'professional' | 'business' | 'custom'> = ['professional', 'business', 'custom'];
-      plans.forEach((plan) => {
+      const plans: Array<'professional' | 'business' | 'custom'> = [
+        'professional',
+        'business',
+        'custom',
+      ];
+      plans.forEach(plan => {
         const result = changePlanSchema.safeParse({ newPlan: plan });
         expect(result.success).toBe(true);
       });
@@ -239,12 +247,9 @@ describe('Stripe API Routes - Contract Tests', () => {
     });
 
     it('should accept all valid proration behaviors', () => {
-      const behaviors: Array<'create_prorations' | 'none' | 'always_invoice'> = [
-        'create_prorations',
-        'none',
-        'always_invoice',
-      ];
-      behaviors.forEach((behavior) => {
+      const behaviors: Array<'create_prorations' | 'none' | 'always_invoice'> =
+        ['create_prorations', 'none', 'always_invoice'];
+      behaviors.forEach(behavior => {
         const result = changePlanSchema.safeParse({
           newPlan: 'business',
           prorationBehavior: behavior,
@@ -297,18 +302,22 @@ describe('Stripe API Routes - Contract Tests', () => {
         },
         isUpgrade: false,
         prorationPreview: null,
-        message: 'Plan will be changed at the end of your current billing period.',
+        message:
+          'Plan will be changed at the end of your current billing period.',
       };
 
       expect(successResponse.isUpgrade).toBe(false);
       expect(successResponse.prorationPreview).toBeNull();
-      expect(successResponse.message).toContain('end of your current billing period');
+      expect(successResponse.message).toContain(
+        'end of your current billing period'
+      );
     });
 
     it('should define error response for no active subscription', () => {
       const errorResponse = {
         error: 'No active subscription',
-        message: 'You need an active subscription to change plans. Please subscribe first.',
+        message:
+          'You need an active subscription to change plans. Please subscribe first.',
       };
 
       expect(errorResponse).toHaveProperty('error');
@@ -353,13 +362,14 @@ describe('Stripe API Routes - Contract Tests', () => {
   // ==========================================================================
 
   describe('lib/stripe/config - Helper Functions', () => {
-    it('PRODUCTS should have 3 tiers', () => {
+    it('PRODUCTS should have 4 tiers', () => {
       const { PRODUCTS } = require('@/lib/stripe/config');
 
-      expect(Object.keys(PRODUCTS)).toHaveLength(3);
-      expect(PRODUCTS.professional).toBeDefined();
-      expect(PRODUCTS.business).toBeDefined();
-      expect(PRODUCTS.custom).toBeDefined();
+      expect(Object.keys(PRODUCTS)).toHaveLength(4);
+      expect(PRODUCTS.starter).toBeDefined();
+      expect(PRODUCTS.pro).toBeDefined();
+      expect(PRODUCTS.growth).toBeDefined();
+      expect(PRODUCTS.scale).toBeDefined();
     });
 
     it('Each product should have required fields', () => {
@@ -376,12 +386,12 @@ describe('Stripe API Routes - Contract Tests', () => {
     it('getProductByPriceId should return correct product', () => {
       const { getProductByPriceId, PRODUCTS } = require('@/lib/stripe/config');
 
-      const professionalPriceId = PRODUCTS.professional.priceId;
-      const product = getProductByPriceId(professionalPriceId);
+      const proPriceId = PRODUCTS.pro.priceId;
+      const product = getProductByPriceId(proPriceId);
 
       expect(product).toBeDefined();
-      expect(product?.name).toBe('Professional');
-      expect(product?.priceId).toBe(professionalPriceId);
+      expect(product?.name).toBe('Pro');
+      expect(product?.priceId).toBe(proPriceId);
     });
 
     it('getProductByPriceId should return undefined for unknown ID', () => {
@@ -395,12 +405,12 @@ describe('Stripe API Routes - Contract Tests', () => {
     it('getProductByName should return correct product (case insensitive)', () => {
       const { getProductByName } = require('@/lib/stripe/config');
 
-      const product1 = getProductByName('Professional');
-      const product2 = getProductByName('professional');
-      const product3 = getProductByName('PROFESSIONAL');
+      const product1 = getProductByName('Pro');
+      const product2 = getProductByName('pro');
+      const product3 = getProductByName('PRO');
 
       expect(product1).toBeDefined();
-      expect(product1?.name).toBe('Professional');
+      expect(product1?.name).toBe('Pro');
       expect(product2).toEqual(product1);
       expect(product3).toEqual(product1);
     });
@@ -408,13 +418,15 @@ describe('Stripe API Routes - Contract Tests', () => {
     it('getProductByName should handle all tier names', () => {
       const { getProductByName } = require('@/lib/stripe/config');
 
-      const professional = getProductByName('professional');
-      const business = getProductByName('business');
-      const custom = getProductByName('custom');
+      const starter = getProductByName('starter');
+      const pro = getProductByName('pro');
+      const growth = getProductByName('growth');
+      const scale = getProductByName('scale');
 
-      expect(professional?.name).toBe('Professional');
-      expect(business?.name).toBe('Business');
-      expect(custom?.name).toBe('Custom');
+      expect(starter?.name).toBe('Starter');
+      expect(pro?.name).toBe('Pro');
+      expect(growth?.name).toBe('Growth');
+      expect(scale?.name).toBe('Scale');
     });
 
     it('getProductByName should return undefined for invalid name', () => {
@@ -449,28 +461,28 @@ describe('Stripe API Routes - Contract Tests', () => {
       }
     });
 
-    it('Professional tier should have expected features', () => {
+    it('Pro tier should have expected features', () => {
       const { PRODUCTS } = require('@/lib/stripe/config');
 
-      expect(PRODUCTS.professional.features.socialAccounts).toBe(5);
-      expect(PRODUCTS.professional.features.aiPosts).toBe(100);
-      expect(PRODUCTS.professional.features.personas).toBe(3);
+      expect(PRODUCTS.pro.features.socialAccounts).toBe(5);
+      expect(PRODUCTS.pro.features.aiPosts).toBe(100);
+      expect(PRODUCTS.pro.features.personas).toBe(3);
     });
 
-    it('Business tier should have unlimited AI posts', () => {
+    it('Growth tier should have unlimited AI posts', () => {
       const { PRODUCTS } = require('@/lib/stripe/config');
 
-      expect(PRODUCTS.business.features.aiPosts).toBe(-1);
-      expect(PRODUCTS.business.features.socialAccounts).toBe(10);
+      expect(PRODUCTS.growth.features.aiPosts).toBe(-1);
+      expect(PRODUCTS.growth.features.socialAccounts).toBe(10);
     });
 
-    it('Custom tier should have all unlimited features', () => {
+    it('Scale tier should have all unlimited features', () => {
       const { PRODUCTS } = require('@/lib/stripe/config');
 
-      expect(PRODUCTS.custom.features.socialAccounts).toBe(-1);
-      expect(PRODUCTS.custom.features.aiPosts).toBe(-1);
-      expect(PRODUCTS.custom.features.personas).toBe(-1);
-      expect(PRODUCTS.custom.price).toBe(-1);
+      expect(PRODUCTS.scale.features.socialAccounts).toBe(-1);
+      expect(PRODUCTS.scale.features.aiPosts).toBe(-1);
+      expect(PRODUCTS.scale.features.personas).toBe(-1);
+      expect(PRODUCTS.scale.price).toBeGreaterThan(0);
     });
   });
 

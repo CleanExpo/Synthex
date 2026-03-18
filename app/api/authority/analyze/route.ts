@@ -15,7 +15,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { getUserIdFromRequest } from '@/lib/auth/jwt-utils';
+import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { analyzeAuthority } from '@/lib/authority/authority-analyzer';
 import { hasAuthorityAddon } from '@/lib/stripe/subscription-service';
 import { logger } from '@/lib/logger';
@@ -32,7 +32,7 @@ const schema = z.object({
 
 export async function POST(req: NextRequest) {
   try {
-    const userId = await getUserIdFromRequest(req);
+    const userId = await getUserIdFromRequestOrCookies(req);
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
     }
@@ -40,7 +40,10 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const parsed = schema.safeParse(body);
     if (!parsed.success) {
-      return NextResponse.json({ error: 'Invalid request', details: parsed.error.issues }, { status: 400 });
+      return NextResponse.json(
+        { error: 'Invalid request', details: parsed.error.issues },
+        { status: 400 }
+      );
     }
 
     const { content, orgId, deepValidation } = parsed.data;
@@ -49,7 +52,11 @@ export async function POST(req: NextRequest) {
       const addonActive = await hasAuthorityAddon(userId);
       if (!addonActive) {
         return NextResponse.json(
-          { error: 'Authority Ranking add-on required for deep validation', upgrade: true, addon: 'authority' },
+          {
+            error: 'Authority Ranking add-on required for deep validation',
+            upgrade: true,
+            addon: 'authority',
+          },
           { status: 403 }
         );
       }
@@ -58,12 +65,18 @@ export async function POST(req: NextRequest) {
     // Resolve plan for BO surface gating
     const userRecord = await prisma.user.findUnique({
       where: { id: userId },
-      select: { organizationId: true, organization: { select: { plan: true } } },
+      select: {
+        organizationId: true,
+        organization: { select: { plan: true } },
+      },
     });
     const orgIdForBO = userRecord?.organizationId ?? userId;
-    const plan       = (userRecord?.organization?.plan ?? 'free').toLowerCase();
+    const plan = (userRecord?.organization?.plan ?? 'free').toLowerCase();
 
-    const validationWeightsResult = isSurfaceAvailable(plan, 'authority_validation')
+    const validationWeightsResult = isSurfaceAvailable(
+      plan,
+      'authority_validation'
+    )
       ? await getAuthorityValidationWeights(orgIdForBO)
       : undefined;
 
@@ -80,15 +93,21 @@ export async function POST(req: NextRequest) {
         'authority_validation',
         orgIdForBO,
         {
-          regulatoryPriority:  validationWeightsResult.weights.regulatoryPriority,
-          statisticalPriority: validationWeightsResult.weights.statisticalPriority,
-          temporalPriority:    validationWeightsResult.weights.temporalPriority,
-          causalPriority:      validationWeightsResult.weights.causalPriority,
-          comparativePriority: validationWeightsResult.weights.comparativePriority,
-          factualPriority:     validationWeightsResult.weights.factualPriority,
+          regulatoryPriority:
+            validationWeightsResult.weights.regulatoryPriority,
+          statisticalPriority:
+            validationWeightsResult.weights.statisticalPriority,
+          temporalPriority: validationWeightsResult.weights.temporalPriority,
+          causalPriority: validationWeightsResult.weights.causalPriority,
+          comparativePriority:
+            validationWeightsResult.weights.comparativePriority,
+          factualPriority: validationWeightsResult.weights.factualPriority,
         },
         result.overallScore / 100,
-        { claimsFound: result.claimsFound, claimsVerified: result.claimsVerified },
+        {
+          claimsFound: result.claimsFound,
+          claimsVerified: result.claimsVerified,
+        }
       );
     }
 

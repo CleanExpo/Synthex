@@ -11,9 +11,13 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { modelManager, getLatestModelForProvider } from '@/lib/ai/model-manager';
+import {
+  modelManager,
+  getLatestModelForProvider,
+} from '@/lib/ai/model-manager';
 import { getAllLatestModels } from '@/lib/ai/model-registry';
 import { getAuthUser } from '@/lib/supabase-server';
+import { verifyAdmin } from '@/lib/admin/verify-admin';
 import { logger } from '@/lib/logger';
 
 /**
@@ -91,16 +95,14 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   try {
-    // Auth check
-    const user = await getAuthUser();
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    // Admin auth check — only admins may force-refresh the model registry
+    const adminAuth = await verifyAdmin(request);
+    if (!adminAuth.isAdmin) {
+      return NextResponse.json(
+        { error: adminAuth.error ?? 'Forbidden' },
+        { status: adminAuth.error === 'Authentication required' ? 401 : 403 }
+      );
     }
-
-    // TODO(UNI-475): Add admin role check — requires UserRole query (prisma.userRole.findFirst)
-    // if (!user.isAdmin) {
-    //   return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-    // }
 
     // Force update
     modelManager.forceUpdate();

@@ -9,20 +9,29 @@ See: .planning/PROJECT.md (updated 2026-02-17)
 
 ## Current Position
 
-Phase: 119 (deep-audit)
-Plan: 3 of 3 — **COMPLETE**
-Status: All 3 plans executed. Master findings report at `.planning/phases/119-deep-audit/119-FINDINGS.md`
-Last activity: 2026-03-17 — Phase 119 deep audit complete (107 findings: 12 CRITICAL, 23 HIGH, 32 MEDIUM, 40 LOW)
+Phase: 120 (quality-sweep) — **COMPLETE**
+Plan: 5 of 5 — **COMPLETE**
+Status: All 5 sprints executed (auth gaps closed, tests restored, tech debt removed, UX hardened)
+Last activity: 2026-03-18 — Phase 120 complete (5 sprints: auth, tests, debt, UX, triage)
 Linear: UNI-1181 (complete), UNI-1180 (human action pending)
 
 Milestone: v10.0 Full Platform Quality Loop — **IN PROGRESS**
 Last milestone shipped: v9.0 — 2026-03-17
-Status: Phase 119 complete. Phase 120 (triage) is next.
+Status: Phase 119 complete. Phase 120 complete.
 
-Progress: ██░░░░░░░░ 20% v10.0 (1/5 phases)
+Progress: ████░░░░░░ 40% v10.0 (2/5 phases)
 
-Next action: Phase 120 — Triage and assign Linear issues from 119-FINDINGS.md findings
-Findings: `.planning/phases/119-deep-audit/119-FINDINGS.md` (107 findings, top 10 priority queue included)
+Next action: Phase 121 — Performance & caching layer
+
+## Phase 120 Summary
+
+Sprints completed 2026-03-18:
+
+- Sprint 1: Auth cookie gap closed (83 routes), admin check re-enabled, WCAG contrast fixed, legacy route archived
+- Sprint 2: 4 failing test suites fixed (99 pass, 1 skip): prisma proxy, onboarding contract, stripe tiers, campaigns mock
+- Sprint 3: puppeteer-screen-recorder removed, audience insights de-mocked, stats engagement de-mocked, .env.example cleaned, fluent-ffmpeg confirmed used
+- Sprint 4: Empty states improved (personas, reports), platform connection banner, nav defaults audited, Quick Post modal, onboarding sub-copy
+- Sprint 5: STATE.md updated
 
 ## Performance Metrics
 

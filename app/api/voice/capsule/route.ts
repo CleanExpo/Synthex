@@ -16,7 +16,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { Prisma } from '@prisma/client';
 import prisma from '@/lib/prisma';
-import { getUserIdFromRequest } from '@/lib/auth/jwt-utils';
+import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { RateLimiter } from '@/lib/rate-limit';
 import { subscriptionService } from '@/lib/stripe/subscription-service';
 import { isFeatureAvailable } from '@/lib/geo/feature-limits';
@@ -53,7 +53,7 @@ function countWords(text: string): number {
 export async function POST(request: NextRequest) {
   try {
     // 1. Auth
-    const userId = await getUserIdFromRequest(request);
+    const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
       return NextResponse.json(
         { error: 'Unauthorised', message: 'Authentication required' },
@@ -73,7 +73,10 @@ export async function POST(request: NextRequest) {
     // 3. Validate body
     const body = await request.json().catch(() => null);
     if (!body) {
-      return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'Invalid request body' },
+        { status: 400 }
+      );
     }
 
     const parsed = capsuleSchema.safeParse(body);
@@ -106,7 +109,8 @@ export async function POST(request: NextRequest) {
     // 6. Optionally persist as ContentCapsule
     let capsuleId: string | undefined;
     if (save) {
-      const orgId = (subscription as unknown as { orgId?: string } | null)?.orgId ?? userId;
+      const orgId =
+        (subscription as unknown as { orgId?: string } | null)?.orgId ?? userId;
       const wordCount = countWords(text);
 
       const capsule = await prisma.contentCapsule.create({

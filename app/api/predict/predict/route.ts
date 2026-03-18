@@ -19,7 +19,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import prisma from '@/lib/prisma';
-import { getUserIdFromRequest } from '@/lib/auth/jwt-utils';
+import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { getForecastingClient } from '@/lib/forecasting/client';
 import { isSpatiotemporalAvailable } from '@/lib/forecasting/feature-limits';
 import { logger } from '@/lib/logger';
@@ -37,25 +37,28 @@ const predictSchema = z.object({
 export async function POST(request: NextRequest) {
   try {
     // 1. Auth
-    const userId = await getUserIdFromRequest(request);
+    const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
       return NextResponse.json(
         { error: 'Unauthorised', message: 'Authentication required' },
-        { status: 401 },
+        { status: 401 }
       );
     }
 
     // Parse body
     const body = await request.json().catch(() => null);
     if (!body) {
-      return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'Invalid request body' },
+        { status: 400 }
+      );
     }
 
     const validation = predictSchema.safeParse(body);
     if (!validation.success) {
       return NextResponse.json(
         { error: 'Validation error', details: validation.error.issues },
-        { status: 400 },
+        { status: 400 }
       );
     }
 
@@ -64,12 +67,15 @@ export async function POST(request: NextRequest) {
     // 2. Org + plan resolve
     const user = await prisma.user.findUnique({
       where: { id: userId },
-      select: { organizationId: true, organization: { select: { plan: true } } },
+      select: {
+        organizationId: true,
+        organization: { select: { plan: true } },
+      },
     });
     if (!user?.organizationId) {
       return NextResponse.json(
         { error: 'Forbidden', message: 'Organisation required' },
-        { status: 403 },
+        { status: 403 }
       );
     }
     const orgId = user.organizationId;
@@ -79,7 +85,7 @@ export async function POST(request: NextRequest) {
     if (!isSpatiotemporalAvailable(plan)) {
       return NextResponse.json(
         { error: 'Upgrade required', upgrade: true },
-        { status: 403 },
+        { status: 403 }
       );
     }
 
@@ -90,7 +96,7 @@ export async function POST(request: NextRequest) {
     if (!model) {
       return NextResponse.json(
         { error: 'Not Found', message: 'Model not found' },
-        { status: 404 },
+        { status: 404 }
       );
     }
 
@@ -101,7 +107,7 @@ export async function POST(request: NextRequest) {
           error: 'Conflict',
           message: `Model is not ready for predictions (status: ${model.status})`,
         },
-        { status: 409 },
+        { status: 409 }
       );
     }
 
@@ -109,8 +115,11 @@ export async function POST(request: NextRequest) {
     const client = getForecastingClient();
     if (!client) {
       return NextResponse.json(
-        { error: 'Service Unavailable', message: 'BayesNF service is not configured' },
-        { status: 503 },
+        {
+          error: 'Service Unavailable',
+          message: 'BayesNF service is not configured',
+        },
+        { status: 503 }
       );
     }
 
@@ -131,7 +140,7 @@ export async function POST(request: NextRequest) {
       });
 
       predictionPoints = platforms.flatMap(({ platform }) =>
-        next7Dates.map((date) => ({ platform, date })),
+        next7Dates.map(date => ({ platform, date }))
       );
     }
 
@@ -145,8 +154,11 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     logger.error('POST /api/predict/predict error:', error);
     return NextResponse.json(
-      { error: 'Internal Server Error', message: 'Failed to generate predictions' },
-      { status: 500 },
+      {
+        error: 'Internal Server Error',
+        message: 'Failed to generate predictions',
+      },
+      { status: 500 }
     );
   }
 }

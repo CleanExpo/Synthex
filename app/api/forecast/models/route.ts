@@ -22,9 +22,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import prisma from '@/lib/prisma';
-import { getUserIdFromRequest } from '@/lib/auth/jwt-utils';
+import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { getForecastingClient } from '@/lib/forecasting/client';
-import { getForecastFeatureLimits, isWithinForecastLimit } from '@/lib/forecasting/feature-limits';
+import {
+  getForecastFeatureLimits,
+  isWithinForecastLimit,
+} from '@/lib/forecasting/feature-limits';
 import { FORECAST_METRICS } from '@/lib/forecasting/metrics';
 import { collectTrainingData } from '@/lib/forecasting/collect-training-data';
 import { logger } from '@/lib/logger';
@@ -61,11 +64,11 @@ const createModelSchema = z.object({
 
 export async function GET(request: NextRequest) {
   try {
-    const userId = await getUserIdFromRequest(request);
+    const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
       return NextResponse.json(
         { error: 'Unauthorised', message: 'Authentication required' },
-        { status: 401 },
+        { status: 401 }
       );
     }
 
@@ -99,8 +102,11 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     logger.error('GET /api/forecast/models error:', error);
     return NextResponse.json(
-      { error: 'Internal Server Error', message: 'Failed to list forecast models' },
-      { status: 500 },
+      {
+        error: 'Internal Server Error',
+        message: 'Failed to list forecast models',
+      },
+      { status: 500 }
     );
   }
 }
@@ -110,25 +116,28 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     // 1. Auth
-    const userId = await getUserIdFromRequest(request);
+    const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
       return NextResponse.json(
         { error: 'Unauthorised', message: 'Authentication required' },
-        { status: 401 },
+        { status: 401 }
       );
     }
 
     // Parse body
     const body = await request.json().catch(() => null);
     if (!body) {
-      return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'Invalid request body' },
+        { status: 400 }
+      );
     }
 
     const validation = createModelSchema.safeParse(body);
     if (!validation.success) {
       return NextResponse.json(
         { error: 'Validation error', details: validation.error.issues },
-        { status: 400 },
+        { status: 400 }
       );
     }
 
@@ -144,8 +153,11 @@ export async function POST(request: NextRequest) {
     });
     if (!user?.organizationId) {
       return NextResponse.json(
-        { error: 'Forbidden', message: 'Organisation required to create a forecast model' },
-        { status: 403 },
+        {
+          error: 'Forbidden',
+          message: 'Organisation required to create a forecast model',
+        },
+        { status: 403 }
       );
     }
     const orgId = user.organizationId;
@@ -158,7 +170,7 @@ export async function POST(request: NextRequest) {
           error: 'Forbidden',
           message: 'Upgrade to the Pro plan to unlock time-series forecasting',
         },
-        { status: 403 },
+        { status: 403 }
       );
     }
 
@@ -171,7 +183,7 @@ export async function POST(request: NextRequest) {
           error: 'Forbidden',
           message: `Forecast model limit reached (${limits.forecastModels} models on ${plan} plan)`,
         },
-        { status: 403 },
+        { status: 403 }
       );
     }
 
@@ -186,7 +198,7 @@ export async function POST(request: NextRequest) {
           error: 'Unprocessable Entity',
           message: `Insufficient data: ${dataPoints.length} data points collected, ${minRequired} required for ${metric} forecasting`,
         },
-        { status: 422 },
+        { status: 422 }
       );
     }
 
@@ -268,8 +280,11 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     logger.error('POST /api/forecast/models error:', error);
     return NextResponse.json(
-      { error: 'Internal Server Error', message: 'Failed to create forecast model' },
-      { status: 500 },
+      {
+        error: 'Internal Server Error',
+        message: 'Failed to create forecast model',
+      },
+      { status: 500 }
     );
   }
 }

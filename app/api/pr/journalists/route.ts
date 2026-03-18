@@ -10,22 +10,22 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import prisma from '@/lib/prisma';
-import { getUserIdFromRequest } from '@/lib/auth/jwt-utils';
+import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 
 // ─── Validation ────────────────────────────────────────────────────────────────
 
 const CreateJournalistSchema = z.object({
-  name:           z.string().min(1).max(200),
-  outlet:         z.string().min(1).max(200),
-  outletDomain:   z.string().min(1).max(200),
-  email:          z.string().email().optional(),
-  title:          z.string().max(200).optional(),
-  location:       z.string().max(200).optional(),
-  beats:          z.array(z.string()).optional().default([]),
-  twitterHandle:  z.string().max(100).optional(),
-  linkedinUrl:    z.string().url().optional(),
-  notes:          z.string().max(5000).optional(),
-  tier:           z.enum(['cold', 'warm', 'hot', 'advocate']).optional().default('cold'),
+  name: z.string().min(1).max(200),
+  outlet: z.string().min(1).max(200),
+  outletDomain: z.string().min(1).max(200),
+  email: z.string().email().optional(),
+  title: z.string().max(200).optional(),
+  location: z.string().max(200).optional(),
+  beats: z.array(z.string()).optional().default([]),
+  twitterHandle: z.string().max(100).optional(),
+  linkedinUrl: z.string().url().optional(),
+  notes: z.string().max(5000).optional(),
+  tier: z.enum(['cold', 'warm', 'hot', 'advocate']).optional().default('cold'),
   lastContactedAt: z.string().datetime().optional(),
 });
 
@@ -33,7 +33,7 @@ const CreateJournalistSchema = z.object({
 
 export async function GET(request: NextRequest) {
   try {
-    const userId = await getUserIdFromRequest(request);
+    const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
     }
@@ -69,7 +69,10 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ contacts });
   } catch (error) {
     console.error('[PR journalists GET]', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
   }
 }
 
@@ -77,7 +80,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const userId = await getUserIdFromRequest(request);
+    const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
     }
@@ -97,24 +100,29 @@ export async function POST(request: NextRequest) {
       data: {
         userId,
         orgId: userId,
-        name:           data.name,
-        outlet:         data.outlet,
-        outletDomain:   data.outletDomain,
-        email:          data.email,
-        title:          data.title,
-        location:       data.location,
-        beats:          data.beats,
-        twitterHandle:  data.twitterHandle,
-        linkedinUrl:    data.linkedinUrl,
-        notes:          data.notes,
-        tier:           data.tier,
-        lastContactedAt: data.lastContactedAt ? new Date(data.lastContactedAt) : undefined,
+        name: data.name,
+        outlet: data.outlet,
+        outletDomain: data.outletDomain,
+        email: data.email,
+        title: data.title,
+        location: data.location,
+        beats: data.beats,
+        twitterHandle: data.twitterHandle,
+        linkedinUrl: data.linkedinUrl,
+        notes: data.notes,
+        tier: data.tier,
+        lastContactedAt: data.lastContactedAt
+          ? new Date(data.lastContactedAt)
+          : undefined,
       },
     });
 
     return NextResponse.json({ contact }, { status: 201 });
   } catch (error) {
     console.error('[PR journalists POST]', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
   }
 }

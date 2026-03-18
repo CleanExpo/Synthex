@@ -15,9 +15,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import prisma from '@/lib/prisma';
-import { getUserIdFromRequest } from '@/lib/auth/jwt-utils';
+import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { getForecastingClient } from '@/lib/forecasting/client';
-import { isHorizonAllowed, isWithinForecastLimit } from '@/lib/forecasting/feature-limits';
+import {
+  isHorizonAllowed,
+  isWithinForecastLimit,
+} from '@/lib/forecasting/feature-limits';
 import { logger } from '@/lib/logger';
 
 // ─── Zod Schema ───────────────────────────────────────────────────────────────
@@ -32,24 +35,27 @@ const predictSchema = z.object({
 export async function POST(request: NextRequest) {
   try {
     // 1. Auth
-    const userId = await getUserIdFromRequest(request);
+    const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
       return NextResponse.json(
         { error: 'Unauthorised', message: 'Authentication required' },
-        { status: 401 },
+        { status: 401 }
       );
     }
 
     const body = await request.json().catch(() => null);
     if (!body) {
-      return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'Invalid request body' },
+        { status: 400 }
+      );
     }
 
     const validation = predictSchema.safeParse(body);
     if (!validation.success) {
       return NextResponse.json(
         { error: 'Validation error', details: validation.error.issues },
-        { status: 400 },
+        { status: 400 }
       );
     }
 
@@ -65,8 +71,11 @@ export async function POST(request: NextRequest) {
     });
     if (!user?.organizationId) {
       return NextResponse.json(
-        { error: 'Forbidden', message: 'Organisation required to generate a forecast' },
-        { status: 403 },
+        {
+          error: 'Forbidden',
+          message: 'Organisation required to generate a forecast',
+        },
+        { status: 403 }
       );
     }
     const orgId = user.organizationId;
@@ -80,7 +89,7 @@ export async function POST(request: NextRequest) {
           error: 'Forbidden',
           message: `${horizonDays}-day forecast requires the ${requiredPlan} plan`,
         },
-        { status: 403 },
+        { status: 403 }
       );
     }
 
@@ -101,7 +110,7 @@ export async function POST(request: NextRequest) {
           error: 'Forbidden',
           message: `Monthly forecast limit reached. Upgrade your plan to generate more forecasts.`,
         },
-        { status: 403 },
+        { status: 403 }
       );
     }
 
@@ -112,7 +121,7 @@ export async function POST(request: NextRequest) {
     if (!model) {
       return NextResponse.json(
         { error: 'Not Found', message: 'Forecast model not found' },
-        { status: 404 },
+        { status: 404 }
       );
     }
 
@@ -123,7 +132,7 @@ export async function POST(request: NextRequest) {
           error: 'Conflict',
           message: `Model is not ready (status: ${model.status})`,
         },
-        { status: 409 },
+        { status: 409 }
       );
     }
 
@@ -131,8 +140,11 @@ export async function POST(request: NextRequest) {
     const client = getForecastingClient();
     if (!client) {
       return NextResponse.json(
-        { error: 'Service Unavailable', message: 'Forecasting service is not configured' },
-        { status: 503 },
+        {
+          error: 'Service Unavailable',
+          message: 'Forecasting service is not configured',
+        },
+        { status: 503 }
       );
     }
 
@@ -159,8 +171,11 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     logger.error('POST /api/forecast/predict error:', error);
     return NextResponse.json(
-      { error: 'Internal Server Error', message: 'Failed to generate forecast' },
-      { status: 500 },
+      {
+        error: 'Internal Server Error',
+        message: 'Failed to generate forecast',
+      },
+      { status: 500 }
     );
   }
 }

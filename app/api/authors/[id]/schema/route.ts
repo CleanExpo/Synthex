@@ -13,7 +13,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import { getUserIdFromRequest } from '@/lib/auth/jwt-utils';
+import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { logger } from '@/lib/logger';
 
 interface AuthorCredential {
@@ -23,11 +23,17 @@ interface AuthorCredential {
   year?: number | string;
 }
 
-export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
-    const userId = await getUserIdFromRequest(request);
+    const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized', message: 'Authentication required' }, { status: 401 });
+      return NextResponse.json(
+        { error: 'Unauthorized', message: 'Authentication required' },
+        { status: 401 }
+      );
     }
 
     const { id } = await params;
@@ -36,9 +42,14 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       return NextResponse.json({ error: 'Invalid ID' }, { status: 400 });
     }
 
-    const author = await prisma.authorProfile.findFirst({ where: { id: authorId, userId } });
+    const author = await prisma.authorProfile.findFirst({
+      where: { id: authorId, userId },
+    });
     if (!author) {
-      return NextResponse.json({ error: 'Not Found', message: 'Author profile not found' }, { status: 404 });
+      return NextResponse.json(
+        { error: 'Not Found', message: 'Author profile not found' },
+        { status: 404 }
+      );
     }
 
     const credentials = (author.credentials as AuthorCredential[]) || [];
@@ -52,7 +63,9 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       description: author.bio.substring(0, 300),
       ...(author.avatarUrl && { image: author.avatarUrl }),
       ...(author.sameAsUrls.length > 0 && { sameAs: author.sameAsUrls }),
-      ...(author.expertiseAreas.length > 0 && { knowsAbout: author.expertiseAreas }),
+      ...(author.expertiseAreas.length > 0 && {
+        knowsAbout: author.expertiseAreas,
+      }),
       ...(credentials.length > 0 && {
         alumniOf: credentials
           .filter(c => c.institution)
@@ -64,7 +77,9 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
           '@type': 'EducationalOccupationalCredential',
           credentialCategory: c.type,
           name: c.title,
-          ...(c.institution && { recognizedBy: { '@type': 'Organization', name: c.institution } }),
+          ...(c.institution && {
+            recognizedBy: { '@type': 'Organization', name: c.institution },
+          }),
         })),
       }),
     };
@@ -88,7 +103,10 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     });
   } catch (error) {
     logger.error('Author schema error:', error);
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Internal Server Error' },
+      { status: 500 }
+    );
   }
 }
 

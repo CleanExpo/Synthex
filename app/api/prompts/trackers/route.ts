@@ -10,7 +10,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import prisma from '@/lib/prisma';
-import { getUserIdFromRequest } from '@/lib/auth/jwt-utils';
+import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 
 // ─── Validation ───────────────────────────────────────────────────────────────
 
@@ -23,37 +23,46 @@ const VALID_CATEGORIES = [
   'product-feature',
 ] as const;
 
-const VALID_ENTITY_TYPES = ['brand', 'product', 'service', 'person', 'location'] as const;
+const VALID_ENTITY_TYPES = [
+  'brand',
+  'product',
+  'service',
+  'person',
+  'location',
+] as const;
 
 const CreateTrackerSchema = z.object({
-  orgId:          z.string().min(1),
-  entityName:     z.string().min(1).max(200),
-  entityType:     z.enum(VALID_ENTITY_TYPES),
-  promptText:     z.string().min(5).max(2000),
+  orgId: z.string().min(1),
+  entityName: z.string().min(1).max(200),
+  entityType: z.enum(VALID_ENTITY_TYPES),
+  promptText: z.string().min(5).max(2000),
   promptCategory: z.enum(VALID_CATEGORIES),
-  targetModel:    z.string().optional(),
+  targetModel: z.string().optional(),
 });
 
 // ─── GET /api/prompts/trackers ────────────────────────────────────────────────
 
 export async function GET(request: NextRequest) {
   try {
-    const userId = await getUserIdFromRequest(request);
+    const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
     }
 
     const { searchParams } = new URL(request.url);
-    const orgId    = searchParams.get('orgId');
-    const status   = searchParams.get('status');
+    const orgId = searchParams.get('orgId');
+    const status = searchParams.get('status');
     const category = searchParams.get('category');
-    const limit    = Math.min(parseInt(searchParams.get('limit') ?? '50', 10), 200);
-    const offset   = parseInt(searchParams.get('offset') ?? '0', 10);
+    const limit = Math.min(
+      parseInt(searchParams.get('limit') ?? '50', 10),
+      200
+    );
+    const offset = parseInt(searchParams.get('offset') ?? '0', 10);
 
     const where: Record<string, unknown> = { userId };
-    if (orgId)    where.orgId           = orgId;
-    if (status)   where.status          = status;
-    if (category) where.promptCategory  = category;
+    if (orgId) where.orgId = orgId;
+    if (status) where.status = status;
+    if (category) where.promptCategory = category;
 
     const [trackers, total] = await Promise.all([
       prisma.promptTracker.findMany({
@@ -64,7 +73,7 @@ export async function GET(request: NextRequest) {
         include: {
           results: {
             orderBy: { testedAt: 'desc' },
-            take: 1,  // Most recent result only
+            take: 1, // Most recent result only
           },
         },
       }),
@@ -74,7 +83,10 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ trackers, total, limit, offset });
   } catch (err) {
     console.error('[GET /api/prompts/trackers]', err);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
   }
 }
 
@@ -82,12 +94,12 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const userId = await getUserIdFromRequest(request);
+    const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
     }
 
-    const body   = await request.json();
+    const body = await request.json();
     const parsed = CreateTrackerSchema.safeParse(body);
     if (!parsed.success) {
       return NextResponse.json(
@@ -96,7 +108,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { orgId, entityName, entityType, promptText, promptCategory, targetModel } = parsed.data;
+    const {
+      orgId,
+      entityName,
+      entityType,
+      promptText,
+      promptCategory,
+      targetModel,
+    } = parsed.data;
 
     // Check for duplicate (same userId + promptText)
     const existing = await prisma.promptTracker.findFirst({
@@ -104,7 +123,10 @@ export async function POST(request: NextRequest) {
     });
     if (existing) {
       return NextResponse.json(
-        { error: 'This prompt is already being tracked', trackerId: existing.id },
+        {
+          error: 'This prompt is already being tracked',
+          trackerId: existing.id,
+        },
         { status: 409 }
       );
     }
@@ -125,6 +147,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ tracker }, { status: 201 });
   } catch (err) {
     console.error('[POST /api/prompts/trackers]', err);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
   }
 }

@@ -115,7 +115,7 @@ export function PromptInput({
         'shadow-[0_0_0_1px_rgba(255,255,255,0.02)_inset] transition-colors',
         'focus-within:border-cyan-500/30',
         disabled && 'opacity-60 pointer-events-none',
-        className,
+        className
       )}
     >
       {/* Textarea */}
@@ -129,9 +129,9 @@ export function PromptInput({
         rows={1}
         className={cn(
           'w-full resize-none bg-transparent px-4 pt-3.5 pb-2 text-sm text-white',
-          'placeholder:text-white/30 outline-none',
+          'placeholder:text-white/50 outline-none',
           'scrollbar-thin scrollbar-track-transparent scrollbar-thumb-white/10',
-          textareaClassName,
+          textareaClassName
         )}
       />
 
@@ -191,7 +191,7 @@ export function PromptInput({
                 'h-7 w-7 rounded-sm transition-all',
                 canSend
                   ? 'bg-cyan-500 text-[#0a1628] hover:bg-cyan-400'
-                  : 'bg-white/[0.04] text-white/20 border-[0.5px] border-white/[0.06] cursor-not-allowed',
+                  : 'bg-white/[0.04] text-white/20 border-[0.5px] border-white/[0.06] cursor-not-allowed'
               )}
             >
               <ArrowUp className="h-3.5 w-3.5" />

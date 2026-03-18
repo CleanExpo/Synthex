@@ -10,25 +10,25 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import prisma from '@/lib/prisma';
-import { getUserIdFromRequest } from '@/lib/auth/jwt-utils';
+import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 
 // ─── Validation ────────────────────────────────────────────────────────────────
 
 const CreatePitchSchema = z.object({
-  journalistId:    z.string().cuid(),
-  subject:         z.string().min(1).max(500),
-  angle:           z.string().min(1).max(2000),
-  bodyDraft:       z.string().max(10000).optional(),
+  journalistId: z.string().cuid(),
+  subject: z.string().min(1).max(500),
+  angle: z.string().min(1).max(2000),
+  bodyDraft: z.string().max(10000).optional(),
   personalisation: z.string().max(2000).optional(),
-  campaignId:      z.string().optional(),
-  tags:            z.array(z.string()).optional().default([]),
+  campaignId: z.string().optional(),
+  tags: z.array(z.string()).optional().default([]),
 });
 
 // ─── GET /api/pr/pitches ───────────────────────────────────────────────────────
 
 export async function GET(request: NextRequest) {
   try {
-    const userId = await getUserIdFromRequest(request);
+    const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
     }
@@ -59,7 +59,10 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ pitches });
   } catch (error) {
     console.error('[PR pitches GET]', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
   }
 }
 
@@ -67,7 +70,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const userId = await getUserIdFromRequest(request);
+    const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
     }
@@ -88,20 +91,23 @@ export async function POST(request: NextRequest) {
       where: { id: data.journalistId, orgId: userId },
     });
     if (!journalist) {
-      return NextResponse.json({ error: 'Journalist not found' }, { status: 404 });
+      return NextResponse.json(
+        { error: 'Journalist not found' },
+        { status: 404 }
+      );
     }
 
     const pitch = await prisma.pRPitch.create({
       data: {
         userId,
         orgId: userId,
-        journalistId:    data.journalistId,
-        subject:         data.subject,
-        angle:           data.angle,
-        bodyDraft:       data.bodyDraft,
+        journalistId: data.journalistId,
+        subject: data.subject,
+        angle: data.angle,
+        bodyDraft: data.bodyDraft,
         personalisation: data.personalisation,
-        campaignId:      data.campaignId,
-        tags:            data.tags,
+        campaignId: data.campaignId,
+        tags: data.tags,
       },
       include: {
         journalist: {
@@ -113,6 +119,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ pitch }, { status: 201 });
   } catch (error) {
     console.error('[PR pitches POST]', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
   }
 }

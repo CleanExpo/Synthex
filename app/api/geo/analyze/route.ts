@@ -18,7 +18,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { Prisma } from '@prisma/client';
 import prisma from '@/lib/prisma';
-import { getUserIdFromRequest } from '@/lib/auth/jwt-utils';
+import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { analyzeGEO } from '@/lib/geo/geo-analyzer';
 import type { GEOPlatform } from '@/lib/geo/types';
 import { logger } from '@/lib/logger';
@@ -29,12 +29,15 @@ const analyzeSchema = z.object({
   contentUrl: z.string().url().optional(),
   contentId: z.string().optional(),
   authorId: z.number().int().optional(),
-  platform: z.enum(['google_aio', 'chatgpt', 'perplexity', 'bing_copilot', 'all']).optional().default('all'),
+  platform: z
+    .enum(['google_aio', 'chatgpt', 'perplexity', 'bing_copilot', 'all'])
+    .optional()
+    .default('all'),
 });
 
 export async function POST(request: NextRequest) {
   try {
-    const userId = await getUserIdFromRequest(request);
+    const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
       return NextResponse.json(
         { error: 'Unauthorized', message: 'Authentication required' },
@@ -51,7 +54,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { contentText, contentUrl, contentId, authorId, platform } = validation.data;
+    const { contentText, contentUrl, contentId, authorId, platform } =
+      validation.data;
 
     // Resolve the user's organisation — used for BO weight lookup and observation
     const userRecord = await prisma.user.findUnique({
@@ -61,15 +65,18 @@ export async function POST(request: NextRequest) {
     const orgId = userRecord?.organizationId ?? undefined;
 
     // Run GEO analysis with org context (enables BO-optimised weights)
-    const result = await analyzeGEO({
-      contentText,
-      contentUrl,
-      contentId,
-      authorId,
-      platform: platform as GEOPlatform,
-      userId,
-      orgId,
-    }, orgId);
+    const result = await analyzeGEO(
+      {
+        contentText,
+        contentUrl,
+        contentId,
+        authorId,
+        platform: platform as GEOPlatform,
+        userId,
+        orgId,
+      },
+      orgId
+    );
 
     // Store analysis in database
     const analysis = await prisma.gEOAnalysis.create({
@@ -87,8 +94,10 @@ export async function POST(request: NextRequest) {
         authorityScore: result.score.authority,
         technicalScore: result.score.technical,
         entityCoherenceScore: result.score.entityCoherence,
-        citablePassages: result.citablePassages as unknown as Prisma.InputJsonValue,
-        recommendations: result.recommendations as unknown as Prisma.InputJsonValue,
+        citablePassages:
+          result.citablePassages as unknown as Prisma.InputJsonValue,
+        recommendations:
+          result.recommendations as unknown as Prisma.InputJsonValue,
         schemaIssues: result.schemaIssues as unknown as Prisma.InputJsonValue,
       },
     });
@@ -102,8 +111,10 @@ export async function POST(request: NextRequest) {
         uniqueEntityCount: result.entityAnalysis.uniqueEntityCount,
         properNounDensity: result.entityAnalysis.properNounDensity,
         coherenceScore: result.entityAnalysis.score,
-        entities: result.entityAnalysis.entities as unknown as Prisma.InputJsonValue,
-        coherenceIssues: result.entityAnalysis.coherenceIssues as unknown as Prisma.InputJsonValue,
+        entities: result.entityAnalysis
+          .entities as unknown as Prisma.InputJsonValue,
+        coherenceIssues: result.entityAnalysis
+          .coherenceIssues as unknown as Prisma.InputJsonValue,
       },
     });
 
@@ -115,13 +126,13 @@ export async function POST(request: NextRequest) {
         orgId,
         {
           citability: result.score.citability / 100,
-          structure:  result.score.structure  / 100,
+          structure: result.score.structure / 100,
           multiModal: result.score.multiModal / 100,
-          authority:  result.score.authority  / 100,
-          technical:  result.score.technical  / 100,
+          authority: result.score.authority / 100,
+          technical: result.score.technical / 100,
         },
         result.score.overall,
-        { contentLength: contentText.length, platform },
+        { contentLength: contentText.length, platform }
       );
     }
 

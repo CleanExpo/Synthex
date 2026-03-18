@@ -23,21 +23,23 @@ const teamSettingsSchema = z.object({
   name: z.string().min(1).max(100).optional(),
   description: z.string().max(500).optional(),
   plan: z.enum(['free', 'starter', 'pro', 'enterprise']).optional(),
-  settings: z.object({
-    allowMemberInvites: z.boolean().optional(),
-    requireApprovalForPosts: z.boolean().optional(),
-    defaultPostVisibility: z.enum(['public', 'private', 'team']).optional(),
-    notifyOnNewMember: z.boolean().optional(),
-    notifyOnPostPublished: z.boolean().optional(),
-    admins: z.array(z.string()).optional(),
-  }).optional(),
+  settings: z
+    .object({
+      allowMemberInvites: z.boolean().optional(),
+      requireApprovalForPosts: z.boolean().optional(),
+      defaultPostVisibility: z.enum(['public', 'private', 'team']).optional(),
+      notifyOnNewMember: z.boolean().optional(),
+      notifyOnPostPublished: z.boolean().optional(),
+      admins: z.array(z.string()).optional(),
+    })
+    .optional(),
 });
 
 // =============================================================================
 // Auth Helper - Uses centralized JWT utilities (no fallback secrets)
 // =============================================================================
 
-import { getUserIdFromRequest } from '@/lib/auth/jwt-utils';
+import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { logger } from '@/lib/logger';
 
 /**
@@ -73,7 +75,7 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const userId = await getUserIdFromRequest(request);
+    const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
       return NextResponse.json(
         { error: 'Unauthorized', message: 'Authentication required' },
@@ -136,7 +138,7 @@ export async function GET(
         plan: team.plan,
         settings: team.settings,
         memberCount: team._count.users,
-        members: team.users.map((u) => ({
+        members: team.users.map(u => ({
           userId: u.id,
           role: settings?.admins?.includes(u.id) ? 'admin' : 'member',
           user: u,
@@ -148,7 +150,13 @@ export async function GET(
   } catch (error: unknown) {
     logger.error('GET team settings error:', error);
     return NextResponse.json(
-      { error: 'Internal Server Error', message: sanitizeErrorForResponse(error, 'Failed to process team settings request') },
+      {
+        error: 'Internal Server Error',
+        message: sanitizeErrorForResponse(
+          error,
+          'Failed to process team settings request'
+        ),
+      },
       { status: 500 }
     );
   }
@@ -163,7 +171,7 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const userId = await getUserIdFromRequest(request);
+    const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
       return NextResponse.json(
         { error: 'Unauthorized', message: 'Authentication required' },
@@ -177,7 +185,10 @@ export async function PATCH(
     const canManage = await canManageTeam(userId, teamId);
     if (!canManage) {
       return NextResponse.json(
-        { error: 'Forbidden', message: 'You do not have permission to manage this team' },
+        {
+          error: 'Forbidden',
+          message: 'You do not have permission to manage this team',
+        },
         { status: 403 }
       );
     }
@@ -199,7 +210,10 @@ export async function PATCH(
       select: { settings: true },
     });
 
-    const currentSettings = (currentTeam?.settings || {}) as Record<string, unknown>;
+    const currentSettings = (currentTeam?.settings || {}) as Record<
+      string,
+      unknown
+    >;
     const newSettings = validation.data.settings
       ? { ...currentSettings, ...validation.data.settings }
       : currentSettings;
@@ -208,12 +222,14 @@ export async function PATCH(
     const settingsJson = JSON.parse(JSON.stringify(newSettings));
 
     // Update team and log in a transaction
-    const team = await prisma.$transaction(async (tx) => {
+    const team = await prisma.$transaction(async tx => {
       const updated = await tx.organization.update({
         where: { id: teamId },
         data: {
           ...(validation.data.name && { name: validation.data.name }),
-          ...(validation.data.description !== undefined && { description: validation.data.description }),
+          ...(validation.data.description !== undefined && {
+            description: validation.data.description,
+          }),
           ...(validation.data.plan && { plan: validation.data.plan }),
           settings: settingsJson,
           updatedAt: new Date(),
@@ -244,7 +260,13 @@ export async function PATCH(
   } catch (error: unknown) {
     logger.error('PATCH team settings error:', error);
     return NextResponse.json(
-      { error: 'Internal Server Error', message: sanitizeErrorForResponse(error, 'Failed to process team settings request') },
+      {
+        error: 'Internal Server Error',
+        message: sanitizeErrorForResponse(
+          error,
+          'Failed to process team settings request'
+        ),
+      },
       { status: 500 }
     );
   }
@@ -259,7 +281,7 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const userId = await getUserIdFromRequest(request);
+    const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
       return NextResponse.json(
         { error: 'Unauthorized', message: 'Authentication required' },
@@ -291,7 +313,7 @@ export async function DELETE(
     }
 
     // Delete team, related data, and log in a single transaction
-    await prisma.$transaction(async (tx) => {
+    await prisma.$transaction(async tx => {
       // Delete team invitations
       await tx.teamInvitation.deleteMany({ where: { organizationId: teamId } });
       // Remove organization from users
@@ -323,7 +345,13 @@ export async function DELETE(
   } catch (error: unknown) {
     logger.error('DELETE team error:', error);
     return NextResponse.json(
-      { error: 'Internal Server Error', message: sanitizeErrorForResponse(error, 'Failed to process team settings request') },
+      {
+        error: 'Internal Server Error',
+        message: sanitizeErrorForResponse(
+          error,
+          'Failed to process team settings request'
+        ),
+      },
       { status: 500 }
     );
   }

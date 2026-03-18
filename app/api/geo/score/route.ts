@@ -15,19 +15,22 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { getUserIdFromRequest } from '@/lib/auth/jwt-utils';
+import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { analyzeGEO } from '@/lib/geo/geo-analyzer';
 import type { GEOPlatform } from '@/lib/geo/types';
 import { logger } from '@/lib/logger';
 
 const scoreSchema = z.object({
   contentText: z.string().min(50, 'Content must be at least 50 characters'),
-  platform: z.enum(['google_aio', 'chatgpt', 'perplexity', 'bing_copilot', 'all']).optional().default('all'),
+  platform: z
+    .enum(['google_aio', 'chatgpt', 'perplexity', 'bing_copilot', 'all'])
+    .optional()
+    .default('all'),
 });
 
 export async function POST(request: NextRequest) {
   try {
-    const userId = await getUserIdFromRequest(request);
+    const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
       return NextResponse.json(
         { error: 'Unauthorized', message: 'Authentication required' },
@@ -50,10 +53,14 @@ export async function POST(request: NextRequest) {
     });
 
     // Return only the score (lightweight)
-    const tier = result.score.overall >= 80 ? 'excellent'
-      : result.score.overall >= 60 ? 'good'
-      : result.score.overall >= 40 ? 'needs_work'
-      : 'poor';
+    const tier =
+      result.score.overall >= 80
+        ? 'excellent'
+        : result.score.overall >= 60
+          ? 'good'
+          : result.score.overall >= 40
+            ? 'needs_work'
+            : 'poor';
 
     return NextResponse.json({
       score: result.score,

@@ -3,7 +3,13 @@
 import { useEffect, useState, useCallback } from 'react';
 import { toast } from 'sonner';
 import { useActiveBusiness } from '@/hooks/useActiveBusiness';
-import { AlertTriangle, MessageSquare, RefreshCw } from '@/components/icons';
+import {
+  AlertTriangle,
+  MessageSquare,
+  RefreshCw,
+  Link2,
+} from '@/components/icons';
+import Link from 'next/link';
 import { ErrorBoundary } from '@/components/ui/error-boundary';
 import { cn } from '@/lib/utils';
 
@@ -33,26 +39,37 @@ export default function DashboardPage() {
   const [isRetrying, setIsRetrying] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
 
-  const { isOwner, activeOrganizationId, isLoading: businessLoading } = useActiveBusiness();
-  const isAllBusinessesMode = isOwner && activeOrganizationId === null && !businessLoading;
+  const {
+    isOwner,
+    activeOrganizationId,
+    isLoading: businessLoading,
+  } = useActiveBusiness();
+  const isAllBusinessesMode =
+    isOwner && activeOrganizationId === null && !businessLoading;
 
   const fetchDashboardData = useCallback(async () => {
     try {
       setError(null);
       setLoading(true);
 
-      const legacyToken = typeof window !== 'undefined'
-        ? localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token') || localStorage.getItem('token')
-        : null;
+      const legacyToken =
+        typeof window !== 'undefined'
+          ? localStorage.getItem('auth_token') ||
+            sessionStorage.getItem('auth_token') ||
+            localStorage.getItem('token')
+          : null;
 
       const response = await fetch('/api/dashboard/stats', {
         credentials: 'include',
-        headers: legacyToken ? { 'Authorization': `Bearer ${legacyToken}` } : {},
+        headers: legacyToken ? { Authorization: `Bearer ${legacyToken}` } : {},
       });
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || `Failed to fetch dashboard stats (${response.status})`);
+        throw new Error(
+          errorData.message ||
+            `Failed to fetch dashboard stats (${response.status})`
+        );
       }
 
       const data = await response.json();
@@ -65,22 +82,39 @@ export default function DashboardPage() {
         connectedPlatforms: data.stats?.connectedPlatforms || 0,
         activeCampaigns: data.stats?.activeCampaigns || 0,
         trendingTopics: data.trendingTopics || [],
-        recentActivity: (data.recentActivity || []).map((activity: { platform: string; action: string; time: string; engagement?: number }, index: number) => ({
-          id: String(index + 1),
-          type: activity.engagement && activity.engagement > 100 ? 'engagement' : 'post' as const,
-          message: `${activity.action} on ${activity.platform}`,
-          timestamp: formatTimeAgo(new Date(activity.time)),
-        })),
+        recentActivity: (data.recentActivity || []).map(
+          (
+            activity: {
+              platform: string;
+              action: string;
+              time: string;
+              engagement?: number;
+            },
+            index: number
+          ) => ({
+            id: String(index + 1),
+            type:
+              activity.engagement && activity.engagement > 100
+                ? 'engagement'
+                : ('post' as const),
+            message: `${activity.action} on ${activity.platform}`,
+            timestamp: formatTimeAgo(new Date(activity.time)),
+          })
+        ),
       };
 
       setStats(dashboardStats);
       setError(null);
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred';
+      const errorMessage =
+        err instanceof Error ? err.message : 'An unexpected error occurred';
       console.error('[Dashboard] Error fetching data:', err);
       setError({
         message: errorMessage,
-        code: err instanceof Error && 'code' in err ? String((err as Error & { code?: string }).code) : undefined,
+        code:
+          err instanceof Error && 'code' in err
+            ? String((err as Error & { code?: string }).code)
+            : undefined,
         timestamp: new Date(),
       });
       setStats(null);
@@ -104,14 +138,27 @@ export default function DashboardPage() {
     ].join('\n');
     try {
       await navigator.clipboard.writeText(details);
-      toast.info('Error details copied. Contact support@synthex.social if this persists.', {
-        duration: 6000,
-        action: { label: 'Help Centre', onClick: () => { window.location.href = '/dashboard/help'; } },
-      });
+      toast.info(
+        'Error details copied. Contact support@synthex.social if this persists.',
+        {
+          duration: 6000,
+          action: {
+            label: 'Help Centre',
+            onClick: () => {
+              window.location.href = '/dashboard/help';
+            },
+          },
+        }
+      );
     } catch {
       toast.info('Contact support@synthex.social if this persists.', {
         duration: 6000,
-        action: { label: 'Help Centre', onClick: () => { window.location.href = '/dashboard/help'; } },
+        action: {
+          label: 'Help Centre',
+          onClick: () => {
+            window.location.href = '/dashboard/help';
+          },
+        },
       });
     }
   }, [error]);
@@ -163,7 +210,8 @@ export default function DashboardPage() {
             Dashboard unavailable
           </h2>
           <p className="text-sm text-white/40 text-center mb-6 leading-relaxed">
-            We couldn&apos;t load your dashboard data. This is usually temporary.
+            We couldn&apos;t load your dashboard data. This is usually
+            temporary.
           </p>
 
           {/* Error detail */}
@@ -191,7 +239,9 @@ export default function DashboardPage() {
                 isRetrying && 'opacity-60 cursor-not-allowed'
               )}
             >
-              <RefreshCw className={cn('h-3.5 w-3.5', isRetrying && 'animate-spin')} />
+              <RefreshCw
+                className={cn('h-3.5 w-3.5', isRetrying && 'animate-spin')}
+              />
               {isRetrying ? 'Retrying…' : 'Try Again'}
             </button>
             <button
@@ -207,12 +257,14 @@ export default function DashboardPage() {
     );
   }
 
-  const isNewUser = stats !== null
-    && stats.totalPosts === 0
-    && stats.followers === 0
-    && stats.scheduledPosts === 0;
+  const isNewUser =
+    stats !== null &&
+    stats.totalPosts === 0 &&
+    stats.followers === 0 &&
+    stats.scheduledPosts === 0;
 
-  const showOnboarding = stats !== null && (stats.connectedPlatforms === 0 || isNewUser);
+  const showOnboarding =
+    stats !== null && (stats.connectedPlatforms === 0 || isNewUser);
 
   return (
     <ErrorBoundary
@@ -220,7 +272,10 @@ export default function DashboardPage() {
       fallbackDescription="Something went wrong rendering the dashboard. Please refresh."
       onError={(err, errorInfo) => {
         console.error('[Dashboard ErrorBoundary]', err);
-        console.error('[Dashboard ErrorBoundary] Stack:', errorInfo.componentStack);
+        console.error(
+          '[Dashboard ErrorBoundary] Stack:',
+          errorInfo.componentStack
+        );
       }}
       showReportButton
       showHomeButton
@@ -257,6 +312,25 @@ export default function DashboardPage() {
         ) : (
           /* ── Returning user flow ────────────────────────────────────────── */
           <div className="space-y-4">
+            {/* Zero-platform banner — auto-dismisses once a platform is connected */}
+            {stats && stats.connectedPlatforms === 0 && (
+              <div className="flex items-center justify-between px-5 py-3.5 border-[0.5px] border-cyan-500/20 bg-cyan-500/[0.04] rounded-sm">
+                <div className="flex items-center gap-3">
+                  <Link2 className="h-4 w-4 text-cyan-400 shrink-0" />
+                  <p className="text-sm text-white/70">
+                    Connect your first platform to see real data in your
+                    dashboard.
+                  </p>
+                </div>
+                <Link
+                  href="/dashboard/platforms"
+                  className="shrink-0 ml-4 px-4 py-1.5 bg-cyan-500 hover:bg-cyan-400 text-[#0a1628] text-xs font-semibold tracking-wide rounded-sm transition-colors"
+                >
+                  Connect now
+                </Link>
+              </div>
+            )}
+
             {/* Stats data strip */}
             <QuickStats stats={stats} />
 

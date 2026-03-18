@@ -10,23 +10,33 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import prisma from '@/lib/prisma';
-import { getUserIdFromRequest } from '@/lib/auth/jwt-utils';
+import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { PITCH_TRANSITIONS, type PitchStatus } from '@/lib/pr/types';
 
 // ─── Validation ────────────────────────────────────────────────────────────────
 
 const UpdatePitchSchema = z.object({
-  subject:         z.string().min(1).max(500).optional(),
-  angle:           z.string().min(1).max(2000).optional(),
-  bodyDraft:       z.string().max(10000).optional(),
+  subject: z.string().min(1).max(500).optional(),
+  angle: z.string().min(1).max(2000).optional(),
+  bodyDraft: z.string().max(10000).optional(),
   personalisation: z.string().max(2000).optional(),
-  status:          z.enum(['draft', 'sent', 'opened', 'replied', 'covered', 'declined', 'archived']).optional(),
-  sentAt:          z.string().datetime().optional(),
-  openedAt:        z.string().datetime().optional(),
-  repliedAt:       z.string().datetime().optional(),
-  followUpAt:      z.string().datetime().optional(),
-  tags:            z.array(z.string()).optional(),
-  campaignId:      z.string().optional(),
+  status: z
+    .enum([
+      'draft',
+      'sent',
+      'opened',
+      'replied',
+      'covered',
+      'declined',
+      'archived',
+    ])
+    .optional(),
+  sentAt: z.string().datetime().optional(),
+  openedAt: z.string().datetime().optional(),
+  repliedAt: z.string().datetime().optional(),
+  followUpAt: z.string().datetime().optional(),
+  tags: z.array(z.string()).optional(),
+  campaignId: z.string().optional(),
 });
 
 // ─── Route params type ─────────────────────────────────────────────────────────
@@ -39,7 +49,7 @@ interface RouteParams {
 
 export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
-    const userId = await getUserIdFromRequest(request);
+    const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
     }
@@ -64,7 +74,10 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     return NextResponse.json({ pitch });
   } catch (error) {
     console.error('[PR pitches/[id] GET]', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
   }
 }
 
@@ -72,7 +85,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
 export async function PATCH(request: NextRequest, { params }: RouteParams) {
   try {
-    const userId = await getUserIdFromRequest(request);
+    const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
     }
@@ -117,9 +130,9 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
       where: { id },
       data: {
         ...data,
-        sentAt:     data.sentAt     ? new Date(data.sentAt)     : undefined,
-        openedAt:   data.openedAt   ? new Date(data.openedAt)   : undefined,
-        repliedAt:  data.repliedAt  ? new Date(data.repliedAt)  : undefined,
+        sentAt: data.sentAt ? new Date(data.sentAt) : undefined,
+        openedAt: data.openedAt ? new Date(data.openedAt) : undefined,
+        repliedAt: data.repliedAt ? new Date(data.repliedAt) : undefined,
         followUpAt: data.followUpAt ? new Date(data.followUpAt) : undefined,
       },
     });
@@ -127,6 +140,9 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     return NextResponse.json({ pitch });
   } catch (error) {
     console.error('[PR pitches/[id] PATCH]', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
   }
 }

@@ -8,7 +8,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import { getUserIdFromRequest } from '@/lib/auth/jwt-utils';
+import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { logger } from '@/lib/logger';
 
 // ─── GET — fetch brand mentions ────────────────────────────────────────────────
@@ -16,19 +16,28 @@ import { logger } from '@/lib/logger';
 export async function GET(request: NextRequest) {
   try {
     // 1. Auth
-    const userId = await getUserIdFromRequest(request);
+    const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
-      return NextResponse.json({ error: 'Unauthorised', message: 'Authentication required' }, { status: 401 });
+      return NextResponse.json(
+        { error: 'Unauthorised', message: 'Authentication required' },
+        { status: 401 }
+      );
     }
 
     // 2. Parse query params
     const { searchParams } = new URL(request.url);
     const brandId = searchParams.get('brandId');
-    const page    = Math.max(1, parseInt(searchParams.get('page') ?? '1', 10));
-    const limit   = Math.min(50, Math.max(1, parseInt(searchParams.get('limit') ?? '20', 10)));
+    const page = Math.max(1, parseInt(searchParams.get('page') ?? '1', 10));
+    const limit = Math.min(
+      50,
+      Math.max(1, parseInt(searchParams.get('limit') ?? '20', 10))
+    );
 
     if (!brandId) {
-      return NextResponse.json({ error: 'brandId is required' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'brandId is required' },
+        { status: 400 }
+      );
     }
 
     // 3. Verify brand ownership
@@ -38,29 +47,29 @@ export async function GET(request: NextRequest) {
     });
 
     if (!brand) {
-      return NextResponse.json({ error: 'Brand identity not found' }, { status: 404 });
+      return NextResponse.json(
+        { error: 'Brand identity not found' },
+        { status: 404 }
+      );
     }
 
     // 4. Fetch mentions with pagination
     const [mentions, total] = await Promise.all([
       prisma.brandMention.findMany({
         where: { brandId },
-        orderBy: [
-          { publishedAt: 'desc' },
-          { createdAt: 'desc' },
-        ],
-        skip:  (page - 1) * limit,
-        take:  limit,
+        orderBy: [{ publishedAt: 'desc' }, { createdAt: 'desc' }],
+        skip: (page - 1) * limit,
+        take: limit,
         select: {
-          id:          true,
-          url:         true,
-          title:       true,
+          id: true,
+          url: true,
+          title: true,
           description: true,
           publishedAt: true,
-          source:      true,
-          apiSource:   true,
-          sentiment:   true,
-          createdAt:   true,
+          source: true,
+          apiSource: true,
+          sentiment: true,
+          createdAt: true,
         },
       }),
       prisma.brandMention.count({ where: { brandId } }),
@@ -69,7 +78,13 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ mentions, total, page, limit });
   } catch (error) {
     logger.error('Brand mentions GET error:', error);
-    return NextResponse.json({ error: 'Internal Server Error', message: 'Failed to fetch brand mentions' }, { status: 500 });
+    return NextResponse.json(
+      {
+        error: 'Internal Server Error',
+        message: 'Failed to fetch brand mentions',
+      },
+      { status: 500 }
+    );
   }
 }
 

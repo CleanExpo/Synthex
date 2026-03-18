@@ -2,8 +2,14 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
 import { Prisma } from '@prisma/client';
-import BrandPsychologyOrchestrator, { BrandGenerationInput } from '@/lib/ai/agents/strategic-marketing/brand-orchestrator';
-import { getUserIdFromCookies, getUserIdFromRequest, unauthorizedResponse } from '@/lib/auth/jwt-utils';
+import BrandPsychologyOrchestrator, {
+  BrandGenerationInput,
+} from '@/lib/ai/agents/strategic-marketing/brand-orchestrator';
+import {
+  getUserIdFromCookies,
+  getUserIdFromRequestOrCookies,
+  unauthorizedResponse,
+} from '@/lib/auth/jwt-utils';
 import { logger } from '@/lib/logger';
 
 const brandGenerateSchema = z.object({
@@ -22,7 +28,9 @@ const brandGenerateSchema = z.object({
 export async function POST(request: NextRequest) {
   try {
     // Get authenticated user ID from cookie or Authorization header
-    const userId = await getUserIdFromCookies() || await getUserIdFromRequest(request);
+    const userId =
+      (await getUserIdFromCookies()) ||
+      (await getUserIdFromRequestOrCookies(request));
     if (!userId) {
       return unauthorizedResponse();
     }
@@ -42,7 +50,7 @@ export async function POST(request: NextRequest) {
       brandGoals,
       tonePreference,
       psychologyPreference,
-      competitorContext
+      competitorContext,
     } = validation.data;
 
     // Initialize the orchestrator
@@ -55,7 +63,7 @@ export async function POST(request: NextRequest) {
       brandGoals,
       tonePreference,
       psychologyPreference,
-      competitorContext
+      competitorContext,
     });
 
     // Save to database (JSON fields need double type assertion for Prisma InputJsonValue)
@@ -66,14 +74,17 @@ export async function POST(request: NextRequest) {
         targetAudience: targetAudience,
         brandGoals: brandGoals,
         tonePreference: tonePreference,
-        psychologyStrategy: result.psychologicalStrategy as unknown as Prisma.InputJsonValue,
+        psychologyStrategy:
+          result.psychologicalStrategy as unknown as Prisma.InputJsonValue,
         brandNames: result.brandNames as unknown as Prisma.InputJsonValue,
         taglines: result.taglines as unknown as Prisma.InputJsonValue,
-        metadataPackages: result.metadataPackages as unknown as Prisma.InputJsonValue,
-        implementationGuide: result.implementationGuide as unknown as Prisma.InputJsonValue,
+        metadataPackages:
+          result.metadataPackages as unknown as Prisma.InputJsonValue,
+        implementationGuide:
+          result.implementationGuide as unknown as Prisma.InputJsonValue,
         effectivenessScore: result.effectivenessScore,
-        status: 'draft'
-      }
+        status: 'draft',
+      },
     });
 
     // Update user preferences if psychology preferences provided
@@ -84,14 +95,14 @@ export async function POST(request: NextRequest) {
           preferredPrinciples: psychologyPreference,
           industryFocus: businessType,
           targetDemographic: targetAudience,
-          updatedAt: new Date()
+          updatedAt: new Date(),
         },
         create: {
           userId: userId,
           preferredPrinciples: psychologyPreference,
           industryFocus: businessType,
-          targetDemographic: targetAudience
-        }
+          targetDemographic: targetAudience,
+        },
       });
     }
 
@@ -102,8 +113,8 @@ export async function POST(request: NextRequest) {
           where: { name: trigger.principle },
           data: {
             usageCount: { increment: 1 },
-            updatedAt: new Date()
-          }
+            updatedAt: new Date(),
+          },
         });
       }
     }
@@ -111,9 +122,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       generationId: generation.id,
-      result
+      result,
     });
-
   } catch (error) {
     logger.error('Brand generation error:', error);
     return NextResponse.json(
@@ -126,7 +136,9 @@ export async function POST(request: NextRequest) {
 export async function GET(request: NextRequest) {
   try {
     // Get authenticated user ID from cookie or Authorization header
-    const userId = await getUserIdFromCookies() || await getUserIdFromRequest(request);
+    const userId =
+      (await getUserIdFromCookies()) ||
+      (await getUserIdFromRequestOrCookies(request));
     if (!userId) {
       return unauthorizedResponse();
     }
@@ -135,14 +147,13 @@ export async function GET(request: NextRequest) {
     const generations = await prisma.brandGeneration.findMany({
       where: { userId: userId },
       orderBy: { createdAt: 'desc' },
-      take: 10
+      take: 10,
     });
 
     return NextResponse.json({
       success: true,
-      generations
+      generations,
     });
-
   } catch (error) {
     logger.error('Failed to fetch brand generations:', error);
     return NextResponse.json(

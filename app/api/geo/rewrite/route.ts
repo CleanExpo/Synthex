@@ -18,7 +18,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { getUserIdFromRequest } from '@/lib/auth/jwt-utils';
+import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { RateLimiter } from '@/lib/rate-limit';
 import { getAIProvider } from '@/lib/ai/providers';
 import { isFeatureAvailable } from '@/lib/geo/feature-limits';
@@ -44,10 +44,20 @@ const rewriteRateLimiter = new RateLimiter({
 // ─── Validation schema ─────────────────────────────────────────────────────────
 
 const rewriteSchema = z.object({
-  content: z.string().min(50, 'Content must be at least 50 characters').max(50000, 'Content must be under 50,000 characters'),
+  content: z
+    .string()
+    .min(50, 'Content must be at least 50 characters')
+    .max(50000, 'Content must be under 50,000 characters'),
   tactic: z.enum([
-    'authoritative-citations', 'statistics', 'quotations', 'fluency',
-    'readability', 'technical-vocabulary', 'uniqueness', 'information-flow', 'persuasion',
+    'authoritative-citations',
+    'statistics',
+    'quotations',
+    'fluency',
+    'readability',
+    'technical-vocabulary',
+    'uniqueness',
+    'information-flow',
+    'persuasion',
   ] as const),
   section: z.string().max(5000).optional(),
 });
@@ -56,7 +66,7 @@ const rewriteSchema = z.object({
 
 export async function POST(request: NextRequest) {
   // 1. Auth
-  const userId = await getUserIdFromRequest(request);
+  const userId = await getUserIdFromRequestOrCookies(request);
   if (!userId) {
     return NextResponse.json(
       { error: 'Unauthorised', message: 'Authentication required' },
@@ -90,7 +100,10 @@ export async function POST(request: NextRequest) {
   // 4. Validate body
   const body = await request.json().catch(() => null);
   if (!body) {
-    return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
+    return NextResponse.json(
+      { error: 'Invalid request body' },
+      { status: 400 }
+    );
   }
 
   const parsed = rewriteSchema.safeParse(body);
@@ -104,7 +117,10 @@ export async function POST(request: NextRequest) {
   const { content, tactic, section } = parsed.data;
 
   // 5. Build prompt
-  const { system, user } = buildTacticRewritePrompt(tactic as GEOTactic, { content, section });
+  const { system, user } = buildTacticRewritePrompt(tactic as GEOTactic, {
+    content,
+    section,
+  });
 
   // 6. Stream response via AI provider
   const aiProvider = getAIProvider();
@@ -150,7 +166,7 @@ export async function POST(request: NextRequest) {
     headers: {
       'Content-Type': 'text/event-stream',
       'Cache-Control': 'no-cache, no-store',
-      'Connection': 'keep-alive',
+      Connection: 'keep-alive',
       'X-Accel-Buffering': 'no',
     },
   });

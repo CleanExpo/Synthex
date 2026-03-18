@@ -12,6 +12,7 @@
 import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { QuickPostModal } from '@/components/dashboard/QuickPostModal';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import {
@@ -28,7 +29,9 @@ import type { ComponentType, SVGProps } from 'react';
 // Types
 // ---------------------------------------------------------------------------
 
-type IconComponent = ComponentType<SVGProps<SVGSVGElement> & { className?: string }>;
+type IconComponent = ComponentType<
+  SVGProps<SVGSVGElement> & { className?: string }
+>;
 
 interface ChecklistStep {
   id: string;
@@ -63,6 +66,7 @@ export function GetStartedChecklist({
   className,
 }: GetStartedChecklistProps) {
   const [dismissed, setDismissed] = useState<boolean>(true);
+  const [quickPostOpen, setQuickPostOpen] = useState(false);
   const router = useRouter();
 
   const prevConnections = useRef(hasConnections);
@@ -84,21 +88,27 @@ export function GetStartedChecklist({
     if (!hasMounted.current) return;
 
     if (hasConnections && !prevConnections.current) {
-      toast.success('Platform connected! Now let\'s create your first post.', {
+      toast.success("Platform connected! Now let's create your first post.", {
         description: 'Use our AI Studio to generate content in seconds.',
-        action: { label: 'Generate Post', onClick: () => router.push('/dashboard/content') },
+        action: {
+          label: 'Generate Post',
+          onClick: () => router.push('/dashboard/content'),
+        },
         duration: 6000,
       });
     }
     if (hasContent && !prevContent.current) {
       toast.success('First post created! Schedule it for the perfect time.', {
         description: 'Pick the optimal time to reach your audience.',
-        action: { label: 'Schedule Post', onClick: () => router.push('/dashboard/schedule') },
+        action: {
+          label: 'Schedule Post',
+          onClick: () => router.push('/dashboard/schedule'),
+        },
         duration: 6000,
       });
     }
     if (hasCampaigns && !prevCampaigns.current) {
-      toast.success('You\'re all set! Your first post is scheduled.', {
+      toast.success("You're all set! Your first post is scheduled.", {
         description: 'It will publish automatically at the scheduled time.',
         duration: 8000,
         icon: <Sparkles className="h-5 w-5 text-amber-400" />,
@@ -111,7 +121,9 @@ export function GetStartedChecklist({
   }, [hasConnections, hasCampaigns, hasContent, router]);
 
   const handleDismiss = useCallback(() => {
-    const currentCompleted = [hasConnections, hasCampaigns, hasContent].filter(Boolean).length;
+    const currentCompleted = [hasConnections, hasCampaigns, hasContent].filter(
+      Boolean
+    ).length;
     if (currentCompleted === 0) {
       toast.info('Complete at least one step before dismissing.', {
         description: 'These steps help you get the most out of Synthex.',
@@ -132,32 +144,35 @@ export function GetStartedChecklist({
       {
         id: 'connect',
         title: 'Connect your first social account',
-        description: 'Link a platform like Instagram, YouTube, or TikTok to start publishing.',
+        description:
+          'Link a platform like Instagram, YouTube, or TikTok to start publishing.',
         href: '/dashboard/platforms',
         icon: Link2,
         completed: hasConnections,
       },
       {
         id: 'content',
-        title: 'Generate your first AI post',
-        description: 'Use the AI Studio to draft, optimise, and publish content in seconds.',
-        href: '/dashboard/content',
+        title: 'Create your first post',
+        description:
+          'Write a quick post right here — choose a platform, write, and schedule.',
+        href: '#quick-post',
         icon: Sparkles,
         completed: hasContent,
       },
       {
         id: 'campaign',
         title: 'Schedule your first post',
-        description: 'Plan and schedule content so it publishes at the perfect time.',
+        description:
+          'Plan and schedule content so it publishes at the perfect time.',
         href: '/dashboard/schedule',
         icon: Rocket,
         completed: hasCampaigns,
       },
     ],
-    [hasConnections, hasCampaigns, hasContent],
+    [hasConnections, hasCampaigns, hasContent]
   );
 
-  const completedCount = steps.filter((s) => s.completed).length;
+  const completedCount = steps.filter(s => s.completed).length;
   const progressPercent = Math.round((completedCount / steps.length) * 100);
   const allComplete = completedCount === steps.length;
 
@@ -165,7 +180,12 @@ export function GetStartedChecklist({
   if (dismissed && completedCount >= 1) return null;
 
   return (
-    <div className={cn('border-[0.5px] border-cyan-500/20 bg-cyan-500/[0.02] rounded-sm overflow-hidden', className)}>
+    <div
+      className={cn(
+        'border-[0.5px] border-cyan-500/20 bg-cyan-500/[0.02] rounded-sm overflow-hidden',
+        className
+      )}
+    >
       {/* Header */}
       <div className="px-6 pt-5 pb-4">
         <div className="flex items-start justify-between gap-3">
@@ -174,7 +194,9 @@ export function GetStartedChecklist({
               <Rocket className="h-4 w-4 text-cyan-400" />
             </div>
             <div>
-              <h3 className="text-base font-light text-white tracking-tight">Get Started with Synthex</h3>
+              <h3 className="text-base font-light text-white tracking-tight">
+                Get Started with Synthex
+              </h3>
               <p className="text-xs text-white/40 mt-0.5">
                 Complete these steps to unlock the full platform
               </p>
@@ -198,7 +220,9 @@ export function GetStartedChecklist({
             <span className="text-[10px] text-white/30">
               {completedCount} of {steps.length} complete
             </span>
-            <span className="font-mono text-[10px] text-cyan-400 tabular-nums">{progressPercent}%</span>
+            <span className="font-mono text-[10px] text-cyan-400 tabular-nums">
+              {progressPercent}%
+            </span>
           </div>
           <div className="h-px bg-white/[0.06] rounded-full overflow-hidden">
             <div
@@ -211,15 +235,23 @@ export function GetStartedChecklist({
 
       {/* Steps */}
       <div className="border-t-[0.5px] border-white/[0.06] divide-y-[0.5px] divide-white/[0.04]">
-        {steps.map((step) => (
+        {steps.map(step => (
           <Link
             key={step.id}
-            href={step.href}
+            href={step.href === '#quick-post' ? '#' : step.href}
+            onClick={
+              step.href === '#quick-post' && !step.completed
+                ? e => {
+                    e.preventDefault();
+                    setQuickPostOpen(true);
+                  }
+                : undefined
+            }
             className={cn(
               'flex items-center gap-3 px-6 py-4 transition-all group',
               step.completed
                 ? 'bg-emerald-500/[0.03] hover:bg-emerald-500/[0.05]'
-                : 'hover:bg-white/[0.02]',
+                : 'hover:bg-white/[0.02]'
             )}
           >
             {/* Icon */}
@@ -228,7 +260,7 @@ export function GetStartedChecklist({
                 'h-8 w-8 border-[0.5px] rounded-sm flex items-center justify-center flex-shrink-0 transition-colors',
                 step.completed
                   ? 'border-emerald-500/30 bg-emerald-500/[0.08]'
-                  : 'border-white/[0.08] bg-white/[0.02] group-hover:border-cyan-500/30 group-hover:bg-cyan-500/[0.08]',
+                  : 'border-white/[0.08] bg-white/[0.02] group-hover:border-cyan-500/30 group-hover:bg-cyan-500/[0.08]'
               )}
             >
               {step.completed ? (
@@ -245,7 +277,7 @@ export function GetStartedChecklist({
                   'text-sm',
                   step.completed
                     ? 'text-emerald-300/70 line-through decoration-emerald-500/40'
-                    : 'text-white/70 group-hover:text-white transition-colors',
+                    : 'text-white/70 group-hover:text-white transition-colors'
                 )}
               >
                 {step.title}
@@ -274,6 +306,8 @@ export function GetStartedChecklist({
           </button>
         </div>
       )}
+
+      <QuickPostModal open={quickPostOpen} onOpenChange={setQuickPostOpen} />
     </div>
   );
 }

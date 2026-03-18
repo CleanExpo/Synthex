@@ -19,7 +19,10 @@ import { z } from 'zod';
 // =============================================================================
 
 const analyticsQuerySchema = z.object({
-  timeRange: z.enum(['7d', '30d', '90d', '12m', 'all']).optional().default('30d'),
+  timeRange: z
+    .enum(['7d', '30d', '90d', '12m', 'all'])
+    .optional()
+    .default('30d'),
   platform: z.string().optional(),
   startDate: z.string().datetime().optional(),
   endDate: z.string().datetime().optional(),
@@ -29,7 +32,7 @@ const analyticsQuerySchema = z.object({
 // Auth Helper - Uses centralized JWT utilities (no fallback secrets)
 // =============================================================================
 
-import { getUserIdFromRequest } from '@/lib/auth/jwt-utils';
+import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { logger } from '@/lib/logger';
 
 // =============================================================================
@@ -38,7 +41,7 @@ import { logger } from '@/lib/logger';
 
 export async function GET(request: NextRequest) {
   try {
-    const userId = await getUserIdFromRequest(request);
+    const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
       return NextResponse.json(
         { error: 'Unauthorized', message: 'Authentication required' },
@@ -136,21 +139,25 @@ export async function GET(request: NextRequest) {
     });
 
     // Calculate engagement rate
-    const engagementRate = totals.impressions > 0
-      ? ((totals.engagement / totals.impressions) * 100).toFixed(2)
-      : '0.00';
+    const engagementRate =
+      totals.impressions > 0
+        ? ((totals.engagement / totals.impressions) * 100).toFixed(2)
+        : '0.00';
 
     // Get platform breakdown
-    const platformBreakdown = posts.reduce((acc, post) => {
-      if (!acc[post.platform]) {
-        acc[post.platform] = { posts: 0, published: 0 };
-      }
-      acc[post.platform].posts++;
-      if (post.status === 'published') {
-        acc[post.platform].published++;
-      }
-      return acc;
-    }, {} as Record<string, { posts: number; published: number }>);
+    const platformBreakdown = posts.reduce(
+      (acc, post) => {
+        if (!acc[post.platform]) {
+          acc[post.platform] = { posts: 0, published: 0 };
+        }
+        acc[post.platform].posts++;
+        if (post.status === 'published') {
+          acc[post.platform].published++;
+        }
+        return acc;
+      },
+      {} as Record<string, { posts: number; published: number }>
+    );
 
     // Get recent activity (API usage)
     const recentActivity = await prisma.apiUsage.findMany({
@@ -168,14 +175,17 @@ export async function GET(request: NextRequest) {
     });
 
     // Get daily post counts for chart
-    const dailyCounts = posts.reduce((acc, post) => {
-      const date = post.createdAt.toISOString().split('T')[0];
-      if (!acc[date]) {
-        acc[date] = 0;
-      }
-      acc[date]++;
-      return acc;
-    }, {} as Record<string, number>);
+    const dailyCounts = posts.reduce(
+      (acc, post) => {
+        const date = post.createdAt.toISOString().split('T')[0];
+        if (!acc[date]) {
+          acc[date] = 0;
+        }
+        acc[date]++;
+        return acc;
+      },
+      {} as Record<string, number>
+    );
 
     const chartData = Object.entries(dailyCounts)
       .map(([date, count]) => ({ date, posts: count }))

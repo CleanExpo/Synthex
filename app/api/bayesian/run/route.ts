@@ -19,37 +19,40 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import prisma from '@/lib/prisma';
-import { getUserIdFromRequest } from '@/lib/auth/jwt-utils';
+import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { isWithinBOLimit } from '@/lib/bayesian/feature-limits';
 import { getQueue, QUEUE_NAMES } from '@/lib/queue/bull-queue';
 import { logger } from '@/lib/logger';
 
 const runSchema = z.object({
-  spaceId:      z.string().min(1),
-  initPoints:   z.number().int().min(3).max(20).optional(),
-  nIterations:  z.number().int().min(5).max(100).optional(),
+  spaceId: z.string().min(1),
+  initPoints: z.number().int().min(3).max(20).optional(),
+  nIterations: z.number().int().min(5).max(100).optional(),
 });
 
 export async function POST(request: NextRequest) {
   try {
-    const userId = await getUserIdFromRequest(request);
+    const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
       return NextResponse.json(
         { error: 'Unauthorised', message: 'Authentication required' },
-        { status: 401 },
+        { status: 401 }
       );
     }
 
     const body = await request.json().catch(() => null);
     if (!body) {
-      return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'Invalid request body' },
+        { status: 400 }
+      );
     }
 
     const validation = runSchema.safeParse(body);
     if (!validation.success) {
       return NextResponse.json(
         { error: 'Validation error', details: validation.error.issues },
-        { status: 400 },
+        { status: 400 }
       );
     }
 
@@ -58,7 +61,10 @@ export async function POST(request: NextRequest) {
     // Resolve user org and plan
     const user = await prisma.user.findUnique({
       where: { id: userId },
-      select: { organizationId: true, organization: { select: { plan: true } } },
+      select: {
+        organizationId: true,
+        organization: { select: { plan: true } },
+      },
     });
     const userOrgId = user?.organizationId;
     const plan = user?.organization?.plan ?? 'free';
@@ -71,13 +77,16 @@ export async function POST(request: NextRequest) {
     if (!space) {
       return NextResponse.json(
         { error: 'Not Found', message: 'Space not found' },
-        { status: 404 },
+        { status: 404 }
       );
     }
     if (space.orgId !== userOrgId) {
       return NextResponse.json(
-        { error: 'Forbidden', message: 'Access denied — space belongs to a different organisation' },
-        { status: 403 },
+        {
+          error: 'Forbidden',
+          message: 'Access denied — space belongs to a different organisation',
+        },
+        { status: 403 }
       );
     }
 
@@ -92,8 +101,11 @@ export async function POST(request: NextRequest) {
     });
     if (!isWithinBOLimit(plan, 'monthlyOptimisations', monthlyRunCount)) {
       return NextResponse.json(
-        { error: 'Forbidden', message: 'Monthly optimisation run limit reached' },
-        { status: 403 },
+        {
+          error: 'Forbidden',
+          message: 'Monthly optimisation run limit reached',
+        },
+        { status: 403 }
       );
     }
 
@@ -114,22 +126,28 @@ export async function POST(request: NextRequest) {
     const run = await prisma.bOOptimisationRun.create({
       data: {
         spaceId,
-        orgId:          space.orgId,
+        orgId: space.orgId,
         userId,
-        externalJobId:  job.id ?? null,
-        status:         'running',
-        initPoints:     initPoints  ?? 5,
-        nIterations:    nIterations ?? 25,
-        startedAt:      new Date(),
+        externalJobId: job.id ?? null,
+        status: 'running',
+        initPoints: initPoints ?? 5,
+        nIterations: nIterations ?? 25,
+        startedAt: new Date(),
       },
     });
 
-    return NextResponse.json({ data: { jobId: job.id, runId: run.id } }, { status: 202 });
+    return NextResponse.json(
+      { data: { jobId: job.id, runId: run.id } },
+      { status: 202 }
+    );
   } catch (error) {
     logger.error('POST /api/bayesian/run error:', error);
     return NextResponse.json(
-      { error: 'Internal Server Error', message: 'Failed to enqueue optimisation run' },
-      { status: 500 },
+      {
+        error: 'Internal Server Error',
+        message: 'Failed to enqueue optimisation run',
+      },
+      { status: 500 }
     );
   }
 }

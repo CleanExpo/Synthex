@@ -29,19 +29,21 @@ const bulkDeleteSchema = z.object({
 });
 
 const reorderSchema = z.object({
-  tasks: z.array(z.object({
-    id: z.string(),
-    order: z.number(),
-    status: z.string().optional(),
-    columnId: z.string().optional(),
-  })),
+  tasks: z.array(
+    z.object({
+      id: z.string(),
+      order: z.number(),
+      status: z.string().optional(),
+      columnId: z.string().optional(),
+    })
+  ),
 });
 
 // =============================================================================
 // Auth Helper - Uses centralized JWT utilities (no fallback secrets)
 // =============================================================================
 
-import { getUserIdFromRequest } from '@/lib/auth/jwt-utils';
+import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { logger } from '@/lib/logger';
 
 // =============================================================================
@@ -50,7 +52,7 @@ import { logger } from '@/lib/logger';
 
 export async function PATCH(request: NextRequest) {
   try {
-    const userId = await getUserIdFromRequest(request);
+    const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
       return NextResponse.json(
         { error: 'Unauthorized', message: 'Authentication required' },
@@ -145,7 +147,10 @@ export async function PATCH(request: NextRequest) {
   } catch (error) {
     logger.error('Error bulk updating tasks:', error);
     return NextResponse.json(
-      { error: 'Internal Server Error', message: 'Failed to bulk update tasks' },
+      {
+        error: 'Internal Server Error',
+        message: 'Failed to bulk update tasks',
+      },
       { status: 500 }
     );
   }
@@ -157,7 +162,7 @@ export async function PATCH(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
-    const userId = await getUserIdFromRequest(request);
+    const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
       return NextResponse.json(
         { error: 'Unauthorized', message: 'Authentication required' },
@@ -199,7 +204,10 @@ export async function DELETE(request: NextRequest) {
   } catch (error) {
     logger.error('Error bulk deleting tasks:', error);
     return NextResponse.json(
-      { error: 'Internal Server Error', message: 'Failed to bulk delete tasks' },
+      {
+        error: 'Internal Server Error',
+        message: 'Failed to bulk delete tasks',
+      },
       { status: 500 }
     );
   }

@@ -11,13 +11,13 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getUserIdFromRequest } from '@/lib/auth/jwt-utils';
+import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { getConnectorStatus } from '@/lib/authority/source-connectors/index';
 import { logger } from '@/lib/logger';
 
 export async function GET(req: NextRequest) {
   try {
-    const userId = await getUserIdFromRequest(req);
+    const userId = await getUserIdFromRequestOrCookies(req);
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
     }
@@ -27,7 +27,10 @@ export async function GET(req: NextRequest) {
     return NextResponse.json(connectors);
   } catch (error) {
     logger.error('Authority sources fetch error', error);
-    return NextResponse.json({ error: 'Failed to fetch source connector status' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Failed to fetch source connector status' },
+      { status: 500 }
+    );
   }
 }
 

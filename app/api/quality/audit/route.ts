@@ -11,7 +11,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { Prisma } from '@prisma/client';
 import prisma from '@/lib/prisma';
-import { getUserIdFromRequest } from '@/lib/auth/jwt-utils';
+import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { RateLimiter } from '@/lib/rate-limit';
 import { scoreHumanness } from '@/lib/quality/humanness-scorer';
 import { ContentScorer } from '@/lib/ai/content-scorer';
@@ -43,7 +43,7 @@ const PostSchema = z.object({
 export async function POST(request: NextRequest) {
   try {
     // 1. Auth
-    const userId = await getUserIdFromRequest(request);
+    const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
       return NextResponse.json(
         { error: 'Unauthorised', message: 'Authentication required' },
@@ -63,7 +63,10 @@ export async function POST(request: NextRequest) {
     // 3. Validate body
     const body = await request.json().catch(() => null);
     if (!body) {
-      return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'Invalid request body' },
+        { status: 400 }
+      );
     }
 
     const parsed = PostSchema.safeParse(body);
@@ -101,11 +104,18 @@ export async function POST(request: NextRequest) {
       auditId = audit.id;
     }
 
-    return NextResponse.json({ humanness, contentScore, ...(auditId ? { auditId } : {}) });
+    return NextResponse.json({
+      humanness,
+      contentScore,
+      ...(auditId ? { auditId } : {}),
+    });
   } catch (error) {
     logger.error('Quality audit error:', error);
     return NextResponse.json(
-      { error: 'Internal Server Error', message: 'Failed to run quality audit' },
+      {
+        error: 'Internal Server Error',
+        message: 'Failed to run quality audit',
+      },
       { status: 500 }
     );
   }
@@ -116,7 +126,7 @@ export async function POST(request: NextRequest) {
 export async function GET(request: NextRequest) {
   try {
     // 1. Auth
-    const userId = await getUserIdFromRequest(request);
+    const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
       return NextResponse.json(
         { error: 'Unauthorised', message: 'Authentication required' },
@@ -144,7 +154,10 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     logger.error('Quality audit history error:', error);
     return NextResponse.json(
-      { error: 'Internal Server Error', message: 'Failed to fetch audit history' },
+      {
+        error: 'Internal Server Error',
+        message: 'Failed to fetch audit history',
+      },
       { status: 500 }
     );
   }

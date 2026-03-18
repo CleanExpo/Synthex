@@ -17,7 +17,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { getUserIdFromRequest } from '@/lib/auth/jwt-utils';
+import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { hasAuthorityAddon } from '@/lib/stripe/subscription-service';
 import { searchAllConnectors } from '@/lib/authority/source-connectors/index';
 import { logger } from '@/lib/logger';
@@ -28,7 +28,7 @@ const schema = z.object({
 
 export async function POST(req: NextRequest) {
   try {
-    const userId = await getUserIdFromRequest(req);
+    const userId = await getUserIdFromRequestOrCookies(req);
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
     }
@@ -37,7 +37,11 @@ export async function POST(req: NextRequest) {
     const addonActive = await hasAuthorityAddon(userId);
     if (!addonActive) {
       return NextResponse.json(
-        { error: 'Authority Ranking add-on required for claim validation', upgrade: true, addon: 'authority' },
+        {
+          error: 'Authority Ranking add-on required for claim validation',
+          upgrade: true,
+          addon: 'authority',
+        },
         { status: 403 }
       );
     }
@@ -45,7 +49,10 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const parsed = schema.safeParse(body);
     if (!parsed.success) {
-      return NextResponse.json({ error: 'Invalid request', details: parsed.error.issues }, { status: 400 });
+      return NextResponse.json(
+        { error: 'Invalid request', details: parsed.error.issues },
+        { status: 400 }
+      );
     }
 
     const { claim } = parsed.data;
@@ -56,7 +63,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ sources, validated });
   } catch (error) {
     logger.error('Authority validate-claim error', error);
-    return NextResponse.json({ error: 'Claim validation failed' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Claim validation failed' },
+      { status: 500 }
+    );
   }
 }
 

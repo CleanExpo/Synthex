@@ -11,24 +11,24 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import { getUserIdFromRequest } from '@/lib/auth/jwt-utils';
+import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { analyzeGaps, aggregateCompetitors } from '@/lib/prompts/gap-analyzer';
 
 // ─── GET /api/prompts/gaps ────────────────────────────────────────────────────
 
 export async function GET(request: NextRequest) {
   try {
-    const userId = await getUserIdFromRequest(request);
+    const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
     }
 
     const { searchParams } = new URL(request.url);
-    const orgId      = searchParams.get('orgId');
-    const entityName = searchParams.get('entityName');  // filter by entity if multiple
+    const orgId = searchParams.get('orgId');
+    const entityName = searchParams.get('entityName'); // filter by entity if multiple
 
     const where: Record<string, unknown> = { userId };
-    if (orgId)      where.orgId      = orgId;
+    if (orgId) where.orgId = orgId;
     if (entityName) where.entityName = entityName;
 
     // Fetch all tested trackers for this user
@@ -52,10 +52,10 @@ export async function GET(request: NextRequest) {
     }
 
     // Flatten results for the analyzer
-    const allResults = trackers.flatMap((t) => t.results);
+    const allResults = trackers.flatMap(t => t.results);
 
-    const gapAnalysis  = analyzeGaps(trackers, allResults);
-    const competitors  = aggregateCompetitors(allResults, trackers.length);
+    const gapAnalysis = analyzeGaps(trackers, allResults);
+    const competitors = aggregateCompetitors(allResults, trackers.length);
 
     return NextResponse.json({
       gapAnalysis,
@@ -64,6 +64,9 @@ export async function GET(request: NextRequest) {
     });
   } catch (err) {
     console.error('[GET /api/prompts/gaps]', err);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
   }
 }

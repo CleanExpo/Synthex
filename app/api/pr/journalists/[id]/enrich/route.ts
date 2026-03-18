@@ -10,7 +10,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import { getUserIdFromRequest } from '@/lib/auth/jwt-utils';
+import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { enrichJournalist } from '@/lib/pr/hunter-enricher';
 
 // ─── Route params type ─────────────────────────────────────────────────────────
@@ -23,7 +23,7 @@ interface RouteParams {
 
 export async function POST(request: NextRequest, { params }: RouteParams) {
   try {
-    const userId = await getUserIdFromRequest(request);
+    const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
     }
@@ -41,7 +41,8 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     // Check if Hunter.io is configured
     if (!process.env.HUNTER_API_KEY) {
       return NextResponse.json({
-        message: 'Hunter.io not configured — add HUNTER_API_KEY to use email enrichment',
+        message:
+          'Hunter.io not configured — add HUNTER_API_KEY to use email enrichment',
         email: null,
         confidence: null,
       });
@@ -88,6 +89,9 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     });
   } catch (error) {
     console.error('[PR journalists/[id]/enrich POST]', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
   }
 }

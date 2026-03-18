@@ -21,18 +21,33 @@ import { z } from 'zod';
 const listTasksQuerySchema = z.object({
   page: z.coerce.number().min(1).optional().default(1),
   limit: z.coerce.number().min(1).max(100).optional().default(50),
-  status: z.enum(['todo', 'in-progress', 'review', 'done', 'all']).optional().default('all'),
-  priority: z.enum(['low', 'medium', 'high', 'urgent', 'all']).optional().default('all'),
+  status: z
+    .enum(['todo', 'in-progress', 'review', 'done', 'all'])
+    .optional()
+    .default('all'),
+  priority: z
+    .enum(['low', 'medium', 'high', 'urgent', 'all'])
+    .optional()
+    .default('all'),
   category: z.string().optional(),
-  sortBy: z.enum(['createdAt', 'dueDate', 'priority', 'order']).optional().default('order'),
+  sortBy: z
+    .enum(['createdAt', 'dueDate', 'priority', 'order'])
+    .optional()
+    .default('order'),
   sortOrder: z.enum(['asc', 'desc']).optional().default('asc'),
 });
 
 const createTaskSchema = z.object({
   title: z.string().min(1).max(200),
   description: z.string().max(5000).optional(),
-  status: z.enum(['todo', 'in-progress', 'review', 'done']).optional().default('todo'),
-  priority: z.enum(['low', 'medium', 'high', 'urgent']).optional().default('medium'),
+  status: z
+    .enum(['todo', 'in-progress', 'review', 'done'])
+    .optional()
+    .default('todo'),
+  priority: z
+    .enum(['low', 'medium', 'high', 'urgent'])
+    .optional()
+    .default('medium'),
   dueDate: z.string().datetime().optional().nullable(),
   tags: z.array(z.string()).optional().default([]),
   category: z.string().max(50).optional(),
@@ -68,7 +83,7 @@ const updateTaskSchema = updateTaskFieldsSchema.extend({
 // Auth Helper - Uses centralized JWT utilities (no fallback secrets)
 // =============================================================================
 
-import { getUserIdFromRequest } from '@/lib/auth/jwt-utils';
+import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { logger } from '@/lib/logger';
 
 // =============================================================================
@@ -77,7 +92,7 @@ import { logger } from '@/lib/logger';
 
 export async function GET(request: NextRequest) {
   try {
-    const userId = await getUserIdFromRequest(request);
+    const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
       return NextResponse.json(
         { error: 'Unauthorized', message: 'Authentication required' },
@@ -99,7 +114,8 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const { page, limit, status, priority, category, sortBy, sortOrder } = validation.data;
+    const { page, limit, status, priority, category, sortBy, sortOrder } =
+      validation.data;
     const skip = (page - 1) * limit;
 
     // Build where clause
@@ -152,7 +168,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const userId = await getUserIdFromRequest(request);
+    const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
       return NextResponse.json(
         { error: 'Unauthorized', message: 'Authentication required' },
@@ -203,7 +219,7 @@ export async function POST(request: NextRequest) {
 
 export async function PATCH(request: NextRequest) {
   try {
-    const userId = await getUserIdFromRequest(request);
+    const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
       return NextResponse.json(
         { error: 'Unauthorized', message: 'Authentication required' },
@@ -239,10 +255,14 @@ export async function PATCH(request: NextRequest) {
     // Handle status change to 'done'
     const updatePayload: Record<string, unknown> = { ...updateData };
     if (updateData.dueDate !== undefined) {
-      updatePayload.dueDate = updateData.dueDate ? new Date(updateData.dueDate) : null;
+      updatePayload.dueDate = updateData.dueDate
+        ? new Date(updateData.dueDate)
+        : null;
     }
     if (updateData.completedAt !== undefined) {
-      updatePayload.completedAt = updateData.completedAt ? new Date(updateData.completedAt) : null;
+      updatePayload.completedAt = updateData.completedAt
+        ? new Date(updateData.completedAt)
+        : null;
     }
     if (updateData.status === 'done' && !updateData.completedAt) {
       updatePayload.completedAt = new Date();
@@ -270,7 +290,7 @@ export async function PATCH(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
-    const userId = await getUserIdFromRequest(request);
+    const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
       return NextResponse.json(
         { error: 'Unauthorized', message: 'Authentication required' },

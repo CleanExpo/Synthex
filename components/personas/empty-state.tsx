@@ -18,13 +18,16 @@ export function PersonaEmptyState({ onCreateClick }: PersonaEmptyStateProps) {
     <Card variant="glass">
       <CardContent className="pt-20 pb-20 text-center">
         <Brain className="h-16 w-16 mx-auto mb-4 text-slate-500" />
-        <h3 className="text-xl font-semibold text-white mb-2">Select a Persona</h3>
+        <h3 className="text-xl font-semibold text-white mb-2">
+          Define Your First Persona
+        </h3>
         <p className="text-slate-400 mb-6">
-          Choose a persona from the list to view details and add training data
+          Personas teach the AI your unique voice and style. Your first persona
+          takes 2 minutes to set up.
         </p>
         <Button onClick={onCreateClick} className="gradient-primary text-white">
           <Plus className="mr-2 h-4 w-4" />
-          Create Your First Persona
+          Create Persona
         </Button>
       </CardContent>
     </Card>

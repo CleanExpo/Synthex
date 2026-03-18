@@ -12,16 +12,19 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getUserIdFromRequest } from '@/lib/auth/jwt-utils';
+import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { listVisualAssets } from '@/lib/services/visual-asset-manager';
 import type { VisualType } from '@/lib/services/paper-banana-client';
 import { logger } from '@/lib/logger';
 
 export async function GET(request: NextRequest) {
   try {
-    const userId = await getUserIdFromRequest(request);
+    const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized', message: 'Authentication required' }, { status: 401 });
+      return NextResponse.json(
+        { error: 'Unauthorized', message: 'Authentication required' },
+        { status: 401 }
+      );
     }
 
     const { searchParams } = new URL(request.url);
@@ -29,15 +32,26 @@ export async function GET(request: NextRequest) {
     const result = await listVisualAssets({
       userId,
       type: searchParams.get('type') as VisualType | undefined,
-      reportId: searchParams.get('reportId') ? parseInt(searchParams.get('reportId')!, 10) : undefined,
-      minQuality: searchParams.get('minQuality') ? parseFloat(searchParams.get('minQuality')!) : undefined,
-      limit: searchParams.get('limit') ? parseInt(searchParams.get('limit')!, 10) : 20,
-      offset: searchParams.get('offset') ? parseInt(searchParams.get('offset')!, 10) : 0,
+      reportId: searchParams.get('reportId')
+        ? parseInt(searchParams.get('reportId')!, 10)
+        : undefined,
+      minQuality: searchParams.get('minQuality')
+        ? parseFloat(searchParams.get('minQuality')!)
+        : undefined,
+      limit: searchParams.get('limit')
+        ? parseInt(searchParams.get('limit')!, 10)
+        : 20,
+      offset: searchParams.get('offset')
+        ? parseInt(searchParams.get('offset')!, 10)
+        : 0,
     });
 
     return NextResponse.json(result);
   } catch (error) {
     logger.error('List visuals error:', error);
-    return NextResponse.json({ error: 'Internal Server Error', message: 'Failed to list visuals' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Internal Server Error', message: 'Failed to list visuals' },
+      { status: 500 }
+    );
   }
 }

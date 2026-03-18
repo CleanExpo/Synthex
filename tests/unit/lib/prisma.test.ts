@@ -107,12 +107,16 @@ describe('Prisma Client Utilities', () => {
 
   describe('Module Loading', () => {
     it('should export prisma as null when window is defined (jsdom environment)', async () => {
-      // jsdom environment has window defined, so getPrismaClient returns null
+      // jsdom environment has window defined, so getPrismaClient returns null internally.
+      // The exported `prisma` is a lazy Proxy — not null itself — but any property access
+      // on it throws because the underlying client is null.
       process.env.DATABASE_URL = 'postgresql://user:pass@localhost:5432/testdb';
       prismaModule = await import('@/lib/prisma');
 
-      // In jsdom, typeof window !== 'undefined', so prisma is null
-      expect(prismaModule.prisma).toBeNull();
+      // Proxy throws on property access when client not initialized
+      expect(() => (prismaModule.prisma as any).user).toThrow(
+        '[Prisma] Client not initialized'
+      );
     });
 
     it('should export utility functions', async () => {
@@ -227,7 +231,8 @@ describe('Prisma Client Utilities', () => {
     });
 
     it('should retry on connection error and succeed', async () => {
-      const operation = jest.fn()
+      const operation = jest
+        .fn()
         .mockRejectedValueOnce(new Error('connection refused'))
         .mockResolvedValueOnce('recovered');
 
@@ -243,7 +248,8 @@ describe('Prisma Client Utilities', () => {
     });
 
     it('should retry on pool error and succeed', async () => {
-      const operation = jest.fn()
+      const operation = jest
+        .fn()
         .mockRejectedValueOnce(new Error('pool exhausted'))
         .mockResolvedValueOnce('recovered');
 
@@ -257,7 +263,8 @@ describe('Prisma Client Utilities', () => {
     });
 
     it('should retry on timeout error', async () => {
-      const operation = jest.fn()
+      const operation = jest
+        .fn()
         .mockRejectedValueOnce(new Error('timeout exceeded'))
         .mockResolvedValueOnce('ok');
 
@@ -271,7 +278,8 @@ describe('Prisma Client Utilities', () => {
     });
 
     it('should throw immediately on non-connection error', async () => {
-      const operation = jest.fn()
+      const operation = jest
+        .fn()
         .mockRejectedValueOnce(new Error('unique constraint violation'));
 
       await expect(
@@ -284,7 +292,8 @@ describe('Prisma Client Utilities', () => {
     it('should throw after exceeding max retries', async () => {
       jest.useRealTimers();
 
-      const operation = jest.fn()
+      const operation = jest
+        .fn()
         .mockRejectedValue(new Error('connection refused'));
 
       await expect(
@@ -297,7 +306,8 @@ describe('Prisma Client Utilities', () => {
     });
 
     it('should use exponential backoff between retries', async () => {
-      const operation = jest.fn()
+      const operation = jest
+        .fn()
         .mockRejectedValueOnce(new Error('connection error'))
         .mockRejectedValueOnce(new Error('connection error'))
         .mockResolvedValueOnce('success');
@@ -323,7 +333,8 @@ describe('Prisma Client Utilities', () => {
     it('should use default maxRetries of 3 when not specified', async () => {
       jest.useRealTimers();
 
-      const operation = jest.fn()
+      const operation = jest
+        .fn()
         .mockRejectedValue(new Error('connection lost'));
 
       await expect(
@@ -339,9 +350,9 @@ describe('Prisma Client Utilities', () => {
     it('should convert non-Error throws to Error objects', async () => {
       const operation = jest.fn().mockRejectedValueOnce('string error');
 
-      await expect(
-        prismaModule.executeWithRetry(operation, 1)
-      ).rejects.toThrow('string error');
+      await expect(prismaModule.executeWithRetry(operation, 1)).rejects.toThrow(
+        'string error'
+      );
     });
   });
 
@@ -354,7 +365,7 @@ describe('Prisma Client Utilities', () => {
       prismaModule = await import('@/lib/prisma');
 
       await expect(
-        prismaModule.withTransaction(async (tx) => 'result')
+        prismaModule.withTransaction(async tx => 'result')
       ).rejects.toThrow('Prisma client not initialized');
     });
   });
@@ -368,9 +379,7 @@ describe('Prisma Client Utilities', () => {
       prismaModule = await import('@/lib/prisma');
 
       // prisma is null in jsdom, so disconnect should be a no-op
-      await expect(
-        prismaModule.disconnectPrisma()
-      ).resolves.toBeUndefined();
+      await expect(prismaModule.disconnectPrisma()).resolves.toBeUndefined();
     });
   });
 
@@ -423,11 +432,12 @@ describe('Prisma Client Utilities', () => {
       process.env.DATABASE_URL = '';
 
       try {
-        // Should throw because empty DATABASE_URL
         prismaModule = await import('@/lib/prisma');
-        // In getPrismaClient, it checks !process.env.DATABASE_URL which is truthy for ''
-        // Actually '' is falsy in JS, so it returns null
-        expect(prismaModule.prisma).toBeNull();
+        // prisma is a lazy Proxy — it is never null. When DATABASE_URL is empty,
+        // getPrismaClient() returns null internally, and the Proxy throws on access.
+        expect(() => (prismaModule.prisma as any).user).toThrow(
+          '[Prisma] Client not initialized'
+        );
       } finally {
         (globalThis as any).window = originalWindow;
       }
@@ -441,8 +451,11 @@ describe('Prisma Client Utilities', () => {
 
       try {
         prismaModule = await import('@/lib/prisma');
-        // createPrismaClient catches the URL parse error and returns null
-        expect(prismaModule.prisma).toBeNull();
+        // createPrismaClient catches the URL parse error; getPrismaClient returns null.
+        // The Proxy throws on any property access when the underlying client is null.
+        expect(() => (prismaModule.prisma as any).user).toThrow(
+          '[Prisma] Client not initialized'
+        );
       } finally {
         (globalThis as any).window = originalWindow;
       }
@@ -453,7 +466,8 @@ describe('Prisma Client Utilities', () => {
     it.skip('should parse DATABASE_URL correctly and create client', async () => {
       const originalWindow = (globalThis as any).window;
       delete (globalThis as any).window;
-      process.env.DATABASE_URL = 'postgresql://myuser:mypass%40special@db.example.com:6543/mydb?pgbouncer=true';
+      process.env.DATABASE_URL =
+        'postgresql://myuser:mypass%40special@db.example.com:6543/mydb?pgbouncer=true';
       process.env.NODE_ENV = 'development';
 
       try {

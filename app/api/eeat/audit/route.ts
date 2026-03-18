@@ -24,7 +24,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { Prisma } from '@prisma/client';
 import prisma from '@/lib/prisma';
-import { getUserIdFromRequest } from '@/lib/auth/jwt-utils';
+import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { scoreEEAT } from '@/lib/eeat/eeat-scorer';
 import { analyzeGEO } from '@/lib/geo/geo-analyzer';
 import type { ContentType } from '@/lib/eeat/types';
@@ -33,23 +33,32 @@ import { logger } from '@/lib/logger';
 const auditSchema = z.object({
   content: z.string().min(100, 'Content must be at least 100 characters'),
   url: z.string().url().optional(),
-  authorInfo: z.object({
-    name: z.string(),
-    credentials: z.array(z.object({
-      type: z.string(),
-      title: z.string(),
-      institution: z.string().optional(),
-      year: z.number().optional(),
-    })).optional(),
-    socialLinks: z.record(z.string()).optional(),
-    bio: z.string().optional(),
-  }).optional(),
-  contentType: z.enum(['article', 'product', 'service', 'ymyl', 'general']).optional().default('general'),
+  authorInfo: z
+    .object({
+      name: z.string(),
+      credentials: z
+        .array(
+          z.object({
+            type: z.string(),
+            title: z.string(),
+            institution: z.string().optional(),
+            year: z.number().optional(),
+          })
+        )
+        .optional(),
+      socialLinks: z.record(z.string()).optional(),
+      bio: z.string().optional(),
+    })
+    .optional(),
+  contentType: z
+    .enum(['article', 'product', 'service', 'ymyl', 'general'])
+    .optional()
+    .default('general'),
 });
 
 export async function POST(request: NextRequest) {
   try {
-    const userId = await getUserIdFromRequest(request);
+    const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
       return NextResponse.json(
         { error: 'Unauthorized', message: 'Authentication required' },
@@ -70,16 +79,27 @@ export async function POST(request: NextRequest) {
 
     // Run both analyses in parallel
     const [eeatResult, geoResult] = await Promise.all([
-      scoreEEAT({ content, authorInfo, url, contentType: contentType as ContentType }),
+      scoreEEAT({
+        content,
+        authorInfo,
+        url,
+        contentType: contentType as ContentType,
+      }),
       analyzeGEO({ contentText: content, contentUrl: url }),
     ]);
 
     // Combined score (50% E-E-A-T, 50% GEO)
-    const combinedScore = Math.round(eeatResult.score.overall * 0.5 + geoResult.score.overall * 0.5);
-    const combinedTier = combinedScore >= 80 ? 'excellent'
-      : combinedScore >= 60 ? 'good'
-      : combinedScore >= 40 ? 'needs_work'
-      : 'poor';
+    const combinedScore = Math.round(
+      eeatResult.score.overall * 0.5 + geoResult.score.overall * 0.5
+    );
+    const combinedTier =
+      combinedScore >= 80
+        ? 'excellent'
+        : combinedScore >= 60
+          ? 'good'
+          : combinedScore >= 40
+            ? 'needs_work'
+            : 'poor';
 
     // Store as full audit
     await prisma.sEOAudit.create({

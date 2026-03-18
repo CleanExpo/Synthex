@@ -16,7 +16,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import prisma from '@/lib/prisma';
-import { getUserIdFromRequest } from '@/lib/auth/jwt-utils';
+import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { testPrompt } from '@/lib/prompts/prompt-tester';
 import { isSurfaceAvailable } from '@/lib/bayesian/feature-limits';
 import { getPromptTestingParams } from '@/lib/bayesian/surfaces/prompt-testing';
@@ -29,7 +29,11 @@ const promptTestStore = new Map<string, { count: number; resetAt: number }>();
 const MAX_TESTS_PER_HOUR = 10;
 const WINDOW_MS = 60 * 60 * 1000; // 1 hour
 
-function checkRateLimit(userId: string): { allowed: boolean; remaining: number; resetAt: number } {
+function checkRateLimit(userId: string): {
+  allowed: boolean;
+  remaining: number;
+  resetAt: number;
+} {
   const now = Date.now();
   let entry = promptTestStore.get(userId);
 
@@ -61,7 +65,7 @@ const TestSchema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
-    const userId = await getUserIdFromRequest(request);
+    const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
     }
@@ -89,7 +93,7 @@ export async function POST(request: NextRequest) {
     }
 
     // ── Validate body ──
-    const body   = await request.json();
+    const body = await request.json();
     const parsed = TestSchema.safeParse(body);
     if (!parsed.success) {
       return NextResponse.json(
@@ -111,44 +115,51 @@ export async function POST(request: NextRequest) {
     // ── Resolve orgId and plan for BO gating ──
     const userRecord = await prisma.user.findUnique({
       where: { id: userId },
-      select: { organizationId: true, organization: { select: { plan: true } } },
+      select: {
+        organizationId: true,
+        organization: { select: { plan: true } },
+      },
     });
     const orgId = userRecord?.organizationId ?? userId;
-    const plan  = userRecord?.organization?.plan ?? 'free';
+    const plan = userRecord?.organization?.plan ?? 'free';
 
     // ── Fetch BO params if surface is available on this plan ──
     let boParams: PromptTestingParams | undefined;
     let boParamsSource: 'bo' | 'heuristic' | undefined;
     if (isSurfaceAvailable(plan, 'prompt_testing')) {
-      const boResult  = await getPromptTestingParams(orgId);
-      boParams        = boResult.params;
-      boParamsSource  = boResult.source;
+      const boResult = await getPromptTestingParams(orgId);
+      boParams = boResult.params;
+      boParamsSource = boResult.source;
     }
 
     // ── Run prompt test (boParams may be undefined for non-Growth plans) ──
-    const testResult = await testPrompt(tracker.promptText, tracker.entityName, boParams);
+    const testResult = await testPrompt(
+      tracker.promptText,
+      tracker.entityName,
+      boParams
+    );
 
     // ── Save result + update tracker in a transaction ──
     const [result] = await prisma.$transaction([
       prisma.promptResult.create({
         data: {
           trackerId,
-          aiResponse:       testResult.response,
-          brandMentioned:   testResult.brandMentioned,
-          brandPosition:    testResult.brandPosition,
-          mentionContext:   testResult.mentionContext,
+          aiResponse: testResult.response,
+          brandMentioned: testResult.brandMentioned,
+          brandPosition: testResult.brandPosition,
+          mentionContext: testResult.mentionContext,
           competitorsFound: testResult.competitorsFound,
-          responseQuality:  testResult.responseQuality,
+          responseQuality: testResult.responseQuality,
         },
       }),
       prisma.promptTracker.update({
         where: { id: trackerId },
         data: {
-          status:               'tested',
-          brandMentioned:       testResult.brandMentioned,
-          brandPosition:        testResult.brandPosition,
+          status: 'tested',
+          brandMentioned: testResult.brandMentioned,
+          brandPosition: testResult.brandPosition,
           competitorsMentioned: testResult.competitorsFound,
-          lastTestedAt:         new Date(),
+          lastTestedAt: new Date(),
         },
       }),
     ]);
@@ -158,36 +169,37 @@ export async function POST(request: NextRequest) {
     if (boParams && boParamsSource === 'bo') {
       const observationTarget = testResult.brandMentioned
         ? testResult.responseQuality
-        : testResult.responseQuality * 0.5;  // Penalise responses that miss the brand
+        : testResult.responseQuality * 0.5; // Penalise responses that miss the brand
 
       void registerObservationSilently(
         'prompt_testing',
         orgId,
         {
-          temperature:    boParams.temperature,
-          maxTokens:      boParams.maxTokens,
+          temperature: boParams.temperature,
+          maxTokens: boParams.maxTokens,
           positivityBias: boParams.positivityBias,
         },
         observationTarget,
         {
-          brandMentioned:  testResult.brandMentioned,
+          brandMentioned: testResult.brandMentioned,
           responseQuality: testResult.responseQuality,
-        },
+        }
       );
     }
 
     return NextResponse.json({
       result,
-      brandMentioned:   testResult.brandMentioned,
-      brandPosition:    testResult.brandPosition,
-      mentionContext:   testResult.mentionContext,
+      brandMentioned: testResult.brandMentioned,
+      brandPosition: testResult.brandPosition,
+      mentionContext: testResult.mentionContext,
       competitorsFound: testResult.competitorsFound,
-      responseQuality:  testResult.responseQuality,
-      remaining:        rl.remaining,
+      responseQuality: testResult.responseQuality,
+      remaining: rl.remaining,
     });
   } catch (err) {
     console.error('[POST /api/prompts/test]', err);
-    const message = err instanceof Error ? err.message : 'Internal server error';
+    const message =
+      err instanceof Error ? err.message : 'Internal server error';
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

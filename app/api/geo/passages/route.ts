@@ -15,7 +15,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { getUserIdFromRequest } from '@/lib/auth/jwt-utils';
+import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { extractCitablePassages } from '@/lib/geo/passage-extractor';
 import { logger } from '@/lib/logger';
 
@@ -25,7 +25,7 @@ const passageSchema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
-    const userId = await getUserIdFromRequest(request);
+    const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
       return NextResponse.json(
         { error: 'Unauthorized', message: 'Authentication required' },
@@ -50,8 +50,16 @@ export async function POST(request: NextRequest) {
       metadata: {
         totalPassages: passages.length,
         optimalPassages: optimalCount,
-        optimalRatio: passages.length > 0 ? Math.round((optimalCount / passages.length) * 100) : 0,
-        avgScore: passages.length > 0 ? Math.round(passages.reduce((s, p) => s + p.score, 0) / passages.length) : 0,
+        optimalRatio:
+          passages.length > 0
+            ? Math.round((optimalCount / passages.length) * 100)
+            : 0,
+        avgScore:
+          passages.length > 0
+            ? Math.round(
+                passages.reduce((s, p) => s + p.score, 0) / passages.length
+              )
+            : 0,
       },
     });
   } catch (error) {

@@ -10,18 +10,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import prisma from '@/lib/prisma';
-import { getUserIdFromRequest } from '@/lib/auth/jwt-utils';
+import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { generateNomination } from '@/lib/awards/nomination-writer';
 
 // ─── Validation ─────────────────────────────────────────────────────────────
 
 const GenerateNominationSchema = z.object({
   brand: z.object({
-    canonicalName:  z.string().min(1).max(200),
-    description:    z.string().min(1).max(1000),
-    credentials:    z.array(z.string()).optional(),
-    achievements:   z.array(z.string()).optional(),
-    location:       z.string().max(200).optional(),
+    canonicalName: z.string().min(1).max(200),
+    description: z.string().min(1).max(1000),
+    credentials: z.array(z.string()).optional(),
+    achievements: z.array(z.string()).optional(),
+    location: z.string().max(200).optional(),
   }),
   byokApiKey: z.string().optional(),
 });
@@ -30,17 +30,19 @@ const GenerateNominationSchema = z.object({
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { id } = await params;
-    const userId = await getUserIdFromRequest(request);
+    const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
     }
 
     // Verify the award belongs to the user
-    const award = await prisma.awardListing.findFirst({ where: { id, userId } });
+    const award = await prisma.awardListing.findFirst({
+      where: { id, userId },
+    });
     if (!award) {
       return NextResponse.json({ error: 'Award not found' }, { status: 404 });
     }
@@ -48,7 +50,10 @@ export async function POST(
     const body = await request.json();
     const parsed = GenerateNominationSchema.safeParse(body);
     if (!parsed.success) {
-      return NextResponse.json({ error: 'Validation failed', details: parsed.error.flatten() }, { status: 400 });
+      return NextResponse.json(
+        { error: 'Validation failed', details: parsed.error.flatten() },
+        { status: 400 }
+      );
     }
 
     const { brand, byokApiKey } = parsed.data;
@@ -57,13 +62,13 @@ export async function POST(
     const draft = await generateNomination(
       {
         award: {
-          name:      award.name,
-          category:  award.category,
+          name: award.name,
+          category: award.category,
           organizer: award.organizer,
         },
         brand,
       },
-      byokApiKey,
+      byokApiKey
     );
 
     // Save nomination draft back to the award record
@@ -75,6 +80,9 @@ export async function POST(
     return NextResponse.json({ draft });
   } catch (err) {
     console.error('[POST /api/awards/[id]/generate-nomination]', err);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
   }
 }

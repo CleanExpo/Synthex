@@ -35,6 +35,10 @@ const mockReferralFindUnique = jest.fn();
 const mockReferralFindFirst = jest.fn();
 const mockReferralCreate = jest.fn();
 const mockBusinessOwnershipCreate = jest.fn();
+const mockBusinessOwnershipFindFirst = jest.fn();
+const mockOnboardingProgressFindUnique = jest.fn();
+const mockOnboardingProgressFindFirst = jest.fn();
+const mockOnboardingProgressUpdateMany = jest.fn();
 const mockTransaction = jest.fn();
 
 jest.mock('@/lib/prisma', () => {
@@ -51,6 +55,8 @@ jest.mock('@/lib/prisma', () => {
     },
     businessOwnership: {
       create: (...args: unknown[]) => mockBusinessOwnershipCreate(...args),
+      findFirst: (...args: unknown[]) =>
+        mockBusinessOwnershipFindFirst(...args),
     },
     persona: {
       create: (...args: unknown[]) => mockPersonaCreate(...args),
@@ -58,6 +64,14 @@ jest.mock('@/lib/prisma', () => {
     },
     platformConnection: {
       findMany: (...args: unknown[]) => mockPlatformConnectionFindMany(...args),
+    },
+    onboardingProgress: {
+      findUnique: (...args: unknown[]) =>
+        mockOnboardingProgressFindUnique(...args),
+      findFirst: (...args: unknown[]) =>
+        mockOnboardingProgressFindFirst(...args),
+      updateMany: (...args: unknown[]) =>
+        mockOnboardingProgressUpdateMany(...args),
     },
     referral: {
       findMany: (...args: unknown[]) => mockReferralFindMany(...args),
@@ -84,11 +98,17 @@ const mockGenerateToken = jest.fn();
 jest.mock('@/lib/auth/jwt-utils', () => ({
   getUserIdFromRequestOrCookies: (...args: unknown[]) => mockGetUserId(...args),
   generateToken: (...args: unknown[]) => mockGenerateToken(...args),
+  unauthorizedResponse: () => {
+    const { NextResponse } = require('next/server');
+    return NextResponse.json(
+      { error: 'Unauthorized', message: 'Authentication required' },
+      { status: 401 }
+    );
+  },
 }));
 
 // =============================================================================
-// Webhook + logger mocks (used by onboarding route)
-// emit() is fire-and-forget inside try-catch, so returning undefined is fine
+// Webhook + logger + email + vault mocks (used by onboarding routes)
 // =============================================================================
 
 jest.mock('@/lib/webhooks', () => ({
@@ -105,6 +125,14 @@ jest.mock('@/lib/logger', () => ({
   },
 }));
 
+jest.mock('@/lib/email/billing-emails', () => ({
+  sendWelcomeSequenceDay0: jest.fn(),
+}));
+
+jest.mock('@/lib/vault/onboarding-seeder', () => ({
+  seedVaultFromOnboarding: jest.fn().mockResolvedValue(undefined),
+}));
+
 // =============================================================================
 // APISecurityChecker mock (used by referrals route)
 // =============================================================================
@@ -115,7 +143,8 @@ const mockCreateSecureResponse = jest.fn();
 jest.mock('@/lib/security/api-security-checker', () => ({
   APISecurityChecker: {
     check: (...args: unknown[]) => mockSecurityCheck(...args),
-    createSecureResponse: (...args: unknown[]) => mockCreateSecureResponse(...args),
+    createSecureResponse: (...args: unknown[]) =>
+      mockCreateSecureResponse(...args),
   },
   DEFAULT_POLICIES: {
     AUTHENTICATED_READ: { requireAuth: true },
@@ -134,10 +163,7 @@ const onboardingSuccessSchema = z.object({
     name: z.string(),
     slug: z.string(),
   }),
-  persona: z.union([
-    z.null(),
-    z.object({ id: z.string(), name: z.string() }),
-  ]),
+  persona: z.union([z.null(), z.object({ id: z.string(), name: z.string() })]),
 });
 
 const onboardingStatusSchema = z.object({
@@ -152,11 +178,13 @@ const referralsGetSchema = z.object({
   success: z.literal(true),
   referralCode: z.string(),
   referralLink: z.string(),
-  referrals: z.array(z.object({
-    id: z.string(),
-    code: z.string(),
-    status: z.string(),
-  })),
+  referrals: z.array(
+    z.object({
+      id: z.string(),
+      code: z.string(),
+      status: z.string(),
+    })
+  ),
   stats: z.object({
     totalSent: z.number(),
     signedUp: z.number(),
@@ -183,19 +211,26 @@ const errorSchema = z.object({
 // Helper: createMockRequest
 // =============================================================================
 
-function createMockRequest(opts: {
-  method?: string;
-  body?: object;
-  url?: string;
-} = {}) {
-  const { method = 'GET', body, url = 'http://localhost:3000/api/onboarding' } = opts;
+function createMockRequest(
+  opts: {
+    method?: string;
+    body?: object;
+    url?: string;
+  } = {}
+) {
+  const {
+    method = 'GET',
+    body,
+    url = 'http://localhost:3000/api/onboarding',
+  } = opts;
   const bodyString = body ? JSON.stringify(body) : undefined;
 
   return {
     url,
     method,
     headers: {
-      get: (name: string) => name === 'content-type' ? 'application/json' : null,
+      get: (name: string) =>
+        name === 'content-type' ? 'application/json' : null,
       has: () => false,
     },
     nextUrl: new URL(url),
@@ -264,19 +299,17 @@ describe('Onboarding & Referrals API Contract Tests', () => {
   });
 
   // ===========================================================================
-  // ONBOARDING POST — Auth enforcement
+  // POST /api/onboarding/complete — Auth enforcement
+  // (Old /api/onboarding POST was split; the completion step is now /complete)
   // ===========================================================================
 
-  describe('POST /api/onboarding — Auth enforcement', () => {
+  describe('POST /api/onboarding/complete — Auth enforcement', () => {
     it('should return 401 when unauthenticated (no userId)', async () => {
-      const { POST } = await import('@/app/api/onboarding/route');
+      const { POST } = await import('@/app/api/onboarding/complete/route');
 
       mockGetUserId.mockResolvedValue(null);
 
-      const req = createMockRequest({
-        method: 'POST',
-        body: { organizationName: 'Acme', industry: 'tech', teamSize: '1-10' },
-      });
+      const req = createMockRequest({ method: 'POST' });
       const response = await POST(req);
 
       expect(response.status).toBe(401);
@@ -287,167 +320,62 @@ describe('Onboarding & Referrals API Contract Tests', () => {
   });
 
   // ===========================================================================
-  // ONBOARDING POST — Input schema validation
+  // POST /api/onboarding/complete — Success response shape
   // ===========================================================================
 
-  describe('POST /api/onboarding — Input validation', () => {
-    it('should return 400 when organizationName is missing', async () => {
-      const { POST } = await import('@/app/api/onboarding/route');
+  describe('POST /api/onboarding/complete — Success response shape', () => {
+    it('should return 400 when no organisation exists for user', async () => {
+      const { POST } = await import('@/app/api/onboarding/complete/route');
 
       mockGetUserId.mockResolvedValue('user-123');
-      mockUserFindUnique.mockResolvedValue(mockUser);
-
-      const req = createMockRequest({
-        method: 'POST',
-        body: { industry: 'technology', teamSize: '1-10' }, // missing organizationName
+      mockUserFindUnique.mockResolvedValue({
+        id: 'user-123',
+        email: 'test@example.com',
+        name: 'Test User',
+        onboardingComplete: false,
+        activeOrganizationId: null,
       });
+      mockOrgFindFirst.mockResolvedValue(null); // no org found
+
+      const req = createMockRequest({ method: 'POST' });
       const response = await POST(req);
 
       expect(response.status).toBe(400);
       const body = await response.json();
-      expect(body.error).toBeTruthy();
+      expect(body.error).toContain('organisation');
     });
 
-    it('should return 400 when industry is missing', async () => {
-      const { POST } = await import('@/app/api/onboarding/route');
+    it('should return 200 { success: true, alreadyComplete: true } when already done', async () => {
+      const { POST } = await import('@/app/api/onboarding/complete/route');
 
       mockGetUserId.mockResolvedValue('user-123');
-      mockUserFindUnique.mockResolvedValue(mockUser);
-
-      const req = createMockRequest({
-        method: 'POST',
-        body: { organizationName: 'Acme Corp', teamSize: '1-10' }, // missing industry
+      mockUserFindUnique.mockResolvedValue({
+        id: 'user-123',
+        email: 'test@example.com',
+        name: 'Test User',
+        onboardingComplete: true, // already complete
+        activeOrganizationId: 'org-456',
       });
+
+      const req = createMockRequest({ method: 'POST' });
       const response = await POST(req);
 
-      expect(response.status).toBe(400);
-    });
-
-    it('should return 400 when teamSize is missing', async () => {
-      const { POST } = await import('@/app/api/onboarding/route');
-
-      mockGetUserId.mockResolvedValue('user-123');
-      mockUserFindUnique.mockResolvedValue(mockUser);
-
-      const req = createMockRequest({
-        method: 'POST',
-        body: { organizationName: 'Acme Corp', industry: 'technology' }, // missing teamSize
-      });
-      const response = await POST(req);
-
-      expect(response.status).toBe(400);
-    });
-
-    it('should validate onboardingSchema — valid full payload passes Zod', () => {
-      const onboardingSchema = z.object({
-        organizationName: z.string().min(1),
-        website: z.string().url().optional().or(z.literal('')),
-        industry: z.string().min(1),
-        teamSize: z.string().min(1),
-        description: z.string().optional().default(''),
-        brandColors: z.object({
-          primary: z.string().optional(),
-          secondary: z.string().optional(),
-          accent: z.string().optional(),
-        }).optional(),
-        socialHandles: z.record(z.string()).optional(),
-        connectedPlatforms: z.array(z.string()).optional().default([]),
-        personaName: z.string().optional().default(''),
-        personaTone: z.string().optional().default(''),
-        personaTopics: z.array(z.string()).optional().default([]),
-        skipPersona: z.boolean().optional().default(false),
-      });
-
-      const result = onboardingSchema.safeParse({
-        organizationName: 'Acme Corp',
-        industry: 'technology',
-        teamSize: '1-10',
-        connectedPlatforms: ['instagram', 'linkedin'],
-        personaName: 'Marketing Expert',
-        personaTone: 'professional',
-        skipPersona: false,
-      });
-      expect(result.success).toBe(true);
-
-      // Minimal required fields only
-      const minimal = onboardingSchema.safeParse({
-        organizationName: 'My Biz',
-        industry: 'retail',
-        teamSize: '11-50',
-      });
-      expect(minimal.success).toBe(true);
+      expect(response.status).toBe(200);
+      const body = await response.json();
+      expect(body.success).toBe(true);
+      expect(body.alreadyComplete).toBe(true);
+      expect(mockTransaction).not.toHaveBeenCalled();
     });
   });
 
   // ===========================================================================
-  // ONBOARDING POST — Success response shape
+  // GET /api/onboarding/progress — Auth enforcement
+  // (Old /api/onboarding GET is now /api/onboarding/progress)
   // ===========================================================================
 
-  describe('POST /api/onboarding — Success response shape', () => {
-    it('should define success response body shape: { success, organization, persona }', () => {
-      // Direct schema validation: route returns { success, organization, persona }
-      // JWT is issued as a Set-Cookie response header (not in body)
-      const successBody = {
-        success: true as const,
-        organization: {
-          id: 'org-456',
-          name: 'Test Organization',
-          slug: 'test-organization',
-        },
-        persona: null,
-      };
-      const parsed = onboardingSuccessSchema.safeParse(successBody);
-      expect(parsed.success).toBe(true);
-      if (parsed.success) {
-        expect(parsed.data.organization.name).toBe('Test Organization');
-        expect(parsed.data.persona).toBeNull();
-      }
-    });
-
-    it('should trigger prisma.$transaction when auth + Zod validation pass', async () => {
-      const { POST } = await import('@/app/api/onboarding/route');
-
-      mockGetUserId.mockResolvedValue('user-123');
-      mockUserFindUnique.mockResolvedValue(mockUser);
-      // Slug available
-      mockOrgFindUnique.mockResolvedValue(null);
-      // Transaction implementation using plain Promise functions (no jest.fn nesting)
-      mockTransaction.mockImplementation((fn: any) => {
-        const tx = {
-          organization: {
-            findFirst: () => Promise.resolve(null), // no existing org
-            create: () => Promise.resolve(mockOrg),
-            update: () => Promise.resolve(mockOrg),
-          },
-          businessOwnership: { create: () => Promise.resolve({}) },
-          user: { update: () => Promise.resolve({}) },
-          persona: { create: () => Promise.resolve(null) },
-        };
-        return fn(tx);
-      });
-
-      const req = createMockRequest({
-        method: 'POST',
-        body: {
-          organizationName: 'Test Organization',
-          industry: 'technology',
-          teamSize: '1-10',
-        },
-      });
-      await POST(req);
-
-      // Transaction invoked = auth passed + Zod validation passed + slug generated
-      expect(mockTransaction).toHaveBeenCalledTimes(1);
-    });
-  });
-
-  // ===========================================================================
-  // ONBOARDING GET — Auth enforcement
-  // ===========================================================================
-
-  describe('GET /api/onboarding — Auth enforcement', () => {
+  describe('GET /api/onboarding/progress — Auth enforcement', () => {
     it('should return 401 when unauthenticated', async () => {
-      const { GET } = await import('@/app/api/onboarding/route');
+      const { GET } = await import('@/app/api/onboarding/progress/route');
 
       mockGetUserId.mockResolvedValue(null);
 
@@ -459,40 +387,45 @@ describe('Onboarding & Referrals API Contract Tests', () => {
   });
 
   // ===========================================================================
-  // ONBOARDING GET — Response shape
+  // GET /api/onboarding/progress — Response shape
   // ===========================================================================
 
-  describe('GET /api/onboarding — Response shape', () => {
-    it('should return 200 with onboarding status, organization, and connectedPlatforms', async () => {
-      const { GET } = await import('@/app/api/onboarding/route');
+  describe('GET /api/onboarding/progress — Response shape', () => {
+    it('should return 200 with current progress stage when found', async () => {
+      const { GET } = await import('@/app/api/onboarding/progress/route');
 
       mockGetUserId.mockResolvedValue('user-123');
-      mockUserFindUnique.mockResolvedValue({
-        id: 'user-123',
-        onboardingComplete: true,
-        updatedAt: new Date('2025-06-01T00:00:00.000Z'),
+      mockOrgFindFirst.mockResolvedValue({ id: 'org-456' });
+      mockOnboardingProgressFindUnique.mockResolvedValue({
+        currentStage: 'review',
+        businessName: 'Test Org',
+        website: 'https://example.com',
+        status: 'in_progress',
+        completedAt: null,
+        auditData: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
       });
-      mockOrgFindFirst.mockResolvedValue(mockOrg);
-      mockPersonaFindFirst.mockResolvedValue(null);
-      mockPlatformConnectionFindMany.mockResolvedValue([
-        { platform: 'instagram' },
-        { platform: 'linkedin' },
-      ]);
 
       const req = createMockRequest({ method: 'GET' });
       const response = await GET(req);
 
       expect(response.status).toBe(200);
       const body = await response.json();
-      const parsed = onboardingStatusSchema.safeParse(body);
-      expect(parsed.success).toBe(true);
-      if (parsed.success) {
-        expect(parsed.data.completed).toBe(true);
-        expect(parsed.data.connectedPlatforms).toContain('instagram');
-        expect(parsed.data.connectedPlatforms).toContain('linkedin');
-        expect(parsed.data.organization).not.toBeNull();
-        expect(parsed.data.persona).toBeNull();
-      }
+      expect(body).toHaveProperty('currentStage', 'review');
+      expect(body).toHaveProperty('businessName', 'Test Org');
+    });
+
+    it('should return 404 when no org exists', async () => {
+      const { GET } = await import('@/app/api/onboarding/progress/route');
+
+      mockGetUserId.mockResolvedValue('user-123');
+      mockOrgFindFirst.mockResolvedValue(null); // no org
+
+      const req = createMockRequest({ method: 'GET' });
+      const response = await GET(req);
+
+      expect(response.status).toBe(404);
     });
   });
 
@@ -510,7 +443,10 @@ describe('Onboarding & Referrals API Contract Tests', () => {
         context: {},
       });
 
-      const req = createMockRequest({ method: 'GET', url: 'http://localhost:3000/api/referrals' });
+      const req = createMockRequest({
+        method: 'GET',
+        url: 'http://localhost:3000/api/referrals',
+      });
       const response = await GET(req);
 
       expect(response.status).toBe(401);
@@ -533,7 +469,10 @@ describe('Onboarding & Referrals API Contract Tests', () => {
       // Return one 'sent' referral so activeCode is resolved directly (no findUnique loop)
       mockReferralFindMany.mockResolvedValue([mockReferral]);
 
-      const req = createMockRequest({ method: 'GET', url: 'http://localhost:3000/api/referrals' });
+      const req = createMockRequest({
+        method: 'GET',
+        url: 'http://localhost:3000/api/referrals',
+      });
       const response = await GET(req);
 
       expect(response.status).toBe(200);
@@ -602,8 +541,12 @@ describe('Onboarding & Referrals API Contract Tests', () => {
     it('should validate the inline InviteSchema Zod constraint', () => {
       const InviteSchema = z.object({ email: z.string().email() });
 
-      expect(InviteSchema.safeParse({ email: 'valid@example.com' }).success).toBe(true);
-      expect(InviteSchema.safeParse({ email: 'not-valid' }).success).toBe(false);
+      expect(
+        InviteSchema.safeParse({ email: 'valid@example.com' }).success
+      ).toBe(true);
+      expect(InviteSchema.safeParse({ email: 'not-valid' }).success).toBe(
+        false
+      );
       expect(InviteSchema.safeParse({ email: '' }).success).toBe(false);
       expect(InviteSchema.safeParse({}).success).toBe(false);
     });
@@ -621,7 +564,7 @@ describe('Onboarding & Referrals API Contract Tests', () => {
         allowed: true,
         context: { userId: 'user-123' },
       });
-      mockReferralFindFirst.mockResolvedValue(null);  // no duplicate
+      mockReferralFindFirst.mockResolvedValue(null); // no duplicate
       mockReferralFindUnique.mockResolvedValue(null); // generated code is unique
       mockReferralCreate.mockResolvedValue({
         ...mockReferral,

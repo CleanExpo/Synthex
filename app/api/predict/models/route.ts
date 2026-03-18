@@ -18,28 +18,31 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import { getUserIdFromRequest } from '@/lib/auth/jwt-utils';
+import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { isSpatiotemporalAvailable } from '@/lib/forecasting/feature-limits';
 import { logger } from '@/lib/logger';
 
 export async function GET(request: NextRequest) {
   try {
-    const userId = await getUserIdFromRequest(request);
+    const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
       return NextResponse.json(
         { error: 'Unauthorised', message: 'Authentication required' },
-        { status: 401 },
+        { status: 401 }
       );
     }
 
     const user = await prisma.user.findUnique({
       where: { id: userId },
-      select: { organizationId: true, organization: { select: { plan: true } } },
+      select: {
+        organizationId: true,
+        organization: { select: { plan: true } },
+      },
     });
     if (!user?.organizationId) {
       return NextResponse.json(
         { error: 'Forbidden', message: 'No organisation' },
-        { status: 403 },
+        { status: 403 }
       );
     }
 
@@ -49,7 +52,7 @@ export async function GET(request: NextRequest) {
     if (!isSpatiotemporalAvailable(plan)) {
       return NextResponse.json(
         { error: 'Upgrade required', upgrade: true },
-        { status: 403 },
+        { status: 403 }
       );
     }
 
@@ -62,8 +65,11 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     logger.error('GET /api/predict/models error:', error);
     return NextResponse.json(
-      { error: 'Internal Server Error', message: 'Failed to list spatiotemporal models' },
-      { status: 500 },
+      {
+        error: 'Internal Server Error',
+        message: 'Failed to list spatiotemporal models',
+      },
+      { status: 500 }
     );
   }
 }

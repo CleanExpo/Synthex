@@ -8,7 +8,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import { getUserIdFromRequest } from '@/lib/auth/jwt-utils';
+import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { RateLimiter } from '@/lib/rate-limit';
 import { checkKnowledgeGraph } from '@/lib/brand/kg-confidence-checker';
 import { logger } from '@/lib/logger';
@@ -19,7 +19,10 @@ const rateLimiter = new RateLimiter({
   windowMs: 60_000,
   maxRequests: 10,
   identifier: (req: NextRequest) => {
-    const ip = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown';
+    const ip =
+      req.headers.get('x-forwarded-for') ||
+      req.headers.get('x-real-ip') ||
+      'unknown';
     return `brand-kg-check:${ip}`;
   },
 });
@@ -29,15 +32,21 @@ const rateLimiter = new RateLimiter({
 export async function GET(request: NextRequest) {
   try {
     // 1. Auth
-    const userId = await getUserIdFromRequest(request);
+    const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
-      return NextResponse.json({ error: 'Unauthorised', message: 'Authentication required' }, { status: 401 });
+      return NextResponse.json(
+        { error: 'Unauthorised', message: 'Authentication required' },
+        { status: 401 }
+      );
     }
 
     // 2. Rate limit
     const rateResult = await rateLimiter.check(request);
     if (!rateResult.allowed) {
-      return NextResponse.json({ error: 'Rate limit exceeded. Please try again shortly.' }, { status: 429 });
+      return NextResponse.json(
+        { error: 'Rate limit exceeded. Please try again shortly.' },
+        { status: 429 }
+      );
     }
 
     // 3. Get brandId from query
@@ -45,7 +54,10 @@ export async function GET(request: NextRequest) {
     const brandId = searchParams.get('brandId');
 
     if (!brandId) {
-      return NextResponse.json({ error: 'brandId is required' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'brandId is required' },
+        { status: 400 }
+      );
     }
 
     // 4. Verify ownership
@@ -55,21 +67,24 @@ export async function GET(request: NextRequest) {
     });
 
     if (!brand) {
-      return NextResponse.json({ error: 'Brand identity not found' }, { status: 404 });
+      return NextResponse.json(
+        { error: 'Brand identity not found' },
+        { status: 404 }
+      );
     }
 
     // 5. Check if API key is configured
     const apiKey = process.env.GOOGLE_KG_API_KEY;
     if (!apiKey) {
       return NextResponse.json({
-        found:      false,
-        reason:     'API key not configured',
-        kgmid:      null,
-        name:       null,
+        found: false,
+        reason: 'API key not configured',
+        kgmid: null,
+        name: null,
         description: null,
         confidence: 0,
-        types:      [],
-        checkedAt:  new Date().toISOString(),
+        types: [],
+        checkedAt: new Date().toISOString(),
       });
     }
 
@@ -81,9 +96,9 @@ export async function GET(request: NextRequest) {
       await prisma.brandIdentity.update({
         where: { id: brandId },
         data: {
-          kgmid:       result.kgmid,
+          kgmid: result.kgmid,
           kgConfidence: result.confidence,
-          updatedAt:   new Date(),
+          updatedAt: new Date(),
         },
       });
     }
@@ -91,7 +106,13 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(result);
   } catch (error) {
     logger.error('Brand KG check GET error:', error);
-    return NextResponse.json({ error: 'Internal Server Error', message: 'Failed to check Knowledge Graph' }, { status: 500 });
+    return NextResponse.json(
+      {
+        error: 'Internal Server Error',
+        message: 'Failed to check Knowledge Graph',
+      },
+      { status: 500 }
+    );
   }
 }
 

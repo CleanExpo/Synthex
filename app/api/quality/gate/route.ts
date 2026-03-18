@@ -13,7 +13,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { getUserIdFromRequest } from '@/lib/auth/jwt-utils';
+import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { RateLimiter } from '@/lib/rate-limit';
 import { scoreHumanness } from '@/lib/quality/humanness-scorer';
 import { logger } from '@/lib/logger';
@@ -44,7 +44,7 @@ const GateSchema = z.object({
 export async function POST(request: NextRequest) {
   try {
     // 1. Auth
-    const userId = await getUserIdFromRequest(request);
+    const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
       return NextResponse.json(
         { error: 'Unauthorised', message: 'Authentication required' },
@@ -64,7 +64,10 @@ export async function POST(request: NextRequest) {
     // 3. Validate body
     const body = await request.json().catch(() => null);
     if (!body) {
-      return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'Invalid request body' },
+        { status: 400 }
+      );
     }
 
     const parsed = GateSchema.safeParse(body);
@@ -82,9 +85,9 @@ export async function POST(request: NextRequest) {
 
     // Build blocking issues from error-severity slop matches (top 5)
     const blockingIssues = result.slopScan.matches
-      .filter((m) => m.severity === 'error')
+      .filter(m => m.severity === 'error')
       .slice(0, 5)
-      .map((m) => `"${m.phrase}"${m.suggestion ? ` → ${m.suggestion}` : ''}`);
+      .map(m => `"${m.phrase}"${m.suggestion ? ` → ${m.suggestion}` : ''}`);
 
     return NextResponse.json({
       passes: result.passes,
@@ -95,7 +98,10 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     logger.error('Quality gate error:', error);
     return NextResponse.json(
-      { error: 'Internal Server Error', message: 'Failed to run quality gate check' },
+      {
+        error: 'Internal Server Error',
+        message: 'Failed to run quality gate check',
+      },
       { status: 500 }
     );
   }

@@ -12,12 +12,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import prisma from '@/lib/prisma';
-import { getUserIdFromRequest } from '@/lib/auth/jwt-utils';
+import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { DISTRIBUTION_CHANNELS } from '@/lib/pr/distribution-channels';
 
 // ─── Validation ────────────────────────────────────────────────────────────────
 
-const VALID_CHANNEL_IDS = DISTRIBUTION_CHANNELS.map((c) => c.id) as [string, ...string[]];
+const VALID_CHANNEL_IDS = DISTRIBUTION_CHANNELS.map(c => c.id) as [
+  string,
+  ...string[],
+];
 
 const DistributeSchema = z.object({
   channels: z.array(z.enum(VALID_CHANNEL_IDS)).min(1),
@@ -27,10 +30,10 @@ const DistributeSchema = z.object({
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const userId = await getUserIdFromRequest(request);
+    const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
     }
@@ -44,7 +47,10 @@ export async function POST(
     });
 
     if (!release) {
-      return NextResponse.json({ error: 'Press release not found' }, { status: 404 });
+      return NextResponse.json(
+        { error: 'Press release not found' },
+        { status: 404 }
+      );
     }
 
     const body = await request.json();
@@ -52,7 +58,7 @@ export async function POST(
     if (!parsed.success) {
       return NextResponse.json(
         { error: 'Validation failed', details: parsed.error.flatten() },
-        { status: 400 },
+        { status: 400 }
       );
     }
 
@@ -61,7 +67,7 @@ export async function POST(
 
     // Upsert a PRDistribution record for each channel
     const distributions = await Promise.all(
-      channels.map(async (channel) => {
+      channels.map(async channel => {
         return prisma.pRDistribution.upsert({
           where: {
             // Use a fallback unique key since Prisma upsert requires a unique field.
@@ -79,7 +85,7 @@ export async function POST(
             submittedAt: now,
           },
         });
-      }),
+      })
     );
 
     // For self-hosted channel: publish the release
@@ -97,7 +103,7 @@ export async function POST(
       });
 
       // Mark self-hosted distribution as published
-      const selfHosted = distributions.find((d) => d.channel === 'self-hosted');
+      const selfHosted = distributions.find(d => d.channel === 'self-hosted');
       if (selfHosted) {
         await prisma.pRDistribution.update({
           where: { id: selfHosted.id },
@@ -113,7 +119,10 @@ export async function POST(
     return NextResponse.json({ distributions, publicUrl });
   } catch (error) {
     console.error('[PR distribute POST]', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
   }
 }
 
@@ -125,7 +134,10 @@ export async function POST(
  * Returns the id of an existing PRDistribution for a given release + channel,
  * or a placeholder that causes Prisma upsert to always create.
  */
-async function getExistingDistributionId(releaseId: string, channel: string): Promise<string> {
+async function getExistingDistributionId(
+  releaseId: string,
+  channel: string
+): Promise<string> {
   const existing = await prisma.pRDistribution.findFirst({
     where: { releaseId, channel },
     select: { id: true },

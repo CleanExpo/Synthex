@@ -13,18 +13,21 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { getUserIdFromRequest } from '@/lib/auth/jwt-utils';
+import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { scoreTactics } from '@/lib/geo/tactic-scorer';
 import { logger } from '@/lib/logger';
 
 const tacticScoreSchema = z.object({
-  content: z.string().min(1, 'Content is required').max(50000, 'Content must be under 50,000 characters'),
+  content: z
+    .string()
+    .min(1, 'Content is required')
+    .max(50000, 'Content must be under 50,000 characters'),
 });
 
 export async function POST(request: NextRequest) {
   try {
     // 1. Auth — all authenticated users can score (free tier allowed)
-    const userId = await getUserIdFromRequest(request);
+    const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
       return NextResponse.json(
         { error: 'Unauthorised', message: 'Authentication required' },

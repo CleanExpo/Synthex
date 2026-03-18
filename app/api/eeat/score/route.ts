@@ -24,31 +24,42 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { Prisma } from '@prisma/client';
 import prisma from '@/lib/prisma';
-import { getUserIdFromRequest } from '@/lib/auth/jwt-utils';
+import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { scoreEEAT } from '@/lib/eeat/eeat-scorer';
 import type { ContentType } from '@/lib/eeat/types';
 import { logger } from '@/lib/logger';
 
 const eeatSchema = z.object({
-  content: z.string().min(100, 'Content must be at least 100 characters for meaningful scoring'),
-  authorInfo: z.object({
-    name: z.string(),
-    credentials: z.array(z.object({
-      type: z.string(),
-      title: z.string(),
-      institution: z.string().optional(),
-      year: z.number().optional(),
-    })).optional(),
-    socialLinks: z.record(z.string()).optional(),
-    bio: z.string().optional(),
-  }).optional(),
+  content: z
+    .string()
+    .min(100, 'Content must be at least 100 characters for meaningful scoring'),
+  authorInfo: z
+    .object({
+      name: z.string(),
+      credentials: z
+        .array(
+          z.object({
+            type: z.string(),
+            title: z.string(),
+            institution: z.string().optional(),
+            year: z.number().optional(),
+          })
+        )
+        .optional(),
+      socialLinks: z.record(z.string()).optional(),
+      bio: z.string().optional(),
+    })
+    .optional(),
   url: z.string().url().optional(),
-  contentType: z.enum(['article', 'product', 'service', 'ymyl', 'general']).optional().default('general'),
+  contentType: z
+    .enum(['article', 'product', 'service', 'ymyl', 'general'])
+    .optional()
+    .default('general'),
 });
 
 export async function POST(request: NextRequest) {
   try {
-    const userId = await getUserIdFromRequest(request);
+    const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
       return NextResponse.json(
         { error: 'Unauthorized', message: 'Authentication required' },
@@ -83,7 +94,8 @@ export async function POST(request: NextRequest) {
         auditType: 'eeat',
         overallScore: result.score.overall,
         eeatScore: result.score as unknown as Prisma.InputJsonValue,
-        recommendations: result.recommendations as unknown as Prisma.InputJsonValue,
+        recommendations:
+          result.recommendations as unknown as Prisma.InputJsonValue,
         rawData: {
           experienceSignals: result.experienceSignals,
           expertiseSignals: result.expertiseSignals,

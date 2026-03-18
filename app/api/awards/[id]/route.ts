@@ -10,24 +10,33 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import prisma from '@/lib/prisma';
-import { getUserIdFromRequest } from '@/lib/auth/jwt-utils';
+import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 
 // ─── Validation ─────────────────────────────────────────────────────────────
 
 const UpdateAwardSchema = z.object({
-  name:            z.string().min(1).max(300).optional(),
-  organizer:       z.string().min(1).max(200).optional(),
-  category:        z.string().min(1).max(200).optional(),
-  deadline:        z.string().datetime().nullable().optional(),
-  submissionUrl:   z.string().url().nullable().optional(),
-  status:          z.enum(['researched', 'in-progress', 'submitted', 'won', 'shortlisted', 'not-selected']).optional(),
-  description:     z.string().max(5000).nullable().optional(),
+  name: z.string().min(1).max(300).optional(),
+  organizer: z.string().min(1).max(200).optional(),
+  category: z.string().min(1).max(200).optional(),
+  deadline: z.string().datetime().nullable().optional(),
+  submissionUrl: z.string().url().nullable().optional(),
+  status: z
+    .enum([
+      'researched',
+      'in-progress',
+      'submitted',
+      'won',
+      'shortlisted',
+      'not-selected',
+    ])
+    .optional(),
+  description: z.string().max(5000).nullable().optional(),
   nominationDraft: z.string().nullable().optional(),
-  entryFee:        z.string().max(100).nullable().optional(),
-  isRecurring:     z.boolean().optional(),
-  recurrenceNote:  z.string().max(300).nullable().optional(),
-  priority:        z.enum(['low', 'medium', 'high']).optional(),
-  notes:           z.string().max(5000).nullable().optional(),
+  entryFee: z.string().max(100).nullable().optional(),
+  isRecurring: z.boolean().optional(),
+  recurrenceNote: z.string().max(300).nullable().optional(),
+  priority: z.enum(['low', 'medium', 'high']).optional(),
+  notes: z.string().max(5000).nullable().optional(),
 });
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -40,11 +49,11 @@ async function getAwardForUser(id: string, userId: string) {
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { id } = await params;
-    const userId = await getUserIdFromRequest(request);
+    const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
     }
@@ -57,7 +66,10 @@ export async function PATCH(
     const body = await request.json();
     const parsed = UpdateAwardSchema.safeParse(body);
     if (!parsed.success) {
-      return NextResponse.json({ error: 'Validation failed', details: parsed.error.flatten() }, { status: 400 });
+      return NextResponse.json(
+        { error: 'Validation failed', details: parsed.error.flatten() },
+        { status: 400 }
+      );
     }
 
     const data = parsed.data;
@@ -65,16 +77,22 @@ export async function PATCH(
       where: { id },
       data: {
         ...data,
-        deadline: data.deadline !== undefined
-          ? (data.deadline ? new Date(data.deadline) : null)
-          : undefined,
+        deadline:
+          data.deadline !== undefined
+            ? data.deadline
+              ? new Date(data.deadline)
+              : null
+            : undefined,
       },
     });
 
     return NextResponse.json({ award: updated });
   } catch (err) {
     console.error('[PATCH /api/awards/[id]]', err);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
   }
 }
 
@@ -82,11 +100,11 @@ export async function PATCH(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { id } = await params;
-    const userId = await getUserIdFromRequest(request);
+    const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
     }
@@ -101,6 +119,9 @@ export async function DELETE(
     return NextResponse.json({ success: true });
   } catch (err) {
     console.error('[DELETE /api/awards/[id]]', err);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
   }
 }

@@ -15,7 +15,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import prisma from '@/lib/prisma';
-import { getUserIdFromRequest } from '@/lib/auth/jwt-utils';
+import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { RateLimiter } from '@/lib/rate-limit';
 import { buildWritingContext } from '@/lib/voice/context-builder';
 import type { VoiceFingerprint } from '@/lib/voice/types';
@@ -47,7 +47,7 @@ const contextSchema = z.object({
 export async function POST(request: NextRequest) {
   try {
     // 1. Auth
-    const userId = await getUserIdFromRequest(request);
+    const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
       return NextResponse.json(
         { error: 'Unauthorised', message: 'Authentication required' },
@@ -67,7 +67,10 @@ export async function POST(request: NextRequest) {
     // 3. Validate body
     const body = await request.json().catch(() => null);
     if (!body) {
-      return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'Invalid request body' },
+        { status: 400 }
+      );
     }
 
     const parsed = contextSchema.safeParse(body);
@@ -103,7 +106,10 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     logger.error('Voice context error:', error);
     return NextResponse.json(
-      { error: 'Internal Server Error', message: 'Failed to build writing context' },
+      {
+        error: 'Internal Server Error',
+        message: 'Failed to build writing context',
+      },
       { status: 500 }
     );
   }

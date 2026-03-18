@@ -13,7 +13,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import prisma from '@/lib/prisma';
-import { getUserIdFromRequest } from '@/lib/auth/jwt-utils';
+import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { analyzeOpportunities } from '@/lib/backlinks/backlink-analyzer';
 import { isSurfaceAvailable } from '@/lib/bayesian/feature-limits';
 import { getBacklinkScoringWeights } from '@/lib/bayesian/surfaces/backlink-scoring';
@@ -22,17 +22,17 @@ import { registerObservationSilently } from '@/lib/bayesian/fallback';
 // ─── Validation ─────────────────────────────────────────────────────────────
 
 const AnalyzeSchema = z.object({
-  orgId:              z.string().min(1),
-  topic:              z.string().min(1).max(200),
-  userDomain:         z.string().min(1).max(253),
-  competitorDomains:  z.array(z.string().max(253)).max(5).optional().default([]),
+  orgId: z.string().min(1),
+  topic: z.string().min(1).max(200),
+  userDomain: z.string().min(1).max(253),
+  competitorDomains: z.array(z.string().max(253)).max(5).optional().default([]),
 });
 
 // ─── POST /api/backlinks/analyze ────────────────────────────────────────────
 
 export async function POST(request: NextRequest) {
   try {
-    const userId = await getUserIdFromRequest(request);
+    const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
     }
@@ -51,10 +51,13 @@ export async function POST(request: NextRequest) {
     // Resolve plan for BO surface gating
     const userRecord = await prisma.user.findUnique({
       where: { id: userId },
-      select: { organizationId: true, organization: { select: { plan: true } } },
+      select: {
+        organizationId: true,
+        organization: { select: { plan: true } },
+      },
     });
     const orgIdForBO = userRecord?.organizationId ?? userId;
-    const plan       = (userRecord?.organization?.plan ?? 'free').toLowerCase();
+    const plan = (userRecord?.organization?.plan ?? 'free').toLowerCase();
 
     const scoringWeightsResult = isSurfaceAvailable(plan, 'backlink_scoring')
       ? await getBacklinkScoringWeights(orgIdForBO)
@@ -63,26 +66,27 @@ export async function POST(request: NextRequest) {
     // Run analysis (may take 5–15 seconds depending on API response times)
     const result = await analyzeOpportunities(
       { orgId, userId, topic, userDomain, competitorDomains },
-      scoringWeightsResult?.weights,
+      scoringWeightsResult?.weights
     );
 
     // Register BO observation (fire-and-forget)
     if (scoringWeightsResult?.source === 'bo') {
-      const target = result.linksFound > 0
-        ? result.highValueCount / result.linksFound
-        : 0;
+      const target =
+        result.linksFound > 0 ? result.highValueCount / result.linksFound : 0;
       void registerObservationSilently(
         'backlink_scoring',
         orgIdForBO,
         {
-          resourcePageWeight:      scoringWeightsResult.weights.resourcePageWeight,
-          guestPostWeight:         scoringWeightsResult.weights.guestPostWeight,
-          brokenLinkWeight:        scoringWeightsResult.weights.brokenLinkWeight,
-          competitorLinkWeight:    scoringWeightsResult.weights.competitorLinkWeight,
-          journalistMentionWeight: scoringWeightsResult.weights.journalistMentionWeight,
+          resourcePageWeight: scoringWeightsResult.weights.resourcePageWeight,
+          guestPostWeight: scoringWeightsResult.weights.guestPostWeight,
+          brokenLinkWeight: scoringWeightsResult.weights.brokenLinkWeight,
+          competitorLinkWeight:
+            scoringWeightsResult.weights.competitorLinkWeight,
+          journalistMentionWeight:
+            scoringWeightsResult.weights.journalistMentionWeight,
         },
         target,
-        { linksFound: result.linksFound, highValueCount: result.highValueCount },
+        { linksFound: result.linksFound, highValueCount: result.highValueCount }
       );
     }
 
@@ -91,9 +95,9 @@ export async function POST(request: NextRequest) {
       data: {
         userId,
         orgId,
-        sourceUrl:      userDomain,
+        sourceUrl: userDomain,
         analysisResult: result as object,
-        linksFound:     result.linksFound,
+        linksFound: result.linksFound,
         highValueCount: result.highValueCount,
       },
     });
@@ -103,7 +107,7 @@ export async function POST(request: NextRequest) {
     if (result.prospects.length > 0) {
       // Upsert — avoid duplicate targetUrl per user
       const existing = await prisma.backlinkProspect.findMany({
-        where:  { userId },
+        where: { userId },
         select: { targetUrl: true },
       });
       const existingUrls = new Set(existing.map(e => e.targetUrl));
@@ -115,10 +119,10 @@ export async function POST(request: NextRequest) {
           data: toCreate.map(p => ({
             userId,
             orgId,
-            targetUrl:       p.url,
-            targetDomain:    p.domain,
+            targetUrl: p.url,
+            targetDomain: p.domain,
             domainAuthority: p.domainAuthority,
-            pageRank:        p.pageRank,
+            pageRank: p.pageRank,
             opportunityType: p.opportunityType,
           })),
           skipDuplicates: true,
@@ -127,15 +131,21 @@ export async function POST(request: NextRequest) {
 
       // Return all user prospects (including pre-existing)
       prospects = await prisma.backlinkProspect.findMany({
-        where:   { userId, orgId },
+        where: { userId, orgId },
         orderBy: [{ domainAuthority: 'desc' }, { discoveredAt: 'desc' }],
-        take:    50,
+        take: 50,
       });
     }
 
-    return NextResponse.json({ analysis, prospects, summary: result }, { status: 201 });
+    return NextResponse.json(
+      { analysis, prospects, summary: result },
+      { status: 201 }
+    );
   } catch (err) {
     console.error('[POST /api/backlinks/analyze]', err);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
   }
 }

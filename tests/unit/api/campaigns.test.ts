@@ -26,15 +26,30 @@ const mockPrisma = {
 jest.mock('@/lib/prisma', () => ({
   __esModule: true,
   default: mockPrisma,
+  prisma: mockPrisma,
+}));
+
+// Mock multi-business scope (required by campaigns route)
+const mockGetEffectiveQueryFilter = jest.fn();
+const mockGetEffectiveOrganizationId = jest.fn();
+jest.mock('@/lib/multi-business/business-scope', () => ({
+  getEffectiveQueryFilter: (...args: unknown[]) =>
+    mockGetEffectiveQueryFilter(...args),
+  getEffectiveOrganizationId: (...args: unknown[]) =>
+    mockGetEffectiveOrganizationId(...args),
 }));
 
 // Mock auth
 const mockGetUserIdFromRequestOrCookies = jest.fn();
 jest.mock('@/lib/auth/jwt-utils', () => ({
-  getUserIdFromRequestOrCookies: (...args: unknown[]) => mockGetUserIdFromRequestOrCookies(...args),
+  getUserIdFromRequestOrCookies: (...args: unknown[]) =>
+    mockGetUserIdFromRequestOrCookies(...args),
   unauthorizedResponse: () => {
     const { NextResponse } = require('next/server');
-    return NextResponse.json({ error: 'Unauthorized', message: 'Authentication required' }, { status: 401 });
+    return NextResponse.json(
+      { error: 'Unauthorized', message: 'Authentication required' },
+      { status: 401 }
+    );
   },
 }));
 
@@ -43,6 +58,10 @@ import { GET, POST, PUT, DELETE } from '@/app/api/campaigns/route';
 describe('Campaigns API - /api/campaigns', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    // Default: user has an org context — returns a non-empty filter so the
+    // guard (Object.keys(filter).length === 0) does not reject the request.
+    mockGetEffectiveQueryFilter.mockResolvedValue({ userId: 'user-123' });
+    mockGetEffectiveOrganizationId.mockResolvedValue('org-123');
   });
 
   function createRequest(
@@ -78,7 +97,13 @@ describe('Campaigns API - /api/campaigns', () => {
           platform: 'instagram',
           status: 'active',
           posts: [
-            { id: 'p1', status: 'published', platform: 'instagram', scheduledAt: null, publishedAt: new Date() },
+            {
+              id: 'p1',
+              status: 'published',
+              platform: 'instagram',
+              scheduledAt: null,
+              publishedAt: new Date(),
+            },
           ],
         },
         {
@@ -101,7 +126,7 @@ describe('Campaigns API - /api/campaigns', () => {
       expect(body.campaigns[0].name).toBe('Summer Campaign');
       expect(mockPrisma.campaign.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
-          where: { userId: 'user-123' },
+          where: { userId: 'user-123' }, // matches mockGetEffectiveQueryFilter return value
           orderBy: { createdAt: 'desc' },
         })
       );
@@ -120,7 +145,9 @@ describe('Campaigns API - /api/campaigns', () => {
 
     it('should return 500 on database error', async () => {
       mockGetUserIdFromRequestOrCookies.mockResolvedValue('user-123');
-      mockPrisma.campaign.findMany.mockRejectedValue(new Error('Connection lost'));
+      mockPrisma.campaign.findMany.mockRejectedValue(
+        new Error('Connection lost')
+      );
 
       const req = createRequest('GET');
       const res = await GET(req);
@@ -227,24 +254,34 @@ describe('Campaigns API - /api/campaigns', () => {
     });
 
     it('should accept all valid platforms', async () => {
-      const validPlatforms = ['twitter', 'linkedin', 'instagram', 'facebook', 'tiktok', 'threads', 'multi'];
+      const validPlatforms = [
+        'twitter',
+        'linkedin',
+        'instagram',
+        'facebook',
+        'tiktok',
+        'threads',
+        'multi',
+      ];
 
       for (const platform of validPlatforms) {
         mockGetUserIdFromRequestOrCookies.mockResolvedValue('user-123');
-        mockPrisma.$transaction.mockImplementation(async (callback: Function) => {
-          const tx = {
-            campaign: {
-              create: jest.fn().mockResolvedValue({
-                id: `camp-${platform}`,
-                name: 'Test',
-                platform,
-                status: 'draft',
-              }),
-            },
-            auditLog: { create: jest.fn().mockResolvedValue({}) },
-          };
-          return callback(tx);
-        });
+        mockPrisma.$transaction.mockImplementation(
+          async (callback: Function) => {
+            const tx = {
+              campaign: {
+                create: jest.fn().mockResolvedValue({
+                  id: `camp-${platform}`,
+                  name: 'Test',
+                  platform,
+                  status: 'draft',
+                }),
+              },
+              auditLog: { create: jest.fn().mockResolvedValue({}) },
+            };
+            return callback(tx);
+          }
+        );
 
         const req = createRequest('POST', { name: 'Test', platform });
         const res = await POST(req);
@@ -273,7 +310,10 @@ describe('Campaigns API - /api/campaigns', () => {
     it('should update campaign with valid data', async () => {
       mockGetUserIdFromRequestOrCookies.mockResolvedValue('user-123');
 
-      const existingCampaign = { id: '550e8400-e29b-41d4-a716-446655440000', userId: 'user-123' };
+      const existingCampaign = {
+        id: '550e8400-e29b-41d4-a716-446655440000',
+        userId: 'user-123',
+      };
       mockPrisma.campaign.findFirst.mockResolvedValue(existingCampaign);
 
       const updatedCampaign = {
@@ -347,7 +387,11 @@ describe('Campaigns API - /api/campaigns', () => {
     it('should return 401 when not authenticated', async () => {
       mockGetUserIdFromRequestOrCookies.mockResolvedValue(null);
 
-      const req = createRequest('DELETE', undefined, 'http://localhost:3000/api/campaigns?id=camp-1');
+      const req = createRequest(
+        'DELETE',
+        undefined,
+        'http://localhost:3000/api/campaigns?id=camp-1'
+      );
       const res = await DELETE(req);
 
       expect(res.status).toBe(401);
@@ -368,7 +412,11 @@ describe('Campaigns API - /api/campaigns', () => {
       mockGetUserIdFromRequestOrCookies.mockResolvedValue('user-123');
       mockPrisma.campaign.findFirst.mockResolvedValue(null);
 
-      const req = createRequest('DELETE', undefined, 'http://localhost:3000/api/campaigns?id=nonexistent');
+      const req = createRequest(
+        'DELETE',
+        undefined,
+        'http://localhost:3000/api/campaigns?id=nonexistent'
+      );
       const res = await DELETE(req);
       const body = await res.json();
 
@@ -379,7 +427,11 @@ describe('Campaigns API - /api/campaigns', () => {
     it('should delete campaign when owned by user', async () => {
       mockGetUserIdFromRequestOrCookies.mockResolvedValue('user-123');
 
-      const existingCampaign = { id: 'camp-1', userId: 'user-123', name: 'To Delete' };
+      const existingCampaign = {
+        id: 'camp-1',
+        userId: 'user-123',
+        name: 'To Delete',
+      };
       mockPrisma.campaign.findFirst.mockResolvedValue(existingCampaign);
 
       mockPrisma.$transaction.mockImplementation(async (callback: Function) => {
@@ -390,7 +442,11 @@ describe('Campaigns API - /api/campaigns', () => {
         return callback(tx);
       });
 
-      const req = createRequest('DELETE', undefined, 'http://localhost:3000/api/campaigns?id=camp-1');
+      const req = createRequest(
+        'DELETE',
+        undefined,
+        'http://localhost:3000/api/campaigns?id=camp-1'
+      );
       const res = await DELETE(req);
       const body = await res.json();
 

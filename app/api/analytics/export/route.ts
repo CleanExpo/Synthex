@@ -14,11 +14,18 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import { exportQuerySchema, type ExportQueryInput, periodToDateRange } from '@/lib/schemas/analytics';
-import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
+import {
+  exportQuerySchema,
+  type ExportQueryInput,
+  periodToDateRange,
+} from '@/lib/schemas/analytics';
+import {
+  APISecurityChecker,
+  DEFAULT_POLICIES,
+} from '@/lib/security/api-security-checker';
 import { auditLogger } from '@/lib/security/audit-logger';
 import { logger } from '@/lib/logger';
-import { getUserIdFromRequest } from '@/lib/auth/jwt-utils';
+import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
@@ -155,12 +162,22 @@ async function fetchAnalyticsData(
         clicks: acc.clicks + (analytics.clicks || 0),
       };
     },
-    { posts: 0, likes: 0, comments: 0, shares: 0, impressions: 0, reach: 0, clicks: 0 }
+    {
+      posts: 0,
+      likes: 0,
+      comments: 0,
+      shares: 0,
+      impressions: 0,
+      reach: 0,
+      clicks: 0,
+    }
   );
 
   const engagementRate =
     totals.impressions > 0
-      ? ((totals.likes + totals.comments + totals.shares) / totals.impressions) * 100
+      ? ((totals.likes + totals.comments + totals.shares) /
+          totals.impressions) *
+        100
       : 0;
 
   return {
@@ -207,7 +224,7 @@ function toCSV(data: AnalyticsData): string {
   ];
 
   // Build CSV rows
-  const rows = posts.map((post) => {
+  const rows = posts.map(post => {
     const analytics = (post.analytics as PostAnalytics) || {};
     return [
       post.id,
@@ -245,7 +262,12 @@ function toCSV(data: AnalyticsData): string {
     `Engagement Rate: ${summary.engagementRate}%`,
   ];
 
-  return [headers.join(','), ...rows.map((r) => r.join(',')), '', summaryRow.join(',')].join('\n');
+  return [
+    headers.join(','),
+    ...rows.map(r => r.join(',')),
+    '',
+    summaryRow.join(','),
+  ].join('\n');
 }
 
 function toJSON(data: AnalyticsData): string {
@@ -266,8 +288,15 @@ function toPDF(data: AnalyticsData): Uint8Array {
 
   doc.setFontSize(10);
   doc.setTextColor(100);
-  doc.text(`Generated: ${new Date().toLocaleString()}`, pageWidth / 2, 28, { align: 'center' });
-  doc.text(`Period: ${summary.period.start.split('T')[0]} to ${summary.period.end.split('T')[0]}`, pageWidth / 2, 34, { align: 'center' });
+  doc.text(`Generated: ${new Date().toLocaleString()}`, pageWidth / 2, 28, {
+    align: 'center',
+  });
+  doc.text(
+    `Period: ${summary.period.start.split('T')[0]} to ${summary.period.end.split('T')[0]}`,
+    pageWidth / 2,
+    34,
+    { align: 'center' }
+  );
 
   // Summary Section
   doc.setFontSize(14);
@@ -301,7 +330,7 @@ function toPDF(data: AnalyticsData): Uint8Array {
     doc.setFontSize(14);
     doc.text('Campaigns', 14, finalY + 15);
 
-    const campaignData = campaigns.map((c) => [
+    const campaignData = campaigns.map(c => [
       c.name,
       c.platform,
       c.status,
@@ -325,9 +354,12 @@ function toPDF(data: AnalyticsData): Uint8Array {
     doc.setFontSize(14);
     doc.text('Post Performance', 14, 20);
 
-    const postData = posts.slice(0, 50).map((post) => {
+    const postData = posts.slice(0, 50).map(post => {
       const analytics = (post.analytics as PostAnalytics) || {};
-      const engagement = (analytics.likes || 0) + (analytics.comments || 0) + (analytics.shares || 0);
+      const engagement =
+        (analytics.likes || 0) +
+        (analytics.comments || 0) +
+        (analytics.shares || 0);
       return [
         (post.content || '').substring(0, 40) + '...',
         post.campaign?.platform || post.platform || '',
@@ -340,7 +372,9 @@ function toPDF(data: AnalyticsData): Uint8Array {
 
     autoTable(doc, {
       startY: 24,
-      head: [['Content', 'Platform', 'Status', 'Likes', 'Comments', 'Engagement']],
+      head: [
+        ['Content', 'Platform', 'Status', 'Likes', 'Comments', 'Engagement'],
+      ],
       body: postData,
       theme: 'striped',
       headStyles: { fillColor: [59, 130, 246] },
@@ -396,7 +430,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const userId = await getUserIdFromRequest(request);
+    const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
       return NextResponse.json(
         { error: 'Unauthorized', message: 'Authentication required' },
@@ -518,9 +552,7 @@ export async function GET(request: NextRequest) {
 
     // Return file download
     // For Uint8Array (PDF), convert to Buffer; for strings, use directly
-    const body = content instanceof Uint8Array
-      ? Buffer.from(content)
-      : content;
+    const body = content instanceof Uint8Array ? Buffer.from(content) : content;
 
     return new NextResponse(body, {
       status: 200,
@@ -555,7 +587,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const userId = await getUserIdFromRequest(request);
+    const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
       return NextResponse.json(
         { error: 'Unauthorized', message: 'Authentication required' },
@@ -634,7 +666,10 @@ export async function POST(request: NextRequest) {
   } catch (error: unknown) {
     logger.error('Analytics export error', { error });
     return NextResponse.json(
-      { error: 'Internal Server Error', message: 'Failed to process export request' },
+      {
+        error: 'Internal Server Error',
+        message: 'Failed to process export request',
+      },
       { status: 500 }
     );
   }

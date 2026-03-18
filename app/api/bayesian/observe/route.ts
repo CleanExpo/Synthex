@@ -16,7 +16,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { Prisma } from '@prisma/client';
 import prisma from '@/lib/prisma';
-import { getUserIdFromRequest } from '@/lib/auth/jwt-utils';
+import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { getBayesianClient } from '@/lib/bayesian/client';
 import { logger } from '@/lib/logger';
 
@@ -29,24 +29,27 @@ const observeSchema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
-    const userId = await getUserIdFromRequest(request);
+    const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
       return NextResponse.json(
         { error: 'Unauthorised', message: 'Authentication required' },
-        { status: 401 },
+        { status: 401 }
       );
     }
 
     const body = await request.json().catch(() => null);
     if (!body) {
-      return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'Invalid request body' },
+        { status: 400 }
+      );
     }
 
     const validation = observeSchema.safeParse(body);
     if (!validation.success) {
       return NextResponse.json(
         { error: 'Validation error', details: validation.error.issues },
-        { status: 400 },
+        { status: 400 }
       );
     }
 
@@ -67,13 +70,16 @@ export async function POST(request: NextRequest) {
     if (!space) {
       return NextResponse.json(
         { error: 'Not Found', message: 'Space not found' },
-        { status: 404 },
+        { status: 404 }
       );
     }
     if (space.orgId !== userOrgId) {
       return NextResponse.json(
-        { error: 'Forbidden', message: 'Access denied — space belongs to a different organisation' },
-        { status: 403 },
+        {
+          error: 'Forbidden',
+          message: 'Access denied — space belongs to a different organisation',
+        },
+        { status: 403 }
       );
     }
 
@@ -83,7 +89,10 @@ export async function POST(request: NextRequest) {
       try {
         await client.observe(spaceId, { parameters, target, metadata });
       } catch (err) {
-        logger.warn('BO service observe call failed — persisting locally only', { spaceId, err });
+        logger.warn(
+          'BO service observe call failed — persisting locally only',
+          { spaceId, err }
+        );
       }
     }
 
@@ -115,8 +124,11 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     logger.error('POST /api/bayesian/observe error:', error);
     return NextResponse.json(
-      { error: 'Internal Server Error', message: 'Failed to register observation' },
-      { status: 500 },
+      {
+        error: 'Internal Server Error',
+        message: 'Failed to register observation',
+      },
+      { status: 500 }
     );
   }
 }

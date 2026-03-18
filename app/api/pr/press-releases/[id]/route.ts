@@ -11,25 +11,27 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import prisma from '@/lib/prisma';
-import { getUserIdFromRequest } from '@/lib/auth/jwt-utils';
+import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 
 // ─── Validation ────────────────────────────────────────────────────────────────
 
 const UpdatePressReleaseSchema = z.object({
-  headline:    z.string().min(1).max(500).optional(),
-  body:        z.string().min(1).optional(),
-  slug:        z.string().max(100).optional(),
-  subheading:  z.string().max(500).optional(),
+  headline: z.string().min(1).max(500).optional(),
+  body: z.string().min(1).optional(),
+  slug: z.string().max(100).optional(),
+  subheading: z.string().max(500).optional(),
   boilerplate: z.string().max(5000).optional(),
-  contactName:  z.string().max(200).optional(),
+  contactName: z.string().max(200).optional(),
   contactEmail: z.string().email().optional(),
   contactPhone: z.string().max(50).optional(),
   datePublished: z.string().datetime().optional(),
-  location:    z.string().max(200).optional(),
-  category:    z.enum(['funding', 'product', 'partnership', 'award', 'other']).optional(),
-  keywords:    z.array(z.string()).optional(),
-  imageUrl:    z.string().url().optional(),
-  status:      z.enum(['draft', 'published', 'archived']).optional(),
+  location: z.string().max(200).optional(),
+  category: z
+    .enum(['funding', 'product', 'partnership', 'award', 'other'])
+    .optional(),
+  keywords: z.array(z.string()).optional(),
+  imageUrl: z.string().url().optional(),
+  status: z.enum(['draft', 'published', 'archived']).optional(),
   distributedTo: z.array(z.string()).optional(),
 });
 
@@ -43,7 +45,7 @@ interface RouteParams {
 
 export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
-    const userId = await getUserIdFromRequest(request);
+    const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
     }
@@ -61,7 +63,10 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     return NextResponse.json({ release });
   } catch (error) {
     console.error('[PR press-releases/[id] GET]', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
   }
 }
 
@@ -69,7 +74,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
 export async function PATCH(request: NextRequest, { params }: RouteParams) {
   try {
-    const userId = await getUserIdFromRequest(request);
+    const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
     }
@@ -105,7 +110,9 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
       where: { id },
       data: {
         ...data,
-        datePublished: data.datePublished ? new Date(data.datePublished) : undefined,
+        datePublished: data.datePublished
+          ? new Date(data.datePublished)
+          : undefined,
         ...(publishedAt ? { publishedAt } : {}),
       },
     });
@@ -113,7 +120,10 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     return NextResponse.json({ release });
   } catch (error) {
     console.error('[PR press-releases/[id] PATCH]', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
   }
 }
 
@@ -121,7 +131,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
 
 export async function DELETE(request: NextRequest, { params }: RouteParams) {
   try {
-    const userId = await getUserIdFromRequest(request);
+    const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
     }
@@ -145,6 +155,9 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error('[PR press-releases/[id] DELETE]', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
   }
 }

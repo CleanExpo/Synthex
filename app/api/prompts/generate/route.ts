@@ -11,30 +11,36 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { getUserIdFromRequest } from '@/lib/auth/jwt-utils';
+import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { generatePrompts } from '@/lib/prompts/prompt-generator';
 
 // ─── Validation ───────────────────────────────────────────────────────────────
 
-const VALID_ENTITY_TYPES = ['brand', 'product', 'service', 'person', 'location'] as const;
+const VALID_ENTITY_TYPES = [
+  'brand',
+  'product',
+  'service',
+  'person',
+  'location',
+] as const;
 
 const GenerateSchema = z.object({
   entityName: z.string().min(1).max(200),
   entityType: z.enum(VALID_ENTITY_TYPES),
-  topic:      z.string().min(1).max(200),
-  location:   z.string().max(200).optional(),
+  topic: z.string().min(1).max(200),
+  location: z.string().max(200).optional(),
 });
 
 // ─── POST /api/prompts/generate ───────────────────────────────────────────────
 
 export async function POST(request: NextRequest) {
   try {
-    const userId = await getUserIdFromRequest(request);
+    const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
     }
 
-    const body   = await request.json();
+    const body = await request.json();
     const parsed = GenerateSchema.safeParse(body);
     if (!parsed.success) {
       return NextResponse.json(
@@ -57,6 +63,9 @@ export async function POST(request: NextRequest) {
     });
   } catch (err) {
     console.error('[POST /api/prompts/generate]', err);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
   }
 }
