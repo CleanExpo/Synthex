@@ -13,22 +13,20 @@ import * as fs from 'fs';
 import { logger } from '@/lib/logger';
 
 // Puppeteer types - using any to avoid webpack resolving the module
- 
+
 type Browser = any;
- 
+
 type Page = any;
 
 // Dynamic imports for puppeteer (not available in serverless/production)
 // webpackIgnore prevents webpack from trying to resolve these modules at build time
 let puppeteer: any = null;
-let PuppeteerScreenRecorderModule: any = null;
 try {
   puppeteer = await import(/* webpackIgnore: true */ 'puppeteer');
-  // @ts-expect-error — puppeteer-screen-recorder has no type declarations
-  PuppeteerScreenRecorderModule = await import(/* webpackIgnore: true */ 'puppeteer-screen-recorder');
 } catch {
   // puppeteer not available in production/serverless
 }
+// puppeteer-screen-recorder was removed in Phase 120 — screen recording is unavailable
 
 export interface CaptureConfig {
   outputDir: string;
@@ -120,29 +118,9 @@ export class CaptureService {
     if (!this.page) {
       throw new Error('Browser not initialized. Call init() first.');
     }
-    if (!PuppeteerScreenRecorderModule) {
-      throw new Error('Puppeteer not available in this environment');
-    }
-
-    const outputPath = path.join(this.config.outputDir, `${filename}.${this.config.format}`);
-
-    this.recorder = new PuppeteerScreenRecorderModule.PuppeteerScreenRecorder(this.page, {
-      followNewTab: false,
-      fps: this.config.fps,
-      videoFrame: {
-        width: this.config.width,
-        height: this.config.height,
-      },
-      videoCrf: 18,
-      videoCodec: 'libx264',
-      videoPreset: 'ultrafast',
-      videoBitrate: 8000,
-      aspectRatio: '16:9',
-    });
-
-    this.currentOutputPath = outputPath;
-    await this.recorder.start(outputPath);
-    logger.info('CaptureService recording started', { outputPath });
+    throw new Error(
+      'Video capture not available — puppeteer-screen-recorder was removed. Use an alternative capture method.'
+    );
   }
 
   /**
@@ -170,7 +148,9 @@ export class CaptureService {
       throw new Error('Browser not initialized');
     }
 
-    logger.debug('CaptureService executing step', { description: step.description });
+    logger.debug('CaptureService executing step', {
+      description: step.description,
+    });
 
     switch (step.action) {
       case 'navigate':
@@ -195,13 +175,18 @@ export class CaptureService {
         break;
 
       case 'wait':
-        await new Promise(resolve => setTimeout(resolve, (step.value as number) * 1000 || 1000));
+        await new Promise(resolve =>
+          setTimeout(resolve, (step.value as number) * 1000 || 1000)
+        );
         break;
 
       case 'scroll':
-        await this.page.evaluate((amount: number) => {
-          window.scrollBy(0, amount);
-        }, step.value as number || 300);
+        await this.page.evaluate(
+          (amount: number) => {
+            window.scrollBy(0, amount);
+          },
+          (step.value as number) || 300
+        );
         break;
 
       case 'hover':
@@ -235,7 +220,6 @@ export class CaptureService {
 
       // Hold final frame
       await new Promise(resolve => setTimeout(resolve, 2000));
-
     } catch (error) {
       console.error(`[CaptureService] Error during workflow: ${error}`);
       throw error;
@@ -258,10 +242,19 @@ export class CaptureService {
       waitUntil: 'networkidle2',
     });
 
-    await this.page.waitForSelector('input[type="email"], input[name="email"]', { timeout: 10000 });
-    await this.page.type('input[type="email"], input[name="email"]', email, { delay: 30 });
+    await this.page.waitForSelector(
+      'input[type="email"], input[name="email"]',
+      { timeout: 10000 }
+    );
+    await this.page.type('input[type="email"], input[name="email"]', email, {
+      delay: 30,
+    });
 
-    await this.page.type('input[type="password"], input[name="password"]', password, { delay: 30 });
+    await this.page.type(
+      'input[type="password"], input[name="password"]',
+      password,
+      { delay: 30 }
+    );
 
     await this.page.click('button[type="submit"]');
 
@@ -299,15 +292,31 @@ export const SYNTHEX_WORKFLOWS: Record<string, CaptureWorkflow> = {
       { action: 'wait', value: 3, description: 'Show landing page' },
       { action: 'scroll', value: 400, description: 'Scroll down landing' },
       { action: 'wait', value: 2, description: 'Show features section' },
-      { action: 'navigate', target: '/dashboard', description: 'Go to dashboard' },
+      {
+        action: 'navigate',
+        target: '/dashboard',
+        description: 'Go to dashboard',
+      },
       { action: 'wait', value: 3, description: 'Show dashboard overview' },
       { action: 'scroll', value: 300, description: 'Scroll dashboard' },
       { action: 'wait', value: 2, description: 'Show dashboard stats' },
-      { action: 'navigate', target: '/dashboard/content', description: 'Go to Content Generator' },
+      {
+        action: 'navigate',
+        target: '/dashboard/content',
+        description: 'Go to Content Generator',
+      },
       { action: 'wait', value: 3, description: 'Show Content Generator' },
-      { action: 'navigate', target: '/dashboard/analytics', description: 'Go to Analytics' },
+      {
+        action: 'navigate',
+        target: '/dashboard/analytics',
+        description: 'Go to Analytics',
+      },
       { action: 'wait', value: 3, description: 'Show Analytics Dashboard' },
-      { action: 'navigate', target: '/dashboard/schedule', description: 'Go to Scheduler' },
+      {
+        action: 'navigate',
+        target: '/dashboard/schedule',
+        description: 'Go to Scheduler',
+      },
       { action: 'wait', value: 3, description: 'Show Scheduler' },
     ],
   },
@@ -317,7 +326,11 @@ export const SYNTHEX_WORKFLOWS: Record<string, CaptureWorkflow> = {
     description: 'Demonstrate AI content generation for social media posts',
     duration: 45,
     steps: [
-      { action: 'navigate', target: '/dashboard/content', description: 'Open Content Generator' },
+      {
+        action: 'navigate',
+        target: '/dashboard/content',
+        description: 'Open Content Generator',
+      },
       { action: 'wait', value: 3, description: 'Show Content Generator page' },
       { action: 'scroll', value: 300, description: 'Scroll to form' },
       { action: 'wait', value: 2, description: 'Show content form' },
@@ -331,11 +344,19 @@ export const SYNTHEX_WORKFLOWS: Record<string, CaptureWorkflow> = {
     description: 'Show real-time analytics and engagement metrics',
     duration: 45,
     steps: [
-      { action: 'navigate', target: '/dashboard/analytics', description: 'Open Analytics Dashboard' },
+      {
+        action: 'navigate',
+        target: '/dashboard/analytics',
+        description: 'Open Analytics Dashboard',
+      },
       { action: 'wait', value: 3, description: 'Show analytics overview' },
       { action: 'scroll', value: 400, description: 'Scroll to charts' },
       { action: 'wait', value: 3, description: 'Show engagement charts' },
-      { action: 'scroll', value: 400, description: 'Scroll to platform breakdown' },
+      {
+        action: 'scroll',
+        value: 400,
+        description: 'Scroll to platform breakdown',
+      },
       { action: 'wait', value: 2, description: 'Show platform metrics' },
     ],
   },
@@ -345,7 +366,11 @@ export const SYNTHEX_WORKFLOWS: Record<string, CaptureWorkflow> = {
     description: 'Demonstrate content scheduling with calendar views',
     duration: 45,
     steps: [
-      { action: 'navigate', target: '/dashboard/schedule', description: 'Open Scheduler' },
+      {
+        action: 'navigate',
+        target: '/dashboard/schedule',
+        description: 'Open Scheduler',
+      },
       { action: 'wait', value: 3, description: 'Show scheduler view' },
       { action: 'scroll', value: 300, description: 'Scroll calendar' },
       { action: 'wait', value: 2, description: 'Show calendar details' },
@@ -359,7 +384,11 @@ export const SYNTHEX_WORKFLOWS: Record<string, CaptureWorkflow> = {
     description: 'Show viral pattern analysis and insights',
     duration: 45,
     steps: [
-      { action: 'navigate', target: '/dashboard/patterns', description: 'Open Viral Patterns' },
+      {
+        action: 'navigate',
+        target: '/dashboard/patterns',
+        description: 'Open Viral Patterns',
+      },
       { action: 'wait', value: 3, description: 'Show pattern overview' },
       { action: 'scroll', value: 400, description: 'Scroll to pattern charts' },
       { action: 'wait', value: 3, description: 'Show pattern visualization' },
