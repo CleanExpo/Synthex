@@ -13,7 +13,12 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { PermissionEngine, ResourceType, ActionType, PermissionDeniedError } from './permission-engine';
+import {
+  PermissionEngine,
+  ResourceType,
+  ActionType,
+  PermissionDeniedError,
+} from './permission-engine';
 import { getTenantFromHeaders } from '@/lib/multi-tenant/tenant-middleware';
 import { logger } from '@/lib/logger';
 
@@ -163,7 +168,10 @@ export function withAnyPermission(
  * Protect a route with custom permission logic
  */
 export function withCustomAccess(
-  checkFn: (request: NextRequest, context: AccessControlContext) => Promise<boolean>,
+  checkFn: (
+    request: NextRequest,
+    context: AccessControlContext
+  ) => Promise<boolean>,
   handler: ProtectedRouteHandler
 ): RouteHandler {
   return async (request, context) => {
@@ -231,7 +239,7 @@ async function extractAccessContext(
   }
 
   // If no tenant from headers, try to get from user's organization
-  const organizationId = tenantId || await getUserOrganizationId(userId);
+  const organizationId = tenantId || (await getUserOrganizationId(userId));
 
   if (!organizationId) {
     return null;
@@ -256,18 +264,14 @@ async function extractUserId(request: NextRequest): Promise<string | null> {
       const token = authHeader.slice(7);
       const parts = token.split('.');
       if (parts.length === 3) {
-        const payload = JSON.parse(Buffer.from(parts[1], 'base64url').toString());
+        const payload = JSON.parse(
+          Buffer.from(parts[1], 'base64url').toString()
+        );
         return payload.sub || payload.userId || null;
       }
     } catch {
       // Invalid token
     }
-  }
-
-  // Try X-User-ID header (for internal services)
-  const userIdHeader = request.headers.get('X-User-ID');
-  if (userIdHeader) {
-    return userIdHeader;
   }
 
   return null;
