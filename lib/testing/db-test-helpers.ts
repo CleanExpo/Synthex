@@ -157,7 +157,9 @@ export class TestDataFactory {
   /**
    * Create test user
    */
-  async createUser(overrides: Partial<CreateUserInput> = {}): Promise<TestUser> {
+  async createUser(
+    overrides: Partial<CreateUserInput> = {}
+  ): Promise<TestUser> {
     const suffix = this.generateSuffix();
     const userData = {
       email: `test-${suffix}@example.com`,
@@ -241,7 +243,9 @@ export class TestDataFactory {
   /**
    * Create test quote
    */
-  async createQuote(overrides: Partial<CreateQuoteInput> = {}): Promise<TestQuote> {
+  async createQuote(
+    overrides: Partial<CreateQuoteInput> = {}
+  ): Promise<TestQuote> {
     const suffix = this.generateSuffix();
     const quoteData = {
       text: `Test quote text ${suffix}`,
@@ -274,7 +278,9 @@ export class TestDataFactory {
       ...overrides,
     };
 
-    const connection = await this.prisma.platformConnection.create({ data: connectionData });
+    const connection = await this.prisma.platformConnection.create({
+      data: connectionData,
+    });
     this.testDb.trackRecord('platformConnection', connection.id);
     return connection as TestPlatformConnection;
   }
@@ -316,10 +322,15 @@ export class TestDataFactory {
   /**
    * Create multiple campaigns for a user
    */
-  async createCampaigns(userId: string, count: number): Promise<TestCampaign[]> {
+  async createCampaigns(
+    userId: string,
+    count: number
+  ): Promise<TestCampaign[]> {
     const campaigns: TestCampaign[] = [];
     for (let i = 0; i < count; i++) {
-      campaigns.push(await this.createCampaign(userId, { name: `Campaign ${i + 1}` }));
+      campaigns.push(
+        await this.createCampaign(userId, { name: `Campaign ${i + 1}` })
+      );
     }
     return campaigns;
   }
@@ -476,7 +487,7 @@ export async function waitForDatabase(
       await prisma.$queryRaw`SELECT 1`;
       return true;
     } catch {
-      await new Promise((resolve) => setTimeout(resolve, delayMs));
+      await new Promise(resolve => setTimeout(resolve, delayMs));
     }
   }
   return false;
@@ -496,10 +507,11 @@ export function createTestDataFactory(testDb: TestDatabase): TestDataFactory {
   return new TestDataFactory(testDb);
 }
 
-export default {
+const dbTestHelpers = {
   TestDatabase,
   TestDataFactory,
   waitForDatabase,
   createTestDatabase,
   createTestDataFactory,
 };
+export default dbTestHelpers;

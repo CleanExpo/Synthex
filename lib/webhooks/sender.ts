@@ -123,10 +123,7 @@ export function generateSignature(
   secret: string,
   algorithm: 'sha256' | 'sha1' = 'sha256'
 ): string {
-  return crypto
-    .createHmac(algorithm, secret)
-    .update(payload)
-    .digest('hex');
+  return crypto.createHmac(algorithm, secret).update(payload).digest('hex');
 }
 
 /**
@@ -149,7 +146,9 @@ export function generateTimestampSignature(
 /**
  * Send a single webhook with retry logic
  */
-export async function sendWebhook(options: SendWebhookOptions): Promise<DeliveryResult> {
+export async function sendWebhook(
+  options: SendWebhookOptions
+): Promise<DeliveryResult> {
   const {
     url,
     event,
@@ -190,7 +189,11 @@ export async function sendWebhook(options: SendWebhookOptions): Promise<Delivery
     headers['X-Webhook-Signature'] = `sha256=${signature}`;
 
     // Also provide timestamp-based signature for extra security
-    headers['X-Webhook-Signature-Timestamp'] = generateTimestampSignature(body, secret, timestamp);
+    headers['X-Webhook-Signature-Timestamp'] = generateTimestampSignature(
+      body,
+      secret,
+      timestamp
+    );
   }
 
   let lastError: string | undefined;
@@ -242,20 +245,27 @@ export async function sendWebhook(options: SendWebhookOptions): Promise<Delivery
       lastError = `HTTP ${response.status}: ${response.statusText}`;
 
       // Don't retry on 4xx errors (except 429 rate limit)
-      if (response.status >= 400 && response.status < 500 && response.status !== 429) {
+      if (
+        response.status >= 400 &&
+        response.status < 500 &&
+        response.status !== 429
+      ) {
         break;
       }
-
     } catch (error) {
-      lastError = (error as Error).name === 'AbortError'
-        ? `Request timeout after ${timeout}ms`
-        : error instanceof Error ? error.message : String(error);
+      lastError =
+        (error as Error).name === 'AbortError'
+          ? `Request timeout after ${timeout}ms`
+          : error instanceof Error
+            ? error.message
+            : String(error);
     }
 
     // Wait before retry (exponential backoff)
     if (attempt < maxRetries) {
-      const delay = RETRY_DELAYS[attempt - 1] || RETRY_DELAYS[RETRY_DELAYS.length - 1];
-      await new Promise((resolve) => setTimeout(resolve, delay));
+      const delay =
+        RETRY_DELAYS[attempt - 1] || RETRY_DELAYS[RETRY_DELAYS.length - 1];
+      await new Promise(resolve => setTimeout(resolve, delay));
     }
   }
 
@@ -288,9 +298,14 @@ export async function broadcastWebhook(
   event: WebhookEventType,
   data: Record<string, unknown>,
   subscriptions: WebhookSubscription[]
-): Promise<{ total: number; succeeded: number; failed: number; results: DeliveryResult[] }> {
+): Promise<{
+  total: number;
+  succeeded: number;
+  failed: number;
+  results: DeliveryResult[];
+}> {
   const activeSubscriptions = subscriptions.filter(
-    (sub) => sub.active && sub.events.includes(event)
+    sub => sub.active && sub.events.includes(event)
   );
 
   if (activeSubscriptions.length === 0) {
@@ -298,7 +313,7 @@ export async function broadcastWebhook(
   }
 
   const results = await Promise.all(
-    activeSubscriptions.map((sub) =>
+    activeSubscriptions.map(sub =>
       sendWebhook({
         url: sub.url,
         event,
@@ -309,7 +324,7 @@ export async function broadcastWebhook(
     )
   );
 
-  const succeeded = results.filter((r) => r.success).length;
+  const succeeded = results.filter(r => r.success).length;
 
   return {
     total: results.length,
@@ -421,7 +436,12 @@ export async function pingWebhook(url: string): Promise<boolean> {
  */
 export async function triggerUserEvent(
   userId: string,
-  event: 'user.created' | 'user.updated' | 'user.deleted' | 'user.login' | 'user.logout',
+  event:
+    | 'user.created'
+    | 'user.updated'
+    | 'user.deleted'
+    | 'user.login'
+    | 'user.logout',
   data: Record<string, unknown>,
   subscriptions: WebhookSubscription[]
 ): Promise<void> {
@@ -433,7 +453,13 @@ export async function triggerUserEvent(
  */
 export async function triggerContentEvent(
   contentId: string,
-  event: 'content.created' | 'content.updated' | 'content.published' | 'content.scheduled' | 'content.failed' | 'content.deleted',
+  event:
+    | 'content.created'
+    | 'content.updated'
+    | 'content.published'
+    | 'content.scheduled'
+    | 'content.failed'
+    | 'content.deleted',
   data: Record<string, unknown>,
   subscriptions: WebhookSubscription[]
 ): Promise<void> {
@@ -445,14 +471,19 @@ export async function triggerContentEvent(
  */
 export async function triggerCampaignEvent(
   campaignId: string,
-  event: 'campaign.created' | 'campaign.started' | 'campaign.completed' | 'campaign.paused' | 'campaign.deleted',
+  event:
+    | 'campaign.created'
+    | 'campaign.started'
+    | 'campaign.completed'
+    | 'campaign.paused'
+    | 'campaign.deleted',
   data: Record<string, unknown>,
   subscriptions: WebhookSubscription[]
 ): Promise<void> {
   await broadcastWebhook(event, { campaignId, ...data }, subscriptions);
 }
 
-export default {
+const webhookSender = {
   sendWebhook,
   broadcastWebhook,
   sendTestWebhook,
@@ -463,3 +494,4 @@ export default {
   triggerContentEvent,
   triggerCampaignEvent,
 };
+export default webhookSender;

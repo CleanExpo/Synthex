@@ -14,8 +14,8 @@
 import { redirect } from 'next/navigation';
 import { getUserIdFromCookies, verifyTokenSafe } from '@/lib/auth/jwt-utils';
 import { isOwnerEmail } from '@/lib/auth/jwt-utils';
+import { getUserEmailById } from '@/lib/admin/verify-admin';
 import { cookies } from 'next/headers';
-import prisma from '@/lib/prisma';
 
 export default async function AdminLayout({
   children,
@@ -38,12 +38,9 @@ export default async function AdminLayout({
   }
 
   // Look up user email from DB to ensure it hasn't changed since JWT was issued
-  const user = await prisma.user.findUnique({
-    where: { id: payload.userId },
-    select: { email: true },
-  });
+  const email = await getUserEmailById(payload.userId);
 
-  if (!user || !isOwnerEmail(user.email)) {
+  if (!email || !isOwnerEmail(email)) {
     redirect('/dashboard');
   }
 

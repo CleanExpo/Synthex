@@ -12,7 +12,12 @@
  * - Memory fallback when Redis unavailable
  */
 
-import Redis, { Cluster, RedisOptions, ClusterOptions, ClusterNode } from 'ioredis';
+import Redis, {
+  Cluster,
+  RedisOptions,
+  ClusterOptions,
+  ClusterNode,
+} from 'ioredis';
 import {
   getRedisConfig,
   getRedisClusterConfig,
@@ -53,7 +58,8 @@ interface RedisClientWrapper {
 // ============================================================================
 
 class MemoryCache {
-  private cache: Map<string, { value: string; expiry: number | null }> = new Map();
+  private cache: Map<string, { value: string; expiry: number | null }> =
+    new Map();
   private maxSize: number;
   private cleanupInterval: NodeJS.Timeout | null = null;
 
@@ -112,14 +118,18 @@ class MemoryCache {
 
   async keys(pattern: string): Promise<string[]> {
     const regex = new RegExp('^' + pattern.replace(/\*/g, '.*') + '$');
-    return Array.from(this.cache.keys()).filter((k) => regex.test(k));
+    return Array.from(this.cache.keys()).filter(k => regex.test(k));
   }
 
   async incr(key: string): Promise<number> {
     const current = await this.get(key);
     const newValue = (parseInt(current || '0', 10) + 1).toString();
     const data = this.cache.get(key);
-    await this.set(key, newValue, data?.expiry ? Math.floor((data.expiry - Date.now()) / 1000) : undefined);
+    await this.set(
+      key,
+      newValue,
+      data?.expiry ? Math.floor((data.expiry - Date.now()) / 1000) : undefined
+    );
     return parseInt(newValue, 10);
   }
 
@@ -139,7 +149,7 @@ class MemoryCache {
   }
 
   async mget(keys: string[]): Promise<(string | null)[]> {
-    return Promise.all(keys.map((k) => this.get(k)));
+    return Promise.all(keys.map(k => this.get(k)));
   }
 
   async mset(keyValues: Record<string, string>): Promise<void> {
@@ -206,7 +216,7 @@ function createClusterClient(): Cluster {
   const clusterConfig = getRedisClusterConfig();
   const poolConfig = getRedisPoolConfig();
 
-  const nodes: ClusterNode[] = clusterConfig.nodes.map((node) => ({
+  const nodes: ClusterNode[] = clusterConfig.nodes.map(node => ({
     host: node.host,
     port: node.port,
   }));
@@ -264,7 +274,6 @@ export function createRedisClient(): RedisClientWrapper {
   const mode = determineRedisMode();
   let client: RedisClient | null = null;
 
-
   // For memory or upstash mode, we don't create an ioredis client
   if (mode !== 'memory' && mode !== 'upstash') {
     try {
@@ -283,21 +292,17 @@ export function createRedisClient(): RedisClientWrapper {
 
       // Set up error handlers
       if (client) {
-        client.on('error', (err) => {
+        client.on('error', err => {
           console.error('[Redis] Connection error:', err.message);
         });
 
-        client.on('connect', () => {
-        });
+        client.on('connect', () => {});
 
-        client.on('ready', () => {
-        });
+        client.on('ready', () => {});
 
-        client.on('close', () => {
-        });
+        client.on('close', () => {});
 
-        client.on('reconnecting', () => {
-        });
+        client.on('reconnecting', () => {});
       }
     } catch (error) {
       console.error('[Redis] Failed to create client:', error);
@@ -383,10 +388,13 @@ export function createRedisClient(): RedisClientWrapper {
             connected: true,
             mode,
             latency,
-            nodes: nodes.map((node) => ({
+            nodes: nodes.map(node => ({
               host: node.options.host || 'unknown',
               port: node.options.port || 0,
-              status: node.status as 'connected' | 'disconnected' | 'connecting',
+              status: node.status as
+                | 'connected'
+                | 'disconnected'
+                | 'connecting',
             })),
           };
         }
@@ -401,7 +409,12 @@ export function createRedisClient(): RedisClientWrapper {
           connected: false,
           mode,
           latency: Date.now() - startTime,
-          error: error instanceof Error ? error instanceof Error ? error.message : String(error) : 'Unknown error',
+          error:
+            error instanceof Error
+              ? error instanceof Error
+                ? error.message
+                : String(error)
+              : 'Unknown error',
         };
       }
     },
@@ -555,8 +568,9 @@ export async function resetRedisClient(): Promise<void> {
 }
 
 // Export default
-export default {
+const redisClient = {
   createRedisClient,
   getRedisClient,
   resetRedisClient,
 };
+export default redisClient;

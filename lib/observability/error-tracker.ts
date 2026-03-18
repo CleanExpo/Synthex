@@ -118,7 +118,11 @@ function classifyError(error: Error): ErrorCategory {
   if (message.includes('forbidden') || message.includes('permission')) {
     return ErrorCategory.AUTHORIZATION;
   }
-  if (message.includes('database') || message.includes('prisma') || message.includes('postgres')) {
+  if (
+    message.includes('database') ||
+    message.includes('prisma') ||
+    message.includes('postgres')
+  ) {
     return ErrorCategory.DATABASE;
   }
   if (message.includes('timeout') || message.includes('econnrefused')) {
@@ -137,19 +141,31 @@ function classifyError(error: Error): ErrorCategory {
 /**
  * Determine error severity based on category and context
  */
-function determineSeverity(error: Error, category: ErrorCategory): ErrorSeverity {
+function determineSeverity(
+  error: Error,
+  category: ErrorCategory
+): ErrorSeverity {
   // Critical: Database and auth issues
-  if (category === ErrorCategory.DATABASE || category === ErrorCategory.AUTHENTICATION) {
+  if (
+    category === ErrorCategory.DATABASE ||
+    category === ErrorCategory.AUTHENTICATION
+  ) {
     return ErrorSeverity.HIGH;
   }
 
   // High: Authorization and external service issues
-  if (category === ErrorCategory.AUTHORIZATION || category === ErrorCategory.EXTERNAL_SERVICE) {
+  if (
+    category === ErrorCategory.AUTHORIZATION ||
+    category === ErrorCategory.EXTERNAL_SERVICE
+  ) {
     return ErrorSeverity.MEDIUM;
   }
 
   // Medium: Network and rate limiting
-  if (category === ErrorCategory.NETWORK || category === ErrorCategory.RATE_LIMIT) {
+  if (
+    category === ErrorCategory.NETWORK ||
+    category === ErrorCategory.RATE_LIMIT
+  ) {
     return ErrorSeverity.MEDIUM;
   }
 
@@ -297,8 +313,9 @@ function cleanupOldErrors(): void {
 
   // If still too many, remove oldest
   if (errorStore.size > MAX_STORED_ERRORS) {
-    const sorted = Array.from(errorStore.entries())
-      .sort((a, b) => a[1].timestamp.getTime() - b[1].timestamp.getTime());
+    const sorted = Array.from(errorStore.entries()).sort(
+      (a, b) => a[1].timestamp.getTime() - b[1].timestamp.getTime()
+    );
 
     const toRemove = sorted.slice(0, errorStore.size - MAX_STORED_ERRORS);
     toRemove.forEach(([fingerprint]) => errorStore.delete(fingerprint));
@@ -323,14 +340,14 @@ export function getRecentErrors(
   let errors = Array.from(errorStore.values());
 
   if (filter?.severity) {
-    errors = errors.filter((e) => e.severity === filter.severity);
+    errors = errors.filter(e => e.severity === filter.severity);
   }
   if (filter?.category) {
-    errors = errors.filter((e) => e.category === filter.category);
+    errors = errors.filter(e => e.category === filter.category);
   }
   if (filter?.since) {
     const since = filter.since;
-    errors = errors.filter((e) => e.timestamp >= since);
+    errors = errors.filter(e => e.timestamp >= since);
   }
 
   return errors
@@ -400,7 +417,7 @@ export function clearTrackedErrors(): void {
   errorStore.clear();
 }
 
-export default {
+const errorTracker = {
   trackError,
   withErrorTracking,
   withErrorTrackingSync,
@@ -410,3 +427,4 @@ export default {
   ErrorSeverity,
   ErrorCategory,
 };
+export default errorTracker;

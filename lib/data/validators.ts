@@ -27,7 +27,10 @@ import { z } from 'zod';
 export const userSchema = z.object({
   id: z.string().cuid().optional(),
   email: z.string().email('Invalid email format'),
-  password: z.string().min(8, 'Password must be at least 8 characters').optional(),
+  password: z
+    .string()
+    .min(8, 'Password must be at least 8 characters')
+    .optional(),
   name: z.string().min(1).max(100).optional(),
   authProvider: z.enum(['local', 'google']).optional().default('local'),
   emailVerified: z.boolean().optional().default(false),
@@ -40,25 +43,29 @@ export type User = z.output<typeof userSchema>;
 /**
  * Campaign validation schema
  */
-export const campaignSchema = z.object({
-  id: z.string().cuid().optional(),
-  name: z.string().min(1, 'Campaign name is required').max(200),
-  description: z.string().max(2000).optional(),
-  status: z.enum(['draft', 'active', 'paused', 'completed', 'archived']).default('draft'),
-  startDate: z.coerce.date().optional(),
-  endDate: z.coerce.date().optional(),
-  budget: z.number().min(0).optional(),
-  goals: z.record(z.unknown()).optional(),
-  userId: z.string().cuid('Invalid user ID'),
-}).refine(
-  (data) => {
-    if (data.startDate && data.endDate) {
-      return data.endDate > data.startDate;
-    }
-    return true;
-  },
-  { message: 'End date must be after start date', path: ['endDate'] }
-);
+export const campaignSchema = z
+  .object({
+    id: z.string().cuid().optional(),
+    name: z.string().min(1, 'Campaign name is required').max(200),
+    description: z.string().max(2000).optional(),
+    status: z
+      .enum(['draft', 'active', 'paused', 'completed', 'archived'])
+      .default('draft'),
+    startDate: z.coerce.date().optional(),
+    endDate: z.coerce.date().optional(),
+    budget: z.number().min(0).optional(),
+    goals: z.record(z.unknown()).optional(),
+    userId: z.string().cuid('Invalid user ID'),
+  })
+  .refine(
+    data => {
+      if (data.startDate && data.endDate) {
+        return data.endDate > data.startDate;
+      }
+      return true;
+    },
+    { message: 'End date must be after start date', path: ['endDate'] }
+  );
 
 /**
  * Post validation schema
@@ -67,7 +74,9 @@ export const postSchema = z.object({
   id: z.string().cuid().optional(),
   content: z.string().min(1, 'Content is required').max(5000),
   platform: z.enum(['twitter', 'instagram', 'facebook', 'linkedin', 'tiktok']),
-  status: z.enum(['draft', 'scheduled', 'published', 'failed', 'archived']).default('draft'),
+  status: z
+    .enum(['draft', 'scheduled', 'published', 'failed', 'archived'])
+    .default('draft'),
   scheduledAt: z.coerce.date().optional(),
   publishedAt: z.coerce.date().optional(),
   campaignId: z.string().cuid('Invalid campaign ID'),
@@ -97,7 +106,9 @@ export const projectSchema = z.object({
   id: z.string().cuid().optional(),
   name: z.string().min(1, 'Project name is required').max(200),
   description: z.string().max(2000).optional(),
-  status: z.enum(['active', 'paused', 'completed', 'archived']).default('active'),
+  status: z
+    .enum(['active', 'paused', 'completed', 'archived'])
+    .default('active'),
   settings: z.record(z.unknown()).optional(),
   userId: z.string().cuid('Invalid user ID'),
 });
@@ -151,7 +162,10 @@ export interface ValidationResult<T> {
 /**
  * Generic validation function
  */
-function validate<T>(schema: z.ZodSchema<T>, data: unknown): ValidationResult<T> {
+function validate<T>(
+  schema: z.ZodSchema<T>,
+  data: unknown
+): ValidationResult<T> {
   const result = schema.safeParse(data);
 
   if (result.success) {
@@ -164,7 +178,7 @@ function validate<T>(schema: z.ZodSchema<T>, data: unknown): ValidationResult<T>
 
   return {
     valid: false,
-    errors: result.error.issues.map((issue) => ({
+    errors: result.error.issues.map(issue => ({
       path: issue.path,
       message: issue.message,
       code: issue.code,
@@ -210,8 +224,13 @@ export function validateProject(data: unknown): ValidationResult<Project> {
 /**
  * Validate platform connection data
  */
-export function validatePlatformConnection(data: unknown): ValidationResult<PlatformConnection> {
-  return validate(platformConnectionSchema, data) as ValidationResult<PlatformConnection>;
+export function validatePlatformConnection(
+  data: unknown
+): ValidationResult<PlatformConnection> {
+  return validate(
+    platformConnectionSchema,
+    data
+  ) as ValidationResult<PlatformConnection>;
 }
 
 // ============================================================================
@@ -236,7 +255,11 @@ export function validateBatch<T>(
   items: unknown[]
 ): BatchValidationResult<T> {
   const valid: T[] = [];
-  const invalid: Array<{ index: number; data: unknown; errors: ValidationError[] }> = [];
+  const invalid: Array<{
+    index: number;
+    data: unknown;
+    errors: ValidationError[];
+  }> = [];
 
   items.forEach((item, index) => {
     const result = validate(schema, item);
@@ -297,9 +320,9 @@ export function sanitizeUrl(input: unknown): string | undefined {
 export function sanitizeStringArray(input: unknown): string[] {
   if (!Array.isArray(input)) return [];
   return input
-    .filter((item) => typeof item === 'string')
-    .map((item) => item.trim())
-    .filter((item) => item.length > 0);
+    .filter(item => typeof item === 'string')
+    .map(item => item.trim())
+    .filter(item => item.length > 0);
 }
 
 // ============================================================================
@@ -317,18 +340,51 @@ export interface IntegrityCheck {
 }
 
 export const integrityChecks: IntegrityCheck[] = [
-  { table: 'campaigns', field: 'userId', referencedTable: 'users', referencedField: 'id' },
-  { table: 'posts', field: 'campaignId', referencedTable: 'campaigns', referencedField: 'id' },
-  { table: 'projects', field: 'userId', referencedTable: 'users', referencedField: 'id' },
-  { table: 'platformConnections', field: 'userId', referencedTable: 'users', referencedField: 'id' },
-  { table: 'notifications', field: 'userId', referencedTable: 'users', referencedField: 'id' },
-  { table: 'sessions', field: 'userId', referencedTable: 'users', referencedField: 'id' },
+  {
+    table: 'campaigns',
+    field: 'userId',
+    referencedTable: 'users',
+    referencedField: 'id',
+  },
+  {
+    table: 'posts',
+    field: 'campaignId',
+    referencedTable: 'campaigns',
+    referencedField: 'id',
+  },
+  {
+    table: 'projects',
+    field: 'userId',
+    referencedTable: 'users',
+    referencedField: 'id',
+  },
+  {
+    table: 'platformConnections',
+    field: 'userId',
+    referencedTable: 'users',
+    referencedField: 'id',
+  },
+  {
+    table: 'notifications',
+    field: 'userId',
+    referencedTable: 'users',
+    referencedField: 'id',
+  },
+  {
+    table: 'sessions',
+    field: 'userId',
+    referencedTable: 'users',
+    referencedField: 'id',
+  },
 ];
 
 /** Prisma client interface for reference validation */
 interface PrismaLikeClient {
   [tableName: string]: {
-    findUnique: (args: { where: { id: string }; select: { id: boolean } }) => Promise<{ id: string } | null>;
+    findUnique: (args: {
+      where: { id: string };
+      select: { id: boolean };
+    }) => Promise<{ id: string } | null>;
   };
 }
 
@@ -364,7 +420,7 @@ export const schemas = {
   platformConnection: platformConnectionSchema,
 };
 
-export default {
+const validators = {
   validateUser,
   validateCampaign,
   validatePost,
@@ -378,3 +434,4 @@ export default {
   sanitizeStringArray,
   schemas,
 };
+export default validators;

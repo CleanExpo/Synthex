@@ -33,17 +33,28 @@ export type {
 // BASE EXPORTS
 // ============================================================================
 
-export { BaseOAuthProvider, OAuthError, OAuthStateManager } from './base-provider';
+export {
+  BaseOAuthProvider,
+  OAuthError,
+  OAuthStateManager,
+} from './base-provider';
 
 // ============================================================================
 // PROVIDER EXPORTS
 // ============================================================================
 
 export { TwitterOAuthProvider, twitterProvider } from './providers/twitter';
-export { MetaOAuthProvider, facebookProvider, instagramProvider } from './providers/meta';
+export {
+  MetaOAuthProvider,
+  facebookProvider,
+  instagramProvider,
+} from './providers/meta';
 export { TikTokOAuthProvider, tiktokProvider } from './providers/tiktok';
 export { LinkedInOAuthProvider, linkedinProvider } from './providers/linkedin';
-export { PinterestOAuthProvider, pinterestProvider } from './providers/pinterest';
+export {
+  PinterestOAuthProvider,
+  pinterestProvider,
+} from './providers/pinterest';
 export { YouTubeOAuthProvider, youtubeProvider } from './providers/youtube';
 export { ThreadsOAuthProvider, threadsProvider } from './providers/threads';
 export { RedditOAuthProvider, redditProvider } from './providers/reddit';
@@ -92,7 +103,9 @@ export function getOAuthProvider(platform: OAuthPlatform): BaseOAuthProvider {
 /**
  * Check if a platform is supported
  */
-export function isSupportedPlatform(platform: string): platform is OAuthPlatform {
+export function isSupportedPlatform(
+  platform: string
+): platform is OAuthPlatform {
   return platform in oauthProviders;
 }
 
@@ -145,7 +158,11 @@ export async function handleOAuthCallback(
 
   // Ensure we have a code
   if (!params.code) {
-    throw new OAuthError(state.platform, 'NO_CODE', 'No authorization code received');
+    throw new OAuthError(
+      state.platform,
+      'NO_CODE',
+      'No authorization code received'
+    );
   }
 
   // Get provider and exchange code for tokens
@@ -188,7 +205,7 @@ export async function revokePlatformTokens(
 // DEFAULT EXPORT
 // ============================================================================
 
-export default {
+const oauth = {
   providers: oauthProviders,
   getProvider: getOAuthProvider,
   isSupportedPlatform,
@@ -198,3 +215,4 @@ export default {
   refreshTokens: refreshPlatformTokens,
   revokeTokens: revokePlatformTokens,
 };
+export default oauth;

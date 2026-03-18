@@ -126,7 +126,9 @@ export function createAuthenticatedRequest(
 /**
  * Extract JSON body from NextResponse
  */
-export async function getResponseJson<T = unknown>(response: Response): Promise<T> {
+export async function getResponseJson<T = unknown>(
+  response: Response
+): Promise<T> {
   return response.json();
 }
 
@@ -144,7 +146,9 @@ export async function expectStatus<T = unknown>(
 /**
  * Assert successful response (2xx status)
  */
-export async function expectSuccess<T = unknown>(response: Response): Promise<T> {
+export async function expectSuccess<T = unknown>(
+  response: Response
+): Promise<T> {
   expect(response.status).toBeGreaterThanOrEqual(200);
   expect(response.status).toBeLessThan(300);
   return getResponseJson<T>(response);
@@ -191,7 +195,11 @@ export function createTestContext(
   options: TestRequestOptions & { params?: Record<string, string> } = {}
 ): TestContext {
   const { params, ...requestOptions } = options;
-  const request = createTestRequest(method, `http://localhost:3000${url}`, requestOptions);
+  const request = createTestRequest(
+    method,
+    `http://localhost:3000${url}`,
+    requestOptions
+  );
 
   return {
     request,
@@ -208,7 +216,8 @@ export function createTestContext(
  * Create mock user for tests
  */
 export function createMockUser(overrides: Partial<MockUser> = {}): MockUser {
-  const id = overrides.id || `user_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+  const id =
+    overrides.id || `user_${Date.now()}_${Math.random().toString(36).slice(2)}`;
   return {
     id,
     email: `${id}@test.example.com`,
@@ -238,7 +247,9 @@ export function createMockCampaign(
   userId: string,
   overrides: Partial<MockCampaign> = {}
 ): MockCampaign {
-  const id = overrides.id || `campaign_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+  const id =
+    overrides.id ||
+    `campaign_${Date.now()}_${Math.random().toString(36).slice(2)}`;
   return {
     id,
     name: 'Test Campaign',
@@ -268,7 +279,8 @@ export function createMockPost(
   campaignId: string,
   overrides: Partial<MockPost> = {}
 ): MockPost {
-  const id = overrides.id || `post_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+  const id =
+    overrides.id || `post_${Date.now()}_${Math.random().toString(36).slice(2)}`;
   return {
     id,
     content: 'Test post content',
@@ -295,7 +307,9 @@ export interface MockPost {
  * Create mock quote for tests
  */
 export function createMockQuote(overrides: Partial<MockQuote> = {}): MockQuote {
-  const id = overrides.id || `quote_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+  const id =
+    overrides.id ||
+    `quote_${Date.now()}_${Math.random().toString(36).slice(2)}`;
   return {
     id,
     content: 'Test quote content',
@@ -325,7 +339,10 @@ export interface MockQuote {
 /**
  * Assert response has required headers
  */
-export function expectHeaders(response: Response, headers: Record<string, string | RegExp>): void {
+export function expectHeaders(
+  response: Response,
+  headers: Record<string, string | RegExp>
+): void {
   Object.entries(headers).forEach(([key, value]) => {
     const headerValue = response.headers.get(key);
     expect(headerValue).not.toBeNull();
@@ -383,7 +400,7 @@ export async function expectResponseTime(
   return response;
 }
 
-export default {
+const apiTestHelpers = {
   createTestRequest,
   createAuthenticatedRequest,
   createTestContext,
@@ -401,3 +418,4 @@ export default {
   measureResponseTime,
   expectResponseTime,
 };
+export default apiTestHelpers;

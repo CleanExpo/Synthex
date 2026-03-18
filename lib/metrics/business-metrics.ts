@@ -133,7 +133,10 @@ interface PostAnalytics {
 // HELPER FUNCTIONS
 // ============================================================================
 
-function getPeriodDates(period: BusinessMetricsPeriod): { start: Date; end: Date } {
+function getPeriodDates(period: BusinessMetricsPeriod): {
+  start: Date;
+  end: Date;
+} {
   const end = new Date();
   const start = new Date();
 
@@ -158,7 +161,10 @@ function getPeriodDates(period: BusinessMetricsPeriod): { start: Date; end: Date
   return { start, end };
 }
 
-function getPreviousPeriodDates(period: BusinessMetricsPeriod): { start: Date; end: Date } {
+function getPreviousPeriodDates(period: BusinessMetricsPeriod): {
+  start: Date;
+  end: Date;
+} {
   const { start: currentStart, end: currentEnd } = getPeriodDates(period);
   const duration = currentEnd.getTime() - currentStart.getTime();
 
@@ -199,32 +205,28 @@ async function getUserMetrics(
   const { start: prevStart, end: prevEnd } = getPreviousPeriodDates(period);
 
   try {
-    const [
-      totalUsers,
-      newUsers,
-      previousNewUsers,
-      activeUserIds,
-    ] = await Promise.all([
-      prisma.user.count(),
-      prisma.user.count({
-        where: {
-          createdAt: { gte: start, lte: end },
-        },
-      }),
-      prisma.user.count({
-        where: {
-          createdAt: { gte: prevStart, lte: prevEnd },
-        },
-      }),
-      // Active users = users who created content/campaigns in period
-      prisma.campaign.findMany({
-        where: {
-          createdAt: { gte: start, lte: end },
-        },
-        select: { userId: true },
-        distinct: ['userId'],
-      }),
-    ]);
+    const [totalUsers, newUsers, previousNewUsers, activeUserIds] =
+      await Promise.all([
+        prisma.user.count(),
+        prisma.user.count({
+          where: {
+            createdAt: { gte: start, lte: end },
+          },
+        }),
+        prisma.user.count({
+          where: {
+            createdAt: { gte: prevStart, lte: prevEnd },
+          },
+        }),
+        // Active users = users who created content/campaigns in period
+        prisma.campaign.findMany({
+          where: {
+            createdAt: { gte: start, lte: end },
+          },
+          select: { userId: true },
+          distinct: ['userId'],
+        }),
+      ]);
 
     const activeUsers = activeUserIds.length;
     const userGrowthRate = calculateGrowthRate(newUsers, previousNewUsers);
@@ -239,10 +241,13 @@ async function getUserMetrics(
     });
 
     const previousActiveSet = new Set(previousActiveUserIds.map(u => u.userId));
-    const retainedUsers = activeUserIds.filter(u => previousActiveSet.has(u.userId)).length;
-    const retentionRate = previousActiveUserIds.length > 0
-      ? Math.round((retainedUsers / previousActiveUserIds.length) * 100)
-      : 0;
+    const retainedUsers = activeUserIds.filter(u =>
+      previousActiveSet.has(u.userId)
+    ).length;
+    const retentionRate =
+      previousActiveUserIds.length > 0
+        ? Math.round((retainedUsers / previousActiveUserIds.length) * 100)
+        : 0;
 
     return {
       totalUsers,
@@ -251,7 +256,8 @@ async function getUserMetrics(
       userGrowthRate,
       retentionRate,
       churnRate: 100 - retentionRate,
-      averageSessionsPerUser: activeUsers > 0 ? Math.round((newUsers / activeUsers) * 10) / 10 : 0,
+      averageSessionsPerUser:
+        activeUsers > 0 ? Math.round((newUsers / activeUsers) * 10) / 10 : 0,
     };
   } catch (error) {
     logger.error('Error calculating user metrics', { error });
@@ -329,8 +335,14 @@ async function getContentMetrics(
       postsCreated: postsInPeriod,
       postsPublished: publishedPosts,
       postsScheduled: scheduledPosts,
-      averagePostsPerUser: uniqueUsers > 0 ? Math.round((postsInPeriod / uniqueUsers) * 10) / 10 : 0,
-      contentGenerationRate: Math.round((postsInPeriod / Math.max(1, getDaysInPeriod(period))) * 10) / 10,
+      averagePostsPerUser:
+        uniqueUsers > 0
+          ? Math.round((postsInPeriod / uniqueUsers) * 10) / 10
+          : 0,
+      contentGenerationRate:
+        Math.round(
+          (postsInPeriod / Math.max(1, getDaysInPeriod(period))) * 10
+        ) / 10,
       aiGeneratedContent: aiGeneratedPosts,
       manualContent: postsInPeriod - aiGeneratedPosts,
     };
@@ -406,21 +418,25 @@ async function getCampaignMetrics(
       },
     });
 
-    const avgDuration = completedWithDates.length > 0
-      ? completedWithDates.reduce((sum, c) => {
-          const duration = (c.updatedAt.getTime() - c.createdAt.getTime()) / (1000 * 60 * 60 * 24);
-          return sum + duration;
-        }, 0) / completedWithDates.length
-      : 0;
+    const avgDuration =
+      completedWithDates.length > 0
+        ? completedWithDates.reduce((sum, c) => {
+            const duration =
+              (c.updatedAt.getTime() - c.createdAt.getTime()) /
+              (1000 * 60 * 60 * 24);
+            return sum + duration;
+          }, 0) / completedWithDates.length
+        : 0;
 
     return {
       totalCampaigns,
       activeCampaigns,
       completedCampaigns,
       draftCampaigns,
-      campaignCompletionRate: totalCampaigns > 0
-        ? Math.round((completedCampaigns / totalCampaigns) * 100)
-        : 0,
+      campaignCompletionRate:
+        totalCampaigns > 0
+          ? Math.round((completedCampaigns / totalCampaigns) * 100)
+          : 0,
       averageCampaignDuration: Math.round(avgDuration * 10) / 10,
       campaignsCreatedInPeriod: campaignsInPeriod,
     };
@@ -472,7 +488,10 @@ async function getEngagementMetrics(
         totalReach += analytics.reach || 0;
 
         // Calculate engagement rate for this post
-        const interactions = (analytics.likes || 0) + (analytics.shares || 0) + (analytics.comments || 0);
+        const interactions =
+          (analytics.likes || 0) +
+          (analytics.shares || 0) +
+          (analytics.comments || 0);
         const reach = analytics.reach || analytics.impressions || 1;
         const engagementRate = (interactions / reach) * 100;
         engagementRateSum += engagementRate;
@@ -485,9 +504,10 @@ async function getEngagementMetrics(
     }
 
     const totalEngagement = totalLikes + totalShares + totalComments;
-    const averageEngagementRate = posts.length > 0
-      ? Math.round((engagementRateSum / posts.length) * 100) / 100
-      : 0;
+    const averageEngagementRate =
+      posts.length > 0
+        ? Math.round((engagementRateSum / posts.length) * 100) / 100
+        : 0;
 
     return {
       totalEngagement,
@@ -565,7 +585,10 @@ async function getPlatformDistribution(
       for (const post of platformPosts) {
         const analytics = post.analytics as PostAnalytics | null;
         if (analytics) {
-          const interactions = (analytics.likes || 0) + (analytics.shares || 0) + (analytics.comments || 0);
+          const interactions =
+            (analytics.likes || 0) +
+            (analytics.shares || 0) +
+            (analytics.comments || 0);
           totalEngagement += interactions;
           const reach = analytics.reach || analytics.impressions || 1;
           engagementRateSum += (interactions / reach) * 100;
@@ -575,11 +598,15 @@ async function getPlatformDistribution(
       distributions.push({
         platform: stat.platform,
         posts: stat._count.id,
-        percentage: totalPosts > 0 ? Math.round((stat._count.id / totalPosts) * 1000) / 10 : 0,
+        percentage:
+          totalPosts > 0
+            ? Math.round((stat._count.id / totalPosts) * 1000) / 10
+            : 0,
         engagement: totalEngagement,
-        averageEngagementRate: platformPosts.length > 0
-          ? Math.round((engagementRateSum / platformPosts.length) * 100) / 100
-          : 0,
+        averageEngagementRate:
+          platformPosts.length > 0
+            ? Math.round((engagementRateSum / platformPosts.length) * 100) / 100
+            : 0,
       });
     }
 
@@ -631,24 +658,40 @@ async function getAIUsageMetrics(
     });
 
     const totalUsers = await prisma.user.count();
-    const aiAdoptionRate = totalUsers > 0
-      ? Math.round((usersWithAI.length / totalUsers) * 100)
-      : 0;
+    const aiAdoptionRate =
+      totalUsers > 0 ? Math.round((usersWithAI.length / totalUsers) * 100) : 0;
 
     // Get top AI features used
     const topFeatures = [
-      { feature: 'Content Generation', count: aiGeneratedPosts, percentage: 100 },
-      { feature: 'Hashtag Suggestions', count: Math.floor(aiGeneratedPosts * 0.8), percentage: 80 },
-      { feature: 'Caption Optimization', count: Math.floor(aiGeneratedPosts * 0.6), percentage: 60 },
-      { feature: 'Best Time Prediction', count: Math.floor(aiGeneratedPosts * 0.4), percentage: 40 },
+      {
+        feature: 'Content Generation',
+        count: aiGeneratedPosts,
+        percentage: 100,
+      },
+      {
+        feature: 'Hashtag Suggestions',
+        count: Math.floor(aiGeneratedPosts * 0.8),
+        percentage: 80,
+      },
+      {
+        feature: 'Caption Optimization',
+        count: Math.floor(aiGeneratedPosts * 0.6),
+        percentage: 60,
+      },
+      {
+        feature: 'Best Time Prediction',
+        count: Math.floor(aiGeneratedPosts * 0.4),
+        percentage: 40,
+      },
     ];
 
     return {
       totalGenerations: aiGeneratedPosts,
       generationsInPeriod: aiGeneratedPosts,
-      averageGenerationsPerUser: usersWithAI.length > 0
-        ? Math.round((aiGeneratedPosts / usersWithAI.length) * 10) / 10
-        : 0,
+      averageGenerationsPerUser:
+        usersWithAI.length > 0
+          ? Math.round((aiGeneratedPosts / usersWithAI.length) * 10) / 10
+          : 0,
       topUsedFeatures: topFeatures,
       aiAdoptionRate,
     };
@@ -712,7 +755,10 @@ async function getGrowthTrends(
       for (const post of postsWithEngagement) {
         const analytics = post.analytics as PostAnalytics | null;
         if (analytics) {
-          totalEngagement += (analytics.likes || 0) + (analytics.shares || 0) + (analytics.comments || 0);
+          totalEngagement +=
+            (analytics.likes || 0) +
+            (analytics.shares || 0) +
+            (analytics.comments || 0);
         }
       }
 
@@ -898,7 +944,10 @@ export async function getQuickMetrics(): Promise<{
     for (const post of recentPosts) {
       const analytics = post.analytics as PostAnalytics | null;
       if (analytics) {
-        const interactions = (analytics.likes || 0) + (analytics.shares || 0) + (analytics.comments || 0);
+        const interactions =
+          (analytics.likes || 0) +
+          (analytics.shares || 0) +
+          (analytics.comments || 0);
         const reach = analytics.reach || analytics.impressions || 1;
         engagementSum += (interactions / reach) * 100;
       }
@@ -908,9 +957,10 @@ export async function getQuickMetrics(): Promise<{
       totalUsers,
       activeCampaigns,
       totalPosts,
-      avgEngagementRate: recentPosts.length > 0
-        ? Math.round((engagementSum / recentPosts.length) * 100) / 100
-        : 0,
+      avgEngagementRate:
+        recentPosts.length > 0
+          ? Math.round((engagementSum / recentPosts.length) * 100) / 100
+          : 0,
     };
   } catch (error) {
     logger.error('Error getting quick metrics', { error });
@@ -923,8 +973,9 @@ export async function getQuickMetrics(): Promise<{
   }
 }
 
-export default {
+const businessMetrics = {
   getBusinessMetrics,
   getQuickMetrics,
   BusinessMetricsPeriod,
 };
+export default businessMetrics;

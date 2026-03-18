@@ -62,7 +62,21 @@ function timingSafeCompare(a: string, b: string): boolean {
  * @param request - Incoming NextRequest
  * @returns AdminAuthResult — { isAdmin, userId?, error? }
  */
-export async function verifyAdmin(request: NextRequest): Promise<AdminAuthResult> {
+/**
+ * Look up a user's email by userId for server-component admin guards.
+ * Provides a service-layer wrapper so layouts don't import Prisma directly.
+ */
+export async function getUserEmailById(userId: string): Promise<string | null> {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { email: true },
+  });
+  return user?.email ?? null;
+}
+
+export async function verifyAdmin(
+  request: NextRequest
+): Promise<AdminAuthResult> {
   // ------------------------------------------------------------------
   // 1. x-admin-api-key header (timing-safe)
   // ------------------------------------------------------------------
@@ -108,7 +122,11 @@ export async function verifyAdmin(request: NextRequest): Promise<AdminAuthResult
     });
 
     if (!user) {
-      return { isAdmin: false, userId: decoded.userId, error: 'User not found' };
+      return {
+        isAdmin: false,
+        userId: decoded.userId,
+        error: 'User not found',
+      };
     }
 
     // Owner email bypass — owner always has admin access regardless of DB role

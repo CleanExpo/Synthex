@@ -171,9 +171,10 @@ async function checkApiPerformance(): Promise<ComponentHealth> {
       return {
         name: 'api',
         status: 'degraded',
-        message: report.api.errorRate > 5
-          ? `Elevated error rate: ${report.api.errorRate.toFixed(1)}%`
-          : `Slow responses: p95 = ${report.api.p95}ms`,
+        message:
+          report.api.errorRate > 5
+            ? `Elevated error rate: ${report.api.errorRate.toFixed(1)}%`
+            : `Slow responses: p95 = ${report.api.p95}ms`,
         details: {
           errorRate: report.api.errorRate,
           p95: report.api.p95,
@@ -273,8 +274,8 @@ export async function getSystemHealth(): Promise<SystemHealth> {
   ];
 
   // Determine overall status
-  const hasUnhealthy = components.some((c) => c.status === 'unhealthy');
-  const hasDegraded = components.some((c) => c.status === 'degraded');
+  const hasUnhealthy = components.some(c => c.status === 'unhealthy');
+  const hasDegraded = components.some(c => c.status === 'degraded');
 
   let status: HealthStatus = 'healthy';
   if (hasUnhealthy) {
@@ -296,7 +297,11 @@ export async function getSystemHealth(): Promise<SystemHealth> {
   const errorStats5min = getErrorStats(5);
   const errorStats1hour = getErrorStats(60);
 
-  let apiMetrics = { requestsPerMinute: 0, averageResponseTime: 0, errorRate: 0 };
+  let apiMetrics = {
+    requestsPerMinute: 0,
+    averageResponseTime: 0,
+    errorRate: 0,
+  };
   try {
     const report = await performanceMonitor.generateReport(5);
     apiMetrics = {
@@ -320,7 +325,9 @@ export async function getSystemHealth(): Promise<SystemHealth> {
         heapUsedMB: Math.round(memoryUsage.heapUsed / 1024 / 1024),
         heapTotalMB: Math.round(memoryUsage.heapTotal / 1024 / 1024),
         rssMB: Math.round(memoryUsage.rss / 1024 / 1024),
-        usagePercent: Math.round((memoryUsage.heapUsed / memoryUsage.heapTotal) * 100),
+        usagePercent: Math.round(
+          (memoryUsage.heapUsed / memoryUsage.heapTotal) * 100
+        ),
       },
       errors: {
         last5Minutes: errorStats5min.total,
@@ -347,8 +354,8 @@ export async function getQuickHealth(): Promise<{
     dbHealth.status === 'unhealthy' || memHealth.status === 'unhealthy'
       ? 'unhealthy'
       : dbHealth.status === 'degraded' || memHealth.status === 'degraded'
-      ? 'degraded'
-      : 'healthy';
+        ? 'degraded'
+        : 'healthy';
 
   return {
     status,
@@ -376,8 +383,9 @@ export function formatUptime(seconds: number): string {
   return `${minutes}m`;
 }
 
-export default {
+const healthDashboard = {
   getSystemHealth,
   getQuickHealth,
   formatUptime,
 };
+export default healthDashboard;

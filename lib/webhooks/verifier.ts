@@ -167,7 +167,7 @@ export function verifyStripeSignature(
 ): VerificationResult {
   try {
     const parts: Record<string, string> = {};
-    signature.split(',').forEach((part) => {
+    signature.split(',').forEach(part => {
       const [key, value] = part.split('=');
       if (key && value) {
         parts[key] = value;
@@ -338,14 +338,18 @@ export interface VerifyWebhookOptions {
  * Main webhook verification function
  * Automatically handles platform-specific verification logic
  */
-export function verifyWebhook(options: VerifyWebhookOptions): VerificationResult {
+export function verifyWebhook(
+  options: VerifyWebhookOptions
+): VerificationResult {
   const { payload, signature, platform, timestamp, customSecret } = options;
 
   // Skip verification in development if no secret configured
   if (process.env.NODE_ENV === 'development') {
     const secret = customSecret || getWebhookSecret(platform);
     if (!secret) {
-      console.warn(`[webhooks] No secret configured for ${platform}, skipping verification in dev`);
+      console.warn(
+        `[webhooks] No secret configured for ${platform}, skipping verification in dev`
+      );
       return { valid: true, platform };
     }
   }
@@ -355,7 +359,11 @@ export function verifyWebhook(options: VerifyWebhookOptions): VerificationResult
     case 'stripe': {
       const secret = customSecret || getWebhookSecret('stripe');
       if (!secret) {
-        return { valid: false, error: 'Stripe webhook secret not configured', platform };
+        return {
+          valid: false,
+          error: 'Stripe webhook secret not configured',
+          platform,
+        };
       }
       return verifyStripeSignature(payload, signature, secret);
     }
@@ -363,7 +371,11 @@ export function verifyWebhook(options: VerifyWebhookOptions): VerificationResult
     case 'slack': {
       const secret = customSecret || getWebhookSecret('slack');
       if (!secret) {
-        return { valid: false, error: 'Slack signing secret not configured', platform };
+        return {
+          valid: false,
+          error: 'Slack signing secret not configured',
+          platform,
+        };
       }
       if (!timestamp) {
         return { valid: false, error: 'Slack timestamp required', platform };
@@ -427,7 +439,10 @@ export async function verifyWebhookRequest(
 ): Promise<{ valid: boolean; payload: string; error?: string }> {
   try {
     const payload = await request.text();
-    const { signature, timestamp } = extractSignature(request.headers, platform);
+    const { signature, timestamp } = extractSignature(
+      request.headers,
+      platform
+    );
 
     if (!signature) {
       return {
@@ -458,7 +473,7 @@ export async function verifyWebhookRequest(
   }
 }
 
-export default {
+const webhookVerifier = {
   verifyWebhook,
   verifyWebhookRequest,
   computeSignature,
@@ -466,3 +481,4 @@ export default {
   safeCompare,
   extractSignature,
 };
+export default webhookVerifier;

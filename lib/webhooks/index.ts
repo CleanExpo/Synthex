@@ -95,7 +95,7 @@ export async function getStats(): Promise<{
 // DEFAULT EXPORT
 // ============================================================================
 
-export default {
+const webhooks = {
   handler: webhookHandler,
   queue: eventQueue,
   retries: retryManager,
@@ -105,3 +105,4 @@ export default {
   stop,
   getStats,
 };
+export default webhooks;
