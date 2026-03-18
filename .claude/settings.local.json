@@ -140,7 +140,10 @@
       "Bash(find /d/Synthex -type f -name *.sql)",
       "Bash(head -20 /d/Synthex/database/migrations/*.sql)",
       "Bash(grep -l \"RLS\\\\|ROW LEVEL SECURITY\\\\|CREATE POLICY\" /d/Synthex/supabase/*.sql /d/Synthex/database/migrations/*.sql)",
-      "mcp__linear__list_issues"
+      "mcp__linear__list_issues",
+      "mcp__linear__save_issue",
+      "mcp__linear__save_comment",
+      "mcp__linear__get_issue"
     ],
     "deny": [
       "Bash(git push --force*)",
