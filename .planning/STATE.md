@@ -9,19 +9,79 @@ See: .planning/PROJECT.md (updated 2026-02-17)
 
 ## Current Position
 
-Phase: 120 (quality-sweep) — **COMPLETE**
-Plan: 5 of 5 — **COMPLETE**
-Status: All 5 sprints executed (auth gaps closed, tests restored, tech debt removed, UX hardened)
-Last activity: 2026-03-18 — Phase 120 complete (5 sprints: auth, tests, debt, UX, triage)
-Linear: UNI-1181 (complete), UNI-1180 (human action pending)
+Phase: 121 (performance-caching-residual-fixes) — **IN PROGRESS**
+Plan: 0 of 3 sub-plans — active
+Status: Swarm audit complete (5 agents). Linear sync complete. Phase 121 blocked fixes being resolved.
+Last activity: 2026-03-18 — Phase 121 swarm audit + Linear sync complete (SYN-387–408 created)
+Linear: SYN-387 (Phase 121, In Progress), UNI-1180 (human action pending)
 
 Milestone: v10.0 Full Platform Quality Loop — **IN PROGRESS**
 Last milestone shipped: v9.0 — 2026-03-17
-Status: Phase 119 complete. Phase 120 complete.
+Status: Phase 119 Done (SYN-384). Phase 120 Done (SYN-385). Phase 121 active (SYN-387).
 
-Progress: ████░░░░░░ 40% v10.0 (2/5 phases)
+Progress: ██████░░░░ 60% v10.0 (3/5 phases in flight)
 
-Next action: Phase 121 — Performance & caching layer
+Next action: Phase 121-02 — Resolve all blocking issues (SYN-389–397, SYN-406)
+
+## Phase 121 Swarm Audit Summary (2026-03-18)
+
+Wave 1 (5 parallel agents) + Wave 2 (B1 consolidation) complete.
+Output: .planning/phases/121-swarm-audit/
+
+### Key Findings vs Phase 119 Baseline
+
+Phase 119 → 107 findings. Phase 120 closed ~15 (~14%).
+
+**CONFIRMED RESOLVED by Phase 120:**
+
+- Auth migration (getUserIdFromRequest → OrCookies): 83 routes ✓
+- Admin role check at /api/system/models (UNI-1170) ✓
+- Mock data removed (audience insights, stats engagement) ✓
+- puppeteer-screen-recorder removed from package.json ✓
+
+**CONFIRMED OPEN (from Phase 119, not fixed):**
+
+- ROUTE-10/11: tasks + research routes userId-only (SYN-391/392)
+- CONNECT-01: /api/billing/subscription missing (SYN-389)
+- CONNECT-03: NotificationBell param mismatch (SYN-390)
+- CONTRAST-01–05: 5 CRITICAL WCAG violations (SYN-393) — CONTRAST-01 partially improved
+- SECURITY-04: NEXT_PUBLIC_BYPASS_TOKEN still in .env.example (SYN-395)
+
+**NEW REGRESSIONS (Phase 121 audit only):**
+
+- CRITICAL: capture-service.ts dynamic import of removed package → runtime crash (SYN-394)
+- HIGH: email/password login route doesn't set httpOnly cookie (SYN-397)
+- HIGH: analytics route userId-only org scoping (SYN-406)
+- MEDIUM: next.config.mjs disables TypeScript + ESLint on Vercel deploy (SYN-402)
+
+### Linear Issues Created This Session
+
+| Issue   | Title                               | Priority | Status      |
+| ------- | ----------------------------------- | -------- | ----------- |
+| SYN-384 | [Phase 119] Deep Audit              | High     | Done        |
+| SYN-385 | [Phase 120] Quality Sweep           | Medium   | Done        |
+| SYN-387 | [Phase 121] Performance & Caching   | High     | In Progress |
+| SYN-388 | [Phase 123] Diagnostic Repeat       | Medium   | Backlog     |
+| SYN-389 | BUG: billing/subscription missing   | Urgent   | Todo        |
+| SYN-390 | BUG: notification filter mismatch   | High     | Todo        |
+| SYN-391 | SECURITY: tasks org scoping         | Urgent   | Todo        |
+| SYN-392 | SECURITY: research org scoping      | Urgent   | Todo        |
+| SYN-393 | A11Y: 5 CRITICAL WCAG violations    | Urgent   | Todo        |
+| SYN-394 | REGRESSION: capture-service crash   | Urgent   | Todo        |
+| SYN-395 | SECURITY: bypass token in .env      | High     | Todo        |
+| SYN-396 | CLEANUP: remove demo/test routes    | High     | Todo        |
+| SYN-397 | SECURITY: login httpOnly cookie     | High     | Todo        |
+| SYN-398 | SECURITY: RLS 16/131 models         | High     | Backlog     |
+| SYN-399 | A11Y: 7 HIGH contrast violations    | Medium   | Backlog     |
+| SYN-400 | DEPS: openai 4.x behind             | High     | Backlog     |
+| SYN-401 | DEPS: @auth/prisma-adapter unused   | Medium   | Backlog     |
+| SYN-402 | BUILD: TS+ESLint disabled on deploy | High     | Backlog     |
+| SYN-403 | DEPS: gsap license ambiguity        | Medium   | Backlog     |
+| SYN-404 | CODE: anonymous exports             | Low      | Backlog     |
+| SYN-405 | CODE: admin/layout Prisma direct    | Medium   | Backlog     |
+| SYN-406 | SECURITY: analytics org scoping     | Urgent   | Todo        |
+| SYN-407 | [v11.0] Tech Foundation Upgrades    | Medium   | Backlog     |
+| SYN-408 | [v11.0] Voice + Industry Modes      | Medium   | Backlog     |
 
 ## Phase 120 Summary
 
