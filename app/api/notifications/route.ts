@@ -12,9 +12,15 @@ import { NextRequest } from 'next/server';
 import { z } from 'zod';
 import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
-import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
+import {
+  APISecurityChecker,
+  DEFAULT_POLICIES,
+} from '@/lib/security/api-security-checker';
 import { NotificationChannel } from '@/lib/websocket/notification-channel';
 import { logger } from '@/lib/logger';
+import { getRedisClient } from '@/lib/redis-client';
+
+const NOTIFICATIONS_CACHE_TTL = 60; // seconds
 
 // Validation schemas
 const createNotificationSchema = z.object({
@@ -22,13 +28,13 @@ const createNotificationSchema = z.object({
   title: z.string().min(1).max(200),
   message: z.string().min(1).max(2000),
   data: z.record(z.unknown()).optional(),
-  userId: z.string().cuid().optional() // If not provided, uses authenticated user
+  userId: z.string().cuid().optional(), // If not provided, uses authenticated user
 });
 
 const querySchema = z.object({
   unreadOnly: z.enum(['true', 'false']).optional(),
   limit: z.string().regex(/^\d+$/).optional(),
-  offset: z.string().regex(/^\d+$/).optional()
+  offset: z.string().regex(/^\d+$/).optional(),
 });
 
 /**
@@ -56,19 +62,37 @@ export async function GET(request: NextRequest) {
     const queryParams = {
       unreadOnly: url.searchParams.get('unreadOnly') || undefined,
       limit: url.searchParams.get('limit') || undefined,
-      offset: url.searchParams.get('offset') || undefined
+      offset: url.searchParams.get('offset') || undefined,
     };
 
     const query = querySchema.parse(queryParams);
     const limit = query.limit ? parseInt(query.limit) : 50;
     const offset = query.offset ? parseInt(query.offset) : 0;
 
+    // ── Cache read ──────────────────────────────────────────────────────────
+    const userId = security.context.userId!;
+    const paramsHash = `${query.unreadOnly ?? 'all'}:${limit}:${offset}`;
+    const cacheKey = `synthex:cache:notifications:${userId}:${paramsHash}`;
+    try {
+      const redis = getRedisClient();
+      const cached = await redis.get(cacheKey);
+      if (cached) {
+        return APISecurityChecker.createSecureResponse(
+          JSON.parse(cached),
+          200,
+          security.context
+        );
+      }
+    } catch {
+      // Redis unavailable — fall through to DB
+    }
+
     // Build where clause
     const whereClause: {
       userId: string;
       read?: boolean;
     } = {
-      userId: security.context.userId!  // Validated by security check above
+      userId: security.context.userId!, // Validated by security check above
     };
 
     if (query.unreadOnly === 'true') {
@@ -89,33 +113,46 @@ export async function GET(request: NextRequest) {
           message: true,
           read: true,
           data: true,
-          createdAt: true
-        }
+          createdAt: true,
+        },
       }),
       prisma.notification.count({ where: whereClause }),
       prisma.notification.count({
         where: {
           userId: security.context.userId!,
-          read: false
-        }
-      })
+          read: false,
+        },
+      }),
     ]);
 
-    return APISecurityChecker.createSecureResponse(
-      {
-        data: notifications,
-        pagination: {
-          total,
-          limit,
-          offset,
-          hasMore: offset + notifications.length < total
-        },
-        unreadCount
+    const responseData = {
+      data: notifications,
+      pagination: {
+        total,
+        limit,
+        offset,
+        hasMore: offset + notifications.length < total,
       },
+      unreadCount,
+    };
+
+    // ── Cache write ─────────────────────────────────────────────────────────
+    try {
+      const redis = getRedisClient();
+      await redis.set(
+        cacheKey,
+        JSON.stringify(responseData),
+        NOTIFICATIONS_CACHE_TTL
+      );
+    } catch {
+      // Non-fatal — response already built
+    }
+
+    return APISecurityChecker.createSecureResponse(
+      responseData,
       200,
       security.context
     );
-
   } catch (error) {
     logger.error('Notifications fetch error:', error);
 
@@ -179,8 +216,10 @@ export async function POST(request: NextRequest) {
         type: data.type,
         title: data.title,
         message: data.message,
-        data: data.data ? (data.data as Prisma.InputJsonValue) : Prisma.JsonNull,
-        userId: targetUserId!
+        data: data.data
+          ? (data.data as Prisma.InputJsonValue)
+          : Prisma.JsonNull,
+        userId: targetUserId!,
       },
       select: {
         id: true,
@@ -189,8 +228,8 @@ export async function POST(request: NextRequest) {
         message: true,
         read: true,
         data: true,
-        createdAt: true
-      }
+        createdAt: true,
+      },
     });
 
     // Broadcast via WebSocket/SSE for real-time delivery
@@ -206,15 +245,25 @@ export async function POST(request: NextRequest) {
       // Real-time delivery is best-effort, don't fail the request
     }
 
+    // ── Cache invalidation ──────────────────────────────────────────────────
+    try {
+      const redis = getRedisClient();
+      const cacheKeys = await redis.keys(
+        `synthex:cache:notifications:${targetUserId}:*`
+      );
+      if (cacheKeys.length > 0) await redis.del(cacheKeys);
+    } catch {
+      // Non-fatal
+    }
+
     return APISecurityChecker.createSecureResponse(
       {
         success: true,
-        data: notification
+        data: notification,
       },
       201,
       security.context
     );
-
   } catch (error) {
     logger.error('Notification creation error:', error);
 

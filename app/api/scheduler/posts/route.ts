@@ -23,12 +23,18 @@ export const dynamic = 'force-dynamic';
 const listPostsQuerySchema = z.object({
   page: z.coerce.number().min(1).optional().default(1),
   limit: z.coerce.number().min(1).max(100).optional().default(20),
-  status: z.enum(['draft', 'scheduled', 'published', 'failed', 'all']).optional().default('all'),
+  status: z
+    .enum(['draft', 'scheduled', 'published', 'failed', 'all'])
+    .optional()
+    .default('all'),
   platform: z.string().optional(),
   batchId: z.string().optional(),
   startDate: z.string().datetime().optional(),
   endDate: z.string().datetime().optional(),
-  sortBy: z.enum(['scheduledAt', 'createdAt', 'publishedAt']).optional().default('scheduledAt'),
+  sortBy: z
+    .enum(['scheduledAt', 'createdAt', 'publishedAt'])
+    .optional()
+    .default('scheduledAt'),
   sortOrder: z.enum(['asc', 'desc']).optional().default('asc'),
 });
 
@@ -37,14 +43,16 @@ const createPostSchema = z.object({
   platform: z.string(),
   scheduledAt: z.string().datetime(),
   campaignId: z.string().optional(),
-  metadata: z.object({
-    images: z.array(z.string()).optional(),
-    hashtags: z.array(z.string()).optional(),
-    mentions: z.array(z.string()).optional(),
-    persona: z.string().optional(),
-    estimatedEngagement: z.number().optional(),
-    batchId: z.string().optional(),
-  }).optional(),
+  metadata: z
+    .object({
+      images: z.array(z.string()).optional(),
+      hashtags: z.array(z.string()).optional(),
+      mentions: z.array(z.string()).optional(),
+      persona: z.string().optional(),
+      estimatedEngagement: z.number().optional(),
+      batchId: z.string().optional(),
+    })
+    .optional(),
 });
 
 const updatePostSchema = z.object({
@@ -52,19 +60,23 @@ const updatePostSchema = z.object({
   platform: z.string().optional(),
   status: z.enum(['draft', 'scheduled', 'published', 'failed']).optional(),
   scheduledAt: z.string().datetime().optional().nullable(),
-  metadata: z.object({
-    images: z.array(z.string()).optional(),
-    hashtags: z.array(z.string()).optional(),
-    mentions: z.array(z.string()).optional(),
-    persona: z.string().optional(),
-    estimatedEngagement: z.number().optional(),
-    engagement: z.object({
-      likes: z.number().optional(),
-      comments: z.number().optional(),
-      shares: z.number().optional(),
-      views: z.number().optional(),
-    }).optional(),
-  }).optional(),
+  metadata: z
+    .object({
+      images: z.array(z.string()).optional(),
+      hashtags: z.array(z.string()).optional(),
+      mentions: z.array(z.string()).optional(),
+      persona: z.string().optional(),
+      estimatedEngagement: z.number().optional(),
+      engagement: z
+        .object({
+          likes: z.number().optional(),
+          comments: z.number().optional(),
+          shares: z.number().optional(),
+          views: z.number().optional(),
+        })
+        .optional(),
+    })
+    .optional(),
 });
 
 // =============================================================================
@@ -74,6 +86,9 @@ const updatePostSchema = z.object({
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { getEffectiveOrganizationId } from '@/lib/multi-business/business-scope';
 import { logger } from '@/lib/logger';
+import { getRedisClient } from '@/lib/redis-client';
+
+const SCHEDULER_POSTS_CACHE_TTL = 60; // seconds
 
 // Get user's campaign IDs for authorization
 async function getUserCampaignIds(userId: string): Promise<string[]> {
@@ -112,8 +127,42 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const { page, limit, status, platform, batchId, startDate, endDate, sortBy, sortOrder } = validation.data;
+    const {
+      page,
+      limit,
+      status,
+      platform,
+      batchId,
+      startDate,
+      endDate,
+      sortBy,
+      sortOrder,
+    } = validation.data;
     const skip = (page - 1) * limit;
+
+    // ── Cache read ──────────────────────────────────────────────────────────
+    const paramParts = [
+      `page=${page}`,
+      `limit=${limit}`,
+      `status=${status}`,
+      ...(platform ? [`platform=${platform}`] : []),
+      ...(batchId ? [`batchId=${batchId}`] : []),
+      ...(startDate ? [`startDate=${startDate}`] : []),
+      ...(endDate ? [`endDate=${endDate}`] : []),
+      `sortBy=${sortBy}`,
+      `sortOrder=${sortOrder}`,
+    ].sort();
+    const paramsHash = paramParts.join('&');
+    const cacheKey = `synthex:cache:scheduler-posts:${userId}:${paramsHash}`;
+    try {
+      const redis = getRedisClient();
+      const cached = await redis.get(cacheKey);
+      if (cached) {
+        return NextResponse.json(JSON.parse(cached));
+      }
+    } catch {
+      // Redis unavailable — fall through to DB
+    }
 
     // Get user's campaign IDs
     const campaignIds = await getUserCampaignIds(userId);
@@ -182,7 +231,7 @@ export async function GET(request: NextRequest) {
       }),
     };
 
-    return NextResponse.json({
+    const responseData = {
       data: posts,
       stats,
       pagination: {
@@ -191,7 +240,21 @@ export async function GET(request: NextRequest) {
         total,
         totalPages: Math.ceil(total / limit),
       },
-    });
+    };
+
+    // ── Cache write ─────────────────────────────────────────────────────────
+    try {
+      const redis = getRedisClient();
+      await redis.set(
+        cacheKey,
+        JSON.stringify(responseData),
+        SCHEDULER_POSTS_CACHE_TTL
+      );
+    } catch {
+      // Non-fatal — response already built
+    }
+
+    return NextResponse.json(responseData);
   } catch (error) {
     logger.error('Error fetching scheduled posts:', error);
     return NextResponse.json(
@@ -289,6 +352,17 @@ export async function POST(request: NextRequest) {
       },
     });
 
+    // ── Cache invalidation ──────────────────────────────────────────────────
+    try {
+      const redis = getRedisClient();
+      const cacheKeys = await redis.keys(
+        `synthex:cache:scheduler-posts:${userId}:*`
+      );
+      if (cacheKeys.length > 0) await redis.del(cacheKeys);
+    } catch {
+      // Non-fatal
+    }
+
     return NextResponse.json({ data: post }, { status: 201 });
   } catch (error) {
     logger.error('Error scheduling post:', error);
@@ -352,7 +426,9 @@ export async function PATCH(request: NextRequest) {
     const updatePayload: Record<string, unknown> = { ...data };
 
     if (data.scheduledAt !== undefined) {
-      updatePayload.scheduledAt = data.scheduledAt ? new Date(data.scheduledAt) : null;
+      updatePayload.scheduledAt = data.scheduledAt
+        ? new Date(data.scheduledAt)
+        : null;
     }
 
     if (data.status === 'published') {
@@ -371,6 +447,17 @@ export async function PATCH(request: NextRequest) {
         },
       },
     });
+
+    // ── Cache invalidation ──────────────────────────────────────────────────
+    try {
+      const redis = getRedisClient();
+      const cacheKeys = await redis.keys(
+        `synthex:cache:scheduler-posts:${userId}:*`
+      );
+      if (cacheKeys.length > 0) await redis.del(cacheKeys);
+    } catch {
+      // Non-fatal
+    }
 
     return NextResponse.json({ data: post });
   } catch (error) {
@@ -424,6 +511,17 @@ export async function DELETE(request: NextRequest) {
     }
 
     await prisma.post.delete({ where: { id } });
+
+    // ── Cache invalidation ──────────────────────────────────────────────────
+    try {
+      const redis = getRedisClient();
+      const cacheKeys = await redis.keys(
+        `synthex:cache:scheduler-posts:${userId}:*`
+      );
+      if (cacheKeys.length > 0) await redis.del(cacheKeys);
+    } catch {
+      // Non-fatal
+    }
 
     return NextResponse.json({ success: true });
   } catch (error) {

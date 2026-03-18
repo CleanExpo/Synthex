@@ -13,7 +13,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { z } from 'zod';
-import { getEffectiveQueryFilter } from '@/lib/multi-business/business-scope';
+import {
+  getEffectiveQueryFilter,
+  getEffectiveOrganizationId,
+} from '@/lib/multi-business/business-scope';
+import { getRedisClient } from '@/lib/redis-client';
+
+const ANALYTICS_CACHE_TTL = 300; // seconds
 
 // =============================================================================
 // Schemas
@@ -77,6 +83,20 @@ export async function GET(request: NextRequest) {
         { error: 'No organisation context found' },
         { status: 403 }
       );
+    }
+
+    // ── Cache read ──────────────────────────────────────────────────────────
+    const orgId = await getEffectiveOrganizationId(userId);
+    const paramsHash = `${timeRange}:${platform ?? 'all'}`;
+    const cacheKey = `synthex:cache:analytics:${orgId ?? userId}:${paramsHash}`;
+    try {
+      const redis = getRedisClient();
+      const cached = await redis.get(cacheKey);
+      if (cached) {
+        return NextResponse.json(JSON.parse(cached));
+      }
+    } catch {
+      // Redis unavailable — fall through to DB
     }
 
     // Calculate date range
@@ -205,7 +225,7 @@ export async function GET(request: NextRequest) {
       .map(([date, count]) => ({ date, posts: count }))
       .sort((a, b) => a.date.localeCompare(b.date));
 
-    return NextResponse.json({
+    const responseData = {
       data: {
         totals: {
           ...totals,
@@ -217,7 +237,21 @@ export async function GET(request: NextRequest) {
         timeRange,
         generatedAt: new Date().toISOString(),
       },
-    });
+    };
+
+    // ── Cache write ─────────────────────────────────────────────────────────
+    try {
+      const redis = getRedisClient();
+      await redis.set(
+        cacheKey,
+        JSON.stringify(responseData),
+        ANALYTICS_CACHE_TTL
+      );
+    } catch {
+      // Non-fatal — response already built
+    }
+
+    return NextResponse.json(responseData);
   } catch (error) {
     logger.error('Error fetching analytics:', error);
     return NextResponse.json(
