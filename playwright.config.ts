@@ -11,11 +11,12 @@ export default defineConfig({
   timeout: 120000, // 2 minutes - handles cold JIT compilation
   reporter: 'html',
   globalSetup: './tests/e2e/global-setup.ts',
+  globalTeardown: './tests/e2e/global-teardown.ts',
   use: {
     baseURL: process.env.BASE_URL || 'http://localhost:3002',
     trace: 'on-first-retry',
     navigationTimeout: 60000, // 60s for page.goto() (cold server)
-    actionTimeout: 30000,     // 30s for clicks/fills (should be fast)
+    actionTimeout: 30000, // 30s for clicks/fills (should be fast)
   },
 
   projects: [

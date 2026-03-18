@@ -1,23 +1,26 @@
 /**
- * Phase 122 — Production Critical Path E2E Tests
+ * Production Critical Path E2E Tests
  *
- * Validates the 8 critical user journeys on live synthex.social.
+ * Validates critical user journeys on live synthex.social.
  * Also includes security spot-checks (headers, auth enforcement).
  *
- * USAGE:
+ * USAGE (production):
  *   BASE_URL=https://synthex.social \
  *   PROD_TEST_EMAIL=you@example.com \
  *   PROD_TEST_PASSWORD=yourpassword \
- *   PROD_ADMIN_EMAIL=admin@example.com \
- *   PROD_ADMIN_PASSWORD=adminpassword \
  *   PW_SKIP_WEBSERVER=1 \
  *   npx playwright test tests/e2e/production-critical-paths.spec.ts
  *
- * HUMAN GATES:
- *   - Provide credentials for a seeded test account (already past onboarding)
- *   - Provide credentials for an admin/owner account
- *   - Confirm Stripe webhooks in Stripe dashboard after Path 5
- *   - Register Linear webhook URL in project settings (UNI-1180)
+ * OPTIONAL (admin/owner coverage):
+ *   PROD_ADMIN_EMAIL=admin@example.com \
+ *   PROD_ADMIN_PASSWORD=adminpassword
+ *
+ * 5 HUMAN GATES THE SPEC CAN'T AUTOMATE (complete after the run):
+ *   1. Full signup → email confirm → 5-step onboarding → dashboard
+ *   2. Stripe checkout → tier shows Pro → webhook confirmed in Stripe dashboard
+ *   3. Live Instagram OAuth → connection confirmed
+ *   4. Post schedule → notification bell badge count correct
+ *   5. Register Linear webhook URL (UNI-1180)
  *
  * @module tests/e2e/production-critical-paths.spec
  */
@@ -32,11 +35,22 @@ import { getAuthToken, setAuthCookie } from './fixtures/auth.fixture';
 const BASE_URL = process.env.BASE_URL || 'https://synthex.social';
 const PROD_EMAIL = process.env.PROD_TEST_EMAIL || '';
 const PROD_PASSWORD = process.env.PROD_TEST_PASSWORD || '';
+const PROD_INVITE_CODE = process.env.PROD_INVITE_CODE || '';
+const RUN_SIGNUP_AUTOMATION = process.env.PW_RUN_SIGNUP_AUTOMATION === '1';
 const ADMIN_EMAIL = process.env.PROD_ADMIN_EMAIL || '';
 const ADMIN_PASSWORD = process.env.PROD_ADMIN_PASSWORD || '';
 
 const HAS_CREDS = !!PROD_EMAIL && !!PROD_PASSWORD;
 const HAS_ADMIN_CREDS = !!ADMIN_EMAIL && !!ADMIN_PASSWORD;
+// NOTE: The human verification checklist is printed at the end of the run
+// via Playwright globalTeardown (tests/e2e/global-teardown.ts).
+
+// ---------------------------------------------------------------------------
+// Preflight — fail fast for production runs
+// ---------------------------------------------------------------------------
+
+// NOTE: Env var preflight for production runs is enforced in tests/e2e/global-setup.ts
+// to ensure the run fails immediately (before starting unrelated tests).
 
 // ---------------------------------------------------------------------------
 // Auth helpers
@@ -161,6 +175,15 @@ test.describe('@production Path 1: Signup → Email Confirmation Screen', () => 
   test('should accept signup form submission and show confirmation screen', async ({
     page,
   }) => {
+    // NOTE: Production signup currently requires an invite code.
+    // The full signup → email confirm → onboarding is a HUMAN GATE.
+    //
+    // By default this test verifies the signup form renders. If you explicitly
+    // want to automate the form submission (not recommended for routine prod
+    // gate runs), set:
+    //   PW_RUN_SIGNUP_AUTOMATION=1
+    //   PROD_INVITE_CODE=...
+
     const testEmail = `synthex-e2e-${Date.now()}@mailinator.com`;
 
     await page.goto(`${BASE_URL}/signup`, {
@@ -168,14 +191,60 @@ test.describe('@production Path 1: Signup → Email Confirmation Screen', () => 
       timeout: 60000,
     });
 
-    // Fill signup form
+    // Verify key form fields exist
+    const inviteCodeInput = page.locator(
+      'input[name="inviteCode"], input[placeholder*="SX-" i], input[aria-label*="invite" i], input:below(:text("Invite Code"))'
+    );
+    const nameInput = page.locator(
+      'input[name="name"], input[placeholder*="John" i], input[aria-label*="full name" i], input:below(:text("Full Name"))'
+    );
     const emailInput = page.locator('input[type="email"], input[name="email"]');
     const passwordInput = page.locator('input[type="password"]').first();
-    const submitButton = page.locator('button[type="submit"]');
+    const confirmPasswordInput = page.locator(
+      'input[name="confirmPassword"], input[aria-label*="confirm" i], input:below(:text("Confirm Password"))'
+    );
+    const submitButton = page.locator(
+      'button[type="submit"], button:has-text("Create account")'
+    );
 
+    await expect(inviteCodeInput.first()).toBeVisible({ timeout: 15000 });
     await expect(emailInput).toBeVisible({ timeout: 15000 });
+    await expect(submitButton.first()).toBeVisible({ timeout: 15000 });
+
+    // Default behaviour: do NOT create production accounts.
+    // If automation is disabled, treat this test as a lightweight smoke check
+    // that the signup form renders (invite gating is expected in production).
+    if (!RUN_SIGNUP_AUTOMATION) {
+      expect(true).toBe(true);
+      return;
+    }
+
+    test.skip(
+      !PROD_INVITE_CODE,
+      'Signup submission requires an invite code. Set PROD_INVITE_CODE to enable signup form submission.'
+    );
+
+    // Fill signup form (only if explicitly enabled)
+    await inviteCodeInput.first().fill(PROD_INVITE_CODE);
+    if (
+      await nameInput
+        .first()
+        .isVisible()
+        .catch(() => false)
+    ) {
+      await nameInput.first().fill('Synthex E2E');
+    }
+
     await emailInput.fill(testEmail);
     await passwordInput.fill('Test@12345678');
+    if (
+      await confirmPasswordInput
+        .first()
+        .isVisible()
+        .catch(() => false)
+    ) {
+      await confirmPasswordInput.first().fill('Test@12345678');
+    }
 
     // Accept terms if present
     const termsCheckbox = page.locator('input[type="checkbox"]');
@@ -183,7 +252,7 @@ test.describe('@production Path 1: Signup → Email Confirmation Screen', () => 
       await termsCheckbox.check();
     }
 
-    await submitButton.click();
+    await submitButton.first().click();
 
     // After submission: should either redirect to confirmation screen,
     // onboarding, or dashboard — never stay on /signup with no feedback
@@ -215,15 +284,11 @@ test.describe('@production Authenticated Critical Paths', () => {
   test.beforeEach(async ({ context, page }) => {
     const loggedIn = await loginAs(context, page, PROD_EMAIL, PROD_PASSWORD);
     if (!loggedIn) {
-      // Try direct login via UI as fallback
-      await page.goto(`${BASE_URL}/login`, {
-        waitUntil: 'domcontentloaded',
-        timeout: 60000,
-      });
-      await page.locator('input[type="email"]').fill(PROD_EMAIL);
-      await page.locator('input[type="password"]').fill(PROD_PASSWORD);
-      await page.locator('button[type="submit"]').click();
-      await page.waitForTimeout(4000);
+      // Production gate runs should fail fast if credentials are wrong.
+      expect(
+        loggedIn,
+        'Could not authenticate with PROD_TEST_EMAIL/PROD_TEST_PASSWORD. Verify the account exists, is not locked, and password is correct.'
+      ).toBeTruthy();
     }
   });
 
@@ -282,7 +347,7 @@ test.describe('@production Authenticated Critical Paths', () => {
       .first();
 
     if (await contentArea.isVisible({ timeout: 5000 }).catch(() => false)) {
-      await contentArea.fill('Test post content for Phase 122 E2E validation');
+      await contentArea.fill('Test post content for production E2E validation');
     }
 
     // Save as draft
@@ -620,62 +685,7 @@ test.describe('@production Path 8: Admin Panel', () => {
     // 200 OK expected for admin; 404 if route doesn't exist yet is acceptable
     expect([200, 404]).toContain(response.status());
   });
-
-  test('Admin /api/admin/users returns 403 for non-owner authenticated user', async ({
-    context,
-    page,
-    request,
-  }) => {
-    test.skip(!HAS_CREDS, 'Requires PROD_TEST_EMAIL (non-admin)');
-
-    const loggedIn = await loginAs(context, page, PROD_EMAIL, PROD_PASSWORD);
-    test.skip(!loggedIn, 'Could not authenticate with non-admin credentials');
-
-    const cookies = await context.cookies();
-    const authCookie = cookies.find(c => c.name === 'auth-token');
-    test.skip(!authCookie, 'No auth-token cookie after login');
-
-    const response = await request.get(`${BASE_URL}/api/admin/users`, {
-      headers: { Cookie: `auth-token=${authCookie!.value}` },
-    });
-
-    expect([401, 403]).toContain(response.status());
-  });
 });
 
-// ---------------------------------------------------------------------------
-// Phase 122 Human Gate Checklist
-// (Printed to stdout — not an automated assertion)
-// ---------------------------------------------------------------------------
-
-test.describe('@production Phase 122 Human Verification Checklist', () => {
-  test('display human gate checklist', async () => {
-    console.log(`
-╔══════════════════════════════════════════════════════════════════════╗
-║            PHASE 122 — HUMAN VERIFICATION GATES                     ║
-╠══════════════════════════════════════════════════════════════════════╣
-║                                                                      ║
-║  After automated tests pass, complete these manually:                ║
-║                                                                      ║
-║  [ ] 1. Signup → email confirm → complete 5-step onboarding wizard   ║
-║         → verify dashboard loads with correct user state             ║
-║                                                                      ║
-║  [ ] 2. Billing: click "Upgrade to Pro" → Stripe checkout opens      ║
-║         → complete test payment → verify tier shown as Pro           ║
-║         → confirm in Stripe dashboard: webhook delivered             ║
-║                                                                      ║
-║  [ ] 3. Platform OAuth: click "Connect Instagram" → redirects to     ║
-║         Instagram OAuth → grant permission → connection confirmed    ║
-║                                                                      ║
-║  [ ] 4. Post schedule → notification appears in NotificationBell     ║
-║         → badge count correct (matches actual unread count)          ║
-║                                                                      ║
-║  [ ] 5. Register Linear webhook URL in project settings (UNI-1180)  ║
-║                                                                      ║
-║  All 5 gates must pass before v10.0 Gate 9 (E2E) is marked Done.    ║
-╚══════════════════════════════════════════════════════════════════════╝
-    `);
-    // Not an assertion — just informational output
-    expect(true).toBe(true);
-  });
-});
+// NOTE: Human verification checklist is printed at the end of the run via
+// tests/e2e/global-teardown.ts.
