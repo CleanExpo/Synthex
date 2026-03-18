@@ -31,6 +31,27 @@ export const stripe = STRIPE_ENABLED
 // Product/Price IDs - These MUST match your Stripe dashboard
 // Placeholder IDs are rejected at checkout time (see app/api/stripe/checkout/route.ts)
 export const PRODUCTS = {
+  introductory: {
+    name: 'Introductory',
+    priceId:
+      process.env.STRIPE_INTRODUCTORY_PRICE_ID ||
+      'price_introductory_placeholder',
+    price: 99,
+    // Transitions to pro ($249) after 2 billing cycles via Stripe Subscription Schedules.
+    // Features mirror the pro plan exactly.
+    transitionToPriceId:
+      process.env.STRIPE_PRO_PRICE_ID || 'price_pro_placeholder',
+    transitionAfterCycles: 2,
+    features: {
+      socialAccounts: 5,
+      aiPosts: 100,
+      personas: 3,
+      analytics: 'professional',
+      support: 'email',
+      scheduling: true,
+      contentLibrary: true,
+    },
+  },
   starter: {
     name: 'Starter',
     priceId: process.env.STRIPE_STARTER_PRICE_ID || 'price_starter_placeholder',
@@ -47,7 +68,10 @@ export const PRODUCTS = {
   },
   pro: {
     name: 'Pro',
-    priceId: process.env.STRIPE_PRO_PRICE_ID || process.env.STRIPE_PROFESSIONAL_PRICE_ID || 'price_pro_placeholder',
+    priceId:
+      process.env.STRIPE_PRO_PRICE_ID ||
+      process.env.STRIPE_PROFESSIONAL_PRICE_ID ||
+      'price_pro_placeholder',
     price: 249,
     features: {
       socialAccounts: 5,
@@ -61,7 +85,10 @@ export const PRODUCTS = {
   },
   growth: {
     name: 'Growth',
-    priceId: process.env.STRIPE_GROWTH_PRICE_ID || process.env.STRIPE_BUSINESS_PRICE_ID || 'price_growth_placeholder',
+    priceId:
+      process.env.STRIPE_GROWTH_PRICE_ID ||
+      process.env.STRIPE_BUSINESS_PRICE_ID ||
+      'price_growth_placeholder',
     price: 449,
     features: {
       socialAccounts: 10,
@@ -78,7 +105,10 @@ export const PRODUCTS = {
   },
   scale: {
     name: 'Scale',
-    priceId: process.env.STRIPE_SCALE_PRICE_ID || process.env.STRIPE_CUSTOM_PRICE_ID || 'price_scale_placeholder',
+    priceId:
+      process.env.STRIPE_SCALE_PRICE_ID ||
+      process.env.STRIPE_CUSTOM_PRICE_ID ||
+      'price_scale_placeholder',
     price: 799,
     features: {
       socialAccounts: -1, // unlimited
@@ -114,4 +144,5 @@ export function getProductByName(name: string) {
 }
 
 // Add-on price IDs
-export const AUTHORITY_ADDON_PRICE_ID = process.env.STRIPE_AUTHORITY_ADDON_PRICE_ID || '';
+export const AUTHORITY_ADDON_PRICE_ID =
+  process.env.STRIPE_AUTHORITY_ADDON_PRICE_ID || '';

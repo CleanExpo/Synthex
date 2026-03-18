@@ -13,6 +13,7 @@
 import { WebhookEvent } from '@/lib/webhooks/types';
 import { webhookHandler } from '@/lib/webhooks/webhook-handler';
 import { subscriptionService } from './subscription-service';
+import { stripe, PRODUCTS } from './config';
 import { auditLogger } from '@/lib/security/audit-logger';
 import { logger } from '@/lib/logger';
 import { prisma } from '@/lib/prisma';
@@ -62,7 +63,9 @@ function getSubscriptionIdFromInvoice(invoice: Stripe.Invoice): string | null {
   }
 
   // Try parent.subscription_details (newer API versions)
-  const parent = invoice.parent as { subscription_details?: { subscription?: string | Stripe.Subscription } } | null;
+  const parent = invoice.parent as {
+    subscription_details?: { subscription?: string | Stripe.Subscription };
+  } | null;
   if (parent?.subscription_details?.subscription) {
     return typeof parent.subscription_details.subscription === 'string'
       ? parent.subscription_details.subscription
@@ -209,14 +212,19 @@ async function handleSubscriptionCancelled(event: WebhookEvent): Promise<void> {
       if (user?.email) {
         // Format the period end date (DD/MM/YYYY per project convention)
         // current_period_end lives on the subscription item in newer Stripe API versions
-        const firstItemPeriodEnd = subscription.items.data[0]?.current_period_end;
+        const firstItemPeriodEnd =
+          subscription.items.data[0]?.current_period_end;
         const periodEnd = subscription.cancel_at
           ? new Date(subscription.cancel_at * 1000)
           : firstItemPeriodEnd
             ? new Date(firstItemPeriodEnd * 1000)
             : null;
         const endDate = periodEnd
-          ? periodEnd.toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' })
+          ? periodEnd.toLocaleDateString('en-AU', {
+              day: 'numeric',
+              month: 'long',
+              year: 'numeric',
+            })
           : 'the end of your billing period';
         sendSubscriptionCancelledEmail({
           email: user.email,
@@ -390,8 +398,9 @@ async function handleCheckoutCompleted(event: WebhookEvent): Promise<void> {
   const session = data.data.object as unknown as Record<string, unknown>;
 
   const customerId = session.customer as string;
-  const userId = (session.client_reference_id as string)
-    || (session.metadata as Record<string, string>)?.userId;
+  const userId =
+    (session.client_reference_id as string) ||
+    (session.metadata as Record<string, string>)?.userId;
 
   logger.info('Handling checkout completed', {
     sessionId: session.id,
@@ -400,13 +409,64 @@ async function handleCheckoutCompleted(event: WebhookEvent): Promise<void> {
   });
 
   if (!userId || !customerId) {
-    logger.warn('Checkout completed missing userId or customerId', { session: session.id });
+    logger.warn('Checkout completed missing userId or customerId', {
+      session: session.id,
+    });
     return;
   }
 
   try {
     // Ensure subscription record exists and has the Stripe customer ID
     await subscriptionService.setStripeCustomerId(userId, customerId);
+
+    // If this is an introductory plan checkout, create a Subscription Schedule
+    // so Stripe automatically transitions to the full price after 2 billing cycles.
+    const sessionMeta = session.metadata as Record<string, string> | undefined;
+    if (sessionMeta?.isIntroductory === 'true' && stripe) {
+      const subscriptionId = session.subscription as string | undefined;
+      if (subscriptionId) {
+        const intro = PRODUCTS.introductory;
+        // Guard: only create schedule if both price IDs are real (not placeholders)
+        if (
+          !intro.priceId.includes('placeholder') &&
+          !intro.transitionToPriceId.includes('placeholder')
+        ) {
+          try {
+            await stripe.subscriptionSchedules.create({
+              from_subscription: subscriptionId,
+              end_behavior: 'release',
+              phases: [
+                {
+                  items: [{ price: intro.priceId, quantity: 1 }],
+                  iterations: intro.transitionAfterCycles, // 2 billing cycles at $99
+                },
+                {
+                  items: [{ price: intro.transitionToPriceId, quantity: 1 }],
+                  // No end_date — continues indefinitely at $249
+                },
+              ],
+            });
+            logger.info('Introductory subscription schedule created', {
+              subscriptionId,
+              userId,
+              introPriceId: intro.priceId,
+              regularPriceId: intro.transitionToPriceId,
+              transitionAfterCycles: intro.transitionAfterCycles,
+            });
+          } catch (scheduleError) {
+            // Non-fatal — subscription still active at $99; log for manual follow-up
+            logger.error(
+              'Failed to create introductory subscription schedule',
+              {
+                scheduleError,
+                subscriptionId,
+                userId,
+              }
+            );
+          }
+        }
+      }
+    }
 
     // Fetch plan details for Unite-Hub event
     const userSub = await subscriptionService.getByStripeCustomerId(customerId);
@@ -434,6 +494,7 @@ async function handleCheckoutCompleted(event: WebhookEvent): Promise<void> {
       details: {
         customerId,
         subscriptionId: session.subscription,
+        isIntroductory: sessionMeta?.isIntroductory === 'true',
       },
     });
   } catch (error) {
@@ -456,7 +517,10 @@ export function registerStripeWebhookHandlers(): void {
   // Subscription events
   webhookHandler.on('billing.subscription_created', handleSubscriptionCreated);
   webhookHandler.on('billing.subscription_updated', handleSubscriptionUpdated);
-  webhookHandler.on('billing.subscription_cancelled', handleSubscriptionCancelled);
+  webhookHandler.on(
+    'billing.subscription_cancelled',
+    handleSubscriptionCancelled
+  );
 
   // Payment events
   webhookHandler.on('billing.payment_succeeded', handlePaymentSucceeded);

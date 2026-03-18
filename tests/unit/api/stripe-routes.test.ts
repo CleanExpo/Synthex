@@ -362,10 +362,10 @@ describe('Stripe API Routes - Contract Tests', () => {
   // ==========================================================================
 
   describe('lib/stripe/config - Helper Functions', () => {
-    it('PRODUCTS should have 4 tiers', () => {
+    it('PRODUCTS should have expected tiers', () => {
       const { PRODUCTS } = require('@/lib/stripe/config');
 
-      expect(Object.keys(PRODUCTS)).toHaveLength(4);
+      expect(PRODUCTS.introductory).toBeDefined();
       expect(PRODUCTS.starter).toBeDefined();
       expect(PRODUCTS.pro).toBeDefined();
       expect(PRODUCTS.growth).toBeDefined();
