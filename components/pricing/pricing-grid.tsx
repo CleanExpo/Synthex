@@ -286,8 +286,8 @@ export function PricingGrid() {
         </span>
       </div>
 
-      {/* Cards grid — 4 columns */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+      {/* Cards grid — 5 columns */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
         {plans.map(plan => (
           <PlanCard key={plan.name} plan={plan} billing={billing} />
         ))}
