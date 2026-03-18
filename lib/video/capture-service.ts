@@ -125,10 +125,14 @@ export class CaptureService {
 
   /**
    * Stop recording
+   *
+   * Note: this.recorder is always null since startRecording() throws.
+   * This method exists for backward compatibility and is called in finally blocks.
+   * It safely handles the null case.
    */
   async stopRecording(): Promise<string | null> {
     if (!this.recorder) {
-      console.warn('[CaptureService] No active recording to stop');
+      // No active recording — this is normal since startRecording() throws
       return null;
     }
 
