@@ -466,7 +466,6 @@ describe('Onboarding & Referrals API Contract Tests', () => {
         allowed: true,
         context: { userId: 'user-123' },
       });
-      // Return one 'sent' referral so activeCode is resolved directly (no findUnique loop)
       mockReferralFindMany.mockResolvedValue([mockReferral]);
 
       const req = createMockRequest({
@@ -480,8 +479,8 @@ describe('Onboarding & Referrals API Contract Tests', () => {
       const parsed = referralsGetSchema.safeParse(body);
       expect(parsed.success).toBe(true);
       if (parsed.success) {
-        expect(parsed.data.referralCode).toBe('SYN-ABCD');
-        expect(parsed.data.referralLink).toContain('SYN-ABCD');
+        expect(parsed.data.referralCode).toBe('USER-123'); // derived from userId.slice(0,8).toUpperCase()
+        expect(parsed.data.referralLink).toContain('USER-123');
         expect(parsed.data.referrals).toHaveLength(1);
         expect(parsed.data.stats.totalSent).toBe(1);
         expect(parsed.data.stats.converted).toBe(0);
