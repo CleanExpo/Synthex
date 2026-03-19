@@ -42,6 +42,15 @@ const LoyaltyTierCard = dynamic(
   { ssr: false }
 );
 
+// SYN-430 — Auto-Research Widget (SWR client component, no SSR)
+const AutoResearchWidget = dynamic(
+  () =>
+    import('@/components/dashboard/AutoResearchWidget').then(m => ({
+      default: m.AutoResearchWidget,
+    })),
+  { ssr: false }
+);
+
 export default function DashboardPage() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
@@ -363,6 +372,9 @@ export default function DashboardPage() {
 
             {/* AI Insights */}
             <InsightsWidget />
+
+            {/* Auto-Research — self-learning trend intelligence */}
+            <AutoResearchWidget />
 
             {/* System health */}
             <SystemPulsePanel />
