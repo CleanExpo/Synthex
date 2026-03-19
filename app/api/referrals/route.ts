@@ -14,7 +14,10 @@
 import { randomBytes } from 'crypto';
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
-import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
+import {
+  APISecurityChecker,
+  DEFAULT_POLICIES,
+} from '@/lib/security/api-security-checker';
 import prisma from '@/lib/prisma';
 import { email as emailService } from '@/lib/email/index';
 import { logger } from '@/lib/logger';
@@ -45,7 +48,10 @@ export async function GET(request: NextRequest) {
   try {
     const userId = security.context.userId;
     if (!userId) {
-      return APISecurityChecker.createSecureResponse({ error: 'User ID not found' }, 401);
+      return APISecurityChecker.createSecureResponse(
+        { error: 'User ID not found' },
+        401
+      );
     }
 
     // Get existing referrals
@@ -66,39 +72,27 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    // Generate a referral code if user doesn't have one yet
-    let activeCode = referrals.find(
-      (r) => r.status === 'sent' || r.status === 'clicked'
-    )?.code;
-
-    if (!activeCode) {
-      // Create a reusable code for the user
-      let code: string;
-      let attempts = 0;
-      do {
-        code = generateReferralCode();
-        attempts++;
-      } while (
-        attempts < 10 &&
-        (await prisma.referral.findUnique({ where: { code } }))
-      );
-      activeCode = code;
-    }
+    // Derive a stable, deterministic personal referral code from the user ID
+    const personalCode = userId.slice(0, 8).toUpperCase();
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://synthex.social';
+    const referralLink = `${appUrl}/ref/${personalCode}`;
 
     // Stats
     const stats = {
       totalSent: referrals.length,
-      signedUp: referrals.filter((r) => ['signed_up', 'converted'].includes(r.status)).length,
-      converted: referrals.filter((r) => r.status === 'converted').length,
+      signedUp: referrals.filter(r =>
+        ['signed_up', 'converted'].includes(r.status)
+      ).length,
+      converted: referrals.filter(r => r.status === 'converted').length,
       rewardsEarned: referrals
-        .filter((r) => r.referrerRewarded)
+        .filter(r => r.referrerRewarded)
         .reduce((sum, r) => sum + (r.rewardAmount || 0), 0),
     };
 
     return APISecurityChecker.createSecureResponse({
       success: true,
-      referralCode: activeCode,
-      referralLink: `${process.env.NEXT_PUBLIC_APP_URL || 'https://synthex.ai'}/signup?ref=${activeCode}`,
+      referralCode: personalCode,
+      referralLink,
       referrals,
       stats,
     });
@@ -131,7 +125,10 @@ export async function POST(request: NextRequest) {
   try {
     const userId = security.context.userId;
     if (!userId) {
-      return APISecurityChecker.createSecureResponse({ error: 'User ID not found' }, 401);
+      return APISecurityChecker.createSecureResponse(
+        { error: 'User ID not found' },
+        401
+      );
     }
 
     const body = await request.json();
@@ -187,13 +184,17 @@ export async function POST(request: NextRequest) {
     const signupUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://synthex.social'}/signup?ref=${code}`;
 
     // Send referral invite email — non-blocking so referral succeeds even if email fails
-    emailService.send({
-      to: email,
-      subject: `${referrerName} invited you to SYNTHEX`,
-      html: `<p>Hi there!</p><p>${referrerName} has invited you to join SYNTHEX. Sign up with your referral link to receive 500 bonus AI credits: <a href="${signupUrl}">${signupUrl}</a></p>`,
-      text: `${referrerName} invited you to join SYNTHEX! Sign up here to get 500 bonus AI credits: ${signupUrl}`,
-      type: 'transactional',
-    }).catch((err: unknown) => logger.error('[referrals] Failed to send invite email:', err));
+    emailService
+      .send({
+        to: email,
+        subject: `${referrerName} invited you to SYNTHEX`,
+        html: `<p>Hi there!</p><p>${referrerName} has invited you to join SYNTHEX. Sign up with your referral link to receive 500 bonus AI credits: <a href="${signupUrl}">${signupUrl}</a></p>`,
+        text: `${referrerName} invited you to join SYNTHEX! Sign up here to get 500 bonus AI credits: ${signupUrl}`,
+        type: 'transactional',
+      })
+      .catch((err: unknown) =>
+        logger.error('[referrals] Failed to send invite email:', err)
+      );
 
     return APISecurityChecker.createSecureResponse({
       success: true,
@@ -201,7 +202,7 @@ export async function POST(request: NextRequest) {
         id: referral.id,
         code: referral.code,
         email: referral.refereeEmail,
-        link: `${process.env.NEXT_PUBLIC_APP_URL || 'https://synthex.ai'}/signup?ref=${code}`,
+        link: `${process.env.NEXT_PUBLIC_APP_URL || 'https://synthex.social'}/signup?ref=${code}`,
       },
     });
   } catch (error) {
