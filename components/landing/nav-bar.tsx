@@ -2,28 +2,28 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { SynthexLogo } from './synthex-logo';
 
 const NAV_LINKS = [
-  { href: '/features', label: 'Features' },
+  { href: '/platform', label: 'Platform' },
+  { href: '/solutions', label: 'Solutions' },
+  { href: '/resources', label: 'Resources' },
   { href: '/pricing', label: 'Pricing' },
-  { href: '/integrations', label: 'Integrations' },
-  { href: '/blog', label: 'Blog' },
-  { href: '/docs', label: 'Docs' },
 ];
 
-/** Fixed top navigation — Scientific Luxury: single-pixel border, sharp corners, opacity text */
+/** Fixed top navigation — industrial amber/orange theme, sharp corners */
 export function NavBar() {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
-    <nav className="fixed top-0 w-full z-50 bg-[#0a1628]/90 backdrop-blur-md border-b border-white/5">
-      <div className="container mx-auto px-6 py-4">
+    <nav className="fixed top-0 w-full z-50 bg-zinc-950/80 backdrop-blur-2xl border-b border-orange-500/15">
+      <div className="max-w-7xl mx-auto px-6 py-4">
         <div className="flex items-center justify-between">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-3 group">
-            <SynthexLogo className="w-8 h-8 transition-opacity group-hover:opacity-80" />
-            <span className="text-white font-semibold tracking-[0.2em] text-sm uppercase">
+            <div className="w-7 h-7 bg-gradient-to-br from-[#ffb87b] to-[#ff8f00] rounded-sm flex items-center justify-center flex-shrink-0">
+              <span className="text-[#2e1500] font-black text-xs">S</span>
+            </div>
+            <span className="text-white font-black tracking-[0.2em] text-sm uppercase">
               SYNTHEX
             </span>
           </Link>
@@ -34,24 +34,24 @@ export function NavBar() {
               <Link
                 key={href}
                 href={href}
-                className="text-white/60 hover:text-white text-sm font-medium transition-colors"
+                className="text-white/50 hover:text-white text-sm font-medium transition-colors"
               >
                 {label}
               </Link>
             ))}
           </div>
 
-          {/* Desktop CTA */}
+          {/* Desktop CTAs */}
           <div className="hidden md:flex items-center gap-3">
             <Link
               href="/login"
-              className="border border-white/20 text-white/70 hover:border-white/40 hover:text-white rounded-full px-4 py-2 text-sm transition-all"
+              className="text-white/60 hover:text-white text-sm font-medium transition-colors px-3 py-2"
             >
-              Sign In
+              Login
             </Link>
             <Link
               href="/signup"
-              className="bg-cyan-500 hover:bg-cyan-400 text-white rounded-full px-5 py-2 text-sm font-semibold transition-colors"
+              className="bg-gradient-to-r from-[#ffb87b] to-[#ff8f00] text-[#2e1500] font-black rounded-sm px-5 py-2 text-sm hover:shadow-[0_0_25px_rgba(255,184,123,0.4)] hover:-translate-y-0.5 transition-all duration-200"
             >
               Get Started
             </Link>
@@ -105,14 +105,14 @@ export function NavBar() {
               <Link
                 href="/login"
                 onClick={() => setMobileOpen(false)}
-                className="block py-2.5 text-center border border-white/20 text-white/70 hover:border-white/40 hover:text-white rounded-full text-sm transition-all"
+                className="block py-2.5 text-center text-white/60 hover:text-white text-sm font-medium transition-colors"
               >
-                Sign In
+                Login
               </Link>
               <Link
                 href="/signup"
                 onClick={() => setMobileOpen(false)}
-                className="block py-2.5 text-center bg-cyan-500 hover:bg-cyan-400 text-white rounded-full text-sm font-semibold transition-colors"
+                className="block py-2.5 text-center bg-gradient-to-r from-[#ffb87b] to-[#ff8f00] text-[#2e1500] font-black rounded-sm text-sm"
               >
                 Get Started
               </Link>

@@ -1,49 +1,56 @@
 'use client';
 
 import { useState } from 'react';
-import { HOMEPAGE_FAQS } from '@/lib/seo/faq-data';
+import { ChevronDown } from 'lucide-react';
 
-/** FAQ accordion — normalised Scientific Luxury borders and typography */
+const FAQS = [
+  {
+    question: 'Is AI content indistinguishable?',
+    answer:
+      'Our neural engine is trained on your specific brand voice, editorial style, and audience data. The output is calibrated to match your established tone so precisely that even your own team cannot reliably identify AI-generated content from manually crafted posts.',
+  },
+  {
+    question: 'How secure are the API credentials?',
+    answer:
+      'All platform credentials are encrypted at rest using AES-256 and transmitted exclusively over TLS 1.3. We operate on a zero-knowledge credential architecture — your tokens are never stored in plaintext and are inaccessible to Synthex personnel. OAuth 2.0 is used wherever available.',
+  },
+  {
+    question: 'Can I override automated posts?',
+    answer:
+      'Absolutely. The platform offers a full editorial review queue where you can approve, modify, or reject any scheduled content before publication. You can also configure approval gates per platform, per campaign, or globally — giving you complete command over your automation pipeline.',
+  },
+];
+
+/** System Operations FAQ — 3-item accordion with amber/orange theme */
 export function FAQSection() {
   const [expanded, setExpanded] = useState<number | null>(null);
 
   return (
-    <section className="relative py-16 md:py-20 z-10">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Section header */}
-        <div className="mb-10 flex flex-col lg:flex-row lg:items-end gap-8">
-          <div>
-            <span className="text-[10px] uppercase tracking-[0.3em] text-white/30 mb-4 block">
-              Common Questions
+    <section className="relative py-24 md:py-28 z-10">
+      <div className="max-w-4xl mx-auto px-6">
+        {/* Header */}
+        <div className="mb-12">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-sm bg-[#ffb87b]/10 border border-[#ffb87b]/20 mb-6">
+            <span className="font-mono text-[10px] font-black tracking-[0.3em] uppercase text-[#ffb87b]">
+              Support
             </span>
-            <h2 className="text-4xl sm:text-5xl font-extralight tracking-tight text-white">
-              Everything you need
-              <br />
-              <span className="text-cyan-400">to know.</span>
-            </h2>
           </div>
-          <p className="text-white/40 text-sm max-w-xs leading-relaxed lg:ml-auto lg:text-right">
-            Still have questions? Email us at{' '}
-            <a
-              href="mailto:hello@synthex.social"
-              className="text-cyan-400 hover:text-cyan-300 transition-colors"
-            >
-              hello@synthex.social
-            </a>
-          </p>
+          <h2 className="text-4xl md:text-5xl font-black uppercase tracking-tight text-white">
+            System Operations FAQ
+          </h2>
         </div>
 
-        {/* FAQ accordion */}
-        <div className="max-w-3xl space-y-[0.5px]">
-          {HOMEPAGE_FAQS.map((faq, index) => {
+        {/* Accordion */}
+        <div className="space-y-1">
+          {FAQS.map((faq, index) => {
             const isOpen = expanded === index;
             return (
               <div
                 key={index}
-                className={`border-[0.5px] overflow-hidden transition-colors duration-200 ${
+                className={`bg-[rgba(28,27,27,0.9)] border rounded-sm overflow-hidden transition-all duration-200 ${
                   isOpen
-                    ? 'border-white/[0.12] bg-white/[0.03]'
-                    : 'border-white/[0.06] bg-white/[0.01] hover:border-white/[0.1]'
+                    ? 'border-[rgba(255,184,123,0.2)]'
+                    : 'border-[rgba(255,220,194,0.08)] hover:border-[rgba(255,220,194,0.15)]'
                 }`}
               >
                 <button
@@ -52,33 +59,17 @@ export function FAQSection() {
                   aria-expanded={isOpen}
                 >
                   <h3
-                    className={`text-sm font-medium leading-relaxed transition-colors duration-200 ${
-                      isOpen ? 'text-white' : 'text-white/70'
+                    className={`text-sm font-black uppercase tracking-wide transition-colors duration-200 ${
+                      isOpen ? 'text-[#ffb87b]' : 'text-white/70'
                     }`}
                   >
                     {faq.question}
                   </h3>
-                  <div
-                    className={`flex-shrink-0 w-5 h-5 flex items-center justify-center border-[0.5px] rounded-sm transition-all duration-300 ${
-                      isOpen
-                        ? 'border-cyan-400/40 bg-cyan-400/10'
-                        : 'border-white/[0.1]'
+                  <ChevronDown
+                    className={`w-4 h-4 flex-shrink-0 transition-all duration-300 ${
+                      isOpen ? 'rotate-180 text-[#ffb87b]' : 'text-white/30'
                     }`}
-                  >
-                    <svg
-                      className={`w-3 h-3 transition-transform duration-300 ${isOpen ? 'rotate-180 text-cyan-400' : 'text-white/40'}`}
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M19 9l-7 7-7-7"
-                      />
-                    </svg>
-                  </div>
+                  />
                 </button>
 
                 <div
@@ -86,7 +77,7 @@ export function FAQSection() {
                     isOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
                   }`}
                 >
-                  <p className="px-6 pb-6 text-sm text-white/50 leading-relaxed border-t border-[0.5px] border-white/[0.04] pt-4">
+                  <p className="px-6 pb-6 text-sm text-white/40 leading-relaxed border-t border-[rgba(255,220,194,0.05)] pt-4 font-mono">
                     {faq.answer}
                   </p>
                 </div>
