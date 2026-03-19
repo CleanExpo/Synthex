@@ -248,7 +248,10 @@ export function NotificationBell() {
 
       <NotificationCentre
         isOpen={centreOpen}
-        onClose={() => setCentreOpen(false)}
+        onClose={() => {
+          setCentreOpen(false);
+          loadNotifications(); // refresh badge count after panel closes
+        }}
       />
     </div>
   );

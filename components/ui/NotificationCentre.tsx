@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useRef } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import useSWR from 'swr';
 import {
@@ -155,6 +156,23 @@ export function NotificationCentre({
   isOpen,
   onClose,
 }: NotificationCentreProps) {
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+
+  // Focus close button when panel opens (accessibility)
+  useEffect(() => {
+    if (isOpen) closeButtonRef.current?.focus();
+  }, [isOpen]);
+
+  // Escape key handler
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
+
   const { data, isLoading, mutate } = useSWR<NotificationsResponse>(
     isOpen ? '/api/notifications?limit=50' : null,
     fetchJson,
@@ -204,95 +222,96 @@ export function NotificationCentre({
 
   return (
     <AnimatePresence>
+      {/* Backdrop */}
       {isOpen && (
-        <>
-          {/* Backdrop */}
-          <motion.div
-            key="nc-backdrop"
-            className="fixed inset-0 z-50 bg-black/40"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            onClick={onClose}
-            aria-hidden="true"
-          />
+        <motion.div
+          key="nc-backdrop"
+          className="fixed inset-0 z-50 bg-black/40"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.2 }}
+          onClick={onClose}
+          aria-hidden="true"
+        />
+      )}
 
-          {/* Panel */}
-          <motion.div
-            key="nc-panel"
-            role="dialog"
-            aria-modal="true"
-            aria-label="Notification Centre"
-            className="fixed right-0 top-0 z-50 h-full w-full sm:w-[420px] bg-black/80 backdrop-blur-2xl border-l border-white/[0.06] flex flex-col"
-            initial={{ x: '100%' }}
-            animate={{ x: 0 }}
-            exit={{ x: '100%' }}
-            transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-          >
-            {/* Header */}
-            <div className="flex items-center justify-between px-5 py-4 border-b border-white/[0.08] shrink-0">
-              <div className="flex items-center gap-2">
-                <Bell className="h-4 w-4 text-cyan-400" />
-                <h2 className="text-sm font-semibold text-white">
-                  Notifications
-                </h2>
-                {(data?.unreadCount ?? 0) > 0 && (
-                  <span className="ml-1 inline-flex items-center rounded-full bg-cyan-500/20 px-2 py-0.5 text-[10px] font-medium text-cyan-400">
-                    {data!.unreadCount} unread
-                  </span>
-                )}
-              </div>
-              <button
-                type="button"
-                onClick={onClose}
-                aria-label="Close notifications"
-                className="rounded-md p-1.5 text-gray-400 hover:text-white hover:bg-white/[0.06] transition-colors"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-
-            {/* Body */}
-            <div className="flex-1 overflow-y-auto">
-              {isLoading ? (
-                // Loading skeleton — 3 placeholder items
-                <div>
-                  <SkeletonItem />
-                  <SkeletonItem />
-                  <SkeletonItem />
-                </div>
-              ) : notifications.length === 0 ? (
-                // Empty state
-                <div className="flex flex-col items-center justify-center h-full gap-3 text-center px-8 py-16">
-                  <Bell className="h-10 w-10 text-gray-600" />
-                  <p className="text-sm text-gray-500">No notifications yet</p>
-                  <p className="text-xs text-gray-600">
-                    We&apos;ll let you know when something happens.
-                  </p>
-                </div>
-              ) : (
-                // Grouped list
-                groupEntries.map(([type, items]) => (
-                  <div key={type}>
-                    <div className="sticky top-0 z-10 px-4 py-2 bg-black/60 backdrop-blur-sm border-b border-white/[0.04]">
-                      <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-500">
-                        {TYPE_LABELS[type]}
-                      </span>
-                    </div>
-                    {items.map(item => (
-                      <NotificationRow
-                        key={item.id}
-                        item={item}
-                        onMarkRead={handleMarkRead}
-                      />
-                    ))}
-                  </div>
-                ))
+      {/* Panel */}
+      {isOpen && (
+        <motion.div
+          key="nc-panel"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Notification Centre"
+          className="fixed right-0 top-0 z-50 h-full w-full sm:w-[420px] bg-black/80 backdrop-blur-2xl border-l border-white/[0.06] flex flex-col"
+          initial={{ x: '100%' }}
+          animate={{ x: 0 }}
+          exit={{ x: '100%' }}
+          transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+        >
+          {/* Header */}
+          <div className="flex items-center justify-between px-5 py-4 border-b border-white/[0.08] shrink-0">
+            <div className="flex items-center gap-2">
+              <Bell className="h-4 w-4 text-cyan-400" />
+              <h2 className="text-sm font-semibold text-white">
+                Notifications
+              </h2>
+              {(data?.unreadCount ?? 0) > 0 && (
+                <span className="ml-1 inline-flex items-center rounded-full bg-cyan-500/20 px-2 py-0.5 text-[10px] font-medium text-cyan-400">
+                  {data?.unreadCount} unread
+                </span>
               )}
             </div>
-          </motion.div>
-        </>
+            <button
+              ref={closeButtonRef}
+              type="button"
+              onClick={onClose}
+              aria-label="Close notifications"
+              className="rounded-md p-1.5 text-gray-400 hover:text-white hover:bg-white/[0.06] transition-colors"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+
+          {/* Body */}
+          <div className="flex-1 overflow-y-auto">
+            {isLoading ? (
+              // Loading skeleton — 3 placeholder items
+              <div>
+                <SkeletonItem />
+                <SkeletonItem />
+                <SkeletonItem />
+              </div>
+            ) : notifications.length === 0 ? (
+              // Empty state
+              <div className="flex flex-col items-center justify-center h-full gap-3 text-center px-8 py-16">
+                <Bell className="h-10 w-10 text-gray-600" />
+                <p className="text-sm text-gray-500">No notifications yet</p>
+                <p className="text-xs text-gray-600">
+                  We&apos;ll let you know when something happens.
+                </p>
+              </div>
+            ) : (
+              // Grouped list
+              groupEntries.map(([type, items]) => (
+                <div key={type}>
+                  <div className="sticky top-0 z-10 px-4 py-2 bg-black/60 backdrop-blur-sm border-b border-white/[0.04]">
+                    <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-500">
+                      {TYPE_LABELS[type]}
+                    </span>
+                  </div>
+                  {items.map(item => (
+                    <NotificationRow
+                      key={item.id}
+                      item={item}
+                      onMarkRead={handleMarkRead}
+                    />
+                  ))}
+                </div>
+              ))
+            )}
+          </div>
+        </motion.div>
       )}
     </AnimatePresence>
   );
