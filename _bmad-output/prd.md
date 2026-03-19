@@ -8,6 +8,7 @@ stepsCompleted:
     'step-03-success',
     'step-04-journeys',
     'step-05-domain',
+    'step-06-innovation',
   ]
 inputDocuments:
   - '.planning/STATE.md'
@@ -273,3 +274,49 @@ Zero-knowledge model for critical credentials:
 | OAuth token expiry causes silent failure | Token expiry detection + immediate dashboard alert + re-auth prompt                                 |
 | Platform API quota exceeded              | Queue-based posting with rate-limit awareness; client notification if queue is blocked              |
 | Client cancels — data ownership          | Client data exportable on request; 30-day post-cancellation data retention then deletion            |
+
+## Innovation & Novel Patterns
+
+### Detected Innovation Areas
+
+**1. Health-Check-as-Conversion-Engine**
+The public URL health check is simultaneously a marketing tool, a lead-generation mechanism, and an onboarding pre-loader. No current marketing platform uses the diagnostic result itself as the sales page — the problem and the pitch are the same screen. This collapses the traditional funnel (awareness → interest → consideration → conversion) into a single moment.
+
+**2. BYOK + Guided Orchestration at Consumer Price Points**
+BYOK SaaS exists at the developer/enterprise tier (Vercel AI, AWS Bedrock). Applying it to non-technical SMB owners — with a guided wizard that abstracts all technical complexity — at $249/month is a novel positioning. The owner never knows they're "using an API key"; they just know their system works and they're not being overcharged for AI compute.
+
+**3. Long-Form Video → Platform-Native Content Pipeline**
+Existing tools (CapCut, Descript, Opus Clip) clip and caption long-form video. None combine that capability with: trend detection, platform-specific style adaptation, brand voice, business context, and a scheduled approval queue — all from a single source video. The innovation is the full pipeline, not any single step.
+
+**4. Gamified Business Health as Retention Mechanic**
+Using a single composite score (Business Health Score) as the product's core retention lever — not "posts published" or "followers gained" — is novel in the SMB marketing space. The score creates loss aversion (cancelling = losing your score history), social proof potential (shareable), and a clear north star that aligns user behaviour with platform value.
+
+**5. Stalled-Setup Recovery as Designed Product Feature**
+Most SaaS treats incomplete onboarding as a failure state to be fixed. Synthex treats it as an expected, designed journey moment — with the Monday brief as a re-engagement trigger tied to competitor comparisons (the strongest motivator for SMB owners). The "nearly quit" journey is a first-class product feature.
+
+### Market Context & Competitive Landscape
+
+Existing tools fall into two categories:
+
+- **All-in-one social schedulers** (Buffer, Hootsuite, Later): No GMB, no website health, no AI content generation, no guided onboarding
+- **Presence management platforms** (Yext, BrightLocal, Vendasta): Enterprise-priced, no social content creation, no AI-native generation, reseller-only distribution
+
+Synthex CIS occupies the uncontested space between them — SMB-priced, AI-native, GMB + social + website in one guided journey.
+
+### Validation Approach
+
+| Innovation                      | Validation Method                                                                                        |
+| ------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| Health-check conversion rate    | A/B test health check CTA vs standard landing page — target ≥60% conversion from completed health check  |
+| BYOK setup completion rate      | Track drop-off at each API connection step — target ≥80% completion of BYOK wizard                       |
+| Video pipeline engagement       | Measure post approval rate — if owners approve >70% of AI-generated clips, pipeline quality is validated |
+| Health Score as retention lever | Compare 90-day retention: clients who check score weekly vs. those who don't                             |
+
+### Risk Mitigation
+
+| Risk                                                                | Mitigation                                                                                                 |
+| ------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| BYOK wizard too complex for non-technical owners                    | User testing with 5 SMB owners before launch; fallback: "Book a setup call" option at each step            |
+| AI video clips feel generic / off-brand                             | Brand voice profile applied to all content; human approval required before any post publishes              |
+| Health Score gaming (owners doing pointless actions to raise score) | Score algorithm weights outcomes (ranking improvement, review count) not just actions (connected accounts) |
+| Competitor awareness causes discouragement not motivation           | Show competitor gap as opportunity ("You could rank here") not deficit ("You're losing")                   |
