@@ -191,6 +191,9 @@ Synthex/
 !.claude/**/*.py
 !synthex-bayesian-service/**/*.py
 
+# Script-generated data files
+scripts/video-ids.json
+
 # Root-level script debris
 *.bat
 !scripts/**/*.bat

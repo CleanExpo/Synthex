@@ -138,6 +138,7 @@
     "@tiptap/starter-kit": "^2.1.0",
     "@upstash/redis": "^1.35.3",
     "ai": "^6.0.37",
+    "apify-client": "^2.22.2",
     "autoprefixer": "^10.4.16",
     "axios": "^1.11.0",
     "bcryptjs": "^3.0.2",
