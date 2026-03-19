@@ -5,6 +5,7 @@ import { Bell } from '@/components/icons';
 import { Button } from '@/components/ui/button';
 import { fetchWithCSRF } from '@/lib/csrf';
 import { cn } from '@/lib/utils';
+import { NotificationCentre } from '@/components/ui/NotificationCentre';
 
 interface Notification {
   id: string;
@@ -24,6 +25,7 @@ export function NotificationBell() {
   const [unreadCount, setUnreadCount] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
+  const [centreOpen, setCentreOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const updateUnreadCount = useCallback((notifs: Notification[]) => {
@@ -206,18 +208,48 @@ export function NotificationBell() {
           </div>
 
           {notifications.length > 0 && (
-            <div className="p-3 border-t border-white/10">
+            <div className="p-3 border-t border-white/10 flex gap-2">
               <Button
                 variant="ghost"
-                className="w-full text-xs text-gray-400 hover:text-white"
+                className="flex-1 text-xs text-gray-400 hover:text-white"
                 onClick={() => setNotifications([])}
               >
                 Clear all
+              </Button>
+              <Button
+                variant="ghost"
+                className="flex-1 text-xs text-cyan-400 hover:text-cyan-300"
+                onClick={() => {
+                  setIsOpen(false);
+                  setCentreOpen(true);
+                }}
+              >
+                View all
+              </Button>
+            </div>
+          )}
+
+          {notifications.length === 0 && (
+            <div className="p-3 border-t border-white/10">
+              <Button
+                variant="ghost"
+                className="w-full text-xs text-cyan-400 hover:text-cyan-300"
+                onClick={() => {
+                  setIsOpen(false);
+                  setCentreOpen(true);
+                }}
+              >
+                View all
               </Button>
             </div>
           )}
         </div>
       )}
+
+      <NotificationCentre
+        isOpen={centreOpen}
+        onClose={() => setCentreOpen(false)}
+      />
     </div>
   );
 }
