@@ -47,3 +47,6 @@ export { FirstWeekWidget } from './FirstWeekWidget';
 // Unite-Group integration + system health
 export { UniteHubWidget } from './UniteHubWidget';
 export { SystemPulsePanel } from './SystemPulsePanel';
+
+// Phase 5C — Loyalty Tier Card
+export { LoyaltyTierCard } from './LoyaltyTierCard';

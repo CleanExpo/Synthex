@@ -60,6 +60,7 @@ import {
   Mic,
   Newspaper,
   ShieldExclamation,
+  Gift,
 } from '@/components/icons';
 import { AIPMFloatingButton } from '@/components/ai-pm';
 import { KeyboardHints } from '@/components/dashboard/keyboard-hints';
@@ -120,6 +121,19 @@ const sidebarGroups: Array<{
       { icon: Home, label: 'Dashboard', href: '/dashboard' },
       { icon: Grid, label: 'Unified View', href: '/dashboard/unified' },
       { icon: Globe, label: 'Platforms', href: '/dashboard/platforms' },
+      { icon: Gift, label: 'Referrals', href: '/dashboard/referrals' },
+    ],
+  },
+  {
+    id: 'creative-suite',
+    icon: Sparkles,
+    label: 'CREATIVE SUITE',
+    items: [
+      {
+        icon: Sparkles,
+        label: 'Creative Suite',
+        href: '/dashboard/creative-suite',
+      },
     ],
   },
   {
@@ -322,6 +336,7 @@ const sidebarGroups: Array<{
 
 const STARTER_GROUP_IDS = new Set([
   'main',
+  'creative-suite',
   'content-ai',
   'planning',
   'analytics',
