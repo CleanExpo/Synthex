@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
+import dynamic from 'next/dynamic';
 import { toast } from 'sonner';
 import { useActiveBusiness } from '@/hooks/useActiveBusiness';
 import {
@@ -31,6 +32,15 @@ import { InsightsWidget } from '@/components/insights/InsightsWidget';
 import { AllBusinessesDashboard } from '@/components/business/AllBusinessesDashboard';
 import { SystemPulsePanel } from '@/components/dashboard/SystemPulsePanel';
 import { UniteHubWidget } from '@/components/dashboard/UniteHubWidget';
+
+// Phase 5C — Loyalty Tier Card (framer-motion: client-only, no SSR)
+const LoyaltyTierCard = dynamic(
+  () =>
+    import('@/components/dashboard/LoyaltyTierCard').then(m => ({
+      default: m.LoyaltyTierCard,
+    })),
+  { ssr: false }
+);
 
 export default function DashboardPage() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
@@ -360,9 +370,10 @@ export default function DashboardPage() {
             {/* Unite-Group hub */}
             <UniteHubWidget />
 
-            {/* Gamification + content suggestions */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            {/* Gamification + Loyalty Tier + content suggestions */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
               <GamificationWidget />
+              <LoyaltyTierCard />
               <ContentSuggestionsWidget />
             </div>
           </div>
