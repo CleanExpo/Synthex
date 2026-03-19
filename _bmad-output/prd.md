@@ -5,6 +5,7 @@ stepsCompleted:
     'step-02-discovery',
     'step-02b-vision',
     'step-02c-executive-summary',
+    'step-03-success',
   ]
 inputDocuments:
   - '.planning/STATE.md'
@@ -50,3 +51,81 @@ The retention model is built into the onboarding: a first win must occur in sess
 | **Domain**          | Marketing Automation / AI Content (unregulated)                                                     |
 | **Complexity**      | Medium — brownfield feature addition on mature codebase (131 Prisma models, live at synthex.social) |
 | **Project Context** | Brownfield — existing platform; CIS adds unified hub, guided journey, and gamification layer        |
+
+## Success Criteria
+
+### User Success
+
+**Session 1 win (must occur in first sitting):**
+
+- All GMB issues surfaced by health check are acknowledged and at least one is actioned (claimed, corrected, or queued for fix)
+- Website critical errors identified and at least one fix initiated
+- One social post created, scheduled, and queued for publishing
+- Business Health Score moves visibly from baseline (e.g., 20 → 45+) within first session
+
+**30-day success:**
+
+- AI has learned the client's tone, industry, and posting preferences from interactions
+- Content suggestions are tailored (not generic) — client can see the system "knows" them
+- Cancellation friction is high: the system holds personalised data, history, and a growing Health Score the client would lose. Switching cost is built-in.
+
+### Business Success
+
+| Milestone                        | Target                                                  |
+| -------------------------------- | ------------------------------------------------------- |
+| Health check → paid conversion   | ≥60% of users who complete the full health check flow   |
+| Month-2 retention (starter pack) | ≥50% remain paying after promotional period ends        |
+| Paying client milestones         | 50 → 100 → 200 → 500 → 1,000 clients                    |
+| North star metric                | Business Health Score average across all active clients |
+
+### Technical Success
+
+**Day-1 connectivity (MVP gates — nothing ships without these working):**
+
+- GMB status capture: current profile completeness, open issues, review score
+- Google Search Console: current rankings, crawl errors, indexed pages
+- LLM connection: client's own AI API key accepted and working (BYOK)
+- Social pages: at least 2 platforms connected and post-scheduling functional
+
+**Performance:**
+
+- Public health check returns results in ≤10 seconds
+- Dashboard loads in ≤2 seconds on 4G connection
+- BYOK key validation confirms connection in ≤5 seconds
+
+### Measurable Outcomes
+
+- Health Score increases ≥20 points in first 30 days for 70% of active users
+- ≥1 social post scheduled per week per active client after day 7
+- ≥80% of clients complete the full onboarding journey (reach first unlock)
+
+## Product Scope
+
+### MVP — Minimum Viable Product
+
+1. Public URL health check tool (GMB, website errors, rankings, competitor snapshot)
+2. Conversational story capture (AI interview → brand profile auto-population)
+3. GMB connection + issue resolution workflow
+4. Google Search Console connection + ranking dashboard
+5. BYOK LLM setup wizard (step-by-step key connection)
+6. Social platform connections (≥2 platforms) + post scheduling
+7. Business Health Score (0–100, live-updating)
+8. Action-gated progressive unlock with celebration moments
+9. CIS Hub page (unified entry point to all connected tools)
+10. AI personalisation engine (learns preferences from interactions over time)
+
+### Growth Features (Post-MVP)
+
+- 15-Minute Monday weekly brief (email/SMS)
+- Story Replay at 90 days (auto-generated progress documentary)
+- Referral-as-unlock mechanic
+- Notification Centre slide-out
+- Loyalty Tier Card (Bronze → Platinum)
+- Competitor Watch (live tracking, not just onboarding snapshot)
+
+### Vision (Future)
+
+- 100 Remotion educational videos + in-product HelpVideo component
+- Explainer video sales funnel (video-first onboarding path for cold traffic)
+- Full GMB automated posting (Google Posts via API)
+- AI auto-drafts weekly content calendar without prompting
