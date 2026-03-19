@@ -11,6 +11,8 @@ stepsCompleted:
     'step-06-innovation',
     'step-07-project-type',
     'step-08-scoping',
+    'step-09-functional',
+    'step-10-nonfunctional',
   ]
 inputDocuments:
   - '.planning/STATE.md'
@@ -467,3 +469,110 @@ Claude AI (via client's own Anthropic API key — BYOK) powers the Pro video pip
 
 - If development resources are constrained: cut Phase 1 items 12 (video pipeline) and 13 (delegation) — they are Pro-only and can launch as "coming soon" gates without breaking the core Starter journey
 - Absolute minimum viable release: items 1–11 (health check through CIS Hub) constitute a shippable experience
+
+## Functional Requirements
+
+### Business Health & Discovery
+
+- **FR1:** Visitor can submit a business URL and receive a Business Health Score (0–100) with itemised issues — no account required
+- **FR2:** System can surface the top 3 local competitors for any submitted URL and display their Health Scores alongside the submitter's
+- **FR3:** Authenticated user can view their Business Health Score updating in real time as actions are completed
+- **FR4:** System can calculate Health Score from outcome-weighted signals (GMB completeness, ranking position, review count, post frequency) — not action counts alone
+- **FR5:** User can share their Business Health Score as a standalone card (image or link)
+
+### Onboarding & Story Capture
+
+- **FR6:** Visitor completing the public health check can convert to a paid account with their health check data pre-loaded — no re-entry required
+- **FR7:** New user can complete a conversational AI interview (5–7 questions) that generates their brand voice profile, business bio, and initial content seeds
+- **FR8:** User can progress through an action-gated onboarding journey where each completed step unlocks the next capability with a visible celebration moment
+- **FR9:** System can detect when a user's onboarding journey has stalled and trigger a targeted re-engagement communication referencing their specific stuck step and competitor comparison
+- **FR10:** System can send a weekly progress brief to users containing last week's summary, one recommended next action, and one win highlight
+
+### Google Presence Management
+
+- **FR11:** User can connect their Google Business Profile account and view all open issues (incomplete fields, unanswered reviews, incorrect hours, missing photos)
+- **FR12:** User can action individual GMB issues (correct hours, update description, respond to reviews, add photos) from within the platform
+- **FR13:** User can connect their Google Search Console account and view current keyword rankings, crawl errors, and indexed page count
+- **FR14:** System can generate a Google Business Post targeting a keyword gap identified from the user's Search Console data
+- **FR15:** User can view a side-by-side ranking comparison against their top local competitor for their primary keywords
+
+### Social Media Management
+
+- **FR16:** User can connect social platform accounts (Meta, TikTok, LinkedIn, YouTube) and authorise posting permissions
+- **FR17:** User can create a social post with text, media, and platform-specific settings from a unified compose interface
+- **FR18:** User can schedule a post to one or multiple connected platforms at a specified date and time
+- **FR19:** User can view, edit, approve, or reject AI-generated post drafts before any content is published
+- **FR20:** System can suggest optimal posting times per platform based on the user's audience and industry
+- **FR21:** User can view post performance analytics (reach, engagement, clicks) across all connected platforms from a single dashboard
+- **FR22:** System can detect trending content formats and topics relevant to the user's industry and surface them as content suggestions
+
+### AI Video Pipeline
+
+- **FR23:** Pro user can upload a source video (long-form) and receive platform-optimised clip variants (9:16, 16:9, 1:1) generated automatically
+- **FR24:** System can generate a posting script, caption, and hashtag set for each clip variant using the user's brand voice and current platform trends
+- **FR25:** Pro user can review, edit, and approve generated video clips and captions before scheduling
+- **FR26:** System can process video content using the user's own Anthropic API key (BYOK) — Synthex does not supply or bill for AI compute
+- **FR27:** User can configure their BYOK API key (Anthropic, and optionally other providers) via a guided setup wizard
+
+### Account & Access Management
+
+- **FR28:** User can register, log in, and manage their account using Supabase authentication (email/password and OAuth)
+- **FR29:** Pro user can invite a delegate by email and assign them an approval-only role scoped to their organisation
+- **FR30:** Delegate can approve, edit, and reject post drafts and update GMB business details — with no access to billing, settings, or API keys
+- **FR31:** User can select a subscription tier (Starter $49/month or Pro $249/month) and manage billing via Stripe
+- **FR32:** System can apply feature gates server-side based on subscription tier — locked features are visible with upgrade prompts, not hidden
+- **FR33:** User can view and manage all connected platform OAuth authorisations and revoke any connection
+- **FR34:** System can detect expired or revoked OAuth tokens and alert the user with a re-authorisation prompt before silent failure occurs
+
+### Content & Brand Intelligence
+
+- **FR35:** System can maintain and refine a brand voice profile for each organisation, learning from the user's edits and approvals over time
+- **FR36:** User can view and edit their brand voice profile (tone, style, key phrases, topics to avoid)
+- **FR37:** System can generate social post drafts, GMB posts, and video scripts consistent with the organisation's brand voice profile
+- **FR38:** User can provide context updates (new product, promotion, seasonal change) that the system incorporates into subsequent content generation
+
+### Admin & Operations (Internal)
+
+- **FR39:** Synthex admin can view a dashboard showing all client organisations' Health Score trends, last-login dates, and connection status
+- **FR40:** Synthex admin can flag a client as churn risk and trigger a manual or automated re-engagement workflow
+- **FR41:** Synthex admin has zero access to any client's API keys, OAuth tokens, or payment instrument details
+
+## Non-Functional Requirements
+
+### Performance
+
+- **NFR1:** Public health check returns a complete Business Health Score and issues list within ≤10 seconds for any submitted URL
+- **NFR2:** All dashboard pages load within ≤2 seconds on a 4G mobile connection
+- **NFR3:** BYOK API key validation (test connection) completes within ≤5 seconds
+- **NFR4:** Post scheduling and approval queue updates reflect in real time (≤1 second) without requiring a page refresh
+- **NFR5:** Video clip generation (Remotion rendering) completes within ≤5 minutes per clip; user receives a progress indicator — no silent hanging
+
+### Security
+
+- **NFR6:** All client API keys, OAuth tokens, and BYOK keys are encrypted at rest using AES-256-GCM and stored in the org-scoped Vault — no plaintext exposure at any layer
+- **NFR7:** Synthex staff and internal systems have zero read access to client credential data — enforced by architecture, not policy alone
+- **NFR8:** Payment card data is never stored or processed by Synthex — delegated entirely to Stripe (PCI DSS compliance via Stripe)
+- **NFR9:** All data in transit is encrypted via TLS 1.2+ — no unencrypted API calls to or from connected platforms
+- **NFR10:** Session tokens use httpOnly, Secure cookies — no JWT stored in localStorage or accessible to JavaScript
+- **NFR11:** All mutation API routes require Zod validation, authentication, and org-scoped queries — no cross-tenant data access possible
+- **NFR12:** OAuth token expiry is detected proactively (before a publishing failure) — clients are alerted at least 24 hours before a scheduled post would fail
+
+### Scalability
+
+- **NFR13:** The platform supports growth from 50 to 1,000 paying clients without architectural changes — Vercel serverless + Supabase connection pooling handles this range
+- **NFR14:** The public health check tool supports concurrent usage by cold traffic without degrading response times — implemented as an edge function or isolated serverless route
+- **NFR15:** Video pipeline rendering is queued — burst demand from multiple Pro users does not block the approval queue for others
+- **NFR16:** Database queries are org-scoped and indexed on `organizationId` — query performance does not degrade as tenant count grows
+
+### Accessibility
+
+- **NFR17:** All dashboard and public-facing pages meet WCAG 2.1 AA contrast requirements — minimum 4.5:1 for normal text, 3:1 for large text
+- **NFR18:** All interactive elements are keyboard-navigable with appropriate ARIA labels — the approval workflow (FR19) must be fully operable without a mouse
+- **NFR19:** The mobile dashboard is fully functional on screens ≥375px width — no horizontal scrolling, touch targets ≥44px
+
+### Integration Reliability
+
+- **NFR20:** Platform integration failures (GMB, Search Console, Meta) surface a clear, actionable error message — never a generic error or silent failure
+- **NFR21:** The system retries failed API calls to connected platforms up to 2 times with exponential backoff before surfacing an error to the user
+- **NFR22:** Connected platform OAuth tokens are refreshed automatically when possible — manual re-authorisation is only required when the platform revokes access
+- **NFR23:** All integrations comply with their respective platform developer policies — posting frequency limits and API quotas are enforced before calls are made, not after
