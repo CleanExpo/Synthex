@@ -6,6 +6,7 @@ stepsCompleted:
     'step-02b-vision',
     'step-02c-executive-summary',
     'step-03-success',
+    'step-04-journeys',
   ]
 inputDocuments:
   - '.planning/STATE.md'
@@ -129,3 +130,104 @@ The retention model is built into the onboarding: a first win must occur in sess
 - Explainer video sales funnel (video-first onboarding path for cold traffic)
 - Full GMB automated posting (Google Posts via API)
 - AI auto-drafts weekly content calendar without prompting
+
+## User Journeys
+
+### Journey 1: Sarah — The Dentist on Autopilot (Primary — Happy Path)
+
+**Who she is:** Sarah owns a dental practice with 3 chairs and 2 staff. She's booked out 3 weeks in advance but her Google Business Profile hasn't been updated since 2022, her website has broken links she doesn't know about, and she hasn't posted on Instagram in 4 months. She's paying $2,800/month to a web agency that sends a monthly PDF report she never reads. She heard about Synthex from another dentist at a conference.
+
+**Opening Scene:** Sarah types her practice website URL into the Synthex health check at 10pm on a Tuesday after clinic closes. She's on her phone. Within 8 seconds she sees: Business Health Score 34/100. 7 GMB issues. 3 broken links. Her top competitor (3 suburbs away) scores 71. She feels a sting of recognition — she knew it was bad, but she didn't know how bad.
+
+**Rising Action:** She clicks "Fix this for $249/month." Connects her Google account. Synthex pulls her GMB data, her Search Console rankings, and her existing website content automatically. An AI interview asks her 6 questions: _"What makes your practice different?" / "Who's your favourite type of patient?" / "What would you want a new patient to know before their first visit?"_ She types casual, honest answers in 4 minutes. Synthex generates her brand voice, a bio, and 3 social post drafts from her words.
+
+**Climax:** Her Health Score jumps to 58. A green "First Win" card appears: _"Your GMB hours are now correct and your top 3 photos have been optimised. 73% of patients check Google before booking — you just improved your first impression."_ She screenshots it and sends it to her practice manager.
+
+**Resolution:** Sarah checks in every Sunday for 10 minutes. She approves 2 posts, skips 1, adds a note about a new whitening special. The system posts at optimal times while she's with patients. At 90 days her score is 74. She's spent $249, not $4,300. She refers her physiotherapist neighbour.
+
+**Requirements revealed:** GMB auto-repair workflows, health score live update, social post approval queue, brand voice capture, mobile-first dashboard, referral mechanic.
+
+---
+
+### Journey 2: Dave — The Tradie Who Nearly Quit (Primary — Edge Case / Recovery)
+
+**Who he is:** Dave runs a plumbing business. His wife set up the Synthex account 3 weeks ago, got to the "Connect Google Search Console" step, didn't know what that was, and stopped. Dave has received 3 "15-Minute Monday" briefs since then, all saying the same thing: _"You're 1 step away from unlocking your ranking dashboard."_ Tonight he finally clicked.
+
+**Opening Scene:** Dave is in his ute at 6:45am before his first job. He opens the email on his phone. The Monday brief shows his Health Score is still stuck at 29. It shows his competitor's Google listing with 47 reviews vs his 12. That's the motivator.
+
+**Rising Action:** He taps "Complete this step." Synthex shows a 3-step guide with screenshots: _"Go to search.google.com/search-console → Add property → Copy this code."_ Dave follows it in 6 minutes. The system immediately pulls his ranking data. He sees he's ranking #1 for "emergency plumber [suburb]" but not appearing for "plumber [suburb]" — a huge gap. His Health Score unlocks to 51 and the ranking dashboard feature opens.
+
+**Climax:** Synthex auto-generates a Google Business post targeting the missing keyword, pre-approved for him to publish in one tap. He taps publish. First post. First keyword-targeted content. He didn't write a word.
+
+**Resolution:** Dave's wife now does the Sunday 10-minute check-in. Dave sees the results on his phone. He doesn't need to understand algorithms — the system does. He cancelled the $180/month SEO "retainer" he was paying someone on Gumtree who never explained what they were doing.
+
+**Requirements revealed:** Progress-gated Monday brief, stalled-setup detection, step-by-step platform connection guides with screenshots, single-tap post approval, competitor ranking comparison.
+
+---
+
+### Journey 3: The Synthex Admin — Spotting Churn Before It Happens (Internal Ops)
+
+**Who they are:** The Synthex ops/support team member reviewing the client dashboard. Not a developer — uses a simple admin interface.
+
+**Opening Scene:** Monday morning. The admin dashboard shows 3 clients with Health Scores that dropped more than 10 points in the last 7 days. One is a café owner whose Google account disconnected (expired OAuth token). One is a barber who hasn't logged in for 19 days. One is an online seller whose last social post was 3 weeks ago.
+
+**Rising Action:** The admin triggers a personalised "we noticed" re-engagement email for the barber. For the café owner, the system has already queued an automated token-refresh prompt. For the online seller, the admin flags them as "churn risk" and schedules a check-in call.
+
+**Climax:** The café owner re-connects their account from the email prompt without needing support. The barber logs back in that evening after the re-engagement email. The online seller takes the call and reveals they've been on holiday — their account is fine.
+
+**Resolution:** All 3 clients retained. The admin prevented 3 potential churns in 20 minutes without a developer or a CRM.
+
+**Requirements revealed:** Admin churn-risk dashboard, Health Score trend monitoring, automated re-engagement triggers, OAuth token expiry detection, manual re-engagement tools.
+
+---
+
+### Journey 4: Marcus — The Cold Visitor Who Converts (Top of Funnel)
+
+**Who he is:** Marcus owns a corner café. He Googled "how to improve my Google ranking" and found a Synthex blog post. There's a "Check your business health — free" button in the post. He clicks it.
+
+**Opening Scene:** Marcus types his café URL. No account needed. 9 seconds later: Health Score 28/100. _"Your Google Business Profile is missing 4 key details that are costing you visibility. Your top 3 competitors in [suburb] average a score of 61."_ A competitor he recognises is listed by name with a score of 74.
+
+**Rising Action:** Marcus reads the full report. 6 specific issues, each with a plain-English explanation of why it matters and what fixing it is worth (e.g., _"Complete GMB profiles get 7x more clicks — yours is 40% complete"_). At the bottom: _"Want us to fix all of this? $249/month. Setup takes one afternoon."_
+
+**Climax:** He clicks sign up. The health check data pre-fills his onboarding — he doesn't start from zero. His score, his issues, his competitor gaps are already loaded. He's immediately in the "fix mode" flow.
+
+**Resolution:** Marcus converts in the same session. The health check was both the marketing and the onboarding. He never saw a pricing page or a feature list — he saw his problem and the solution side by side.
+
+**Requirements revealed:** Public health check (no login), report-to-signup conversion flow, pre-fill onboarding from health check data, competitor snapshot, plain-English issue explanations with business-value context.
+
+---
+
+### Journey 5: Julie — The Admin Who Runs It For The Boss (Delegated User)
+
+**Who she is:** Julie is the receptionist at a physio clinic. The owner, Dr. Chen, set up Synthex during a quiet afternoon and then said _"Julie, can you just keep an eye on this?"_ Julie is not a marketer. She's organised, efficient, and has 20 minutes on Friday afternoons.
+
+**Opening Scene:** Julie gets a Friday summary notification. _"3 posts ready to approve. Health Score unchanged at 67. One action available: add your Christmas hours to Google."_
+
+**Rising Action:** Julie opens Synthex on her desktop. The 3 posts are already written — AI-generated from Dr. Chen's brand voice. She reads them, edits one slightly (changes "back pain" to "back issues" because Dr. Chen prefers that phrasing), approves all three. She updates the Christmas hours in 2 clicks.
+
+**Climax:** All done. 11 minutes. She didn't need to know what hashtags to use, when to post, or how the Google algorithm works. The system handled everything — she just reviewed.
+
+**Resolution:** Dr. Chen checks his score every Sunday from his phone. He sees it's at 72. He's never had to think about social media since signing up. Julie has never had to ask him what to post. The system has learned Dr. Chen's voice well enough that Julie rarely edits anything now.
+
+**Requirements revealed:** Role-based access (owner vs. delegated user), approval workflow with edit capability, mobile view for owner / desktop for delegate, AI voice learning from edits and approvals, notification summary (not overwhelming detail).
+
+---
+
+### Journey Requirements Summary
+
+| Capability                              | Journeys That Need It   |
+| --------------------------------------- | ----------------------- |
+| Public URL health check (no login)      | Marcus (J4)             |
+| GMB auto-repair + issue workflow        | Sarah (J1), Marcus (J4) |
+| Google Search Console connection guide  | Dave (J2)               |
+| Brand voice capture (AI interview)      | Sarah (J1)              |
+| Social post approval queue              | Sarah (J1), Julie (J5)  |
+| Health Score live-updating              | All journeys            |
+| Progress-gated Monday brief             | Dave (J2)               |
+| Stalled-setup detection + re-engagement | Dave (J2), Admin (J3)   |
+| Churn-risk admin dashboard              | Admin (J3)              |
+| Role-based access (owner / delegate)    | Julie (J5)              |
+| AI voice learning from edits            | Julie (J5)              |
+| Report-to-signup conversion flow        | Marcus (J4)             |
+| Competitor snapshot                     | Sarah (J1), Marcus (J4) |
+| Mobile-first dashboard                  | Sarah (J1), Dave (J2)   |
