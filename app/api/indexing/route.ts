@@ -1,6 +1,7 @@
 /**
- * @internal Server-only endpoint — not called directly by frontend UI.
+ * @internal External/admin API endpoint — not called by the web frontend.
  * Used by: admin tooling and cron jobs to submit URLs to Google's Indexing API.
+ * This is an intentional external API; do not archive.
  */
 
 /**
@@ -15,19 +16,32 @@
 
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
-import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
-import { submitUrl, submitBatch, getSynthexPublicUrls } from '@/lib/google/indexing';
+import {
+  APISecurityChecker,
+  DEFAULT_POLICIES,
+} from '@/lib/security/api-security-checker';
+import {
+  submitUrl,
+  submitBatch,
+  getSynthexPublicUrls,
+} from '@/lib/google/indexing';
 import { logger } from '@/lib/logger';
 
 const SubmitSchema = z.object({
   url: z.string().url().optional(),
   urls: z.array(z.string().url()).optional(),
-  type: z.enum(['URL_UPDATED', 'URL_DELETED']).optional().default('URL_UPDATED'),
+  type: z
+    .enum(['URL_UPDATED', 'URL_DELETED'])
+    .optional()
+    .default('URL_UPDATED'),
 });
 
 export async function POST(request: NextRequest) {
   // Admin-only endpoint
-  const security = await APISecurityChecker.check(request, DEFAULT_POLICIES.AUTHENTICATED_WRITE);
+  const security = await APISecurityChecker.check(
+    request,
+    DEFAULT_POLICIES.AUTHENTICATED_WRITE
+  );
   if (!security.allowed) {
     return APISecurityChecker.createSecureResponse(
       { error: security.error },
@@ -42,7 +56,7 @@ export async function POST(request: NextRequest) {
     if (action === 'batch') {
       const urls = getSynthexPublicUrls();
       const results = await submitBatch(urls);
-      const succeeded = results.filter((r) => r.success).length;
+      const succeeded = results.filter(r => r.success).length;
       return APISecurityChecker.createSecureResponse({
         success: true,
         message: `Submitted ${succeeded}/${urls.length} URLs`,
@@ -55,7 +69,11 @@ export async function POST(request: NextRequest) {
     const validation = SubmitSchema.safeParse(body);
     if (!validation.success) {
       return APISecurityChecker.createSecureResponse(
-        { success: false, error: 'Invalid request', details: validation.error.errors },
+        {
+          success: false,
+          error: 'Invalid request',
+          details: validation.error.errors,
+        },
         400
       );
     }
@@ -64,12 +82,18 @@ export async function POST(request: NextRequest) {
 
     if (urls && urls.length > 0) {
       const results = await submitBatch(urls, type);
-      return APISecurityChecker.createSecureResponse({ success: true, results });
+      return APISecurityChecker.createSecureResponse({
+        success: true,
+        results,
+      });
     }
 
     if (url) {
       const result = await submitUrl(url, type);
-      return APISecurityChecker.createSecureResponse({ success: result.success, result });
+      return APISecurityChecker.createSecureResponse({
+        success: result.success,
+        result,
+      });
     }
 
     return APISecurityChecker.createSecureResponse(

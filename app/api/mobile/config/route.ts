@@ -1,6 +1,7 @@
 /**
- * @internal Server-only endpoint — not called directly by frontend UI.
+ * @internal External/mobile API endpoint — not called by the web frontend.
  * Used by: mobile app SDK clients for runtime configuration.
+ * This is an intentional external API; do not archive.
  */
 
 /**
@@ -15,7 +16,10 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
+import {
+  APISecurityChecker,
+  DEFAULT_POLICIES,
+} from '@/lib/security/api-security-checker';
 import { logger } from '@/lib/logger';
 
 /**
@@ -69,4 +73,3 @@ export async function GET(request: NextRequest) {
     );
   }
 }
-

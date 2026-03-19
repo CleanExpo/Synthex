@@ -1,6 +1,7 @@
 /**
- * @internal Server-only endpoint — not called directly by frontend UI.
+ * @internal External/mobile API endpoint — not called by the web frontend.
  * Used by: mobile app SDK clients for offline data synchronisation.
+ * This is an intentional external API; do not archive.
  */
 
 /**
@@ -16,20 +17,28 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
+import {
+  APISecurityChecker,
+  DEFAULT_POLICIES,
+} from '@/lib/security/api-security-checker';
 import { z } from 'zod';
 import { logger } from '@/lib/logger';
 
 // Validation schema for sync data
 const syncDataSchema = z.object({
   lastSyncTimestamp: z.string().datetime().optional(),
-  changes: z.array(z.object({
-    type: z.enum(['create', 'update', 'delete']),
-    entity: z.string(),
-    id: z.string(),
-    data: z.record(z.unknown()).optional(),
-    timestamp: z.string().datetime(),
-  })).optional().default([]),
+  changes: z
+    .array(
+      z.object({
+        type: z.enum(['create', 'update', 'delete']),
+        entity: z.string(),
+        id: z.string(),
+        data: z.record(z.unknown()).optional(),
+        timestamp: z.string().datetime(),
+      })
+    )
+    .optional()
+    .default([]),
   deviceId: z.string().max(100).optional(),
 });
 
@@ -99,4 +108,3 @@ export async function POST(request: NextRequest) {
 
 // Node.js runtime required for Prisma
 export const runtime = 'nodejs';
-
